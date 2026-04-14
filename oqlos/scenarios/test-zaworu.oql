@@ -1,0 +1,49 @@
+SCENARIO: 'Test Zaworu'
+DEVICE_TYPE: 'BA'
+DEVICE_MODEL: 'PSS 7000'
+MANUFACTURER: 'Dräger'
+
+GOAL: Test otwarcia zaworu NC
+  1. Otwórz zawór NC:
+    → Valve.open NC
+    WAIT 500
+    → Sensor.read AI01
+    IF [AI01] [>=] [-15 mbar] ELSE ERROR 'Zawór NC nie otworzył się'
+    SAVE: cisnienie_nc_otwarte
+
+GOAL: Test zamknięcia zaworu NC
+  1. Zamknij zawór NC:
+    → Valve.close NC
+    WAIT 500
+    → Sensor.read AI01
+    IF [AI01] [<=] [-50 mbar] ELSE ERROR 'Zawór NC nie zamknął się szczelnie'
+    SAVE: cisnienie_nc_zamkniete
+
+GOAL: Test otwarcia zaworu SC
+  1. Otwórz zawór SC:
+    → Valve.open SC
+    WAIT 500
+    → Sensor.read AI02
+    IF [AI02] [>=] [5.0 bar] ELSE ERROR 'Zawór SC nie otworzył się'
+    SAVE: cisnienie_sc_otwarte
+
+GOAL: Test zamknięcia zaworu SC
+  1. Zamknij zawór SC:
+    → Valve.close SC
+    WAIT 500
+    → Sensor.read AI02
+    IF [AI02] [<=] [0.5 bar] ELSE ERROR 'Zawór SC nie zamknął się szczelnie'
+    SAVE: cisnienie_sc_zamkniete
+
+GOAL: Test szczelności zaworu WC
+  1. Otwórz zawór WC:
+    → Valve.open WC
+    WAIT 1000
+    → Sensor.read AI03
+    SAVE: cisnienie_wc_poczatek
+  2. Zamknij i obserwuj:
+    → Valve.close WC
+    WAIT 3000
+    → Sensor.read AI03
+    IF [AI03] [>=] [-5 mbar] ELSE ERROR 'Zawór WC nieszczelny'
+    SAVE: cisnienie_wc_koniec

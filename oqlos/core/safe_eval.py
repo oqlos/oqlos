@@ -58,64 +58,96 @@ def safe_eval(expr: str, context: dict[str, Any] | None = None) -> Any:
     return _eval_node(tree.body, ctx)
 
 
-def _eval_node(node: ast.AST, ctx: dict[str, Any]) -> Any:
-    if isinstance(node, ast.Expression):
-        return _eval_node(node.body, ctx)
+def _eval_constant(node: ast.Constant, ctx: dict[str, Any]) -> Any:
+    """Evaluate a constant literal."""
+    return node.value
 
-    if isinstance(node, ast.Constant):
-        return node.value
 
-    if isinstance(node, ast.Name):
-        name = node.id
-        if name in _ALLOWED_NAMES:
-            return _ALLOWED_NAMES[name]
-        if name in ctx:
-            return ctx[name]
-        raise SafeEvalError(f"Undefined variable: {name}")
+def _eval_name(node: ast.Name, ctx: dict[str, Any]) -> Any:
+    """Evaluate a name lookup (variable or constant)."""
+    name = node.id
+    if name in _ALLOWED_NAMES:
+        return _ALLOWED_NAMES[name]
+    if name in ctx:
+        return ctx[name]
+    raise SafeEvalError(f"Undefined variable: {name}")
 
-    if isinstance(node, ast.UnaryOp):
-        operand = _eval_node(node.operand, ctx)
-        if isinstance(node.op, ast.USub):
-            return -operand
-        if isinstance(node.op, ast.Not):
-            return not operand
-        raise SafeEvalError(f"Unsupported unary op: {type(node.op).__name__}")
 
-    if isinstance(node, ast.BinOp):
-        left = _eval_node(node.left, ctx)
-        right = _eval_node(node.right, ctx)
-        op_fn = _SAFE_OPS.get(type(node.op))
+def _eval_unary_op(node: ast.UnaryOp, ctx: dict[str, Any]) -> Any:
+    """Evaluate a unary operation (-x, not x)."""
+    operand = _eval_node(node.operand, ctx)
+    if isinstance(node.op, ast.USub):
+        return -operand
+    if isinstance(node.op, ast.Not):
+        return not operand
+    raise SafeEvalError(f"Unsupported unary op: {type(node.op).__name__}")
+
+
+def _eval_bin_op(node: ast.BinOp, ctx: dict[str, Any]) -> Any:
+    """Evaluate a binary operation (+, -, *, /, %)."""
+    left = _eval_node(node.left, ctx)
+    right = _eval_node(node.right, ctx)
+    op_fn = _SAFE_OPS.get(type(node.op))
+    if op_fn is None:
+        raise SafeEvalError(f"Unsupported operator: {type(node.op).__name__}")
+    return op_fn(left, right)
+
+
+def _eval_compare(node: ast.Compare, ctx: dict[str, Any]) -> Any:
+    """Evaluate a comparison chain (x < y < z)."""
+    left = _eval_node(node.left, ctx)
+    for op, comparator in zip(node.ops, node.comparators):
+        right = _eval_node(comparator, ctx)
+        op_fn = _SAFE_OPS.get(type(op))
         if op_fn is None:
-            raise SafeEvalError(f"Unsupported operator: {type(node.op).__name__}")
-        return op_fn(left, right)
+            raise SafeEvalError(f"Unsupported comparison: {type(op).__name__}")
+        if not op_fn(left, right):
+            return False
+        left = right
+    return True
 
-    if isinstance(node, ast.Compare):
-        left = _eval_node(node.left, ctx)
-        for op, comparator in zip(node.ops, node.comparators):
-            right = _eval_node(comparator, ctx)
-            op_fn = _SAFE_OPS.get(type(op))
-            if op_fn is None:
-                raise SafeEvalError(f"Unsupported comparison: {type(op).__name__}")
-            if not op_fn(left, right):
-                return False
-            left = right
-        return True
 
-    if isinstance(node, ast.BoolOp):
-        values = [_eval_node(v, ctx) for v in node.values]
-        if isinstance(node.op, ast.And):
-            return all(values)
-        if isinstance(node.op, ast.Or):
-            return any(values)
+def _eval_bool_op(node: ast.BoolOp, ctx: dict[str, Any]) -> Any:
+    """Evaluate a boolean operation (and, or)."""
+    values = [_eval_node(v, ctx) for v in node.values]
+    if isinstance(node.op, ast.And):
+        return all(values)
+    if isinstance(node.op, ast.Or):
+        return any(values)
+    raise SafeEvalError(f"Unsupported bool op: {type(node.op).__name__}")
 
-    if isinstance(node, ast.Call):
-        if isinstance(node.func, ast.Name) and node.func.id in _ALLOWED_FUNCS:
-            args = [_eval_node(a, ctx) for a in node.args]
-            return _ALLOWED_FUNCS[node.func.id](*args)
-        raise SafeEvalError(f"Function not allowed: {ast.dump(node.func)}")
 
-    if isinstance(node, ast.IfExp):
-        test = _eval_node(node.test, ctx)
-        return _eval_node(node.body, ctx) if test else _eval_node(node.orelse, ctx)
+def _eval_call(node: ast.Call, ctx: dict[str, Any]) -> Any:
+    """Evaluate a function call (whitelisted functions only)."""
+    if isinstance(node.func, ast.Name) and node.func.id in _ALLOWED_FUNCS:
+        args = [_eval_node(a, ctx) for a in node.args]
+        return _ALLOWED_FUNCS[node.func.id](*args)
+    raise SafeEvalError(f"Function not allowed: {ast.dump(node.func)}")
 
-    raise SafeEvalError(f"Unsupported expression: {type(node).__name__}")
+
+def _eval_if_exp(node: ast.IfExp, ctx: dict[str, Any]) -> Any:
+    """Evaluate a conditional expression (x if test else y)."""
+    test = _eval_node(node.test, ctx)
+    return _eval_node(node.body, ctx) if test else _eval_node(node.orelse, ctx)
+
+
+# Registry mapping AST node types to their evaluators
+_NODE_EVALUATORS: dict[type[ast.AST], Any] = {
+    ast.Expression: lambda node, ctx: _eval_node(node.body, ctx),
+    ast.Constant: _eval_constant,
+    ast.Name: _eval_name,
+    ast.UnaryOp: _eval_unary_op,
+    ast.BinOp: _eval_bin_op,
+    ast.Compare: _eval_compare,
+    ast.BoolOp: _eval_bool_op,
+    ast.Call: _eval_call,
+    ast.IfExp: _eval_if_exp,
+}
+
+
+def _eval_node(node: ast.AST, ctx: dict[str, Any]) -> Any:
+    """Dispatch node evaluation to the appropriate handler."""
+    handler = _NODE_EVALUATORS.get(type(node))
+    if handler is None:
+        raise SafeEvalError(f"Unsupported expression: {type(node).__name__}")
+    return handler(node, ctx)

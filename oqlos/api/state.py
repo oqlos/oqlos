@@ -11,29 +11,16 @@ from typing import Any
 
 from oqlos.models.execution import ExecutionRequest, CommandEnvelope
 from oqlos.models.scenario import Step, Scenario
-from oqlos.core.state import StateManager
-from oqlos.core.executor import ScenarioOrchestrator
 from oqlos.core.parser import parse_dsl_to_goal_with_issues
+from oqlos.api.utils import execution_ctrl as _ctrl
 
 router = APIRouter(tags=["state"])
 logger = logging.getLogger(__name__)
 
-# Will be set during app initialization
-state_manager: StateManager = None
-orchestrator: ScenarioOrchestrator = None
-
-## DSL parsing moved to utils/dsl_parser.py: parse_dsl_to_goal
-
-def set_dependencies(sm: StateManager, orch: ScenarioOrchestrator):
-    """Set the dependencies"""
-    global state_manager, orchestrator
-    state_manager = sm
-    orchestrator = orch
-
 def _compose_named_state() -> dict[str, Any]:
     """Build peripheral state as named dictionary"""
     named = {}
-    for pid, per in state_manager.peripherals.items():
+    for pid, per in _ctrl.state_manager.peripherals.items():
         # Sanitize key names for safe access
         safe_key = pid.replace('-', '_').replace('.', '_')
         named[safe_key] = {
@@ -214,8 +201,8 @@ async def fetch_variables(source: str = "http://localhost:8101/api/v1/data/varia
 async def fetch_protocol_steps(scenario: str, source: str = "http://localhost:8100/connect-test/protocol-steps"):
     """Fetch protocol steps for preview."""
     # Prefer locally loaded scenario goals
-    if scenario and scenario in state_manager.scenarios:
-        sc = state_manager.scenarios[scenario]
+    if scenario and scenario in _ctrl.state_manager.scenarios:
+        sc = _ctrl.state_manager.scenarios[scenario]
         steps = []
         for goal in sc.goals:
             for step in goal.steps:
@@ -266,7 +253,7 @@ def _maybe_register_dsl_from_content(data: dict, scenario_id: str):
                 protocol='',
                 goals=[parsed_goal]
             )
-            state_manager.scenarios[scenario_id] = temp
+            _ctrl.state_manager.scenarios[scenario_id] = temp
             logger.debug("Created temporary scenario with %d steps", len(parsed_goal.steps))
             return parsed_goal, invalid_lines
     except Exception as ex:
@@ -328,7 +315,7 @@ async def _handle_start(env: CommandEnvelope) -> dict:
     if inline_dsl and parsed_goal and not parsed_goal.steps:
         raise HTTPException(status_code=400, detail='inline DSL contains no executable runtime steps')
 
-    if req.scenarioId not in state_manager.scenarios:
+    if req.scenarioId not in _ctrl.state_manager.scenarios:
         raise HTTPException(status_code=404, detail=f'scenario {req.scenarioId} not found')
 
     execution_id = f"exec-{datetime.now(timezone.utc).timestamp()}"
@@ -336,7 +323,7 @@ async def _handle_start(env: CommandEnvelope) -> dict:
     async def run_execution():
         try:
             logger.info("Background task STARTED for scenario: %s", req.scenarioId)
-            result = await orchestrator.execute_scenario(
+            result = await _ctrl.orchestrator.execute_scenario(
                 scenario_id=req.scenarioId,
                 goals=req.goals,
                 mode=req.mode,
@@ -351,25 +338,19 @@ async def _handle_start(env: CommandEnvelope) -> dict:
     return {"executionId": execution_id, "status": "started"}
 
 async def _handle_pause(env: CommandEnvelope) -> dict:
-    if not orchestrator.current_execution:
+    if not _ctrl.orchestrator.current_execution:
         return {"error": "No current execution", "status": "failed"}
-    orchestrator.paused = True
-    orchestrator.current_execution.status = 'paused'
-    return {"status": "paused"}
+    return _ctrl.do_pause()
 
 async def _handle_resume(env: CommandEnvelope) -> dict:
-    if not orchestrator.current_execution:
+    if not _ctrl.orchestrator.current_execution:
         return {"error": "No current execution", "status": "failed"}
-    orchestrator.paused = False
-    orchestrator.current_execution.status = 'running'
-    return {"status": "running"}
+    return _ctrl.do_resume()
 
 async def _handle_stop(env: CommandEnvelope) -> dict:
-    if not orchestrator.current_execution:
+    if not _ctrl.orchestrator.current_execution:
         return {"error": "No current execution", "status": "failed"}
-    orchestrator.running = False
-    orchestrator.current_execution.status = 'stopped'
-    return {"status": "stopped"}
+    return _ctrl.do_stop()
 
 _COMMAND_HANDLERS: dict[str, Any] = {
     'StartExecution': _handle_start,

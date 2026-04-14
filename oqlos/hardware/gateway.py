@@ -4,7 +4,7 @@
 Reads config from env vars:
   HARDWARE_MODE    = mock | real          (default: mock)
   PIADC_URL        = http://host:8080     (piadc ADS1115 service)
-  MOTOR_URL        = http://host:8001     (rpi-motor-tic249 service)
+  MOTOR_URL        = http://host:8203     (rpi-motor-DRI0050 service)
     MODBUS_SERIAL_PORT = /dev/ttyACM1       (preferred RTU serial port)
     MODBUS_BAUD      = 19200                (preferred RTU baud rate)
     MODBUS_PARITY    = N                    (preferred parity, 8N1 by default)
@@ -42,7 +42,7 @@ logger = logging.getLogger(__name__)
 
 _HARDWARE_MODE = os.getenv("HARDWARE_MODE", "mock").lower()
 _PIADC_URL = os.getenv("PIADC_URL", "http://localhost:8080")
-_MOTOR_URL = os.getenv("MOTOR_URL", "http://localhost:8001")
+_MOTOR_URL = os.getenv("MOTOR_URL", "http://localhost:8203")
 _MODBUS_HOST = os.getenv("MODBUS_HOST", "localhost")
 _MODBUS_PORT = int(os.getenv("MODBUS_PORT", "502"))
 _MODBUS_SERIAL = os.getenv("MODBUS_SERIAL_PORT", DEFAULT_MODBUS_SERIAL)
@@ -87,21 +87,20 @@ class _PiAdcAdapter:
         return data.get("voltage")
 
 
-class _TicMotorAdapter:
-    """Controls the artificial-lung stepper motor via rpi-motor-tic249 REST API."""
+class _DRI0050MotorAdapter:
+    """Controls the pump motor via rpi-motor-DRI0050 REST API (DFRobot DRI0050 PWM driver)."""
 
     def __init__(self, base_url: str) -> None:
         self._base = base_url.rstrip("/")
 
     async def set_speed(self, power_pct: float) -> dict[str, Any]:
-        """Map 0–100% pump power to motor reciprocation speed."""
+        """Set motor power as 0–100 %."""
         if power_pct <= 0:
             return await self._stop()
-        speed = int(power_pct / 100 * 5000)
         async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
             resp = await client.post(
-                f"{self._base}/api/reciprocate",
-                json={"speed": speed, "cycles": 0},
+                f"{self._base}/api/speed",
+                json={"power_pct": power_pct},
             )
             resp.raise_for_status()
             return resp.json()
@@ -209,13 +208,13 @@ class HardwareGateway:
     """Single entry-point for all physical hardware I/O.
 
     In *mock* mode every call is a no-op that logs the intended action.
-    In *real* mode it calls the actual hardware services (piadc / tic249 / modbus).
+    In *real* mode it calls the actual hardware services (piadc / DRI0050 / modbus).
     """
 
     def __init__(self) -> None:
         self.mode = _HARDWARE_MODE
         self._piadc = _PiAdcAdapter(_PIADC_URL)
-        self._motor = _TicMotorAdapter(_MOTOR_URL)
+        self._motor = _DRI0050MotorAdapter(_MOTOR_URL)
         self._modbus = _ModbusAdapter(_MODBUS_SERIAL, _MODBUS_BAUD, _MODBUS_PARITY, _MODBUS_HOST, _MODBUS_PORT)
         logger.info(
             "HardwareGateway init: mode=%s piadc=%s motor=%s modbus=%s@%d 8%s1 (tcp-fallback=%s:%d)",

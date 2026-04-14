@@ -25,19 +25,7 @@ from pathlib import Path
 from typing import Callable
 
 from oqlos.shared.release_version import resolve_release_version
-
-
-def _resolve_logs_db_path(project_root_fallback: Path) -> str:
-    """Resolve logs.db path from environment or default.
-
-    Shared logic previously duplicated in 4+ nfo_config.py files.
-    """
-    url = os.environ.get("LOG_DATABASE_URL", "")
-    if url.startswith("sqlite:///"):
-        return url[len("sqlite:///"):]
-
-    project_root = Path(os.environ.get("PROJECT_ROOT", str(project_root_fallback)))
-    return str(project_root / "db" / "logs" / "logs.db")
+from oqlos.shared.logs_query import resolve_logs_db_path as _resolve_logs_db_path
 
 
 def create_nfo_setup(

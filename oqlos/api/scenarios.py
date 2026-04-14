@@ -4,22 +4,14 @@ from fastapi import APIRouter, HTTPException
 import httpx
 
 from oqlos.models.scenario import Scenario, Goal, Step
-from oqlos.core.state import StateManager
+from oqlos.api.utils import execution_ctrl as _ctrl
 
 router = APIRouter(prefix="/api/v1/scenarios", tags=["scenarios"])
-
-# Will be set during app initialization
-state_manager: StateManager = None
-
-def set_state_manager(sm: StateManager):
-    """Set the state manager instance"""
-    global state_manager
-    state_manager = sm
 
 @router.get("")
 async def get_scenarios():
     """Get all scenarios"""
-    return list(state_manager.scenarios.values())
+    return list(_ctrl.state_manager.scenarios.values())
 
 @router.get("/{scenario_id}")
 async def get_scenario(scenario_id: str):
@@ -27,9 +19,9 @@ async def get_scenario(scenario_id: str):
     # Guard: if path captured 'fetch' due to param route precedence, delegate to fetch endpoint
     if scenario_id == 'fetch':
         return await fetch_scenarios()
-    if scenario_id not in state_manager.scenarios:
+    if scenario_id not in _ctrl.state_manager.scenarios:
         raise HTTPException(status_code=404, detail="Scenario not found")
-    return state_manager.scenarios[scenario_id]
+    return _ctrl.state_manager.scenarios[scenario_id]
 
 async def _fetch_raw_from_sources(sources: list[str]) -> Any | None:
     """Try each URL in order and return the first valid JSON response, or None."""
@@ -102,7 +94,7 @@ async def fetch_scenarios(source: str = "http://localhost:8100/connect-data/test
     ]
     raw = await _fetch_raw_from_sources(sources)
     if raw is None:
-        return list(state_manager.scenarios.values())
+        return list(_ctrl.state_manager.scenarios.values())
 
     rows = raw.get("rows") if isinstance(raw, dict) else raw
     out = []
@@ -114,12 +106,12 @@ async def fetch_scenarios(source: str = "http://localhost:8100/connect-data/test
             if not scenario:
                 continue
             # Don't overwrite local scenarios with goals - they are authoritative
-            if scenario.id in state_manager.scenarios:
-                existing = state_manager.scenarios[scenario.id]
+            if scenario.id in _ctrl.state_manager.scenarios:
+                existing = _ctrl.state_manager.scenarios[scenario.id]
                 if existing.goals:
                     out.append(existing.model_dump())
                     continue
-            state_manager.scenarios[scenario.id] = scenario
+            _ctrl.state_manager.scenarios[scenario.id] = scenario
             out.append(scenario.model_dump())
     return out
 
@@ -195,12 +187,12 @@ def _parse_goals_from_dsl(goals_dsl: list[str], sid: str, parse_fn) -> list[Goal
 
 def _merge_goals_into_scenario(sid: str, item: dict[str, Any], parsed_goals: list[Goal]) -> None:
     """Merge parsed goals into an existing scenario or create a new one."""
-    scenario = state_manager.scenarios.get(sid)
+    scenario = _ctrl.state_manager.scenarios.get(sid)
     if scenario:
         scenario.goals = (scenario.goals or []) + parsed_goals
-        state_manager.scenarios[sid] = scenario
+        _ctrl.state_manager.scenarios[sid] = scenario
     else:
-        state_manager.scenarios[sid] = Scenario(
+        _ctrl.state_manager.scenarios[sid] = Scenario(
             id=sid,
             name=str(item.get('name') or sid),
             description=str(item.get('description') or ''),
@@ -212,7 +204,7 @@ def _merge_goals_into_scenario(sid: str, item: dict[str, Any], parsed_goals: lis
         )
 
 def _register_single_dsl_scenario(item: dict[str, Any], parse_fn) -> str | None:
-    """Parse DSL strings from one payload item and merge into state_manager.
+    """Parse DSL strings from one payload item and merge into _ctrl.state_manager.
     Returns the scenario id on success, or None."""
     sid = str(item.get('id') or item.get('scenarioId') or '').strip()
     if not sid:

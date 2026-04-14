@@ -15,6 +15,55 @@ _SAFE_OPS = {
     ast.NotEq: operator.ne,
 }
 
+def _resolve_compare(node: ast.Compare, context: dict[str, Any]) -> bool:
+    """Resolve a Compare node (a < b, chained comparisons)."""
+    left = _safe_resolve(node.left, context)
+    for op, comparator in zip(node.ops, node.comparators):
+        right = _safe_resolve(comparator, context)
+        fn = _SAFE_OPS.get(type(op))
+        if fn is None:
+            raise ValueError(f"Unsupported comparison operator: {type(op).__name__}")
+        if not fn(left, right):
+            return False
+        left = right
+    return True
+
+
+def _resolve_name_or_attr(node: Any, context: dict[str, Any]) -> Any:
+    """Resolve Name or Attribute nodes against context."""
+    if isinstance(node, ast.Name):
+        if node.id in context:
+            return context[node.id]
+        raise ValueError(f"Unknown variable: {node.id}")
+    # ast.Attribute
+    obj = _safe_resolve(node.value, context)
+    if hasattr(obj, node.attr):
+        return getattr(obj, node.attr)
+    raise ValueError(f"Object has no attribute '{node.attr}'")
+
+
+def _safe_resolve(node: Any, context: dict[str, Any]) -> Any:
+    """Resolve a single AST node against *context*."""
+    if isinstance(node, ast.Constant) and isinstance(node.value, (int, float, bool)):
+        return node.value
+    if isinstance(node, ast.UnaryOp):
+        if isinstance(node.op, (ast.USub, ast.UAdd)):
+            operand = _safe_resolve(node.operand, context)
+            return -operand if isinstance(node.op, ast.USub) else operand
+        if isinstance(node.op, ast.Not):
+            return not _safe_resolve(node.operand, context)
+    if isinstance(node, (ast.Name, ast.Attribute)):
+        return _resolve_name_or_attr(node, context)
+    if isinstance(node, ast.Compare):
+        return _resolve_compare(node, context)
+    if isinstance(node, ast.BoolOp):
+        if isinstance(node.op, ast.And):
+            return all(_safe_resolve(v, context) for v in node.values)
+        if isinstance(node.op, ast.Or):
+            return any(_safe_resolve(v, context) for v in node.values)
+    raise ValueError(f"Unsupported expression node: {type(node).__name__}")
+
+
 def safe_eval_condition(expr: str, context: dict[str, Any]) -> bool:
     """Evaluate a simple comparison expression without using eval().
 
@@ -31,49 +80,7 @@ def safe_eval_condition(expr: str, context: dict[str, Any]) -> bool:
     except SyntaxError as e:
         raise ValueError(f"Invalid expression syntax: {e}") from e
 
-    def _resolve(node):
-        # Numeric literal
-        if isinstance(node, ast.Constant) and isinstance(node.value, (int, float, bool)):
-            return node.value
-        # Negative number: -X
-        if isinstance(node, ast.UnaryOp) and isinstance(node.op, (ast.USub, ast.UAdd)):
-            operand = _resolve(node.operand)
-            return -operand if isinstance(node.op, ast.USub) else operand
-        # Bare name
-        if isinstance(node, ast.Name):
-            if node.id in context:
-                return context[node.id]
-            raise ValueError(f"Unknown variable: {node.id}")
-        # Dotted attribute (e.g. nc_sensor.currentValue)
-        if isinstance(node, ast.Attribute):
-            obj = _resolve(node.value)
-            if hasattr(obj, node.attr):
-                return getattr(obj, node.attr)
-            raise ValueError(f"Object has no attribute '{node.attr}'")
-        # Comparison: a < b, a >= b, chained comparisons
-        if isinstance(node, ast.Compare):
-            left = _resolve(node.left)
-            for op, comparator in zip(node.ops, node.comparators):
-                right = _resolve(comparator)
-                fn = _SAFE_OPS.get(type(op))
-                if fn is None:
-                    raise ValueError(f"Unsupported comparison operator: {type(op).__name__}")
-                if not fn(left, right):
-                    return False
-                left = right
-            return True
-        # BoolOp: and / or
-        if isinstance(node, ast.BoolOp):
-            if isinstance(node.op, ast.And):
-                return all(_resolve(v) for v in node.values)
-            if isinstance(node.op, ast.Or):
-                return any(_resolve(v) for v in node.values)
-        # Not
-        if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.Not):
-            return not _resolve(node.operand)
-        raise ValueError(f"Unsupported expression node: {type(node).__name__}")
-
-    return bool(_resolve(tree.body))
+    return bool(_safe_resolve(tree.body, context))
 
 logger = logging.getLogger(__name__)
 

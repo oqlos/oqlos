@@ -61,20 +61,16 @@ class CqlInterpreter(BaseInterpreter):
     def parse(self, source: str, filename: str = "<string>") -> CqlDocument:
         return parse_cql(source, filename)
 
-    def execute(self, parsed: CqlDocument) -> ScriptResult:
-        doc = parsed
-        t0 = time.monotonic()
-
-        # Header
-        name = doc.metadata.scenario_name or doc.filename
+    def _print_header(self, doc: CqlDocument, name: str) -> None:
+        """Print execution header with metadata."""
         self.out.step("📋", f"CQL: {name}")
         if doc.metadata.device_type:
             self.out.step("🔧", f"Device: {doc.metadata.device_type} / {doc.metadata.device_model}")
         if doc.intervals:
             self.out.step("⏱️ ", f"Intervals: {len(doc.intervals)}")
 
-        # Validate
-        issues = validate_cql(doc)
+    def _collect_warnings(self, doc: CqlDocument, issues: list[str]) -> None:
+        """Collect and emit warnings from document and validation issues."""
         for w in doc.warnings:
             self.warnings.append(w)
             self.out.warn(w)
@@ -82,37 +78,43 @@ class CqlInterpreter(BaseInterpreter):
             self.warnings.append(issue)
             self.out.warn(issue)
 
-        if self.mode == "validate":
-            ok = len(issues) == 0
-            return ScriptResult(
-                source=name, ok=ok, steps=self.results,
-                variables=self.vars.all(), errors=self.errors,
-                warnings=self.warnings, duration_ms=(time.monotonic() - t0) * 1000,
-            )
+    def _run_validation_mode(self, name: str, issues: list[str], t0: float) -> ScriptResult:
+        """Return early result for validate mode."""
+        ok = len(issues) == 0
+        return ScriptResult(
+            source=name, ok=ok, steps=self.results,
+            variables=self.vars.all(), errors=self.errors,
+            warnings=self.warnings, duration_ms=(time.monotonic() - t0) * 1000,
+        )
 
-        # Auto-mock: seed sensor values from condition ranges
-        if self._auto_mock:
-            self._seed_sensors_from_conditions(doc)
-
-        # Collect all goals
+    def _collect_all_goals(self, doc: CqlDocument) -> list[tuple[str, CqlGoal]]:
+        """Collect all goals from document and scenarios."""
         all_goals: list[tuple[str, CqlGoal]] = []
         for g in doc.goals:
             all_goals.append(("", g))
         for sc in doc.scenarios:
             for g in sc.goals:
                 all_goals.append((sc.name, g))
+        return all_goals
 
-        # Execute goals
+    def _execute_single_goal(self, sc_name: str, goal: CqlGoal) -> None:
+        """Execute all steps in a single goal."""
+        prefix = f"{sc_name}/" if sc_name else ""
+        self.out.step("🎯", f"GOAL: {prefix}{goal.name}")
+        if goal.description:
+            self.out.info(f"  {goal.description}")
+
+        for step in goal.steps:
+            result = self._execute_step(step, goal)
+            self.results.append(result)
+
+    def _execute_all_goals(self, all_goals: list[tuple[str, CqlGoal]]) -> None:
+        """Execute all collected goals."""
         for sc_name, goal in all_goals:
-            prefix = f"{sc_name}/" if sc_name else ""
-            self.out.step("🎯", f"GOAL: {prefix}{goal.name}")
-            if goal.description:
-                self.out.info(f"  {goal.description}")
+            self._execute_single_goal(sc_name, goal)
 
-            for step in goal.steps:
-                result = self._execute_step(step, goal)
-                self.results.append(result)
-
+    def _build_script_result(self, name: str, t0: float) -> ScriptResult:
+        """Build final script execution result."""
         elapsed = (time.monotonic() - t0) * 1000
         ok = all(r.status in (StepStatus.PASSED, StepStatus.SKIPPED) for r in self.results)
         sr = ScriptResult(
@@ -123,6 +125,28 @@ class CqlInterpreter(BaseInterpreter):
         self.out.emit("")
         self.out.emit(sr.summary())
         return sr
+
+    def execute(self, parsed: CqlDocument) -> ScriptResult:
+        """Execute CQL document through all phases: header, validate, execute, result."""
+        doc = parsed
+        t0 = time.monotonic()
+        name = doc.metadata.scenario_name or doc.filename
+
+        self._print_header(doc, name)
+
+        issues = validate_cql(doc)
+        self._collect_warnings(doc, issues)
+
+        if self.mode == "validate":
+            return self._run_validation_mode(name, issues, t0)
+
+        if self._auto_mock:
+            self._seed_sensors_from_conditions(doc)
+
+        all_goals = self._collect_all_goals(doc)
+        self._execute_all_goals(all_goals)
+
+        return self._build_script_result(name, t0)
 
     def _execute_step(self, step: CqlStep, goal: CqlGoal) -> StepResult:
         t0 = time.monotonic()
@@ -151,117 +175,146 @@ class CqlInterpreter(BaseInterpreter):
         )
 
     def _execute_action(self, act: CqlAction) -> StepStatus:
-        if act.kind == "action":
-            if self.mode == "execute":
-                return self._execute_firmware_action(act)
-            self.out.step("    →", f"{act.target}.{act.method} {act.args}")
-            return StepStatus.PASSED
+        """Dispatch a CQL action to the appropriate handler."""
+    # ── Action dispatch table ───────────────────────────────────────
 
-        if act.kind == "task":
-            self.out.step("    🔨", act.args)
-            return StepStatus.PASSED
+    def _exec_action_action(self, act: CqlAction) -> StepStatus:
+        if self.mode == "execute":
+            return self._execute_firmware_action(act)
+        self.out.step("    →", f"{act.target}.{act.method} {act.args}")
+        return StepStatus.PASSED
 
-        # PUMP action removed - now handled as SET 'pompa'
-        if act.kind == "set":
-            value = (act.args or "").strip()
-            target_lower = (act.target or "").strip().lower()
-            self.vars.set(act.target, value)
+    def _exec_action_task(self, act: CqlAction) -> StepStatus:
+        self.out.step("    🔨", act.args)
+        return StepStatus.PASSED
 
-            if target_lower in {"wait", "delay", "pause", "timeout"}:
-                try:
-                    import re as _re
-                    match = _re.search(r"[-+]?\d*\.?\d+", value.replace(",", "."))
-                    secs = float(match.group(0)) if match else 0.0
-                    if "ms" in value.lower():
-                        secs = secs / 1000.0
-                except Exception:
-                    secs = 0.0
-                if self.mode == "dry-run":
-                    self.out.step("    ⏳", f"SET [{act.target}] = [{value}] (simulated)")
-                elif self._skip_waits:
-                    self.out.step("    ⏳", f"SET [{act.target}] = [{value}] (skipped)")
-                else:
-                    import asyncio
-                    try:
-                        loop = asyncio.get_event_loop()
-                        if loop.is_running():
-                            self.out.step("    ⏳", f"SET [{act.target}] = [{value}] (skipped in sync)")
-                        else:
-                            loop.run_until_complete(asyncio.sleep(max(secs, 0.0)))
-                            self.out.step("    ⏳", f"SET [{act.target}] = [{value}]")
-                    except RuntimeError:
-                        time.sleep(max(secs, 0.0))
-                        self.out.step("    ⏳", f"SET [{act.target}] = [{value}]")
-                return StepStatus.PASSED
+    def _exec_action_set(self, act: CqlAction) -> StepStatus:
+        value = (act.args or "").strip()
+        target_lower = (act.target or "").strip().lower()
+        self.vars.set(act.target, value)
 
-            if self.mode == "execute":
-                if any(token in target_lower for token in ("zawór", "zawor", "valve", "pompa", "pump", "sprężarka", "sprezarka", "compressor")):
-                    fw = self._get_firmware()
-                    normalized_value = value
-                    lowered = value.lower()
-                    if lowered in {"on", "true"}:
-                        normalized_value = 1
-                    elif lowered in {"off", "false"}:
-                        normalized_value = 0
-                    else:
-                        try:
-                            import re as _re
-                            match = _re.search(r"[-+]?\d*\.?\d+", value.replace(",", "."))
-                            if match:
-                                num = float(match.group(0))
-                                normalized_value = int(num) if num.is_integer() else num
-                        except Exception:
-                            normalized_value = value
-                    try:
-                        fw.set_peripheral(act.target or "", normalized_value)
-                    except Exception as exc:
-                        self.errors.append(str(exc))
-                        self.out.error(str(exc))
-                        return StepStatus.ERROR
-            self.out.step("    ⚙️", f"SET [{act.target}] = [{value}]")
-            return StepStatus.PASSED
+        if target_lower in {"wait", "delay", "pause", "timeout"}:
+            return self._exec_set_wait(act, value)
 
-        if act.kind == "save":
-            val = self.sensor_values.get(act.target, 0.0) if act.target.startswith("AI") else "OK"
-            self.vars.set(act.target, val)
-            self.out.step("    💾", f"SAVE {act.target} = {val}")
-            return StepStatus.PASSED
+        if self.mode == "execute":
+            if any(token in target_lower for token in ("zawór", "zawor", "valve", "pompa", "pump", "sprężarka", "sprezarka", "compressor")):
+                result = self._exec_set_peripheral(act, value)
+                if result is not None:
+                    return result
+        self.out.step("    ⚙️", f"SET [{act.target}] = [{value}]")
+        return StepStatus.PASSED
 
-        if act.kind == "wait":
-            secs = float(act.args)
-            if self.mode == "dry-run":
-                self.out.step("    ⏳", f"WAIT {secs}s (simulated)")
-            elif self._skip_waits:
-                self.out.step("    ⏳", f"WAIT {secs}s (skipped)")
+    def _exec_set_wait(self, act: CqlAction, value: str) -> StepStatus:
+        secs = self._parse_wait_secs(value)
+        if self.mode == "dry-run":
+            self.out.step("    ⏳", f"SET [{act.target}] = [{value}] (simulated)")
+        elif self._skip_waits:
+            self.out.step("    ⏳", f"SET [{act.target}] = [{value}] (skipped)")
+        else:
+            self._do_sleep(secs, f"SET [{act.target}] = [{value}]")
+        return StepStatus.PASSED
+
+    def _exec_set_peripheral(self, act: CqlAction, value: str) -> StepStatus | None:
+        fw = self._get_firmware()
+        normalized_value: Any = value
+        lowered = value.lower()
+        if lowered in {"on", "true"}:
+            normalized_value = 1
+        elif lowered in {"off", "false"}:
+            normalized_value = 0
+        else:
+            try:
+                import re as _re
+                match = _re.search(r"[-+]?\d*\.?\d+", value.replace(",", "."))
+                if match:
+                    num = float(match.group(0))
+                    normalized_value = int(num) if num.is_integer() else num
+            except Exception:
+                normalized_value = value
+        try:
+            fw.set_peripheral(act.target or "", normalized_value)
+        except Exception as exc:
+            self.errors.append(str(exc))
+            self.out.error(str(exc))
+            return StepStatus.ERROR
+        return None
+
+    def _exec_action_save(self, act: CqlAction) -> StepStatus:
+        val = self.sensor_values.get(act.target, 0.0) if act.target.startswith("AI") else "OK"
+        self.vars.set(act.target, val)
+        self.out.step("    💾", f"SAVE {act.target} = {val}")
+        return StepStatus.PASSED
+
+    @staticmethod
+    def _parse_wait_secs(raw: str) -> float:
+        """Parse a WAIT value to seconds.  Default unit is ms."""
+        import re as _re
+        low = raw.lower().strip()
+        match = _re.search(r"[-+]?\d*\.?\d+", low.replace(",", "."))
+        if not match:
+            return 0.0
+        num = float(match.group(0))
+        if "s" in low and "ms" not in low:
+            return num  # explicit seconds
+        # bare number or explicit "ms" → milliseconds
+        return num / 1000.0
+
+    def _exec_action_wait(self, act: CqlAction) -> StepStatus:
+        secs = self._parse_wait_secs(act.args)
+        if self.mode == "dry-run":
+            self.out.step("    ⏳", f"WAIT {secs}s (simulated)")
+        elif self._skip_waits:
+            self.out.step("    ⏳", f"WAIT {secs}s (skipped)")
+        else:
+            self._do_sleep(secs, f"WAIT {secs}s")
+        return StepStatus.PASSED
+
+    def _exec_action_min_max(self, act: CqlAction) -> StepStatus:
+        self.out.step("    📏", f"{act.kind.upper()} [{act.target}] = {act.args}")
+        return StepStatus.PASSED
+
+    def _exec_action_val(self, act: CqlAction) -> StepStatus:
+        sensor = act.target
+        val = self.sensor_values.get(sensor, 0.0)
+        self.vars.set(sensor, val)
+        self.out.step("    📊", f"VAL [{sensor}] = {val} {act.args}")
+        return StepStatus.PASSED
+
+    def _exec_action_condition(self, act: CqlAction) -> StepStatus:
+        if self.mode == "execute":
+            self._refresh_sensors_from_firmware()
+        return self._evaluate_condition(act)
+
+    def _do_sleep(self, secs: float, label: str) -> None:
+        import asyncio
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                self.out.step("    ⏳", f"{label} (skipped in sync)")
             else:
-                import asyncio
-                try:
-                    loop = asyncio.get_event_loop()
-                    if loop.is_running():
-                        self.out.step("    ⏳", f"WAIT {secs}s (skipped in sync)")
-                    else:
-                        loop.run_until_complete(asyncio.sleep(secs))
-                except RuntimeError:
-                    time.sleep(secs)
-                self.out.step("    ⏳", f"WAIT {secs}s")
-            return StepStatus.PASSED
+                loop.run_until_complete(asyncio.sleep(max(secs, 0.0)))
+                self.out.step("    ⏳", label)
+        except RuntimeError:
+            time.sleep(max(secs, 0.0))
+            self.out.step("    ⏳", label)
 
-        if act.kind in ("min", "max"):
-            self.out.step("    📏", f"{act.kind.upper()} [{act.target}] = {act.args}")
-            return StepStatus.PASSED
+    _ACTION_DISPATCH: dict[str, str] = {
+        "action": "_exec_action_action",
+        "task": "_exec_action_task",
+        "set": "_exec_action_set",
+        "save": "_exec_action_save",
+        "wait": "_exec_action_wait",
+        "min": "_exec_action_min_max",
+        "max": "_exec_action_min_max",
+        "val": "_exec_action_val",
+        "condition": "_exec_action_condition",
+        "if_else": "_exec_action_condition",
+    }
 
-        if act.kind == "val":
-            sensor = act.target
-            val = self.sensor_values.get(sensor, 0.0)
-            self.vars.set(sensor, val)
-            self.out.step("    📊", f"VAL [{sensor}] = {val} {act.args}")
-            return StepStatus.PASSED
-
-        if act.kind in ("condition", "if_else"):
-            if self.mode == "execute":
-                self._refresh_sensors_from_firmware()
-            return self._evaluate_condition(act)
-
+    def _execute_action(self, act: CqlAction) -> StepStatus:
+        method_name = self._ACTION_DISPATCH.get(act.kind)
+        if method_name is not None:
+            return getattr(self, method_name)(act)
         return StepStatus.PASSED
 
     # Operator → seed value factory for _seed_sensors_from_conditions
@@ -315,7 +368,13 @@ class CqlInterpreter(BaseInterpreter):
     def _get_firmware(self):
         """Lazy-init firmware adapter."""
         if self._firmware is None:
-            from ..firmware_adapter import FirmwareAdapter
+            try:
+                from oqlos.hardware.firmware_adapter import FirmwareAdapter
+            except ImportError:
+                raise RuntimeError(
+                    "FirmwareAdapter not available — install oqlos with firmware extras "
+                    "or run inside the c2004 monorepo"
+                )
             self._firmware = FirmwareAdapter(base_url=self._firmware_url)
         return self._firmware
 

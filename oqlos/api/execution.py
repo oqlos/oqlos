@@ -7,27 +7,16 @@ from typing import Any
 
 from oqlos.models.execution import ExecutionRequest
 from oqlos.models.scenario import Step
-from oqlos.core.state import StateManager
-from oqlos.core.executor import ScenarioOrchestrator
+from oqlos.api.utils import execution_ctrl as _ctrl
 
 router = APIRouter(prefix="/api/v1/execution", tags=["execution"])
-
-# Will be set during app initialization
-state_manager: StateManager = None
-orchestrator: ScenarioOrchestrator = None
-
-def set_dependencies(sm: StateManager, orch: ScenarioOrchestrator):
-    """Set the dependencies"""
-    global state_manager, orchestrator
-    state_manager = sm
-    orchestrator = orch
 
 def _resolve_step_label(scenario_id: str, goal_id: str | None, step_id: str | None) -> str | None:
     """Look up the human-readable label for a step within a scenario.
     Returns None when the step cannot be found."""
     if not scenario_id or not step_id:
         return None
-    sc = state_manager.scenarios.get(scenario_id)
+    sc = _ctrl.state_manager.scenarios.get(scenario_id)
     if not sc:
         return None
     for g in (sc.goals or []):
@@ -42,7 +31,7 @@ def _flatten_steps_for_scenario(scenario_id: str | None) -> list[Step]:
     out: list[Step] = []
     if not scenario_id:
         return out
-    sc = state_manager.scenarios.get(scenario_id)
+    sc = _ctrl.state_manager.scenarios.get(scenario_id)
     if not sc or not isinstance(sc.goals, list):
         return out
     for g in sc.goals:
@@ -83,12 +72,12 @@ def _resolve_current_index(exec_obj, sc) -> int:
 
 def _current_projection() -> dict[str, Any]:
     """Get current execution projection"""
-    exec_obj = orchestrator.current_execution
+    exec_obj = _ctrl.orchestrator.current_execution
     status = exec_obj.status if exec_obj else 'idle'
     progress = exec_obj.progress if exec_obj else 0
     scenario_id = exec_obj.scenarioId if exec_obj else ''
 
-    sc = state_manager.scenarios.get(scenario_id) if scenario_id else None
+    sc = _ctrl.state_manager.scenarios.get(scenario_id) if scenario_id else None
     return {
         'status': status,
         'progress': progress,
@@ -105,7 +94,7 @@ async def start_execution(request: ExecutionRequest):
         if request.content and request.content.get('dsl'):
             _register_dsl_scenario(request.scenarioId, request.content['dsl'])
         
-        execution_id = await orchestrator.execute_scenario(
+        execution_id = await _ctrl.orchestrator.execute_scenario(
             scenario_id=request.scenarioId,
             goals=request.goals,
             mode=request.mode,
@@ -134,19 +123,19 @@ async def execute_step(payload: dict[str, Any]):
         raise HTTPException(status_code=400, detail="scenarioId and step are required")
 
     # If no active execution, start one implicitly
-    if execution_id and execution_id in state_manager.executions:
-        exec_obj = state_manager.executions[execution_id]
-    elif orchestrator.current_execution:
-        exec_obj = orchestrator.current_execution
+    if execution_id and execution_id in _ctrl.state_manager.executions:
+        exec_obj = _ctrl.state_manager.executions[execution_id]
+    elif _ctrl.orchestrator.current_execution:
+        exec_obj = _ctrl.orchestrator.current_execution
         execution_id = exec_obj.executionId
     else:
-        execution_id = await orchestrator.execute_scenario(
+        execution_id = await _ctrl.orchestrator.execute_scenario(
             scenario_id=scenario_id,
             goals=[],
             mode="step",
             speed=1.0,
         )
-        exec_obj = state_manager.executions.get(execution_id)
+        exec_obj = _ctrl.state_manager.executions.get(execution_id)
 
     # Build a Step model and delegate to orchestrator
     step = Step(
@@ -155,7 +144,7 @@ async def execute_step(payload: dict[str, Any]):
         peripheral=step_data.get("peripheral"),
         value=step_data.get("value"),
     )
-    result = await orchestrator.execute_single_step(step) if hasattr(orchestrator, 'execute_single_step') else {"status": "executed", "step": step_data}
+    result = await _ctrl.orchestrator.execute_single_step(step) if hasattr(orchestrator, 'execute_single_step') else {"status": "executed", "step": step_data}
 
     return {
         "executionId": execution_id,
@@ -185,44 +174,35 @@ def _register_dsl_scenario(scenario_id: str, dsl_content: str):
             slug=scenario_id,
             goals=[goal]
         )
-        state_manager.scenarios[scenario_id] = scenario
+        _ctrl.state_manager.scenarios[scenario_id] = scenario
 
 @router.post("/{execution_id}/pause")
 async def pause_execution(execution_id: str):
     """Pause execution"""
-    if execution_id not in state_manager.executions:
+    if execution_id not in _ctrl.state_manager.executions:
         raise HTTPException(status_code=404, detail="Execution not found")
-    
-    orchestrator.paused = True
-    state_manager.executions[execution_id].status = 'paused'
-    return {"status": "paused"}
+    return _ctrl.do_pause(execution_id)
 
 @router.post("/{execution_id}/resume")
 async def resume_execution(execution_id: str):
     """Resume execution"""
-    if execution_id not in state_manager.executions:
+    if execution_id not in _ctrl.state_manager.executions:
         raise HTTPException(status_code=404, detail="Execution not found")
-    
-    orchestrator.paused = False
-    state_manager.executions[execution_id].status = 'running'
-    return {"status": "running"}
+    return _ctrl.do_resume(execution_id)
 
 @router.post("/{execution_id}/stop")
 async def stop_execution(execution_id: str):
     """Stop execution"""
-    if execution_id not in state_manager.executions:
+    if execution_id not in _ctrl.state_manager.executions:
         raise HTTPException(status_code=404, detail="Execution not found")
-    
-    orchestrator.running = False
-    state_manager.executions[execution_id].status = 'stopped'
-    return {"status": "stopped"}
+    return _ctrl.do_stop(execution_id)
 
 @router.get("/by-id/{execution_id}")
 async def get_execution(execution_id: str):
     """Get execution status"""
-    if execution_id not in state_manager.executions:
+    if execution_id not in _ctrl.state_manager.executions:
         raise HTTPException(status_code=404, detail="Execution not found")
-    return state_manager.executions[execution_id]
+    return _ctrl.state_manager.executions[execution_id]
 
 @router.get("/projection")
 async def get_execution_projection():
@@ -232,7 +212,7 @@ async def get_execution_projection():
 @router.get("/status")
 async def get_execution_status():
     """Return textual logs and status for polling fallback when SSE is unavailable."""
-    exec_obj = orchestrator.current_execution
+    exec_obj = _ctrl.orchestrator.current_execution
     if not exec_obj:
         return {
             "status": "idle",
@@ -257,7 +237,7 @@ async def get_execution_status():
 @router.get("/logs")
 async def get_execution_logs():
     """Return execution logs for frontend polling."""
-    exec_obj = orchestrator.current_execution
+    exec_obj = _ctrl.orchestrator.current_execution
     if not exec_obj:
         return {
             "logs": [],
@@ -282,27 +262,21 @@ async def get_execution_logs():
 # Legacy control endpoints without execution_id (frontend fallback)
 @router.post("/pause")
 async def pause_execution_legacy():
-    if not orchestrator.current_execution:
+    if not _ctrl.orchestrator.current_execution:
         raise HTTPException(status_code=404, detail="No current execution")
-    orchestrator.paused = True
-    orchestrator.current_execution.status = 'paused'
-    return {"status": "paused"}
+    return _ctrl.do_pause()
 
 @router.post("/resume")
 async def resume_execution_legacy():
-    if not orchestrator.current_execution:
+    if not _ctrl.orchestrator.current_execution:
         raise HTTPException(status_code=404, detail="No current execution")
-    orchestrator.paused = False
-    orchestrator.current_execution.status = 'running'
-    return {"status": "running"}
+    return _ctrl.do_resume()
 
 @router.post("/stop")
 async def stop_execution_legacy():
-    if not orchestrator.current_execution:
+    if not _ctrl.orchestrator.current_execution:
         raise HTTPException(status_code=404, detail="No current execution")
-    orchestrator.running = False
-    orchestrator.current_execution.status = 'stopped'
-    return {"status": "stopped"}
+    return _ctrl.do_stop()
 
 # ============= Streaming Endpoints =============
 
@@ -346,7 +320,7 @@ async def execution_logs_stream(scenario: str | None = None):
         yield f"data: {json.dumps({'type': 'log', 'message': f'🔗 Connected to logs stream for scenario: {scenario_name}'})}\n\n"
         
         # Get current execution logs
-        exec_obj = orchestrator.current_execution
+        exec_obj = _ctrl.orchestrator.current_execution
         if exec_obj:
             # Resolve current step label if available
             step_label = _resolve_step_label(exec_obj.scenarioId, exec_obj.currentGoal, exec_obj.currentStep)
@@ -367,8 +341,8 @@ async def execution_logs_stream(scenario: str | None = None):
         
         # Stream periodic updates for 30 seconds
         for i in range(30):
-            if orchestrator.current_execution:
-                exec_obj = orchestrator.current_execution
+            if _ctrl.orchestrator.current_execution:
+                exec_obj = _ctrl.orchestrator.current_execution
                 log_message = f"⏱️ {i+1}s - Status: {exec_obj.status} | Progress: {exec_obj.progress:.1f}%"
                 
                 if exec_obj.currentStep:

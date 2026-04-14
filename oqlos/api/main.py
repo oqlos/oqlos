@@ -25,10 +25,7 @@ from oqlos.api import (
     version_router,
     hardware_router,
 )
-from oqlos.api.scenarios import set_state_manager as set_scenarios_state_manager
-from oqlos.api.peripherals import set_state_manager as set_peripherals_state_manager
-from oqlos.api.execution import set_dependencies as set_execution_dependencies
-from oqlos.api.state import set_dependencies as set_state_dependencies
+from oqlos.api.utils.execution_ctrl import set_dependencies as set_shared_dependencies
 from oqlos.api.hardware import set_hardware_gateway
 from oqlos.utils import load_sample_scenarios
 from oqlos.config import FIRMWARE_PORT, SERVICE_NAME, SERVICE_VERSION
@@ -68,11 +65,8 @@ hardware = HardwareGateway()
 state_manager = StateManager()
 orchestrator = ScenarioOrchestrator(state_manager, hardware)
 
-# Set dependencies for API modules
-set_scenarios_state_manager(state_manager)
-set_peripherals_state_manager(state_manager)
-set_execution_dependencies(state_manager, orchestrator)
-set_state_dependencies(state_manager, orchestrator)
+# Set dependencies for API modules — single shared injection point
+set_shared_dependencies(state_manager, orchestrator)
 set_hardware_gateway(hardware)
 
 # Include API routers
