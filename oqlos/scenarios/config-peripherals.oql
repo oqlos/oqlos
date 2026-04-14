@@ -1,0 +1,114 @@
+SCENARIO: 'Konfiguracja Peryferii'
+DEVICE_TYPE: 'BA'
+DEVICE_MODEL: 'PSS 7000'
+MANUFACTURER: 'Dräger'
+
+# ============================================
+# KONFIGURACJA POMPY
+# ============================================
+GOAL: INIT Pompa
+  # Wyłączenie pompy na start (bezpieczeństwo)
+  SET 'pump-main' '0'
+  SET 'pompa 1' '0'
+  SET 'PUMP' 'off'
+  WAIT 500
+
+# ============================================
+# KONFIGURACJA ZAWORÓW - Inicjalizacja pozycji
+# ============================================
+GOAL: INIT Zawory NC (Normally Closed)
+  # Zawór NC - domyślnie zamknięty
+  SET 'valve-nc' '0'
+  SET 'zawór NC' 'closed'
+  SET 'zawór izolacyjny' 'closed'
+  WAIT 300
+
+GOAL: INIT Zawory SC (Smoke Circuit)
+  # Zawór SC - domyślnie zamknięty
+  SET 'valve-sc' '0'
+  SET 'zawór SC' 'closed'
+  SET 'zawór wlotowy' 'closed'
+  WAIT 300
+
+GOAL: INIT Zawory WC (Water Circuit)
+  # Zawór WC - domyślnie zamknięty
+  SET 'valve-wc' '0'
+  SET 'zawór WC' 'closed'
+  SET 'zawór wylotowy' 'closed'
+  WAIT 300
+
+GOAL: INIT Zawory ogólne (valve-1 do valve-8)
+  # Wszystkie zawory na pozycję zamkniętą
+  SET 'valve-1' '0'
+  SET 'valve-2' '0'
+  SET 'valve-3' '0'
+  SET 'valve-4' '0'
+  SET 'valve-5' '0'
+  SET 'valve-6' '0'
+  SET 'valve-7' '0'
+  SET 'valve-8' '0'
+  WAIT 500
+
+# ============================================
+# KONFIGURACJA CZUJNIKÓW - Kalibracja
+# ============================================
+GOAL: INIT Czujniki ciśnienia
+  # Czujniki są inicjalizowane automatycznie przez piadc
+  # Odczyt wartości bazowych (opcjonalnie)
+  # → Sensor.read AI01
+  # → Sensor.read AI02
+  # → Sensor.read AI03
+  SAVE: kalibracja_bazowa
+  WAIT 500
+
+# ============================================
+# WERYFIKACJA KONFIGURACJI
+# ============================================
+GOAL: VERIFY Wszystkie zawory zamknięte
+  # Weryfikacja przez ponowne wysłanie komendy zamknięcia
+  # (weryfikacja odczytem stanu wymaga rozszerzenia parsera)
+  SET 'valve-nc' 'closed'
+  SET 'valve-sc' 'closed'
+  SET 'valve-wc' 'closed'
+  WAIT 200
+  SAVE: zawory_zamkniete
+
+GOAL: VERIFY Pompa wyłączona
+  # Weryfikacja przez ponowne wysłanie komendy wyłączenia
+  # (weryfikacja odczytem stanu wymaga rozszerzenia parsera)
+  SET 'pump-main' '0'
+  SET 'pompa 1' '0'
+  SET 'PUMP' 'off'
+  WAIT 200
+  SAVE: pompa_wylaczona
+
+# ============================================
+# STANY GOTOWOŚCI SYSTEMU
+# ============================================
+GOAL: STATE Ready - System gotowy do pracy
+  # Wszystkie systemy zainicjalizowane
+  SAVE: system_ready
+  WAIT 1000
+
+# ============================================
+# PRZYKŁADY KONFIGURACJI SPECJALNEJ
+# ============================================
+GOAL: CONFIG Tryb kalibracji
+  # Otwarcie wszystkich zaworów do kalibracji
+  SET 'valve-nc' 'open'
+  SET 'valve-sc' 'open'
+  SET 'valve-wc' 'open'
+  WAIT 1000
+  # Powrót do zamkniętej pozycji
+  SET 'valve-nc' 'closed'
+  SET 'valve-sc' 'closed'
+  SET 'valve-wc' 'closed'
+  SAVE: kalibracja_zakonczona
+
+GOAL: CONFIG Tryb testowy pompy
+  # Test pompy z niską mocą
+  SET 'pompa 1' '5 l/min'
+  WAIT 2000
+  # Stop
+  SET 'pompa 1' '0'
+  SAVE: test_pompy_ok

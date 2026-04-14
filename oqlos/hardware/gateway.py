@@ -173,28 +173,45 @@ class _ModbusAdapter:
             logger.info("[MODBUS STUB] coil %d → %s", coil, value)
             return True
         if self._mode == "rtu":
-            # Synchronous ModbusSerialClient (pymodbus 3.x)
+            return self._set_coil_rtu(coil, value)
+        else:
+            return await self._set_coil_tcp(coil, value)
+
+    def _set_coil_rtu(self, coil: int, value: bool, retries: int = 3) -> bool:
+        """Write coil via RTU with retry on transient serial errors."""
+        for attempt in range(1, retries + 1):
             try:
                 if not self._client.connected:
                     self._client.connect()
-                # Waveshare: write single coil (func 05), 0xFF00=ON, 0x0000=OFF
                 result = self._client.write_coil(address=coil, value=value, device_id=1)
                 ok = hasattr(result, 'function_code') and not getattr(result, 'isError', lambda: True)()
-                if not ok:
-                    logger.error("Modbus RTU write_coil(%d, %s) failed: %s", coil, value, result)
-                return ok
+                if ok:
+                    return True
+                logger.warning(
+                    "Modbus RTU write_coil(%d, %s) attempt %d/%d failed: %s",
+                    coil, value, attempt, retries, result,
+                )
             except Exception as exc:
-                logger.error("Modbus RTU error: %s", exc)
-                return False
-        else:
-            # TCP fallback (async)
-            await self._client.connect()
-            result = await self._client.write_coil(coil, value)
-            await self._client.close()
-            ok = not result.isError()
-            if not ok:
-                logger.error("Modbus TCP write_coil(%d, %s) failed: %s", coil, value, result)
-            return ok
+                logger.warning(
+                    "Modbus RTU error attempt %d/%d: %s", attempt, retries, exc,
+                )
+                # Reconnect on serial error
+                try:
+                    self._client.close()
+                except Exception:
+                    pass
+        logger.error("Modbus RTU write_coil(%d, %s) failed after %d retries", coil, value, retries)
+        return False
+
+    async def _set_coil_tcp(self, coil: int, value: bool) -> bool:
+        """Write coil via Modbus TCP fallback."""
+        await self._client.connect()
+        result = await self._client.write_coil(coil, value)
+        await self._client.close()
+        ok = not result.isError()
+        if not ok:
+            logger.error("Modbus TCP write_coil(%d, %s) failed: %s", coil, value, result)
+        return ok
 
     async def set_valve(self, valve_id: str, value: bool) -> bool:
         coil = _VALVE_COIL_MAP.get(valve_id)

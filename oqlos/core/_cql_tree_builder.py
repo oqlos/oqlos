@@ -17,6 +17,8 @@ from ._cql_tokenizer import (
     RE_SCENARIO,
     RE_GOAL_SIMPLE,
     RE_GOAL_NAMED,
+    RE_CONFIG_SIMPLE,
+    RE_CONFIG_NAMED,
     RE_STEP_NUM,
     _ACTION_PARSERS,
 )
@@ -69,6 +71,16 @@ def _parse_goal_line(
     stripped: str, line: str, indent: int, current_scenario: CqlScenario | None
 ) -> CqlGoal | None:
     """Parse GOAL: (simple CQL) or named goal (ConnectGo 2-space indent)."""
+    # CONFIG: blocks are treated as special configuration goals
+    m = RE_CONFIG_SIMPLE.match(stripped)
+    if m:
+        return CqlGoal(name=f"[CONFIG] {m.group(1).strip()}")
+
+    if indent == 2 and current_scenario:
+        m = RE_CONFIG_NAMED.match(line)
+        if m:
+            return CqlGoal(name=f"[CONFIG] {m.group(1).strip()}")
+
     m = RE_GOAL_SIMPLE.match(stripped)
     if m:
         return CqlGoal(name=m.group(1).strip())

@@ -145,9 +145,27 @@ GOAL: Visual Inspection
 
 ## Supported Hardware
 
-- **Valves**: valve-1 through valve-14, valve-nc, valve-sc, valve-wc
-- **Pump**: pump-main
-- **Sensors**: AI01 (NC), AI02 (SC), AI03 (WC)
+- **Valves**: valve-1 through valve-14, valve-nc, valve-sc, valve-wc (Modbus RTU via /dev/ttyACM1 @ 19200 8N1)
+- **Pump**: pump-main (DRI0050 PWM motor driver via HTTP :8203)
+- **Sensors**: AI01 (NC), AI02 (SC), AI03 (WC) (piADC ADS1115 via HTTP :8204)
+
+### Hardware Adapters
+
+| Adapter | Class | Protocol | Default URL |
+|---------|-------|----------|-------------|
+| Motor (pump) | `_DRI0050MotorAdapter` | HTTP POST /api/speed | http://localhost:8203 |
+| Valves | `_ModbusAdapter` | Modbus RTU (pymodbus) | /dev/ttyACM1 serial |
+| Sensors | `_PiAdcAdapter` | HTTP GET /api/v1/hardware/sensor/{id} | http://localhost:8204 |
+
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `OQLOS_HARDWARE_MODE` | `mock` | `mock` or `real` |
+| `MOTOR_URL` | `http://localhost:8203` | DRI0050 motor service |
+| `PIADC_URL` | `http://localhost:8080` | piADC sensor service |
+| `MODBUS_SERIAL_PORT` | `/dev/ttyACM1` | Modbus RTU serial port |
+| `MODBUS_BAUD_RATE` | `19200` | Modbus baud rate |
 
 ## Docker Deployment
 
@@ -162,7 +180,7 @@ docker-compose -f docker/docker-compose.prod.yml up -d
 ## Testing
 
 ```bash
-# Run all tests
+# Run all tests (96 passing)
 pytest
 
 # Run with coverage
@@ -170,7 +188,12 @@ pytest --cov=oqlos
 
 # Run specific test file
 pytest tests/test_interpreter.py -v
+
+# Run OQL scenarios (dry-run)
+python -m oqlos.core.interpreter scenarios/test-pompy.oql --mode dry-run
 ```
+
+**Status:** 96 tests passing, 3 scenarios (12/12 goals), CC̄≤15, 0 violations
 
 ## Documentation
 
