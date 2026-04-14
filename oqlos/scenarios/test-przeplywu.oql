@@ -1,0 +1,6 @@
+GOAL: Test przepływu
+  SET 'pompa 1' '1'
+  SET 'czas' '10 s'
+  WAIT '10 s'
+  VAL 'przepływ' 'l/min'
+  SET 'pompa 1' '0'

@@ -1,0 +1,4 @@
+GOAL: Sprawdzenie stanu wizualnego maski przed testem
+  SET 'Operator' 'confirm'
+  SAVE 'result'
+  SET 'Operator' 'confirm'

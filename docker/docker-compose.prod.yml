@@ -1,0 +1,20 @@
+version: "3.9"
+services:
+  oqlos-api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    command: oqlos-server --host 0.0.0.0 --port 8200
+    restart: unless-stopped
+    environment:
+      - OQLOS_ENV=production
+      - OQLOS_HARDWARE_MODE=real
+      - OQLOS_DB_PATH=/data/oqlos.db
+    volumes:
+      - oqlos-data:/data
+      - ../oqlos/scenarios:/scenarios:ro
+    ports:
+      - "8200:8200"
+
+volumes:
+  oqlos-data:

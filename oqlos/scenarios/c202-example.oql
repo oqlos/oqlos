@@ -1,0 +1,35 @@
+# C202 Example scenario
+# Category: other
+
+GOAL: Kontrola Wizualna
+  VAL 'wynik' 'OK/NOK'
+GOAL: Test Szczelności
+  VAL 'ciśnienie NC' 'mbar'
+  MIN 'ciśnienie NC' '-10 mbar'
+  MAX 'ciśnienie NC' '0 mbar'
+  SAVE 'ciśnienie NC'
+GOAL: Test Szczelności (stary sposób)
+  SET 'PUMP' '5l'
+  SET 'zawór BO06' '1'
+  SET 'timeout' '20 s'
+  SET 'timer' '0 s'
+  VAL 'ciśnienie NC' 'mbar'
+  MIN 'ciśnienie NC' '-10 mbar'
+  MAX 'ciśnienie NC' '0 mbar'
+  SAVE 'ciśnienie NC'
+  SET 'PUMP' 'off'
+  SET 'zawór BO04' '0'
+  SET 'zawór BO05' '0'
+  SET 'zawór BO06' '0'
+  SET 'timer' '0 s'
+GOAL: Ciśnienie otwarcia zaw. wyd.
+  VAL 'ciśnienie' 'bar'
+  MIN 'ciśnienie' '11 bar'
+  MAX 'ciśnienie' '12 bar'
+GOAL: Test nadciśnienia
+  SET 'timeout' '10 s'
+  IF 'timer' > 'timeout'
+  VAL 'nadciśnienie' 'mbar'
+  MIN 'nadciśnienie' '2.0 mbar'
+  MAX 'nadciśnienie' '3.9 mbar'
+  SAVE 'nadciśnienie'

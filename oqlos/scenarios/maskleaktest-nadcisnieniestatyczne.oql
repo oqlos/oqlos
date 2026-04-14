@@ -1,0 +1,6 @@
+GOAL: Nadciśnienie statyczne w masce: 1.0 – 3.9 mbar
+  SET 'Pump' 'set'
+  SET 'Valve' 'overpressure'
+  WAIT '3000 ms'
+  MIN 'AI01' '1.0 mbar'
+  SAVE 'AI01.value'

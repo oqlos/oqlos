@@ -1,0 +1,26 @@
+GOAL: Inicjalizacja pomiaru kaskadowego
+  SET 'czujnik niskiego ciśnienia' '1'
+  SET 'czujnik wysokiego ciśnienia' '1'
+  SET 'zakres_niski' '0..50 mbar'
+  SET 'zakres_wysoki' '50..1000 mbar'
+  SET 'próg_przełączenia' '45 mbar'
+GOAL: Pomiar w zakresie niskim
+  SET 'pompa 1' '1'
+  SAMPLE 'ciśnienie_niskie' 'START' '100 ms'
+  WAIT '5 s'
+  VAL 'cn' 'mbar'
+  IF 'cn' > 'próg_przełączenia'
+  GOTO 'Pomiar w zakresie wysokim'
+  MIN 'cn' '0 mbar'
+  MAX 'cn' '50 mbar'
+GOAL: Pomiar w zakresie wysokim
+  SET 'multiplekser' 'zakres_wysoki'
+  SAMPLE 'ciśnienie_wysokie' 'START' '100 ms'
+  WAIT '5 s'
+  VAL 'cw' 'mbar'
+  MIN 'cw' '50 mbar'
+  MAX 'cw' '1000 mbar'
+GOAL: Raport
+  FUNC 'p_max' = 'MAX' 'cn,cw'
+  FUNC 'p_min' = 'MIN' 'cn,cw'
+  SET 'raport kaskadowy' '1'

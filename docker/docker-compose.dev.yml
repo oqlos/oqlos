@@ -1,0 +1,30 @@
+version: "3.9"
+services:
+  traefik:
+    image: traefik:v3
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  oqlos-api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    command: oqlos-server --host 0.0.0.0 --port 8200
+    labels:
+      - "traefik.http.routers.oqlos.rule=Host(`api.oqlos.localhost`)"
+    environment:
+      - OQLOS_ENV=dev
+      - OQLOS_HARDWARE_MODE=mock
+      - OQLOS_DB_PATH=/data/oqlos.db
+    volumes:
+      - ./data:/data
+      - ../oqlos/scenarios:/scenarios:ro
+    ports:
+      - "8200:8200"

@@ -1,0 +1,379 @@
+# firmware/services/scenario_orchestrator.py
+import asyncio
+import ast
+import logging
+import operator
+from datetime import datetime, timezone
+from typing import Any
+
+_SAFE_OPS = {
+    ast.Lt: operator.lt,
+    ast.LtE: operator.le,
+    ast.Gt: operator.gt,
+    ast.GtE: operator.ge,
+    ast.Eq: operator.eq,
+    ast.NotEq: operator.ne,
+}
+
+def safe_eval_condition(expr: str, context: dict[str, Any]) -> bool:
+    """Evaluate a simple comparison expression without using eval().
+
+    Supports:
+      - Numeric literals and negative numbers
+      - Bare names and dotted attribute access resolved against *context*
+      - Comparisons: <, <=, >, >=, ==, !=
+      - Boolean operators: and, or, not
+
+    Raises ValueError for unsupported syntax.
+    """
+    try:
+        tree = ast.parse(expr.strip(), mode='eval')
+    except SyntaxError as e:
+        raise ValueError(f"Invalid expression syntax: {e}") from e
+
+    def _resolve(node):
+        # Numeric literal
+        if isinstance(node, ast.Constant) and isinstance(node.value, (int, float, bool)):
+            return node.value
+        # Negative number: -X
+        if isinstance(node, ast.UnaryOp) and isinstance(node.op, (ast.USub, ast.UAdd)):
+            operand = _resolve(node.operand)
+            return -operand if isinstance(node.op, ast.USub) else operand
+        # Bare name
+        if isinstance(node, ast.Name):
+            if node.id in context:
+                return context[node.id]
+            raise ValueError(f"Unknown variable: {node.id}")
+        # Dotted attribute (e.g. nc_sensor.currentValue)
+        if isinstance(node, ast.Attribute):
+            obj = _resolve(node.value)
+            if hasattr(obj, node.attr):
+                return getattr(obj, node.attr)
+            raise ValueError(f"Object has no attribute '{node.attr}'")
+        # Comparison: a < b, a >= b, chained comparisons
+        if isinstance(node, ast.Compare):
+            left = _resolve(node.left)
+            for op, comparator in zip(node.ops, node.comparators):
+                right = _resolve(comparator)
+                fn = _SAFE_OPS.get(type(op))
+                if fn is None:
+                    raise ValueError(f"Unsupported comparison operator: {type(op).__name__}")
+                if not fn(left, right):
+                    return False
+                left = right
+            return True
+        # BoolOp: and / or
+        if isinstance(node, ast.BoolOp):
+            if isinstance(node.op, ast.And):
+                return all(_resolve(v) for v in node.values)
+            if isinstance(node.op, ast.Or):
+                return any(_resolve(v) for v in node.values)
+        # Not
+        if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.Not):
+            return not _resolve(node.operand)
+        raise ValueError(f"Unsupported expression node: {type(node).__name__}")
+
+    return bool(_resolve(tree.body))
+
+logger = logging.getLogger(__name__)
+
+try:
+    from nfo import logged
+except ImportError:
+    def logged(cls=None, **kw):
+        return cls if cls is not None else (lambda c: c)
+
+from oqlos.models.scenario import Step, Goal
+from oqlos.models.execution import ExecutionStatus
+from oqlos.models.peripheral import Peripheral
+from oqlos.core.state import StateManager
+from oqlos.hardware.gateway import HardwareGateway
+
+@logged
+class ScenarioOrchestrator:
+    def __init__(self, state_manager: StateManager, hardware: HardwareGateway | None = None):
+        self.state_manager = state_manager
+        self.hardware = hardware or HardwareGateway()
+        self.running = False
+        self.paused = False
+        self.current_execution = None
+        self.current_index: int = -1
+        self._step_plan: list[Step] = []
+    
+    def _sanitize_identifier(self, name: str) -> str:
+        """Convert peripheral IDs like 'nc-sensor'/'pump-main' to python-safe identifiers."""
+        return name.replace('-', '_').replace('.', '_').replace(' ', '_')
+
+    def _build_eval_context(self) -> dict[str, Any]:
+        """Expose peripherals in eval context using sanitized identifiers."""
+        ctx: dict[str, Any] = {}
+        for pid, per in self.state_manager.peripherals.items():
+            ctx[self._sanitize_identifier(pid)] = per
+        # Convenience aliases (optional)
+        if 'nc-sensor' in self.state_manager.peripherals:
+            ctx['nc_sensor'] = self.state_manager.peripherals['nc-sensor']
+        if 'sc-sensor' in self.state_manager.peripherals:
+            ctx['sc_sensor'] = self.state_manager.peripherals['sc-sensor']
+        if 'wc-sensor' in self.state_manager.peripherals:
+            ctx['wc_sensor'] = self.state_manager.peripherals['wc-sensor']
+        return ctx
+
+    def _sanitize_expression(self, expr: str) -> str:
+        if not expr:
+            return expr
+        sanitized = expr
+        for pid in self.state_manager.peripherals.keys():
+            sanitized = sanitized.replace(pid, self._sanitize_identifier(pid))
+        return sanitized
+        
+    def _build_step_plan(self, goals_to_run: list) -> None:
+        """Flatten goal steps into a linear plan for projection tracking."""
+        self._step_plan = []
+        self._step_counter = 0
+        for g in goals_to_run:
+            for st in (g.steps or []):
+                self._step_plan.append(st)
+        self.current_index = -1
+
+    async def _execute_goal_steps(
+        self, goal, execution: ExecutionStatus, execution_id: str,
+        mode: str, speed: float, total_steps: int, completed_steps: int
+    ) -> int:
+        """Run all steps in a single goal, returning updated completed_steps count."""
+        for step in goal.steps:
+            if not self.running:
+                break
+            while self.paused:
+                await asyncio.sleep(0.1)
+
+            execution.currentStep = step.id
+            self.current_index = self._step_counter
+            self._step_counter += 1
+
+            human = getattr(step, 'label', None)
+            if not human:
+                human = f"{step.action}" + (f" [{step.peripheral}]" if step.peripheral else "")
+            await self.log_event('info', f"⏳ Executing: {human}")
+            await self.execute_step(step, mode, speed)
+
+            completed_steps += 1
+            execution.progress = (completed_steps / total_steps) * 100
+
+            await self.state_manager.broadcast_event({
+                'type': 'execution_update',
+                'executionId': execution_id,
+                'currentIndex': self.current_index,
+                'status': execution.status,
+                'currentGoal': execution.currentGoal,
+                'currentStep': execution.currentStep,
+                'progress': execution.progress
+            })
+        return completed_steps
+
+    async def execute_scenario(self, scenario_id: str, goals: list[str] | None, mode: str, speed: float):
+        """Execute a scenario with specified goals"""
+        scenario = self.state_manager.scenarios.get(scenario_id)
+        if not scenario:
+            raise ValueError(f"Scenario {scenario_id} not found")
+        
+        execution_id = f"exec-{datetime.now(timezone.utc).timestamp()}"
+        execution = ExecutionStatus(
+            executionId=execution_id,
+            scenarioId=scenario_id,
+            status='running',
+            currentGoal=None,
+            currentStep=None,
+            progress=0
+        )
+        
+        self.state_manager.executions[execution_id] = execution
+        self.current_execution = execution
+        self.running = True
+        
+        # Filter goals if specified
+        goals_to_run = scenario.goals
+        if goals:
+            goals_to_run = [g for g in scenario.goals if g.id in goals]
+
+        total_steps = sum(len(g.steps) for g in goals_to_run)
+        completed_steps = 0
+        self._build_step_plan(goals_to_run)
+        
+        for goal in goals_to_run:
+            if not self.running:
+                break
+            execution.currentGoal = goal.id
+            await self.log_event('info', f'Starting GOAL: {goal.name}')
+
+            completed_steps = await self._execute_goal_steps(
+                goal, execution, execution_id, mode, speed, total_steps, completed_steps
+            )
+            
+            validation_passed = await self.validate_goal(goal)
+            if validation_passed:
+                await self.log_event('success', f'✓ GOAL completed successfully')
+            else:
+                await self.log_event('error', f'✗ GOAL validation failed')
+        
+        execution.status = 'completed'
+        self.running = False
+        if self._step_plan:
+            self.current_index = len(self._step_plan) - 1
+        return execution_id
+    
+    async def execute_step(self, step: Step, mode: str, speed: float):
+        """Execute a single step"""
+        await self.log_event('info', f'⚙️ Executing step {step.id}: {step.action}')
+        if step.peripheral:
+            await self.log_event('info', f'🎛️ Target peripheral: {step.peripheral}')
+        
+        # Add small delay to make execution visible
+        await asyncio.sleep(0.5 / speed if speed > 0 else 0.5)
+        
+        act = (step.action or '').upper()
+        if act == 'SET_VALVE':
+            await self._execute_valve_step(step, mode)
+                
+        elif act == 'SET_PUMP':
+            await self._execute_pump_step(step, mode, speed)
+        
+        elif act == 'WAIT':
+            await self._execute_wait_step(step, speed)
+        
+        elif act == 'READ_SENSOR':
+            await self._execute_sensor_read_step(step)
+        
+        elif act == 'VALIDATE':
+            await self._execute_validate_step(step)
+
+    async def _execute_valve_step(self, step: Step, mode: str):
+        """Execute valve control step"""
+        if step.peripheral and step.peripheral in self.state_manager.peripherals:
+            peripheral = self.state_manager.peripherals[step.peripheral]
+            if mode == 'auto' or peripheral.mode == 'auto':
+                peripheral.currentValue = step.value
+                peripheral.targetValue = step.value
+                await self.log_event('info', f'{peripheral.name}: {"OPEN" if step.value else "CLOSED"}')
+                await self.hardware.set_valve(step.peripheral, bool(step.value))
+
+    async def _execute_pump_step(self, step: Step, mode: str, speed: float):
+        """Execute pump control step"""
+        if step.peripheral and step.peripheral in self.state_manager.peripherals:
+            peripheral = self.state_manager.peripherals[step.peripheral]
+            if mode == 'auto' or peripheral.mode == 'auto':
+                # Simulate gradual pump power change
+                start_value = peripheral.currentValue
+                target_value = step.value
+                steps = 10
+                for i in range(steps):
+                    peripheral.currentValue = start_value + (target_value - start_value) * (i + 1) / steps
+                    await self.update_dependent_sensors(peripheral)
+                    await asyncio.sleep(0.1 / speed)
+                peripheral.targetValue = target_value
+                await self.log_event('info', f'Pump power: {target_value}%')
+                await self.hardware.set_pump(float(target_value))
+
+    async def _execute_wait_step(self, step: Step, speed: float):
+        """Execute wait step"""
+        if step.duration:
+            await asyncio.sleep(step.duration / 1000 / speed)
+
+    async def _execute_sensor_read_step(self, step: Step):
+        """Execute sensor reading step"""
+        if step.peripheral and step.peripheral in self.state_manager.peripherals:
+            peripheral = self.state_manager.peripherals[step.peripheral]
+            hw_value = await self.hardware.read_sensor(step.peripheral)
+            if hw_value is not None:
+                peripheral.currentValue = hw_value
+            await self.log_event('info', f'{peripheral.name} reading: {peripheral.currentValue} {peripheral.unit}')
+
+    async def _execute_validate_step(self, step: Step):
+        """Execute validation step"""
+        if step.condition:
+            try:
+                expr = self._sanitize_expression(step.condition)
+                ctx = self._build_eval_context()
+                # Provide convenient alias for current value when peripheral specified
+                try:
+                    if step.peripheral and step.peripheral in self.state_manager.peripherals:
+                        ctx['value'] = self.state_manager.peripherals[step.peripheral].currentValue
+                except Exception as e:  # noqa: BLE001
+                    logger.debug("Could not resolve peripheral value alias: %s", e)
+                result = safe_eval_condition(expr, ctx)
+                if result:
+                    await self.log_event('success', f'✓ Validation PASSED: {step.condition}')
+                else:
+                    await self.log_event('error', f'✗ Validation FAILED: {step.condition}')
+            except Exception as ex:
+                # Do not crash the whole execution; log and continue
+                await self.log_event('error', f'Failed to evaluate validation: {step.condition} ({ex})')
+    
+    async def update_dependent_sensors(self, pump: Peripheral):
+        """Update sensor values based on pump and valve states"""
+        # Simplified physics simulation
+        pump_power = pump.currentValue
+        
+        # Update NC sensor if valve is open
+        valve_nc = self.state_manager.peripherals.get('valve-nc')
+        if valve_nc and valve_nc.currentValue:
+            nc_sensor = self.state_manager.peripherals.get('nc-sensor')
+            if nc_sensor:
+                # Negative pressure proportional to pump power
+                nc_sensor.currentValue = -pump_power * 0.6  # -60 mbar at 100% power
+                await self.log_event('info', f'NC Sensor: {nc_sensor.currentValue:.1f} mbar')
+        
+        # Update SC sensor if valve is open
+        valve_sc = self.state_manager.peripherals.get('valve-sc')
+        if valve_sc and valve_sc.currentValue:
+            sc_sensor = self.state_manager.peripherals.get('sc-sensor')
+            if sc_sensor:
+                sc_sensor.currentValue = pump_power * 0.25  # 25 bar at 100% power
+                await self.log_event('info', f'SC Sensor: {sc_sensor.currentValue:.1f} bar')
+        
+        # Update WC sensor if valve is open
+        valve_wc = self.state_manager.peripherals.get('valve-wc')
+        if valve_wc and valve_wc.currentValue:
+            wc_sensor = self.state_manager.peripherals.get('wc-sensor')
+            if wc_sensor:
+                wc_sensor.currentValue = pump_power * 4  # 400 bar at 100% power
+                await self.log_event('info', f'WC Sensor: {wc_sensor.currentValue:.1f} bar')
+        
+        # Broadcast peripheral updates
+        for peripheral in self.state_manager.peripherals.values():
+            await self.state_manager.broadcast_event({
+                'type': 'peripheral_update',
+                'peripheral': peripheral.model_dump()  # Use model_dump instead of deprecated dict()
+            })
+    
+    async def validate_goal(self, goal: Goal):
+        """Validate goal completion"""
+        all_valid = True
+        for rule in goal.validationCriteria:
+            if rule.peripheral in self.state_manager.peripherals:
+                peripheral = self.state_manager.peripherals[rule.peripheral]
+                # Simple evaluation (in production, use safe evaluation)
+                context = {
+                    'value': peripheral.currentValue,
+                    'leakRate': 0  # Placeholder for leak rate calculation
+                }
+                try:
+                    result = safe_eval_condition(rule.condition, context)
+                    if not result:
+                        await self.log_event('error', rule.errorMessage)
+                        all_valid = False
+                except Exception as ex:
+                    await self.log_event('error', f'Failed to evaluate: {rule.condition} ({ex})')
+                    all_valid = False
+        return all_valid
+    
+    async def log_event(self, level: str, message: str):
+        """Log event and broadcast to clients"""
+        timestamp = datetime.now(timezone.utc).isoformat()
+        event = {
+            'type': 'event',
+            'timestamp': timestamp,
+            'level': level,
+            'message': message
+        }
+        
+        await self.state_manager.broadcast_event(event)
