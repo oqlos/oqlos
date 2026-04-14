@@ -19,7 +19,7 @@ from oqlos.core.base import (
     StepStatus,
 )
 from oqlos.models.dsl_models import CqlAction, CqlCondition, CqlDocument, CqlGoal, CqlStep
-from .cql_parser import parse_cql, validate_cql
+from oqlos.core.cql_parser import parse_cql, validate_cql
 
 
 class CqlInterpreter(BaseInterpreter):
@@ -161,17 +161,7 @@ class CqlInterpreter(BaseInterpreter):
             self.out.step("    🔨", act.args)
             return StepStatus.PASSED
 
-        if act.kind == "pump":
-            if self.mode == "execute":
-                fw = self._get_firmware()
-                result = fw.dispatch_action(act.target or "pump", "set", act.args)
-                if not result.get("ok"):
-                    self.errors.append(str(result.get("detail") or "Pump execution failed"))
-                    self.out.error(str(result.get("detail") or "Pump execution failed"))
-                    return StepStatus.ERROR
-            self.out.step("    🫧", f"PUMP {act.args}")
-            return StepStatus.PASSED
-
+        # PUMP action removed - now handled as SET 'pompa'
         if act.kind == "set":
             value = (act.args or "").strip()
             target_lower = (act.target or "").strip().lower()
@@ -325,7 +315,7 @@ class CqlInterpreter(BaseInterpreter):
     def _get_firmware(self):
         """Lazy-init firmware adapter."""
         if self._firmware is None:
-            from oqlos.core.firmware_adapter import FirmwareAdapter
+            from ..firmware_adapter import FirmwareAdapter
             self._firmware = FirmwareAdapter(base_url=self._firmware_url)
         return self._firmware
 

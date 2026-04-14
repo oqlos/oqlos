@@ -10,29 +10,16 @@ from __future__ import annotations
 
 import re
 
-try:
-    from oqlos.models.dsl_models import (
-        CqlAction,
-        CqlCondition,
-        CqlDocument,
-        CqlGoal,
-        CqlInterval,
-        CqlMetadata,
-        CqlScenario,
-        CqlStep,
-    )
-except ImportError:
-    # Fallback for dynamic loading
-    from oqlos.models.dsl_models import (
-        CqlAction,
-        CqlCondition,
-        CqlDocument,
-        CqlGoal,
-        CqlInterval,
-        CqlMetadata,
-        CqlScenario,
-        CqlStep,
-    )
+from oqlos.models.dsl_models import (
+    CqlAction,
+    CqlCondition,
+    CqlDocument,
+    CqlGoal,
+    CqlInterval,
+    CqlMetadata,
+    CqlScenario,
+    CqlStep,
+)
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Regex patterns
@@ -50,7 +37,7 @@ RE_SAVE_COLON = re.compile(r'^\s+SAVE\s*:\s*(\S+)\s*$')
 RE_SAVE_BRACKET = re.compile(r'^\s+SAVE\s+\[(.+?)\]\s*$')
 RE_SAVE_QUOTED = re.compile(r'^\s+SAVE\s+"(.+?)"\s*$')
 RE_WAIT = re.compile(r'^\s+WAIT\s+\[?([\d.]+)\s*(?:ms|s)?\]?\s*$')
-RE_PUMP = re.compile(r'^\s+PUMP\s+\[(.+?)\]\s*$')
+# RE_PUMP removed - now handled as SET 'pompa'
 RE_SET = re.compile(r'^\s+SET\s+\[(.+?)\]\s*=\s*\[(.+?)\]\s*$')
 RE_SET_QUOTED = re.compile(r'^\s+SET\s+"(.+?)"\s+"(.+?)"\s*$')
 RE_SET_SINGLE = re.compile(r"^\s+SET\s+'(.+?)'\s+'(.+?)'\s*$")
@@ -216,12 +203,7 @@ def _parse_action_line(
         actions_list.append(CqlAction(kind="wait", args=m.group(1), raw=stripped))
         return True
 
-    # Dedicated pump control: PUMP [5 bar]
-    m = RE_PUMP.match(line)
-    if m:
-        actions_list.append(CqlAction(kind="pump", target="pump-main", args=m.group(1).strip(), raw=stripped))
-        return True
-
+    # PUMP command removed - now handled as SET 'pompa'
     # Generic SET [parameter] = [value]  or  SET "parameter" "value"  or  SET 'parameter' 'value'
     m = RE_SET.match(line) or RE_SET_QUOTED.match(line) or RE_SET_SINGLE.match(line)
     if m:
