@@ -12,21 +12,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, FileResponse
 import uvicorn
 
-_firmware_root = Path(__file__).parent
-_project_root = _firmware_root.parent
-if str(_firmware_root) not in sys.path:
-    sys.path.insert(0, str(_firmware_root))
-if str(_project_root) not in sys.path:
-    sys.path.append(str(_project_root))
-
-for _module_name in [name for name in list(sys.modules) if name == "api" or name.startswith("api.")]:
-    sys.modules.pop(_module_name, None)
-for _module_name in [name for name in list(sys.modules) if name == "models" or name.startswith("models.")]:
-    sys.modules.pop(_module_name, None)
-
 # Import refactored components
-from services import StateManager, ScenarioOrchestrator, HardwareGateway
-from api import (
+from oqlos.core.state import StateManager
+from oqlos.core.executor import ScenarioOrchestrator
+from oqlos.hardware.gateway import HardwareGateway
+from oqlos.api import (
     scenarios_router,
     peripherals_router,
     execution_router,
@@ -35,12 +25,12 @@ from api import (
     version_router,
     hardware_router,
 )
-from api.scenarios import set_state_manager as set_scenarios_state_manager
-from api.peripherals import set_state_manager as set_peripherals_state_manager
-from api.execution import set_dependencies as set_execution_dependencies
-from api.state import set_dependencies as set_state_dependencies
-from api.hardware import set_hardware_gateway
-from utils import load_sample_scenarios
+from oqlos.api.scenarios import set_state_manager as set_scenarios_state_manager
+from oqlos.api.peripherals import set_state_manager as set_peripherals_state_manager
+from oqlos.api.execution import set_dependencies as set_execution_dependencies
+from oqlos.api.state import set_dependencies as set_state_dependencies
+from oqlos.api.hardware import set_hardware_gateway
+from oqlos.utils import load_sample_scenarios
 from oqlos.config import FIRMWARE_PORT, SERVICE_NAME, SERVICE_VERSION
 
 logging.basicConfig(level=logging.INFO)

@@ -2,13 +2,7 @@
 
 from __future__ import annotations
 
-import os
-import sys
-
-_firmware_root = os.path.join(os.path.dirname(__file__), '..')
-sys.path.insert(0, os.path.abspath(_firmware_root))
-
-from utils.dsl_parser import parse_dsl_to_goal, parse_dsl_to_goal_with_issues
+from oqlos.core.parser import parse_dsl_to_goal, parse_dsl_to_goal_with_issues
 
 
 class TestDslParserRuntime:

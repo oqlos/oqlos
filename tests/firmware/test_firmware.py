@@ -6,4 +6,4 @@ def test_placeholder():
 
 def test_import():
     """Verify the main module can be imported."""
-    import main  # noqa: F401
+    import oqlos.api.main  # noqa: F401

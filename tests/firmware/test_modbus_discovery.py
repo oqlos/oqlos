@@ -1,13 +1,9 @@
 """Tests for Waveshare Modbus serial autodiscovery."""
 
-import os
 import sys
 import types
 
-_firmware_root = os.path.join(os.path.dirname(__file__), "..")
-sys.path.insert(0, _firmware_root)
-
-from services import modbus_discovery
+from oqlos.hardware import discovery as modbus_discovery
 
 
 class _OkResponse:

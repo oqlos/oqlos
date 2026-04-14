@@ -8,28 +8,16 @@ Covers:
 - _compute_slug: slug generation
 """
 
-import sys
-import os
-import importlib.util
 import pytest
 
-_firmware_root = os.path.join(os.path.dirname(__file__), '..')
-sys.path.insert(0, _firmware_root)
-
-# Import api/scenarios.py directly (bypass api/__init__.py which has heavy deps)
-_spec = importlib.util.spec_from_file_location(
-    "api_scenarios", os.path.join(_firmware_root, "api", "scenarios.py")
+from oqlos.api.scenarios import (
+    _extract_id,
+    _extract_display_fields,
+    _extract_goals,
+    _normalize_scenario_row,
+    _compute_slug,
 )
-_mod = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(_mod)
-
-_extract_id = _mod._extract_id
-_extract_display_fields = _mod._extract_display_fields
-_extract_goals = _mod._extract_goals
-_normalize_scenario_row = _mod._normalize_scenario_row
-_compute_slug = _mod._compute_slug
-
-from models.scenarios import Scenario, Goal
+from oqlos.models.scenario import Scenario, Goal
 
 
 # ===== _extract_id =============================================================

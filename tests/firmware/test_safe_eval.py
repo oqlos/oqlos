@@ -10,14 +10,9 @@ Covers:
 - Edge cases: empty strings, unknown variables, unsupported ops
 """
 
-import sys
-import os
 import pytest
 
-# Ensure firmware root is on sys.path so we can import the module under test
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
-
-from services.scenario_orchestrator import safe_eval_condition
+from oqlos.core.executor import safe_eval_condition
 
 
 # ---------------------------------------------------------------------------
