@@ -29,6 +29,8 @@ oqlos-events = "oqlos.shared.event_server:main"
 rpi = ["RPi.GPIO>=0.7", "smbus2>=0.4"]
 server = ["websockets>=13.0"]
 dev = ["pytest", "pytest-asyncio", "httpx", "websockets>=13.0"]
+# Hardware service dependencies (for running microservices)
+hardware-services = ["dri0050>=1.0.0", "piADC>=1.0.0", "piRTC>=1.0.0"]
 
 [tool.setuptools.packages.find]
 include = ["oqlos*"]

@@ -6,7 +6,7 @@ MANUFACTURER: 'Dräger'
 GOAL: Test przepływu z pompą 5 l/min
   1. Uruchom pompę z przepływem 5 l/min:
     SET 'PUMP' '5 l'
-    WAIT 2000
+    WAIT 2000ms
   2. Odczytaj przepływ:
     VAL 'przepływ' 'l/min'
     SAVE: przeplyw_5l
@@ -14,7 +14,7 @@ GOAL: Test przepływu z pompą 5 l/min
 GOAL: Test przepływu z pompą 10 l/min
   1. Zwiększ przepływ do 10 l/min:
     SET 'PUMP' '10 l'
-    WAIT 2000
+    WAIT 2000ms
   2. Odczytaj przepływ:
     VAL 'przepływ' 'l/min'
     SAVE: przeplyw_10l

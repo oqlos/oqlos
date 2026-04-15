@@ -6,9 +6,9 @@ MANUFACTURER: 'Dräger'
 GOAL: Test przepływu
   # 1. Uruchom pompę 1 ze spacją
     SET 'pompa 1' '2 l/min'
-    WAIT 2000
+    WAIT 2000ms
   # 2. Zmień kierunek
     SET 'pompa 1' '-2 l/min'
-    WAIT 2000
+    WAIT 2000ms
   # 3. Wyłącz pompę
     SET 'pompa 1' '0'

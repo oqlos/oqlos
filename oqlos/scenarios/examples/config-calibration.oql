@@ -10,7 +10,7 @@ CONFIG: Otwarcie wszystkich zaworów
   SET 'valve-nc' 'open'
   SET 'valve-sc' 'open'
   SET 'valve-wc' 'open'
-  WAIT 2000
+  WAIT 2000 ms
 
 # ============================================
 # CONFIG Faza 2: Pomiar bazowy (zero)

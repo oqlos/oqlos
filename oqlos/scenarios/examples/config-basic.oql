@@ -9,7 +9,7 @@ CONFIG: Reset zaworów
   SET 'valve-nc' 'closed'
   SET 'valve-sc' 'closed'
   SET 'valve-wc' 'closed'
-  WAIT 200
+  WAIT 200ms
 
 CONFIG: Wyłączenie pompy
   # Upewnij się że pompa jest wyłączona
@@ -25,11 +25,11 @@ CONFIG: Wyłączenie pompy
 GOAL: Test pompy - cykl pracy
   # Uruchom pompę
   SET 'pompa 1' '3 l/min'
-  WAIT 2000
+  WAIT 2000ms
   
   # Zmień kierunek
   SET 'pompa 1' '-3 l/min'
-  WAIT 2000
+  WAIT 2000ms
   
   # Wyłącz
   SET 'pompa 1' '0'
