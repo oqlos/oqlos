@@ -4,8 +4,8 @@ DEVICE_MODEL: 'PSS 7000'
 MANUFACTURER: 'Dräger'
 
 GOAL: Test płuca tic249
-  1. Uruchom płuca na krótko:
-    → Lung.start 2
-    WAIT 1500ms
-  2. Zatrzymaj płuca:
-    → Lung.stop
+  # Uruchom płuca na krótko
+  SET 'pluco' '2.0'
+  WAIT '1500 ms'
+  # Zatrzymaj płuca
+  SET 'pluco' '0.0'

@@ -1,30 +1,45 @@
 GOAL: Przygotowanie testu wytrzymałości
-  SET 'próbka' '1'
+  SET 'próbka' '1 (ok)'
   SET 'czujnik siły' '1'
   SET 'czujnik przemieszczenia' '1'
   SET 'siła_max' '1000 N'
   SET 'cykle' '100'
   SET 'prędkość' '10 mm/s'
+
 GOAL: Test cykliczny
   SET 'siłownik' '1'
   SET 'pozycja_docelowa' '50 mm'
   WAIT '1 s'
+  
   VAL 'siła_aktualna' 'N'
   VAL 'pozycja_aktualna' 'mm'
+  
   MIN 'siła_aktualna' '0 N'
   MAX 'siła_aktualna' '1100 N'
-  IF 'siła_aktualna' > '1100'
-  ELSE ERROR 'Przekroczono maksymalną siłę'
+  
+  IF 'siła_aktualna' > '1100.0'
+    ELSE ERROR 'Przekroczono maksymalną siłę'
+  ENDIF
+  
   SET 'pozycja_docelowa' '0 mm'
   WAIT '1 s'
-  FUNC 'cykl_aktualny' = 'SUM' 'cykl_aktualny,1'
+  
+  # Increment logic is external or handled by FUNC
+  FUNC 'cykl_aktualny' = 'SUM' 'cykl_aktualny, 1'
+  
   IF 'cykl_aktualny' < 'cykle'
-  GOTO 'Test cykliczny'
-  ELSE INFO 'Zakończono cykle testowe'
+    GOTO 'Test cykliczny'
+  ELSE
+    # Zakończono cykle testowe
+  ENDIF
+
 GOAL: Ocena wyniku
   VAL 'cykle_wykonane' 'szt'
   MIN 'cykle_wykonane' '100 szt'
-  IF 'cykle_wykonane' < '100'
-  ELSE ERROR 'Nie wykonano wymaganej liczby cykli'
-  SET 'siłownik' '0'
-  SET 'raport wytrzymałości' '1'
+  
+  IF 'cykle_wykonane' < '100.0'
+    ELSE ERROR 'Nie wykonano wymaganej liczby cykli'
+  ENDIF
+  
+  SET 'siłownik' '0 (off)'
+  SET 'raport wytrzymałości' '1 (generated)'

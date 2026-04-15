@@ -4,17 +4,19 @@ DEVICE_MODEL: 'PSS 7000'
 MANUFACTURER: 'Dräger'
 
 GOAL: Test zaworów modbus
-  1. Otwórz i zamknij zawór NC:
-    → Valve.open NC
-    WAIT 200ms
-    → Valve.close NC
-    WAIT 200ms
-  2. Otwórz i zamknij zawór SC:
-    → Valve.open SC
-    WAIT 200ms
-    → Valve.close SC
-    WAIT 200ms
-  3. Otwórz i zamknij zawór WC:
-    → Valve.open WC
-    WAIT 200ms
-    → Valve.close WC
+  # Otwórz i zamknij zawór NC
+  SET 'zawór NC' '1'
+  WAIT '200 ms'
+  SET 'zawór NC' '0'
+  WAIT '200 ms'
+  
+  # Otwórz i zamknij zawór SC
+  SET 'zawór SC' '1'
+  WAIT '200 ms'
+  SET 'zawór SC' '0'
+  WAIT '200 ms'
+  
+  # Otwórz i zamknij zawór WC
+  SET 'zawór WC' '1'
+  WAIT '200 ms'
+  SET 'zawór WC' '0'

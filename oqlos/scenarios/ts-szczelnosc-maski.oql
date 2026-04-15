@@ -3,8 +3,12 @@ CATEGORY: env
 
 GOAL: Test szczelności maski
   SET 'pompa podciśnieniowa' '1'
-  SET 'podciśnienie' '-10 mbar'
+  SET 'podciśnienie' '-10.0 mbar'
   SET 'czas' '60 s'
+  WAIT '60 s'
+  
   MIN 'szczelność' '95 %'
   MAX 'szczelność' '100 %'
   VAL 'szczelność' '%'
+  
+  SET 'pompa podciśnieniowa' '0 (off)'

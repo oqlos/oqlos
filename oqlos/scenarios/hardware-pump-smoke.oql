@@ -4,7 +4,7 @@ DEVICE_MODEL: 'PSS 7000'
 MANUFACTURER: 'Dräger'
 
 GOAL: Test pompy DRI0050
-  1. Uruchom pompę:
-    SET 'pompa 1' '5 l/min'
-  2. Wyłącz pompę:
-    SET 'pompa 1' '0'
+  # Uruchom pompę
+  SET 'pompa 1' '5.0 l/min'
+  # Wyłącz pompę
+  SET 'pompa 1' '0 l/min'

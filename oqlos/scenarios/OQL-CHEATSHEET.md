@@ -12,6 +12,9 @@ CONFIG: Inicjalizacja
   SET 'pompa 1' '0'
   WAIT 500
 
+CONFIG: Kalibracja pompy
+  SET 'PUMP_FLOW_FULL_SCALE_LPM' '10'
+
 GOAL: Test
   SET 'pompa 1' '5 l/min'
   WAIT 2000
@@ -26,6 +29,9 @@ GOAL: Test
 | **Zawór SC** | `valve-sc`, `zawór SC` | `'0'`, `'closed'`, `'1'`, `'open'` | `SET 'valve-sc' 'open'` |
 | **Zawór WC** | `valve-wc`, `zawór WC` | `'0'`, `'closed'`, `'1'`, `'open'` | `SET 'valve-wc' 'closed'` |
 | **Zawory 1-8** | `valve-1` do `valve-8` | `'0'`, `'closed'`, `'1'`, `'open'` | `SET 'valve-3' '0'` |
+
+> Flow values written as `l/min` are converted to PWM using `PUMP_FLOW_FULL_SCALE_LPM`.
+> You can keep this config in `.env` or override it in a `CONFIG:` block with `SET 'PUMP_FLOW_FULL_SCALE_LPM' '10'`.
 
 ## WAIT - czas oczekiwania
 

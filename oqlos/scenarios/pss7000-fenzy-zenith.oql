@@ -1,80 +1,101 @@
 GOAL: Test wizualny aparatu
   VAL 'wynik' 'OK/NOK'
   SAVE 'wynik'
+
 GOAL: Podłącz złącza SC
   # 1. Podłącz złącza SC do aparatu
+
 GOAL: Odkręć zawór butli
   SET 'zawór butli 300 bar' '1'
+
 GOAL: Załóż maskę FENZY ZENITH
+  # Akcja manualna
+
 GOAL: Test statyczny średniego ciśnienia
-  SET 'PUMP' 'off'
+  SET 'PUMP' '0 l/min'
   SET 'timeout' '3 s'
   SET 'timer' '0 s'
   IF 'timer' > 'timeout'
-  MIN 'ciśnienie SC' '6.0 bar'
-  MAX 'ciśnienie SC' '8.0 bar'
-  VAL 'ciśnienie SC' 'bar'
-  SAVE 'ciśnienie SC'
+    MIN 'ciśnienie SC' '6.0 bar'
+    MAX 'ciśnienie SC' '8.0 bar'
+    VAL 'ciśnienie SC' 'bar'
+    SAVE 'ciśnienie SC'
+  ENDIF
+
 GOAL: Zmiana średniego ciśnienia
   SET 'czas pomiaru' '60 s'
   SET 'timer' '0 s'
-  SET 'WAIT' 'timer = czas pomiaru'
+  WAIT '6 s'
   MIN 'delta ciśnienia SC' '-1.0 bar'
   MAX 'delta ciśnienia SC' '0.5 bar'
-  VAL 'delta ciśnienia SC' 'bar'
+  VAL 'delta ciśnienia SC' 'AI01'
   SAVE 'delta ciśnienia SC'
+
 GOAL: Zamknij zawór butli
   SET 'zawór butli 300 bar' '0'
+
 GOAL: Test szczelności układu WC
-  SET 'PUMP' 'off'
+  SET 'PUMP' '0 l/min'
   SET 'czas obserwacji' '5 s'
   SET 'timer' '0 s'
-  SET 'WAIT' 'timer = czas obserwacji'
+  WAIT '5 s'
+
 GOAL: Kontrola spadku ciśnienia (max 3 bar/10s)
   SET 'czas pomiaru' '10 s'
   SET 'timer' '0 s'
-  SET 'WAIT' 'timer = czas pomiaru'
+  WAIT '10 s'
   MAX 'spadek ciśnienia' '3 bar'
-  VAL 'spadek ciśnienia' 'bar'
+  VAL 'spadek ciśnienia' 'AI01'
   SAVE 'czas pomiaru'
+
 GOAL: Podłącz automat oddechowy
+  # Akcja manualna
+
 GOAL: Test nadciśnienia statycznego
-  SET 'PUMP' 'off'
+  SET 'PUMP' '0 l/min'
   SET 'timeout' '5 s'
   SET 'timer' '0 s'
   IF 'timer' > 'timeout'
-  MIN 'nadciśnienie' '2.2 mbar'
-  MAX 'nadciśnienie' '4.1 mbar'
-  VAL 'nadciśnienie' 'mbar'
-  SAVE 'nadciśnienie'
+    MIN 'nadciśnienie' '2.2 mbar'
+    MAX 'nadciśnienie' '4.1 mbar'
+    VAL 'nadciśnienie' 'AI01'
+    SAVE 'nadciśnienie'
+  ENDIF
+
 GOAL: Test sygnału akustycznego
-  SET 'PUMP' '5l'
+  SET 'PUMP' '5.0 l/min'
   SET 'zawór BO06' '1'
   MIN 'ciśnienie NC' '0.0 mbar'
-  VAL 'ciśnienie NC' 'mbar'
+  VAL 'ciśnienie NC' 'AI01'
   SAVE 'wynik sygnału'
+
 GOAL: Wytworzenie podciśnienia
-  SET 'PUMP' '5l'
+  SET 'PUMP' '5.0 l/min'
   SET 'zawór BO06' '1'
   SET 'timeout' '20 s'
   SET 'timer' '0 s'
   IF 'timer' > 'timeout'
-  MIN 'ciśnienie NC' '-12.0 mbar'
-  MAX 'ciśnienie NC' '12.0 mbar'
-  VAL 'ciśnienie NC' 'mbar'
+    MIN 'ciśnienie NC' '-12.0 mbar'
+    MAX 'ciśnienie NC' '12.0 mbar'
+    VAL 'ciśnienie NC' 'AI01'
+  ENDIF
+
 GOAL: Ustawienie parametru AUTO
-  SET 'PUMP' 'off'
+  SET 'PUMP' '0 l/min'
   SET 'zawór BO04' '1'
   SET 'timeout' '15 s'
   SET 'timer' '0 s'
   IF 'timer' > 'timeout'
-  MAX 'ciśnienie NC' '-6.0 mbar'
-  VAL 'ciśnienie NC' 'mbar'
+    MAX 'ciśnienie NC' '-6.0 mbar'
+    VAL 'ciśnienie NC' 'AI01'
+  ENDIF
+
 GOAL: Test szczelności automatu oddechowego
   SET 'czas stabilizacji' '5 s'
   SET 'timer' '0 s'
-  SET 'WAIT' 'timer = czas stabilizacji'
+  WAIT '5 s'
   MAX 'ciśnienie NC końcowe' '-4.0 mbar'
-  VAL 'ciśnienie NC' 'mbar'
+  VAL 'ciśnienie NC' 'AI01'
   IF 'ciśnienie NC' > '-4.0 mbar'
-  SAVE 'ciśnienie NC'
+    SAVE 'ciśnienie NC'
+  ENDIF

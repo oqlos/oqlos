@@ -1,11 +1,14 @@
 GOAL: Test spadku ciśnienia automatu
-  SET 'regulator' '50 l/min'
+  SET 'regulator' '50.0 l/min'
   SET 'pompa 1' '1'
+  
   SAMPLE 'ciśnienie' 'START' '50 ms'
   SET 'czas_pomiaru' '10 s'
   WAIT '10 s'
+  
   FUNC 'dp_srednie' = 'AVG' 'ciśnienie'
   MIN 'dp_srednie' '0.5 mbar'
   MAX 'dp_srednie' '3.5 mbar'
   VAL 'dp_srednie' 'mbar'
-  SET 'pompa 1' '0'
+  
+  SET 'pompa 1' '0 (off)'

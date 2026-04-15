@@ -4,7 +4,7 @@
 GOAL: Kontrola Wizualna
   VAL 'wynik' 'OK/NOK'
 GOAL: Test Szczelności
-  VAL 'ciśnienie NC' 'mbar'
+  VAL 'ciśnienie NC' 'AI01'
   MIN 'ciśnienie NC' '-10 mbar'
   MAX 'ciśnienie NC' '0 mbar'
   SAVE 'ciśnienie NC'
@@ -13,7 +13,7 @@ GOAL: Test Szczelności (stary sposób)
   SET 'zawór BO06' '1'
   SET 'timeout' '20 s'
   SET 'timer' '0 s'
-  VAL 'ciśnienie NC' 'mbar'
+  VAL 'ciśnienie NC' 'AI01'
   MIN 'ciśnienie NC' '-10 mbar'
   MAX 'ciśnienie NC' '0 mbar'
   SAVE 'ciśnienie NC'

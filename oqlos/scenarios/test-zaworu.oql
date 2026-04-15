@@ -4,53 +4,84 @@ DEVICE_MODEL: 'PSS 7000'
 MANUFACTURER: 'Dräger'
 
 GOAL: Test odczytu zaworu NC
-  1. Otwórz zawór NC:
-    → Valve.open NC
-    WAIT 500
-    → Sensor.read AI01
-    IF [AI01] [>=] [0.60 V] ELSE ERROR 'Zawór NC nie mieści się w oczekiwanym zakresie'
-    IF [AI01] [<=] [0.67 V] ELSE ERROR 'Zawór NC nie mieści się w oczekiwanym zakresie'
-    SAVE: cisnienie_nc_otwarte
+  # Otwórz zawór NC
+  SET 'zawór NC' '1'
+  WAIT '500 ms'
+  
+  VAL 'AI01' 'V'
+  IF 'AI01' < '0.60'
+    ELSE ERROR 'Zawór NC nie mieści się w oczekiwanym zakresie (za niski)'
+  ENDIF
+  IF 'AI01' > '0.67'
+    ELSE ERROR 'Zawór NC nie mieści się w oczekiwanym zakresie (za wysoki)'
+  ENDIF
+  SAVE 'cisnienie_nc_otwarte'
 
 GOAL: Test odczytu zaworu NC po zamknięciu
-  1. Zamknij zawór NC:
-    → Valve.close NC
-    WAIT 500
-    → Sensor.read AI01
-    IF [AI01] [>=] [0.60 V] ELSE ERROR 'Zawór NC po zamknięciu nie mieści się w oczekiwanym zakresie'
-    IF [AI01] [<=] [0.67 V] ELSE ERROR 'Zawór NC po zamknięciu nie mieści się w oczekiwanym zakresie'
-    SAVE: cisnienie_nc_zamkniete
+  # Zamknij zawór NC
+  SET 'zawór NC' '0'
+  WAIT '500 ms'
+  
+  VAL 'AI01' 'V'
+  IF 'AI01' < '0.60'
+    ELSE ERROR 'Zawór NC po zamknięciu nie mieści się w oczekiwanym zakresie'
+  ENDIF
+  IF 'AI01' > '0.67'
+    ELSE ERROR 'Zawór NC po zamknięciu nie mieści się w oczekiwanym zakresie'
+  ENDIF
+  SAVE 'cisnienie_nc_zamkniete'
 
 GOAL: Test odczytu zaworu SC
-  1. Otwórz zawór SC:
-    → Valve.open SC
-    WAIT 500
-    → Sensor.read AI02
-    IF [AI02] [>=] [0.73 V] ELSE ERROR 'Zawór SC nie mieści się w oczekiwanym zakresie'
-    IF [AI02] [<=] [0.78 V] ELSE ERROR 'Zawór SC nie mieści się w oczekiwanym zakresie'
-    SAVE: cisnienie_sc_otwarte
+  # Otwórz zawór SC
+  SET 'zawór SC' '1'
+  WAIT '500 ms'
+
+  VAL 'AI02' 'V'
+  IF 'AI02' < '0.73'
+    ELSE ERROR 'Zawór SC nie mieści się w oczekiwanym zakresie'
+  ENDIF
+  IF 'AI02' > '0.78'
+    ELSE ERROR 'Zawór SC nie mieści się w oczekiwanym zakresie'
+  ENDIF
+  SAVE 'cisnienie_sc_otwarte'
 
 GOAL: Test odczytu zaworu SC po zamknięciu
-  1. Zamknij zawór SC:
-    → Valve.close SC
-    WAIT 500
-    → Sensor.read AI02
-    IF [AI02] [>=] [0.73 V] ELSE ERROR 'Zawór SC po zamknięciu nie mieści się w oczekiwanym zakresie'
-    IF [AI02] [<=] [0.78 V] ELSE ERROR 'Zawór SC po zamknięciu nie mieści się w oczekiwanym zakresie'
-    SAVE: cisnienie_sc_zamkniete
+  # Zamknij zawór SC
+  SET 'zawór SC' '0'
+  WAIT '500 ms'
+
+  VAL 'AI02' 'V'
+  IF 'AI02' < '0.73'
+    ELSE ERROR 'Zawór SC po zamknięciu nie mieści się w oczekiwanym zakresie'
+  ENDIF
+  IF 'AI02' > '0.78'
+    ELSE ERROR 'Zawór SC po zamknięciu nie mieści się w oczekiwanym zakresie'
+  ENDIF
+  SAVE 'cisnienie_sc_zamkniete'
 
 GOAL: Test stabilności zaworu WC
-  1. Otwórz zawór WC:
-    → Valve.open WC
-    WAIT 1000
-    → Sensor.read AI03
-    IF [AI03] [>=] [0.86 V] ELSE ERROR 'Zawór WC nie mieści się w oczekiwanym zakresie'
-    IF [AI03] [<=] [0.91 V] ELSE ERROR 'Zawór WC nie mieści się w oczekiwanym zakresie'
-    SAVE: cisnienie_wc_poczatek
-  2. Zamknij i obserwuj:
-    → Valve.close WC
-    WAIT 3000
-    → Sensor.read AI03
-    IF [AI03] [>=] [0.86 V] ELSE ERROR 'Zawór WC po zamknięciu nie mieści się w oczekiwanym zakresie'
-    IF [AI03] [<=] [0.91 V] ELSE ERROR 'Zawór WC po zamknięciu nie mieści się w oczekiwanym zakresie'
-    SAVE: cisnienie_wc_koniec
+  # Otwórz zawór WC
+  SET 'zawór WC' '1'
+  WAIT '1000 ms'
+  
+  VAL 'AI03' 'V'
+  IF 'AI03' < '0.86'
+    ELSE ERROR 'Zawór WC nie mieści się w oczekiwanym zakresie'
+  ENDIF
+  IF 'AI03' > '0.91'
+    ELSE ERROR 'Zawór WC nie mieści się w oczekiwanym zakresie'
+  ENDIF
+  SAVE 'cisnienie_wc_poczatek'
+  
+  # Zamknij i obserwuj
+  SET 'zawór WC' '0'
+  WAIT '3000 ms'
+  
+  VAL 'AI03' 'V'
+  IF 'AI03' < '0.86'
+    ELSE ERROR 'Zawór WC po zamknięciu nie mieści się w oczekiwanym zakresie'
+  ENDIF
+  IF 'AI03' > '0.91'
+    ELSE ERROR 'Zawór WC po zamknięciu nie mieści się w oczekiwanym zakresie'
+  ENDIF
+  SAVE 'cisnienie_wc_koniec'

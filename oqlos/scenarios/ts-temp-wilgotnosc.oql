@@ -4,24 +4,37 @@
 GOAL: Pomiar warunków środowiskowych
   SET 'czujnik temperatury' '1'
   SET 'czujnik wilgotności' '1'
+  
   SAMPLE 'temperatura' 'START' '1000 ms'
   SAMPLE 'wilgotnosc' 'START' '1000 ms'
   WAIT '10 s'
+  
   VAL 'temperatura' '°C'
   VAL 'wilgotnosc' '%RH'
+  
   SAMPLE 'temperatura' 'STOP'
   SAMPLE 'wilgotnosc' 'STOP'
+  
   MIN 'temperatura' '15 °C'
   MAX 'temperatura' '25 °C'
   MIN 'wilgotnosc' '30 %RH'
   MAX 'wilgotnosc' '70 %RH'
-  IF 'temperatura' < '15'
-  ELSE ERROR 'Temperatura poniżej dopuszczalnego minimum'
-  IF 'temperatura' > '25'
-  ELSE ERROR 'Temperatura powyżej dopuszczalnego maksimum'
-  IF 'wilgotnosc' < '30'
-  ELSE ERROR 'Wilgotność poniżej dopuszczalnego minimum'
-  IF 'wilgotnosc' > '70'
-  ELSE ERROR 'Wilgotność powyżej dopuszczalnego maksimum'
-  SET 'czujnik temperatury' '0'
-  SET 'czujnik wilgotności' '0'
+  
+  IF 'temperatura' < '15.0'
+    ELSE ERROR 'Temperatura poniżej dopuszczalnego minimum'
+  ENDIF
+  
+  IF 'temperatura' > '25.0'
+    ELSE ERROR 'Temperatura powyżej dopuszczalnego maksimum'
+  ENDIF
+  
+  IF 'wilgotnosc' < '30.0'
+    ELSE ERROR 'Wilgotność poniżej dopuszczalnego minimum'
+  ENDIF
+  
+  IF 'wilgotnosc' > '70.0'
+    ELSE ERROR 'Wilgotność powyżej dopuszczalnego maksimum'
+  ENDIF
+  
+  SET 'czujnik temperatury' '0 (off)'
+  SET 'czujnik wilgotności' '0 (off)'

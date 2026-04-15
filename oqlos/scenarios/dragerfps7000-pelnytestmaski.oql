@@ -4,28 +4,47 @@ GOAL: Pełny test maski
   SAVE 'operator.result'
   SET 'valve-sc' 'open'
   SET 'pompa 1' '5 l/min'
+  
   IF 'Timer' ≤ '7.0'
-  SET 'valve-nc' 'open'
-  SET 'pompa 1' '5 l/min'
-  IF 'AI01' ≥ '-11.0'
-  IF 'Timer' ≤ '10.0'
-  SET 'pompa 1' '0'
-  IF 'Timer' ≤ '10.0'
-  SET 'valve-nc' 'closed'
-  SET 'pompa 1' '0'
-  IF 'AI01' ≤ '-10.1'
-  IF 'Timer' ≤ '20.0'
-  SET 'pompa 1' '0'
-  IF 'AI01' ≤ '-9.0'
-  SAVE 'AI01.value'
-  IF 'Timer' ≤ '60.0'
-  SET 'valve-sc' 'open'
-  SET 'pompa 1' '10 l/min'
-  IF 'Timer' ≤ '5.0'
-  SET 'valve-sc' 'open'
-  SET 'pompa 1' '10 l/min'
-  MIN 'AI01' '4.2 mbar'
-  SAVE 'AI01.value'
-  SET 'valve-nc' 'open'
-  SET 'pompa 1' '5 l/min'
-  IF 'Timer' ≤ '7.0'
+    SET 'valve-nc' 'open'
+    SET 'pompa 1' '5 l/min'
+    
+    IF 'AI01' ≥ '-11.0 mbar'
+      IF 'Timer' ≤ '10.0'
+        SET 'pompa 1' '0 l/min'
+        
+        IF 'Timer' ≤ '10.0'
+          SET 'valve-nc' 'closed'
+          SET 'pompa 1' '0 l/min'
+          
+          IF 'AI01' ≤ '-10.1 mbar'
+            IF 'Timer' ≤ '20.0'
+              SET 'pompa 1' '0 l/min'
+              
+              IF 'AI01' ≤ '-9.0 mbar'
+                SAVE 'AI01.value'
+                
+                IF 'Timer' ≤ '60.0'
+                  SET 'valve-sc' 'open'
+                  SET 'pompa 1' '10 l/min'
+                  
+                  IF 'Timer' ≤ '5.0'
+                    SET 'valve-sc' 'open'
+                    SET 'pompa 1' '10 l/min'
+                    MIN 'AI01' '4.2 mbar'
+                    SAVE 'AI01'
+                    SET 'valve-nc' 'open'
+                    SET 'pompa 1' '5 l/min'
+                    
+                    IF 'Timer' ≤ '7.0'
+                      # Koniec ścieżki pomyślnej
+                    ENDIF
+                  ENDIF
+                ENDIF
+              ENDIF
+            ENDIF
+          ENDIF
+        ENDIF
+      ENDIF
+    ENDIF
+  ENDIF
