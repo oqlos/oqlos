@@ -43,6 +43,9 @@ class CqlAction:
     args: str = ""
     condition: CqlCondition | None = None
     raw: str = ""
+    then_actions: list[CqlAction] = field(default_factory=list)
+    else_actions: list[CqlAction] = field(default_factory=list)
+    loop_actions: list[CqlAction] = field(default_factory=list)
 
 @dataclass
 class CqlStep:

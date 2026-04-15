@@ -9,7 +9,7 @@ GOAL: Odkryj zawór butli
   SET 'zawór butli 300 bar' '1 (open)'
 
 GOAL: Test statyczny średniego ciśnienia
-  SET 'PUMP' '0 l/min (off)'
+  SET 'PUMP' '0 l/min'
   SET 'timeout' '3 s'
   SET 'timer' '0 s'
   
@@ -23,13 +23,13 @@ GOAL: Test statyczny średniego ciśnienia
   ENDIF
 
 GOAL: Test szczelności układu WC
-  SET 'PUMP' '0 l/min (off)'
+  SET 'PUMP' '0 l/min'
   SET 'czas obserwacji' '5 s'
   SET 'timer' '0 s'
   WAIT '1.0 s'
 
 GOAL: Test nadciśnienia statycznego
-  SET 'PUMP' '0 l/min (off)'
+  SET 'PUMP' '0 l/min'
   SET 'timeout' '5 s'
   SET 'timer' '0 s'
   # Condition met in simulation to execute the following

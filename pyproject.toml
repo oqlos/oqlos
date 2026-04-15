@@ -21,6 +21,7 @@ dependencies = [
     "goal>=2.1.0",
     "costs>=0.1.20",
     "pfix>=0.1.60",
+    "paho-mqtt>=1.6.1",
 ]
 
 [project.scripts]
@@ -35,6 +36,7 @@ dev = ["pytest", "pytest-asyncio", "httpx", "websockets>=13.0",
     "goal>=2.1.0",
     "costs>=0.1.20",
     "pfix>=0.1.60",
+    "paho-mqtt>=1.6.1",
 ]
 # Hardware service dependencies (for running microservices)
 hardware-services = ["dri0050>=1.0.0", "piADC>=1.0.0", "piRTC>=1.0.0"]

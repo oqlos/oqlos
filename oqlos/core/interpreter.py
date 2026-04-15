@@ -12,14 +12,20 @@ from __future__ import annotations
 import time
 from typing import Any
 
+import yaml
+
+import oqlos.config as oql_config
 from oqlos.core.base import (
     BaseInterpreter,
     ScriptResult,
     StepResult,
     StepStatus,
+    VariableStore,
 )
+from oqlos.core._dsl_helpers import _parse_numeric_value
 from oqlos.models.dsl_models import CqlAction, CqlCondition, CqlDocument, CqlGoal, CqlStep
 from oqlos.core.cql_parser import parse_cql, validate_cql
+from oqlos.hardware.firmware_adapter import _PERIPHERAL_MAP
 
 
 class CqlInterpreter(BaseInterpreter):
@@ -46,17 +52,111 @@ class CqlInterpreter(BaseInterpreter):
         firmware_url: str = "http://localhost:8202",
         auto_mock: bool = True,
         skip_waits: bool = False,
+        bridge_url: str | None = None,
+        yaml_output: bool = False,
     ):
-        super().__init__(variables=variables, quiet=quiet)
+        super().__init__(variables=variables, quiet=quiet, bridge_url=bridge_url)
         self.mode = mode  # validate, dry-run, execute
         self._firmware = None
         self._firmware_url = firmware_url
         self._skip_waits = skip_waits
         self._auto_mock = auto_mock and mode == "dry-run"
+        self._goal_skipped = False # Track if current goal execution should be skipped (flat IF)
+        self._yaml_output = yaml_output
         # Seed with defaults, then overlay user-provided values
         self.sensor_values: dict[str, float] = dict(self.DEFAULT_MOCK_SENSORS)
         if sensor_values:
             self.sensor_values.update(sensor_values)
+
+    @staticmethod
+    def _coerce_float(value: Any) -> float | None:
+        """Best-effort float coercion for config values."""
+        if value is None:
+            return None
+        if isinstance(value, (int, float)):
+            return float(value)
+        parsed = _parse_numeric_value(str(value))
+        if parsed is not None:
+            return float(parsed)
+        try:
+            return float(str(value).replace(",", ".").strip())
+        except Exception:
+            return None
+
+    def _resolve_peripheral_id(self, target: str) -> str | None:
+        """Resolve a known target name to a firmware peripheral id."""
+        normalized = target.strip().lower().replace(" ", "-").replace("_", "-")
+        return _PERIPHERAL_MAP.get(normalized)
+
+    def _get_pump_flow_full_scale_lpm(self) -> float:
+        """Resolve the flow rate that maps to 100% PWM."""
+        for key in ("PUMP_FLOW_FULL_SCALE_LPM", "pump_flow_full_scale_lpm"):
+            raw = self.vars.get(key)
+            scale = self._coerce_float(raw)
+            if scale and scale > 0:
+                return scale
+
+        try:
+            settings = oql_config.get_settings()
+            scale = self._coerce_float(getattr(settings, "pump_flow_full_scale_lpm", None))
+            if scale and scale > 0:
+                return scale
+        except Exception:
+            pass
+
+        return 10.0
+
+    def _normalize_pump_power(self, raw_value: str) -> float:
+        """Convert a pump command value to a PWM percentage."""
+        text = self.vars.interpolate((raw_value or "").strip())
+        lowered = text.lower().strip()
+
+        if lowered in {"on", "true"}:
+            return 100.0
+        if lowered in {"off", "false"}:
+            return 0.0
+
+        numeric = self._coerce_float(text)
+        if numeric is None:
+            return 0.0
+
+        compact = lowered.replace(" ", "")
+        if "l/min" in compact or compact.endswith("lpm"):
+            scale = self._get_pump_flow_full_scale_lpm()
+            if scale <= 0:
+                return 0.0
+            numeric = numeric / scale * 100.0
+
+        return max(0.0, min(100.0, float(numeric)))
+
+    def _normalize_valve_value(self, raw_value: Any) -> bool:
+        """Convert a valve command value to a boolean state."""
+        if isinstance(raw_value, bool):
+            return raw_value
+        if isinstance(raw_value, (int, float)):
+            return float(raw_value) != 0.0
+
+        text = self.vars.interpolate(str(raw_value or "")).strip().lower()
+        if text in {"on", "true", "open", "1", "yes"}:
+            return True
+        if text in {"off", "false", "closed", "close", "0", "no"}:
+            return False
+
+        numeric = self._coerce_float(text)
+        if numeric is not None:
+            return numeric != 0.0
+        return bool(text)
+
+    def _normalize_lung_value(self, raw_value: Any) -> int:
+        """Convert a lung command value to a cycle count."""
+        text = self.vars.interpolate(str(raw_value or "")).strip().lower()
+        if text in {"off", "false", "stop", "0"}:
+            return 0
+
+        numeric = self._coerce_float(text)
+        if numeric is None:
+            return 5
+        return max(0, int(numeric))
 
     def parse(self, source: str, filename: str = "<string>") -> CqlDocument:
         return parse_cql(source, filename)
@@ -111,6 +211,7 @@ class CqlInterpreter(BaseInterpreter):
     def _execute_all_goals(self, all_goals: list[tuple[str, CqlGoal]]) -> None:
         """Execute all collected goals."""
         for sc_name, goal in all_goals:
+            self._goal_skipped = False # Reset for each goal
             self._execute_single_goal(sc_name, goal)
 
     def _build_script_result(self, name: str, t0: float) -> ScriptResult:
@@ -163,9 +264,11 @@ class CqlInterpreter(BaseInterpreter):
             elif act_result == StepStatus.ERROR:
                 status = StepStatus.ERROR
                 message = act.raw
+            elif act_result == StepStatus.SKIPPED:
+                status = StepStatus.SKIPPED
 
         elapsed = (time.monotonic() - t0) * 1000
-        icon = {"passed": "✅", "failed": "❌", "error": "💥"}.get(status.value, "⏭️")
+        icon = {"passed": "✅", "failed": "❌", "error": "💥", "skipped": "⏭️"}.get(status.value, "⏭️")
         self.out.step(f"    {icon}", f"[{status.value}] {step.name}")
 
         return StepResult(
@@ -174,22 +277,24 @@ class CqlInterpreter(BaseInterpreter):
             duration_ms=elapsed, details=details,
         )
 
-    def _execute_action(self, act: CqlAction) -> StepStatus:
-        """Dispatch a CQL action to the appropriate handler."""
     # ── Action dispatch table ───────────────────────────────────────
 
     def _exec_action_action(self, act: CqlAction) -> StepStatus:
+        args_interpolated = self.vars.interpolate(act.args)
         if self.mode == "execute":
-            return self._execute_firmware_action(act)
-        self.out.step("    →", f"{act.target}.{act.method} {act.args}")
+            # Pass interpolated args implicitly or explicitly
+            return self._execute_firmware_action(act, args_interpolated)
+        self.out.step("    →", f"{act.target}.{act.method} {args_interpolated}")
         return StepStatus.PASSED
 
     def _exec_action_task(self, act: CqlAction) -> StepStatus:
-        self.out.step("    🔨", act.args)
+        args_interpolated = self.vars.interpolate(act.args)
+        self.out.step("    🔨", args_interpolated)
         return StepStatus.PASSED
 
     def _exec_action_set(self, act: CqlAction) -> StepStatus:
-        value = (act.args or "").strip()
+        """Intelligent SET dispatch: HAL Device > VariableStore."""
+        value = self.vars.interpolate((act.args or "").strip())
         target_lower = (act.target or "").strip().lower()
         self.vars.set(act.target, value)
 
@@ -197,7 +302,7 @@ class CqlInterpreter(BaseInterpreter):
             return self._exec_set_wait(act, value)
 
         if self.mode == "execute":
-            if any(token in target_lower for token in ("zawór", "zawor", "valve", "pompa", "pump", "sprężarka", "sprezarka", "compressor")):
+            if self._resolve_peripheral_id(act.target or "") is not None:
                 result = self._exec_set_peripheral(act, value)
                 if result is not None:
                     return result
@@ -213,31 +318,6 @@ class CqlInterpreter(BaseInterpreter):
         else:
             self._do_sleep(secs, f"SET [{act.target}] = [{value}]")
         return StepStatus.PASSED
-
-    def _exec_set_peripheral(self, act: CqlAction, value: str) -> StepStatus | None:
-        fw = self._get_firmware()
-        normalized_value: Any = value
-        lowered = value.lower()
-        if lowered in {"on", "true"}:
-            normalized_value = 1
-        elif lowered in {"off", "false"}:
-            normalized_value = 0
-        else:
-            try:
-                import re as _re
-                match = _re.search(r"[-+]?\d*\.?\d+", value.replace(",", "."))
-                if match:
-                    num = float(match.group(0))
-                    normalized_value = int(num) if num.is_integer() else num
-            except Exception:
-                normalized_value = value
-        try:
-            fw.set_peripheral(act.target or "", normalized_value)
-        except Exception as exc:
-            self.errors.append(str(exc))
-            self.out.error(str(exc))
-            return StepStatus.ERROR
-        return None
 
     def _exec_action_save(self, act: CqlAction) -> StepStatus:
         val = self.sensor_values.get(act.target, 0.0) if act.target.startswith("AI") else "OK"
@@ -270,14 +350,90 @@ class CqlInterpreter(BaseInterpreter):
         return StepStatus.PASSED
 
     def _exec_action_min_max(self, act: CqlAction) -> StepStatus:
-        self.out.step("    📏", f"{act.kind.upper()} [{act.target}] = {act.args}")
-        return StepStatus.PASSED
+        # Re-use logic for condition check but as an action
+        # For simple technical scripts, MIN/MAX often mean "verify current value"
+        sensor = act.target
+        op = ">=" if act.kind == "min" else "<="
+        try:
+            val = float(act.args.split()[0])
+        except (ValueError, IndexError):
+            val = 0.0
+            
+        cond = CqlCondition(sensor=sensor, operator=op, value=val)
+        return self._evaluate_condition(CqlAction(kind="condition", condition=cond))
 
     def _exec_action_val(self, act: CqlAction) -> StepStatus:
         sensor = act.target
         val = self.sensor_values.get(sensor, 0.0)
         self.vars.set(sensor, val)
         self.out.step("    📊", f"VAL [{sensor}] = {val} {act.args}")
+        return StepStatus.PASSED
+
+    def _exec_action_if_block(self, act: CqlAction) -> StepStatus:
+        # For basic blocks (nested), stay internal
+        if act.then_actions or act.else_actions:
+            cond_status = self._evaluate_condition(act)
+            target_actions = act.then_actions if cond_status == StepStatus.PASSED else act.else_actions
+            for sub_act in target_actions:
+                status = self._execute_action(sub_act)
+                if status not in (StepStatus.PASSED, StepStatus.SKIPPED):
+                    return status
+            return StepStatus.PASSED
+        
+        # For Flat DSL (no explicit then/else actions in AST yet, or single IF line)
+        # If warunek fails, skip the rest of the current goal
+        cond_status = self._evaluate_condition(act)
+        if cond_status != StepStatus.PASSED:
+            self.out.info(f"Condition not met: {act.raw} — skipping rest of goal")
+            self._goal_skipped = True
+            
+        return StepStatus.PASSED
+
+    def _exec_action_loop_block(self, act: CqlAction) -> StepStatus:
+        """Recursive handler for LOOP block execution."""
+        method = act.method or "times"
+        self.out.step("    🔄", f"LOOP {method.upper()}: {act.raw}")
+        
+        max_iters = 1000
+        iteration = 0
+        
+        # Create scoped variable store for loop
+        old_vars = self.vars
+        self.vars = VariableStore(parent=old_vars)
+        
+        try:
+            if method == "times":
+                count = int(act.args) if act.args.isdigit() else 1
+                for i in range(count):
+                    self.vars.set("ITER", i) # Expose current iteration
+                    for sub_act in act.loop_actions:
+                        status = self._execute_action(sub_act)
+                        if status not in (StepStatus.PASSED, StepStatus.SKIPPED):
+                            return status
+                return StepStatus.PASSED
+
+            if method == "while":
+                while self._evaluate_condition(act) == StepStatus.PASSED:
+                    iteration += 1
+                    if iteration > max_iters:
+                        self.out.error(f"Loop safety limit reached ({max_iters} iters)")
+                        return StepStatus.ERROR
+                    
+                    for sub_act in act.loop_actions:
+                        status = self._execute_action(sub_act)
+                        if status not in (StepStatus.PASSED, StepStatus.SKIPPED):
+                            return status
+                return StepStatus.PASSED
+        finally:
+            self.vars = old_vars
+            
+        return StepStatus.PASSED
+
+    def _exec_action_var_set(self, act: CqlAction) -> StepStatus:
+        """Handle explicit VAR assignment."""
+        val = self.vars.interpolate(act.args)
+        self.vars.set(act.target, val)
+        self.out.step("    📌", f"VAR {act.target} = {val}")
         return StepStatus.PASSED
 
     def _exec_action_condition(self, act: CqlAction) -> StepStatus:
@@ -309,13 +465,70 @@ class CqlInterpreter(BaseInterpreter):
         "val": "_exec_action_val",
         "condition": "_exec_action_condition",
         "if_else": "_exec_action_condition",
+        "if_block": "_exec_action_if_block",
+        "loop_block": "_exec_action_loop_block",
+        "var_set": "_exec_action_var_set",
     }
 
     def _execute_action(self, act: CqlAction) -> StepStatus:
+        """Dispatch action to specific handler based on kind."""
+        if self._goal_skipped:
+            return StepStatus.SKIPPED
+
         method_name = self._ACTION_DISPATCH.get(act.kind)
         if method_name is not None:
             return getattr(self, method_name)(act)
-        return StepStatus.PASSED
+        
+        # Try flat action dispatch (SET, VAL, SAVE, etc. if kind is generic)
+        if act.kind in ("set", "val", "save", "min", "max", "wait"):
+            return self._exec_flat_action(act)
+            
+        self.out.warn(f"Unknown action kind: {act.kind}")
+        return StepStatus.ERROR
+
+    def _exec_flat_action(self, act: CqlAction) -> StepStatus:
+        """Handle actions without arrows (SET 'PUMP' 'off', etc)."""
+        kind = act.kind.lower()
+        if kind == "set":
+            return self._exec_action_set(act)
+        elif kind == "val":
+            return self._exec_action_val(act)
+        elif kind == "save":
+            return self._exec_action_save(act)
+        elif kind in ("min", "max"):
+            return self._exec_action_min_max(act)
+        elif kind == "wait":
+            return self._exec_action_wait(act)
+        return StepStatus.ERROR
+
+    def _exec_set_peripheral(self, act: CqlAction, value: str) -> StepStatus | None:
+        fw = self._get_firmware()
+        normalized_value = value
+        resolved = self._resolve_peripheral_id(act.target or "")
+        if resolved and resolved.startswith("pump"):
+            normalized_value = self._normalize_pump_power(value)
+        elif resolved and resolved.startswith("valve"):
+            normalized_value = self._normalize_valve_value(value)
+        elif resolved and resolved.startswith("lung"):
+            normalized_value = self._normalize_lung_value(value)
+        elif isinstance(value, str):
+            lowered = value.lower()
+            if lowered in {"on", "true"}:
+                normalized_value = 1
+            elif lowered in {"off", "false"}:
+                normalized_value = 0
+            else:
+                numeric = self._coerce_float(value)
+                if numeric is not None:
+                    normalized_value = int(numeric) if numeric.is_integer() else numeric
+        try:
+            fw.set_peripheral(act.target or "", normalized_value)
+        except Exception as exc:
+            self.errors.append(str(exc))
+            self.out.error(str(exc))
+            return StepStatus.ERROR
+
+        return None
 
     # Operator → seed value factory for _seed_sensors_from_conditions
     _SEED_VALUE_FNS: dict[str, Any] = {
@@ -378,17 +591,16 @@ class CqlInterpreter(BaseInterpreter):
             self._firmware = FirmwareAdapter(base_url=self._firmware_url)
         return self._firmware
 
-    def _execute_firmware_action(self, act: CqlAction) -> StepStatus:
-        """Dispatch action to firmware simulator via HTTP."""
-        fw = self._get_firmware()
-        result = fw.dispatch_action(act.target, act.method, act.args)
-        if result["ok"]:
-            self.out.step("    → 🔧", f"{act.target}.{act.method} → {result['detail']}")
+    def _execute_firmware_action(self, act: CqlAction, args: str | None = None) -> StepStatus:
+        """Execute action on real/simulated firmware."""
+        to_send = args if args is not None else self.vars.interpolate(act.args)
+        res = self.firmware.dispatch_action(act.target, act.method, to_send)
+        if res.get("ok"):
+            self.out.step("    →", f"{act.target}.{act.method} {to_send} ({res.get('detail')})")
             return StepStatus.PASSED
         else:
-            self.out.step("    → ❌", f"{act.target}.{act.method} FAILED: {result['detail']}")
-            self.errors.append(result["detail"])
-            return StepStatus.ERROR
+            self.out.error(f"{act.target}.{act.method} FAILED: {res.get('detail')}")
+            return StepStatus.FAILED
 
     def _refresh_sensors_from_firmware(self) -> None:
         """Read all sensor values from firmware and update local cache."""

@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import fcntl
 import glob
 import logging
@@ -206,9 +207,11 @@ async def hardware_health():
 @router.get("/identify")
 async def hardware_identify():
     """Return full hardware identification: registry + live probe results."""
-    health = await _gw().health()
-    probes = _probe_all_hardware()
-    diagnostics = _collect_hardware_diagnostics()
+    health_task = asyncio.create_task(_gw().health())
+    probes_task = asyncio.to_thread(_probe_all_hardware)
+    diagnostics_task = asyncio.to_thread(_collect_hardware_diagnostics)
+
+    health, probes, diagnostics = await asyncio.gather(health_task, probes_task, diagnostics_task)
 
     adapters = []
     for hw in _HARDWARE_REGISTRY:

@@ -54,8 +54,10 @@ source = """
 SCENARIO: "Test"
 DEVICE_TYPE: "BA"
 GOAL: Check
-  1. Step:
-    → Sensor.read AI01
+  SET 'pompa 1' '5.0 l/min'
+  IF 'AI01' > '0.5 V'
+    SAVE 'high_voltage'
+  ENDIF
 """
 
 interp = CqlInterpreter(mode="dry-run")
@@ -150,13 +152,19 @@ MANUFACTURER: "Dräger"
   intervals: [tt#000, tt#001]
 
 GOAL: Visual Inspection
-  1. Check mask surface:
-    → Valve.open NC
-    WAIT 2000
-    → Sensor.read AI01
-    IF [AI01] [>=] [0.60 V] ELSE ERROR "NC sensor voltage too low"
-    IF [AI01] [<=] [0.67 V] ELSE ERROR "NC sensor voltage too high"
-    SAVE: nc_voltage_reading
+  # Nowa płaska składnia (Flat DSL)
+  SET 'valve-nc' '1 (open)'
+  WAIT '2.0 s'
+  
+  IF 'AI01' >= '0.60 V'
+    IF 'AI01' <= '0.67 V'
+      SAVE 'nc_voltage_reading'
+    ELSE
+      ERROR "NC sensor voltage too high"
+    ENDIF
+  ELSE
+    ERROR "NC sensor voltage too low"
+  ENDIF
 ```
 
 ### CONFIG Blocks (Configuration Goals)
@@ -171,22 +179,26 @@ DEVICE_TYPE: "BA"
 
 CONFIG: Safety Initialization
   # Always disable pump on startup
-  SET 'pump-main' '0'
+  SET 'pump-main' '0 l/min (off)'
   SET 'PUMP' 'off'
-  WAIT 500
+  WAIT '500 ms'
 
 CONFIG: Valve Reset
   # Close all valves to known state
-  SET 'valve-nc' 'closed'
-  SET 'valve-sc' 'closed'
-  SET 'valve-wc' 'closed'
-  WAIT 300
+  SET 'valve-nc' '0 (closed)'
+  SET 'valve-sc' '0 (closed)'
+  SET 'valve-wc' '0 (closed)'
+  WAIT '300 ms'
+
+CONFIG: Pump Calibration
+  # 10 l/min corresponds to 100% PWM by default
+  SET 'PUMP_FLOW_FULL_SCALE_LPM' '10.0'
 
 GOAL: Voltage Test
-  SET 'valve-nc' 'open'
-  WAIT 1000
-  → Sensor.read AI01
-  SAVE: voltage_test
+  SET 'valve-nc' '1 (open)'
+  WAIT '1.0 s'
+  VAL 'AI01' 'V'
+  SAVE 'voltage_test'
 ```
 
 #### Configuration File: config-peripherals.oql
@@ -203,37 +215,37 @@ MANUFACTURER: 'Dräger'
 # PUMP INITIALIZATION
 # ============================================
 CONFIG: INIT Pompa
-  SET 'pump-main' '0'
-  SET 'pompa 1' '0'
+  SET 'pump-main' '0 l/min'
+  SET 'pompa 1' '0 l/min'
   SET 'PUMP' 'off'
-  WAIT 500
+  WAIT '500 ms'
 
 # ============================================
 # VALVE INITIALIZATION
 # ============================================
 CONFIG: INIT Zawory NC
-  SET 'valve-nc' 'closed'
-  SET 'zawór NC' 'closed'
-  WAIT 300
+  SET 'valve-nc' '0 (closed)'
+  SET 'zawór NC' '0 (closed)'
+  WAIT '300 ms'
 
 CONFIG: INIT Zawory SC
-  SET 'valve-sc' 'closed'
-  SET 'zawór SC' 'closed'
-  WAIT 300
+  SET 'valve-sc' '0 (closed)'
+  SET 'zawór SC' '0 (closed)'
+  WAIT '300 ms'
 
 CONFIG: INIT Zawory ogólne
   SET 'valve-1' '0'
   SET 'valve-2' '0'
   SET 'valve-3' '0'
   SET 'valve-4' '0'
-  WAIT 500
+  WAIT '500 ms'
 
 # ============================================
 # SYSTEM READY STATE
 # ============================================
 CONFIG: STATE Ready
-  SAVE: system_ready
-  WAIT 1000
+  SAVE 'system_ready'
+  WAIT '1000 ms'
 ```
 
 #### Running Configuration
@@ -249,7 +261,15 @@ oqlctl run scenarios/config-peripherals.oql --mode execute
 oqlctl run scenarios/config-peripherals.oql \
   --firmware-url http://localhost:8202 \
   --mode execute
+
+# Fastest single-command hardware execution
+oqlctl cmd "SET 'pompa 1' '0'"
+
+# Single command without touching hardware
+oqlctl cmd "SET 'pompa 1' '0'" --mode dry-run
 ```
+
+Use `cmd` when you want to send just one OQL line to the firmware. Use `run` when the action requires multiple steps.
 
 #### CLI Output Example
 
@@ -257,15 +277,14 @@ oqlctl run scenarios/config-peripherals.oql \
 📋 CQL: 'Konfiguracja Peryferii'
 🔧 Device: 'BA' / 'PSS 7000'
 🎯 GOAL: [CONFIG] INIT Pompa
-  📌 Step 0: [CONFIG] INIT Pompa
-    ⚙️ SET [pump-main] = [0]
-    ⚙️ SET [pompa 1] = [0]
-    ⏳ WAIT 0.5s
-    ✅ [passed] [CONFIG] INIT Pompa
+  ⚙️ SET [pump-main] = [0 l/min]
+  ⚙️ SET [pompa 1] = [0 l/min]
+  ⏳ WAIT 0.5s
+  ✅ [passed] [CONFIG] INIT Pompa
 🎯 GOAL: [CONFIG] INIT Zawory NC
-  ⚙️ SET [valve-nc] = [closed]
+  ⚙️ SET [valve-nc] = [0 (closed)]
   ...
-✅ 'Konfiguracja Peryferii': 11/11 passed
+✅ 'Konfiguracja Peryferii': 255/255 passed
 ```
 
 ## Supported Hardware
@@ -308,6 +327,7 @@ basic open/close actuation.
 | `PIADC_URL` | `http://localhost:8080` | piADC sensor service |
 | `MODBUS_SERIAL_PORT` | `/dev/ttyACM1` | Modbus RTU serial port |
 | `MODBUS_BAUD_RATE` | `19200` | Modbus baud rate |
+| `PUMP_FLOW_FULL_SCALE_LPM` | `10` | Flow rate that maps to 100% PWM for `pompa 1` |
 
 ## Docker Deployment
 

@@ -11,6 +11,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
+import yaml
+
 # ── Result types ─────────────────────────────────────────────────────────────
 
 class StepStatus(Enum):
@@ -57,31 +59,47 @@ class ScriptResult:
 # ── Variable store ───────────────────────────────────────────────────────────
 
 class VariableStore:
-    """Simple key-value store with interpolation support."""
+    """Hierarchical key-value store with interpolation support."""
 
-    def __init__(self, initial: dict[str, Any] | None = None):
+    def __init__(self, initial: dict[str, Any] | None = None, parent: VariableStore | None = None):
         self._vars: dict[str, Any] = dict(initial or {})
+        self.parent = parent
 
-    def set(self, key: str, value: Any) -> None:
-        self._vars[key] = value
+    def set(self, key: str, value: Any, local: bool = True) -> None:
+        """Set variable value. If local=False, try to update in parent if exists."""
+        if not local and self.parent and self.parent.has(key):
+            self.parent.set(key, value, local=False)
+        else:
+            self._vars[key] = value
 
     def get(self, key: str, default: Any = None) -> Any:
-        return self._vars.get(key, default)
+        """Get variable value, searching up the hierarchy."""
+        if key in self._vars:
+            return self._vars[key]
+        if self.parent:
+            return self.parent.get(key, default)
+        return default
 
     def has(self, key: str) -> bool:
-        return key in self._vars
+        """Check if variable exists in this or parent stores."""
+        return key in self._vars or (self.parent.has(key) if self.parent else False)
 
-    def all(self) -> dict[str, Any]:
-        return dict(self._vars)
+    def all(self, include_parents: bool = True) -> dict[str, Any]:
+        """Get all variables visible from this store."""
+        if not self.parent or not include_parents:
+            return dict(self._vars)
+        merged = self.parent.all(include_parents=True)
+        merged.update(self._vars)
+        return merged
 
     def clear(self) -> None:
         self._vars.clear()
 
     def interpolate(self, text: str) -> str:
-        """Replace ${var} and $var references in text."""
+        """Replace ${var} and $var references in text using hierarchical lookup."""
         def _repl(m: re.Match) -> str:
             key = m.group(1) or m.group(2)
-            val = self._vars.get(key)
+            val = self.get(key)
             return str(val) if val is not None else m.group(0)
         # ${var} first, then $var (word chars only)
         text = re.sub(r'\$\{([^}]+)\}', _repl, text)
@@ -91,43 +109,94 @@ class VariableStore:
 # ── Output / logging ────────────────────────────────────────────────────────
 
 class InterpreterOutput:
-    """Collects interpreter output lines for display or testing."""
+    """Collects interpreter output lines for display or testing, and optionally broadcasts events."""
 
-    def __init__(self, quiet: bool = False):
+    def __init__(self, quiet: bool = False, bridge: EventBridge | None = None, yaml_output: bool = False):
         self.quiet = quiet
+        self.bridge = bridge
+        self.yaml_output = yaml_output
         self.lines: list[str] = []
+        self.yaml_data: dict[str, Any] = {}
 
-    def emit(self, msg: str) -> None:
+    def emit(self, msg: str, event_type: str = "log") -> None:
         self.lines.append(msg)
         if not self.quiet:
-            print(msg)
+            if self.yaml_output:
+                # For YAML output, we'll collect structured data instead
+                pass
+            else:
+                print(msg)
+        
+        if self.bridge and self.bridge.connected:
+            # We use a helper because send_event is async.
+            # In a synchronous interpreter, we might need a background thread 
+            # or use asyncio.run if not already in an event loop.
+            # For simplicity in Sprint 4, we'll try to use a fire-and-forget 
+            # or check if we are already in an async context.
+            self._broadcast_event(event_type, {"message": msg})
+
+    def _broadcast_event(self, event_type: str, payload: dict[str, Any]) -> None:
+        if not self.bridge: return
+        try:
+            import asyncio
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                loop.create_task(self.bridge.send_event(event_type, payload))
+            else:
+                loop.run_until_complete(self.bridge.send_event(event_type, payload))
+        except Exception:
+            pass
 
     def info(self, msg: str) -> None:
-        self.emit(f"ℹ️  {msg}")
+        if self.yaml_output:
+            self.yaml_data.setdefault("info", []).append(msg)
+        else:
+            self.emit(f"ℹ️  {msg}", "info")
 
     def ok(self, msg: str) -> None:
-        self.emit(f"✅ {msg}")
+        if self.yaml_output:
+            self.yaml_data.setdefault("success", []).append(msg)
+        else:
+            self.emit(f"✅ {msg}", "success")
 
     def fail(self, msg: str) -> None:
-        self.emit(f"❌ {msg}")
+        if self.yaml_output:
+            self.yaml_data.setdefault("failure", []).append(msg)
+        else:
+            self.emit(f"❌ {msg}", "failure")
 
     def warn(self, msg: str) -> None:
-        self.emit(f"⚠️  {msg}")
+        if self.yaml_output:
+            self.yaml_data.setdefault("warning", []).append(msg)
+        else:
+            self.emit(f"⚠️  {msg}", "warning")
 
     def error(self, msg: str) -> None:
-        self.emit(f"❌ {msg}")
+        if self.yaml_output:
+            self.yaml_data.setdefault("error", []).append(msg)
+        else:
+            self.emit(f"❌ {msg}", "error")
 
     def step(self, icon: str, msg: str) -> None:
-        self.emit(f"{icon} {msg}")
+        if self.yaml_output:
+            self.yaml_data.setdefault("steps", []).append({"icon": icon, "message": msg})
+        else:
+            self.emit(f"{icon} {msg}", "step")
+
+    def output_yaml(self) -> None:
+        """Output collected YAML data to stdout."""
+        if self.yaml_output and self.yaml_data and not self.quiet:
+            print(yaml.dump(self.yaml_data, default_flow_style=False, sort_keys=False), end="")
 
 # ── Base interpreter ─────────────────────────────────────────────────────────
 
 class BaseInterpreter(ABC):
     """Abstract base for language interpreters."""
 
-    def __init__(self, variables: dict[str, Any] | None = None, quiet: bool = False):
+    def __init__(self, variables: dict[str, Any] | None = None, quiet: bool = False, bridge_url: str | None = None, yaml_output: bool = False):
+        self.bridge = EventBridge(bridge_url) if bridge_url else None
         self.vars = VariableStore(variables)
-        self.out = InterpreterOutput(quiet=quiet)
+        self.out = InterpreterOutput(quiet=quiet, bridge=self.bridge, yaml_output=yaml_output)
         self.results: list[StepResult] = []
         self.errors: list[str] = []
         self.warnings: list[str] = []
@@ -143,11 +212,36 @@ class BaseInterpreter(ABC):
         ...
 
     def run(self, source: str, filename: str = "<string>") -> ScriptResult:
-        """Parse + execute in one step."""
+        """Parse + execute in one step with EventBridge support."""
+        import asyncio
         t0 = time.monotonic()
+        
+        # Connect bridge if available
+        if self.bridge:
+            try:
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    # If we are already in a loop, we can't block here properly without await.
+                    # This is a limitation of this shim.
+                    pass
+                else:
+                    loop.run_until_complete(self.bridge.connect())
+            except Exception:
+                pass
+
         parsed = self.parse(source, filename)
         result = self.execute(parsed)
         result.duration_ms = (time.monotonic() - t0) * 1000
+        
+        # Disconnect bridge
+        if self.bridge:
+            try:
+                loop = asyncio.get_event_loop()
+                if not loop.is_running():
+                    loop.run_until_complete(self.bridge.disconnect())
+            except Exception:
+                pass
+                
         return result
 
     def run_file(self, path: str) -> ScriptResult:

@@ -26,6 +26,7 @@ from oqlos.api import (
     hardware_router,
 )
 from oqlos.api.editor import router as editor_router
+from oqlos.api import plugins as plugins_router
 from oqlos.api.utils.execution_ctrl import set_dependencies as set_shared_dependencies
 from oqlos.api.hardware import set_hardware_gateway
 from oqlos.utils import load_sample_scenarios
@@ -79,6 +80,7 @@ app.include_router(logs_router)
 app.include_router(version_router)
 app.include_router(hardware_router)
 app.include_router(editor_router)
+app.include_router(plugins_router.router)
 
 # Compatibility: expose the same API under /firmware/* (frontend expects this prefix)
 app.include_router(scenarios_router, prefix="/firmware")

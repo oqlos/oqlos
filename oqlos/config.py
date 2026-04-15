@@ -45,6 +45,9 @@ class Settings(BaseSettings):
     motor_url: str = "http://localhost:49055"
     lung_motor_url: str = "http://localhost:8205"
     
+    # Pump Calibration
+    pump_flow_full_scale_lpm: float = 10.0
+
     # Logging
     log_level: str = "INFO"
     

@@ -30,7 +30,13 @@ async def _fetch_raw_from_sources(sources: list[str]) -> Any | None:
             for src in sources:
                 try:
                     resp = await client.get(src)
-                    return resp.json()
+                    if not resp.is_success:
+                        continue
+                    data = resp.json()
+                    if isinstance(data, list):
+                        return data
+                    if isinstance(data, dict) and "rows" in data:
+                        return data
                 except Exception:  # noqa: BLE001
                     continue
     except Exception:  # noqa: BLE001
@@ -113,7 +119,9 @@ async def fetch_scenarios(source: str = "http://localhost:8100/connect-data/test
                     continue
             _ctrl.state_manager.scenarios[scenario.id] = scenario
             out.append(scenario.model_dump())
-    return out
+    if out:
+        return out
+    return list(_ctrl.state_manager.scenarios.values())
 
 def _parse_content_to_goals(content) -> list[Goal]:
     """Parse scenario content to extract goals with steps"""

@@ -76,20 +76,11 @@ _PERIPHERAL_MAP["zawór-overpressure"] = "valve-5"
 _PERIPHERAL_MAP["zawor-overpressure"] = "valve-5"
 _PERIPHERAL_MAP["overpressure"] = "valve-5"
 
-# BO (Blok Oddechowy) valves — BO04=valve-4, BO05=valve-5, BO06=valve-6, etc.
-for i in range(1, 15):
-    _PERIPHERAL_MAP.setdefault(f"bo{i:02d}", f"valve-{i}")
-    _PERIPHERAL_MAP.setdefault(f"bo-{i:02d}", f"valve-{i}")
-    _PERIPHERAL_MAP.setdefault(f"zawór-bo{i:02d}", f"valve-{i}")
-    _PERIPHERAL_MAP.setdefault(f"zawor-bo{i:02d}", f"valve-{i}")
-
 # Bottle valve (conceptual — no direct firmware peripheral, map to valve-1)
 _PERIPHERAL_MAP["zawór-butli"] = "valve-1"
 _PERIPHERAL_MAP["zawor-butli"] = "valve-1"
 _PERIPHERAL_MAP["valve-butli"] = "valve-1"
 _PERIPHERAL_MAP["bottle-valve"] = "valve-1"
-_PERIPHERAL_MAP["zawór-butli-300-bar"] = "valve-1"
-_PERIPHERAL_MAP["zawor-butli-300-bar"] = "valve-1"
 
 # Artificial lung
 _PERIPHERAL_MAP["lung"] = "lung-main"
@@ -100,17 +91,25 @@ _PERIPHERAL_MAP["pluco"] = "lung-main"
 # CQL sensor names (AI01, AI02, etc.) → firmware peripheral IDs
 _SENSOR_MAP = {
     "AI01": "nc-sensor",
+    "ciśnienie-nc": "nc-sensor",
+    "cisnienie-nc": "nc-sensor",
+    "nadciśnienie": "nc-sensor",
+    "nadcisnienie": "nc-sensor",
     "AI02": "sc-sensor",
+    "ciśnienie-sc": "sc-sensor",
+    "cisnienie-sc": "sc-sensor",
     "AI03": "wc-sensor",
+    "ciśnienie-wc": "wc-sensor",
 }
 
 
 class FirmwareAdapter:
     """HTTP bridge between CQL interpreter and firmware simulator."""
 
-    def __init__(self, base_url: str = "http://localhost:8202", timeout: float = 5.0):
+    def __init__(self, base_url: str = "http://localhost:8202", timeout: float = 5.0, mock: bool = False):
         self.base_url = base_url.rstrip("/")
         self.timeout = timeout
+        self.mock = mock
         self.lung_motor_url = get_settings().lung_motor_url.rstrip("/")
         self._client: Any = None
 
@@ -160,11 +159,23 @@ class FirmwareAdapter:
         the HardwareGateway actually drives real hardware.
         Falls back to PUT /api/v1/peripherals/{pid} for unknown types.
         """
+        import re
+        
+        def _parse_numeric(val):
+            """Extract numeric value from string like '5 l/min' or '10 mbar'."""
+            if val is None:
+                return 0.0
+            if isinstance(val, (int, float)):
+                return float(val)
+            # Extract first numeric value from string
+            match = re.search(r'[-+]?[0-9]*\.?[0-9]+', str(val))
+            return float(match.group()) if match else 0.0
+        
         pid = self._resolve_peripheral(target)
 
         # Route to hardware-specific endpoints for real device control
         if pid.startswith("pump"):
-            power = float(value) if value is not None else 0.0
+            power = _parse_numeric(value)
             r = self._get_client().post(
                 "/api/v1/hardware/pump",
                 params={"power_pct": power},
@@ -196,7 +207,8 @@ class FirmwareAdapter:
         if pid.startswith("lung"):
             # Lung motor: value > 0 starts reciprocating, 0 stops
             lung_url = self._get_lung_motor_url()
-            cycles = int(float(value)) if value and float(value) > 0 else 0
+            val_num = _parse_numeric(value)
+            cycles = int(val_num) if val_num > 0 else 0
             if cycles > 0:
                 payload = {"steps": 500, "speed": 100000, "cycles": cycles, "pause": 0.5}
                 try:
@@ -324,49 +336,71 @@ class FirmwareAdapter:
 
         return target_lower, method_lower, args_stripped
 
-    def _execute_method(self, target: str, peripheral_target: str, method_lower: str, args: str) -> dict:
-        """Execute the resolved method on the target peripheral."""
-        pid = self._resolve_peripheral(peripheral_target)
-        is_valve = pid.startswith("valve")
-        is_lung = pid.startswith("lung")
+    # ── Action Handlers ──────────────────────────────────────────────────────
 
-        if is_lung:
-            if method_lower in {"off", "stop", "wyłącz", "wylacz", "zamknij", "close"}:
-                data = self.set_peripheral(peripheral_target, 0)
-                return {"ok": True, "detail": f"{target}.stop → lung stopped", "data": data}
-            cycles = _parse_numeric(args) if args.strip() else 5
-            data = self.set_peripheral(peripheral_target, cycles)
-            return {"ok": True, "detail": f"{target}.reciprocate → {int(cycles)} cycles", "data": data}
+    def _handle_lung_action(self, target: str, peripheral: str, method: str, args: str) -> dict:
+        if method in {"off", "stop", "wyłącz", "wylacz", "zamknij", "close"}:
+            data = self.set_peripheral(peripheral, 0)
+            return {"ok": True, "detail": f"{target}.stop → lung stopped", "data": data}
+        cycles = _parse_numeric(args) if args.strip() else 5
+        data = self.set_peripheral(peripheral, cycles)
+        return {"ok": True, "detail": f"{target}.reciprocate → {int(cycles)} cycles", "data": data}
 
-        if method_lower in {"off", "wyłącz", "wylacz", "stop", "zamknij", "close"}:
-            data = self.valve_close(peripheral_target) if is_valve else self.pump_off(peripheral_target)
-            detail = f"{target}.close → 0" if is_valve else f"{target}.off → 0"
-            return {"ok": True, "detail": detail, "data": data}
-
-        if method_lower in {"open", "otwórz", "otworz"}:
-            data = self.valve_open(peripheral_target)
+    def _handle_valve_action(self, target: str, peripheral: str, method: str, args: str) -> dict:
+        if method in {"off", "wyłącz", "wylacz", "stop", "zamknij", "close"}:
+            data = self.valve_close(peripheral)
+            return {"ok": True, "detail": f"{target}.close → 0", "data": data}
+        if method in {"open", "otwórz", "otworz"}:
+            data = self.valve_open(peripheral)
             return {"ok": True, "detail": f"{target}.open → 1", "data": data}
+        # default to open/on
+        data = self.valve_open(peripheral)
+        return {"ok": True, "detail": f"{target}.open (default) → 1", "data": data}
 
-        if method_lower in {"on", "set", "włącz", "wlacz", "ustaw", "start"}:
-            if is_valve:
-                data = self.valve_open(peripheral_target)
-                return {"ok": True, "detail": f"{target}.open → 1", "data": data}
-            val = _parse_numeric(args) if args.strip() else 1.0
-            data = self.pump_set(peripheral_target, val)
-            return {"ok": True, "detail": f"{target}.set → {val}", "data": data}
+    def _handle_pump_action(self, target: str, peripheral: str, method: str, args: str) -> dict:
+        if method in {"off", "wyłącz", "wylacz", "stop"}:
+            data = self.pump_off(peripheral)
+            return {"ok": True, "detail": f"{target}.off → 0", "data": data}
+        val = _parse_numeric(args) if args.strip() else 1.0
+        data = self.pump_set(peripheral, val)
+        return {"ok": True, "detail": f"{target}.set → {val}", "data": data}
 
-        if method_lower in {"reset", "wyzeruj"}:
+    def _handle_common_action(self, target: str, method: str, args: str) -> dict | None:
+        if method in {"reset", "wyzeruj"}:
             data = self.reset_peripherals()
             return {"ok": True, "detail": "reset all", "data": data}
+        if method in {"confirm", "potwierdź", "potwierdz"}:
+            return {"ok": True, "detail": f"Operator confirmed: {args}", "data": {}}
+        return None
 
+    def _execute_method(self, target: str, peripheral_target: str, method_lower: str, args: str) -> dict:
+        """Execute the resolved method on the target peripheral using a dispatch table."""
+        common = self._handle_common_action(target, method_lower, args)
+        if common:
+            return common
+
+        pid = self._resolve_peripheral(peripheral_target)
+        
+        # Sensor reading
         if method_lower in {"read", "zmierz", "sprawdź", "sprawdz", "odczytaj"}:
             val = self.read_sensor(peripheral_target)
             return {"ok": True, "detail": f"{target} = {val}", "data": {"value": val}}
 
-        if method_lower in {"confirm", "potwierdź", "potwierdz"}:
-            return {"ok": True, "detail": f"Operator confirmed: {args}", "data": {}}
+        # Type-specific dispatch
+        if pid.startswith("lung"):
+            return self._handle_lung_action(target, pid, method_lower, args)
+        if pid.startswith("valve"):
+            return self._handle_valve_action(target, pid, method_lower, args)
+        if pid.startswith("pump"):
+            return self._handle_pump_action(target, pid, method_lower, args)
 
-        return {"ok": False, "detail": f"Unknown method: {target}.{method_lower}", "data": {}}
+        # Fallback for generic peripherals
+        try:
+            val = _parse_numeric(args) if args.strip() else 1
+            data = self.set_peripheral(pid, val)
+            return {"ok": True, "detail": f"{target}.{method_lower} → {val}", "data": data}
+        except Exception as e:
+            return {"ok": False, "detail": f"Unknown method or error: {target}.{method_lower} ({e})", "data": {}}
 
     def dispatch_action(self, target: str, method: str, args: str = "") -> dict:
         """Dispatch a CQL action (→ Target.method args) to firmware.

@@ -121,6 +121,9 @@ class _ParseState:
         """Handle scenario/goal/step/action hierarchy."""
         sc = _parse_scenario_line(self.doc, stripped)
         if sc is not None:
+            # Clear block stack on new scenario
+            if hasattr(self, 'block_stack'):
+                self.block_stack.clear()
             self.current_scenario = sc
             self.current_goal = None
             self.current_step = None
@@ -132,12 +135,17 @@ class _ParseState:
 
         goal = _parse_goal_line(stripped, line, indent, self.current_scenario)
         if goal is not None:
+            # Clear block stack on new goal (implicit ENDIF/ENDLOOP at end of goal)
+            if hasattr(self, 'block_stack'):
+                self.block_stack.clear()
+                
             if self.current_scenario:
                 self.current_scenario.goals.append(goal)
             else:
                 self.doc.goals.append(goal)
             self.current_goal = goal
             self.current_step = None
+            return True
             return True
 
         if self.current_goal and not self.current_step:
@@ -158,8 +166,85 @@ class _ParseState:
             return True
 
         self.current_step = _ensure_step_for_actions(self.current_step, self.current_goal)
+        if self.current_step is None:
+            return False
 
-        if _parse_action_line(line, stripped, self.current_step.actions, self.doc, self.i):
+        # Nested block management
+        from oqlos.models.dsl_models import CqlAction
+        if not hasattr(self, 'block_stack'):
+            self.block_stack: list[tuple[CqlAction, bool]] = []  # (action, in_else_branch)
+
+        # Try to parse as an action
+        temp_actions: list[CqlAction] = []
+        if _parse_action_line(line, stripped, temp_actions, self.doc, self.i):
+            if not temp_actions:
+                return True
+            
+            act = temp_actions[0]
+            
+            # Handle block control keywords
+            if act.kind == "if_block":
+                self.block_stack.append((act, False))
+                # Add the if_block itself to the parent (step or outer block)
+                if len(self.block_stack) > 1:
+                    parent_act, in_else = self.block_stack[-2]
+                    target_list = parent_act.else_actions if in_else else parent_act.then_actions
+                    # If the parent is a loop, things are simpler
+                    if parent_act.kind == "loop_block":
+                        parent_act.loop_actions.append(act)
+                    else:
+                        target_list.append(act)
+                else:
+                    self.current_step.actions.append(act)
+                return True
+                
+            if act.kind == "loop_block":
+                self.block_stack.append((act, False)) # loop doesn't havebranches like ELSE
+                if len(self.block_stack) > 1:
+                    parent_act, in_else = self.block_stack[-2]
+                    if parent_act.kind == "loop_block":
+                        parent_act.loop_actions.append(act)
+                    else:
+                        target_list = parent_act.else_actions if in_else else parent_act.then_actions
+                        target_list.append(act)
+                else:
+                    self.current_step.actions.append(act)
+                return True
+
+            if act.kind == "else_block":
+                if not self.block_stack:
+                    self.doc.warnings.append(f"L{self.i}: ELSE ohne IF")
+                    return True
+                parent_act, _ = self.block_stack.pop()
+                if parent_act.kind != "if_block":
+                    self.doc.warnings.append(f"L{self.i}: ELSE inside LOOP")
+                self.block_stack.append((parent_act, True))
+                return True
+                
+            if act.kind == "endif":
+                if not self.block_stack or self.block_stack[-1][0].kind != "if_block":
+                    self.doc.warnings.append(f"L{self.i}: ENDIF ohne IF")
+                    if not self.block_stack: return True
+                self.block_stack.pop()
+                return True
+
+            if act.kind == "endloop":
+                if not self.block_stack or self.block_stack[-1][0].kind != "loop_block":
+                    self.doc.warnings.append(f"L{self.i}: ENDLOOP ohne LOOP")
+                    if not self.block_stack: return True
+                self.block_stack.pop()
+                return True
+
+            # Standard actions & var_set
+            if self.block_stack:
+                parent_act, in_else = self.block_stack[-1]
+                if parent_act.kind == "loop_block":
+                    parent_act.loop_actions.append(act)
+                else:
+                    target_list = parent_act.else_actions if in_else else parent_act.then_actions
+                    target_list.append(act)
+            else:
+                self.current_step.actions.append(act)
             return True
 
         return False

@@ -26,6 +26,7 @@ Valve mapping (valve-N id → Modbus coil address):
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
 from typing import Any
@@ -391,13 +392,21 @@ class HardwareGateway:
             result["note"] = "mock mode — no hardware calls"
             return result
 
-        for name, url in [("piadc", _PIADC_URL), ("motor", _MOTOR_URL), ("lung", _LUNG_MOTOR_URL)]:
+        async def _check_service(name: str, url: str) -> tuple[str, str]:
             try:
                 async with httpx.AsyncClient(timeout=_TIMEOUT) as c:
                     r = await c.get(f"{url}/health")
-                result[name] = "ok" if r.status_code < 300 else f"http {r.status_code}"
+                return name, "ok" if r.status_code < 300 else f"http {r.status_code}"
             except Exception as exc:
-                result[name] = f"error: {exc}"
+                return name, f"error: {exc}"
+
+        checks = await asyncio.gather(
+            _check_service("piadc", _PIADC_URL),
+            _check_service("motor", _MOTOR_URL),
+            _check_service("lung", _LUNG_MOTOR_URL),
+        )
+        for name, status in checks:
+            result[name] = status
 
         result["modbus"] = (
             f"{self._modbus._serial_port}@{self._modbus._baudrate} 8{self._modbus._parity}1 "

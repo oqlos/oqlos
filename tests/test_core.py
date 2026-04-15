@@ -7,7 +7,9 @@ Run: cd oqlos && python -m pytest tests/ -v
 from __future__ import annotations
 
 import pytest
+from types import SimpleNamespace
 
+import oqlos.config as oql_config
 from oqlos.core.base import VariableStore, StepStatus
 from oqlos.core.interpreter import CqlInterpreter
 from oqlos.core.cql_parser import parse_cql, validate_cql
@@ -255,6 +257,60 @@ class TestCqlExecuteMode:
         interp = CqlInterpreter(mode="execute", quiet=True, firmware_url="http://localhost:9999")
         assert interp._firmware is None
         assert interp._firmware_url == "http://localhost:9999"
+
+    def test_pump_flow_uses_env_scale(self, monkeypatch):
+        calls: list[tuple[str, float]] = []
+
+        class FakeFirmware:
+            def set_peripheral(self, target: str, value):
+                calls.append((target, value))
+                return {"ok": True}
+
+        monkeypatch.setattr(
+            oql_config,
+            "get_settings",
+            lambda: SimpleNamespace(pump_flow_full_scale_lpm=20.0),
+        )
+
+        interp = CqlInterpreter(mode="execute", quiet=True)
+        monkeypatch.setattr(interp, "_get_firmware", lambda: FakeFirmware())
+
+        result = interp.run("SCENARIO: Pump\nGOAL: Demo\n  SET 'pompa 1' '10 l/min'\n")
+
+        assert result.ok is True
+        assert calls == [("pompa 1", 50.0)]
+
+    def test_pump_flow_scale_can_be_overridden_in_config_block(self, monkeypatch):
+        calls: list[tuple[str, float]] = []
+
+        class FakeFirmware:
+            def set_peripheral(self, target: str, value):
+                calls.append((target, value))
+                return {"ok": True}
+
+        monkeypatch.setattr(
+            oql_config,
+            "get_settings",
+            lambda: SimpleNamespace(pump_flow_full_scale_lpm=10.0),
+        )
+
+        interp = CqlInterpreter(mode="execute", quiet=True)
+        monkeypatch.setattr(interp, "_get_firmware", lambda: FakeFirmware())
+
+        src = """SCENARIO: Pump config
+
+CONFIG: Kalibracja pompy
+  SET 'PUMP_FLOW_FULL_SCALE_LPM' '20'
+
+GOAL: Test przepływu
+  SET 'pompa 1' '10 l/min'
+"""
+
+        result = interp.run(src)
+
+        assert result.ok is True
+        assert interp.vars.get("PUMP_FLOW_FULL_SCALE_LPM") == "20"
+        assert calls == [("pompa 1", 50.0)]
 
     def test_dry_run_does_not_use_firmware(self):
         src = """SCENARIO: Test
