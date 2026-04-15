@@ -154,8 +154,9 @@ GOAL: Visual Inspection
     → Valve.open NC
     WAIT 2000
     → Sensor.read AI01
-    IF [AI01] [>=] [-15 mbar] ELSE ERROR "Pressure too low"
-    SAVE: pressure_reading
+    IF [AI01] [>=] [0.60 V] ELSE ERROR "NC sensor voltage too low"
+    IF [AI01] [<=] [0.67 V] ELSE ERROR "NC sensor voltage too high"
+    SAVE: nc_voltage_reading
 ```
 
 ### CONFIG Blocks (Configuration Goals)
@@ -181,11 +182,11 @@ CONFIG: Valve Reset
   SET 'valve-wc' 'closed'
   WAIT 300
 
-GOAL: Pressure Test
+GOAL: Voltage Test
   SET 'valve-nc' 'open'
   WAIT 1000
   → Sensor.read AI01
-  SAVE: pressure_test
+  SAVE: voltage_test
 ```
 
 #### Configuration File: config-peripherals.oql
@@ -272,7 +273,7 @@ oqlctl run scenarios/config-peripherals.oql \
 - **Valves**: valve-1 through valve-14, valve-nc, valve-sc, valve-wc (Modbus RTU via /dev/ttyACM1 @ 19200 8N1)
 - **Pump**: pump-main (DRI0050 PWM motor driver via HTTP :49055)
 - **Artificial lung**: lung-main (Tic T249 stepper via HTTP :8205)
-- **Sensors**: AI01 (NC), AI02 (SC), AI03 (WC) (piADC ADS1115 via HTTP :8204)
+- **Sensors**: AI01 (NC), AI02 (SC), AI03 (WC) (piADC ADS1115 via HTTP :8204; raw ADC voltage)
 
 ### Hardware Adapters
 
@@ -292,6 +293,10 @@ status, and a diagnostics block with:
 - Serial port inventory (`ttyACM*` and `ttyUSB*`)
 - I2C bus inventory (`/dev/i2c-*`)
 - Best-effort bridge health snapshot for `piadc`, `motor`, `lung`, and `modbus`
+
+The current valve calibration flow uses raw `piADC` voltage windows in the test scenario
+`oqlos/oqlos/scenarios/test-zaworu.oql`, while `hardware-valves-smoke.oql` only verifies
+basic open/close actuation.
 
 ### Environment Variables
 

@@ -95,9 +95,10 @@ GOAL: Detect and validate all hardware components
   ASSERT_JSON "motor" "ok"
   
   # Test peryferiów
+  # piADC zwraca surowe napięcie, więc progi podajemy w voltach.
   SET "pompa" "2"
   WAIT "500ms"
-  ASSERT_SENSOR "sc-sensor" ">" "1" "mbar"
+  ASSERT_SENSOR "sc-sensor" ">" "0.73" "V"
   SET "pompa" "0"
   
   # Raport dla shell
@@ -108,8 +109,11 @@ GOAL: Detect and validate all hardware components
 
 Test kalibracji sprawdza:
 1. **Pump response** - czas odpowiedzi pompy DRI0050
-2. **Valve calibration** - sekwencja otwarcia/zamknięcia zaworów NC/SC/WC
-3. **Sensor readings** - odczyty z sensorów ciśnienia (NC/SC/WC)
+2. **Valve actuation** - sekwencja otwarcia/zamknięcia zaworów NC/SC/WC
+3. **Sensor readings** - surowe odczyty napięcia ADC z NC/SC/WC
+4. **Calibrated valve validation** - scenariusz `oqlos/oqlos/scenarios/test-zaworu.oql` z oknami napięć
+
+Do samego potwierdzenia sterowania zaworami użyj `hardware-valves-smoke.oql`; do walidacji progów na realnym sprzęcie użyj `test-zaworu.oql`.
 
 ```bash
 # Kalibracja z wyjściem JSON

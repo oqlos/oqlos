@@ -24,16 +24,16 @@ cd dsl && make server
 
 Output:
 ```
-╔═══════════════════════════════════════════════════════════╗
-║           🌐 DSL Event Server                               ║
-║                                                             ║
-║  WebSocket: ws://0.0.0.0:8104                              ║
-║                                                             ║
-║  Endpoints:                                                 ║
-║    /events  - General events                                ║
-║    /browser - Browser clients                               ║
-║    /cli     - CLI clients                                   ║
-╚═══════════════════════════════════════════════════════════╝
+╔════════════════════════════════════════════════════╗
+║           🌐 DSL Event Server                       ║
+║                                                    ║
+║  WebSocket: ws://0.0.0.0:8104                      ║
+║                                                    ║
+║  Endpoints:                                        ║
+║    /events  - General events                       ║
+║    /browser - Browser clients                      ║
+║    /cli     - CLI clients                          ║
+╚════════════════════════════════════════════════════╝
 ✅ Server running on ws://0.0.0.0:8104
 ```
 

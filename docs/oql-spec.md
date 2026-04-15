@@ -70,6 +70,10 @@ Timer ∈ [0, 30000] ms | WAIT "Stabilization"
 IF [sensor] [op] [value unit] ELSE ERROR "message"
 ```
 
+Units in conditions follow the underlying measurement source. For the current
+piADC-based valve diagnostics, raw sensor values are validated as voltages (`V`)
+instead of translated pressure units.
+
 ## Min/Max/Val
 
 ```

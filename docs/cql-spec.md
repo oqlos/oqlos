@@ -152,7 +152,7 @@ dsl/
 - **`FirmwareAdapter`** — HTTP bridge between CQL interpreter and firmware simulator.
 - **`CqlMetadata`** — —
 - **`CqlInterval`** — —
-- **`CqlCondition`** — Sensor condition: AI01 ∈ [min, max] unit | ACTION 'msg'
+- **`CqlCondition`** — Sensor condition: AI01 [op] [value unit] | ACTION 'msg' (units follow the measurement source, e.g. `V` for raw piADC readings)
 - **`CqlAction`** — An action within a step: → Target.method args, TASK, SET, WAIT, or PUMP.
 - **`CqlStep`** — A numbered step within a goal: 1. Step name:
 - **`CqlGoal`** — A test goal within a scenario.
