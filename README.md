@@ -143,6 +143,115 @@ GOAL: Visual Inspection
     SAVE: pressure_reading
 ```
 
+### CONFIG Blocks (Configuration Goals)
+
+Use `CONFIG:` for hardware initialization and setup procedures. CONFIG blocks are semantically identical to GOAL blocks but marked with `[CONFIG]` prefix for clarity in logs and documentation.
+
+#### Basic CONFIG Example
+
+```oql
+SCENARIO: "System Startup"
+DEVICE_TYPE: "BA"
+
+CONFIG: Safety Initialization
+  # Always disable pump on startup
+  SET 'pump-main' '0'
+  SET 'PUMP' 'off'
+  WAIT 500
+
+CONFIG: Valve Reset
+  # Close all valves to known state
+  SET 'valve-nc' 'closed'
+  SET 'valve-sc' 'closed'
+  SET 'valve-wc' 'closed'
+  WAIT 300
+
+GOAL: Pressure Test
+  SET 'valve-nc' 'open'
+  WAIT 1000
+  → Sensor.read AI01
+  SAVE: pressure_test
+```
+
+#### Configuration File: config-peripherals.oql
+
+Full peripheral initialization scenario:
+
+```oql
+SCENARIO: 'Konfiguracja Peryferii'
+DEVICE_TYPE: 'BA'
+DEVICE_MODEL: 'PSS 7000'
+MANUFACTURER: 'Dräger'
+
+# ============================================
+# PUMP INITIALIZATION
+# ============================================
+CONFIG: INIT Pompa
+  SET 'pump-main' '0'
+  SET 'pompa 1' '0'
+  SET 'PUMP' 'off'
+  WAIT 500
+
+# ============================================
+# VALVE INITIALIZATION
+# ============================================
+CONFIG: INIT Zawory NC
+  SET 'valve-nc' 'closed'
+  SET 'zawór NC' 'closed'
+  WAIT 300
+
+CONFIG: INIT Zawory SC
+  SET 'valve-sc' 'closed'
+  SET 'zawór SC' 'closed'
+  WAIT 300
+
+CONFIG: INIT Zawory ogólne
+  SET 'valve-1' '0'
+  SET 'valve-2' '0'
+  SET 'valve-3' '0'
+  SET 'valve-4' '0'
+  WAIT 500
+
+# ============================================
+# SYSTEM READY STATE
+# ============================================
+CONFIG: STATE Ready
+  SAVE: system_ready
+  WAIT 1000
+```
+
+#### Running Configuration
+
+```bash
+# Dry-run (validate and simulate)
+oqlctl run scenarios/config-peripherals.oql --mode dry-run
+
+# Execute on real hardware
+oqlctl run scenarios/config-peripherals.oql --mode execute
+
+# Execute with custom firmware URL
+oqlctl run scenarios/config-peripherals.oql \
+  --firmware-url http://localhost:8202 \
+  --mode execute
+```
+
+#### CLI Output Example
+
+```
+📋 CQL: 'Konfiguracja Peryferii'
+🔧 Device: 'BA' / 'PSS 7000'
+🎯 GOAL: [CONFIG] INIT Pompa
+  📌 Step 0: [CONFIG] INIT Pompa
+    ⚙️ SET [pump-main] = [0]
+    ⚙️ SET [pompa 1] = [0]
+    ⏳ WAIT 0.5s
+    ✅ [passed] [CONFIG] INIT Pompa
+🎯 GOAL: [CONFIG] INIT Zawory NC
+  ⚙️ SET [valve-nc] = [closed]
+  ...
+✅ 'Konfiguracja Peryferii': 11/11 passed
+```
+
 ## Supported Hardware
 
 - **Valves**: valve-1 through valve-14, valve-nc, valve-sc, valve-wc (Modbus RTU via /dev/ttyACM1 @ 19200 8N1)

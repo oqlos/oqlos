@@ -57,7 +57,7 @@ def _build_step_labels(sc) -> list[str]:
 
 def _resolve_current_index(exec_obj, sc) -> int:
     """Determine the current step index from orchestrator state or by scanning goals."""
-    current_idx = getattr(orchestrator, 'current_index', -1)
+    current_idx = getattr(_ctrl.orchestrator, 'current_index', -1)
     if current_idx is not None and current_idx >= 0:
         return current_idx
     if not exec_obj or not sc:
@@ -144,7 +144,7 @@ async def execute_step(payload: dict[str, Any]):
         peripheral=step_data.get("peripheral"),
         value=step_data.get("value"),
     )
-    result = await _ctrl.orchestrator.execute_single_step(step) if hasattr(orchestrator, 'execute_single_step') else {"status": "executed", "step": step_data}
+    result = await _ctrl.orchestrator.execute_single_step(step) if hasattr(_ctrl.orchestrator, 'execute_single_step') else {"status": "executed", "step": step_data}
 
     return {
         "executionId": execution_id,

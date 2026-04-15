@@ -2,28 +2,18 @@
 import asyncio
 import ast
 import logging
-import operator
 from datetime import datetime, timezone
 from typing import Any
 
-_SAFE_OPS = {
-    ast.Lt: operator.lt,
-    ast.LtE: operator.le,
-    ast.Gt: operator.gt,
-    ast.GtE: operator.ge,
-    ast.Eq: operator.eq,
-    ast.NotEq: operator.ne,
-}
+from oqlos.core._compare import resolve_compare
+
 
 def _resolve_compare(node: ast.Compare, context: dict[str, Any]) -> bool:
     """Resolve a Compare node (a < b, chained comparisons)."""
     left = _safe_resolve(node.left, context)
     for op, comparator in zip(node.ops, node.comparators):
         right = _safe_resolve(comparator, context)
-        fn = _SAFE_OPS.get(type(op))
-        if fn is None:
-            raise ValueError(f"Unsupported comparison operator: {type(op).__name__}")
-        if not fn(left, right):
+        if not resolve_compare(left, op, right):
             return False
         left = right
     return True

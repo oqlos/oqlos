@@ -11,20 +11,14 @@ import ast
 import operator
 from typing import Any
 
+from oqlos.core._compare import resolve_compare
+
 _SAFE_OPS = {
     ast.Add: operator.add,
     ast.Sub: operator.sub,
     ast.Mult: operator.mul,
     ast.Div: operator.truediv,
     ast.Mod: operator.mod,
-    ast.Eq: operator.eq,
-    ast.NotEq: operator.ne,
-    ast.Lt: operator.lt,
-    ast.LtE: operator.le,
-    ast.Gt: operator.gt,
-    ast.GtE: operator.ge,
-    ast.And: lambda a, b: a and b,
-    ast.Or: lambda a, b: a or b,
 }
 
 _ALLOWED_NAMES = {"True": True, "False": False, "None": None}
@@ -98,10 +92,7 @@ def _eval_compare(node: ast.Compare, ctx: dict[str, Any]) -> Any:
     left = _eval_node(node.left, ctx)
     for op, comparator in zip(node.ops, node.comparators):
         right = _eval_node(comparator, ctx)
-        op_fn = _SAFE_OPS.get(type(op))
-        if op_fn is None:
-            raise SafeEvalError(f"Unsupported comparison: {type(op).__name__}")
-        if not op_fn(left, right):
+        if not resolve_compare(left, op, right):
             return False
         left = right
     return True

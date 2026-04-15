@@ -13,16 +13,22 @@ dependencies = [
     "fastapi>=0.110",
     "uvicorn>=0.28",
     "pydantic>=2.0",
+    "pydantic-settings>=2.2.0",
     "pyserial>=3.5",
     "pymodbus>=3.6",
+    "httpx>=0.25",
+    "nfo>=0.2.3",
 ]
 
 [project.scripts]
 oqlos-server = "oqlos.api.main:run"
+oqlctl = "oqlos.tools.cql_cli:main"
+oqlos-events = "oqlos.shared.event_server:main"
 
 [project.optional-dependencies]
 rpi = ["RPi.GPIO>=0.7", "smbus2>=0.4"]
-dev = ["pytest", "pytest-asyncio", "httpx"]
+server = ["websockets>=13.0"]
+dev = ["pytest", "pytest-asyncio", "httpx", "websockets>=13.0"]
 
 [tool.setuptools.packages.find]
 include = ["oqlos*"]

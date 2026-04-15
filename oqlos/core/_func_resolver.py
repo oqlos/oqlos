@@ -40,6 +40,37 @@ def _collect_function_definitions(lines: list[str]) -> dict[str, list[str]]:
     return func_defs
 
 
+_FUNC_CALL_PATTERNS = [
+    re.compile(r'FUNC\s*"([^"]*)"(?:\s+.*)?$', re.IGNORECASE),
+    re.compile(r"FUNC\s*'([^']*)'(?:\s+.*)?$", re.IGNORECASE),
+    re.compile(r"FUNC\s*\[([^\]]+)\](?:\s+.*)?$", re.IGNORECASE),
+]
+_FUNC_COLON_PATTERN = re.compile(r"FUNC:\s*(.+)$", re.IGNORECASE)
+
+
+def _extract_func_name(line: str, indent: int) -> str | None:
+    """Extract function name from a FUNC call line, or None if not a FUNC call."""
+    normalized = _normalize_quote_syntax(line)
+    for pattern in _FUNC_CALL_PATTERNS:
+        m = pattern.match(normalized)
+        if m:
+            name = m.group(1).strip()
+            return name or None
+    m = _FUNC_COLON_PATTERN.match(normalized)
+    if m and indent > 0:
+        name = m.group(1).strip()
+        return name or None
+    return None
+
+
+def _guard_recursion(func_name: str, call_stack: tuple[str, ...]) -> None:
+    """Raise RecursionError on circular or too-deep FUNC calls."""
+    if len(call_stack) >= MAX_FUNC_DEPTH:
+        raise RecursionError(f"FUNC depth limit ({MAX_FUNC_DEPTH}) exceeded: {' → '.join(call_stack)}")
+    if func_name in call_stack:
+        raise RecursionError(f"Circular FUNC reference: {' → '.join(call_stack)} → {func_name}")
+
+
 def _parse_func_call(
     line: str,
     step_counter: int,
@@ -50,31 +81,14 @@ def _parse_func_call(
     parse_line_fn: Callable[..., int] | None = None,
 ) -> tuple[int, bool, bool]:
     """Expand an in-goal FUNC call into its defined runtime steps."""
-    normalized_line = _normalize_quote_syntax(line)
-    m_quote = re.match(r'FUNC\s*"([^"]*)"(?:\s+.*)?$', normalized_line, re.IGNORECASE)
-    m_squote = re.match(r"FUNC\s*'([^']*)'(?:\s+.*)?$", normalized_line, re.IGNORECASE)
-    m_bracket = re.match(r"FUNC\s*\[([^\]]+)\](?:\s+.*)?$", normalized_line, re.IGNORECASE)
-    m_colon = re.match(r"FUNC:\s*(.+)$", normalized_line, re.IGNORECASE)
-    if not m_quote and not m_squote and not m_bracket and not m_colon:
+    func_name = _extract_func_name(line, indent)
+    if func_name is None:
         return step_counter, False, False
 
-    # `FUNC: name` at top level is a definition, not a call.
-    if m_colon and indent == 0:
-        return step_counter, False, False
-
-    func_name = (m_quote.group(1) if m_quote else m_squote.group(1) if m_squote else m_bracket.group(1) if m_bracket else m_colon.group(1)).strip()
-    if not func_name:
-        return step_counter, True, True
-    if len(call_stack) >= MAX_FUNC_DEPTH:
-        raise RecursionError(f"FUNC depth limit ({MAX_FUNC_DEPTH}) exceeded: {' → '.join(call_stack)}")
-    if func_name in call_stack:
-        raise RecursionError(f"Circular FUNC reference: {' → '.join(call_stack)} → {func_name}")
+    _guard_recursion(func_name, call_stack)
 
     func_lines = func_defs.get(func_name)
-    if not func_lines:
-        return step_counter, True, True
-
-    if parse_line_fn is None:
+    if not func_lines or parse_line_fn is None:
         return step_counter, True, True
 
     for func_line in func_lines:

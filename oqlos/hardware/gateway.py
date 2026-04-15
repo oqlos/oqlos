@@ -228,22 +228,28 @@ class HardwareGateway:
     In *real* mode it calls the actual hardware services (piadc / DRI0050 / modbus).
     """
 
-    def __init__(self) -> None:
-        self.mode = _HARDWARE_MODE
-        self._piadc = _PiAdcAdapter(_PIADC_URL)
-        self._motor = _DRI0050MotorAdapter(_MOTOR_URL)
-        self._modbus = _ModbusAdapter(_MODBUS_SERIAL, _MODBUS_BAUD, _MODBUS_PARITY, _MODBUS_HOST, _MODBUS_PORT)
-        logger.info(
-            "HardwareGateway init: mode=%s piadc=%s motor=%s modbus=%s@%d 8%s1 (tcp-fallback=%s:%d)",
-            self.mode,
-            _PIADC_URL,
-            _MOTOR_URL,
-            self._modbus._serial_port,
-            self._modbus._baudrate,
-            self._modbus._parity,
-            _MODBUS_HOST,
-            _MODBUS_PORT,
-        )
+    def __init__(self, mode: str | None = None) -> None:
+        self.mode = mode or _HARDWARE_MODE
+        if self.mode == "real":
+            self._piadc = _PiAdcAdapter(_PIADC_URL)
+            self._motor = _DRI0050MotorAdapter(_MOTOR_URL)
+            self._modbus = _ModbusAdapter(_MODBUS_SERIAL, _MODBUS_BAUD, _MODBUS_PARITY, _MODBUS_HOST, _MODBUS_PORT)
+            logger.info(
+                "HardwareGateway init: mode=%s piadc=%s motor=%s modbus=%s@%d 8%s1 (tcp-fallback=%s:%d)",
+                self.mode,
+                _PIADC_URL,
+                _MOTOR_URL,
+                self._modbus._serial_port,
+                self._modbus._baudrate,
+                self._modbus._parity,
+                _MODBUS_HOST,
+                _MODBUS_PORT,
+            )
+        else:
+            self._piadc = None
+            self._motor = None
+            self._modbus = None
+            logger.info("HardwareGateway init: mode=%s (hardware adapters not initialized)", self.mode)
 
     @property
     def is_real(self) -> bool:

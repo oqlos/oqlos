@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OqlOS Scenario Editor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            background: #16213e;
+            padding: 1rem 2rem;
+            border-bottom: 2px solid #0f3460;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            font-size: 1.5rem;
+            color: #e94560;
+        }
+        
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        .sidebar {
+            width: 300px;
+            background: #0f3460;
+            border-right: 2px solid #16213e;
+            overflow-y: auto;
+        }
+        
+        .sidebar-header {
+            padding: 1rem;
+            background: #16213e;
+            font-weight: bold;
+            border-bottom: 1px solid #0f3460;
+        }
+        
+        .file-list {
+            list-style: none;
+        }
+        
+        .file-item {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            border-bottom: 1px solid #1a1a2e;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .file-item:hover {
+            background: #1a1a2e;
+        }
+        
+        .file-item.active {
+            background: #e94560;
+        }
+        
+        .file-icon {
+            font-size: 1.2rem;
+        }
+        
+        .editor-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .editor-toolbar {
+            background: #16213e;
+            padding: 0.75rem 1rem;
+            display: flex;
+            gap: 0.5rem;
+            border-bottom: 2px solid #0f3460;
+        }
+        
+        .toolbar-btn {
+            background: #0f3460;
+            color: #eee;
+            border: none;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            border-radius: 4px;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        
+        .toolbar-btn:hover {
+            background: #e94560;
+        }
+        
+        .toolbar-btn:disabled {
+            background: #333;
+            cursor: not-allowed;
+        }
+        
+        .editor-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .file-name-display {
+            background: #1a1a2e;
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            color: #888;
+            border-bottom: 1px solid #0f3460;
+        }
+        
+        textarea {
+            flex: 1;
+            background: #0f0f1a;
+            color: #eee;
+            border: none;
+            padding: 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            resize: none;
+            outline: none;
+        }
+        
+        .status-bar {
+            background: #16213e;
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            color: #888;
+            border-top: 1px solid #0f3460;
+        }
+        
+        .execution-panel {
+            background: #1a1a2e;
+            border-top: 2px solid #0f3460;
+            padding: 1rem;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .execution-panel h3 {
+            margin-bottom: 0.5rem;
+            color: #e94560;
+        }
+        
+        .log-entry {
+            padding: 0.25rem 0;
+            font-size: 0.85rem;
+        }
+        
+        .log-entry.success {
+            color: #4ade80;
+        }
+        
+        .log-entry.error {
+            color: #f87171;
+        }
+        
+        .log-entry.info {
+            color: #60a5fa;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        select, input {
+            background: #0f3460;
+            color: #eee;
+            border: 1px solid #16213e;
+            padding: 0.5rem;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔧 OqlOS Scenario Editor</h1>
+        <button class="toolbar-btn" onclick="refreshFiles()">🔄 Refresh</button>
+    </div>
+    
+    <div class="main-container">
+        <div class="sidebar">
+            <div class="sidebar-header">📁 Scenarios</div>
+            <ul class="file-list" id="fileList"></ul>
+        </div>
+        
+        <div class="editor-container">
+            <div class="editor-toolbar">
+                <button class="toolbar-btn" id="saveBtn" onclick="saveFile()" disabled>💾 Save</button>
+                <button class="toolbar-btn" id="executeBtn" onclick="executeScenario()" disabled>▶️ Execute</button>
+            </div>
+            
+            <div class="editor-area">
+                <div class="file-name-display" id="fileNameDisplay">No file selected</div>
+                <textarea id="editor" placeholder="Select a file to edit..."></textarea>
+            </div>
+            
+            <div class="execution-panel">
+                <h3>⚡ Execution Controls</h3>
+                <div class="controls">
+                    <select id="modeSelect">
+                        <option value="mock">Mock Mode</option>
+                        <option value="auto">Auto Mode</option>
+                    </select>
+                    <input type="number" id="speedInput" value="1.0" min="0.1" max="10.0" step="0.1" style="width: 80px;">
+                    <span style="align-self: center;">Speed</span>
+                </div>
+                <div id="executionLog"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="status-bar" id="statusBar">Ready</div>
+    
+    <script>
+        const API_BASE = '/api/v1/editor';
+        let currentFile = null;
+        let files = [];
+        
+        async function loadFiles() {
+            try {
+                const response = await fetch(`${API_BASE}/files`);
+                const data = await response.json();
+                files = data.files;
+                renderFileList();
+                updateStatus(`Loaded ${files.length} files`);
+            } catch (error) {
+                updateStatus(`Error loading files: ${error.message}`, 'error');
+            }
+        }
+        
+        function renderFileList() {
+            const fileList = document.getElementById('fileList');
+            fileList.innerHTML = '';
+            
+            files.forEach(file => {
+                if (file.is_directory) return;
+                
+                const li = document.createElement('li');
+                li.className = 'file-item';
+                li.innerHTML = `
+                    <span class="file-icon">📄</span>
+                    <span>${file.name}</span>
+                `;
+                li.onclick = () => selectFile(file);
+                fileList.appendChild(li);
+            });
+        }
+        
+        async function selectFile(file) {
+            currentFile = file;
+            
+            // Update UI
+            document.querySelectorAll('.file-item').forEach(item => item.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            document.getElementById('fileNameDisplay').textContent = file.name;
+            document.getElementById('saveBtn').disabled = false;
+            document.getElementById('executeBtn').disabled = false;
+            
+            // Load content
+            try {
+                updateStatus('Loading file...');
+                const response = await fetch(`${API_BASE}/file/${file.path}`);
+                const data = await response.json();
+                document.getElementById('editor').value = data.content;
+                updateStatus(`Loaded: ${file.name}`);
+            } catch (error) {
+                updateStatus(`Error loading file: ${error.message}`, 'error');
+            }
+        }
+        
+        async function saveFile() {
+            if (!currentFile) return;
+            
+            const content = document.getElementById('editor').value;
+            
+            try {
+                updateStatus('Saving file...');
+                const response = await fetch(`${API_BASE}/file/${currentFile.path}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ path: currentFile.path, content })
+                });
+                
+                if (response.ok) {
+                    updateStatus(`Saved: ${currentFile.name}`);
+                    addLog('success', `File saved: ${currentFile.name}`);
+                } else {
+                    throw new Error('Save failed');
+                }
+            } catch (error) {
+                updateStatus(`Error saving file: ${error.message}`, 'error');
+                addLog('error', `Save failed: ${error.message}`);
+            }
+        }
+        
+        async function executeScenario() {
+            if (!currentFile) return;
+            
+            const mode = document.getElementById('modeSelect').value;
+            const speed = parseFloat(document.getElementById('speedInput').value);
+            
+            try {
+                updateStatus('Executing scenario...');
+                addLog('info', `Starting execution: ${currentFile.name} (${mode} mode, speed ${speed}x)`);
+                
+                const response = await fetch(`${API_BASE}/execute`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        scenario_file: currentFile.path,
+                        mode: mode,
+                        speed: speed
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    updateStatus(`Execution started: ${data.execution_id}`);
+                    addLog('success', `Execution started: ${data.execution_id}`);
+                    addLog('success', `Scenario: ${data.scenario_name}`);
+                } else {
+                    throw new Error(data.detail || 'Execution failed');
+                }
+            } catch (error) {
+                updateStatus(`Error executing scenario: ${error.message}`, 'error');
+                addLog('error', `Execution failed: ${error.message}`);
+            }
+        }
+        
+        function updateStatus(message, type = 'info') {
+            const statusBar = document.getElementById('statusBar');
+            statusBar.textContent = message;
+            statusBar.style.color = type === 'error' ? '#f87171' : type === 'success' ? '#4ade80' : '#888';
+        }
+        
+        function addLog(type, message) {
+            const logPanel = document.getElementById('executionLog');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logPanel.appendChild(entry);
+            logPanel.scrollTop = logPanel.scrollHeight;
+        }
+        
+        function refreshFiles() {
+            loadFiles();
+        }
+        
+        // Initialize
+        loadFiles();
+    </script>
+</body>
+</html>

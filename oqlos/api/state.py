@@ -337,20 +337,18 @@ async def _handle_start(env: CommandEnvelope) -> dict:
     logger.debug("Async execution task created: %s", task)
     return {"executionId": execution_id, "status": "started"}
 
-async def _handle_pause(env: CommandEnvelope) -> dict:
-    if not _ctrl.orchestrator.current_execution:
-        return {"error": "No current execution", "status": "failed"}
-    return _ctrl.do_pause()
+def _make_state_handler(ctrl_fn):
+    """Factory for pause/resume/stop command handlers — eliminates 3 near-identical blocks."""
+    async def handler(env: CommandEnvelope) -> dict:
+        if not _ctrl.orchestrator.current_execution:
+            return {"error": "No current execution", "status": "failed"}
+        return ctrl_fn()
+    handler.__name__ = f"_handle_{ctrl_fn.__name__}"
+    return handler
 
-async def _handle_resume(env: CommandEnvelope) -> dict:
-    if not _ctrl.orchestrator.current_execution:
-        return {"error": "No current execution", "status": "failed"}
-    return _ctrl.do_resume()
-
-async def _handle_stop(env: CommandEnvelope) -> dict:
-    if not _ctrl.orchestrator.current_execution:
-        return {"error": "No current execution", "status": "failed"}
-    return _ctrl.do_stop()
+_handle_pause  = _make_state_handler(_ctrl.do_pause)
+_handle_resume = _make_state_handler(_ctrl.do_resume)
+_handle_stop   = _make_state_handler(_ctrl.do_stop)
 
 _COMMAND_HANDLERS: dict[str, Any] = {
     'StartExecution': _handle_start,

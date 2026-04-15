@@ -1,0 +1,44 @@
+SCENARIO: 'Kalibracja PSS7000'
+DEVICE_TYPE: 'BA'
+DEVICE_MODEL: 'PSS 7000'
+MANUFACTURER: 'Dräger'
+
+# ============================================
+# CONFIG Faza 1: Otwarcie zaworów
+# ============================================
+CONFIG: Otwarcie wszystkich zaworów
+  SET 'valve-nc' 'open'
+  SET 'valve-sc' 'open'
+  SET 'valve-wc' 'open'
+  WAIT 2000
+
+# ============================================
+# CONFIG Faza 2: Pomiar bazowy (zero)
+# ============================================
+CONFIG: Pomiar ciśnienia bazowego
+  → Sensor.read AI01
+  → Sensor.read AI02
+  → Sensor.read AI03
+  SAVE: baseline_nc
+  SAVE: baseline_sc
+  SAVE: baseline_wc
+  WAIT 500
+
+# ============================================
+# CONFIG Faza 3: Zamknięcie zaworów
+# ============================================
+CONFIG: Zamknięcie zaworów po kalibracji
+  SET 'valve-nc' 'closed'
+  SET 'valve-sc' 'closed'
+  SET 'valve-wc' 'closed'
+  WAIT 1000
+  SAVE: kalibracja_zakonczona
+
+# ============================================
+# GOAL: Weryfikacja szczelności
+# ============================================
+GOAL: Test szczelności NC
+  # Czekaj na stabilizację ciśnienia
+  WAIT 5000
+  → Sensor.read AI01
+  SAVE: cisnienie_koncowe_nc

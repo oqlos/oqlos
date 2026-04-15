@@ -25,6 +25,7 @@ from oqlos.api import (
     version_router,
     hardware_router,
 )
+from oqlos.api.editor import router as editor_router
 from oqlos.api.utils.execution_ctrl import set_dependencies as set_shared_dependencies
 from oqlos.api.hardware import set_hardware_gateway
 from oqlos.utils import load_sample_scenarios
@@ -77,6 +78,7 @@ app.include_router(state_router)
 app.include_router(logs_router)
 app.include_router(version_router)
 app.include_router(hardware_router)
+app.include_router(editor_router)
 
 # Compatibility: expose the same API under /firmware/* (frontend expects this prefix)
 app.include_router(scenarios_router, prefix="/firmware")
@@ -99,6 +101,14 @@ async def index_page():
     if index_path.exists():
         return FileResponse(index_path)
     return HTMLResponse("<h1>Test Simulator Firmware</h1><p>index.html not found.</p>")
+
+@app.get("/editor", response_class=HTMLResponse)
+async def editor_page():
+    """Serve the scenario editor UI"""
+    editor_path = STATIC_DIR / "static" / "editor.html"
+    if editor_path.exists():
+        return FileResponse(editor_path)
+    return HTMLResponse("<h1>Scenario Editor</h1><p>editor.html not found.</p>")
 
 @app.get("/health")
 @app.get("/api/v1/health")
@@ -145,5 +155,10 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         state_manager.websocket_connections.remove(websocket)
 
-if __name__ == "__main__":
+def run():
+    """Entry point for ``oqlos-server`` console script."""
     uvicorn.run(app, host="0.0.0.0", port=FIRMWARE_PORT)
+
+
+if __name__ == "__main__":
+    run()

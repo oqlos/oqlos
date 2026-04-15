@@ -1,0 +1,56 @@
+SCENARIO: 'Test Pattern - Prepare/Test/Cleanup'
+DEVICE_TYPE: 'BA'
+
+# ============================================
+# 1. PREPARE - CONFIG: Przygotowanie środowiska
+# ============================================
+CONFIG: Prepare Environment
+  # Wyłącz pompy
+  SET 'pump-main' '0'
+  SET 'pompa 1' '0'
+  
+  # Ustaw zawory w pozycję testową
+  SET 'valve-nc' 'closed'
+  SET 'valve-sc' 'open'
+  SET 'valve-wc' 'closed'
+  
+  # Czekaj na stabilizację
+  WAIT 1000
+  SAVE: env_prepared
+
+# ============================================
+# 2. TEST - GOAL: Właściwy test
+# ============================================
+GOAL: Execute Pressure Test
+  # Otwórz dopływ
+  SET 'valve-nc' 'open'
+  WAIT 500
+  
+  # Uruchom pompę
+  SET 'pompa 1' '5 l/min'
+  WAIT 3000
+  
+  # Odczytaj ciśnienie
+  → Sensor.read AI02
+  SAVE: test_result
+  
+  # Zatrzymaj pompę
+  SET 'pompa 1' '0'
+  WAIT 500
+
+# ============================================
+# 3. CLEANUP - CONFIG: Sprzątanie
+# ============================================
+CONFIG: Cleanup and Reset
+  # Wyłącz wszystko
+  SET 'pompa 1' '0'
+  SET 'pump-main' '0'
+  
+  # Zamknij wszystkie zawory
+  SET 'valve-nc' 'closed'
+  SET 'valve-sc' 'closed'
+  SET 'valve-wc' 'closed'
+  
+  WAIT 500
+  SAVE: cleanup_done
+  SAVE: test_sequence_complete
