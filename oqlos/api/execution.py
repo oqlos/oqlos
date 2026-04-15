@@ -176,26 +176,19 @@ def _register_dsl_scenario(scenario_id: str, dsl_content: str):
         )
         _ctrl.state_manager.scenarios[scenario_id] = scenario
 
-@router.post("/{execution_id}/pause")
-async def pause_execution(execution_id: str):
-    """Pause execution"""
-    if execution_id not in _ctrl.state_manager.executions:
-        raise HTTPException(status_code=404, detail="Execution not found")
-    return _ctrl.do_pause(execution_id)
+def _make_exec_route(ctrl_fn):
+    """Factory for pause/resume/stop routes — eliminates 3 near-identical handlers."""
+    async def handler(execution_id: str):
+        if execution_id not in _ctrl.state_manager.executions:
+            raise HTTPException(status_code=404, detail="Execution not found")
+        return ctrl_fn(execution_id)
+    handler.__name__ = ctrl_fn.__name__
+    handler.__doc__ = f"{ctrl_fn.__name__.replace('do_', '').capitalize()} execution"
+    return handler
 
-@router.post("/{execution_id}/resume")
-async def resume_execution(execution_id: str):
-    """Resume execution"""
-    if execution_id not in _ctrl.state_manager.executions:
-        raise HTTPException(status_code=404, detail="Execution not found")
-    return _ctrl.do_resume(execution_id)
-
-@router.post("/{execution_id}/stop")
-async def stop_execution(execution_id: str):
-    """Stop execution"""
-    if execution_id not in _ctrl.state_manager.executions:
-        raise HTTPException(status_code=404, detail="Execution not found")
-    return _ctrl.do_stop(execution_id)
+pause_execution  = router.post("/{execution_id}/pause")(_make_exec_route(_ctrl.do_pause))
+resume_execution = router.post("/{execution_id}/resume")(_make_exec_route(_ctrl.do_resume))
+stop_execution   = router.post("/{execution_id}/stop")(_make_exec_route(_ctrl.do_stop))
 
 @router.get("/by-id/{execution_id}")
 async def get_execution(execution_id: str):
@@ -260,23 +253,17 @@ async def get_execution_logs():
     }
 
 # Legacy control endpoints without execution_id (frontend fallback)
-@router.post("/pause")
-async def pause_execution_legacy():
-    if not _ctrl.orchestrator.current_execution:
-        raise HTTPException(status_code=404, detail="No current execution")
-    return _ctrl.do_pause()
+def _make_legacy_route(ctrl_fn):
+    async def handler():
+        if not _ctrl.orchestrator.current_execution:
+            raise HTTPException(status_code=404, detail="No current execution")
+        return ctrl_fn()
+    handler.__name__ = f"{ctrl_fn.__name__}_legacy"
+    return handler
 
-@router.post("/resume")
-async def resume_execution_legacy():
-    if not _ctrl.orchestrator.current_execution:
-        raise HTTPException(status_code=404, detail="No current execution")
-    return _ctrl.do_resume()
-
-@router.post("/stop")
-async def stop_execution_legacy():
-    if not _ctrl.orchestrator.current_execution:
-        raise HTTPException(status_code=404, detail="No current execution")
-    return _ctrl.do_stop()
+pause_execution_legacy  = router.post("/pause")(_make_legacy_route(_ctrl.do_pause))
+resume_execution_legacy = router.post("/resume")(_make_legacy_route(_ctrl.do_resume))
+stop_execution_legacy   = router.post("/stop")(_make_legacy_route(_ctrl.do_stop))
 
 # ============= Streaming Endpoints =============
 
