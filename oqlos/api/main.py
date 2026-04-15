@@ -15,7 +15,7 @@ import uvicorn
 # Import refactored components
 from oqlos.core.state import StateManager
 from oqlos.core.executor import ScenarioOrchestrator
-from oqlos.hardware.gateway import HardwareGateway
+from oqlos.hardware.plugin_gateway import PluginHardwareGateway
 from oqlos.api import (
     scenarios_router,
     peripherals_router,
@@ -63,7 +63,7 @@ app.add_middleware(
 )
 
 # Initialize services
-hardware = HardwareGateway()
+hardware = PluginHardwareGateway()
 state_manager = StateManager()
 orchestrator = ScenarioOrchestrator(state_manager, hardware)
 

@@ -71,49 +71,65 @@ def _cmd_benchmark(parts: list[str], url: str) -> None:
         print(f"❌ {results['error']}")
 
 
+def _dispatch_command(cmd: str, parts: list[str], url: str) -> bool:
+    """Dispatch a single command. Returns False to exit shell."""
+    # Exit commands
+    if cmd in ("exit", "quit", "q"):
+        print("Goodbye!")
+        return False
+
+    # Simple commands - mapped to their handlers
+    simple_commands = {
+        "help": lambda: print(_HELP_TEXT),
+        "list": _cmd_list,
+        "health": lambda: print(cmd_health(url)),
+        "identify": lambda: print(json.dumps(check_firmware_identify(url), indent=2, default=str)),
+        "diagnose": lambda: print(cmd_diagnose(url)),
+        "clear": lambda: print("\033[2J\033[H", end=""),
+        "calibrate": lambda: _cmd_calibrate(url),
+        "save": lambda: print(f"\n📄 Report saved to: {save_diagnostic_report(None, url)}"),
+        "json": lambda: print(json.dumps(check_firmware_identify(url))),
+    }
+
+    if cmd in simple_commands:
+        simple_commands[cmd]()
+        return True
+
+    # Commands with arguments
+    if parts[0] == "test":
+        test_type = parts[1] if len(parts) > 1 else "all"
+        print(f"\n🧪 Running {test_type} smoke test...")
+        print("  (Smoke tests not yet implemented in shell)")
+        return True
+
+    if parts[0] == "benchmark":
+        _cmd_benchmark(parts, url)
+        return True
+
+    # Unknown command
+    print(f"Unknown command: {cmd!r}. Type 'help' for available commands.")
+    return True
+
+
 def interactive_shell(url: str = "http://localhost:8202") -> None:
-    """Run the interactive hardware diagnostic REPL."""
+    """Run the interactive hardware diagnostic REPL.
+
+    Refactored from CC=18 to CC<10 using command dispatch table.
+    """
     print("\n🔧 Hardware Diagnose Shell")
     print("Type 'help' for commands, 'exit' to quit.\n")
 
     while True:
         try:
             raw = input("hw-diagnose> ").strip()
+            if not raw:
+                continue
+
             cmd = raw.lower()
             parts = cmd.split()
 
-            if not cmd:
-                continue
-            elif cmd in ("exit", "quit", "q"):
-                print("Goodbye!")
+            if not _dispatch_command(cmd, parts, url):
                 break
-            elif cmd == "help":
-                print(_HELP_TEXT)
-            elif cmd == "list":
-                _cmd_list()
-            elif cmd == "health":
-                print(cmd_health(url))
-            elif cmd == "identify":
-                print(json.dumps(check_firmware_identify(url), indent=2, default=str))
-            elif cmd == "diagnose":
-                print(cmd_diagnose(url))
-            elif cmd == "clear":
-                print("\033[2J\033[H", end="")
-            elif parts[0] == "test":
-                test_type = parts[1] if len(parts) > 1 else "all"
-                print(f"\n🧪 Running {test_type} smoke test...")
-                print("  (Smoke tests not yet implemented in shell)")
-            elif cmd == "calibrate":
-                _cmd_calibrate(url)
-            elif parts[0] == "benchmark":
-                _cmd_benchmark(parts, url)
-            elif cmd == "save":
-                saved = save_diagnostic_report(None, url)
-                print(f"\n📄 Report saved to: {saved}")
-            elif cmd == "json":
-                print(json.dumps(check_firmware_identify(url)))
-            else:
-                print(f"Unknown command: {cmd!r}. Type 'help' for available commands.")
 
         except KeyboardInterrupt:
             print("\nGoodbye!")

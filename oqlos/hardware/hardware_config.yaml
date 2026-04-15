@@ -1,17 +1,14 @@
-# Example hardware plugin configuration (unified format)
+# Unified Hardware Plugin Configuration
+# Each plugin block contains: connection, peripherals (with scale/units/conversion)
 #
-# Each plugin block contains:
-#   - connection settings (type, params, timeout)
-#   - peripherals with scales, units, rasters, and conversions
-#
-# To change hardware parameters (scales, units, proportions) — just edit
-# this YAML.  Reload at runtime:
-#   oqlctl plugin reload --config plugin-config.yaml
+# Edit this file to change parameters, scales, units, and proportions
+# without touching Python code.  Reload at runtime via:
+#   PluginRegistry.load_configs_from_yaml("hardware_config.yaml")
 
 plugins:
-  # ------------------------------------------------------------------
-  # piADC (ADS1115) — 4-channel 16-bit ADC sensor
-  # ------------------------------------------------------------------
+  # -----------------------------------------------------------------------
+  # piADC — ADS1115 16-bit ADC sensor
+  # -----------------------------------------------------------------------
   piadc:
     enabled: true
     connection_type: http
@@ -21,7 +18,6 @@ plugins:
     retry_count: 3
     metadata:
       description: "ADS1115 16-bit ADC — 4-channel analog input sensor"
-      location: main_board
     peripherals:
       voltage:
         name: voltage
@@ -34,19 +30,19 @@ plugins:
         scale: {min: 0, max: 10, default: 0, unit: bar}
         conversion: {type: none}
 
-  # ------------------------------------------------------------------
+  # -----------------------------------------------------------------------
   # DFRobot DRI0050 — PWM motor driver (pump)
-  # ------------------------------------------------------------------
+  # -----------------------------------------------------------------------
   motor-dri0050:
     enabled: true
-    connection_type: http
+    connection_type: cli
     connection_params:
-      base_url: http://localhost:49055
+      command: /home/tom/github/oqlos/venv/bin/dri0050-pwm
+      port: /dev/ttyUSB0
     timeout: 5.0
     retry_count: 3
     metadata:
-      description: "PWM motor & LED strip driver"
-      calibration_date: "2026-04-15"
+      description: "PWM motor & LED strip driver via CLI or HTTP"
     peripherals:
       speed:
         name: speed
@@ -55,22 +51,30 @@ plugins:
         raster: [0, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
         conversion:
           type: linear
-          scale: 0.1       # l/min → duty cycle (10 l/min = 100%)
+          scale: 0.1       # l/min → duty cycle 0-1 (10 l/min = 100%)
           offset: 0
       power:
         name: power
         type: pump
         scale: {min: 0, max: 100, default: 0, unit: "%"}
-        conversion: {type: linear, scale: 0.02, offset: 0}
+        conversion:
+          type: linear
+          scale: 0.02
+          offset: 0
       duty:
         name: duty
         type: pump
         scale: {min: 0.0, max: 1.0, default: 0.0, unit: ""}
         conversion: {type: none}
+      frequency:
+        name: frequency
+        type: pump
+        scale: {min: 183, max: 46875, default: 1019, unit: Hz}
+        conversion: {type: none}
 
-  # ------------------------------------------------------------------
+  # -----------------------------------------------------------------------
   # Waveshare Modbus RTU IO 8CH — valve controller
-  # ------------------------------------------------------------------
+  # -----------------------------------------------------------------------
   modbus-io:
     enabled: true
     connection_type: modbus-rtu
@@ -81,8 +85,7 @@ plugins:
     timeout: 2.0
     retry_count: 3
     metadata:
-      description: "8DI + 8DO industrial I/O — valve & signal control"
-      valve_count: 8
+      description: "8DI + 8DO industrial I/O module — valve & signal control"
     peripherals:
       state:
         name: state
@@ -91,9 +94,9 @@ plugins:
         raster: [0, 1]
         conversion: {type: none}
 
-  # ------------------------------------------------------------------
+  # -----------------------------------------------------------------------
   # Pololu Tic T249 — stepper motor (artificial lung)
-  # ------------------------------------------------------------------
+  # -----------------------------------------------------------------------
   motor-tic249:
     enabled: true
     connection_type: http

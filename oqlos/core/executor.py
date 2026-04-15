@@ -84,13 +84,13 @@ from oqlos.models.scenario import Step, Goal
 from oqlos.models.execution import ExecutionStatus
 from oqlos.models.peripheral import Peripheral
 from oqlos.core.state import StateManager
-from oqlos.hardware.gateway import HardwareGateway
+from oqlos.hardware.plugin_gateway import PluginHardwareGateway
 
 @logged
 class ScenarioOrchestrator:
-    def __init__(self, state_manager: StateManager, hardware: HardwareGateway | None = None):
+    def __init__(self, state_manager: StateManager, hardware: PluginHardwareGateway | None = None):
         self.state_manager = state_manager
-        self.hardware = hardware or HardwareGateway()
+        self.hardware = hardware or PluginHardwareGateway()
         self.running = False
         self.paused = False
         self.current_execution = None

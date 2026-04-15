@@ -125,76 +125,123 @@ class LungPlugin(HardwarePlugin):
                 compatible=False,
             )
 
+    # ── Command Handlers (refactored from monolithic execute_command) ──
+
+    async def _handle_reciprocate_http(self, params: dict[str, Any]) -> dict[str, Any]:
+        """Handle reciprocate command via HTTP."""
+        steps = params.get("steps", 500)
+        speed = params.get("speed", 100000)
+        cycles = params.get("cycles", 5)
+        pause = params.get("pause", 0.5)
+        resp = await self._client.post(
+            f"{self._base_url}/api/reciprocate",
+            json={"steps": steps, "speed": speed, "cycles": cycles, "pause": pause},
+        )
+        if resp.status_code < 300:
+            return {"success": True, "data": resp.json()}
+        return {"success": False, "error": f"HTTP {resp.status_code}"}
+
+    async def _handle_reciprocate_usb(self, params: dict[str, Any]) -> dict[str, Any]:
+        """Handle reciprocate command via USB (placeholder)."""
+        steps = params.get("steps", 500)
+        speed = params.get("speed", 100000)
+        return {"success": True, "data": {"steps": steps, "speed": speed}}
+
+    async def _handle_stop_http(self) -> dict[str, Any]:
+        """Handle stop command via HTTP."""
+        resp = await self._client.post(f"{self._base_url}/api/stop")
+        if resp.status_code < 300:
+            return {"success": True, "data": resp.json()}
+        return {"success": False, "error": f"HTTP {resp.status_code}"}
+
+    async def _handle_stop_usb(self) -> dict[str, Any]:
+        """Handle stop command via USB (placeholder)."""
+        return {"success": True, "data": {"stopped": True}}
+
+    async def _handle_move_http(self, params: dict[str, Any]) -> dict[str, Any]:
+        """Handle move command via HTTP."""
+        position = params.get("position", 0)
+        speed = params.get("speed")
+        payload = {"position": position}
+        if speed is not None:
+            payload["speed"] = speed
+        resp = await self._client.post(f"{self._base_url}/api/move", json=payload)
+        if resp.status_code < 300:
+            return {"success": True, "data": resp.json()}
+        return {"success": False, "error": f"HTTP {resp.status_code}"}
+
+    async def _handle_move_usb(self, params: dict[str, Any]) -> dict[str, Any]:
+        """Handle move command via USB (placeholder)."""
+        position = params.get("position", 0)
+        return {"success": True, "data": {"position": position}}
+
+    async def _handle_energize_http(self, params: dict[str, Any]) -> dict[str, Any]:
+        """Handle energize command via HTTP."""
+        enable = params.get("enable", True)
+        resp = await self._client.post(f"{self._base_url}/api/energize", json={"enable": enable})
+        if resp.status_code < 300:
+            return {"success": True, "data": resp.json()}
+        return {"success": False, "error": f"HTTP {resp.status_code}"}
+
+    async def _handle_energize_usb(self, params: dict[str, Any]) -> dict[str, Any]:
+        """Handle energize command via USB (placeholder)."""
+        enable = params.get("enable", True)
+        return {"success": True, "data": {"energized": enable}}
+
+    async def _handle_status_http(self) -> dict[str, Any]:
+        """Handle status command via HTTP."""
+        resp = await self._client.get(f"{self._base_url}/api/status")
+        if resp.status_code < 300:
+            return {"success": True, "data": resp.json()}
+        return {"success": False, "error": f"HTTP {resp.status_code}"}
+
+    async def _handle_status_usb(self) -> dict[str, Any]:
+        """Handle status command via USB (placeholder)."""
+        return {"success": True, "data": {"status": "ok"}}
+
     async def execute_command(self, command: str, params: dict[str, Any]) -> dict[str, Any]:
-        """Execute lung motor command."""
+        """Execute lung motor command.
+
+        Refactored from CC=20 monolithic function into orchestrator
+        calling focused command handlers (each CC<10).
+        """
         if self.config.connection_type == "http" and not self._client:
             return {"success": False, "error": "Not connected to lung motor"}
 
         try:
             if command == "reciprocate":
-                steps = params.get("steps", 500)
-                speed = params.get("speed", 100000)
-                cycles = params.get("cycles", 5)
-                pause = params.get("pause", 0.5)
-
                 if self.config.connection_type == "http":
-                    resp = await self._client.post(
-                        f"{self._base_url}/api/reciprocate",
-                        json={"steps": steps, "speed": speed, "cycles": cycles, "pause": pause},
-                    )
-                    if resp.status_code < 300:
-                        return {"success": True, "data": resp.json()}
-                    else:
-                        return {"success": False, "error": f"HTTP {resp.status_code}"}
+                    return await self._handle_reciprocate_http(params)
                 else:
-                    # USB implementation would be here
-                    return {"success": True, "data": {"steps": steps, "speed": speed}}
+                    return await self._handle_reciprocate_usb(params)
+
             elif command == "stop":
                 if self.config.connection_type == "http":
-                    resp = await self._client.post(f"{self._base_url}/api/stop")
-                    if resp.status_code < 300:
-                        return {"success": True, "data": resp.json()}
-                    else:
-                        return {"success": False, "error": f"HTTP {resp.status_code}"}
+                    return await self._handle_stop_http()
                 else:
-                    return {"success": True, "data": {"stopped": True}}
+                    return await self._handle_stop_usb()
+
             elif command == "move":
-                position = params.get("position", 0)
-                speed = params.get("speed")
-
                 if self.config.connection_type == "http":
-                    payload = {"position": position}
-                    if speed is not None:
-                        payload["speed"] = speed
-                    resp = await self._client.post(f"{self._base_url}/api/move", json=payload)
-                    if resp.status_code < 300:
-                        return {"success": True, "data": resp.json()}
-                    else:
-                        return {"success": False, "error": f"HTTP {resp.status_code}"}
+                    return await self._handle_move_http(params)
                 else:
-                    return {"success": True, "data": {"position": position}}
+                    return await self._handle_move_usb(params)
+
             elif command == "energize":
-                enable = params.get("enable", True)
-
                 if self.config.connection_type == "http":
-                    resp = await self._client.post(f"{self._base_url}/api/energize", json={"enable": enable})
-                    if resp.status_code < 300:
-                        return {"success": True, "data": resp.json()}
-                    else:
-                        return {"success": False, "error": f"HTTP {resp.status_code}"}
+                    return await self._handle_energize_http(params)
                 else:
-                    return {"success": True, "data": {"energized": enable}}
+                    return await self._handle_energize_usb(params)
+
             elif command == "status":
                 if self.config.connection_type == "http":
-                    resp = await self._client.get(f"{self._base_url}/api/status")
-                    if resp.status_code < 300:
-                        return {"success": True, "data": resp.json()}
-                    else:
-                        return {"success": False, "error": f"HTTP {resp.status_code}"}
+                    return await self._handle_status_http()
                 else:
-                    return {"success": True, "data": {"status": "ok"}}
+                    return await self._handle_status_usb()
+
             else:
                 return {"success": False, "error": f"Unknown command: {command}"}
+
         except Exception as exc:
             return {"success": False, "error": str(exc)}
 

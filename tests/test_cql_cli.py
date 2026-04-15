@@ -14,6 +14,7 @@ from oqlos.tools import cql_cli
 class _FakeInterpreter:
     def __init__(self, **kwargs):
         self.kwargs = kwargs
+        self.out = SimpleNamespace(output_yaml=lambda: None)
 
     def run(self, source: str, filename: str):
         return SimpleNamespace(
@@ -57,6 +58,10 @@ def test_cmd_executes_single_command(monkeypatch):
             ],
         }
 
+    def fake_ensure_firmware_running(url: str, *, quiet: bool, yaml_output: bool) -> bool:
+        captured.setdefault("ensure_firmware_urls", []).append(url)
+        return True
+
     class FakeInterpreter(_FakeInterpreter):
         def __init__(self, **kwargs):
             super().__init__(**kwargs)
@@ -69,6 +74,7 @@ def test_cmd_executes_single_command(monkeypatch):
 
     monkeypatch.setattr(cql_cli, "check_firmware_health", fake_health)
     monkeypatch.setattr(cql_cli, "check_firmware_identify", fake_identify)
+    monkeypatch.setattr(cql_cli, "_ensure_firmware_running", fake_ensure_firmware_running)
     monkeypatch.setattr(cql_cli, "CqlInterpreter", FakeInterpreter)
     monkeypatch.setattr(sys, "argv", ["oqlctl", "cmd", "SET 'pompa 1' '0'"])
 
@@ -95,12 +101,16 @@ def test_cmd_execute_aborts_when_hardware_is_unavailable(monkeypatch, capsys):
     def fake_identify(url: str) -> dict[str, object]:
         pytest.fail(f"identify should not be called when health fails: {url}")
 
+    def fake_ensure_firmware_running(url: str, *, quiet: bool, yaml_output: bool) -> bool:
+        return True
+
     class FakeInterpreter(_FakeInterpreter):
         def __init__(self, **kwargs):
             raise AssertionError("Interpreter should not be created when preflight fails")
 
     monkeypatch.setattr(cql_cli, "check_firmware_health", fake_health)
     monkeypatch.setattr(cql_cli, "check_firmware_identify", fake_identify)
+    monkeypatch.setattr(cql_cli, "_ensure_firmware_running", fake_ensure_firmware_running)
     monkeypatch.setattr(cql_cli, "CqlInterpreter", FakeInterpreter)
     monkeypatch.setattr(sys, "argv", ["oqlctl", "cmd", "SET 'pompa 1' '0'"])
 
@@ -108,7 +118,7 @@ def test_cmd_execute_aborts_when_hardware_is_unavailable(monkeypatch, capsys):
         cql_cli.main()
 
     assert excinfo.value.code == 1
-    assert "Hardware preflight failed" in capsys.readouterr().err
+    assert "Hardware preflight failed" in capsys.readouterr().out
 
 
 def test_file_mode_still_executes_scenario(monkeypatch, tmp_path):

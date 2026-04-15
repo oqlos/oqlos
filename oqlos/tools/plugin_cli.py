@@ -30,6 +30,9 @@ PluginRegistry.register(MotorPlugin)
 PluginRegistry.register(ModbusPlugin)
 PluginRegistry.register(LungPlugin)
 
+# Discover third-party plugins from entry points
+PluginRegistry.discover_entry_point_plugins()
+
 
 def _load_config_file(path: str) -> dict[str, PluginConfig]:
     """Load plugin configurations from a YAML or JSON file."""
@@ -37,11 +40,11 @@ def _load_config_file(path: str) -> dict[str, PluginConfig]:
     if not config_path.exists():
         raise FileNotFoundError(f"Config file not found: {path}")
 
+    if config_path.suffix in [".yaml", ".yml"]:
+        return PluginRegistry.load_configs_from_yaml(config_path)
+
     with open(config_path) as f:
-        if config_path.suffix in [".yaml", ".yml"]:
-            data = yaml.safe_load(f)
-        else:
-            data = json.load(f)
+        data = json.load(f)
 
     configs = {}
     for plugin_id, config_data in data.get("plugins", {}).items():
@@ -53,12 +56,13 @@ def _load_config_file(path: str) -> dict[str, PluginConfig]:
             timeout=config_data.get("timeout", 5.0),
             retry_count=config_data.get("retry_count", 3),
             metadata=config_data.get("metadata", {}),
+            peripherals=config_data.get("peripherals", {}),
         )
     return configs
 
 
 def _save_config_file(path: str, configs: dict[str, PluginConfig]) -> None:
-    """Save plugin configurations to a YAML file."""
+    """Save plugin configurations to a YAML file (unified format)."""
     data = {
         "plugins": {
             plugin_id: {
@@ -68,6 +72,10 @@ def _save_config_file(path: str, configs: dict[str, PluginConfig]) -> None:
                 "timeout": config.timeout,
                 "retry_count": config.retry_count,
                 "metadata": config.metadata,
+                "peripherals": {
+                    pname: pcfg.model_dump()
+                    for pname, pcfg in config.peripherals.items()
+                },
             }
             for plugin_id, config in configs.items()
         }
@@ -198,6 +206,55 @@ async def cmd_execute(args: argparse.Namespace) -> None:
     print(yaml.dump(result, default_flow_style=False, sort_keys=False))
 
 
+async def cmd_reload(args: argparse.Namespace) -> None:
+    """Reload plugin configurations from YAML file."""
+    config_path = args.config or str(
+        Path(__file__).resolve().parent.parent / "hardware" / "hardware_config.yaml"
+    )
+    try:
+        configs = PluginRegistry.load_configs_from_yaml(config_path)
+        print(f"Reloaded {len(configs)} plugin config(s) from {config_path}")
+        for plugin_id, cfg in configs.items():
+            periphs = list(cfg.peripherals.keys())
+            print(f"  {plugin_id}: conn={cfg.connection_type}, peripherals={periphs}")
+    except Exception as exc:
+        print(f"Reload failed: {exc}", file=sys.stderr)
+        sys.exit(1)
+
+
+async def cmd_peripherals(args: argparse.Namespace) -> None:
+    """Show peripheral definitions for a plugin (from loaded config)."""
+    config_path = str(
+        Path(__file__).resolve().parent.parent / "hardware" / "hardware_config.yaml"
+    )
+    try:
+        configs = PluginRegistry.load_configs_from_yaml(config_path)
+    except Exception as exc:
+        print(f"Failed to load config: {exc}", file=sys.stderr)
+        sys.exit(1)
+
+    cfg = configs.get(args.plugin_id)
+    if not cfg:
+        print(f"Plugin '{args.plugin_id}' not found in config", file=sys.stderr)
+        sys.exit(1)
+
+    if not cfg.peripherals:
+        print(f"Plugin '{args.plugin_id}' has no peripherals defined")
+        return
+
+    print(f"Peripherals for {args.plugin_id}:")
+    for pname, pcfg in cfg.peripherals.items():
+        print(f"  {pname}:")
+        print(f"    type: {pcfg.type}")
+        print(f"    scale: {pcfg.scale.min}–{pcfg.scale.max} {pcfg.scale.unit}")
+        if pcfg.scale.default is not None:
+            print(f"    default: {pcfg.scale.default}")
+        if pcfg.raster:
+            print(f"    raster: {pcfg.raster}")
+        if pcfg.conversion.type != "none":
+            print(f"    conversion: {pcfg.conversion.type} (scale={pcfg.conversion.scale}, offset={pcfg.conversion.offset})")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         prog="oqlctl plugin",
@@ -242,6 +299,14 @@ def main() -> None:
     exec_parser.add_argument("command", help="Command to execute")
     exec_parser.add_argument("--params", help="Command params as JSON string")
 
+    # Reload command
+    reload_parser = subparsers.add_parser("reload", help="Reload configs from YAML")
+    reload_parser.add_argument("--config", help="Path to config file (default: hardware_config.yaml)")
+
+    # Peripherals command
+    periph_parser = subparsers.add_parser("peripherals", help="Show peripheral definitions")
+    periph_parser.add_argument("plugin_id", help="Plugin ID")
+
     args = parser.parse_args()
 
     if not args.command:
@@ -265,6 +330,10 @@ def main() -> None:
             await cmd_health(args)
         elif args.command == "execute":
             await cmd_execute(args)
+        elif args.command == "reload":
+            await cmd_reload(args)
+        elif args.command == "peripherals":
+            await cmd_peripherals(args)
 
     asyncio.run(run_command())
 

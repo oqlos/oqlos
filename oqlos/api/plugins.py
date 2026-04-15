@@ -24,6 +24,9 @@ PluginRegistry.register(MotorPlugin)
 PluginRegistry.register(ModbusPlugin)
 PluginRegistry.register(LungPlugin)
 
+# Discover third-party plugins from entry points
+PluginRegistry.discover_entry_point_plugins()
+
 router = APIRouter(prefix="/api/v1/plugins", tags=["plugins"])
 
 
@@ -74,6 +77,7 @@ async def connect_plugin(plugin_id: str, config: dict[str, Any]):
         timeout=config.get("timeout", 5.0),
         retry_count=config.get("retry_count", 3),
         metadata=config.get("metadata", {}),
+        peripherals=config.get("peripherals", {}),
     )
 
     success = await PluginRegistry.connect_plugin(plugin_id, plugin_config)
@@ -123,6 +127,7 @@ async def validate_plugin_configs(configs: dict[str, dict[str, Any]]):
             timeout=config_data.get("timeout", 5.0),
             retry_count=config_data.get("retry_count", 3),
             metadata=config_data.get("metadata", {}),
+            peripherals=config_data.get("peripherals", {}),
         )
 
     errors = PluginRegistry.validate_all_configurations(plugin_configs)

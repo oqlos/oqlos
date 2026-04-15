@@ -117,49 +117,175 @@ class _ParseState:
             return True
         return False
 
-    def _try_hierarchy(self, stripped: str, line: str, indent: int) -> bool:
-        """Handle scenario/goal/step/action hierarchy."""
+    # ── Hierarchy Handlers (refactored from monolithic _try_hierarchy) ──
+
+    def _handle_scenario(self, stripped: str) -> bool:
+        """Handle scenario line parsing."""
         sc = _parse_scenario_line(self.doc, stripped)
-        if sc is not None:
-            # Clear block stack on new scenario
-            if hasattr(self, 'block_stack'):
-                self.block_stack.clear()
-            self.current_scenario = sc
-            self.current_goal = None
-            self.current_step = None
-            return True
+        if sc is None:
+            return False
+        # Clear block stack on new scenario
+        if hasattr(self, 'block_stack'):
+            self.block_stack.clear()
+        self.current_scenario = sc
+        self.current_goal = None
+        self.current_step = None
+        return True
 
-        if self.current_scenario and not self.current_goal:
-            if _parse_scenario_attrs(line, self.current_scenario):
-                return True
+    def _handle_scenario_attrs(self, line: str) -> bool:
+        """Handle scenario attribute lines."""
+        if not (self.current_scenario and not self.current_goal):
+            return False
+        return _parse_scenario_attrs(line, self.current_scenario)
 
+    def _handle_goal(self, stripped: str, line: str, indent: int) -> bool:
+        """Handle goal line parsing."""
         goal = _parse_goal_line(stripped, line, indent, self.current_scenario)
-        if goal is not None:
-            # Clear block stack on new goal (implicit ENDIF/ENDLOOP at end of goal)
-            if hasattr(self, 'block_stack'):
-                self.block_stack.clear()
-                
-            if self.current_scenario:
-                self.current_scenario.goals.append(goal)
-            else:
-                self.doc.goals.append(goal)
-            self.current_goal = goal
-            self.current_step = None
-            return True
-            return True
+        if goal is None:
+            return False
+        # Clear block stack on new goal (implicit ENDIF/ENDLOOP at end of goal)
+        if hasattr(self, 'block_stack'):
+            self.block_stack.clear()
 
-        if self.current_goal and not self.current_step:
-            if _parse_goal_attrs(line, self.current_goal):
-                return True
+        if self.current_scenario:
+            self.current_scenario.goals.append(goal)
+        else:
+            self.doc.goals.append(goal)
+        self.current_goal = goal
+        self.current_step = None
+        return True
 
+    def _handle_goal_attrs(self, line: str) -> bool:
+        """Handle goal attribute lines."""
+        if not (self.current_goal and not self.current_step):
+            return False
+        return _parse_goal_attrs(line, self.current_goal)
+
+    def _handle_step(self, line: str) -> bool:
+        """Handle step line parsing."""
         self.current_goal, self.current_scenario = _ensure_goal_for_step(
             self.current_goal, self.current_scenario, line
         )
-
         step = _parse_step_line(line, self.current_goal)
-        if step is not None:
-            self.current_goal.steps.append(step)  # type: ignore[union-attr]
-            self.current_step = step
+        if step is None:
+            return False
+        self.current_goal.steps.append(step)  # type: ignore[union-attr]
+        self.current_step = step
+        return True
+
+    def _init_block_stack(self) -> None:
+        """Initialize block stack if not present."""
+        from oqlos.models.dsl_models import CqlAction
+        if not hasattr(self, 'block_stack'):
+            self.block_stack: list[tuple[CqlAction, bool]] = []
+
+    def _add_action_to_parent(self, act) -> None:
+        """Add action to appropriate parent (step or block)."""
+        if self.block_stack:
+            parent_act, in_else = self.block_stack[-1]
+            if parent_act.kind == "loop_block":
+                parent_act.loop_actions.append(act)
+            else:
+                target_list = parent_act.else_actions if in_else else parent_act.then_actions
+                target_list.append(act)
+        else:
+            self.current_step.actions.append(act)
+
+    def _append_nested_action(self, act) -> None:
+        """Append action to appropriate parent in block stack."""
+        if len(self.block_stack) <= 1:
+            self.current_step.actions.append(act)
+            return
+
+        parent_act, in_else = self.block_stack[-2]
+        if parent_act.kind == "loop_block":
+            parent_act.loop_actions.append(act)
+        else:
+            target_list = parent_act.else_actions if in_else else parent_act.then_actions
+            target_list.append(act)
+
+    def _append_loop_action(self, act) -> None:
+        """Append loop action handling special loop-in-loop case."""
+        if len(self.block_stack) <= 1:
+            self.current_step.actions.append(act)
+            return
+
+        parent_act, in_else = self.block_stack[-2]
+        if parent_act.kind == "loop_block":
+            parent_act.loop_actions.append(act)
+        else:
+            target_list = parent_act.else_actions if in_else else parent_act.then_actions
+            target_list.append(act)
+
+    def _pop_block_with_warning(self, expected_kind: str, warning_msg: str) -> bool:
+        """Pop block from stack with validation and warning."""
+        if not self.block_stack or self.block_stack[-1][0].kind != expected_kind:
+            self.doc.warnings.append(f"L{self.i}: {warning_msg}")
+            if not self.block_stack:
+                return True  # Handled, but with warning
+        self.block_stack.pop()
+        return True
+
+    def _handle_block_control(self, act) -> bool:
+        """Handle block control keywords (if_block, loop_block, else_block, endif, endloop).
+
+        Refactored from CC=20 to orchestrator calling focused helpers.
+        """
+        # Block starters
+        if act.kind == "if_block":
+            self.block_stack.append((act, False))
+            self._append_nested_action(act)
+            return True
+
+        if act.kind == "loop_block":
+            self.block_stack.append((act, False))
+            self._append_loop_action(act)
+            return True
+
+        # Branch control
+        if act.kind == "else_block":
+            return self._handle_else_block()
+
+        # Block enders
+        if act.kind == "endif":
+            return self._pop_block_with_warning("if_block", "ENDIF ohne IF")
+
+        if act.kind == "endloop":
+            return self._pop_block_with_warning("loop_block", "ENDLOOP ohne LOOP")
+
+        return False
+
+    def _handle_else_block(self) -> bool:
+        """Handle ELSE block control."""
+        if not self.block_stack:
+            self.doc.warnings.append(f"L{self.i}: ELSE ohne IF")
+            return True
+        parent_act, _ = self.block_stack.pop()
+        if parent_act.kind != "if_block":
+            self.doc.warnings.append(f"L{self.i}: ELSE inside LOOP")
+        self.block_stack.append((parent_act, True))
+        return True
+
+    def _try_hierarchy(self, stripped: str, line: str, indent: int) -> bool:
+        """Handle scenario/goal/step/action hierarchy.
+
+        Refactored from monolithic CC=40 function into orchestrator
+        calling focused handlers (each CC<10).
+        """
+        # Scenario level
+        if self._handle_scenario(stripped):
+            return True
+        if self._handle_scenario_attrs(line):
+            return True
+
+        # Goal level
+        if self._handle_goal(stripped, line, indent):
+            return True
+        if self._handle_goal_attrs(line):
+            return True
+
+        # Step level
+        if self._handle_step(line):
             return True
 
         if not self.current_goal:
@@ -169,85 +295,24 @@ class _ParseState:
         if self.current_step is None:
             return False
 
-        # Nested block management
-        from oqlos.models.dsl_models import CqlAction
-        if not hasattr(self, 'block_stack'):
-            self.block_stack: list[tuple[CqlAction, bool]] = []  # (action, in_else_branch)
+        # Action level
+        self._init_block_stack()
 
-        # Try to parse as an action
-        temp_actions: list[CqlAction] = []
-        if _parse_action_line(line, stripped, temp_actions, self.doc, self.i):
-            if not temp_actions:
-                return True
-            
-            act = temp_actions[0]
-            
-            # Handle block control keywords
-            if act.kind == "if_block":
-                self.block_stack.append((act, False))
-                # Add the if_block itself to the parent (step or outer block)
-                if len(self.block_stack) > 1:
-                    parent_act, in_else = self.block_stack[-2]
-                    target_list = parent_act.else_actions if in_else else parent_act.then_actions
-                    # If the parent is a loop, things are simpler
-                    if parent_act.kind == "loop_block":
-                        parent_act.loop_actions.append(act)
-                    else:
-                        target_list.append(act)
-                else:
-                    self.current_step.actions.append(act)
-                return True
-                
-            if act.kind == "loop_block":
-                self.block_stack.append((act, False)) # loop doesn't havebranches like ELSE
-                if len(self.block_stack) > 1:
-                    parent_act, in_else = self.block_stack[-2]
-                    if parent_act.kind == "loop_block":
-                        parent_act.loop_actions.append(act)
-                    else:
-                        target_list = parent_act.else_actions if in_else else parent_act.then_actions
-                        target_list.append(act)
-                else:
-                    self.current_step.actions.append(act)
-                return True
-
-            if act.kind == "else_block":
-                if not self.block_stack:
-                    self.doc.warnings.append(f"L{self.i}: ELSE ohne IF")
-                    return True
-                parent_act, _ = self.block_stack.pop()
-                if parent_act.kind != "if_block":
-                    self.doc.warnings.append(f"L{self.i}: ELSE inside LOOP")
-                self.block_stack.append((parent_act, True))
-                return True
-                
-            if act.kind == "endif":
-                if not self.block_stack or self.block_stack[-1][0].kind != "if_block":
-                    self.doc.warnings.append(f"L{self.i}: ENDIF ohne IF")
-                    if not self.block_stack: return True
-                self.block_stack.pop()
-                return True
-
-            if act.kind == "endloop":
-                if not self.block_stack or self.block_stack[-1][0].kind != "loop_block":
-                    self.doc.warnings.append(f"L{self.i}: ENDLOOP ohne LOOP")
-                    if not self.block_stack: return True
-                self.block_stack.pop()
-                return True
-
-            # Standard actions & var_set
-            if self.block_stack:
-                parent_act, in_else = self.block_stack[-1]
-                if parent_act.kind == "loop_block":
-                    parent_act.loop_actions.append(act)
-                else:
-                    target_list = parent_act.else_actions if in_else else parent_act.then_actions
-                    target_list.append(act)
-            else:
-                self.current_step.actions.append(act)
+        temp_actions = []
+        if not _parse_action_line(line, stripped, temp_actions, self.doc, self.i):
+            return False
+        if not temp_actions:
             return True
 
-        return False
+        act = temp_actions[0]
+
+        # Try block control first
+        if self._handle_block_control(act):
+            return True
+
+        # Standard action
+        self._add_action_to_parent(act)
+        return True
 
 
 def parse_cql(source: str, filename: str = "<string>") -> CqlDocument:

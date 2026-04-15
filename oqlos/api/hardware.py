@@ -12,13 +12,13 @@ import pathlib
 from typing import Any
 
 from fastapi import APIRouter
-from oqlos.hardware.gateway import HardwareGateway
+from oqlos.hardware.plugin_gateway import PluginHardwareGateway
 from oqlos.hardware.discovery import list_serial_ports, probe_waveshare_modbus
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/hardware", tags=["hardware"])
 
-_gateway: HardwareGateway | None = None
+_gateway: PluginHardwareGateway | None = None
 
 # Static hardware registry — describes adapters available in the system
 _HARDWARE_REGISTRY: list[dict[str, Any]] = [
@@ -27,7 +27,7 @@ _HARDWARE_REGISTRY: list[dict[str, Any]] = [
         "name": "piADC (ADS1115)",
         "version": "1.0.2",
         "protocol": "I2C + REST",
-        "description": "ADS1115 16-bit ADC — 4-channel analog input",
+        "description": "ADS1115 16-bit ADC - 4-channel analog input",
         "repo": "piadc",
         "channels": {"0": "NC sensor (mbar)", "1": "SC sensor (bar)", "2": "WC sensor (bar)", "3": "spare"},
     },
@@ -36,7 +36,7 @@ _HARDWARE_REGISTRY: list[dict[str, Any]] = [
         "name": "Pololu Tic T249",
         "version": "0.1.13",
         "protocol": "USB + REST",
-        "description": "Stepper motor controller — artificial lung pump",
+        "description": "Stepper motor controller - artificial lung pump",
         "repo": "rpi-motor-tic249",
         "capabilities": ["reciprocate", "homing", "limit-switches"],
     },
@@ -54,10 +54,10 @@ _HARDWARE_REGISTRY: list[dict[str, Any]] = [
         "name": "Waveshare Modbus RTU IO 8CH",
         "version": "V2.00",
         "protocol": "Modbus RTU (RS485)",
-        "description": "8DI + 8DO industrial I/O module — valve & signal control",
+        "description": "8DI + 8DO industrial I/O module - valve & signal control",
         "repo": "pimodbus",
-        "digital_outputs": "DO1–DO8 (5–40V, open-drain, 500mA/ch)",
-        "digital_inputs": "DI1–DI8 (5–36V, optocoupler isolated)",
+        "digital_outputs": "DO1-DO8 (5-40V, open-drain, 500mA/ch)",
+        "digital_inputs": "DI1-DI8 (5-36V, optocoupler isolated)",
         "interface": "RS485 via USB serial adapter",
         "default_config": "19200 baud, N-8-1, slave address 1",
         "wiki": "https://www.waveshare.com/wiki/Modbus_RTU_IO_8CH",

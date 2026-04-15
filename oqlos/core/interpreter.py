@@ -20,10 +20,9 @@ from oqlos.core.base import (
     ScriptResult,
     StepResult,
     StepStatus,
-    VariableStore,
 )
 from oqlos.core._dsl_helpers import _parse_numeric_value
-from oqlos.models.dsl_models import CqlAction, CqlCondition, CqlDocument, CqlGoal, CqlStep
+from oqlos.models.dsl_models import CqlAction, CqlDocument, CqlGoal, CqlStep
 from oqlos.core.cql_parser import parse_cql, validate_cql
 from oqlos.hardware.firmware_adapter import _PERIPHERAL_MAP
 from oqlos.hardware.plugin_gateway import PluginHardwareGateway
@@ -287,227 +286,50 @@ class CqlInterpreter(BaseInterpreter):
 
     # ── Action dispatch table ───────────────────────────────────────
 
-    def _exec_action_action(self, act: CqlAction) -> StepStatus:
-        args_interpolated = self.vars.interpolate(act.args)
-        if self.mode == "execute":
-            # Pass interpolated args implicitly or explicitly
-            return self._execute_firmware_action(act, args_interpolated)
-        self.out.step("    →", f"{act.target}.{act.method} {args_interpolated}")
-        return StepStatus.PASSED
-
-    def _exec_action_task(self, act: CqlAction) -> StepStatus:
-        args_interpolated = self.vars.interpolate(act.args)
-        self.out.step("    🔨", args_interpolated)
-        return StepStatus.PASSED
-
-    def _exec_action_set(self, act: CqlAction) -> StepStatus:
-        """Intelligent SET dispatch: HAL Device > VariableStore."""
-        value = self.vars.interpolate((act.args or "").strip())
-        target_lower = (act.target or "").strip().lower()
-        self.vars.set(act.target, value)
-
-        if target_lower in {"wait", "delay", "pause", "timeout"}:
-            return self._exec_set_wait(act, value)
-
-        if self.mode == "execute":
-            if self._resolve_peripheral_id(act.target or "") is not None:
-                result = self._exec_set_peripheral(act, value)
-                if result is not None:
-                    return result
-        self.out.step("    ⚙️", f"SET [{act.target}] = [{value}]")
-        return StepStatus.PASSED
-
-    def _exec_set_wait(self, act: CqlAction, value: str) -> StepStatus:
-        secs = self._parse_wait_secs(value)
-        if self.mode == "dry-run":
-            self.out.step("    ⏳", f"SET [{act.target}] = [{value}] (simulated)")
-        elif self._skip_waits:
-            self.out.step("    ⏳", f"SET [{act.target}] = [{value}] (skipped)")
-        else:
-            self._do_sleep(secs, f"SET [{act.target}] = [{value}]")
-        return StepStatus.PASSED
-
-    def _exec_action_save(self, act: CqlAction) -> StepStatus:
-        val = self.sensor_values.get(act.target, 0.0) if act.target.startswith("AI") else "OK"
-        self.vars.set(act.target, val)
-        self.out.step("    💾", f"SAVE {act.target} = {val}")
-        return StepStatus.PASSED
-
-    @staticmethod
-    def _parse_wait_secs(raw: str) -> float:
-        """Parse a WAIT value to seconds.  Default unit is ms."""
-        import re as _re
-        low = raw.lower().strip()
-        match = _re.search(r"[-+]?\d*\.?\d+", low.replace(",", "."))
-        if not match:
-            return 0.0
-        num = float(match.group(0))
-        if "s" in low and "ms" not in low:
-            return num  # explicit seconds
-        # bare number or explicit "ms" → milliseconds
-        return num / 1000.0
-
-    def _exec_action_wait(self, act: CqlAction) -> StepStatus:
-        secs = self._parse_wait_secs(act.args)
-        if self.mode == "dry-run":
-            self.out.step("    ⏳", f"WAIT {secs}s (simulated)")
-        elif self._skip_waits:
-            self.out.step("    ⏳", f"WAIT {secs}s (skipped)")
-        else:
-            self._do_sleep(secs, f"WAIT {secs}s")
-        return StepStatus.PASSED
-
-    def _exec_action_min_max(self, act: CqlAction) -> StepStatus:
-        # Re-use logic for condition check but as an action
-        # For simple technical scripts, MIN/MAX often mean "verify current value"
-        sensor = act.target
-        op = ">=" if act.kind == "min" else "<="
-        try:
-            val = float(act.args.split()[0])
-        except (ValueError, IndexError):
-            val = 0.0
-            
-        cond = CqlCondition(sensor=sensor, operator=op, value=val)
-        return self._evaluate_condition(CqlAction(kind="condition", condition=cond))
-
-    def _exec_action_val(self, act: CqlAction) -> StepStatus:
-        sensor = act.target
-        val = self.sensor_values.get(sensor, 0.0)
-        self.vars.set(sensor, val)
-        self.out.step("    📊", f"VAL [{sensor}] = {val} {act.args}")
-        return StepStatus.PASSED
-
-    def _exec_action_if_block(self, act: CqlAction) -> StepStatus:
-        # For basic blocks (nested), stay internal
-        if act.then_actions or act.else_actions:
-            cond_status = self._evaluate_condition(act)
-            target_actions = act.then_actions if cond_status == StepStatus.PASSED else act.else_actions
-            for sub_act in target_actions:
-                status = self._execute_action(sub_act)
-                if status not in (StepStatus.PASSED, StepStatus.SKIPPED):
-                    return status
-            return StepStatus.PASSED
-        
-        # For Flat DSL (no explicit then/else actions in AST yet, or single IF line)
-        # If warunek fails, skip the rest of the current goal
-        cond_status = self._evaluate_condition(act)
-        if cond_status != StepStatus.PASSED:
-            self.out.info(f"Condition not met: {act.raw} — skipping rest of goal")
-            self._goal_skipped = True
-            
-        return StepStatus.PASSED
-
-    def _exec_action_loop_block(self, act: CqlAction) -> StepStatus:
-        """Recursive handler for LOOP block execution."""
-        method = act.method or "times"
-        self.out.step("    🔄", f"LOOP {method.upper()}: {act.raw}")
-        
-        max_iters = 1000
-        iteration = 0
-        
-        # Create scoped variable store for loop
-        old_vars = self.vars
-        self.vars = VariableStore(parent=old_vars)
-        
-        try:
-            if method == "times":
-                count = int(act.args) if act.args.isdigit() else 1
-                for i in range(count):
-                    self.vars.set("ITER", i) # Expose current iteration
-                    for sub_act in act.loop_actions:
-                        status = self._execute_action(sub_act)
-                        if status not in (StepStatus.PASSED, StepStatus.SKIPPED):
-                            return status
-                return StepStatus.PASSED
-
-            if method == "while":
-                while self._evaluate_condition(act) == StepStatus.PASSED:
-                    iteration += 1
-                    if iteration > max_iters:
-                        self.out.error(f"Loop safety limit reached ({max_iters} iters)")
-                        return StepStatus.ERROR
-                    
-                    for sub_act in act.loop_actions:
-                        status = self._execute_action(sub_act)
-                        if status not in (StepStatus.PASSED, StepStatus.SKIPPED):
-                            return status
-                return StepStatus.PASSED
-        finally:
-            self.vars = old_vars
-            
-        return StepStatus.PASSED
-
-    def _exec_action_var_set(self, act: CqlAction) -> StepStatus:
-        """Handle explicit VAR assignment."""
-        val = self.vars.interpolate(act.args)
-        self.vars.set(act.target, val)
-        self.out.step("    📌", f"VAR {act.target} = {val}")
-        return StepStatus.PASSED
-
-    def _exec_action_condition(self, act: CqlAction) -> StepStatus:
-        if self.mode == "execute":
-            self._refresh_sensors_from_firmware()
-        return self._evaluate_condition(act)
-
-    def _do_sleep(self, secs: float, label: str) -> None:
-        import asyncio
-        try:
-            loop = asyncio.get_event_loop()
-            if loop.is_running():
-                self.out.step("    ⏳", f"{label} (skipped in sync)")
-            else:
-                loop.run_until_complete(asyncio.sleep(max(secs, 0.0)))
-                self.out.step("    ⏳", label)
-        except RuntimeError:
-            time.sleep(max(secs, 0.0))
-            self.out.step("    ⏳", label)
-
-    _ACTION_DISPATCH: dict[str, str] = {
-        "action": "_exec_action_action",
-        "task": "_exec_action_task",
-        "set": "_exec_action_set",
-        "save": "_exec_action_save",
-        "wait": "_exec_action_wait",
-        "min": "_exec_action_min_max",
-        "max": "_exec_action_min_max",
-        "val": "_exec_action_val",
-        "condition": "_exec_action_condition",
-        "if_else": "_exec_action_condition",
-        "if_block": "_exec_action_if_block",
-        "loop_block": "_exec_action_loop_block",
-        "var_set": "_exec_action_var_set",
-    }
+    # ── Action Handlers (delegated to _interpreter_actions module) ──
 
     def _execute_action(self, act: CqlAction) -> StepStatus:
         """Dispatch action to specific handler based on kind."""
         if self._goal_skipped:
             return StepStatus.SKIPPED
 
-        method_name = self._ACTION_DISPATCH.get(act.kind)
-        if method_name is not None:
-            return getattr(self, method_name)(act)
-        
+        from oqlos.core._interpreter_actions import ACTION_HANDLERS
+
+        handler = ACTION_HANDLERS.get(act.kind)
+        if handler is not None:
+            return handler(self, act)
+
         # Try flat action dispatch (SET, VAL, SAVE, etc. if kind is generic)
         if act.kind in ("set", "val", "save", "min", "max", "wait"):
             return self._exec_flat_action(act)
-            
+
         self.out.warn(f"Unknown action kind: {act.kind}")
         return StepStatus.ERROR
 
     def _exec_flat_action(self, act: CqlAction) -> StepStatus:
         """Handle actions without arrows (SET 'PUMP' 'off', etc)."""
+        from oqlos.core._interpreter_actions import (
+            exec_action_set, exec_action_val, exec_action_save,
+            exec_action_min_max, exec_action_wait
+        )
+
         kind = act.kind.lower()
         if kind == "set":
-            return self._exec_action_set(act)
+            return exec_action_set(self, act)
         elif kind == "val":
-            return self._exec_action_val(act)
+            return exec_action_val(self, act)
         elif kind == "save":
-            return self._exec_action_save(act)
+            return exec_action_save(self, act)
         elif kind in ("min", "max"):
-            return self._exec_action_min_max(act)
+            return exec_action_min_max(self, act)
         elif kind == "wait":
-            return self._exec_action_wait(act)
+            return exec_action_wait(self, act)
         return StepStatus.ERROR
+
+    def _do_sleep(self, secs: float, label: str) -> None:
+        """Perform sleep operation."""
+        from oqlos.core._interpreter_actions import _do_sleep
+        _do_sleep(self, secs, label)
 
     def _exec_set_peripheral(self, act: CqlAction, value: str) -> StepStatus | None:
         fw = self._get_firmware()
@@ -600,7 +422,64 @@ class CqlInterpreter(BaseInterpreter):
         return self._firmware
 
     def _execute_firmware_action(self, act: CqlAction, args: str | None = None) -> StepStatus:
-        """Execute action on real/simulated firmware."""
+        """Execute action using plugin gateway when available, otherwise legacy firmware."""
+        if self._use_plugin_gateway and self._plugin_gateway:
+            return self._execute_plugin_action(act, args)
+        else:
+            return self._execute_legacy_firmware_action(act, args)
+
+    def _execute_plugin_action(self, act: CqlAction, args: str | None = None) -> StepStatus:
+        """Execute action using the new plugin gateway system."""
+        target = act.target
+        method = act.method
+        to_send = args if args is not None else self.vars.interpolate(act.args)
+
+        try:
+            # Map DSL targets to plugin commands
+            if method in {"set", "off"}:
+                # Pump command
+                power_pct = self._normalize_pump_power(to_send) if method == "set" else 0.0
+                success = self._plugin_gateway.set_pump(power_pct)
+                if success:
+                    self.vars.set(target, to_send)
+                    self.out.step("    →", f"{act.target}.{act.method} {to_send}")
+                    return StepStatus.PASSED
+                else:
+                    self.out.error(f"{act.target}.{act.method} FAILED: plugin error")
+                    return StepStatus.FAILED
+
+            elif method in {"open", "close"}:
+                # Valve command
+                value = (method == "open")
+                success = self._plugin_gateway.set_valve(target, value)
+                if success:
+                    self.vars.set(target, value)
+                    self.out.step("    →", f"{act.target}.{act.method} {value}")
+                    return StepStatus.PASSED
+                else:
+                    self.out.error(f"{act.target}.{act.method} FAILED: plugin error")
+                    return StepStatus.FAILED
+
+            elif method == "reciprocate":
+                # Lung command
+                success = self._plugin_gateway.set_lung()
+                if success:
+                    self.out.step("    →", f"{act.target}.{act.method}")
+                    return StepStatus.PASSED
+                else:
+                    self.out.error(f"{act.target}.{act.method} FAILED: plugin error")
+                    return StepStatus.FAILED
+
+            else:
+                self.out.warn(f"Unknown method {method} for target {target}")
+                return StepStatus.PASSED
+
+        except Exception as exc:
+            self.out.error(f"Plugin execution error: {exc}")
+            return StepStatus.FAILED
+
+    def _execute_legacy_firmware_action(self, act: CqlAction, args: str | None = None) -> StepStatus:
+        """Execute action on real/simulated firmware (legacy fallback)."""
         to_send = args if args is not None else self.vars.interpolate(act.args)
         res = self.firmware.dispatch_action(act.target, act.method, to_send)
         if res.get("ok"):

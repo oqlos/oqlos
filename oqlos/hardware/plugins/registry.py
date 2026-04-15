@@ -5,9 +5,12 @@ Hardware plugin registry - manages plugin discovery, registration, and lifecycle
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 from typing import Any, Type
 
-from .base import HardwarePlugin, PluginConfig, PluginHealth, PluginStatus
+import yaml
+
+from .base import HardwarePlugin, PluginConfig, PluginHealth, PluginStatus, get_pluggy_manager
 
 logger = logging.getLogger(__name__)
 
@@ -217,3 +220,97 @@ class PluginRegistry:
                 for plugin_id, instance in cls._instances.items()
             ],
         }
+
+    # ------------------------------------------------------------------
+    # Entry-point discovery (stevedore-like, stdlib only)
+    # ------------------------------------------------------------------
+
+    @classmethod
+    def discover_entry_point_plugins(
+        cls, group: str = "oqlos_hardware"
+    ) -> list[str]:
+        """
+        Discover and register plugins from installed entry points.
+
+        Third-party packages expose plugins via::
+
+            [project.entry-points."oqlos_hardware"]
+            my_driver = "my_package:MyDriverPlugin"
+
+        If the loaded object has ``PLUGIN_ID`` it is registered as an
+        ABC-based plugin.  Otherwise it is registered with the pluggy
+        PluginManager for hookspec-based drivers.
+
+        Returns list of discovered plugin IDs / entry-point names.
+        """
+        from importlib.metadata import entry_points
+
+        discovered: list[str] = []
+        eps = entry_points(group=group)
+        for ep in eps:
+            try:
+                plugin_obj = ep.load()
+                if (
+                    isinstance(plugin_obj, type)
+                    and issubclass(plugin_obj, HardwarePlugin)
+                    and hasattr(plugin_obj, "PLUGIN_ID")
+                ):
+                    cls.register(plugin_obj)
+                    discovered.append(plugin_obj.PLUGIN_ID)
+                else:
+                    # Hookspec-based driver — register with pluggy PM
+                    pm = get_pluggy_manager()
+                    pm.register(plugin_obj, name=ep.name)
+                    discovered.append(ep.name)
+                logger.info("Discovered entry-point plugin: %s", ep.name)
+            except Exception as exc:
+                logger.error("Failed to load entry point %s: %s", ep.name, exc)
+        return discovered
+
+    # ------------------------------------------------------------------
+    # YAML configuration reload
+    # ------------------------------------------------------------------
+
+    @classmethod
+    def load_configs_from_yaml(
+        cls, config_path: str | Path
+    ) -> dict[str, PluginConfig]:
+        """
+        Load (or reload) plugin configurations from a unified YAML file.
+
+        The YAML format is::
+
+            plugins:
+              motor-dri0050:
+                enabled: true
+                connection_type: http
+                connection_params:
+                  base_url: http://localhost:49055
+                peripherals:
+                  speed:
+                    name: speed
+                    type: pump
+                    scale: {min: 0, max: 100, unit: "l/min"}
+                    conversion: {type: linear, scale: 0.1}
+
+        Returns dict mapping plugin_id -> PluginConfig.
+        """
+        path = Path(config_path)
+        if not path.exists():
+            raise FileNotFoundError(f"Config file not found: {path}")
+
+        with open(path) as fh:
+            data = yaml.safe_load(fh) or {}
+
+        configs: dict[str, PluginConfig] = {}
+        for plugin_id, plugin_data in data.get("plugins", {}).items():
+            try:
+                configs[plugin_id] = PluginConfig.model_validate(
+                    {"plugin_id": plugin_id, **plugin_data}
+                )
+                logger.info("Loaded config for plugin: %s", plugin_id)
+            except Exception as exc:
+                logger.error(
+                    "Invalid config for plugin %s: %s", plugin_id, exc
+                )
+        return configs
