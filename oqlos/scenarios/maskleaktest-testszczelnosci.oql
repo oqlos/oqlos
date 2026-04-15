@@ -1,9 +1,9 @@
 GOAL: Wytworzenie podciśnienia -10 mbar i obserwacja przez 60 sekund
-  SET 'Pump' 'set'
-  SET 'Valve' 'NC'
+  SET 'pompa 1' '5 l/min'
+  SET 'valve-nc' 'open'
   WAIT '2000 ms'
   MIN 'AI01' '-11.0 mbar'
   SAVE 'AI01.value'
-  SET 'Pump' 'off'
+  SET 'pompa 1' '0'
   MIN 'AI01' '-11.0 mbar'
   SAVE 'AI01.value'

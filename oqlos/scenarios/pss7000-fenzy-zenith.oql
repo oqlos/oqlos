@@ -2,6 +2,7 @@ GOAL: Test wizualny aparatu
   VAL 'wynik' 'OK/NOK'
   SAVE 'wynik'
 GOAL: Podłącz złącza SC
+  # 1. Podłącz złącza SC do aparatu
 GOAL: Odkręć zawór butli
   SET 'zawór butli 300 bar' '1'
 GOAL: Załóż maskę FENZY ZENITH

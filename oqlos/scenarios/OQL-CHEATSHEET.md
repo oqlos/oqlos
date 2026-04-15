@@ -102,6 +102,12 @@ oqlctl run scenariusz.oql \
 
 # Krok po kroku (interaktywnie)
 oqlctl run scenariusz.oql --step
+
+# Najprostsza pojedyncza komenda na sprzęt
+oqlctl cmd "SET 'pompa 1' '0'"
+
+# Tylko symulacja jednej komendy
+oqlctl cmd "SET 'pompa 1' '0'" --mode dry-run
 ```
 
 ## Dostępne pliki

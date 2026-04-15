@@ -33,3 +33,4 @@ GOAL: Test nadciśnienia
   MIN 'nadciśnienie' '2.0 mbar'
   MAX 'nadciśnienie' '3.9 mbar'
   SAVE 'nadciśnienie'
+  ENDIF

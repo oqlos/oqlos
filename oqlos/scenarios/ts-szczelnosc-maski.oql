@@ -1,5 +1,5 @@
-# Test szczelności maski
-# Category: env
+SCENARIO: Test szczelności maski
+CATEGORY: env
 
 GOAL: Test szczelności maski
   SET 'pompa podciśnieniowa' '1'

@@ -1,7 +1,6 @@
-# SCENARIO: Hardware Diagnostics
-# DEVICE_TYPE: TEST_EQUIPMENT
-# DESCRIPTION: Comprehensive hardware detection and validation test
-# Runs via: oqlctl hardware-diagnostics.oql --mode execute
+SCENARIO: Hardware Diagnostics
+DEVICE_TYPE: TEST_EQUIPMENT
+DESCRIPTION: Comprehensive hardware detection and validation test
 
 GOAL: Detect and validate all hardware components
   # === USB/Serial Device Detection ===
