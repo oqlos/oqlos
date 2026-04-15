@@ -40,14 +40,27 @@ from oqlos.hardware.discovery import (
 
 logger = logging.getLogger(__name__)
 
-_HARDWARE_MODE = os.getenv("HARDWARE_MODE", "mock").lower()
-_PIADC_URL = os.getenv("PIADC_URL", "http://localhost:8080")
-_MOTOR_URL = os.getenv("MOTOR_URL", "http://localhost:8203")
-_MODBUS_HOST = os.getenv("MODBUS_HOST", "localhost")
-_MODBUS_PORT = int(os.getenv("MODBUS_PORT", "502"))
-_MODBUS_SERIAL = os.getenv("MODBUS_SERIAL_PORT", DEFAULT_MODBUS_SERIAL)
-_MODBUS_BAUD = int(os.getenv("MODBUS_BAUD", str(DEFAULT_MODBUS_BAUD)))
-_MODBUS_PARITY = os.getenv("MODBUS_PARITY", DEFAULT_MODBUS_PARITY).upper()
+# Import settings from config
+try:
+    from oqlos.config import _settings as settings
+    _HARDWARE_MODE = settings.hardware_mode.lower()
+    _PIADC_URL = settings.piadc_url
+    _MOTOR_URL = settings.motor_url
+    _MODBUS_HOST = settings.modbus_host
+    _MODBUS_PORT = settings.modbus_port
+    _MODBUS_SERIAL = settings.modbus_serial_port
+    _MODBUS_BAUD = settings.modbus_baud
+    _MODBUS_PARITY = settings.modbus_parity.upper()
+except ImportError:
+    # Fallback to environment variables if config not available
+    _HARDWARE_MODE = os.getenv("HARDWARE_MODE", "mock").lower()
+    _PIADC_URL = os.getenv("PIADC_URL", "http://localhost:8080")
+    _MOTOR_URL = os.getenv("MOTOR_URL", "http://localhost:8203")
+    _MODBUS_HOST = os.getenv("MODBUS_HOST", "localhost")
+    _MODBUS_PORT = int(os.getenv("MODBUS_PORT", "502"))
+    _MODBUS_SERIAL = os.getenv("MODBUS_SERIAL_PORT", DEFAULT_MODBUS_SERIAL)
+    _MODBUS_BAUD = int(os.getenv("MODBUS_BAUD", str(DEFAULT_MODBUS_BAUD)))
+    _MODBUS_PARITY = os.getenv("MODBUS_PARITY", DEFAULT_MODBUS_PARITY).upper()
 
 _SENSOR_CHANNEL_MAP: dict[str, int] = {
     "nc-sensor": 0,
