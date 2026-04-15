@@ -42,7 +42,7 @@ class Settings(BaseSettings):
     
     # Hardware Service URLs
     piadc_url: str = "http://localhost:8080"
-    motor_url: str = "http://localhost:8203"
+    motor_url: str = "http://localhost:49055"
     
     # Logging
     log_level: str = "INFO"

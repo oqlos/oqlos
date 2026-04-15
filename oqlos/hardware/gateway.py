@@ -4,7 +4,7 @@
 Reads config from env vars:
   HARDWARE_MODE    = mock | real          (default: mock)
   PIADC_URL        = http://host:8080     (piadc ADS1115 service)
-  MOTOR_URL        = http://host:8203     (rpi-motor-DRI0050 service)
+  MOTOR_URL        = http://host:49055    (rpi-motor-DRI0050 service)
     MODBUS_SERIAL_PORT = /dev/ttyACM1       (preferred RTU serial port)
     MODBUS_BAUD      = 19200                (preferred RTU baud rate)
     MODBUS_PARITY    = N                    (preferred parity, 8N1 by default)
@@ -55,7 +55,7 @@ except ImportError:
     # Fallback to environment variables if config not available
     _HARDWARE_MODE = os.getenv("HARDWARE_MODE", "mock").lower()
     _PIADC_URL = os.getenv("PIADC_URL", "http://localhost:8080")
-    _MOTOR_URL = os.getenv("MOTOR_URL", "http://localhost:8203")
+    _MOTOR_URL = os.getenv("MOTOR_URL", "http://localhost:49055")
     _MODBUS_HOST = os.getenv("MODBUS_HOST", "localhost")
     _MODBUS_PORT = int(os.getenv("MODBUS_PORT", "502"))
     _MODBUS_SERIAL = os.getenv("MODBUS_SERIAL_PORT", DEFAULT_MODBUS_SERIAL)

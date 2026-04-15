@@ -12,7 +12,7 @@ from typing import Any
 
 from fastapi import APIRouter
 from oqlos.hardware.gateway import HardwareGateway
-from oqlos.hardware.discovery import probe_waveshare_modbus
+from oqlos.hardware.discovery import list_serial_ports, probe_waveshare_modbus
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/hardware", tags=["hardware"])
@@ -177,6 +177,15 @@ def _probe_all_hardware() -> dict[str, Any]:
     }
 
 
+def _collect_hardware_diagnostics() -> dict[str, Any]:
+    """Collect best-effort port and bus inventory for troubleshooting."""
+    return {
+        "usb_devices": _scan_usb_devices(),
+        "serial_ports": list_serial_ports(),
+        "i2c_buses": sorted(glob.glob("/dev/i2c-*")),
+    }
+
+
 def set_hardware_gateway(gw: HardwareGateway) -> None:
     global _gateway
     _gateway = gw
@@ -199,6 +208,7 @@ async def hardware_identify():
     """Return full hardware identification: registry + live probe results."""
     health = await _gw().health()
     probes = _probe_all_hardware()
+    diagnostics = _collect_hardware_diagnostics()
 
     adapters = []
     for hw in _HARDWARE_REGISTRY:
@@ -226,6 +236,10 @@ async def hardware_identify():
         "detected": connected_count,
         "total": len(adapters),
         "adapters": adapters,
+        "diagnostics": {
+            "health": health,
+            **diagnostics,
+        },
     }
 
 
