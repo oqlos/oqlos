@@ -43,6 +43,7 @@ class Settings(BaseSettings):
     # Hardware Service URLs
     piadc_url: str = "http://localhost:8080"
     motor_url: str = "http://localhost:49055"
+    lung_motor_url: str = "http://localhost:8205"
     
     # Logging
     log_level: str = "INFO"

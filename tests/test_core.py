@@ -335,6 +335,52 @@ class TestFirmwareAdapterUnit:
         assert result["ok"] is True
         assert "confirmed" in result["detail"]
 
+    def test_dispatch_lung_falls_back_to_direct_service_on_404(self, monkeypatch):
+        import httpx
+
+        from oqlos.hardware import firmware_adapter as firmware_adapter_module
+
+        class BridgeClient:
+            def post(self, url, params=None, json=None):
+                request = httpx.Request("POST", f"http://localhost:8202{url}")
+                return httpx.Response(404, request=request)
+
+            def close(self):
+                return None
+
+        class DirectClient:
+            def __init__(self, base_url: str, timeout: float):
+                self.base_url = base_url.rstrip("/")
+
+            def post(self, url, params=None, json=None):
+                request = httpx.Request("POST", f"{self.base_url}{url}")
+                return httpx.Response(200, json={"ok": True, "service": "tic249"}, request=request)
+
+            def close(self):
+                return None
+
+        created_urls: list[str] = []
+
+        def fake_client(*, base_url, timeout):
+            created_urls.append(base_url.rstrip("/"))
+            if base_url.rstrip("/").endswith("8205"):
+                return DirectClient(base_url, timeout)
+            raise AssertionError(f"Unexpected client base URL: {base_url}")
+
+        monkeypatch.setattr(firmware_adapter_module.httpx, "Client", fake_client)
+
+        fw = FirmwareAdapter.__new__(FirmwareAdapter)
+        fw.base_url = "http://localhost:8202"
+        fw.timeout = 5.0
+        fw._client = BridgeClient()
+        fw.lung_motor_url = "http://localhost:8205"
+
+        result = fw.set_peripheral("lung", 2)
+
+        assert result["ok"] is True
+        assert result["service"] == "tic249"
+        assert created_urls == ["http://localhost:8205"]
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # EventStore

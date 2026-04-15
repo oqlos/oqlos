@@ -240,8 +240,21 @@ class ScenarioOrchestrator:
         elif act == 'READ_SENSOR':
             await self._execute_sensor_read_step(step)
         
+        elif act == 'SET_LUNG':
+            await self._execute_lung_step(step, mode)
+        
         elif act == 'VALIDATE':
             await self._execute_validate_step(step)
+
+    async def _execute_lung_step(self, step: Step, mode: str):
+        """Execute artificial lung reciprocating motion step."""
+        cycles = int(step.value) if step.value and step.value > 0 else 5
+        if mode == 'auto':
+            await self.log_event('info', f'🫁 Lung reciprocate: {cycles} cycles')
+            if step.value == 0:
+                await self.hardware.stop_lung()
+            else:
+                await self.hardware.set_lung(cycles=cycles)
 
     async def _execute_valve_step(self, step: Step, mode: str):
         """Execute valve control step"""

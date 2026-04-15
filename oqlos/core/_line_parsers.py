@@ -102,6 +102,17 @@ def _set_pump_step(peripheral: str, value_raw: str, step_counter: int, line: str
     return Step(id=f'step-{step_counter}', action='SET_PUMP', peripheral=peripheral, value=value, label=line)
 
 
+def _set_lung_step(peripheral: str, value_raw: str, step_counter: int, line: str) -> Step:
+    """Build a SET_LUNG step from value text."""
+    lowered = value_raw.lower()
+    if lowered in _CLOSE_ACTIONS or lowered in {'0', 'stop'}:
+        value: Any = 0
+    else:
+        numeric = _parse_numeric_value(value_raw)
+        value = numeric if numeric is not None else 5  # default 5 cycles
+    return Step(id=f'step-{step_counter}', action='SET_LUNG', peripheral=peripheral, value=value, label=line)
+
+
 def _parse_set_line(line: str, step_counter: int) -> Step | None:
     """Parse `SET 'zawór 2' '1'` or legacy `SET [zawór 2] = [1]`."""
     normalized_line = _normalize_quote_syntax(line)
@@ -134,6 +145,9 @@ def _parse_set_line(line: str, step_counter: int) -> Step | None:
 
     if peripheral == 'pump-main':
         return _set_pump_step(peripheral, value_raw, step_counter, line)
+
+    if peripheral == 'lung-main':
+        return _set_lung_step(peripheral, value_raw, step_counter, line)
 
     return None
 

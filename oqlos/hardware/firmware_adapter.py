@@ -20,6 +20,8 @@ try:
 except ImportError:
     httpx = None  # type: ignore
 
+from oqlos.config import get_settings
+
 
 # ── Peripheral name mapping ──────────────────────────────────────────────────
 # CQL target names → firmware peripheral IDs
@@ -109,6 +111,7 @@ class FirmwareAdapter:
     def __init__(self, base_url: str = "http://localhost:8202", timeout: float = 5.0):
         self.base_url = base_url.rstrip("/")
         self.timeout = timeout
+        self.lung_motor_url = get_settings().lung_motor_url.rstrip("/")
         self._client: Any = None
 
     def _get_client(self):
@@ -122,6 +125,15 @@ class FirmwareAdapter:
         if self._client:
             self._client.close()
             self._client = None
+
+    def _get_lung_motor_url(self) -> str:
+        url = getattr(self, "lung_motor_url", "")
+        if url:
+            return str(url).rstrip("/")
+        try:
+            return get_settings().lung_motor_url.rstrip("/")
+        except Exception:
+            return "http://localhost:8205"
 
     # ── Health check ─────────────────────────────────────────────────────────
 
@@ -180,6 +192,46 @@ class FirmwareAdapter:
                 json={"currentValue": value, "targetValue": value},
             )
             return r.json()
+
+        if pid.startswith("lung"):
+            # Lung motor: value > 0 starts reciprocating, 0 stops
+            lung_url = self._get_lung_motor_url()
+            cycles = int(float(value)) if value and float(value) > 0 else 0
+            if cycles > 0:
+                payload = {"steps": 500, "speed": 100000, "cycles": cycles, "pause": 0.5}
+                try:
+                    r = self._get_client().post(
+                        "/api/v1/hardware/lung",
+                        params=payload,
+                    )
+                    r.raise_for_status()
+                    return r.json()
+                except httpx.HTTPStatusError as exc:
+                    if exc.response.status_code != 404:
+                        raise
+                direct = httpx.Client(base_url=lung_url, timeout=self.timeout)
+                try:
+                    r = direct.post("/api/reciprocate", json=payload)
+                    r.raise_for_status()
+                    return r.json()
+                finally:
+                    direct.close()
+
+            try:
+                r = self._get_client().post("/api/v1/hardware/lung/stop")
+                r.raise_for_status()
+                return r.json()
+            except httpx.HTTPStatusError as exc:
+                if exc.response.status_code != 404:
+                    raise
+
+            direct = httpx.Client(base_url=lung_url, timeout=self.timeout)
+            try:
+                r = direct.post("/api/stop")
+                r.raise_for_status()
+                return r.json()
+            finally:
+                direct.close()
 
         # Fallback: generic peripheral update (state only)
         r = self._get_client().put(
@@ -274,7 +326,17 @@ class FirmwareAdapter:
 
     def _execute_method(self, target: str, peripheral_target: str, method_lower: str, args: str) -> dict:
         """Execute the resolved method on the target peripheral."""
-        is_valve = self._resolve_peripheral(peripheral_target).startswith("valve")
+        pid = self._resolve_peripheral(peripheral_target)
+        is_valve = pid.startswith("valve")
+        is_lung = pid.startswith("lung")
+
+        if is_lung:
+            if method_lower in {"off", "stop", "wyłącz", "wylacz", "zamknij", "close"}:
+                data = self.set_peripheral(peripheral_target, 0)
+                return {"ok": True, "detail": f"{target}.stop → lung stopped", "data": data}
+            cycles = _parse_numeric(args) if args.strip() else 5
+            data = self.set_peripheral(peripheral_target, cycles)
+            return {"ok": True, "detail": f"{target}.reciprocate → {int(cycles)} cycles", "data": data}
 
         if method_lower in {"off", "wyłącz", "wylacz", "stop", "zamknij", "close"}:
             data = self.valve_close(peripheral_target) if is_valve else self.pump_off(peripheral_target)

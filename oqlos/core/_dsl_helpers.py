@@ -13,6 +13,7 @@ _OPEN_ACTIONS = {'włącz', 'wlacz', 'on', 'open', 'otwórz', 'otworz', 'start'}
 _CLOSE_ACTIONS = {'wyłącz', 'wylacz', 'off', 'close', 'zamknij', 'stop'}
 _WAIT_ACTIONS = {'czekaj', 'wait', 'delay', 'pauza', 'pause', 'timeout'}
 _PUMP_OBJECT_RE = re.compile(r'\b(pump|pompa|sprężarka|sprezarka|compressor)\b', re.IGNORECASE)
+_LUNG_OBJECT_RE = re.compile(r'\b(lung|płuco|pluco|respirator)\b', re.IGNORECASE)
 _SENSOR_OBJECT_RE = re.compile(r'\b(czujnik|sensor)\b', re.IGNORECASE)
 _DOUBLE_QUOTED_LITERAL_RE = re.compile(r'"([^"\r\n]*)"')
 
@@ -28,6 +29,10 @@ def _looks_like_valve_object(obj: str) -> bool:
 
 def _looks_like_pump_object(obj: str) -> bool:
     return bool(_PUMP_OBJECT_RE.search(obj))
+
+
+def _looks_like_lung_object(obj: str) -> bool:
+    return bool(_LUNG_OBJECT_RE.search(obj))
 
 
 def _looks_like_sensor_object(obj: str) -> bool:
@@ -50,6 +55,9 @@ def _map_peripheral(obj: str) -> str | None:
 
     if _looks_like_pump_object(obj):
         return 'pump-main'
+
+    if _looks_like_lung_object(obj):
+        return 'lung-main'
 
     if _looks_like_sensor_object(obj):
         if 'sc' in obj:
@@ -95,6 +103,15 @@ def _map_wait_action(fn: str, obj: str, obj_raw: str, line: str, step_counter: i
     return 'WAIT', None, duration, step
 
 
+def _map_lung_action(fn: str, obj_raw: str, line: str) -> tuple[str, Any, None, None]:
+    """Map lung action value from function name."""
+    if fn in _CLOSE_ACTIONS or fn in {'stop'}:
+        return 'SET_LUNG', 0, None, None
+    numeric = _parse_numeric_value(obj_raw or line)
+    value = numeric if numeric is not None else 5  # default 5 cycles
+    return 'SET_LUNG', value, None, None
+
+
 def _map_action_value(fn: str, obj: str, obj_raw: str, line: str, step_counter: int) -> tuple[str | None, Any, int | None, Step | None]:
     """Map function and object strings to action, value, duration, or a wait step."""
     if _looks_like_valve_object(obj):
@@ -102,6 +119,9 @@ def _map_action_value(fn: str, obj: str, obj_raw: str, line: str, step_counter: 
 
     if _looks_like_pump_object(obj):
         return _map_pump_action(fn, obj_raw, line)
+
+    if _looks_like_lung_object(obj):
+        return _map_lung_action(fn, obj_raw, line)
 
     if _looks_like_sensor_object(obj) and fn in ('odczytaj', 'zmierz', 'sprawdź', 'sprawdz', 'read', 'measure'):
         return 'READ_SENSOR', None, None, None

@@ -1,0 +1,340 @@
+{
+  "timestamp": "2026-04-15 13:31:38",
+  "firmware_url": "http://localhost:8202",
+  "usb_devices": [
+    {
+      "device": "/dev/ttyS31",
+      "vid": null,
+      "pid": null,
+      "manufacturer": null,
+      "product": null,
+      "serial": null,
+      "description": "n/a"
+    },
+    {
+      "device": "/dev/ttyS30",
+      "vid": null,
+      "pid": null,
+      "manufacturer": null,
+      "product": null,
+      "serial": null,
+      "description": "n/a"
+    },
+    {
+      "device": "/dev/ttyS29",
+      "vid": null,
+      "pid": null,
+      "manufacturer": null,
+      "product": null,
+      "serial": null,
+      "description": "n/a"
+    },
+    {
+      "device": "/dev/ttyS28",
+      "vid": null,
+      "pid": null,
+      "manufacturer": null,
+      "product": null,
+      "serial": null,
+      "description": "n/a"
+    },
+    {
+      "device": "/dev/ttyS27",
+      "vid": null,
+      "pid": null,
+      "manufacturer": null,
+      "product": null,
+      "serial": null,
+      "description": "n/a"
+    },
+    {
+      "device": "/dev/ttyS26",
+      "vid": null,
+      "pid": null,
+      "manufacturer": null,
+      "product": null,
+      "serial": null,
+      "description": "n/a"
+    },
+    {
+      "device": "/dev/ttyS25",
+      "vid": null,
+      "pid": null,
+      "manufacturer": null,
+      "product": null,
+      "serial": null,
+      "description": "n/a"
+    },
+    {
+      "device": "/dev/ttyS24",
+      "vid": null,
+      "pid": null,
+      "manufacturer": null,
+      "product": null,
+      "serial": null,
+      "description": "n/a"
+    },
+    {
+      "device": "/dev/ttyS23",
+      "vid": null,
+      "pid": null,
+      "manufacturer": null,
+      "product": null,
+      "serial": null,
+      "description": "n/a"
+    },
+    {
+      "device": "/dev/ttyS22",
+      "vid": null,
+      "pid": null,
+      "manufacturer": null,
+      "product": null,
+      "serial": null,
+      "description": "n/a"
+    },
+    {
+      "device": "/dev/ttyS21",
+      "vid": null,
+      "pid": null,
+      "manufacturer": null,
+      "product": null,
+      "serial": null,
+      "description": "n/a"
+    },
+    {
+      "device": "/dev/ttyS20",
+      "vid": null,
+      "pid": null,
+      "manufacturer": null,
+      "product": null,
+      "serial": null,
+      "description": "n/a"
+    },
+    {
+      "device": "/dev/ttyS19",
+      "vid": null,
+      "pid": null,
+      "manufacturer": null,
+      "product": null,
+      "serial": null,
+      "description": "n/a"
+    },
+    {
+      "device": "/dev/ttyS18",
+      "vid": null,
+      "pid": null,
+      "manufacturer": null,
+      "product": null,
+      "serial": null,
+      "description": "n/a"
+    },
+    {
+      "device": "/dev/ttyS17",
+      "vid": null,
+      "pid": null,
+      "manufacturer": null,
+      "product": null,
+      "serial": null,
+      "description": "n/a"
+    },
+    {
+      "device": "/dev/ttyS16",
+      "vid": null,
+      "pid": null,
+      "manufacturer": null,
+      "product": null,
+      "serial": null,
+      "description": "n/a"
+    },
+    {
+      "device": "/dev/ttyS15",
+      "vid": null,
+      "pid": null,
+      "manufacturer": null,
+      "product": null,
+      "serial": null,
+      "description": "n/a"
+    },
+    {
+      "device": "/dev/ttyS14",
+      "vid": null,
+      "pid": null,
+      "manufacturer": null,
+      "product": null,
+      "serial": null,
+      "description": "n/a"
+    },
+    {
+      "device": "/dev/ttyS13",
+      "vid": null,
+      "pid": null,
+      "manufacturer": null,
+      "product": null,
+      "serial": null,
+      "description": "n/a"
+    },
+    {
+      "device": "/dev/ttyS12",
+      "vid": null,
+      "pid": null,
+      "manufacturer": null,
+      "product": null,
+      "serial": null,
+      "description": "n/a"
+    },
+    {
+      "device": "/dev/ttyS11",
+      "vid": null,
+      "pid": null,
+      "manufacturer": null,
+      "product": null,
+      "serial": null,
+      "description": "n/a"
+    },
+    {
+      "device": "/dev/ttyS10",
+      "vid": null,
+      "pid": null,
+      "manufacturer": null,
+      "product": null,
+      "serial": null,
+      "description": "n/a"
+    },
+    {
+      "device": "/dev/ttyS9",
+      "vid": null,
+      "pid": null,
+      "manufacturer": null,
+      "product": null,
+      "serial": null,
+      "description": "n/a"
+    },
+    {
+      "device": "/dev/ttyS8",
+      "vid": null,
+      "pid": null,
+      "manufacturer": null,
+      "product": null,
+      "serial": null,
+      "description": "n/a"
+    },
+    {
+      "device": "/dev/ttyS7",
+      "vid": null,
+      "pid": null,
+      "manufacturer": null,
+      "product": null,
+      "serial": null,
+      "description": "n/a"
+    },
+    {
+      "device": "/dev/ttyS6",
+      "vid": null,
+      "pid": null,
+      "manufacturer": null,
+      "product": null,
+      "serial": null,
+      "description": "n/a"
+    },
+    {
+      "device": "/dev/ttyS5",
+      "vid": null,
+      "pid": null,
+      "manufacturer": null,
+      "product": null,
+      "serial": null,
+      "description": "n/a"
+    },
+    {
+      "device": "/dev/ttyS4",
+      "vid": null,
+      "pid": null,
+      "manufacturer": null,
+      "product": null,
+      "serial": null,
+      "description": "n/a"
+    },
+    {
+      "device": "/dev/ttyS3",
+      "vid": null,
+      "pid": null,
+      "manufacturer": null,
+      "product": null,
+      "serial": null,
+      "description": "n/a"
+    },
+    {
+      "device": "/dev/ttyS2",
+      "vid": null,
+      "pid": null,
+      "manufacturer": null,
+      "product": null,
+      "serial": null,
+      "description": "n/a"
+    },
+    {
+      "device": "/dev/ttyS1",
+      "vid": null,
+      "pid": null,
+      "manufacturer": null,
+      "product": null,
+      "serial": null,
+      "description": "n/a"
+    },
+    {
+      "device": "/dev/ttyS0",
+      "vid": null,
+      "pid": null,
+      "manufacturer": null,
+      "product": null,
+      "serial": null,
+      "description": "n/a"
+    },
+    {
+      "device": "/dev/ttyUSB0",
+      "vid": "0x1A86",
+      "pid": "0x7523",
+      "manufacturer": null,
+      "product": "USB2.0-Serial",
+      "serial": null,
+      "description": "USB2.0-Serial"
+    },
+    {
+      "device": "/dev/ttyACM1",
+      "vid": "0x1A86",
+      "pid": "0x55D3",
+      "manufacturer": null,
+      "product": "USB Single Serial",
+      "serial": "5958006895",
+      "description": "USB Single Serial"
+    },
+    {
+      "device": "/dev/ttyACM0",
+      "vid": "0x067B",
+      "pid": "0x2323",
+      "manufacturer": "Prolific Technology Inc.",
+      "product": "USB-Serial Controller",
+      "serial": "BOCJb118D16",
+      "description": "USB-Serial Controller"
+    }
+  ],
+  "i2c_buses": [],
+  "firmware_health": {
+    "mode": "real",
+    "piadc": "ok",
+    "motor": "ok",
+    "modbus": "/dev/ttyACM1@19200 8N1 (mode=rtu)"
+  },
+  "firmware_identify": {
+    "error": "timed out"
+  },
+  "calibration": {
+    "timestamp": 1776252703.7791595,
+    "tests": [],
+    "passed": 0,
+    "failed": 0,
+    "errors": [
+      "Calibration error: timed out"
+    ]
+  }
+}

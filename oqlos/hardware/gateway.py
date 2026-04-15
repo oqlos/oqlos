@@ -46,6 +46,7 @@ try:
     _HARDWARE_MODE = settings.hardware_mode.lower()
     _PIADC_URL = settings.piadc_url
     _MOTOR_URL = settings.motor_url
+    _LUNG_MOTOR_URL = settings.lung_motor_url
     _MODBUS_HOST = settings.modbus_host
     _MODBUS_PORT = settings.modbus_port
     _MODBUS_SERIAL = settings.modbus_serial_port
@@ -56,6 +57,7 @@ except ImportError:
     _HARDWARE_MODE = os.getenv("HARDWARE_MODE", "mock").lower()
     _PIADC_URL = os.getenv("PIADC_URL", "http://localhost:8080")
     _MOTOR_URL = os.getenv("MOTOR_URL", "http://localhost:49055")
+    _LUNG_MOTOR_URL = os.getenv("LUNG_MOTOR_URL", "http://localhost:5000")
     _MODBUS_HOST = os.getenv("MODBUS_HOST", "localhost")
     _MODBUS_PORT = int(os.getenv("MODBUS_PORT", "502"))
     _MODBUS_SERIAL = os.getenv("MODBUS_SERIAL_PORT", DEFAULT_MODBUS_SERIAL)
@@ -121,6 +123,62 @@ class _DRI0050MotorAdapter:
     async def _stop(self) -> dict[str, Any]:
         async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
             resp = await client.post(f"{self._base}/api/stop")
+            resp.raise_for_status()
+            return resp.json()
+
+    async def status(self) -> dict[str, Any]:
+        async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
+            resp = await client.get(f"{self._base}/api/status")
+            resp.raise_for_status()
+            return resp.json()
+
+
+class _Tic249LungAdapter:
+    """Controls the artificial lung stepper motor via rpi-motor-tic249 Flask API.
+
+    Endpoints (Flask, default port 5000):
+      POST /api/reciprocate  — start reciprocating motion {steps, speed, cycles, pause}
+      POST /api/stop         — emergency stop
+      POST /api/move         — move to absolute position {position, speed}
+      POST /api/energize     — enable/disable motor {enable: bool}
+      GET  /api/status       — motor state (position, velocity, connected, ready)
+      GET  /health           — health check
+    """
+
+    def __init__(self, base_url: str) -> None:
+        self._base = base_url.rstrip("/")
+
+    async def reciprocate(
+        self, steps: int = 500, speed: int = 100000, cycles: int = 5, pause: float = 0.5
+    ) -> dict[str, Any]:
+        """Start reciprocating (back-and-forth) lung motion."""
+        async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
+            resp = await client.post(
+                f"{self._base}/api/reciprocate",
+                json={"steps": steps, "speed": speed, "cycles": cycles, "pause": pause},
+            )
+            resp.raise_for_status()
+            return resp.json()
+
+    async def stop(self) -> dict[str, Any]:
+        async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
+            resp = await client.post(f"{self._base}/api/stop")
+            resp.raise_for_status()
+            return resp.json()
+
+    async def move(self, position: int, speed: int | None = None) -> dict[str, Any]:
+        """Move to absolute position."""
+        payload: dict[str, Any] = {"position": position}
+        if speed is not None:
+            payload["speed"] = speed
+        async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
+            resp = await client.post(f"{self._base}/api/move", json=payload)
+            resp.raise_for_status()
+            return resp.json()
+
+    async def energize(self, enable: bool = True) -> dict[str, Any]:
+        async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
+            resp = await client.post(f"{self._base}/api/energize", json={"enable": enable})
             resp.raise_for_status()
             return resp.json()
 
@@ -246,12 +304,14 @@ class HardwareGateway:
         if self.mode == "real":
             self._piadc = _PiAdcAdapter(_PIADC_URL)
             self._motor = _DRI0050MotorAdapter(_MOTOR_URL)
+            self._lung = _Tic249LungAdapter(_LUNG_MOTOR_URL)
             self._modbus = _ModbusAdapter(_MODBUS_SERIAL, _MODBUS_BAUD, _MODBUS_PARITY, _MODBUS_HOST, _MODBUS_PORT)
             logger.info(
-                "HardwareGateway init: mode=%s piadc=%s motor=%s modbus=%s@%d 8%s1 (tcp-fallback=%s:%d)",
+                "HardwareGateway init: mode=%s piadc=%s motor=%s lung=%s modbus=%s@%d 8%s1 (tcp-fallback=%s:%d)",
                 self.mode,
                 _PIADC_URL,
                 _MOTOR_URL,
+                _LUNG_MOTOR_URL,
                 self._modbus._serial_port,
                 self._modbus._baudrate,
                 self._modbus._parity,
@@ -261,6 +321,7 @@ class HardwareGateway:
         else:
             self._piadc = None
             self._motor = None
+            self._lung = None
             self._modbus = None
             logger.info("HardwareGateway init: mode=%s (hardware adapters not initialized)", self.mode)
 
@@ -299,6 +360,30 @@ class HardwareGateway:
             logger.error("HardwareGateway.read_sensor error: %s", exc)
             return None
 
+    async def set_lung(self, steps: int = 500, speed: int = 100000, cycles: int = 5, pause: float = 0.5) -> bool:
+        """Start artificial lung reciprocating motion (tic249 stepper)."""
+        if not self.is_real:
+            logger.info("[HW mock] SET_LUNG steps=%d speed=%d cycles=%d pause=%.1f", steps, speed, cycles, pause)
+            return True
+        try:
+            await self._lung.reciprocate(steps=steps, speed=speed, cycles=cycles, pause=pause)
+            return True
+        except Exception as exc:
+            logger.error("HardwareGateway.set_lung error: %s", exc)
+            return False
+
+    async def stop_lung(self) -> bool:
+        """Emergency stop the artificial lung motor."""
+        if not self.is_real:
+            logger.info("[HW mock] STOP_LUNG")
+            return True
+        try:
+            await self._lung.stop()
+            return True
+        except Exception as exc:
+            logger.error("HardwareGateway.stop_lung error: %s", exc)
+            return False
+
     async def health(self) -> dict[str, Any]:
         """Return connectivity status for all hardware services."""
         result: dict[str, Any] = {"mode": self.mode}
@@ -306,7 +391,7 @@ class HardwareGateway:
             result["note"] = "mock mode — no hardware calls"
             return result
 
-        for name, url in [("piadc", _PIADC_URL), ("motor", _MOTOR_URL)]:
+        for name, url in [("piadc", _PIADC_URL), ("motor", _MOTOR_URL), ("lung", _LUNG_MOTOR_URL)]:
             try:
                 async with httpx.AsyncClient(timeout=_TIMEOUT) as c:
                     r = await c.get(f"{url}/health")

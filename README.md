@@ -256,6 +256,7 @@ oqlctl run scenarios/config-peripherals.oql \
 
 - **Valves**: valve-1 through valve-14, valve-nc, valve-sc, valve-wc (Modbus RTU via /dev/ttyACM1 @ 19200 8N1)
 - **Pump**: pump-main (DRI0050 PWM motor driver via HTTP :49055)
+- **Artificial lung**: lung-main (Tic T249 stepper via HTTP :8205)
 - **Sensors**: AI01 (NC), AI02 (SC), AI03 (WC) (piADC ADS1115 via HTTP :8204)
 
 ### Hardware Adapters
@@ -263,8 +264,19 @@ oqlctl run scenarios/config-peripherals.oql \
 | Adapter | Class | Protocol | Default URL |
 |---------|-------|----------|-------------|
 | Motor (pump) | `_DRI0050MotorAdapter` | HTTP POST /api/speed | http://localhost:49055 |
+| Lung (artificial lung) | `_Tic249LungAdapter` | HTTP POST /api/lung | http://localhost:8205 |
 | Valves | `_ModbusAdapter` | Modbus RTU (pymodbus) | /dev/ttyACM1 serial |
 | Sensors | `_PiAdcAdapter` | HTTP GET /api/v1/hardware/sensor/{id} | http://localhost:8204 |
+
+### Hardware Identification & Diagnostics
+
+The `/api/v1/hardware/identify` endpoint returns the adapter registry, live probe
+status, and a diagnostics block with:
+
+- USB device inventory
+- Serial port inventory (`ttyACM*` and `ttyUSB*`)
+- I2C bus inventory (`/dev/i2c-*`)
+- Best-effort bridge health snapshot for `piadc`, `motor`, `lung`, and `modbus`
 
 ### Environment Variables
 
@@ -272,6 +284,7 @@ oqlctl run scenarios/config-peripherals.oql \
 |----------|---------|-------------|
 | `OQLOS_HARDWARE_MODE` | `mock` | `mock` or `real` |
 | `MOTOR_URL` | `http://localhost:49055` | DRI0050 motor service |
+| `LUNG_MOTOR_URL` | `http://localhost:8205` | Tic T249 lung service |
 | `PIADC_URL` | `http://localhost:8080` | piADC sensor service |
 | `MODBUS_SERIAL_PORT` | `/dev/ttyACM1` | Modbus RTU serial port |
 | `MODBUS_BAUD_RATE` | `19200` | Modbus baud rate |

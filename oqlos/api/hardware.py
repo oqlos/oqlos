@@ -262,3 +262,17 @@ async def read_sensor(sensor_id: str):
     """Read a sensor value directly from hardware."""
     value = await _gw().read_sensor(sensor_id)
     return {"sensor_id": sensor_id, "value": value}
+
+
+@router.post("/lung")
+async def set_lung(steps: int = 500, speed: int = 100000, cycles: int = 5, pause: float = 0.5):
+    """Start artificial lung reciprocating motion (tic249 stepper)."""
+    ok = await _gw().set_lung(steps=steps, speed=speed, cycles=cycles, pause=pause)
+    return {"steps": steps, "speed": speed, "cycles": cycles, "pause": pause, "ok": ok}
+
+
+@router.post("/lung/stop")
+async def stop_lung():
+    """Emergency stop the artificial lung motor."""
+    ok = await _gw().stop_lung()
+    return {"ok": ok, "status": "stopped"}
