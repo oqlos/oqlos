@@ -1,0 +1,42 @@
+# Example hardware plugin configuration
+# This file demonstrates how to configure hardware plugins in a standardized way
+
+plugins:
+  # piADC (ADS1115) sensor configuration
+  piadc:
+    enabled: true
+    connection_type: http
+    connection_params:
+      base_url: http://localhost:8080
+    timeout: 5.0
+    retry_count: 3
+    metadata:
+      description: ADS1115 16-bit ADC for pressure sensors
+      location: main_board
+
+  # DFRobot DRI0050 motor configuration
+  motor-dri0050:
+    enabled: true
+    connection_type: http
+    connection_params:
+      base_url: http://localhost:49055
+    timeout: 5.0
+    retry_count: 3
+    metadata:
+      description: PWM motor driver for pump
+      max_power_pct: 100
+      calibration_date: "2026-04-15"
+
+  # Waveshare Modbus RTU IO 8CH configuration
+  modbus-io:
+    enabled: true
+    connection_type: modbus-rtu
+    connection_params:
+      serial_port: /dev/ttyACM0
+      baudrate: 19200
+      parity: N
+    timeout: 2.0
+    retry_count: 3
+    metadata:
+      description: 8-channel digital I/O for valve control
+      valve_count: 8

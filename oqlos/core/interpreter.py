@@ -26,6 +26,7 @@ from oqlos.core._dsl_helpers import _parse_numeric_value
 from oqlos.models.dsl_models import CqlAction, CqlCondition, CqlDocument, CqlGoal, CqlStep
 from oqlos.core.cql_parser import parse_cql, validate_cql
 from oqlos.hardware.firmware_adapter import _PERIPHERAL_MAP
+from oqlos.hardware.plugin_gateway import PluginHardwareGateway
 
 
 class CqlInterpreter(BaseInterpreter):
@@ -54,6 +55,7 @@ class CqlInterpreter(BaseInterpreter):
         skip_waits: bool = False,
         bridge_url: str | None = None,
         yaml_output: bool = False,
+        use_plugin_gateway: bool = True,
     ):
         super().__init__(variables=variables, quiet=quiet, bridge_url=bridge_url)
         self.mode = mode  # validate, dry-run, execute
@@ -63,6 +65,12 @@ class CqlInterpreter(BaseInterpreter):
         self._auto_mock = auto_mock and mode == "dry-run"
         self._goal_skipped = False # Track if current goal execution should be skipped (flat IF)
         self._yaml_output = yaml_output
+        self._use_plugin_gateway = use_plugin_gateway
+        # Use plugin gateway instead of old hardware system
+        if use_plugin_gateway:
+            self._plugin_gateway = PluginHardwareGateway(mode=mode)
+        else:
+            self._plugin_gateway = None
         # Seed with defaults, then overlay user-provided values
         self.sensor_values: dict[str, float] = dict(self.DEFAULT_MOCK_SENSORS)
         if sensor_values:
