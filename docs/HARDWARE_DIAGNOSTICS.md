@@ -96,10 +96,10 @@ GOAL: Detect and validate all hardware components
   
   # Test peryferiów
   # piADC zwraca surowe napięcie, więc progi podajemy w voltach.
-  SET "pompa" "2"
-  WAIT "500ms"
-  ASSERT_SENSOR "sc-sensor" ">" "0.73" "V"
-  SET "pompa" "0"
+  SET 'pompa 1' '2.0 l/min'
+  WAIT '0.5 s'
+  ASSERT_SENSOR 'sc-sensor' '>' '0.73' 'V'
+  SET 'pompa 1' '0 l/min'
   
   # Raport dla shell
   SHELL_EXPORT "HARDWARE_OK" "true"

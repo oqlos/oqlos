@@ -204,7 +204,7 @@ PROTOCOL_CREATED "pro-example-001" {"via": "cqrs", "deviceId": "d-001"}
 NAVIGATE "/connect-test-protocol?protocol=pro-example-001&step=1"
 
 # Execute test steps
-STEP_COMPLETE "step-1" {"name": "Sprawdzenie ciśnienia", "status": "passed", "value": "15.2 mbar"}
+STEP_COMPLETE "step-1" {"name": "Sprawdzenie napięcia", "status": "passed", "value": "0.76 V"}
 WAIT 500
 
 STEP_COMPLETE "step-2" {"name": "Test szczelności", "status": "passed", "value": "OK"}
@@ -305,7 +305,7 @@ START_TEST "ts-demo" {"name": "Demo Test", "steps": 3}
 
 STEP_COMPLETE "step-1" {"name": "Initialization", "status": "passed"}
 WAIT 200
-STEP_COMPLETE "step-2" {"name": "Pressure Check", "status": "passed", "value": "15.2 mbar"}
+STEP_COMPLETE "step-2" {"name": "Voltage Check", "status": "passed", "value": "0.76 V"}
 WAIT 200
 STEP_COMPLETE "step-3" {"name": "Finalization", "status": "passed"}
 
@@ -449,15 +449,15 @@ This script generates complete test workflows that emit events for the Reports m
 LOG "Starting test report generation..." {"level": "info"}
 RECORD_START "report-generation"
 
-# Test 1: MSA Device - Pressure Test
+# Test 1: MSA Device - Voltage Test
 NAVIGATE "/connect-id/device-rfid"
 SELECT_DEVICE "d-msa-7000" {"type": "MSA_G1", "serial": "AO73138"}
 NAVIGATE "/connect-test/testing"
 SELECT_INTERVAL "3m" {"code": "periodic_3m"}
-START_TEST "ts-pressure" {"name": "Test ciśnienia MSA", "steps": 3}
+START_TEST "ts-voltage" {"name": "Test napięcia MSA", "steps": 3}
 PROTOCOL_CREATED "pro-msa-001" {"device_id": "d-msa-7000", "status": "IN_PROGRESS"}
 STEP_COMPLETE "step-1" {"name": "Inicjalizacja", "status": "passed"}
-STEP_COMPLETE "step-2" {"name": "Test ciśnienia 15 mbar", "status": "passed", "value": "15.2 mbar"}
+STEP_COMPLETE "step-2" {"name": "Test napięcia 0.76 V", "status": "passed", "value": "0.76 V"}
 STEP_COMPLETE "step-3" {"name": "Weryfikacja", "status": "passed"}
 PROTOCOL_FINALIZE "pro-msa-001" {"status": "COMPLETED"}
 
@@ -475,7 +475,7 @@ RECORD_STOP
 📍 NAVIGATE /connect-id/device-rfid
 📱 SELECT_DEVICE d-msa-7000
 📍 NAVIGATE /connect-test/testing
-🧪 START_TEST ts-pressure
+🧪 START_TEST ts-voltage
 📋 PROTOCOL_CREATED pro-msa-001
 ✅ STEP_COMPLETE step-1 [passed]
 ✅ STEP_COMPLETE step-2 [passed]
