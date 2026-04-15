@@ -1,0 +1,251 @@
+# ConnectGo DSL: DRAGER PSS 7000
+# Aparat nadciśnieniowy - Test kompletny
+# Source: c10/Data/Reports/dv10232/tst00000.xml
+
+# =============================================================================
+@PSS7000.TestPrzezAdapter
+# Test kompletny przez adapter [tt#002, tt#003, tt#004]
+# =============================================================================
+
+Przygotowanie:
+  → Operator.confirm "Kontrola wizualna" ✓SAVE
+  → Operator.confirm "Podłącz złącza SC"
+  → Operator.confirm "Otwórz zawór butli 300 bar"
+  → Operator.confirm "Podłącz adapter do głowy kontrolnej"
+  → Operator.confirm "Podłącz automat oddechowy (wyłączony)"
+
+TestStatycznySC:
+  # TEST STATYCZNY ŚREDNIEGO CIŚNIENIA / przy 200 bar
+  → Pump.off
+  AI02 ∈ [6.0, 8.0] bar               | ERROR "Ciśnienie SC poza zakresem"
+  Timer ≤ 3 s                          | ERROR "Timeout"
+  ✓SAVE AI02
+
+ZmianaSC:
+  # ZMIANA ŚREDNIEGO CIŚNIENIA / po 1 min
+  → Pump.off
+  ΔAI02 ∈ [-0.3, 0.6] bar             | ERROR "Zmiana ciśnienia poza normą"
+  Timer = 60 s
+  ✓SAVE ΔAI02
+
+CisnienieOtwarcia:
+  # CIŚNIENIE OTWARCIA AUTOMATU ODDECHOWEGO
+  # ⚠️ ALARM: Wyłącz automat oddechowy i powtórz test
+  → Pump.set 5l
+  → Valve.BO06 on
+  AI01 ∈ [-29.0, -5.0] mbar           | ERROR "Ciśnienie otwarcia błędne"
+  Timer ≤ 8 s
+  ✓SAVE AI01.min
+
+TestNadcisnienia:
+  # TEST NADCIŚNIENIA STATYCZNEGO
+  → Pump.off
+  AI01 ∈ [2.0, 3.9] mbar              | ERROR "Nadciśnienie poza zakresem"
+  Timer ≤ 10 s                         | ERROR "Timeout"
+  ✓SAVE AI01
+  → Operator.confirm "Zamknij zawór butli 300 bar"
+
+TestSzczelnosciWC:
+  # TEST SZCZELNOŚCI UKŁADU WC / min 200 bar
+  → Pump.off
+  Timer = 5 s
+  → Operator.confirm "Test układu WC" ✓SAVE
+  
+  # Kontrola spadku ciśnienia - max 10 bar/min
+  AI02 ≤ 10 bar                        | ERROR "Spadek ciśnienia zbyt duży"
+  Timer = 60 s
+  ✓SAVE Timer
+  
+  → Operator.confirm "Potwierdzenie szczelności WC"
+
+TestSygnaluAkust:
+  # TEST SYGNAŁU AKUSTYCZNEGO 50-60 bar
+  # ⚠️ ALARM: Otwórz i zamknij zawór butli 300 bar
+  → Pump.set 5l
+  → Valve.BO06 on
+  AI01 ≥ 0.0 mbar
+  → Operator.confirm "Sygnał akustyczny 50-60 bar" ✓SAVE
+
+TestSzczelnosciAuto:
+  # TEST SZCZELNOŚCI AUTOMATU ODDECHOWEGO
+  # ⚠️ ALARM: Wykryto nieszczelność
+  → Operator.confirm "Wyłącz automat oddechowy"
+  
+  # Wytworzenie nadciśnienia
+  → Pump.set 5l
+  → Valve.BO05 on
+  AI01 ≤ 12.0 mbar
+  Timer ≤ 20 s                         | ERROR "Brak nadciśnienia"
+  
+  # Pomiar początkowy
+  → Pump.off
+  → Valve.BO04 on
+  AI01 ≥ 7.5 mbar
+  Timer ≤ 15 s                         | ERROR "Timeout"
+  
+  # Pomiar końcowy (60s stabilizacji)
+  AI01 ≥ 6.5 mbar                      | ERROR "Nieszczelność automatu"
+  Timer = 60 s
+  ✓SAVE AI01
+
+# =============================================================================
+@PSS7000.TestPrzezMaske
+# Test kompletny przez maskę [tt#000, tt#001, tt#005]
+# =============================================================================
+
+Przygotowanie:
+  → Operator.confirm "Test wizualny" ✓SAVE
+  → Operator.confirm "Podłącz złącza SC"
+  → Operator.confirm "Otwórz zawór butli 300 bar"
+  → Operator.confirm "Załóż i uszczelnij maskę na głowę testową"
+  → Operator.confirm "Podłącz automat oddechowy (wyłączony)"
+
+TestStatycznySC:
+  → Pump.off
+  AI02 ∈ [6.0, 8.0] bar               | ERROR "Ciśnienie SC poza zakresem"
+  Timer ≤ 3 s                          | ERROR "Timeout"
+  ✓SAVE AI02
+
+ZmianaSC:
+  → Pump.off
+  ΔAI02 ∈ [-0.3, 0.6] bar             | ERROR "Zmiana ciśnienia poza normą"
+  Timer = 60 s
+  ✓SAVE ΔAI02
+
+CisnienieOtwarcia:
+  # ⚠️ ALARM: Wyłącz automat oddechowy i powtórz test
+  → Pump.set 5l
+  → Valve.BO06 on
+  AI01 ∈ [-29.0, -5.0] mbar           | ERROR "Ciśnienie otwarcia błędne"
+  Timer ≤ 8 s
+  ✓SAVE AI01.min
+
+TestNadcisnienia:
+  → Pump.off
+  AI01 ∈ [2.0, 3.9] mbar              | ERROR "Nadciśnienie poza zakresem"
+  Timer ≤ 10 s                         | ERROR "Timeout"
+  ✓SAVE AI01
+  → Operator.confirm "Zamknij zawór butli 300 bar"
+
+TestSzczelnosciWC:
+  # ⚠️ ALARM: Otwórz i zamknij zawór butli 300 bar
+  → Pump.off
+  Timer = 5 s
+  Timer = 60 s
+  ✓SAVE Timer
+  → Operator.confirm "Potwierdzenie szczelności WC"
+
+TestSygnaluAkust:
+  # ⚠️ ALARM: Odkręć i zamknij zawór butli 300 bar
+  → Pump.set 5l
+  → Valve.BO06 on
+  AI01 ≥ 0.0 mbar
+  → Operator.confirm "Sygnał akustyczny 50-60 bar" ✓SAVE
+
+TestSzczelnosciAuto:
+  # ⚠️ ALARM: Wykryto nieszczelność
+  → Operator.confirm "Wyłącz automat oddechowy"
+  
+  # Wytworzenie podciśnienia
+  → Pump.set 5l
+  → Valve.BO06 on
+  AI01 ∈ [-10.0, 10.0] mbar
+  Timer ≤ 20 s                         | ERROR "Brak podciśnienia"
+  
+  # Pomiar początkowy
+  → Pump.off
+  → Valve.BO04 on
+  AI01 ≤ -7.5 mbar
+  Timer ≤ 15 s                         | ERROR "Timeout"
+  
+  # Pomiar końcowy
+  AI01 ≤ -6.5 mbar                     | ERROR "Nieszczelność automatu"
+  Timer = 60 s
+  ✓SAVE AI01
+
+# =============================================================================
+@PSS7000.TestFenzyZenith
+# Test przez maskę FENZY ZENITH [tt#006]
+# =============================================================================
+
+Przygotowanie:
+  → Operator.confirm "Test wizualny" ✓SAVE
+  → Operator.confirm "Podłącz złącza SC"
+  → Operator.confirm "Odkręć zawór butli 300 bar"
+  → Operator.confirm "Załóż i uszczelnij maskę na głowę testową"
+
+TestStatycznySC:
+  → Pump.off
+  AI02 ∈ [6.0, 8.0] bar               | ERROR "Ciśnienie SC poza zakresem"
+  Timer ≤ 3 s                          | ERROR "Timeout"
+  ✓SAVE AI02
+
+ZmianaSC:
+  ΔAI02 ∈ [-1.0, 0.5] bar             | ERROR "Zmiana ciśnienia poza normą"
+  Timer = 60 s
+  ✓SAVE ΔAI02
+  → Operator.confirm "Zamknij zawór butli 300 bar"
+
+TestSzczelnosciWC:
+  # ⚠️ ALARM: Otwórz i zamknij zawór butli 300 bar
+  → Pump.off
+  Timer = 5 s
+  Timer = 10 s                         # max spadek 3 bar/10s
+  ✓SAVE Timer
+  → Operator.confirm "Potwierdzenie szczelności WC"
+  → Operator.confirm "Podłącz automat oddechowy do maski"
+
+TestNadcisnienia:
+  → Pump.off
+  AI01 ∈ [2.2, 4.1] mbar              | ERROR "Nadciśnienie poza zakresem"
+  Timer ≤ 5 s                          | ERROR "Timeout"
+  ✓SAVE AI01
+
+TestSygnaluAkust:
+  # ⚠️ ALARM: Otwórz i zamknij zawór butli 300 bar
+  → Pump.set 5l
+  → Valve.BO06 on
+  AI01 ≥ 0.0 mbar
+  → Operator.confirm "Sygnał akustyczny 50-60 bar" ✓SAVE
+
+TestSzczelnosciAuto:
+  # ⚠️ ALARM: Wykryto nieszczelność
+  → Pump.set 5l
+  → Valve.BO06 on
+  AI01 ∈ [-12.0, 12.0] mbar
+  Timer ≤ 20 s                         | ERROR "Brak podciśnienia"
+  
+  → Pump.off
+  → Valve.BO04 on
+  AI01 ≤ -6.0 mbar
+  Timer ≤ 15 s                         | ERROR "Timeout"
+  
+  AI01 ≤ -4.0 mbar                     | ERROR "Nieszczelność automatu"
+  Timer = 5 s
+  ✓SAVE AI01
+
+# =============================================================================
+# HARDWARE CONFIG
+# =============================================================================
+
+#:config
+OUTPUTS:
+  Pump: [off, 5l]
+  Valve.BO04: "Zawór izolacyjny automatu"
+  Valve.BO05: "Zawór nadciśnienia"  
+  Valve.BO06: "Zawór podciśnienia"
+
+SENSORS:
+  AI01: {name: "Ciśnienie NC", unit: mbar, range: [-50, 50]}
+  AI02: {name: "Ciśnienie SC", unit: bar,  range: [0, 10]}
+  AI03: {name: "Ciśnienie WC", unit: bar,  range: [0, 350]}
+
+INTERVALS:
+  tt#000: {name: "Po użyciu [M]",           period: 0}
+  tt#001: {name: "Co 1 rok [M]",            period: 12}
+  tt#002: {name: "Co 1 rok [A]",            period: 12}
+  tt#003: {name: "Po użyciu [A]",           period: 0}
+  tt#004: {name: "Co 1/2 roku [A]",         period: 6}
+  tt#005: {name: "Co 1/2 roku [M]",         period: 6}
+  tt#006: {name: "Po użyciu Fenzy ZENITH",  period: 0}
+#:endconfig
