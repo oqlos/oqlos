@@ -4,14 +4,16 @@ from fastapi import APIRouter, HTTPException
 import httpx
 
 from oqlos.models.scenario import Scenario, Goal, Step
+from oqlos.shared._endpoint_helpers import make_collection_route
 from oqlos.api.utils import execution_ctrl as _ctrl
 
 router = APIRouter(prefix="/api/v1/scenarios", tags=["scenarios"])
 
-@router.get("")
-async def get_scenarios():
-    """Get all scenarios"""
-    return list(_ctrl.state_manager.scenarios.values())
+get_scenarios = make_collection_route(
+    "get_scenarios",
+    lambda: _ctrl.state_manager.scenarios,
+)
+router.get("")(get_scenarios)
 
 @router.get("/{scenario_id}")
 async def get_scenario(scenario_id: str):

@@ -149,7 +149,7 @@ def _emit_preflight_error(error_msg: str, yaml_output: bool, quiet: bool) -> Non
     if yaml_output:
         output_yaml({"status": "error", "message": error_msg}, quiet=quiet)
     else:
-        click.echo(f"[ERROR] {error_msg}", err=True)
+        click.echo(f"[ERROR] {error_msg}")
 
 
 def emit_preflight_success(

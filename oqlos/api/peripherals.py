@@ -3,14 +3,16 @@ from typing import Any
 from fastapi import APIRouter, HTTPException
 
 from oqlos.models.peripheral import PeripheralMode
+from oqlos.shared._endpoint_helpers import make_collection_route
 from oqlos.api.utils import execution_ctrl as _ctrl
 
 router = APIRouter(prefix="/api/v1/peripherals", tags=["peripherals"])
 
-@router.get("")
-async def get_peripherals():
-    """Get all peripherals"""
-    return list(_ctrl.state_manager.peripherals.values())
+get_peripherals = make_collection_route(
+    "get_peripherals",
+    lambda: _ctrl.state_manager.peripherals,
+)
+router.get("")(get_peripherals)
 
 @router.get("/{peripheral_id}")
 async def get_peripheral(peripheral_id: str):

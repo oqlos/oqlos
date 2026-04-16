@@ -88,12 +88,12 @@ def create_cmd_parser() -> argparse.ArgumentParser:
         help="Skip real-time waits in execute mode",
     )
     parser.add_argument(
-        "--continuous", "-c", action="store_true", default=True,
-        help="Keep command active until Ctrl+C (default: true)"
+        "--continuous", "-c", action="store_true",
+        help="Keep command active until Ctrl+C"
     )
     parser.add_argument(
         "--once", action="store_true",
-        help="Execute command once and exit (default: false)"
+        help="Execute command once and exit"
     )
     parser.add_argument(
         "--bridge", help="Event Server URL (e.g. ws://localhost:8104/cli)"

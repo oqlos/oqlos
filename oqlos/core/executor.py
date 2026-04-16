@@ -5,18 +5,12 @@ import logging
 from datetime import datetime, timezone
 from typing import Any
 
-from oqlos.core._compare import resolve_compare
+from oqlos.core._compare import resolve_compare_chain
 
 
 def _resolve_compare(node: ast.Compare, context: dict[str, Any]) -> bool:
     """Resolve a Compare node (a < b, chained comparisons)."""
-    left = _safe_resolve(node.left, context)
-    for op, comparator in zip(node.ops, node.comparators):
-        right = _safe_resolve(comparator, context)
-        if not resolve_compare(left, op, right):
-            return False
-        left = right
-    return True
+    return resolve_compare_chain(node, lambda current: _safe_resolve(current, context))
 
 
 def _resolve_name_or_attr(node: Any, context: dict[str, Any]) -> Any:

@@ -10,6 +10,7 @@ from typing import Any
 import httpx
 
 from .base import HardwarePlugin, PluginConfig, PluginHealth, PluginStatus
+from ._shared import http_health_check, not_connected_health, health_check_exception, http_disconnect
 
 logger = logging.getLogger(__name__)
 
@@ -71,44 +72,19 @@ class PiadcPlugin(HardwarePlugin):
 
     async def disconnect(self) -> None:
         """Disconnect from piADC service."""
-        if self._client:
-            await self._client.aclose()
-            self._client = None
+        await http_disconnect(self._client, "piADC")
+        self._client = None
         self._status = PluginStatus.CONFIGURED
-        logger.info("Disconnected from piADC")
 
     async def health_check(self) -> PluginHealth:
         """Check piADC health and compatibility."""
         if not self._client:
-            return PluginHealth(
-                status=PluginStatus.ERROR,
-                message="Not connected to piADC",
-                compatible=False,
-            )
+            return not_connected_health("piADC")
 
         try:
-            resp = await self._client.get(f"{self._base_url}/health")
-            if resp.status_code < 300:
-                data = resp.json()
-                return PluginHealth(
-                    status=PluginStatus.CONNECTED,
-                    message="piADC is healthy",
-                    details=data,
-                    compatible=True,
-                    version=data.get("version", "unknown"),
-                )
-            else:
-                return PluginHealth(
-                    status=PluginStatus.ERROR,
-                    message=f"Health check failed: HTTP {resp.status_code}",
-                    compatible=False,
-                )
+            return await http_health_check(self._client, self._base_url, "piADC")
         except Exception as exc:
-            return PluginHealth(
-                status=PluginStatus.ERROR,
-                message=f"Health check exception: {exc}",
-                compatible=False,
-            )
+            return health_check_exception(exc)
 
     async def execute_command(self, command: str, params: dict[str, Any]) -> dict[str, Any]:
         """Execute piADC command."""

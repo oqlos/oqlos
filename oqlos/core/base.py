@@ -136,14 +136,20 @@ class InterpreterOutput:
             self._broadcast_event(event_type, {"message": msg})
 
     def _broadcast_event(self, event_type: str, payload: dict[str, Any]) -> None:
-        if not self.bridge: return
+        if not self.bridge:
+            return
         try:
             import asyncio
-            loop = asyncio.get_event_loop()
-            if loop.is_running():
+
+            try:
+                loop = asyncio.get_running_loop()
+            except RuntimeError:
+                loop = None
+
+            if loop and loop.is_running():
                 loop.create_task(self.bridge.send_event(event_type, payload))
             else:
-                loop.run_until_complete(self.bridge.send_event(event_type, payload))
+                asyncio.run(self.bridge.send_event(event_type, payload))
         except Exception:
             pass
 

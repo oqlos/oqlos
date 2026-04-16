@@ -39,7 +39,7 @@ def run_source(
     """Execute a CQL source string with a configured interpreter."""
     interp = CqlInterpreter(
         mode=mode,
-        quiet=quiet or yaml_output,  # Suppress text output when using YAML
+        quiet=quiet,
         sensor_values=sensors,
         firmware_url=firmware_url,
         skip_waits=skip_waits,

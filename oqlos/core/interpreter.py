@@ -331,26 +331,16 @@ class CqlInterpreter(BaseInterpreter):
         from oqlos.core._interpreter_actions import _do_sleep
         _do_sleep(self, secs, label)
 
+    _PERIPHERAL_NORMALIZER_METHODS: dict[str, str] = {
+        "pump": "_normalize_pump_power",
+        "valve": "_normalize_valve_value",
+        "lung": "_normalize_lung_value",
+    }
+
     def _exec_set_peripheral(self, act: CqlAction, value: str) -> StepStatus | None:
         fw = self._get_firmware()
-        normalized_value = value
         resolved = self._resolve_peripheral_id(act.target or "")
-        if resolved and resolved.startswith("pump"):
-            normalized_value = self._normalize_pump_power(value)
-        elif resolved and resolved.startswith("valve"):
-            normalized_value = self._normalize_valve_value(value)
-        elif resolved and resolved.startswith("lung"):
-            normalized_value = self._normalize_lung_value(value)
-        elif isinstance(value, str):
-            lowered = value.lower()
-            if lowered in {"on", "true"}:
-                normalized_value = 1
-            elif lowered in {"off", "false"}:
-                normalized_value = 0
-            else:
-                numeric = self._coerce_float(value)
-                if numeric is not None:
-                    normalized_value = int(numeric) if numeric.is_integer() else numeric
+        normalized_value = self._normalize_peripheral_value(resolved, value)
         try:
             fw.set_peripheral(act.target or "", normalized_value)
         except Exception as exc:
@@ -359,6 +349,30 @@ class CqlInterpreter(BaseInterpreter):
             return StepStatus.ERROR
 
         return None
+
+    def _normalize_peripheral_value(self, resolved: str | None, value: str) -> Any:
+        """Normalize a DSL value according to the resolved peripheral family."""
+        if resolved:
+            for prefix, normalizer_name in self._PERIPHERAL_NORMALIZER_METHODS.items():
+                if resolved.startswith(prefix):
+                    return getattr(self, normalizer_name)(value)
+        return self._coerce_generic_peripheral_value(value)
+
+    def _coerce_generic_peripheral_value(self, value: Any) -> Any:
+        """Best-effort coercion for unmapped peripherals."""
+        if not isinstance(value, str):
+            return value
+
+        lowered = value.lower()
+        if lowered in {"on", "true"}:
+            return 1
+        if lowered in {"off", "false"}:
+            return 0
+
+        numeric = self._coerce_float(value)
+        if numeric is None:
+            return value
+        return int(numeric) if numeric.is_integer() else numeric
 
     # Operator → seed value factory for _seed_sensors_from_conditions
     _SEED_VALUE_FNS: dict[str, Any] = {

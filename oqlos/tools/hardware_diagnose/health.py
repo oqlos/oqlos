@@ -5,24 +5,25 @@ from __future__ import annotations
 from .discovery import list_usb_serial_devices, list_i2c_buses, detect_chips_on_i2c
 
 
-def check_firmware_health(url: str = "http://localhost:8202") -> dict:
-    """Check firmware health via HTTP API."""
+def _request_firmware_json(url: str, endpoint: str, *, timeout: float) -> dict:
+    """Fetch JSON from a firmware endpoint with a consistent error contract."""
     try:
         import httpx
-        r = httpx.get(f"{url}/api/v1/hardware/health", timeout=5.0)
-        return r.json() if r.status_code == 200 else {"error": f"HTTP {r.status_code}"}
-    except Exception as e:
-        return {"error": str(e)}
+
+        response = httpx.get(f"{url}{endpoint}", timeout=timeout)
+        return response.json() if response.status_code == 200 else {"error": f"HTTP {response.status_code}"}
+    except Exception as exc:
+        return {"error": str(exc)}
+
+
+def check_firmware_health(url: str = "http://localhost:8202") -> dict:
+    """Check firmware health via HTTP API."""
+    return _request_firmware_json(url, "/api/v1/hardware/health", timeout=5.0)
 
 
 def check_firmware_identify(url: str = "http://localhost:8202") -> dict:
     """Get detailed hardware identification."""
-    try:
-        import httpx
-        r = httpx.get(f"{url}/api/v1/hardware/identify", timeout=20.0)
-        return r.json() if r.status_code == 200 else {"error": f"HTTP {r.status_code}"}
-    except Exception as e:
-        return {"error": str(e)}
+    return _request_firmware_json(url, "/api/v1/hardware/identify", timeout=20.0)
 
 
 def cmd_health(url: str = "http://localhost:8202") -> str:

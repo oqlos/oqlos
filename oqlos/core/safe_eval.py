@@ -11,7 +11,7 @@ import ast
 import operator
 from typing import Any
 
-from oqlos.core._compare import resolve_compare
+from oqlos.core._compare import resolve_compare_chain
 
 _SAFE_OPS = {
     ast.Add: operator.add,
@@ -89,13 +89,7 @@ def _eval_bin_op(node: ast.BinOp, ctx: dict[str, Any]) -> Any:
 
 def _eval_compare(node: ast.Compare, ctx: dict[str, Any]) -> Any:
     """Evaluate a comparison chain (x < y < z)."""
-    left = _eval_node(node.left, ctx)
-    for op, comparator in zip(node.ops, node.comparators):
-        right = _eval_node(comparator, ctx)
-        if not resolve_compare(left, op, right):
-            return False
-        left = right
-    return True
+    return resolve_compare_chain(node, lambda current: _eval_node(current, ctx))
 
 
 def _eval_bool_op(node: ast.BoolOp, ctx: dict[str, Any]) -> Any:

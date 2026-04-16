@@ -9,7 +9,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.responses import HTMLResponse
 import uvicorn
 
 # Import refactored components
@@ -31,6 +31,7 @@ from oqlos.api.utils.execution_ctrl import set_dependencies as set_shared_depend
 from oqlos.api.hardware import set_hardware_gateway
 from oqlos.utils import load_sample_scenarios
 from oqlos.config import FIRMWARE_PORT, SERVICE_NAME, SERVICE_VERSION
+from oqlos.shared._endpoint_helpers import serve_html_page
 
 logging.basicConfig(level=logging.INFO)
 try:
@@ -99,18 +100,20 @@ load_sample_scenarios(state_manager)
 @app.get("/", response_class=HTMLResponse)
 async def index_page():
     """Serve the firmware UI (index.html) at root"""
-    index_path = STATIC_DIR / "index.html"
-    if index_path.exists():
-        return FileResponse(index_path)
-    return HTMLResponse("<h1>Test Simulator Firmware</h1><p>index.html not found.</p>")
+    return serve_html_page(
+        STATIC_DIR / "index.html",
+        missing_title="Test Simulator Firmware",
+        missing_message="index.html not found.",
+    )
 
 @app.get("/editor", response_class=HTMLResponse)
 async def editor_page():
     """Serve the scenario editor UI"""
-    editor_path = STATIC_DIR / "static" / "editor.html"
-    if editor_path.exists():
-        return FileResponse(editor_path)
-    return HTMLResponse("<h1>Scenario Editor</h1><p>editor.html not found.</p>")
+    return serve_html_page(
+        STATIC_DIR / "static" / "editor.html",
+        missing_title="Scenario Editor",
+        missing_message="editor.html not found.",
+    )
 
 @app.get("/health")
 @app.get("/api/v1/health")

@@ -10,6 +10,7 @@ from typing import Any
 import httpx
 
 from .base import HardwarePlugin, PluginConfig, PluginHealth, PluginStatus
+from ._shared import http_health_check, not_connected_health, health_check_exception, http_disconnect
 
 logger = logging.getLogger(__name__)
 
@@ -78,39 +79,18 @@ class LungPlugin(HardwarePlugin):
 
     async def disconnect(self) -> None:
         """Disconnect from lung motor service."""
-        if self._client:
-            await self._client.aclose()
-            self._client = None
+        await http_disconnect(self._client, "lung motor")
+        self._client = None
         self._status = PluginStatus.CONFIGURED
-        logger.info("Disconnected from lung motor")
 
     async def health_check(self) -> PluginHealth:
         """Check lung motor health and compatibility."""
         if self.config.connection_type == "http" and not self._client:
-            return PluginHealth(
-                status=PluginStatus.ERROR,
-                message="Not connected to lung motor",
-                compatible=False,
-            )
+            return not_connected_health("lung motor")
 
         try:
             if self.config.connection_type == "http":
-                resp = await self._client.get(f"{self._base_url}/health")
-                if resp.status_code < 300:
-                    data = resp.json()
-                    return PluginHealth(
-                        status=PluginStatus.CONNECTED,
-                        message="Lung motor is healthy",
-                        details=data,
-                        compatible=True,
-                        version=data.get("version", "unknown"),
-                    )
-                else:
-                    return PluginHealth(
-                        status=PluginStatus.ERROR,
-                        message=f"Health check failed: HTTP {resp.status_code}",
-                        compatible=False,
-                    )
+                return await http_health_check(self._client, self._base_url, "Lung motor")
             else:
                 # USB health check would be implemented here
                 return PluginHealth(
@@ -119,11 +99,7 @@ class LungPlugin(HardwarePlugin):
                     compatible=True,
                 )
         except Exception as exc:
-            return PluginHealth(
-                status=PluginStatus.ERROR,
-                message=f"Health check exception: {exc}",
-                compatible=False,
-            )
+            return health_check_exception(exc)
 
     # ── Command Handlers (refactored from monolithic execute_command) ──
 
