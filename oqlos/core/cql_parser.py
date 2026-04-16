@@ -42,12 +42,65 @@ class _ParseState:
         self.current_step: CqlStep | None = None
         self.in_intervals_block = False
         self.in_skip_block = False
+        self.block_stack = []
+        self.pending_inline_if = None
+        self.pending_inline_if_indent: int | None = None
 
     def parse(self) -> CqlDocument:
         """Parse all lines and return the document."""
         while self.i < self.n:
             self._process_line()
+        self._flush_pending_inline_if()
         return self.doc
+
+    def _peek_next_significant_indent(self) -> int | None:
+        """Look ahead to the next non-empty, non-comment line indent."""
+        for raw in self.lines[self.i:]:
+            line = raw.rstrip()
+            stripped = line.lstrip()
+            if not stripped or stripped.startswith("#"):
+                continue
+            return len(line) - len(stripped)
+        return None
+
+    def _flush_pending_inline_if(self, *, preserve_block: bool = False) -> None:
+        """Append a deferred flat IF once its inline actions are known."""
+        if self.pending_inline_if is None:
+            return
+        if (
+            not preserve_block
+            and not self.pending_inline_if.then_actions
+            and not self.pending_inline_if.else_actions
+        ):
+            self.pending_inline_if.kind = "if_else"
+        self._add_action_to_parent(self.pending_inline_if)
+        self.pending_inline_if = None
+        self.pending_inline_if_indent = None
+
+    def _attach_pending_inline_if(self, act, indent: int) -> bool:
+        """Attach same-indent inline actions to the deferred flat IF."""
+        if self.pending_inline_if is None or self.pending_inline_if_indent is None:
+            return False
+        if indent != self.pending_inline_if_indent:
+            return False
+        if act.kind in {
+            "if_block",
+            "if_fail_block",
+            "loop_block",
+            "else_block",
+            "endif",
+            "end",
+            "endloop",
+        }:
+            return False
+        if act.kind == "else":
+            self.pending_inline_if.else_actions.append(act)
+            self._flush_pending_inline_if()
+            return True
+        if not self.pending_inline_if.then_actions and not self.pending_inline_if.else_actions:
+            self.pending_inline_if.then_actions.append(act)
+            return True
+        return False
 
     def _get_line_info(self) -> tuple[str, str, str, int]:
         """Get raw, line, stripped, and indent for current line."""
@@ -124,9 +177,8 @@ class _ParseState:
         sc = _parse_scenario_line(self.doc, stripped)
         if sc is None:
             return False
-        # Clear block stack on new scenario
-        if hasattr(self, 'block_stack'):
-            self.block_stack.clear()
+        self._flush_pending_inline_if()
+        self.block_stack.clear()
         self.current_scenario = sc
         self.current_goal = None
         self.current_step = None
@@ -143,9 +195,8 @@ class _ParseState:
         goal = _parse_goal_line(stripped, line, indent, self.current_scenario)
         if goal is None:
             return False
-        # Clear block stack on new goal (implicit ENDIF/ENDLOOP at end of goal)
-        if hasattr(self, 'block_stack'):
-            self.block_stack.clear()
+        self._flush_pending_inline_if()
+        self.block_stack.clear()
 
         if self.current_scenario:
             self.current_scenario.goals.append(goal)
@@ -163,21 +214,21 @@ class _ParseState:
 
     def _handle_step(self, line: str) -> bool:
         """Handle step line parsing."""
-        self.current_goal, self.current_scenario = _ensure_goal_for_step(
+        next_goal, next_scenario = _ensure_goal_for_step(
             self.current_goal, self.current_scenario, line
         )
-        step = _parse_step_line(line, self.current_goal)
+        step = _parse_step_line(line, next_goal)
         if step is None:
             return False
+        self._flush_pending_inline_if()
+        self.current_goal, self.current_scenario = next_goal, next_scenario
         self.current_goal.steps.append(step)  # type: ignore[union-attr]
         self.current_step = step
         return True
 
     def _init_block_stack(self) -> None:
-        """Initialize block stack if not present."""
-        from oqlos.models.dsl_models import CqlAction
-        if not hasattr(self, 'block_stack'):
-            self.block_stack: list[tuple[CqlAction, bool]] = []
+        """Compatibility no-op for the parser action stack."""
+        return None
 
     def _add_action_to_parent(self, act) -> None:
         """Add action to appropriate parent (step or block)."""
@@ -185,6 +236,8 @@ class _ParseState:
             parent_act, in_else = self.block_stack[-1]
             if parent_act.kind == "loop_block":
                 parent_act.loop_actions.append(act)
+            elif act.kind == "else" and parent_act.kind == "if_block" and not in_else:
+                parent_act.else_actions.append(act)
             else:
                 target_list = parent_act.else_actions if in_else else parent_act.then_actions
                 target_list.append(act)
@@ -232,7 +285,7 @@ class _ParseState:
         Refactored from CC=20 to orchestrator calling focused helpers.
         """
         # Block starters
-        if act.kind == "if_block":
+        if act.kind in {"if_block", "if_fail_block"}:
             self.block_stack.append((act, False))
             self._append_nested_action(act)
             return True
@@ -249,6 +302,9 @@ class _ParseState:
         # Block enders
         if act.kind == "endif":
             return self._pop_block_with_warning("if_block", "ENDIF ohne IF")
+
+        if act.kind == "end":
+            return self._pop_block_with_warning("if_fail_block", "END ohne IF_FAIL")
 
         if act.kind == "endloop":
             return self._pop_block_with_warning("loop_block", "ENDLOOP ohne LOOP")
@@ -305,6 +361,22 @@ class _ParseState:
             return True
 
         act = temp_actions[0]
+
+        if self.pending_inline_if is not None:
+            if act.kind == "endif" and indent == self.pending_inline_if_indent:
+                self._flush_pending_inline_if(preserve_block=True)
+                return True
+            if self._attach_pending_inline_if(act, indent):
+                return True
+            self._flush_pending_inline_if()
+
+        if act.kind == "if_block":
+            next_indent = self._peek_next_significant_indent()
+            if next_indent is not None and next_indent > indent:
+                return self._handle_block_control(act)
+            self.pending_inline_if = act
+            self.pending_inline_if_indent = indent
+            return True
 
         # Try block control first
         if self._handle_block_control(act):

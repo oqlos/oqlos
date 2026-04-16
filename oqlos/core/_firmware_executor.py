@@ -1,0 +1,201 @@
+"""
+Firmware and plugin gateway execution for CQL interpreter.
+
+Handles hardware action execution via plugin gateway or legacy firmware adapter.
+"""
+
+from __future__ import annotations
+
+from typing import Any, TYPE_CHECKING
+
+from oqlos.hardware.firmware_adapter import _PERIPHERAL_MAP
+from oqlos.hardware.plugin_gateway import PluginHardwareGateway
+
+if TYPE_CHECKING:
+    from oqlos.models.dsl_models import CqlAction
+    from oqlos.core.base import StepStatus
+
+
+class FirmwareExecutor:
+    """Executes hardware actions via plugin gateway or legacy firmware."""
+
+    # Mapping from peripheral family to normalizer method name
+    _PERIPHERAL_NORMALIZER_METHODS: dict[str, str] = {
+        "pump": "normalize_pump_power",
+        "valve": "normalize_valve_value",
+        "lung": "normalize_lung_value",
+    }
+
+    def __init__(
+        self,
+        mode: str = "dry-run",
+        firmware_url: str = "http://localhost:8202",
+        use_plugin_gateway: bool = True,
+        vars_store: Any = None,
+        output_handler: Any = None,
+        normalizer: Any = None,
+    ):
+        """
+        Initialize firmware executor.
+
+        Args:
+            mode: Execution mode (validate, dry-run, execute)
+            firmware_url: URL for legacy firmware adapter
+            use_plugin_gateway: Whether to use plugin gateway (recommended)
+            vars_store: VariableStore for value interpolation and storage
+            output_handler: InterpreterOutput for emitting messages
+            normalizer: ValueNormalizer for value normalization
+        """
+        self.mode = mode
+        self._firmware_url = firmware_url
+        self._use_plugin_gateway = use_plugin_gateway
+        self.vars = vars_store
+        self.out = output_handler
+        self.normalizer = normalizer
+        self._firmware = None
+        self._plugin_gateway: PluginHardwareGateway | None = None
+
+        # Use plugin gateway instead of old hardware system
+        if use_plugin_gateway:
+            self._plugin_gateway = PluginHardwareGateway(mode=mode)
+
+    def _get_firmware(self):
+        """Lazy-init firmware adapter."""
+        if self._firmware is None:
+            try:
+                from oqlos.hardware.firmware_adapter import FirmwareAdapter
+            except ImportError:
+                raise RuntimeError(
+                    "FirmwareAdapter not available — install oqlos with firmware extras "
+                    "or run inside the c2004 monorepo"
+                )
+            self._firmware = FirmwareAdapter(base_url=self._firmware_url)
+        return self._firmware
+
+    @staticmethod
+    def resolve_peripheral_id(target: str) -> str | None:
+        """Resolve a known target name to a firmware peripheral id."""
+        normalized = target.strip().lower().replace(" ", "-").replace("_", "-")
+        return _PERIPHERAL_MAP.get(normalized)
+
+    def normalize_peripheral_value(self, resolved: str | None, value: str) -> Any:
+        """Normalize a DSL value according to the resolved peripheral family."""
+        if resolved and self.normalizer:
+            for prefix, normalizer_name in self._PERIPHERAL_NORMALIZER_METHODS.items():
+                if resolved.startswith(prefix):
+                    return getattr(self.normalizer, normalizer_name)(value)
+        if self.normalizer:
+            return self.normalizer.coerce_generic_peripheral_value(value)
+        return value
+
+    def refresh_sensors_from_firmware(self, sensor_values: dict[str, float]) -> None:
+        """Read all sensor values from firmware and update local cache."""
+        try:
+            fw = self._get_firmware()
+            readings = fw.read_all_sensors()
+            sensor_values.update(readings)
+        except Exception:
+            pass  # Keep existing mock values on failure
+
+    def execute_firmware_action(
+        self,
+        act: "CqlAction",
+        args: str | None = None,
+    ) -> "StepStatus":
+        """Execute action using plugin gateway when available, otherwise legacy firmware."""
+        if self._use_plugin_gateway and self._plugin_gateway:
+            return self._execute_plugin_action(act, args)
+        else:
+            return self._execute_legacy_firmware_action(act, args)
+
+    def _execute_plugin_action(
+        self,
+        act: "CqlAction",
+        args: str | None = None,
+    ) -> "StepStatus":
+        """Execute action using the new plugin gateway system."""
+        from oqlos.core.base import StepStatus
+
+        target = act.target
+        method = act.method
+        to_send = args if args is not None else self.vars.interpolate(act.args)
+
+        try:
+            # Map DSL targets to plugin commands
+            if method in {"set", "off"}:
+                # Pump command
+                power_pct = (
+                    self.normalizer.normalize_pump_power(to_send)
+                    if method == "set" and self.normalizer
+                    else 0.0
+                )
+                success = self._plugin_gateway.set_pump(power_pct)
+                if success:
+                    self.vars.set(target, to_send)
+                    self.out.step("    →", f"{act.target}.{act.method} {to_send}")
+                    return StepStatus.PASSED
+                else:
+                    self.out.error(f"{act.target}.{act.method} FAILED: plugin error")
+                    return StepStatus.FAILED
+
+            elif method in {"open", "close"}:
+                # Valve command
+                value = (method == "open")
+                success = self._plugin_gateway.set_valve(target, value)
+                if success:
+                    self.vars.set(target, value)
+                    self.out.step("    →", f"{act.target}.{act.method} {value}")
+                    return StepStatus.PASSED
+                else:
+                    self.out.error(f"{act.target}.{act.method} FAILED: plugin error")
+                    return StepStatus.FAILED
+
+            elif method == "reciprocate":
+                # Lung command
+                success = self._plugin_gateway.set_lung()
+                if success:
+                    self.out.step("    →", f"{act.target}.{act.method}")
+                    return StepStatus.PASSED
+                else:
+                    self.out.error(f"{act.target}.{act.method} FAILED: plugin error")
+                    return StepStatus.FAILED
+
+            else:
+                self.out.warn(f"Unknown method {method} for target {target}")
+                return StepStatus.PASSED
+
+        except Exception as exc:
+            self.out.error(f"Plugin execution error: {exc}")
+            return StepStatus.FAILED
+
+    def _execute_legacy_firmware_action(
+        self,
+        act: "CqlAction",
+        args: str | None = None,
+    ) -> "StepStatus":
+        """Execute action on real/simulated firmware (legacy fallback)."""
+        from oqlos.core.base import StepStatus
+
+        to_send = args if args is not None else self.vars.interpolate(act.args)
+        res = self._get_firmware().dispatch_action(act.target, act.method, to_send)
+        if res.get("ok"):
+            self.out.step("    →", f"{act.target}.{act.method} {to_send} ({res.get('detail')})")
+            return StepStatus.PASSED
+        else:
+            self.out.error(f"{act.target}.{act.method} FAILED: {res.get('detail')}")
+            return StepStatus.FAILED
+
+    def exec_set_peripheral(self, act: "CqlAction", value: str) -> "StepStatus | None":
+        """Execute SET action for a peripheral."""
+        from oqlos.core.base import StepStatus
+
+        fw = self._get_firmware()
+        resolved = self.resolve_peripheral_id(act.target or "")
+        normalized_value = self.normalize_peripheral_value(resolved, value)
+        try:
+            fw.set_peripheral(act.target or "", normalized_value)
+        except Exception as exc:
+            self.out.error(str(exc))
+            return StepStatus.ERROR
+
+        return None

@@ -64,6 +64,7 @@ RE_IF_BLOCK = re.compile(r"^\s*IF\s+['\"](.+?)['\"]\s+([<>=!≤≥]+)\s+['\"](.+
 RE_IF_BLOCK_BRACKET = re.compile(
     r"^\s*IF\s*\[([^\]]+)\]\s*\[([<>=!≤≥]+)\]\s*\[([^\]]+)\]\s*$", re.IGNORECASE
 )
+RE_IF_EXPR = re.compile(r"^\s*IF\s+(.+?)\s*$", re.IGNORECASE)
 RE_IF_FAIL_BLOCK = re.compile(r'^\s*IF_FAIL\s+["\'](.+?)["\']\s+THEN\s*$', re.IGNORECASE)
 RE_ELSE_BLOCK = re.compile(r"^\s*ELSE\s*$", re.IGNORECASE)
 RE_ENDIF = re.compile(r"^\s*ENDIF\s*$", re.IGNORECASE)
@@ -125,13 +126,13 @@ def _match_first(line: str, *regexes):
     return None
 
 
-def _parse_condition_value(raw_value: str, *, keep_unit_tail: bool) -> tuple[float, str]:
+def _parse_condition_value(raw_value: str, *, keep_unit_tail: bool) -> tuple[float | None, str]:
     """Parse the leading numeric token and any remaining unit text."""
     parts = raw_value.split()
     try:
         value = float(parts[0])
     except (IndexError, ValueError):
-        return 0.0, ""
+        return None, ""
 
     if len(parts) <= 1:
         return value, ""
@@ -206,22 +207,30 @@ def _try_if_else(line: str, stripped: str) -> CqlAction | None:
     val, unit = _parse_condition_value(raw_val, keep_unit_tail=True)
     cond = CqlCondition(
         sensor=m.group(1), operator=m.group(2),
-        value=val, unit=unit,
+        unit=unit,
         on_fail="ERROR", fail_message=m.group(4),
     )
-    return CqlAction(kind="if_else", condition=cond, raw=stripped)
+    if val is not None:
+        cond.value = val
+    return CqlAction(kind="if_else", condition=cond, args=raw_val, raw=stripped)
 
 def _try_if_block(line: str, stripped: str) -> CqlAction | None:
     m = _match_first(line, RE_IF_BLOCK, RE_IF_BLOCK_BRACKET)
+    if m:
+        raw_val = m.group(3)
+        val, unit = _parse_condition_value(raw_val, keep_unit_tail=False)
+        cond = CqlCondition(
+            sensor=m.group(1), operator=m.group(2),
+            unit=unit,
+        )
+        if val is not None:
+            cond.value = val
+        return CqlAction(kind="if_block", condition=cond, args=raw_val, raw=stripped)
+
+    m = RE_IF_EXPR.match(line)
     if not m:
         return None
-    raw_val = m.group(3)
-    val, unit = _parse_condition_value(raw_val, keep_unit_tail=False)
-    cond = CqlCondition(
-        sensor=m.group(1), operator=m.group(2),
-        value=val, unit=unit,
-    )
-    return CqlAction(kind="if_block", condition=cond, args=raw_val, raw=stripped)
+    return CqlAction(kind="if_block", args=m.group(1).strip(), raw=stripped)
 
 
 def _try_if_fail_block(line: str, stripped: str) -> CqlAction | None:

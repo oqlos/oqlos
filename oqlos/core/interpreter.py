@@ -5,27 +5,31 @@ Modes:
   - validate: parse + check structure (no execution)
   - dry-run:  walk through steps, simulate sensor values
   - execute:  connect to hardware/API and run real test
+
+Refactored: Value normalization, sensor evaluation, and firmware execution
+are now delegated to specialized modules:
+  - _value_normalizers.ValueNormalizer
+  - _sensor_evaluator.SensorEvaluator
+  - _firmware_executor.FirmwareExecutor
 """
 
 from __future__ import annotations
 
+import re
 import time
 from typing import Any
 
-import yaml
-
-import oqlos.config as oql_config
 from oqlos.core.base import (
     BaseInterpreter,
     ScriptResult,
     StepResult,
     StepStatus,
 )
-from oqlos.core._dsl_helpers import _parse_numeric_value
-from oqlos.models.dsl_models import CqlAction, CqlDocument, CqlGoal, CqlStep
+from oqlos.models.dsl_models import CqlAction, CqlCondition, CqlDocument, CqlGoal, CqlStep
 from oqlos.core.cql_parser import parse_cql, validate_cql
-from oqlos.hardware.firmware_adapter import _PERIPHERAL_MAP
-from oqlos.hardware.plugin_gateway import PluginHardwareGateway
+from oqlos.core._value_normalizers import ValueNormalizer
+from oqlos.core._sensor_evaluator import SensorEvaluator
+from oqlos.core._firmware_executor import FirmwareExecutor
 
 
 class CqlInterpreter(BaseInterpreter):
@@ -35,13 +39,6 @@ class CqlInterpreter(BaseInterpreter):
       - dry-run:  simulate execution with mock sensor values
       - execute:  connect to firmware simulator (:8202) and run real test
     """
-
-    # Default mock sensor values for realistic dry-run simulation
-    DEFAULT_MOCK_SENSORS: dict[str, float] = {
-        "AI01": -12.0,   # NC pressure sensor (mbar) — typical negative pressure
-        "AI02": 7.0,     # SC pressure sensor (bar) — typical medium pressure
-        "AI03": 290.0,   # WC pressure sensor (bar) — typical bottle pressure
-    }
 
     def __init__(
         self,
@@ -58,112 +55,81 @@ class CqlInterpreter(BaseInterpreter):
     ):
         super().__init__(variables=variables, quiet=quiet, bridge_url=bridge_url)
         self.mode = mode  # validate, dry-run, execute
-        self._firmware = None
-        self._firmware_url = firmware_url
         self._skip_waits = skip_waits
-        self._auto_mock = auto_mock and mode == "dry-run"
-        self._goal_skipped = False # Track if current goal execution should be skipped (flat IF)
+        self._goal_skipped = False  # Track if current goal execution should be skipped (flat IF)
         self._yaml_output = yaml_output
-        self._use_plugin_gateway = use_plugin_gateway
-        # Use plugin gateway instead of old hardware system
-        if use_plugin_gateway:
-            self._plugin_gateway = PluginHardwareGateway(mode=mode)
-        else:
-            self._plugin_gateway = None
-        # Seed with defaults, then overlay user-provided values
-        self.sensor_values: dict[str, float] = dict(self.DEFAULT_MOCK_SENSORS)
-        if sensor_values:
-            self.sensor_values.update(sensor_values)
 
-    @staticmethod
-    def _coerce_float(value: Any) -> float | None:
-        """Best-effort float coercion for config values."""
-        if value is None:
-            return None
-        if isinstance(value, (int, float)):
-            return float(value)
-        parsed = _parse_numeric_value(str(value))
-        if parsed is not None:
-            return float(parsed)
-        try:
-            return float(str(value).replace(",", ".").strip())
-        except Exception:
-            return None
+        # Initialize specialized components
+        self._normalizer = ValueNormalizer(self.vars)
+        self._sensor_eval = SensorEvaluator(
+            sensor_values=sensor_values,
+            auto_mock=auto_mock,
+            mode=mode,
+        )
+        self._fw_exec = FirmwareExecutor(
+            mode=mode,
+            firmware_url=firmware_url,
+            use_plugin_gateway=use_plugin_gateway,
+            vars_store=self.vars,
+            output_handler=self.out,
+            normalizer=self._normalizer,
+        )
+
+    # --- Delegated properties for backward compatibility ---
+
+    @property
+    def sensor_values(self) -> dict[str, float]:
+        """Access sensor values through the sensor evaluator."""
+        return self._sensor_eval.sensor_values
+
+    @sensor_values.setter
+    def sensor_values(self, value: dict[str, float]) -> None:
+        """Set sensor values through the sensor evaluator."""
+        self._sensor_eval.sensor_values = value
+
+    @property
+    def _firmware(self):
+        """Backward-compatible access to the delegated firmware adapter."""
+        return self._fw_exec._firmware
+
+    @_firmware.setter
+    def _firmware(self, value) -> None:
+        """Backward-compatible setter for tests and legacy code paths."""
+        self._fw_exec._firmware = value
+
+    @property
+    def _firmware_url(self) -> str:
+        """Backward-compatible access to the delegated firmware URL."""
+        return self._fw_exec._firmware_url
+
+    @_firmware_url.setter
+    def _firmware_url(self, value: str) -> None:
+        """Backward-compatible setter for tests and legacy code paths."""
+        self._fw_exec._firmware_url = value
+
+    def _coerce_float(self, value: Any) -> float | None:
+        """Delegate to ValueNormalizer."""
+        return self._normalizer.coerce_float(value)
 
     def _resolve_peripheral_id(self, target: str) -> str | None:
-        """Resolve a known target name to a firmware peripheral id."""
-        normalized = target.strip().lower().replace(" ", "-").replace("_", "-")
-        return _PERIPHERAL_MAP.get(normalized)
+        """Delegate to FirmwareExecutor."""
+        return self._fw_exec.resolve_peripheral_id(target)
 
     def _get_pump_flow_full_scale_lpm(self) -> float:
-        """Resolve the flow rate that maps to 100% PWM."""
-        for key in ("PUMP_FLOW_FULL_SCALE_LPM", "pump_flow_full_scale_lpm"):
-            raw = self.vars.get(key)
-            scale = self._coerce_float(raw)
-            if scale and scale > 0:
-                return scale
-
-        try:
-            settings = oql_config.get_settings()
-            scale = self._coerce_float(getattr(settings, "pump_flow_full_scale_lpm", None))
-            if scale and scale > 0:
-                return scale
-        except Exception:
-            pass
-
-        return 10.0
+        """Delegate to ValueNormalizer."""
+        return self._normalizer._get_pump_flow_full_scale_lpm()
 
     def _normalize_pump_power(self, raw_value: str) -> float:
-        """Convert a pump command value to a PWM percentage."""
-        text = self.vars.interpolate((raw_value or "").strip())
-        lowered = text.lower().strip()
-
-        if lowered in {"on", "true"}:
-            return 100.0
-        if lowered in {"off", "false"}:
-            return 0.0
-
-        numeric = self._coerce_float(text)
-        if numeric is None:
-            return 0.0
-
-        compact = lowered.replace(" ", "")
-        if "l/min" in compact or compact.endswith("lpm"):
-            scale = self._get_pump_flow_full_scale_lpm()
-            if scale <= 0:
-                return 0.0
-            numeric = numeric / scale * 100.0
-
-        return max(0.0, min(100.0, float(numeric)))
+        """Delegate to ValueNormalizer."""
+        return self._normalizer.normalize_pump_power(raw_value)
 
     def _normalize_valve_value(self, raw_value: Any) -> bool:
-        """Convert a valve command value to a boolean state."""
-        if isinstance(raw_value, bool):
-            return raw_value
-        if isinstance(raw_value, (int, float)):
-            return float(raw_value) != 0.0
-
-        text = self.vars.interpolate(str(raw_value or "")).strip().lower()
-        if text in {"on", "true", "open", "1", "yes"}:
-            return True
-        if text in {"off", "false", "closed", "close", "0", "no"}:
-            return False
-
-        numeric = self._coerce_float(text)
-        if numeric is not None:
-            return numeric != 0.0
-        return bool(text)
+        """Delegate to ValueNormalizer."""
+        return self._normalizer.normalize_valve_value(raw_value)
 
     def _normalize_lung_value(self, raw_value: Any) -> int:
-        """Convert a lung command value to a cycle count."""
-        text = self.vars.interpolate(str(raw_value or "")).strip().lower()
-        if text in {"off", "false", "stop", "0"}:
-            return 0
-
-        numeric = self._coerce_float(text)
-        if numeric is None:
-            return 5
-        return max(0, int(numeric))
+        """Delegate to ValueNormalizer."""
+        return self._normalizer.normalize_lung_value(raw_value)
 
     def parse(self, source: str, filename: str = "<string>") -> CqlDocument:
         return parse_cql(source, filename)
@@ -248,8 +214,8 @@ class CqlInterpreter(BaseInterpreter):
         if self.mode == "validate":
             return self._run_validation_mode(name, issues, t0)
 
-        if self._auto_mock:
-            self._seed_sensors_from_conditions(doc)
+        if self._sensor_eval._auto_mock:
+            self._sensor_eval.seed_sensors_from_conditions(doc)
 
         all_goals = self._collect_all_goals(doc)
         self._execute_all_goals(all_goals)
@@ -331,246 +297,234 @@ class CqlInterpreter(BaseInterpreter):
         from oqlos.core._interpreter_actions import _do_sleep
         _do_sleep(self, secs, label)
 
-    _PERIPHERAL_NORMALIZER_METHODS: dict[str, str] = {
-        "pump": "_normalize_pump_power",
-        "valve": "_normalize_valve_value",
-        "lung": "_normalize_lung_value",
-    }
+    def _normalize_peripheral_value(self, resolved: str | None, value: str) -> Any:
+        """Delegate to FirmwareExecutor."""
+        return self._fw_exec.normalize_peripheral_value(resolved, value)
+
+    def _coerce_generic_peripheral_value(self, value: Any) -> Any:
+        """Delegate to ValueNormalizer."""
+        return self._normalizer.coerce_generic_peripheral_value(value)
 
     def _exec_set_peripheral(self, act: CqlAction, value: str) -> StepStatus | None:
+        """Execute SET for a peripheral while preserving legacy monkeypatch points."""
         fw = self._get_firmware()
         resolved = self._resolve_peripheral_id(act.target or "")
         normalized_value = self._normalize_peripheral_value(resolved, value)
         try:
             fw.set_peripheral(act.target or "", normalized_value)
         except Exception as exc:
-            self.errors.append(str(exc))
             self.out.error(str(exc))
             return StepStatus.ERROR
-
         return None
 
-    def _normalize_peripheral_value(self, resolved: str | None, value: str) -> Any:
-        """Normalize a DSL value according to the resolved peripheral family."""
-        if resolved:
-            for prefix, normalizer_name in self._PERIPHERAL_NORMALIZER_METHODS.items():
-                if resolved.startswith(prefix):
-                    return getattr(self, normalizer_name)(value)
-        return self._coerce_generic_peripheral_value(value)
-
-    def _coerce_generic_peripheral_value(self, value: Any) -> Any:
-        """Best-effort coercion for unmapped peripherals."""
-        if not isinstance(value, str):
-            return value
-
-        lowered = value.lower()
-        if lowered in {"on", "true"}:
-            return 1
-        if lowered in {"off", "false"}:
-            return 0
-
-        numeric = self._coerce_float(value)
-        if numeric is None:
-            return value
-        return int(numeric) if numeric.is_integer() else numeric
-
-    # Operator → seed value factory for _seed_sensors_from_conditions
-    _SEED_VALUE_FNS: dict[str, Any] = {
-        "≤":  lambda v: v * 0.5,
-        "<=": lambda v: v * 0.5,
-        "<":  lambda v: v - 1.0,
-        "≥":  lambda v: v * 1.5 if v > 0 else v * 0.5,
-        ">=": lambda v: v * 1.5 if v > 0 else v * 0.5,
-        ">":  lambda v: v + 1.0,
-    }
-
-    @staticmethod
-    def _collect_sensor_constraints(doc: CqlDocument) -> dict[str, list[tuple[str, float | None, float | None]]]:
-        """Walk AST and collect per-sensor condition constraints."""
-        all_goals = list(doc.goals)
-        for sc in doc.scenarios:
-            all_goals.extend(sc.goals)
-
-        sensor_ranges: dict[str, list[tuple[str, float | None, float | None]]] = {}
-        for goal in all_goals:
-            for step in goal.steps:
-                for act in step.actions:
-                    cond = act.condition
-                    if not cond or not cond.sensor or cond.sensor == "Timer":
-                        continue
-                    sensor = cond.sensor[1:] if cond.sensor.startswith("Δ") else cond.sensor
-                    sensor_ranges.setdefault(sensor, []).append((
-                        cond.operator,
-                        cond.value_min if cond.value_min is not None else cond.value,
-                        cond.value_max,
-                    ))
-        return sensor_ranges
-
-    def _seed_sensors_from_conditions(self, doc: CqlDocument) -> None:
-        """Analyze conditions in document and seed mid-range sensor values for dry-run."""
-        sensor_ranges = self._collect_sensor_constraints(doc)
-
-        for sensor, constraints in sensor_ranges.items():
-            if sensor in self.sensor_values and sensor not in self.DEFAULT_MOCK_SENSORS:
-                continue  # User already provided a value
-            for op, vmin, vmax in constraints:
-                if op == "∈" and vmin is not None and vmax is not None:
-                    self.sensor_values[sensor] = (vmin + vmax) / 2.0
-                    break
-                seed_fn = self._SEED_VALUE_FNS.get(op)
-                if seed_fn and vmin is not None:
-                    self.sensor_values[sensor] = seed_fn(vmin)
-                    break
-
     def _get_firmware(self):
-        """Lazy-init firmware adapter."""
-        if self._firmware is None:
-            try:
-                from oqlos.hardware.firmware_adapter import FirmwareAdapter
-            except ImportError:
-                raise RuntimeError(
-                    "FirmwareAdapter not available — install oqlos with firmware extras "
-                    "or run inside the c2004 monorepo"
-                )
-            self._firmware = FirmwareAdapter(base_url=self._firmware_url)
-        return self._firmware
+        """Delegate to FirmwareExecutor."""
+        return self._fw_exec._get_firmware()
 
     def _execute_firmware_action(self, act: CqlAction, args: str | None = None) -> StepStatus:
-        """Execute action using plugin gateway when available, otherwise legacy firmware."""
-        if self._use_plugin_gateway and self._plugin_gateway:
-            return self._execute_plugin_action(act, args)
-        else:
-            return self._execute_legacy_firmware_action(act, args)
+        """Delegate to FirmwareExecutor."""
+        return self._fw_exec.execute_firmware_action(act, args)
 
     def _execute_plugin_action(self, act: CqlAction, args: str | None = None) -> StepStatus:
-        """Execute action using the new plugin gateway system."""
-        target = act.target
-        method = act.method
-        to_send = args if args is not None else self.vars.interpolate(act.args)
-
-        try:
-            # Map DSL targets to plugin commands
-            if method in {"set", "off"}:
-                # Pump command
-                power_pct = self._normalize_pump_power(to_send) if method == "set" else 0.0
-                success = self._plugin_gateway.set_pump(power_pct)
-                if success:
-                    self.vars.set(target, to_send)
-                    self.out.step("    →", f"{act.target}.{act.method} {to_send}")
-                    return StepStatus.PASSED
-                else:
-                    self.out.error(f"{act.target}.{act.method} FAILED: plugin error")
-                    return StepStatus.FAILED
-
-            elif method in {"open", "close"}:
-                # Valve command
-                value = (method == "open")
-                success = self._plugin_gateway.set_valve(target, value)
-                if success:
-                    self.vars.set(target, value)
-                    self.out.step("    →", f"{act.target}.{act.method} {value}")
-                    return StepStatus.PASSED
-                else:
-                    self.out.error(f"{act.target}.{act.method} FAILED: plugin error")
-                    return StepStatus.FAILED
-
-            elif method == "reciprocate":
-                # Lung command
-                success = self._plugin_gateway.set_lung()
-                if success:
-                    self.out.step("    →", f"{act.target}.{act.method}")
-                    return StepStatus.PASSED
-                else:
-                    self.out.error(f"{act.target}.{act.method} FAILED: plugin error")
-                    return StepStatus.FAILED
-
-            else:
-                self.out.warn(f"Unknown method {method} for target {target}")
-                return StepStatus.PASSED
-
-        except Exception as exc:
-            self.out.error(f"Plugin execution error: {exc}")
-            return StepStatus.FAILED
+        """Delegate to FirmwareExecutor."""
+        return self._fw_exec._execute_plugin_action(act, args)
 
     def _execute_legacy_firmware_action(self, act: CqlAction, args: str | None = None) -> StepStatus:
-        """Execute action on real/simulated firmware (legacy fallback)."""
-        to_send = args if args is not None else self.vars.interpolate(act.args)
-        res = self.firmware.dispatch_action(act.target, act.method, to_send)
-        if res.get("ok"):
-            self.out.step("    →", f"{act.target}.{act.method} {to_send} ({res.get('detail')})")
-            return StepStatus.PASSED
-        else:
-            self.out.error(f"{act.target}.{act.method} FAILED: {res.get('detail')}")
-            return StepStatus.FAILED
+        """Delegate to FirmwareExecutor."""
+        return self._fw_exec._execute_legacy_firmware_action(act, args)
 
     def _refresh_sensors_from_firmware(self) -> None:
-        """Read all sensor values from firmware and update local cache."""
-        try:
-            fw = self._get_firmware()
-            readings = fw.read_all_sensors()
-            self.sensor_values.update(readings)
-        except Exception:
-            pass  # Keep existing mock values on failure
+        """Delegate to FirmwareExecutor."""
+        self._fw_exec.refresh_sensors_from_firmware(self.sensor_values)
 
-    # Operator → (needs_nudge_down, comparison_fn) for scalar operators
-    _SCALAR_OPS: dict[str, tuple[bool, Any]] = {
-        "≤":  (True,  lambda v, t: v <= t),
-        "<=": (True,  lambda v, t: v <= t),
-        "<":  (True,  lambda v, t: v < t),
-        "≥":  (False, lambda v, t: v >= t),
-        ">=": (False, lambda v, t: v >= t),
-        ">":  (False, lambda v, t: v > t),
-    }
+    def _auto_mock_sensor(self, sensor: str, cond, val: float) -> float:
+        """Delegate to SensorEvaluator."""
+        return self._sensor_eval.auto_mock_sensor(sensor, cond, val)
 
-    def _auto_mock_sensor(self, sensor: str, cond: CqlCondition, val: float) -> float:
-        """In dry-run auto-mock, nudge sensor value to satisfy condition."""
-        if cond.operator == "∈" and cond.value_min is not None and cond.value_max is not None:
-            val = (cond.value_min + cond.value_max) / 2.0
-        elif cond.operator in self._SCALAR_OPS and cond.value is not None:
-            nudge_down, cmp_fn = self._SCALAR_OPS[cond.operator]
-            if not cmp_fn(val, cond.value):
-                offset = abs(cond.value) * 0.1 + 0.1
-                val = cond.value - offset if nudge_down else cond.value + offset
-        self.sensor_values[sensor] = val
-        return val
+    def _compare_sensor(self, sensor: str, cond, val: float) -> tuple[bool, str]:
+        """Delegate to SensorEvaluator."""
+        return self._sensor_eval.compare_sensor(sensor, cond, val)
 
-    def _compare_sensor(self, sensor: str, cond: CqlCondition, val: float) -> tuple[bool, str]:
-        """Compare sensor value against condition. Returns (ok, description)."""
-        if cond.operator == "∈" and cond.value_min is not None and cond.value_max is not None:
-            ok = cond.value_min <= val <= cond.value_max
-            return ok, f"{sensor} = {val} ∈ [{cond.value_min}, {cond.value_max}] {cond.unit}"
-        if cond.operator in self._SCALAR_OPS:
-            _, cmp_fn = self._SCALAR_OPS[cond.operator]
-            ok = cmp_fn(val, cond.value or 0)
-            return ok, f"{sensor} = {val} {cond.operator} {cond.value} {cond.unit}"
-        return True, f"{sensor} {cond.operator} {cond.value} {cond.unit}"
+    _INLINE_IF_SPLIT_RE = re.compile(r"\s+(AND|OR)\s+", re.IGNORECASE)
+    _INLINE_IF_CLAUSE_RE = re.compile(
+        r"^\s*(?:['\"](?P<sensor_quoted>.+?)['\"]|\[(?P<sensor_bracket>[^\]]+)\])\s*"
+        r"(?:\[(?P<op_bracket>[<>=!≤≥]+)\]|(?P<op>[<>=!≤≥]+))\s*"
+        r"(?:['\"](?P<value_quoted>.+?)['\"]|\[(?P<value_bracket>[^\]]+)\])\s*$",
+        re.IGNORECASE,
+    )
+
+    def _resolve_sensor_value(self, sensor: str) -> float:
+        """Resolve a sensor or computed variable value from cache or variables."""
+        base_sensor = sensor[1:] if sensor.startswith("Δ") else sensor
+        if sensor in self.sensor_values:
+            return float(self.sensor_values[sensor])
+        if base_sensor in self.sensor_values:
+            return float(self.sensor_values[base_sensor])
+
+        numeric = self._coerce_float(self.vars.get(sensor))
+        if numeric is not None:
+            return float(numeric)
+        numeric = self._coerce_float(self.vars.get(base_sensor))
+        if numeric is not None:
+            return float(numeric)
+        return 0.0
+
+    def _resolve_condition_rhs(self, raw_value: str | None, fallback: float | None, fallback_unit: str) -> tuple[float | None, str]:
+        """Resolve a condition RHS from raw DSL text or a parsed fallback."""
+        text = str(raw_value or "").strip()
+        if text:
+            interpolated = self.vars.interpolate(text)
+            if interpolated == text:
+                stored = self.vars.get(text)
+                if stored is not None:
+                    interpolated = str(stored)
+            numeric = self._coerce_float(interpolated)
+            if numeric is not None:
+                unit = ""
+                match = re.match(r"\s*[-+]?\d*\.?\d+(.*)$", interpolated.replace(",", "."))
+                if match:
+                    unit = match.group(1).strip()
+                return float(numeric), unit or fallback_unit
+        return fallback, fallback_unit
+
+    def _evaluate_resolved_condition(
+        self,
+        *,
+        sensor: str,
+        operator: str,
+        threshold: float | None,
+        unit: str,
+        on_fail: str,
+        fail_message: str,
+    ) -> StepStatus:
+        """Evaluate a single scalar condition after RHS resolution."""
+        if sensor == "Timer":
+            self.out.step("    ⏱️ ", f"Timer {operator} {threshold}s → OK (simulated)")
+            return StepStatus.PASSED
+
+        if threshold is None:
+            self.out.warn(f"Could not resolve condition value for {sensor} {operator}")
+            return StepStatus.ERROR
+
+        cond = CqlCondition(
+            sensor=sensor,
+            operator=operator,
+            value=threshold,
+            unit=unit,
+            on_fail=on_fail,
+            fail_message=fail_message,
+        )
+        val = self._resolve_sensor_value(sensor)
+
+        if self._sensor_eval._auto_mock and self.mode == "dry-run":
+            val = self._sensor_eval.auto_mock_sensor(sensor, cond, val)
+
+        ok, desc = self._sensor_eval.compare_sensor(sensor, cond, val)
+        if ok:
+            self.out.step("    ✅", f"{desc} → PASS")
+            return StepStatus.PASSED
+
+        self.out.step("    ❌", f"{desc} → {on_fail}: {fail_message}")
+        if on_fail == "ERROR":
+            self.errors.append(f"{sensor}: {fail_message}")
+            return StepStatus.FAILED
+        return StepStatus.WARNING
+
+    def _evaluate_inline_condition_expression(
+        self,
+        expression: str,
+        *,
+        on_fail: str = "",
+        fail_message: str = "",
+    ) -> StepStatus:
+        """Evaluate flat IF expressions, including OR/AND chains."""
+        tokens = [token for token in self._INLINE_IF_SPLIT_RE.split(str(expression or "").strip()) if token]
+        if not tokens:
+            return StepStatus.ERROR
+
+        result: bool | None = None
+        pending_connector = "AND"
+        descriptions: list[str] = []
+
+        for token in tokens:
+            connector = token.upper()
+            if connector in {"AND", "OR"}:
+                pending_connector = connector
+                descriptions.append(connector)
+                continue
+
+            match = self._INLINE_IF_CLAUSE_RE.match(token)
+            if not match:
+                self.out.warn(f"Unsupported IF expression: {expression}")
+                return StepStatus.ERROR
+
+            sensor = (match.group("sensor_quoted") or match.group("sensor_bracket") or "").strip()
+            operator = (match.group("op") or match.group("op_bracket") or "").strip()
+            raw_value = (match.group("value_quoted") or match.group("value_bracket") or "").strip()
+            threshold, unit = self._resolve_condition_rhs(raw_value, None, "")
+            if threshold is None:
+                self.out.warn(f"Could not resolve IF expression value: {raw_value}")
+                return StepStatus.ERROR
+
+            cond = CqlCondition(sensor=sensor, operator=operator, value=threshold, unit=unit)
+            val = self._resolve_sensor_value(sensor)
+            if self._sensor_eval._auto_mock and self.mode == "dry-run":
+                val = self._sensor_eval.auto_mock_sensor(sensor, cond, val)
+            ok, desc = self._sensor_eval.compare_sensor(sensor, cond, val)
+            descriptions.append(desc)
+
+            if result is None:
+                result = ok
+            elif pending_connector == "AND":
+                result = result and ok
+            else:
+                result = result or ok
+
+        if result:
+            self.out.step("    ✅", f"{' '.join(descriptions)} → PASS")
+            return StepStatus.PASSED
+
+        self.out.step("    ❌", f"{' '.join(descriptions)} → {on_fail}: {fail_message}")
+        if on_fail == "ERROR":
+            self.errors.append(fail_message or expression)
+            return StepStatus.FAILED
+        return StepStatus.WARNING
 
     def _evaluate_condition(self, act: CqlAction) -> StepStatus:
+        """Evaluate a condition using the sensor evaluator."""
         cond = act.condition
+        if not cond and act.args:
+            return self._evaluate_inline_condition_expression(act.args)
         if not cond:
             return StepStatus.PASSED
 
         sensor = cond.sensor
-        # Timer conditions: always pass in dry-run
-        if sensor == "Timer":
-            self.out.step("    ⏱️ ", f"Timer {cond.operator} {cond.value}s → OK (simulated)")
-            return StepStatus.PASSED
+        if cond.operator == "∈" and cond.value_min is not None and cond.value_max is not None:
+            if sensor == "Timer":
+                self.out.step("    ⏱️ ", f"Timer {cond.operator} {cond.value}s → OK (simulated)")
+                return StepStatus.PASSED
 
-        # Delta sensors (ΔAI02) — use base sensor name for lookup
-        base_sensor = sensor[1:] if sensor.startswith("Δ") else sensor
-        val = self.sensor_values.get(sensor, self.sensor_values.get(base_sensor, 0.0))
+            val = self._resolve_sensor_value(sensor)
+            if self._sensor_eval._auto_mock and self.mode == "dry-run":
+                val = self._sensor_eval.auto_mock_sensor(sensor, cond, val)
 
-        if self._auto_mock and self.mode == "dry-run":
-            val = self._auto_mock_sensor(sensor, cond, val)
+            ok, desc = self._sensor_eval.compare_sensor(sensor, cond, val)
+            if ok:
+                self.out.step("    ✅", f"{desc} → PASS")
+                return StepStatus.PASSED
 
-        ok, desc = self._compare_sensor(sensor, cond, val)
-
-        if ok:
-            self.out.step("    ✅", f"{desc} → PASS")
-            return StepStatus.PASSED
-        else:
             self.out.step("    ❌", f"{desc} → {cond.on_fail}: {cond.fail_message}")
             if cond.on_fail == "ERROR":
                 self.errors.append(f"{sensor}: {cond.fail_message}")
                 return StepStatus.FAILED
             return StepStatus.WARNING
+
+        threshold, unit = self._resolve_condition_rhs(act.args, cond.value, cond.unit)
+        return self._evaluate_resolved_condition(
+            sensor=sensor,
+            operator=cond.operator,
+            threshold=threshold,
+            unit=unit,
+            on_fail=cond.on_fail,
+            fail_message=cond.fail_message,
+        )
