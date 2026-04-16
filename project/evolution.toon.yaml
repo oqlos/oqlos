@@ -1,0 +1,69 @@
+# code2llm/evolution | 693 func | 74f | 2026-04-16
+
+NEXT[7] (ranked by impact):
+  [1] !! SPLIT           oqlos/core/_interpreter_actions.py
+      WHY: 703L, 0 classes, max CC=23
+      EFFORT: ~4h  IMPACT: 16169
+
+  [2] !! SPLIT           oqlos/core/interpreter.py
+      WHY: 530L, 1 classes, max CC=24
+      EFFORT: ~4h  IMPACT: 12720
+
+  [3] !  SPLIT-FUNC      exec_action_assert  CC=22  fan=20
+      WHY: CC=22 exceeds 15
+      EFFORT: ~1h  IMPACT: 440
+
+  [4] !  SPLIT-FUNC      CqlInterpreter._evaluate_inline_condition_expression  CC=24  fan=16
+      WHY: CC=24 exceeds 15
+      EFFORT: ~1h  IMPACT: 384
+
+  [5] !  SPLIT-FUNC      exec_action_func  CC=23  fan=14
+      WHY: CC=23 exceeds 15
+      EFFORT: ~1h  IMPACT: 322
+
+  [6] !  SPLIT-FUNC      main  CC=15  fan=18
+      WHY: CC=15 exceeds 15
+      EFFORT: ~1h  IMPACT: 270
+
+  [7] !  SPLIT-FUNC      _ParseState._try_hierarchy  CC=18  fan=13
+      WHY: CC=18 exceeds 15
+      EFFORT: ~1h  IMPACT: 234
+
+
+RISKS[2]:
+  ⚠ Splitting oqlos/core/_interpreter_actions.py may break 36 import paths
+  ⚠ Splitting oqlos/core/interpreter.py may break 38 import paths
+
+METRICS-TARGET:
+  CC̄:          3.8 → ≤2.7
+  max-CC:      24 → ≤12
+  god-modules: 2 → 0
+  high-CC(≥15): 5 → ≤2
+  hub-types:   0 → ≤0
+
+PATTERNS (language parser shared logic):
+  _extract_declarations() in base.py — unified extraction for:
+    - TypeScript: interfaces, types, classes, functions, arrow funcs
+    - PHP: namespaces, traits, classes, functions, includes
+    - Ruby: modules, classes, methods, requires
+    - C++: classes, structs, functions, #includes
+    - C#: classes, interfaces, methods, usings
+    - Java: classes, interfaces, methods, imports
+    - Go: packages, functions, structs
+    - Rust: modules, functions, traits, use statements
+
+  Shared regex patterns per language:
+    - import: language-specific import/require/using patterns
+    - class: class/struct/trait declarations with inheritance
+    - function: function/method signatures with visibility
+    - brace_tracking: for C-family languages ({ })
+    - end_keyword_tracking: for Ruby (module/class/def...end)
+
+  Benefits:
+    - Consistent extraction logic across all languages
+    - Reduced code duplication (~70% reduction in parser LOC)
+    - Easier maintenance: fix once, apply everywhere
+    - Standardized FunctionInfo/ClassInfo models
+
+HISTORY:
+  (first run — no previous data)

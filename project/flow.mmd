@@ -1,0 +1,25 @@
+flowchart TD
+
+    %% Entry points (blue)
+    classDef entry fill:#4dabf7,stroke:#1971c2,color:#fff
+
+    subgraph Core
+        oqlos__core__state__StateManager__initialize_peripherals["initialize_peripherals"]
+        oqlos__core__state__StateManager__broadcast_event["broadcast_event"]
+        setup_hardware_and_run_oql__main["main"]
+        oqlos__core___dsl_helpers___parse_numeric_value["_parse_numeric_value"]
+        oqlos__core___dsl_helpers___map_pump_action["_map_pump_action"]
+        oqlos__core___dsl_helpers___map_action_value["_map_action_value"]
+        oqlos__core___interpreter_actions__exec_action_task["exec_action_task"]
+        oqlos__core___interpreter_actions__exec_action_log["exec_action_log"]
+        oqlos__core___interpreter_actions__exec_action_error["exec_action_error"]
+        oqlos__core___interpreter_actions__exec_action_else["exec_action_else"]
+        oqlos__core___interpreter_actions__exec_action_sample["exec_action_sample"]
+        oqlos__core___interpreter_actions__exec_action_func["exec_action_func"]
+        oqlos__core___interpreter_actions__exec_action_goto["exec_action_goto"]
+        oqlos__core___interpreter_actions__exec_action_api["exec_action_api"]
+        oqlos__core___interpreter_actions__exec_action_expect["exec_action_expect"]
+        ...["+470 more"]
+    end
+
+    class oqlos__core__state__StateManager__initialize_peripherals,oqlos__core__state__StateManager__broadcast_event,setup_hardware_and_run_oql__main,oqlos__core___interpreter_actions__exec_action_task,oqlos__core___interpreter_actions__exec_action_log,oqlos__core___interpreter_actions__exec_action_error,oqlos__core___interpreter_actions__exec_action_else,oqlos__core___interpreter_actions__exec_action_sample,oqlos__core___interpreter_actions__exec_action_func,oqlos__core___interpreter_actions__exec_action_goto entry

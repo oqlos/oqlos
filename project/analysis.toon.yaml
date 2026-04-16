@@ -1,0 +1,158 @@
+# code2llm | 98f 14970L | python:96,shell:2 | 2026-04-16
+# CC̄=3.7 | critical:5/704 | dups:0 | cycles:0
+
+HEALTH[5]:
+  🟡 CC    exec_action_func CC=23 (limit:15)
+  🟡 CC    exec_action_assert CC=22 (limit:15)
+  🟡 CC    _evaluate_inline_condition_expression CC=24 (limit:15)
+  🟡 CC    _try_hierarchy CC=18 (limit:15)
+  🟡 CC    main CC=15 (limit:15)
+
+REFACTOR[1]:
+  1. split 5 high-CC methods  (CC>15)
+
+PIPELINES[425]:
+  [1] Src [__init__]: __init__
+      PURITY: 100% pure
+  [2] Src [initialize_peripherals]: initialize_peripherals
+      PURITY: 100% pure
+  [3] Src [broadcast_event]: broadcast_event
+      PURITY: 100% pure
+  [4] Src [main]: main → run_oql_scenario
+      PURITY: 100% pure
+  [5] Src [exec_action_task]: exec_action_task
+      PURITY: 100% pure
+
+LAYERS:
+  ./                              CC̄=6.9    ←in:0  →out:0
+  │ setup_hardware_and_run_oql   333L  0C    7m  CC=12     ←0
+  │ project.sh                  35L  0C    0m  CC=0.0    ←0
+  │
+  oqlos/                          CC̄=3.7    ←in:4  →out:0
+  │ !! _interpreter_actions       703L  0C   36m  CC=23     ←1
+  │ !! interpreter                530L  1C   38m  CC=24     ←0
+  │ generators                 442L  0C   18m  CC=14     ←0
+  │ !! cql_parser                 432L  1C   27m  CC=18     ←2
+  │ firmware_adapter           428L  1C   23m  CC=12     ←0
+  │ gateway                    415L  5C   25m  CC=7      ←0
+  │ _cql_tokenizer             386L  0C   25m  CC=5      ←0
+  │ executor                   383L  1C   21m  CC=14     ←0
+  │ motor                      376L  1C   17m  CC=14     ←0
+  │ state                      370L  0C   16m  CC=13     ←0
+  │ execution                  354L  0C   16m  CC=11     ←0
+  │ plugin_gateway             348L  1C   14m  CC=6      ←0
+  │ plugin_cli                 342L  0C   13m  CC=8      ←0
+  │ base                       326L  8C   19m  CC=5      ←1
+  │ base                       320L  7C   28m  CC=7      ←10
+  │ registry                   316L  1C   14m  CC=6      ←4
+  │ schema                     296L  5C    6m  CC=7      ←0
+  │ hardware                   281L  0C   16m  CC=9      ←0
+  │ preflight                  265L  0C   10m  CC=13     ←1
+  │ modbus                     258L  1C    7m  CC=12     ←0
+  │ scenarios                  251L  0C   16m  CC=11     ←0
+  │ _line_parsers              246L  0C    9m  CC=12     ←2
+  │ lung                       245L  1C   17m  CC=14     ←0
+  │ discovery                  232L  0C    8m  CC=12     ←2
+  │ _firmware_executor         201L  1C    9m  CC=11     ←0
+  │ main                       189L  0C    5m  CC=5      ←0
+  │ parser                     183L  0C    5m  CC=13     ←2
+  │ commands                   178L  0C    5m  CC=8      ←1
+  │ parser                     175L  0C    6m  CC=9      ←0
+  │ event_server               171L  2C   11m  CC=7      ←0
+  │ main                       169L  0C    6m  CC=5      ←0
+  │ piadc                      150L  1C    7m  CC=9      ←0
+  │ utils                      148L  0C   10m  CC=8      ←3
+  │ _sensor_evaluator          145L  1C    6m  CC=10     ←0
+  │ logs_query                 145L  1C    5m  CC=11     ←1
+  │ safe_eval                  138L  1C   10m  CC=4      ←0
+  │ shell                      138L  0C    5m  CC=6      ←1
+  │ peripheral_mapping         138L  0C    4m  CC=2      ←0
+  │ plugins                    137L  0C    8m  CC=3      ←0
+  │ !! __main__                   135L  0C    5m  CC=15     ←0
+  │ _dsl_helpers               132L  0C   12m  CC=11     ←4
+  │ _value_normalizers         126L  1C    7m  CC=8      ←0
+  │ editor                     126L  3C    5m  CC=6      ←0
+  │ config_schema              125L  1C    3m  CC=2      ←0
+  │ release_version            125L  0C    7m  CC=11     ←1
+  │ state                      124L  1C    3m  CC=4      ←0
+  │ mqtt                       119L  1C    9m  CC=3      ←0
+  │ discovery                  112L  1C    5m  CC=11     ←4
+  │ file_ops                   108L  1C    5m  CC=4      ←1
+  │ _utils                     101L  0C    6m  CC=12     ←1
+  │ _func_resolver              96L  0C    4m  CC=13     ←1
+  │ calibration                 92L  0C    4m  CC=5      ←3
+  │ spi                         92L  1C    7m  CC=4      ←0
+  │ models                      90L  5C    0m  CC=0.0    ←0
+  │ gpio                        89L  1C    7m  CC=6      ←0
+  │ junit                       86L  1C    3m  CC=8      ←0
+  │ dsl_models                  86L  8C    0m  CC=0.0    ←0
+  │ config_factory              84L  0C    1m  CC=1      ←0
+  │ health                      80L  0C    5m  CC=6      ←5
+  │ event_store                 77L  1C   10m  CC=3      ←0
+  │ sample_data                 73L  0C    1m  CC=1      ←0
+  │ peripherals                 70L  0C    4m  CC=5      ←0
+  │ config                      67L  1C    1m  CC=1      ←2
+  │ version_endpoint            66L  0C    2m  CC=3      ←0
+  │ report                      63L  0C    2m  CC=12     ←3
+  │ execution_ctrl              62L  0C    3m  CC=1      ←0
+  │ _shared                     61L  0C    4m  CC=2      ←3
+  │ __init__                    60L  0C    2m  CC=1      ←0
+  │ protocol                    60L  2C    6m  CC=1      ←0
+  │ benchmark                   55L  0C    1m  CC=6      ←2
+  │ __init__                    53L  0C    0m  CC=0.0    ←0
+  │ registry                    49L  1C    3m  CC=2      ←0
+  │ logs                        45L  0C    3m  CC=1      ←0
+  │ __init__                    43L  0C    0m  CC=0.0    ←0
+  │ _compare                    40L  0C    2m  CC=3      ←2
+  │ scenario                    35L  4C    0m  CC=0.0    ←0
+  │ _endpoint_helpers           34L  0C    2m  CC=2      ←1
+  │ peripheral                  33L  4C    0m  CC=0.0    ←0
+  │ version                     24L  0C    0m  CC=0.0    ←0
+  │ logger                      23L  0C    1m  CC=2      ←0
+  │ execution                   22L  3C    0m  CC=0.0    ←0
+  │ __init__                    19L  0C    0m  CC=0.0    ←0
+  │ __init__                    17L  0C    0m  CC=0.0    ←0
+  │ __init__                    17L  0C    0m  CC=0.0    ←0
+  │ __init__                     5L  0C    0m  CC=0.0    ←0
+  │ __init__                     5L  0C    0m  CC=0.0    ←0
+  │ __init__                     3L  0C    0m  CC=0.0    ←0
+  │ __init__                     3L  0C    0m  CC=0.0    ←0
+  │ __init__                     0L  0C    0m  CC=0.0    ←0
+  │ __init__                     0L  0C    0m  CC=0.0    ←0
+  │ __init__                     0L  0C    0m  CC=0.0    ←0
+  │ __init__                     0L  0C    0m  CC=0.0    ←0
+  │ __init__                     0L  0C    0m  CC=0.0    ←0
+  │ __init__                     0L  0C    0m  CC=0.0    ←0
+  │ __init__                     0L  0C    0m  CC=0.0    ←0
+  │
+  scripts/                        CC̄=0.0    ←in:0  →out:0
+  │ hardware-check.sh          340L  0C   11m  CC=0.0    ←0
+  │
+  ── zero ──
+     oqlos/api/utils/__init__.py               0L
+     oqlos/core/__init__.py                    0L
+     oqlos/hardware/__init__.py                0L
+     oqlos/ide/__init__.py                     0L
+     oqlos/models/__init__.py                  0L
+     oqlos/shared/__init__.py                  0L
+     oqlos/tools/__init__.py                   0L
+
+COUPLING:
+                  oqlos.hardware     oqlos.tools       oqlos.api      oqlos.core    oqlos.shared           oqlos       oqlos.dsl
+  oqlos.hardware              ──             ←12             ←10               1                               4                  hub
+     oqlos.tools              12              ──                               9                                                  !! fan-out
+       oqlos.api              10                              ──               2               7                                  !! fan-out
+      oqlos.core              ←1              ←9              ←2              ──              ←1                              ←1  hub
+    oqlos.shared                                              ←7               1              ──                                  hub
+           oqlos              ←4                                                                              ──                
+       oqlos.dsl                                                               1                                              ──
+  CYCLES: none
+  HUB: oqlos.core/ (fan-in=14)
+  HUB: oqlos.hardware/ (fan-in=22)
+  HUB: oqlos.shared/ (fan-in=7)
+  SMELL: oqlos.api/ fan-out=19 → split needed
+  SMELL: oqlos.tools/ fan-out=21 → split needed
+
+EXTERNAL:
+  validation: run `vallm batch .` → validation.toon
+  duplication: run `redup scan .` → duplication.toon

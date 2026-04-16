@@ -339,6 +339,70 @@ def _resolve_numeric_token(interp: "CqlInterpreter", token: str) -> float:
     return 0.0
 
 
+def _func_avg(values: list[float]) -> float:
+    """Calculate average of values."""
+    return sum(values) / len(values) if values else 0.0
+
+
+def _func_sum(values: list[float]) -> float:
+    """Calculate sum of values."""
+    return sum(values)
+
+
+def _func_min(values: list[float]) -> float:
+    """Find minimum value."""
+    return min(values) if values else 0.0
+
+
+def _func_max(values: list[float]) -> float:
+    """Find maximum value."""
+    return max(values) if values else 0.0
+
+
+def _func_sub(values: list[float]) -> float:
+    """Subtract remaining values from first value."""
+    return values[0] - sum(values[1:]) if values else 0.0
+
+
+def _func_div(values: list[float], interp: "CqlInterpreter", target: str) -> float:
+    """Divide values sequentially with zero check."""
+    if not values:
+        return 0.0
+    result = values[0]
+    for divisor in values[1:]:
+        if divisor == 0:
+            interp.out.warn(f"FUNC {target}: division by zero in dry-run, keeping result at 0")
+            return 0.0
+        result /= divisor
+    return result
+
+
+def _func_mul(values: list[float]) -> float:
+    """Multiply all values."""
+    result = 1.0
+    for value in values:
+        result *= value
+    return result
+
+
+def _func_add(values: list[float]) -> float:
+    """Add all values (alias for SUM)."""
+    return sum(values)
+
+
+# Dispatch table for FUNC handlers: method -> handler function
+_FUNC_HANDLERS: dict[str, callable] = {
+    "AVG": _func_avg,
+    "SUM": _func_sum,
+    "MIN": _func_min,
+    "MAX": _func_max,
+    "SUB": _func_sub,
+    "DIV": _func_div,
+    "MUL": _func_mul,
+    "ADD": _func_add,
+}
+
+
 def exec_action_func(interp: "CqlInterpreter", act: CqlAction) -> "StepStatus":
     """Execute FUNC action using simple arithmetic over literals and variables."""
     from oqlos.core.base import StepStatus
@@ -347,37 +411,16 @@ def exec_action_func(interp: "CqlInterpreter", act: CqlAction) -> "StepStatus":
     tokens = [token.strip() for token in str(act.args or "").split(",") if token.strip()]
     values = [_resolve_numeric_token(interp, token) for token in tokens]
 
+    handler = _FUNC_HANDLERS.get(method)
+    if handler is None:
+        interp.out.warn(f"Unknown FUNC method: {method}")
+        return StepStatus.ERROR
+
     try:
-        if method == "AVG":
-            result = sum(values) / len(values) if values else 0.0
-        elif method == "SUM":
-            result = sum(values)
-        elif method == "MIN":
-            result = min(values) if values else 0.0
-        elif method == "MAX":
-            result = max(values) if values else 0.0
-        elif method == "SUB":
-            result = values[0] - sum(values[1:]) if values else 0.0
-        elif method == "DIV":
-            if not values:
-                result = 0.0
-            else:
-                result = values[0]
-                for divisor in values[1:]:
-                    if divisor == 0:
-                        interp.out.warn(f"FUNC {act.target}: division by zero in dry-run, keeping result at 0")
-                        result = 0.0
-                        break
-                    result /= divisor
-        elif method == "MUL":
-            result = 1.0
-            for value in values:
-                result *= value
-        elif method == "ADD":
-            result = sum(values)
+        if method == "DIV":
+            result = handler(values, interp, act.target)
         else:
-            interp.out.warn(f"Unknown FUNC method: {method}")
-            return StepStatus.ERROR
+            result = handler(values)
     except Exception as exc:
         interp.out.error(f"FUNC {act.target} failed: {exc}")
         return StepStatus.ERROR
@@ -421,6 +464,89 @@ def exec_action_expect(interp: "CqlInterpreter", act: CqlAction) -> "StepStatus"
     return StepStatus.PASSED
 
 
+def _assert_status(interp: "CqlInterpreter", act: CqlAction, tokens: list[str]) -> "StepStatus":
+    """Handle ASSERT_STATUS: verify HTTP status code."""
+    from oqlos.core.base import StepStatus
+    expected = int(_coerce_expected_value(tokens[0] if tokens else 200) or 200)
+    actual = int(_coerce_expected_value(interp.vars.get("api.last.status")) or 0)
+    if actual != expected:
+        return _record_failure(interp, "api.status", f"Expected HTTP {expected}, got {actual}")
+    interp.out.step("    ✅", f"ASSERT_STATUS {expected}")
+    return StepStatus.PASSED
+
+
+def _assert_json(interp: "CqlInterpreter", act: CqlAction, tokens: list[str]) -> "StepStatus":
+    """Handle ASSERT_JSON: verify JSON path value."""
+    from oqlos.core.base import StepStatus
+    if len(tokens) < 2:
+        return _record_failure(interp, "api.json", f"Malformed ASSERT_JSON: {act.raw}")
+    path = tokens[0]
+    operator = tokens[1] if len(tokens) > 2 else "=="
+    expected = tokens[2] if len(tokens) > 2 else tokens[1]
+    actual = _get_nested_value(interp.vars.get("api.last.response") or {}, path)
+    if not _compare_values(actual, operator, expected):
+        return _record_failure(
+            interp,
+            path,
+            f"ASSERT_JSON {path} {operator} {expected} failed for {actual}",
+        )
+    interp.out.step("    ✅", f"ASSERT_JSON {path} {operator} {expected}")
+    return StepStatus.PASSED
+
+
+def _assert_sensor(interp: "CqlInterpreter", act: CqlAction, tokens: list[str]) -> "StepStatus":
+    """Handle ASSERT_SENSOR: verify sensor condition."""
+    from oqlos.core.base import StepStatus
+    if len(tokens) < 3:
+        return _record_failure(interp, "sensor", f"Malformed ASSERT_SENSOR: {act.raw}")
+    sensor, operator, raw_value = tokens[:3]
+    unit = tokens[3] if len(tokens) > 3 else ""
+    numeric = interp._coerce_float(raw_value)
+    cond = CqlCondition(
+        sensor=sensor,
+        operator=operator,
+        value=numeric,
+        unit=unit,
+        on_fail="ERROR",
+        fail_message=f"ASSERT_SENSOR failed: {sensor} {operator} {raw_value}",
+    )
+    status = interp._evaluate_condition(CqlAction(kind="condition", condition=cond, args=raw_value))
+    if status == StepStatus.PASSED:
+        _mark_success(interp, sensor)
+    else:
+        interp.vars.set(f"failure:{sensor}", True)
+    return status
+
+
+def _assert_valve(interp: "CqlInterpreter", act: CqlAction, tokens: list[str]) -> "StepStatus":
+    """Handle ASSERT_VALVE: verify valve state."""
+    from oqlos.core.base import StepStatus
+    if len(tokens) < 2:
+        return _record_failure(interp, "valve", f"Malformed ASSERT_VALVE: {act.raw}")
+    target, expected_token = tokens[:2]
+    actual = _lookup_peripheral_state(interp, target)
+    expected = _normalize_bool(expected_token)
+    actual_bool = _normalize_bool(actual)
+    if expected is None or actual_bool is None or actual_bool != expected:
+        return _record_failure(
+            interp,
+            target,
+            f"ASSERT_VALVE {target} expected {expected_token}, got {actual}",
+        )
+    _mark_success(interp, target)
+    interp.out.step("    ✅", f"ASSERT_VALVE {target} == {expected}")
+    return StepStatus.PASSED
+
+
+# Dispatch table for ASSERT handlers: method -> handler function
+_ASSERT_HANDLERS: dict[str, callable] = {
+    "ASSERT_STATUS": _assert_status,
+    "ASSERT_JSON": _assert_json,
+    "ASSERT_SENSOR": _assert_sensor,
+    "ASSERT_VALVE": _assert_valve,
+}
+
+
 def exec_action_assert(interp: "CqlInterpreter", act: CqlAction) -> "StepStatus":
     """Execute ASSERT_* actions for dry-run diagnostics and API checks."""
     from oqlos.core.base import StepStatus
@@ -428,67 +554,9 @@ def exec_action_assert(interp: "CqlInterpreter", act: CqlAction) -> "StepStatus"
     method = str(act.method or "").upper()
     tokens = _drop_command_token(act)
 
-    if method == "ASSERT_STATUS":
-        expected = int(_coerce_expected_value(tokens[0] if tokens else 200) or 200)
-        actual = int(_coerce_expected_value(interp.vars.get("api.last.status")) or 0)
-        if actual != expected:
-            return _record_failure(interp, "api.status", f"Expected HTTP {expected}, got {actual}")
-        interp.out.step("    ✅", f"ASSERT_STATUS {expected}")
-        return StepStatus.PASSED
-
-    if method == "ASSERT_JSON":
-        if len(tokens) < 2:
-            return _record_failure(interp, "api.json", f"Malformed ASSERT_JSON: {act.raw}")
-        path = tokens[0]
-        operator = tokens[1] if len(tokens) > 2 else "=="
-        expected = tokens[2] if len(tokens) > 2 else tokens[1]
-        actual = _get_nested_value(interp.vars.get("api.last.response") or {}, path)
-        if not _compare_values(actual, operator, expected):
-            return _record_failure(
-                interp,
-                path,
-                f"ASSERT_JSON {path} {operator} {expected} failed for {actual}",
-            )
-        interp.out.step("    ✅", f"ASSERT_JSON {path} {operator} {expected}")
-        return StepStatus.PASSED
-
-    if method == "ASSERT_SENSOR":
-        if len(tokens) < 3:
-            return _record_failure(interp, "sensor", f"Malformed ASSERT_SENSOR: {act.raw}")
-        sensor, operator, raw_value = tokens[:3]
-        unit = tokens[3] if len(tokens) > 3 else ""
-        numeric = interp._coerce_float(raw_value)
-        cond = CqlCondition(
-            sensor=sensor,
-            operator=operator,
-            value=numeric,
-            unit=unit,
-            on_fail="ERROR",
-            fail_message=f"ASSERT_SENSOR failed: {sensor} {operator} {raw_value}",
-        )
-        status = interp._evaluate_condition(CqlAction(kind="condition", condition=cond, args=raw_value))
-        if status == StepStatus.PASSED:
-            _mark_success(interp, sensor)
-        else:
-            interp.vars.set(f"failure:{sensor}", True)
-        return status
-
-    if method == "ASSERT_VALVE":
-        if len(tokens) < 2:
-            return _record_failure(interp, "valve", f"Malformed ASSERT_VALVE: {act.raw}")
-        target, expected_token = tokens[:2]
-        actual = _lookup_peripheral_state(interp, target)
-        expected = _normalize_bool(expected_token)
-        actual_bool = _normalize_bool(actual)
-        if expected is None or actual_bool is None or actual_bool != expected:
-            return _record_failure(
-                interp,
-                target,
-                f"ASSERT_VALVE {target} expected {expected_token}, got {actual}",
-            )
-        _mark_success(interp, target)
-        interp.out.step("    ✅", f"ASSERT_VALVE {target} == {expected}")
-        return StepStatus.PASSED
+    handler = _ASSERT_HANDLERS.get(method)
+    if handler:
+        return handler(interp, act, tokens)
 
     return _record_failure(interp, method.lower(), f"Unsupported assert action: {act.raw}")
 

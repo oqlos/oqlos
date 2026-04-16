@@ -430,6 +430,41 @@ class CqlInterpreter(BaseInterpreter):
             return StepStatus.FAILED
         return StepStatus.WARNING
 
+    def _eval_condition_clause(
+        self,
+        token: str,
+        expression: str,
+    ) -> tuple[bool | None, str, StepStatus | None]:
+        """Evaluate a single condition clause (sensor op value).
+
+        Returns: (ok_result, description, error_status)
+            - ok_result: bool if successful, None if error
+            - description: string description of the condition
+            - error_status: StepStatus.ERROR if parsing failed, None if ok
+        """
+        match = self._INLINE_IF_CLAUSE_RE.match(token)
+        if not match:
+            self.out.warn(f"Unsupported IF expression: {expression}")
+            return None, "", StepStatus.ERROR
+
+        sensor = (match.group("sensor_quoted") or match.group("sensor_bracket") or "").strip()
+        operator = (match.group("op") or match.group("op_bracket") or "").strip()
+        raw_value = (match.group("value_quoted") or match.group("value_bracket") or "").strip()
+
+        threshold, unit = self._resolve_condition_rhs(raw_value, None, "")
+        if threshold is None:
+            self.out.warn(f"Could not resolve IF expression value: {raw_value}")
+            return None, "", StepStatus.ERROR
+
+        cond = CqlCondition(sensor=sensor, operator=operator, value=threshold, unit=unit)
+        val = self._resolve_sensor_value(sensor)
+
+        if self._sensor_eval._auto_mock and self.mode == "dry-run":
+            val = self._sensor_eval.auto_mock_sensor(sensor, cond, val)
+
+        ok, desc = self._sensor_eval.compare_sensor(sensor, cond, val)
+        return ok, desc, None
+
     def _evaluate_inline_condition_expression(
         self,
         expression: str,
@@ -453,24 +488,10 @@ class CqlInterpreter(BaseInterpreter):
                 descriptions.append(connector)
                 continue
 
-            match = self._INLINE_IF_CLAUSE_RE.match(token)
-            if not match:
-                self.out.warn(f"Unsupported IF expression: {expression}")
-                return StepStatus.ERROR
+            ok, desc, error = self._eval_condition_clause(token, expression)
+            if error:
+                return error
 
-            sensor = (match.group("sensor_quoted") or match.group("sensor_bracket") or "").strip()
-            operator = (match.group("op") or match.group("op_bracket") or "").strip()
-            raw_value = (match.group("value_quoted") or match.group("value_bracket") or "").strip()
-            threshold, unit = self._resolve_condition_rhs(raw_value, None, "")
-            if threshold is None:
-                self.out.warn(f"Could not resolve IF expression value: {raw_value}")
-                return StepStatus.ERROR
-
-            cond = CqlCondition(sensor=sensor, operator=operator, value=threshold, unit=unit)
-            val = self._resolve_sensor_value(sensor)
-            if self._sensor_eval._auto_mock and self.mode == "dry-run":
-                val = self._sensor_eval.auto_mock_sensor(sensor, cond, val)
-            ok, desc = self._sensor_eval.compare_sensor(sensor, cond, val)
             descriptions.append(desc)
 
             if result is None:

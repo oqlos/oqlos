@@ -1,0 +1,112 @@
+# vallm batch | 189f | 103✓ 6⚠ 23✗ | 2026-04-16
+
+SUMMARY:
+  scanned: 189  passed: 103 (54.5%)  warnings: 6  errors: 23  unsupported: 63
+
+WARNINGS[6]{path,score}:
+  oqlos/core/cql_parser.py,0.96
+    issues[3]{rule,severity,message,line}:
+      complexity.cyclomatic,warning,_try_hierarchy has cyclomatic complexity 18 (max: 15),325
+      complexity.maintainability,warning,Low maintainability index: 19.4 (threshold: 20),
+      complexity.lizard_cc,warning,_try_hierarchy: CC=18 exceeds limit 15,325
+  oqlos/dsl/schema.py,0.97
+    issues[1]{rule,severity,message,line}:
+      complexity.lizard_length,warning,get_default_dsl_schema: 163 lines exceeds limit 100,123
+  oqlos/core/_interpreter_actions.py,0.98
+    issues[1]{rule,severity,message,line}:
+      complexity.maintainability,warning,Low maintainability index: 1.7 (threshold: 20),
+  oqlos/core/interpreter.py,0.98
+    issues[1]{rule,severity,message,line}:
+      complexity.maintainability,warning,Low maintainability index: 14.1 (threshold: 20),
+  oqlos/tools/xml_import/generators.py,0.98
+    issues[1]{rule,severity,message,line}:
+      complexity.maintainability,warning,Low maintainability index: 13.3 (threshold: 20),
+  tests/firmware/test_tokenizer_extended.py,0.98
+    issues[1]{rule,severity,message,line}:
+      complexity.maintainability,warning,Low maintainability index: 17.4 (threshold: 20),
+
+ERRORS[23]{path,score}:
+  tests/firmware/test_safe_eval.py,0.79
+    issues[1]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'pytest' not found,13
+  oqlos/hardware/discovery.py,0.84
+    issues[3]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'pymodbus.client' not found,157
+      python.import.resolvable,error,Module 'serial.tools' not found,32
+      python.import.resolvable,error,Module 'pymodbus.client' not found,205
+  tests/firmware/test_normalize_scenario.py,0.86
+    issues[1]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'pytest' not found,11
+  tests/firmware/test_parser_cycle.py,0.86
+    issues[1]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'pytest' not found,5
+  oqlos/api/logs.py,0.89
+    issues[1]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'fastapi' not found,11
+  oqlos/api/plugins.py,0.89
+    issues[1]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'fastapi' not found,9
+  oqlos/core/state.py,0.89
+    issues[1]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'fastapi' not found,2
+  oqlos/shared/version_endpoint.py,0.89
+    issues[1]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'fastapi' not found,12
+  oqlos/api/execution.py,0.91
+    issues[2]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'fastapi' not found,2
+      python.import.resolvable,error,Module 'fastapi.responses' not found,3
+  oqlos/api/main.py,0.91
+    issues[4]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'fastapi' not found,10
+      python.import.resolvable,error,Module 'fastapi.middleware.cors' not found,11
+      python.import.resolvable,error,Module 'fastapi.responses' not found,12
+      python.import.resolvable,error,Module 'uvicorn' not found,13
+  oqlos/api/peripherals.py,0.91
+    issues[1]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'fastapi' not found,3
+  oqlos/shared/_endpoint_helpers.py,0.91
+    issues[1]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'fastapi.responses' not found,7
+  oqlos/api/state.py,0.93
+    issues[2]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'fastapi' not found,3
+      python.import.resolvable,error,Module 'fastapi.responses' not found,4
+  tests/test_cql_cli.py,0.93
+    issues[1]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'pytest' not found,9
+  tests/test_cql_scenarios.py,0.93
+    issues[1]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'pytest' not found,12
+  tests/test_oql_scenarios.py,0.93
+    issues[1]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'pytest' not found,12
+  oqlos/api/scenarios.py,0.94
+    issues[1]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'fastapi' not found,3
+  oqlos/api/editor.py,0.95
+    issues[1]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'fastapi' not found,9
+  oqlos/hardware/drivers/mqtt.py,0.95
+    issues[1]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'paho.mqtt.client' not found,12
+  oqlos/api/hardware.py,0.96
+    issues[1]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'fastapi' not found,14
+  oqlos/core/base.py,0.96
+    issues[1]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'websockets' not found,285
+  tests/firmware/test_lung_integration.py,0.96
+    issues[1]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'pytest' not found,14
+  tests/test_core.py,0.96
+    issues[1]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'pytest' not found,9
+
+UNSUPPORTED[6]{bucket,count}:
+  *.md,11
+  Dockerfile*,1
+  *.txt,1
+  *.yml,2
+  *.example,1
+  other,47

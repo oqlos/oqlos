@@ -1,0 +1,17 @@
+flowchart TD
+    oqlos__api["oqlos.api<br/>93 funcs"]
+    oqlos__config["oqlos.config<br/>1 funcs"]
+    oqlos__core["oqlos.core<br/>242 funcs"]
+    oqlos__dsl["oqlos.dsl<br/>6 funcs"]
+    oqlos__hardware["oqlos.hardware<br/>194 funcs"]
+    oqlos__shared["oqlos.shared<br/>44 funcs"]
+    oqlos__tools["oqlos.tools<br/>102 funcs"]
+    oqlos__tools ==>|12| oqlos__hardware
+    oqlos__api ==>|10| oqlos__hardware
+    oqlos__tools ==>|9| oqlos__core
+    oqlos__api ==>|7| oqlos__shared
+    oqlos__hardware ==>|4| oqlos__config
+    oqlos__api -->|2| oqlos__core
+    oqlos__hardware -->|1| oqlos__core
+    oqlos__shared -->|1| oqlos__core
+    oqlos__dsl -->|1| oqlos__core
