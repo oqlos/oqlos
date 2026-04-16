@@ -163,26 +163,32 @@ def run_cmd_mode(argv: list[str]) -> None:
     execute_command_with_cleanup(args, result, yaml_output, args.quiet)
 
 
-def main() -> None:
-    """Main entry point - dispatches to appropriate mode."""
-    argv = sys.argv[1:]
-
+def _dispatch_to_mode(argv: list[str]) -> None:
+    """Dispatch to appropriate CLI mode based on arguments."""
+    # Empty args - show help
     if not argv:
         create_file_parser().print_help()
         return
 
-    # Check for subcommand mode
-    if argv[0] == "cmd":
-        # Check if it's the "list" subcommand
-        if len(argv) >= 2 and argv[1] == "list":
-            handle_list_command(argv)
-            return
-        run_cmd_mode(argv[1:])
+    # Not cmd mode - file mode
+    if argv[0] != "cmd":
+        args = create_file_parser().parse_args()
+        run_file_mode(args)
         return
 
-    # File mode
-    args = create_file_parser().parse_args()
-    run_file_mode(args)
+    # cmd mode - check for list subcommand
+    if len(argv) >= 2 and argv[1] == "list":
+        handle_list_command(argv)
+        return
+
+    # Standard cmd mode
+    run_cmd_mode(argv[1:])
+
+
+def main() -> None:
+    """Main entry point - delegates to dispatcher."""
+    argv = sys.argv[1:]
+    _dispatch_to_mode(argv)
 
 
 if __name__ == "__main__":

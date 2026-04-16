@@ -322,11 +322,10 @@ class _ParseState:
         self.block_stack.append((parent_act, True))
         return True
 
-    def _try_hierarchy(self, stripped: str, line: str, indent: int) -> bool:
-        """Handle scenario/goal/step/action hierarchy.
+    def _try_handle_structure_levels(self, stripped: str, line: str, indent: int) -> bool | None:
+        """Try to handle scenario/goal/step structure levels.
 
-        Refactored from monolithic CC=40 function into orchestrator
-        calling focused handlers (each CC<10).
+        Returns True if handled, False if error, None if not a structure line.
         """
         # Scenario level
         if self._handle_scenario(stripped):
@@ -344,6 +343,57 @@ class _ParseState:
         if self._handle_step(line):
             return True
 
+        return None
+
+    def _handle_inline_if_logic(self, act, indent: int) -> bool | None:
+        """Handle pending inline-if attachment logic.
+
+        Returns True if action was handled (consumed), None if not applicable.
+        """
+        if self.pending_inline_if is None:
+            return None
+
+        if act.kind == "endif" and indent == self.pending_inline_if_indent:
+            self._flush_pending_inline_if(preserve_block=True)
+            return True
+
+        if self._attach_pending_inline_if(act, indent):
+            return True
+
+        self._flush_pending_inline_if()
+        return None
+
+    def _handle_action_dispatch(self, act, indent: int) -> bool:
+        """Dispatch action to appropriate handler (block-control, inline-if, or standard)."""
+        # Handle if_block actions (new inline-if or block-control)
+        if act.kind == "if_block":
+            next_indent = self._peek_next_significant_indent()
+            if next_indent is not None and next_indent > indent:
+                return self._handle_block_control(act)
+            self.pending_inline_if = act
+            self.pending_inline_if_indent = indent
+            return True
+
+        # Try block control (ELSE, LOOP, etc.)
+        if self._handle_block_control(act):
+            return True
+
+        # Standard action
+        self._add_action_to_parent(act)
+        return True
+
+    def _try_hierarchy(self, stripped: str, line: str, indent: int) -> bool:
+        """Handle scenario/goal/step/action hierarchy.
+
+        Refactored from monolithic CC=40 function into orchestrator
+        calling focused handlers (each CC<10).
+        """
+        # Structure levels (scenario/goal/step)
+        result = self._try_handle_structure_levels(stripped, line, indent)
+        if result is not None:
+            return result
+
+        # Need goal context for actions
         if not self.current_goal:
             return True
 
@@ -351,7 +401,7 @@ class _ParseState:
         if self.current_step is None:
             return False
 
-        # Action level
+        # Action level setup
         self._init_block_stack()
 
         temp_actions = []
@@ -362,29 +412,13 @@ class _ParseState:
 
         act = temp_actions[0]
 
-        if self.pending_inline_if is not None:
-            if act.kind == "endif" and indent == self.pending_inline_if_indent:
-                self._flush_pending_inline_if(preserve_block=True)
-                return True
-            if self._attach_pending_inline_if(act, indent):
-                return True
-            self._flush_pending_inline_if()
+        # Try pending inline-if attachment
+        inline_result = self._handle_inline_if_logic(act, indent)
+        if inline_result is not None:
+            return inline_result
 
-        if act.kind == "if_block":
-            next_indent = self._peek_next_significant_indent()
-            if next_indent is not None and next_indent > indent:
-                return self._handle_block_control(act)
-            self.pending_inline_if = act
-            self.pending_inline_if_indent = indent
-            return True
-
-        # Try block control first
-        if self._handle_block_control(act):
-            return True
-
-        # Standard action
-        self._add_action_to_parent(act)
-        return True
+        # Dispatch to appropriate action handler
+        return self._handle_action_dispatch(act, indent)
 
 
 def parse_cql(source: str, filename: str = "<string>") -> CqlDocument:
