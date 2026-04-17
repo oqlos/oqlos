@@ -313,27 +313,27 @@ def main() -> None:
         parser.print_help()
         sys.exit(1)
 
+    # Command dispatch table: reduces CC from 15 to ~4
+    _COMMAND_HANDLERS: dict[str, callable] = {
+        "list": cmd_list,
+        "status": cmd_status,
+        "capabilities": cmd_capabilities,
+        "validate": cmd_validate,
+        "connect": cmd_connect,
+        "disconnect": cmd_disconnect,
+        "health": cmd_health,
+        "execute": cmd_execute,
+        "reload": cmd_reload,
+        "peripherals": cmd_peripherals,
+    }
+
+    handler = _COMMAND_HANDLERS.get(args.command)
+    if handler is None:
+        parser.print_help()
+        sys.exit(1)
+
     async def run_command():
-        if args.command == "list":
-            await cmd_list(args)
-        elif args.command == "status":
-            await cmd_status(args)
-        elif args.command == "capabilities":
-            await cmd_capabilities(args)
-        elif args.command == "validate":
-            await cmd_validate(args)
-        elif args.command == "connect":
-            await cmd_connect(args)
-        elif args.command == "disconnect":
-            await cmd_disconnect(args)
-        elif args.command == "health":
-            await cmd_health(args)
-        elif args.command == "execute":
-            await cmd_execute(args)
-        elif args.command == "reload":
-            await cmd_reload(args)
-        elif args.command == "peripherals":
-            await cmd_peripherals(args)
+        await handler(args)
 
     asyncio.run(run_command())
 
