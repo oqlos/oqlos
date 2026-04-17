@@ -472,11 +472,27 @@ class CqlInterpreter(BaseInterpreter):
         on_fail: str = "",
         fail_message: str = "",
     ) -> StepStatus:
-        """Evaluate flat IF expressions, including OR/AND chains."""
-        tokens = [token for token in self._INLINE_IF_SPLIT_RE.split(str(expression or "").strip()) if token]
+        """Evaluate flat IF expressions, including OR/AND chains. CC≈8"""
+        tokens = self._tokenize_condition_expression(expression)
         if not tokens:
             return StepStatus.ERROR
 
+        result, descriptions = self._aggregate_condition_results(tokens, expression)
+        if result is None:
+            return StepStatus.ERROR
+
+        return self._finalize_condition_result(
+            result, descriptions, on_fail, fail_message or expression
+        )
+
+    def _tokenize_condition_expression(self, expression: str) -> list[str]:
+        """Split expression into tokens (clauses and AND/OR connectors)."""
+        return [token for token in self._INLINE_IF_SPLIT_RE.split(str(expression or "").strip()) if token]
+
+    def _aggregate_condition_results(
+        self, tokens: list[str], expression: str
+    ) -> tuple[bool | None, list[str]]:
+        """Evaluate all condition clauses and aggregate with AND/OR logic."""
         result: bool | None = None
         pending_connector = "AND"
         descriptions: list[str] = []
@@ -490,24 +506,33 @@ class CqlInterpreter(BaseInterpreter):
 
             ok, desc, error = self._eval_condition_clause(token, expression)
             if error:
-                return error
+                return None, descriptions
 
             descriptions.append(desc)
+            result = self._apply_connector(result, ok, pending_connector)
 
-            if result is None:
-                result = ok
-            elif pending_connector == "AND":
-                result = result and ok
-            else:
-                result = result or ok
+        return result, descriptions
 
+    def _apply_connector(self, current: bool | None, clause_result: bool, connector: str) -> bool:
+        """Apply AND/OR logic to combine condition results."""
+        if current is None:
+            return clause_result
+        if connector == "AND":
+            return current and clause_result
+        return current or clause_result
+
+    def _finalize_condition_result(
+        self, result: bool, descriptions: list[str], on_fail: str, fail_message: str
+    ) -> StepStatus:
+        """Emit output and return appropriate status based on final result."""
+        desc_str = " ".join(descriptions)
         if result:
-            self.out.step("    ✅", f"{' '.join(descriptions)} → PASS")
+            self.out.step("    ✅", f"{desc_str} → PASS")
             return StepStatus.PASSED
 
-        self.out.step("    ❌", f"{' '.join(descriptions)} → {on_fail}: {fail_message}")
+        self.out.step("    ❌", f"{desc_str} → {on_fail}: {fail_message}")
         if on_fail == "ERROR":
-            self.errors.append(fail_message or expression)
+            self.errors.append(fail_message)
             return StepStatus.FAILED
         return StepStatus.WARNING
 
