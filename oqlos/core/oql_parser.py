@@ -33,8 +33,8 @@ NUM = r"-?\d+(?:[.,]\d+)?"
 #: Duration: number optionally glued to a time unit (``3s``, ``500ms``, ``3000``).
 DUR_RE = re.compile(rf"^({NUM})(ms|s|m|h)?$")
 
-#: Header of a block: ``GOAL name:``, ``CONFIG name:``, ``MACRO name:``.
-BLOCK_RE = re.compile(r"^(GOAL|CONFIG|MACRO)(?:\s+(.+?))?:\s*$", re.IGNORECASE)
+#: Header of a block: ``GOAL name:``, ``CONFIG name:``, ``MACRO name:``, ``FUNC name:``.
+BLOCK_RE = re.compile(r"^(GOAL|CONFIG|MACRO|FUNC)(?:\s+(.+?))?:\s*$", re.IGNORECASE)
 
 #: Metadata line: ``KEY: value`` (KEY is UPPER_SNAKE).
 META_RE = re.compile(r"^([A-Z][A-Z0-9_]*)\s*:\s*(.+)$")
@@ -121,6 +121,9 @@ class OqlDoc:
 
     def macros(self) -> list[OqlBlock]:
         return [b for b in self.blocks if b.type == "MACRO"]
+
+    def funcs(self) -> list[OqlBlock]:
+        return [b for b in self.blocks if b.type == "FUNC"]
 
 
 # ── Conversion helpers ───────────────────────────────────────────
@@ -348,6 +351,11 @@ def parse_INCLUDE(tokens: list[str], ln: int, raw: str) -> OqlCmd:
     return OqlCmd("INCLUDE", {"path": tokens[0]}, ln, raw)
 
 
+def parse_FUNC_CALL(tokens: list[str], ln: int, raw: str) -> OqlCmd:
+    _require(tokens, 1, "FUNC", ln, '"func-name" [args...]')
+    return OqlCmd("FUNC", {"name": tokens[0], "args": tokens[1:]}, ln, raw)
+
+
 # ── Dispatch table ───────────────────────────────────────────────
 
 DISPATCHERS = {
@@ -364,6 +372,7 @@ DISPATCHERS = {
     "CORRECT": parse_CORRECT,
     "CALL":    parse_CALL,
     "INCLUDE": parse_INCLUDE,
+    "FUNC":    parse_FUNC_CALL,
 }
 
 #: Ordered list of canonical base commands (used by documentation tests).

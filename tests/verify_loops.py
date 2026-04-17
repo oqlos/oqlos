@@ -10,12 +10,12 @@ from oqlos.core.base import StepStatus
 def test_loops():
     print("Testing Block LOOP/ENDLOOP...")
     
-    scenario_path = os.path.join(os.path.dirname(__file__), 'scenarios', 'test_loops.cql')
+    scenario_path = os.path.join(os.path.dirname(__file__), 'scenarios', 'test_loops.oql')
     with open(scenario_path, 'r') as f:
         source = f.read()
     
     interpreter = CqlInterpreter(mode="dry-run")
-    parsed = interpreter.parse(source, "test_loops.cql")
+    parsed = interpreter.parse(source, "test_loops.oql")
     result = interpreter.execute(parsed)
     
     print(f"\nResult: {'SUCCESS' if result.ok else 'FAILURE'}")

@@ -10,14 +10,14 @@ from oqlos.core.base import StepStatus
 def test_block_if():
     print("Testing Block IF/ELSE/ENDIF...")
     
-    scenario_path = os.path.join(os.path.dirname(__file__), 'scenarios', 'test_block_if.cql')
+    scenario_path = os.path.join(os.path.dirname(__file__), 'scenarios', 'test_block_if.oql')
     with open(scenario_path, 'r') as f:
         source = f.read()
     
     # Run in dry-run mode
     # DEFAULT_MOCK_SENSORS: AI01 = -12.0
     interpreter = CqlInterpreter(mode="dry-run")
-    parsed = interpreter.parse(source, "test_block_if.cql")
+    parsed = interpreter.parse(source, "test_block_if.oql")
     result = interpreter.execute(parsed)
     
     print(f"\nResult: {'SUCCESS' if result.ok else 'FAILURE'}")
