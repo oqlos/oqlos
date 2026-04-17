@@ -43,19 +43,21 @@ oqlos-server --port 8200
 OQLOS_HARDWARE_MODE=mock oqlos-server --port 8200
 ```
 
-### Run a Scenario
+### Run a Scenario (OQL v3 — flat syntax)
 
 ```python
 from oqlos.core.interpreter import CqlInterpreter
 
 source = """
-SCENARIO: "Test"
-DEVICE_TYPE: "BA"
-GOAL: Check
-  SET 'pompa 1' '5.0 l/min'
-  IF 'AI01' > '0.5 V'
-    SAVE 'high_voltage'
-  ENDIF
+SCENARIO: Test
+DEVICE_TYPE: BA
+
+GOAL check:
+  SET pompa-1 5.0 l/min
+  WAIT 500ms
+  GET AI01
+  CHECK 0.5 <= AI01 <= 0.8 V
+  SAVE high-voltage
 """
 
 interp = CqlInterpreter(mode="dry-run")
@@ -63,28 +65,31 @@ result = interp.run(source, "test.oql")
 print(result.ok)  # True if successful
 ```
 
+OQL v3 is a flat, quote-free syntax with 12 base commands
+(`SET`, `GET`, `WAIT`, `SAVE`, `CHECK`, `MIN`, `MAX`, `SAMPLE`, `LOG`,
+`ERROR`, `CALL`, `INCLUDE`).  See `docs/oql-spec.md` for the full
+specification and `oqlos/scenarios/OQL-CHEATSHEET.md` for a quick
+reference.  The interpreter still parses legacy v1/v2 scripts with
+quoted identifiers for backward compatibility.
+
 ## Package Structure
 
 ```
 oqlos/
-├── core/               # Parser, executor, state machine, interpreter
-│   ├── interpreter.py  # CqlInterpreter main execution engine
-│   ├── parser.py       # OQL language parser
-│   └── cql_parser.py   # Legacy CQL parser support
-├── models/             # Data models
-│   ├── scenario.py     # Scenario definition models
-│   ├── execution.py    # Execution state models
-│   └── peripheral.py   # Hardware peripheral models
-├── hardware/           # Hardware abstraction
-│   ├── gateway.py      # Hardware gateway interface
-│   ├── modbus/         # Modbus communication
-│   └── drivers/        # Device drivers
-├── api/                # REST API
-│   ├── server.py       # FastAPI application
-│   └── routes/         # API endpoints
-├── executor/           # Scenario execution logic
-├── scenarios/          # Sample .oql scenario files
-└── shared/             # Utilities (logger, config, version)
+├── core/
+│   ├── interpreter.py   # CqlInterpreter — main execution engine
+│   ├── oql_parser.py    # OQL v3 flat parser (12 base commands)
+│   ├── _oql_adapter.py  # v3 AST → legacy CqlDocument bridge (+ INCLUDE/MACRO)
+│   ├── cql_parser.py    # Legacy v1/v2 parser (dispatches to v3 on detection)
+│   └── …
+├── models/              # Data models (dsl_models, scenario, execution, peripheral)
+├── hardware/            # Hardware abstraction (Modbus, HTTP adapters, …)
+├── api/                 # FastAPI REST server and routes
+├── executor/            # Scenario execution helpers
+├── scenarios/           # Scenario files (.oql) — all in v3 flat syntax
+│   ├── lib/             # Macro libraries (hardware.oql, peripherals.oql)
+│   └── examples/        # Didactic examples
+└── shared/              # Utilities (logger, config, version)
 ```
 
 ## Core Components
@@ -111,18 +116,22 @@ result = interp.run(source_code, filename)
 
 ### Parser
 
-Two-phase parsing pipeline:
+Auto-detecting parser pipeline:
 
-1. **Raw Parser** — Converts OQL text to structured blocks
-2. **CQL Parser** — Processes blocks into executable commands
+1. `parse_cql(source, filename)` first checks the source with
+   `is_flat_oql()`.
+2. If the source uses v3 flat grammar (`GOAL name:`, no quotes,
+   `INCLUDE "..."`), it dispatches to `parse_flat_oql()` which returns a
+   legacy `CqlDocument` via `oqlos/core/_oql_adapter.py`
+   (`INCLUDE` + `MACRO`/`CALL` expansion happens here).
+3. Otherwise the legacy state-machine parser handles it.
 
 ```python
-from oqlos.core.parser import parse_scenario
-from oqlos.core.cql_parser import CqlParser
+from oqlos.core.cql_parser import parse_cql
+from oqlos.core.oql_parser import parse_oql
 
-blocks = parse_scenario(source)
-parser = CqlParser(blocks)
-scenario = parser.parse()
+doc = parse_cql(source, "test.oql")      # either path
+raw = parse_oql(source, "test.oql")      # just the v3 AST (OqlDoc)
 ```
 
 ## API Endpoints
@@ -136,153 +145,130 @@ When running `oqlos-server`:
 | `/api/scenarios/{id}/run` | POST | Execute a scenario |
 | `/health` | GET | Health check |
 
-## OQL Scenario Format
+## OQL Scenario Format (v3 Flat Syntax)
 
-OQL scenarios define hardware testing procedures declaratively:
+OQL scenarios describe hardware tests with a minimal set of **12 base
+commands**: `SET`, `GET`, `WAIT`, `SAVE`, `CHECK`, `MIN`, `MAX`, `SAMPLE`,
+`LOG`, `ERROR`, `CALL`, `INCLUDE` — plus block headers `GOAL`, `CONFIG`
+and `MACRO`.  Full specification: `docs/oql-spec.md`.
 
 ```oql
-SCENARIO: "PSS 7000 Mask Test"
-DEVICE_TYPE: "BA"
-DEVICE_MODEL: "PSS 7000"
-MANUFACTURER: "Dräger"
+SCENARIO: PSS 7000 Mask Test
+DEVICE_TYPE: BA
+DEVICE_MODEL: PSS 7000
+MANUFACTURER: Dräger
 
-@Namespace.ScenarioName
-  intervals: [tt#000, tt#001]
+INCLUDE "lib/peripherals.oql"
 
-GOAL: Visual Inspection
-  # Nowa płaska składnia (Flat DSL)
-  SET 'valve-nc' '1 (open)'
-  WAIT '2.0 s'
-  
-  IF 'AI01' >= '0.60 V'
-    IF 'AI01' <= '0.67 V'
-      SAVE 'nc_voltage_reading'
-    ELSE
-      ERROR "NC sensor voltage too high"
-    ENDIF
-  ELSE
-    ERROR "NC sensor voltage too low"
-  ENDIF
+CONFIG reset:
+  CALL init-all
+
+GOAL visual-inspection:
+  SET valve-nc 1
+  WAIT 2s
+  GET AI01
+  CHECK 0.60 <= AI01 <= 0.67 V
+  SAVE nc-voltage-reading
 ```
 
-### CONFIG Blocks (Configuration Goals)
+Key rules:
 
-Use `CONFIG:` for hardware initialization and setup procedures. CONFIG blocks are semantically identical to GOAL blocks but marked with `[CONFIG]` prefix for clarity in logs and documentation.
+- **Identifiers are bare** — no surrounding quotes
+  (`pump-main`, not `'pump-main'`).  For names with spaces use brackets:
+  `SET [pompa głównego obiegu] 5 l/min`.
+- **Block headers use the `NAME:` form** — `GOAL test-pressure:` instead
+  of `GOAL: test pressure`.
+- **No `IF/ELSE/ENDIF`** — use `CHECK min <= sensor <= max unit` for
+  range assertions, or split into multiple `GOAL` blocks for sequencing.
+- **Unicode is welcome** — `ciśnienie-NC`, `°C`, `%RH`, `μV`, `m³/h` …
 
-#### Basic CONFIG Example
+### CONFIG Blocks
+
+`CONFIG` blocks are semantically identical to `GOAL` but marked
+`[CONFIG]` in logs — convention for initialization and cleanup:
 
 ```oql
-SCENARIO: "System Startup"
-DEVICE_TYPE: "BA"
+SCENARIO: System Startup
+DEVICE_TYPE: BA
 
-CONFIG: Safety Initialization
-  # Always disable pump on startup
-  SET 'pump-main' '0 l/min (off)'
-  SET 'PUMP' 'off'
-  WAIT '500 ms'
+INCLUDE "lib/peripherals.oql"
 
-CONFIG: Valve Reset
-  # Close all valves to known state
-  SET 'valve-nc' '0 (closed)'
-  SET 'valve-sc' '0 (closed)'
-  SET 'valve-wc' '0 (closed)'
-  WAIT '300 ms'
+CONFIG safety-initialization:
+  CALL init-pump
+  CALL init-valves-main
+  WAIT 500ms
 
-CONFIG: Pump Calibration
+CONFIG pump-calibration:
   # 10 l/min corresponds to 100% PWM by default
-  SET 'PUMP_FLOW_FULL_SCALE_LPM' '10.0'
+  SET PUMP_FLOW_FULL_SCALE_LPM 10.0
 
-GOAL: Voltage Test
-  SET 'valve-nc' '1 (open)'
-  WAIT '1.0 s'
-  VAL 'AI01' 'V'
-  SAVE 'voltage_test'
+GOAL voltage-test:
+  SET valve-nc 1
+  WAIT 1s
+  GET AI01
+  SAVE voltage-test
 ```
 
-#### Configuration File: config-peripherals.oql
+### Macros and INCLUDE
 
-Full peripheral initialization scenario:
+Reusable sequences live in `oqlos/scenarios/lib/` and are pulled in with
+`INCLUDE`.  Positional arguments use `$1`, `$2`, … placeholders:
 
 ```oql
-SCENARIO: 'Konfiguracja Peryferii'
-DEVICE_TYPE: 'BA'
-DEVICE_MODEL: 'PSS 7000'
-MANUFACTURER: 'Dräger'
+INCLUDE "lib/hardware.oql"
 
-# ============================================
-# PUMP INITIALIZATION
-# ============================================
-CONFIG: INIT Pompa
-  SET 'pump-main' '0 l/min'
-  SET 'pompa 1' '0 l/min'
-  SET 'PUMP' 'off'
-  WAIT '500 ms'
+MACRO pump-ramp:
+  SET pump-main $1 l/min
+  WAIT $2
+  SET pump-main 0
 
-# ============================================
-# VALVE INITIALIZATION
-# ============================================
-CONFIG: INIT Zawory NC
-  SET 'valve-nc' '0 (closed)'
-  SET 'zawór NC' '0 (closed)'
-  WAIT '300 ms'
-
-CONFIG: INIT Zawory SC
-  SET 'valve-sc' '0 (closed)'
-  SET 'zawór SC' '0 (closed)'
-  WAIT '300 ms'
-
-CONFIG: INIT Zawory ogólne
-  SET 'valve-1' '0'
-  SET 'valve-2' '0'
-  SET 'valve-3' '0'
-  SET 'valve-4' '0'
-  WAIT '500 ms'
-
-# ============================================
-# SYSTEM READY STATE
-# ============================================
-CONFIG: STATE Ready
-  SAVE 'system_ready'
-  WAIT '1000 ms'
+GOAL smoke:
+  CALL pump-ramp 5 2s
+  CALL hw-valves-smoke
+  CALL hw-sensors-baseline
 ```
 
-#### Running Configuration
+### Running Scenarios
 
 ```bash
 # Dry-run (validate and simulate)
-oqlctl run scenarios/config-peripherals.oql --mode dry-run
+oqlctl scenarios/config-peripherals.oql --mode dry-run
 
 # Execute on real hardware
-oqlctl run scenarios/config-peripherals.oql --mode execute
+oqlctl scenarios/config-peripherals.oql --mode execute
 
 # Execute with custom firmware URL
-oqlctl run scenarios/config-peripherals.oql \
+oqlctl scenarios/config-peripherals.oql \
   --firmware-url http://localhost:8202 \
   --mode execute
 
-# Fastest single-command hardware execution
-oqlctl cmd "SET 'pompa 1' '0'"
+# Fastest single-command hardware execution (v3 syntax)
+oqlctl cmd "SET pompa-1 0"
 
 # Single command without touching hardware
-oqlctl cmd "SET 'pompa 1' '0'" --mode dry-run
+oqlctl cmd "SET pompa-1 0" --mode dry-run
+
+# Validate every .oql in a directory tree
+oqlctl --validate-dir oqlos/scenarios
 ```
 
-Use `cmd` when you want to send just one OQL line to the firmware. Use `run` when the action requires multiple steps.
+Use `cmd` when you want to send a single OQL line to the firmware;
+use a file path when the action requires multiple steps.
 
 #### CLI Output Example
 
 ```
-📋 CQL: 'Konfiguracja Peryferii'
-🔧 Device: 'BA' / 'PSS 7000'
-🎯 GOAL: [CONFIG] INIT Pompa
-  ⚙️ SET [pump-main] = [0 l/min]
-  ⚙️ SET [pompa 1] = [0 l/min]
+📋 CQL: Konfiguracja Peryferii
+🔧 Device: BA / PSS 7000
+🎯 GOAL: [CONFIG] init-pompa
+  ⚙️ SET [pump-main] = [0]
+  ⚙️ SET [pompa-1] = [0]
   ⏳ WAIT 0.5s
-  ✅ [passed] [CONFIG] INIT Pompa
-🎯 GOAL: [CONFIG] INIT Zawory NC
-  ⚙️ SET [valve-nc] = [0 (closed)]
+  ✅ [passed] [CONFIG] init-pompa
+🎯 GOAL: [CONFIG] init-zawory-nc
+  ⚙️ SET [valve-nc] = [0]
   ...
-✅ 'Konfiguracja Peryferii': 255/255 passed
+✅ Konfiguracja Peryferii: 10/10 passed
 ```
 
 ## Supported Hardware

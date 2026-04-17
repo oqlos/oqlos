@@ -1,87 +1,55 @@
-SCENARIO: 'Test Zaworu'
-DEVICE_TYPE: 'BA'
-DEVICE_MODEL: 'PSS 7000'
-MANUFACTURER: 'Dräger'
+SCENARIO: Test Zaworu
+DEVICE_TYPE: BA
+DEVICE_MODEL: PSS 7000
+MANUFACTURER: Dräger
 
-GOAL: Test odczytu zaworu NC
-  # Otwórz zawór NC
-  SET 'zawór NC' '1'
-  WAIT '500 ms'
-  
-  VAL 'AI01' 'V'
-  IF 'AI01' < '0.60'
-    ELSE ERROR 'Zawór NC nie mieści się w oczekiwanym zakresie (za niski)'
-  ENDIF
-  IF 'AI01' > '0.67'
-    ELSE ERROR 'Zawór NC nie mieści się w oczekiwanym zakresie (za wysoki)'
-  ENDIF
-  SAVE 'cisnienie_nc_otwarte'
+# Oczekiwane okna napięciowe (kalibracja piADC):
+#   AI01 (NC): 0.60 – 0.67 V
+#   AI02 (SC): 0.73 – 0.78 V
+#   AI03 (WC): 0.86 – 0.91 V
 
-GOAL: Test odczytu zaworu NC po zamknięciu
-  # Zamknij zawór NC
-  SET 'zawór NC' '0'
-  WAIT '500 ms'
-  
-  VAL 'AI01' 'V'
-  IF 'AI01' < '0.60'
-    ELSE ERROR 'Zawór NC po zamknięciu nie mieści się w oczekiwanym zakresie'
-  ENDIF
-  IF 'AI01' > '0.67'
-    ELSE ERROR 'Zawór NC po zamknięciu nie mieści się w oczekiwanym zakresie'
-  ENDIF
-  SAVE 'cisnienie_nc_zamkniete'
+GOAL test-odczytu-nc-otwarty:
+  SET valve-nc 1
+  WAIT 500ms
+  CHECK 0.60 <= AI01 <= 0.67 V
+  CORRECT 'Napięcie NC w zakresie kalibracji (otwarty)'
+  ERROR 'Błąd: napięcie NC poza zakresem 0.60-0.67 V (zawór otwarty)'
+  SAVE cisnienie-nc-otwarte
 
-GOAL: Test odczytu zaworu SC
-  # Otwórz zawór SC
-  SET 'zawór SC' '1'
-  WAIT '500 ms'
+GOAL test-odczytu-nc-zamkniety:
+  SET valve-nc 0
+  WAIT 500ms
+  CHECK 0.60 <= AI01 <= 0.67 V
+  CORRECT 'Napięcie NC w zakresie kalibracji (zamknięty)'
+  ERROR 'Błąd: napięcie NC poza zakresem 0.60-0.67 V (zawór zamknięty)'
+  SAVE cisnienie-nc-zamkniete
 
-  VAL 'AI02' 'V'
-  IF 'AI02' < '0.73'
-    ELSE ERROR 'Zawór SC nie mieści się w oczekiwanym zakresie'
-  ENDIF
-  IF 'AI02' > '0.78'
-    ELSE ERROR 'Zawór SC nie mieści się w oczekiwanym zakresie'
-  ENDIF
-  SAVE 'cisnienie_sc_otwarte'
+GOAL test-odczytu-sc-otwarty:
+  SET valve-sc 1
+  WAIT 500ms
+  CHECK 0.73 <= AI02 <= 0.78 V
+  CORRECT 'Napięcie SC w zakresie kalibracji (otwarty)'
+  ERROR 'Błąd: napięcie SC poza zakresem 0.73-0.78 V (zawór otwarty)'
+  SAVE cisnienie-sc-otwarte
 
-GOAL: Test odczytu zaworu SC po zamknięciu
-  # Zamknij zawór SC
-  SET 'zawór SC' '0'
-  WAIT '500 ms'
+GOAL test-odczytu-sc-zamkniety:
+  SET valve-sc 0
+  WAIT 500ms
+  CHECK 0.73 <= AI02 <= 0.78 V
+  CORRECT 'Napięcie SC w zakresie kalibracji (zamknięty)'
+  ERROR 'Błąd: napięcie SC poza zakresem 0.73-0.78 V (zawór zamknięty)'
+  SAVE cisnienie-sc-zamkniete
 
-  VAL 'AI02' 'V'
-  IF 'AI02' < '0.73'
-    ELSE ERROR 'Zawór SC po zamknięciu nie mieści się w oczekiwanym zakresie'
-  ENDIF
-  IF 'AI02' > '0.78'
-    ELSE ERROR 'Zawór SC po zamknięciu nie mieści się w oczekiwanym zakresie'
-  ENDIF
-  SAVE 'cisnienie_sc_zamkniete'
-
-GOAL: Test stabilności zaworu WC
-  # Otwórz zawór WC
-  SET 'zawór WC' '1'
-  WAIT '1000 ms'
-  
-  VAL 'AI03' 'V'
-  IF 'AI03' < '0.86'
-    ELSE ERROR 'Zawór WC nie mieści się w oczekiwanym zakresie'
-  ENDIF
-  IF 'AI03' > '0.91'
-    ELSE ERROR 'Zawór WC nie mieści się w oczekiwanym zakresie'
-  ENDIF
-  SAVE 'cisnienie_wc_poczatek'
-  
-  # Zamknij i obserwuj
-  SET 'zawór WC' '0'
-  WAIT '3000 ms'
-  
-  VAL 'AI03' 'V'
-  IF 'AI03' < '0.86'
-    ELSE ERROR 'Zawór WC po zamknięciu nie mieści się w oczekiwanym zakresie'
-  ENDIF
-  IF 'AI03' > '0.91'
-    ELSE ERROR 'Zawór WC po zamknięciu nie mieści się w oczekiwanym zakresie'
-  ENDIF
-  SAVE 'cisnienie_wc_koniec'
+GOAL test-stabilności-wc:
+  SET valve-wc 1
+  WAIT 1s
+  CHECK 0.86 <= AI03 <= 0.91 V
+  CORRECT 'Napięcie WC w zakresie kalibracji (początek)'
+  ERROR 'Błąd: napięcie WC poza zakresem 0.86-0.91 V'
+  SAVE cisnienie-wc-poczatek
+  SET valve-wc 0
+  WAIT 3s
+  CHECK 0.86 <= AI03 <= 0.91 V
+  CORRECT 'Napięcie WC w zakresie kalibracji (stabilność)'
+  ERROR 'Błąd: napięcie WC poza zakresem 0.86-0.91 V (brak stabilności)'
+  SAVE cisnienie-wc-koniec

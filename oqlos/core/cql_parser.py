@@ -422,7 +422,19 @@ class _ParseState:
 
 
 def parse_cql(source: str, filename: str = "<string>") -> CqlDocument:
-    """Parse CQL source into AST."""
+    """Parse CQL source into AST.
+
+    When the source uses the v3 flat OQL grammar (``GOAL name:``, unquoted
+    identifiers, no ``IF/ENDIF``), dispatch to the new parser via the
+    OQL→CQL adapter.  Legacy quoted-string CQL sources fall through to the
+    original state-based parser.
+    """
+    # Local import avoids a circular dependency at module load time.
+    from ._oql_adapter import is_flat_oql, parse_flat_oql
+
+    if is_flat_oql(source):
+        return parse_flat_oql(source, filename)
+
     doc = CqlDocument(filename=filename)
     lines = source.split("\n")
     state = _ParseState(doc, lines)

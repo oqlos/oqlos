@@ -1,45 +1,46 @@
-GOAL: Przygotowanie testu ciśnieniowego
-  SET 'pompa próżniowa' '1'
-  SET 'pompa ciśnieniowa' '1'
-  SET 'czujnik próżni' '1'
-  SET 'czujnik niskiego ciśnienia' '1'
-  SET 'czujnik wysokiego ciśnienia' '1'
-  SET 'zakres_prozni' '-1000..0 mbar'
-  SET 'zakres_niski' '0..50 mbar'
-  SET 'zakres_wysoki' '50..2000 mbar'
-  SET 'zawór izolacyjny' '1'
-GOAL: Test próżni
-  SET 'pompa próżniowa' '1'
-  SAMPLE 'ciśnienie' 'START' '50 ms'
-  SET 'target_proznia' '-950 mbar'
-  WAIT '30 s'
-  VAL 'ciśnienie' 'mbar'
-  MIN 'ciśnienie' '-1000 mbar'
-  MAX 'ciśnienie' '-900 mbar'
-  IF 'ciśnienie' < '-900'
-  ELSE ERROR 'Nie osiągnięto wymaganej próżni'
-  SET 'pompa próżniowa' '0'
-GOAL: Test niskiego ciśnienia
-  SET 'pompa ciśnieniowa' '1'
-  SET 'target_niskie' '30 mbar'
-  WAIT '10 s'
-  VAL 'cn' 'mbar'
-  MIN 'cn' '25 mbar'
-  MAX 'cn' '35 mbar'
-  IF 'cn' < '25' OR 'cn' > '35'
-  ELSE ERROR 'Ciśnienie poza zakresem niskim'
-GOAL: Test wysokiego ciśnienia
-  SET 'zakres' 'wysoki'
-  SET 'target_wysokie' '500 mbar'
-  WAIT '10 s'
-  VAL 'cw' 'mbar'
-  MIN 'cw' '480 mbar'
-  MAX 'cw' '520 mbar'
-  IF 'cw' < '480' OR 'cw' > '520'
-  ELSE ERROR 'Ciśnienie poza zakresem wysokim'
-  SET 'pompa ciśnieniowa' '0'
-  SET 'zawór izolacyjny' '0'
-GOAL: Podsumowanie
-  FUNC 'zakres_dynamiki' = 'SUB' 'cw,cn'
-  SAVE 'zakres_dynamiki' 'raport'
-  SET 'raport pełny' '1'
+SCENARIO: Pełny test ciśnieniowy z przełączaniem zakresów
+DESCRIPTION: Sekwencja próżnia -> niskie -> wysokie ciśnienie.
+
+CONFIG przygotowanie:
+  SET pompa-próżniowa 1
+  SET pompa-ciśnieniowa 1
+  SET czujnik-próżni 1
+  SET czujnik-niskiego-ciśnienia 1
+  SET czujnik-wysokiego-ciśnienia 1
+  SET zawór-izolacyjny 1
+
+GOAL test-próżni:
+  SET pompa-próżniowa 1
+  SAMPLE ciśnienie START 50ms
+  WAIT 30s
+  SAMPLE ciśnienie STOP
+  GET ciśnienie
+  SAVE p-prozni
+  CHECK -1000 <= ciśnienie <= -900 mbar
+  CORRECT 'Próżnia w normie (-1000 do -900 mbar)'
+  ERROR 'Błąd: próżnia poza zakresem -1000 do -900 mbar'
+  SET pompa-próżniowa 0
+
+GOAL test-niskiego-ciśnienia:
+  SET pompa-ciśnieniowa 1
+  WAIT 10s
+  GET ciśnienie-niskie
+  SAVE cn
+  CHECK 25 <= ciśnienie-niskie <= 35 mbar
+  CORRECT 'Niskie ciśnienie w normie (25-35 mbar)'
+  ERROR 'Błąd: niskie ciśnienie poza zakresem 25-35 mbar'
+
+GOAL test-wysokiego-ciśnienia:
+  SET multiplekser 2
+  WAIT 10s
+  GET ciśnienie-wysokie
+  SAVE cw
+  CHECK 480 <= ciśnienie-wysokie <= 520 mbar
+  CORRECT 'Wysokie ciśnienie w normie (480-520 mbar)'
+  ERROR 'Błąd: wysokie ciśnienie poza zakresem 480-520 mbar'
+  SET pompa-ciśnieniowa 0
+  SET zawór-izolacyjny 0
+
+GOAL podsumowanie:
+  LOG "Test ciśnieniowy zakończony"
+  SAVE raport-pełny

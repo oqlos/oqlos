@@ -1,26 +1,32 @@
-GOAL: Inicjalizacja pomiaru kaskadowego
-  SET 'czujnik niskiego ciśnienia' '1'
-  SET 'czujnik wysokiego ciśnienia' '1'
-  SET 'zakres_niski' '0..50 mbar'
-  SET 'zakres_wysoki' '50..1000 mbar'
-  SET 'próg_przełączenia' '45 mbar'
-GOAL: Pomiar w zakresie niskim
-  SET 'pompa 1' '1'
-  SAMPLE 'ciśnienie_niskie' 'START' '100 ms'
-  WAIT '5 s'
-  VAL 'cn' 'mbar'
-  IF 'cn' > 'próg_przełączenia'
-  GOTO 'Pomiar w zakresie wysokim'
-  MIN 'cn' '0 mbar'
-  MAX 'cn' '50 mbar'
-GOAL: Pomiar w zakresie wysokim
-  SET 'multiplekser' 'zakres_wysoki'
-  SAMPLE 'ciśnienie_wysokie' 'START' '100 ms'
-  WAIT '5 s'
-  VAL 'cw' 'mbar'
-  MIN 'cw' '50 mbar'
-  MAX 'cw' '1000 mbar'
-GOAL: Raport
-  FUNC 'p_max' = 'MAX' 'cn,cw'
-  FUNC 'p_min' = 'MIN' 'cn,cw'
-  SET 'raport kaskadowy' '1'
+SCENARIO: Kaskadowy pomiar ciśnienia
+DESCRIPTION: Przełączanie zakresów pomiarowych (niski/wysoki).
+
+CONFIG init-pomiar-kaskadowy:
+  SET czujnik-niskiego-ciśnienia 1
+  SET czujnik-wysokiego-ciśnienia 1
+
+GOAL pomiar-zakres-niski:
+  SET pompa-1 1
+  SAMPLE ciśnienie-niskie START 100ms
+  WAIT 5s
+  SAMPLE ciśnienie-niskie STOP
+  GET ciśnienie-niskie
+  SAVE cn
+  CHECK 0 <= ciśnienie-niskie <= 50 mbar
+  CORRECT 'Pomiar zakresu niskiego OK (0-50 mbar)'
+  ERROR 'Błąd: pomiar zakresu niskiego poza zakresem'
+
+GOAL pomiar-zakres-wysoki:
+  SET multiplekser 2
+  SAMPLE ciśnienie-wysokie START 100ms
+  WAIT 5s
+  SAMPLE ciśnienie-wysokie STOP
+  GET ciśnienie-wysokie
+  SAVE cw
+  CHECK 50 <= ciśnienie-wysokie <= 1000 mbar
+  CORRECT 'Pomiar zakresu wysokiego OK (50-1000 mbar)'
+  ERROR 'Błąd: pomiar zakresu wysokiego poza zakresem'
+
+GOAL raport-kaskadowy:
+  LOG "Zakresy cn/cw pomierzone — raport gotowy"
+  SAVE raport-kaskadowy

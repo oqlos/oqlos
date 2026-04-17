@@ -1,0 +1,79 @@
+
+<style>
+.w{padding:2px 0}
+.sec{font-size:11px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.06em;margin:16px 0 8px}
+.code{background:var(--color-background-tertiary);border:.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:10px 12px;margin:0 0 8px}
+.cl{font-size:10px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.06em;margin:0 0 6px;font-family:var(--font-sans)}
+pre{margin:0;font-family:var(--font-mono);font-size:11.5px;line-height:1.75;white-space:pre;color:var(--color-text-primary)}
+.kw{color:#3B8BD4;font-weight:500}
+.id{color:#639922}
+.nu{color:#BA7517}
+.un{color:#9F77DD}
+.cm{color:var(--color-text-tertiary);font-style:italic}
+.op{color:#D85A30}
+.er{color:#E24B4A}
+.ok{color:#1D9E75}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 8px}
+.annot{display:flex;align-items:baseline;gap:6px;margin:3px 0}
+.ac{font-family:var(--font-mono);font-size:11.5px;white-space:pre}
+.ad{font-family:var(--font-sans);font-size:11px;color:var(--color-text-secondary)}
+.tag{display:inline-block;font-size:10px;padding:1px 6px;border-radius:3px;font-weight:500;margin-left:4px;font-family:var(--font-sans)}
+.t-kw{background:var(--color-background-info);color:var(--color-text-info)}
+.t-id{background:var(--color-background-success);color:var(--color-text-success)}
+.t-nu{background:var(--color-background-warning);color:var(--color-text-warning)}
+.t-un{color:#7F77DD;background:#EEEDFE}
+</style>
+<div class="w">
+<div class="sec">Gramatyka — 4 tokeny, każdy inny typ</div>
+<div class="code">
+<div class="cl">Anatomia linii OQL</div>
+<pre>
+<span class="kw">SET</span>   <span class="id">pump-main</span>   <span class="nu">5.0</span>   <span class="un">l/min</span>
+ │         │          │       │
+ │         │          │       └─ <span class="tag t-un">UNIT</span>  opcjonalny, może mieć /
+ │         │          └───────── <span class="tag t-nu">VALUE</span> liczba (int lub float, może być ujemna)
+ │         └──────────────────── <span class="tag t-id">TARGET</span> identyfikator (litery, cyfry, -)
+ └────────────────────────────── <span class="tag t-kw">CMD</span>   zawsze UPPERCASE
+
+<span class="kw">MIN</span>   <span class="id">AI02</span>        <span class="nu">6.0</span>   <span class="un">bar</span>      <span class="cm">← ta sama struktura co SET</span>
+<span class="kw">WAIT</span>  <span class="nu">3</span><span class="un">s</span>                            <span class="cm">← VALUE+UNIT sklejone (bez spacji)</span>
+<span class="kw">WAIT</span>  <span class="nu">3000</span>                          <span class="cm">← gołe ms (domyślna jednostka)</span>
+<span class="kw">READ</span>  <span class="id">AI02</span>                          <span class="cm">← tylko TARGET</span>
+<span class="kw">SAVE</span>  <span class="id">cisnienie_sc</span>                  <span class="cm">← tylko TARGET</span>
+<span class="kw">CHECK</span> <span class="nu">6.0</span> <span class="op">&lt;=</span> <span class="id">AI02</span> <span class="op">&lt;=</span> <span class="nu">8.0</span> <span class="un">bar</span>      <span class="cm">← specjalna składnia</span>
+</pre>
+</div>
+
+<div class="sec">Reguły tokenizacji — każda komenda zna swoją strukturę</div>
+<div class="grid2">
+<div class="code">
+<div class="cl">Znane struktury argumentów</div>
+<pre><span class="kw">SET</span>    → <span class="tag t-id">TARGET</span> <span class="tag t-nu">VALUE</span> [<span class="tag t-un">UNIT</span>]
+<span class="kw">MIN</span>    → <span class="tag t-id">TARGET</span> <span class="tag t-nu">VALUE</span> <span class="tag t-un">UNIT</span>
+<span class="kw">MAX</span>    → <span class="tag t-id">TARGET</span> <span class="tag t-nu">VALUE</span> <span class="tag t-un">UNIT</span>
+<span class="kw">WAIT</span>   → <span class="tag t-nu">DURATION</span>        <span class="cm">(3s|3000ms|3000)</span>
+<span class="kw">READ</span>   → <span class="tag t-id">TARGET</span>
+<span class="kw">SAVE</span>   → <span class="tag t-id">TARGET</span>
+<span class="kw">SAMPLE</span> → <span class="tag t-id">TARGET</span> START|STOP [<span class="tag t-nu">INTERVAL</span>]
+<span class="kw">CHECK</span>  → <span class="tag t-nu">MIN</span> &lt;= <span class="tag t-id">TARGET</span> &lt;= <span class="tag t-nu">MAX</span> <span class="tag t-un">UNIT</span>
+<span class="kw">ERROR</span>  → <span class="cm">"message string"</span>
+<span class="kw">GOAL</span>   → <span class="cm">name:</span>   <span class="cm">(blok)</span>
+<span class="kw">CONFIG</span> → <span class="cm">name:</span>   <span class="cm">(blok)</span></pre>
+</div>
+<div class="code">
+<div class="cl">Reguły wartości</div>
+<pre><span class="cm"># VALUE: liczba (int lub float)</span>
+<span class="nu">0</span>    <span class="nu">5.0</span>    <span class="nu">-10.5</span>    <span class="nu">145</span>
+
+<span class="cm"># UNIT: jeden token po VALUE</span>
+<span class="un">bar</span>   <span class="un">mbar</span>   <span class="un">l/min</span>   <span class="un">°C</span>   <span class="un">%RH</span>
+
+<span class="cm"># DURATION: VALUE sklejone z UNIT</span>
+<span class="nu">3</span><span class="un">s</span>  <span class="nu">500</span><span class="un">ms</span>  <span class="nu">60</span><span class="un">s</span>  <span class="nu">3000</span> <span class="cm">(=ms)</span>
+
+<span class="cm"># TARGET: identyfikator</span>
+<span class="id">pump-main</span>  <span class="id">AI02</span>  <span class="id">valve-nc</span>
+<span class="id">cisnienie_sc</span>  <span class="id">test-result</span></pre>
+</div>
+</div>
+</div>

@@ -1,49 +1,59 @@
-# Hardware Testing Examples (OQL/CQL)
+# Hardware Testing Examples (OQL v3 Flat Syntax)
 
-This section provides practical examples of the hardware testing DSL used for medical device diagnostics.
+Practical examples of the v3 flat OQL used for medical device
+diagnostics.  Identifiers are bare; range assertions replace `IF/ENDIF`.
 
 ## Example: Static Pressure Test
-Demonstrates standard initialization and sensor validation.
 
 ```oql
-SCENARIO: 'Static Pressure Check'
-DEVICE_TYPE: 'BA'
+SCENARIO: Static Pressure Check
+DEVICE_TYPE: BA
 
-GOAL: Initialization
-  SET 'PUMP' '0 l/min'
-  SET 'valve-nc' '0'
-  WAIT '500 ms'
+CONFIG initialization:
+  SET pump-main 0
+  SET valve-nc 0
+  WAIT 500ms
 
-GOAL: Pressure Measurement
-  SET 'valve-nc' '1'
-  WAIT '2.0 s'
-  
-  IF 'AI01' > '6.0 bar'
-    LOG "Pressure OK"
-    SAVE 'static_pressure'
-  ELSE
-    ERROR "Insufficient pressure"
-  ENDIF
+GOAL pressure-measurement:
+  SET valve-nc 1
+  WAIT 2s
+  GET AI01
+  CHECK 6.0 <= AI01 <= 8.0 bar
+  SAVE static-pressure
 ```
 
 ## Example: Continuous Sampling
-Using the `SAMPLE` command for background telemetry.
 
 ```oql
-GOAL: Dynamic Flow Test
-  SAMPLE 'AI01' 'START' '100 ms'
-  SET 'PUMP' '10.0 l/min'
-  WAIT '5.0 s'
-  
-  VAL 'AI01' 'mbar'
-  SAMPLE 'AI01' 'STOP'
-  
-  IF 'AI01' < '5.0 mbar'
-    ERROR "Flow resistance too high"
-  ENDIF
+GOAL dynamic-flow-test:
+  SAMPLE AI01 START 100ms
+  SET pump-main 10.0 l/min
+  WAIT 5s
+  SAMPLE AI01 STOP
+  GET AI01
+  SAVE flow-reading
+  MIN AI01 5.0 mbar
+```
+
+## Example: Macro Library Usage
+
+```oql
+INCLUDE "lib/hardware.oql"
+INCLUDE "lib/peripherals.oql"
+
+CONFIG reset:
+  CALL init-all
+
+GOAL smoke:
+  CALL hw-pump-smoke
+  CALL hw-valves-smoke
+  CALL hw-sensors-baseline
 ```
 
 ---
 
 ## Technical Reference
-For full language details, see [OQL Language Specification v2.0](oql-spec.md).
+
+- Full language details: [OQL v3 Specification](oql-spec.md).
+- Visual anatomy: [`docs/oql-grammar-anatomy.html`](oql-grammar-anatomy.html).
+- Quick reference: `oqlos/scenarios/OQL-CHEATSHEET.md`.

@@ -1,0 +1,114 @@
+app {
+  name: "oqlos";
+  version: "0.1.1";
+}
+
+entity[name="ExecutionStatus"] {
+
+}
+
+entity[name="CommandEnvelope"] {
+
+}
+
+entity[name="Step"] {
+
+}
+
+entity[name="ValidationRule"] {
+
+}
+
+entity[name="Goal"] {
+
+}
+
+entity[name="Scenario"] {
+
+}
+
+entity[name="Peripheral"] {
+
+}
+
+interface[type="api"] {
+  type: rest;
+  framework: fastapi;
+}
+
+interface[type="cli"] {
+  framework: argparse;
+}
+interface[type="cli"] page[name="oqlctl"] {
+
+}
+
+integration[name="modbus"] {
+  type: "hardware";
+}
+
+workflow[name="install"] {
+  trigger: "manual";
+  step-1: run cmd=pip install -e .[dev];
+}
+
+workflow[name="test"] {
+  trigger: "manual";
+  step-1: run cmd=pytest -q;
+}
+
+workflow[name="build"] {
+  trigger: "manual";
+  step-1: run cmd=python -m build;
+}
+
+workflow[name="health"] {
+  trigger: "manual";
+  step-1: run cmd=docker compose ps;
+  step-2: run cmd=docker compose exec app echo "Health check passed";
+}
+
+workflow[name="clean"] {
+  trigger: "manual";
+  step-1: run cmd=rm -rf build/ dist/ *.egg-info;
+}
+
+deploy {
+  target: docker-compose;
+  compose_file: docker/docker-compose.dev.yml;
+}
+
+environment[name="local"] {
+  runtime: docker-compose;
+  env_file: ".env";
+}
+
+environment[name="dev"] {
+  runtime: docker-compose;
+}
+
+environment[name="prod"] {
+  runtime: docker-compose;
+}
+
+workflow[name="all"] {
+  trigger: "manual";
+  step-1: run cmd=taskfile run install;
+  step-2: run cmd=taskfile run lint;
+  step-3: run cmd=taskfile run test;
+}
+
+workflow[name="help"] {
+  trigger: "manual";
+  step-1: run cmd=taskfile list;
+}
+
+workflow[name="lint"] {
+  trigger: "manual";
+  step-1: run cmd=ruff check .;
+}
+
+workflow[name="fmt"] {
+  trigger: "manual";
+  step-1: run cmd=ruff format .;
+}

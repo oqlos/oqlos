@@ -33,6 +33,7 @@ class CqlCondition:
     unit: str = ""
     on_fail: str = ""        # ERROR, PASS, WAIT
     fail_message: str = ""
+    pass_message: str = ""     # Message shown when CHECK passes
 
 @dataclass
 class CqlAction:

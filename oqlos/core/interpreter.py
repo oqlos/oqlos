@@ -556,7 +556,8 @@ class CqlInterpreter(BaseInterpreter):
 
             ok, desc = self._sensor_eval.compare_sensor(sensor, cond, val)
             if ok:
-                self.out.step("    ✅", f"{desc} → PASS")
+                pass_msg = f" → {cond.pass_message}" if cond.pass_message else " → PASS"
+                self.out.step("    ✅", f"{desc}{pass_msg}")
                 return StepStatus.PASSED
 
             self.out.step("    ❌", f"{desc} → {cond.on_fail}: {cond.fail_message}")

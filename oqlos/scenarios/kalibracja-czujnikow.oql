@@ -1,38 +1,45 @@
-GOAL: Kalibracja punktu zero
-  SET 'moduł kalibracyjny' '1'
-  SET 'ciśnienie odniesienia' '0 mbar'
-  SAMPLE 'czujnik_1' 'START' '500 ms'
-  SAMPLE 'czujnik_2' 'START' '500 ms'
-  WAIT '5 s'
-  VAL 'offset_1' 'mbar'
-  VAL 'offset_2' 'mbar'
-  FUNC 'korekta_1' = 'SUB' '0,offset_1'
-  FUNC 'korekta_2' = 'SUB' '0,offset_2'
-  SAVE 'korekta_1' 'kalibracja'
-  SAVE 'korekta_2' 'kalibracja'
-  SET 'moduł kalibracyjny' '0'
-GOAL: Kalibracja punktu odniesienia
-  SET 'ciśnienie odniesienia' '100 mbar'
-  SET 'pompa kalibracyjna' '1'
-  SAMPLE 'czujnik_1' 'START' '500 ms'
-  SAMPLE 'czujnik_2' 'START' '500 ms'
-  WAIT '5 s'
-  VAL 'gain_1' 'mbar'
-  VAL 'gain_2' 'mbar'
-  FUNC 'wspolczynnik_1' = 'DIV' '100,gain_1'
-  FUNC 'wspolczynnik_2' = 'DIV' '100,gain_2'
-  SAVE 'wspolczynnik_1' 'kalibracja'
-  SAVE 'wspolczynnik_2' 'kalibracja'
-  SET 'pompa kalibracyjna' '0'
-GOAL: Weryfikacja kalibracji
-  SET 'pompa testowa' '1'
-  SET 'cisnienie_testowe' '50 mbar'
-  WAIT '3 s'
-  VAL 'odczyt_1' 'mbar'
-  VAL 'odczyt_2' 'mbar'
-  MIN 'odczyt_1' '48 mbar'
-  MAX 'odczyt_1' '52 mbar'
-  MIN 'odczyt_2' '48 mbar'
-  MAX 'odczyt_2' '52 mbar'
-  SET 'pompa testowa' '0'
-  SET 'certyfikat kalibracji' '1'
+SCENARIO: Kalibracja czujników ciśnienia
+
+GOAL kalibracja-punkt-zero:
+  SET moduł-kalibracyjny 1
+  SET ciśnienie-odniesienia 0 mbar
+  SAMPLE czujnik-1 START 500ms
+  SAMPLE czujnik-2 START 500ms
+  WAIT 5s
+  SAMPLE czujnik-1 STOP
+  SAMPLE czujnik-2 STOP
+  GET czujnik-1
+  SAVE offset-1
+  GET czujnik-2
+  SAVE offset-2
+  SET moduł-kalibracyjny 0
+
+GOAL kalibracja-punkt-odniesienia:
+  SET ciśnienie-odniesienia 100 mbar
+  SET pompa-kalibracyjna 1
+  SAMPLE czujnik-1 START 500ms
+  SAMPLE czujnik-2 START 500ms
+  WAIT 5s
+  SAMPLE czujnik-1 STOP
+  SAMPLE czujnik-2 STOP
+  GET czujnik-1
+  SAVE gain-1
+  GET czujnik-2
+  SAVE gain-2
+  SET pompa-kalibracyjna 0
+
+GOAL weryfikacja-kalibracji:
+  SET pompa-testowa 1
+  WAIT 3s
+  GET czujnik-1
+  SAVE odczyt-1
+  GET czujnik-2
+  SAVE odczyt-2
+  CHECK 48 <= czujnik-1 <= 52 mbar
+  CORRECT 'Czujnik 1 kalibracja OK (48-52 mbar)'
+  ERROR 'Błąd: czujnik 1 poza zakresem kalibracji'
+  CHECK 48 <= czujnik-2 <= 52 mbar
+  CORRECT 'Czujnik 2 kalibracja OK (48-52 mbar)'
+  ERROR 'Błąd: czujnik 2 poza zakresem kalibracji'
+  SET pompa-testowa 0
+  SAVE certyfikat-kalibracji

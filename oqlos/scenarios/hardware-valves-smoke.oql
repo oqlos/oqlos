@@ -1,22 +1,18 @@
-SCENARIO: 'Hardware Valves Smoke Test'
-DEVICE_TYPE: 'BA'
-DEVICE_MODEL: 'PSS 7000'
-MANUFACTURER: 'Dräger'
+SCENARIO: Hardware Valves Smoke Test
+DEVICE_TYPE: BA
+DEVICE_MODEL: PSS 7000
+MANUFACTURER: Dräger
 
-GOAL: Test zaworów modbus
-  # Otwórz i zamknij zawór NC
-  SET 'zawór NC' '1'
-  WAIT '200 ms'
-  SET 'zawór NC' '0'
-  WAIT '200 ms'
-  
-  # Otwórz i zamknij zawór SC
-  SET 'zawór SC' '1'
-  WAIT '200 ms'
-  SET 'zawór SC' '0'
-  WAIT '200 ms'
-  
-  # Otwórz i zamknij zawór WC
-  SET 'zawór WC' '1'
-  WAIT '200 ms'
-  SET 'zawór WC' '0'
+GOAL smoke-test-modbus-valves:
+  LOG "Cykl NC -> SC -> WC"
+  SET valve-nc 1
+  WAIT 200ms
+  SET valve-nc 0
+  WAIT 200ms
+  SET valve-sc 1
+  WAIT 200ms
+  SET valve-sc 0
+  WAIT 200ms
+  SET valve-wc 1
+  WAIT 200ms
+  SET valve-wc 0

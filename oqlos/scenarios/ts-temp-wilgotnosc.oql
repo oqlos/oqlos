@@ -1,40 +1,25 @@
 # Test temperatury i wilgotności
 # Category: env
 
-GOAL: Pomiar warunków środowiskowych
-  SET 'czujnik temperatury' '1'
-  SET 'czujnik wilgotności' '1'
-  
-  SAMPLE 'temperatura' 'START' '1000 ms'
-  SAMPLE 'wilgotnosc' 'START' '1000 ms'
-  WAIT '10 s'
-  
-  VAL 'temperatura' '°C'
-  VAL 'wilgotnosc' '%RH'
-  
-  SAMPLE 'temperatura' 'STOP'
-  SAMPLE 'wilgotnosc' 'STOP'
-  
-  MIN 'temperatura' '15 °C'
-  MAX 'temperatura' '25 °C'
-  MIN 'wilgotnosc' '30 %RH'
-  MAX 'wilgotnosc' '70 %RH'
-  
-  IF 'temperatura' < '15.0'
-    ELSE ERROR 'Temperatura poniżej dopuszczalnego minimum'
-  ENDIF
-  
-  IF 'temperatura' > '25.0'
-    ELSE ERROR 'Temperatura powyżej dopuszczalnego maksimum'
-  ENDIF
-  
-  IF 'wilgotnosc' < '30.0'
-    ELSE ERROR 'Wilgotność poniżej dopuszczalnego minimum'
-  ENDIF
-  
-  IF 'wilgotnosc' > '70.0'
-    ELSE ERROR 'Wilgotność powyżej dopuszczalnego maksimum'
-  ENDIF
-  
-  SET 'czujnik temperatury' '0 (off)'
-  SET 'czujnik wilgotności' '0 (off)'
+SCENARIO: Pomiar warunków środowiskowych
+
+GOAL pomiar-temp-wilgotność:
+  SET czujnik-temperatury 1
+  SET czujnik-wilgotności 1
+  SAMPLE temperatura START 1s
+  SAMPLE wilgotność START 1s
+  WAIT 10s
+  SAMPLE temperatura STOP
+  SAMPLE wilgotność STOP
+  GET temperatura
+  SAVE temperatura
+  GET wilgotność
+  SAVE wilgotność
+  CHECK 15 <= temperatura <= 25 °C
+  CORRECT 'Temperatura w normie (15-25°C)'
+  ERROR 'Błąd: temperatura poza zakresem 15-25°C'
+  CHECK 30 <= wilgotność <= 70 %RH
+  CORRECT 'Wilgotność w normie (30-70%RH)'
+  ERROR 'Błąd: wilgotność poza zakresem 30-70%RH'
+  SET czujnik-temperatury 0
+  SET czujnik-wilgotności 0

@@ -1,116 +1,100 @@
-GOAL: Test wizualny aparatu
-  VAL 'wynik' 'OK/NOK'
+SCENARIO: PSS 7000 — Test przez adapter
 
-GOAL: Podłącz złącza średniego ciśnienia
-  # Akcja manualna
+GOAL test-wizualny:
+  LOG "Inspekcja wizualna aparatu"
+  SAVE wynik-wizualny
 
-GOAL: Otwórz zawór butli
-  # Akcja manualna
+GOAL podłącz-złącza-sc:
+  LOG "Akcja manualna: podłącz złącza średniego ciśnienia"
 
-GOAL: Podłącz adapter
-  # Akcja manualna
+GOAL otwórz-zawór-butli:
+  LOG "Akcja manualna: otwórz zawór butli"
 
-GOAL: Podłącz automat oddechowy
-  # Akcja manualna
+GOAL podłącz-adapter:
+  LOG "Akcja manualna: podłącz adapter"
 
-GOAL: Test statyczny średniego ciśnienia
-  SET 'PUMP' '0 l/min'
-  SET 'timeout' '3 s'
-  SET 'timer' '0 s'
-  IF 'timer' > 'timeout'
-    MIN 'ciśnienie SC' '6.0 bar'
-    MAX 'ciśnienie SC' '8.0 bar'
-    VAL 'ciśnienie SC' 'bar'
-    SAVE 'ciśnienie SC'
-  ENDIF
+GOAL podłącz-automat-oddechowy:
+  LOG "Akcja manualna: podłącz automat oddechowy"
 
-GOAL: Zmiana średniego ciśnienia po 1 min
-  SET 'PUMP' '0 l/min'
-  SET 'czas pomiaru' '60 s'
-  SET 'timer' '0 s'
-  WAIT '60 s'
-  MIN 'delta ciśnienia SC' '-0.3 bar'
-  MAX 'delta ciśnienia SC' '0.6 bar'
-  VAL 'delta ciśnienia SC' 'bar'
-  SAVE 'delta ciśnienia SC'
+GOAL test-statyczny-sc:
+  SET pump-main 0
+  WAIT 3s
+  GET AI02
+  SAVE ciśnienie-sc
+  CHECK 6.0 <= AI02 <= 8.0 bar
+  CORRECT 'Ciśnienie SC w normie (6-8 bar) - adapter'
+  ERROR 'Błąd: ciśnienie SC poza zakresem 6-8 bar (adapter)'
 
-GOAL: Ciśnienie otwarcia automatu oddechowego
-  SET 'PUMP' '5.0 l/min'
-  SET 'zawór BO06' '1'
-  SET 'timeout' '8 s'
-  SET 'timer' '0 s'
-  IF 'timer' > 'timeout'
-    MIN 'ciśnienie NC' '-29.0 mbar'
-    MAX 'ciśnienie NC' '-5.0 mbar'
-    VAL 'ciśnienie NC' 'AI01'
-    SAVE 'ciśnienie NC min'
-  ENDIF
+GOAL zmiana-sc-po-1-min:
+  SET pump-main 0
+  WAIT 60s
+  GET AI02
+  SAVE delta-ciśnienia-sc
+  CHECK -0.3 <= AI02 <= 0.6 bar
+  CORRECT 'Delta ciśnienia SC w normie (adapter)'
+  ERROR 'Błąd: przekroczona delta ciśnienia SC (adapter)'
 
-GOAL: Test nadciśnienia statycznego
-  SET 'PUMP' '0 l/min'
-  SET 'timeout' '10 s'
-  SET 'timer' '0 s'
-  IF 'timer' > 'timeout'
-    MIN 'nadciśnienie' '2.0 mbar'
-    MAX 'nadciśnienie' '3.9 mbar'
-    VAL 'nadciśnienie' 'mbar'
-    SAVE 'nadciśnienie'
-  ENDIF
+GOAL ciśnienie-otwarcia-automatu:
+  SET pump-main 5.0 l/min
+  SET valve-bo06 1
+  WAIT 8s
+  GET AI01
+  SAVE ciśnienie-nc-min
+  CHECK -29.0 <= AI01 <= -5.0 mbar
+  CORRECT 'Ciśnienie otwarcia automatu w normie (adapter)'
+  ERROR 'Błąd: ciśnienie otwarcia poza zakresem (adapter)'
 
-GOAL: Zamknij zawór butli
-  SET 'zawór butli 300 bar' '0'
+GOAL test-nadciśnienia-statycznego:
+  SET pump-main 0
+  WAIT 10s
+  GET nadciśnienie
+  SAVE nadciśnienie
+  CHECK 2.0 <= nadciśnienie <= 3.9 mbar
+  CORRECT 'Nadciśnienie statyczne w normie (adapter)'
+  ERROR 'Błąd: nadciśnienie poza zakresem (adapter)'
 
-GOAL: Test szczelności układu WC
-  SET 'PUMP' '0 l/min'
-  SET 'czas obserwacji' '5 s'
-  SET 'timer' '0 s'
-  WAIT '5 s'
-  SAVE 'wynik operatora'
+GOAL zamknij-zawór-butli:
+  SET zawór-butli-300bar 0
 
-GOAL: Kontrola spadku ciśnienia WC
-  SET 'czas pomiaru' '60 s'
-  SET 'timer' '0 s'
-  WAIT '60 s'
-  MAX 'spadek ciśnienia' '10 bar'
-  VAL 'spadek ciśnienia' 'bar'
-  SAVE 'czas pomiaru'
+GOAL test-szczelności-wc:
+  SET pump-main 0
+  WAIT 5s
+  SAVE wynik-operatora
 
-GOAL: Test sygnału akustycznego 50-60 bar
-  SET 'PUMP' '5.0 l/min'
-  SET 'zawór BO06' '1'
-  MIN 'ciśnienie NC' '0.0 mbar'
-  VAL 'ciśnienie NC' 'AI01'
-  SAVE 'wynik sygnału'
+GOAL kontrola-spadku-wc:
+  WAIT 60s
+  GET spadek-ciśnienia
+  SAVE spadek-ciśnienia
+  MAX spadek-ciśnienia 10 bar
 
-GOAL: Wyłącz automat oddechowy
-  SET 'automat oddechowy' '0 (off)'
+GOAL test-sygnału-akustycznego:
+  SET pump-main 5.0 l/min
+  SET valve-bo06 1
+  WAIT 2s
+  GET AI01
+  SAVE wynik-sygnału
+  MIN AI01 0.0 mbar
 
-GOAL: Wytworzenie nadciśnienia
-  SET 'PUMP' '5.0 l/min'
-  SET 'zawór BO05' '1'
-  SET 'timeout' '20 s'
-  SET 'timer' '0 s'
-  IF 'timer' > 'timeout'
-    MAX 'ciśnienie NC' '12.0 mbar'
-    VAL 'ciśnienie NC' 'AI01'
-  ENDIF
+GOAL wyłącz-automat-oddechowy:
+  SET automat-oddechowy 0
 
-GOAL: Test szczelności automatu - pomiar początkowy
-  SET 'PUMP' '0 l/min'
-  SET 'zawór BO04' '1'
-  SET 'timeout' '15 s'
-  SET 'timer' '0 s'
-  IF 'timer' > 'timeout'
-    MIN 'ciśnienie NC początkowe' '7.5 mbar'
-    VAL 'ciśnienie NC' 'AI01'
-  ENDIF
+GOAL wytworzenie-nadciśnienia:
+  SET pump-main 5.0 l/min
+  SET valve-bo05 1
+  WAIT 20s
+  GET AI01
+  MAX AI01 12.0 mbar
 
-GOAL: Test szczelności automatu - pomiar końcowy
-  SET 'czas stabilizacji' '60 s'
-  SET 'timer' '0 s'
-  WAIT '60 s'
-  MIN 'ciśnienie NC końcowe' '6.5 mbar'
-  VAL 'ciśnienie NC' 'AI01'
-  IF 'ciśnienie NC' < '6.5 mbar'
-    SAVE 'ciśnienie NC'
-  ENDIF
+GOAL szczelność-automatu-start:
+  SET pump-main 0
+  SET valve-bo04 1
+  WAIT 15s
+  GET AI01
+  SAVE ciśnienie-nc-początkowe
+  MIN AI01 7.5 mbar
+
+GOAL szczelność-automatu-koniec:
+  WAIT 60s
+  GET AI01
+  SAVE ciśnienie-nc-końcowe
+  MIN AI01 6.5 mbar

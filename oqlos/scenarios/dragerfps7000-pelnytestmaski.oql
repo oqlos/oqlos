@@ -1,50 +1,47 @@
-GOAL: Pełny test maski
-  SET 'pompa 1' '0'
-  SET 'Operator' 'confirm'
-  SAVE 'operator.result'
-  SET 'valve-sc' 'open'
-  SET 'pompa 1' '5 l/min'
-  
-  IF 'Timer' ≤ '7.0'
-    SET 'valve-nc' 'open'
-    SET 'pompa 1' '5 l/min'
-    
-    IF 'AI01' ≥ '-11.0 mbar'
-      IF 'Timer' ≤ '10.0'
-        SET 'pompa 1' '0 l/min'
-        
-        IF 'Timer' ≤ '10.0'
-          SET 'valve-nc' 'closed'
-          SET 'pompa 1' '0 l/min'
-          
-          IF 'AI01' ≤ '-10.1 mbar'
-            IF 'Timer' ≤ '20.0'
-              SET 'pompa 1' '0 l/min'
-              
-              IF 'AI01' ≤ '-9.0 mbar'
-                SAVE 'AI01.value'
-                
-                IF 'Timer' ≤ '60.0'
-                  SET 'valve-sc' 'open'
-                  SET 'pompa 1' '10 l/min'
-                  
-                  IF 'Timer' ≤ '5.0'
-                    SET 'valve-sc' 'open'
-                    SET 'pompa 1' '10 l/min'
-                    MIN 'AI01' '4.2 mbar'
-                    SAVE 'AI01'
-                    SET 'valve-nc' 'open'
-                    SET 'pompa 1' '5 l/min'
-                    
-                    IF 'Timer' ≤ '7.0'
-                      # Koniec ścieżki pomyślnej
-                    ENDIF
-                  ENDIF
-                ENDIF
-              ENDIF
-            ENDIF
-          ENDIF
-        ENDIF
-      ENDIF
-    ENDIF
-  ENDIF
+SCENARIO: Dräger FPS 7000 — Pełny test maski (sekwencyjny)
+DESCRIPTION: Płaska wersja — każdy etap osobnym GOAL; brak IF/ENDIF.
+
+GOAL faza-0-potwierdzenie-operatora:
+  LOG "Akcja manualna: potwierdź gotowość"
+  SET pump-main 0
+  SAVE wynik-operatora
+
+GOAL faza-1-podciśnienie:
+  SET valve-sc 1
+  SET pump-main 5 l/min
+  WAIT 7s
+  SET valve-nc 1
+  SET pump-main 5 l/min
+  WAIT 10s
+  GET AI01
+  MIN AI01 -11.0 mbar
+
+GOAL faza-2-stabilizacja:
+  SET pump-main 0 l/min
+  WAIT 10s
+  SET valve-nc 0
+  GET AI01
+  MAX AI01 -10.1 mbar
+
+GOAL faza-3-szczelność-maski:
+  SET pump-main 0 l/min
+  WAIT 20s
+  GET AI01
+  SAVE szczelność-maska
+  MAX AI01 -9.0 mbar
+
+GOAL faza-4-zawór-wydechowy:
+  SET valve-sc 1
+  SET pump-main 10 l/min
+  WAIT 5s
+  GET AI01
+  CHECK 4.2 <= AI01 <= 6.0 mbar
+  CORRECT 'Ciśnienie zaworu wydechowego OK (4.2-6.0 mbar)'
+  ERROR 'Błąd: ciśnienie zaworu wydechowego poza zakresem'
+  SAVE ciśnienie-wydechu
+
+GOAL faza-5-wyjście:
+  SET valve-nc 1
+  SET pump-main 5 l/min
+  WAIT 7s
+  SET pump-main 0

@@ -1,45 +1,27 @@
-GOAL: Przygotowanie testu wytrzymałości
-  SET 'próbka' '1 (ok)'
-  SET 'czujnik siły' '1'
-  SET 'czujnik przemieszczenia' '1'
-  SET 'siła_max' '1000 N'
-  SET 'cykle' '100'
-  SET 'prędkość' '10 mm/s'
+SCENARIO: Test wytrzymałości mechanicznej
+DESCRIPTION: Pojedynczy cykl obciążenia/odciążenia — pętla cykli jest sterowana z zewnątrz.
 
-GOAL: Test cykliczny
-  SET 'siłownik' '1'
-  SET 'pozycja_docelowa' '50 mm'
-  WAIT '1 s'
-  
-  VAL 'siła_aktualna' 'N'
-  VAL 'pozycja_aktualna' 'mm'
-  
-  MIN 'siła_aktualna' '0 N'
-  MAX 'siła_aktualna' '1100 N'
-  
-  IF 'siła_aktualna' > '1100.0'
-    ELSE ERROR 'Przekroczono maksymalną siłę'
-  ENDIF
-  
-  SET 'pozycja_docelowa' '0 mm'
-  WAIT '1 s'
-  
-  # Increment logic is external or handled by FUNC
-  FUNC 'cykl_aktualny' = 'SUM' 'cykl_aktualny, 1'
-  
-  IF 'cykl_aktualny' < 'cykle'
-    GOTO 'Test cykliczny'
-  ELSE
-    # Zakończono cykle testowe
-  ENDIF
+CONFIG przygotowanie:
+  SET próbka 1
+  SET czujnik-siły 1
+  SET czujnik-przemieszczenia 1
 
-GOAL: Ocena wyniku
-  VAL 'cykle_wykonane' 'szt'
-  MIN 'cykle_wykonane' '100 szt'
-  
-  IF 'cykle_wykonane' < '100.0'
-    ELSE ERROR 'Nie wykonano wymaganej liczby cykli'
-  ENDIF
-  
-  SET 'siłownik' '0 (off)'
-  SET 'raport wytrzymałości' '1 (generated)'
+GOAL cykl-pojedynczy:
+  SET siłownik 1
+  SET pozycja-docelowa 50 mm
+  WAIT 1s
+  GET siła-aktualna
+  SAVE siła-aktualna
+  GET pozycja-aktualna
+  SAVE pozycja-aktualna
+  CHECK 0 <= siła-aktualna <= 1100 N
+  CORRECT 'Siła w zakresie wytrzymałości (0-1100 N)'
+  ERROR 'Błąd: siła poza zakresem wytrzymałości'
+  SET pozycja-docelowa 0 mm
+  WAIT 1s
+
+GOAL ocena-wyniku:
+  GET cykle-wykonane
+  MIN cykle-wykonane 100 szt
+  SET siłownik 0
+  SAVE raport-wytrzymałości

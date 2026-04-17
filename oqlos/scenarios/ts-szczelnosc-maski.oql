@@ -1,14 +1,12 @@
 SCENARIO: Test szczelności maski
 CATEGORY: env
 
-GOAL: Test szczelności maski
-  SET 'pompa podciśnieniowa' '1'
-  SET 'podciśnienie' '-10.0 mbar'
-  SET 'czas' '60 s'
-  WAIT '60 s'
-  
-  MIN 'szczelność' '95 %'
-  MAX 'szczelność' '100 %'
-  VAL 'szczelność' '%'
-  
-  SET 'pompa podciśnieniowa' '0 (off)'
+GOAL test-szczelności:
+  SET pompa-podciśnieniowa 1
+  WAIT 60s
+  CHECK 95 <= szczelność <= 100 %
+  CORRECT 'Szczelność maski OK (95-100%)'
+  ERROR 'Błąd: szczelność maski poniżej 95%'
+  GET szczelność
+  SAVE szczelność-maska
+  SET pompa-podciśnieniowa 0

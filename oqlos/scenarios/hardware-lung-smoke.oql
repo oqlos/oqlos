@@ -1,11 +1,11 @@
-SCENARIO: 'Hardware Lung Smoke Test'
-DEVICE_TYPE: 'BA'
-DEVICE_MODEL: 'PSS 7000'
-MANUFACTURER: 'Dräger'
+SCENARIO: Hardware Lung Smoke Test
+DEVICE_TYPE: BA
+DEVICE_MODEL: PSS 7000
+MANUFACTURER: Dräger
 
-GOAL: Test płuca tic249
-  # Uruchom płuca na krótko
-  SET 'pluco' '2.0'
-  WAIT '1500 ms'
-  # Zatrzymaj płuca
-  SET 'pluco' '0.0'
+GOAL smoke-test-tic249:
+  LOG "Uruchamiam silnik płuca"
+  SET lung-main 2.0
+  WAIT 1500ms
+  SET lung-main 0
+  LOG "Zatrzymano"

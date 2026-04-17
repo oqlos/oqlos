@@ -1,36 +1,44 @@
 # C202 Example scenario
 # Category: other
 
-GOAL: Kontrola Wizualna
-  VAL 'wynik' 'OK/NOK'
-GOAL: Test Szczelności
-  VAL 'ciśnienie NC' 'AI01'
-  MIN 'ciśnienie NC' '-10 mbar'
-  MAX 'ciśnienie NC' '0 mbar'
-  SAVE 'ciśnienie NC'
-GOAL: Test Szczelności (stary sposób)
-  SET 'PUMP' '5l'
-  SET 'zawór BO06' '1'
-  SET 'timeout' '20 s'
-  SET 'timer' '0 s'
-  VAL 'ciśnienie NC' 'AI01'
-  MIN 'ciśnienie NC' '-10 mbar'
-  MAX 'ciśnienie NC' '0 mbar'
-  SAVE 'ciśnienie NC'
-  SET 'PUMP' 'off'
-  SET 'zawór BO04' '0'
-  SET 'zawór BO05' '0'
-  SET 'zawór BO06' '0'
-  SET 'timer' '0 s'
-GOAL: Ciśnienie otwarcia zaw. wyd.
-  VAL 'ciśnienie' 'bar'
-  MIN 'ciśnienie' '11 bar'
-  MAX 'ciśnienie' '12 bar'
-GOAL: Test nadciśnienia
-  SET 'timeout' '10 s'
-  IF 'timer' > 'timeout'
-  VAL 'nadciśnienie' 'mbar'
-  MIN 'nadciśnienie' '2.0 mbar'
-  MAX 'nadciśnienie' '3.9 mbar'
-  SAVE 'nadciśnienie'
-  ENDIF
+SCENARIO: Aparat C202 — przykład
+
+GOAL kontrola-wizualna:
+  LOG "Inspekcja wizualna — potwierdzenie operatora"
+  SAVE wynik-wizualny
+
+GOAL test-szczelności:
+  GET AI01
+  CHECK -10 <= AI01 <= 0 mbar
+  CORRECT 'Szczelność NC w normie'
+  ERROR 'Błąd: nieszczelność NC (poza zakresem -10 do 0 mbar)'
+  SAVE ciśnienie-NC
+
+GOAL test-szczelności-pełny:
+  SET pump-main 5 l/min
+  SET valve-bo06 1
+  WAIT 20s
+  GET AI01
+  CHECK -10 <= AI01 <= 0 mbar
+  CORRECT 'Szczelność pełna w normie'
+  ERROR 'Błąd: nieszczelność w teście pełnym'
+  SAVE ciśnienie-NC-pełny
+  SET pump-main 0
+  SET valve-bo04 0
+  SET valve-bo05 0
+  SET valve-bo06 0
+
+GOAL ciśnienie-otwarcia-zaw-wyd:
+  GET ciśnienie
+  CHECK 11 <= ciśnienie <= 12 bar
+  CORRECT 'Ciśnienie otwarcia zaworu wydajnego w normie (11-12 bar)'
+  ERROR 'Błąd: ciśnienie otwarcia poza zakresem 11-12 bar'
+  SAVE ciśnienie-otwarcia
+
+GOAL test-nadciśnienia:
+  WAIT 10s
+  GET nadciśnienie
+  CHECK 2.0 <= nadciśnienie <= 3.9 mbar
+  CORRECT 'Nadciśnienie w normie (2.0-3.9 mbar)'
+  ERROR 'Błąd: nadciśnienie poza zakresem 2.0-3.9 mbar'
+  SAVE nadciśnienie

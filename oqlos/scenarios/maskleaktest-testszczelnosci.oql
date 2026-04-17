@@ -1,9 +1,15 @@
-GOAL: Wytworzenie podciśnienia -10 mbar i obserwacja przez 60 sekund
-  SET 'pompa 1' '5.0 l/min'
-  SET 'valve-nc' '1'
-  WAIT '2.0 s'
-  MIN 'AI01' '-11.0 mbar'
-  SAVE 'AI01.value'
-  SET 'pompa 1' '0 l/min'
-  MIN 'AI01' '-11.0 mbar'
-  SAVE 'AI01.value'
+GOAL test-szczelności-maska:
+  # wytworzenie podciśnienia -10 mbar, obserwacja 60 s
+  SET pompa-1 5.0 l/min
+  SET valve-nc 1
+  WAIT 2s
+  CHECK -11.0 <= AI01 <= -9.0 mbar
+  CORRECT 'Podciśnienie startowe OK (-11 do -9 mbar)'
+  ERROR 'Błąd: podciśnienie startowe poza zakresem'
+  SAVE podciśnienie-start
+  SET pompa-1 0 l/min
+  WAIT 60s
+  CHECK -11.0 <= AI01 <= -9.0 mbar
+  CORRECT 'Szczelność maski OK (po 60s)'
+  ERROR 'Błąd: nieszczelność maski (spadek podciśnienia)'
+  SAVE podciśnienie-koniec

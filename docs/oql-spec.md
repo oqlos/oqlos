@@ -1,119 +1,237 @@
-# OQL/CQL Language Specification v2.0 (Flat DSL)
+# OQL Language Specification v3.0 (Flat Syntax)
 
-## 1. Overview
-OQL (Operation Query Language) and its variant CQL are declarative domain-specific languages designed for hardware testing, medical device diagnostics (e.g., Dräger BA sets), and process automation.
+## 1. Filozofia
 
-Version 2.0 introduces the **Flat Syntax**, which eliminates rigid block requirements and introduces intelligent hardware dispatch.
+OQL (Operation Query Language) jest deklaratywnym DSL do testów sprzętu
+diagnostycznego (aparaty oddechowe Dräger, piADC, pompy DRI0050, zawory
+Modbus, płuca TIC249, itd.).
 
-### 1.1 Core Principles
-- **Case-Insensitivity**: All keywords (`SCENARIO`, `GOAL`, `IF`, `SET`, `VAL`) are case-insensitive.
-- **Flat Structure**: Direct action commands can be placed under `GOAL` without prefixed arrows (`→`) or numbered steps.
-- **Explicit Scoping**: All multi-line `IF` blocks **MUST** be closed with an `ENDIF` statement.
-- **Intelligent Dispatch**: The `SET` command automatically detects if the target is a hardware peripheral (HAL) or a local variable.
+Wersja 3 radykalnie upraszcza składnię:
 
----
+- **Bez cudzysłowów** — identyfikatory są gołe (`pump-main`, nie `'pump-main'`).
+- **Bez znaku `=`** — każda komenda zna swoją strukturę argumentów, więc
+  parser nie musi zgadywać.
+- **Płaska struktura** — brak `IF/ELSE/ENDIF`. Warunki to `CHECK min <= sensor <= max unit`.
+- **Makra zamiast bogatej gramatyki** — tylko 12 komend bazowych; wszystko
+  inne to `MACRO` wywoływane przez `CALL`.
+- **Pełny Unicode** — polskie znaki, `°`, `³`, `μ` są legalne w nazwach.
 
-## 2. Document Structure
+## 2. Anatomia linii
 
-### 2.1 Metadata Header
-Every script starts with a metadata block to identify the test context.
-```oql
-SCENARIO: 'Full Mask Test'
-DEVICE_TYPE: 'BA'
-DEVICE_MODEL: 'PSS 7000'
-MANUFACTURER: 'Dräger'
+```
+SET   pump-main   5.0   l/min
+ │         │       │     │
+ │         │       │     └─ UNIT   opcjonalny, może zawierać '/'
+ │         │       └──────── VALUE liczba (int | float | ujemna)
+ │         └──────────────── TARGET identyfikator
+ └────────────────────────── CMD    zawsze UPPERCASE
 ```
 
-### 2.2 Global Configuration (Optional)
-Used for calibrating constants and tuning the interpreter.
+## 3. Komendy bazowe (12)
+
+| Komenda | Składnia | Działanie |
+|---|---|---|
+| `SET`     | `SET target value [unit]`           | Ustaw peryferium lub zmienną |
+| `GET`     | `GET sensor`                        | Odczytaj sensor (alias `READ`) |
+| `WAIT`    | `WAIT duration`                     | `3s`, `500ms`, `3000` (bare = ms) |
+| `SAVE`    | `SAVE label`                        | Zapisz bieżący wynik do protokołu |
+| `CHECK`   | `CHECK min <= sensor <= max unit`   | Range assertion |
+| `MIN`     | `MIN sensor value unit`             | Dolna granica |
+| `MAX`     | `MAX sensor value unit`             | Górna granica |
+| `SAMPLE`  | `SAMPLE sensor START\|STOP [interval]` | Sampling w tle |
+| `LOG`     | `LOG "wiadomość"`                   | Wiadomość informacyjna |
+| `ERROR`   | `ERROR "wiadomość"`                 | Przerwij z błędem |
+| `CALL`    | `CALL macro-name [arg1 arg2 …]`     | Wywołanie makra |
+| `INCLUDE` | `INCLUDE "ścieżka.oql"`             | Dołącz bibliotekę makr |
+
+### 3.1 Nagłówki bloków
+
+- `GOAL name:` — blok wykonawczy (cel testowy).
+- `CONFIG name:` — blok inicjalizacyjny; semantycznie identyczny z `GOAL`,
+  ale oznaczony `[CONFIG]` w logach.
+- `MACRO name:` — definicja makra (ciało rozwijane przy `CALL`).
+
+`name` może zawierać dowolne znaki bez dwukropka; dla nazw ze spacjami
+użyj `GOAL [Nazwa wielowyrazowa]:`.
+
+### 3.2 Metadane
+
+Poza blokami można zdefiniować metadane (klucz UPPER_SNAKE, wartość tekstowa):
+
 ```oql
-CONFIG: Calibration
-  PUMP_FLOW_FULL_SCALE_LPM = 10.0
+SCENARIO: Test szczelności maski
+DEVICE_TYPE: BA
+DEVICE_MODEL: PSS 7000
+MANUFACTURER: Dräger
+DESCRIPTION: Pełen test leak-test dla PSS 7000
+CATEGORY: env
 ```
 
----
+## 4. Reguły tokenizacji
 
-## 3. Goals and Logic
+Parser nie zgaduje — każda komenda zna swoją strukturę:
 
-### 3.1 Goals
-A scenario consists of one or more `GOAL` blocks.
+1. **Podział na CMD + reszta** (`split(None, 1)`) — pierwszy token to nazwa
+   komendy, reszta idzie do parsera komendy.
+2. **`WAIT`** — jedyna komenda, gdzie value i unit mogą być sklejone:
+   `3s` → `(3, 's')`, `3000` → `(3000, 'ms')`.
+3. **`SET/MIN/MAX`** — unit to wszystko po pierwszej liczbie; może zawierać
+   `/` i Unicode: `l/min`, `°C`, `%RH`, `m³/h`.
+4. **`CHECK`** — ma własne regex `(NUM) <= (IDENT) <= (NUM) (UNIT)?`.
+5. **Dispatch table** — zamiast jednego `if/elif`, każda komenda ma własną
+   funkcję parsującą. Dodanie komendy = dopisanie jednej funkcji + wpis
+   w słowniku.
+
+## 5. Identyfikatory i wartości
+
+### 5.1 Identyfikatory
+
+Unicode dozwolone. Reguła: identyfikator to token bez białego znaku i
+bez znaków składniowych (`#`, `:`, `=`, `"`, `'`, `[`, `]`).
+
 ```oql
-GOAL: Static Pressure Test
-  SET 'PUMP' '0 l/min'
-  WAIT '5 s'
-  VAL 'AI01' 'mbar'
+pump-main         # OK
+ciśnienie-NC      # OK (polskie znaki)
+valve-bo06        # OK
+AI01              # OK
 ```
 
-### 3.2 Conditional Logic (IF / ELSE / ENDIF)
-Conditionals gate the execution of subsequent actions. Multi-line blocks require an explicit `ENDIF`.
+Dla nazw ze spacjami użyj nawiasów kwadratowych:
+
 ```oql
-IF 'timer' > 'timeout'
-  MIN 'pressure' '6.0 bar'
-  MAX 'pressure' '8.0 bar'
-  LOG "Threshold reached"
-ENDIF
+SET [pompa głównego obiegu] 5 l/min
+SAVE [wynik testu maski]
 ```
 
-*Note: Nested conditionals are supported and encouraged for complex safety "gates".*
+### 5.2 Liczby
 
----
+Int, float, ujemne. Przecinek i kropka obsługiwane:
+`0`, `5.0`, `-10.5`, `145`, `3,14`.
 
-## 4. Fundamental Actions
+### 5.3 Jednostki
 
-| Command | Syntax | Description |
-| :--- | :--- | :--- |
-| **SET** | `SET 'target' 'value unit'` | Sets hardware state or variable. e.g., `SET 'valve-nc' '1'` |
-| **VAL** | `VAL 'sensor' 'unit'` | Reads and validates a sensor value. |
-| **SAVE** | `SAVE 'label'` | Persists the current measurement to the test protocol. |
-| **WAIT** | `WAIT 'duration'` | Pauses execution (e.g., `500 ms`, `2.0 s`). |
-| **MIN / MAX** | `MIN 'sensor' 'value unit'` | Sets threshold validation bounds. |
-| **LOG** | `LOG "message"` | Records a diagnostic message in the execution log. |
-| **ERROR** | `ERROR "message"` | Aborts execution with a critical failure message. |
+Jeden token po liczbie; może zawierać `/`, Unicode, cyfry:
+`bar`, `mbar`, `l/min`, `°C`, `%RH`, `m³/h`, `Pa`.
 
----
+### 5.4 Duration
 
-## 5. Technical Commands (Production)
+`3s`, `500ms`, `60s`, `3000` (bare = ms), `2m`, `1h`.
 
-For advanced diagnostics and API integration:
-- **`SAMPLE 'sensor' 'START/STOP' 'interval'`**: Background sensor sampling.
-- **`FUNC 'var' = 'METHOD' 'args'`**: Calculations (e.g., `AVG`, `SUM`, `SUB`).
-- **`API_GET/POST 'url'`**: Direct integration with the backend API.
-- **`ASSERT_STATUS/JSON`**: Validation of API responses.
-- **`EXPECT_DEVICE 'path'`**: Hardware discovery validation.
-- **`GOTO 'Goal Name'`**: Control flow jump (use sparingly).
+### 5.5 Stringi
 
----
+Tylko w `LOG`, `ERROR`, `INCLUDE` (wiadomości i ścieżki):
 
-## 6. Standard Units and Aliases
-
-### 6.1 Units
-Value strings should follow the format: `value unit`.
-Units are required for proper technical scaling.
-- **Pressure**: `bar`, `mbar`
-- **Flow**: `l/min`, `cfm`
-- **Time**: `s`, `ms`, `min`
-- **Voltage**: `V`, `mV`
-
-### 6.2 Target Aliases (HAL)
-- `valve-nc`, `valve-sc`, `valve-wc`: Safety valves.
-- `pompa 1`, `pump-main`: Suction/pressure pumps.
-- `AI01`, `AI02`, `AI03`: Pressure sensor channels.
-
----
-
-## 7. Example: Production-Grade Script
 ```oql
-GOAL: High Pressure Leak Test
-  SET 'zawór butli' '1'
-  WAIT '5.0 s'
-  
-  IF 'AI02' > '280 bar'
-    LOG "Pressure stabilized"
-    SET 'timer' '0 s'
-    WAIT '60 s'
-    MIN 'AI02' '270 bar'
-    SAVE 'leak_test_result'
-  ELSE
-    ERROR "Insufficient cylinder pressure for test"
-  ENDIF
+LOG "Rozpoczynam fazę 2"
+ERROR "Ciśnienie poza zakresem"
+INCLUDE "lib/hardware.oql"
 ```
+
+Obsługiwane `"..."` i `'...'`; escape `\"` / `\\`.
+
+## 6. Makra i INCLUDE
+
+### 6.1 Definicja makra
+
+```oql
+MACRO hw-pump-smoke:
+  SET pump-main 5 l/min
+  WAIT 2s
+  SET pump-main 0
+```
+
+### 6.2 Wywołanie
+
+```oql
+GOAL diagnostyka:
+  CALL hw-pump-smoke
+```
+
+### 6.3 Argumenty pozycjonalne
+
+Makro może używać placeholders `$1`, `$2`, … (tekstowe podstawienie
+wykonywane przed tokenizacją):
+
+```oql
+MACRO set-pump-lpm:
+  SET pump-main $1 l/min
+  WAIT $2
+
+GOAL ramp:
+  CALL set-pump-lpm 3 500ms
+  CALL set-pump-lpm 5 500ms
+  CALL set-pump-lpm 0 200ms
+```
+
+### 6.4 INCLUDE
+
+`INCLUDE "ścieżka"` rozwiązywane względem:
+
+1. ścieżki absolutnej,
+2. katalogu pliku wywołującego,
+3. `oqlos/scenarios/` (korzeń).
+
+Makra z włączonych plików stają się dostępne w aktualnym dokumencie.
+Definicje lokalne mają pierwszeństwo.
+
+## 7. Aliasy sprzętowe (HAL)
+
+Targety rozwiązywane przez interpreter do adapterów sprzętowych:
+
+- **Zawory**: `valve-nc`, `valve-sc`, `valve-wc`, `valve-1` … `valve-8`,
+  `valve-bo04`, `valve-bo05`, `valve-bo06`.
+- **Pompy**: `pump-main` (DRI0050), `pompa-1` (alias).
+- **Płuco**: `lung-main` (TIC249).
+- **Sensory**: `AI01` (NC), `AI02` (SC), `AI03` (WC).
+
+## 8. Pełny przykład
+
+```oql
+SCENARIO: PSS 7000 — Test szczelności maski
+DEVICE_TYPE: BA
+DEVICE_MODEL: PSS 7000
+MANUFACTURER: Dräger
+
+INCLUDE "lib/peripherals.oql"
+
+CONFIG reset:
+  CALL init-all
+
+GOAL test-statyczny-sc:
+  SET pump-main 0
+  WAIT 3s
+  GET AI02
+  SAVE ciśnienie-sc
+  CHECK 6.0 <= AI02 <= 8.0 bar
+
+GOAL ciśnienie-otwarcia-automatu:
+  SET pump-main 5.0 l/min
+  SET valve-bo06 1
+  WAIT 8s
+  GET AI01
+  SAVE ciśnienie-nc-min
+  CHECK -29.0 <= AI01 <= -5.0 mbar
+
+GOAL koniec:
+  CALL stop-all
+  LOG "Test zakończony"
+  SAVE test-done
+```
+
+## 9. Kompatybilność
+
+Interpreter detektuje automatycznie składnię:
+
+- **v3 (flat):** `GOAL name:` / `CONFIG name:` / `MACRO name:` / `INCLUDE "..."`.
+- **v1/v2 (legacy, z cudzysłowami):** `GOAL: Name` + `'target' 'value'`.
+
+Obie są parsowalne, ale **v3 jest zalecana** dla wszystkich nowych
+scenariuszy. Pliki v1/v2 działają na starej ścieżce parsera (deprecated).
+
+## 10. Referencje
+
+- Anatomia tokenów: `docs/oql-grammar-anatomy.html`
+- Biblioteki makr: `oqlos/scenarios/lib/README.md`
+- Cheatsheet: `oqlos/scenarios/OQL-CHEATSHEET.md`
+- Parser: `oqlos/core/oql_parser.py`
+- Adapter: `oqlos/core/_oql_adapter.py`

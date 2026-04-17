@@ -1,35 +1,44 @@
-GOAL: TEST SZCZELNOŚCI AUTOMATU ODDECHOWEGO
-  SET 'pompa 1' '0'
-  SAVE 'result'
-  SET 'pompa 1' '0'
-  SET 'pompa 1' '0'
-  SET 'pompa 1' '0'
-  SET 'pompa 1' '0'
-  MIN 'AI02' '6.0 bar'
-  IF 'Timer' ≤ '3.0'
-  SAVE 'AI02'
-  MIN 'AI02' '-1.0 bar'
-  SAVE 'AI02.delta'
-  SET 'pompa 1' '0'
-  SAVE 'timer'
-  SET 'pompa 1' '0'
-  SET 'pompa 1' '0'
-  SET 'pompa 1' '0'
-  MIN 'AI01' '2.2 mbar'
-  IF 'Timer' ≤ '5.0'
-  SAVE 'AI01'
-  SET 'pompa 1' '5 l/min'
-  SET 'valve-nc' 'open'
-  IF 'AI01' ≥ '0.0'
-  SET 'pompa 1' '0'
-  SAVE 'operator.result'
-  SET 'pompa 1' '5 l/min'
-  SET 'valve-nc' 'open'
-  MIN 'AI01' '-12.0 mbar'
-  IF 'Timer' ≤ '20.0'
-  SET 'pompa 1' '0'
-  SET 'valve-nc' 'closed'
-  IF 'AI01' ≤ '-6.0'
-  IF 'Timer' ≤ '15.0'
-  IF 'AI01' ≤ '-4.0'
-  SAVE 'AI01'
+SCENARIO: PSS 7000 + FENZY ZENITH — test szczelności automatu
+
+GOAL faza-1-statyczne-sc:
+  SET pump-main 0
+  WAIT 3s
+  GET AI02
+  SAVE ciśnienie-sc
+  MIN AI02 6.0 bar
+
+GOAL faza-2-delta-sc:
+  WAIT 3s
+  GET AI02
+  SAVE delta-ciśnienia-sc
+  MIN AI02 -1.0 bar
+
+GOAL faza-3-nadciśnienie:
+  SET pump-main 0
+  WAIT 5s
+  GET AI01
+  SAVE nadciśnienie
+  MIN AI01 2.2 mbar
+
+GOAL faza-4-sygnal-akustyczny:
+  SET pump-main 5 l/min
+  SET valve-nc 1
+  WAIT 2s
+  GET AI01
+  MIN AI01 0.0 mbar
+  SAVE wynik-operatora
+
+GOAL faza-5-podciśnienie:
+  SET pump-main 5 l/min
+  SET valve-nc 1
+  WAIT 20s
+  GET AI01
+  MIN AI01 -12.0 mbar
+
+GOAL faza-6-szczelność:
+  SET pump-main 0
+  SET valve-nc 0
+  WAIT 15s
+  GET AI01
+  SAVE ciśnienie-nc-końcowe
+  MAX AI01 -4.0 mbar

@@ -1,127 +1,42 @@
 SCENARIO: Hardware Diagnostics
 DEVICE_TYPE: TEST_EQUIPMENT
-DESCRIPTION: Comprehensive hardware detection and validation test
+DESCRIPTION: Smoke-test dla pompy, zaworów, płuca i czujników piADC.
 
-GOAL: Detect and validate all hardware components
-  # === USB/Serial Device Detection ===
-  LOG "Detecting USB/serial peripherals..."
-  
-  # Expected devices (will be checked against detected)
-  EXPECT_DEVICE "/dev/ttyACM0" "CH340" "Modbus RTU"
-  EXPECT_DEVICE "/dev/ttyACM1" "CH340" "Modbus RTU Backup"
-  EXPECT_DEVICE "/dev/ttyUSB0" "FTDI" "Serial Adapter"
-  
-  # === I2C Bus Detection ===
-  LOG "Detecting I2C buses..."
-  
-  EXPECT_I2C_BUS "/dev/i2c-0"
-  EXPECT_I2C_BUS "/dev/i2c-1"
-  
-  # Check for ADS1115 ADC (address 0x48)
-  EXPECT_I2C_CHIP "0x48" "ADS1115 ADC"
-  
-  # === Firmware Bridge Health ===
-  LOG "Checking firmware bridge health..."
-  
-  API_GET "/api/v1/hardware/health"
-  ASSERT_STATUS 200
-  ASSERT_JSON "mode" "real"
-  ASSERT_JSON "piadc" "ok"
-  ASSERT_JSON "motor" "ok"
-  ASSERT_JSON "modbus" "contains" "ttyACM"
-  
-  # === Per-Component Tests ===
-  
-  # 1. DRI0050 Motor (Pump)
-  LOG "Testing DRI0050 motor controller..."
-  
-  API_GET "/api/v1/hardware/identify"
-  ASSERT_STATUS 200
-  ASSERT_JSON "adapters.motor-dri0050.status" "ok"
-  
-  # Test pump control
-  SET "pompa" "2"
-  WAIT "500ms"
-  ASSERT_SENSOR "sc-sensor" ">" "1" "mbar"
-  SET "pompa" "0"
-  
-  # 2. TIC249 Lung Motor
-  LOG "Testing TIC249 lung controller..."
-  
-  API_GET "/api/v1/hardware/identify"
-  ASSERT_JSON "adapters.motor-tic249.status" "ok"
-  
-  # Test lung reciprocation
-  SET "pluco" "1"
-  WAIT "1000ms"
-  SET "pluco" "0"
-  
-  # 3. Modbus Valves (Waveshare RTU IO)
-  LOG "Testing Modbus valves..."
-  
-  API_GET "/api/v1/hardware/identify"
-  ASSERT_JSON "adapters.modbus-io.status" "ok"
-  
-  # Test valve sequence
-  SET "zawor NC" "ON"
-  WAIT "200ms"
-  ASSERT_VALVE "valve-nc" "True"
-  
-  SET "zawor SC" "ON"
-  WAIT "200ms"
-  ASSERT_VALVE "valve-sc" "True"
-  
-  SET "zawor WC" "ON"
-  WAIT "200ms"
-  ASSERT_VALVE "valve-wc" "True"
-  
-  # Close all valves
-  SET "zawor NC" "OFF"
-  SET "zawor SC" "OFF"
-  SET "zawor WC" "OFF"
-  WAIT "200ms"
-  
-  # 4. Pressure Sensors (PIADC ADS1115)
-  LOG "Testing pressure sensors..."
-  
-  API_GET "/api/v1/hardware/identify"
-  ASSERT_JSON "adapters.piadc.status" "ok"
-  
-  # Read all sensor channels
-  GET_SENSOR "nc-sensor"
-  GET_SENSOR "sc-sensor"
-  GET_SENSOR "wc-sensor"
-  
-  # Validate sensor ranges (should be near 2.5V at rest)
-  ASSERT_SENSOR "nc-sensor" ">" "0"
-  ASSERT_SENSOR "nc-sensor" "<" "5000" "mbar"
-  
-  # === Summary ===
-  LOG "Hardware diagnostics complete!"
-  
-  IF_FAIL "modbus" THEN
-    LOG "WARN: Modbus communication issues detected"
-    LOG "  Check: /dev/ttyACM1 connection, baud rate 19200"
-  END
-  
-  IF_FAIL "valve-nc" THEN
-    LOG "WARN: Valve NC (coil 0) not responding"
-    LOG "  Check: wiring, power supply, coil resistance"
-  END
+INCLUDE "lib/hardware.oql"
+INCLUDE "lib/peripherals.oql"
 
-GOAL: Generate shell-compatible report
-  LOG "Generating JSON report for shell scripts..."
-  
-  API_GET "/api/v1/peripherals"
-  SAVE_JSON "peripherals"
-  
-  API_GET "/api/v1/state"
-  SAVE_JSON "state"
-  
-  # Export for shell processing
-  SHELL_EXPORT "HARDWARE_OK" "true"
-  SHELL_EXPORT "USB_DEVICES" "detected"
-  SHELL_EXPORT "I2C_BUSES" "detected"
-  SHELL_EXPORT "MODBUS_STATUS" "connected"
-  
-  LOG "Use: eval $(oqlctl hardware-diagnostics.oql --json | jq -r '.shell_exports')"
+CONFIG start:
+  LOG "=== Hardware diagnostics ==="
+  CALL init-all
+
+GOAL smoke-pump:
+  LOG "Test: pompa DRI0050"
+  CALL hw-pump-smoke
+
+GOAL smoke-lung:
+  LOG "Test: płuco TIC249"
+  CALL hw-lung-smoke
+
+GOAL smoke-valves:
+  LOG "Test: zawory Modbus (NC / SC / WC)"
+  CALL hw-valves-smoke
+  CALL hw-valves-reset
+
+GOAL smoke-sensors:
+  LOG "Test: czujniki ADS1115 (AI01/AI02/AI03)"
+  CALL hw-sensors-baseline
+  # sanity-checki zakresów przy braku ciśnienia
+  CHECK -5 <= AI01 <= 5 V
+  CORRECT 'Czujnik AI01 w zakresie bazowym'
+  ERROR 'Błąd: czujnik AI01 poza zakresem -5 do 5 V'
+  CHECK -5 <= AI02 <= 5 V
+  CORRECT 'Czujnik AI02 w zakresie bazowym'
+  ERROR 'Błąd: czujnik AI02 poza zakresem -5 do 5 V'
+  CHECK -5 <= AI03 <= 5 V
+  CORRECT 'Czujnik AI03 w zakresie bazowym'
+  ERROR 'Błąd: czujnik AI03 poza zakresem -5 do 5 V'
+
+GOAL koniec:
+  CALL stop-all
+  LOG "Hardware diagnostics zakończone"
+  SAVE diagnostics-done

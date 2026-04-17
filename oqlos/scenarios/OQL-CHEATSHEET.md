@@ -1,143 +1,202 @@
-# OQL Quick Reference
+# OQL v3 Cheatsheet
 
-## Podstawowa struktura
+## Kompletny zestaw 12 komend
 
 ```oql
-SCENARIO: 'Nazwa'
-DEVICE_TYPE: 'BA'
-DEVICE_MODEL: 'PSS 7000'
-MANUFACTURER: 'Dräger'
-
-CONFIG: Inicjalizacja
-  SET 'pompa 1' '0'
-  WAIT 500
-
-CONFIG: Kalibracja pompy
-  SET 'PUMP_FLOW_FULL_SCALE_LPM' '10'
-
-GOAL: Test
-  SET 'pompa 1' '5 l/min'
-  WAIT 2000
+SET target value [unit]          # ustaw peryferium/zmienną
+GET sensor                       # odczytaj sensor (alias: READ)
+WAIT duration                    # 3s, 500ms, 3000 (= ms)
+SAVE label                       # zapisz wynik do protokołu
+CHECK min <= sensor <= max unit  # range assertion
+MIN sensor value unit            # dolna granica
+MAX sensor value unit            # górna granica
+SAMPLE sensor START|STOP [int]   # sampling w tle
+LOG "wiadomość"                  # log info
+ERROR "wiadomość"                # abort z błędem
+CALL macro-name [args...]        # wywołaj makro
+INCLUDE "ścieżka.oql"            # dołącz bibliotekę
 ```
 
-## Komendy SET dla peryferii
+Plus bloki: `GOAL name:`, `CONFIG name:`, `MACRO name:`.
 
-| Peryferium | Nazwy | Wartości | Przykład |
-|------------|-------|----------|----------|
-| **Pompa** | `pump-main`, `pompa 1`, `PUMP` | `'0'`, `'off'`, `'5 l/min'`, `'100'` | `SET 'pompa 1' '5 l/min'` |
-| **Zawór NC** | `valve-nc`, `zawór NC` | `'0'`, `'closed'`, `'1'`, `'open'` | `SET 'valve-nc' 'closed'` |
-| **Zawór SC** | `valve-sc`, `zawór SC` | `'0'`, `'closed'`, `'1'`, `'open'` | `SET 'valve-sc' 'open'` |
-| **Zawór WC** | `valve-wc`, `zawór WC` | `'0'`, `'closed'`, `'1'`, `'open'` | `SET 'valve-wc' 'closed'` |
-| **Zawory 1-8** | `valve-1` do `valve-8` | `'0'`, `'closed'`, `'1'`, `'open'` | `SET 'valve-3' '0'` |
+## Anatomia
 
-> Flow values written as `l/min` are converted to PWM using `PUMP_FLOW_FULL_SCALE_LPM`.
-> You can keep this config in `.env` or override it in a `CONFIG:` block with `SET 'PUMP_FLOW_FULL_SCALE_LPM' '10'`.
+```
+SET   pump-main   5.0   l/min
+ │      │         │      │
+ CMD   TARGET   VALUE   UNIT(opcjonalny, może zawierać '/' i Unicode)
+```
 
-## WAIT - czas oczekiwania
+## Metadane (poza blokami)
 
-| Składnia | Znaczenie | Przykład |
-|----------|-----------|----------|
-| `WAIT 500` | 500 milisekund | `WAIT 500` |
-| `WAIT 2000` | 2000 ms = 2 sekundy | `WAIT 2000` |
-| `WAIT '2 s'` | 2 sekundy (jawne) | `WAIT '2 s'` |
-| `WAIT '500 ms'` | 500 milisekund (jawne) | `WAIT '500 ms'` |
+```oql
+SCENARIO: Test szczelności
+DEVICE_TYPE: BA
+DEVICE_MODEL: PSS 7000
+MANUFACTURER: Dräger
+DESCRIPTION: Leak test
+CATEGORY: env
+```
 
-**Rule**: bare number = zawsze milisekundy
+## Podstawowe przykłady
+
+### Pompa
+
+```oql
+SET pompa-1 5.0 l/min
+WAIT 2s
+SET pompa-1 0
+```
+
+### Zawór
+
+```oql
+SET valve-nc 1      # otwórz
+WAIT 500ms
+SET valve-nc 0      # zamknij
+```
+
+### Odczyt + assertion
+
+```oql
+GET AI01
+SAVE ciśnienie-sc
+CHECK 6.0 <= AI01 <= 8.0 bar
+```
+
+### Sampling w tle
+
+```oql
+SAMPLE ciśnienie START 50ms
+WAIT 10s
+SAMPLE ciśnienie STOP
+GET ciśnienie
+SAVE dp
+```
+
+## Spacje w identyfikatorach
+
+Dwie opcje:
+
+```oql
+# kebab-case (zalecane)
+SET pompa-główna 5 l/min
+SAVE ciśnienie-końcowe
+
+# nawiasy kwadratowe (escape)
+SET [pompa głównego obiegu] 5 l/min
+SAVE [wynik testu maski]
+```
+
+## Polskie znaki i Unicode
+
+Pełny Unicode w identyfikatorach i wartościach:
+
+```oql
+SAVE ciśnienie-NC
+CHECK 15 <= temperatura <= 25 °C
+CHECK 30 <= wilgotność <= 70 %RH
+SET multiplekser-μV 1
+```
+
+## WAIT
+
+| Składnia | Znaczenie |
+|---|---|
+| `WAIT 500` | 500 ms (bare = ms) |
+| `WAIT 500ms` | 500 ms (jawne) |
+| `WAIT 2s` | 2 sekundy |
+| `WAIT 30s` | 30 sekund |
+| `WAIT 2m` | 2 minuty |
 
 ## CONFIG vs GOAL
 
 ```oql
-# CONFIG - inicjalizacja, setup, kalibracja
-CONFIG: Nazwa
-  SET ...
-  WAIT ...
-  SAVE: init_done
+# CONFIG — inicjalizacja, setup, kalibracja (wykonuje się pierwsze)
+CONFIG reset:
+  SET pump-main 0
+  SET valve-nc 0
+  WAIT 500ms
 
-# GOAL - właściwy test
-GOAL: Nazwa
-  SET ...
-  → Sensor.read AI01
-  SAVE: wynik
+# GOAL — właściwy test
+GOAL test-pressure:
+  SET pompa-1 5 l/min
+  WAIT 3s
+  GET AI02
+  CHECK 6.0 <= AI02 <= 8.0 bar
 ```
 
-## Przykłady pełnych scenariuszy
+## Makra
 
-### Minimalny scenariusz
 ```oql
-SCENARIO: 'Test'
-DEVICE_TYPE: 'BA'
+INCLUDE "lib/hardware.oql"
 
-GOAL: Pompa ON/OFF
-  SET 'pompa 1' '5 l/min'
-  WAIT 2000
-  SET 'pompa 1' '0'
+MACRO pump-ramp:
+  SET pump-main $1 l/min
+  WAIT $2
+  SET pump-main 0
+
+GOAL test:
+  CALL pump-ramp 5 2s
+  CALL hw-valves-smoke
 ```
 
-### Inicjalizacja + test
+## Przykład pełny
+
 ```oql
-SCENARIO: 'Inicjalizacja i test'
-DEVICE_TYPE: 'BA'
+SCENARIO: Test szczelności maski
+DEVICE_TYPE: BA
 
-CONFIG: Reset
-  SET 'pump-main' '0'
-  SET 'valve-nc' 'closed'
-  WAIT 500
+INCLUDE "lib/peripherals.oql"
 
-GOAL: Test przepływu
-  SET 'valve-nc' 'open'
-  WAIT 200
-  SET 'pompa 1' '3 l/min'
-  WAIT 3000
-  SET 'pompa 1' '0'
-  SET 'valve-nc' 'closed'
+CONFIG reset:
+  CALL init-all
+
+GOAL podciśnienie:
+  SET pompa-1 5.0 l/min
+  SET valve-nc 1
+  WAIT 2s
+  CHECK -11 <= AI01 <= -9 mbar
+  SAVE podciśnienie-start
+
+GOAL obserwacja-60s:
+  SET pompa-1 0
+  WAIT 60s
+  CHECK -11 <= AI01 <= -9 mbar
+  SAVE podciśnienie-koniec
 ```
 
 ## Uruchamianie
 
 ```bash
 # Dry-run (symulacja)
-oqlctl run scenariusz.oql --mode dry-run
+oqlctl scenariusz.oql --mode dry-run
 
 # Wykonanie na sprzęcie
-oqlctl run scenariusz.oql --mode execute
+oqlctl scenariusz.oql --mode execute
 
-# Z custom firmware URL
-oqlctl run scenariusz.oql \
-  --mode execute \
-  --firmware-url http://localhost:8202
+# Pojedyncza komenda
+oqlctl cmd "SET pompa-1 0"
 
-# Krok po kroku (interaktywnie)
-oqlctl run scenariusz.oql --step
-
-# Najprostsza pojedyncza komenda na sprzęt
-oqlctl cmd "SET 'pompa 1' '0'"
-
-# Tylko symulacja jednej komendy
-oqlctl cmd "SET 'pompa 1' '0'" --mode dry-run
+# Walidacja wszystkich plików w katalogu
+oqlctl --validate-dir oqlos/scenarios
 ```
 
-## Dostępne pliki
-
-```bash
-# Pełna konfiguracja peryferii (11 GOALs)
-oqlctl run scenarios/config-peripherals.oql
-
-# Przykłady
-oqlctl run scenarios/examples/config-basic.oql
-oqlctl run scenarios/examples/config-calibration.oql
-oqlctl run scenarios/examples/config-test-pattern.oql
-```
-
-## Hardware Mode
+## Tryby sprzętu
 
 ```bash
 # Mock (symulacja bez sprzętu)
-export HARDWARE_MODE=mock
-oqlctl run scenariusz.oql
+export OQLOS_HARDWARE_MODE=mock
 
 # Real (prawdziwy sprzęt)
-export HARDWARE_MODE=real
+export OQLOS_HARDWARE_MODE=real
 export MOTOR_URL=http://localhost:49055
 export PIADC_URL=http://localhost:8080
-oqlctl run scenariusz.oql
 ```
+
+## Dostępne biblioteki makr
+
+- `lib/hardware.oql` — `hw-pump-smoke`, `hw-valves-smoke`, `hw-lung-smoke`, `hw-sensors-baseline`, …
+- `lib/peripherals.oql` — `init-pump`, `init-valves-main`, `init-valves-bo`, `init-valves-numbered`, `init-all`, `stop-all`
+
+Pełna lista w `oqlos/scenarios/lib/README.md`.

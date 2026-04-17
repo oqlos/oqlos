@@ -1,124 +1,136 @@
-# OQL Configuration Examples
+# OQL v3 — Przykłady CONFIG / GOAL
 
-## Przykłady użycia CONFIG i GOAL
-
-### 1. Podstawowa inicjalizacja (config-basic.oql)
+## 1. Podstawowa inicjalizacja (`config-basic.oql`)
 
 ```oql
-SCENARIO: 'Basic Init'
-DEVICE_TYPE: 'BA'
+SCENARIO: Podstawowy przykład CONFIG + GOAL
 
-# CONFIG - zawsze na początku
-CONFIG: Reset zaworów
-  SET 'valve-nc' 'closed'
-  SET 'valve-sc' 'closed'
-  WAIT 200
+CONFIG inicjalizacja:
+  SET pump-main 0 l/min
+  SET valve-nc 0
+  WAIT 500ms
 
-CONFIG: Wyłączenie pompy
-  SET 'pump-main' '0'
-  WAIT 500
-
-# GOAL - właściwy test
-GOAL: Test pompy
-  SET 'pompa 1' '3 l/min'
-  WAIT 2000
-  SET 'pompa 1' '0'
+GOAL test-operacyjny:
+  SET pompa-1 5.0 l/min
+  WAIT 1s
+  SET pompa-1 0 l/min
 ```
 
-Uruchomienie:
 ```bash
-oqlctl run examples/config-basic.oql --mode execute
+oqlctl oqlos/scenarios/examples/config-basic.oql --mode dry-run
 ```
 
-### 2. Kalibracja systemu (config-calibration.oql)
+## 2. Kalibracja systemu (`config-calibration.oql`)
 
 ```oql
-SCENARIO: 'Kalibracja PSS7000'
-DEVICE_TYPE: 'BA'
-DEVICE_MODEL: 'PSS 7000'
+SCENARIO: Kalibracja PSS7000
+DEVICE_TYPE: BA
+DEVICE_MODEL: PSS 7000
 
-CONFIG: Otwarcie wszystkich zaworów
-  SET 'valve-nc' 'open'
-  SET 'valve-sc' 'open'
-  SET 'valve-wc' 'open'
-  WAIT 2000
+CONFIG otwarcie-zaworów:
+  SET valve-nc 1
+  SET valve-sc 1
+  SET valve-wc 1
+  WAIT 2s
 
-CONFIG: Pomiar bazowy
-  → Sensor.read AI01
-  → Sensor.read AI02
-  SAVE: baseline_nc
-  SAVE: baseline_sc
+CONFIG pomiar-bazowy:
+  GET AI01
+  SAVE baseline-nc
+  GET AI02
+  SAVE baseline-sc
 
-CONFIG: Zamknięcie zaworów
-  SET 'valve-nc' 'closed'
-  SET 'valve-sc' 'closed'
-  SET 'valve-wc' 'closed'
-  WAIT 1000
-  SAVE: kalibracja_zakonczona
+CONFIG zamknięcie-zaworów:
+  SET valve-nc 0
+  SET valve-sc 0
+  SET valve-wc 0
+  WAIT 1s
+  SAVE kalibracja-zakończona
 
-GOAL: Weryfikacja szczelności
-  WAIT 5000
-  → Sensor.read AI01
-  SAVE: cisnienie_koncowe
+GOAL weryfikacja-nc:
+  WAIT 5s
+  GET AI01
+  SAVE ciśnienie-końcowe-nc
 ```
 
-### 3. Wzorzec: Prepare → Test → Cleanup
+## 3. Wzorzec Prepare → Test → Cleanup (`config-test-pattern.oql`)
 
 ```oql
-SCENARIO: 'Test Pattern'
-DEVICE_TYPE: 'BA'
+SCENARIO: Test Pattern — Prepare / Test / Cleanup
+DEVICE_TYPE: BA
 
-# 1. PREPARE - CONFIG
-CONFIG: Prepare Environment
-  SET 'pump-main' '0'
-  SET 'valve-nc' 'closed'
-  SET 'valve-sc' 'open'
-  WAIT 1000
+CONFIG prepare-environment:
+  SET pump-main 0
+  SET valve-nc 0
+  SET valve-sc 1
+  WAIT 1s
 
-# 2. TEST - GOAL
-GOAL: Execute Test
-  SET 'pompa 1' '5 l/min'
-  WAIT 3000
-  → Sensor.read AI02
-  SAVE: test_result
+GOAL execute-pressure-test:
+  SET pompa-1 5 l/min
+  WAIT 3s
+  GET AI02
+  SAVE test-result
+  SET pompa-1 0
 
-# 3. CLEANUP - CONFIG
-CONFIG: Cleanup
-  SET 'pompa 1' '0'
-  SET 'valve-sc' 'closed'
-  WAIT 500
-  SAVE: cleanup_done
+CONFIG cleanup:
+  SET pompa-1 0
+  SET valve-sc 0
+  WAIT 500ms
+  SAVE cleanup-done
+```
+
+## 4. Biblioteki makr
+
+Dla powtarzających się fragmentów używaj `INCLUDE` + `CALL`:
+
+```oql
+SCENARIO: Smoke z makrami
+INCLUDE "lib/peripherals.oql"
+INCLUDE "lib/hardware.oql"
+
+CONFIG reset:
+  CALL init-all
+
+GOAL smoke:
+  CALL hw-pump-smoke
+  CALL hw-valves-smoke
+```
+
+Pełen rejestr makr: `oqlos/scenarios/lib/README.md`.
+
+## Różnica CONFIG vs GOAL
+
+- **CONFIG**: inicjalizacja, setup, kalibracja (oznaczany `[CONFIG]`
+  w logach i uruchamiany przed GOAL-ami).
+- **GOAL**: właściwe testy i procedury pomiarowe.
+
+W output widzisz:
+```
+🎯 GOAL: [CONFIG] reset         ← CONFIG
+🎯 GOAL: execute-pressure-test   ← GOAL
 ```
 
 ## Szybki start
 
 ```bash
-# 1. Sprawdź dostępne scenariusze
-ls oqlos/oqlos/scenarios/examples/
+ls oqlos/scenarios/examples/
+oqlctl oqlos/scenarios/examples/config-basic.oql --mode dry-run
+oqlctl oqlos/scenarios/examples/config-basic.oql --mode execute
 
-# 2. Walidacja (dry-run)
-oqlctl run oqlos/oqlos/scenarios/examples/config-basic.oql --mode dry-run
+# Jednorazowa komenda na sprzęt
+oqlctl cmd "SET pompa-1 0"
+oqlctl cmd "SET valve-nc 1" --mode dry-run
 
-# 3. Wykonanie na sprzęcie
-oqlctl run oqlos/oqlos/scenarios/examples/config-basic.oql \
-  --mode execute \
-  --firmware-url http://localhost:8202
-
-# 4. Inicjalizacja wszystkich peryferii
-oqlctl run oqlos/oqlos/scenarios/config-peripherals.oql --mode execute
+# Walidacja całego katalogu
+oqlctl --validate-dir oqlos/scenarios
 ```
 
-## Komendy SET dla peryferii
+## Peryferia (HAL aliases)
 
-| Peryferium | Wartości | Przykład |
-|------------|----------|----------|
-| `pump-main` / `pompa 1` | `'0'`, `'off'`, `'5 l/min'`, `'100'` | `SET 'pompa 1' '5 l/min'` |
-| `valve-nc` | `'0'`, `'closed'`, `'1'`, `'open'` | `SET 'valve-nc' 'closed'` |
-| `valve-sc` | `'0'`, `'closed'`, `'1'`, `'open'` | `SET 'valve-sc' 'open'` |
-| `valve-1` do `valve-8` | `'0'`, `'closed'`, `'1'`, `'open'` | `SET 'valve-3' '0'` |
-
-## Różnica CONFIG vs GOAL
-
-- **CONFIG**: Używaj do inicjalizacji, setupu, kalibracji
-- **GOAL**: Używaj do właściwych testów i procedur
-- W output widzisz: `🎯 GOAL: [CONFIG] Nazwa` lub `🎯 GOAL: Nazwa`
+| Peryferium | ID | Przykład |
+|---|---|---|
+| Pompa główna | `pump-main` / `pompa-1` | `SET pump-main 5 l/min` |
+| Zawory NC/SC/WC | `valve-nc`, `valve-sc`, `valve-wc` | `SET valve-nc 1` |
+| Zawory numerowane | `valve-1` … `valve-8` | `SET valve-3 0` |
+| Zawory BO | `valve-bo04`, `valve-bo05`, `valve-bo06` | `SET valve-bo06 1` |
+| Płuco | `lung-main` | `SET lung-main 2` |
+| Sensory | `AI01`, `AI02`, `AI03` | `GET AI02` |

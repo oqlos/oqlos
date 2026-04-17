@@ -1,42 +1,48 @@
-GOAL: TEST WIZUALNY
-  SET 'pompa 1' '0'
-  SET 'Test wizualny' '1'
-  SAVE 'Test wizualny'
-  SET 'valve-sc' 'open'
-  SET 'pompa 1' '5 l/min'
-  SET 'WAIT' '7.0 s'
-  SET 'valve-nc' 'open'
-  SET 'pompa 1' '5 l/min'
-  MIN 'AI01' '-11.0 mbar'
-  VAL 'AI01' 'mbar'
-  IF 'AI01' < '-11.0 mbar' ELSE ERROR 'Wytworzenie  podciśnienia [mbar]'
-  SET 'WAIT' '10.0 s'
-  SET 'pompa 1' '0'
-  SET 'WAIT' '10.0 s'
-  SET 'valve-nc' 'closed'
-  SET 'pompa 1' '0'
-  MAX 'AI01' '-10.1 mbar'
-  VAL 'AI01' 'mbar'
-  IF 'AI01' > '-10.1 mbar' ELSE ERROR 'Ustawienie parametru Auto [s]'
-  SET 'WAIT' '20.0 s'
-GOAL: TEST SZCZELNOŚCI MASKI NADCIŚNIENIOWEJ
-  SET 'pompa 1' '0'
-  MAX 'AI01' '-9.0 mbar'
-  VAL 'AI01' 'mbar'
-  IF 'AI01' > '-9.0 mbar' ELSE ERROR 'Test szczelności maski'
-  SAVE 'AI01'
-  SET 'WAIT' '60.0 s'
-  SET 'valve-sc' 'open'
-  SET 'pompa 1' '10 l/min'
-  SET 'WAIT' '5.0 s'
-  SET 'valve-sc' 'open'
-  SET 'pompa 1' '10 l/min'
-  MIN 'AI01' '4.2 mbar'
-  MAX 'AI01' '6.0 mbar'
-  VAL 'AI01' 'mbar'
-  IF 'AI01' < '4.2 mbar' ELSE ERROR 'Ciśnienie otwarcia zaworu wydechowego'
-  SAVE 'AI01'
-  SET 'WAIT' '1.0 s'
-  SET 'valve-nc' 'open'
-  SET 'pompa 1' '5 l/min'
-  SET 'WAIT' '7.0 s'
+SCENARIO: Dräger FPS 7000 — Pełny test maski
+
+GOAL test-wizualny:
+  LOG "Inspekcja wizualna aparatu"
+  SET pump-main 0
+  SAVE test-wizualny
+
+GOAL wytworzenie-podciśnienia:
+  SET valve-sc 1
+  SET pump-main 5 l/min
+  WAIT 7s
+  SET valve-nc 1
+  SET pump-main 5 l/min
+  WAIT 5s
+  GET AI01
+  MIN AI01 -11.0 mbar
+  SAVE podciśnienie
+
+GOAL ustawienie-auto:
+  SET pump-main 0
+  WAIT 20s
+  SET valve-nc 0
+  GET AI01
+  MAX AI01 -10.1 mbar
+  SAVE auto-start
+
+GOAL szczelność-nadciśnieniowa:
+  SET pump-main 0
+  WAIT 60s
+  GET AI01
+  MAX AI01 -9.0 mbar
+  SAVE szczelność-maska
+
+GOAL ciśnienie-otwarcia-zaworu-wyd:
+  SET valve-sc 1
+  SET pump-main 10 l/min
+  WAIT 5s
+  GET AI01
+  CHECK 4.2 <= AI01 <= 6.0 mbar
+  CORRECT 'Ciśnienie otwarcia zaworu wydechowego OK (4.2-6.0 mbar)'
+  ERROR 'Błąd: ciśnienie otwarcia zaworu wydechowego poza zakresem'
+  SAVE ciśnienie-otwarcia-wyd
+
+GOAL wyjście:
+  SET valve-nc 1
+  SET pump-main 5 l/min
+  WAIT 7s
+  SET pump-main 0

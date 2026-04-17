@@ -1,43 +1,53 @@
-GOAL: TEST SZCZELNOŚCI AUTOMATU ODDECHOWEGO
-  SET 'pompa 1' '0'
-  SAVE 'result'
-  SET 'pompa 1' '0'
-  SET 'pompa 1' '0'
-  SET 'pompa 1' '0'
-  SET 'pompa 1' '0'
-  SET 'pompa 1' '0'
-  MIN 'AI02' '6.0 bar'
-  IF 'Timer' ≤ '3.0'
-  SAVE 'AI02.value'
-  SET 'pompa 1' '0'
-  MIN 'AI02' '-0.3 bar'
-  SAVE 'AI02.delta'
-  SET 'pompa 1' '5 l/min'
-  SET 'valve-nc' 'open'
-  MIN 'AI01' '-29.0 mbar'
-  IF 'Timer' ≤ '8.0'
-  SAVE 'AI01.min'
-  SET 'pompa 1' '0'
-  MIN 'AI01' '2.0 mbar'
-  IF 'Timer' ≤ '10.0'
-  SAVE 'AI01.value'
-  SET 'pompa 1' '0'
-  SET 'pompa 1' '0'
-  SAVE 'operator.result'
-  IF 'AI02' ≤ '10.0'
-  SAVE 'timer.value'
-  SET 'pompa 1' '5 l/min'
-  SET 'valve-nc' 'open'
-  IF 'AI01' ≥ '0.0'
-  SET 'pompa 1' '0'
-  SAVE 'operator.result'
-  SET 'pompa 1' '5 l/min'
-  SET 'valve-sc' 'open'
-  IF 'AI01' ≤ '12.0'
-  IF 'Timer' ≤ '20.0'
-  SET 'pompa 1' '0'
-  SET 'valve-nc' 'closed'
-  IF 'AI01' ≥ '7.5'
-  IF 'Timer' ≤ '15.0'
-  IF 'AI01' ≥ '6.5'
-  SAVE 'AI01.value'
+SCENARIO: PSS 7000 — Test szczelności automatu (przez adapter)
+
+GOAL test-statyczny-sc:
+  SET pump-main 0
+  WAIT 3s
+  GET AI02
+  SAVE ciśnienie-sc
+  MIN AI02 6.0 bar
+
+GOAL delta-sc:
+  SET pump-main 0
+  WAIT 60s
+  GET AI02
+  SAVE delta-ciśnienia-sc
+  MIN AI02 -0.3 bar
+
+GOAL ciśnienie-otwarcia-automatu:
+  SET pump-main 5 l/min
+  SET valve-nc 1
+  WAIT 8s
+  GET AI01
+  SAVE ciśnienie-nc-min
+  MIN AI01 -29.0 mbar
+
+GOAL test-nadciśnienia-statycznego:
+  SET pump-main 0
+  WAIT 10s
+  GET AI01
+  SAVE nadciśnienie
+  MIN AI01 2.0 mbar
+
+GOAL sygnał-akustyczny:
+  SET pump-main 5 l/min
+  SET valve-nc 1
+  WAIT 2s
+  GET AI01
+  MIN AI01 0.0 mbar
+  SAVE wynik-operatora
+
+GOAL wytworzenie-podciśnienia:
+  SET pump-main 5 l/min
+  SET valve-sc 1
+  WAIT 20s
+  GET AI01
+  MAX AI01 12.0 mbar
+
+GOAL szczelność-automatu:
+  SET pump-main 0
+  SET valve-nc 0
+  WAIT 15s
+  GET AI01
+  SAVE ciśnienie-nc-końcowe
+  MIN AI01 6.5 mbar
