@@ -1,9 +1,10 @@
-GOAL ciśnienie-otwarcia-zaworu-wydechowego:
+GOAL:
+  SET NAME 'ciśnienie otwarcia zaworu wydechowego'
   # oczekiwany zakres: 4.2 – 6.0 mbar
   SET pompa-1 5.0 l/min
   SET valve-nc 1
   WAIT 1s
-  CHECK 4.2 <= AI01 <= 6.0 mbar
+  IF AI01 4.2 .. 6.0 mbar
   CORRECT 'Ciśnienie otwarcia zaworu wydechowego OK (4.2-6.0 mbar)'
   ERROR 'Błąd: ciśnienie otwarcia poza zakresem 4.2-6.0 mbar'
   SAVE ciśnienie-otwarcia

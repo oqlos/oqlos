@@ -6,7 +6,8 @@ CONFIG inicjalizacja-systemu:
   SET valve-nc 0
   WAIT 500ms
 
-GOAL normalny-test:
+GOAL:
+  SET NAME 'normalny test'
   SET pompa-1 5 l/min
   WAIT 1s
   SET pompa-1 0

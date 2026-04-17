@@ -16,7 +16,8 @@ CONFIG prepare-environment:
 # ──────────────────────────────────────────────
 # 2. TEST — właściwy pomiar ciśnienia
 # ──────────────────────────────────────────────
-GOAL execute-pressure-test:
+GOAL:
+  SET NAME 'execute pressure test'
   SET valve-nc 1
   WAIT 500ms
   SET pompa-1 5 l/min

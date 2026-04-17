@@ -34,7 +34,7 @@ NUM = r"-?\d+(?:[.,]\d+)?"
 DUR_RE = re.compile(rf"^({NUM})(ms|s|m|h)?$")
 
 #: Header of a block: ``GOAL name:``, ``CONFIG name:``, ``MACRO name:``.
-BLOCK_RE = re.compile(r"^(GOAL|CONFIG|MACRO)\s+(.+?):\s*$", re.IGNORECASE)
+BLOCK_RE = re.compile(r"^(GOAL|CONFIG|MACRO)(?:\s+(.+?))?:\s*$", re.IGNORECASE)
 
 #: Metadata line: ``KEY: value`` (KEY is UPPER_SNAKE).
 META_RE = re.compile(r"^([A-Z][A-Z0-9_]*)\s*:\s*(.+)$")
@@ -42,6 +42,11 @@ META_RE = re.compile(r"^([A-Z][A-Z0-9_]*)\s*:\s*(.+)$")
 #: ``CHECK`` clause: ``min <= sensor <= max unit``.
 CHECK_RE = re.compile(
     rf"^({NUM})\s*<=\s*(\S+)\s*<=\s*({NUM})(?:\s+(\S+))?$"
+)
+
+#: ``IF`` range clause: ``sensor min .. max [unit]``.
+IF_RE = re.compile(
+    rf"^(\S+)\s+({NUM})\s*\.\.\s*({NUM})(?:\s+(\S+))?$"
 )
 
 #: Whitelisted metadata keys.  Unknown ``KEY:`` lines at the top level are
@@ -266,6 +271,25 @@ def parse_CHECK(rest: str, ln: int, raw: str) -> OqlCmd:
     )
 
 
+def parse_IF(rest: str, ln: int, raw: str) -> OqlCmd:
+    match = IF_RE.match(rest.strip())
+    if not match:
+        raise ValueError(
+            f"IF wymaga: sensor min .. max [unit] (linia {ln})"
+        )
+    return OqlCmd(
+        "CHECK",
+        {
+            "sensor": match.group(1),
+            "min": to_num(match.group(2)),
+            "max": to_num(match.group(3)),
+            "unit": match.group(4),
+        },
+        ln,
+        raw,
+    )
+
+
 def parse_MIN(tokens: list[str], ln: int, raw: str) -> OqlCmd:
     _require(tokens, 2, "MIN", ln, "sensor value [unit]")
     sensor = tokens[0]
@@ -399,7 +423,7 @@ def parse_oql(text: str, filename: str = "<string>") -> OqlDoc:
         # block header
         block = BLOCK_RE.match(line)
         if block:
-            name = block.group(2).strip()
+            name = block.group(2).strip() if block.group(2) else ""
             # allow ``GOAL [Nazwa ze spacjami]:`` form
             if name.startswith("[") and name.endswith("]"):
                 name = name[1:-1].strip()
@@ -429,6 +453,13 @@ def parse_oql(text: str, filename: str = "<string>") -> OqlDoc:
         cmd = parts[0].upper()
         rest = parts[1] if len(parts) > 1 else ""
 
+        # SET NAME updates the current block name (metadata only)
+        if cmd == "SET" and current:
+            tokens = tokenize(rest)
+            if len(tokens) >= 2 and tokens[0].upper() == "NAME":
+                current.name = " ".join(tokens[1:]).strip("'\"")
+                continue  # Don't add as a regular command
+
         # CORRECT and ERROR modify the previous CHECK command
         if cmd in ("CORRECT", "ERROR") and current.cmds:
             last_cmd = current.cmds[-1]
@@ -447,6 +478,8 @@ def parse_oql(text: str, filename: str = "<string>") -> OqlDoc:
         try:
             if cmd == "CHECK":
                 parsed = parse_CHECK(rest, ln, line)
+            elif cmd == "IF":
+                parsed = parse_IF(rest, ln, line)
             else:
                 handler = DISPATCHERS.get(cmd)
                 if handler is None:

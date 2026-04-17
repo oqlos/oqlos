@@ -10,7 +10,8 @@ CONFIG inicjalizacja:
   SET valve-nc 0
   WAIT 500ms
 
-GOAL test-operacyjny:
+GOAL:
+  SET NAME 'Test operacyjny'
   SET pompa-1 5.0 l/min
   WAIT 1s
   SET pompa-1 0 l/min
@@ -46,7 +47,8 @@ CONFIG zamknięcie-zaworów:
   WAIT 1s
   SAVE kalibracja-zakończona
 
-GOAL weryfikacja-nc:
+GOAL:
+  SET NAME 'Weryfikacja NC'
   WAIT 5s
   GET AI01
   SAVE ciśnienie-końcowe-nc
@@ -64,7 +66,8 @@ CONFIG prepare-environment:
   SET valve-sc 1
   WAIT 1s
 
-GOAL execute-pressure-test:
+GOAL:
+  SET NAME 'Execute pressure test'
   SET pompa-1 5 l/min
   WAIT 3s
   GET AI02
@@ -90,7 +93,8 @@ INCLUDE "lib/hardware.oql"
 CONFIG reset:
   CALL init-all
 
-GOAL smoke:
+GOAL:
+  SET NAME 'Smoke'
   CALL hw-pump-smoke
   CALL hw-valves-smoke
 ```

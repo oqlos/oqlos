@@ -9,38 +9,42 @@ CONFIG przygotowanie:
   SET czujnik-wysokiego-ciśnienia 1
   SET zawór-izolacyjny 1
 
-GOAL test-próżni:
+GOAL:
+  SET NAME 'test próżni'
   SET pompa-próżniowa 1
   SAMPLE ciśnienie START 50ms
   WAIT 30s
   SAMPLE ciśnienie STOP
   GET ciśnienie
   SAVE p-prozni
-  CHECK -1000 <= ciśnienie <= -900 mbar
+  IF ciśnienie -1000 .. -900 mbar
   CORRECT 'Próżnia w normie (-1000 do -900 mbar)'
   ERROR 'Błąd: próżnia poza zakresem -1000 do -900 mbar'
   SET pompa-próżniowa 0
 
-GOAL test-niskiego-ciśnienia:
+GOAL:
+  SET NAME 'test niskiego ciśnienia'
   SET pompa-ciśnieniowa 1
   WAIT 10s
   GET ciśnienie-niskie
   SAVE cn
-  CHECK 25 <= ciśnienie-niskie <= 35 mbar
+  IF ciśnienie-niskie 25 .. 35 mbar
   CORRECT 'Niskie ciśnienie w normie (25-35 mbar)'
   ERROR 'Błąd: niskie ciśnienie poza zakresem 25-35 mbar'
 
-GOAL test-wysokiego-ciśnienia:
+GOAL:
+  SET NAME 'test wysokiego ciśnienia'
   SET multiplekser 2
   WAIT 10s
   GET ciśnienie-wysokie
   SAVE cw
-  CHECK 480 <= ciśnienie-wysokie <= 520 mbar
+  IF ciśnienie-wysokie 480 .. 520 mbar
   CORRECT 'Wysokie ciśnienie w normie (480-520 mbar)'
   ERROR 'Błąd: wysokie ciśnienie poza zakresem 480-520 mbar'
   SET pompa-ciśnieniowa 0
   SET zawór-izolacyjny 0
 
-GOAL podsumowanie:
+GOAL:
+  SET NAME 'podsumowanie'
   LOG "Test ciśnieniowy zakończony"
   SAVE raport-pełny

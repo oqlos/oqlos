@@ -3,23 +3,26 @@
 
 SCENARIO: Aparat C202 — przykład
 
-GOAL kontrola-wizualna:
+GOAL:
+  SET NAME 'kontrola wizualna'
   LOG "Inspekcja wizualna — potwierdzenie operatora"
   SAVE wynik-wizualny
 
-GOAL test-szczelności:
+GOAL:
+  SET NAME 'test szczelności'
   GET AI01
-  CHECK -10 <= AI01 <= 0 mbar
+  IF AI01 -10 .. 0 mbar
   CORRECT 'Szczelność NC w normie'
   ERROR 'Błąd: nieszczelność NC (poza zakresem -10 do 0 mbar)'
   SAVE ciśnienie-NC
 
-GOAL test-szczelności-pełny:
+GOAL:
+  SET NAME 'test szczelności pełny'
   SET pump-main 5 l/min
   SET valve-bo06 1
   WAIT 20s
   GET AI01
-  CHECK -10 <= AI01 <= 0 mbar
+  IF AI01 -10 .. 0 mbar
   CORRECT 'Szczelność pełna w normie'
   ERROR 'Błąd: nieszczelność w teście pełnym'
   SAVE ciśnienie-NC-pełny
@@ -28,17 +31,19 @@ GOAL test-szczelności-pełny:
   SET valve-bo05 0
   SET valve-bo06 0
 
-GOAL ciśnienie-otwarcia-zaw-wyd:
+GOAL:
+  SET NAME 'ciśnienie otwarcia zaw wyd'
   GET ciśnienie
-  CHECK 11 <= ciśnienie <= 12 bar
+  IF ciśnienie 11 .. 12 bar
   CORRECT 'Ciśnienie otwarcia zaworu wydajnego w normie (11-12 bar)'
   ERROR 'Błąd: ciśnienie otwarcia poza zakresem 11-12 bar'
   SAVE ciśnienie-otwarcia
 
-GOAL test-nadciśnienia:
+GOAL:
+  SET NAME 'test nadciśnienia'
   WAIT 10s
   GET nadciśnienie
-  CHECK 2.0 <= nadciśnienie <= 3.9 mbar
+  IF nadciśnienie 2.0 .. 3.9 mbar
   CORRECT 'Nadciśnienie w normie (2.0-3.9 mbar)'
   ERROR 'Błąd: nadciśnienie poza zakresem 2.0-3.9 mbar'
   SAVE nadciśnienie

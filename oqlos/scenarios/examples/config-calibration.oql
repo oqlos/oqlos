@@ -37,7 +37,8 @@ CONFIG zamknięcie-zaworów:
 # ──────────────────────────────────────────────
 # Weryfikacja szczelności NC
 # ──────────────────────────────────────────────
-GOAL weryfikacja-nc:
+GOAL:
+  SET NAME 'weryfikacja nc'
   WAIT 5s
   GET AI01
   SAVE ciśnienie-końcowe-nc

@@ -1,6 +1,7 @@
 SCENARIO: Test spadku ciśnienia automatu
 
-GOAL test-spadku-ciśnienia:
+GOAL:
+  SET NAME 'test spadku ciśnienia'
   SET regulator 50.0 l/min
   SET pompa-1 1
   SAMPLE ciśnienie START 50ms
@@ -8,7 +9,7 @@ GOAL test-spadku-ciśnienia:
   SAMPLE ciśnienie STOP
   GET ciśnienie
   SAVE dp-srednie
-  CHECK 0.5 <= ciśnienie <= 3.5 mbar
+  IF ciśnienie 0.5 .. 3.5 mbar
   CORRECT 'Spadek ciśnienia automatu OK (0.5-3.5 mbar)'
   ERROR 'Błąd: spadek ciśnienia poza zakresem'
   SET pompa-1 0

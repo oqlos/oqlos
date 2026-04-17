@@ -9,34 +9,39 @@ CONFIG start:
   LOG "=== Hardware diagnostics ==="
   CALL init-all
 
-GOAL smoke-pump:
+GOAL:
+  SET NAME 'smoke pump'
   LOG "Test: pompa DRI0050"
   CALL hw-pump-smoke
 
-GOAL smoke-lung:
+GOAL:
+  SET NAME 'smoke lung'
   LOG "Test: płuco TIC249"
   CALL hw-lung-smoke
 
-GOAL smoke-valves:
+GOAL:
+  SET NAME 'smoke valves'
   LOG "Test: zawory Modbus (NC / SC / WC)"
   CALL hw-valves-smoke
   CALL hw-valves-reset
 
-GOAL smoke-sensors:
+GOAL:
+  SET NAME 'smoke sensors'
   LOG "Test: czujniki ADS1115 (AI01/AI02/AI03)"
   CALL hw-sensors-baseline
   # sanity-checki zakresów przy braku ciśnienia
-  CHECK -5 <= AI01 <= 5 V
+  IF AI01 -5 .. 5 V
   CORRECT 'Czujnik AI01 w zakresie bazowym'
   ERROR 'Błąd: czujnik AI01 poza zakresem -5 do 5 V'
-  CHECK -5 <= AI02 <= 5 V
+  IF AI02 -5 .. 5 V
   CORRECT 'Czujnik AI02 w zakresie bazowym'
   ERROR 'Błąd: czujnik AI02 poza zakresem -5 do 5 V'
-  CHECK -5 <= AI03 <= 5 V
+  IF AI03 -5 .. 5 V
   CORRECT 'Czujnik AI03 w zakresie bazowym'
   ERROR 'Błąd: czujnik AI03 poza zakresem -5 do 5 V'
 
-GOAL koniec:
+GOAL:
+  SET NAME 'koniec'
   CALL stop-all
   LOG "Hardware diagnostics zakończone"
   SAVE diagnostics-done

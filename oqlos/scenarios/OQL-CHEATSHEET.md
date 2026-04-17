@@ -17,7 +17,9 @@ CALL macro-name [args...]        # wywołaj makro
 INCLUDE "ścieżka.oql"            # dołącz bibliotekę
 ```
 
-Plus bloki: `GOAL name:`, `CONFIG name:`, `MACRO name:`.
+Plus bloki: `GOAL:`, `CONFIG name:`, `MACRO name:`.
+Nowa składnia GOAL: nazwa ustawiana przez `SET NAME 'nazwa'` wewnątrz bloku.
+Stara składnia `GOAL name:` nadal działa dla kompatybilności wstecznej.
 
 ## Anatomia
 
@@ -152,17 +154,23 @@ INCLUDE "lib/peripherals.oql"
 CONFIG reset:
   CALL init-all
 
-GOAL podciśnienie:
+GOAL:
+  SET NAME 'Podciśnienie'
   SET pompa-1 5.0 l/min
   SET valve-nc 1
   WAIT 2s
-  CHECK -11 <= AI01 <= -9 mbar
+  IF AI01 -11 .. -9 mbar
+  CORRECT 'Podciśnienie w normie'
+  ERROR 'Podciśnienie poza zakresem'
   SAVE podciśnienie-start
 
-GOAL obserwacja-60s:
+GOAL:
+  SET NAME 'Obserwacja 60s'
   SET pompa-1 0
   WAIT 60s
-  CHECK -11 <= AI01 <= -9 mbar
+  IF AI01 -11 .. -9 mbar
+  CORRECT 'Podciśnienie stabilne'
+  ERROR 'Podciśnienie niestabilne'
   SAVE podciśnienie-koniec
 ```
 

@@ -54,12 +54,14 @@ CONFIG verify-pompa-wylaczona:
 # STATE / TRYBY — tryby pracy systemu
 # ──────────────────────────────────────────────
 
-GOAL state-ready:
+GOAL:
+  SET NAME 'state ready'
   LOG "System gotowy do pracy"
   SAVE system-ready
   WAIT 1s
 
-GOAL tryb-kalibracji:
+GOAL:
+  SET NAME 'tryb kalibracji'
   SET valve-nc 1
   SET valve-sc 1
   SET valve-wc 1
@@ -69,7 +71,8 @@ GOAL tryb-kalibracji:
   SET valve-wc 0
   SAVE kalibracja-zakonczona
 
-GOAL tryb-testowy-pompy:
+GOAL:
+  SET NAME 'tryb testowy pompy'
   SET pompa-1 5 l/min
   WAIT 2s
   SET pompa-1 0

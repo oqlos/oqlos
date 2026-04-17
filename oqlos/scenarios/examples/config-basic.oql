@@ -8,7 +8,8 @@ CONFIG inicjalizacja:
   SET valve-nc 0
   WAIT 500ms
 
-GOAL test-operacyjny:
+GOAL:
+  SET NAME 'test operacyjny'
   SET pompa-1 5.0 l/min
   WAIT 1s
   SET pompa-1 0 l/min

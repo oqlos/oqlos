@@ -52,11 +52,14 @@ source = """
 SCENARIO: Test
 DEVICE_TYPE: BA
 
-GOAL check:
+GOAL:
+  SET NAME 'Check'
   SET pompa-1 5.0 l/min
   WAIT 500ms
   GET AI01
-  CHECK 0.5 <= AI01 <= 0.8 V
+  IF AI01 0.5 .. 0.8 V
+  CORRECT 'Voltage OK'
+  ERROR 'Voltage out of range'
   SAVE high-voltage
 """
 
@@ -120,7 +123,7 @@ Auto-detecting parser pipeline:
 
 1. `parse_cql(source, filename)` first checks the source with
    `is_flat_oql()`.
-2. If the source uses v3 flat grammar (`GOAL name:`, no quotes,
+2. If the source uses v3 flat grammar (`GOAL:` + `SET NAME`, no quotes,
    `INCLUDE "..."`), it dispatches to `parse_flat_oql()` which returns a
    legacy `CqlDocument` via `oqlos/core/_oql_adapter.py`
    (`INCLUDE` + `MACRO`/`CALL` expansion happens here).
@@ -163,11 +166,14 @@ INCLUDE "lib/peripherals.oql"
 CONFIG reset:
   CALL init-all
 
-GOAL visual-inspection:
+GOAL:
+  SET NAME 'Visual inspection'
   SET valve-nc 1
   WAIT 2s
   GET AI01
-  CHECK 0.60 <= AI01 <= 0.67 V
+  IF AI01 0.60 .. 0.67 V
+  CORRECT 'NC voltage in range'
+  ERROR 'NC voltage out of range'
   SAVE nc-voltage-reading
 ```
 
@@ -176,10 +182,10 @@ Key rules:
 - **Identifiers are bare** — no surrounding quotes
   (`pump-main`, not `'pump-main'`).  For names with spaces use brackets:
   `SET [pompa głównego obiegu] 5 l/min`.
-- **Block headers use the `NAME:` form** — `GOAL test-pressure:` instead
-  of `GOAL: test pressure`.
-- **No `IF/ELSE/ENDIF`** — use `CHECK min <= sensor <= max unit` for
-  range assertions, or split into multiple `GOAL` blocks for sequencing.
+- **GOAL name set via SET NAME** — use `GOAL:` followed by `SET NAME 'nazwa'`
+  inside the block. Legacy `GOAL name:` still works for backward compatibility.
+- **No `IF/ELSE/ENDIF`** — use `IF min .. max unit` with `CORRECT`/`ERROR` messages
+  for range assertions, or split into multiple `GOAL` blocks for sequencing.
 - **Unicode is welcome** — `ciśnienie-NC`, `°C`, `%RH`, `μV`, `m³/h` …
 
 ### CONFIG Blocks
@@ -202,7 +208,8 @@ CONFIG pump-calibration:
   # 10 l/min corresponds to 100% PWM by default
   SET PUMP_FLOW_FULL_SCALE_LPM 10.0
 
-GOAL voltage-test:
+GOAL:
+  SET NAME 'Voltage test'
   SET valve-nc 1
   WAIT 1s
   GET AI01
@@ -222,7 +229,8 @@ MACRO pump-ramp:
   WAIT $2
   SET pump-main 0
 
-GOAL smoke:
+GOAL:
+  SET NAME 'Smoke'
   CALL pump-ramp 5 2s
   CALL hw-valves-smoke
   CALL hw-sensors-baseline

@@ -1,53 +1,74 @@
 SCENARIO: PSS 7000 — Test szczelności automatu (przez maskę)
 DESCRIPTION: Sekwencyjna wersja testu z płaską strukturą (bez zagnieżdżonego IF).
 
-GOAL test-statyczny-sc:
+GOAL:
+  SET NAME 'Test statyczny SC'
   SET pump-main 0 l/min
   WAIT 3s
   GET AI02
   SAVE ciśnienie-sc
-  MIN AI02 6.0 bar
+  IF AI02 6.0 .. 10.0 bar
+  CORRECT 'Ciśnienie SC w normie (6-10 bar)'
+  ERROR 'Błąd: ciśnienie SC poza zakresem'
 
-GOAL delta-sc:
+GOAL:
+  SET NAME 'Delta SC'
   WAIT 60s
   GET AI02
   SAVE delta-ciśnienia-sc
-  MIN AI02 -0.3 bar
+  IF AI02 -0.3 .. 0.6 bar
+  CORRECT 'Delta ciśnienia SC w normie'
+  ERROR 'Błąd: delta ciśnienia SC poza zakresem'
 
-GOAL ciśnienie-otwarcia-automatu:
+GOAL:
+  SET NAME 'Ciśnienie otwarcia automatu'
   SET pump-main 5.0 l/min
   SET valve-nc 1
   WAIT 8s
   GET AI01
   SAVE ciśnienie-nc-min
-  MIN AI01 -29.0 mbar
+  IF AI01 -29.0 .. -5.0 mbar
+  CORRECT 'Ciśnienie otwarcia w normie'
+  ERROR 'Błąd: ciśnienie otwarcia poza zakresem'
 
-GOAL nadciśnienie-statyczne:
+GOAL:
+  SET NAME 'Nadciśnienie statyczne'
   SET pump-main 0 l/min
   WAIT 10s
   GET AI01
   SAVE nadciśnienie
-  MIN AI01 2.0 mbar
+  IF AI01 2.0 .. 4.0 mbar
+  CORRECT 'Nadciśnienie statyczne w normie'
+  ERROR 'Błąd: nadciśnienie poza zakresem'
 
-GOAL sygnał-akustyczny:
+GOAL:
+  SET NAME 'Sygnał akustyczny'
   SET pump-main 5.0 l/min
   SET valve-nc 1
   WAIT 2s
   GET AI01
-  MIN AI01 0.0 mbar
+  IF AI01 0.0 .. 1.0 mbar
+  CORRECT 'Sygnał akustyczny OK'
+  ERROR 'Błąd: sygnał akustyczny poza zakresem'
   SAVE wynik-operatora
 
-GOAL wytworzenie-podciśnienia:
+GOAL:
+  SET NAME 'Wytworzenie podciśnienia'
   SET pump-main 5.0 l/min
   SET valve-nc 1
   WAIT 20s
   GET AI01
-  MIN AI01 -10.0 mbar
+  IF AI01 -15.0 .. -10.0 mbar
+  CORRECT 'Podciśnienie w normie'
+  ERROR 'Błąd: podciśnienie poza zakresem'
 
-GOAL szczelność-automatu:
+GOAL:
+  SET NAME 'Szczelność automatu'
   SET pump-main 0 l/min
   SET valve-nc 0
   WAIT 15s
   GET AI01
   SAVE ciśnienie-nc-końcowe
-  MAX AI01 -6.5 mbar
+  IF AI01 -12.0 .. -6.5 mbar
+  CORRECT 'Szczelność automatu OK'
+  ERROR 'Błąd: szczelność automatu poza zakresem'

@@ -3,7 +3,8 @@
 
 SCENARIO: Pomiar warunków środowiskowych
 
-GOAL pomiar-temp-wilgotność:
+GOAL:
+  SET NAME 'pomiar temp wilgotność'
   SET czujnik-temperatury 1
   SET czujnik-wilgotności 1
   SAMPLE temperatura START 1s
@@ -15,10 +16,10 @@ GOAL pomiar-temp-wilgotność:
   SAVE temperatura
   GET wilgotność
   SAVE wilgotność
-  CHECK 15 <= temperatura <= 25 °C
+  IF temperatura 15 .. 25 °C
   CORRECT 'Temperatura w normie (15-25°C)'
   ERROR 'Błąd: temperatura poza zakresem 15-25°C'
-  CHECK 30 <= wilgotność <= 70 %RH
+  IF wilgotność 30 .. 70 %RH
   CORRECT 'Wilgotność w normie (30-70%RH)'
   ERROR 'Błąd: wilgotność poza zakresem 30-70%RH'
   SET czujnik-temperatury 0

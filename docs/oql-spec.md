@@ -46,13 +46,14 @@ SET   pump-main   5.0   l/min
 
 ### 3.1 Nagłówki bloków
 
-- `GOAL name:` — blok wykonawczy (cel testowy).
+- `GOAL:` — blok wykonawczy (cel testowy). Nazwa ustawiana przez `SET NAME 'nazwa'` wewnątrz bloku.
+- `GOAL name:` — stara składnia, nadal obsługiwana dla kompatybilności wstecznej.
 - `CONFIG name:` — blok inicjalizacyjny; semantycznie identyczny z `GOAL`,
   ale oznaczony `[CONFIG]` w logach.
 - `MACRO name:` — definicja makra (ciało rozwijane przy `CALL`).
 
-`name` może zawierać dowolne znaki bez dwukropka; dla nazw ze spacjami
-użyj `GOAL [Nazwa wielowyrazowa]:`.
+Nazwa bloku GOAL może być ustawiona przez `SET NAME 'nazwa'` (nowa składnia) lub
+bezpośrednio w nagłówku (stara składnia). Dla nazw ze spacjami użyj `SET NAME 'Nazwa wielowyrazowa'`.
 
 ### 3.2 Metadane
 
@@ -197,22 +198,29 @@ INCLUDE "lib/peripherals.oql"
 CONFIG reset:
   CALL init-all
 
-GOAL test-statyczny-sc:
+GOAL:
+  SET NAME 'Test statyczny SC'
   SET pump-main 0
   WAIT 3s
   GET AI02
   SAVE ciśnienie-sc
-  CHECK 6.0 <= AI02 <= 8.0 bar
+  IF AI02 6.0 .. 8.0 bar
+  CORRECT 'Ciśnienie SC w normie'
+  ERROR 'Ciśnienie SC poza zakresem'
 
-GOAL ciśnienie-otwarcia-automatu:
+GOAL:
+  SET NAME 'Ciśnienie otwarcia automatu'
   SET pump-main 5.0 l/min
   SET valve-bo06 1
   WAIT 8s
   GET AI01
   SAVE ciśnienie-nc-min
-  CHECK -29.0 <= AI01 <= -5.0 mbar
+  IF AI01 -29.0 .. -5.0 mbar
+  CORRECT 'Ciśnienie otwarcia w normie'
+  ERROR 'Ciśnienie otwarcia poza zakresem'
 
-GOAL koniec:
+GOAL:
+  SET NAME 'Koniec'
   CALL stop-all
   LOG "Test zakończony"
   SAVE test-done
@@ -222,10 +230,11 @@ GOAL koniec:
 
 Interpreter detektuje automatycznie składnię:
 
-- **v3 (flat):** `GOAL name:` / `CONFIG name:` / `MACRO name:` / `INCLUDE "..."`.
+- **v3 (flat):** `GOAL:` + `SET NAME 'nazwa'` / `CONFIG name:` / `MACRO name:` / `INCLUDE "..."`.
+- **v3 (legacy):** `GOAL name:` nadal działa dla kompatybilności wstecznej.
 - **v1/v2 (legacy, z cudzysłowami):** `GOAL: Name` + `'target' 'value'`.
 
-Obie są parsowalne, ale **v3 jest zalecana** dla wszystkich nowych
+Nowa składnia `GOAL:` + `SET NAME 'nazwa'` jest zalecana dla wszystkich nowych
 scenariuszy. Pliki v1/v2 działają na starej ścieżce parsera (deprecated).
 
 ## 10. Referencje
