@@ -452,9 +452,9 @@ def parse_oql(text: str, filename: str = "<string>") -> OqlDoc:
             doc.errors.append(f"Linia {ln}: komenda musi być wcięta: {line!r}")
             continue
 
-        # Inside MACRO blocks, defer parsing — the body may contain $N
+        # Inside MACRO/FUNC blocks, defer parsing — the body may contain $N
         # placeholders that are only resolvable at expansion time.
-        if current.type == "MACRO":
+        if current.type in ("MACRO", "FUNC"):
             current.raw_cmds.append((ln, line))
             continue
 
