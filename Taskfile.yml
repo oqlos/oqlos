@@ -96,7 +96,7 @@ tasks:
   doql:doctor:
     desc: Run doql health checks
     cmds:
-      - "{{.DOQL_CMD}} doctor {{.PWD}}"
+      - "{{.DOQL_CMD}} doctor"
 
   doql:build:
     desc: Generate code from app.doql.less

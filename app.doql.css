@@ -105,7 +105,7 @@ fi;
 
 workflow[name="doql:doctor"] {
   trigger: "manual";
-  step-1: run cmd={{.DOQL_CMD}} doctor {{.PWD}};
+  step-1: run cmd={{.DOQL_CMD}} doctor;
 }
 
 workflow[name="doql:build"] {

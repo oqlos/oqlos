@@ -24,6 +24,7 @@ dependencies = [
     "paho-mqtt>=1.6.1",
     "pluggy>=1.4",
     "PyYAML>=6.0",
+    "testql>=0.2.0",
 ]
 
 [project.scripts]

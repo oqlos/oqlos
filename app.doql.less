@@ -1,0 +1,116 @@
+// LESS format — define @variables here as needed
+
+app {
+  name: "oqlos";
+  version: "0.1.1";
+}
+
+entity[name="ExecutionStatus"] {
+
+}
+
+entity[name="CommandEnvelope"] {
+
+}
+
+entity[name="Step"] {
+
+}
+
+entity[name="ValidationRule"] {
+
+}
+
+entity[name="Goal"] {
+
+}
+
+entity[name="Scenario"] {
+
+}
+
+entity[name="Peripheral"] {
+
+}
+
+interface[type="api"] {
+  type: rest;
+  framework: fastapi;
+}
+
+interface[type="cli"] {
+  framework: argparse;
+}
+interface[type="cli"] page[name="oqlctl"] {
+
+}
+
+workflow[name="install"] {
+  trigger: """""""""manual""""""""";
+}
+
+workflow[name="test"] {
+  trigger: """""""""manual""""""""";
+}
+
+workflow[name="lint"] {
+  trigger: """""""""manual""""""""";
+}
+
+workflow[name="fmt"] {
+  trigger: """""""""manual""""""""";
+}
+
+workflow[name="build"] {
+  trigger: """""""""manual""""""""";
+}
+
+workflow[name="clean"] {
+  trigger: """""""""manual""""""""";
+}
+
+workflow[name="hardware:check"] {
+  trigger: """""""""manual""""""""";
+}
+
+workflow[name="hardware:identify"] {
+  trigger: """""""""manual""""""""";
+}
+
+workflow[name="doql:adopt"] {
+  trigger: """""""""manual""""""""";
+}
+
+workflow[name="doql:validate"] {
+  trigger: """""""""manual""""""""";
+}
+
+workflow[name="doql:doctor"] {
+  trigger: """""""""manual""""""""";
+}
+
+workflow[name="doql:build"] {
+  trigger: """""""""manual""""""""";
+}
+
+workflow[name="help"] {
+  trigger: """""""""manual""""""""";
+}
+
+deploy {
+  target: docker-compose;
+  compose_file: docker/docker-compose.dev.yml;
+}
+
+environment[name="local"] {
+  runtime: docker-compose;
+  env_file: """"""""".env""""""""";
+}
+
+environment[name="dev"] {
+  runtime: docker-compose;
+}
+
+environment[name="prod"] {
+  runtime: docker-compose;
+}

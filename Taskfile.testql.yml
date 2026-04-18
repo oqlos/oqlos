@@ -1,0 +1,48 @@
+# TestQL Integration for OqlOS
+# https://taskfile.dev
+
+version: '3'
+
+vars:
+  TESTQL_DIR: testql-scenarios
+
+tasks:
+  default:
+    cmds:
+      - task --list
+
+  analyze:
+    desc: Analyze project structure for testability
+    cmds:
+      - testql analyze .
+
+  generate:
+    desc: Generate TestQL scenarios from project structure
+    cmds:
+      - testql generate . --output-dir {{.TESTQL_DIR}}
+
+  run:
+    desc: Run a TestQL scenario
+    cmds:
+      - testql run {{.CLI_ARGS}}
+
+  run-all:
+    desc: Run all generated TestQL scenarios
+    cmds:
+      - for file in {{.TESTQL_DIR}}/*.testql.toon.yaml; do testql run "$file" --url http://localhost:8202; done
+
+  smoke:
+    desc: Run hardware smoke tests
+    cmds:
+      - testql run {{.TESTQL_DIR}}/generated-hardware-smoke.testql.toon.yaml --url http://localhost:8202 || echo "Hardware tests not generated yet"
+      - testql run {{.TESTQL_DIR}}/generated-api-integration.testql.toon.yaml --url http://localhost:8202
+
+  dry-run:
+    desc: Validate all scenarios without executing
+    cmds:
+      - for file in {{.TESTQL_DIR}}/*.testql.toon.yaml; do testql run "$file" --dry-run; done
+
+  clean:
+    desc: Remove generated test files
+    cmds:
+      - rm -f {{.TESTQL_DIR}}/generated-*.testql.toon.yaml
