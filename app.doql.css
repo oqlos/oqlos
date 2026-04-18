@@ -89,8 +89,9 @@ workflow[name="doql:adopt"] {
   echo "⚠️  doql not installed. Install: pip install doql"
   exit 1
 fi;
-  step-2: run cmd={{.DOQL_CMD}} adopt {{.PWD}} --output {{.DOQL_OUTPUT}};
-  step-3: run cmd=echo "✅ Project structure captured in {{.DOQL_OUTPUT}}";
+  step-2: run cmd={{.DOQL_CMD}} adopt {{.PWD}} --output app.doql.css --force;
+  step-3: run cmd={{.DOQL_CMD}} export --format less -o {{.DOQL_OUTPUT}};
+  step-4: run cmd=echo "✅ Project structure captured in {{.DOQL_OUTPUT}}";
 }
 
 workflow[name="doql:validate"] {
@@ -99,7 +100,7 @@ workflow[name="doql:validate"] {
   echo "❌ {{.DOQL_OUTPUT}} not found. Run: task doql:adopt"
   exit 1
 fi;
-  step-2: run cmd={{.DOQL_CMD}} validate {{.DOQL_OUTPUT}};
+  step-2: run cmd={{.DOQL_CMD}} validate;
 }
 
 workflow[name="doql:doctor"] {
@@ -113,7 +114,11 @@ workflow[name="doql:build"] {
   echo "❌ {{.DOQL_OUTPUT}} not found. Run: task doql:adopt"
   exit 1
 fi;
-  step-2: run cmd={{.DOQL_CMD}} build {{.DOQL_OUTPUT}} --out build/;
+  step-2: run cmd=# Regenerate LESS from CSS if CSS exists
+if [ -f "app.doql.css" ]; then
+  {{.DOQL_CMD}} export --format less -o {{.DOQL_OUTPUT}}
+fi;
+  step-3: run cmd={{.DOQL_CMD}} build app.doql.css --out build/;
 }
 
 workflow[name="help"] {
