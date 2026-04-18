@@ -150,9 +150,9 @@ COUPLING:
            oqlos              ←4                                                                              ──                
        oqlos.dsl                                                               1                                              ──
   CYCLES: none
-  HUB: oqlos.hardware/ (fan-in=22)
-  HUB: oqlos.shared/ (fan-in=7)
   HUB: oqlos.core/ (fan-in=14)
+  HUB: oqlos.shared/ (fan-in=7)
+  HUB: oqlos.hardware/ (fan-in=22)
   SMELL: oqlos.api/ fan-out=19 → split needed
   SMELL: oqlos.tools/ fan-out=21 → split needed
 
