@@ -1,11 +1,11 @@
-# code2llm | 102f 16524L | python:100,shell:2 | 2026-04-18
+# code2llm | 102f 16524L | python:102,shell:3 | 2026-04-18
 # CC̄=3.7 | critical:4/775 | dups:0 | cycles:0
 
 HEALTH[4]:
   🟡 CC    parse_oql CC=34 (limit:15)
   🟡 CC    _cmd_to_actions CC=24 (limit:15)
-  🟡 CC    main CC=15 (limit:15)
   🟡 CC    report_json CC=16 (limit:15)
+  🟡 CC    main CC=15 (limit:15)
 
 REFACTOR[1]:
   1. split 4 high-CC methods  (CC>15)
@@ -150,9 +150,9 @@ COUPLING:
            oqlos              ←4                                                                              ──                
        oqlos.dsl                                                               1                                              ──
   CYCLES: none
-  HUB: oqlos.core/ (fan-in=14)
-  HUB: oqlos.shared/ (fan-in=7)
   HUB: oqlos.hardware/ (fan-in=22)
+  HUB: oqlos.shared/ (fan-in=7)
+  HUB: oqlos.core/ (fan-in=14)
   SMELL: oqlos.api/ fan-out=19 → split needed
   SMELL: oqlos.tools/ fan-out=21 → split needed
 

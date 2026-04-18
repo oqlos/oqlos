@@ -1,352 +1,151 @@
-# oqlos | 98f 14970L | shell:2,python:96 | 2026-04-16
-# stats: 704 func | 0 cls | 98 mod | CC̄=3.7 | critical:5 | cycles:0
-# alerts[5]: fan-out main=26; fan-out FirmwareAdapter.set_peripheral=20; fan-out exec_action_assert=20; CC CqlInterpreter._evaluate_inline_condition_expression=24; CC exec_action_func=23
-# hotspots[5]: main fan=26; exec_action_assert fan=20; FirmwareAdapter.set_peripheral fan=20; main fan=18; _handle_start fan=18
+# oqlos | 128f 19992L | python:124,shell:2,css:1,less:1 | 2026-04-18
+# stats: 492 func | 131 cls | 128 mod | CC̄=4.2 | critical:41 | cycles:0
+# alerts[5]: CC parse_oql=34; CC _cmd_to_actions=24; CC report_json=16; CC main=15; CC _safe_resolve=14
+# hotspots[5]: parse_oql fan=22; _handle_start fan=18; main fan=18; report_json fan=16; generate_goals_json fan=15
 # evolution: baseline
 # Keys: M=modules, D=details, i=imports, e=exports, c=classes, f=functions, m=methods
-M[98]:
-  oqlos/__init__.py,3
-  oqlos/api/__init__.py,17
-  oqlos/api/editor.py,126
-  oqlos/api/execution.py,354
-  oqlos/api/hardware.py,281
-  oqlos/api/logs.py,45
-  oqlos/api/main.py,169
-  oqlos/api/peripherals.py,70
-  oqlos/api/plugins.py,137
-  oqlos/api/scenarios.py,251
-  oqlos/api/state.py,370
-  oqlos/api/utils/__init__.py,0
-  oqlos/api/utils/execution_ctrl.py,62
-  oqlos/api/version.py,24
-  oqlos/config.py,67
-  oqlos/core/__init__.py,0
-  oqlos/core/_compare.py,40
-  oqlos/core/_cql_tokenizer.py,386
-  oqlos/core/_dsl_helpers.py,132
-  oqlos/core/_firmware_executor.py,201
-  oqlos/core/_func_resolver.py,96
-  oqlos/core/_interpreter_actions.py,703
-  oqlos/core/_line_parsers.py,246
-  oqlos/core/_sensor_evaluator.py,145
-  oqlos/core/_value_normalizers.py,126
-  oqlos/core/base.py,320
-  oqlos/core/cql_parser.py,432
-  oqlos/core/executor.py,383
-  oqlos/core/interpreter.py,530
-  oqlos/core/parser.py,183
-  oqlos/core/safe_eval.py,138
-  oqlos/core/state.py,124
+M[128]:
+  app.doql.css,165
+  app.doql.less,167
+  oqlos/__init__.py,4
+  oqlos/api/__init__.py,18
+  oqlos/api/editor.py,127
+  oqlos/api/execution.py,355
+  oqlos/api/hardware.py,282
+  oqlos/api/logs.py,46
+  oqlos/api/main.py,170
+  oqlos/api/peripherals.py,71
+  oqlos/api/plugins.py,138
+  oqlos/api/scenarios.py,252
+  oqlos/api/state.py,371
+  oqlos/api/utils/__init__.py,1
+  oqlos/api/utils/execution_ctrl.py,63
+  oqlos/api/version.py,25
+  oqlos/config.py,68
+  oqlos/core/__init__.py,1
+  oqlos/core/_compare.py,41
+  oqlos/core/_cql_tokenizer.py,387
+  oqlos/core/_cql_tree_builder.py,162
+  oqlos/core/_dsl_helpers.py,133
+  oqlos/core/_firmware_executor.py,202
+  oqlos/core/_func_resolver.py,97
+  oqlos/core/_interpreter_actions.py,772
+  oqlos/core/_line_parsers.py,247
+  oqlos/core/_oql_adapter.py,413
+  oqlos/core/_sensor_evaluator.py,146
+  oqlos/core/_value_normalizers.py,127
+  oqlos/core/base.py,321
+  oqlos/core/cql_parser.py,479
+  oqlos/core/executor.py,384
+  oqlos/core/interpreter.py,584
+  oqlos/core/oql_parser.py,572
+  oqlos/core/parser.py,184
+  oqlos/core/safe_eval.py,139
+  oqlos/core/state.py,125
   oqlos/dsl/__init__.py,19
   oqlos/dsl/schema.py,296
-  oqlos/hardware/__init__.py,0
-  oqlos/hardware/config_schema.py,125
+  oqlos/hardware/__init__.py,1
+  oqlos/hardware/config_schema.py,126
   oqlos/hardware/discovery.py,232
-  oqlos/hardware/drivers/__init__.py,5
-  oqlos/hardware/drivers/gpio.py,89
-  oqlos/hardware/drivers/mqtt.py,119
-  oqlos/hardware/drivers/spi.py,92
-  oqlos/hardware/firmware_adapter.py,428
-  oqlos/hardware/gateway.py,415
-  oqlos/hardware/peripheral_mapping.py,138
-  oqlos/hardware/plugin_gateway.py,348
-  oqlos/hardware/plugins/__init__.py,43
-  oqlos/hardware/plugins/_shared.py,61
-  oqlos/hardware/plugins/base.py,326
-  oqlos/hardware/plugins/lung.py,245
-  oqlos/hardware/plugins/modbus.py,258
-  oqlos/hardware/plugins/motor.py,376
-  oqlos/hardware/plugins/piadc.py,150
-  oqlos/hardware/plugins/registry.py,316
-  oqlos/hardware/protocol.py,60
-  oqlos/hardware/registry.py,49
-  oqlos/ide/__init__.py,0
-  oqlos/models/__init__.py,0
-  oqlos/models/dsl_models.py,86
-  oqlos/models/execution.py,22
-  oqlos/models/peripheral.py,33
-  oqlos/models/scenario.py,35
-  oqlos/reporters/__init__.py,5
-  oqlos/reporters/junit.py,86
-  oqlos/shared/__init__.py,0
+  oqlos/hardware/drivers/__init__.py,6
+  oqlos/hardware/drivers/gpio.py,90
+  oqlos/hardware/drivers/mqtt.py,120
+  oqlos/hardware/drivers/spi.py,93
+  oqlos/hardware/firmware_adapter.py,429
+  oqlos/hardware/gateway.py,416
+  oqlos/hardware/peripheral_mapping.py,139
+  oqlos/hardware/plugin_gateway.py,349
+  oqlos/hardware/plugins/__init__.py,44
+  oqlos/hardware/plugins/_shared.py,62
+  oqlos/hardware/plugins/base.py,327
+  oqlos/hardware/plugins/lung.py,246
+  oqlos/hardware/plugins/modbus.py,259
+  oqlos/hardware/plugins/motor.py,377
+  oqlos/hardware/plugins/piadc.py,151
+  oqlos/hardware/plugins/registry.py,317
+  oqlos/hardware/protocol.py,61
+  oqlos/hardware/registry.py,50
+  oqlos/ide/__init__.py,1
+  oqlos/models/__init__.py,1
+  oqlos/models/dsl_models.py,88
+  oqlos/models/execution.py,23
+  oqlos/models/peripheral.py,34
+  oqlos/models/scenario.py,36
+  oqlos/reporters/__init__.py,7
+  oqlos/reporters/html_report.py,267
+  oqlos/reporters/json_reporter.py,131
+  oqlos/reporters/junit.py,87
+  oqlos/shared/__init__.py,1
   oqlos/shared/_endpoint_helpers.py,34
-  oqlos/shared/config_factory.py,84
-  oqlos/shared/event_server.py,171
-  oqlos/shared/event_store.py,77
-  oqlos/shared/file_ops.py,108
-  oqlos/shared/logger.py,23
-  oqlos/shared/logs_query.py,145
-  oqlos/shared/release_version.py,125
-  oqlos/shared/version_endpoint.py,66
-  oqlos/tools/__init__.py,0
-  oqlos/tools/cql_cli/__init__.py,60
-  oqlos/tools/cql_cli/commands.py,178
-  oqlos/tools/cql_cli/main.py,189
-  oqlos/tools/cql_cli/preflight.py,265
-  oqlos/tools/cql_cli/utils.py,148
-  oqlos/tools/hardware_diagnose/__init__.py,53
-  oqlos/tools/hardware_diagnose/__main__.py,135
-  oqlos/tools/hardware_diagnose/benchmark.py,55
-  oqlos/tools/hardware_diagnose/calibration.py,92
-  oqlos/tools/hardware_diagnose/discovery.py,112
-  oqlos/tools/hardware_diagnose/health.py,80
-  oqlos/tools/hardware_diagnose/report.py,63
-  oqlos/tools/hardware_diagnose/shell.py,138
-  oqlos/tools/plugin_cli.py,342
-  oqlos/tools/xml_import/__init__.py,17
-  oqlos/tools/xml_import/_utils.py,101
-  oqlos/tools/xml_import/generators.py,442
-  oqlos/tools/xml_import/models.py,90
-  oqlos/tools/xml_import/parser.py,175
-  oqlos/utils/__init__.py,3
-  oqlos/utils/sample_data.py,73
+  oqlos/shared/config_factory.py,85
+  oqlos/shared/event_server.py,172
+  oqlos/shared/event_store.py,78
+  oqlos/shared/file_ops.py,109
+  oqlos/shared/logger.py,24
+  oqlos/shared/logs_query.py,146
+  oqlos/shared/release_version.py,126
+  oqlos/shared/version_endpoint.py,67
+  oqlos/tools/__init__.py,1
+  oqlos/tools/cql_cli/__init__.py,61
+  oqlos/tools/cql_cli/commands.py,179
+  oqlos/tools/cql_cli/main.py,196
+  oqlos/tools/cql_cli/preflight.py,266
+  oqlos/tools/cql_cli/utils.py,149
+  oqlos/tools/cql_cli.py,58
+  oqlos/tools/hardware_diagnose/__init__.py,54
+  oqlos/tools/hardware_diagnose/__main__.py,136
+  oqlos/tools/hardware_diagnose/benchmark.py,56
+  oqlos/tools/hardware_diagnose/calibration.py,93
+  oqlos/tools/hardware_diagnose/discovery.py,113
+  oqlos/tools/hardware_diagnose/health.py,81
+  oqlos/tools/hardware_diagnose/report.py,64
+  oqlos/tools/hardware_diagnose/shell.py,139
+  oqlos/tools/hardware_diagnose.py,37
+  oqlos/tools/plugin_cli.py,343
+  oqlos/tools/xml_import/__init__.py,18
+  oqlos/tools/xml_import/_utils.py,102
+  oqlos/tools/xml_import/generators.py,443
+  oqlos/tools/xml_import/models.py,91
+  oqlos/tools/xml_import/parser.py,176
+  oqlos/utils/__init__.py,4
+  oqlos/utils/sample_data.py,74
   project.sh,35
-  scripts/hardware-check.sh,340
-  setup_hardware_and_run_oql.py,333
+  scripts/hardware-check.sh,341
+  setup_hardware_and_run_oql.py,334
+  tests/firmware/test_dsl_parser_runtime.py,144
+  tests/firmware/test_firmware.py,10
+  tests/firmware/test_hardware_identify.py,88
+  tests/firmware/test_lung_integration.py,282
+  tests/firmware/test_modbus_discovery.py,90
+  tests/firmware/test_normalize_scenario.py,200
+  tests/firmware/test_parser_cycle.py,53
+  tests/firmware/test_runtime_command_payload.py,16
+  tests/firmware/test_safe_eval.py,244
+  tests/firmware/test_tokenizer_extended.py,194
+  tests/test_core.py,488
+  tests/test_cql_cli.py,166
+  tests/test_cql_inline_regressions.py,74
+  tests/test_cql_scenarios.py,88
+  tests/test_dsl_schema.py,20
+  tests/test_oql_dry_run_regressions.py,62
+  tests/test_oql_parser_v3.py,348
+  tests/test_oql_scenarios.py,74
+  tests/test_reporting.py,46
+  tests/verify_block_if.py,61
+  tests/verify_loops.py,34
 D:
-  oqlos/core/interpreter.py:
-    e: CqlInterpreter
-    CqlInterpreter(BaseInterpreter): __init__(10),sensor_values(1),sensor_values(1),_firmware(1),_firmware(1),_firmware_url(1),_firmware_url(1),_coerce_float(1),_resolve_peripheral_id(1),_get_pump_flow_full_scale_lpm(0),_normalize_pump_power(1),_normalize_valve_value(1),_normalize_lung_value(1),parse(2),_print_header(2),_collect_warnings(2),_run_validation_mode(3),_collect_all_goals(1),_execute_single_goal(2),_execute_all_goals(1),_build_script_result(2),execute(1),_execute_step(2),_execute_action(1),_exec_flat_action(1),_do_sleep(2),_normalize_peripheral_value(2),_coerce_generic_peripheral_value(1),_exec_set_peripheral(2),_get_firmware(0),_execute_firmware_action(2),_execute_plugin_action(2),_execute_legacy_firmware_action(2),_refresh_sensors_from_firmware(0),_auto_mock_sensor(3),_compare_sensor(3),_resolve_sensor_value(1),_resolve_condition_rhs(3),_evaluate_resolved_condition(0),_evaluate_inline_condition_expression(1),_evaluate_condition(1)  # CQL interpreter with three modes:
-  - validate: parse + chec...
-  oqlos/core/_interpreter_actions.py:
-    e: _extract_action_tokens,_drop_command_token,_coerce_expected_value,_compare_values,_get_nested_value,_record_failure,_mark_success,_normalize_bool,_lookup_peripheral_state,_mock_api_response,exec_action_task,exec_action_save,parse_wait_secs,exec_action_wait,_do_sleep,exec_action_min_max,exec_action_val,exec_action_log,exec_action_error,exec_action_else,exec_action_sample,_resolve_numeric_token,exec_action_func,exec_action_goto,exec_action_api,exec_action_expect,exec_action_assert,exec_action_shell,exec_action_var_set,exec_action_condition,exec_action_if_fail_block,exec_action_if_block,exec_action_loop_block,exec_action_set,_exec_set_wait,exec_action_action
-    _extract_action_tokens(text)
-    _drop_command_token(act)
-    _coerce_expected_value(value)
-    _compare_values(actual;operator;expected)
-    _get_nested_value(payload;path)
-    _record_failure(interp;key;message)
-    _mark_success(interp;key)
-    _normalize_bool(value)
-    _lookup_peripheral_state(interp;target)
-    _mock_api_response(interp;endpoint)
-    exec_action_task(interp;act)
-    exec_action_save(interp;act)
-    parse_wait_secs(raw)
-    exec_action_wait(interp;act)
-    _do_sleep(interp;secs;label)
-    exec_action_min_max(interp;act)
-    exec_action_val(interp;act)
-    exec_action_log(interp;act)
-    exec_action_error(interp;act)
-    exec_action_else(interp;act)
-    exec_action_sample(interp;act)
-    _resolve_numeric_token(interp;token)
-    exec_action_func(interp;act)
-    exec_action_goto(interp;act)
-    exec_action_api(interp;act)
-    exec_action_expect(interp;act)
-    exec_action_assert(interp;act)
-    exec_action_shell(interp;act)
-    exec_action_var_set(interp;act)
-    exec_action_condition(interp;act)
-    exec_action_if_fail_block(interp;act)
-    exec_action_if_block(interp;act)
-    exec_action_loop_block(interp;act)
-    exec_action_set(interp;act)
-    _exec_set_wait(interp;act;value)
-    exec_action_action(interp;act)
-  oqlos/core/cql_parser.py:
-    e: _ParseState,parse_cql,_collect_all_goals,_validate_intervals,validate_cql
-    _ParseState: __init__(2),parse(0),_peek_next_significant_indent(0),_flush_pending_inline_if(0),_attach_pending_inline_if(2),_get_line_info(0),_process_line(0),_try_skip_block(2),_try_intervals_block(3),_try_top_level(3),_handle_scenario(1),_handle_scenario_attrs(1),_handle_goal(3),_handle_goal_attrs(1),_handle_step(1),_init_block_stack(0),_add_action_to_parent(1),_append_nested_action(1),_append_loop_action(1),_pop_block_with_warning(2),_handle_block_control(1),_handle_else_block(0),_try_hierarchy(3)  # Encapsulates the parsing state to simplify the main loop...
-    parse_cql(source;filename)
-    _collect_all_goals(doc)
-    _validate_intervals(doc)
-    validate_cql(doc)
-  oqlos/tools/hardware_diagnose/__main__.py:
-    e: _print_list,_print_health,_print_calibrate,_print_benchmark,main
-    _print_list(url;as_json)
-    _print_health(url;as_json)
-    _print_calibrate(url;as_json)
-    _print_benchmark(url;duration;as_json)
-    main()
-  oqlos/core/executor.py:
-    e: ScenarioOrchestrator,_resolve_compare,_resolve_name_or_attr,_safe_resolve,safe_eval_condition
-    ScenarioOrchestrator: __init__(2),_sanitize_identifier(1),_build_eval_context(0),_sanitize_expression(1),_build_step_plan(1),_execute_goal_steps(7),execute_scenario(4),execute_step(3),_execute_lung_step(2),_execute_valve_step(2),_execute_pump_step(3),_execute_wait_step(2),_execute_sensor_read_step(1),_execute_validate_step(1),update_dependent_sensors(1),validate_goal(1),log_event(2)
-    _resolve_compare(node;context)
-    _resolve_name_or_attr(node;context)
-    _safe_resolve(node;context)
-    safe_eval_condition(expr;context)
-  oqlos/tools/xml_import/generators.py:
-    e: _mode_symbol,_format_range,_mode_action,_emit_cql_output,_emit_cql_param,_emit_cql_sensor_param,_emit_dsl_output,_emit_dsl_param,_build_steps_from_op,_append_sensor_assertion,_build_validation_criteria,generate_dsl,_emit_dsl_test_run,_emit_dsl_sensors,_emit_dsl_metadata,generate_cql,_generate_cql_for_goal,generate_goals_json
-    _mode_symbol(mode)
-    _format_range(p)
-    _mode_action(mode)
-    _emit_cql_output(out;a)
-    _emit_cql_param(p;a)
-    _emit_cql_sensor_param(p;a)
-    _emit_dsl_output(out;a)
-    _emit_dsl_param(p;a)
-    _build_steps_from_op(op)
-    _append_sensor_assertion(steps;op;p)
-    _build_validation_criteria(ops)
-    generate_dsl(report)
-    _emit_dsl_test_run(report;tr;a)
-    _emit_dsl_sensors(report;a)
-    _emit_dsl_metadata(report;a)
-    generate_cql(report)
-    _generate_cql_for_goal(ops)
-    generate_goals_json(report)
-  oqlos/hardware/plugins/lung.py:
-    e: LungPlugin
-    LungPlugin(HardwarePlugin): __init__(1),validate_config(0),connect(0),disconnect(0),health_check(0),_handle_reciprocate_http(1),_handle_reciprocate_usb(1),_handle_stop_http(0),_handle_stop_usb(0),_handle_move_http(1),_handle_move_usb(1),_handle_energize_http(1),_handle_energize_usb(1),_handle_status_http(0),_handle_status_usb(0),execute_command(2),get_capabilities(0)  # Plugin for Pololu Tic T249 stepper motor (artificial lung).
-...
-  oqlos/hardware/plugins/motor.py:
-    e: MotorPlugin
-    MotorPlugin(HardwarePlugin): __init__(1),validate_config(0),connect(0),disconnect(0),health_check(0),_validate_power_pct(1),_handle_set_speed_http(2),_handle_set_speed_cli(2),_handle_set_speed_modbus(2),_handle_stop_http(1),_handle_stop_cli(1),_handle_stop_modbus(1),_handle_status_http(1),_handle_status_cli(1),_handle_status_modbus(1),execute_command(2),get_capabilities(0)  # Plugin for DFRobot DRI0050 PWM motor driver.
-
-Configuration:...
-  oqlos/core/parser.py:
-    e: _dispatch_simple_parser,_try_action_or_condition,_parse_runtime_line,parse_dsl_to_goal_with_issues,parse_dsl_to_goal
-    _dispatch_simple_parser(kind;line;step_counter;steps)
-    _try_action_or_condition(line;normalized_line;step_counter;steps;record_invalid)
-    _parse_runtime_line(line;step_counter;steps;func_defs;indent;call_stack;invalid_lines)
-    parse_dsl_to_goal_with_issues(dsl;scenario_id)
-    parse_dsl_to_goal(dsl;scenario_id)
-  oqlos/core/_func_resolver.py:
-    e: _collect_function_definitions,_extract_func_name,_guard_recursion,_parse_func_call
-    _collect_function_definitions(lines)
-    _extract_func_name(line;indent)
-    _guard_recursion(func_name;call_stack)
-    _parse_func_call(line;step_counter;steps;func_defs;indent;call_stack;parse_line_fn)
-  oqlos/tools/cql_cli/preflight.py:
-    e: ensure_firmware_running,_is_firmware_running,_start_firmware_service,check_firmware_state,check_required_adapter,_emit_preflight_error,emit_preflight_success,_emit_yaml_preflight,_emit_text_preflight,preflight_hardware
-    ensure_firmware_running(firmware_url)
-    _is_firmware_running(firmware_url)
-    _start_firmware_service(firmware_url)
-    check_firmware_state(firmware_url;yaml_output;quiet)
-    check_required_adapter(command;adapters;yaml_output;quiet)
-    _emit_preflight_error(error_msg;yaml_output;quiet)
-    emit_preflight_success(firmware_url;health;identify;required_adapter;adapter_status;yaml_output;quiet)
-    _emit_yaml_preflight(firmware_url;health;identify;required_adapter;adapter_status)
-    _emit_text_preflight(firmware_url;health;identify;required_adapter;adapter_status)
-    preflight_hardware(command;firmware_url)
-  oqlos/api/state.py:
-    e: _compose_named_state,_compose_sim_state_list,get_state,_generate_sinusoidal_values,stream_values,get_current_value,get_sim_state,get_variables_alias,fetch_variables,fetch_protocol_steps,_maybe_register_dsl_from_content,_extract_scenario_id,_extract_inline_dsl,_handle_start,_make_state_handler,post_commands
-    _compose_named_state()
-    _compose_sim_state_list(named_state)
-    get_state()
-    _generate_sinusoidal_values(param;min_val;max_val;period;interval)
-    stream_values(param;min;max;period;interval;demo)
-    get_current_value(param)
-    get_sim_state()
-    get_variables_alias()
-    fetch_variables(source)
-    fetch_protocol_steps(scenario;source)
-    _maybe_register_dsl_from_content(data;scenario_id)
-    _extract_scenario_id(data)
-    _extract_inline_dsl(data)
-    _handle_start(env)
-    _make_state_handler(ctrl_fn)
-    post_commands(env;background_tasks)
-  setup_hardware_and_run_oql.py:
-    e: detect_serial_devices,suggest_modbus_port,generate_env_content,setup_env_file,load_env_file,run_oql_scenario,main
-    detect_serial_devices()
-    suggest_modbus_port(devices)
-    generate_env_content(hardware_mode;modbus_port;piadc_url;motor_url;lung_motor_url)
-    setup_env_file(env_path;hardware_mode;modbus_port;force)
-    load_env_file(env_path)
-    run_oql_scenario(scenario_path;mode;firmware_url)
-    main()
-  oqlos/core/_line_parsers.py:
-    e: _parse_task_part,_parse_pump_line,_set_valve_step,_set_pump_step,_set_lung_step,_parse_set_line,_parse_inline_task,_parse_action_line,_parse_if_condition
-    _parse_task_part(part;step_counter)
-    _parse_pump_line(line;step_counter)
-    _set_valve_step(peripheral;value_raw;step_counter;line)
-    _set_pump_step(peripheral;value_raw;step_counter;line)
-    _set_lung_step(peripheral;value_raw;step_counter;line)
-    _parse_set_line(line;step_counter)
-    _parse_inline_task(line;step_counter;steps)
-    _parse_action_line(line;step_counter;steps)
-    _parse_if_condition(line;step_counter;steps)
-  oqlos/tools/hardware_diagnose/report.py:
-    e: format_peripheral_table,save_diagnostic_report
-    format_peripheral_table(devices)
-    save_diagnostic_report(filename;url)
-  oqlos/tools/xml_import/_utils.py:
-    e: slugify,is_pump_output,is_compressor_output,normalize_output_name,normalize_flow_value,normalize_set_value
-    slugify(text)
-    is_pump_output(name)
-    is_compressor_output(name)
-    normalize_output_name(name)
-    normalize_flow_value(raw_value)
-    normalize_set_value(raw_value)
-  oqlos/hardware/discovery.py:
-    e: _unique_preserving_order,list_serial_ports,_build_probe_candidates,_make_pymodbus_fallback_result,_make_probe_success_result,_make_probe_failure_result,_try_modbus_connection,probe_waveshare_modbus
-    _unique_preserving_order(values)
-    list_serial_ports()
-    _build_probe_candidates(ports;preferred_port;preferred_baud;preferred_parity)
-    _make_pymodbus_fallback_result(first_port)
-    _make_probe_success_result(port_meta;serial_port;baudrate;parity)
-    _make_probe_failure_result(first_port;last_error)
-    _try_modbus_connection(serial_port;baudrate;parity;timeout)
-    probe_waveshare_modbus(preferred_port;preferred_baud;preferred_parity;timeout)
-  oqlos/hardware/firmware_adapter.py:
-    e: FirmwareAdapter,_parse_numeric
-    FirmwareAdapter: __init__(3),_get_client(0),close(0),_get_lung_motor_url(0),is_available(0),_resolve_peripheral(1),set_peripheral(2),pump_off(1),pump_set(2),valve_open(1),valve_close(1),reset_peripherals(0),read_state(0),read_sensor(1),read_all_sensors(0),_resolve_dispatch_target(3),_handle_lung_action(4),_handle_valve_action(4),_handle_pump_action(4),_handle_common_action(3),_execute_method(4),dispatch_action(3)  # HTTP bridge between CQL interpreter and firmware simulator...
-    _parse_numeric(s)
-  oqlos/hardware/plugins/modbus.py:
-    e: ModbusPlugin
-    ModbusPlugin(HardwarePlugin): __init__(1),validate_config(0),connect(0),disconnect(0),health_check(0),execute_command(2),get_capabilities(0)  # Plugin for Waveshare Modbus RTU IO 8CH valve controller.
-
-Co...
-  oqlos/core/_dsl_helpers.py:
-    e: _normalize_quote_syntax,_looks_like_valve_object,_looks_like_pump_object,_looks_like_lung_object,_looks_like_sensor_object,_map_peripheral,_parse_numeric_value,_map_valve_action,_map_pump_action,_map_wait_action,_map_lung_action,_map_action_value
-    _normalize_quote_syntax(line)
-    _looks_like_valve_object(obj)
-    _looks_like_pump_object(obj)
-    _looks_like_lung_object(obj)
-    _looks_like_sensor_object(obj)
-    _map_peripheral(obj)
-    _parse_numeric_value(raw)
-    _map_valve_action(fn)
-    _map_pump_action(fn;obj_raw;line)
-    _map_wait_action(fn;obj;obj_raw;line;step_counter)
-    _map_lung_action(fn;obj_raw;line)
-    _map_action_value(fn;obj;obj_raw;line;step_counter)
-  oqlos/core/_firmware_executor.py:
-    e: FirmwareExecutor
-    FirmwareExecutor: __init__(6),_get_firmware(0),resolve_peripheral_id(0),normalize_peripheral_value(2),refresh_sensors_from_firmware(1),execute_firmware_action(2),_execute_plugin_action(2),_execute_legacy_firmware_action(2),exec_set_peripheral(2)  # Executes hardware actions via plugin gateway or legacy firmw...
-  oqlos/tools/hardware_diagnose/discovery.py:
-    e: UsbDevice,_run_shell_command,list_usb_serial_devices,list_i2c_buses,detect_chips_on_i2c
-    UsbDevice: to_dict(0)  # USB device information...
-    _run_shell_command(cmd)
-    list_usb_serial_devices()
-    list_i2c_buses()
-    detect_chips_on_i2c(bus)
-  oqlos/shared/release_version.py:
-    e: clean_version,_run_git,_read_version_from_package_json,_read_version_from_text,_version_candidates,resolve_release_version,main
-    clean_version(raw)
-    _run_git(project_root)
-    _read_version_from_package_json(path)
-    _read_version_from_text(path)
-    _version_candidates(project_root)
-    resolve_release_version(project_root)
-    main()
-  oqlos/shared/logs_query.py:
-    e: LogsQueryService,resolve_logs_db_path
-    LogsQueryService: __init__(1),_connect(0),query_logs(0),get_stats(0)  # Read-only query service for nfo logs SQLite database.
-
-Follo...
-    resolve_logs_db_path(project_root_fallback)
-  oqlos/api/scenarios.py:
-    e: get_scenario,_fetch_raw_from_sources,_compute_slug,_extract_id,_extract_display_fields,_extract_goals,_normalize_scenario_row,fetch_scenarios,_parse_content_to_goals,_ensure_list,_normalize_dsl_payload,_collect_dsl_strings,_parse_goals_from_dsl,_merge_goals_into_scenario,_register_single_dsl_scenario,register_dsl
-    get_scenario(scenario_id)
-    _fetch_raw_from_sources(sources)
-    _compute_slug(item;display_name;sid)
-    _extract_id(item)
-    _extract_display_fields(item;sid)
-    _extract_goals(item)
-    _normalize_scenario_row(item)
-    fetch_scenarios(source)
-    _parse_content_to_goals(content)
-    _ensure_list(x)
-    _normalize_dsl_payload(payload)
-    _collect_dsl_strings(item)
-    _parse_goals_from_dsl(goals_dsl;sid;parse_fn)
-    _merge_goals_into_scenario(sid;item;parsed_goals)
-    _register_single_dsl_scenario(item;parse_fn)
-    register_dsl(payload)
+  oqlos/__init__.py:
+  oqlos/api/__init__.py:
+  oqlos/api/editor.py:
+    e: FileInfo,FileContent,ExecutionRequest,_safe_path,list_files,read_file_endpoint,write_file_endpoint,execute_scenario
+    FileInfo:
+    FileContent:
+    ExecutionRequest:
+    _safe_path(file_path)
+    list_files()
+    read_file_endpoint(file_path)
+    write_file_endpoint(file_path;file_content)
+    execute_scenario(request)
   oqlos/api/execution.py:
     e: _resolve_step_label,_flatten_steps_for_scenario,_build_step_labels,_resolve_current_index,_current_projection,start_execution,execute_step,_register_dsl_scenario,_make_exec_route,get_execution,get_execution_projection,get_execution_status,get_execution_logs,_make_legacy_route,execution_stream,execution_logs_stream
     _resolve_step_label(scenario_id;goal_id;step_id)
@@ -365,22 +164,6 @@ Follo...
     _make_legacy_route(ctrl_fn)
     execution_stream(scenario)
     execution_logs_stream(scenario)
-  oqlos/core/_sensor_evaluator.py:
-    e: SensorEvaluator
-    SensorEvaluator: __init__(3),collect_sensor_constraints(0),seed_sensors_from_conditions(1),auto_mock_sensor(3),compare_sensor(3),get_sensor_value(1)  # Evaluates sensor conditions and manages sensor values...
-  oqlos/tools/xml_import/parser.py:
-    e: parse_xml,_populate_report_fields,_parse_intervals,_parse_test_run,_parse_operation,_parse_operation_params
-    parse_xml(xml_path)
-    _populate_report_fields(report;vars_)
-    _parse_intervals(report;vars_)
-    _parse_test_run(report;vars_;tr_num)
-    _parse_operation(report;vars_;pfx;op_num)
-    _parse_operation_params(op;vars_;opfx)
-  oqlos/hardware/plugins/piadc.py:
-    e: PiadcPlugin
-    PiadcPlugin(HardwarePlugin): __init__(1),validate_config(0),connect(0),disconnect(0),health_check(0),execute_command(2),get_capabilities(0)  # Plugin for piADC (ADS1115) 16-bit ADC sensor.
-
-Configuration...
   oqlos/api/hardware.py:
     e: _scan_usb_devices,_probe_tic249,_probe_dri0050,_probe_i2c_ads1115,_probe_modbus_rtu,_probe_all_hardware,_collect_hardware_diagnostics,set_hardware_gateway,_gw,hardware_health,hardware_identify,set_valve,set_pump,read_sensor,set_lung,stop_lung
     _scan_usb_devices()
@@ -399,127 +182,87 @@ Configuration...
     read_sensor(sensor_id)
     set_lung(steps;speed;cycles;pause)
     stop_lung()
-  oqlos/core/_value_normalizers.py:
-    e: ValueNormalizer
-    ValueNormalizer: __init__(1),coerce_float(0),_get_pump_flow_full_scale_lpm(0),normalize_pump_power(1),normalize_valve_value(1),normalize_lung_value(1),coerce_generic_peripheral_value(1)  # Normalizes DSL values to hardware-compatible formats...
-  oqlos/tools/plugin_cli.py:
-    e: _load_config_file,_save_config_file,cmd_list,cmd_status,cmd_capabilities,cmd_validate,cmd_connect,cmd_disconnect,cmd_health,cmd_execute,cmd_reload,cmd_peripherals,main
-    _load_config_file(path)
-    _save_config_file(path;configs)
-    cmd_list(args)
-    cmd_status(args)
-    cmd_capabilities(args)
-    cmd_validate(args)
-    cmd_connect(args)
-    cmd_disconnect(args)
-    cmd_health(args)
-    cmd_execute(args)
-    cmd_reload(args)
-    cmd_peripherals(args)
-    main()
-  oqlos/tools/cql_cli/commands.py:
-    e: run_source,run_single_command,handle_list_command,execute_command_with_cleanup,_run_continuous_mode
-    run_source(source;filename)
-    run_single_command(command)
-    handle_list_command(argv)
-    execute_command_with_cleanup(args;result;yaml_output;quiet)
-    _run_continuous_mode(args;quiet)
-  oqlos/tools/cql_cli/utils.py:
-    e: output_yaml,parse_sensor_overrides,build_result_payload,normalize_target_name,build_single_command_scenario,_extract_first_action,_resolve_peripheral_adapter,_resolve_sensor_target,resolve_required_adapter,validate_directory
-    output_yaml(data;quiet)
-    parse_sensor_overrides(sensor_args)
-    build_result_payload(result)
-    normalize_target_name(target)
-    build_single_command_scenario(command)
-    _extract_first_action(command)
-    _resolve_peripheral_adapter(target)
-    _resolve_sensor_target(action)
-    resolve_required_adapter(command)
-    validate_directory(d;interpreter_class)
-  oqlos/reporters/junit.py:
-    e: JUnitReporter,report_junit
-    JUnitReporter: generate(2),_add_testcase(2)  # Generate JUnit XML from a ScriptResult...
-    report_junit(result;suite_name)
-  oqlos/core/base.py:
-    e: StepStatus,StepResult,ScriptResult,VariableStore,InterpreterOutput,BaseInterpreter,EventBridge
-    StepStatus(Enum):
-    StepResult:
-    ScriptResult: summary(0)
-    VariableStore: __init__(2),set(3),get(2),has(1),all(1),clear(0),interpolate(1)  # Hierarchical key-value store with interpolation support...
-    InterpreterOutput: __init__(3),emit(2),_broadcast_event(2),info(1),ok(1),fail(1),warn(1),error(1),step(2),output_yaml(0)  # Collects interpreter output lines for display or testing, an...
-    BaseInterpreter(ABC): __init__(4),parse(2),execute(1),run(2),run_file(1),strip_comments(0)  # Abstract base for language interpreters...
-    EventBridge: __init__(1),connect(0),disconnect(0),send_event(2)  # Optional WebSocket bridge to DSL Event Server (port 8104).
-
-...
-  oqlos/hardware/gateway.py:
-    e: _PiAdcAdapter,_DRI0050MotorAdapter,_Tic249LungAdapter,_ModbusAdapter,HardwareGateway
-    _PiAdcAdapter: __init__(1),read_channel(1),read_sensor(1)  # Reads pressure / analog sensors via piadc REST API (ADS1115)...
-    _DRI0050MotorAdapter: __init__(1),set_speed(1),_stop(0),status(0)  # Controls the pump motor via rpi-motor-DRI0050 REST API (DFRo...
-    _Tic249LungAdapter: __init__(1),reciprocate(4),stop(0),move(2),energize(1),status(0)  # Controls the artificial lung stepper motor via rpi-motor-tic...
-    _ModbusAdapter: __init__(5),set_coil(2),_set_coil_rtu(3),_set_coil_tcp(2),set_valve(2)  # Controls valves via Modbus RTU over RS485 (Waveshare Modbus ...
-    HardwareGateway: __init__(1),set_valve(2),set_pump(1),read_sensor(1),set_lung(4),stop_lung(0),health(0)  # Single entry-point for all physical hardware I/O.
-
-In *mock*...
-  oqlos/shared/event_server.py:
-    e: ConnectionManager,EventServer,main
-    ConnectionManager: __init__(0),connect(2),disconnect(1),broadcast(2),get_stats(0)  # Tracks connected WebSocket clients and broadcasts messages...
-    EventServer: __init__(3),handle_client(1),_handle_message(2),_normalize_event(0),start(0)  # WebSocket event broker with persistence...
-    main()
-  oqlos/dsl/schema.py:
-    e: DslDialect,DslItem,DslFunctionBinding,DslParamUnitBinding,DslSchema,_normalize_name_list,_build_inferred_object_function_map,_build_inferred_param_unit_map,_merge_object_function_map,_merge_param_unit_map,get_default_dsl_schema
-    DslDialect(BaseModel):  # Supported DSL dialect metadata...
-    DslItem(BaseModel):  # A reusable schema item visible to editor clients...
-    DslFunctionBinding(BaseModel):  # Object to function relationship used by visual builders...
-    DslParamUnitBinding(BaseModel):  # Param to unit relationship used by visual builders...
-    DslSchema(BaseModel):  # Complete editor schema shared by GUI and runtime tooling...
-    _normalize_name_list(values)
-    _build_inferred_object_function_map(objects;functions)
-    _build_inferred_param_unit_map(params;units)
-    _merge_object_function_map(explicit_map;inferred_map)
-    _merge_param_unit_map(explicit_map;inferred_map)
-    get_default_dsl_schema()
-  oqlos/tools/hardware_diagnose/health.py:
-    e: _request_firmware_json,check_firmware_health,check_firmware_identify,cmd_health,cmd_diagnose
-    _request_firmware_json(url;endpoint)
-    check_firmware_health(url)
-    check_firmware_identify(url)
-    cmd_health(url)
-    cmd_diagnose(url)
-  oqlos/tools/hardware_diagnose/benchmark.py:
-    e: run_benchmark
-    run_benchmark(url;duration)
-  oqlos/tools/hardware_diagnose/shell.py:
-    e: _cmd_list,_cmd_calibrate,_cmd_benchmark,_dispatch_command,interactive_shell
-    _cmd_list()
-    _cmd_calibrate(url)
-    _cmd_benchmark(parts;url)
-    _dispatch_command(cmd;parts;url)
-    interactive_shell(url)
-  oqlos/hardware/plugin_gateway.py:
-    e: PluginHardwareGateway
-    PluginHardwareGateway: __init__(2),_load_hardware_schema(0),_load_plugin_configs(1),_create_default_configs(0),_parse_plugin_configs(1),ensure_initialized(0),_initialize_plugins(0),set_valve(2),set_pump(1),read_sensor(1),set_lung(4),stop_lung(0),reload_configs(1),health(0)  # Simplified hardware gateway using plugin architecture.
-
-Inst...
-  oqlos/hardware/plugins/registry.py:
-    e: PluginRegistry
-    PluginRegistry: register(1),unregister(1),get_plugin_class(1),list_plugins(0),create_instance(2),get_instance(1),connect_plugin(2),disconnect_plugin(1),health_check(1),health_check_all(0),validate_all_configurations(1),get_status(0),discover_entry_point_plugins(1),load_configs_from_yaml(1)  # Central registry for hardware plugins.
-
-Manages:
-- Plugin di...
-  oqlos/hardware/drivers/gpio.py:
-    e: GpioDriver
-    GpioDriver(HardwareProtocol): __init__(0),connect(1),read(1),write(2),discover(0),health_check(0),disconnect(0)  # Driver for direct GPIO control.
-Supports basic I/O operation...
-  oqlos/api/editor.py:
-    e: FileInfo,FileContent,ExecutionRequest,_safe_path,list_files,read_file_endpoint,write_file_endpoint,execute_scenario
-    FileInfo(BaseModel):
-    FileContent(BaseModel):
-    ExecutionRequest(BaseModel):
-    _safe_path(file_path)
-    list_files()
-    read_file_endpoint(file_path)
-    write_file_endpoint(file_path;file_content)
-    execute_scenario(request)
+  oqlos/api/logs.py:
+    e: _get_service,get_logs,get_log_stats
+    _get_service()
+    get_logs(level;function;module;q;environment;limit;offset)
+    get_log_stats()
+  oqlos/api/main.py:
+    e: index_page,editor_page,health_check,status,websocket_endpoint,run
+    index_page()
+    editor_page()
+    health_check()
+    status()
+    websocket_endpoint(websocket)
+    run()
+  oqlos/api/peripherals.py:
+    e: get_peripheral,update_peripheral,set_peripheral,reset_peripherals
+    get_peripheral(peripheral_id)
+    update_peripheral(peripheral_id;update_data)
+    set_peripheral(peripheral_id;value;mode)
+    reset_peripherals()
+  oqlos/api/plugins.py:
+    e: list_plugins,get_plugin_status,get_plugin_info,get_plugin_health,connect_plugin,disconnect_plugin,execute_plugin_command,validate_plugin_configs
+    list_plugins()
+    get_plugin_status()
+    get_plugin_info(plugin_id)
+    get_plugin_health(plugin_id)
+    connect_plugin(plugin_id;config)
+    disconnect_plugin(plugin_id)
+    execute_plugin_command(plugin_id;command)
+    validate_plugin_configs(configs)
+  oqlos/api/scenarios.py:
+    e: get_scenario,_fetch_raw_from_sources,_compute_slug,_extract_id,_extract_display_fields,_extract_goals,_normalize_scenario_row,fetch_scenarios,_parse_content_to_goals,_ensure_list,_normalize_dsl_payload,_collect_dsl_strings,_parse_goals_from_dsl,_merge_goals_into_scenario,_register_single_dsl_scenario,register_dsl
+    get_scenario(scenario_id)
+    _fetch_raw_from_sources(sources)
+    _compute_slug(item;display_name;sid)
+    _extract_id(item)
+    _extract_display_fields(item;sid)
+    _extract_goals(item)
+    _normalize_scenario_row(item)
+    fetch_scenarios(source)
+    _parse_content_to_goals(content)
+    _ensure_list(x)
+    _normalize_dsl_payload(payload)
+    _collect_dsl_strings(item)
+    _parse_goals_from_dsl(goals_dsl;sid;parse_fn)
+    _merge_goals_into_scenario(sid;item;parsed_goals)
+    _register_single_dsl_scenario(item;parse_fn)
+    register_dsl(payload)
+  oqlos/api/state.py:
+    e: _compose_named_state,_compose_sim_state_list,get_state,_generate_sinusoidal_values,stream_values,get_current_value,get_sim_state,get_variables_alias,fetch_variables,fetch_protocol_steps,_maybe_register_dsl_from_content,_extract_scenario_id,_extract_inline_dsl,_handle_start,_make_state_handler,post_commands
+    _compose_named_state()
+    _compose_sim_state_list(named_state)
+    get_state()
+    _generate_sinusoidal_values(param;min_val;max_val;period;interval)
+    stream_values(param;min;max;period;interval;demo)
+    get_current_value(param)
+    get_sim_state()
+    get_variables_alias()
+    fetch_variables(source)
+    fetch_protocol_steps(scenario;source)
+    _maybe_register_dsl_from_content(data;scenario_id)
+    _extract_scenario_id(data)
+    _extract_inline_dsl(data)
+    _handle_start(env)
+    _make_state_handler(ctrl_fn)
+    post_commands(env;background_tasks)
+  oqlos/api/utils/__init__.py:
+  oqlos/api/utils/execution_ctrl.py:
+    e: set_dependencies,_make_getter,_make_exec_handler
+    set_dependencies(sm;orch)
+    _make_getter(name;label)
+    _make_exec_handler(orch_attr;orch_value;target_status)
+  oqlos/api/version.py:
+  oqlos/config.py:
+    e: Settings,get_settings
+    Settings:  # Application settings loaded from environment variables and .
+    get_settings()
+  oqlos/core/__init__.py:
+  oqlos/core/_compare.py:
+    e: resolve_compare,resolve_compare_chain
+    resolve_compare(left;op;right)
+    resolve_compare_chain(node;resolve_value)
   oqlos/core/_cql_tokenizer.py:
     e: _make_args_parser,_make_keyword_parser,_make_method_parser,_match_first,_parse_condition_value,_try_arrow_action,_try_task,_try_save,_try_set,_try_condition_range,_try_condition_cmp,_try_if_else,_try_if_block,_try_if_fail_block,_try_if_standalone,_try_else_standalone,_try_min_max,_try_val,_try_loop_start,_try_var,_try_func,_try_sample,_try_api,_try_goto,_try_save_ws
     _make_args_parser(regex;kind)
@@ -547,57 +290,186 @@ Supports basic I/O operation...
     _try_api(line;stripped)
     _try_goto(line;stripped)
     _try_save_ws(line;stripped)
-  oqlos/tools/hardware_diagnose/calibration.py:
-    e: run_calibration_test,_calibrate_pump,_calibrate_valves,_calibrate_sensors
-    run_calibration_test(url)
-    _calibrate_pump(client;url;log)
-    _calibrate_valves(client;url;log)
-    _calibrate_sensors(client;url;log)
-  oqlos/tools/cql_cli/main.py:
-    e: create_file_parser,create_cmd_parser,run_file_mode,run_cmd_mode,main
-    create_file_parser()
-    create_cmd_parser()
-    run_file_mode(args)
-    run_cmd_mode(argv)
-    main()
-  oqlos/hardware/plugins/base.py:
-    e: PluginStatus,HardwareDriverSpec,ScaleConfig,ConversionConfig,PeripheralConfig,PluginConfig,PluginHealth,HardwarePlugin,get_pluggy_manager,dynamic_peripheral_model
-    PluginStatus(Enum):  # Status of a hardware plugin...
-    HardwareDriverSpec: set_peripheral(3),read_sensor(1),get_driver_status(0)  # Pluggy hookspec for hardware drivers.
-
-Third-party drivers i...
-    ScaleConfig(BaseModel): contains(1),clamp(1)  # Scale / range definition for a peripheral parameter...
-    ConversionConfig(BaseModel):  # Describes how to convert a logical value to a hardware value...
-    PeripheralConfig(BaseModel): validate_value(1),convert_value(1)  # Configuration for a single peripheral (sensor / actuator).
-
-...
-    PluginConfig(BaseModel): validate(0),get_peripheral(1)  # Standardized configuration schema for hardware plugins...
-    PluginHealth(BaseModel):  # Health check result for a hardware plugin...
-    HardwarePlugin(ABC): __init__(1),connect(0),disconnect(0),health_check(0),validate_config(0),execute_command(2),get_capabilities(0),__repr__(0)  # Base interface for hardware integration plugins.
-
-Each plugi...
-    get_pluggy_manager()
-    dynamic_peripheral_model(peripheral)
-  oqlos/api/peripherals.py:
-    e: get_peripheral,update_peripheral,set_peripheral,reset_peripherals
-    get_peripheral(peripheral_id)
-    update_peripheral(peripheral_id;update_data)
-    set_peripheral(peripheral_id;value;mode)
-    reset_peripherals()
-  oqlos/api/main.py:
-    e: index_page,editor_page,health_check,status,websocket_endpoint,run
-    index_page()
-    editor_page()
-    health_check()
-    status()
-    websocket_endpoint(websocket)
-    run()
-  oqlos/core/state.py:
-    e: StateManager
-    StateManager: __init__(0),initialize_peripherals(0),broadcast_event(1)
+  oqlos/core/_cql_tree_builder.py:
+    e: _parse_metadata_kv,_parse_scenario_line,_parse_scenario_attrs,_parse_goal_line,_parse_goal_attrs,_parse_step_line,_parse_action_line,_ensure_goal_for_step,_ensure_step_for_actions
+    _parse_metadata_kv(doc;stripped)
+    _parse_scenario_line(doc;stripped)
+    _parse_scenario_attrs(line;current_scenario)
+    _parse_goal_line(stripped;line;indent;current_scenario)
+    _parse_goal_attrs(line;current_goal)
+    _parse_step_line(line;current_goal)
+    _parse_action_line(line;stripped;actions_list;doc;lineno)
+    _ensure_goal_for_step(current_goal;current_scenario;line)
+    _ensure_step_for_actions(current_step;current_goal)
+  oqlos/core/_dsl_helpers.py:
+    e: _normalize_quote_syntax,_looks_like_valve_object,_looks_like_pump_object,_looks_like_lung_object,_looks_like_sensor_object,_map_peripheral,_parse_numeric_value,_map_valve_action,_map_pump_action,_map_wait_action,_map_lung_action,_map_action_value
+    _normalize_quote_syntax(line)
+    _looks_like_valve_object(obj)
+    _looks_like_pump_object(obj)
+    _looks_like_lung_object(obj)
+    _looks_like_sensor_object(obj)
+    _map_peripheral(obj)
+    _parse_numeric_value(raw)
+    _map_valve_action(fn)
+    _map_pump_action(fn;obj_raw;line)
+    _map_wait_action(fn;obj;obj_raw;line;step_counter)
+    _map_lung_action(fn;obj_raw;line)
+    _map_action_value(fn;obj;obj_raw;line;step_counter)
+  oqlos/core/_firmware_executor.py:
+    e: FirmwareExecutor
+    FirmwareExecutor: __init__(6),_get_firmware(0),resolve_peripheral_id(1),normalize_peripheral_value(2),refresh_sensors_from_firmware(1),execute_firmware_action(2),_execute_plugin_action(2),_execute_legacy_firmware_action(2),exec_set_peripheral(2)  # Executes hardware actions via plugin gateway or legacy firmw
+  oqlos/core/_func_resolver.py:
+    e: _collect_function_definitions,_extract_func_name,_guard_recursion,_parse_func_call
+    _collect_function_definitions(lines)
+    _extract_func_name(line;indent)
+    _guard_recursion(func_name;call_stack)
+    _parse_func_call(line;step_counter;steps;func_defs;indent;call_stack;parse_line_fn)
+  oqlos/core/_interpreter_actions.py:
+    e: _extract_action_tokens,_drop_command_token,_coerce_expected_value,_compare_values,_get_nested_value,_record_failure,_mark_success,_normalize_bool,_lookup_peripheral_state,_mock_api_response,exec_action_task,exec_action_save,parse_wait_secs,exec_action_wait,_do_sleep,exec_action_min_max,exec_action_val,exec_action_log,exec_action_error,exec_action_else,exec_action_sample,_resolve_numeric_token,_func_avg,_func_sum,_func_min,_func_max,_func_sub,_func_div,_func_mul,_func_add,exec_action_func,exec_action_goto,exec_action_api,exec_action_expect,_assert_status,_assert_json,_assert_sensor,_assert_valve,exec_action_assert,exec_action_shell,exec_action_var_set,exec_action_condition,exec_action_if_fail_block,exec_action_if_block,exec_action_loop_block,exec_action_set,_exec_set_wait,exec_action_action
+    _extract_action_tokens(text)
+    _drop_command_token(act)
+    _coerce_expected_value(value)
+    _compare_values(actual;operator;expected)
+    _get_nested_value(payload;path)
+    _record_failure(interp;key;message)
+    _mark_success(interp;key)
+    _normalize_bool(value)
+    _lookup_peripheral_state(interp;target)
+    _mock_api_response(interp;endpoint)
+    exec_action_task(interp;act)
+    exec_action_save(interp;act)
+    parse_wait_secs(raw)
+    exec_action_wait(interp;act)
+    _do_sleep(interp;secs;label)
+    exec_action_min_max(interp;act)
+    exec_action_val(interp;act)
+    exec_action_log(interp;act)
+    exec_action_error(interp;act)
+    exec_action_else(interp;act)
+    exec_action_sample(interp;act)
+    _resolve_numeric_token(interp;token)
+    _func_avg(values)
+    _func_sum(values)
+    _func_min(values)
+    _func_max(values)
+    _func_sub(values)
+    _func_div(values;interp;target)
+    _func_mul(values)
+    _func_add(values)
+    exec_action_func(interp;act)
+    exec_action_goto(interp;act)
+    exec_action_api(interp;act)
+    exec_action_expect(interp;act)
+    _assert_status(interp;act;tokens)
+    _assert_json(interp;act;tokens)
+    _assert_sensor(interp;act;tokens)
+    _assert_valve(interp;act;tokens)
+    exec_action_assert(interp;act)
+    exec_action_shell(interp;act)
+    exec_action_var_set(interp;act)
+    exec_action_condition(interp;act)
+    exec_action_if_fail_block(interp;act)
+    exec_action_if_block(interp;act)
+    exec_action_loop_block(interp;act)
+    exec_action_set(interp;act)
+    _exec_set_wait(interp;act;value)
+    exec_action_action(interp;act)
+  oqlos/core/_line_parsers.py:
+    e: _parse_task_part,_parse_pump_line,_set_valve_step,_set_pump_step,_set_lung_step,_parse_set_line,_parse_inline_task,_parse_action_line,_parse_if_condition
+    _parse_task_part(part;step_counter)
+    _parse_pump_line(line;step_counter)
+    _set_valve_step(peripheral;value_raw;step_counter;line)
+    _set_pump_step(peripheral;value_raw;step_counter;line)
+    _set_lung_step(peripheral;value_raw;step_counter;line)
+    _parse_set_line(line;step_counter)
+    _parse_inline_task(line;step_counter;steps)
+    _parse_action_line(line;step_counter;steps)
+    _parse_if_condition(line;step_counter;steps)
+  oqlos/core/_oql_adapter.py:
+    e: _fmt_value,_scenarios_root,_resolve_include,_substitute_args,_MacroRegistry,_load_includes,_cmd_to_actions,_parse_macro_line,is_flat_oql,oql_doc_to_cql,_split_device_field,parse_flat_oql
+    _MacroRegistry: __init__(0),register(1),get(1)  # Collect ``MACRO`` definitions (raw body lines) from the root
+    _fmt_value(value;unit)
+    _scenarios_root()
+    _resolve_include(path;base)
+    _substitute_args(raw;args)
+    _load_includes(doc;macros;base;seen)
+    _cmd_to_actions(cmd;macros;visiting)
+    _parse_macro_line(raw_line;ln;args)
+    is_flat_oql(source)
+    oql_doc_to_cql(doc)
+    _split_device_field(device;index)
+    parse_flat_oql(source;filename)
+  oqlos/core/_sensor_evaluator.py:
+    e: SensorEvaluator
+    SensorEvaluator: __init__(3),collect_sensor_constraints(1),seed_sensors_from_conditions(1),auto_mock_sensor(3),compare_sensor(3),get_sensor_value(1)  # Evaluates sensor conditions and manages sensor values.
+  oqlos/core/_value_normalizers.py:
+    e: ValueNormalizer
+    ValueNormalizer: __init__(1),coerce_float(1),_get_pump_flow_full_scale_lpm(0),normalize_pump_power(1),normalize_valve_value(1),normalize_lung_value(1),coerce_generic_peripheral_value(1)  # Normalizes DSL values to hardware-compatible formats.
+  oqlos/core/base.py:
+    e: StepStatus,StepResult,ScriptResult,VariableStore,InterpreterOutput,BaseInterpreter,EventBridge
+    StepStatus:
+    StepResult:
+    ScriptResult: passed(0),failed(0),summary(0)
+    VariableStore: __init__(2),set(3),get(2),has(1),all(1),clear(0),interpolate(1)  # Hierarchical key-value store with interpolation support.
+    InterpreterOutput: __init__(3),emit(2),_broadcast_event(2),info(1),ok(1),fail(1),warn(1),error(1),step(2),output_yaml(0)  # Collects interpreter output lines for display or testing, an
+    BaseInterpreter: __init__(4),parse(2),execute(1),run(2),run_file(1),strip_comments(1)  # Abstract base for language interpreters.
+    EventBridge: __init__(1),connect(0),disconnect(0),send_event(2),connected(0)  # Optional WebSocket bridge to DSL Event Server (port 8104).
+  oqlos/core/cql_parser.py:
+    e: _ParseState,parse_cql,_collect_all_goals,_validate_intervals,validate_cql
+    _ParseState: __init__(2),parse(0),_peek_next_significant_indent(0),_flush_pending_inline_if(0),_attach_pending_inline_if(2),_get_line_info(0),_process_line(0),_try_skip_block(2),_try_intervals_block(3),_try_top_level(3),_handle_scenario(1),_handle_scenario_attrs(1),_handle_goal(3),_handle_goal_attrs(1),_handle_step(1),_init_block_stack(0),_add_action_to_parent(1),_append_nested_action(1),_append_loop_action(1),_pop_block_with_warning(2),_handle_block_control(1),_handle_else_block(0),_try_handle_structure_levels(3),_handle_inline_if_logic(2),_handle_action_dispatch(2),_try_hierarchy(3)  # Encapsulates the parsing state to simplify the main loop.
+    parse_cql(source;filename)
+    _collect_all_goals(doc)
+    _validate_intervals(doc)
+    validate_cql(doc)
+  oqlos/core/executor.py:
+    e: _resolve_compare,_resolve_name_or_attr,_safe_resolve,safe_eval_condition,ScenarioOrchestrator
+    ScenarioOrchestrator: __init__(2),_sanitize_identifier(1),_build_eval_context(0),_sanitize_expression(1),_build_step_plan(1),_execute_goal_steps(7),execute_scenario(4),execute_step(3),_execute_lung_step(2),_execute_valve_step(2),_execute_pump_step(3),_execute_wait_step(2),_execute_sensor_read_step(1),_execute_validate_step(1),update_dependent_sensors(1),validate_goal(1),log_event(2)
+    _resolve_compare(node;context)
+    _resolve_name_or_attr(node;context)
+    _safe_resolve(node;context)
+    safe_eval_condition(expr;context)
+  oqlos/core/interpreter.py:
+    e: CqlInterpreter
+    CqlInterpreter: __init__(10),sensor_values(0),sensor_values(1),_firmware(0),_firmware(1),_firmware_url(0),_firmware_url(1),_coerce_float(1),_resolve_peripheral_id(1),_get_pump_flow_full_scale_lpm(0),_normalize_pump_power(1),_normalize_valve_value(1),_normalize_lung_value(1),parse(2),_print_header(2),_collect_warnings(2),_run_validation_mode(3),_collect_all_goals(1),_execute_single_goal(2),_execute_all_goals(1),_build_script_result(2),execute(1),_execute_step(2),_execute_action(1),_exec_flat_action(1),_do_sleep(2),_normalize_peripheral_value(2),_coerce_generic_peripheral_value(1),_exec_set_peripheral(2),_get_firmware(0),_execute_firmware_action(2),_execute_plugin_action(2),_execute_legacy_firmware_action(2),_refresh_sensors_from_firmware(0),_auto_mock_sensor(3),_compare_sensor(3),_resolve_sensor_value(1),_resolve_condition_rhs(3),_evaluate_resolved_condition(0),_eval_condition_clause(2),_evaluate_inline_condition_expression(1),_tokenize_condition_expression(1),_aggregate_condition_results(2),_apply_connector(3),_finalize_condition_result(4),_evaluate_condition(1)  # CQL interpreter with three modes:
+  oqlos/core/oql_parser.py:
+    e: OqlCmd,OqlBlock,OqlDoc,to_num,parse_duration,duration_to_ms,_unescape,tokenize,_require,_split_value_unit,parse_SET,parse_GET,parse_WAIT,parse_SAVE,parse_CHECK,parse_IF,parse_MIN,parse_MAX,parse_SAMPLE,parse_LOG,parse_ERROR,parse_CORRECT,parse_CALL,parse_INCLUDE,parse_FUNC_CALL,parse_oql,format_doc
+    OqlCmd: __repr__(0)  # A single command line inside a block.
+    OqlBlock:  # A named block: ``GOAL``, ``CONFIG``, or ``MACRO``.
+    OqlDoc: goals(0),configs(0),macros(0),funcs(0)  # Parsed OQL document.
+    to_num(raw)
+    parse_duration(token)
+    duration_to_ms(token)
+    _unescape(text)
+    tokenize(rest)
+    _require(tokens;minimum;cmd;ln;shape)
+    _split_value_unit(tokens)
+    parse_SET(tokens;ln;raw)
+    parse_GET(tokens;ln;raw)
+    parse_WAIT(tokens;ln;raw)
+    parse_SAVE(tokens;ln;raw)
+    parse_CHECK(rest;ln;raw)
+    parse_IF(rest;ln;raw)
+    parse_MIN(tokens;ln;raw)
+    parse_MAX(tokens;ln;raw)
+    parse_SAMPLE(tokens;ln;raw)
+    parse_LOG(tokens;ln;raw)
+    parse_ERROR(tokens;ln;raw)
+    parse_CORRECT(tokens;ln;raw)
+    parse_CALL(tokens;ln;raw)
+    parse_INCLUDE(tokens;ln;raw)
+    parse_FUNC_CALL(tokens;ln;raw)
+    parse_oql(text;filename)
+    format_doc(doc)
+  oqlos/core/parser.py:
+    e: _dispatch_simple_parser,_try_action_or_condition,_parse_runtime_line,parse_dsl_to_goal_with_issues,parse_dsl_to_goal
+    _dispatch_simple_parser(kind;line;step_counter;steps)
+    _try_action_or_condition(line;normalized_line;step_counter;steps;record_invalid)
+    _parse_runtime_line(line;step_counter;steps;func_defs;indent;call_stack;invalid_lines)
+    parse_dsl_to_goal_with_issues(dsl;scenario_id)
+    parse_dsl_to_goal(dsl;scenario_id)
   oqlos/core/safe_eval.py:
     e: SafeEvalError,safe_eval,_eval_constant,_eval_name,_eval_unary_op,_eval_bin_op,_eval_compare,_eval_bool_op,_eval_call,_eval_if_exp,_eval_node
-    SafeEvalError(Exception):  # Raised when an expression cannot be safely evaluated...
+    SafeEvalError:  # Raised when an expression cannot be safely evaluated.
     safe_eval(expr;context)
     _eval_constant(node;ctx)
     _eval_name(node;ctx)
@@ -608,163 +480,509 @@ Each plugi...
     _eval_call(node;ctx)
     _eval_if_exp(node;ctx)
     _eval_node(node;ctx)
-  oqlos/shared/file_ops.py:
-    e: PathEscapeError,_ensure_safe_path,list_files,iter_entries,read_file,write_file
-    PathEscapeError(PermissionError):  # Raised when a resolved path would escape the base directory...
-    _ensure_safe_path(base;rel)
-    list_files(base;pattern;recursive)
-    iter_entries(base)
-    read_file(base;rel)
-    write_file(base;rel;content)
-  oqlos/hardware/drivers/spi.py:
-    e: SpiDriver
-    SpiDriver(HardwareProtocol): __init__(0),connect(1),read(1),write(2),discover(0),health_check(0),disconnect(0)  # SPI driver for HAL.
-Address format: "bus.device" (e.g. "0.0"...
-  oqlos/core/_compare.py:
-    e: resolve_compare,resolve_compare_chain
-    resolve_compare(left;op;right)
-    resolve_compare_chain(node;resolve_value)
-  oqlos/hardware/drivers/mqtt.py:
-    e: MqttDriver
-    MqttDriver(HardwareProtocol): __init__(0),connect(1),_on_connect(4),_on_message(3),read(1),write(2),discover(0),health_check(0),disconnect(0)  # MQTT driver for the Hardware Abstraction Layer.
-Mapped to Pr...
-  oqlos/shared/version_endpoint.py:
-    e: build_version_payload,create_version_router
-    build_version_payload(service_name;version)
-    create_version_router()
-  oqlos/shared/event_store.py:
-    e: EventStore
-    EventStore: __init__(1),append(1),get_all(0),get_recent(1),get_by_correlation(1),clear(0),to_json(0),from_json(1),_save(0),_load(0)  # Append-only event store with optional JSON file persistence...
-  oqlos/api/plugins.py:
-    e: list_plugins,get_plugin_status,get_plugin_info,get_plugin_health,connect_plugin,disconnect_plugin,execute_plugin_command,validate_plugin_configs
-    list_plugins()
-    get_plugin_status()
-    get_plugin_info(plugin_id)
-    get_plugin_health(plugin_id)
-    connect_plugin(plugin_id;config)
-    disconnect_plugin(plugin_id)
-    execute_plugin_command(plugin_id;command)
-    validate_plugin_configs(configs)
+  oqlos/core/state.py:
+    e: StateManager
+    StateManager: __init__(0),initialize_peripherals(0),broadcast_event(1)
+  oqlos/dsl/__init__.py:
+  oqlos/dsl/schema.py:
+    e: DslDialect,DslItem,DslFunctionBinding,DslParamUnitBinding,DslSchema,_normalize_name_list,_build_inferred_object_function_map,_build_inferred_param_unit_map,_merge_object_function_map,_merge_param_unit_map,get_default_dsl_schema
+    DslDialect:  # Supported DSL dialect metadata.
+    DslItem:  # A reusable schema item visible to editor clients.
+    DslFunctionBinding:  # Object to function relationship used by visual builders.
+    DslParamUnitBinding:  # Param to unit relationship used by visual builders.
+    DslSchema:  # Complete editor schema shared by GUI and runtime tooling.
+    _normalize_name_list(values)
+    _build_inferred_object_function_map(objects;functions)
+    _build_inferred_param_unit_map(params;units)
+    _merge_object_function_map(explicit_map;inferred_map)
+    _merge_param_unit_map(explicit_map;inferred_map)
+    get_default_dsl_schema()
+  oqlos/hardware/__init__.py:
   oqlos/hardware/config_schema.py:
     e: UnitType,get_hardware_config,register_hardware_config,load_config_from_yaml
-    UnitType(Enum):  # Standard unit types for hardware parameters...
+    UnitType:  # Standard unit types for hardware parameters.
     get_hardware_config(device_id)
     register_hardware_config(config)
     load_config_from_yaml(config_path)
-  oqlos/hardware/registry.py:
-    e: DriverRegistry
-    DriverRegistry: register(1),create(1),list_registered(0)  # Registry for hardware drivers. Allows mapping ProtocolType t...
+  oqlos/hardware/discovery.py:
+    e: _unique_preserving_order,list_serial_ports,_build_probe_candidates,_make_pymodbus_fallback_result,_make_probe_success_result,_make_probe_failure_result,_try_modbus_connection,probe_waveshare_modbus
+    _unique_preserving_order(values)
+    list_serial_ports()
+    _build_probe_candidates(ports;preferred_port;preferred_baud;preferred_parity)
+    _make_pymodbus_fallback_result(first_port)
+    _make_probe_success_result(port_meta;serial_port;baudrate;parity)
+    _make_probe_failure_result(first_port;last_error)
+    _try_modbus_connection(serial_port;baudrate;parity;timeout)
+    probe_waveshare_modbus(preferred_port;preferred_baud;preferred_parity;timeout)
+  oqlos/hardware/drivers/__init__.py:
+  oqlos/hardware/drivers/gpio.py:
+    e: GpioDriver
+    GpioDriver: __init__(0),connect(1),read(1),write(2),discover(0),health_check(0),disconnect(0)  # Driver for direct GPIO control.
+  oqlos/hardware/drivers/mqtt.py:
+    e: MqttDriver
+    MqttDriver: __init__(0),connect(1),_on_connect(4),_on_message(3),read(1),write(2),discover(0),health_check(0),disconnect(0)  # MQTT driver for the Hardware Abstraction Layer.
+  oqlos/hardware/drivers/spi.py:
+    e: SpiDriver
+    SpiDriver: __init__(0),connect(1),read(1),write(2),discover(0),health_check(0),disconnect(0)  # SPI driver for HAL.
+  oqlos/hardware/firmware_adapter.py:
+    e: FirmwareAdapter,_parse_numeric
+    FirmwareAdapter: __init__(3),_get_client(0),close(0),_get_lung_motor_url(0),is_available(0),_resolve_peripheral(1),set_peripheral(2),pump_off(1),pump_set(2),valve_open(1),valve_close(1),reset_peripherals(0),read_state(0),read_sensor(1),read_all_sensors(0),_resolve_dispatch_target(3),_handle_lung_action(4),_handle_valve_action(4),_handle_pump_action(4),_handle_common_action(3),_execute_method(4),dispatch_action(3)  # HTTP bridge between CQL interpreter and firmware simulator.
+    _parse_numeric(s)
+  oqlos/hardware/gateway.py:
+    e: _PiAdcAdapter,_DRI0050MotorAdapter,_Tic249LungAdapter,_ModbusAdapter,HardwareGateway
+    _PiAdcAdapter: __init__(1),read_channel(1),read_sensor(1)  # Reads pressure / analog sensors via piadc REST API (ADS1115)
+    _DRI0050MotorAdapter: __init__(1),set_speed(1),_stop(0),status(0)  # Controls the pump motor via rpi-motor-DRI0050 REST API (DFRo
+    _Tic249LungAdapter: __init__(1),reciprocate(4),stop(0),move(2),energize(1),status(0)  # Controls the artificial lung stepper motor via rpi-motor-tic
+    _ModbusAdapter: __init__(5),set_coil(2),_set_coil_rtu(3),_set_coil_tcp(2),set_valve(2)  # Controls valves via Modbus RTU over RS485 (Waveshare Modbus 
+    HardwareGateway: __init__(1),is_real(0),set_valve(2),set_pump(1),read_sensor(1),set_lung(4),stop_lung(0),health(0)  # Single entry-point for all physical hardware I/O.
   oqlos/hardware/peripheral_mapping.py:
     e: resolve_target_to_plugin,register_custom_mapping,get_all_mappings,generate_dynamic_valve_mappings
     resolve_target_to_plugin(target)
     register_custom_mapping(target;plugin_id)
     get_all_mappings()
     generate_dynamic_valve_mappings(max_valve_count)
+  oqlos/hardware/plugin_gateway.py:
+    e: PluginHardwareGateway
+    PluginHardwareGateway: __init__(2),_load_hardware_schema(0),_load_plugin_configs(1),_create_default_configs(0),_parse_plugin_configs(1),ensure_initialized(0),_initialize_plugins(0),is_real(0),set_valve(2),set_pump(1),read_sensor(1),set_lung(4),stop_lung(0),reload_configs(1),health(0)  # Simplified hardware gateway using plugin architecture.
+  oqlos/hardware/plugins/__init__.py:
   oqlos/hardware/plugins/_shared.py:
     e: http_health_check,not_connected_health,health_check_exception,http_disconnect
     http_health_check(client;base_url;label)
     not_connected_health(label)
     health_check_exception(exc)
     http_disconnect(client;label)
-  oqlos/shared/_endpoint_helpers.py:
-    e: serve_html_page,make_collection_route
-    serve_html_page(file_path)
-    make_collection_route(route_name;get_collection)
-  oqlos/shared/logger.py:
-    e: get_logger
-    get_logger(name)
-  oqlos/tools/cql_cli/__init__.py:
-    e: _sync_compat_symbols,main
-    _sync_compat_symbols()
-    main()
+  oqlos/hardware/plugins/base.py:
+    e: PluginStatus,HardwareDriverSpec,get_pluggy_manager,ScaleConfig,ConversionConfig,PeripheralConfig,PluginConfig,PluginHealth,dynamic_peripheral_model,HardwarePlugin
+    PluginStatus:  # Status of a hardware plugin.
+    HardwareDriverSpec: set_peripheral(3),read_sensor(1),get_driver_status(0)  # Pluggy hookspec for hardware drivers.
+    ScaleConfig: contains(1),clamp(1)  # Scale / range definition for a peripheral parameter.
+    ConversionConfig:  # Describes how to convert a logical value to a hardware value
+    PeripheralConfig: validate_value(1),convert_value(1)  # Configuration for a single peripheral (sensor / actuator).
+    PluginConfig: validate(0),get_peripheral(1)  # Standardized configuration schema for hardware plugins.
+    PluginHealth:  # Health check result for a hardware plugin.
+    HardwarePlugin: __init__(1),connect(0),disconnect(0),health_check(0),validate_config(0),execute_command(2),get_capabilities(1),status(0),is_connected(0),__repr__(0)  # Base interface for hardware integration plugins.
+    get_pluggy_manager()
+    dynamic_peripheral_model(peripheral)
+  oqlos/hardware/plugins/lung.py:
+    e: LungPlugin
+    LungPlugin: __init__(1),validate_config(0),connect(0),disconnect(0),health_check(0),_handle_reciprocate_http(1),_handle_reciprocate_usb(1),_handle_stop_http(0),_handle_stop_usb(0),_handle_move_http(1),_handle_move_usb(1),_handle_energize_http(1),_handle_energize_usb(1),_handle_status_http(0),_handle_status_usb(0),execute_command(2),get_capabilities(1)  # Plugin for Pololu Tic T249 stepper motor (artificial lung).
+  oqlos/hardware/plugins/modbus.py:
+    e: ModbusPlugin
+    ModbusPlugin: __init__(1),validate_config(0),connect(0),disconnect(0),health_check(0),execute_command(2),get_capabilities(1)  # Plugin for Waveshare Modbus RTU IO 8CH valve controller.
+  oqlos/hardware/plugins/motor.py:
+    e: MotorPlugin
+    MotorPlugin: __init__(1),validate_config(0),connect(0),disconnect(0),health_check(0),_validate_power_pct(1),_handle_set_speed_http(2),_handle_set_speed_cli(2),_handle_set_speed_modbus(2),_handle_stop_http(1),_handle_stop_cli(1),_handle_stop_modbus(1),_handle_status_http(1),_handle_status_cli(1),_handle_status_modbus(1),execute_command(2),get_capabilities(1)  # Plugin for DFRobot DRI0050 PWM motor driver.
+  oqlos/hardware/plugins/piadc.py:
+    e: PiadcPlugin
+    PiadcPlugin: __init__(1),validate_config(0),connect(0),disconnect(0),health_check(0),execute_command(2),get_capabilities(1)  # Plugin for piADC (ADS1115) 16-bit ADC sensor.
+  oqlos/hardware/plugins/registry.py:
+    e: PluginRegistry
+    PluginRegistry: register(2),unregister(2),get_plugin_class(2),list_plugins(1),create_instance(3),get_instance(2),connect_plugin(3),disconnect_plugin(2),health_check(2),health_check_all(1),validate_all_configurations(2),get_status(1),discover_entry_point_plugins(2),load_configs_from_yaml(2)  # Central registry for hardware plugins.
   oqlos/hardware/protocol.py:
     e: ProtocolType,HardwareProtocol
-    ProtocolType(Enum):  # Supported hardware communication protocols...
-    HardwareProtocol(ABC): connect(1),read(1),write(2),discover(0),health_check(0),disconnect(0)  # Base class for all hardware drivers.
-
-A driver must implemen...
-  oqlos/config.py:
-    e: Settings,get_settings
-    Settings(BaseSettings):  # Application settings loaded from environment variables and ...
-    get_settings()
-  oqlos/utils/sample_data.py:
-    e: load_sample_scenarios
-    load_sample_scenarios(state_manager)
-  oqlos/shared/config_factory.py:
-    e: create_nfo_setup
-    create_nfo_setup()
-  oqlos/api/logs.py:
-    e: _get_service,get_logs,get_log_stats
-    _get_service()
-    get_logs(level;function;module;q;environment;limit;offset)
-    get_log_stats()
-  oqlos/api/utils/execution_ctrl.py:
-    e: set_dependencies,_make_getter,_make_exec_handler
-    set_dependencies(sm;orch)
-    _make_getter(name;label)
-    _make_exec_handler(orch_attr;orch_value;target_status)
-  project.sh:
-  oqlos/core/__init__.py:
-  oqlos/__init__.py:
-  oqlos/tools/__init__.py:
-  oqlos/tools/hardware_diagnose/__init__.py:
-  oqlos/tools/xml_import/__init__.py:
-  oqlos/tools/xml_import/models.py:
-    e: SensorParam,Output,Operation,TestRun,DeviceReport
-    SensorParam:  # Parameter measurement from an operation...
-    Output:  # Hardware output setting...
-    Operation:  # Single test operation (step)...
-    TestRun:  # A test run (scenario) within a device type...
-    DeviceReport:  # Parsed device test report...
+    ProtocolType:  # Supported hardware communication protocols.
+    HardwareProtocol: connect(1),read(1),write(2),discover(0),health_check(0),disconnect(0)  # Base class for all hardware drivers.
+  oqlos/hardware/registry.py:
+    e: DriverRegistry
+    DriverRegistry: register(2),create(2),list_registered(1)  # Registry for hardware drivers. Allows mapping ProtocolType t
+  oqlos/ide/__init__.py:
+  oqlos/models/__init__.py:
   oqlos/models/dsl_models.py:
     e: CqlMetadata,CqlInterval,CqlCondition,CqlAction,CqlStep,CqlGoal,CqlScenario,CqlDocument
     CqlMetadata:
     CqlInterval:
-    CqlCondition:  # Sensor condition: AI01 ∈ [min, max] unit | ACTION 'msg'...
-    CqlAction:  # An action within a step: → Target.method args, TASK, SET, WA...
-    CqlStep:  # A numbered step within a goal: 1. Step name:...
-    CqlGoal:  # A test goal within a scenario...
-    CqlScenario:  # A named scenario block: @Namespace.Name...
-    CqlDocument:  # Root AST node for a .cql file...
-  oqlos/models/__init__.py:
-  oqlos/models/peripheral.py:
-    e: PeripheralType,PeripheralStatus,PeripheralMode,Peripheral
-    PeripheralType(str,Enum):
-    PeripheralStatus(str,Enum):
-    PeripheralMode(str,Enum):
-    Peripheral(BaseModel):
-  oqlos/hardware/__init__.py:
-  oqlos/hardware/plugins/__init__.py:
-  oqlos/models/scenario.py:
-    e: Step,ValidationRule,Goal,Scenario
-    Step(BaseModel):
-    ValidationRule(BaseModel):
-    Goal(BaseModel):
-    Scenario(BaseModel):
-  oqlos/hardware/drivers/__init__.py:
-  oqlos/reporters/__init__.py:
-  oqlos/utils/__init__.py:
-  oqlos/shared/__init__.py:
-  oqlos/api/version.py:
-  oqlos/api/__init__.py:
+    CqlCondition:  # Sensor condition: AI01 ∈ [min, max] unit | ACTION 'msg'
+    CqlAction:  # An action within a step: → Target.method args, TASK, SET, WA
+    CqlStep:  # A numbered step within a goal: 1. Step name:
+    CqlGoal:  # A test goal within a scenario.
+    CqlScenario:  # A named scenario block: @Namespace.Name
+    CqlDocument:  # Root AST node for a .cql file.
   oqlos/models/execution.py:
     e: ExecutionRequest,ExecutionStatus,CommandEnvelope
-    ExecutionRequest(BaseModel):
-    ExecutionStatus(BaseModel):
-    CommandEnvelope(BaseModel):
-  oqlos/api/utils/__init__.py:
-  oqlos/ide/__init__.py:
-  oqlos/dsl/__init__.py:
-  scripts/hardware-check.sh:
-    e: log_info,log_warn,log_error,detect_usb_peripherals,detect_i2c_buses,check_firmware_health,run_smoke_test,run_calibration,generate_report,full_diagnostic,main
-    log_info()
-    log_warn()
-    log_error()
-    detect_usb_peripherals()
-    detect_i2c_buses()
-    check_firmware_health()
-    run_smoke_test()
-    run_calibration()
-    generate_report()
-    full_diagnostic()
+    ExecutionRequest:
+    ExecutionStatus:
+    CommandEnvelope:
+  oqlos/models/peripheral.py:
+    e: PeripheralType,PeripheralStatus,PeripheralMode,Peripheral
+    PeripheralType:
+    PeripheralStatus:
+    PeripheralMode:
+    Peripheral:
+  oqlos/models/scenario.py:
+    e: Step,ValidationRule,Goal,Scenario
+    Step:
+    ValidationRule:
+    Goal:
+    Scenario:
+  oqlos/reporters/__init__.py:
+  oqlos/reporters/html_report.py:
+    e: render_html_report,_render_device_meta,_render_goal,_render_thresholds_table,_render_step
+    render_html_report(data_json)
+    _render_device_meta(meta)
+    _render_goal(goal;idx)
+    _render_thresholds_table(thresholds)
+    _render_step(step;idx)
+  oqlos/reporters/json_reporter.py:
+    e: _step_to_dict,report_json
+    _step_to_dict(step)
+    report_json(result)
+  oqlos/reporters/junit.py:
+    e: JUnitReporter,report_junit
+    JUnitReporter: generate(2),_add_testcase(3)  # Generate JUnit XML from a ScriptResult.
+    report_junit(result;suite_name)
+  oqlos/shared/__init__.py:
+  oqlos/shared/_endpoint_helpers.py:
+    e: serve_html_page,make_collection_route
+    serve_html_page(file_path)
+    make_collection_route(route_name;get_collection)
+  oqlos/shared/config_factory.py:
+    e: create_nfo_setup
+    create_nfo_setup()
+  oqlos/shared/event_server.py:
+    e: ConnectionManager,EventServer,main
+    ConnectionManager: __init__(0),connect(2),disconnect(1),broadcast(2),get_stats(0)  # Tracks connected WebSocket clients and broadcasts messages.
+    EventServer: __init__(3),handle_client(1),_handle_message(2),_normalize_event(1),start(0)  # WebSocket event broker with persistence.
     main()
+  oqlos/shared/event_store.py:
+    e: EventStore
+    EventStore: __init__(1),append(1),get_all(0),get_recent(1),get_by_correlation(1),clear(0),to_json(0),from_json(1),count(0),_save(0),_load(0)  # Append-only event store with optional JSON file persistence.
+  oqlos/shared/file_ops.py:
+    e: PathEscapeError,_ensure_safe_path,list_files,iter_entries,read_file,write_file
+    PathEscapeError:  # Raised when a resolved path would escape the base directory.
+    _ensure_safe_path(base;rel)
+    list_files(base;pattern;recursive)
+    iter_entries(base)
+    read_file(base;rel)
+    write_file(base;rel;content)
+  oqlos/shared/logger.py:
+    e: get_logger
+    get_logger(name)
+  oqlos/shared/logs_query.py:
+    e: resolve_logs_db_path,LogsQueryService
+    LogsQueryService: __init__(1),db_exists(0),_connect(0),query_logs(0),get_stats(0)  # Read-only query service for nfo logs SQLite database.
+    resolve_logs_db_path(project_root_fallback)
+  oqlos/shared/release_version.py:
+    e: clean_version,_run_git,_read_version_from_package_json,_read_version_from_text,_version_candidates,resolve_release_version,main
+    clean_version(raw)
+    _run_git(project_root)
+    _read_version_from_package_json(path)
+    _read_version_from_text(path)
+    _version_candidates(project_root)
+    resolve_release_version(project_root)
+    main()
+  oqlos/shared/version_endpoint.py:
+    e: build_version_payload,create_version_router
+    build_version_payload(service_name;version)
+    create_version_router()
+  oqlos/tools/__init__.py:
+  oqlos/tools/cql_cli/__init__.py:
+    e: _sync_compat_symbols,main
+    _sync_compat_symbols()
+    main()
+  oqlos/tools/cql_cli/commands.py:
+    e: run_source,run_single_command,handle_list_command,execute_command_with_cleanup,_run_continuous_mode
+    run_source(source;filename)
+    run_single_command(command)
+    handle_list_command(argv)
+    execute_command_with_cleanup(args;result;yaml_output;quiet)
+    _run_continuous_mode(args;quiet)
+  oqlos/tools/cql_cli/main.py:
+    e: create_file_parser,create_cmd_parser,run_file_mode,run_cmd_mode,_dispatch_to_mode,main
+    create_file_parser()
+    create_cmd_parser()
+    run_file_mode(args)
+    run_cmd_mode(argv)
+    _dispatch_to_mode(argv)
+    main()
+  oqlos/tools/cql_cli/preflight.py:
+    e: ensure_firmware_running,_is_firmware_running,_start_firmware_service,check_firmware_state,check_required_adapter,_emit_preflight_error,emit_preflight_success,_emit_yaml_preflight,_emit_text_preflight,preflight_hardware
+    ensure_firmware_running(firmware_url)
+    _is_firmware_running(firmware_url)
+    _start_firmware_service(firmware_url)
+    check_firmware_state(firmware_url;yaml_output;quiet)
+    check_required_adapter(command;adapters;yaml_output;quiet)
+    _emit_preflight_error(error_msg;yaml_output;quiet)
+    emit_preflight_success(firmware_url;health;identify;required_adapter;adapter_status;yaml_output;quiet)
+    _emit_yaml_preflight(firmware_url;health;identify;required_adapter;adapter_status)
+    _emit_text_preflight(firmware_url;health;identify;required_adapter;adapter_status)
+    preflight_hardware(command;firmware_url)
+  oqlos/tools/cql_cli/utils.py:
+    e: output_yaml,parse_sensor_overrides,build_result_payload,normalize_target_name,build_single_command_scenario,_extract_first_action,_resolve_peripheral_adapter,_resolve_sensor_target,resolve_required_adapter,validate_directory
+    output_yaml(data;quiet)
+    parse_sensor_overrides(sensor_args)
+    build_result_payload(result)
+    normalize_target_name(target)
+    build_single_command_scenario(command)
+    _extract_first_action(command)
+    _resolve_peripheral_adapter(target)
+    _resolve_sensor_target(action)
+    resolve_required_adapter(command)
+    validate_directory(d;interpreter_class)
+  oqlos/tools/cql_cli.py:
+  oqlos/tools/hardware_diagnose/__init__.py:
+  oqlos/tools/hardware_diagnose/__main__.py:
+    e: _print_list,_print_health,_print_calibrate,_print_benchmark,main
+    _print_list(url;as_json)
+    _print_health(url;as_json)
+    _print_calibrate(url;as_json)
+    _print_benchmark(url;duration;as_json)
+    main()
+  oqlos/tools/hardware_diagnose/benchmark.py:
+    e: run_benchmark
+    run_benchmark(url;duration)
+  oqlos/tools/hardware_diagnose/calibration.py:
+    e: run_calibration_test,_calibrate_pump,_calibrate_valves,_calibrate_sensors
+    run_calibration_test(url)
+    _calibrate_pump(client;url;log)
+    _calibrate_valves(client;url;log)
+    _calibrate_sensors(client;url;log)
+  oqlos/tools/hardware_diagnose/discovery.py:
+    e: _run_shell_command,UsbDevice,list_usb_serial_devices,list_i2c_buses,detect_chips_on_i2c
+    UsbDevice: to_dict(0)  # USB device information.
+    _run_shell_command(cmd)
+    list_usb_serial_devices()
+    list_i2c_buses()
+    detect_chips_on_i2c(bus)
+  oqlos/tools/hardware_diagnose/health.py:
+    e: _request_firmware_json,check_firmware_health,check_firmware_identify,cmd_health,cmd_diagnose
+    _request_firmware_json(url;endpoint)
+    check_firmware_health(url)
+    check_firmware_identify(url)
+    cmd_health(url)
+    cmd_diagnose(url)
+  oqlos/tools/hardware_diagnose/report.py:
+    e: format_peripheral_table,save_diagnostic_report
+    format_peripheral_table(devices)
+    save_diagnostic_report(filename;url)
+  oqlos/tools/hardware_diagnose/shell.py:
+    e: _cmd_list,_cmd_calibrate,_cmd_benchmark,_dispatch_command,interactive_shell
+    _cmd_list()
+    _cmd_calibrate(url)
+    _cmd_benchmark(parts;url)
+    _dispatch_command(cmd;parts;url)
+    interactive_shell(url)
+  oqlos/tools/hardware_diagnose.py:
+  oqlos/tools/plugin_cli.py:
+    e: _load_config_file,_save_config_file,cmd_list,cmd_status,cmd_capabilities,cmd_validate,cmd_connect,cmd_disconnect,cmd_health,cmd_execute,cmd_reload,cmd_peripherals,main
+    _load_config_file(path)
+    _save_config_file(path;configs)
+    cmd_list(args)
+    cmd_status(args)
+    cmd_capabilities(args)
+    cmd_validate(args)
+    cmd_connect(args)
+    cmd_disconnect(args)
+    cmd_health(args)
+    cmd_execute(args)
+    cmd_reload(args)
+    cmd_peripherals(args)
+    main()
+  oqlos/tools/xml_import/__init__.py:
+  oqlos/tools/xml_import/_utils.py:
+    e: slugify,is_pump_output,is_compressor_output,normalize_output_name,normalize_flow_value,normalize_set_value
+    slugify(text)
+    is_pump_output(name)
+    is_compressor_output(name)
+    normalize_output_name(name)
+    normalize_flow_value(raw_value)
+    normalize_set_value(raw_value)
+  oqlos/tools/xml_import/generators.py:
+    e: _mode_symbol,_format_range,_mode_action,_emit_cql_output,_emit_cql_param,_emit_cql_sensor_param,_emit_dsl_output,_emit_dsl_param,_build_steps_from_op,_append_sensor_assertion,_build_validation_criteria,generate_dsl,_emit_dsl_test_run,_emit_dsl_sensors,_emit_dsl_metadata,generate_cql,_generate_cql_for_goal,generate_goals_json
+    _mode_symbol(mode)
+    _format_range(p)
+    _mode_action(mode)
+    _emit_cql_output(out;a)
+    _emit_cql_param(p;a)
+    _emit_cql_sensor_param(p;a)
+    _emit_dsl_output(out;a)
+    _emit_dsl_param(p;a)
+    _build_steps_from_op(op)
+    _append_sensor_assertion(steps;op;p)
+    _build_validation_criteria(ops)
+    generate_dsl(report)
+    _emit_dsl_test_run(report;tr;a)
+    _emit_dsl_sensors(report;a)
+    _emit_dsl_metadata(report;a)
+    generate_cql(report)
+    _generate_cql_for_goal(ops)
+    generate_goals_json(report)
+  oqlos/tools/xml_import/models.py:
+    e: SensorParam,Output,Operation,TestRun,DeviceReport
+    SensorParam:  # Parameter measurement from an operation.
+    Output:  # Hardware output setting.
+    Operation:  # Single test operation (step).
+    TestRun:  # A test run (scenario) within a device type.
+    DeviceReport:  # Parsed device test report.
+  oqlos/tools/xml_import/parser.py:
+    e: parse_xml,_populate_report_fields,_parse_intervals,_parse_test_run,_parse_operation,_parse_operation_params
+    parse_xml(xml_path)
+    _populate_report_fields(report;vars_)
+    _parse_intervals(report;vars_)
+    _parse_test_run(report;vars_;tr_num)
+    _parse_operation(report;vars_;pfx;op_num)
+    _parse_operation_params(op;vars_;opfx)
+  oqlos/utils/__init__.py:
+  oqlos/utils/sample_data.py:
+    e: load_sample_scenarios
+    load_sample_scenarios(state_manager)
+  setup_hardware_and_run_oql.py:
+    e: detect_serial_devices,suggest_modbus_port,generate_env_content,setup_env_file,load_env_file,run_oql_scenario,main
+    detect_serial_devices()
+    suggest_modbus_port(devices)
+    generate_env_content(hardware_mode;modbus_port;piadc_url;motor_url;lung_motor_url)
+    setup_env_file(env_path;hardware_mode;modbus_port;force)
+    load_env_file(env_path)
+    run_oql_scenario(scenario_path;mode;firmware_url)
+    main()
+  tests/firmware/test_dsl_parser_runtime.py:
+    e: TestDslParserRuntime
+    TestDslParserRuntime: test_parses_bracketed_task_lines_for_valve_14(0),test_parses_wait_step_from_builder_serialization(0),test_parses_dedicated_pump_command(0),test_parses_set_lines_for_valve_and_compressor(0),test_parses_if_condition_with_operator_between_brackets(0),test_expands_func_call_into_runtime_steps(0),test_reports_invalid_runtime_line_for_pompx_typo(0),test_accepts_pompa_with_suffix_as_real_pump_reference(0),test_accepts_set_pompa_alias(0)
+  tests/firmware/test_firmware.py:
+    e: test_placeholder,test_import
+    test_placeholder()
+    test_import()
+  tests/firmware/test_hardware_identify.py:
+    e: _FakeGateway,test_collect_hardware_diagnostics_exposes_ports,test_hardware_identify_includes_diagnostics
+    _FakeGateway: health(0)
+    test_collect_hardware_diagnostics_exposes_ports(monkeypatch)
+    test_hardware_identify_includes_diagnostics(monkeypatch)
+  tests/firmware/test_lung_integration.py:
+    e: TestLungDslHelpers,TestLungDslParser,TestLungExecutor,TestFirmwareAdapterLung,TestHardwareGatewayLung,TestCqlInterpreterLung
+    TestLungDslHelpers: test_looks_like_lung_object(1),test_not_lung_object(0),test_map_peripheral_lung(0),test_map_lung_action_start(0),test_map_lung_action_stop(0),test_map_lung_action_default_cycles(0),test_map_action_value_lung(0)
+    TestLungDslParser: test_parses_lung_set_command(0),test_parses_lung_task_command(0),test_parses_lung_stop(0)
+    TestLungExecutor: _make_orchestrator(0),test_execute_lung_step_reciprocate(0),test_execute_lung_step_stop(0),test_execute_step_dispatches_set_lung(0)
+    TestFirmwareAdapterLung: test_peripheral_map_lung(0),test_resolve_peripheral_lung(0),test_dispatch_lung_start(0),test_dispatch_lung_stop(0),test_set_peripheral_lung_start(0),test_set_peripheral_lung_stop(0)
+    TestHardwareGatewayLung: test_set_lung_mock(0),test_stop_lung_mock(0)
+    TestCqlInterpreterLung: test_dry_run_lung_action(0)
+  tests/firmware/test_modbus_discovery.py:
+    e: _OkResponse,_ErrorResponse,_install_fake_pymodbus,test_probe_waveshare_modbus_detects_working_port,test_probe_waveshare_modbus_reports_adapter_only_when_no_response
+    _OkResponse: isError(0)
+    _ErrorResponse: isError(0)
+    _install_fake_pymodbus(monkeypatch;responsive_port;responsive_baud;responsive_parity)
+    test_probe_waveshare_modbus_detects_working_port(monkeypatch)
+    test_probe_waveshare_modbus_reports_adapter_only_when_no_response(monkeypatch)
+  tests/firmware/test_normalize_scenario.py:
+    e: TestExtractId,TestExtractDisplayFields,TestExtractGoals,TestComputeSlug,TestNormalizeScenarioRow
+    TestExtractId: test_valid_id(0),test_strips_whitespace(0),test_missing_id_returns_none(0),test_empty_string_returns_none(0),test_none_value_returns_none(0),test_numeric_id_converted_to_str(0)
+    TestExtractDisplayFields: test_all_fields_present(0),test_name_fallback_to_title(0),test_name_fallback_to_code(0),test_name_fallback_to_sid(0),test_device_fallback_to_device_id(0),test_protocol_fallback_to_protocol_id(0),test_missing_optional_fields_default_empty(0)
+    TestExtractGoals: test_no_content_returns_empty(0),test_none_content_returns_empty(0),test_content_with_goals(0),test_content_without_goals_key(0),test_content_non_dict(0)
+    TestComputeSlug: test_explicit_slug(0),test_slug_from_code(0),test_slug_from_display_name(0),test_slug_from_sid(0),test_double_hyphens_collapsed(0),test_strips_leading_trailing_hyphens(0)
+    TestNormalizeScenarioRow: test_full_row(0),test_minimal_row(0),test_missing_id_returns_none(0),test_empty_id_returns_none(0),test_fallback_fields(0)
+  tests/firmware/test_parser_cycle.py:
+    e: TestParserCycleDetection
+    TestParserCycleDetection: test_direct_circular_func_raises(0),test_self_referencing_func_raises(0),test_valid_func_call_works(0),test_max_func_depth_constant(0)
+  tests/firmware/test_runtime_command_payload.py:
+    e: test_extract_scenario_id_accepts_frontend_and_cli_keys,test_extract_inline_dsl_accepts_content_and_direct_fields
+    test_extract_scenario_id_accepts_frontend_and_cli_keys()
+    test_extract_inline_dsl_accepts_content_and_direct_fields()
+  tests/firmware/test_safe_eval.py:
+    e: _Obj,TestBasicComparisons,TestBooleanOps,TestChainedComparisons,TestNegativeNumbers,TestDottedAccess,TestErrorHandling,TestSecurity,TestFirmwareScenarios
+    _Obj: __init__(0)
+    TestBasicComparisons: test_eq_true(0),test_eq_false(0),test_ne_true(0),test_ne_false(0),test_lt(0),test_le(0),test_gt(0),test_ge(0),test_float_comparison(0)
+    TestBooleanOps: test_and_true(0),test_and_false(0),test_or_true(0),test_or_false(0),test_not_true(0),test_not_false(0),test_complex_boolean(0)
+    TestChainedComparisons: test_chained_lt(0),test_chained_le(0)
+    TestNegativeNumbers: test_negative_literal(0),test_negative_context_value(0),test_unary_plus(0)
+    TestDottedAccess: test_simple_attr(0),test_attr_comparison(0),test_unknown_attr_raises(0)
+    TestErrorHandling: test_empty_string_raises(0),test_whitespace_only_raises(0),test_unknown_variable_raises(0),test_syntax_error_raises(0),test_unsupported_node_raises(0)
+    TestSecurity: test_reject_function_call(0),test_reject_import(0),test_reject_lambda(0),test_reject_list_comprehension(0),test_reject_dict_literal(0),test_reject_subscript(0),test_reject_string_literal(0),test_reject_fstring(0),test_reject_walrus_operator(0),test_reject_attribute_dunder(0),test_reject_exec_via_eval(0),test_reject_getattr_builtin(0)  # Ensure the evaluator rejects any construct that could execut
+    TestFirmwareScenarios: test_valve_pressure_check(0),test_pump_power_range(0),test_leak_rate_validation(0),test_sensor_threshold(0),test_boolean_context_value(0)  # Test expressions that mirror actual firmware validation cond
+  tests/firmware/test_tokenizer_extended.py:
+    e: TestValSingleQuote,TestMinMaxSingleQuote,TestIfElseSingleQuote,TestIfStandalone,TestElseStandalone,TestSample,TestGoto,TestFunc,TestSaveSingleQuote,TestWaitQuoted
+    TestValSingleQuote: test_val_single_quote(0),test_val_double_quote(0),test_val_bracket(0)
+    TestMinMaxSingleQuote: test_min_single_quote(0),test_max_single_quote(0),test_min_bracket(0),test_max_double_quote(0)
+    TestIfElseSingleQuote: test_if_else_single_quote(0),test_if_else_bracket_single_error(0),test_if_else_bracket_double_error(0)
+    TestIfStandalone: test_if_standalone_unicode_op(0),test_if_standalone_ascii_op(0),test_if_standalone_with_unit(0)
+    TestElseStandalone: test_else_error(0),test_else_info(0)
+    TestSample: test_sample_with_interval(0),test_sample_stop(0)
+    TestGoto: test_goto(0)
+    TestFunc: test_func_sub(0),test_func_div(0)
+    TestSaveSingleQuote: test_save_single_simple(0),test_save_single_with_namespace(0)
+    TestWaitQuoted: test_wait_quoted_seconds(0)
+  tests/test_core.py:
+    e: TestVariableStore,TestCqlParser,TestCqlValidator,TestCqlInterpreter,TestCqlExecuteMode,TestFirmwareAdapterUnit,TestEventStore
+    TestVariableStore: test_set_get(0),test_interpolate_dollar(0),test_interpolate_braces(0),test_interpolate_missing(0)
+    TestCqlParser: test_simple_metadata(0),test_parses_set_as_pump(0),test_parses_set_command_for_valve_and_compressor(0),test_simple_goals(0),test_simple_actions(0),test_connectgo_metadata(0),test_connectgo_intervals(0),test_connectgo_scenario(0),test_connectgo_goals(0),test_connectgo_steps(0),test_connectgo_arrow_action(0),test_connectgo_condition(0)
+    TestCqlValidator: test_valid_document(0),test_empty_document(0),test_invalid_interval_ref(0)
+    TestCqlInterpreter: test_dry_run_simple(0),test_dry_run_with_sensors(0),test_validate_mode(0),test_set_actions_store_variables(0),test_variables_saved(0)
+    TestCqlExecuteMode: test_execute_mode_initializes_firmware(0),test_pump_flow_uses_env_scale(1),test_pump_flow_scale_can_be_overridden_in_config_block(1),test_dry_run_does_not_use_firmware(0),test_auto_mock_seeds_default_sensors(0),test_auto_mock_range_condition_passes(0),test_auto_mock_disabled(0)
+    TestFirmwareAdapterUnit: test_peripheral_map_completeness(0),test_sensor_map(0),test_parse_numeric(0),test_resolve_peripheral(0),test_dispatch_confirm_no_http(0),test_dispatch_lung_falls_back_to_direct_service_on_404(1)
+    TestEventStore: test_append_and_get(0),test_get_recent(0),test_get_by_correlation(0),test_clear(0),test_json_roundtrip(0),test_persistence(1)
+  tests/test_cql_cli.py:
+    e: _FakeInterpreter,test_cmd_executes_single_command,test_cmd_execute_aborts_when_hardware_is_unavailable,test_file_mode_still_executes_scenario,test_result_payload_is_json_safe
+    _FakeInterpreter: __init__(0),run(2)
+    test_cmd_executes_single_command(monkeypatch)
+    test_cmd_execute_aborts_when_hardware_is_unavailable(monkeypatch;capsys)
+    test_file_mode_still_executes_scenario(monkeypatch;tmp_path)
+    test_result_payload_is_json_safe()
+  tests/test_cql_inline_regressions.py:
+    e: test_flat_if_with_variable_threshold_and_goto_skips_rest_of_goal,test_flat_if_else_error_pair_does_not_execute_else_when_condition_passes,test_compound_if_or_expression_is_supported_in_dry_run,test_func_actions_compute_values_for_following_conditions
+    test_flat_if_with_variable_threshold_and_goto_skips_rest_of_goal()
+    test_flat_if_else_error_pair_does_not_execute_else_when_condition_passes()
+    test_compound_if_or_expression_is_supported_in_dry_run()
+    test_func_actions_compute_values_for_following_conditions()
+  tests/test_cql_scenarios.py:
+    e: _collect,test_cql_db_scenario_dryrun,test_cql_hw_example_dryrun,test_cql_invalid_example_rejects_unknown_peripheral,test_cql_db_scenario_validate
+    _collect(directory;ext)
+    test_cql_db_scenario_dryrun(path)
+    test_cql_hw_example_dryrun(path)
+    test_cql_invalid_example_rejects_unknown_peripheral()
+    test_cql_db_scenario_validate(path)
+  tests/test_dsl_schema.py:
+    e: test_default_schema_exposes_cql_and_oql_dialects,test_explicit_object_and_param_maps_override_inferred_fallbacks
+    test_default_schema_exposes_cql_and_oql_dialects()
+    test_explicit_object_and_param_maps_override_inferred_fallbacks()
+  tests/test_oql_dry_run_regressions.py:
+    e: test_block_if_else_error_attaches_to_else_branch,test_comment_only_if_block_does_not_capture_endif,test_oql_dry_run_supports_api_assert_shell_and_if_fail
+    test_block_if_else_error_attaches_to_else_branch()
+    test_comment_only_if_block_does_not_capture_endif()
+    test_oql_dry_run_supports_api_assert_shell_and_if_fail()
+  tests/test_oql_parser_v3.py:
+    e: test_tokenize_simple,test_tokenize_brackets_allow_spaces,test_tokenize_double_quoted_string,test_tokenize_single_quoted_string,test_tokenize_unclosed_quote_raises,test_tokenize_unclosed_bracket_raises,test_duration_to_ms,test_parse_minimal_goal,test_parse_metadata,test_parse_check_range,test_parse_check_negative_values,test_parse_sample_with_interval,test_parse_unicode_identifiers,test_parse_bracketed_target_with_spaces,test_parse_bracketed_block_name,test_parse_rejects_unindented_command,test_parse_rejects_unknown_command,test_base_commands_list_matches_dispatcher,test_is_flat_oql_detects_new_syntax,test_is_flat_oql_rejects_legacy,test_adapter_produces_cql_goals,test_adapter_config_prefix,test_macro_call_expansion,test_unknown_macro_becomes_error_action,test_include_resolves_from_scenarios_root,test_include_missing_file_yields_error,test_check_with_correct_message,test_check_with_error_message,test_check_with_both_messages,test_correct_without_check_is_error,test_adapter_uses_custom_messages
+    test_tokenize_simple()
+    test_tokenize_brackets_allow_spaces()
+    test_tokenize_double_quoted_string()
+    test_tokenize_single_quoted_string()
+    test_tokenize_unclosed_quote_raises()
+    test_tokenize_unclosed_bracket_raises()
+    test_duration_to_ms(token;expected)
+    test_parse_minimal_goal()
+    test_parse_metadata()
+    test_parse_check_range()
+    test_parse_check_negative_values()
+    test_parse_sample_with_interval()
+    test_parse_unicode_identifiers()
+    test_parse_bracketed_target_with_spaces()
+    test_parse_bracketed_block_name()
+    test_parse_rejects_unindented_command()
+    test_parse_rejects_unknown_command()
+    test_base_commands_list_matches_dispatcher()
+    test_is_flat_oql_detects_new_syntax()
+    test_is_flat_oql_rejects_legacy()
+    test_adapter_produces_cql_goals()
+    test_adapter_config_prefix()
+    test_macro_call_expansion()
+    test_unknown_macro_becomes_error_action()
+    test_include_resolves_from_scenarios_root()
+    test_include_missing_file_yields_error()
+    test_check_with_correct_message()
+    test_check_with_error_message()
+    test_check_with_both_messages()
+    test_correct_without_check_is_error()
+    test_adapter_uses_custom_messages()
+  tests/test_oql_scenarios.py:
+    e: _collect,test_oql_scenario_dryrun,test_oql_example_dryrun,test_oql_scenario_validate
+    _collect(directory;ext)
+    test_oql_scenario_dryrun(path)
+    test_oql_example_dryrun(path)
+    test_oql_scenario_validate(path)
+  tests/test_reporting.py:
+    e: MockWS,MockBridge,test_reporting
+    MockWS: send(1),close(0)
+    MockBridge: __init__(0),send_event(2)
+    test_reporting()
+  tests/verify_block_if.py:
+    e: test_block_if
+    test_block_if()
+  tests/verify_loops.py:
+    e: test_loops
+    test_loops()
