@@ -1,0 +1,49 @@
+pipeline:
+  name: oqlos-quality
+
+  metrics:
+    cc_max: 15
+    vallm_pass_min: 65   # adjust based on actual
+    # coverage disabled - pytest_cov reports null
+
+  stages:
+    - name: analyze
+      tool: code2llm-filtered
+
+    - name: validate
+      tool: vallm-filtered
+
+    - name: prefact
+      tool: prefact
+      optional: true
+      when: any_stage_fail
+      timeout: 900
+
+    - name: fix
+      tool: llx-fix
+      optional: true
+      when: any_stage_fail
+      timeout: 1800
+
+    - name: security
+      tool: bandit
+      optional: true
+      timeout: 120
+
+    - name: test
+      tool: pytest
+      timeout: 600
+
+    - name: push
+      tool: git-push
+      optional: true
+      timeout: 120
+
+  loop:
+    max_iterations: 3
+    on_fail: report
+    ticket_backends:
+      - markdown
+
+  env:
+    LLM_MODEL: openrouter/qwen/qwen3-coder-next

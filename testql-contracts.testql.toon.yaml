@@ -1,0 +1,49 @@
+# SCENARIO: API Contract Tests
+# Auto-generated from OpenAPI spec
+# TYPE: contract
+
+CONFIG[3]{key, value}:
+  base_url, ${api_url:-http://localhost:8101}
+  timeout_ms, 10000
+  strict_validation, true
+
+API[49]{method, endpoint, expected_status}:
+  GET, /api/v1/state, 200  # Get current system state
+  GET, /api/v1/values/stream, 200  # SSE endpoint for live value streaming.
+  GET, /api/v1/values/current, 200  # Get current value for a parameter (single request,
+  GET, /api/v1/sim/state, 200  # Get simulation state in list format
+  GET, /api/v1/variables, 200  # Get variables (alias for fetch)
+  GET, /api/v1/variables/fetch, 200  # Fetch variables (Peripheral State Table) from back
+  GET, /api/v1/protocol-steps/fetch, 200  # Fetch protocol steps for preview.
+  POST, /api/v1/commands, 201  # Command bus endpoint used by frontend.
+  GET, /api/v1/plugins/, 200  # List all registered hardware plugins.
+  GET, /api/v1/plugins/status, 200  # Get overall status of all plugins.
+  GET, /api/v1/plugins/{plugin_id}, 200  # Get information about a specific plugin.
+  GET, /api/v1/plugins/{plugin_id}/health, 200  # Get health status of a specific plugin.
+  POST, /api/v1/plugins/{plugin_id}/connect, 201  # Connect to a hardware plugin.
+  POST, /api/v1/plugins/{plugin_id}/disconnect, 201  # Disconnect from a hardware plugin.
+  POST, /api/v1/plugins/{plugin_id}/execute, 201  # Execute a command on a hardware plugin.
+  POST, /api/v1/plugins/validate, 201  # Validate configurations for multiple plugins.
+  GET, /api/v1/scenarios/{scenario_id}, 200  # Get specific scenario
+  GET, /api/v1/scenarios/fetch, 200  # Fetch scenarios from backend DB or external JSON a
+  POST, /api/v1/scenarios/register-dsl, 201  # Register one or many scenarios defined as DSL stri
+  POST, /api/v1/execution/start, 201  # Start scenario execution
+  POST, /api/v1/execution/step, 201  # Execute a single DSL step within the current (or n
+  GET, /api/v1/execution/by-id/{execution_id}, 200  # Get execution status
+  GET, /api/v1/execution/projection, 200  # Return a lightweight execution projection used by 
+  GET, /api/v1/execution/status, 200  # Return textual logs and status for polling fallbac
+  GET, /api/v1/execution/logs, 200  # Return execution logs for frontend polling.
+  GET, /api/v1/execution/stream, 200  # Stream execution events for frontend polling fallb
+  GET, /api/v1/execution/logs/stream, 200  # Stream execution logs for terminal view
+  GET, /api/v1/peripherals/{peripheral_id}, 200  # Get specific peripheral
+  PUT, /api/v1/peripherals/{peripheral_id}, 200  # Update peripheral via PUT (for tests)
+  POST, /api/v1/peripherals/{peripheral_id}/set, 201  # Update peripheral (manual mode)
+
+# Contract Validation
+ASSERT[3]{field, operator, expected}:
+  content_type, ==, application/json
+  schema_valid, ==, true
+  status, <, 500
+
+PERFORMANCE[1]{metric, threshold}:
+  response_time_ms, <, 1000

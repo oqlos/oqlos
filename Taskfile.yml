@@ -21,6 +21,21 @@ tasks:
     cmds:
       - pip install -e .[dev]
 
+  quality:
+    desc: Run pyqual quality pipeline
+    cmds:
+      - pyqual run
+
+  quality:fix:
+    desc: Run pyqual with auto-fix
+    cmds:
+      - pyqual run --fix
+
+  quality:report:
+    desc: Generate pyqual quality report
+    cmds:
+      - pyqual report
+
   test:
     desc: Run pytest suite
     cmds:
@@ -47,11 +62,10 @@ tasks:
       - rm -rf build/ dist/ *.egg-info
 
   all:
-    desc: Run install, lint, test
+    desc: Run install, quality check
     cmds:
       - task: install
-      - task: lint
-      - task: test
+      - task: quality
 
   # ─────────────────────────────────────────────────────────────────────────────
   # Hardware / oqlctl

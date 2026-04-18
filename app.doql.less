@@ -1,8 +1,8 @@
 // LESS format — define @variables here as needed
 
 app {
-  name: "oqlos";
-  version: "0.1.1";
+  name: oqlos;
+  version: 0.1.1;
 }
 
 entity[name="ExecutionStatus"] {
@@ -45,56 +45,107 @@ interface[type="cli"] page[name="oqlctl"] {
 
 }
 
+integration[name="modbus"] {
+  type: hardware;
+  type: hardware;
+}
+
 workflow[name="install"] {
-  trigger: """""""""manual""""""""";
+  trigger: manual;
+  step-1: run cmd=pip install -e .[dev];
+}
+
+workflow[name="quality"] {
+  trigger: manual;
+  step-1: run cmd=pyqual run;
+}
+
+workflow[name="quality:fix"] {
+  trigger: manual;
+  step-1: run cmd=pyqual run --fix;
+}
+
+workflow[name="quality:report"] {
+  trigger: manual;
+  step-1: run cmd=pyqual report;
 }
 
 workflow[name="test"] {
-  trigger: """""""""manual""""""""";
+  trigger: manual;
+  step-1: run cmd=pytest -q;
 }
 
 workflow[name="lint"] {
-  trigger: """""""""manual""""""""";
+  trigger: manual;
+  step-1: run cmd=ruff check .;
 }
 
 workflow[name="fmt"] {
-  trigger: """""""""manual""""""""";
+  trigger: manual;
+  step-1: run cmd=ruff format .;
 }
 
 workflow[name="build"] {
-  trigger: """""""""manual""""""""";
+  trigger: manual;
+  step-1: run cmd=python -m build;
 }
 
 workflow[name="clean"] {
-  trigger: """""""""manual""""""""";
+  trigger: manual;
+  step-1: run cmd=rm -rf build/ dist/ *.egg-info;
 }
 
 workflow[name="hardware:check"] {
-  trigger: """""""""manual""""""""";
+  trigger: manual;
+  step-1: run cmd=oqlctl --status || echo "Hardware not available (mock mode)";
 }
 
 workflow[name="hardware:identify"] {
-  trigger: """""""""manual""""""""";
+  trigger: manual;
+  step-1: run cmd=oqlctl --identify;
 }
 
 workflow[name="doql:adopt"] {
-  trigger: """""""""manual""""""""";
+  trigger: manual;
+  step-1: run cmd=if ! command -v {{.DOQL_CMD}} >/dev/null 2>&1; then
+echo "⚠️  doql not installed. Install: pip install doql"
+exit 1
+fi;
+  step-2: run cmd={{.DOQL_CMD}} adopt {{.PWD}} --output app.doql.css --force;
+  step-3: run cmd={{.DOQL_CMD}} export --format less -o {{.DOQL_OUTPUT}};
+  step-4: run cmd=echo "✅ Project structure captured in {{.DOQL_OUTPUT}}";
 }
 
 workflow[name="doql:validate"] {
-  trigger: """""""""manual""""""""";
+  trigger: manual;
+  step-1: run cmd=if [ ! -f "{{.DOQL_OUTPUT}}" ]; then
+echo "❌ {{.DOQL_OUTPUT}} not found. Run: task doql:adopt"
+exit 1
+fi;
+  step-2: run cmd={{.DOQL_CMD}} validate;
 }
 
 workflow[name="doql:doctor"] {
-  trigger: """""""""manual""""""""";
+  trigger: manual;
+  step-1: run cmd={{.DOQL_CMD}} doctor;
 }
 
 workflow[name="doql:build"] {
-  trigger: """""""""manual""""""""";
+  trigger: manual;
+  step-1: run cmd=if [ ! -f "{{.DOQL_OUTPUT}}" ]; then
+echo "❌ {{.DOQL_OUTPUT}} not found. Run: task doql:adopt"
+exit 1
+fi;
+  step-2: run cmd=# Regenerate LESS from CSS if CSS exists
+if [ -f "app.doql.css" ]; then
+{{.DOQL_CMD}} export --format less -o {{.DOQL_OUTPUT}}
+fi;
+  step-3: run cmd={{.DOQL_CMD}} build app.doql.css --out build/;
 }
 
 workflow[name="help"] {
-  trigger: """""""""manual""""""""";
+  trigger: manual;
+  step-1: run cmd=task --list;
 }
 
 deploy {
@@ -104,7 +155,7 @@ deploy {
 
 environment[name="local"] {
   runtime: docker-compose;
-  env_file: """"""""".env""""""""";
+  env_file: .env;
 }
 
 environment[name="dev"] {

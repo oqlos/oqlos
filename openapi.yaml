@@ -1,0 +1,2016 @@
+components:
+  schemas:
+    Error:
+      properties:
+        code:
+          type: integer
+        error:
+          type: string
+        message:
+          type: string
+      type: object
+    HealthCheck:
+      properties:
+        status:
+          enum:
+          - ok
+          - error
+          type: string
+        timestamp:
+          format: date-time
+          type: string
+        version:
+          type: string
+      type: object
+info:
+  description: Auto-generated OpenAPI spec for oqlos
+  title: oqlos API
+  version: 1.0.0
+openapi: 3.0.3
+paths:
+  /:
+    get:
+      operationId: index_page
+      responses:
+        '200': &id001
+          content:
+            application/json:
+              schema:
+                type: object
+          description: Success
+        '401': &id002
+          description: Unauthorized
+        '404': &id003
+          description: Not Found
+        '500': &id004
+          description: Internal Server Error
+      summary: Serve the firmware UI (index.html) at root
+      tags:
+      - fastapi
+  /api/status:
+    get:
+      operationId: status
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: GET /api/status
+      tags:
+      - fastapi
+      - status
+  /api/v1/commands:
+    post:
+      operationId: post_commands
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                description:
+                  type: string
+                name:
+                  type: string
+              type: object
+        required: true
+      responses:
+        '201': &id005
+          content:
+            application/json:
+              schema:
+                type: object
+          description: Created
+        '400': &id006
+          content:
+            application/json:
+              schema:
+                properties:
+                  detail:
+                    type: string
+                  error:
+                    type: string
+                type: object
+          description: Bad Request
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Command bus endpoint used by frontend.
+      tags:
+      - v1
+      - fastapi
+  /api/v1/editor/execute:
+    post:
+      operationId: execute_scenario
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
+      responses:
+        '201': *id005
+        '400': *id006
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Execute a scenario file using oqlos runtime.
+      tags:
+      - v1
+      - fastapi
+  /api/v1/editor/file/{file_path:path}:
+    get:
+      operationId: read_file_endpoint
+      parameters:
+      - in: path
+        name: file_path:path
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: file_path
+        required: false
+        schema:
+          type: str
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Read a file's content.
+      tags:
+      - v1
+      - fastapi
+    post:
+      operationId: write_file_endpoint
+      parameters:
+      - in: path
+        name: file_path:path
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: file_path
+        required: false
+        schema:
+          type: str
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
+      responses:
+        '201': *id005
+        '400': *id006
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Write content to a file (creates parent directories as needed).
+      tags:
+      - v1
+      - fastapi
+  /api/v1/editor/files:
+    get:
+      operationId: list_files
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: List all entries in the scenarios directory.
+      tags:
+      - v1
+      - fastapi
+  /api/v1/execution/by-id/{execution_id}:
+    get:
+      operationId: get_execution
+      parameters:
+      - in: path
+        name: execution_id
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: execution_id
+        required: false
+        schema:
+          type: str
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Get execution status
+      tags:
+      - v1
+      - fastapi
+  /api/v1/execution/logs:
+    get:
+      operationId: get_execution_logs
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Return execution logs for frontend polling.
+      tags:
+      - v1
+      - fastapi
+  /api/v1/execution/logs/stream:
+    get:
+      operationId: execution_logs_stream
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Stream execution logs for terminal view
+      tags:
+      - v1
+      - fastapi
+  /api/v1/execution/projection:
+    get:
+      operationId: get_execution_projection
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Return a lightweight execution projection used by the frontend polling
+        fallback.
+      tags:
+      - v1
+      - fastapi
+  /api/v1/execution/start:
+    post:
+      operationId: start_execution
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
+      responses:
+        '201': *id005
+        '400': *id006
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Start scenario execution
+      tags:
+      - v1
+      - fastapi
+  /api/v1/execution/status:
+    get:
+      operationId: get_execution_status
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Return textual logs and status for polling fallback when SSE is unavailable.
+      tags:
+      - v1
+      - fastapi
+  /api/v1/execution/step:
+    post:
+      operationId: execute_step
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
+      responses:
+        '201': *id005
+        '400': *id006
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Execute a single DSL step within the current (or new) execution.
+      tags:
+      - v1
+      - fastapi
+  /api/v1/execution/stream:
+    get:
+      operationId: execution_stream
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Stream execution events for frontend polling fallback
+      tags:
+      - v1
+      - fastapi
+  /api/v1/hardware/health:
+    get:
+      operationId: hardware_health
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Return connectivity status for all hardware services.
+      tags:
+      - v1
+      - fastapi
+  /api/v1/hardware/identify:
+    get:
+      operationId: hardware_identify
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: 'Return full hardware identification: registry + live probe results.'
+      tags:
+      - v1
+      - fastapi
+  /api/v1/hardware/lung:
+    post:
+      operationId: set_lung
+      parameters:
+      - in: query
+        name: steps
+        required: false
+        schema:
+          type: int
+      - in: query
+        name: speed
+        required: false
+        schema:
+          type: int
+      - in: query
+        name: cycles
+        required: false
+        schema:
+          type: int
+      - in: query
+        name: pause
+        required: false
+        schema:
+          type: float
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
+      responses:
+        '201': *id005
+        '400': *id006
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Start artificial lung reciprocating motion (tic249 stepper).
+      tags:
+      - v1
+      - fastapi
+  /api/v1/hardware/lung/stop:
+    post:
+      operationId: stop_lung
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
+      responses:
+        '201': *id005
+        '400': *id006
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Emergency stop the artificial lung motor.
+      tags:
+      - v1
+      - fastapi
+  /api/v1/hardware/pump:
+    post:
+      operationId: set_pump
+      parameters:
+      - in: query
+        name: power_pct
+        required: false
+        schema:
+          type: float
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
+      responses:
+        '201': *id005
+        '400': *id006
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Directly set pump power % (for manual testing).
+      tags:
+      - v1
+      - fastapi
+  /api/v1/hardware/sensor/{sensor_id}:
+    get:
+      operationId: read_sensor
+      parameters:
+      - in: path
+        name: sensor_id
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: sensor_id
+        required: false
+        schema:
+          type: str
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Read a sensor value directly from hardware.
+      tags:
+      - v1
+      - fastapi
+  /api/v1/hardware/valve/{valve_id}:
+    post:
+      operationId: set_valve
+      parameters:
+      - in: path
+        name: valve_id
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: valve_id
+        required: false
+        schema:
+          type: str
+      - in: query
+        name: value
+        required: false
+        schema:
+          type: bool
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
+      responses:
+        '201': *id005
+        '400': *id006
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Directly set a valve (for manual testing).
+      tags:
+      - v1
+      - fastapi
+  /api/v1/health:
+    get:
+      operationId: health_check
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Health check endpoint for tests and frontend compatibility probes.
+      tags:
+      - v1
+      - fastapi
+  /api/v1/logs/stats:
+    get:
+      operationId: get_log_stats
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Summary statistics from logs database.
+      tags:
+      - v1
+      - fastapi
+  /api/v1/peripherals/reset:
+    post:
+      operationId: reset_peripherals
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
+      responses:
+        '201': *id005
+        '400': *id006
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Reset all peripherals
+      tags:
+      - v1
+      - fastapi
+  /api/v1/peripherals/{peripheral_id}:
+    get:
+      operationId: get_peripheral
+      parameters:
+      - in: path
+        name: peripheral_id
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: peripheral_id
+        required: false
+        schema:
+          type: str
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Get specific peripheral
+      tags:
+      - v1
+      - fastapi
+    put:
+      operationId: update_peripheral
+      parameters:
+      - in: path
+        name: peripheral_id
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: peripheral_id
+        required: false
+        schema:
+          type: str
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                data:
+                  type: object
+                id:
+                  type: string
+                name:
+                  type: string
+              type: object
+        required: true
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Update peripheral via PUT (for tests)
+      tags:
+      - v1
+      - fastapi
+  /api/v1/peripherals/{peripheral_id}/set:
+    post:
+      operationId: set_peripheral
+      parameters:
+      - in: path
+        name: peripheral_id
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: peripheral_id
+        required: false
+        schema:
+          type: str
+      - in: query
+        name: mode
+        required: false
+        schema:
+          type: str
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
+      responses:
+        '201': *id005
+        '400': *id006
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Update peripheral (manual mode)
+      tags:
+      - v1
+      - fastapi
+  /api/v1/plugins/:
+    get:
+      operationId: list_plugins
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: List all registered hardware plugins.
+      tags:
+      - v1
+      - fastapi
+  /api/v1/plugins/status:
+    get:
+      operationId: get_plugin_status
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Get overall status of all plugins.
+      tags:
+      - v1
+      - fastapi
+  /api/v1/plugins/validate:
+    post:
+      operationId: validate_plugin_configs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
+      responses:
+        '201': *id005
+        '400': *id006
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Validate configurations for multiple plugins.
+      tags:
+      - v1
+      - fastapi
+  /api/v1/plugins/{plugin_id}:
+    get:
+      operationId: get_plugin_info
+      parameters:
+      - in: path
+        name: plugin_id
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: plugin_id
+        required: false
+        schema:
+          type: str
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Get information about a specific plugin.
+      tags:
+      - v1
+      - fastapi
+  /api/v1/plugins/{plugin_id}/connect:
+    post:
+      operationId: connect_plugin
+      parameters:
+      - in: path
+        name: plugin_id
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: plugin_id
+        required: false
+        schema:
+          type: str
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
+      responses:
+        '201': *id005
+        '400': *id006
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Connect to a hardware plugin.
+      tags:
+      - v1
+      - fastapi
+  /api/v1/plugins/{plugin_id}/disconnect:
+    post:
+      operationId: disconnect_plugin
+      parameters:
+      - in: path
+        name: plugin_id
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: plugin_id
+        required: false
+        schema:
+          type: str
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
+      responses:
+        '201': *id005
+        '400': *id006
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Disconnect from a hardware plugin.
+      tags:
+      - v1
+      - fastapi
+  /api/v1/plugins/{plugin_id}/execute:
+    post:
+      operationId: execute_plugin_command
+      parameters:
+      - in: path
+        name: plugin_id
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: plugin_id
+        required: false
+        schema:
+          type: str
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
+      responses:
+        '201': *id005
+        '400': *id006
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Execute a command on a hardware plugin.
+      tags:
+      - v1
+      - fastapi
+  /api/v1/plugins/{plugin_id}/health:
+    get:
+      operationId: get_plugin_health
+      parameters:
+      - in: path
+        name: plugin_id
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: plugin_id
+        required: false
+        schema:
+          type: str
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Get health status of a specific plugin.
+      tags:
+      - v1
+      - fastapi
+  /api/v1/protocol-steps/fetch:
+    get:
+      operationId: fetch_protocol_steps
+      parameters:
+      - in: query
+        name: scenario
+        required: false
+        schema:
+          type: str
+      - in: query
+        name: source
+        required: false
+        schema:
+          type: str
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Fetch protocol steps for preview.
+      tags:
+      - v1
+      - fastapi
+  /api/v1/scenarios/fetch:
+    get:
+      operationId: fetch_scenarios
+      parameters:
+      - in: query
+        name: source
+        required: false
+        schema:
+          type: str
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Fetch scenarios from backend DB or external JSON and normalize shape.
+      tags:
+      - v1
+      - fastapi
+  /api/v1/scenarios/register-dsl:
+    post:
+      operationId: register_dsl
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
+      responses:
+        '201': *id005
+        '400': *id006
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Register one or many scenarios defined as DSL strings.
+      tags:
+      - v1
+      - fastapi
+  /api/v1/scenarios/{scenario_id}:
+    get:
+      operationId: get_scenario
+      parameters:
+      - in: path
+        name: scenario_id
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: scenario_id
+        required: false
+        schema:
+          type: str
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Get specific scenario
+      tags:
+      - v1
+      - fastapi
+  /api/v1/sim/state:
+    get:
+      operationId: get_sim_state
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Get simulation state in list format
+      tags:
+      - v1
+      - fastapi
+  /api/v1/state:
+    get:
+      operationId: get_state
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Get current system state
+      tags:
+      - v1
+      - fastapi
+  /api/v1/values/current:
+    get:
+      operationId: get_current_value
+      parameters:
+      - in: query
+        name: param
+        required: false
+        schema:
+          type: str
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Get current value for a parameter (single request, not streaming).
+      tags:
+      - v1
+      - fastapi
+  /api/v1/values/stream:
+    get:
+      operationId: stream_values
+      parameters:
+      - in: query
+        name: param
+        required: false
+        schema:
+          type: str
+      - in: query
+        name: min
+        required: false
+        schema:
+          type: float
+      - in: query
+        name: max
+        required: false
+        schema:
+          type: float
+      - in: query
+        name: period
+        required: false
+        schema:
+          type: float
+      - in: query
+        name: interval
+        required: false
+        schema:
+          type: float
+      - in: query
+        name: demo
+        required: false
+        schema:
+          type: bool
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: SSE endpoint for live value streaming.
+      tags:
+      - v1
+      - fastapi
+  /api/v1/variables:
+    get:
+      operationId: get_variables_alias
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Get variables (alias for fetch)
+      tags:
+      - v1
+      - fastapi
+  /api/v1/variables/fetch:
+    get:
+      operationId: fetch_variables
+      parameters:
+      - in: query
+        name: source
+        required: false
+        schema:
+          type: str
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Fetch variables (Peripheral State Table) from backend DB; tolerate
+        dev HTML by returning [].
+      tags:
+      - v1
+      - fastapi
+  /editor:
+    get:
+      operationId: editor_page
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Serve the scenario editor UI
+      tags:
+      - fastapi
+  /firmware/api/v1/health:
+    get:
+      operationId: health_check
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Health check endpoint for tests and frontend compatibility probes.
+      tags:
+      - fastapi
+      - firmware
+  /health:
+    get:
+      operationId: health_check
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Health check endpoint for tests and frontend compatibility probes.
+      tags:
+      - fastapi
+  /http://localhost:8101/:
+    get:
+      operationId: index_page
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Serve the firmware UI (index.html) at root
+      tags:
+      - openapi
+      - 'http:'
+  /http://localhost:8101/api/status:
+    get:
+      operationId: status
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: GET /api/status
+      tags:
+      - openapi
+      - 'http:'
+  /http://localhost:8101/api/v1/commands:
+    post:
+      operationId: post_commands
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                description:
+                  type: string
+                name:
+                  type: string
+              type: object
+        required: true
+      responses:
+        '201': *id005
+        '400': *id006
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Command bus endpoint used by frontend.
+      tags:
+      - openapi
+      - 'http:'
+  /http://localhost:8101/api/v1/editor/execute:
+    post:
+      operationId: execute_scenario
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
+      responses:
+        '201': *id005
+        '400': *id006
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Execute a scenario file using oqlos runtime.
+      tags:
+      - openapi
+      - 'http:'
+  /http://localhost:8101/api/v1/editor/file/{file_path:path}:
+    get:
+      operationId: read_file_endpoint
+      parameters:
+      - in: path
+        name: file_path:path
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: file_path
+        required: false
+        schema:
+          type: string
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Read a file's content.
+      tags:
+      - openapi
+      - 'http:'
+    post:
+      operationId: write_file_endpoint
+      parameters:
+      - in: path
+        name: file_path:path
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: file_path
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
+      responses:
+        '201': *id005
+        '400': *id006
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Write content to a file (creates parent directories as needed).
+      tags:
+      - openapi
+      - 'http:'
+  /http://localhost:8101/api/v1/editor/files:
+    get:
+      operationId: list_files
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: List all entries in the scenarios directory.
+      tags:
+      - openapi
+      - 'http:'
+  /http://localhost:8101/api/v1/execution/by-id/{execution_id}:
+    get:
+      operationId: get_execution
+      parameters:
+      - in: path
+        name: execution_id
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: execution_id
+        required: false
+        schema:
+          type: string
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Get execution status
+      tags:
+      - openapi
+      - 'http:'
+  /http://localhost:8101/api/v1/execution/logs:
+    get:
+      operationId: get_execution_logs
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Return execution logs for frontend polling.
+      tags:
+      - openapi
+      - 'http:'
+  /http://localhost:8101/api/v1/execution/logs/stream:
+    get:
+      operationId: execution_logs_stream
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Stream execution logs for terminal view
+      tags:
+      - openapi
+      - 'http:'
+  /http://localhost:8101/api/v1/execution/projection:
+    get:
+      operationId: get_execution_projection
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Return a lightweight execution projection used by the frontend polling
+        fallback.
+      tags:
+      - openapi
+      - 'http:'
+  /http://localhost:8101/api/v1/execution/start:
+    post:
+      operationId: start_execution
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
+      responses:
+        '201': *id005
+        '400': *id006
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Start scenario execution
+      tags:
+      - openapi
+      - 'http:'
+  /http://localhost:8101/api/v1/execution/status:
+    get:
+      operationId: get_execution_status
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Return textual logs and status for polling fallback when SSE is unavailable.
+      tags:
+      - openapi
+      - 'http:'
+  /http://localhost:8101/api/v1/execution/step:
+    post:
+      operationId: execute_step
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
+      responses:
+        '201': *id005
+        '400': *id006
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Execute a single DSL step within the current (or new) execution.
+      tags:
+      - openapi
+      - 'http:'
+  /http://localhost:8101/api/v1/execution/stream:
+    get:
+      operationId: execution_stream
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Stream execution events for frontend polling fallback
+      tags:
+      - openapi
+      - 'http:'
+  /http://localhost:8101/api/v1/hardware/health:
+    get:
+      operationId: hardware_health
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Return connectivity status for all hardware services.
+      tags:
+      - openapi
+      - 'http:'
+  /http://localhost:8101/api/v1/hardware/identify:
+    get:
+      operationId: hardware_identify
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: 'Return full hardware identification: registry + live probe results.'
+      tags:
+      - openapi
+      - 'http:'
+  /http://localhost:8101/api/v1/hardware/lung:
+    post:
+      operationId: set_lung
+      parameters:
+      - in: query
+        name: steps
+        required: false
+        schema:
+          type: string
+      - in: query
+        name: speed
+        required: false
+        schema:
+          type: string
+      - in: query
+        name: cycles
+        required: false
+        schema:
+          type: string
+      - in: query
+        name: pause
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
+      responses:
+        '201': *id005
+        '400': *id006
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Start artificial lung reciprocating motion (tic249 stepper).
+      tags:
+      - openapi
+      - 'http:'
+  /http://localhost:8101/api/v1/hardware/lung/stop:
+    post:
+      operationId: stop_lung
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
+      responses:
+        '201': *id005
+        '400': *id006
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Emergency stop the artificial lung motor.
+      tags:
+      - openapi
+      - 'http:'
+  /http://localhost:8101/api/v1/hardware/pump:
+    post:
+      operationId: set_pump
+      parameters:
+      - in: query
+        name: power_pct
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
+      responses:
+        '201': *id005
+        '400': *id006
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Directly set pump power % (for manual testing).
+      tags:
+      - openapi
+      - 'http:'
+  /http://localhost:8101/api/v1/hardware/sensor/{sensor_id}:
+    get:
+      operationId: read_sensor
+      parameters:
+      - in: path
+        name: sensor_id
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: sensor_id
+        required: false
+        schema:
+          type: string
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Read a sensor value directly from hardware.
+      tags:
+      - openapi
+      - 'http:'
+  /http://localhost:8101/api/v1/hardware/valve/{valve_id}:
+    post:
+      operationId: set_valve
+      parameters:
+      - in: path
+        name: valve_id
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: valve_id
+        required: false
+        schema:
+          type: string
+      - in: query
+        name: value
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
+      responses:
+        '201': *id005
+        '400': *id006
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Directly set a valve (for manual testing).
+      tags:
+      - openapi
+      - 'http:'
+  /http://localhost:8101/api/v1/health:
+    get:
+      operationId: health_check
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Health check endpoint for tests and frontend compatibility probes.
+      tags:
+      - openapi
+      - 'http:'
+  /http://localhost:8101/api/v1/logs/stats:
+    get:
+      operationId: get_log_stats
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Summary statistics from logs database.
+      tags:
+      - openapi
+      - 'http:'
+  /http://localhost:8101/api/v1/peripherals/reset:
+    post:
+      operationId: reset_peripherals
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
+      responses:
+        '201': *id005
+        '400': *id006
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Reset all peripherals
+      tags:
+      - openapi
+      - 'http:'
+  /http://localhost:8101/api/v1/peripherals/{peripheral_id}:
+    get:
+      operationId: get_peripheral
+      parameters:
+      - in: path
+        name: peripheral_id
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: peripheral_id
+        required: false
+        schema:
+          type: string
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Get specific peripheral
+      tags:
+      - openapi
+      - 'http:'
+    put:
+      operationId: update_peripheral
+      parameters:
+      - in: path
+        name: peripheral_id
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: peripheral_id
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                data:
+                  type: object
+                id:
+                  type: string
+                name:
+                  type: string
+              type: object
+        required: true
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Update peripheral via PUT (for tests)
+      tags:
+      - openapi
+      - 'http:'
+  /http://localhost:8101/api/v1/peripherals/{peripheral_id}/set:
+    post:
+      operationId: set_peripheral
+      parameters:
+      - in: path
+        name: peripheral_id
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: peripheral_id
+        required: false
+        schema:
+          type: string
+      - in: query
+        name: mode
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
+      responses:
+        '201': *id005
+        '400': *id006
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Update peripheral (manual mode)
+      tags:
+      - openapi
+      - 'http:'
+  /http://localhost:8101/api/v1/plugins/:
+    get:
+      operationId: list_plugins
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: List all registered hardware plugins.
+      tags:
+      - openapi
+      - 'http:'
+  /http://localhost:8101/api/v1/plugins/status:
+    get:
+      operationId: get_plugin_status
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Get overall status of all plugins.
+      tags:
+      - openapi
+      - 'http:'
+  /http://localhost:8101/api/v1/plugins/validate:
+    post:
+      operationId: validate_plugin_configs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
+      responses:
+        '201': *id005
+        '400': *id006
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Validate configurations for multiple plugins.
+      tags:
+      - openapi
+      - 'http:'
+  /http://localhost:8101/api/v1/plugins/{plugin_id}:
+    get:
+      operationId: get_plugin_info
+      parameters:
+      - in: path
+        name: plugin_id
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: plugin_id
+        required: false
+        schema:
+          type: string
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Get information about a specific plugin.
+      tags:
+      - openapi
+      - 'http:'
+  /http://localhost:8101/api/v1/plugins/{plugin_id}/connect:
+    post:
+      operationId: connect_plugin
+      parameters:
+      - in: path
+        name: plugin_id
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: plugin_id
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
+      responses:
+        '201': *id005
+        '400': *id006
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Connect to a hardware plugin.
+      tags:
+      - openapi
+      - 'http:'
+  /http://localhost:8101/api/v1/plugins/{plugin_id}/disconnect:
+    post:
+      operationId: disconnect_plugin
+      parameters:
+      - in: path
+        name: plugin_id
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: plugin_id
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
+      responses:
+        '201': *id005
+        '400': *id006
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Disconnect from a hardware plugin.
+      tags:
+      - openapi
+      - 'http:'
+  /http://localhost:8101/api/v1/plugins/{plugin_id}/execute:
+    post:
+      operationId: execute_plugin_command
+      parameters:
+      - in: path
+        name: plugin_id
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: plugin_id
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
+      responses:
+        '201': *id005
+        '400': *id006
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Execute a command on a hardware plugin.
+      tags:
+      - openapi
+      - 'http:'
+  /http://localhost:8101/api/v1/plugins/{plugin_id}/health:
+    get:
+      operationId: get_plugin_health
+      parameters:
+      - in: path
+        name: plugin_id
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: plugin_id
+        required: false
+        schema:
+          type: string
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Get health status of a specific plugin.
+      tags:
+      - openapi
+      - 'http:'
+  /http://localhost:8101/api/v1/protocol-steps/fetch:
+    get:
+      operationId: fetch_protocol_steps
+      parameters:
+      - in: query
+        name: scenario
+        required: false
+        schema:
+          type: string
+      - in: query
+        name: source
+        required: false
+        schema:
+          type: string
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Fetch protocol steps for preview.
+      tags:
+      - openapi
+      - 'http:'
+  /http://localhost:8101/api/v1/scenarios/fetch:
+    get:
+      operationId: fetch_scenarios
+      parameters:
+      - in: query
+        name: source
+        required: false
+        schema:
+          type: string
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Fetch scenarios from backend DB or external JSON and normalize shape.
+      tags:
+      - openapi
+      - 'http:'
+  /http://localhost:8101/api/v1/scenarios/register-dsl:
+    post:
+      operationId: register_dsl
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
+      responses:
+        '201': *id005
+        '400': *id006
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Register one or many scenarios defined as DSL strings.
+      tags:
+      - openapi
+      - 'http:'
+  /http://localhost:8101/api/v1/scenarios/{scenario_id}:
+    get:
+      operationId: get_scenario
+      parameters:
+      - in: path
+        name: scenario_id
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: scenario_id
+        required: false
+        schema:
+          type: string
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Get specific scenario
+      tags:
+      - openapi
+      - 'http:'
+  /http://localhost:8101/api/v1/sim/state:
+    get:
+      operationId: get_sim_state
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Get simulation state in list format
+      tags:
+      - openapi
+      - 'http:'
+  /http://localhost:8101/api/v1/state:
+    get:
+      operationId: get_state
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Get current system state
+      tags:
+      - openapi
+      - 'http:'
+  /http://localhost:8101/api/v1/values/current:
+    get:
+      operationId: get_current_value
+      parameters:
+      - in: query
+        name: param
+        required: false
+        schema:
+          type: string
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Get current value for a parameter (single request, not streaming).
+      tags:
+      - openapi
+      - 'http:'
+  /http://localhost:8101/api/v1/values/stream:
+    get:
+      operationId: stream_values
+      parameters:
+      - in: query
+        name: param
+        required: false
+        schema:
+          type: string
+      - in: query
+        name: min
+        required: false
+        schema:
+          type: string
+      - in: query
+        name: max
+        required: false
+        schema:
+          type: string
+      - in: query
+        name: period
+        required: false
+        schema:
+          type: string
+      - in: query
+        name: interval
+        required: false
+        schema:
+          type: string
+      - in: query
+        name: demo
+        required: false
+        schema:
+          type: string
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: SSE endpoint for live value streaming.
+      tags:
+      - openapi
+      - 'http:'
+  /http://localhost:8101/api/v1/variables:
+    get:
+      operationId: get_variables_alias
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Get variables (alias for fetch)
+      tags:
+      - openapi
+      - 'http:'
+  /http://localhost:8101/api/v1/variables/fetch:
+    get:
+      operationId: fetch_variables
+      parameters:
+      - in: query
+        name: source
+        required: false
+        schema:
+          type: string
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Fetch variables (Peripheral State Table) from backend DB; tolerate
+        dev HTML by returning [].
+      tags:
+      - openapi
+      - 'http:'
+  /http://localhost:8101/editor:
+    get:
+      operationId: editor_page
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Serve the scenario editor UI
+      tags:
+      - openapi
+      - 'http:'
+  /http://localhost:8101/firmware/api/v1/health:
+    get:
+      operationId: health_check
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Health check endpoint for tests and frontend compatibility probes.
+      tags:
+      - openapi
+      - 'http:'
+  /http://localhost:8101/health:
+    get:
+      operationId: health_check
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: Health check endpoint for tests and frontend compatibility probes.
+      tags:
+      - openapi
+      - 'http:'
+  /http://localhost:8101/ws:
+    websocket:
+      operationId: websocket_endpoint
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: WEBSOCKET /ws
+      tags:
+      - openapi
+      - 'http:'
+  /ws:
+    websocket:
+      operationId: websocket_endpoint
+      responses:
+        '200': *id001
+        '401': *id002
+        '404': *id003
+        '500': *id004
+      summary: WEBSOCKET /ws
+      tags:
+      - fastapi
+servers:
+- description: Local development
+  url: http://localhost:8101
+- description: Relative
+  url: /

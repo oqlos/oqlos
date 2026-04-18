@@ -43,9 +43,28 @@ interface[type="cli"] page[name="oqlctl"] {
 
 }
 
+integration[name="modbus"] {
+  type: "hardware";
+}
+
 workflow[name="install"] {
   trigger: "manual";
   step-1: run cmd=pip install -e .[dev];
+}
+
+workflow[name="quality"] {
+  trigger: "manual";
+  step-1: run cmd=pyqual run;
+}
+
+workflow[name="quality:fix"] {
+  trigger: "manual";
+  step-1: run cmd=pyqual run --fix;
+}
+
+workflow[name="quality:report"] {
+  trigger: "manual";
+  step-1: run cmd=pyqual report;
 }
 
 workflow[name="test"] {

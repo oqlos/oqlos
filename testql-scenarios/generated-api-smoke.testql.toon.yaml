@@ -1,0 +1,45 @@
+# SCENARIO: Auto-generated API Smoke Tests
+# TYPE: api
+# GENERATED: true
+# DETECTORS: FastAPIDetector, ConfigEndpointDetector
+
+CONFIG[4]{key, value}:
+  base_url, http://localhost:8101
+  timeout_ms, 10000
+  retry_count, 3
+  detected_frameworks, FastAPIDetector, ConfigEndpointDetector
+
+# REST API Endpoints (36 unique)
+API[25]{method, endpoint, expected_status}:
+  GET, /api/v1/state, 200  # get_state - Get current system state
+  GET, /api/v1/values/stream, 200  # stream_values - SSE endpoint for live value streaming.
+  GET, /api/v1/values/current, 200  # get_current_value - Get current value for a parameter (single request,
+  GET, /api/v1/sim/state, 200  # get_sim_state - Get simulation state in list format
+  GET, /api/v1/variables, 200  # get_variables_alias - Get variables (alias for fetch)
+  GET, /api/v1/variables/fetch, 200  # fetch_variables - Fetch variables (Peripheral State Table) from back
+  GET, /api/v1/protocol-steps/fetch, 200  # fetch_protocol_steps - Fetch protocol steps for preview.
+  POST, /api/v1/commands, 201  # post_commands - Command bus endpoint used by frontend.
+  GET, /api/v1/plugins/, 200  # list_plugins - List all registered hardware plugins.
+  GET, /api/v1/plugins/status, 200  # get_plugin_status - Get overall status of all plugins.
+  POST, /api/v1/plugins/validate, 201  # validate_plugin_configs - Validate configurations for multiple plugins.
+  GET, /api/v1/scenarios/fetch, 200  # fetch_scenarios - Fetch scenarios from backend DB or external JSON a
+  POST, /api/v1/scenarios/register-dsl, 201  # register_dsl - Register one or many scenarios defined as DSL stri
+  POST, /api/v1/execution/start, 201  # start_execution - Start scenario execution
+  POST, /api/v1/execution/step, 201  # execute_step - Execute a single DSL step within the current (or n
+  GET, /api/v1/execution/projection, 200  # get_execution_projection - Return a lightweight execution projection used by 
+  GET, /api/v1/execution/status, 200  # get_execution_status - Return textual logs and status for polling fallbac
+  GET, /api/v1/execution/logs, 200  # get_execution_logs - Return execution logs for frontend polling.
+  GET, /api/v1/execution/stream, 200  # execution_stream - Stream execution events for frontend polling fallb
+  GET, /api/v1/execution/logs/stream, 200  # execution_logs_stream - Stream execution logs for terminal view
+  POST, /api/v1/peripherals/reset, 201  # reset_peripherals - Reset all peripherals
+  GET, /api/v1/hardware/health, 200  # hardware_health - Return connectivity status for all hardware servic
+  GET, /api/v1/hardware/identify, 200  # hardware_identify - Return full hardware identification: registry + li
+  POST, /api/v1/hardware/pump, 201  # set_pump - Directly set pump power % (for manual testing).
+  POST, /api/v1/hardware/lung, 201  # set_lung - Start artificial lung reciprocating motion (tic249
+
+ASSERT[2]{field, operator, expected}:
+  status, <, 500
+  response_time, <, 2000
+
+# Summary by Framework:
+#   fastapi: 50 endpoints

@@ -1,0 +1,15 @@
+# SCENARIO: Auto-generated from Python Tests
+# TYPE: integration
+# GENERATED: true
+
+LOG[42]{message}:
+  "Test: TestVariableStore_test_interpolate_braces"
+  "Test: TestCqlExecuteMode_test_execute_mode_initializes_firmware"
+  "Test: TestFirmwareAdapterUnit_test_resolve_peripheral"
+  "Test: TestFirmwareAdapterUnit_test_dispatch_confirm_no_http"
+  "Test: TestFirmwareAdapterUnit_test_dispatch_lung_falls_back_to_direct_service_on_404"
+  "Test: test_interpolate_braces"
+  "Test: test_execute_mode_initializes_firmware"
+  "Test: test_resolve_peripheral"
+  "Test: test_dispatch_confirm_no_http"
+  "Test: test_dispatch_lung_falls_back_to_direct_service_on_404"
