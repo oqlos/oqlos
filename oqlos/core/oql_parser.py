@@ -455,6 +455,14 @@ def parse_oql(text: str, filename: str = "<string>") -> OqlDoc:
         # Inside MACRO/FUNC blocks, defer parsing — the body may contain $N
         # placeholders that are only resolvable at expansion time.
         if current.type in ("MACRO", "FUNC"):
+            # SET NAME updates block name even in deferred blocks
+            parts_peek = line.split(None, 2)
+            if (
+                len(parts_peek) >= 3
+                and parts_peek[0].upper() == "SET"
+                and parts_peek[1].upper() == "NAME"
+            ):
+                current.name = parts_peek[2].strip("'\"")
             current.raw_cmds.append((ln, line))
             continue
 

@@ -1,33 +1,28 @@
 SCENARIO: Kalibracja czujników ciśnienia
 
+FUNC:
+  SET NAME 'Próbkuj czujnik'
+  # $1=czujnik  $2=interwał  $3=czas  $4=label
+  SAMPLE $1 START $2
+  WAIT $3
+  SAMPLE $1 STOP
+  GET $1
+  SAVE $4
+
 GOAL:
   SET NAME 'kalibracja punkt zero'
   SET moduł-kalibracyjny 1
   SET ciśnienie-odniesienia 0 mbar
-  SAMPLE czujnik-1 START 500ms
-  SAMPLE czujnik-2 START 500ms
-  WAIT 5s
-  SAMPLE czujnik-1 STOP
-  SAMPLE czujnik-2 STOP
-  GET czujnik-1
-  SAVE offset-1
-  GET czujnik-2
-  SAVE offset-2
+  FUNC 'Próbkuj czujnik' 'czujnik-1' '500ms' '5s' 'offset-1'
+  FUNC 'Próbkuj czujnik' 'czujnik-2' '500ms' '5s' 'offset-2'
   SET moduł-kalibracyjny 0
 
 GOAL:
   SET NAME 'kalibracja punkt odniesienia'
   SET ciśnienie-odniesienia 100 mbar
   SET pompa-kalibracyjna 1
-  SAMPLE czujnik-1 START 500ms
-  SAMPLE czujnik-2 START 500ms
-  WAIT 5s
-  SAMPLE czujnik-1 STOP
-  SAMPLE czujnik-2 STOP
-  GET czujnik-1
-  SAVE gain-1
-  GET czujnik-2
-  SAVE gain-2
+  FUNC 'Próbkuj czujnik' 'czujnik-1' '500ms' '5s' 'gain-1'
+  FUNC 'Próbkuj czujnik' 'czujnik-2' '500ms' '5s' 'gain-2'
   SET pompa-kalibracyjna 0
 
 GOAL:

@@ -3,17 +3,18 @@ DEVICE_TYPE: BA
 DEVICE_MODEL: PSS 7000
 MANUFACTURER: Dräger
 
-GOAL:
-  SET NAME 'przepływ 5 l min'
-  SET pump-main 5.0 l/min
+FUNC:
+  SET NAME 'Pomiar przepływu'
+  SET pump-main $1
   WAIT 2s
   GET przepływ
-  SAVE przepływ-5l
+  SAVE $2
+
+GOAL:
+  SET NAME 'przepływ 5 l min'
+  FUNC 'Pomiar przepływu' '5.0 l/min' 'przepływ-5l'
 
 GOAL:
   SET NAME 'przepływ 10 l min'
-  SET pump-main 10.0 l/min
-  WAIT 2s
-  GET przepływ
-  SAVE przepływ-10l
+  FUNC 'Pomiar przepływu' '10.0 l/min' 'przepływ-10l'
   SET pump-main 0 l/min

@@ -3,24 +3,21 @@
 
 SCENARIO: Pomiar warunków środowiskowych
 
+FUNC:
+  SET NAME 'Pomiar środowiskowy'
+  # $1=czujnik  $2=interwał  $3=czas  $4=min  $5=max  $6=unit
+  SET $1 1
+  SAMPLE $1 START $2
+  WAIT $3
+  SAMPLE $1 STOP
+  GET $1
+  SAVE $1
+  IF $1 $4 .. $5 $6
+  CORRECT 'Pomiar w normie'
+  ERROR 'Błąd: pomiar poza zakresem'
+  SET $1 0
+
 GOAL:
   SET NAME 'pomiar temp wilgotność'
-  SET czujnik-temperatury 1
-  SET czujnik-wilgotności 1
-  SAMPLE temperatura START 1s
-  SAMPLE wilgotność START 1s
-  WAIT 10s
-  SAMPLE temperatura STOP
-  SAMPLE wilgotność STOP
-  GET temperatura
-  SAVE temperatura
-  GET wilgotność
-  SAVE wilgotność
-  IF temperatura 15 .. 25 °C
-  CORRECT 'Temperatura w normie (15-25°C)'
-  ERROR 'Błąd: temperatura poza zakresem 15-25°C'
-  IF wilgotność 30 .. 70 %RH
-  CORRECT 'Wilgotność w normie (30-70%RH)'
-  ERROR 'Błąd: wilgotność poza zakresem 30-70%RH'
-  SET czujnik-temperatury 0
-  SET czujnik-wilgotności 0
+  FUNC 'Pomiar środowiskowy' 'temperatura' '1s' '10s' '15' '25' '°C'
+  FUNC 'Pomiar środowiskowy' 'wilgotność' '1s' '10s' '30' '70' '%RH'

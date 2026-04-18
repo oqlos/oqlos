@@ -1,51 +1,130 @@
-version: '1'
-name: oqlos
-description: Minimal Taskfile
-variables:
+# Taskfile.yml — oqlos (OqlOS Hardware Integration) project runner
+# https://taskfile.dev
+
+version: "3"
+
+vars:
   APP_NAME: oqlos
-environments:
-  local:
-    container_runtime: docker
-    compose_command: docker compose
+  DOQL_OUTPUT: app.doql.less
+  DOQL_CMD: "{{if eq OS \"windows\"}}doql.exe{{else}}doql{{end}}"
+
+env:
+  PYTHONPATH: "{{.PWD}}"
+
 tasks:
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Development
+  # ─────────────────────────────────────────────────────────────────────────────
+
   install:
     desc: Install Python dependencies (editable)
     cmds:
-    - pip install -e .[dev]
+      - pip install -e .[dev]
+
   test:
     desc: Run pytest suite
     cmds:
-    - pytest -q
-  build:
-    desc: Build wheel + sdist
-    cmds:
-    - python -m build
-  clean:
-    desc: Remove build artefacts
-    cmds:
-    - rm -rf build/ dist/ *.egg-info
-  health:
-    desc: '[from doql] workflow: health'
-    cmds:
-    - docker compose ps
-    - docker compose exec app echo "Health check passed"
-  all:
-    desc: Run install, lint, test
-    cmds:
-    - taskfile run install
-    - taskfile run lint
-    - taskfile run test
-  fmt:
-    desc: Auto-format with ruff
-    cmds:
-    - ruff format .
-  help:
-    desc: Show available tasks
-    cmds:
-    - echo "oqlos — available tasks:"
-    - echo ""
-    - taskfile list
+      - pytest -q
+
   lint:
     desc: Run ruff lint check
     cmds:
-    - ruff check .
+      - ruff check .
+
+  fmt:
+    desc: Auto-format with ruff
+    cmds:
+      - ruff format .
+
+  build:
+    desc: Build wheel + sdist
+    cmds:
+      - python -m build
+
+  clean:
+    desc: Remove build artefacts
+    cmds:
+      - rm -rf build/ dist/ *.egg-info
+
+  all:
+    desc: Run install, lint, test
+    cmds:
+      - task: install
+      - task: lint
+      - task: test
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Hardware / oqlctl
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  hardware:check:
+    desc: Check hardware status via oqlctl
+    cmds:
+      - oqlctl --status || echo "Hardware not available (mock mode)"
+
+  hardware:identify:
+    desc: Identify connected hardware
+    cmds:
+      - oqlctl --identify
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Doql Integration
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  doql:adopt:
+    desc: Reverse-engineer oqlos project structure
+    cmds:
+      - |
+        if ! command -v {{.DOQL_CMD}} >/dev/null 2>&1; then
+          echo "⚠️  doql not installed. Install: pip install doql"
+          exit 1
+        fi
+      - "{{.DOQL_CMD}} adopt {{.PWD}} --output app.doql.css --force"
+      - "{{.DOQL_CMD}} export --format less -o {{.DOQL_OUTPUT}}"
+      - echo "✅ Project structure captured in {{.DOQL_OUTPUT}}"
+
+  doql:validate:
+    desc: Validate app.doql.less syntax
+    cmds:
+      - |
+        if [ ! -f "{{.DOQL_OUTPUT}}" ]; then
+          echo "❌ {{.DOQL_OUTPUT}} not found. Run: task doql:adopt"
+          exit 1
+        fi
+      - "{{.DOQL_CMD}} validate"
+
+  doql:doctor:
+    desc: Run doql health checks
+    cmds:
+      - "{{.DOQL_CMD}} doctor {{.PWD}}"
+
+  doql:build:
+    desc: Generate code from app.doql.less
+    cmds:
+      - |
+        if [ ! -f "{{.DOQL_OUTPUT}}" ]; then
+          echo "❌ {{.DOQL_OUTPUT}} not found. Run: task doql:adopt"
+          exit 1
+        fi
+      - |
+        # Regenerate LESS from CSS if CSS exists
+        if [ -f "app.doql.css" ]; then
+          {{.DOQL_CMD}} export --format less -o {{.DOQL_OUTPUT}}
+        fi
+      - "{{.DOQL_CMD}} build app.doql.css --out build/"
+
+  analyze:
+    desc: Full doql analysis (adopt + validate + doctor)
+    cmds:
+      - task: doql:adopt
+      - task: doql:validate
+      - task: doql:doctor
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Utility
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  help:
+    desc: Show available tasks
+    cmds:
+      - task --list

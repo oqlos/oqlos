@@ -8,53 +8,33 @@ MANUFACTURER: Dräger
 #   AI02 (SC): 0.73 – 0.78 V
 #   AI03 (WC): 0.86 – 0.91 V
 
+FUNC:
+  SET NAME 'Test zaworu'
+  # $1=zawór  $2=stan  $3=czujnik  $4=min  $5=max  $6=label
+  SET $1 $2
+  WAIT 500ms
+  IF $3 $4 .. $5 V
+  CORRECT 'Napięcie w zakresie kalibracji'
+  ERROR 'Błąd: napięcie poza zakresem'
+  SAVE $6
+
 GOAL:
   SET NAME 'test odczytu nc otwarty'
-  SET valve-nc 1
-  WAIT 500ms
-  IF AI01 0.60 .. 0.67 V
-  CORRECT 'Napięcie NC w zakresie kalibracji (otwarty)'
-  ERROR 'Błąd: napięcie NC poza zakresem 0.60-0.67 V (zawór otwarty)'
-  SAVE cisnienie-nc-otwarte
+  FUNC 'Test zaworu' 'valve-nc' '1' 'AI01' '0.60' '0.67' 'cisnienie-nc-otwarte'
 
 GOAL:
   SET NAME 'test odczytu nc zamkniety'
-  SET valve-nc 0
-  WAIT 500ms
-  IF AI01 0.60 .. 0.67 V
-  CORRECT 'Napięcie NC w zakresie kalibracji (zamknięty)'
-  ERROR 'Błąd: napięcie NC poza zakresem 0.60-0.67 V (zawór zamknięty)'
-  SAVE cisnienie-nc-zamkniete
+  FUNC 'Test zaworu' 'valve-nc' '0' 'AI01' '0.60' '0.67' 'cisnienie-nc-zamkniete'
 
 GOAL:
   SET NAME 'test odczytu sc otwarty'
-  SET valve-sc 1
-  WAIT 500ms
-  IF AI02 0.73 .. 0.78 V
-  CORRECT 'Napięcie SC w zakresie kalibracji (otwarty)'
-  ERROR 'Błąd: napięcie SC poza zakresem 0.73-0.78 V (zawór otwarty)'
-  SAVE cisnienie-sc-otwarte
+  FUNC 'Test zaworu' 'valve-sc' '1' 'AI02' '0.73' '0.78' 'cisnienie-sc-otwarte'
 
 GOAL:
   SET NAME 'test odczytu sc zamkniety'
-  SET valve-sc 0
-  WAIT 500ms
-  IF AI02 0.73 .. 0.78 V
-  CORRECT 'Napięcie SC w zakresie kalibracji (zamknięty)'
-  ERROR 'Błąd: napięcie SC poza zakresem 0.73-0.78 V (zawór zamknięty)'
-  SAVE cisnienie-sc-zamkniete
+  FUNC 'Test zaworu' 'valve-sc' '0' 'AI02' '0.73' '0.78' 'cisnienie-sc-zamkniete'
 
 GOAL:
   SET NAME 'test stabilności wc'
-  SET valve-wc 1
-  WAIT 1s
-  IF AI03 0.86 .. 0.91 V
-  CORRECT 'Napięcie WC w zakresie kalibracji (początek)'
-  ERROR 'Błąd: napięcie WC poza zakresem 0.86-0.91 V'
-  SAVE cisnienie-wc-poczatek
-  SET valve-wc 0
-  WAIT 3s
-  IF AI03 0.86 .. 0.91 V
-  CORRECT 'Napięcie WC w zakresie kalibracji (stabilność)'
-  ERROR 'Błąd: napięcie WC poza zakresem 0.86-0.91 V (brak stabilności)'
-  SAVE cisnienie-wc-koniec
+  FUNC 'Test zaworu' 'valve-wc' '1' 'AI03' '0.86' '0.91' 'cisnienie-wc-poczatek'
+  FUNC 'Test zaworu' 'valve-wc' '0' 'AI03' '0.86' '0.91' 'cisnienie-wc-koniec'
