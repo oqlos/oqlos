@@ -6,13 +6,13 @@ CONFIG[1]{key, value}:
   generated_from, oql_scenarios
 
 LOG[41]{message}:
-  "Scenario: test_iter_var"
-  "Scenario: test_loops"
-  "Scenario: test_nested_loops"
-  "Scenario: test_technical_flat"
-  "Scenario: test_block_if"
   "Scenario: hardware-lung-smoke"
   "Scenario: hardware-diagnostics"
   "Scenario: ts-temp-wilgotnosc"
   "Scenario: maskleaktest-ogledinywizualne"
   "Scenario: pss7000-testprzezadapter"
+  "Scenario: test-pompy"
+  "Scenario: hardware-valves-smoke"
+  "Scenario: kaskadowy-pomiar-cisnienia-z-przelaczaniem-czujnikow"
+  "Scenario: test-przeplywu"
+  "Scenario: c202-example"

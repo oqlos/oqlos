@@ -7,7 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-04-15
+
 ### Added
+- testql-scenarios: `generated-api-smoke.testql.toon.yaml` — API smoke tests (31 endpoint commands)
+- testql-scenarios: `generated-api-integration.testql.toon.yaml` — API integration flows
+- testql-scenarios: `generated-from-pytests.testql.toon.yaml` — scenarios from pytest suite
+- testql-scenarios: `generated-from-scenarios.testql.toon.yaml` — hardware type scenario (BA device)
+- testql-scenarios: `cross-project-integration.testql.toon.yaml` — cross-project integration checks
 - **OQL v3 — Flat Syntax** (`oqlos/core/oql_parser.py`): quote-free DSL
   with 12 base commands (`SET`, `GET`, `WAIT`, `SAVE`, `CHECK`, `MIN`,
   `MAX`, `SAMPLE`, `LOG`, `ERROR`, `CALL`, `INCLUDE`).

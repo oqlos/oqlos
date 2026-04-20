@@ -16,6 +16,8 @@ OqlOS — Operation Query Language runtime for hardware testing
 - [Release Management (`goal.yaml`)](#release-management-goalyaml)
 - [Code Analysis](#code-analysis)
 - [Source Map](#source-map)
+- [API Stubs](#api-stubs)
+- [Test Contracts](#test-contracts)
 - [Intent](#intent)
 
 ## Metadata
@@ -37,7 +39,7 @@ SUMD (description) → DOQL/source (code) → taskfile (automation) → testql (
 
 ### DOQL Application Declaration (`app.doql.less`)
 
-```less markpact:file path=app.doql.less
+```less markpact:doql path=app.doql.less
 // LESS format — define @variables here as needed
 
 app {
@@ -220,7 +222,7 @@ environment[name="prod"] {
 
 ### REST API (from `openapi.yaml`)
 
-```yaml markpact:file path=openapi.yaml
+```yaml markpact:openapi path=openapi.yaml
 components:
   schemas:
     Error:
@@ -1262,7 +1264,7 @@ servers:
 
 #### `testql-scenarios/cross-project-integration.testql.toon.yaml`
 
-```toon markpact:file path=testql-scenarios/cross-project-integration.testql.toon.yaml
+```toon markpact:testql path=testql-scenarios/cross-project-integration.testql.toon.yaml
 # SCENARIO: Cross-Project Integration Tests
 # TYPE: integration
 # GENERATED: true
@@ -1278,7 +1280,7 @@ LOG[2]{message}:
 
 #### `testql-scenarios/generated-api-integration.testql.toon.yaml`
 
-```toon markpact:file path=testql-scenarios/generated-api-integration.testql.toon.yaml
+```toon markpact:testql path=testql-scenarios/generated-api-integration.testql.toon.yaml
 # SCENARIO: API Integration Tests
 # TYPE: api
 # GENERATED: true
@@ -1301,45 +1303,45 @@ ASSERT[2]{field, operator, expected}:
 
 #### `testql-scenarios/generated-api-smoke.testql.toon.yaml`
 
-```toon markpact:file path=testql-scenarios/generated-api-smoke.testql.toon.yaml
+```toon markpact:testql path=testql-scenarios/generated-api-smoke.testql.toon.yaml
 # SCENARIO: Auto-generated API Smoke Tests
 # TYPE: api
 # GENERATED: true
-# DETECTORS: FastAPIDetector, ConfigEndpointDetector
+# DETECTORS: FastAPIDetector, OpenAPIDetector, ConfigEndpointDetector
 
 CONFIG[4]{key, value}:
   base_url, http://localhost:8101
   timeout_ms, 10000
   retry_count, 3
-  detected_frameworks, FastAPIDetector, ConfigEndpointDetector
+  detected_frameworks, FastAPIDetector, OpenAPIDetector, ConfigEndpointDetector
 
-# REST API Endpoints (36 unique)
+# REST API Endpoints (72 unique)
 API[25]{method, endpoint, expected_status}:
-  GET, /api/v1/state, 200  # get_state - Get current system state
-  GET, /api/v1/values/stream, 200  # stream_values - SSE endpoint for live value streaming.
-  GET, /api/v1/values/current, 200  # get_current_value - Get current value for a parameter (single request,
-  GET, /api/v1/sim/state, 200  # get_sim_state - Get simulation state in list format
-  GET, /api/v1/variables, 200  # get_variables_alias - Get variables (alias for fetch)
-  GET, /api/v1/variables/fetch, 200  # fetch_variables - Fetch variables (Peripheral State Table) from back
-  GET, /api/v1/protocol-steps/fetch, 200  # fetch_protocol_steps - Fetch protocol steps for preview.
-  POST, /api/v1/commands, 201  # post_commands - Command bus endpoint used by frontend.
-  GET, /api/v1/plugins/, 200  # list_plugins - List all registered hardware plugins.
-  GET, /api/v1/plugins/status, 200  # get_plugin_status - Get overall status of all plugins.
-  POST, /api/v1/plugins/validate, 201  # validate_plugin_configs - Validate configurations for multiple plugins.
-  GET, /api/v1/scenarios/fetch, 200  # fetch_scenarios - Fetch scenarios from backend DB or external JSON a
-  POST, /api/v1/scenarios/register-dsl, 201  # register_dsl - Register one or many scenarios defined as DSL stri
-  POST, /api/v1/execution/start, 201  # start_execution - Start scenario execution
-  POST, /api/v1/execution/step, 201  # execute_step - Execute a single DSL step within the current (or n
-  GET, /api/v1/execution/projection, 200  # get_execution_projection - Return a lightweight execution projection used by 
-  GET, /api/v1/execution/status, 200  # get_execution_status - Return textual logs and status for polling fallbac
-  GET, /api/v1/execution/logs, 200  # get_execution_logs - Return execution logs for frontend polling.
-  GET, /api/v1/execution/stream, 200  # execution_stream - Stream execution events for frontend polling fallb
-  GET, /api/v1/execution/logs/stream, 200  # execution_logs_stream - Stream execution logs for terminal view
-  POST, /api/v1/peripherals/reset, 201  # reset_peripherals - Reset all peripherals
-  GET, /api/v1/hardware/health, 200  # hardware_health - Return connectivity status for all hardware servic
-  GET, /api/v1/hardware/identify, 200  # hardware_identify - Return full hardware identification: registry + li
-  POST, /api/v1/hardware/pump, 201  # set_pump - Directly set pump power % (for manual testing).
-  POST, /api/v1/hardware/lung, 201  # set_lung - Start artificial lung reciprocating motion (tic249
+  GET, /api/v1/state, 200
+  GET, /api/v1/values/stream, 200
+  GET, /api/v1/values/current, 200
+  GET, /api/v1/sim/state, 200
+  GET, /api/v1/variables, 200
+  GET, /api/v1/variables/fetch, 200
+  GET, /api/v1/protocol-steps/fetch, 200
+  POST, /api/v1/commands, 201
+  GET, /api/v1/plugins/, 200
+  GET, /api/v1/plugins/status, 200
+  POST, /api/v1/plugins/validate, 201
+  GET, /api/v1/scenarios/fetch, 200
+  POST, /api/v1/scenarios/register-dsl, 201
+  POST, /api/v1/execution/start, 201
+  POST, /api/v1/execution/step, 201
+  GET, /api/v1/execution/projection, 200
+  GET, /api/v1/execution/status, 200
+  GET, /api/v1/execution/logs, 200
+  GET, /api/v1/execution/stream, 200
+  GET, /api/v1/execution/logs/stream, 200
+  POST, /api/v1/peripherals/reset, 201
+  GET, /api/v1/hardware/health, 200
+  GET, /api/v1/hardware/identify, 200
+  POST, /api/v1/hardware/pump, 201
+  POST, /api/v1/hardware/lung, 201
 
 ASSERT[2]{field, operator, expected}:
   status, <, 500
@@ -1347,11 +1349,12 @@ ASSERT[2]{field, operator, expected}:
 
 # Summary by Framework:
 #   fastapi: 50 endpoints
+#   openapi: 50 endpoints
 ```
 
 #### `testql-scenarios/generated-from-pytests.testql.toon.yaml`
 
-```toon markpact:file path=testql-scenarios/generated-from-pytests.testql.toon.yaml
+```toon markpact:testql path=testql-scenarios/generated-from-pytests.testql.toon.yaml
 # SCENARIO: Auto-generated from Python Tests
 # TYPE: integration
 # GENERATED: true
@@ -1371,7 +1374,7 @@ LOG[42]{message}:
 
 #### `testql-scenarios/generated-from-scenarios.testql.toon.yaml`
 
-```toon markpact:file path=testql-scenarios/generated-from-scenarios.testql.toon.yaml
+```toon markpact:testql path=testql-scenarios/generated-from-scenarios.testql.toon.yaml
 # SCENARIO: Auto-generated from OQL/CQL Scenarios
 # TYPE: hardware
 # GENERATED: true
@@ -1380,21 +1383,21 @@ CONFIG[1]{key, value}:
   generated_from, oql_scenarios
 
 LOG[41]{message}:
-  "Scenario: test_iter_var"
-  "Scenario: test_loops"
-  "Scenario: test_nested_loops"
-  "Scenario: test_technical_flat"
-  "Scenario: test_block_if"
   "Scenario: hardware-lung-smoke"
   "Scenario: hardware-diagnostics"
   "Scenario: ts-temp-wilgotnosc"
   "Scenario: maskleaktest-ogledinywizualne"
   "Scenario: pss7000-testprzezadapter"
+  "Scenario: test-pompy"
+  "Scenario: hardware-valves-smoke"
+  "Scenario: kaskadowy-pomiar-cisnienia-z-przelaczaniem-czujnikow"
+  "Scenario: test-przeplywu"
+  "Scenario: c202-example"
 ```
 
 #### `testql-contracts.testql.toon.yaml`
 
-```toon markpact:file path=testql-contracts.testql.toon.yaml
+```toon markpact:testql path=testql-contracts.testql.toon.yaml
 # SCENARIO: API Contract Tests
 # Auto-generated from OpenAPI spec
 # TYPE: contract
@@ -1450,7 +1453,7 @@ PERFORMANCE[1]{metric, threshold}:
 
 ### Taskfile Tasks (`Taskfile.yml`)
 
-```yaml markpact:file path=Taskfile.yml
+```yaml markpact:taskfile path=Taskfile.yml
 # Taskfile.yml — oqlos (OqlOS Hardware Integration) project runner
 # https://taskfile.dev
 
@@ -1473,6 +1476,22 @@ tasks:
     desc: Install Python dependencies (editable)
     cmds:
       - pip install -e .[dev]
+
+  deps:update:
+    desc: Upgrade all outdated Python packages in the active / project venv
+    cmds:
+      - |
+        PIP="pip"
+        [ -f "{{.PWD}}/.venv/bin/pip" ] && PIP="{{.PWD}}/.venv/bin/pip"
+        $PIP install --upgrade pip
+        OUTDATED=$($PIP list --outdated --format=columns 2>/dev/null | tail -n +3 | awk '{print $1}')
+        if [ -z "$OUTDATED" ]; then
+          echo "✅ All packages are up to date."
+        else
+          echo "📦 Upgrading: $OUTDATED"
+          echo "$OUTDATED" | xargs $PIP install --upgrade
+          echo "✅ Done."
+        fi
 
   quality:
     desc: Run pyqual quality pipeline
@@ -1599,7 +1618,7 @@ tasks:
 
 ## Quality Pipeline (`pyqual.yaml`)
 
-```yaml markpact:file path=pyqual.yaml
+```yaml markpact:pyqual path=pyqual.yaml
 pipeline:
   name: oqlos-quality
 
@@ -1748,10 +1767,10 @@ pip install -e .[dev]
 
 ### `project/map.toon.yaml`
 
-```toon markpact:file path=project/map.toon.yaml
-# oqlos | 128f 19992L | python:124,shell:2,css:1,less:1 | 2026-04-18
-# stats: 492 func | 131 cls | 128 mod | CC̄=4.2 | critical:41 | cycles:0
-# alerts[5]: CC parse_oql=34; CC _cmd_to_actions=24; CC report_json=16; CC main=15; CC _safe_resolve=14
+```toon markpact:analysis path=project/map.toon.yaml
+# oqlos | 128f 19992L | python:124,shell:2,css:1,less:1 | 2026-04-19
+# stats: 492 func | 131 cls | 128 mod | CC̄=3.7 | critical:34 | cycles:0
+# alerts[5]: CC parse_oql=31; CC _cmd_to_actions=23; CC _handle_start=14; CC _start_firmware_service=14; CC _build_validation_criteria=14
 # hotspots[5]: parse_oql fan=22; _handle_start fan=18; main fan=18; report_json fan=16; generate_goals_json fan=15
 # evolution: baseline
 # Keys: M=modules, D=details, i=imports, e=exports, c=classes, f=functions, m=methods
@@ -1888,7 +1907,7 @@ D:
   oqlos/__init__.py:
   oqlos/api/__init__.py:
   oqlos/api/editor.py:
-    e: FileInfo,FileContent,ExecutionRequest,_safe_path,list_files,read_file_endpoint,write_file_endpoint,execute_scenario
+    e: _safe_path,list_files,read_file_endpoint,write_file_endpoint,execute_scenario,FileInfo,FileContent,ExecutionRequest
     FileInfo:
     FileContent:
     ExecutionRequest:
@@ -2006,7 +2025,7 @@ D:
     _make_exec_handler(orch_attr;orch_value;target_status)
   oqlos/api/version.py:
   oqlos/config.py:
-    e: Settings,get_settings
+    e: get_settings,Settings
     Settings:  # Application settings loaded from environment variables and .
     get_settings()
   oqlos/core/__init__.py:
@@ -2137,7 +2156,7 @@ D:
     _parse_action_line(line;step_counter;steps)
     _parse_if_condition(line;step_counter;steps)
   oqlos/core/_oql_adapter.py:
-    e: _fmt_value,_scenarios_root,_resolve_include,_substitute_args,_MacroRegistry,_load_includes,_cmd_to_actions,_parse_macro_line,is_flat_oql,oql_doc_to_cql,_split_device_field,parse_flat_oql
+    e: _fmt_value,_scenarios_root,_resolve_include,_substitute_args,_load_includes,_cmd_to_actions,_parse_macro_line,is_flat_oql,oql_doc_to_cql,_split_device_field,parse_flat_oql,_MacroRegistry
     _MacroRegistry: __init__(0),register(1),get(1)  # Collect ``MACRO`` definitions (raw body lines) from the root
     _fmt_value(value;unit)
     _scenarios_root()
@@ -2166,7 +2185,7 @@ D:
     BaseInterpreter: __init__(4),parse(2),execute(1),run(2),run_file(1),strip_comments(1)  # Abstract base for language interpreters.
     EventBridge: __init__(1),connect(0),disconnect(0),send_event(2),connected(0)  # Optional WebSocket bridge to DSL Event Server (port 8104).
   oqlos/core/cql_parser.py:
-    e: _ParseState,parse_cql,_collect_all_goals,_validate_intervals,validate_cql
+    e: parse_cql,_collect_all_goals,_validate_intervals,validate_cql,_ParseState
     _ParseState: __init__(2),parse(0),_peek_next_significant_indent(0),_flush_pending_inline_if(0),_attach_pending_inline_if(2),_get_line_info(0),_process_line(0),_try_skip_block(2),_try_intervals_block(3),_try_top_level(3),_handle_scenario(1),_handle_scenario_attrs(1),_handle_goal(3),_handle_goal_attrs(1),_handle_step(1),_init_block_stack(0),_add_action_to_parent(1),_append_nested_action(1),_append_loop_action(1),_pop_block_with_warning(2),_handle_block_control(1),_handle_else_block(0),_try_handle_structure_levels(3),_handle_inline_if_logic(2),_handle_action_dispatch(2),_try_hierarchy(3)  # Encapsulates the parsing state to simplify the main loop.
     parse_cql(source;filename)
     _collect_all_goals(doc)
@@ -2183,7 +2202,7 @@ D:
     e: CqlInterpreter
     CqlInterpreter: __init__(10),sensor_values(0),sensor_values(1),_firmware(0),_firmware(1),_firmware_url(0),_firmware_url(1),_coerce_float(1),_resolve_peripheral_id(1),_get_pump_flow_full_scale_lpm(0),_normalize_pump_power(1),_normalize_valve_value(1),_normalize_lung_value(1),parse(2),_print_header(2),_collect_warnings(2),_run_validation_mode(3),_collect_all_goals(1),_execute_single_goal(2),_execute_all_goals(1),_build_script_result(2),execute(1),_execute_step(2),_execute_action(1),_exec_flat_action(1),_do_sleep(2),_normalize_peripheral_value(2),_coerce_generic_peripheral_value(1),_exec_set_peripheral(2),_get_firmware(0),_execute_firmware_action(2),_execute_plugin_action(2),_execute_legacy_firmware_action(2),_refresh_sensors_from_firmware(0),_auto_mock_sensor(3),_compare_sensor(3),_resolve_sensor_value(1),_resolve_condition_rhs(3),_evaluate_resolved_condition(0),_eval_condition_clause(2),_evaluate_inline_condition_expression(1),_tokenize_condition_expression(1),_aggregate_condition_results(2),_apply_connector(3),_finalize_condition_result(4),_evaluate_condition(1)  # CQL interpreter with three modes:
   oqlos/core/oql_parser.py:
-    e: OqlCmd,OqlBlock,OqlDoc,to_num,parse_duration,duration_to_ms,_unescape,tokenize,_require,_split_value_unit,parse_SET,parse_GET,parse_WAIT,parse_SAVE,parse_CHECK,parse_IF,parse_MIN,parse_MAX,parse_SAMPLE,parse_LOG,parse_ERROR,parse_CORRECT,parse_CALL,parse_INCLUDE,parse_FUNC_CALL,parse_oql,format_doc
+    e: to_num,parse_duration,duration_to_ms,_unescape,tokenize,_require,_split_value_unit,parse_SET,parse_GET,parse_WAIT,parse_SAVE,parse_CHECK,parse_IF,parse_MIN,parse_MAX,parse_SAMPLE,parse_LOG,parse_ERROR,parse_CORRECT,parse_CALL,parse_INCLUDE,parse_FUNC_CALL,parse_oql,format_doc,OqlCmd,OqlBlock,OqlDoc
     OqlCmd: __repr__(0)  # A single command line inside a block.
     OqlBlock:  # A named block: ``GOAL``, ``CONFIG``, or ``MACRO``.
     OqlDoc: goals(0),configs(0),macros(0),funcs(0)  # Parsed OQL document.
@@ -2219,7 +2238,7 @@ D:
     parse_dsl_to_goal_with_issues(dsl;scenario_id)
     parse_dsl_to_goal(dsl;scenario_id)
   oqlos/core/safe_eval.py:
-    e: SafeEvalError,safe_eval,_eval_constant,_eval_name,_eval_unary_op,_eval_bin_op,_eval_compare,_eval_bool_op,_eval_call,_eval_if_exp,_eval_node
+    e: safe_eval,_eval_constant,_eval_name,_eval_unary_op,_eval_bin_op,_eval_compare,_eval_bool_op,_eval_call,_eval_if_exp,_eval_node,SafeEvalError
     SafeEvalError:  # Raised when an expression cannot be safely evaluated.
     safe_eval(expr;context)
     _eval_constant(node;ctx)
@@ -2236,7 +2255,7 @@ D:
     StateManager: __init__(0),initialize_peripherals(0),broadcast_event(1)
   oqlos/dsl/__init__.py:
   oqlos/dsl/schema.py:
-    e: DslDialect,DslItem,DslFunctionBinding,DslParamUnitBinding,DslSchema,_normalize_name_list,_build_inferred_object_function_map,_build_inferred_param_unit_map,_merge_object_function_map,_merge_param_unit_map,get_default_dsl_schema
+    e: _normalize_name_list,_build_inferred_object_function_map,_build_inferred_param_unit_map,_merge_object_function_map,_merge_param_unit_map,get_default_dsl_schema,DslDialect,DslItem,DslFunctionBinding,DslParamUnitBinding,DslSchema
     DslDialect:  # Supported DSL dialect metadata.
     DslItem:  # A reusable schema item visible to editor clients.
     DslFunctionBinding:  # Object to function relationship used by visual builders.
@@ -2250,7 +2269,7 @@ D:
     get_default_dsl_schema()
   oqlos/hardware/__init__.py:
   oqlos/hardware/config_schema.py:
-    e: UnitType,get_hardware_config,register_hardware_config,load_config_from_yaml
+    e: get_hardware_config,register_hardware_config,load_config_from_yaml,UnitType
     UnitType:  # Standard unit types for hardware parameters.
     get_hardware_config(device_id)
     register_hardware_config(config)
@@ -2276,7 +2295,7 @@ D:
     e: SpiDriver
     SpiDriver: __init__(0),connect(1),read(1),write(2),discover(0),health_check(0),disconnect(0)  # SPI driver for HAL.
   oqlos/hardware/firmware_adapter.py:
-    e: FirmwareAdapter,_parse_numeric
+    e: _parse_numeric,FirmwareAdapter
     FirmwareAdapter: __init__(3),_get_client(0),close(0),_get_lung_motor_url(0),is_available(0),_resolve_peripheral(1),set_peripheral(2),pump_off(1),pump_set(2),valve_open(1),valve_close(1),reset_peripherals(0),read_state(0),read_sensor(1),read_all_sensors(0),_resolve_dispatch_target(3),_handle_lung_action(4),_handle_valve_action(4),_handle_pump_action(4),_handle_common_action(3),_execute_method(4),dispatch_action(3)  # HTTP bridge between CQL interpreter and firmware simulator.
     _parse_numeric(s)
   oqlos/hardware/gateway.py:
@@ -2303,7 +2322,7 @@ D:
     health_check_exception(exc)
     http_disconnect(client;label)
   oqlos/hardware/plugins/base.py:
-    e: PluginStatus,HardwareDriverSpec,get_pluggy_manager,ScaleConfig,ConversionConfig,PeripheralConfig,PluginConfig,PluginHealth,dynamic_peripheral_model,HardwarePlugin
+    e: get_pluggy_manager,dynamic_peripheral_model,PluginStatus,HardwareDriverSpec,ScaleConfig,ConversionConfig,PeripheralConfig,PluginConfig,PluginHealth,HardwarePlugin
     PluginStatus:  # Status of a hardware plugin.
     HardwareDriverSpec: set_peripheral(3),read_sensor(1),get_driver_status(0)  # Pluggy hookspec for hardware drivers.
     ScaleConfig: contains(1),clamp(1)  # Scale / range definition for a peripheral parameter.
@@ -2378,7 +2397,7 @@ D:
     _step_to_dict(step)
     report_json(result)
   oqlos/reporters/junit.py:
-    e: JUnitReporter,report_junit
+    e: report_junit,JUnitReporter
     JUnitReporter: generate(2),_add_testcase(3)  # Generate JUnit XML from a ScriptResult.
     report_junit(result;suite_name)
   oqlos/shared/__init__.py:
@@ -2390,7 +2409,7 @@ D:
     e: create_nfo_setup
     create_nfo_setup()
   oqlos/shared/event_server.py:
-    e: ConnectionManager,EventServer,main
+    e: main,ConnectionManager,EventServer
     ConnectionManager: __init__(0),connect(2),disconnect(1),broadcast(2),get_stats(0)  # Tracks connected WebSocket clients and broadcasts messages.
     EventServer: __init__(3),handle_client(1),_handle_message(2),_normalize_event(1),start(0)  # WebSocket event broker with persistence.
     main()
@@ -2398,7 +2417,7 @@ D:
     e: EventStore
     EventStore: __init__(1),append(1),get_all(0),get_recent(1),get_by_correlation(1),clear(0),to_json(0),from_json(1),count(0),_save(0),_load(0)  # Append-only event store with optional JSON file persistence.
   oqlos/shared/file_ops.py:
-    e: PathEscapeError,_ensure_safe_path,list_files,iter_entries,read_file,write_file
+    e: _ensure_safe_path,list_files,iter_entries,read_file,write_file,PathEscapeError
     PathEscapeError:  # Raised when a resolved path would escape the base directory.
     _ensure_safe_path(base;rel)
     list_files(base;pattern;recursive)
@@ -2488,7 +2507,7 @@ D:
     _calibrate_valves(client;url;log)
     _calibrate_sensors(client;url;log)
   oqlos/tools/hardware_diagnose/discovery.py:
-    e: _run_shell_command,UsbDevice,list_usb_serial_devices,list_i2c_buses,detect_chips_on_i2c
+    e: _run_shell_command,list_usb_serial_devices,list_i2c_buses,detect_chips_on_i2c,UsbDevice
     UsbDevice: to_dict(0)  # USB device information.
     _run_shell_command(cmd)
     list_usb_serial_devices()
@@ -2593,7 +2612,7 @@ D:
     test_placeholder()
     test_import()
   tests/firmware/test_hardware_identify.py:
-    e: _FakeGateway,test_collect_hardware_diagnostics_exposes_ports,test_hardware_identify_includes_diagnostics
+    e: test_collect_hardware_diagnostics_exposes_ports,test_hardware_identify_includes_diagnostics,_FakeGateway
     _FakeGateway: health(0)
     test_collect_hardware_diagnostics_exposes_ports(monkeypatch)
     test_hardware_identify_includes_diagnostics(monkeypatch)
@@ -2606,7 +2625,7 @@ D:
     TestHardwareGatewayLung: test_set_lung_mock(0),test_stop_lung_mock(0)
     TestCqlInterpreterLung: test_dry_run_lung_action(0)
   tests/firmware/test_modbus_discovery.py:
-    e: _OkResponse,_ErrorResponse,_install_fake_pymodbus,test_probe_waveshare_modbus_detects_working_port,test_probe_waveshare_modbus_reports_adapter_only_when_no_response
+    e: _install_fake_pymodbus,test_probe_waveshare_modbus_detects_working_port,test_probe_waveshare_modbus_reports_adapter_only_when_no_response,_OkResponse,_ErrorResponse
     _OkResponse: isError(0)
     _ErrorResponse: isError(0)
     _install_fake_pymodbus(monkeypatch;responsive_port;responsive_baud;responsive_parity)
@@ -2659,7 +2678,7 @@ D:
     TestFirmwareAdapterUnit: test_peripheral_map_completeness(0),test_sensor_map(0),test_parse_numeric(0),test_resolve_peripheral(0),test_dispatch_confirm_no_http(0),test_dispatch_lung_falls_back_to_direct_service_on_404(1)
     TestEventStore: test_append_and_get(0),test_get_recent(0),test_get_by_correlation(0),test_clear(0),test_json_roundtrip(0),test_persistence(1)
   tests/test_cql_cli.py:
-    e: _FakeInterpreter,test_cmd_executes_single_command,test_cmd_execute_aborts_when_hardware_is_unavailable,test_file_mode_still_executes_scenario,test_result_payload_is_json_safe
+    e: test_cmd_executes_single_command,test_cmd_execute_aborts_when_hardware_is_unavailable,test_file_mode_still_executes_scenario,test_result_payload_is_json_safe,_FakeInterpreter
     _FakeInterpreter: __init__(0),run(2)
     test_cmd_executes_single_command(monkeypatch)
     test_cmd_execute_aborts_when_hardware_is_unavailable(monkeypatch;capsys)
@@ -2727,7 +2746,7 @@ D:
     test_oql_example_dryrun(path)
     test_oql_scenario_validate(path)
   tests/test_reporting.py:
-    e: MockWS,MockBridge,test_reporting
+    e: test_reporting,MockWS,MockBridge
     MockWS: send(1),close(0)
     MockBridge: __init__(0),send_event(2)
     test_reporting()
@@ -2749,6 +2768,159 @@ D:
 def get_settings()  # CC=1, fan=0
 class Settings:  # Application settings loaded from environment variables and .
 ```
+
+## API Stubs
+
+*oqlos API v1.0.0 — auto-generated stubs from `openapi.yaml`.*
+
+```python markpact:openapi path=openapi.yaml
+# fastapi
+def index_page() -> Response:  # Serve the firmware UI (index.html) at root
+    "GET /"
+def status() -> Response:  # GET /api/status
+    "GET /api/status"
+def editor_page() -> Response:  # Serve the scenario editor UI
+    "GET /editor"
+def health_check() -> Response:  # Health check endpoint for tests and frontend compatibility probes.
+    "GET /firmware/api/v1/health"
+def health_check() -> Response:  # Health check endpoint for tests and frontend compatibility probes.
+    "GET /health"
+
+# v1
+def post_commands() -> Response:  # Command bus endpoint used by frontend.
+    "POST /api/v1/commands"
+def execute_scenario() -> Response:  # Execute a scenario file using oqlos runtime.
+    "POST /api/v1/editor/execute"
+def read_file_endpoint() -> Response:  # Read a file's content.
+    "GET /api/v1/editor/file/{file_path:path}"
+def write_file_endpoint() -> Response:  # Write content to a file (creates parent directories as needed).
+    "POST /api/v1/editor/file/{file_path:path}"
+def list_files() -> Response:  # List all entries in the scenarios directory.
+    "GET /api/v1/editor/files"
+def get_execution() -> Response:  # Get execution status
+    "GET /api/v1/execution/by-id/{execution_id}"
+def get_execution_logs() -> Response:  # Return execution logs for frontend polling.
+    "GET /api/v1/execution/logs"
+def execution_logs_stream() -> Response:  # Stream execution logs for terminal view
+    "GET /api/v1/execution/logs/stream"
+def get_execution_projection() -> Response:  # Return a lightweight execution projection used by the frontend polling fallback.
+    "GET /api/v1/execution/projection"
+def start_execution() -> Response:  # Start scenario execution
+    "POST /api/v1/execution/start"
+def get_execution_status() -> Response:  # Return textual logs and status for polling fallback when SSE is unavailable.
+    "GET /api/v1/execution/status"
+def execute_step() -> Response:  # Execute a single DSL step within the current (or new) execution.
+    "POST /api/v1/execution/step"
+def execution_stream() -> Response:  # Stream execution events for frontend polling fallback
+    "GET /api/v1/execution/stream"
+def hardware_health() -> Response:  # Return connectivity status for all hardware services.
+    "GET /api/v1/hardware/health"
+def hardware_identify() -> Response:  # Return full hardware identification: registry + live probe results.
+    "GET /api/v1/hardware/identify"
+def set_lung() -> Response:  # Start artificial lung reciprocating motion (tic249 stepper).
+    "POST /api/v1/hardware/lung"
+def stop_lung() -> Response:  # Emergency stop the artificial lung motor.
+    "POST /api/v1/hardware/lung/stop"
+def set_pump() -> Response:  # Directly set pump power % (for manual testing).
+    "POST /api/v1/hardware/pump"
+def read_sensor() -> Response:  # Read a sensor value directly from hardware.
+    "GET /api/v1/hardware/sensor/{sensor_id}"
+def set_valve() -> Response:  # Directly set a valve (for manual testing).
+    "POST /api/v1/hardware/valve/{valve_id}"
+def health_check() -> Response:  # Health check endpoint for tests and frontend compatibility probes.
+    "GET /api/v1/health"
+def get_log_stats() -> Response:  # Summary statistics from logs database.
+    "GET /api/v1/logs/stats"
+def reset_peripherals() -> Response:  # Reset all peripherals
+    "POST /api/v1/peripherals/reset"
+def get_peripheral() -> Response:  # Get specific peripheral
+    "GET /api/v1/peripherals/{peripheral_id}"
+def update_peripheral() -> Response:  # Update peripheral via PUT (for tests)
+    "PUT /api/v1/peripherals/{peripheral_id}"
+def set_peripheral() -> Response:  # Update peripheral (manual mode)
+    "POST /api/v1/peripherals/{peripheral_id}/set"
+def list_plugins() -> Response:  # List all registered hardware plugins.
+    "GET /api/v1/plugins/"
+def get_plugin_status() -> Response:  # Get overall status of all plugins.
+    "GET /api/v1/plugins/status"
+def validate_plugin_configs() -> Response:  # Validate configurations for multiple plugins.
+    "POST /api/v1/plugins/validate"
+def get_plugin_info() -> Response:  # Get information about a specific plugin.
+    "GET /api/v1/plugins/{plugin_id}"
+def connect_plugin() -> Response:  # Connect to a hardware plugin.
+    "POST /api/v1/plugins/{plugin_id}/connect"
+def disconnect_plugin() -> Response:  # Disconnect from a hardware plugin.
+    "POST /api/v1/plugins/{plugin_id}/disconnect"
+def execute_plugin_command() -> Response:  # Execute a command on a hardware plugin.
+    "POST /api/v1/plugins/{plugin_id}/execute"
+def get_plugin_health() -> Response:  # Get health status of a specific plugin.
+    "GET /api/v1/plugins/{plugin_id}/health"
+def fetch_protocol_steps() -> Response:  # Fetch protocol steps for preview.
+    "GET /api/v1/protocol-steps/fetch"
+def fetch_scenarios() -> Response:  # Fetch scenarios from backend DB or external JSON and normalize shape.
+    "GET /api/v1/scenarios/fetch"
+def register_dsl() -> Response:  # Register one or many scenarios defined as DSL strings.
+    "POST /api/v1/scenarios/register-dsl"
+def get_scenario() -> Response:  # Get specific scenario
+    "GET /api/v1/scenarios/{scenario_id}"
+def get_sim_state() -> Response:  # Get simulation state in list format
+    "GET /api/v1/sim/state"
+def get_state() -> Response:  # Get current system state
+    "GET /api/v1/state"
+def get_current_value() -> Response:  # Get current value for a parameter (single request, not streaming).
+    "GET /api/v1/values/current"
+def stream_values() -> Response:  # SSE endpoint for live value streaming.
+    "GET /api/v1/values/stream"
+def get_variables_alias() -> Response:  # Get variables (alias for fetch)
+    "GET /api/v1/variables"
+def fetch_variables() -> Response:  # Fetch variables (Peripheral State Table) from backend DB; tolerate dev HTML by returning [].
+    "GET /api/v1/variables/fetch"
+
+```
+
+**Schemas**: `Error`, `HealthCheck`
+
+## Test Contracts
+
+*Scenarios as contract signatures — what the system guarantees.*
+
+### Api (2)
+
+**`API Integration Tests`**
+- `GET /health` → `200`
+- `GET /api/v1/status` → `200`
+- `POST /api/v1/test` → `201`
+- assert `status == ok`
+- assert `response_time < 1000`
+
+**`Auto-generated API Smoke Tests`**
+- `GET /api/v1/state` → `200`
+- `GET /api/v1/values/stream` → `200`
+- `GET /api/v1/values/current` → `200`
+- assert `status < 500`
+- assert `response_time < 2000`
+- detectors: FastAPIDetector, OpenAPIDetector, ConfigEndpointDetector
+
+### Contract (1)
+
+**`API Contract Tests`**
+- `GET /api/v1/state` → `200`
+- `GET /api/v1/values/stream` → `200`
+- `GET /api/v1/values/current` → `200`
+- assert `content_type == application/json`
+- assert `schema_valid == true`
+- assert `status < 500`
+- perf `response_time_ms < <, 1000`
+
+### Hardware (1)
+
+**`Auto-generated from OQL/CQL Scenarios`**
+
+### Integration (2)
+
+**`Cross-Project Integration Tests`**
+
+**`Auto-generated from Python Tests`**
 
 ## Intent
 
