@@ -1,3 +1,4 @@
+VERSION 3
 # C202 Example scenario
 # Category: other
 
@@ -6,15 +7,14 @@ SCENARIO: Aparat C202 — przykład
 FUNC:
   SET NAME 'Sprawdź sensor'
   # $1=sensor  $2=min  $3=max  $4=unit  $5=save-label
-  GET $1
-  IF $1 $2 .. $3 $4
+  IF '$1' '$2 .. $3 $4'
   CORRECT 'Pomiar w normie'
   ERROR 'Błąd: pomiar poza zakresem'
   SAVE $5
 
 GOAL:
   SET NAME 'kontrola wizualna'
-  LOG "Inspekcja wizualna — potwierdzenie operatora"
+  LOG 'Inspekcja wizualna — potwierdzenie operatora'
   SAVE wynik-wizualny
 
 GOAL:
@@ -23,14 +23,14 @@ GOAL:
 
 GOAL:
   SET NAME 'test szczelności pełny'
-  SET pump-main 5 l/min
-  SET valve-bo06 1
+  SET 'pump-main' '5 l/min'
+  SET 'valve-bo06' '1'
   WAIT 20s
   FUNC 'Sprawdź sensor' 'AI01' '-10' '0' 'mbar' 'ciśnienie-NC-pełny'
-  SET pump-main 0
-  SET valve-bo04 0
-  SET valve-bo05 0
-  SET valve-bo06 0
+  SET 'pump-main' '0'
+  SET 'valve-bo04' '0'
+  SET 'valve-bo05' '0'
+  SET 'valve-bo06' '0'
 
 GOAL:
   SET NAME 'ciśnienie otwarcia zaw wyd'

@@ -1,31 +1,31 @@
+VERSION 3
 SCENARIO: Test wytrzymałości mechanicznej
 DESCRIPTION: Pojedynczy cykl obciążenia/odciążenia — pętla cykli jest sterowana z zewnątrz.
 
 CONFIG przygotowanie:
-  SET próbka 1
-  SET czujnik-siły 1
-  SET czujnik-przemieszczenia 1
+  SET 'próbka' '1'
+  SET 'czujnik-siły' '1'
+  SET 'czujnik-przemieszczenia' '1'
 
 GOAL:
   SET NAME 'Cykl pojedynczy'
-  SET siłownik 1
-  SET pozycja-docelowa 50 mm
+  SET 'siłownik' '1'
+  SET 'pozycja-docelowa' '50 mm'
   WAIT 1s
   GET siła-aktualna
   SAVE siła-aktualna
   GET pozycja-aktualna
   SAVE pozycja-aktualna
-  IF siła-aktualna 0 .. 1100 N
+  IF 'siła-aktualna' '0 .. 1100 N'
   CORRECT 'Siła w zakresie wytrzymałości (0-1100 N)'
   ERROR 'Błąd: siła poza zakresem wytrzymałości'
-  SET pozycja-docelowa 0 mm
+  SET 'pozycja-docelowa' '0 mm'
   WAIT 1s
 
 GOAL:
   SET NAME 'Ocena wyniku'
-  GET cykle-wykonane
-  IF cykle-wykonane 100 .. 1000 szt
+  IF 'cykle-wykonane' '100 .. 1000 szt'
   CORRECT 'Liczba cykli w normie'
   ERROR 'Błąd: liczba cykli poniżej minimum'
-  SET siłownik 0
+  SET 'siłownik' '0'
   SAVE raport-wytrzymałości

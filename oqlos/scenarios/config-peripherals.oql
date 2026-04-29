@@ -1,9 +1,10 @@
+VERSION 3
 SCENARIO: Konfiguracja Peryferii
 DEVICE_TYPE: BA
 DEVICE_MODEL: PSS 7000
 MANUFACTURER: Dräger
 
-INCLUDE "lib/peripherals.oql"
+INCLUDE 'lib/peripherals.oql'
 
 # ──────────────────────────────────────────────
 # INIT — peryferia do znanego stanu bezpiecznego
@@ -13,15 +14,15 @@ CONFIG init-pompa:
   CALL init-pump
 
 CONFIG init-zawory-nc:
-  SET valve-nc 0
+  SET 'valve-nc' '0'
   WAIT 300ms
 
 CONFIG init-zawory-sc:
-  SET valve-sc 0
+  SET 'valve-sc' '0'
   WAIT 300ms
 
 CONFIG init-zawory-wc:
-  SET valve-wc 0
+  SET 'valve-wc' '0'
   WAIT 300ms
 
 CONFIG init-zawory-numerowane:
@@ -40,9 +41,9 @@ CONFIG init-czujniki:
 # ──────────────────────────────────────────────
 
 CONFIG verify-zawory-zamkniete:
-  SET valve-nc 0
-  SET valve-sc 0
-  SET valve-wc 0
+  SET 'valve-nc' '0'
+  SET 'valve-sc' '0'
+  SET 'valve-wc' '0'
   WAIT 200ms
   SAVE zawory-zamkniete
 
@@ -56,24 +57,24 @@ CONFIG verify-pompa-wylaczona:
 
 GOAL:
   SET NAME 'state ready'
-  LOG "System gotowy do pracy"
+  LOG 'System gotowy do pracy'
   SAVE system-ready
   WAIT 1s
 
 GOAL:
   SET NAME 'tryb kalibracji'
-  SET valve-nc 1
-  SET valve-sc 1
-  SET valve-wc 1
+  SET 'valve-nc' '1'
+  SET 'valve-sc' '1'
+  SET 'valve-wc' '1'
   WAIT 1s
-  SET valve-nc 0
-  SET valve-sc 0
-  SET valve-wc 0
+  SET 'valve-nc' '0'
+  SET 'valve-sc' '0'
+  SET 'valve-wc' '0'
   SAVE kalibracja-zakonczona
 
 GOAL:
   SET NAME 'tryb testowy pompy'
-  SET pompa-1 5 l/min
+  SET 'pompa-1' '5 l/min'
   WAIT 2s
-  SET pompa-1 0
+  SET 'pompa-1' '0'
   SAVE test-pompy-ok

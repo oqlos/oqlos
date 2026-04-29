@@ -1,3 +1,4 @@
+VERSION 3
 SCENARIO: Test Przepływu
 DEVICE_TYPE: BA
 DEVICE_MODEL: PSS 7000
@@ -5,7 +6,7 @@ MANUFACTURER: Dräger
 
 FUNC:
   SET NAME 'Pomiar przepływu'
-  SET pump-main $1
+  SET 'pump-main' '$1'
   WAIT 2s
   GET przepływ
   SAVE $2
@@ -17,4 +18,4 @@ GOAL:
 GOAL:
   SET NAME 'przepływ 10 l min'
   FUNC 'Pomiar przepływu' '10.0 l/min' 'przepływ-10l'
-  SET pump-main 0 l/min
+  SET 'pump-main' '0 l/min'

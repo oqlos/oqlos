@@ -1,3 +1,4 @@
+VERSION 3
 SCENARIO: Hardware Valves Smoke Test
 DEVICE_TYPE: BA
 DEVICE_MODEL: PSS 7000
@@ -5,13 +6,13 @@ MANUFACTURER: Dräger
 
 FUNC:
   SET NAME 'Cykl zaworu'
-  SET $1 1
+  SET '$1' '1'
   WAIT 200ms
-  SET $1 0
+  SET '$1' '0'
 
 GOAL:
   SET NAME 'smoke test modbus valves'
-  LOG "Cykl NC -> SC -> WC"
+  LOG 'Cykl NC -> SC -> WC'
   FUNC 'Cykl zaworu' 'valve-nc'
   WAIT 200ms
   FUNC 'Cykl zaworu' 'valve-sc'

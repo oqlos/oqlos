@@ -1,3 +1,4 @@
+VERSION 3
 SCENARIO: Hardware Lung Smoke Test
 DEVICE_TYPE: BA
 DEVICE_MODEL: PSS 7000
@@ -5,8 +6,11 @@ MANUFACTURER: Dräger
 
 GOAL:
   SET NAME 'smoke test tic249'
-  LOG "Uruchamiam silnik płuca"
-  SET lung-main 2.0
-  WAIT 1500ms
-  SET lung-main 0
-  LOG "Zatrzymano"
+  LOG 'Uruchamiam silnik płuca'
+  SET 'Pojemność płuca' '2.5l'
+  SET 'Ilość cykli płuca' '20'
+  SET 'Płuco' 'Start'
+  REPEATS 10:
+    WAIT 5s
+    IF 'AI03' '-5 .. 5 V' CORRECT STOP
+  LOG 'Zatrzymano'

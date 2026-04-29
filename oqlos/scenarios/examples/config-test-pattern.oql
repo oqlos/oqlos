@@ -1,3 +1,4 @@
+VERSION 3
 SCENARIO: Test Pattern — Prepare / Test / Cleanup
 DEVICE_TYPE: BA
 
@@ -5,11 +6,11 @@ DEVICE_TYPE: BA
 # 1. PREPARE — przygotowanie środowiska
 # ──────────────────────────────────────────────
 CONFIG prepare-environment:
-  SET pump-main 0
-  SET pompa-1 0
-  SET valve-nc 0
-  SET valve-sc 1
-  SET valve-wc 0
+  SET 'pump-main' '0'
+  SET 'pompa-1' '0'
+  SET 'valve-nc' '0'
+  SET 'valve-sc' '1'
+  SET 'valve-wc' '0'
   WAIT 1s
   SAVE env-prepared
 
@@ -18,24 +19,24 @@ CONFIG prepare-environment:
 # ──────────────────────────────────────────────
 GOAL:
   SET NAME 'execute pressure test'
-  SET valve-nc 1
+  SET 'valve-nc' '1'
   WAIT 500ms
-  SET pompa-1 5 l/min
+  SET 'pompa-1' '5 l/min'
   WAIT 3s
   GET AI02
   SAVE test-result
-  SET pompa-1 0
+  SET 'pompa-1' '0'
   WAIT 500ms
 
 # ──────────────────────────────────────────────
 # 3. CLEANUP — sprzątanie i reset
 # ──────────────────────────────────────────────
 CONFIG cleanup:
-  SET pompa-1 0
-  SET pump-main 0
-  SET valve-nc 0
-  SET valve-sc 0
-  SET valve-wc 0
+  SET 'pompa-1' '0'
+  SET 'pump-main' '0'
+  SET 'valve-nc' '0'
+  SET 'valve-sc' '0'
+  SET 'valve-wc' '0'
   WAIT 500ms
   SAVE cleanup-done
   SAVE test-sequence-complete

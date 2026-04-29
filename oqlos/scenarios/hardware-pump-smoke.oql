@@ -1,3 +1,4 @@
+VERSION 3
 SCENARIO: Hardware Pump Smoke Test
 DEVICE_TYPE: BA
 DEVICE_MODEL: PSS 7000
@@ -5,8 +6,8 @@ MANUFACTURER: Dräger
 
 GOAL:
   SET NAME 'smoke test dri0050'
-  LOG "Start pompy"
-  SET pompa-1 5.0 l/min
+  LOG 'Start pompy'
+  SET 'pompa-1' '5.0 l/min'
   WAIT 500ms
-  SET pompa-1 0 l/min
-  LOG "Pompa wyłączona"
+  SET 'pompa-1' '0 l/min'
+  LOG 'Pompa wyłączona'

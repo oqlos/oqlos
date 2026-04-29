@@ -1,3 +1,4 @@
+VERSION 3
 SCENARIO: 'Dräger FPS 7000 Full Test'
 DEVICE_TYPE: 'BA'
 DEVICE_MODEL: 'FPS 7000'
@@ -17,9 +18,9 @@ GOAL: Pełny test maski
     
     IF 'AI01' ≥ '-11.0 mbar'
       IF 'Timer' ≤ '15.0 s'
-        SET 'pompa 1' '0 l/min'
-        VAL 'Cisnienie NC' 'AI01'
-        SAVE 'AI01.value'
+      SET 'pompa 1' '0 l/min'
+      VAL 'Cisnienie NC' 'AI01'
+      SAVE 'AI01.value'
         
         IF 'AI01' ≤ '-9.0 mbar'
           # Koniec ścieżki

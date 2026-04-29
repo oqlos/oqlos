@@ -1,109 +1,102 @@
+VERSION 3
 SCENARIO: PSS 7000 z maską FENZY ZENITH
 
 GOAL:
   SET NAME 'Test wizualny'
-  LOG "Inspekcja wizualna aparatu"
+  LOG 'Inspekcja wizualna aparatu'
   SAVE wynik-wizualny
 
 GOAL:
   SET NAME 'Podłącz złącza SC'
-  LOG "Akcja manualna: podłącz złącza SC"
+  LOG 'Akcja manualna: podłącz złącza SC'
 
 GOAL:
   SET NAME 'Odkręć zawór butli'
-  SET zawór-butli-300bar 1
+  SET 'zawór-butli-300bar' '1'
 
 GOAL:
   SET NAME 'Załóż maskę'
-  LOG "Akcja manualna: załóż maskę FENZY ZENITH"
+  LOG 'Akcja manualna: załóż maskę FENZY ZENITH'
 
 GOAL:
   SET NAME 'Test statyczny SC'
-  SET pump-main 0
+  SET 'pump-main' '0'
   WAIT 3s
-  GET AI02
   SAVE ciśnienie-sc
-  IF AI02 6.0 .. 8.0 bar
+  IF 'AI02' '6.0 .. 8.0 bar'
   CORRECT 'Ciśnienie SC w normie (FENZY ZENITH)'
   ERROR 'Błąd: ciśnienie SC poza zakresem (FENZY ZENITH)'
 
 GOAL:
   SET NAME 'Zmiana SC'
   WAIT 6s
-  GET AI01
   SAVE delta-ciśnienia-sc
-  IF AI01 -1.0 .. 0.5 bar
+  IF 'AI01' '-1.0 .. 0.5 bar'
   CORRECT 'Delta ciśnienia w normie (FENZY ZENITH)'
   ERROR 'Błąd: przekroczona delta ciśnienia (FENZY ZENITH)'
 
 GOAL:
   SET NAME 'Zamknij zawór butli'
-  SET zawór-butli-300bar 0
+  SET 'zawór-butli-300bar' '0'
 
 GOAL:
   SET NAME 'Test szczelności WC'
-  SET pump-main 0
+  SET 'pump-main' '0'
   WAIT 5s
 
 GOAL:
   SET NAME 'Kontrola spadku WC'
   WAIT 10s
-  GET AI01
   SAVE spadek-ciśnienia
-  IF AI01 0.0 .. 3.0 bar
+  IF 'AI01' '0.0 .. 3.0 bar'
   CORRECT 'Spadek WC w normie'
   ERROR 'Błąd: spadek WC poza zakresem'
 
 GOAL:
   SET NAME 'Podłącz automat oddechowy'
-  LOG "Akcja manualna: podłącz automat oddechowy"
+  LOG 'Akcja manualna: podłącz automat oddechowy'
 
 GOAL:
   SET NAME 'Test nadciśnienia statycznego'
-  SET pump-main 0
+  SET 'pump-main' '0'
   WAIT 5s
-  GET AI01
   SAVE nadciśnienie
-  IF AI01 2.2 .. 4.1 mbar
+  IF 'AI01' '2.2 .. 4.1 mbar'
   CORRECT 'Nadciśnienie statyczne w normie (FENZY ZENITH)'
   ERROR 'Błąd: nadciśnienie poza zakresem (FENZY ZENITH)'
 
 GOAL:
   SET NAME 'Test sygnału akustycznego'
-  SET pump-main 5.0 l/min
-  SET valve-bo06 1
+  SET 'pump-main' '5.0 l/min'
+  SET 'valve-bo06' '1'
   WAIT 2s
-  GET AI01
   SAVE wynik-sygnału
-  IF AI01 0.0 .. 1.0 mbar
+  IF 'AI01' '0.0 .. 1.0 mbar'
   CORRECT 'Sygnał akustyczny OK'
   ERROR 'Błąd: sygnał akustyczny poza zakresem'
 
 GOAL:
   SET NAME 'Wytworzenie podciśnienia'
-  SET pump-main 5.0 l/min
-  SET valve-bo06 1
+  SET 'pump-main' '5.0 l/min'
+  SET 'valve-bo06' '1'
   WAIT 20s
-  GET AI01
-  IF AI01 -12.0 .. 12.0 mbar
+  IF 'AI01' '-12.0 .. 12.0 mbar'
   CORRECT 'Podciśnienie w normie (FENZY ZENITH)'
   ERROR 'Błąd: podciśnienie poza zakresem (FENZY ZENITH)'
 
 GOAL:
   SET NAME 'Ustawienie auto'
-  SET pump-main 0
-  SET valve-bo04 1
+  SET 'pump-main' '0'
+  SET 'valve-bo04' '1'
   WAIT 15s
-  GET AI01
-  IF AI01 -12.0 .. -6.0 mbar
+  IF 'AI01' '-12.0 .. -6.0 mbar'
   CORRECT 'Ustawienie auto OK'
   ERROR 'Błąd: ustawienie auto poza zakresem'
 
 GOAL:
   SET NAME 'Test szczelności automatu'
   WAIT 5s
-  GET AI01
   SAVE ciśnienie-nc-końcowe
-  IF AI01 -8.0 .. -4.0 mbar
+  IF 'AI01' '-8.0 .. -4.0 mbar'
   CORRECT 'Szczelność automatu OK'
   ERROR 'Błąd: szczelność automatu poza zakresem'

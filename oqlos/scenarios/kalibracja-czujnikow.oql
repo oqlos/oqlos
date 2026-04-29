@@ -1,3 +1,4 @@
+VERSION 3
 SCENARIO: Kalibracja czujników ciśnienia
 
 FUNC:
@@ -11,33 +12,33 @@ FUNC:
 
 GOAL:
   SET NAME 'kalibracja punkt zero'
-  SET moduł-kalibracyjny 1
-  SET ciśnienie-odniesienia 0 mbar
+  SET 'moduł-kalibracyjny' '1'
+  SET 'ciśnienie-odniesienia' '0 mbar'
   FUNC 'Próbkuj czujnik' 'czujnik-1' '500ms' '5s' 'offset-1'
   FUNC 'Próbkuj czujnik' 'czujnik-2' '500ms' '5s' 'offset-2'
-  SET moduł-kalibracyjny 0
+  SET 'moduł-kalibracyjny' '0'
 
 GOAL:
   SET NAME 'kalibracja punkt odniesienia'
-  SET ciśnienie-odniesienia 100 mbar
-  SET pompa-kalibracyjna 1
+  SET 'ciśnienie-odniesienia' '100 mbar'
+  SET 'pompa-kalibracyjna' '1'
   FUNC 'Próbkuj czujnik' 'czujnik-1' '500ms' '5s' 'gain-1'
   FUNC 'Próbkuj czujnik' 'czujnik-2' '500ms' '5s' 'gain-2'
-  SET pompa-kalibracyjna 0
+  SET 'pompa-kalibracyjna' '0'
 
 GOAL:
   SET NAME 'weryfikacja kalibracji'
-  SET pompa-testowa 1
+  SET 'pompa-testowa' '1'
   WAIT 3s
   GET czujnik-1
   SAVE odczyt-1
   GET czujnik-2
   SAVE odczyt-2
-  IF czujnik-1 48 .. 52 mbar
+  IF 'czujnik-1' '48 .. 52 mbar'
   CORRECT 'Czujnik 1 kalibracja OK (48-52 mbar)'
   ERROR 'Błąd: czujnik 1 poza zakresem kalibracji'
-  IF czujnik-2 48 .. 52 mbar
+  IF 'czujnik-2' '48 .. 52 mbar'
   CORRECT 'Czujnik 2 kalibracja OK (48-52 mbar)'
   ERROR 'Błąd: czujnik 2 poza zakresem kalibracji'
-  SET pompa-testowa 0
+  SET 'pompa-testowa' '0'
   SAVE certyfikat-kalibracji

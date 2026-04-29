@@ -1,47 +1,48 @@
+VERSION 3
 SCENARIO: Hardware Diagnostics
 DEVICE_TYPE: TEST_EQUIPMENT
 DESCRIPTION: Smoke-test dla pompy, zaworów, płuca i czujników piADC.
 
-INCLUDE "lib/hardware.oql"
-INCLUDE "lib/peripherals.oql"
+INCLUDE 'lib/hardware.oql'
+INCLUDE 'lib/peripherals.oql'
 
 CONFIG start:
-  LOG "=== Hardware diagnostics ==="
+  LOG '=== Hardware diagnostics ==='
   CALL init-all
 
 GOAL:
   SET NAME 'smoke pump'
-  LOG "Test: pompa DRI0050"
+  LOG 'Test: pompa DRI0050'
   CALL hw-pump-smoke
 
 GOAL:
   SET NAME 'smoke lung'
-  LOG "Test: płuco TIC249"
+  LOG 'Test: płuco TIC249'
   CALL hw-lung-smoke
 
 GOAL:
   SET NAME 'smoke valves'
-  LOG "Test: zawory Modbus (NC / SC / WC)"
+  LOG 'Test: zawory Modbus (NC / SC / WC)'
   CALL hw-valves-smoke
   CALL hw-valves-reset
 
 GOAL:
   SET NAME 'smoke sensors'
-  LOG "Test: czujniki ADS1115 (AI01/AI02/AI03)"
+  LOG 'Test: czujniki ADS1115 (AI01/AI02/AI03)'
   CALL hw-sensors-baseline
   # sanity-checki zakresów przy braku ciśnienia
-  IF AI01 -5 .. 5 V
+  IF 'AI01' '-5 .. 5 V'
   CORRECT 'Czujnik AI01 w zakresie bazowym'
   ERROR 'Błąd: czujnik AI01 poza zakresem -5 do 5 V'
-  IF AI02 -5 .. 5 V
+  IF 'AI02' '-5 .. 5 V'
   CORRECT 'Czujnik AI02 w zakresie bazowym'
   ERROR 'Błąd: czujnik AI02 poza zakresem -5 do 5 V'
-  IF AI03 -5 .. 5 V
+  IF 'AI03' '-5 .. 5 V'
   CORRECT 'Czujnik AI03 w zakresie bazowym'
   ERROR 'Błąd: czujnik AI03 poza zakresem -5 do 5 V'
 
 GOAL:
   SET NAME 'koniec'
   CALL stop-all
-  LOG "Hardware diagnostics zakończone"
+  LOG 'Hardware diagnostics zakończone'
   SAVE diagnostics-done

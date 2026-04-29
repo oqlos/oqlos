@@ -1,3 +1,4 @@
+VERSION 3
 SCENARIO: Test Zaworu
 DEVICE_TYPE: BA
 DEVICE_MODEL: PSS 7000
@@ -11,9 +12,9 @@ MANUFACTURER: Dräger
 FUNC:
   SET NAME 'Test zaworu'
   # $1=zawór  $2=stan  $3=czujnik  $4=min  $5=max  $6=label
-  SET $1 $2
+  SET '$1' '$2'
   WAIT 500ms
-  IF $3 $4 .. $5 V
+  IF '$3' '$4 .. $5 V'
   CORRECT 'Napięcie w zakresie kalibracji'
   ERROR 'Błąd: napięcie poza zakresem'
   SAVE $6

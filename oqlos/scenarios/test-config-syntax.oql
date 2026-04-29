@@ -1,13 +1,14 @@
+VERSION 3
 SCENARIO: Test CONFIG składni
 DEVICE_TYPE: BA
 
 CONFIG inicjalizacja-systemu:
-  SET pump-main 0
-  SET valve-nc 0
+  SET 'pump-main' '0'
+  SET 'valve-nc' '0'
   WAIT 500ms
 
 GOAL:
   SET NAME 'normalny test'
-  SET pompa-1 5 l/min
+  SET 'pompa-1' '5 l/min'
   WAIT 1s
-  SET pompa-1 0
+  SET 'pompa-1' '0'

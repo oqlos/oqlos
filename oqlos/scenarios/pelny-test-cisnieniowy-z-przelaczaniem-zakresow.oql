@@ -1,17 +1,18 @@
+VERSION 3
 SCENARIO: Pełny test ciśnieniowy z przełączaniem zakresów
 DESCRIPTION: Sekwencja próżnia -> niskie -> wysokie ciśnienie.
 
 CONFIG przygotowanie:
-  SET pompa-próżniowa 1
-  SET pompa-ciśnieniowa 1
-  SET czujnik-próżni 1
-  SET czujnik-niskiego-ciśnienia 1
-  SET czujnik-wysokiego-ciśnienia 1
-  SET zawór-izolacyjny 1
+  SET 'pompa-próżniowa' '1'
+  SET 'pompa-ciśnieniowa' '1'
+  SET 'czujnik-próżni' '1'
+  SET 'czujnik-niskiego-ciśnienia' '1'
+  SET 'czujnik-wysokiego-ciśnienia' '1'
+  SET 'zawór-izolacyjny' '1'
 
 GOAL:
   SET NAME 'test próżni'
-  SET pompa-próżniowa 1
+  SET 'pompa-próżniowa' '1'
   SAMPLE ciśnienie START 50ms
   WAIT 30s
   SAMPLE ciśnienie STOP
@@ -20,11 +21,11 @@ GOAL:
   IF ciśnienie -1000 .. -900 mbar
   CORRECT 'Próżnia w normie (-1000 do -900 mbar)'
   ERROR 'Błąd: próżnia poza zakresem -1000 do -900 mbar'
-  SET pompa-próżniowa 0
+  SET 'pompa-próżniowa' '0'
 
 GOAL:
   SET NAME 'test niskiego ciśnienia'
-  SET pompa-ciśnieniowa 1
+  SET 'pompa-ciśnieniowa' '1'
   WAIT 10s
   GET ciśnienie-niskie
   SAVE cn
@@ -34,17 +35,17 @@ GOAL:
 
 GOAL:
   SET NAME 'test wysokiego ciśnienia'
-  SET multiplekser 2
+  SET 'multiplekser' '2'
   WAIT 10s
   GET ciśnienie-wysokie
   SAVE cw
   IF ciśnienie-wysokie 480 .. 520 mbar
   CORRECT 'Wysokie ciśnienie w normie (480-520 mbar)'
   ERROR 'Błąd: wysokie ciśnienie poza zakresem 480-520 mbar'
-  SET pompa-ciśnieniowa 0
-  SET zawór-izolacyjny 0
+  SET 'pompa-ciśnieniowa' '0'
+  SET 'zawór-izolacyjny' '0'
 
 GOAL:
   SET NAME 'podsumowanie'
-  LOG "Test ciśnieniowy zakończony"
+  LOG 'Test ciśnieniowy zakończony'
   SAVE raport-pełny

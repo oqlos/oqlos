@@ -1,15 +1,16 @@
+VERSION 3
 # Basic Configuration Example
 # Category: config
 
 SCENARIO: Podstawowy przykład CONFIG + GOAL
 
 CONFIG inicjalizacja:
-  SET pump-main 0 l/min
-  SET valve-nc 0
+  SET 'pump-main' '0 l/min'
+  SET 'valve-nc' '0'
   WAIT 500ms
 
 GOAL:
   SET NAME 'test operacyjny'
-  SET pompa-1 5.0 l/min
+  SET 'pompa-1' '5.0 l/min'
   WAIT 1s
-  SET pompa-1 0 l/min
+  SET 'pompa-1' '0 l/min'
