@@ -1,4 +1,4 @@
-VERSION 3
+VERSION: 4
 SCENARIO: Pełny test ciśnieniowy z przełączaniem zakresów
 DESCRIPTION: Sekwencja próżnia -> niskie -> wysokie ciśnienie.
 
@@ -16,9 +16,8 @@ GOAL:
   SAMPLE ciśnienie START 50ms
   WAIT 30s
   SAMPLE ciśnienie STOP
-  GET ciśnienie
   SAVE p-prozni
-  IF ciśnienie -1000 .. -900 mbar
+  IF 'ciśnienie' '-1000 .. -900 mbar'
   CORRECT 'Próżnia w normie (-1000 do -900 mbar)'
   ERROR 'Błąd: próżnia poza zakresem -1000 do -900 mbar'
   SET 'pompa-próżniowa' '0'
@@ -27,9 +26,8 @@ GOAL:
   SET NAME 'test niskiego ciśnienia'
   SET 'pompa-ciśnieniowa' '1'
   WAIT 10s
-  GET ciśnienie-niskie
   SAVE cn
-  IF ciśnienie-niskie 25 .. 35 mbar
+  IF 'ciśnienie-niskie' '25 .. 35 mbar'
   CORRECT 'Niskie ciśnienie w normie (25-35 mbar)'
   ERROR 'Błąd: niskie ciśnienie poza zakresem 25-35 mbar'
 
@@ -37,9 +35,8 @@ GOAL:
   SET NAME 'test wysokiego ciśnienia'
   SET 'multiplekser' '2'
   WAIT 10s
-  GET ciśnienie-wysokie
   SAVE cw
-  IF ciśnienie-wysokie 480 .. 520 mbar
+  IF 'ciśnienie-wysokie' '480 .. 520 mbar'
   CORRECT 'Wysokie ciśnienie w normie (480-520 mbar)'
   ERROR 'Błąd: wysokie ciśnienie poza zakresem 480-520 mbar'
   SET 'pompa-ciśnieniowa' '0'

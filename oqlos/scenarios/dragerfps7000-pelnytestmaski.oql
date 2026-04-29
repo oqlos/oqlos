@@ -1,4 +1,4 @@
-VERSION 3
+VERSION: 4
 SCENARIO: Dräger FPS 7000 — Pełny test maski (sekwencyjny)
 DESCRIPTION: Płaska wersja — każdy etap osobnym GOAL; brak IF/ENDIF.
 

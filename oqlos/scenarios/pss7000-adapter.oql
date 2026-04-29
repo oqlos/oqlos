@@ -1,4 +1,4 @@
-VERSION 3
+VERSION: 4
 SCENARIO: PSS 7000 — Test przez adapter
 
 GOAL:

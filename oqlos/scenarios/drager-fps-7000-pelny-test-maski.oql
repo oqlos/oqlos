@@ -1,4 +1,4 @@
-VERSION 3
+VERSION: 4
 SCENARIO: Dräger FPS 7000 — Pełny test maski
 
 GOAL:
@@ -25,7 +25,6 @@ GOAL:
   SET 'pump-main' '0'
   WAIT 20s
   SET 'valve-nc' '0'
-  GET AI01
   IF 'AI01' '-15.0 .. -10.1 mbar'
   CORRECT 'Ustawienie auto OK'
   ERROR 'Błąd: ustawienie auto poza zakresem'

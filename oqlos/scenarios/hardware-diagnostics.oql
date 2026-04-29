@@ -1,4 +1,4 @@
-VERSION 3
+VERSION: 4
 SCENARIO: Hardware Diagnostics
 DEVICE_TYPE: TEST_EQUIPMENT
 DESCRIPTION: Smoke-test dla pompy, zaworów, płuca i czujników piADC.

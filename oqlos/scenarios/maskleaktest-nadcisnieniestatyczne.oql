@@ -1,4 +1,4 @@
-VERSION 3
+VERSION: 4
 GOAL:
   SET NAME 'nadciśnienie statyczne maska'
   # oczekiwany zakres: 1.0 – 3.9 mbar

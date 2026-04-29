@@ -1,4 +1,4 @@
-VERSION 3
+VERSION: 4
 SCENARIO: Test Pattern — Prepare / Test / Cleanup
 DEVICE_TYPE: BA
 

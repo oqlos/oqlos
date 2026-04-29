@@ -1,4 +1,4 @@
-VERSION 3
+VERSION: 4
 GOAL:
   SET NAME 'ciśnienie otwarcia zaworu wydechowego'
   # oczekiwany zakres: 4.2 – 6.0 mbar

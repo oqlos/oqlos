@@ -1,4 +1,4 @@
-VERSION 3
+VERSION: 4
 SCENARIO: Test wytrzymałości mechanicznej
 DESCRIPTION: Pojedynczy cykl obciążenia/odciążenia — pętla cykli jest sterowana z zewnątrz.
 

@@ -1,4 +1,4 @@
-VERSION 3
+VERSION: 4
 GOAL:
   SET NAME 'test szczelności maska'
   # wytworzenie podciśnienia -10 mbar, obserwacja 60 s

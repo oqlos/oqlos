@@ -1,4 +1,4 @@
-VERSION 3
+VERSION: 4
 # =============================================================================
 # DSL: Test Szczelności Maski Ochronnej
 # Scenariusz: scn-mask-leak-test

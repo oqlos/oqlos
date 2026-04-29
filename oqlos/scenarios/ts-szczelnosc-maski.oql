@@ -1,4 +1,4 @@
-VERSION 3
+VERSION: 4
 SCENARIO: Test szczelności maski
 CATEGORY: env
 
@@ -6,7 +6,7 @@ GOAL:
   SET NAME 'test szczelności'
   SET 'pompa-podciśnieniowa' '1'
   WAIT 60s
-  IF szczelność 95 .. 100 %
+  IF 'szczelność' '95 .. 100 %'
   CORRECT 'Szczelność maski OK (95-100%)'
   ERROR 'Błąd: szczelność maski poniżej 95%'
   GET szczelność
