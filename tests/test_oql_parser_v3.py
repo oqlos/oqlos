@@ -13,6 +13,7 @@ from oqlos.core.oql_parser import (
     duration_to_ms,
     tokenize,
 )
+from oqlos.core.oql_versioning import OQL_VERSION_CURRENT
 
 
 # ── tokenize ─────────────────────────────────────────────────────
@@ -161,6 +162,50 @@ def test_parse_rejects_unknown_command():
     assert any("nieznana komenda" in e for e in doc.errors)
 
 
+def test_parse_v4_goal_requires_set_name():
+    src = textwrap.dedent(
+        f"""
+        VERSION: {OQL_VERSION_CURRENT}
+        GOAL:
+          WAIT 500ms
+        """
+    )
+    doc = parse_oql(src)
+    assert any("wymaga 'SET NAME ...'" in e for e in doc.errors)
+
+
+def test_parse_v4_rejects_inline_goal_name():
+    src = textwrap.dedent(
+        f"""
+        VERSION: {OQL_VERSION_CURRENT}
+        GOAL test:
+          WAIT 500ms
+        """
+    )
+    doc = parse_oql(src)
+    assert any("użyj 'GOAL:'" in e for e in doc.errors)
+
+
+def test_parse_v4_goal_name_from_set_name():
+    src = textwrap.dedent(
+        f"""
+        VERSION: {OQL_VERSION_CURRENT}
+        GOAL:
+          SET NAME 'Test ciśnienia'
+          WAIT 500ms
+        """
+    )
+    doc = parse_oql(src)
+    assert not doc.errors
+    assert doc.blocks[0].name == "Test ciśnienia"
+
+
+def test_parse_rejects_unsupported_oql_version():
+    src = "VERSION: 99\nGOAL g:\n  SET x 0\n"
+    doc = parse_oql(src)
+    assert any("Nieobsługiwana wersja OQL" in e for e in doc.errors)
+
+
 def test_base_commands_list_matches_dispatcher():
     from oqlos.core.oql_parser import DISPATCHERS
     # All base commands except CHECK must be in DISPATCHERS
@@ -174,6 +219,7 @@ def test_base_commands_list_matches_dispatcher():
 def test_is_flat_oql_detects_new_syntax():
     assert is_flat_oql("GOAL test:\n  SET x 0\n") is True
     assert is_flat_oql('INCLUDE "lib/x.oql"\nGOAL t:\n  SET x 0\n') is True
+    assert is_flat_oql(f"VERSION: {OQL_VERSION_CURRENT}\nGOAL:\n  SET NAME 'x'\n") is True
 
 
 def test_is_flat_oql_rejects_legacy():

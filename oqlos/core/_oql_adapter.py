@@ -1,7 +1,7 @@
 """Adapter: convert :class:`OqlDoc` produced by ``oql_parser`` into the
 existing :class:`CqlDocument` AST consumed by the runtime interpreter.
 
-This keeps the new v3 flat OQL grammar fully executable by reusing the
+This keeps the flat OQL grammar (v3/v4) fully executable by reusing the
 mature action/condition handlers in ``_interpreter_actions.py`` without
 touching them.
 
@@ -301,6 +301,21 @@ def _cmd_to_actions(
             CqlAction(kind="error", args=cmd.args.get("message", ""), raw=cmd.raw)
         ]
 
+    if kind == "REPEAT":
+        action = cmd.args.get("action")
+        if action == "start":
+            return [
+                CqlAction(
+                    kind="loop_block",
+                    method="times",
+                    args=cmd.args.get("count", "1"),
+                    raw=cmd.raw,
+                )
+            ]
+        if action == "stop":
+            return [CqlAction(kind="endloop", raw=cmd.raw)]
+        return []
+
     # Fallback — unknown but structurally valid command
     return [CqlAction(kind="action", method=kind, raw=cmd.raw)]
 
@@ -338,17 +353,24 @@ def _parse_macro_line(
 
 
 def is_flat_oql(source: str) -> bool:
-    """Heuristic: detect new-style (v3) flat OQL source.
+    """Heuristic: detect flat OQL source (v3/v4).
 
-    Returns ``True`` when the text uses ``GOAL name:`` / ``CONFIG name:`` /
-    ``MACRO name:`` block headers (with the colon AFTER the name), as
-    opposed to the legacy ``GOAL:`` (colon immediately after the keyword).
-    A top-level ``INCLUDE "..."`` directive also triggers the new grammar.
+    Returns ``True`` when the text clearly uses OQL syntax, including:
+    - explicit ``VERSION: 4`` header,
+    - ``GOAL name:`` / ``CONFIG name:`` / ``MACRO name:`` style blocks,
+    - top-level ``INCLUDE "..."`` directives.
+
+    For ambiguous ``GOAL:`` inputs without explicit version markers, this
+    detector falls back to legacy behavior to avoid hijacking old CQL.
     """
 
+    version_re = re.compile(r"^\s*VERSION\s*:\s*\d+\s*$", re.M | re.IGNORECASE)
     block_re = re.compile(r"^\s*(GOAL|CONFIG|MACRO)\s+[^\s:][^:]*:\s*$", re.M)
     legacy_re = re.compile(r"^\s*(GOAL|CONFIG)\s*:\s*\S", re.M)
     include_re = re.compile(r"^\s*INCLUDE\s+[\"']", re.M)
+
+    if version_re.search(source):
+        return True
 
     has_new = bool(block_re.search(source) or include_re.search(source))
     has_legacy = bool(legacy_re.search(source))
@@ -384,10 +406,35 @@ def oql_doc_to_cql(doc: OqlDoc) -> CqlDocument:
         b for b in doc.blocks if b.type == "GOAL"
     ]
 
-    for block in ordered_blocks:
+    def _build_actions(cmds: list[OqlCmd]) -> list[CqlAction]:
+        """Expand commands, grouping loop_block..endloop into loop_actions."""
         actions: list[CqlAction] = []
-        for cmd in block.cmds:
-            actions.extend(_cmd_to_actions(cmd, macros))
+        i = 0
+        while i < len(cmds):
+            act_list = _cmd_to_actions(cmds[i], macros)
+            i += 1
+            if not act_list:
+                continue
+            first = act_list[0]
+            if first.kind == "loop_block":
+                # collect inner actions until endloop
+                loop_inner: list[CqlAction] = []
+                while i < len(cmds):
+                    inner_list = _cmd_to_actions(cmds[i], macros)
+                    i += 1
+                    if inner_list and inner_list[0].kind == "endloop":
+                        break
+                    for a in inner_list:
+                        loop_inner.append(a)
+                first.loop_actions = loop_inner
+                actions.append(first)
+            else:
+                for a in act_list:
+                    actions.append(a)
+        return actions
+
+    for block in ordered_blocks:
+        actions = _build_actions(block.cmds)
         goal_name = block.name
         if block.type == "CONFIG":
             goal_name = f"[CONFIG] {block.name}"

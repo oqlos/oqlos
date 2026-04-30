@@ -1,5 +1,5 @@
 """
-OQL v3 parser — flat, quote-free syntax based on TODO/oql_parser.py.
+OQL parser (v3 + v4 compatibility) — flat, quote-free syntax.
 
 Design (see docs/oql-spec.md):
   * 12 base commands:
@@ -24,6 +24,13 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from typing import Any, Optional
+
+from .oql_versioning import (
+    OQL_VERSION_CURRENT,
+    OQL_VERSION_LEGACY,
+    SUPPORTED_OQL_VERSIONS,
+    resolve_oql_version,
+)
 
 # ── Regex building blocks ─────────────────────────────────────────
 
@@ -110,6 +117,8 @@ class OqlDoc:
     errors: list[str] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
     filename: str = ""
+    oql_version: int = OQL_VERSION_LEGACY
+    declared_version: int | None = None
 
     # Convenience helpers ---------------------------------------------------
 
@@ -356,6 +365,12 @@ def parse_FUNC_CALL(tokens: list[str], ln: int, raw: str) -> OqlCmd:
     return OqlCmd("FUNC", {"name": tokens[0], "args": tokens[1:]}, ln, raw)
 
 
+def parse_REPEAT(tokens: list[str], ln: int, raw: str) -> OqlCmd:
+    if not tokens or tokens[0].upper() == "STOP":
+        return OqlCmd("REPEAT", {"action": "stop"}, ln, raw)
+    return OqlCmd("REPEAT", {"action": "start", "count": tokens[0]}, ln, raw)
+
+
 # ── Dispatch table ───────────────────────────────────────────────
 
 DISPATCHERS = {
@@ -373,6 +388,7 @@ DISPATCHERS = {
     "CALL":    parse_CALL,
     "INCLUDE": parse_INCLUDE,
     "FUNC":    parse_FUNC_CALL,
+    "REPEAT":  parse_REPEAT,
 }
 
 #: Ordered list of canonical base commands (used by documentation tests).
@@ -394,7 +410,33 @@ def parse_oql(text: str, filename: str = "<string>") -> OqlDoc:
     can report them uniformly.
     """
 
-    doc = OqlDoc(filename=filename)
+    version_info = resolve_oql_version(text)
+    doc = OqlDoc(
+        filename=filename,
+        oql_version=version_info.effective,
+        declared_version=version_info.declared,
+    )
+
+    if not version_info.declared:
+        doc.meta["version"] = str(version_info.effective)
+    if version_info.declared is not None and version_info.declared not in SUPPORTED_OQL_VERSIONS:
+        doc.errors.append(
+            f"Nieobsługiwana wersja OQL: {version_info.declared} (obsługiwane: {', '.join(str(v) for v in SUPPORTED_OQL_VERSIONS)})"
+        )
+    if (
+        version_info.effective == OQL_VERSION_CURRENT
+        and version_info.first_meaningful_line
+        and not re.match(
+            rf"^VERSION\s*:\s*{OQL_VERSION_CURRENT}\s*$",
+            version_info.first_meaningful_line,
+            re.IGNORECASE,
+        )
+    ):
+        line_no = version_info.first_meaningful_line_number or 1
+        doc.errors.append(
+            f"Linia {line_no}: pierwsza istotna linia musi mieć postać 'VERSION: 4'"
+        )
+
     current: OqlBlock | None = None
 
     for ln, raw in enumerate(text.splitlines(), 1):
@@ -436,8 +478,13 @@ def parse_oql(text: str, filename: str = "<string>") -> OqlDoc:
             # allow ``GOAL [Nazwa ze spacjami]:`` form
             if name.startswith("[") and name.endswith("]"):
                 name = name[1:-1].strip()
+            block_type = block.group(1).upper()
+            if version_info.effective == OQL_VERSION_CURRENT and block_type == "GOAL" and name:
+                doc.errors.append(
+                    f"Linia {ln}: w VERSION: 4 użyj 'GOAL:' i nazwy przez 'SET NAME ...'"
+                )
             current = OqlBlock(
-                type=block.group(1).upper(),
+                type=block_type,
                 name=name,
                 line=ln,
             )
@@ -512,6 +559,13 @@ def parse_oql(text: str, filename: str = "<string>") -> OqlDoc:
 
         current.cmds.append(parsed)
 
+    if version_info.effective == OQL_VERSION_CURRENT:
+        for block in doc.blocks:
+            if block.type == "GOAL" and not block.name:
+                doc.errors.append(
+                    f"Linia {block.line}: GOAL w VERSION: 4 wymaga 'SET NAME ...' jako pierwszej komendy"
+                )
+
     return doc
 
 
@@ -547,6 +601,7 @@ if __name__ == "__main__":  # pragma: no cover — manual smoke test
     import sys
 
     SAMPLE = """
+VERSION: 4
 SCENARIO: Przykładowy test maski
 DEVICE: BA / PSS 7000 / Dräger
 
@@ -555,14 +610,16 @@ CONFIG reset:
   SET zawór-sc 0
   WAIT 500ms
 
-GOAL test-ciśnienia:
+GOAL:
+  SET NAME [test-ciśnienia]
   SET pompa-1 5.0 l/min
   WAIT 3s
   GET AI02
   CHECK 6.0 <= AI02 <= 8.0 bar
   SAVE ciśnienie-sc
 
-GOAL [test z spacjami]:
+GOAL:
+  SET NAME [test z spacjami]
   SET [pompa głównego obiegu] 5.0 l/min
   WAIT 1s
 """

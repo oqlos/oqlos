@@ -73,6 +73,9 @@ RE_END = re.compile(r"^\s*END\s*$", re.IGNORECASE)
 # Loops
 RE_LOOP_START = re.compile(r"^\s*LOOP\s+(?:(\d+)\s+TIMES|WHILE\s+['\"](.+?)['\"]\s+([<>=!≤≥]+)\s+['\"](.+?)['\"])\s*$", re.IGNORECASE)
 RE_ENDLOOP = re.compile(r"^\s*ENDLOOP\s*$", re.IGNORECASE)
+# REPEAT v4 syntax
+RE_REPEAT_START = re.compile(r"^\s*REPEAT\s+(\d+)\s*:\s*$", re.IGNORECASE)
+RE_REPEAT_STOP = re.compile(r"^\s*REPEAT\s+STOP\s*$", re.IGNORECASE)
 
 # Variables
 RE_VAR = re.compile(r"^\s*VAR\s+(\w+)\s*=\s*['\"](.+?)['\"]\s*$", re.IGNORECASE)
@@ -301,6 +304,18 @@ def _try_loop_start(line: str, stripped: str) -> CqlAction | None:
         args=raw_val, raw=stripped
     )
 
+def _try_repeat_start(line: str, stripped: str) -> CqlAction | None:
+    m = RE_REPEAT_START.match(line)
+    if not m:
+        return None
+    return CqlAction(kind="loop_block", method="times", args=m.group(1), raw=stripped)
+
+def _try_repeat_stop(line: str, stripped: str) -> CqlAction | None:
+    m = RE_REPEAT_STOP.match(line)
+    if not m:
+        return None
+    return CqlAction(kind="endloop", raw=stripped)
+
 def _try_var(line: str, stripped: str) -> CqlAction | None:
     m = RE_VAR.match(line)
     if not m:
@@ -362,6 +377,8 @@ _ACTION_PARSERS = [
     _try_end,
     _try_loop_start,
     _try_endloop,
+    _try_repeat_start,
+    _try_repeat_stop,
     _try_var,
     _try_arrow_action,
     _try_task,

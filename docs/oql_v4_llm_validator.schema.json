@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://oqlos.local/schemas/oql_v4_llm_validator.schema.json",
+  "title": "OQL v4 LLM Migration Validation Report",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "validator",
+    "source",
+    "valid",
+    "summary",
+    "issues",
+    "migration_rules"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "validator": {
+      "type": "string",
+      "const": "oql_v4_validator"
+    },
+    "source": {
+      "type": "string"
+    },
+    "valid": {
+      "type": "boolean"
+    },
+    "summary": {
+      "type": "object",
+      "required": ["errors", "warnings", "issues_total"],
+      "properties": {
+        "errors": { "type": "integer", "minimum": 0 },
+        "warnings": { "type": "integer", "minimum": 0 },
+        "issues_total": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["rule", "severity", "message"],
+        "properties": {
+          "rule": {
+            "type": "string",
+            "enum": [
+              "version_first_line",
+              "version_present",
+              "goal_inline_name",
+              "goal_set_name",
+              "loop_deprecated",
+              "repeats_typo",
+              "repeat_format",
+              "runtime_dry_run",
+              "runtime_error",
+              "runtime_warning",
+              "non_oql_payload",
+              "runtime_exception",
+              "runtime_import"
+            ]
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["error", "warning"]
+          },
+          "message": { "type": "string" },
+          "line": {
+            "type": ["integer", "null"],
+            "minimum": 1
+          },
+          "suggestion": {
+            "type": ["string", "null"]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "migration_rules": {
+      "type": "object",
+      "required": ["version", "goal_format", "loop_format", "set_format"],
+      "properties": {
+        "version": { "type": "string" },
+        "goal_format": { "type": "string" },
+        "loop_format": { "type": "string" },
+        "set_format": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
