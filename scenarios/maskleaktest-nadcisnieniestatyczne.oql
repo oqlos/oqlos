@@ -4,7 +4,7 @@ GOAL:
   SET 'Pump' 'set'
   SET 'Valve' 'overpressure'
   WAIT '3000 ms'
-  IF 'AI01' '1.0 mbar' .. ∞'
+  IF 'AI01' > '1.0 mbar'
     CORRECT 'AI01' w zakresie '1.0 mbar' .. ∞'
     ERROR 'AI01' poza zakresem '1.0 mbar' .. ∞'
   SAVE 'AI01.value'

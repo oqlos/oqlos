@@ -164,6 +164,82 @@ def _merge_minmax_to_if(lines: list[str]) -> list[str]:
     return result
 
 
+def _rewrite_legacy_if(lines: list[str]) -> list[str]:
+    """
+    Rewrite legacy one-sided IF patterns:
+      IF sensor val .. 999999   →  IF 'sensor' 'val .. ∞ unit'
+      IF sensor -999999 .. val  →  IF 'sensor' '-∞ .. val unit'
+    Also merge consecutive same-sensor pairs into a range IF.
+    Skip lines with 'timeout', quoted ranges or ELSE (already v4 or special).
+    """
+    # Match: IF sensor lo .. hi  (no quotes around sensor, with sentinel 999999)
+    pat = re.compile(
+        r"^(\s*)IF\s+(['\"]?)(\S+)\2\s+(['\"]?)(-?[\d.]+\w*|-999999)\4\s*\.\.\s+(['\"]?)([\d.]+\w*|999999)\6\s*$",
+        re.IGNORECASE,
+    )
+
+    def parse_if(line: str):
+        m = pat.match(line)
+        if not m:
+            return None
+        indent, _, sensor, _, lo, _, hi = m.groups()
+        return indent, sensor, lo, hi
+
+    result: list[str] = []
+    i = 0
+    while i < len(lines):
+        p = parse_if(lines[i])
+        if p:
+            indent, sensor, lo, hi = p
+            # Skip special sensors (already quoted ranges like 'timer')
+            if sensor.startswith("'") or "timeout" in lines[i]:
+                result.append(lines[i])
+                i += 1
+                continue
+
+            # Look ahead for complementary IF on same sensor
+            j = i + 1
+            while j < len(lines) and lines[j].strip() == "":
+                j += 1
+            p2 = parse_if(lines[j]) if j < len(lines) else None
+
+            if p2 and p2[1] == sensor:
+                # Merge pair into range
+                _, _, lo2, hi2 = p2
+                # Determine actual min/max
+                lo_val = lo if lo != "-999999" else lo2
+                hi_val = hi if hi != "999999" else hi2
+                num_lo, unit_lo = _extract_num_unit(lo_val)
+                num_hi, unit_hi = _extract_num_unit(hi_val)
+                unit = unit_lo or unit_hi
+                range_str = f"{num_lo} .. {num_hi} {unit}".strip() if unit else f"{num_lo} .. {num_hi}"
+                result.append(f"{indent}IF '{sensor}' '{range_str}'")
+                result.append(f"{indent}  CORRECT '{sensor} w zakresie {range_str}'")
+                result.append(f"{indent}  ERROR '{sensor} poza zakresem {range_str}'")
+                i = j + 1
+                continue
+            else:
+                # Single-sided
+                num_lo, unit_lo = _extract_num_unit(lo)
+                num_hi, unit_hi = _extract_num_unit(hi)
+                unit = unit_lo or unit_hi
+                if hi in ("999999",) or hi.endswith("999999"):
+                    bound = f"{num_lo} .. ∞"
+                elif lo in ("-999999",) or lo.endswith("-999999"):
+                    bound = f"-∞ .. {num_hi}"
+                else:
+                    bound = f"{num_lo} .. {num_hi}"
+                label = f"{bound} {unit}".strip() if unit else bound
+                result.append(f"{indent}IF '{sensor}' '{label}'")
+                result.append(f"{indent}  CORRECT '{sensor} w zakresie {label}'")
+                result.append(f"{indent}  ERROR '{sensor} poza zakresem {label}'")
+                i += 1
+                continue
+        result.append(lines[i])
+        i += 1
+    return result
+
+
 def migrate_v2_to_v4(text: str) -> str:
     lines = text.splitlines()
     out: list[str] = []
@@ -402,6 +478,8 @@ def migrate_v2_to_v4(text: str) -> str:
 
     # Post-process: merge adjacent __MINMAX__ markers into IF range + CORRECT/ERROR
     out = _merge_minmax_to_if(out)
+    # Post-process: rewrite legacy IF sensor val .. 999999 patterns
+    out = _rewrite_legacy_if(out)
 
     first_meaningful = next((x for x in out if x.strip() and not x.strip().startswith("#")), None)
     if not first_meaningful or not re.match(r"^VERSION\s*:\s*4\s*$", first_meaningful, re.IGNORECASE):

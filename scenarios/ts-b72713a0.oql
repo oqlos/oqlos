@@ -8,9 +8,7 @@ GOAL:
   LOG 'TASK Potwierdź Potwierdź montaż maski'
   WAIT 7s
   IF 'Ciśnienie_maski' '-12.0 .. -8.5 mbar'
-  CORRECT 'Ciśnienie_maski w zakresie -12.0 .. -8.5 mbar'
-  ERROR 'Ciśnienie_maski poza zakresem -12.0 .. -8.5 mbar'
+    CORRECT 'Ciśnienie_maski w zakresie -12.0 .. -8.5 mbar'
+    ERROR 'Ciśnienie_maski poza zakresem -12.0 .. -8.5 mbar'
   LOG 'VAL Ciśnienie maski mbar'
-  IF Ciśnienie_maski -12.0mbar .. 999999
-  IF Ciśnienie_maski -999999 .. -8.5mbar
   SAVE Ciśnienie maski

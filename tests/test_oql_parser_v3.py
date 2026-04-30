@@ -129,6 +129,19 @@ def test_parse_sample_with_interval():
     assert cmd.args["direction"] == "START"
 
 
+def test_parse_if_delta_signed_threshold():
+    src = "GOAL d:\n  IF_DELTA 'AI01' '5 s' '+0.1l/min'\n"
+    doc = parse_oql(src)
+    assert not doc.errors
+    cmd = doc.blocks[0].cmds[0]
+    assert cmd.cmd == "IF_DELTA"
+    assert cmd.args["sensor"] == "AI01"
+    assert cmd.args["window_ms"] == 5000
+    assert cmd.args["operator"] == ">"
+    assert cmd.args["threshold"] == 0.1
+    assert cmd.args["unit"] == "l/min"
+
+
 def test_parse_unicode_identifiers():
     src = "GOAL u:\n  SAVE ciśnienie-NC\n  CHECK 15 <= temperatura <= 25 °C\n"
     doc = parse_oql(src)
@@ -391,3 +404,23 @@ def test_adapter_uses_custom_messages():
     assert action.kind == "condition"
     assert action.condition.pass_message == "Wartość OK"
     assert action.condition.fail_message == "Wartość poza zakresem"
+
+
+def test_adapter_if_delta_uses_custom_messages_and_delta_sensor():
+    src = textwrap.dedent(
+        """
+        GOAL test:
+          IF_DELTA 'AI01' '5 s' '-0.1l/min'
+          CORRECT 'Delta OK'
+          ERROR 'Delta NOK'
+        """
+    )
+    cdoc = parse_flat_oql(src)
+    action = cdoc.goals[0].steps[0].actions[0]
+    assert action.kind == "condition"
+    assert action.condition.sensor == "ΔAI01"
+    assert action.condition.operator == "<"
+    assert action.condition.value == 0.1
+    assert action.condition.unit == "l/min"
+    assert action.condition.pass_message == "Delta OK"
+    assert action.condition.fail_message == "Delta NOK"

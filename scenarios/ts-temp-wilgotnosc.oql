@@ -14,13 +14,17 @@ GOAL:
   LOG 'VAL temp_avg °C'
   LOG 'VAL wilg_avg %RH'
   IF 'temp_avg' '15 .. 35 °C'
-    CORRECT 'temp_avg w zakresie 15 .. 35 °C'
-    ERROR 'temp_avg poza zakresem 15 .. 35 °C'
+  CORRECT 'temp_avg w zakresie 15 .. 35 °C'
+  ERROR 'temp_avg poza zakresem 15 .. 35 °C'
   IF 'wilg_avg' '30 .. 70 %RH'
-    CORRECT 'wilg_avg w zakresie 30 .. 70 %RH'
-    ERROR 'wilg_avg poza zakresem 30 .. 70 %RH'
-  IF temp_avg -999999 .. 15
+  CORRECT 'wilg_avg w zakresie 30 .. 70 %RH'
+  ERROR 'wilg_avg poza zakresem 30 .. 70 %RH'
+  IF 'temp_avg' '-∞ .. 15'
+    CORRECT 'temp_avg w zakresie -∞ .. 15'
+    ERROR 'temp_avg poza zakresem -∞ .. 15'
   ERROR 'Temperatura poniżej minimum'
-  IF temp_avg 35 .. 999999
+  IF 'temp_avg' > '35'
+    CORRECT 'temp_avg w zakresie 35 .. ∞'
+    ERROR 'temp_avg poza zakresem 35 .. ∞'
   ERROR 'Temperatura powyżej maksimum'
   SAVE warunki-protokół

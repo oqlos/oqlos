@@ -364,6 +364,10 @@ class CqlInterpreter(BaseInterpreter):
         base_sensor = sensor[1:] if sensor.startswith("Δ") else sensor
         if sensor in self.sensor_values:
             return float(self.sensor_values[sensor])
+
+        if sensor.startswith("Δ"):
+            return self._resolve_delta_sensor_value(base_sensor)
+
         if base_sensor in self.sensor_values:
             return float(self.sensor_values[base_sensor])
 
@@ -374,6 +378,75 @@ class CqlInterpreter(BaseInterpreter):
         if numeric is not None:
             return float(numeric)
         return 0.0
+
+    def _resolve_delta_sensor_value(self, base_sensor: str) -> float:
+        """Best-effort delta fallback for Δ-sensors when no explicit value is stored."""
+        now = time.monotonic()
+
+        if base_sensor in self.sensor_values:
+            current = float(self.sensor_values[base_sensor])
+        else:
+            numeric = self._coerce_float(self.vars.get(base_sensor))
+            current = float(numeric) if numeric is not None else 0.0
+
+        prev_value = self._coerce_float(self.vars.get(f"__delta_prev_value:{base_sensor}"))
+        prev_time = self._coerce_float(self.vars.get(f"__delta_prev_time:{base_sensor}"))
+
+        self.vars.set(f"__delta_prev_value:{base_sensor}", current)
+        self.vars.set(f"__delta_prev_time:{base_sensor}", now)
+
+        if prev_value is None or prev_time is None or now <= prev_time:
+            return 0.0
+
+        return float((current - float(prev_value)) / (now - float(prev_time)))
+
+    def _resolve_windowed_delta_sensor_value(self, base_sensor: str, window_s: float) -> float:
+        """Compute delta rate for Δ-sensor over a configured time window."""
+        now = time.monotonic()
+        if base_sensor in self.sensor_values:
+            current = float(self.sensor_values[base_sensor])
+        else:
+            numeric = self._coerce_float(self.vars.get(base_sensor))
+            current = float(numeric) if numeric is not None else 0.0
+
+        state_key = f"__delta_window_state:{base_sensor}:{window_s}"
+        prev_state = self.vars.get(state_key)
+        prev_value = None
+        prev_time = None
+        if isinstance(prev_state, (tuple, list)) and len(prev_state) == 2:
+            prev_value = self._coerce_float(prev_state[0])
+            prev_time = self._coerce_float(prev_state[1])
+
+        if prev_value is None or prev_time is None or now <= prev_time:
+            self.vars.set(state_key, (current, now))
+            return 0.0
+
+        elapsed = now - float(prev_time)
+        if elapsed <= 0:
+            return 0.0
+
+        effective_window = max(float(window_s), 0.001)
+        denominator = effective_window if elapsed < effective_window else elapsed
+        rate = float((current - float(prev_value)) / denominator)
+
+        if elapsed >= effective_window:
+            self.vars.set(state_key, (current, now))
+
+        return rate
+
+    @staticmethod
+    def _extract_window_seconds(args: str | None) -> float | None:
+        """Parse window metadata from action args, e.g. ``window_s=5.0``."""
+        text = str(args or "").strip()
+        if not text:
+            return None
+        match = re.search(r"window_s\s*=\s*([-+]?\d*\.?\d+)", text)
+        if not match:
+            return None
+        try:
+            return float(match.group(1))
+        except ValueError:
+            return None
 
     def _resolve_condition_rhs(self, raw_value: str | None, fallback: float | None, fallback_unit: str) -> tuple[float | None, str]:
         """Resolve a condition RHS from raw DSL text or a parsed fallback."""
@@ -572,7 +645,16 @@ class CqlInterpreter(BaseInterpreter):
                 return StepStatus.FAILED
             return StepStatus.WARNING
 
-        threshold, unit = self._resolve_condition_rhs(act.args, cond.value, cond.unit)
+        window_s = None
+        if sensor.startswith("Δ"):
+            window_s = self._extract_window_seconds(act.args)
+            if window_s is not None and window_s > 0:
+                base_sensor = sensor[1:]
+                delta_rate = self._resolve_windowed_delta_sensor_value(base_sensor, window_s)
+                self.sensor_values[sensor] = delta_rate
+
+        rhs_text = None if window_s is not None else act.args
+        threshold, unit = self._resolve_condition_rhs(rhs_text, cond.value, cond.unit)
         return self._evaluate_resolved_condition(
             sensor=sensor,
             operator=cond.operator,

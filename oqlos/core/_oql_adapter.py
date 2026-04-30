@@ -277,6 +277,36 @@ def _cmd_to_actions(
             )
         ]
 
+    if kind == "IF_DELTA":
+        sensor = str(cmd.args.get("sensor") or "").strip()
+        delta_sensor = f"Δ{sensor}" if sensor else ""
+        operator = str(cmd.args.get("operator") or ">")
+        threshold = float(cmd.args.get("threshold") or 0.0)
+        unit = str(cmd.args.get("unit") or "").strip()
+        window_s = cmd.args.get("window_s")
+        window_label = f" w oknie {window_s}s" if window_s else ""
+        default_fail = (
+            f"delta {sensor}{window_label} {operator} {threshold} {unit}".strip()
+        )
+
+        cond = CqlCondition(
+            sensor=delta_sensor,
+            operator=operator,
+            value=threshold,
+            unit=unit,
+            on_fail="ERROR",
+            fail_message=cmd.args.get("error_msg") or default_fail,
+            pass_message=cmd.args.get("correct_msg") or "",
+        )
+        return [
+            CqlAction(
+                kind="condition",
+                condition=cond,
+                args=f"window_s={window_s}" if window_s else "",
+                raw=cmd.raw,
+            )
+        ]
+
     if kind == "SAMPLE":
         direction = cmd.args["direction"]
         interval = cmd.args.get("interval_ms")

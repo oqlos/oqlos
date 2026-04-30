@@ -10,8 +10,9 @@ GOAL:
   CORRECT 'Ciśnienie_otwarcia_zaworu w zakresie 4.2 .. 6.0 mbar'
   ERROR 'Ciśnienie_otwarcia_zaworu poza zakresem 4.2 .. 6.0 mbar'
   LOG 'VAL Ciśnienie otwarcia zaworu mbar'
-  IF Ciśnienie_otwarcia_zaworu 4.2mbar .. 999999
-  IF Ciśnienie_otwarcia_zaworu -999999 .. 6.0mbar
+  IF 'Ciśnienie_otwarcia_zaworu' '4.2 .. 6.0 mbar'
+    CORRECT 'Ciśnienie_otwarcia_zaworu w zakresie 4.2 .. 6.0 mbar'
+    ERROR 'Ciśnienie_otwarcia_zaworu poza zakresem 4.2 .. 6.0 mbar'
   SAVE Ciśnienie otwarcia zaworu
   LOG 'TASK Włącz zawór BO03'
   SET PUMP 0

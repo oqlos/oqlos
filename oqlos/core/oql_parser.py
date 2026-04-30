@@ -56,6 +56,8 @@ IF_RE = re.compile(
     rf"^(\S+)\s+({NUM})\s*\.\.\s*({NUM})(?:\s+(\S+))?$"
 )
 
+DELTA_RE = re.compile(r"^([+-]?\d+(?:[\.,]\d+)?)(.*)$")
+
 #: Whitelisted metadata keys.  Unknown ``KEY:`` lines at the top level are
 #: still captured in :pyattr:`OqlDoc.meta` but emit a warning.
 _KNOWN_META_KEYS = {
@@ -259,6 +261,41 @@ def parse_WAIT(tokens: list[str], ln: int, raw: str) -> OqlCmd:
     )
 
 
+def parse_IF_DELTA(tokens: list[str], ln: int, raw: str) -> OqlCmd:
+    _require(tokens, 3, "IF_DELTA", ln, "sensor duration signed-threshold")
+    sensor = tokens[0]
+    duration_token = str(tokens[1]).replace(" ", "")
+    try:
+        window_ms = duration_to_ms(duration_token)
+    except ValueError as exc:
+        raise ValueError(f"IF_DELTA: {exc}") from exc
+
+    match = DELTA_RE.match(str(tokens[2]).strip())
+    if not match:
+        raise ValueError(
+            f"IF_DELTA wymaga: signed-threshold jak +0.1l/min lub -0.1l/min (linia {ln})"
+        )
+
+    signed_value = to_num(match.group(1))
+    threshold = abs(float(signed_value))
+    operator = ">" if signed_value > 0 else "<" if signed_value < 0 else "="
+    unit = match.group(2).strip() or None
+    window_seconds = window_ms / 1000.0
+    return OqlCmd(
+        "IF_DELTA",
+        {
+            "sensor": sensor,
+            "window_ms": window_ms,
+            "window_s": window_seconds,
+            "operator": operator,
+            "threshold": threshold,
+            "unit": unit,
+        },
+        ln,
+        raw,
+    )
+
+
 def parse_SAVE(tokens: list[str], ln: int, raw: str) -> OqlCmd:
     _require(tokens, 1, "SAVE", ln, "label")
     return OqlCmd("SAVE", {"label": tokens[0]}, ln, raw)
@@ -389,13 +426,14 @@ DISPATCHERS = {
     "INCLUDE": parse_INCLUDE,
     "FUNC":    parse_FUNC_CALL,
     "REPEAT":  parse_REPEAT,
+    "IF_DELTA": parse_IF_DELTA,
 }
 
 #: Ordered list of canonical base commands (used by documentation tests).
 BASE_COMMANDS: tuple[str, ...] = (
     "SET", "GET", "WAIT", "SAVE", "CHECK",
     "MIN", "MAX", "SAMPLE",
-    "LOG", "ERROR", "CALL", "INCLUDE",
+    "LOG", "ERROR", "CALL", "INCLUDE", "IF_DELTA",
 )
 
 
@@ -524,10 +562,10 @@ def parse_oql(text: str, filename: str = "<string>") -> OqlDoc:
                 current.name = " ".join(tokens[1:]).strip("'\"")
                 continue  # Don't add as a regular command
 
-        # CORRECT and ERROR modify the previous CHECK command
+        # CORRECT and ERROR modify the previous conditional command
         if cmd in ("CORRECT", "ERROR") and current.cmds:
             last_cmd = current.cmds[-1]
-            if last_cmd.cmd == "CHECK":
+            if last_cmd.cmd in {"CHECK", "IF_DELTA"}:
                 tokens = tokenize(rest)
                 message = " ".join(tokens)
                 key = "correct_msg" if cmd == "CORRECT" else "error_msg"
@@ -535,7 +573,7 @@ def parse_oql(text: str, filename: str = "<string>") -> OqlDoc:
                 continue
             else:
                 doc.errors.append(
-                    f"Linia {ln}: {cmd} musi występować bezpośrednio po CHECK"
+                    f"Linia {ln}: {cmd} musi występować bezpośrednio po CHECK lub IF_DELTA"
                 )
                 continue
 

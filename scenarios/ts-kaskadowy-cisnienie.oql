@@ -12,7 +12,9 @@ GOAL:
   SAMPLE ciśnienie_niskie START 100ms
   WAIT 5s
   LOG 'VAL ciśnienie_niskie mbar'
-  IF ciśnienie_niskie -999999 .. próg_przełączenia
+  IF 'ciśnienie_niskie' '-∞ .. próg_przełączenia'
+    CORRECT 'ciśnienie_niskie poniżej progu przełączenia'
+    ERROR 'ciśnienie_niskie powyżej progu przełączenia'
   LOG 'GOTO Pomiar delta na średnim ciśnieniu - NOT SUPPORTED IN V4'
   LOG 'ELSE INFO: 'Ciśnienie stabilne, kontynuuj monitoring' - NOT SUPPORTED IN V4'
   LOG 'GOTO Monitoring niskiego ciśnienia - NOT SUPPORTED IN V4'
@@ -29,16 +31,19 @@ GOAL:
   LOG 'CALC delta_ciśnienia = DIFF ciśnienie_start ciśnienie_koniec'
   LOG 'CALC ubytek_l_min = RATE ciśnienie_średnie l/min'
   LOG 'VAL ubytek_l_min l/min'
-  DELTA ubytek_l_min = 0.5l/min
   IF 'ubytek_l_min' '0 .. 0.5 l/min'
-    CORRECT 'ubytek_l_min w zakresie 0 .. 0.5 l/min'
-    ERROR 'ubytek_l_min poza zakresem 0 .. 0.5 l/min'
-  IF ubytek_l_min 0.5 .. 999999
+  CORRECT 'ubytek_l_min w zakresie 0 .. 0.5 l/min'
+  ERROR 'ubytek_l_min poza zakresem 0 .. 0.5 l/min'
+  IF_DELTA 'ciśnienie_średnie' '60 s' '+0.5l/min'
+  CORRECT 'ubytek_l_min w zakresie 0.5 .. ∞'
+  ERROR 'ubytek_l_min poza zakresem 0.5 .. ∞'
   ERROR 'Zbyt duży ubytek: przekroczono 0.5 l/min'
 
 GOAL:
   SET NAME 'Walidacja wyniku'
   LOG 'VAL ubytek_l_min l/min'
-  IF ubytek_l_min -999999 .. 0.5
+  IF 'ubytek_l_min' '-∞ .. 0.5'
+  CORRECT 'ubytek_l_min w zakresie -∞ .. 0.5'
+  ERROR 'ubytek_l_min poza zakresem -∞ .. 0.5'
   ERROR 'FAIL: Ubytek zbyt wysoki'
   SAVE wynik-protokół

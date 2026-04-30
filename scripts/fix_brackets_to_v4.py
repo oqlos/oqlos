@@ -12,12 +12,16 @@ from scripts.oql_v2_to_v4_migrate_db import migrate_v2_to_v4
 
 
 def needs_migration(text: str) -> bool:
-    """Check if text contains v2 bracket syntax [...], legacy MIN/MAX, or PUMP commands."""
+    """Check if text contains v2 bracket syntax, legacy MIN/MAX, PUMP, or old IF sentinels."""
     if re.search(r"\[([^\]]+)\]", text):
         return True
     if re.search(r"^\s*(MIN|MAX)\s+\S+\s*[= ]", text, re.MULTILINE | re.IGNORECASE):
         return True
     if re.search(r"^\s*PUMP\s+\S", text, re.MULTILINE | re.IGNORECASE):
+        return True
+    if re.search(r"\.\.\s*(999999|-999999|\s*999999)", text):
+        return True
+    if re.search(r"-999999\s*\.\.", text):
         return True
     return False
 

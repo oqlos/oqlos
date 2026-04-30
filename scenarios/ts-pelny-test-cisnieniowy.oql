@@ -21,12 +21,14 @@ GOAL:
   LOG 'VAL średnie_LP mbar'
   LOG 'VAL delta_LP mbar/s'
   IF 'średnie_LP' '95 .. 105 mbar'
-    CORRECT 'średnie_LP w zakresie 95 .. 105 mbar'
-    ERROR 'średnie_LP poza zakresem 95 .. 105 mbar'
+  CORRECT 'średnie_LP w zakresie 95 .. 105 mbar'
+  ERROR 'średnie_LP poza zakresem 95 .. 105 mbar'
   IF 'delta_LP' '-∞ .. 0.1 mbar/s'
-    CORRECT 'delta_LP w zakresie -∞ .. 0.1 mbar/s'
-    ERROR 'delta_LP poza zakresem -∞ .. 0.1 mbar/s'
-  IF delta_LP 0.5 .. 999999
+  CORRECT 'delta_LP w zakresie -∞ .. 0.1 mbar/s'
+  ERROR 'delta_LP poza zakresem -∞ .. 0.1 mbar/s'
+  IF 'delta_LP' > '0.5'
+    CORRECT 'delta_LP w zakresie 0.5 .. ∞'
+    ERROR 'delta_LP poza zakresem 0.5 .. ∞'
   LOG 'GOTO Test na średnim zakresie - NOT SUPPORTED IN V4'
   LOG 'ELSE INFO: 'Test LP OK' - NOT SUPPORTED IN V4'
 
@@ -47,9 +49,11 @@ GOAL:
   LOG 'VAL delta_MP mbar/min'
   LOG 'VAL ubytek_min l/min'
   IF 'ubytek_min' '0 .. 0.5 l/min'
-    CORRECT 'ubytek_min w zakresie 0 .. 0.5 l/min'
-    ERROR 'ubytek_min poza zakresem 0 .. 0.5 l/min'
-  IF ubytek_min 0.5 .. 999999
+  CORRECT 'ubytek_min w zakresie 0 .. 0.5 l/min'
+  ERROR 'ubytek_min poza zakresem 0 .. 0.5 l/min'
+  IF 'ubytek_min' > '0.5'
+    CORRECT 'ubytek_min w zakresie 0.5 .. ∞'
+    ERROR 'ubytek_min poza zakresem 0.5 .. ∞'
   ERROR 'Przekroczono dopuszczalny ubytek 0.5 l/min'
 
 GOAL:

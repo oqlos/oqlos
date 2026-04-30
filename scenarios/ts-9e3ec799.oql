@@ -10,8 +10,10 @@ GOAL:
   LOG 'TASK Wyłącz zawór BO13'
   LOG 'TASK Wyłącz zawór BO14'
   SET PUMP 0
-  IF 'Stabilność_układu' '1.5 .. ∞ bar'
+  IF 'Stabilność_układu' > '1.5 bar'
   CORRECT 'Stabilność_układu w zakresie 1.5 .. ∞ bar'
   ERROR 'Stabilność_układu poza zakresem 1.5 .. ∞ bar'
   LOG 'VAL Stabilność układu bar'
-  IF Stabilność_układu 1.5bar .. 999999
+  IF 'Stabilność_układu' > '1.5 bar'
+    CORRECT 'Stabilność_układu w zakresie 1.5 .. ∞ bar'
+    ERROR 'Stabilność_układu poza zakresem 1.5 .. ∞ bar'
