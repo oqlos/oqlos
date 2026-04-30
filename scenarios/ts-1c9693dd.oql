@@ -3,16 +3,16 @@ SCENARIO: XML Example — Leak Sequence
 
 GOAL:
   SET NAME 'XML Example — Leak Sequence'
-TASK: Włącz [zawór BO05]
-PUMP [10 l]
-WAIT [5 s]
-MIN [Ciśnienie otwarcia zaworu] = [4.2 mbar]
-MAX [Ciśnienie otwarcia zaworu] = [6.0 mbar]
-VAL [Ciśnienie otwarcia zaworu] [mbar]
-IF [Ciśnienie otwarcia zaworu] [>=] [4.2 mbar]
-IF [Ciśnienie otwarcia zaworu] [<=] [6.0 mbar]
-SAVE [Ciśnienie otwarcia zaworu]
-TASK: Włącz [zawór BO03]
-PUMP [off]
-WAIT [3 s]
-
+  LOG 'TASK Włącz zawór BO05'
+  SET PUMP 10l
+  WAIT 5s
+  IF 'Ciśnienie_otwarcia_zaworu' '4.2 .. 6.0 mbar'
+  CORRECT 'Ciśnienie_otwarcia_zaworu w zakresie 4.2 .. 6.0 mbar'
+  ERROR 'Ciśnienie_otwarcia_zaworu poza zakresem 4.2 .. 6.0 mbar'
+  LOG 'VAL Ciśnienie otwarcia zaworu mbar'
+  IF Ciśnienie_otwarcia_zaworu 4.2mbar .. 999999
+  IF Ciśnienie_otwarcia_zaworu -999999 .. 6.0mbar
+  SAVE Ciśnienie otwarcia zaworu
+  LOG 'TASK Włącz zawór BO03'
+  SET PUMP 0
+  WAIT 3s

@@ -1,44 +1,44 @@
 VERSION: 4
 GOAL:
   SET NAME 'Inicjalizacja pomiaru kaskadowego'
-  TASK: [Kalibruj] [czujnik niskiego ciśnienia]
-  TASK: [Kalibruj] [czujnik średniego ciśnienia]
-  SET [próg_przełączenia] = [50 mbar]
-  SET [czas_pomiaru_delta] = [60 s]
+  LOG 'TASK Kalibruj czujnik niskiego ciśnienia'
+  LOG 'TASK Kalibruj czujnik średniego ciśnienia'
+  SET próg_przełączenia = 50mbar
+  SET czas_pomiaru_delta = 60s
 
 GOAL:
   SET NAME 'Monitoring niskiego ciśnienia'
-  TASK: [Włącz] [czujnik niskiego ciśnienia]
-  SAMPLE [ciśnienie_niskie] [START] [100 ms]
-  WAIT [5 s]
-  VAL [ciśnienie_niskie] [mbar]
-  IF [ciśnienie_niskie] [<] [próg_przełączenia]
-  GOTO [Pomiar delta na średnim ciśnieniu]
-  ELSE INFO ["Ciśnienie stabilne, kontynuuj monitoring"]
-  GOTO [Monitoring niskiego ciśnienia]
+  SET czujnik_niskiego_ciśnienia 1
+  SAMPLE ciśnienie_niskie START 100ms
+  WAIT 5s
+  LOG 'VAL ciśnienie_niskie mbar'
+  IF ciśnienie_niskie -999999 .. próg_przełączenia
+  LOG 'GOTO Pomiar delta na średnim ciśnieniu - NOT SUPPORTED IN V4'
+  LOG 'ELSE INFO: 'Ciśnienie stabilne, kontynuuj monitoring' - NOT SUPPORTED IN V4'
+  LOG 'GOTO Monitoring niskiego ciśnienia - NOT SUPPORTED IN V4'
 
 GOAL:
   SET NAME 'Pomiar delta na średnim ciśnieniu'
-  TASK: [Wyłącz] [czujnik niskiego ciśnienia]
-  TASK: [Włącz] [czujnik średniego ciśnienia]
-  SAMPLE [ciśnienie_średnie] [START] [100 ms]
-  VAL [ciśnienie_start] [mbar]
-  WAIT [60 s]
-  SAMPLE [ciśnienie_średnie] [STOP]
-  VAL [ciśnienie_koniec] [mbar]
-  CALC [delta_ciśnienia] = [DIFF] [ciśnienie_start] [ciśnienie_koniec]
-  CALC [ubytek_l_min] = [RATE] [ciśnienie_średnie] [l/min]
-  VAL [ubytek_l_min] [l/min]
-  DELTA [ubytek_l_min] = [0.5 l/min]
-  MIN [ubytek_l_min] = [0 l/min]
-  MAX [ubytek_l_min] = [0.5 l/min]
-  IF [ubytek_l_min] [>] [0.5]
-  ELSE ERROR ["Zbyt duży ubytek: przekroczono 0.5 l/min"]
+  SET czujnik_niskiego_ciśnienia 0
+  SET czujnik_średniego_ciśnienia 1
+  SAMPLE ciśnienie_średnie START 100ms
+  LOG 'VAL ciśnienie_start mbar'
+  WAIT 60s
+  SAMPLE ciśnienie_średnie STOP
+  LOG 'VAL ciśnienie_koniec mbar'
+  LOG 'CALC delta_ciśnienia = DIFF ciśnienie_start ciśnienie_koniec'
+  LOG 'CALC ubytek_l_min = RATE ciśnienie_średnie l/min'
+  LOG 'VAL ubytek_l_min l/min'
+  DELTA ubytek_l_min = 0.5l/min
+  IF 'ubytek_l_min' '0 .. 0.5 l/min'
+    CORRECT 'ubytek_l_min w zakresie 0 .. 0.5 l/min'
+    ERROR 'ubytek_l_min poza zakresem 0 .. 0.5 l/min'
+  IF ubytek_l_min 0.5 .. 999999
+  ERROR 'Zbyt duży ubytek: przekroczono 0.5 l/min'
 
 GOAL:
   SET NAME 'Walidacja wyniku'
-  VAL [ubytek_l_min] [l/min]
-  IF [ubytek_l_min] [<=] [0.5]
-  ELSE ERROR ["FAIL: Ubytek zbyt wysoki"]
-  TASK: [Zapisz] [wynik] [protokół]
-
+  LOG 'VAL ubytek_l_min l/min'
+  IF ubytek_l_min -999999 .. 0.5
+  ERROR 'FAIL: Ubytek zbyt wysoki'
+  SAVE wynik-protokół

@@ -4,12 +4,13 @@
 VERSION: 4
 GOAL:
   SET NAME 'Kontrola Wizualna'
-  VAL 'wynik' 'OK/NOK'
+  LOG 'VAL \'wynik\' \'OK/NOK\'
 GOAL:
   SET NAME 'Test Szczelności'
-  VAL 'ciśnienie NC' 'mbar'
-  MIN 'ciśnienie NC' '-10 mbar'
-  MAX 'ciśnienie NC' '0 mbar'
+  LOG 'VAL \'ciśnienie NC\' \'mbar\'
+  IF 'ciśnienie' 'NC' '-10 mbar' .. NC' '0 mbar'
+    CORRECT 'ciśnienie w zakresie NC' '-10 mbar' .. NC' '0 mbar'
+    ERROR 'ciśnienie poza zakresem NC' '-10 mbar' .. NC' '0 mbar'
   SAVE 'ciśnienie NC'
 GOAL:
   SET NAME 'Test Szczelności (stary sposób)'
@@ -17,9 +18,10 @@ GOAL:
   SET 'zawór BO06' '1'
   SET 'timeout' '20 s'
   SET 'timer' '0 s'
-  VAL 'ciśnienie NC' 'mbar'
-  MIN 'ciśnienie NC' '-10 mbar'
-  MAX 'ciśnienie NC' '0 mbar'
+  LOG 'VAL \'ciśnienie NC\' \'mbar\'
+  IF 'ciśnienie' 'NC' '-10 mbar' .. NC' '0 mbar'
+    CORRECT 'ciśnienie w zakresie NC' '-10 mbar' .. NC' '0 mbar'
+    ERROR 'ciśnienie poza zakresem NC' '-10 mbar' .. NC' '0 mbar'
   SAVE 'ciśnienie NC'
   SET 'PUMP' 'off'
   SET 'zawór BO04' '0'
@@ -28,15 +30,16 @@ GOAL:
   SET 'timer' '0 s'
 GOAL:
   SET NAME 'Ciśnienie otwarcia zaw. wyd.'
-  VAL 'ciśnienie' 'bar'
-  MIN 'ciśnienie' '11 bar'
-  MAX 'ciśnienie' '12 bar'
+  LOG 'VAL \'ciśnienie\' \'bar\'
+  IF 'ciśnienie' '11 bar' .. '12 bar'
+    CORRECT 'ciśnienie' w zakresie '11 bar' .. '12 bar'
+    ERROR 'ciśnienie' poza zakresem '11 bar' .. '12 bar'
 GOAL:
   SET NAME 'Test nadciśnienia'
   SET 'timeout' '10 s'
-  IF 'timer' > 'timeout'
-  VAL 'nadciśnienie' 'mbar'
-  MIN 'nadciśnienie' '2.0 mbar'
-  MAX 'nadciśnienie' '3.9 mbar'
+  IF 'timer' 'timeout' .. 999999
+  LOG 'VAL \'nadciśnienie\' \'mbar\'
+  IF 'nadciśnienie' '2.0 mbar' .. '3.9 mbar'
+    CORRECT 'nadciśnienie' w zakresie '2.0 mbar' .. '3.9 mbar'
+    ERROR 'nadciśnienie' poza zakresem '2.0 mbar' .. '3.9 mbar'
   SAVE 'nadciśnienie'
-

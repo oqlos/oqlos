@@ -3,14 +3,15 @@ SCENARIO: XML Example — Valve Cycle
 
 GOAL:
   SET NAME 'XML Example — Valve Cycle'
-TASK: Włącz [zawór BO13]
-TASK: Włącz [zawór BO14]
-PUMP [3 bar]
-WAIT [2 s]
-TASK: Wyłącz [zawór BO13]
-TASK: Wyłącz [zawór BO14]
-PUMP [off]
-MIN [Stabilność układu] = [1.5 bar]
-VAL [Stabilność układu] [bar]
-IF [Stabilność układu] [>=] [1.5 bar]
-
+  LOG 'TASK Włącz zawór BO13'
+  LOG 'TASK Włącz zawór BO14'
+  SET PUMP 3bar
+  WAIT 2s
+  LOG 'TASK Wyłącz zawór BO13'
+  LOG 'TASK Wyłącz zawór BO14'
+  SET PUMP 0
+  IF 'Stabilność_układu' '1.5 .. ∞ bar'
+  CORRECT 'Stabilność_układu w zakresie 1.5 .. ∞ bar'
+  ERROR 'Stabilność_układu poza zakresem 1.5 .. ∞ bar'
+  LOG 'VAL Stabilność układu bar'
+  IF Stabilność_układu 1.5bar .. 999999

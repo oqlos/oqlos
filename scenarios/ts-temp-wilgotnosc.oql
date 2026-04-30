@@ -1,25 +1,26 @@
 VERSION: 4
 GOAL:
   SET NAME 'Pomiar warunków środowiskowych'
-  TASK: [Włącz] [czujnik temperatury]
-  TASK: [Włącz] [czujnik wilgotności]
-  WAIT [3 s]
-  SAMPLE [temperatura] [START] [500 ms]
-  SAMPLE [wilgotność] [START] [500 ms]
-  WAIT [30 s]
-  SAMPLE [temperatura] [STOP]
-  SAMPLE [wilgotność] [STOP]
-  CALC [temp_avg] = [AVG] [temperatura]
-  CALC [wilg_avg] = [AVG] [wilgotność]
-  VAL [temp_avg] [°C]
-  VAL [wilg_avg] [%RH]
-  MIN [temp_avg] = [15 °C]
-  MAX [temp_avg] = [35 °C]
-  MIN [wilg_avg] = [30 %RH]
-  MAX [wilg_avg] = [70 %RH]
-  IF [temp_avg] [<] [15]
-  ELSE ERROR ["Temperatura poniżej minimum"]
-  IF [temp_avg] [>] [35]
-  ELSE ERROR ["Temperatura powyżej maksimum"]
-  TASK: [Zapisz] [warunki] [protokół]
-
+  SET czujnik_temperatury 1
+  SET czujnik_wilgotności 1
+  WAIT 3s
+  SAMPLE temperatura START 500ms
+  SAMPLE wilgotność START 500ms
+  WAIT 30s
+  SAMPLE temperatura STOP
+  SAMPLE wilgotność STOP
+  LOG 'CALC temp_avg = AVG temperatura'
+  LOG 'CALC wilg_avg = AVG wilgotność'
+  LOG 'VAL temp_avg °C'
+  LOG 'VAL wilg_avg %RH'
+  IF 'temp_avg' '15 .. 35 °C'
+    CORRECT 'temp_avg w zakresie 15 .. 35 °C'
+    ERROR 'temp_avg poza zakresem 15 .. 35 °C'
+  IF 'wilg_avg' '30 .. 70 %RH'
+    CORRECT 'wilg_avg w zakresie 30 .. 70 %RH'
+    ERROR 'wilg_avg poza zakresem 30 .. 70 %RH'
+  IF temp_avg -999999 .. 15
+  ERROR 'Temperatura poniżej minimum'
+  IF temp_avg 35 .. 999999
+  ERROR 'Temperatura powyżej maksimum'
+  SAVE warunki-protokół

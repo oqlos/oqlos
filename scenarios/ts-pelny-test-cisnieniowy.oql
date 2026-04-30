@@ -1,57 +1,60 @@
 VERSION: 4
 GOAL:
   SET NAME 'Przygotowanie testu ciśnieniowego'
-  TASK: [Resetuj] [system]
-  TASK: [Włącz] [zasilanie]
-  SET [tryb] = [TEST]
-  WAIT [2 s]
+  LOG 'TASK Resetuj system'
+  SET zasilanie 1
+  SET tryb = TEST
+  WAIT 2s
 
 GOAL:
   SET NAME 'Test na niskim zakresie'
-  TASK: [Wybierz] [czujnik LP]
-  SET [ciśnienie_docelowe] = [100 mbar]
-  TASK: [Włącz] [pompa]
-  WAIT [5 s]
-  SAMPLE [ciśnienie_LP] [START] [50 ms]
-  SET [czas_stabilizacji] = [30 s]
-  WAIT [30 s]
-  SAMPLE [ciśnienie_LP] [STOP]
-  CALC [średnie_LP] = [AVG] [ciśnienie_LP]
-  CALC [delta_LP] = [DELTA] [ciśnienie_LP]
-  VAL [średnie_LP] [mbar]
-  VAL [delta_LP] [mbar/s]
-  MIN [średnie_LP] = [95 mbar]
-  MAX [średnie_LP] = [105 mbar]
-  MAX [delta_LP] = [0.1 mbar/s]
-  IF [delta_LP] [>] [0.5]
-  GOTO [Test na średnim zakresie]
-  ELSE INFO ["Test LP OK"]
+  LOG 'TASK Wybierz czujnik LP'
+  SET ciśnienie_docelowe = 100mbar
+  SET pompa 1
+  WAIT 5s
+  SAMPLE ciśnienie_LP START 50ms
+  SET czas_stabilizacji = 30s
+  WAIT 30s
+  SAMPLE ciśnienie_LP STOP
+  LOG 'CALC średnie_LP = AVG ciśnienie_LP'
+  LOG 'CALC delta_LP = DELTA ciśnienie_LP'
+  LOG 'VAL średnie_LP mbar'
+  LOG 'VAL delta_LP mbar/s'
+  IF 'średnie_LP' '95 .. 105 mbar'
+    CORRECT 'średnie_LP w zakresie 95 .. 105 mbar'
+    ERROR 'średnie_LP poza zakresem 95 .. 105 mbar'
+  IF 'delta_LP' '-∞ .. 0.1 mbar/s'
+    CORRECT 'delta_LP w zakresie -∞ .. 0.1 mbar/s'
+    ERROR 'delta_LP poza zakresem -∞ .. 0.1 mbar/s'
+  IF delta_LP 0.5 .. 999999
+  LOG 'GOTO Test na średnim zakresie - NOT SUPPORTED IN V4'
+  LOG 'ELSE INFO: 'Test LP OK' - NOT SUPPORTED IN V4'
 
 GOAL:
   SET NAME 'Test na średnim zakresie'
-  TASK: [Wyłącz] [czujnik LP]
-  TASK: [Wybierz] [czujnik MP]
-  SET [ciśnienie_docelowe] = [500 mbar]
-  WAIT [5 s]
-  SAMPLE [ciśnienie_MP] [START] [50 ms]
-  SET [czas_pomiaru] = [60 s]
-  WAIT [60 s]
-  SAMPLE [ciśnienie_MP] [STOP]
-  CALC [średnie_MP] = [AVG] [ciśnienie_MP]
-  CALC [delta_MP] = [DELTA] [ciśnienie_MP]
-  CALC [ubytek_min] = [RATE] [ciśnienie_MP] [l/min]
-  VAL [średnie_MP] [mbar]
-  VAL [delta_MP] [mbar/min]
-  VAL [ubytek_min] [l/min]
-  MIN [ubytek_min] = [0 l/min]
-  MAX [ubytek_min] = [0.5 l/min]
-  IF [ubytek_min] [>] [0.5]
-  ELSE ERROR ["Przekroczono dopuszczalny ubytek 0.5 l/min"]
+  SET czujnik_LP 0
+  LOG 'TASK Wybierz czujnik MP'
+  SET ciśnienie_docelowe = 500mbar
+  WAIT 5s
+  SAMPLE ciśnienie_MP START 50ms
+  SET czas_pomiaru = 60s
+  WAIT 60s
+  SAMPLE ciśnienie_MP STOP
+  LOG 'CALC średnie_MP = AVG ciśnienie_MP'
+  LOG 'CALC delta_MP = DELTA ciśnienie_MP'
+  LOG 'CALC ubytek_min = RATE ciśnienie_MP l/min'
+  LOG 'VAL średnie_MP mbar'
+  LOG 'VAL delta_MP mbar/min'
+  LOG 'VAL ubytek_min l/min'
+  IF 'ubytek_min' '0 .. 0.5 l/min'
+    CORRECT 'ubytek_min w zakresie 0 .. 0.5 l/min'
+    ERROR 'ubytek_min poza zakresem 0 .. 0.5 l/min'
+  IF ubytek_min 0.5 .. 999999
+  ERROR 'Przekroczono dopuszczalny ubytek 0.5 l/min'
 
 GOAL:
   SET NAME 'Zakończenie'
-  TASK: [Wyłącz] [pompa]
-  TASK: [Wyłącz] [czujnik MP]
-  SET [tryb] = [IDLE]
-  TASK: [Generuj] [raport]
-
+  SET pompa 0
+  SET czujnik_MP 0
+  SET tryb = IDLE
+  LOG 'TASK Generuj raport'

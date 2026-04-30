@@ -1,6 +1,5 @@
 VERSION: 4
 GOAL:
   SET NAME 'Test wizualny'
-  TASK: [Sprawdź] [wizualnie] [maska]
-  TASK: [Sprawdź] [uszczelki] [gogle]
-
+  LOG 'TASK Sprawdź wizualnie maska'
+  LOG 'TASK Sprawdź uszczelki gogle'

@@ -26,9 +26,10 @@ GOAL:
   IF 'Timer' ≤ '5.0'
   SET 'BO05' 'on'
   SET 'Pump' 'set'
-  MIN 'AI01' '4.2 mbar'
+  IF 'AI01' '4.2 mbar' .. ∞'
+    CORRECT 'AI01' w zakresie '4.2 mbar' .. ∞'
+    ERROR 'AI01' poza zakresem '4.2 mbar' .. ∞'
   SAVE 'AI01.value'
   SET 'BO03' 'on'
   SET 'Pump' 'set'
   IF 'Timer' ≤ '7.0'
-

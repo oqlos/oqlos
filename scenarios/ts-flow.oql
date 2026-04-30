@@ -1,11 +1,11 @@
 VERSION: 4
 GOAL:
   SET NAME 'Test przepływu'
-  TASK: [Włącz] [pompa 1]
-  SET [czas] = [10 s]
-  WAIT [10 s]
-  MIN [przepływ] = [100 l/min]
-  MAX [przepływ] = [300 l/min]
-  VAL [przepływ] [l/min]
-  TASK: [Wyłącz] [pompa 1]
-
+  SET pompa_1 1
+  SET czas = 10s
+  WAIT 10s
+  IF 'przepływ' '100 .. 300 l/min'
+    CORRECT 'przepływ w zakresie 100 .. 300 l/min'
+    ERROR 'przepływ poza zakresem 100 .. 300 l/min'
+  LOG 'VAL przepływ l/min'
+  SET pompa_1 0
