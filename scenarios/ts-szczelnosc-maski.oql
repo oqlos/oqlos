@@ -1,0 +1,10 @@
+VERSION: 4
+GOAL:
+  SET NAME 'Test szczelności maski'
+  TASK: [Włącz] [pompa podciśnieniowa]
+  SET [podciśnienie] = [-10 mbar]
+  SET [czas] = [60 s]
+  MIN [szczelność] = [95 %]
+  MAX [szczelność] = [100 %]
+  VAL [szczelność] [%]
+

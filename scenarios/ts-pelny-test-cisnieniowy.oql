@@ -1,0 +1,57 @@
+VERSION: 4
+GOAL:
+  SET NAME 'Przygotowanie testu ciśnieniowego'
+  TASK: [Resetuj] [system]
+  TASK: [Włącz] [zasilanie]
+  SET [tryb] = [TEST]
+  WAIT [2 s]
+
+GOAL:
+  SET NAME 'Test na niskim zakresie'
+  TASK: [Wybierz] [czujnik LP]
+  SET [ciśnienie_docelowe] = [100 mbar]
+  TASK: [Włącz] [pompa]
+  WAIT [5 s]
+  SAMPLE [ciśnienie_LP] [START] [50 ms]
+  SET [czas_stabilizacji] = [30 s]
+  WAIT [30 s]
+  SAMPLE [ciśnienie_LP] [STOP]
+  CALC [średnie_LP] = [AVG] [ciśnienie_LP]
+  CALC [delta_LP] = [DELTA] [ciśnienie_LP]
+  VAL [średnie_LP] [mbar]
+  VAL [delta_LP] [mbar/s]
+  MIN [średnie_LP] = [95 mbar]
+  MAX [średnie_LP] = [105 mbar]
+  MAX [delta_LP] = [0.1 mbar/s]
+  IF [delta_LP] [>] [0.5]
+  GOTO [Test na średnim zakresie]
+  ELSE INFO ["Test LP OK"]
+
+GOAL:
+  SET NAME 'Test na średnim zakresie'
+  TASK: [Wyłącz] [czujnik LP]
+  TASK: [Wybierz] [czujnik MP]
+  SET [ciśnienie_docelowe] = [500 mbar]
+  WAIT [5 s]
+  SAMPLE [ciśnienie_MP] [START] [50 ms]
+  SET [czas_pomiaru] = [60 s]
+  WAIT [60 s]
+  SAMPLE [ciśnienie_MP] [STOP]
+  CALC [średnie_MP] = [AVG] [ciśnienie_MP]
+  CALC [delta_MP] = [DELTA] [ciśnienie_MP]
+  CALC [ubytek_min] = [RATE] [ciśnienie_MP] [l/min]
+  VAL [średnie_MP] [mbar]
+  VAL [delta_MP] [mbar/min]
+  VAL [ubytek_min] [l/min]
+  MIN [ubytek_min] = [0 l/min]
+  MAX [ubytek_min] = [0.5 l/min]
+  IF [ubytek_min] [>] [0.5]
+  ELSE ERROR ["Przekroczono dopuszczalny ubytek 0.5 l/min"]
+
+GOAL:
+  SET NAME 'Zakończenie'
+  TASK: [Wyłącz] [pompa]
+  TASK: [Wyłącz] [czujnik MP]
+  SET [tryb] = [IDLE]
+  TASK: [Generuj] [raport]
+

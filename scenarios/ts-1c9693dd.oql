@@ -1,0 +1,18 @@
+VERSION: 4
+SCENARIO: XML Example — Leak Sequence
+
+GOAL:
+  SET NAME 'XML Example — Leak Sequence'
+TASK: Włącz [zawór BO05]
+PUMP [10 l]
+WAIT [5 s]
+MIN [Ciśnienie otwarcia zaworu] = [4.2 mbar]
+MAX [Ciśnienie otwarcia zaworu] = [6.0 mbar]
+VAL [Ciśnienie otwarcia zaworu] [mbar]
+IF [Ciśnienie otwarcia zaworu] [>=] [4.2 mbar]
+IF [Ciśnienie otwarcia zaworu] [<=] [6.0 mbar]
+SAVE [Ciśnienie otwarcia zaworu]
+TASK: Włącz [zawór BO03]
+PUMP [off]
+WAIT [3 s]
+

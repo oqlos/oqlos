@@ -1,0 +1,16 @@
+VERSION: 4
+SCENARIO: XML Example — Valve Cycle
+
+GOAL:
+  SET NAME 'XML Example — Valve Cycle'
+TASK: Włącz [zawór BO13]
+TASK: Włącz [zawór BO14]
+PUMP [3 bar]
+WAIT [2 s]
+TASK: Wyłącz [zawór BO13]
+TASK: Wyłącz [zawór BO14]
+PUMP [off]
+MIN [Stabilność układu] = [1.5 bar]
+VAL [Stabilność układu] [bar]
+IF [Stabilność układu] [>=] [1.5 bar]
+

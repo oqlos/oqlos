@@ -1,0 +1,15 @@
+VERSION: 4
+GOAL:
+  SET NAME 'Test spadku ciśnienia automatu'
+  TASK: [Ustaw przepływ] [regulator] [50 l/min]
+  TASK: [Włącz] [pompa 1]
+  SAMPLE [ciśnienie] [START] [50 ms]
+  SET [czas_pomiaru] = [10 s]
+  WAIT [10 s]
+  SAMPLE [ciśnienie] [STOP]
+  CALC [dp_srednie] = [AVG] [ciśnienie]
+  MIN [dp_srednie] = [0.5 mbar]
+  MAX [dp_srednie] = [3.5 mbar]
+  VAL [dp_srednie] [mbar]
+  TASK: [Wyłącz] [pompa 1]
+

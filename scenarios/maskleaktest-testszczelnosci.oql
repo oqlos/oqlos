@@ -1,0 +1,12 @@
+VERSION: 4
+GOAL:
+  SET NAME 'Wytworzenie podciśnienia -10 mbar i obserwacja przez 60 sekund'
+  SET 'Pump' 'set'
+  SET 'Valve' 'NC'
+  WAIT '2000 ms'
+  MIN 'AI01' '-11.0 mbar'
+  SAVE 'AI01.value'
+  SET 'Pump' 'off'
+  MIN 'AI01' '-11.0 mbar'
+  SAVE 'AI01.value'
+

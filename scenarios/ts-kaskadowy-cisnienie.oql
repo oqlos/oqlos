@@ -1,0 +1,44 @@
+VERSION: 4
+GOAL:
+  SET NAME 'Inicjalizacja pomiaru kaskadowego'
+  TASK: [Kalibruj] [czujnik niskiego ciśnienia]
+  TASK: [Kalibruj] [czujnik średniego ciśnienia]
+  SET [próg_przełączenia] = [50 mbar]
+  SET [czas_pomiaru_delta] = [60 s]
+
+GOAL:
+  SET NAME 'Monitoring niskiego ciśnienia'
+  TASK: [Włącz] [czujnik niskiego ciśnienia]
+  SAMPLE [ciśnienie_niskie] [START] [100 ms]
+  WAIT [5 s]
+  VAL [ciśnienie_niskie] [mbar]
+  IF [ciśnienie_niskie] [<] [próg_przełączenia]
+  GOTO [Pomiar delta na średnim ciśnieniu]
+  ELSE INFO ["Ciśnienie stabilne, kontynuuj monitoring"]
+  GOTO [Monitoring niskiego ciśnienia]
+
+GOAL:
+  SET NAME 'Pomiar delta na średnim ciśnieniu'
+  TASK: [Wyłącz] [czujnik niskiego ciśnienia]
+  TASK: [Włącz] [czujnik średniego ciśnienia]
+  SAMPLE [ciśnienie_średnie] [START] [100 ms]
+  VAL [ciśnienie_start] [mbar]
+  WAIT [60 s]
+  SAMPLE [ciśnienie_średnie] [STOP]
+  VAL [ciśnienie_koniec] [mbar]
+  CALC [delta_ciśnienia] = [DIFF] [ciśnienie_start] [ciśnienie_koniec]
+  CALC [ubytek_l_min] = [RATE] [ciśnienie_średnie] [l/min]
+  VAL [ubytek_l_min] [l/min]
+  DELTA [ubytek_l_min] = [0.5 l/min]
+  MIN [ubytek_l_min] = [0 l/min]
+  MAX [ubytek_l_min] = [0.5 l/min]
+  IF [ubytek_l_min] [>] [0.5]
+  ELSE ERROR ["Zbyt duży ubytek: przekroczono 0.5 l/min"]
+
+GOAL:
+  SET NAME 'Walidacja wyniku'
+  VAL [ubytek_l_min] [l/min]
+  IF [ubytek_l_min] [<=] [0.5]
+  ELSE ERROR ["FAIL: Ubytek zbyt wysoki"]
+  TASK: [Zapisz] [wynik] [protokół]
+

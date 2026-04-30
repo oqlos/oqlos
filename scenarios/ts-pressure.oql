@@ -1,0 +1,8 @@
+VERSION: 4
+GOAL:
+  SET NAME 'Test spadku ciśnienia automatu'
+  TASK: [Ustaw przepływ] [regulator] [50 l/min]
+  TASK: [Włącz] [pompa 1]
+  MIN [ciśnienie] = [0.5 mbar]
+  MAX [ciśnienie] = [3.5 mbar]
+

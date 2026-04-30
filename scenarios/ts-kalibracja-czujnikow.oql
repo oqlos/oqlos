@@ -1,0 +1,50 @@
+VERSION: 4
+GOAL:
+  SET NAME 'Kalibracja punktu zero'
+  TASK: [Resetuj] [czujnik ciśnienia]
+  SET [ciśnienie_ref] = [0 mbar]
+  WAIT [5 s]
+  SAMPLE [ciśnienie_raw] [START] [100 ms]
+  WAIT [10 s]
+  SAMPLE [ciśnienie_raw] [STOP]
+  CALC [offset_zero] = [AVG] [ciśnienie_raw]
+  VAL [offset_zero] [mbar]
+  MIN [offset_zero] = [-1 mbar]
+  MAX [offset_zero] = [1 mbar]
+  IF [offset_zero] [>] [1]
+  ELSE ERROR ["Offset zero poza zakresem"]
+  TASK: [Zapisz] [offset_zero] [kalibracja]
+
+GOAL:
+  SET NAME 'Kalibracja punktu span'
+  SET [ciśnienie_ref] = [1000 mbar]
+  TASK: [Włącz] [źródło ciśnienia]
+  WAIT [10 s]
+  SAMPLE [ciśnienie_raw] [START] [100 ms]
+  WAIT [10 s]
+  SAMPLE [ciśnienie_raw] [STOP]
+  CALC [span_measured] = [AVG] [ciśnienie_raw]
+  CALC [span_error] = [DIFF] [span_measured] [ciśnienie_ref]
+  VAL [span_measured] [mbar]
+  VAL [span_error] [mbar]
+  MIN [span_error] = [-10 mbar]
+  MAX [span_error] = [10 mbar]
+  IF [span_error] [>] [10]
+  ELSE ERROR ["Błąd span poza tolerancją"]
+  TASK: [Wyłącz] [źródło ciśnienia]
+  TASK: [Zapisz] [span_measured] [kalibracja]
+
+GOAL:
+  SET NAME 'Weryfikacja kalibracji'
+  SET [ciśnienie_ref] = [500 mbar]
+  TASK: [Włącz] [źródło ciśnienia]
+  WAIT [5 s]
+  VAL [ciśnienie_weryfikacja] [mbar]
+  CALC [weryfikacja_error] = [DIFF] [ciśnienie_weryfikacja] [ciśnienie_ref]
+  MIN [weryfikacja_error] = [-5 mbar]
+  MAX [weryfikacja_error] = [5 mbar]
+  IF [weryfikacja_error] [>] [5]
+  ELSE ERROR ["Weryfikacja kalibracji negatywna"]
+  TASK: [Wyłącz] [źródło ciśnienia]
+  TASK: [Generuj] [certyfikat kalibracji]
+

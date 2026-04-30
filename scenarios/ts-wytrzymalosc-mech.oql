@@ -1,0 +1,38 @@
+VERSION: 4
+GOAL:
+  SET NAME 'Przygotowanie testu wytrzymałości'
+  TASK: [Montuj] [próbka] [uchwyt testowy]
+  TASK: [Kalibruj] [czujnik siły]
+  TASK: [Kalibruj] [czujnik przemieszczenia]
+  SET [siła_max] = [1000 N]
+  SET [cykle] = [100]
+  SET [prędkość] = [10 mm/s]
+
+GOAL:
+  SET NAME 'Test cykliczny'
+  SET [cykl_aktualny] = [0]
+  TASK: [Włącz] [siłownik]
+  SET [pozycja_docelowa] = [50 mm]
+  WAIT [1 s]
+  VAL [siła_aktualna] [N]
+  VAL [pozycja_aktualna] [mm]
+  MIN [siła_aktualna] = [0 N]
+  MAX [siła_aktualna] = [1100 N]
+  IF [siła_aktualna] [>] [1100]
+  ELSE ERROR ["Przekroczono maksymalną siłę"]
+  SET [pozycja_docelowa] = [0 mm]
+  WAIT [1 s]
+  CALC [cykl_aktualny] = [SUM] [cykl_aktualny] [1]
+  IF [cykl_aktualny] [<] [cykle]
+  GOTO [Test cykliczny]
+  ELSE INFO ["Zakończono cykle testowe"]
+
+GOAL:
+  SET NAME 'Ocena wyniku'
+  VAL [cykle_wykonane] [szt]
+  MIN [cykle_wykonane] = [100 szt]
+  IF [cykle_wykonane] [<] [100]
+  ELSE ERROR ["Nie wykonano wymaganej liczby cykli"]
+  TASK: [Wyłącz] [siłownik]
+  TASK: [Generuj] [raport wytrzymałości]
+

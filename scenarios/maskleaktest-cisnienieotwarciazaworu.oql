@@ -1,0 +1,9 @@
+VERSION: 4
+GOAL:
+  SET NAME 'Ciśnienie otwarcia zaworu wydechowego: 4.2 – 6.0 mbar'
+  SET 'Pump' 'set'
+  SET 'Valve' 'NC'
+  WAIT '1000 ms'
+  MIN 'AI01' '4.2 mbar'
+  SAVE 'AI01.min'
+

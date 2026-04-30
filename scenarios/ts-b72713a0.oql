@@ -1,0 +1,16 @@
+VERSION: 4
+SCENARIO: XML Example — Pressure Window
+
+GOAL:
+  SET NAME 'XML Example — Pressure Window'
+TASK: Włącz [zawór BO02]
+PUMP [5 bar]
+TASK: Potwierdź [Potwierdź montaż maski]
+WAIT [7 s]
+MIN [Ciśnienie maski] = [-12.0 mbar]
+MAX [Ciśnienie maski] = [-8.5 mbar]
+VAL [Ciśnienie maski] [mbar]
+IF [Ciśnienie maski] [>=] [-12.0 mbar]
+IF [Ciśnienie maski] [<=] [-8.5 mbar]
+SAVE [Ciśnienie maski]
+

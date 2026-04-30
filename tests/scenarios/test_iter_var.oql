@@ -1,9 +1,11 @@
+VERSION: 4
 SCENARIO: "Test Iter Variable"
 DEVICE_TYPE: "Simulator"
 
-GOAL: Verify ITER increments
+GOAL:
+  SET NAME [Verify ITER increments]
     # Print ITER
-    LOOP 3 TIMES
-        WAIT '100 ms'
+REPEAT 3:
+  WAIT 100 ms
         # ITER is automatically injected by loop handler
-    ENDLOOP
+REPEAT STOP

@@ -60,6 +60,30 @@ def _normalize_bracket_tokens(text: str) -> str:
     return re.sub(r"\[([^\]]+)\]", lambda m: m.group(1).strip(), text)
 
 
+def _bracket_tokens(text: str) -> list[str]:
+    """Return the contents of [...] bracket groups in order; whitespace-stripped."""
+    return [m.group(1).strip() for m in re.finditer(r"\[([^\]]+)\]", text)]
+
+
+def _to_v4_token(name: str) -> str:
+    """Wrap multi-word identifiers with [...] for v4, otherwise return as-is."""
+    name = name.strip()
+    if not name:
+        return name
+    if " " in name:
+        return f"[{name}]"
+    return name
+
+
+def _join_value_unit(value: str) -> str:
+    """Collapse a numeric value + optional space-unit (e.g. '500 ms') into '500ms'."""
+    cleaned = value.strip()
+    match = re.match(r"^(-?\d+(?:[.,]\d+)?)\s+([A-Za-z%/°²³µμ]+.*)$", cleaned)
+    if match:
+        return f"{match.group(1)}{match.group(2).strip()}"
+    return cleaned.replace(" ", "")
+
+
 def _quote(value: str) -> str:
     safe = value.replace("'", "\\'")
     return f"'{safe}'"
@@ -88,35 +112,40 @@ def migrate_v2_to_v4(text: str) -> str:
             continue
 
         if re.match(r"^TASK\s*:\s*", normalized, re.IGNORECASE):
-            task_body = re.sub(r"^TASK\s*:\s*", "", normalized, flags=re.IGNORECASE).strip()
-            tokens = task_body.split()
-            if len(tokens) >= 2 and tokens[0].lower() in {"włącz", "wlacz", "on", "enable"}:
-                out.append(f"  SET {tokens[1]} 1")
-            elif len(tokens) >= 2 and tokens[0].lower() in {"wyłącz", "wylacz", "off", "disable"}:
-                out.append(f"  SET {tokens[1]} 0")
-            elif len(tokens) >= 2 and tokens[0].lower() in {"zapisz", "save"}:
-                label = "-".join(tokens[1:])
+            raw_task = re.sub(r"^TASK\s*:\s*", "", stripped, flags=re.IGNORECASE).strip()
+            bracket = _bracket_tokens(raw_task)
+            tokens = bracket or raw_task.split()
+            verb = tokens[0].lower() if tokens else ""
+            rest = tokens[1:]
+            if verb in {"włącz", "wlacz", "on", "enable"} and rest:
+                out.append(f"  SET {_to_v4_token(rest[0])} 1")
+            elif verb in {"wyłącz", "wylacz", "off", "disable"} and rest:
+                out.append(f"  SET {_to_v4_token(rest[0])} 0")
+            elif verb in {"zapisz", "save"} and rest:
+                label = "-".join(t.replace(" ", "_") for t in rest)
                 out.append(f"  SAVE {label}")
             else:
-                out.append(f"  LOG {_quote('TASK ' + task_body)}")
+                out.append(f"  LOG {_quote('TASK ' + raw_task)}")
             continue
 
         if re.match(r"^WAIT\s+", normalized, re.IGNORECASE):
-            wait_body = re.sub(r"^WAIT\s+", "", normalized, flags=re.IGNORECASE).strip().replace(" ", "")
+            wait_raw = re.sub(r"^WAIT\s+", "", normalized, flags=re.IGNORECASE).strip()
+            wait_body = _join_value_unit(wait_raw)
             out.append(f"  WAIT {wait_body}")
             continue
 
         sample_match = re.match(
-            r"^SAMPLE\s+([^\s]+)\s+(START|STOP)(?:\s+([^\s]+))?$",
+            r"^SAMPLE\s+([^\s]+)\s+(START|STOP)(?:\s+(.+))?$",
             normalized,
             re.IGNORECASE,
         )
         if sample_match:
             sensor = sample_match.group(1)
             direction = sample_match.group(2).upper()
-            interval = sample_match.group(3)
-            if interval:
-                out.append(f"  SAMPLE {sensor} {direction} {interval.replace(' ', '')}")
+            interval_raw = sample_match.group(3)
+            if interval_raw:
+                interval = _join_value_unit(interval_raw)
+                out.append(f"  SAMPLE {sensor} {direction} {interval}")
             else:
                 out.append(f"  SAMPLE {sensor} {direction}")
             continue

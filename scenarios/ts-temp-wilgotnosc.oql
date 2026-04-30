@@ -1,0 +1,25 @@
+VERSION: 4
+GOAL:
+  SET NAME 'Pomiar warunków środowiskowych'
+  TASK: [Włącz] [czujnik temperatury]
+  TASK: [Włącz] [czujnik wilgotności]
+  WAIT [3 s]
+  SAMPLE [temperatura] [START] [500 ms]
+  SAMPLE [wilgotność] [START] [500 ms]
+  WAIT [30 s]
+  SAMPLE [temperatura] [STOP]
+  SAMPLE [wilgotność] [STOP]
+  CALC [temp_avg] = [AVG] [temperatura]
+  CALC [wilg_avg] = [AVG] [wilgotność]
+  VAL [temp_avg] [°C]
+  VAL [wilg_avg] [%RH]
+  MIN [temp_avg] = [15 °C]
+  MAX [temp_avg] = [35 °C]
+  MIN [wilg_avg] = [30 %RH]
+  MAX [wilg_avg] = [70 %RH]
+  IF [temp_avg] [<] [15]
+  ELSE ERROR ["Temperatura poniżej minimum"]
+  IF [temp_avg] [>] [35]
+  ELSE ERROR ["Temperatura powyżej maksimum"]
+  TASK: [Zapisz] [warunki] [protokół]
+

@@ -1,11 +1,13 @@
+VERSION: 4
 SCENARIO: "Test Nested Loops & Scoping"
 DEVICE_TYPE: "Simulator"
 
-GOAL: Verify ITER shadowing
+GOAL:
+  SET NAME [Verify ITER shadowing]
     # Double loop
-    LOOP 2 TIMES
-        WAIT '100 ms'
-        LOOP 3 TIMES
-            WAIT '50 ms'
-        ENDLOOP
-    ENDLOOP
+REPEAT 2:
+  WAIT 100 ms
+REPEAT 3:
+  WAIT 50 ms
+REPEAT STOP
+REPEAT STOP
