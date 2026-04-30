@@ -60,33 +60,108 @@ def _normalize_bracket_tokens(text: str) -> str:
     return re.sub(r"\[([^\]]+)\]", lambda m: m.group(1).strip(), text)
 
 
+def _to_v4_token(text: str) -> str:
+    """Convert bracketed/multi-word identifier to v4: spaces replaced with underscores."""
+    text = _normalize_bracket_tokens(text.strip())
+    if not text:
+        return text
+    return text.replace(" ", "_")
+
+
 def _bracket_tokens(text: str) -> list[str]:
     """Return the contents of [...] bracket groups in order; whitespace-stripped."""
     return [m.group(1).strip() for m in re.finditer(r"\[([^\]]+)\]", text)]
 
 
-def _to_v4_token(name: str) -> str:
-    """Wrap multi-word identifiers with [...] for v4, otherwise return as-is."""
-    name = name.strip()
-    if not name:
-        return name
-    if " " in name:
-        return f"[{name}]"
-    return name
-
-
 def _join_value_unit(value: str) -> str:
     """Collapse a numeric value + optional space-unit (e.g. '500 ms') into '500ms'."""
     cleaned = value.strip()
-    match = re.match(r"^(-?\d+(?:[.,]\d+)?)\s+([A-Za-z%/°²³µμ]+.*)$", cleaned)
+    # Match: number + space + rest (remove spaces from rest)
+    match = re.match(r"^(-?\d+(?:[.,]\d+)?)\s+(.+)$", cleaned)
     if match:
-        return f"{match.group(1)}{match.group(2).strip()}"
-    return cleaned.replace(" ", "")
+        num = match.group(1)
+        unit = match.group(2).strip()
+        # Remove all spaces from unit (e.g., 'l/min' -> 'l/min', but '50 mbar' -> '50mbar')
+        unit = unit.replace(" ", "")
+        return f"{num}{unit}"
+    # If no unit match, return as-is
+    return cleaned
 
 
 def _quote(value: str) -> str:
     safe = value.replace("'", "\\'")
     return f"'{safe}'"
+
+
+def _extract_num_unit(value: str) -> tuple[str, str]:
+    """Split '3.5mbar' into ('3.5', 'mbar'), or '100%' into ('100', '%)."""
+    m = re.match(r"^(-?\d+(?:[.,]\d+)?)(.*)$", value.strip())
+    if m:
+        return m.group(1), m.group(2).strip()
+    return value.strip(), ""
+
+
+def _merge_minmax_to_if(lines: list[str]) -> list[str]:
+    """
+    Merge pairs of:
+      __MINMAX__MIN__sensor__val
+      __MINMAX__MAX__sensor__val
+    into:
+      IF sensor 'min .. max unit'
+        CORRECT 'sensor w zakresie min..max unit'
+        ERROR 'sensor poza zakresem min..max unit'
+    If only MIN or only MAX present, emit a standalone IF.
+    """
+    # Parse marker
+    def parse_marker(line: str):
+        m = re.match(r"^\s*__MINMAX__(MIN|MAX)__([^_].+?)__(.+)$", line)
+        if m:
+            return m.group(1), m.group(2), m.group(3)
+        return None
+
+    result: list[str] = []
+    i = 0
+    while i < len(lines):
+        p = parse_marker(lines[i])
+        if p:
+            kind1, sensor1, val1 = p
+            # Look ahead for matching opposite on next non-empty line
+            j = i + 1
+            while j < len(lines) and lines[j].strip() == "":
+                j += 1
+            p2 = parse_marker(lines[j]) if j < len(lines) else None
+            if p2 and p2[1] == sensor1 and p2[0] != kind1:
+                kind2, _, val2 = p2
+                # Determine MIN/MAX values
+                if kind1 == "MIN":
+                    min_val, max_val = val1, val2
+                else:
+                    min_val, max_val = val2, val1
+                num_min, unit_min = _extract_num_unit(min_val)
+                num_max, unit_max = _extract_num_unit(max_val)
+                unit = unit_min or unit_max
+                range_str = f"{num_min} .. {num_max} {unit}".strip() if unit else f"{num_min} .. {num_max}"
+                result.append(f"  IF '{sensor1}' '{range_str}'")
+                result.append(f"    CORRECT '{sensor1} w zakresie {range_str}'")
+                result.append(f"    ERROR '{sensor1} poza zakresem {range_str}'")
+                i = j + 1
+                continue
+            else:
+                # Only single MIN or MAX - emit simple IF
+                num, unit = _extract_num_unit(val1)
+                if kind1 == "MIN":
+                    bound = f"{num} .. ∞"
+                else:
+                    bound = f"-∞ .. {num}"
+                label = f"{bound} {unit}".strip() if unit else bound
+                result.append(f"  IF '{sensor1}' '{label}'")
+                result.append(f"    CORRECT '{sensor1} w zakresie {label}'")
+                result.append(f"    ERROR '{sensor1} poza zakresem {label}'")
+                i += 1
+                continue
+        result.append(lines[i])
+        i += 1
+    return result
 
 
 def migrate_v2_to_v4(text: str) -> str:
@@ -102,12 +177,13 @@ def migrate_v2_to_v4(text: str) -> str:
             out.append(raw)
             continue
 
+        # Keep brackets for multi-word identifiers, normalize for parsing
         normalized = _normalize_bracket_tokens(stripped)
 
         goal_match = re.match(r"^GOAL\s*:\s*(.+)$", normalized, re.IGNORECASE)
         if goal_match:
             name = goal_match.group(1).strip().strip("\"'")
-            out.append("GOAL:")
+            out.append("GOAL")
             out.append(f"  SET NAME {_quote(name)}")
             continue
 
@@ -140,7 +216,7 @@ def migrate_v2_to_v4(text: str) -> str:
             re.IGNORECASE,
         )
         if sample_match:
-            sensor = sample_match.group(1)
+            sensor = _to_v4_token(sample_match.group(1))
             direction = sample_match.group(2).upper()
             interval_raw = sample_match.group(3)
             if interval_raw:
@@ -150,12 +226,40 @@ def migrate_v2_to_v4(text: str) -> str:
                 out.append(f"  SAMPLE {sensor} {direction}")
             continue
 
-        minmax_match = re.match(r"^(MIN|MAX)\s+([^\s]+)\s*=\s*(.+)$", normalized, re.IGNORECASE)
+        minmax_match = re.match(r"^(MIN|MAX)\s+(.+?)\s*=\s*(.+)$", stripped, re.IGNORECASE)
         if minmax_match:
             kind = minmax_match.group(1).upper()
-            sensor = minmax_match.group(2)
-            value = minmax_match.group(3).strip()
-            out.append(f"  {kind} {sensor} {value}")
+            sensor = _to_v4_token(_normalize_bracket_tokens(minmax_match.group(2)))
+            value = _normalize_bracket_tokens(minmax_match.group(3).strip())
+            value_joined = _join_value_unit(value)
+            out.append(f"  __MINMAX__{kind}__{sensor}__{value_joined}")
+            continue
+
+        # MIN/MAX without = (e.g., MIN przepływ 100 l/min)
+        minmax_simple_match = re.match(r"^(MIN|MAX)\s+([^\s]+)\s+(.+)$", normalized, re.IGNORECASE)
+        if minmax_simple_match:
+            kind = minmax_simple_match.group(1).upper()
+            sensor = _to_v4_token(minmax_simple_match.group(2))
+            value = _normalize_bracket_tokens(minmax_simple_match.group(3).strip())
+            value_joined = _join_value_unit(value)
+            out.append(f"  __MINMAX__{kind}__{sensor}__{value_joined}")
+            continue
+
+        # Handle DELTA with = (e.g., DELTA ubytek = [0.5 l/min])
+        delta_match = re.match(r"^DELTA\s+(.+?)\s*=\s*(.+)$", normalized, re.IGNORECASE)
+        if delta_match:
+            sensor = delta_match.group(1).strip()
+            value = delta_match.group(2).strip()
+            # Remove brackets from value if present
+            value = _normalize_bracket_tokens(value)
+            # Keep brackets for multi-word identifiers
+            sensor_v4 = _to_v4_token(sensor)
+            # Don't join value if it's already quoted
+            if value.startswith("'") or value.startswith('"'):
+                value_joined = value
+            else:
+                value_joined = _join_value_unit(value)
+            out.append(f"  DELTA {sensor_v4} = {value_joined}")
             continue
 
         if re.match(r"^CALC\s+", normalized, re.IGNORECASE):
@@ -167,20 +271,29 @@ def migrate_v2_to_v4(text: str) -> str:
             continue
 
         if_match = re.match(
-            r"^IF\s+([^\s]+)\s+(<|>|<=|>=|=)\s+([^\s]+)$",
-            normalized,
+            r"^IF\s+(\S.*?)\s+(<|>|<=|>=|=)\s+(.+)$",
+            stripped,
             re.IGNORECASE,
         )
         if if_match:
-            sensor = if_match.group(1)
+            sensor = if_match.group(1).strip()
             op = if_match.group(2)
-            value = if_match.group(3)
-            if op in {"<", "<="}:
-                out.append(f"  IF {sensor} -999999 .. {value}")
-            elif op in {">", ">="}:
-                out.append(f"  IF {sensor} {value} .. 999999")
+            value = if_match.group(3).strip()
+            # Keep brackets for multi-word sensors
+            sensor = _to_v4_token(sensor)
+            # Remove brackets from value if present
+            value = _normalize_bracket_tokens(value)
+            # Don't join value if it's already quoted
+            if value.startswith("'") or value.startswith('"'):
+                value_joined = value
             else:
-                out.append(f"  IF {sensor} {value} .. {value}")
+                value_joined = _join_value_unit(value)
+            if op in {"<", "<="}:
+                out.append(f"  IF {sensor} -999999 .. {value_joined}")
+            elif op in {">", ">="}:
+                out.append(f"  IF {sensor} {value_joined} .. 999999")
+            else:
+                out.append(f"  IF {sensor} {value_joined} .. {value_joined}")
             continue
 
         else_error_match = re.match(r'^ELSE\s+ERROR\s+"(.+)"$', normalized, re.IGNORECASE)
@@ -188,10 +301,107 @@ def migrate_v2_to_v4(text: str) -> str:
             out.append(f"  ERROR {_quote(else_error_match.group(1))}")
             continue
 
+        # Handle GOTO (not v4, convert to LOG with warning)
+        goto_match = re.match(r"^GOTO\s+(.+)$", normalized, re.IGNORECASE)
+        if goto_match:
+            target = goto_match.group(1).strip()
+            out.append(f"  LOG 'GOTO {target} - NOT SUPPORTED IN V4'")
+            continue
+
+        # Handle SAVE with bracketed label
+        save_match = re.match(r"^SAVE\s+(.+)$", normalized, re.IGNORECASE)
+        if save_match:
+            label = save_match.group(1).strip()
+            # Remove brackets from label if present
+            label = _normalize_bracket_tokens(label)
+            out.append(f"  SAVE {label}")
+            continue
+
+        # Handle ELSE INFO (not v4, convert to LOG with warning)
+        else_info_match = re.match(r'^ELSE\s+INFO\s+"(.+)"$', normalized, re.IGNORECASE)
+        if else_info_match:
+            message = else_info_match.group(1)
+            out.append(f"  LOG 'ELSE INFO: {_quote(message)} - NOT SUPPORTED IN V4'")
+            continue
+
+        # Handle SET NAME (special case - keep as-is)
+        set_name_match = re.match(r"^SET\s+NAME\s+(.+)$", normalized, re.IGNORECASE)
+        if set_name_match:
+            value = set_name_match.group(1).strip()
+            out.append(f"  SET NAME {value}")
+            continue
+
+        # Handle SET with = (e.g., SET [próg] = 50 mbar)
+        if "=" in stripped and re.match(r"^SET\s+", stripped, re.IGNORECASE):
+            # Split on first = to separate identifier and value
+            parts = stripped.split("=", 1)
+            if len(parts) == 2:
+                identifier = parts[0].replace("SET", "", 1).strip()
+                value = parts[1].strip()
+                # Remove brackets from identifier if present
+                identifier = _normalize_bracket_tokens(identifier)
+                # Remove brackets from value if present
+                value = _normalize_bracket_tokens(value)
+                # Keep brackets for multi-word identifiers
+                identifier_v4 = _to_v4_token(identifier)
+                # Don't join value if it's already quoted
+                if value.startswith("'") or value.startswith('"'):
+                    value_joined = value
+                else:
+                    value_joined = _join_value_unit(value)
+                out.append(f"  SET {identifier_v4} = {value_joined}")
+                continue
+
+        # Handle SET without = (e.g., SET [czujnik LP] 0, SET pompa 1)
+        if re.match(r"^SET\s+", stripped, re.IGNORECASE) and "=" not in stripped:
+            rest = re.sub(r"^SET\s+", "", stripped, flags=re.IGNORECASE)
+            # Detect bracketed identifier: [foo bar] value
+            bm = re.match(r"^\[([^\]]+)\]\s+(.+)$", rest)
+            if bm:
+                identifier = bm.group(1).strip()
+                value = bm.group(2).strip()
+            else:
+                # Plain identifier: word value
+                parts = rest.split(None, 1)
+                if len(parts) == 2:
+                    identifier = parts[0].strip()
+                    value = parts[1].strip()
+                else:
+                    identifier = rest.strip()
+                    value = ""
+            # Convert identifier: spaces → underscores
+            identifier_v4 = identifier.replace(" ", "_")
+            # Remove brackets from value if present
+            value = _normalize_bracket_tokens(value)
+            # Don't join value if it's already quoted
+            if value.startswith("'") or value.startswith('"'):
+                value_joined = value
+            else:
+                value_joined = _join_value_unit(value)
+            if value_joined:
+                out.append(f"  SET {identifier_v4} {value_joined}")
+            else:
+                out.append(f"  SET {identifier_v4}")
+            continue
+
+        # Handle PUMP: PUMP off → SET PUMP 0, PUMP 10l → SET PUMP 10l
+        pump_match = re.match(r"^PUMP\s+\[?([^\]]+)\]?$", normalized, re.IGNORECASE)
+        if pump_match:
+            value = _normalize_bracket_tokens(pump_match.group(1).strip())
+            if value.lower() in {"off", "0"}:
+                out.append("  SET PUMP 0")
+            else:
+                value_joined = _join_value_unit(value)
+                out.append(f"  SET PUMP {value_joined}")
+            continue
+
         if re.match(r"^(SCENARIO|VERSION|GOAL:|CONFIG|MACRO|FUNC:)\b", normalized, re.IGNORECASE):
             out.append(normalized)
         else:
             out.append(f"  {normalized}")
+
+    # Post-process: merge adjacent __MINMAX__ markers into IF range + CORRECT/ERROR
+    out = _merge_minmax_to_if(out)
 
     first_meaningful = next((x for x in out if x.strip() and not x.strip().startswith("#")), None)
     if not first_meaningful or not re.match(r"^VERSION\s*:\s*4\s*$", first_meaningful, re.IGNORECASE):
