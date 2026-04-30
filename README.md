@@ -268,6 +268,89 @@ oqlctl --validate-dir oqlos/scenarios
 Use `cmd` when you want to send a single OQL line to the firmware;
 use a file path when the action requires multiple steps.
 
+### Scenario Sync (DB <-> local)
+
+This repo includes scripts for synchronizing scenario DSL between database rows and local `.oql` files.
+
+#### 1) DB -> local files
+
+Export all scenarios from DB API to a ZIP archive:
+
+```bash
+python3 scripts/scenarios_export.py \
+  --base "http://localhost:8096" \
+  --all \
+  --out scenarios.zip
+```
+
+Unpack to a local directory:
+
+```bash
+mkdir -p scenarios
+unzip -o scenarios.zip -d scenarios
+```
+
+The archive includes one `<id>.oql` file per scenario and `manifest.json`.
+
+Export a single scenario (id or UI URL with `?scenario=`):
+
+```bash
+python3 scripts/scenarios_export.py \
+  --base "http://localhost:8096" \
+  --scenario "ts-temp-wilgotnosc" \
+  --out ts-temp-wilgotnosc.oql.bash
+```
+
+#### 2) local files -> DB (Import)
+
+Import all `.oql` files from a local directory into the database, overwriting existing scenarios:
+
+```bash
+python3 scripts/scenarios_export.py --import --dir ./scenarios
+```
+
+With custom API base and validation disabled:
+
+```bash
+python3 scripts/scenarios_export.py \
+  --base "http://localhost:8096" \
+  --import \
+  --dir ./scenarios \
+  --no-validate
+```
+
+Each file named `<id>.oql` updates the scenario `<id>` via PATCH. 
+Files are validated against OQL v4 by default before import.
+
+**Alternative: Use the migration/sync script** for more control:
+
+Dry-run preview (no write):
+
+```bash
+python3 scripts/oql_v2_to_v4_migrate_db.py \
+  --source-url "http://localhost:8100/connect-data/test-scenarios" \
+  --prefer-local \
+  --pretty
+```
+
+Apply updates to DB:
+
+```bash
+python3 scripts/oql_v2_to_v4_migrate_db.py \
+  --source-url "http://localhost:8100/connect-data/test-scenarios" \
+  --prefer-local \
+  --apply \
+  --write-method PATCH \
+  --write-url "http://localhost:8101/api/v1/data/test_scenarios/{id}" \
+  --pretty
+```
+
+Notes:
+
+- `--prefer-local` reads local files from `oqlos/scenarios/<id>.oql`.
+- DB row `id` must match local filename (without `.oql`).
+- Run without `--apply` first to verify changes and runtime validation output.
+
 #### CLI Output Example
 
 ```

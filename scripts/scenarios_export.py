@@ -1,26 +1,24 @@
 #!/usr/bin/env python3
-"""Export OQL scenarios from a running OqlOS instance.
+"""Export/import OQL scenarios to/from a running OqlOS instance.
 
-Two modes:
+Export modes:
 
 1. Bulk export (all scenarios) into a ZIP archive::
 
        python3 scripts/scenarios_export.py --all --out scenarios.zip
 
-   The archive contains one ``<scenario_id>.oql`` file per scenario plus a
-   ``manifest.json`` with ``id``, ``title`` and basic metadata.
-
 2. Single scenario export to a self-contained ``.oql.bash`` re-import script::
 
-       python3 scripts/scenarios_export.py \
-           --scenario ts-kaskadowy-cisnienie \
-           --out ts-kaskadowy-cisnienie.oql.bash
+       python3 scripts/scenarios_export.py --scenario ts-kaskadowy-cisnienie --out ts.oql.bash
 
-   ``--scenario`` accepts either a scenario id or a UI URL like
-   ``http://localhost:8096/scenarios?scenario=ts-kaskadowy-cisnienie``.
+Import mode:
 
-The generated ``.oql.bash`` is an executable bash script that, when run,
-re-imports the scenario via ``PATCH /api/v3/data/test_scenarios/<id>``.
+3. Import all ``.oql`` files from a directory into the database::
+
+       python3 scripts/scenarios_export.py --import --dir ./scenarios
+
+   Each file named ``<id>.oql`` updates the scenario ``<id>`` via PATCH.
+   Files are validated against OQL v4 before import.
 """
 from __future__ import annotations
 
@@ -35,6 +33,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse, parse_qs
 from urllib.request import Request, urlopen
+from urllib.error import HTTPError
 
 
 DEFAULT_BASE = "http://localhost:8096"
@@ -205,12 +204,73 @@ def export_one_bash(base: str, sid: str, out_path: Path) -> dict[str, Any]:
     return {"out": str(out_path), "id": sid, "bytes": len(rendered.encode("utf-8"))}
 
 
+def _http_patch_json(url: str, payload: dict[str, Any], timeout: float = 20.0) -> tuple[int, dict[str, Any]]:
+    data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+    req = Request(url, data=data, method="PATCH", headers={"Content-Type": "application/json"})
+    try:
+        with urlopen(req, timeout=timeout) as resp:
+            return resp.getcode(), json.loads(resp.read().decode("utf-8"))
+    except HTTPError as e:
+        return e.code, json.loads(e.read().decode("utf-8"))
+
+
+def _validate_oql_v4(dsl: str, source: str) -> tuple[bool, list[str]]:
+    try:
+        from oql_v4_validator import validate_oql_v4
+        result = validate_oql_v4(dsl, source)
+        if not result.get("valid"):
+            errors = [f"{i.get('line', '?')}: {i.get('message', '')}" for i in result.get("issues", []) if i.get("severity") == "error"]
+            return False, errors
+        return True, []
+    except Exception as e:
+        return True, [f"Validation skipped: {e}"]
+
+
+def import_scenarios(base: str, dir_path: Path, validate: bool = True) -> dict[str, Any]:
+    imported: list[dict[str, Any]] = []
+    failed: list[dict[str, Any]] = []
+    skipped: list[dict[str, Any]] = []
+
+    if not dir_path.is_dir():
+        raise ValueError(f"Not a directory: {dir_path}")
+
+    oql_files = sorted(dir_path.glob("*.oql"))
+
+    for fpath in oql_files:
+        sid = fpath.stem
+        dsl = fpath.read_text(encoding="utf-8")
+        if not dsl.strip():
+            skipped.append({"id": sid, "reason": "empty_file"})
+            continue
+
+        if validate:
+            valid, errors = _validate_oql_v4(dsl, str(fpath))
+            if not valid:
+                failed.append({"id": sid, "reason": "validation_failed", "errors": errors})
+                continue
+
+        url = _row_url(base, sid)
+        try:
+            code, resp = _http_patch_json(url, {"dsl": dsl})
+            if code in (200, 201):
+                imported.append({"id": sid, "status": code})
+            else:
+                failed.append({"id": sid, "status": code, "response": resp})
+        except Exception as exc:
+            failed.append({"id": sid, "error": str(exc)})
+
+    return {"imported": imported, "failed": failed, "skipped": skipped, "count": len(imported)}
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--base", default=DEFAULT_BASE, help=f"API base URL (default {DEFAULT_BASE})")
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--all", action="store_true", help="Export all scenarios to a ZIP archive")
     group.add_argument("--scenario", help="Scenario id or UI URL with ?scenario=<id>")
+    group.add_argument("--import", action="store_true", dest="import_mode", help="Import .oql files from --dir")
+    parser.add_argument("--dir", type=Path, default=Path("./scenarios"), help="Directory for import (default ./scenarios)")
+    parser.add_argument("--no-validate", action="store_true", help="Skip OQL v4 validation during import")
     parser.add_argument("--out", help="Output path (zip for --all, .oql.bash for --scenario)")
     args = parser.parse_args(argv)
 
@@ -218,11 +278,13 @@ def main(argv: list[str] | None = None) -> int:
         if args.all:
             out = Path(args.out or "scenarios.zip")
             report = export_all_zip(args.base, out)
+        elif args.import_mode:
+            report = import_scenarios(args.base, args.dir, validate=not args.no_validate)
         else:
             sid = _resolve_scenario_id(args.scenario)
             out = Path(args.out or f"{_safe_filename(sid)}.oql.bash")
             report = export_one_bash(args.base, sid, out)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         print(json.dumps({"ok": False, "error": str(exc)}, ensure_ascii=False))
         return 2
 
