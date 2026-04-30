@@ -3,17 +3,17 @@
 
 ## AI Cost Tracking
 
-![PyPI](https://img.shields.io/badge/pypi-costs-blue) ![Version](https://img.shields.io/badge/version-0.1.3-blue) ![Python](https://img.shields.io/badge/python-3.9+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
-![AI Cost](https://img.shields.io/badge/AI%20Cost-$3.90-orange) ![Human Time](https://img.shields.io/badge/Human%20Time-22.1h-blue) ![Model](https://img.shields.io/badge/Model-openrouter%2Fqwen%2Fqwen3--coder--next-lightgrey)
+![PyPI](https://img.shields.io/badge/pypi-costs-blue) ![Version](https://img.shields.io/badge/version-0.1.4-blue) ![Python](https://img.shields.io/badge/python-3.9+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
+![AI Cost](https://img.shields.io/badge/AI%20Cost-$4.05-orange) ![Human Time](https://img.shields.io/badge/Human%20Time-22.1h-blue) ![Model](https://img.shields.io/badge/Model-openrouter%2Fqwen%2Fqwen3--coder--next-lightgrey)
 
-- 🤖 **LLM usage:** $3.9000 (26 commits)
-- 👤 **Human dev:** ~$2212 (22.1h @ $100/h, 30min dedup)
+- 🤖 **LLM usage:** $4.0500 (27 commits)
+- 👤 **Human dev:** ~$2213 (22.1h @ $100/h, 30min dedup)
 
 Generated on 2026-04-30 using [openrouter/qwen/qwen3-coder-next](https://openrouter.ai/qwen/qwen3-coder-next)
 
 ---
 
-![Version](https://img.shields.io/badge/version-0.1.3-blue) ![Python](https://img.shields.io/badge/python-3.10+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
+![Version](https://img.shields.io/badge/version-0.1.4-blue) ![Python](https://img.shields.io/badge/python-3.10+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
 
 
 OqlOS is the core runtime for executing OQL (Operation Query Language) hardware testing scenarios. It provides the execution engine, hardware abstraction layer, and API server for running automated hardware tests.
@@ -27,6 +27,38 @@ pip install -e ".[dev]"
 # Basic installation
 pip install -e .
 ```
+
+### CLI Quick Check (step by step)
+
+If you see:
+
+```bash
+oqlos: command not found
+```
+
+that is expected — `oqlos` is the package name, not the CLI command.
+
+Use this sequence:
+
+```bash
+# 1) Activate your virtualenv
+source .venv/bin/activate
+
+# 2) Install the project in editable mode (creates console scripts)
+python -m pip install -e .
+
+# 3) Check available CLI help
+oqlctl --help
+
+# 4) If PATH still does not see scripts, use module form directly
+python -m oqlos.tools.cql_cli.main --help
+```
+
+Main commands provided by this project:
+
+- `oqlctl` — scenario CLI (validate / dry-run / execute)
+- `oqlos-server` — API server
+- `oqlos-events` — event server
 
 ## Requirements
 
