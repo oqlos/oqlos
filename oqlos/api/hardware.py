@@ -12,13 +12,12 @@ import pathlib
 from typing import Any
 
 from fastapi import APIRouter
-from oqlos.hardware.plugin_gateway import PluginHardwareGateway
 from oqlos.hardware.discovery import list_serial_ports, probe_waveshare_modbus
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/hardware", tags=["hardware"])
 
-_gateway: PluginHardwareGateway | None = None
+_gateway: Any | None = None
 
 # Static hardware registry — describes adapters available in the system
 _HARDWARE_REGISTRY: list[dict[str, Any]] = [

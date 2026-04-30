@@ -18,14 +18,21 @@ from oqlos.hardware.plugins import (
     LungPlugin,
 )
 
-# Register built-in plugins
-PluginRegistry.register(PiadcPlugin)
-PluginRegistry.register(MotorPlugin)
-PluginRegistry.register(ModbusPlugin)
-PluginRegistry.register(LungPlugin)
+_PLUGINS_INITIALIZED = False
 
-# Discover third-party plugins from entry points
-PluginRegistry.discover_entry_point_plugins()
+
+def ensure_plugins_initialized() -> None:
+    """Register and discover plugins once per process."""
+    global _PLUGINS_INITIALIZED
+    if _PLUGINS_INITIALIZED:
+        return
+
+    PluginRegistry.register(PiadcPlugin)
+    PluginRegistry.register(MotorPlugin)
+    PluginRegistry.register(ModbusPlugin)
+    PluginRegistry.register(LungPlugin)
+    PluginRegistry.discover_entry_point_plugins()
+    _PLUGINS_INITIALIZED = True
 
 router = APIRouter(prefix="/api/v1/plugins", tags=["plugins"])
 

@@ -72,11 +72,14 @@ Main commands provided by this project:
 
 ```bash
 # Start with real hardware
-oqlos-server --port 8200
+HARDWARE_MODE=real oqlos-server --host 0.0.0.0 --port 8200
 
 # Run with mock hardware (development/testing)
 OQLOS_HARDWARE_MODE=mock oqlos-server --port 8200
 ```
+
+`oqlos-server` supports `--host` and `--port` flags.  Environment-based
+defaults are still respected when flags are omitted.
 
 ### Run a Scenario (OQL v3 — flat syntax)
 
@@ -432,12 +435,20 @@ basic open/close actuation.
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `OQLOS_HARDWARE_MODE` | `mock` | `mock` or `real` |
-| `MOTOR_URL` | `http://localhost:49055` | DRI0050 motor service |
-| `LUNG_MOTOR_URL` | `http://localhost:8205` | Tic T249 lung service |
-| `PIADC_URL` | `http://localhost:8080` | piADC sensor service |
-| `MODBUS_SERIAL_PORT` | `/dev/ttyACM1` | Modbus RTU serial port |
-| `MODBUS_BAUD_RATE` | `19200` | Modbus baud rate |
-| `PUMP_FLOW_FULL_SCALE_LPM` | `10` | Flow rate that maps to 100% PWM for `pompa 1` |
+| `OQLOS_MOTOR_URL` | `http://localhost:49055` | DRI0050 motor service |
+| `OQLOS_LUNG_MOTOR_URL` | `http://localhost:8205` | Tic T249 lung service |
+| `OQLOS_PIADC_URL` | `http://localhost:8080` | piADC sensor service |
+| `OQLOS_MODBUS_SERIAL_PORT` | `/dev/ttyACM1` | Modbus RTU serial port |
+| `OQLOS_MODBUS_BAUD` | `19200` | Modbus baud rate |
+| `OQLOS_PUMP_FLOW_FULL_SCALE_LPM` | `10` | Flow rate that maps to 100% PWM for `pompa 1` |
+
+Notes:
+
+- Both prefixed and legacy env names are accepted (for easier rollout):
+  `OQLOS_HARDWARE_MODE` or `HARDWARE_MODE`, `OQLOS_FIRMWARE_PORT` or
+  `FIRMWARE_PORT`, etc.
+- Prefer the `OQLOS_*` namespace in new deployments to avoid collisions
+  with other services.
 
 ## Docker Deployment
 

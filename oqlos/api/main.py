@@ -2,10 +2,12 @@
 Test Simulator Backend Service - Refactored
 Port: 8202 (Firmware Simulator)
 """
+import argparse
+from contextlib import asynccontextmanager
 import json
 import logging
-import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
@@ -15,7 +17,6 @@ import uvicorn
 # Import refactored components
 from oqlos.core.state import StateManager
 from oqlos.core.executor import ScenarioOrchestrator
-from oqlos.hardware.plugin_gateway import PluginHardwareGateway
 from oqlos.api import (
     scenarios_router,
     peripherals_router,
@@ -27,11 +28,15 @@ from oqlos.api import (
 )
 from oqlos.api.editor import router as editor_router
 from oqlos.api import plugins as plugins_router
+from oqlos.api.plugins import ensure_plugins_initialized
 from oqlos.api.utils.execution_ctrl import set_dependencies as set_shared_dependencies
 from oqlos.api.hardware import set_hardware_gateway
 from oqlos.utils import load_sample_scenarios
 from oqlos.config import FIRMWARE_PORT, SERVICE_NAME, SERVICE_VERSION
 from oqlos.shared._endpoint_helpers import serve_html_page
+
+if TYPE_CHECKING:
+    from oqlos.hardware.plugin_gateway import PluginHardwareGateway
 
 logging.basicConfig(level=logging.INFO)
 try:
@@ -51,8 +56,18 @@ except ImportError:
 
 STATIC_DIR = Path(__file__).parent
 
+@asynccontextmanager
+async def _app_lifespan(_: FastAPI):
+    _initialize_runtime_dependencies()
+    yield
+
+
 # Create FastAPI app
-app = FastAPI(title="Test Simulator Backend", version=SERVICE_VERSION)
+app = FastAPI(
+    title="Test Simulator Backend",
+    version=SERVICE_VERSION,
+    lifespan=_app_lifespan,
+)
 
 # CORS configuration
 app.add_middleware(
@@ -63,14 +78,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize services
-hardware = PluginHardwareGateway()
-state_manager = StateManager()
-orchestrator = ScenarioOrchestrator(state_manager, hardware)
-
-# Set dependencies for API modules — single shared injection point
-set_shared_dependencies(state_manager, orchestrator)
-set_hardware_gateway(hardware)
+# Runtime dependencies are initialized lazily on app startup.
+hardware: "PluginHardwareGateway | None" = None
+state_manager: StateManager | None = None
+orchestrator: ScenarioOrchestrator | None = None
 
 # Include API routers
 app.include_router(scenarios_router)
@@ -92,8 +103,25 @@ app.include_router(logs_router, prefix="/firmware")
 app.include_router(version_router, prefix="/firmware")
 app.include_router(hardware_router, prefix="/firmware")
 
-# Load sample data
-load_sample_scenarios(state_manager)
+def _initialize_runtime_dependencies() -> None:
+    """Initialize runtime dependency graph once per process."""
+    global hardware, state_manager, orchestrator
+
+    if hardware is not None and state_manager is not None and orchestrator is not None:
+        return
+
+    logger.info("Initializing OqlOS runtime dependencies")
+    ensure_plugins_initialized()
+
+    from oqlos.hardware.plugin_gateway import PluginHardwareGateway
+
+    hardware = PluginHardwareGateway()
+    state_manager = StateManager()
+    orchestrator = ScenarioOrchestrator(state_manager, hardware)
+
+    set_shared_dependencies(state_manager, orchestrator)
+    set_hardware_gateway(hardware)
+    load_sample_scenarios(state_manager)
 
 # ============= Basic Endpoints =============
 
@@ -140,8 +168,13 @@ async def status():
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
+    if state_manager is None:
+        await websocket.close(code=1011)
+        return
+
+    manager = state_manager
     await websocket.accept()
-    state_manager.websocket_connections.append(websocket)
+    manager.websocket_connections.append(websocket)
     
     try:
         while True:
@@ -158,11 +191,32 @@ async def websocket_endpoint(websocket: WebSocket):
                 await websocket.send_json({'error': 'Invalid JSON'})
     
     except WebSocketDisconnect:
-        state_manager.websocket_connections.remove(websocket)
+        if websocket in manager.websocket_connections:
+            manager.websocket_connections.remove(websocket)
+
+def _parse_server_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        prog="oqlos-server",
+        description="Run OqlOS API/runtime server",
+    )
+    parser.add_argument(
+        "--host",
+        default="0.0.0.0",
+        help="Bind host (default: 0.0.0.0)",
+    )
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=FIRMWARE_PORT,
+        help=f"Bind port (default from env/config: {FIRMWARE_PORT})",
+    )
+    return parser.parse_args()
+
 
 def run():
     """Entry point for ``oqlos-server`` console script."""
-    uvicorn.run(app, host="0.0.0.0", port=FIRMWARE_PORT)
+    args = _parse_server_args()
+    uvicorn.run(app, host=args.host, port=args.port)
 
 
 if __name__ == "__main__":
