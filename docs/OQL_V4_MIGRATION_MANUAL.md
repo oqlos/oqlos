@@ -130,3 +130,76 @@ LLM powinien produkować:
   2. test runtime (`CqlInterpreter`, `dry-run`).
 - Jeśli `valid=false`, LLM nie powinien kończyć procesu bez poprawek.
 - Przy pracy masowej: walidować każdy plik osobno i raportować listę błędów.
+
+## 6) V2 -> V4 (legacy) — przykład `ts-temp-wilgotnosc`
+
+### Wejście (legacy v2)
+
+```oql
+GOAL: Pomiar warunków środowiskowych
+  TASK: [Włącz] [czujnik temperatury]
+  TASK: [Włącz] [czujnik wilgotności]
+  WAIT [3 s]
+  SAMPLE [temperatura] [START] [500 ms]
+  SAMPLE [wilgotność] [START] [500 ms]
+  WAIT [30 s]
+  SAMPLE [temperatura] [STOP]
+  SAMPLE [wilgotność] [STOP]
+  CALC [temp_avg] = [AVG] [temperatura]
+  CALC [wilg_avg] = [AVG] [wilgotność]
+  VAL [temp_avg] [°C]
+  VAL [wilg_avg] [%RH]
+  MIN [temp_avg] = [15 °C]
+  MAX [temp_avg] = [35 °C]
+  MIN [wilg_avg] = [30 %RH]
+  MAX [wilg_avg] = [70 %RH]
+  IF [temp_avg] [<] [15]
+  ELSE ERROR ["Temperatura poniżej minimum"]
+  IF [temp_avg] [>] [35]
+  ELSE ERROR ["Temperatura powyżej maksimum"]
+  TASK: [Zapisz] [warunki] [protokół]
+```
+
+### Jak walidować legacy v2
+
+```bash
+python3 scripts/oql_v2_validator.py \
+  --url "http://localhost:8096/scenarios?scenario=ts-temp-wilgotnosc" \
+  --pretty
+```
+
+Schemat raportu v2:
+- `docs/oql_v2_llm_validator.schema.json`
+
+### Jak migrować i aktualizować rekordy DB do v4
+
+Najpierw uruchom podgląd (`dry-run`, bez zapisu):
+
+```bash
+python3 scripts/oql_v2_to_v4_migrate_db.py \
+  --source-url "http://localhost:8100/connect-data/test-scenarios" \
+  --scenario "ts-temp-wilgotnosc" \
+  --prefer-local \
+  --pretty
+```
+
+Następnie wykonaj zapis do backendu danych (przykładowy endpoint):
+
+```bash
+python3 scripts/oql_v2_to_v4_migrate_db.py \
+  --source-url "http://localhost:8100/connect-data/test-scenarios" \
+  --scenario "ts-temp-wilgotnosc" \
+  --prefer-local \
+  --apply \
+  --write-method PATCH \
+  --write-url "http://localhost:8101/api/v1/data/test_scenarios/{id}" \
+  --pretty
+```
+
+Po migracji uruchom walidację v4:
+
+```bash
+python3 scripts/oql_v4_validator.py \
+  --url "http://localhost:8096/scenarios?scenario=ts-temp-wilgotnosc" \
+  --pretty
+```

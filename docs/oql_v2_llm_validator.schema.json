@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://oqlos.local/schemas/oql_v2_llm_validator.schema.json",
+  "title": "OQL v2 Legacy Validation Report",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "validator",
+    "source",
+    "valid",
+    "summary",
+    "issues",
+    "migration_rules"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "validator": {
+      "type": "string",
+      "const": "oql_v2_validator"
+    },
+    "source": {
+      "type": "string"
+    },
+    "valid": {
+      "type": "boolean"
+    },
+    "summary": {
+      "type": "object",
+      "required": ["errors", "warnings", "issues_total"],
+      "properties": {
+        "errors": { "type": "integer", "minimum": 0 },
+        "warnings": { "type": "integer", "minimum": 0 },
+        "issues_total": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["rule", "severity", "message"],
+        "properties": {
+          "rule": {
+            "type": "string",
+            "enum": [
+              "already_v4",
+              "goal_inline_name_legacy",
+              "task_legacy",
+              "calc_legacy",
+              "val_legacy",
+              "if_cmp_legacy",
+              "else_error_legacy",
+              "bracket_tokens_legacy",
+              "non_oql_payload"
+            ]
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["error", "warning"]
+          },
+          "message": { "type": "string" },
+          "line": {
+            "type": ["integer", "null"],
+            "minimum": 1
+          },
+          "suggestion": {
+            "type": ["string", "null"]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "migration_rules": {
+      "type": "object",
+      "required": ["target_version", "goal_format", "task_format", "condition_format"],
+      "properties": {
+        "target_version": { "type": "string" },
+        "goal_format": { "type": "string" },
+        "task_format": { "type": "string" },
+        "condition_format": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
