@@ -354,6 +354,38 @@ GOAL: Check
 # ═══════════════════════════════════════════════════════════════════════════════
 
 class TestFirmwareAdapterUnit:
+    def _firmware_with_post_response(self, payload: dict):
+        class Response:
+            def __init__(self, data: dict):
+                self._data = data
+
+            def json(self):
+                return self._data
+
+            def raise_for_status(self):
+                return None
+
+        class Client:
+            def __init__(self, data: dict):
+                self._data = data
+                self.post_calls = []
+                self.put_calls = []
+
+            def post(self, url, params=None, json=None):
+                self.post_calls.append((url, params, json))
+                return Response(self._data)
+
+            def put(self, url, json=None):
+                self.put_calls.append((url, json))
+                return Response({"ok": True})
+
+        fw = FirmwareAdapter.__new__(FirmwareAdapter)
+        fw.base_url = "http://localhost:8202"
+        fw.timeout = 5.0
+        fw._client = Client(payload)
+        fw.lung_motor_url = "http://localhost:8205"
+        return fw, fw._client
+
     def test_peripheral_map_completeness(self):
         assert _PERIPHERAL_MAP["pump"] == "pump-main"
         assert _PERIPHERAL_MAP["valve"] == "valve-1"
@@ -390,6 +422,38 @@ class TestFirmwareAdapterUnit:
         result = fw.dispatch_action("Operator", "confirm", "Kontrola wizualna")
         assert result["ok"] is True
         assert "confirmed" in result["detail"]
+
+    def test_set_peripheral_pump_rejects_nested_failed_response(self):
+        fw, client = self._firmware_with_post_response(
+            {
+                "power_pct": 1.0,
+                "ok": {
+                    "success": False,
+                    "error": "Value 1.0 not in allowed raster",
+                },
+            }
+        )
+
+        with pytest.raises(RuntimeError, match="allowed raster"):
+            fw.set_peripheral("pompa-1", 1)
+
+        assert client.put_calls == []
+
+    def test_dispatch_pump_reports_hardware_rejection(self):
+        fw, _client = self._firmware_with_post_response(
+            {
+                "power_pct": 1.0,
+                "ok": {
+                    "success": False,
+                    "error": "Value 1.0 not in allowed raster",
+                },
+            }
+        )
+
+        result = fw.dispatch_action("Pump", "set", "1")
+
+        assert result["ok"] is False
+        assert "allowed raster" in result["detail"]
 
     def test_dispatch_lung_falls_back_to_direct_service_on_404(self, monkeypatch):
         import httpx

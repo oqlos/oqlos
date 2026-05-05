@@ -151,6 +151,31 @@ class FirmwareAdapter:
         key = target.lower().replace(" ", "-")
         return _PERIPHERAL_MAP.get(key, key)
 
+    @staticmethod
+    def _raise_if_rejected(data: Any, context: str) -> None:
+        """Raise when a hardware endpoint reports logical failure in JSON."""
+        if not isinstance(data, dict):
+            return
+
+        message: Any = None
+        ok = data.get("ok")
+        if isinstance(ok, dict):
+            success = ok.get("success")
+            if success is False:
+                message = ok.get("error") or ok.get("message") or ok.get("detail")
+        elif ok is False:
+            message = data.get("error") or data.get("message") or data.get("detail")
+
+        if data.get("success") is False:
+            message = data.get("error") or data.get("message") or data.get("detail") or message
+
+        status = data.get("status")
+        if isinstance(status, str) and status.lower() in {"error", "failed", "failure"}:
+            message = data.get("error") or data.get("message") or data.get("detail") or message
+
+        if message:
+            raise RuntimeError(f"{context} rejected: {message}")
+
     def set_peripheral(self, target: str, value: Any) -> dict:
         """Set peripheral value via firmware API.
 
@@ -181,12 +206,14 @@ class FirmwareAdapter:
                 params={"power_pct": power},
             )
             r.raise_for_status()
+            data = r.json()
+            self._raise_if_rejected(data, f"{target} ({pid})")
             # Also update peripheral state for UI consistency
             self._get_client().put(
                 f"/api/v1/peripherals/{pid}",
                 json={"currentValue": value, "targetValue": value},
             )
-            return r.json()
+            return data
 
         if pid.startswith("valve"):
             bool_value = bool(value) if not isinstance(value, bool) else value
@@ -197,12 +224,14 @@ class FirmwareAdapter:
                 params={"value": str(bool_value).lower()},
             )
             r.raise_for_status()
+            data = r.json()
+            self._raise_if_rejected(data, f"{target} ({pid})")
             # Also update peripheral state for UI consistency
             self._get_client().put(
                 f"/api/v1/peripherals/{pid}",
                 json={"currentValue": value, "targetValue": value},
             )
-            return r.json()
+            return data
 
         if pid.startswith("lung"):
             # Lung motor: value > 0 starts reciprocating, 0 stops
@@ -217,7 +246,9 @@ class FirmwareAdapter:
                         params=payload,
                     )
                     r.raise_for_status()
-                    return r.json()
+                    data = r.json()
+                    self._raise_if_rejected(data, f"{target} ({pid})")
+                    return data
                 except httpx.HTTPStatusError as exc:
                     if exc.response.status_code != 404:
                         raise
@@ -225,14 +256,18 @@ class FirmwareAdapter:
                 try:
                     r = direct.post("/api/reciprocate", json=payload)
                     r.raise_for_status()
-                    return r.json()
+                    data = r.json()
+                    self._raise_if_rejected(data, f"{target} ({pid})")
+                    return data
                 finally:
                     direct.close()
 
             try:
                 r = self._get_client().post("/api/v1/hardware/lung/stop")
                 r.raise_for_status()
-                return r.json()
+                data = r.json()
+                self._raise_if_rejected(data, f"{target} ({pid})")
+                return data
             except httpx.HTTPStatusError as exc:
                 if exc.response.status_code != 404:
                     raise
@@ -241,7 +276,9 @@ class FirmwareAdapter:
             try:
                 r = direct.post("/api/stop")
                 r.raise_for_status()
-                return r.json()
+                data = r.json()
+                self._raise_if_rejected(data, f"{target} ({pid})")
+                return data
             finally:
                 direct.close()
 
@@ -251,7 +288,9 @@ class FirmwareAdapter:
             json={"currentValue": value, "targetValue": value},
         )
         r.raise_for_status()
-        return r.json()
+        data = r.json()
+        self._raise_if_rejected(data, f"{target} ({pid})")
+        return data
 
     def pump_off(self, target: str = "pump") -> dict:
         return self.set_peripheral(target, 0)

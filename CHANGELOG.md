@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.8] - 2026-05-05
+
+### Docs
+- Update README.md
+
+### Test
+- Update tests/test_core.py
+
+### Other
+- Update oqlos/hardware/firmware_adapter.py
+
 ## [0.1.7] - 2026-05-05
 
 ### Docs
