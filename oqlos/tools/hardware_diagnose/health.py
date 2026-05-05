@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from .discovery import list_usb_serial_devices, list_i2c_buses, detect_chips_on_i2c
 
+_OK_HEALTH_STATUSES = {"ok", "connected", "healthy", "ready"}
+
 
 def _request_firmware_json(url: str, endpoint: str, *, timeout: float) -> dict:
     """Fetch JSON from a firmware endpoint with a consistent error contract."""
@@ -26,6 +28,32 @@ def check_firmware_identify(url: str = "http://localhost:8202") -> dict:
     return _request_firmware_json(url, "/api/v1/hardware/identify", timeout=20.0)
 
 
+def _is_health_ok(value) -> bool:
+    if value in ["ok", "connected", True]:
+        return True
+    if isinstance(value, dict):
+        status = value.get("status")
+        if isinstance(status, str):
+            return status.lower() in _OK_HEALTH_STATUSES
+        return value.get("ok") is True or value.get("success") is True
+    return False
+
+
+def _format_health_value(value) -> str:
+    if not isinstance(value, dict):
+        return str(value)
+
+    status = value.get("status")
+    message = value.get("message") or value.get("error") or value.get("reason")
+    if status and message:
+        return f"{status}: {message}"
+    if status:
+        return str(status)
+    if message:
+        return str(message)
+    return str(value)
+
+
 def cmd_health(url: str = "http://localhost:8202") -> str:
     """Health command — check firmware health, return formatted string."""
     health = check_firmware_health(url)
@@ -38,8 +66,8 @@ def cmd_health(url: str = "http://localhost:8202") -> str:
         output.append(f"Mode: {mode.upper()}")
         for key, val in health.items():
             if key != "mode":
-                status = "✅" if val in ["ok", "connected", True] else "⚠️"
-                output.append(f"  {status} {key}: {val}")
+                status = "✅" if _is_health_ok(val) else "⚠️"
+                output.append(f"  {status} {key}: {_format_health_value(val)}")
 
     return "\n".join(output)
 

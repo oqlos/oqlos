@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import pytest
+import asyncio
 
 from oqlos.hardware.plugins.base import PluginConfig
 from oqlos.hardware.plugins.motor import MotorPlugin
@@ -21,8 +21,7 @@ class _Client:
         return _Response()
 
 
-@pytest.mark.asyncio
-async def test_motor_plugin_http_stop_uses_global_time_import():
+def test_motor_plugin_http_stop_uses_global_time_import():
     plugin = MotorPlugin(
         PluginConfig(
             plugin_id="motor-dri0050",
@@ -33,7 +32,7 @@ async def test_motor_plugin_http_stop_uses_global_time_import():
     )
     plugin._client = _Client()
 
-    result = await plugin.execute_command("stop", {})
+    result = asyncio.run(plugin.execute_command("stop", {}))
 
     assert result["success"] is True
     assert result["data"]["stopped"] is True
