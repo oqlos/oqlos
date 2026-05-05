@@ -160,6 +160,27 @@ class LungPlugin(HardwarePlugin):
             return None
         return data if isinstance(data, dict) else None
 
+    @staticmethod
+    def _runtime_block_reason(status: dict[str, Any] | None) -> str | None:
+        """Return a user-facing reason when runtime state indicates no motion is possible."""
+        if not isinstance(status, dict):
+            return None
+
+        if status.get("connected") is False:
+            return "Lung motor is not connected"
+        if status.get("ready") is False:
+            return "Lung motor is not ready"
+        if status.get("motor_driver_error"):
+            return "Motor driver error is active"
+        if status.get("low_vin"):
+            return "Motor supply voltage is too low"
+
+        # Safety stop state observed in the field: both limits active => Tic blocks movement.
+        if status.get("forward_limit_active") and status.get("reverse_limit_active"):
+            return "Both limit switches are active; movement is blocked"
+
+        return None
+
     # ── Command Handlers (refactored from monolithic execute_command) ──
 
     async def _handle_reciprocate_http(self, params: dict[str, Any]) -> dict[str, Any]:
@@ -168,6 +189,16 @@ class LungPlugin(HardwarePlugin):
         speed = params.get("speed", 100000)
         cycles = params.get("cycles", 5)
         pause = params.get("pause", 0.5)
+
+        runtime = await self._runtime_status()
+        blocked_reason = self._runtime_block_reason(runtime)
+        if blocked_reason:
+            return {
+                "success": False,
+                "error": blocked_reason,
+                "data": {"runtime_status": runtime},
+            }
+
         resp = await self._client.post(
             f"{self._base_url}/api/reciprocate",
             json={"steps": steps, "speed": speed, "cycles": cycles, "pause": pause},

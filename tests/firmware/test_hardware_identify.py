@@ -85,3 +85,34 @@ def test_hardware_identify_includes_diagnostics(monkeypatch):
     assert result["diagnostics"]["health"]["motor"] == "ok"
     assert result["diagnostics"]["serial_ports"][0]["device"] == "/dev/ttyUSB0"
     assert any(adapter["id"] == "motor-dri0050" for adapter in result["adapters"])
+
+
+class _ModbusTimeoutGateway:
+    async def health(self) -> dict[str, object]:
+        return {
+            "mode": "real",
+            "piadc": {"status": "connected", "compatible": True},
+            "motor-tic249": {"status": "connected", "compatible": True},
+            "motor-dri0050": {"status": "connected", "compatible": True},
+            "modbus-io": {
+                "status": "error",
+                "message": "Modbus RTU read_coils timed out after 2.0s",
+                "compatible": False,
+            },
+        }
+
+
+def test_hardware_identify_reports_modbus_timeout_as_adapter_only(monkeypatch):
+    monkeypatch.setattr(hw, "_gateway", _ModbusTimeoutGateway())
+
+    def _unexpected_live_probe(*_args):
+        raise AssertionError("modbus timeout should use plugin health, not a second serial probe")
+
+    monkeypatch.setattr(hw, "_probe_all_hardware", _unexpected_live_probe)
+    monkeypatch.setattr(hw, "_collect_hardware_diagnostics", lambda: {})
+
+    result = asyncio.run(hw.hardware_identify())
+    modbus = next(adapter for adapter in result["adapters"] if adapter["id"] == "modbus-io")
+
+    assert modbus["status"] == "adapter-only"
+    assert "did not answer" in modbus["probe"]["diagnosis"]

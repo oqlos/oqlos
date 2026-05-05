@@ -149,18 +149,20 @@ class MotorPlugin(HardwarePlugin):
     # ── Command Handlers (refactored from monolithic execute_command) ──
 
     def _validate_power_pct(self, power_pct: float) -> tuple[bool, float, str | None]:
-        """Validate and convert power percentage using peripheral config."""
-        peripheral = self.config.get_peripheral("speed")
-        if peripheral:
-            is_valid, error_msg = peripheral.validate_value(power_pct)
-            if not is_valid:
-                return False, power_pct, error_msg
-            return True, peripheral.convert_value(power_pct), None
-        else:
-            # Fallback validation
-            if not 0 <= power_pct <= 100:
-                return False, power_pct, "power_pct must be between 0 and 100"
-            return True, power_pct, None
+        """Validate pump power percentage.
+
+        The HTTP DRI0050 service accepts ``power_pct`` directly as 0-100%.
+        Peripheral conversions such as l/min -> duty belong in higher-level
+        scenario mapping, not in this low-level percent command.
+        """
+        try:
+            normalized = float(power_pct)
+        except (TypeError, ValueError):
+            return False, 0.0, "power_pct must be a number"
+
+        if not 0 <= normalized <= 100:
+            return False, normalized, "power_pct must be between 0 and 100"
+        return True, normalized, None
 
     async def _handle_set_speed_http(self, power_pct: float, start_time: float) -> dict[str, Any]:
         """Handle set_speed command via HTTP."""

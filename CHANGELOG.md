@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.11] - 2026-05-05
+
+### Docs
+- Update README.md
+
+### Test
+- Update tests/firmware/test_hardware_identify.py
+
+### Other
+- Update oqlos.yaml
+- Update oqlos/api/hardware.py
+- Update oqlos/hardware/plugin_gateway.py
+- Update oqlos/hardware/plugins/lung.py
+- Update oqlos/hardware/plugins/motor.py
+- Update oqlos/hardware/plugins/piadc.py
+- Update uv.lock
+
 ## [0.1.10] - 2026-05-05
 
 ### Docs

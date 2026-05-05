@@ -15,6 +15,40 @@ from ._shared import http_health_check, not_connected_health, health_check_excep
 logger = logging.getLogger(__name__)
 
 
+_SENSOR_CHANNEL_ALIASES: dict[str, int] = {
+    "ai01": 0,
+    "nc-sensor": 0,
+    "nc sensor": 0,
+    "cisnienie-nc": 0,
+    "ciśnienie-nc": 0,
+    "nadcisnienie": 0,
+    "nadciśnienie": 0,
+    "pressure": 0,
+    "pressure-sensor": 0,
+    "ai02": 1,
+    "sc-sensor": 1,
+    "sc sensor": 1,
+    "cisnienie-sc": 1,
+    "ciśnienie-sc": 1,
+    "ai03": 2,
+    "wc-sensor": 2,
+    "wc sensor": 2,
+    "cisnienie-wc": 2,
+    "ciśnienie-wc": 2,
+    "ai04": 3,
+    "spare": 3,
+}
+
+
+def _resolve_sensor_channel(sensor_id: Any) -> int | None:
+    sensor_key = str(sensor_id).strip()
+    if sensor_key in {"0", "1", "2", "3"}:
+        return int(sensor_key)
+
+    normalized_key = sensor_key.lower().replace("_", "-")
+    return _SENSOR_CHANNEL_ALIASES.get(normalized_key)
+
+
 class PiadcPlugin(HardwarePlugin):
     """
     Plugin for piADC (ADS1115) 16-bit ADC sensor.
@@ -104,6 +138,22 @@ class PiadcPlugin(HardwarePlugin):
         except Exception as exc:
             return health_check_exception(exc)
 
+    async def _read_blocker(self) -> str | None:
+        """Return an error message when piADC is reachable but not a real ADC."""
+        if not self._client:
+            return "Not connected to piADC"
+
+        resp = await self._client.get(f"{self._base_url}/health")
+        if resp.status_code >= 300:
+            return f"piADC health check failed: HTTP {resp.status_code}"
+
+        details = resp.json()
+        if details.get("mock_mode") is True:
+            return "piADC service is in mock_mode; refusing mocked ADC reading"
+        if details.get("initialized") is False:
+            return "piADC service is not initialized"
+        return None
+
     async def execute_command(self, command: str, params: dict[str, Any]) -> dict[str, Any]:
         """Execute piADC command."""
         if not self._client:
@@ -111,6 +161,9 @@ class PiadcPlugin(HardwarePlugin):
 
         try:
             if command == "read_channel":
+                blocker = await self._read_blocker()
+                if blocker:
+                    return {"success": False, "error": blocker}
                 channel = params.get("channel", 0)
                 resp = await self._client.get(f"{self._base_url}/read/{channel}")
                 if resp.status_code < 300:
@@ -118,16 +171,13 @@ class PiadcPlugin(HardwarePlugin):
                 else:
                     return {"success": False, "error": f"HTTP {resp.status_code}"}
             elif command == "read_sensor":
+                blocker = await self._read_blocker()
+                if blocker:
+                    return {"success": False, "error": blocker}
                 sensor_id = params.get("sensor_id")
                 if not sensor_id:
                     return {"success": False, "error": "sensor_id is required"}
-                # Map sensor IDs to channels
-                channel_map = {
-                    "nc-sensor": 0,
-                    "sc-sensor": 1,
-                    "wc-sensor": 2,
-                }
-                channel = channel_map.get(sensor_id)
+                channel = _resolve_sensor_channel(sensor_id)
                 if channel is None:
                     return {"success": False, "error": f"Unknown sensor_id: {sensor_id}"}
                 resp = await self._client.get(f"{self._base_url}/read/{channel}")
@@ -147,7 +197,16 @@ class PiadcPlugin(HardwarePlugin):
         capabilities = super().get_capabilities()
         capabilities.update({
             "supported_commands": ["read_channel", "read_sensor"],
-            "supported_sensors": ["nc-sensor", "sc-sensor", "wc-sensor"],
+            "supported_sensors": [
+                "AI01",
+                "AI02",
+                "AI03",
+                "AI04",
+                "nc-sensor",
+                "sc-sensor",
+                "wc-sensor",
+                "pressure-sensor",
+            ],
             "channels": {
                 "0": "NC sensor (mbar)",
                 "1": "SC sensor (bar)",

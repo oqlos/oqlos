@@ -6,12 +6,13 @@ from __future__ import annotations
 import asyncio
 import fcntl
 import glob
+import inspect
 import logging
 import os
 import pathlib
 from typing import Any
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException, Query
 from oqlos.config import get_settings
 from oqlos.hardware.discovery import list_serial_ports, probe_waveshare_modbus
 
@@ -137,26 +138,46 @@ def _probe_dri0050(usb_devices: list[dict[str, str]]) -> dict[str, Any]:
 
 
 def _probe_i2c_ads1115() -> dict[str, Any]:
-    """Probe I2C buses for ADS1115 at address 0x48."""
+    """Probe configured I2C bus(es) for ADS1115."""
     I2C_SLAVE = 0x0703
-    for bus_num in range(8):
+    address_raw = os.getenv("ADS1115_I2C_ADDRESS", "0x48")
+    try:
+        address = int(address_raw, 0)
+    except ValueError:
+        address = 0x48
+
+    bus_raw = os.getenv("ADS1115_I2C_BUS")
+    if bus_raw not in (None, ""):
+        try:
+            bus_numbers = [int(bus_raw)]
+        except ValueError:
+            bus_numbers = []
+    else:
+        bus_numbers = list(range(8))
+
+    reasons: list[str] = []
+    for bus_num in bus_numbers:
         dev_path = f"/dev/i2c-{bus_num}"
         if not os.path.exists(dev_path):
+            reasons.append(f"{dev_path} does not exist")
             continue
         try:
             fd = os.open(dev_path, os.O_RDWR)
             try:
-                fcntl.ioctl(fd, I2C_SLAVE, 0x48)
+                fcntl.ioctl(fd, I2C_SLAVE, address)
                 os.read(fd, 1)
                 os.close(fd)
-                return {"connected": True, "bus": bus_num, "address": "0x48"}
-            except OSError:
+                return {"connected": True, "bus": bus_num, "address": hex(address)}
+            except OSError as exc:
                 os.close(fd)
+                reasons.append(f"{dev_path} {hex(address)} probe failed: {exc}")
         except PermissionError:
-            return {"connected": False, "reason": f"permission denied on {dev_path}"}
-        except OSError:
-            pass
-    return {"connected": False, "reason": "no I2C bus or no device at 0x48"}
+            reasons.append(f"permission denied on {dev_path}")
+        except OSError as exc:
+            reasons.append(f"{dev_path} open failed: {exc}")
+
+    reason = "; ".join(reasons) if reasons else f"no I2C bus or no device at {hex(address)}"
+    return {"connected": False, "reason": reason, "address": hex(address), "buses": bus_numbers}
 
 
 def _probe_modbus_rtu() -> dict[str, Any]:
@@ -172,15 +193,23 @@ def _probe_modbus_rtu() -> dict[str, Any]:
     return probe
 
 
-def _probe_all_hardware() -> dict[str, Any]:
-    """Run all hardware probes and return combined result."""
-    usb_devices = _scan_usb_devices()
-    return {
-        "motor-tic249": _probe_tic249(usb_devices),
-        "motor-dri0050": _probe_dri0050(usb_devices),
-        "piadc": _probe_i2c_ads1115(),
-        "modbus-io": _probe_modbus_rtu(),
-    }
+def _probe_all_hardware(ids: set[str] | None = None) -> dict[str, Any]:
+    """Run selected hardware probes and return combined result."""
+    selected = ids or {hw["id"] for hw in _HARDWARE_REGISTRY}
+    usb_devices: list[dict[str, str]] | None = None
+    results: dict[str, Any] = {}
+
+    if "motor-tic249" in selected or "motor-dri0050" in selected:
+        usb_devices = _scan_usb_devices()
+    if "motor-tic249" in selected:
+        results["motor-tic249"] = _probe_tic249(usb_devices or [])
+    if "motor-dri0050" in selected:
+        results["motor-dri0050"] = _probe_dri0050(usb_devices or [])
+    if "piadc" in selected:
+        results["piadc"] = _probe_i2c_ads1115()
+    if "modbus-io" in selected:
+        results["modbus-io"] = _probe_modbus_rtu()
+    return results
 
 
 def _collect_hardware_diagnostics() -> dict[str, Any]:
@@ -190,6 +219,45 @@ def _collect_hardware_diagnostics() -> dict[str, Any]:
         "serial_ports": list_serial_ports(),
         "i2c_buses": sorted(glob.glob("/dev/i2c-*")),
     }
+
+
+def _is_plugin_compatible(health_entry: Any) -> bool:
+    """Return True when plugin health confirms adapter is reachable and compatible."""
+    return isinstance(health_entry, dict) and bool(health_entry.get("compatible"))
+
+
+def _needs_live_scan(health: dict[str, Any]) -> bool:
+    """Run expensive live scan only when at least one registered adapter is not compatible."""
+    for hw in _HARDWARE_REGISTRY:
+        if not _is_plugin_compatible(health.get(hw["id"])):
+            return True
+    return False
+
+
+def _unhealthy_plugin_ids(health: dict[str, Any]) -> set[str]:
+    """Return adapter ids whose plugin health is not compatible."""
+    return {
+        hw["id"]
+        for hw in _HARDWARE_REGISTRY
+        if not _is_plugin_compatible(health.get(hw["id"]))
+    }
+
+
+def _modbus_health_is_no_response(health_entry: dict[str, Any]) -> bool:
+    """Return True when the serial adapter is open but the Modbus device is silent."""
+    message = str(health_entry.get("message") or "")
+    return (
+        "read_coils" in message
+        or "No response" in message
+        or "timed out" in message
+    )
+
+
+def _probe_selected_hardware(ids: set[str]) -> dict[str, Any]:
+    """Run selected probes while staying compatible with older monkeypatched tests."""
+    if len(inspect.signature(_probe_all_hardware).parameters) == 0:
+        return _probe_all_hardware()  # type: ignore[call-arg]
+    return _probe_all_hardware(ids)
 
 
 def set_hardware_gateway(gw: HardwareGateway) -> None:
@@ -210,21 +278,71 @@ async def hardware_health():
 
 
 @router.get("/identify")
-async def hardware_identify():
-    """Return full hardware identification: registry + live probe results."""
-    health_task = asyncio.create_task(_gw().health())
-    probes_task = asyncio.to_thread(_probe_all_hardware)
-    diagnostics_task = asyncio.to_thread(_collect_hardware_diagnostics)
+async def hardware_identify(
+    scan: str = Query(
+        default="auto",
+        description="Scan mode: auto (scan only on failure), always (force live scan), never (skip live scan)",
+    )
+):
+    """Return hardware identification with conditional live scanning for low latency."""
+    scan_mode = scan if isinstance(scan, str) else "auto"
+    scan_mode = (scan_mode or "auto").strip().lower()
+    if scan_mode not in {"auto", "always", "never"}:
+        scan_mode = "auto"
 
-    health, probes, diagnostics = await asyncio.gather(health_task, probes_task, diagnostics_task)
+    health = await _gw().health()
+
+    scan_ids: set[str] = set()
+    if scan_mode == "always":
+        scan_ids = {hw["id"] for hw in _HARDWARE_REGISTRY}
+    elif scan_mode == "auto" and _needs_live_scan(health):
+        scan_ids = _unhealthy_plugin_ids(health)
+
+    modbus_health = health.get("modbus-io")
+    if isinstance(modbus_health, dict) and _modbus_health_is_no_response(modbus_health):
+        # The plugin already owns the serial port. A second in-process probe can
+        # report a misleading lock/access error instead of the real no-response state.
+        scan_ids.discard("modbus-io")
+
+    should_scan = bool(scan_ids)
+    if should_scan:
+        probes_task = asyncio.to_thread(_probe_selected_hardware, scan_ids)
+        diagnostics_task = asyncio.to_thread(_collect_hardware_diagnostics)
+        probes, diagnostics = await asyncio.gather(probes_task, diagnostics_task)
+    else:
+        probes = {}
+        diagnostics = {
+            "scan_skipped": True,
+            "scan_skip_reason": "plugin-health compatible" if scan_mode == "auto" else "scan=never",
+        }
 
     adapters = []
     for hw in _HARDWARE_REGISTRY:
         hw_id = hw["id"]
         probe = probes.get(hw_id, {})
+        health_entry = health.get(hw_id)
         entry = {**hw, "status": "offline", "probe": probe}
 
-        if probe.get("connected"):
+        if isinstance(health_entry, dict):
+            entry["probe"] = {
+                "connected": bool(health_entry.get("compatible")),
+                "source": "plugin-health",
+                "health": health_entry,
+                "local_probe": probe,
+            }
+            if health_entry.get("compatible"):
+                entry["status"] = "ok"
+            elif health_entry.get("status") == "error":
+                if hw_id == "modbus-io" and _modbus_health_is_no_response(health_entry):
+                    entry["status"] = "adapter-only"
+                    entry["probe"]["diagnosis"] = (
+                        "serial adapter is open in OqlOS, but the Modbus device did not answer"
+                    )
+                else:
+                    entry["status"] = "no-access"
+            else:
+                entry["status"] = "offline"
+        elif probe.get("connected"):
             # For modbus-io: adapter present but module may not respond
             if hw_id == "modbus-io" and not probe.get("modbus_device_responds", True):
                 entry["status"] = "adapter-only"
@@ -246,6 +364,8 @@ async def hardware_identify():
         "adapters": adapters,
         "diagnostics": {
             "health": health,
+            "scan_mode": scan_mode,
+            "scan_performed": should_scan,
             **diagnostics,
         },
     }
@@ -268,6 +388,18 @@ async def set_pump(power_pct: float = 0.0):
 @router.get("/sensor/{sensor_id}")
 async def read_sensor(sensor_id: str):
     """Read a sensor value directly from hardware."""
+    health = await _gw().health()
+    piadc_health = health.get("piadc")
+    if health.get("mode") == "real" and isinstance(piadc_health, dict) and not piadc_health.get("compatible"):
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "message": "piADC is not available for real sensor readings",
+                "sensor_id": sensor_id,
+                "piadc": piadc_health,
+            },
+        )
+
     value = await _gw().read_sensor(sensor_id)
     return {"sensor_id": sensor_id, "value": value}
 
@@ -275,8 +407,31 @@ async def read_sensor(sensor_id: str):
 @router.post("/lung")
 async def set_lung(steps: int = 500, speed: int = 100000, cycles: int = 5, pause: float = 0.5):
     """Start artificial lung reciprocating motion (tic249 stepper)."""
-    ok = await _gw().set_lung(steps=steps, speed=speed, cycles=cycles, pause=pause)
-    return {"steps": steps, "speed": speed, "cycles": cycles, "pause": pause, "ok": ok}
+    detailed_result: dict[str, Any] | None = None
+    if hasattr(_gw(), "set_lung_result"):
+        try:
+            maybe_result = await _gw().set_lung_result(steps=steps, speed=speed, cycles=cycles, pause=pause)
+            if isinstance(maybe_result, dict):
+                detailed_result = maybe_result
+        except Exception:
+            detailed_result = None
+
+    if detailed_result is None:
+        ok = await _gw().set_lung(steps=steps, speed=speed, cycles=cycles, pause=pause)
+        return {"steps": steps, "speed": speed, "cycles": cycles, "pause": pause, "ok": ok}
+
+    payload: dict[str, Any] = {
+        "steps": steps,
+        "speed": speed,
+        "cycles": cycles,
+        "pause": pause,
+        "ok": bool(detailed_result.get("success", False)),
+    }
+    if detailed_result.get("error"):
+        payload["error"] = detailed_result.get("error")
+    if detailed_result.get("data") is not None:
+        payload["data"] = detailed_result.get("data")
+    return payload
 
 
 @router.post("/lung/stop")
@@ -284,3 +439,10 @@ async def stop_lung():
     """Emergency stop the artificial lung motor."""
     ok = await _gw().stop_lung()
     return {"ok": ok, "status": "stopped"}
+
+
+@router.post("/lung/disable")
+async def disable_lung():
+    """De-energize the artificial lung motor (release coils)."""
+    ok = await _gw().disable_lung()
+    return {"ok": ok, "status": "de-energized"}

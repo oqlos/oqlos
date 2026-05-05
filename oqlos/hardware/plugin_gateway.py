@@ -53,6 +53,7 @@ class PluginHardwareGateway:
         self._plugin_configs: dict[str, PluginConfig] = {}
 
         self._init_done = False
+        self._init_lock = asyncio.Lock()
         if self.mode == "real":
             # Load hardware configuration schema
             self._load_hardware_schema(config_path)
@@ -104,25 +105,34 @@ class PluginHardwareGateway:
             await self._initialize_plugins()
 
     async def _initialize_plugins(self) -> None:
-        """Initialize all enabled plugins."""
+        """Initialize all enabled plugins in parallel."""
         if self._init_done:
             return
-        for plugin_id, config in self._plugin_configs.items():
-            if not config.enabled:
-                logger.info(f"Plugin {plugin_id} is disabled, skipping")
-                continue
 
-            try:
-                instance = await PluginRegistry.create_instance(plugin_id, config)
-                success = await instance.connect()
-                if success:
-                    self._plugins[plugin_id] = instance
-                    logger.info(f"Plugin {plugin_id} initialized and connected")
-                else:
-                    logger.error(f"Failed to connect plugin {plugin_id}")
-            except Exception as exc:
-                logger.error(f"Failed to initialize plugin {plugin_id}: {exc}")
-        self._init_done = True
+        async with self._init_lock:
+            if self._init_done:
+                return
+
+            async def _connect_one(plugin_id: str, config: PluginConfig) -> None:
+                if not config.enabled:
+                    logger.info(f"Plugin {plugin_id} is disabled, skipping")
+                    return
+                try:
+                    instance = await PluginRegistry.create_instance(plugin_id, config)
+                    success = await instance.connect()
+                    if success:
+                        self._plugins[plugin_id] = instance
+                        logger.info(f"Plugin {plugin_id} initialized and connected")
+                    else:
+                        logger.error(f"Failed to connect plugin {plugin_id}")
+                except Exception as exc:
+                    logger.error(f"Failed to initialize plugin {plugin_id}: {exc}")
+
+            await asyncio.gather(*[
+                _connect_one(pid, cfg)
+                for pid, cfg in self._plugin_configs.items()
+            ])
+            self._init_done = True
 
     @property
     def is_real(self) -> bool:
@@ -134,6 +144,7 @@ class PluginHardwareGateway:
             logger.info("[HW mock] SET_VALVE %s → %s", valve_id, value)
             return True
 
+        await self.ensure_initialized()
         plugin = self._plugins.get("modbus-io")
         if not plugin:
             logger.error("Modbus plugin not available")
@@ -152,6 +163,7 @@ class PluginHardwareGateway:
             logger.info("[HW mock] SET_PUMP %.1f%%", power_pct)
             return {"success": True, "data": {"power_pct": power_pct, "mock": True}}
 
+        await self.ensure_initialized()
         plugin = self._plugins.get("motor-dri0050")
         if not plugin:
             logger.error("Motor plugin not available")
@@ -170,6 +182,7 @@ class PluginHardwareGateway:
             logger.info("[HW mock] READ_SENSOR %s → None", sensor_id)
             return None
 
+        await self.ensure_initialized()
         plugin = self._plugins.get("piadc")
         if not plugin:
             logger.error("PiADC plugin not available")
@@ -184,16 +197,32 @@ class PluginHardwareGateway:
             logger.error("PluginHardwareGateway.read_sensor error: %s", exc)
             return None
 
-    async def set_lung(self, steps: int = 500, speed: int = 100000, cycles: int = 5, pause: float = 0.5) -> bool:
-        """Start artificial lung reciprocating motion using lung plugin."""
+    async def set_lung_result(
+        self,
+        steps: int = 500,
+        speed: int = 100000,
+        cycles: int = 5,
+        pause: float = 0.5,
+    ) -> dict[str, Any]:
+        """Start artificial lung reciprocating motion and return detailed plugin result."""
         if not self.is_real:
             logger.info("[HW mock] SET_LUNG steps=%d speed=%d cycles=%d pause=%.1f", steps, speed, cycles, pause)
-            return True
+            return {
+                "success": True,
+                "data": {
+                    "steps": steps,
+                    "speed": speed,
+                    "cycles": cycles,
+                    "pause": pause,
+                    "mock": True,
+                },
+            }
 
+        await self.ensure_initialized()
         plugin = self._plugins.get("motor-tic249")
         if not plugin:
             logger.error("Lung plugin not available")
-            return False
+            return {"success": False, "error": "Lung plugin not available"}
 
         try:
             result = await plugin.execute_command("reciprocate", {
@@ -202,10 +231,15 @@ class PluginHardwareGateway:
                 "cycles": cycles,
                 "pause": pause,
             })
-            return result.get("success", False)
+            return result if isinstance(result, dict) else {"success": False, "error": "Invalid plugin response"}
         except Exception as exc:
             logger.error("PluginHardwareGateway.set_lung error: %s", exc)
-            return False
+            return {"success": False, "error": str(exc)}
+
+    async def set_lung(self, steps: int = 500, speed: int = 100000, cycles: int = 5, pause: float = 0.5) -> bool:
+        """Compatibility bool API for scenario executor paths."""
+        result = await self.set_lung_result(steps=steps, speed=speed, cycles=cycles, pause=pause)
+        return bool(result.get("success", False))
 
     async def stop_lung(self) -> bool:
         """Emergency stop the artificial lung motor using lung plugin."""
@@ -213,6 +247,7 @@ class PluginHardwareGateway:
             logger.info("[HW mock] STOP_LUNG")
             return True
 
+        await self.ensure_initialized()
         plugin = self._plugins.get("motor-tic249")
         if not plugin:
             logger.error("Lung plugin not available")
@@ -223,6 +258,25 @@ class PluginHardwareGateway:
             return result.get("success", False)
         except Exception as exc:
             logger.error("PluginHardwareGateway.stop_lung error: %s", exc)
+            return False
+
+    async def disable_lung(self) -> bool:
+        """De-energize the artificial lung motor (release coils) using lung plugin."""
+        if not self.is_real:
+            logger.info("[HW mock] DISABLE_LUNG")
+            return True
+
+        await self.ensure_initialized()
+        plugin = self._plugins.get("motor-tic249")
+        if not plugin:
+            logger.error("Lung plugin not available")
+            return False
+
+        try:
+            result = await plugin.execute_command("energize", {"enable": False})
+            return result.get("success", False)
+        except Exception as exc:
+            logger.error("PluginHardwareGateway.disable_lung error: %s", exc)
             return False
 
     async def reload_configs(self, config_path: str | None = None) -> dict[str, Any]:
