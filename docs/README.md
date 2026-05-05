@@ -1,3 +1,35 @@
+# OqlOS Documentation
+
+## Hardware Operator Entry Points
+
+Before running scenarios in `execute` mode, use the hardware doctor:
+
+```bash
+oqlctl doctor
+oqlctl detect
+oqlctl doctor --json
+oqlctl doctor --fix
+```
+
+`doctor` combines host-side USB/serial/I2C discovery, Modbus RTU probing,
+`oqlos.yaml` validation, and firmware `/api/v1/hardware/health` +
+`/api/v1/hardware/identify` checks. It reports concrete issues such as:
+
+- firmware running in `mock` mode,
+- firmware/container missing access to `/dev/ttyACM*` or `/dev/ttyUSB*`,
+- `modbus-io` port/baud mismatch,
+- adapter statuses such as `offline`, `no-access`, or `adapter-only`.
+
+Safe automatic repair is intentionally narrow: `oqlctl doctor --fix` updates
+only detected Modbus connection parameters in `oqlos.yaml` and writes
+`oqlos.yaml.bak` first. The current default hardware profile expects
+`/dev/ttyACM1 @ 19200 8N1` for Waveshare Modbus RTU IO 8CH.
+Runtime repairs such as enabling real firmware mode, restarting containers, or
+mounting `/dev/ttyACM*`/`/dev/ttyUSB*` remain manual and are reported as
+unapplied repairs when `--fix` is requested.
+
+Detailed guide: [Hardware Diagnostics](HARDWARE_DIAGNOSTICS.md).
+
 <!-- code2docs:start --># oqlos
 
 ![version](https://img.shields.io/badge/version-0.1.0-blue) ![python](https://img.shields.io/badge/python-%3E%3D3.10-blue) ![coverage](https://img.shields.io/badge/coverage-unknown-lightgrey) ![functions](https://img.shields.io/badge/functions-712-green)

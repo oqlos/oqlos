@@ -4,9 +4,17 @@
 #   - connection settings (type, params, timeout)
 #   - peripherals with scales, units, rasters, and conversions
 #
-# To change hardware parameters (scales, units, proportions) — just edit
-# this YAML.  Reload at runtime:
-#   oqlctl plugin reload --config plugin-config.yaml
+# To change hardware parameters (scales, units, proportions) — edit this YAML.
+# Before real execution, validate the runtime and config:
+#   oqlctl doctor --config examples/plugin-config.yaml
+#   oqlctl detect --config examples/plugin-config.yaml
+#
+# If doctor detects a responding Modbus device on a different port/baud, it can
+# safely update only the Modbus connection params and create a .bak backup:
+#   oqlctl doctor --config examples/plugin-config.yaml --fix
+#
+# Reload at runtime:
+#   oqlctl plugin reload --config examples/plugin-config.yaml
 
 plugins:
   # ------------------------------------------------------------------
@@ -75,7 +83,7 @@ plugins:
     enabled: true
     connection_type: modbus-rtu
     connection_params:
-      serial_port: /dev/ttyACM0
+      serial_port: /dev/ttyACM1
       baudrate: 19200
       parity: N
     timeout: 2.0

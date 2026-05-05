@@ -87,10 +87,11 @@ def test_cmd_executes_single_command(monkeypatch):
     assert captured["health_urls"] == [cql_cli.DEFAULT_FIRMWARE_URL]
     assert captured["identify_urls"] == [cql_cli.DEFAULT_FIRMWARE_URL]
     assert captured["source"] == (
-        'SCENARIO: "Single command"\n'
-        'GOAL: Execute command\n'
-        '  1. Run command:\n'
-        "    SET 'pompa 1' '0'\n"
+        "VERSION: 4\n"
+        "SCENARIO: Single command\n"
+        "GOAL:\n"
+        "  SET NAME 'Execute command'\n"
+        "  SET 'pompa 1' '0'\n"
     )
 
 
@@ -145,6 +146,169 @@ def test_file_mode_still_executes_scenario(monkeypatch, tmp_path):
 
     assert captured["path"] == str(scenario_file)
     assert captured["init"]["mode"] == "execute"
+
+
+def test_run_subcommand_executes_scenario_file(monkeypatch, tmp_path):
+    captured: dict[str, object] = {}
+    scenario_file = tmp_path / "scenario.oql"
+    scenario_file.write_text("SCENARIO: Test\nGOAL: Demo\n  SET 'pompa 1' '0'\n", encoding="utf-8")
+
+    class FakeInterpreter(_FakeInterpreter):
+        def __init__(self, **kwargs):
+            super().__init__(**kwargs)
+            captured["init"] = kwargs
+
+        def run_file(self, path: str):
+            captured["path"] = path
+            return super().run("", path)
+
+    monkeypatch.setattr(cql_cli, "CqlInterpreter", FakeInterpreter)
+    monkeypatch.setattr(sys, "argv", ["oqlctl", "run", str(scenario_file), "--mode", "dry-run"])
+
+    cql_cli.main()
+
+    assert captured["path"] == str(scenario_file)
+    assert captured["init"]["mode"] == "dry-run"
+
+
+def test_run_subcommand_fetches_scenario_url(monkeypatch):
+    import importlib
+
+    main_module = importlib.import_module("oqlos.tools.cql_cli.main")
+    captured: dict[str, object] = {}
+
+    class FakeInterpreter(_FakeInterpreter):
+        def run(self, source: str, filename: str):
+            captured["source"] = source
+            captured["filename"] = filename
+            return super().run(source, filename)
+
+    monkeypatch.setattr(main_module, "CqlInterpreter", FakeInterpreter)
+    monkeypatch.setattr(
+        main_module,
+        "_fetch_scenario_source",
+        lambda url: "SCENARIO: From URL\nGOAL: Demo\n  SET 'pompa 1' '0'\n",
+    )
+
+    main_module._dispatch_to_mode([
+        "run",
+        "http://localhost:8096/scenarios?scenario=maskleaktest-nadcisnieniestatyczne",
+        "--mode",
+        "dry-run",
+    ])
+
+    assert captured["filename"] == "http://localhost:8096/scenarios?scenario=maskleaktest-nadcisnieniestatyczne"
+    assert "SCENARIO: From URL" in captured["source"]
+
+
+def test_fetch_scenario_source_rejects_editor_html(monkeypatch):
+    import importlib
+
+    main_module = importlib.import_module("oqlos.tools.cql_cli.main")
+
+    class FakeResponse:
+        headers = {"content-type": "text/html"}
+        text = "<!DOCTYPE html><html><body><div id='root'></div></body></html>"
+
+        def raise_for_status(self):
+            return None
+
+    monkeypatch.setattr("httpx.get", lambda url, timeout: FakeResponse())
+
+    with pytest.raises(main_module.ScenarioFetchError, match="returned HTML"):
+        main_module._fetch_scenario_source("http://localhost:8096/scenarios?scenario=demo")
+
+
+def test_run_subcommand_reports_url_fetch_error(monkeypatch, capsys):
+    import importlib
+
+    main_module = importlib.import_module("oqlos.tools.cql_cli.main")
+
+    class FakeInterpreter(_FakeInterpreter):
+        pass
+
+    def fake_fetch(url: str):
+        raise main_module.ScenarioFetchError("URL returned HTML, not OQL/CQL source")
+
+    monkeypatch.setattr(main_module, "CqlInterpreter", FakeInterpreter)
+    monkeypatch.setattr(main_module, "_fetch_scenario_source", fake_fetch)
+
+    with pytest.raises(SystemExit) as excinfo:
+        main_module._dispatch_to_mode([
+            "run",
+            "http://localhost:8096/scenarios?scenario=demo",
+            "--mode",
+            "dry-run",
+            "--json",
+        ])
+
+    payload = json.loads(capsys.readouterr().out)
+    assert excinfo.value.code == 1
+    assert payload["status"] == "error"
+    assert "not OQL/CQL source" in payload["message"]
+
+
+def test_cmd_execute_mock_mode_error_suggests_dry_run_and_doctor(monkeypatch, capsys):
+    def fake_health(url: str) -> dict[str, object]:
+        return {"mode": "mock", "note": "mock mode - no hardware calls"}
+
+    def fake_identify(url: str) -> dict[str, object]:
+        pytest.fail(f"identify should not be called when mode is mock: {url}")
+
+    def fake_ensure_firmware_running(url: str, *, quiet: bool, yaml_output: bool) -> bool:
+        return True
+
+    class FakeInterpreter(_FakeInterpreter):
+        def __init__(self, **kwargs):
+            raise AssertionError("Interpreter should not be created when preflight fails")
+
+    monkeypatch.setattr(cql_cli, "check_firmware_health", fake_health)
+    monkeypatch.setattr(cql_cli, "check_firmware_identify", fake_identify)
+    monkeypatch.setattr(cql_cli, "_ensure_firmware_running", fake_ensure_firmware_running)
+    monkeypatch.setattr(cql_cli, "CqlInterpreter", FakeInterpreter)
+    monkeypatch.setattr(sys, "argv", ["oqlctl", "cmd", "SET pompa-1 0"])
+
+    with pytest.raises(SystemExit) as excinfo:
+        cql_cli.main()
+
+    output = capsys.readouterr().out
+    assert excinfo.value.code == 1
+    assert "--mode dry-run" in output
+    assert "oqlctl doctor" in output
+
+
+def test_cmd_execute_blocks_when_required_adapter_health_is_bad(monkeypatch, capsys):
+    def fake_health(url: str) -> dict[str, object]:
+        return {"mode": "real", "motor": "error: connection refused"}
+
+    def fake_identify(url: str) -> dict[str, object]:
+        return {
+            "mode": "real",
+            "detected": 1,
+            "total": 4,
+            "adapters": [{"id": "motor-dri0050", "status": "ok"}],
+        }
+
+    def fake_ensure_firmware_running(url: str, *, quiet: bool, yaml_output: bool) -> bool:
+        return True
+
+    class FakeInterpreter(_FakeInterpreter):
+        def __init__(self, **kwargs):
+            raise AssertionError("Interpreter should not run when motor health is bad")
+
+    monkeypatch.setattr(cql_cli, "check_firmware_health", fake_health)
+    monkeypatch.setattr(cql_cli, "check_firmware_identify", fake_identify)
+    monkeypatch.setattr(cql_cli, "_ensure_firmware_running", fake_ensure_firmware_running)
+    monkeypatch.setattr(cql_cli, "CqlInterpreter", FakeInterpreter)
+    monkeypatch.setattr(sys, "argv", ["oqlctl", "cmd", "SET pompa-1 0"])
+
+    with pytest.raises(SystemExit) as excinfo:
+        cql_cli.main()
+
+    output = capsys.readouterr().out
+    assert excinfo.value.code == 1
+    assert "motor-dri0050" in output
+    assert "connection refused" in output
 
 
 def test_oqlctl_doctor_subcommand_dispatches_to_hardware_flags(monkeypatch):

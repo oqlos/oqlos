@@ -18,6 +18,14 @@ from oqlos.tools.cql_cli.utils import output_yaml, resolve_required_adapter
 from oqlos.tools.hardware_diagnose.health import check_firmware_health, check_firmware_identify
 
 
+_HEALTH_KEYS_BY_ADAPTER = {
+    "piadc": ("piadc",),
+    "motor-dri0050": ("motor-dri0050", "motor"),
+    "motor-tic249": ("motor-tic249", "lung"),
+    "modbus-io": ("modbus-io", "modbus"),
+}
+
+
 def ensure_firmware_running(firmware_url: str, *, quiet: bool, yaml_output: bool = False) -> bool:
     """Attempt to start firmware service if it's not available."""
     # First check if already running
@@ -91,7 +99,11 @@ def check_firmware_state(firmware_url: str, yaml_output: bool, quiet: bool) -> t
         return False, health, {}
 
     if str(health.get("mode", "")).lower() != "real":
-        error_msg = f"Hardware preflight failed: firmware mode is {health.get('mode', 'unknown')!r}; real hardware is required"
+        error_msg = (
+            f"Hardware preflight failed: firmware mode is {health.get('mode', 'unknown')!r}; "
+            "real hardware is required. Use '--mode dry-run' to simulate, or run "
+            "'oqlctl doctor' before execute mode."
+        )
         _emit_preflight_error(error_msg, yaml_output, quiet)
         return False, health, {}
 
@@ -142,6 +154,52 @@ def check_required_adapter(
         return False, required_adapter, adapter_status
 
     return True, required_adapter, adapter_status
+
+
+def check_required_adapter_health(
+    required_adapter: str | None,
+    health: dict,
+    yaml_output: bool,
+    quiet: bool,
+) -> bool:
+    """Check required adapter service health when firmware exposes it."""
+    if not required_adapter:
+        return True
+
+    keys = _HEALTH_KEYS_BY_ADAPTER.get(required_adapter, (required_adapter,))
+    for key in keys:
+        if key not in health:
+            continue
+        raw_status = health.get(key)
+        if _health_status_is_ok(raw_status):
+            return True
+        error_msg = (
+            "Hardware preflight failed: "
+            f"adapter {required_adapter!r} health is not ok ({key}={raw_status!r})"
+        )
+        _emit_preflight_error(error_msg, yaml_output, quiet)
+        return False
+
+    return True
+
+
+def _health_status_is_ok(raw_status) -> bool:
+    """Normalize old gateway string health and plugin-gateway dict health."""
+    if isinstance(raw_status, dict):
+        status = str(raw_status.get("status", "")).lower()
+        compatible = raw_status.get("compatible")
+        return status in {"ok", "connected"} and compatible is not False
+
+    status = str(raw_status).lower()
+    if not status:
+        return False
+    if status == "ok" or status.startswith("ok "):
+        return True
+    if "error" in status or "offline" in status or "no-access" in status:
+        return False
+    # Legacy real-mode modbus health is a descriptor like
+    # "/dev/ttyACM1@19200 8N1 (mode=rtu)".
+    return True
 
 
 def _emit_preflight_error(error_msg: str, yaml_output: bool, quiet: bool) -> None:
@@ -253,6 +311,9 @@ def preflight_hardware(
         command, adapters, yaml_output, quiet
     )
     if not adapter_ok:
+        return False
+
+    if not check_required_adapter_health(required_adapter, health, yaml_output, quiet):
         return False
 
     # Emit success output

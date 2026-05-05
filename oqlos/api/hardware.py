@@ -12,12 +12,14 @@ import pathlib
 from typing import Any
 
 from fastapi import APIRouter
+from oqlos.config import get_settings
 from oqlos.hardware.discovery import list_serial_ports, probe_waveshare_modbus
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/hardware", tags=["hardware"])
 
 _gateway: Any | None = None
+_settings = get_settings()
 
 # Static hardware registry — describes adapters available in the system
 _HARDWARE_REGISTRY: list[dict[str, Any]] = [
@@ -159,7 +161,11 @@ def _probe_i2c_ads1115() -> dict[str, Any]:
 
 def _probe_modbus_rtu() -> dict[str, Any]:
     """Detect the active Waveshare Modbus RTU serial port and line settings."""
-    probe = probe_waveshare_modbus()
+    probe = probe_waveshare_modbus(
+        preferred_port=_settings.modbus_serial_port,
+        preferred_baud=_settings.modbus_baud,
+        preferred_parity=_settings.modbus_parity,
+    )
     if probe.get("connected") and not probe.get("modbus_device_responds", True):
         note = probe.get("note") or "USB serial adapter detected"
         probe["note"] = f"{note} (check power or RS485 wiring if this is unexpected)"

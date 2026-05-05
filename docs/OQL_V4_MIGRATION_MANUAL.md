@@ -6,6 +6,17 @@ Ten dokument opisuje jak **LLM** i developer mają:
 - zaktualizować do `VERSION: 4`,
 - zweryfikować poprawność parserem/runtime.
 
+Przed testem na realnym sprzęcie uruchom:
+
+```bash
+oqlctl doctor
+oqlctl detect
+```
+
+Migracja syntaktyczna ma przechodzić `dry-run`; `execute` uruchamiaj dopiero,
+gdy `doctor` nie zgłasza błędów blokujących, a ostrzeżenia są świadomie
+zaakceptowane przez operatora.
+
 ## 1) Docelowe reguły VERSION: 4
 
 1. Pierwsza istotna linia: `VERSION: 4`.

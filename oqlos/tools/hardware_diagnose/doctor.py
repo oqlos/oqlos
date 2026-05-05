@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import shutil
+import subprocess
 from contextlib import redirect_stderr, redirect_stdout
 from io import StringIO
 from pathlib import Path
@@ -25,6 +26,13 @@ from oqlos.tools.hardware_diagnose.health import (
 
 
 Issue = dict[str, Any]
+
+_HEALTH_KEYS_BY_ADAPTER = {
+    "piadc": ("piadc",),
+    "motor-dri0050": ("motor-dri0050", "motor"),
+    "motor-tic249": ("motor-tic249", "lung"),
+    "modbus-io": ("modbus-io", "modbus"),
+}
 
 
 def _usb_serial_only(devices: list[UsbDevice]) -> list[UsbDevice]:
@@ -79,6 +87,61 @@ def _probe_modbus(probe_timeout: float) -> dict[str, Any]:
     return result
 
 
+def _serial_port_owners(devices: list[UsbDevice]) -> dict[str, list[dict[str, str]]]:
+    """Return processes currently holding detected serial devices, best effort."""
+    if not shutil.which("fuser"):
+        return {}
+
+    owners: dict[str, list[dict[str, str]]] = {}
+    for dev in devices:
+        try:
+            proc = subprocess.run(
+                ["fuser", dev.device],
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=1.0,
+                check=False,
+            )
+        except Exception:
+            continue
+
+        pids = _extract_pids(f"{proc.stdout}\n{proc.stderr}")
+        if not pids:
+            continue
+        owners[dev.device] = [_describe_pid(pid) for pid in pids]
+    return owners
+
+
+def _extract_pids(text: str) -> list[str]:
+    pids: list[str] = []
+    for token in text.replace(":", " ").split():
+        if token.isdigit() and token not in pids:
+            pids.append(token)
+    return pids
+
+
+def _describe_pid(pid: str) -> dict[str, str]:
+    try:
+        proc = subprocess.run(
+            ["ps", "-p", pid, "-o", "comm=", "-o", "args="],
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            timeout=1.0,
+            check=False,
+        )
+        line = proc.stdout.strip()
+    except Exception:
+        line = ""
+    if not line:
+        return {"pid": pid, "command": "unknown"}
+    parts = line.split(None, 1)
+    command = parts[0]
+    args = parts[1] if len(parts) > 1 else command
+    return {"pid": pid, "command": command, "args": args}
+
+
 def detect_hardware(
     firmware_url: str = "http://localhost:8202",
     *,
@@ -97,6 +160,7 @@ def detect_hardware(
         "host": {
             "usb_devices": [dev.to_dict() for dev in usb_devices],
             "usb_serial_devices": [dev.to_dict() for dev in usb_serial],
+            "serial_port_owners": _serial_port_owners(usb_serial),
             "i2c_buses": list_i2c_buses(),
         },
         "probes": {
@@ -161,6 +225,8 @@ def _analyze_modbus_config(detection: dict[str, Any], issues: list[Issue]) -> No
     expected = _expected_modbus_params(modbus_probe)
 
     if not expected:
+        if _firmware_modbus_health_ok(detection):
+            return
         if modbus_probe.get("connected"):
             _add_issue(
                 issues,
@@ -256,7 +322,11 @@ def _analyze_firmware_access(detection: dict[str, Any], issues: list[Issue]) -> 
             repair={
                 "id": "enable_real_mode",
                 "safe": False,
-                "hint": "Run firmware with HARDWARE_MODE=real or OQLOS_HARDWARE_MODE=real.",
+                "hint": (
+                    "Restart firmware with HARDWARE_MODE=real or "
+                    "OQLOS_HARDWARE_MODE=real. This is not applied by --fix "
+                    "because it changes runtime actuator behavior."
+                ),
             },
         )
 
@@ -275,6 +345,7 @@ def _analyze_firmware_access(detection: dict[str, Any], issues: list[Issue]) -> 
         firmware_serial = diagnostics.get("serial_ports") or []
 
     if host_serial and not firmware_serial:
+        serial_mounts = ", ".join(str(dev.get("device")) for dev in host_serial if dev.get("device"))
         _add_issue(
             issues,
             severity="warn",
@@ -286,7 +357,10 @@ def _analyze_firmware_access(detection: dict[str, Any], issues: list[Issue]) -> 
             repair={
                 "id": "mount_serial_devices",
                 "safe": False,
-                "hint": "Mount the detected serial device into the firmware container or run firmware on the host.",
+                "hint": (
+                    "Mount detected serial devices into the firmware container "
+                    f"({serial_mounts}) or run firmware on the host; then restart firmware."
+                ),
             },
         )
 
@@ -295,6 +369,17 @@ def _analyze_firmware_access(detection: dict[str, Any], issues: list[Issue]) -> 
         for adapter in adapters:
             status = adapter.get("status")
             adapter_id = adapter.get("id", "unknown")
+            health_status = _adapter_health_status(health, adapter_id)
+            if health_status is not None:
+                if _health_status_is_ok(health_status):
+                    continue
+                _add_issue(
+                    issues,
+                    severity="warn",
+                    code=f"adapter_{adapter_id}_health_not_ok",
+                    message=f"Firmware adapter {adapter_id} health is {health_status}.",
+                )
+                continue
             if status not in (None, "ok"):
                 _add_issue(
                     issues,
@@ -302,6 +387,66 @@ def _analyze_firmware_access(detection: dict[str, Any], issues: list[Issue]) -> 
                     code=f"adapter_{adapter_id}_not_ok",
                     message=f"Firmware adapter {adapter_id} status is {status}.",
                 )
+
+
+def _adapter_health_status(health: dict[str, Any], adapter_id: str) -> Any | None:
+    keys = _HEALTH_KEYS_BY_ADAPTER.get(adapter_id, (adapter_id,))
+    for key in keys:
+        if key in health:
+            return health[key]
+    return None
+
+
+def _health_status_is_ok(raw_status: Any) -> bool:
+    if isinstance(raw_status, dict):
+        status = str(raw_status.get("status", "")).lower()
+        compatible = raw_status.get("compatible")
+        return status in {"ok", "connected"} and compatible is not False
+
+    status = str(raw_status).lower()
+    if not status:
+        return False
+    if status == "ok" or status.startswith("ok "):
+        return True
+    if "error" in status or "offline" in status or "no-access" in status:
+        return False
+    return True
+
+
+def _analyze_serial_port_owners(detection: dict[str, Any], issues: list[Issue]) -> None:
+    host = detection.get("host", {})
+    owners = host.get("serial_port_owners") if isinstance(host, dict) else {}
+    if not isinstance(owners, dict) or not owners:
+        return
+
+    config = detection.get("config", {})
+    modbus = _modbus_config(config) if isinstance(config, dict) else None
+    params = modbus.get("connection_params") if isinstance(modbus, dict) else {}
+    configured_port = params.get("serial_port") if isinstance(params, dict) else None
+    if not configured_port or configured_port not in owners:
+        return
+
+    proc_list = owners.get(configured_port) or []
+    owner_labels = ", ".join(
+        f"{proc.get('command', 'process')}[{proc.get('pid')}]" for proc in proc_list
+    )
+    _add_issue(
+        issues,
+        severity="warn",
+        code="serial_port_busy",
+        message=(
+            f"Configured Modbus port {configured_port} is already open by {owner_labels}. "
+            "Only one process can own a Modbus RTU serial port at a time."
+        ),
+        repair={
+            "id": "release_serial_port",
+            "safe": False,
+            "hint": (
+                f"Stop the process using {configured_port}, or point oqlctl to that "
+                "already-running firmware URL instead of probing the same serial port twice."
+            ),
+        },
+    )
 
 
 def _collect_repairs(issues: list[Issue]) -> list[dict[str, Any]]:
@@ -335,6 +480,7 @@ def build_doctor_report(
     )
     issues: list[Issue] = []
     _analyze_modbus_config(detection, issues)
+    _analyze_serial_port_owners(detection, issues)
     _analyze_firmware_access(detection, issues)
 
     repairs = _collect_repairs(issues)
@@ -360,6 +506,7 @@ def build_doctor_report(
         "issues": issues,
         "repairs": repairs,
         "applied_repairs": applied,
+        "fix_requested": fix,
     }
 
 
@@ -438,12 +585,25 @@ def format_detection(detection: dict[str, Any]) -> str:
             "Modbus: OK "
             f"{modbus.get('serial_port')} @ {modbus.get('baudrate')} 8{modbus.get('parity')}1"
         )
+    elif _firmware_modbus_health_ok(detection):
+        lines.append("Modbus: OK via firmware (local serial port is already in use)")
     else:
         lines.append(f"Modbus: not ready ({modbus.get('reason') or modbus.get('note') or 'no response'})")
 
     config = detection.get("config", {})
     lines.append(f"Config: {config.get('path') if config.get('ok') else config.get('error')}")
     return "\n".join(lines)
+
+
+def _firmware_modbus_health_ok(detection: dict[str, Any]) -> bool:
+    firmware = detection.get("firmware")
+    if not isinstance(firmware, dict):
+        return False
+    health = firmware.get("health")
+    if not isinstance(health, dict):
+        return False
+    status = _adapter_health_status(health, "modbus-io")
+    return status is not None and _health_status_is_ok(status)
 
 
 def format_doctor(report: dict[str, Any]) -> str:
@@ -478,5 +638,20 @@ def format_doctor(report: dict[str, Any]) -> str:
             lines.append(f"  - {repair.get('id')} -> {repair.get('path')}")
             if repair.get("backup"):
                 lines.append(f"    backup: {repair['backup']}")
+
+    repairs = report.get("repairs") or []
+    if report.get("fix_requested") and repairs:
+        unapplied = [
+            repair for repair in repairs
+            if not any(item.get("id") == repair.get("id") for item in applied)
+        ]
+        if unapplied:
+            lines.append("")
+            lines.append("Unapplied repairs:")
+            for repair in unapplied:
+                safety = "manual/unsafe" if not repair.get("safe") else "safe"
+                lines.append(f"  - skipped {safety}: {repair.get('id')}")
+                if repair.get("hint"):
+                    lines.append(f"    hint: {repair['hint']}")
 
     return "\n".join(lines)

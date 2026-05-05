@@ -5,11 +5,28 @@ Interaktywne narzędzia do wykrywania i diagnostyki sprzętu przez USB/serial/I2
 ## Szybki start
 
 ```bash
+# Zalecany pierwszy krok przed realnym testem sprzętu
+oqlctl doctor
+
+# Tylko inteligentna detekcja hosta i konfiguracji
+oqlctl detect
+
+# JSON do CI / skryptów operatora
+oqlctl doctor --json
+oqlctl detect --json
+
+# Bezpieczna automatyczna naprawa wykrytych parametrów Modbus w oqlos.yaml
+oqlctl doctor --fix
+
 # Interaktywny shell diagnostyczny
 python -m oqlos.tools.hardware_diagnose --shell
 
 # Lista urządzeń USB
 python -m oqlos.tools.hardware_diagnose --list
+
+# Smart detect / doctor przez moduł diagnostyczny
+python -m oqlos.tools.hardware_diagnose --detect
+python -m oqlos.tools.hardware_diagnose --doctor
 
 # Status health
 python -m oqlos.tools.hardware_diagnose --health
@@ -31,6 +48,48 @@ python -m oqlos.tools.hardware_diagnose --report
 python -m oqlos.tools.hardware_diagnose --report my_report.json
 ```
 
+## Smart Detect i Doctor
+
+`detect` zbiera sygnały lokalne i runtime:
+
+- urządzenia USB/serial widoczne na hoście,
+- magistrale I2C,
+- aktywny Modbus RTU przez `probe_waveshare_modbus()`,
+- ścieżkę i parametry `oqlos.yaml`,
+- health i identify firmware bridge.
+
+`doctor` analizuje te dane i tworzy listę problemów oraz napraw:
+
+| Kod | Znaczenie | Typowa naprawa |
+|-----|-----------|----------------|
+| `modbus_config_mismatch` | `oqlos.yaml` wskazuje inny port/baud niż odpowiadające urządzenie Modbus | `oqlctl doctor --fix` |
+| `firmware_not_real` | firmware działa w `mock`, więc endpointy aktuatorów nie dotykają sprzętu | uruchom z `HARDWARE_MODE=real` albo `OQLOS_HARDWARE_MODE=real` |
+| `firmware_no_serial_access` | host widzi `/dev/ttyACM*`/`/dev/ttyUSB*`, ale firmware nie | podmontuj urządzenia do kontenera albo uruchom firmware na hoście |
+| `adapter_*_not_ok` | konkretny adapter firmware jest offline/no-access | sprawdź zasilanie, mounty, URL serwisów i uprawnienia |
+
+Przykład:
+
+```bash
+oqlctl doctor
+oqlctl doctor --json | jq '.issues[] | {severity, code, message}'
+```
+
+`--fix` stosuje tylko naprawy oznaczone jako bezpieczne. Aktualnie oznacza to
+aktualizację `plugins.modbus-io.connection_params` w `oqlos.yaml` do wykrytych
+wartości `serial_port`, `baudrate` i `parity`. Przed zapisem tworzony jest
+backup `oqlos.yaml.bak`.
+
+Zmiany runtime są celowo ręczne: `doctor --fix` nie przełącza firmware z
+`mock` na `real`, nie restartuje kontenerów i nie montuje `/dev/ttyACM*` ani
+`/dev/ttyUSB*`. W raporcie pojawią się jako `Unapplied repairs` z konkretną
+wskazówką, co trzeba zmienić w uruchomieniu firmware.
+
+Domyślne oczekiwane parametry Waveshare Modbus RTU IO 8CH w tej konfiguracji:
+`/dev/ttyACM1 @ 19200 8N1`.
+
+Gotowy przykład workflow operatora znajduje się w
+`examples/hardware/doctor-workflow.sh`.
+
 ## Komendy w shellu
 
 | Komenda | Opis |
@@ -49,6 +108,12 @@ python -m oqlos.tools.hardware_diagnose --report my_report.json
 ## Wyjście JSON dla skryptów shell
 
 ```bash
+# Doctor jako JSON
+oqlctl doctor --json | jq '.summary, .issues'
+
+# Detect jako JSON
+oqlctl detect --json | jq '.probes.modbus'
+
 # Lista urządzeń jako JSON
 python -m oqlos.tools.hardware_diagnose --list --json | jq '.usb_devices[] | select(.vid != null)'
 
@@ -84,7 +149,7 @@ FIRMWARE_URL=http://192.168.1.100:8202 ./hardware-check.sh
 # SCENARIO: Hardware Diagnostics
 GOAL: Detect and validate all hardware components
   # Wykrywanie urządzeń
-  EXPECT_DEVICE "/dev/ttyACM0" "CH340" "Modbus RTU"
+  EXPECT_DEVICE "/dev/ttyACM1" "CH340" "Modbus RTU"
   EXPECT_DEVICE "/dev/ttyUSB0" "FTDI" "Serial"
   
   # Sprawdzenie health
@@ -177,7 +242,7 @@ Widoczne urządzenia:
 
 Mapowanie:
 - `ttyACM0` → Potencjalnie debug/tty
-- `ttyACM1` → Modbus RTU (Waveshare 8CH IO)
+- `ttyACM1` → Modbus RTU (Waveshare 8CH IO, 19200 8N1)
 - `ttyUSB0` → Dodatkowy serial (opcjonalny)
 
 ## Tryby pracy
@@ -235,4 +300,20 @@ curl -s http://localhost:8202/health
 
 # Zaloguj się do shell firmware
 curl -s http://localhost:8202/api/v1/state
+```
+
+### Firmware działa, ale doctor zgłasza mock
+```bash
+oqlctl doctor
+HARDWARE_MODE=real oqlos-server --host 0.0.0.0 --port 8202
+```
+
+### Firmware nie widzi seriali w kontenerze
+```bash
+# Host widzi porty
+oqlctl detect
+
+# Kontener musi mieć device mount, np.
+# devices:
+#   - /dev/ttyACM1:/dev/ttyACM1
 ```

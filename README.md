@@ -3,17 +3,17 @@
 
 ## AI Cost Tracking
 
-![PyPI](https://img.shields.io/badge/pypi-costs-blue) ![Version](https://img.shields.io/badge/version-0.1.4-blue) ![Python](https://img.shields.io/badge/python-3.9+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
-![AI Cost](https://img.shields.io/badge/AI%20Cost-$4.05-orange) ![Human Time](https://img.shields.io/badge/Human%20Time-22.1h-blue) ![Model](https://img.shields.io/badge/Model-openrouter%2Fqwen%2Fqwen3--coder--next-lightgrey)
+![PyPI](https://img.shields.io/badge/pypi-costs-blue) ![Version](https://img.shields.io/badge/version-0.1.5-blue) ![Python](https://img.shields.io/badge/python-3.9+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
+![AI Cost](https://img.shields.io/badge/AI%20Cost-$4.20-orange) ![Human Time](https://img.shields.io/badge/Human%20Time-23.6h-blue) ![Model](https://img.shields.io/badge/Model-openrouter%2Fqwen%2Fqwen3--coder--next-lightgrey)
 
-- 🤖 **LLM usage:** $4.0500 (27 commits)
-- 👤 **Human dev:** ~$2213 (22.1h @ $100/h, 30min dedup)
+- 🤖 **LLM usage:** $4.2000 (28 commits)
+- 👤 **Human dev:** ~$2365 (23.6h @ $100/h, 30min dedup)
 
-Generated on 2026-04-30 using [openrouter/qwen/qwen3-coder-next](https://openrouter.ai/qwen/qwen3-coder-next)
+Generated on 2026-05-05 using [openrouter/qwen/qwen3-coder-next](https://openrouter.ai/qwen/qwen3-coder-next)
 
 ---
 
-![Version](https://img.shields.io/badge/version-0.1.4-blue) ![Python](https://img.shields.io/badge/python-3.10+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
+![Version](https://img.shields.io/badge/version-0.1.5-blue) ![Python](https://img.shields.io/badge/python-3.10+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
 
 
 OqlOS is the core runtime for executing OQL (Operation Query Language) hardware testing scenarios. It provides the execution engine, hardware abstraction layer, and API server for running automated hardware tests.
@@ -57,8 +57,44 @@ python -m oqlos.tools.cql_cli.main --help
 Main commands provided by this project:
 
 - `oqlctl` — scenario CLI (validate / dry-run / execute)
+- `oqlctl detect` — smart local hardware detection (USB/serial/I2C/Modbus + config)
+- `oqlctl doctor` — operator-facing hardware/config doctor with repair hints
 - `oqlos-server` — API server
 - `oqlos-events` — event server
+
+### Hardware Doctor Quick Check
+
+Use `doctor` before executing real scenarios. It compares what the host can
+see with `oqlos.yaml` and with the firmware bridge, then reports actionable
+issues such as mock mode, missing device mounts, or a Modbus port/baud mismatch.
+
+```bash
+# Human-readable report
+oqlctl doctor
+
+# Machine-readable report for scripts
+oqlctl doctor --json
+
+# Local host detection only
+oqlctl detect
+
+# Backward-compatible aliases
+oqlctl --status
+oqlctl --identify
+
+# Apply safe repairs only (currently: update detected Modbus params in oqlos.yaml)
+oqlctl doctor --fix
+
+# Example operator workflow
+bash examples/hardware/doctor-workflow.sh
+```
+
+Current expected Modbus RTU defaults for the Waveshare 8CH IO controller:
+`/dev/ttyACM1 @ 19200 8N1`. If the hardware is moved to another port, run
+`oqlctl doctor --fix` after confirming the detected device is correct.
+Runtime changes such as switching firmware from `mock` to `real`, restarting
+containers, or mounting `/dev/ttyACM*`/`/dev/ttyUSB*` are reported as
+manual/unsafe repairs and are not applied automatically.
 
 ## Requirements
 
@@ -279,14 +315,20 @@ GOAL:
 ```bash
 # Dry-run (validate and simulate)
 oqlctl scenarios/config-peripherals.oql --mode dry-run
+oqlctl run scenarios/config-peripherals.oql --mode dry-run
 
 # Execute on real hardware
 oqlctl scenarios/config-peripherals.oql --mode execute
+oqlctl run scenarios/config-peripherals.oql --mode execute
 
 # Execute with custom firmware URL
 oqlctl scenarios/config-peripherals.oql \
   --firmware-url http://localhost:8202 \
   --mode execute
+
+# Run a scenario directly from a raw .oql URL or JSON source endpoint
+oqlctl run "http://localhost:9000/scenarios/maskleaktest-nadcisnieniestatyczne.oql" \
+  --mode dry-run
 
 # Fastest single-command hardware execution (v3 syntax)
 oqlctl cmd "SET pompa-1 0"
@@ -294,9 +336,16 @@ oqlctl cmd "SET pompa-1 0"
 # Single command without touching hardware
 oqlctl cmd "SET pompa-1 0" --mode dry-run
 
+# Parseable single-command dry-run output
+oqlctl cmd "SET pompa-1 0" --mode dry-run --json -q
+
 # Validate every .oql in a directory tree
 oqlctl --validate-dir oqlos/scenarios
 ```
+
+For URL runs, the response must be raw OQL/CQL text or JSON with one of
+`code`, `dsl`, `source`, or `content`. Editor/browser routes such as
+`http://localhost:8096/scenarios?scenario=...` return HTML and are rejected.
 
 Use `cmd` when you want to send a single OQL line to the firmware;
 use a file path when the action requires multiple steps.
@@ -418,6 +467,15 @@ Notes:
 
 ### Hardware Identification & Diagnostics
 
+Preferred operator commands:
+
+```bash
+oqlctl detect              # local USB/serial/I2C/Modbus probe
+oqlctl doctor              # detect runtime/config problems
+oqlctl doctor --json       # parseable report
+oqlctl doctor --fix        # safe config repair for detected Modbus settings
+```
+
 The `/api/v1/hardware/identify` endpoint returns the adapter registry, live probe
 status, and a diagnostics block with:
 
@@ -463,8 +521,8 @@ docker-compose -f docker/docker-compose.prod.yml up -d
 ## Testing
 
 ```bash
-# Run all tests (96 passing)
-pytest
+# Run all tests
+pytest -q
 
 # Run with coverage
 pytest --cov=oqlos
@@ -476,12 +534,13 @@ pytest tests/test_interpreter.py -v
 python -m oqlos.core.interpreter scenarios/test-pompy.oql --mode dry-run
 ```
 
-**Status:** 96 tests passing, 3 scenarios (12/12 goals), CC̄≤15, 0 violations
+**Status:** current local verification: `356 passed`.
 
 ## Documentation
 
 - [OQL Language Specification](docs/oql-spec.md) — Complete language reference
-- [API Documentation](docs/api.md) — REST API details
+- [Hardware Diagnostics](docs/HARDWARE_DIAGNOSTICS.md) — Smart detect, doctor, calibration, and troubleshooting
+- [Docs Index](docs/README.md) — Project documentation overview
 
 ## License
 

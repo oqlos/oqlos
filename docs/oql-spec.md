@@ -6,6 +6,18 @@ OQL (Operation Query Language) jest deklaratywnym DSL do testów sprzętu
 diagnostycznego (aparaty oddechowe Dräger, piADC, pompy DRI0050, zawory
 Modbus, płuca TIC249, itd.).
 
+Przed uruchomieniem scenariusza w trybie realnym użyj preflightu sprzętowego:
+
+```bash
+oqlctl doctor
+oqlctl detect
+```
+
+`doctor` porównuje lokalną detekcję USB/serial/I2C/Modbus z `oqlos.yaml` i
+firmware bridge. Jeśli wykryje niezgodność parametrów Modbus, `oqlctl doctor
+--fix` może bezpiecznie zaktualizować tylko `plugins.modbus-io.connection_params`
+po wcześniejszym utworzeniu `oqlos.yaml.bak`.
+
 Wersja 3 radykalnie upraszcza składnię:
 
 - **Bez cudzysłowów** — identyfikatory są gołe (`pump-main`, nie `'pump-main'`).

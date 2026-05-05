@@ -16,6 +16,28 @@ This document contains practical examples of the DSL Event Sourcing system with 
 
 ## Quick Start
 
+### OqlOS Hardware Doctor
+
+For hardware-backed OQL/CQL scenarios, run doctor before execute mode:
+
+```bash
+# Detect local USB/serial/I2C/Modbus and compare with oqlos.yaml + firmware
+oqlctl doctor
+
+# Parseable report
+oqlctl doctor --json
+
+# Local detection only
+oqlctl detect
+
+# Safe config repair for detected Modbus settings
+oqlctl doctor --fix
+```
+
+The doctor is designed to catch the common failure mode where the host sees
+the USB serial adapter, but firmware is still running in `mock` or inside a
+container without `/dev/ttyACM*`/`/dev/ttyUSB*` mounts.
+
 ### Start the Server
 
 ```bash
@@ -42,6 +64,36 @@ Output:
 ```bash
 cd dsl && make run-script FILE=examples/quick-navigation.dsl
 ```
+
+### Run OQL From File or URL
+
+```bash
+# Explicit run subcommand
+oqlctl run test.oql --mode dry-run
+
+# Existing file-mode shorthand still works
+oqlctl test.oql --mode dry-run
+
+# Raw .oql URL or JSON endpoint returning code/dsl/source/content
+oqlctl run "http://localhost:9000/scenarios/maskleaktest-nadcisnieniestatyczne.oql" \
+  --mode dry-run
+
+# Single command simulation
+oqlctl cmd "SET pompa-1 0" --mode dry-run
+
+# Clean JSON payload for scripts
+oqlctl cmd "SET pompa-1 0" --mode dry-run --json -q
+```
+
+`oqlctl cmd` defaults to `execute` because it is intended for direct hardware
+commands. When firmware reports `mock`, preflight blocks `execute`; add
+`--mode dry-run` for simulation or run `oqlctl doctor` before enabling real
+hardware.
+
+`oqlctl run URL` expects raw OQL/CQL text or JSON containing `code`, `dsl`,
+`source`, or `content`. Editor routes like
+`http://localhost:8096/scenarios?scenario=...` return HTML and are rejected
+instead of producing a misleading zero-step PASS.
 
 ---
 

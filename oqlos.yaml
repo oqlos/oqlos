@@ -9,7 +9,7 @@ plugins:
     enabled: true
     connection_type: http
     connection_params:
-      base_url: http://piadc:8204
+      base_url: http://localhost:8204
     timeout: 5.0
     retry_count: 3
     metadata:
@@ -33,7 +33,7 @@ plugins:
     enabled: true
     connection_type: http
     connection_params:
-      base_url: http://motor:8203
+      base_url: http://localhost:8203
     timeout: 5.0
     retry_count: 3
     metadata:
@@ -96,7 +96,7 @@ plugins:
     enabled: true
     connection_type: http
     connection_params:
-      base_url: http://tic249:5000
+      base_url: http://localhost:8205
     timeout: 5.0
     retry_count: 3
     metadata:

@@ -101,6 +101,82 @@ def test_doctor_fix_updates_modbus_config(monkeypatch, tmp_path):
     assert (tmp_path / "oqlos.yaml.bak").exists()
 
 
+def test_doctor_fix_reports_unapplied_manual_repairs(monkeypatch, tmp_path):
+    config = tmp_path / "oqlos.yaml"
+    _write_config(config)
+    _patch_detection(monkeypatch)
+
+    report = doctor.build_doctor_report(config_path=config, fix=True)
+    output = doctor.format_doctor(report)
+
+    assert report["fix_requested"] is True
+    assert "Unapplied repairs:" in output
+    assert "skipped manual/unsafe: enable_real_mode" in output
+    assert "skipped manual/unsafe: mount_serial_devices" in output
+
+
+def test_doctor_reports_busy_configured_serial_port(monkeypatch, tmp_path):
+    config = tmp_path / "oqlos.yaml"
+    _write_config(config)
+    _patch_detection(monkeypatch)
+    monkeypatch.setattr(
+        doctor,
+        "_serial_port_owners",
+        lambda devices: {
+            "/dev/ttyACM0": [
+                {"pid": "1234", "command": "oqlos-server", "args": "oqlos-server --port 8210"}
+            ]
+        },
+    )
+
+    report = doctor.build_doctor_report(config_path=config)
+
+    issue = next(item for item in report["issues"] if item["code"] == "serial_port_busy")
+    assert "/dev/ttyACM0" in issue["message"]
+    assert "oqlos-server[1234]" in issue["message"]
+    assert any(repair["id"] == "release_serial_port" for repair in report["repairs"])
+
+
+def test_doctor_trusts_firmware_modbus_health_when_local_port_is_busy(monkeypatch, tmp_path):
+    config = tmp_path / "oqlos.yaml"
+    _write_config(config)
+    _patch_detection(monkeypatch)
+    monkeypatch.setattr(
+        doctor,
+        "probe_waveshare_modbus",
+        lambda timeout=0.35: {
+            "connected": True,
+            "serial_port": "/dev/ttyACM1",
+            "modbus_device_responds": False,
+            "reason": "/dev/ttyACM1 busy or unavailable",
+        },
+    )
+    monkeypatch.setattr(
+        doctor,
+        "check_firmware_health",
+        lambda url: {"mode": "real", "modbus-io": {"status": "connected", "compatible": True}},
+    )
+    monkeypatch.setattr(
+        doctor,
+        "check_firmware_identify",
+        lambda url: {
+            "mode": "real",
+            "detected": 0,
+            "total": 4,
+            "adapters": [{"id": "modbus-io", "status": "adapter-only"}],
+            "diagnostics": {"serial_ports": ["/dev/ttyACM1"]},
+        },
+    )
+
+    report = doctor.build_doctor_report(config_path=config)
+    output = doctor.format_doctor(report)
+    codes = {item["code"] for item in report["issues"]}
+
+    assert "modbus_adapter_only" not in codes
+    assert "adapter_modbus-io_not_ok" not in codes
+    assert "Modbus: OK via firmware" in output
+
+
 def test_detection_filters_real_usb_serial_devices(monkeypatch, tmp_path):
     config = tmp_path / "oqlos.yaml"
     _write_config(config)

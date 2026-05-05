@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.5] - 2026-05-05
+
+### Docs
+- Update README.md
+- Update docs/HARDWARE_DIAGNOSTICS.md
+- Update docs/OQL_V4_MIGRATION_MANUAL.md
+- Update docs/README.md
+- Update docs/cql-examples.md
+- Update docs/cql-spec.md
+- Update docs/oql-spec.md
+
+### Test
+- Update tests/firmware/test_hardware_doctor.py
+- Update tests/test_cql_cli.py
+
+### Other
+- Update examples/hardware/doctor-workflow.sh
+- Update examples/plugin-config.yaml
+- Update oqlos.yaml
+- Update oqlos/api/hardware.py
+- Update oqlos/tools/cql_cli/main.py
+- Update oqlos/tools/cql_cli/preflight.py
+- Update oqlos/tools/cql_cli/utils.py
+- Update oqlos/tools/hardware_diagnose/doctor.py
+
 ## [0.1.4] - 2026-04-30
 
 ### Docs

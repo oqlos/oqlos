@@ -70,11 +70,12 @@ def build_single_command_scenario(command: str) -> str:
     if not stripped:
         raise ValueError("Command cannot be empty")
 
-    indented_command = textwrap.indent(stripped, "    ")
+    indented_command = textwrap.indent(stripped, "  ")
     return (
-        'SCENARIO: "Single command"\n'
-        'GOAL: Execute command\n'
-        '  1. Run command:\n'
+        "VERSION: 4\n"
+        "SCENARIO: Single command\n"
+        "GOAL:\n"
+        "  SET NAME 'Execute command'\n"
         f"{indented_command}\n"
     )
 

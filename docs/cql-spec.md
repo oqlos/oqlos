@@ -3,6 +3,25 @@
 Practical examples of the v3 flat OQL used for medical device
 diagnostics.  Identifiers are bare; range assertions replace `IF/ENDIF`.
 
+## Operator Preflight
+
+Before running these examples in `execute` mode, verify that the runtime can see
+the same hardware as the host:
+
+```bash
+oqlctl doctor
+oqlctl detect
+```
+
+If `doctor` reports a `modbus_config_mismatch`, use:
+
+```bash
+oqlctl doctor --fix
+```
+
+This only updates detected Modbus connection parameters in `oqlos.yaml` and
+creates a backup first.
+
 ## Example: Static Pressure Test
 
 ```oql
