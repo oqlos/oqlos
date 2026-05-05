@@ -3,17 +3,17 @@
 
 ## AI Cost Tracking
 
-![PyPI](https://img.shields.io/badge/pypi-costs-blue) ![Version](https://img.shields.io/badge/version-0.1.9-blue) ![Python](https://img.shields.io/badge/python-3.9+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
-![AI Cost](https://img.shields.io/badge/AI%20Cost-$4.80-orange) ![Human Time](https://img.shields.io/badge/Human%20Time-24.0h-blue) ![Model](https://img.shields.io/badge/Model-openrouter%2Fqwen%2Fqwen3--coder--next-lightgrey)
+![PyPI](https://img.shields.io/badge/pypi-costs-blue) ![Version](https://img.shields.io/badge/version-0.1.10-blue) ![Python](https://img.shields.io/badge/python-3.9+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
+![AI Cost](https://img.shields.io/badge/AI%20Cost-$4.95-orange) ![Human Time](https://img.shields.io/badge/Human%20Time-24.1h-blue) ![Model](https://img.shields.io/badge/Model-openrouter%2Fqwen%2Fqwen3--coder--next-lightgrey)
 
-- 🤖 **LLM usage:** $4.8000 (32 commits)
-- 👤 **Human dev:** ~$2403 (24.0h @ $100/h, 30min dedup)
+- 🤖 **LLM usage:** $4.9500 (33 commits)
+- 👤 **Human dev:** ~$2411 (24.1h @ $100/h, 30min dedup)
 
 Generated on 2026-05-05 using [openrouter/qwen/qwen3-coder-next](https://openrouter.ai/qwen/qwen3-coder-next)
 
 ---
 
-![Version](https://img.shields.io/badge/version-0.1.9-blue) ![Python](https://img.shields.io/badge/python-3.10+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
+![Version](https://img.shields.io/badge/version-0.1.10-blue) ![Python](https://img.shields.io/badge/python-3.10+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
 
 
 OqlOS is the core runtime for executing OQL (Operation Query Language) hardware testing scenarios. It provides the execution engine, hardware abstraction layer, and API server for running automated hardware tests.
@@ -66,7 +66,8 @@ Main commands provided by this project:
 
 Use `doctor` before executing real scenarios. It compares what the host can
 see with `oqlos.yaml` and with the firmware bridge, then reports actionable
-issues such as mock mode, missing device mounts, or a Modbus port/baud mismatch.
+issues such as mock mode, missing device mounts, a busy serial port, stale
+HTTP driver services, or a Modbus port/baud mismatch.
 
 ```bash
 # Human-readable report
@@ -89,9 +90,18 @@ oqlctl doctor --fix
 bash examples/hardware/doctor-workflow.sh
 ```
 
-Current expected Modbus RTU defaults for the Waveshare 8CH IO controller:
-`/dev/ttyACM1 @ 19200 8N1`. If the hardware is moved to another port, run
-`oqlctl doctor --fix` after confirming the detected device is correct.
+If `oqlctl --help` shows only legacy Click subcommands such as `run`, `cmd`,
+and `scenarios`, activate this repository virtualenv or call `.venv/bin/oqlctl`
+directly. The smart `detect`/`doctor` and hardware preflight paths live in the
+current repository CLI.
+
+Current expected Modbus RTU defaults for the Waveshare 8CH IO controller are
+`19200 8N1`; prefer a stable `/dev/serial/by-id/...` path in `oqlos.yaml`
+instead of relying on changing `/dev/ttyACM*` numbering. `doctor` resolves
+those symlinks, so it can still report the real busy device, e.g.
+`/dev/ttyACM0`, when another process owns the configured `by-id` path. If the
+hardware is moved to another port, run `oqlctl doctor --fix` after confirming
+the detected device is correct.
 Runtime changes such as switching firmware from `mock` to `real`, restarting
 containers, or mounting `/dev/ttyACM*`/`/dev/ttyUSB*` are reported as
 manual/unsafe repairs and are not applied automatically.
@@ -451,7 +461,7 @@ Notes:
 
 ## Supported Hardware
 
-- **Valves**: valve-1 through valve-14, valve-nc, valve-sc, valve-wc (Modbus RTU via /dev/ttyACM1 @ 19200 8N1)
+- **Valves**: valve-1 through valve-14, valve-nc, valve-sc, valve-wc (Modbus RTU via `/dev/serial/by-id/...` or `/dev/ttyACM*` @ 19200 8N1)
 - **Pump**: pump-main (DRI0050 PWM motor driver via HTTP :49055)
 - **Artificial lung**: lung-main (Tic T249 stepper via HTTP :8205)
 - **Sensors**: AI01 (NC), AI02 (SC), AI03 (WC) (piADC ADS1115 via HTTP :8204; raw ADC voltage)

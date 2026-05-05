@@ -11,19 +11,27 @@ oqlctl doctor --json
 oqlctl doctor --fix
 ```
 
+If a global `oqlctl` shadows the repository CLI and lacks `detect`/`doctor`,
+activate `.venv` or call `.venv/bin/oqlctl` explicitly.
+
 `doctor` combines host-side USB/serial/I2C discovery, Modbus RTU probing,
 `oqlos.yaml` validation, and firmware `/api/v1/hardware/health` +
 `/api/v1/hardware/identify` checks. It reports concrete issues such as:
 
 - firmware running in `mock` mode,
 - firmware/container missing access to `/dev/ttyACM*` or `/dev/ttyUSB*`,
+- local USB devices connected to a different host than a remote firmware URL,
+- a configured Modbus port already owned by another process, including when
+  `oqlos.yaml` uses `/dev/serial/by-id/...`,
 - `modbus-io` port/baud mismatch,
-- adapter statuses such as `offline`, `no-access`, or `adapter-only`.
+- adapter statuses such as `offline`, `no-access`, `adapter-only`, mock-mode
+  HTTP drivers, and runtime health failures.
 
 Safe automatic repair is intentionally narrow: `oqlctl doctor --fix` updates
 only detected Modbus connection parameters in `oqlos.yaml` and writes
 `oqlos.yaml.bak` first. The current default hardware profile expects
-`/dev/ttyACM1 @ 19200 8N1` for Waveshare Modbus RTU IO 8CH.
+`19200 8N1` for Waveshare Modbus RTU IO 8CH; prefer stable
+`/dev/serial/by-id/...` paths over volatile `/dev/ttyACM*` numbering.
 Runtime repairs such as enabling real firmware mode, restarting containers, or
 mounting `/dev/ttyACM*`/`/dev/ttyUSB*` remain manual and are reported as
 unapplied repairs when `--fix` is requested.

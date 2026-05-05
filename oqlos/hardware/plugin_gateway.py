@@ -267,7 +267,7 @@ class PluginHardwareGateway:
             result["note"] = "mock mode — no hardware calls"
             return result
 
-        health_results = await PluginRegistry.health_check_all()
+        health_results = await PluginRegistry.health_check_all(timeout=2.5)
         for plugin_id, health in health_results.items():
             result[plugin_id] = {
                 "status": health.status.value,

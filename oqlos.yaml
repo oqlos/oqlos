@@ -74,7 +74,7 @@ plugins:
     enabled: true
     connection_type: modbus-rtu
     connection_params:
-      serial_port: /dev/ttyACM1
+      serial_port: /dev/serial/by-id/usb-Prolific_Technology_Inc._USB-Serial_Controller_BOCJb118D16-if00
       baudrate: 19200
       parity: N
     timeout: 2.0

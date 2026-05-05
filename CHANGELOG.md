@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.10] - 2026-05-05
+
+### Docs
+- Update README.md
+- Update docs/HARDWARE_DIAGNOSTICS.md
+- Update docs/README.md
+
+### Test
+- Update tests/firmware/test_hardware_discovery.py
+- Update tests/firmware/test_hardware_doctor.py
+- Update tests/firmware/test_motor_plugin.py
+- Update tests/firmware/test_plugin_health.py
+
+### Other
+- Update examples/hardware/doctor-workflow.sh
+- Update examples/plugin-config.yaml
+- Update oqlos.yaml
+- Update oqlos/hardware/plugin_gateway.py
+- Update oqlos/hardware/plugins/lung.py
+- Update oqlos/hardware/plugins/modbus.py
+- Update oqlos/hardware/plugins/motor.py
+- Update oqlos/hardware/plugins/piadc.py
+- Update oqlos/hardware/plugins/registry.py
+- Update oqlos/tools/cql_cli/preflight.py
+- ... and 3 more files
+
 ## [0.1.9] - 2026-05-05
 
 ### Docs

@@ -82,7 +82,25 @@ class PiadcPlugin(HardwarePlugin):
             return not_connected_health("piADC")
 
         try:
-            return await http_health_check(self._client, self._base_url, "piADC")
+            health = await http_health_check(self._client, self._base_url, "piADC")
+            details = health.details if isinstance(health.details, dict) else {}
+            if details.get("mock_mode") is True:
+                return PluginHealth(
+                    status=PluginStatus.ERROR,
+                    message="piADC service is in mock_mode; real ADC readings are not available",
+                    details=details,
+                    compatible=False,
+                    version=health.version,
+                )
+            if details.get("initialized") is False:
+                return PluginHealth(
+                    status=PluginStatus.ERROR,
+                    message="piADC service is not initialized",
+                    details=details,
+                    compatible=False,
+                    version=health.version,
+                )
+            return health
         except Exception as exc:
             return health_check_exception(exc)
 

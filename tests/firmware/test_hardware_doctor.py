@@ -137,6 +137,44 @@ def test_doctor_reports_busy_configured_serial_port(monkeypatch, tmp_path):
     assert any(repair["id"] == "release_serial_port" for repair in report["repairs"])
 
 
+def test_doctor_reports_busy_configured_serial_port_via_by_id_symlink(monkeypatch, tmp_path):
+    config = tmp_path / "oqlos.yaml"
+    config.write_text(
+        """
+plugins:
+  modbus-io:
+    enabled: true
+    connection_type: modbus-rtu
+    connection_params:
+      serial_port: /dev/serial/by-id/usb-Modbus
+      baudrate: 9600
+      parity: N
+""".lstrip(),
+        encoding="utf-8",
+    )
+    _patch_detection(monkeypatch)
+    monkeypatch.setattr(
+        doctor,
+        "_canonical_device_path",
+        lambda path: "/dev/ttyACM0" if path in {"/dev/serial/by-id/usb-Modbus", "/dev/ttyACM0"} else path,
+    )
+    monkeypatch.setattr(
+        doctor,
+        "_serial_port_owners",
+        lambda devices: {
+            "/dev/ttyACM0": [
+                {"pid": "1234", "command": "oqlos-server", "args": "oqlos-server --port 8210"}
+            ]
+        },
+    )
+
+    report = doctor.build_doctor_report(config_path=config)
+
+    issue = next(item for item in report["issues"] if item["code"] == "serial_port_busy")
+    assert "/dev/serial/by-id/usb-Modbus (/dev/ttyACM0)" in issue["message"]
+    assert "oqlos-server[1234]" in issue["message"]
+
+
 def test_doctor_trusts_firmware_modbus_health_when_local_port_is_busy(monkeypatch, tmp_path):
     config = tmp_path / "oqlos.yaml"
     _write_config(config)
@@ -175,6 +213,54 @@ def test_doctor_trusts_firmware_modbus_health_when_local_port_is_busy(monkeypatc
     assert "modbus_adapter_only" not in codes
     assert "adapter_modbus-io_not_ok" not in codes
     assert "Modbus: OK via firmware" in output
+
+
+def test_doctor_explains_remote_firmware_cannot_use_local_usb(monkeypatch, tmp_path):
+    config = tmp_path / "oqlos.yaml"
+    _write_config(config)
+    _patch_detection(monkeypatch)
+    monkeypatch.setattr(
+        doctor,
+        "probe_waveshare_modbus",
+        lambda timeout=0.35: {
+            "connected": False,
+            "reason": "local probe skipped",
+            "modbus_device_responds": False,
+        },
+    )
+    monkeypatch.setattr(
+        doctor,
+        "check_firmware_health",
+        lambda url: {"mode": "real", "modbus": "/dev/ttyACM1@19200 8N1 (mode=rtu)"},
+    )
+    monkeypatch.setattr(
+        doctor,
+        "check_firmware_identify",
+        lambda url: {
+            "mode": "real",
+            "detected": 0,
+            "total": 4,
+            "adapters": [
+                {"id": "piadc", "status": "no-access"},
+                {"id": "motor-dri0050", "status": "offline"},
+                {"id": "modbus-io", "status": "no-access"},
+            ],
+            "diagnostics": {"serial_ports": []},
+        },
+    )
+
+    report = doctor.build_doctor_report(
+        firmware_url="http://192.168.188.109:8202",
+        config_path=config,
+    )
+    output = doctor.format_doctor(report)
+    codes = {item["code"] for item in report["issues"]}
+
+    assert "remote_firmware_no_serial_access" in codes
+    assert "firmware_no_serial_access" not in codes
+    assert "modbus_not_detected" not in codes
+    assert "Firmware: http://192.168.188.109:8202 (remote host 192.168.188.109)" in output
+    assert "Modbus: remote firmware status no-access" in output
 
 
 def test_detection_filters_real_usb_serial_devices(monkeypatch, tmp_path):

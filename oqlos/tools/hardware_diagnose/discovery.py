@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import glob
 import subprocess
 from dataclasses import dataclass
 from typing import Optional
@@ -61,35 +62,21 @@ def list_usb_serial_devices() -> list[UsbDevice]:
                 description=port.description or "Unknown",
             ))
 
-    rc, stdout, _ = _run_shell_command(["ls", "-la", "/dev/ttyACM*", "/dev/ttyUSB*"])
-    if rc == 0:
-        for line in stdout.split("\n"):
-            if "ttyACM" in line or "ttyUSB" in line:
-                parts = line.split()
-                if len(parts) >= 10:
-                    device = f"/dev/{parts[-1]}"
-                    if not any(d.device == device for d in devices):
-                        devices.append(UsbDevice(
-                            device=device,
-                            vid=None, pid=None, manufacturer=None,
-                            product=None, serial_number=None,
-                            description="USB Serial (from ls)",
-                        ))
+    for device in sorted(glob.glob("/dev/ttyACM*") + glob.glob("/dev/ttyUSB*")):
+        if not any(d.device == device for d in devices):
+            devices.append(UsbDevice(
+                device=device,
+                vid=None, pid=None, manufacturer=None,
+                product=None, serial_number=None,
+                description="USB Serial (from glob)",
+            ))
 
     return devices
 
 
 def list_i2c_buses() -> list[str]:
     """List available I2C buses."""
-    rc, stdout, _ = _run_shell_command(["ls", "-la", "/dev/i2c-*"])
-    buses = []
-    if rc == 0:
-        for line in stdout.split("\n"):
-            if "/dev/i2c-" in line:
-                parts = line.split()
-                if len(parts) >= 10:
-                    buses.append(f"/dev/{parts[-1]}")
-    return buses
+    return sorted(glob.glob("/dev/i2c-*"))
 
 
 def detect_chips_on_i2c(bus: str = "/dev/i2c-1") -> list[dict]:

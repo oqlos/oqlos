@@ -195,11 +195,13 @@ def _health_status_is_ok(raw_status) -> bool:
         return False
     if status == "ok" or status.startswith("ok "):
         return True
+    if status in {"connected", "healthy", "ready"}:
+        return True
+    if status.startswith(("connected ", "healthy ", "ready ")):
+        return True
     if "error" in status or "offline" in status or "no-access" in status:
         return False
-    # Legacy real-mode modbus health is a descriptor like
-    # "/dev/ttyACM1@19200 8N1 (mode=rtu)".
-    return True
+    return False
 
 
 def _emit_preflight_error(error_msg: str, yaml_output: bool, quiet: bool) -> None:

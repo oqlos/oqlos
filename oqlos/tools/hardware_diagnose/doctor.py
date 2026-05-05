@@ -8,6 +8,7 @@ from contextlib import redirect_stderr, redirect_stdout
 from io import StringIO
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 import yaml
 
@@ -33,6 +34,8 @@ _HEALTH_KEYS_BY_ADAPTER = {
     "motor-tic249": ("motor-tic249", "lung"),
     "modbus-io": ("modbus-io", "modbus"),
 }
+
+_LOCAL_FIRMWARE_HOSTS = {"", "localhost", "127.0.0.1", "::1"}
 
 
 def _usb_serial_only(devices: list[UsbDevice]) -> list[UsbDevice]:
@@ -113,6 +116,27 @@ def _serial_port_owners(devices: list[UsbDevice]) -> dict[str, list[dict[str, st
     return owners
 
 
+def _canonical_device_path(device: str) -> str:
+    try:
+        return str(Path(device).resolve(strict=False))
+    except Exception:
+        return device
+
+
+def _owners_for_configured_port(
+    owners: dict[str, list[dict[str, str]]],
+    configured_port: str,
+) -> tuple[str, list[dict[str, str]]] | tuple[None, list[dict[str, str]]]:
+    if configured_port in owners:
+        return configured_port, owners[configured_port]
+
+    configured_real_path = _canonical_device_path(configured_port)
+    for owner_port, proc_list in owners.items():
+        if _canonical_device_path(owner_port) == configured_real_path:
+            return owner_port, proc_list
+    return None, []
+
+
 def _extract_pids(text: str) -> list[str]:
     pids: list[str] = []
     for token in text.replace(":", " ").split():
@@ -169,13 +193,23 @@ def detect_hardware(
     }
 
     if include_firmware:
+        firmware_host = _firmware_hostname(firmware_url)
         result["firmware"] = {
             "url": firmware_url,
+            "host": firmware_host,
+            "is_local": firmware_host in _LOCAL_FIRMWARE_HOSTS,
             "health": check_firmware_health(firmware_url),
             "identify": check_firmware_identify(firmware_url),
         }
 
     return result
+
+
+def _firmware_hostname(firmware_url: str) -> str:
+    try:
+        return (urlparse(firmware_url).hostname or "").lower()
+    except Exception:
+        return ""
 
 
 def _add_issue(
@@ -220,6 +254,9 @@ def _expected_modbus_params(modbus_probe: dict[str, Any]) -> dict[str, Any] | No
 
 
 def _analyze_modbus_config(detection: dict[str, Any], issues: list[Issue]) -> None:
+    if _firmware_is_remote(detection):
+        return
+
     config = detection.get("config", {})
     modbus_probe = detection.get("probes", {}).get("modbus", {})
     expected = _expected_modbus_params(modbus_probe)
@@ -346,23 +383,45 @@ def _analyze_firmware_access(detection: dict[str, Any], issues: list[Issue]) -> 
 
     if host_serial and not firmware_serial:
         serial_mounts = ", ".join(str(dev.get("device")) for dev in host_serial if dev.get("device"))
-        _add_issue(
-            issues,
-            severity="warn",
-            code="firmware_no_serial_access",
-            message=(
-                "Host sees USB serial devices, but firmware identify sees none. "
-                "The service is probably missing /dev/ttyACM* or /dev/ttyUSB* device mounts."
-            ),
-            repair={
-                "id": "mount_serial_devices",
-                "safe": False,
-                "hint": (
-                    "Mount detected serial devices into the firmware container "
-                    f"({serial_mounts}) or run firmware on the host; then restart firmware."
+        if not firmware.get("is_local", True):
+            firmware_host = firmware.get("host") or firmware.get("url") or "remote host"
+            _add_issue(
+                issues,
+                severity="warn",
+                code="remote_firmware_no_serial_access",
+                message=(
+                    "The CLI host sees USB serial devices, but firmware is running on "
+                    f"{firmware_host}; remote firmware cannot access local /dev/ttyACM* "
+                    "or /dev/ttyUSB* devices."
                 ),
-            },
-        )
+                repair={
+                    "id": "align_firmware_host",
+                    "safe": False,
+                    "hint": (
+                        "Attach the USB/serial hardware to the firmware host, run firmware "
+                        "on this machine, or configure firmware to call network-reachable "
+                        "hardware services instead of local /dev devices."
+                    ),
+                },
+            )
+        else:
+            _add_issue(
+                issues,
+                severity="warn",
+                code="firmware_no_serial_access",
+                message=(
+                    "Host sees USB serial devices, but firmware identify sees none. "
+                    "The service is probably missing /dev/ttyACM* or /dev/ttyUSB* device mounts."
+                ),
+                repair={
+                    "id": "mount_serial_devices",
+                    "safe": False,
+                    "hint": (
+                        "Mount detected serial devices into the firmware container "
+                        f"({serial_mounts}) or run firmware on the host; then restart firmware."
+                    ),
+                },
+            )
 
     adapters = identify.get("adapters") if isinstance(identify, dict) else []
     if isinstance(adapters, list):
@@ -408,12 +467,19 @@ def _health_status_is_ok(raw_status: Any) -> bool:
         return False
     if status == "ok" or status.startswith("ok "):
         return True
+    if status in {"connected", "healthy", "ready"}:
+        return True
+    if status.startswith(("connected ", "healthy ", "ready ")):
+        return True
     if "error" in status or "offline" in status or "no-access" in status:
         return False
-    return True
+    return False
 
 
 def _analyze_serial_port_owners(detection: dict[str, Any], issues: list[Issue]) -> None:
+    if _firmware_is_remote(detection):
+        return
+
     host = detection.get("host", {})
     owners = host.get("serial_port_owners") if isinstance(host, dict) else {}
     if not isinstance(owners, dict) or not owners:
@@ -423,26 +489,32 @@ def _analyze_serial_port_owners(detection: dict[str, Any], issues: list[Issue]) 
     modbus = _modbus_config(config) if isinstance(config, dict) else None
     params = modbus.get("connection_params") if isinstance(modbus, dict) else {}
     configured_port = params.get("serial_port") if isinstance(params, dict) else None
-    if not configured_port or configured_port not in owners:
+    if not configured_port:
         return
 
-    proc_list = owners.get(configured_port) or []
+    owner_port, proc_list = _owners_for_configured_port(owners, str(configured_port))
+    if not owner_port or not proc_list:
+        return
+
     owner_labels = ", ".join(
         f"{proc.get('command', 'process')}[{proc.get('pid')}]" for proc in proc_list
     )
+    port_label = str(configured_port)
+    if owner_port != configured_port:
+        port_label = f"{configured_port} ({owner_port})"
     _add_issue(
         issues,
         severity="warn",
         code="serial_port_busy",
         message=(
-            f"Configured Modbus port {configured_port} is already open by {owner_labels}. "
+            f"Configured Modbus port {port_label} is already open by {owner_labels}. "
             "Only one process can own a Modbus RTU serial port at a time."
         ),
         repair={
             "id": "release_serial_port",
             "safe": False,
             "hint": (
-                f"Stop the process using {configured_port}, or point oqlctl to that "
+                f"Stop the process using {owner_port}, or point oqlctl to that "
                 "already-running firmware URL instead of probing the same serial port twice."
             ),
         },
@@ -569,6 +641,10 @@ def _update_modbus_config(
 def format_detection(detection: dict[str, Any]) -> str:
     """Format smart detection output for operators."""
     lines = ["", "OqlOS Smart Detect", "-" * 50]
+    firmware = detection.get("firmware")
+    if isinstance(firmware, dict):
+        location = "local" if firmware.get("is_local", True) else f"remote host {firmware.get('host')}"
+        lines.append(f"Firmware: {firmware.get('url')} ({location})")
     host = detection.get("host", {})
     serial = host.get("usb_serial_devices") or []
     lines.append(f"Host USB serial devices: {len(serial)}")
@@ -580,7 +656,9 @@ def format_detection(detection: dict[str, Any]) -> str:
     lines.append(f"I2C buses: {', '.join(buses) if buses else 'none'}")
 
     modbus = detection.get("probes", {}).get("modbus", {})
-    if modbus.get("modbus_device_responds"):
+    if _firmware_is_remote(detection):
+        lines.append(f"Modbus: remote firmware status {_firmware_adapter_status(detection, 'modbus-io') or 'unknown'}")
+    elif modbus.get("modbus_device_responds"):
         lines.append(
             "Modbus: OK "
             f"{modbus.get('serial_port')} @ {modbus.get('baudrate')} 8{modbus.get('parity')}1"
@@ -603,7 +681,36 @@ def _firmware_modbus_health_ok(detection: dict[str, Any]) -> bool:
     if not isinstance(health, dict):
         return False
     status = _adapter_health_status(health, "modbus-io")
-    return status is not None and _health_status_is_ok(status)
+    if isinstance(status, dict):
+        return _health_status_is_ok(status)
+    if isinstance(status, str) and status.lower().startswith(("ok", "connected", "healthy", "ready")):
+        return True
+
+    identify = firmware.get("identify")
+    adapters = identify.get("adapters") if isinstance(identify, dict) else []
+    if isinstance(adapters, list):
+        for adapter in adapters:
+            if adapter.get("id") == "modbus-io":
+                return adapter.get("status") == "ok"
+    return False
+
+
+def _firmware_is_remote(detection: dict[str, Any]) -> bool:
+    firmware = detection.get("firmware")
+    return isinstance(firmware, dict) and firmware.get("is_local") is False
+
+
+def _firmware_adapter_status(detection: dict[str, Any], adapter_id: str) -> str | None:
+    firmware = detection.get("firmware")
+    identify = firmware.get("identify") if isinstance(firmware, dict) else None
+    adapters = identify.get("adapters") if isinstance(identify, dict) else None
+    if not isinstance(adapters, list):
+        return None
+    for adapter in adapters:
+        if adapter.get("id") == adapter_id:
+            status = adapter.get("status")
+            return str(status) if status is not None else None
+    return None
 
 
 def format_doctor(report: dict[str, Any]) -> str:

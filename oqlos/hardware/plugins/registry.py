@@ -4,6 +4,7 @@ Hardware plugin registry - manages plugin discovery, registration, and lifecycle
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from pathlib import Path
 from typing import Any, Type
@@ -156,12 +157,23 @@ class PluginRegistry:
         return False
 
     @classmethod
-    async def health_check(cls, plugin_id: str) -> PluginHealth | None:
+    async def health_check(cls, plugin_id: str, *, timeout: float | None = None) -> PluginHealth | None:
         """Perform health check on a plugin instance."""
         instance = cls.get_instance(plugin_id)
         if instance:
             try:
-                health = await instance.health_check()
+                check = instance.health_check()
+                health = await asyncio.wait_for(check, timeout=timeout) if timeout else await check
+                instance._health = health
+                instance._status = health.status
+                return health
+            except asyncio.TimeoutError:
+                logger.error("Health check timed out for plugin %s", plugin_id)
+                health = PluginHealth(
+                    status=PluginStatus.ERROR,
+                    message=f"Health check timed out after {timeout:.1f}s",
+                    compatible=False,
+                )
                 instance._health = health
                 instance._status = health.status
                 return health
@@ -175,11 +187,14 @@ class PluginRegistry:
         return None
 
     @classmethod
-    async def health_check_all(cls) -> dict[str, PluginHealth]:
+    async def health_check_all(cls, *, timeout: float | None = None) -> dict[str, PluginHealth]:
         """Perform health checks on all active plugin instances."""
+        async def _check(plugin_id: str) -> tuple[str, PluginHealth | None]:
+            return plugin_id, await cls.health_check(plugin_id, timeout=timeout)
+
         results = {}
-        for plugin_id in cls._instances:
-            health = await cls.health_check(plugin_id)
+        checks = [_check(plugin_id) for plugin_id in cls._instances]
+        for plugin_id, health in await asyncio.gather(*checks):
             if health:
                 results[plugin_id] = health
         return results

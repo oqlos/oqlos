@@ -63,9 +63,11 @@ python -m oqlos.tools.hardware_diagnose --report my_report.json
 | Kod | Znaczenie | Typowa naprawa |
 |-----|-----------|----------------|
 | `modbus_config_mismatch` | `oqlos.yaml` wskazuje inny port/baud niż odpowiadające urządzenie Modbus | `oqlctl doctor --fix` |
+| `serial_port_busy` | skonfigurowany port Modbus jest już otwarty przez inny proces; działa także dla symlinków `/dev/serial/by-id/...` | zatrzymaj drugi proces albo użyj jego `--firmware-url` |
 | `firmware_not_real` | firmware działa w `mock`, więc endpointy aktuatorów nie dotykają sprzętu | uruchom z `HARDWARE_MODE=real` albo `OQLOS_HARDWARE_MODE=real` |
 | `firmware_no_serial_access` | host widzi `/dev/ttyACM*`/`/dev/ttyUSB*`, ale firmware nie | podmontuj urządzenia do kontenera albo uruchom firmware na hoście |
-| `adapter_*_not_ok` | konkretny adapter firmware jest offline/no-access | sprawdź zasilanie, mounty, URL serwisów i uprawnienia |
+| `remote_firmware_no_serial_access` | lokalny host widzi USB, ale zdalne firmware ich nie widzi | podłącz sprzęt do hosta firmware albo uruchom firmware lokalnie |
+| `adapter_*_not_ok` / `adapter_*_health_not_ok` | konkretny adapter firmware jest offline/no-access albo health zwraca błąd | sprawdź zasilanie, mounty, URL serwisów i uprawnienia |
 
 Przykład:
 
@@ -84,8 +86,11 @@ Zmiany runtime są celowo ręczne: `doctor --fix` nie przełącza firmware z
 `/dev/ttyUSB*`. W raporcie pojawią się jako `Unapplied repairs` z konkretną
 wskazówką, co trzeba zmienić w uruchomieniu firmware.
 
-Domyślne oczekiwane parametry Waveshare Modbus RTU IO 8CH w tej konfiguracji:
-`/dev/ttyACM1 @ 19200 8N1`.
+Domyślne oczekiwane parametry Waveshare Modbus RTU IO 8CH w tej konfiguracji
+to `19200 8N1`. W `oqlos.yaml` preferuj stabilną ścieżkę
+`/dev/serial/by-id/...`; numeracja `/dev/ttyACM*` może zmienić się po restarcie
+USB. `doctor` kanonizuje symlinki i pokaże realny port zajęty przez proces,
+np. `/dev/ttyACM0`.
 
 Gotowy przykład workflow operatora znajduje się w
 `examples/hardware/doctor-workflow.sh`.
@@ -306,6 +311,35 @@ curl -s http://localhost:8202/api/v1/state
 ```bash
 oqlctl doctor
 HARDWARE_MODE=real oqlos-server --host 0.0.0.0 --port 8202
+```
+
+### Health firmware timeoutuje na Modbus RTU
+Jeśli `/api/v1/hardware/health` zwraca `Modbus RTU read_coils timed out`,
+adapter USB-serial jest widoczny, ale moduł RTU nie odpowiedział. Najczęstsze
+przyczyny:
+
+- RS485 A/B zamienione lub brak wspólnej masy,
+- brak zasilania modułu Waveshare,
+- inny slave id niż `1`,
+- inny baud/parity niż `19200 8N1`,
+- port serial jest zajęty przez inny proces.
+
+Health nie powinien blokować całego API dłużej niż timeout pluginu; sprawdź:
+
+```bash
+curl --max-time 10 http://localhost:8202/api/v1/hardware/health
+oqlctl doctor
+```
+
+### piADC jest widoczne, ale nie ma dostępu do I2C
+Jeśli identify pokazuje `/dev/i2c-*`, ale `piadc` ma `permission denied` albo
+serwis zgłasza `mock_mode`, użytkownik/usługa firmware nie ma realnego dostępu
+do magistrali albo piADC działa w trybie symulacji. Sprawdź:
+
+```bash
+ls -l /dev/i2c-*
+groups
+curl http://localhost:8204/health
 ```
 
 ### Firmware nie widzi seriali w kontenerze

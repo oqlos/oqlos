@@ -6,9 +6,11 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 import subprocess
 import time
 from typing import Any
+from urllib.parse import urlparse
 
 import httpx
 
@@ -117,7 +119,19 @@ class MotorPlugin(HardwarePlugin):
 
         try:
             if self.config.connection_type == "http":
-                return await http_health_check(self._client, self._base_url, "Motor")
+                health = await http_health_check(self._client, self._base_url, "Motor")
+                details = health.details if isinstance(health.details, dict) else {}
+                port = details.get("port")
+                if isinstance(port, str) and port.startswith("/dev/") and self._base_url_is_local():
+                    if not os.path.exists(port):
+                        return PluginHealth(
+                            status=PluginStatus.ERROR,
+                            message=f"Motor service reports missing serial port: {port}",
+                            details=details,
+                            compatible=False,
+                            version=health.version,
+                        )
+                return health
             else:
                 # Modbus RTU health check would be implemented here
                 return PluginHealth(
@@ -127,6 +141,10 @@ class MotorPlugin(HardwarePlugin):
                 )
         except Exception as exc:
             return health_check_exception(exc)
+
+    def _base_url_is_local(self) -> bool:
+        host = (urlparse(self._base_url).hostname or "").lower()
+        return host in {"", "localhost", "127.0.0.1", "::1"}
 
     # ── Command Handlers (refactored from monolithic execute_command) ──
 

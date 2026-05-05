@@ -109,6 +109,18 @@ class LungPlugin(HardwarePlugin):
                         except Exception:
                             version = "unknown"
 
+                        runtime = await self._runtime_status()
+                        if runtime is not None:
+                            details["runtime_status"] = runtime
+                            if runtime.get("connected") is False or runtime.get("success") is False or runtime.get("error"):
+                                return PluginHealth(
+                                    status=PluginStatus.ERROR,
+                                    message=runtime.get("error") or "Lung motor service is not initialized",
+                                    details=details,
+                                    compatible=False,
+                                    version=version,
+                                )
+
                         return PluginHealth(
                             status=PluginStatus.CONNECTED,
                             message="Lung motor is healthy",
@@ -131,6 +143,22 @@ class LungPlugin(HardwarePlugin):
                 )
         except Exception as exc:
             return health_check_exception(exc)
+
+    async def _runtime_status(self) -> dict[str, Any] | None:
+        """Return optional runtime status when the HTTP service exposes it."""
+        if not self._client:
+            return None
+        try:
+            resp = await self._client.get(f"{self._base_url}/api/status")
+        except Exception:
+            return None
+        if resp.status_code >= 300:
+            return None
+        try:
+            data = resp.json()
+        except Exception:
+            return None
+        return data if isinstance(data, dict) else None
 
     # ── Command Handlers (refactored from monolithic execute_command) ──
 

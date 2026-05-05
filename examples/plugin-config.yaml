@@ -13,6 +13,10 @@
 # safely update only the Modbus connection params and create a .bak backup:
 #   oqlctl doctor --config examples/plugin-config.yaml --fix
 #
+# Prefer /dev/serial/by-id/... for serial hardware. doctor resolves those
+# symlinks when reporting busy ports, so the message may mention the underlying
+# /dev/ttyACM* or /dev/ttyUSB* device.
+#
 # Reload at runtime:
 #   oqlctl plugin reload --config examples/plugin-config.yaml
 

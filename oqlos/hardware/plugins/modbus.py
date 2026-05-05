@@ -4,6 +4,7 @@ Modbus plugin - Waveshare Modbus RTU IO 8CH integration.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 
@@ -143,7 +144,22 @@ class ModbusPlugin(HardwarePlugin):
         try:
             # Try to read a coil to test connection
             if self._mode == "rtu":
-                result = self._client.read_coils(address=0, count=1, device_id=1)
+                try:
+                    result = await asyncio.wait_for(
+                        asyncio.to_thread(
+                            self._client.read_coils,
+                            address=0,
+                            count=1,
+                            device_id=1,
+                        ),
+                        timeout=self._rtu_timeout(),
+                    )
+                except asyncio.TimeoutError:
+                    return PluginHealth(
+                        status=PluginStatus.ERROR,
+                        message=f"Modbus RTU read_coils timed out after {self._rtu_timeout():.1f}s",
+                        compatible=False,
+                    )
                 if result and not result.isError():
                     return PluginHealth(
                         status=PluginStatus.CONNECTED,
@@ -194,7 +210,15 @@ class ModbusPlugin(HardwarePlugin):
                     return {"success": False, "error": "coil must be a non-negative integer"}
 
                 if self._mode == "rtu":
-                    result = self._client.write_coil(address=coil, value=value, device_id=1)
+                    result = await asyncio.wait_for(
+                        asyncio.to_thread(
+                            self._client.write_coil,
+                            address=coil,
+                            value=value,
+                            device_id=1,
+                        ),
+                        timeout=self._rtu_timeout(),
+                    )
                     success = hasattr(result, "function_code") and not getattr(result, "isError", lambda: True)()
                 else:
                     result = await self._client.write_coil(coil, value, device_id=1)
@@ -225,6 +249,12 @@ class ModbusPlugin(HardwarePlugin):
                 return {"success": False, "error": f"Unknown command: {command}"}
         except Exception as exc:
             return {"success": False, "error": str(exc)}
+
+    def _rtu_timeout(self) -> float:
+        try:
+            return max(0.1, float(self.config.timeout))
+        except (TypeError, ValueError):
+            return 2.0
 
     @classmethod
     def get_capabilities(cls) -> dict[str, Any]:
