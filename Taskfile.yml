@@ -88,14 +88,14 @@ tasks:
   # ─────────────────────────────────────────────────────────────────────────────
 
   hardware:check:
-    desc: Check hardware status via oqlctl
+    desc: Run OqlOS hardware doctor via oqlctl
     cmds:
-      - oqlctl --status || echo "Hardware not available (mock mode)"
+      - oqlctl doctor || echo "Hardware doctor reported issues"
 
   hardware:identify:
     desc: Identify connected hardware
     cmds:
-      - oqlctl --identify
+      - oqlctl identify
 
   # ─────────────────────────────────────────────────────────────────────────────
   # Doql Integration

@@ -5,6 +5,8 @@ CLI entry point: python -m oqlos.tools.hardware_diagnose [options]
 Usage:
   python -m oqlos.tools.hardware_diagnose               # interactive shell
   python -m oqlos.tools.hardware_diagnose --list         # USB/I2C list
+  python -m oqlos.tools.hardware_diagnose --detect       # smart local detection
+  python -m oqlos.tools.hardware_diagnose --doctor       # diagnose config/runtime issues
   python -m oqlos.tools.hardware_diagnose --health       # firmware health
   python -m oqlos.tools.hardware_diagnose --diagnose     # full diagnostic
   python -m oqlos.tools.hardware_diagnose --calibrate    # calibration test
@@ -22,6 +24,7 @@ from .discovery import list_usb_serial_devices, list_i2c_buses
 from .health import check_firmware_health, check_firmware_identify, cmd_health, cmd_diagnose
 from .calibration import run_calibration_test
 from .benchmark import run_benchmark
+from .doctor import build_doctor_report, detect_hardware, format_detection, format_doctor
 from .report import format_peripheral_table, save_diagnostic_report
 from .shell import interactive_shell
 
@@ -76,6 +79,16 @@ def _print_benchmark(url: str, duration: int, as_json: bool) -> None:
         print(f"RPS:      {results['rps']:.1f}")
 
 
+def _print_detect(url: str, as_json: bool, config_path: str | None) -> None:
+    result = detect_hardware(url, config_path=config_path)
+    print(json.dumps(result) if as_json else format_detection(result))
+
+
+def _print_doctor(url: str, as_json: bool, config_path: str | None, fix: bool) -> None:
+    result = build_doctor_report(url, config_path=config_path, fix=fix)
+    print(json.dumps(result) if as_json else format_doctor(result))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Hardware Diagnose CLI",
@@ -83,7 +96,11 @@ def main() -> None:
         epilog=__doc__,
     )
     parser.add_argument("--firmware-url", default="http://localhost:8202", help="Firmware base URL")
+    parser.add_argument("--config",      help="Path to oqlos.yaml (default: auto-detect)")
     parser.add_argument("--list",       action="store_true", help="List USB/serial/I2C peripherals")
+    parser.add_argument("--detect",     action="store_true", help="Run smart local hardware detection")
+    parser.add_argument("--doctor",     action="store_true", help="Diagnose OqlOS hardware config/runtime issues")
+    parser.add_argument("--fix",        action="store_true", help="Apply safe doctor repairs")
     parser.add_argument("--health",     action="store_true", help="Check hardware health")
     parser.add_argument("--identify",   action="store_true", help="Detailed identification")
     parser.add_argument("--diagnose",   action="store_true", help="Full diagnostic")
@@ -98,12 +115,16 @@ def main() -> None:
     url = args.firmware_url
     jout = args.json
     action_given = any([
-        args.list, args.health, args.identify, args.diagnose,
+        args.list, args.detect, args.doctor, args.fix, args.health, args.identify, args.diagnose,
         args.calibrate, args.benchmark is not None, args.report, args.shell,
     ])
 
     if not action_given or args.shell:
         interactive_shell(url)
+    elif args.detect:
+        _print_detect(url, jout, args.config)
+    elif args.doctor or args.fix:
+        _print_doctor(url, jout, args.config, args.fix)
     elif args.list:
         _print_list(url, jout)
     elif args.health:

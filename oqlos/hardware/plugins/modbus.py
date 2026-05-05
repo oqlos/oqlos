@@ -143,7 +143,7 @@ class ModbusPlugin(HardwarePlugin):
         try:
             # Try to read a coil to test connection
             if self._mode == "rtu":
-                result = self._client.read_coils(address=0, count=1, slave_id=1)
+                result = self._client.read_coils(address=0, count=1, device_id=1)
                 if result and not result.isError():
                     return PluginHealth(
                         status=PluginStatus.CONNECTED,
@@ -158,7 +158,7 @@ class ModbusPlugin(HardwarePlugin):
                         compatible=False,
                     )
             elif self._mode == "tcp":
-                result = await self._client.read_coils(0, 1, slave=1)
+                result = await self._client.read_coils(0, count=1, device_id=1)
                 if not result.isError():
                     return PluginHealth(
                         status=PluginStatus.CONNECTED,
@@ -194,10 +194,10 @@ class ModbusPlugin(HardwarePlugin):
                     return {"success": False, "error": "coil must be a non-negative integer"}
 
                 if self._mode == "rtu":
-                    result = self._client.write_coil(address=coil, value=value, slave_id=1)
+                    result = self._client.write_coil(address=coil, value=value, device_id=1)
                     success = hasattr(result, "function_code") and not getattr(result, "isError", lambda: True)()
                 else:
-                    result = await self._client.write_coil(coil, value, slave=1)
+                    result = await self._client.write_coil(coil, value, device_id=1)
                     success = not result.isError()
 
                 if success:

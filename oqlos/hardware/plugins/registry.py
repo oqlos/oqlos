@@ -10,7 +10,14 @@ from typing import Any, Type
 
 import yaml
 
-from .base import HardwarePlugin, PluginConfig, PluginHealth, PluginStatus, get_pluggy_manager
+from .base import (
+    HardwarePlugin,
+    OqlosConfigDocument,
+    PluginConfig,
+    PluginHealth,
+    PluginStatus,
+    get_pluggy_manager,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -302,15 +309,9 @@ class PluginRegistry:
         with open(path) as fh:
             data = yaml.safe_load(fh) or {}
 
+        document = OqlosConfigDocument.model_validate(data)
         configs: dict[str, PluginConfig] = {}
-        for plugin_id, plugin_data in data.get("plugins", {}).items():
-            try:
-                configs[plugin_id] = PluginConfig.model_validate(
-                    {"plugin_id": plugin_id, **plugin_data}
-                )
-                logger.info("Loaded config for plugin: %s", plugin_id)
-            except Exception as exc:
-                logger.error(
-                    "Invalid config for plugin %s: %s", plugin_id, exc
-                )
+        for plugin_id, plugin_config in document.plugins.items():
+            configs[plugin_id] = plugin_config.model_copy(update={"plugin_id": plugin_id})
+            logger.info("Loaded config for plugin: %s", plugin_id)
         return configs

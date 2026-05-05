@@ -1,9 +1,5 @@
-# Unified Hardware Plugin Configuration
-# Each plugin block contains: connection, peripherals (with scale/units/conversion)
-#
-# Edit this file to change parameters, scales, units, and proportions
-# without touching Python code.  Reload at runtime via:
-#   PluginRegistry.load_configs_from_yaml("hardware_config.yaml")
+# OqlOS unified hardware plugin configuration
+# External config file (outside Python package)
 
 plugins:
   # -----------------------------------------------------------------------
@@ -13,7 +9,7 @@ plugins:
     enabled: true
     connection_type: http
     connection_params:
-      base_url: http://localhost:8080
+      base_url: http://piadc:8204
     timeout: 5.0
     retry_count: 3
     metadata:
@@ -35,10 +31,9 @@ plugins:
   # -----------------------------------------------------------------------
   motor-dri0050:
     enabled: true
-    connection_type: cli
+    connection_type: http
     connection_params:
-      command: /home/tom/github/oqlos/venv/bin/dri0050-pwm
-      port: /dev/ttyUSB0
+      base_url: http://motor:8203
     timeout: 5.0
     retry_count: 3
     metadata:
@@ -51,7 +46,7 @@ plugins:
         raster: [0, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
         conversion:
           type: linear
-          scale: 0.1       # l/min → duty cycle 0-1 (10 l/min = 100%)
+          scale: 0.1
           offset: 0
       power:
         name: power
@@ -79,7 +74,7 @@ plugins:
     enabled: true
     connection_type: modbus-rtu
     connection_params:
-      serial_port: /dev/ttyACM0
+      serial_port: /dev/ttyACM1
       baudrate: 19200
       parity: N
     timeout: 2.0
@@ -101,7 +96,7 @@ plugins:
     enabled: true
     connection_type: http
     connection_params:
-      base_url: http://localhost:8205
+      base_url: http://tic249:5000
     timeout: 5.0
     retry_count: 3
     metadata:

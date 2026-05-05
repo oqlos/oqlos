@@ -341,6 +341,7 @@ oqlos/
 - `probe_waveshare_modbus(preferred_port, preferred_baud, preferred_parity, timeout)` — Probe serial ports and return the first working Modbus RTU configuration.
 - `get_pluggy_manager()` — Return the global pluggy PluginManager for third-party drivers.
 - `dynamic_peripheral_model(peripheral)` — Generate a runtime Pydantic model from a ``PeripheralConfig``.
+- `build_dynamic_schema_models(config_path)` — Build runtime Pydantic schema models for all plugins/peripherals declared in ``oqlos.yaml``.
 - `http_health_check(client, base_url, label)` — Shared HTTP health check — GET {base_url}/health.
 - `not_connected_health(label)` — Return error health when plugin has no active client.
 - `health_check_exception(exc)` — Return error health for unexpected exceptions.

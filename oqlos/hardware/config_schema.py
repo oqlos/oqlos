@@ -22,11 +22,15 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
+from pydantic import BaseModel
+
+from oqlos.hardware.config_paths import resolve_oqlos_config_path
 from oqlos.hardware.plugins.base import (
     ConversionConfig,
     PeripheralConfig,
     PluginConfig,
     ScaleConfig,
+    dynamic_plugin_schema_models,
 )
 from oqlos.hardware.plugins.registry import PluginRegistry
 
@@ -88,22 +92,23 @@ def get_hardware_config(device_id: str) -> PluginConfig | None:
         DeprecationWarning,
         stacklevel=2,
     )
-    default_yaml = Path(__file__).parent / "hardware_config.yaml"
-    if default_yaml.exists():
-        configs = PluginRegistry.load_configs_from_yaml(default_yaml)
-        return configs.get(device_id)
-    return None
+    try:
+        config_path = resolve_oqlos_config_path()
+    except FileNotFoundError:
+        return None
+    configs = PluginRegistry.load_configs_from_yaml(config_path)
+    return configs.get(device_id)
 
 
 def register_hardware_config(config: PluginConfig) -> None:
     """No-op shim — configs live in the unified YAML now.
 
     .. deprecated::
-        Edit ``hardware_config.yaml`` and call
+        Edit ``oqlos.yaml`` and call
         ``PluginRegistry.load_configs_from_yaml()`` instead.
     """
     warnings.warn(
-        "register_hardware_config() is deprecated — edit hardware_config.yaml",
+        "register_hardware_config() is deprecated — edit oqlos.yaml",
         DeprecationWarning,
         stacklevel=2,
     )
@@ -123,3 +128,18 @@ def load_config_from_yaml(
         stacklevel=2,
     )
     return PluginRegistry.load_configs_from_yaml(config_path)
+
+
+def build_dynamic_schema_models(
+    config_path: str | Path | None = None,
+) -> dict[str, dict[str, type[BaseModel]]]:
+    """Build runtime Pydantic schema models from ``oqlos.yaml``.
+
+    Returns mapping ``plugin_id -> {peripheral_name -> model_class}``.
+    """
+    resolved_path = resolve_oqlos_config_path(config_path)
+    configs = PluginRegistry.load_configs_from_yaml(resolved_path)
+    return {
+        plugin_id: dynamic_plugin_schema_models(plugin_config)
+        for plugin_id, plugin_config in configs.items()
+    }

@@ -16,7 +16,7 @@ from enum import Enum
 from typing import Any, ClassVar
 
 import pluggy
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, create_model, field_validator
 
 
 class PluginStatus(Enum):
@@ -165,6 +165,36 @@ class PluginConfig(BaseModel):
         return self.peripherals.get(name)
 
 
+class OqlosConfigDocument(BaseModel):
+    """Top-level ``oqlos.yaml`` schema.
+
+    Keeps plugin map dynamic (`dict[str, PluginConfig]`) and allows extra
+    top-level sections for forward-compatible evolution.
+    """
+
+    model_config = ConfigDict(extra="allow")
+    plugins: dict[str, PluginConfig] = Field(default_factory=dict)
+
+    @field_validator("plugins", mode="before")
+    @classmethod
+    def _inject_plugin_ids(
+        cls,
+        value: Any,
+    ) -> dict[str, dict[str, Any]]:
+        if value is None:
+            return {}
+        if not isinstance(value, dict):
+            return value
+
+        normalized: dict[str, dict[str, Any]] = {}
+        for plugin_id, plugin_data in value.items():
+            if isinstance(plugin_data, dict):
+                normalized[plugin_id] = {"plugin_id": plugin_id, **plugin_data}
+            else:
+                normalized[plugin_id] = plugin_data
+        return normalized
+
+
 class PluginHealth(BaseModel):
     """Health check result for a hardware plugin."""
     status: PluginStatus
@@ -197,8 +227,6 @@ def dynamic_peripheral_model(
     Returns:
         A Pydantic ``BaseModel`` subclass.
     """
-    from pydantic import create_model
-
     name = model_name or f"{peripheral.name.title().replace(' ', '')}Peripheral"
     fields: dict[str, Any] = {
         "value": (
@@ -218,6 +246,22 @@ def dynamic_peripheral_model(
         fields[prop_name] = (prop_type, Field(default=prop_default))
 
     return create_model(name, **fields)
+
+
+def dynamic_plugin_schema_models(config: PluginConfig) -> dict[str, type[BaseModel]]:
+    """Build runtime Pydantic models for all plugin peripherals.
+
+    Returns mapping ``peripheral_name -> dynamic model class`` generated from
+    ``PeripheralConfig`` definitions in ``oqlos.yaml``.
+    """
+    models: dict[str, type[BaseModel]] = {}
+    for peripheral_name, peripheral in config.peripherals.items():
+        model_name = (
+            f"{config.plugin_id.title().replace('-', '')}"
+            f"{peripheral_name.title().replace('-', '').replace('_', '')}Schema"
+        )
+        models[peripheral_name] = dynamic_peripheral_model(peripheral, model_name=model_name)
+    return models
 
 
 class HardwarePlugin(ABC):

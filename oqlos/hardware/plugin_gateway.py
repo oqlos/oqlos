@@ -10,14 +10,13 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from pathlib import Path
 from typing import Any
 
 from oqlos.config import get_settings
+from oqlos.hardware.config_paths import resolve_oqlos_config_path
 from oqlos.hardware.plugins import (
     PluginConfig,
     PluginRegistry,
-    PluginStatus,
     PiadcPlugin,
     MotorPlugin,
     ModbusPlugin,
@@ -56,8 +55,7 @@ class PluginHardwareGateway:
         self._init_done = False
         if self.mode == "real":
             # Load hardware configuration schema
-            self._load_hardware_schema()
-            self._load_plugin_configs(config_path or settings)
+            self._load_hardware_schema(config_path)
             # Schedule async plugin init — will run on first await or event-loop tick
             try:
                 loop = asyncio.get_running_loop()
@@ -70,90 +68,21 @@ class PluginHardwareGateway:
             self._init_done = True
             logger.info("PluginHardwareGateway: mode=mock (plugins not initialized)")
 
-    def _load_hardware_schema(self) -> None:
+    def _load_hardware_schema(self, config_path: str | None = None) -> None:
         """Load unified plugin config from YAML (connection + peripherals)."""
         try:
-            default_config_path = Path(__file__).parent / "hardware_config.yaml"
-            if default_config_path.exists():
-                loaded = PluginRegistry.load_configs_from_yaml(default_config_path)
-                self._plugin_configs.update(loaded)
-                logger.info(
-                    "Loaded unified plugin config from %s (%d plugins)",
-                    default_config_path,
-                    len(loaded),
-                )
-            else:
-                logger.warning(f"Hardware config file not found: {default_config_path}")
+            selected_path = resolve_oqlos_config_path(config_path)
+            loaded = PluginRegistry.load_configs_from_yaml(selected_path)
+            self._plugin_configs.update(loaded)
+            logger.info(
+                "Loaded unified plugin config from %s (%d plugins)",
+                selected_path,
+                len(loaded),
+            )
+            if not loaded:
+                raise RuntimeError(f"No plugins defined in config: {selected_path}")
         except Exception as exc:
-            logger.warning(f"Failed to load hardware config: {exc}")
-
-    def _load_plugin_configs(self, config_source: Any) -> None:
-        """Load plugin configurations from settings or config file."""
-        # If configs were already loaded from YAML in _load_hardware_schema, skip
-        if self._plugin_configs:
-            logger.info("Plugin configs already loaded from YAML, skipping env fallback")
-            return
-
-        # Try to load from explicit config file path
-        if isinstance(config_source, (str, Path)):
-            config_path = Path(config_source)
-            if config_path.exists():
-                try:
-                    loaded = PluginRegistry.load_configs_from_yaml(config_path)
-                    self._plugin_configs.update(loaded)
-                    return
-                except Exception as exc:
-                    logger.warning(f"Failed to load plugin config from {config_path}: {exc}")
-
-        # Fallback to environment-based configuration
-        self._create_default_configs()
-
-    def _create_default_configs(self) -> None:
-        """Create default plugin configurations from environment variables."""
-        settings = get_settings()
-
-        self._plugin_configs["piadc"] = PluginConfig(
-            plugin_id="piadc",
-            enabled=True,
-            connection_type="http",
-            connection_params={"base_url": settings.piadc_url},
-            timeout=5.0,
-            retry_count=3,
-        )
-
-        self._plugin_configs["motor-dri0050"] = PluginConfig(
-            plugin_id="motor-dri0050",
-            enabled=True,
-            connection_type="cli",
-            connection_params={
-                "command": "/home/tom/github/oqlos/venv/bin/dri0050-pwm",
-                "port": "/dev/ttyUSB0",
-            },
-            timeout=5.0,
-            retry_count=3,
-        )
-
-        self._plugin_configs["motor-tic249"] = PluginConfig(
-            plugin_id="motor-tic249",
-            enabled=True,
-            connection_type="http",
-            connection_params={"base_url": settings.lung_motor_url},
-            timeout=5.0,
-            retry_count=3,
-        )
-
-        self._plugin_configs["modbus-io"] = PluginConfig(
-            plugin_id="modbus-io",
-            enabled=True,
-            connection_type="modbus-rtu",
-            connection_params={
-                "serial_port": settings.modbus_serial_port,
-                "baudrate": settings.modbus_baud,
-                "parity": settings.modbus_parity,
-            },
-            timeout=2.0,
-            retry_count=3,
-        )
+            raise RuntimeError(f"Failed to load oqlos.yaml configuration: {exc}") from exc
 
     def _parse_plugin_configs(self, plugins_data: dict[str, dict[str, Any]]) -> None:
         """Parse plugin configurations from dictionary (Pydantic handles nesting)."""
@@ -305,9 +234,10 @@ class PluginHardwareGateway:
 
         Returns summary of changes applied.
         """
-        path = Path(config_path) if config_path else (
-            Path(__file__).parent / "hardware_config.yaml"
-        )
+        try:
+            path = resolve_oqlos_config_path(config_path)
+        except Exception as exc:
+            return {"success": False, "error": str(exc)}
         try:
             new_configs = PluginRegistry.load_configs_from_yaml(path)
         except Exception as exc:

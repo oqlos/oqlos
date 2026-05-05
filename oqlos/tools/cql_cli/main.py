@@ -43,6 +43,12 @@ def create_file_parser() -> argparse.ArgumentParser:
         help="Mock sensor value: AI01=7.5",
     )
     parser.add_argument("--json", action="store_true", help="Output JSON result")
+    parser.add_argument("--status", action="store_true", help="Show hardware health status")
+    parser.add_argument("--identify", action="store_true", help="Show hardware identification")
+    parser.add_argument("--detect", action="store_true", help="Run smart local hardware detection")
+    parser.add_argument("--doctor", action="store_true", help="Diagnose OqlOS hardware config/runtime issues")
+    parser.add_argument("--fix", action="store_true", help="Apply safe doctor repairs")
+    parser.add_argument("--config", help="Path to oqlos.yaml for detect/doctor")
     parser.add_argument(
         "--firmware-url", default=DEFAULT_FIRMWARE_URL,
         help=f"Firmware simulator URL (default: {DEFAULT_FIRMWARE_URL})",
@@ -55,6 +61,23 @@ def create_file_parser() -> argparse.ArgumentParser:
         "--bridge", help="Event Server URL (e.g. ws://localhost:8104/cli)"
     )
     parser.add_argument("--validate-dir", help="Validate all .cql/.oql files in directory")
+    return parser
+
+
+def create_hardware_parser(action: str) -> argparse.ArgumentParser:
+    """Create parser for oqlctl hardware utility subcommands."""
+    parser = argparse.ArgumentParser(
+        prog=f"oqlctl {action}",
+        description=f"OqlOS hardware {action}",
+    )
+    parser.add_argument("--json", action="store_true", help="Output JSON result")
+    parser.add_argument(
+        "--firmware-url", default=DEFAULT_FIRMWARE_URL,
+        help=f"Firmware simulator URL (default: {DEFAULT_FIRMWARE_URL})",
+    )
+    parser.add_argument("--config", help="Path to oqlos.yaml (default: auto-detect)")
+    if action == "doctor":
+        parser.add_argument("--fix", action="store_true", help="Apply safe doctor repairs")
     return parser
 
 
@@ -103,6 +126,9 @@ def create_cmd_parser() -> argparse.ArgumentParser:
 
 def run_file_mode(args: argparse.Namespace) -> None:
     """Execute file-based CQL/OQL processing."""
+    if _run_hardware_flags(args):
+        return
+
     # Parse sensor overrides
     sensors = parse_sensor_overrides(args.sensor)
 
@@ -130,6 +156,57 @@ def run_file_mode(args: argparse.Namespace) -> None:
         from oqlos.tools.cql_cli.utils import build_result_payload
         import json
         print(json.dumps(build_result_payload(result), indent=2, ensure_ascii=False))
+
+
+def _run_hardware_flags(args: argparse.Namespace) -> bool:
+    """Handle hardware utility flags on the file-mode parser."""
+    if args.status:
+        from oqlos.tools.hardware_diagnose.health import cmd_health
+        print(cmd_health(args.firmware_url))
+        return True
+
+    if args.identify:
+        from oqlos.tools.hardware_diagnose.health import check_firmware_identify
+        import json
+
+        data = check_firmware_identify(args.firmware_url)
+        print(json.dumps(data) if args.json else json.dumps(data, indent=2, default=str))
+        return True
+
+    if args.detect:
+        from oqlos.tools.hardware_diagnose.doctor import detect_hardware, format_detection
+        import json
+
+        data = detect_hardware(args.firmware_url, config_path=args.config)
+        print(json.dumps(data) if args.json else format_detection(data))
+        return True
+
+    if args.doctor or args.fix:
+        from oqlos.tools.hardware_diagnose.doctor import build_doctor_report, format_doctor
+        import json
+
+        data = build_doctor_report(args.firmware_url, config_path=args.config, fix=args.fix)
+        print(json.dumps(data) if args.json else format_doctor(data))
+        return True
+
+    return False
+
+
+def run_hardware_mode(action: str, argv: list[str]) -> None:
+    """Run oqlctl status/identify/detect/doctor subcommands."""
+    args = create_hardware_parser(action).parse_args(argv)
+    from types import SimpleNamespace
+
+    _run_hardware_flags(SimpleNamespace(
+        status=action == "status",
+        identify=action == "identify",
+        detect=action == "detect",
+        doctor=action == "doctor",
+        fix=getattr(args, "fix", False),
+        json=args.json,
+        firmware_url=args.firmware_url,
+        config=args.config,
+    ))
 
 
 def run_cmd_mode(argv: list[str]) -> None:
@@ -171,8 +248,13 @@ def _dispatch_to_mode(argv: list[str]) -> None:
         return
 
     # Not cmd mode - file mode
+    if argv[0] in {"status", "identify", "detect", "doctor"}:
+        run_hardware_mode(argv[0], argv[1:])
+        return
+
+    # Not cmd mode - file mode
     if argv[0] != "cmd":
-        args = create_file_parser().parse_args()
+        args = create_file_parser().parse_args(argv)
         run_file_mode(args)
         return
 

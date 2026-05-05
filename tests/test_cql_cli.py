@@ -147,6 +147,47 @@ def test_file_mode_still_executes_scenario(monkeypatch, tmp_path):
     assert captured["init"]["mode"] == "execute"
 
 
+def test_oqlctl_doctor_subcommand_dispatches_to_hardware_flags(monkeypatch):
+    import importlib
+
+    main_module = importlib.import_module("oqlos.tools.cql_cli.main")
+
+    captured = {}
+
+    def fake_run_hardware_flags(args):
+        captured["args"] = args
+        return True
+
+    monkeypatch.setattr(main_module, "_run_hardware_flags", fake_run_hardware_flags)
+
+    main_module.run_hardware_mode("doctor", ["--firmware-url", "http://example.test", "--config", "custom.yaml", "--fix", "--json"])
+
+    assert captured["args"].doctor is True
+    assert captured["args"].fix is True
+    assert captured["args"].json is True
+    assert captured["args"].firmware_url == "http://example.test"
+    assert captured["args"].config == "custom.yaml"
+
+
+def test_oqlctl_status_flag_dispatches_without_file(monkeypatch):
+    import importlib
+
+    main_module = importlib.import_module("oqlos.tools.cql_cli.main")
+
+    captured = {}
+
+    def fake_run_hardware_flags(args):
+        captured["status"] = args.status
+        return True
+
+    monkeypatch.setattr(main_module, "_run_hardware_flags", fake_run_hardware_flags)
+    args = main_module.create_file_parser().parse_args(["--status"])
+
+    main_module.run_file_mode(args)
+
+    assert captured["status"] is True
+
+
 def test_result_payload_is_json_safe():
     result = SimpleNamespace(
         source="<cmd>",

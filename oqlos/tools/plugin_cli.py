@@ -12,6 +12,7 @@ from pathlib import Path
 
 import yaml
 
+from oqlos.hardware.config_paths import resolve_oqlos_config_path
 from oqlos.hardware.plugins import (
     HardwarePlugin,
     PluginConfig,
@@ -32,6 +33,10 @@ PluginRegistry.register(LungPlugin)
 
 # Discover third-party plugins from entry points
 PluginRegistry.discover_entry_point_plugins()
+
+
+def _default_config_path() -> str:
+    return str(resolve_oqlos_config_path())
 
 
 def _load_config_file(path: str) -> dict[str, PluginConfig]:
@@ -208,9 +213,7 @@ async def cmd_execute(args: argparse.Namespace) -> None:
 
 async def cmd_reload(args: argparse.Namespace) -> None:
     """Reload plugin configurations from YAML file."""
-    config_path = args.config or str(
-        Path(__file__).resolve().parent.parent / "hardware" / "hardware_config.yaml"
-    )
+    config_path = args.config or _default_config_path()
     try:
         configs = PluginRegistry.load_configs_from_yaml(config_path)
         print(f"Reloaded {len(configs)} plugin config(s) from {config_path}")
@@ -224,9 +227,7 @@ async def cmd_reload(args: argparse.Namespace) -> None:
 
 async def cmd_peripherals(args: argparse.Namespace) -> None:
     """Show peripheral definitions for a plugin (from loaded config)."""
-    config_path = str(
-        Path(__file__).resolve().parent.parent / "hardware" / "hardware_config.yaml"
-    )
+    config_path = _default_config_path()
     try:
         configs = PluginRegistry.load_configs_from_yaml(config_path)
     except Exception as exc:
@@ -301,7 +302,7 @@ def main() -> None:
 
     # Reload command
     reload_parser = subparsers.add_parser("reload", help="Reload configs from YAML")
-    reload_parser.add_argument("--config", help="Path to config file (default: hardware_config.yaml)")
+    reload_parser.add_argument("--config", help="Path to config file (default: oqlos.yaml)")
 
     # Peripherals command
     periph_parser = subparsers.add_parser("peripherals", help="Show peripheral definitions")

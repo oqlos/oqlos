@@ -10,7 +10,7 @@ from typing import Any
 import httpx
 
 from .base import HardwarePlugin, PluginConfig, PluginHealth, PluginStatus
-from ._shared import http_health_check, not_connected_health, health_check_exception, http_disconnect
+from ._shared import not_connected_health, health_check_exception, http_disconnect
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +36,7 @@ class LungPlugin(HardwarePlugin):
         super().__init__(config)
         self._client: httpx.AsyncClient | None = None
         self._base_url = self.config.connection_params.get("base_url", "http://localhost:8205").rstrip("/")
+        self._health_endpoint = "/health"
 
     def validate_config(self) -> list[str]:
         """Validate lung-specific configuration."""
@@ -57,16 +58,18 @@ class LungPlugin(HardwarePlugin):
         try:
             if self.config.connection_type == "http":
                 self._client = httpx.AsyncClient(timeout=self.config.timeout)
-                # Test connection with health check
-                resp = await self._client.get(f"{self._base_url}/health")
-                if resp.status_code < 300:
-                    self._status = PluginStatus.CONNECTED
-                    logger.info(f"Connected to lung motor at {self._base_url}")
-                    return True
-                else:
-                    self._status = PluginStatus.ERROR
-                    logger.error(f"Lung motor health check failed: HTTP {resp.status_code}")
-                    return False
+
+                for endpoint in ("/health", "/api/settings"):
+                    resp = await self._client.get(f"{self._base_url}{endpoint}")
+                    if resp.status_code < 300:
+                        self._health_endpoint = endpoint
+                        self._status = PluginStatus.CONNECTED
+                        logger.info(f"Connected to lung motor at {self._base_url}{endpoint}")
+                        return True
+
+                self._status = PluginStatus.ERROR
+                logger.error("Lung motor probe failed on /health and /api/settings")
+                return False
             else:
                 # USB connection would be implemented here
                 self._status = PluginStatus.CONNECTED
@@ -90,7 +93,35 @@ class LungPlugin(HardwarePlugin):
 
         try:
             if self.config.connection_type == "http":
-                return await http_health_check(self._client, self._base_url, "Lung motor")
+                checked: set[str] = set()
+                for endpoint in (self._health_endpoint, "/health", "/api/settings"):
+                    if endpoint in checked:
+                        continue
+                    checked.add(endpoint)
+
+                    resp = await self._client.get(f"{self._base_url}{endpoint}")
+                    if resp.status_code < 300:
+                        details: dict[str, Any] = {"endpoint": endpoint}
+                        try:
+                            data = resp.json()
+                            details["data"] = data
+                            version = data.get("version", "unknown") if isinstance(data, dict) else "unknown"
+                        except Exception:
+                            version = "unknown"
+
+                        return PluginHealth(
+                            status=PluginStatus.CONNECTED,
+                            message="Lung motor is healthy",
+                            details=details,
+                            compatible=True,
+                            version=version,
+                        )
+
+                return PluginHealth(
+                    status=PluginStatus.ERROR,
+                    message="Health check failed on /health and /api/settings",
+                    compatible=False,
+                )
             else:
                 # USB health check would be implemented here
                 return PluginHealth(
