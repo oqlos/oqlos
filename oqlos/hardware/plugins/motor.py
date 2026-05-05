@@ -7,6 +7,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import subprocess
+import time
 from typing import Any
 
 import httpx
@@ -312,7 +313,6 @@ class MotorPlugin(HardwarePlugin):
         if self.config.connection_type == "http" and not self._client:
             return {"success": False, "error": "Not connected to motor"}
 
-        import time
         start_time = time.monotonic()
 
         try:

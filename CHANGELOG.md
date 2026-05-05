@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.6] - 2026-05-05
+
+### Docs
+- Update README.md
+
+### Test
+- Update tests/firmware/test_motor_plugin.py
+
+### Other
+- Update oqlos/hardware/plugins/motor.py
+
 ## [0.1.5] - 2026-05-05
 
 ### Docs
