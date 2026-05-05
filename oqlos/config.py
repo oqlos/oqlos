@@ -38,7 +38,7 @@ class Settings(BaseSettings):
     
     # Hardware Configuration
     hardware_mode: str = Field(
-        default="mock",
+        default="real",
         validation_alias=AliasChoices("OQLOS_HARDWARE_MODE", "HARDWARE_MODE"),
     )
     

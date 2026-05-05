@@ -2,7 +2,7 @@
 """Hardware gateway — routes DSL step actions to real hardware services.
 
 Reads config from env vars:
-  HARDWARE_MODE    = mock | real          (default: mock)
+    HARDWARE_MODE    = mock | real          (default: real)
   PIADC_URL        = http://host:8080     (piadc ADS1115 service)
   MOTOR_URL        = http://host:49055    (rpi-motor-DRI0050 service)
     MODBUS_SERIAL_PORT = /dev/ttyACM1       (preferred RTU serial port)
@@ -55,7 +55,7 @@ try:
     _MODBUS_PARITY = settings.modbus_parity.upper()
 except ImportError:
     # Fallback to environment variables if config not available
-    _HARDWARE_MODE = os.getenv("HARDWARE_MODE", "mock").lower()
+    _HARDWARE_MODE = os.getenv("HARDWARE_MODE", "real").lower()
     _PIADC_URL = os.getenv("PIADC_URL", "http://localhost:8080")
     _MOTOR_URL = os.getenv("MOTOR_URL", "http://localhost:49055")
     _LUNG_MOTOR_URL = os.getenv("LUNG_MOTOR_URL", "http://localhost:5000")

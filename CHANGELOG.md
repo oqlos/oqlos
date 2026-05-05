@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.7] - 2026-05-05
+
+### Docs
+- Update README.md
+
+### Other
+- Update oqlos/api/editor.py
+- Update oqlos/api/static/editor.html
+- Update oqlos/config.py
+- Update oqlos/hardware/gateway.py
+
 ## [0.1.6] - 2026-05-05
 
 ### Docs

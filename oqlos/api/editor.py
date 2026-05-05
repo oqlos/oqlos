@@ -37,7 +37,7 @@ class FileContent(BaseModel):
 
 class ExecutionRequest(BaseModel):
     scenario_file: str
-    mode: str = "mock"
+    mode: str = "real"
     speed: float = 1.0
 
 
@@ -103,7 +103,7 @@ async def execute_scenario(request: ExecutionRequest) -> dict[str, Any]:
 
         content = full_path.read_text(encoding="utf-8")
         interpreter = CqlInterpreter(
-            mode="dry-run" if request.mode == "mock" else "execute",
+            mode="execute",
             quiet=False,
             skip_waits=request.speed > 2.0,
         )
