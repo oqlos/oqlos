@@ -95,6 +95,42 @@ np. `/dev/ttyACM0`.
 Gotowy przykład workflow operatora znajduje się w
 `examples/hardware/doctor-workflow.sh`.
 
+## Co zostało naprawione (2026-05-05)
+
+Poniższe problemy zostały naprawione w runtime i ścieżkach diagnostycznych:
+
+1. `motor_disable` dla Tic T249
+- Endpoint `POST /api/v1/hardware/lung/disable` poprawnie de-energizuje cewki.
+
+2. Wolny `identify` i timeouty po stronie klientów
+- `GET /api/v1/hardware/identify` działa w trybie warunkowego skanu:
+  - `scan=auto` skanuje tylko gdy plugin health nie jest kompatybilny,
+  - `scan=always` wymusza skan,
+  - `scan=never` pomija skan.
+- Dzięki temu standardowy odczyt stanu ma dużo niższą latencję.
+
+3. Fałszywe `ok=true` przy braku ruchu silnika
+- Ścieżka uruchamiania lung zwraca teraz jawny błąd (`ok=false`, `error`, `data.runtime_status`) zamiast pozornego sukcesu.
+
+4. Blokada ruchu przez krańcówki
+- Dodano pre-check przed ruchem i jasny komunikat gdy aktywne są obie krańcówki:
+  - `Both limit switches are active; movement is blocked`
+
+5. Lepsza klasyfikacja błędów Modbus
+- Gdy adapter serial jest otwarty, ale urządzenie Modbus nie odpowiada, raport opisuje tryb `no-response` zamiast mylącego samego błędu blokady portu.
+
+6. Diagnoza niskiego zasilania silnika
+- Przy zbyt niskim VIN (np. odłączone 24V) zwracany jest czytelny błąd:
+  - `Motor supply voltage is too low`
+
+Szybkie sprawdzenie:
+
+```bash
+curl -sS 'http://127.0.0.1:8202/api/v1/hardware/identify?scan=auto' | jq '.diagnostics'
+curl -sS 'http://127.0.0.1:8205/api/status' | jq '{forward_limit_active,reverse_limit_active,low_vin,vin_voltage}'
+curl -sS -X POST 'http://127.0.0.1:8202/api/v1/hardware/lung?steps=500&speed=100000&cycles=1&pause=0.5' | jq
+```
+
 ## Komendy w shellu
 
 | Komenda | Opis |

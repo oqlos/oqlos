@@ -52,6 +52,9 @@ class ModbusPlugin(HardwarePlugin):
             parity = self.config.connection_params.get("parity", "N")
             if parity not in ["N", "E", "O"]:
                 errors.append("parity must be N, E, or O")
+            device_id = self.config.connection_params.get("device_id", 1)
+            if not isinstance(device_id, int) or device_id <= 0:
+                errors.append("device_id must be a positive integer")
         elif self.config.connection_type == "modbus-tcp":
             host = self.config.connection_params.get("host")
             if not host:
@@ -59,6 +62,9 @@ class ModbusPlugin(HardwarePlugin):
             port = self.config.connection_params.get("port", 502)
             if not isinstance(port, int) or port <= 0 or port > 65535:
                 errors.append("port must be a valid port number (1-65535)")
+            device_id = self.config.connection_params.get("device_id", 1)
+            if not isinstance(device_id, int) or device_id <= 0:
+                errors.append("device_id must be a positive integer")
         else:
             errors.append("modbus plugin supports modbus-rtu or modbus-tcp connection types")
 
@@ -150,7 +156,7 @@ class ModbusPlugin(HardwarePlugin):
                             self._client.read_coils,
                             address=0,
                             count=1,
-                            device_id=1,
+                            device_id=self._device_id(),
                         ),
                         timeout=self._rtu_timeout(),
                     )
@@ -164,7 +170,7 @@ class ModbusPlugin(HardwarePlugin):
                     return PluginHealth(
                         status=PluginStatus.CONNECTED,
                         message="Modbus RTU is healthy",
-                        details={"mode": "rtu"},
+                        details={"mode": "rtu", "device_id": self._device_id()},
                         compatible=True,
                     )
                 else:
@@ -174,12 +180,12 @@ class ModbusPlugin(HardwarePlugin):
                         compatible=False,
                     )
             elif self._mode == "tcp":
-                result = await self._client.read_coils(0, count=1, device_id=1)
+                result = await self._client.read_coils(0, count=1, device_id=self._device_id())
                 if not result.isError():
                     return PluginHealth(
                         status=PluginStatus.CONNECTED,
                         message="Modbus TCP is healthy",
-                        details={"mode": "tcp"},
+                        details={"mode": "tcp", "device_id": self._device_id()},
                         compatible=True,
                     )
                 else:
@@ -215,13 +221,13 @@ class ModbusPlugin(HardwarePlugin):
                             self._client.write_coil,
                             address=coil,
                             value=value,
-                            device_id=1,
+                            device_id=self._device_id(),
                         ),
                         timeout=self._rtu_timeout(),
                     )
                     success = hasattr(result, "function_code") and not getattr(result, "isError", lambda: True)()
                 else:
-                    result = await self._client.write_coil(coil, value, device_id=1)
+                    result = await self._client.write_coil(coil, value, device_id=self._device_id())
                     success = not result.isError()
 
                 if success:
@@ -256,6 +262,12 @@ class ModbusPlugin(HardwarePlugin):
         except (TypeError, ValueError):
             return 2.0
 
+    def _device_id(self) -> int:
+        try:
+            return max(1, int(self.config.connection_params.get("device_id", 1)))
+        except (TypeError, ValueError):
+            return 1
+
     @classmethod
     def get_capabilities(cls) -> dict[str, Any]:
         """Return modbus plugin capabilities."""
@@ -279,6 +291,7 @@ class ModbusPlugin(HardwarePlugin):
                         "serial_port": {"type": "string"},
                         "baudrate": {"type": "integer", "default": 19200},
                         "parity": {"type": "string", "enum": ["N", "E", "O"], "default": "N"},
+                        "device_id": {"type": "integer", "default": 1, "minimum": 1},
                         "host": {"type": "string"},
                         "port": {"type": "integer", "default": 502},
                     },

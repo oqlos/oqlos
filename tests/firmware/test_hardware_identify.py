@@ -55,6 +55,31 @@ def test_collect_hardware_diagnostics_exposes_ports(monkeypatch):
     assert diagnostics["i2c_buses"] == ["/dev/i2c-0"]
 
 
+def test_piadc_local_probe_is_skipped_on_non_rpi(monkeypatch):
+    monkeypatch.setenv("ADS1115_ALLOW_NON_RPI", "false")
+    monkeypatch.setenv("PIADC_URL", "http://rpi.local:8204")
+    monkeypatch.setattr(hw, "_is_raspberry_pi_host", lambda: False)
+
+    result = hw._probe_i2c_ads1115()
+
+    assert result["connected"] is False
+    assert result["skipped"] is True
+    assert result["remote_url"] == "http://rpi.local:8204"
+    assert "Raspberry Pi" in result["reason"]
+
+
+def test_platform_selection_can_force_generic_linux_probe(monkeypatch):
+    monkeypatch.setenv("PIADC_PLATFORM", "generic-linux")
+    monkeypatch.setenv("ADS1115_ALLOW_NON_RPI", "false")
+    monkeypatch.setattr(hw, "_is_raspberry_pi_host", lambda: False)
+
+    platform = hw._detect_runtime_platform()
+
+    assert platform["piadc_selected"] == "generic-linux"
+    assert platform["piadc_driver_role"] == "generic-linux-smbus"
+    assert platform["piadc_local_probe_allowed"] is True
+
+
 def test_hardware_identify_includes_diagnostics(monkeypatch):
     monkeypatch.setattr(hw, "_gateway", _FakeGateway())
     monkeypatch.setattr(
@@ -84,6 +109,7 @@ def test_hardware_identify_includes_diagnostics(monkeypatch):
     assert result["total"] == 4
     assert result["diagnostics"]["health"]["motor"] == "ok"
     assert result["diagnostics"]["serial_ports"][0]["device"] == "/dev/ttyUSB0"
+    assert "platform" in result
     assert any(adapter["id"] == "motor-dri0050" for adapter in result["adapters"])
 
 

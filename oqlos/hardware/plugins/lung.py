@@ -168,12 +168,14 @@ class LungPlugin(HardwarePlugin):
 
         if status.get("connected") is False:
             return "Lung motor is not connected"
-        if status.get("ready") is False:
-            return "Lung motor is not ready"
         if status.get("motor_driver_error"):
             return "Motor driver error is active"
         if status.get("low_vin"):
             return "Motor supply voltage is too low"
+
+        # ready=False is a standby/safe-start state after stop or de-energize.
+        # The rpi-motor-tic249 service prepares the Tic before motion, so it is
+        # not a blocker by itself.
 
         # Safety stop state observed in the field: both limits active => Tic blocks movement.
         if status.get("forward_limit_active") and status.get("reverse_limit_active"):

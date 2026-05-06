@@ -5,6 +5,9 @@ PiADC plugin - ADS1115 16-bit ADC sensor integration.
 from __future__ import annotations
 
 import logging
+import os
+import pathlib
+import platform
 from typing import Any
 
 import httpx
@@ -38,6 +41,37 @@ _SENSOR_CHANNEL_ALIASES: dict[str, int] = {
     "ai04": 3,
     "spare": 3,
 }
+
+
+def _read_text_file(path: str) -> str:
+    try:
+        return pathlib.Path(path).read_text(encoding="utf-8", errors="ignore").strip("\x00\n ")
+    except OSError:
+        return ""
+
+
+def _is_raspberry_pi_host() -> bool:
+    model = " ".join(
+        filter(
+            None,
+            [
+                _read_text_file("/proc/device-tree/model"),
+                _read_text_file("/sys/firmware/devicetree/base/model"),
+            ],
+        )
+    ).lower()
+    return "raspberry pi" in model
+
+
+def _requires_remote_rpi_hint(base_url: str, exc: Exception | None = None) -> str:
+    detail = f": {exc}" if exc else ""
+    if os.getenv("ADS1115_ALLOW_NON_RPI", "false").lower() == "true" or _is_raspberry_pi_host():
+        return f"piADC service is not reachable at {base_url}{detail}"
+    return (
+        f"piADC service is not reachable at {base_url}{detail}. ADS1115 HAT local mode "
+        f"requires Raspberry Pi I2C; this host is {platform.machine() or 'unknown'}. "
+        "Run piADC on the Raspberry Pi that owns the HAT and set PIADC_URL/OQLOS_PIADC_URL."
+    )
 
 
 def _resolve_sensor_channel(sensor_id: Any) -> int | None:
@@ -127,15 +161,22 @@ class PiadcPlugin(HardwarePlugin):
                     version=health.version,
                 )
             if details.get("initialized") is False:
+                reason = details.get("message") or "piADC service is not initialized"
                 return PluginHealth(
                     status=PluginStatus.ERROR,
-                    message="piADC service is not initialized",
+                    message=f"piADC service is not initialized: {reason}",
                     details=details,
                     compatible=False,
                     version=health.version,
                 )
             return health
         except Exception as exc:
+            if isinstance(exc, (httpx.HTTPError, OSError, RuntimeError)):
+                return PluginHealth(
+                    status=PluginStatus.ERROR,
+                    message=_requires_remote_rpi_hint(self._base_url, exc),
+                    compatible=False,
+                )
             return health_check_exception(exc)
 
     async def _read_blocker(self) -> str | None:
@@ -143,7 +184,10 @@ class PiadcPlugin(HardwarePlugin):
         if not self._client:
             return "Not connected to piADC"
 
-        resp = await self._client.get(f"{self._base_url}/health")
+        try:
+            resp = await self._client.get(f"{self._base_url}/health")
+        except Exception as exc:
+            return _requires_remote_rpi_hint(self._base_url, exc)
         if resp.status_code >= 300:
             return f"piADC health check failed: HTTP {resp.status_code}"
 
@@ -151,7 +195,8 @@ class PiadcPlugin(HardwarePlugin):
         if details.get("mock_mode") is True:
             return "piADC service is in mock_mode; refusing mocked ADC reading"
         if details.get("initialized") is False:
-            return "piADC service is not initialized"
+            reason = details.get("message") or "piADC service is not initialized"
+            return f"piADC service is not initialized: {reason}"
         return None
 
     async def execute_command(self, command: str, params: dict[str, Any]) -> dict[str, Any]:

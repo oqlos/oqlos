@@ -8,6 +8,7 @@ Usage:
   python -m oqlos.tools.hardware_diagnose --detect       # smart local detection
   python -m oqlos.tools.hardware_diagnose --doctor       # diagnose config/runtime issues
   python -m oqlos.tools.hardware_diagnose --health       # firmware health
+  python -m oqlos.tools.hardware_diagnose --modbus-probe # direct Modbus RTU probe
   python -m oqlos.tools.hardware_diagnose --diagnose     # full diagnostic
   python -m oqlos.tools.hardware_diagnose --calibrate    # calibration test
   python -m oqlos.tools.hardware_diagnose --benchmark 10 # 10s perf benchmark
@@ -25,6 +26,7 @@ from .health import check_firmware_health, check_firmware_identify, cmd_health, 
 from .calibration import run_calibration_test
 from .benchmark import run_benchmark
 from .doctor import build_doctor_report, detect_hardware, format_detection, format_doctor
+from .modbus_probe import add_modbus_probe_arguments, run_modbus_probe_from_args
 from .report import format_peripheral_table, save_diagnostic_report
 from .shell import interactive_shell
 
@@ -89,6 +91,12 @@ def _print_doctor(url: str, as_json: bool, config_path: str | None, fix: bool) -
     print(json.dumps(result) if as_json else format_doctor(result))
 
 
+def _print_modbus_probe(_as_json: bool, args: argparse.Namespace) -> None:
+    result = run_modbus_probe_from_args(args)
+    print(json.dumps(result, ensure_ascii=False, indent=2))
+    raise SystemExit(0 if result.get("ok") else 2)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Hardware Diagnose CLI",
@@ -103,6 +111,7 @@ def main() -> None:
     parser.add_argument("--fix",        action="store_true", help="Apply safe doctor repairs")
     parser.add_argument("--health",     action="store_true", help="Check hardware health")
     parser.add_argument("--identify",   action="store_true", help="Detailed identification")
+    parser.add_argument("--modbus-probe", action="store_true", help="Probe Modbus RTU directly with MODBUS_* env")
     parser.add_argument("--diagnose",   action="store_true", help="Full diagnostic")
     parser.add_argument("--calibrate",  action="store_true", help="Run calibration test")
     parser.add_argument("--benchmark",  type=int, nargs="?", const=10, metavar="SECONDS")
@@ -110,13 +119,14 @@ def main() -> None:
                         help="Save diagnostic report (auto-generates filename)")
     parser.add_argument("--shell",      action="store_true", help="Interactive shell mode")
     parser.add_argument("--json",       action="store_true", help="Output as JSON")
+    add_modbus_probe_arguments(parser)
     args = parser.parse_args()
 
     url = args.firmware_url
     jout = args.json
     action_given = any([
         args.list, args.detect, args.doctor, args.fix, args.health, args.identify, args.diagnose,
-        args.calibrate, args.benchmark is not None, args.report, args.shell,
+        args.modbus_probe, args.calibrate, args.benchmark is not None, args.report, args.shell,
     ])
 
     if not action_given or args.shell:
@@ -129,6 +139,8 @@ def main() -> None:
         _print_list(url, jout)
     elif args.health:
         _print_health(url, jout)
+    elif args.modbus_probe:
+        _print_modbus_probe(jout, args)
     elif args.identify:
         data = check_firmware_identify(url)
         print(json.dumps(data) if jout else json.dumps(data, indent=2, default=str))

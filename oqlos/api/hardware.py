@@ -10,6 +10,8 @@ import inspect
 import logging
 import os
 import pathlib
+import platform
+import sys
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query
@@ -70,6 +72,153 @@ _HARDWARE_REGISTRY: list[dict[str, Any]] = [
 # ---------------------------------------------------------------------------
 # Low-level hardware probing (no external libs required)
 # ---------------------------------------------------------------------------
+
+
+def _read_text_file(path: str) -> str:
+    try:
+        return pathlib.Path(path).read_text(encoding="utf-8", errors="ignore").strip("\x00\n ")
+    except OSError:
+        return ""
+
+
+def _board_model() -> str:
+    return " ".join(
+        filter(
+            None,
+            [
+                _read_text_file("/proc/device-tree/model"),
+                _read_text_file("/sys/firmware/devicetree/base/model"),
+            ],
+        )
+    ).strip()
+
+
+def _is_raspberry_pi_host() -> bool:
+    return "raspberry pi" in _board_model().lower()
+
+
+def _os_release() -> dict[str, str]:
+    data = {}
+    for line in _read_text_file("/etc/os-release").splitlines():
+        if "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        data[key.lower()] = value.strip().strip('"')
+    return data
+
+
+def _in_container() -> bool:
+    if os.path.exists("/.dockerenv"):
+        return True
+    cgroup = _read_text_file("/proc/1/cgroup").lower()
+    return any(marker in cgroup for marker in ("docker", "containerd", "kubepods", "podman"))
+
+
+def _selected_hardware_platform() -> str:
+    value = (
+        os.getenv("OQLOS_HARDWARE_PLATFORM")
+        or os.getenv("HARDWARE_PLATFORM")
+        or os.getenv("PIADC_PLATFORM")
+        or os.getenv("ADS1115_PLATFORM")
+        or "auto"
+    )
+    value = value.strip().lower().replace("_", "-")
+    aliases = {
+        "pc": "desktop",
+        "desktop-linux": "desktop",
+        "rpi": "raspberry-pi",
+        "raspberry": "raspberry-pi",
+        "raspberrypi": "raspberry-pi",
+        "remote-rpi": "external-rpi",
+        "external": "external-rpi",
+        "smbus": "generic-linux",
+        "linux-smbus": "generic-linux",
+    }
+    return aliases.get(value, value)
+
+
+def _selected_piadc_platform() -> str:
+    value = os.getenv("PIADC_PLATFORM") or os.getenv("ADS1115_PLATFORM") or _selected_hardware_platform()
+    value = value.strip().lower().replace("_", "-")
+    aliases = {
+        "rpi": "raspberry-pi",
+        "raspberry": "raspberry-pi",
+        "raspberrypi": "raspberry-pi",
+        "remote-rpi": "external-rpi",
+        "external": "external-rpi",
+        "smbus": "generic-linux",
+        "linux-smbus": "generic-linux",
+        "pc": "desktop",
+    }
+    return aliases.get(value, value)
+
+
+def _detect_runtime_platform() -> dict[str, Any]:
+    board_model = _board_model()
+    os_release = _os_release()
+    system = platform.system() or "unknown"
+    is_wsl = "microsoft" in platform.release().lower()
+    in_container = _in_container()
+    is_rpi = "raspberry pi" in board_model.lower()
+
+    if is_rpi:
+        detected = "raspberry-pi"
+    elif system == "Linux" and in_container:
+        detected = "linux-container"
+    elif system == "Linux" and is_wsl:
+        detected = "wsl"
+    elif system == "Linux":
+        detected = "desktop-linux"
+    elif system == "Darwin":
+        detected = "macos"
+    elif system == "Windows":
+        detected = "windows"
+    else:
+        detected = "unknown"
+
+    piadc_selected = _selected_piadc_platform()
+    if piadc_selected == "auto":
+        piadc_role = "rpi-hat-local" if is_rpi else "external-rpi-required"
+    elif piadc_selected == "raspberry-pi":
+        piadc_role = "rpi-hat-local"
+    elif piadc_selected == "generic-linux":
+        piadc_role = "generic-linux-smbus"
+    elif piadc_selected in {"desktop", "external-rpi"}:
+        piadc_role = "external-rpi-required"
+    else:
+        piadc_role = "unknown-selection"
+
+    return {
+        "selected": _selected_hardware_platform(),
+        "piadc_selected": piadc_selected,
+        "detected": detected,
+        "is_raspberry_pi": is_rpi,
+        "raspberry_pi_model": board_model if is_rpi else "",
+        "board_model": board_model,
+        "system": system,
+        "os_pretty_name": os_release.get("pretty_name", ""),
+        "os_id": os_release.get("id", ""),
+        "os_version": os_release.get("version_id", ""),
+        "kernel": platform.release(),
+        "machine": platform.machine() or "unknown",
+        "python": sys.version.split()[0],
+        "in_container": in_container,
+        "is_wsl": is_wsl,
+        "piadc_driver_role": piadc_role,
+        "piadc_local_probe_allowed": _local_ads1115_probe_allowed(),
+        "i2c_buses": sorted(glob.glob("/dev/i2c-*")),
+        "serial_ports": [port.get("device") for port in list_serial_ports()],
+    }
+
+
+def _local_ads1115_probe_allowed() -> bool:
+    selection = _selected_piadc_platform()
+    if selection in {"desktop", "external-rpi"}:
+        return False
+    if selection in {"raspberry-pi", "generic-linux"}:
+        return True
+    return os.getenv("ADS1115_ALLOW_NON_RPI", "false").lower() == "true" or _is_raspberry_pi_host()
+
 
 def _scan_usb_devices() -> list[dict[str, str]]:
     """Scan /sys/bus/usb/devices for connected USB devices (vendor:product)."""
@@ -139,6 +288,19 @@ def _probe_dri0050(usb_devices: list[dict[str, str]]) -> dict[str, Any]:
 
 def _probe_i2c_ads1115() -> dict[str, Any]:
     """Probe configured I2C bus(es) for ADS1115."""
+    piadc_url = os.getenv("OQLOS_PIADC_URL") or os.getenv("PIADC_URL") or "http://localhost:8204"
+    if not _local_ads1115_probe_allowed():
+        return {
+            "connected": False,
+            "skipped": True,
+            "reason": (
+                "local ADS1115 HAT probe skipped: this host does not look like Raspberry Pi "
+                f"(machine={platform.machine() or 'unknown'}). Run piADC on the Raspberry Pi "
+                "that owns the HAT and point OqlOS to it with PIADC_URL/OQLOS_PIADC_URL."
+            ),
+            "remote_url": piadc_url,
+        }
+
     I2C_SLAVE = 0x0703
     address_raw = os.getenv("ADS1115_I2C_ADDRESS", "0x48")
     try:
@@ -215,6 +377,7 @@ def _probe_all_hardware(ids: set[str] | None = None) -> dict[str, Any]:
 def _collect_hardware_diagnostics() -> dict[str, Any]:
     """Collect best-effort port and bus inventory for troubleshooting."""
     return {
+        "platform": _detect_runtime_platform(),
         "usb_devices": _scan_usb_devices(),
         "serial_ports": list_serial_ports(),
         "i2c_buses": sorted(glob.glob("/dev/i2c-*")),
@@ -274,7 +437,10 @@ def _gw() -> HardwareGateway:
 @router.get("/health")
 async def hardware_health():
     """Return connectivity status for all hardware services."""
-    return await _gw().health()
+    payload = await _gw().health()
+    if isinstance(payload, dict):
+        payload["platform"] = _detect_runtime_platform()
+    return payload
 
 
 @router.get("/identify")
@@ -359,6 +525,7 @@ async def hardware_identify(
     connected_count = sum(1 for a in adapters if a["status"] == "ok")
     return {
         "mode": mode,
+        "platform": _detect_runtime_platform(),
         "detected": connected_count,
         "total": len(adapters),
         "adapters": adapters,

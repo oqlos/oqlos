@@ -3,17 +3,17 @@
 
 ## AI Cost Tracking
 
-![PyPI](https://img.shields.io/badge/pypi-costs-blue) ![Version](https://img.shields.io/badge/version-0.1.11-blue) ![Python](https://img.shields.io/badge/python-3.9+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
-![AI Cost](https://img.shields.io/badge/AI%20Cost-$5.10-orange) ![Human Time](https://img.shields.io/badge/Human%20Time-24.6h-blue) ![Model](https://img.shields.io/badge/Model-openrouter%2Fqwen%2Fqwen3--coder--next-lightgrey)
+![PyPI](https://img.shields.io/badge/pypi-costs-blue) ![Version](https://img.shields.io/badge/version-0.1.12-blue) ![Python](https://img.shields.io/badge/python-3.9+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
+![AI Cost](https://img.shields.io/badge/AI%20Cost-$5.25-orange) ![Human Time](https://img.shields.io/badge/Human%20Time-26.2h-blue) ![Model](https://img.shields.io/badge/Model-openrouter%2Fqwen%2Fqwen3--coder--next-lightgrey)
 
-- 🤖 **LLM usage:** $5.1000 (34 commits)
-- 👤 **Human dev:** ~$2461 (24.6h @ $100/h, 30min dedup)
+- 🤖 **LLM usage:** $5.2500 (35 commits)
+- 👤 **Human dev:** ~$2616 (26.2h @ $100/h, 30min dedup)
 
-Generated on 2026-05-05 using [openrouter/qwen/qwen3-coder-next](https://openrouter.ai/qwen/qwen3-coder-next)
+Generated on 2026-05-06 using [openrouter/qwen/qwen3-coder-next](https://openrouter.ai/qwen/qwen3-coder-next)
 
 ---
 
-![Version](https://img.shields.io/badge/version-0.1.11-blue) ![Python](https://img.shields.io/badge/python-3.10+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
+![Version](https://img.shields.io/badge/version-0.1.12-blue) ![Python](https://img.shields.io/badge/python-3.10+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
 
 
 OqlOS is the core runtime for executing OQL (Operation Query Language) hardware testing scenarios. It provides the execution engine, hardware abstraction layer, and API server for running automated hardware tests.
@@ -59,6 +59,7 @@ Main commands provided by this project:
 - `oqlctl` — scenario CLI (validate / dry-run / execute)
 - `oqlctl detect` — smart local hardware detection (USB/serial/I2C/Modbus + config)
 - `oqlctl doctor` — operator-facing hardware/config doctor with repair hints
+- `oqlos-modbus-probe` — direct Modbus RTU probe outside the running gateway
 - `oqlos-server` — API server
 - `oqlos-events` — event server
 
@@ -78,6 +79,10 @@ oqlctl doctor --json
 
 # Local host detection only
 oqlctl detect
+
+# Direct Modbus RTU probe outside the running gateway
+oqlos-modbus-probe --serial /dev/serial/by-id/usb-1a86_USB_Single_Serial_5958006895-if00 \
+  --baud 19200 --parity N --device-id 1 --function read_coils --address 0 --count 1 --timeout 2.5
 
 # Backward-compatible aliases
 oqlctl --status
@@ -497,6 +502,27 @@ status, and a diagnostics block with:
 The current valve calibration flow uses raw `piADC` voltage windows in the test scenario
 `oqlos/oqlos/scenarios/test-zaworu.oql`, while `hardware-valves-smoke.oql` only verifies
 basic open/close actuation.
+
+### Recent Fixes (2026-05-05)
+
+- **Motor disable path fixed**: `POST /api/v1/hardware/lung/disable` now consistently de-energizes Tic T249.
+- **Identify endpoint acceleration**: `/api/v1/hardware/identify` supports conditional scan mode (`scan=auto|always|never`) and skips expensive live scan when plugin health is already compatible.
+- **False-success prevention for lung start**: lung command path now returns structured failure (`ok=false` + `error` + `data.runtime_status`) when motion is blocked.
+- **Pre-checks before reciprocate**: lung startup validates blocker conditions first (both limit switches active, low VIN, driver fault, disconnected controller).
+- **Modbus diagnostics quality**: when adapter is open but device is silent, diagnostics report no-response context instead of misleading lock/access-only signals.
+
+Quick verification commands:
+
+```bash
+curl -sS 'http://127.0.0.1:8202/api/v1/hardware/identify?scan=auto' | jq '.diagnostics.scan_performed, .diagnostics.scan_skip_reason'
+curl -sS -X POST 'http://127.0.0.1:8202/api/v1/hardware/lung/disable' | jq
+curl -sS -X POST 'http://127.0.0.1:8202/api/v1/hardware/lung?steps=500&speed=100000&cycles=1&pause=0.5' | jq
+```
+
+Expected behavior for blocked hardware cases:
+
+- both limits active: `error="Both limit switches are active; movement is blocked"`
+- low supply voltage: `error="Motor supply voltage is too low"`
 
 ### Environment Variables
 

@@ -7,6 +7,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- `POST /api/v1/hardware/lung/disable` now de-energizes Tic T249 coils reliably (`de-energized` response path).
+- `GET /api/v1/hardware/identify` latency reduced by conditional scanning (`scan=auto|always|never`), with fast path when plugin health is compatible.
+- `GET /api/v1/hardware/identify` no longer misreports Modbus lock errors when plugin already owns the serial port and the real issue is `read_coils` no-response.
+- Restored and stabilized detailed lung error propagation (`ok=false`, `error`, `data.runtime_status`) so callers no longer get false-positive success when movement is blocked.
+- Fixed runtime regression that caused proxy diagnostics failures after refactor (`_candidate_oqlos_bases` path in upstream integration).
+- Lung startup now performs explicit pre-checks for movement blockers before issuing reciprocate:
+  - both limit switches active,
+  - low VIN,
+  - motor driver fault,
+  - disconnected controller.
+
+### Docs
+- Clarified hardware diagnostics workflow and failure signatures for:
+  - identify timeout/latency,
+  - dual active limit switches,
+  - low VIN (missing motor supply),
+  - Modbus adapter-present but device-silent mode.
+
+## [0.1.12] - 2026-05-06
+
+### Docs
+- Update CHANGELOG.md
+- Update README.md
+- Update docs/HARDWARE_DIAGNOSTICS.md
+
+### Test
+- Update tests/firmware/test_hardware_identify.py
+- Update tests/firmware/test_lung_plugin_reciprocate.py
+- Update tests/firmware/test_modbus_probe_cli.py
+- Update tests/firmware/test_plugin_gateway_env.py
+- Update tests/firmware/test_plugin_health.py
+
+### Other
+- Update oqlos/api/hardware.py
+- Update oqlos/hardware/plugin_gateway.py
+- Update oqlos/hardware/plugins/lung.py
+- Update oqlos/hardware/plugins/modbus.py
+- Update oqlos/hardware/plugins/piadc.py
+- Update oqlos/tools/hardware_diagnose/__main__.py
+- Update oqlos/tools/hardware_diagnose/modbus_probe.py
+- Update uv.lock
+
 ## [0.1.11] - 2026-05-05
 
 ### Docs

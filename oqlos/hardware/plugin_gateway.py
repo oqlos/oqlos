@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 from typing import Any
 
 from oqlos.config import get_settings
@@ -75,6 +76,7 @@ class PluginHardwareGateway:
             selected_path = resolve_oqlos_config_path(config_path)
             loaded = PluginRegistry.load_configs_from_yaml(selected_path)
             self._plugin_configs.update(loaded)
+            self._apply_env_overrides()
             logger.info(
                 "Loaded unified plugin config from %s (%d plugins)",
                 selected_path,
@@ -98,6 +100,43 @@ class PluginHardwareGateway:
                 metadata=config_data.get("metadata", {}),
                 peripherals=config_data.get("peripherals", {}),
             )
+        self._apply_env_overrides()
+
+    def _apply_env_overrides(self) -> None:
+        """Let deployment env point YAML-defined plugins at host/external services."""
+        url_overrides = {
+            "piadc": ("OQLOS_PIADC_URL", "PIADC_URL"),
+            "motor-dri0050": ("OQLOS_MOTOR_URL", "MOTOR_URL"),
+            "motor-tic249": ("OQLOS_LUNG_MOTOR_URL", "LUNG_MOTOR_URL"),
+        }
+        for plugin_id, env_names in url_overrides.items():
+            value = next((os.getenv(name) for name in env_names if os.getenv(name)), None)
+            if not value or plugin_id not in self._plugin_configs:
+                continue
+            self._plugin_configs[plugin_id].connection_params["base_url"] = value.rstrip("/")
+            logger.info("Hardware plugin %s base_url overridden by env", plugin_id)
+
+        modbus = self._plugin_configs.get("modbus-io")
+        if modbus is None:
+            return
+
+        modbus_overrides = {
+            "serial_port": ("OQLOS_MODBUS_SERIAL_PORT", "MODBUS_SERIAL_PORT"),
+            "baudrate": ("OQLOS_MODBUS_BAUD", "MODBUS_BAUD", "MODBUS_BAUD_RATE"),
+            "parity": ("OQLOS_MODBUS_PARITY", "MODBUS_PARITY"),
+            "device_id": ("OQLOS_MODBUS_DEVICE_ID", "MODBUS_DEVICE_ID"),
+        }
+        for param_name, env_names in modbus_overrides.items():
+            value = next((os.getenv(name) for name in env_names if os.getenv(name)), None)
+            if value is None:
+                continue
+            if param_name in {"baudrate", "device_id"}:
+                try:
+                    modbus.connection_params[param_name] = int(value)
+                except ValueError:
+                    logger.warning("Ignoring invalid Modbus %s override: %s", param_name, value)
+            else:
+                modbus.connection_params[param_name] = value
 
     async def ensure_initialized(self) -> None:
         """Await this to guarantee all plugins are connected."""
