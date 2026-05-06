@@ -26,6 +26,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - low VIN (missing motor supply),
   - Modbus adapter-present but device-silent mode.
 
+## [0.1.13] - 2026-05-06
+
+### Docs
+- Update README.md
+
+### Other
+- Update uv.lock
+
 ## [0.1.12] - 2026-05-06
 
 ### Docs
