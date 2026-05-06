@@ -40,8 +40,8 @@ Detailed guide: [Hardware Diagnostics](HARDWARE_DIAGNOSTICS.md).
 
 <!-- code2docs:start --># oqlos
 
-![version](https://img.shields.io/badge/version-0.1.0-blue) ![python](https://img.shields.io/badge/python-%3E%3D3.10-blue) ![coverage](https://img.shields.io/badge/coverage-unknown-lightgrey) ![functions](https://img.shields.io/badge/functions-712-green)
-> **712** functions | **82** classes | **100** files | CC̄ = 3.7
+![version](https://img.shields.io/badge/version-0.1.0-blue) ![python](https://img.shields.io/badge/python-%3E%3D3.10-blue) ![coverage](https://img.shields.io/badge/coverage-unknown-lightgrey) ![functions](https://img.shields.io/badge/functions-981-green)
+> **981** functions | **95** classes | **150** files | CC̄ = 4.2
 
 > Auto-generated project documentation from source code analysis.
 
@@ -108,105 +108,163 @@ config = Code2DocsConfig(project_name="mylib", verbose=True)
 docs = generate_docs("./my-project", config=config)
 ```
 
-## Generated Output
 
-When you run `oqlos`, the following files are produced:
 
-```
-<project>/
-├── README.md                 # Main project README (auto-generated sections)
-├── docs/
-│   ├── api.md               # Consolidated API reference
-│   ├── modules.md           # Module documentation with metrics
-│   ├── architecture.md      # Architecture overview with diagrams
-│   ├── dependency-graph.md  # Module dependency graphs
-│   ├── coverage.md          # Docstring coverage report
-│   ├── getting-started.md   # Getting started guide
-│   ├── configuration.md    # Configuration reference
-│   └── api-changelog.md    # API change tracking
-├── examples/
-│   ├── quickstart.py       # Basic usage examples
-│   └── advanced_usage.py   # Advanced usage examples
-├── CONTRIBUTING.md         # Contribution guidelines
-└── mkdocs.yml             # MkDocs site configuration
-```
-
-## Configuration
-
-Create `oqlos.yaml` in your project root (or run `oqlos init`):
-
-```yaml
-project:
-  name: my-project
-  source: ./
-  output: ./docs/
-
-readme:
-  sections:
-    - overview
-    - install
-    - quickstart
-    - api
-    - structure
-  badges:
-    - version
-    - python
-    - coverage
-  sync_markers: true
-
-docs:
-  api_reference: true
-  module_docs: true
-  architecture: true
-  changelog: true
-
-examples:
-  auto_generate: true
-  from_entry_points: true
-
-sync:
-  strategy: markers    # markers | full | git-diff
-  watch: false
-  ignore:
-    - "tests/"
-    - "__pycache__"
-```
-
-## Sync Markers
-
-oqlos can update only specific sections of an existing README using HTML comment markers:
-
-```markdown
-<!-- oqlos:start -->
-# Project Title
-... auto-generated content ...
-<!-- oqlos:end -->
-```
-
-Content outside the markers is preserved when regenerating. Enable this with `sync_markers: true` in your configuration.
 
 ## Architecture
 
 ```
 oqlos/
-├── project        ├── state├── setup_hardware_and_run_oql├── oqlos/        ├── _dsl_helpers    ├── core/        ├── parser        ├── _func_resolver        ├── _interpreter_actions        ├── executor        ├── _cql_tokenizer        ├── interpreter        ├── safe_eval        ├── _compare        ├── _line_parsers        ├── _firmware_executor        ├── _value_normalizers        ├── cql_parser        ├── _sensor_evaluator    ├── tools/        ├── hardware_diagnose/        ├── cql_cli/            ├── health            ├── __main__        ├── plugin_cli            ├── shell            ├── benchmark            ├── report            ├── calibration            ├── _utils        ├── xml_import/            ├── parser            ├── generators            ├── models            ├── commands            ├── utils        ├── base            ├── preflight            ├── main            ├── discovery    ├── models/        ├── dsl_models    ├── config        ├── protocol        ├── config_schema        ├── gateway        ├── registry    ├── hardware/        ├── peripheral_mapping        ├── plugin_gateway        ├── discovery        ├── firmware_adapter            ├── base        ├── execution            ├── registry        ├── plugins/            ├── modbus            ├── piadc            ├── lung            ├── _shared            ├── gpio        ├── drivers/            ├── spi            ├── mqtt    ├── reporters/            ├── motor        ├── scenario    ├── utils/        ├── sample_data        ├── _endpoint_helpers        ├── file_ops        ├── logs_query    ├── shared/        ├── config_factory        ├── event_server        ├── version_endpoint        ├── event_store        ├── logger        ├── version        ├── release_version        ├── plugins        ├── state        ├── execution        ├── peripherals    ├── api/        ├── hardware        ├── logs        ├── editor        ├── main        ├── utils/            ├── execution_ctrl    ├── ide/        ├── junit    ├── dsl/    ├── hardware-check        ├── schema        ├── peripheral        ├── scenarios```
+├── hw_diagnostic_20260415_133138
+├── setup_hardware_and_run_oql
+├── goal
+├── oqlos/
+├── pyqual
+├── sumd
+├── pyproject
+    ├── testql
+        ├── toon
+├── TODO
+├── CHANGELOG
+├── Taskfile
+├── openapi
+├── project
+├── README
+    ├── cql-spec
+        ├── schema
+    ├── cql-examples
+    ├── oql-spec
+        ├── schema
+    ├── HARDWARE_DIAGNOSTICS
+    ├── OQL_V4_MIGRATION_MANUAL
+    ├── README
+    ├── plugin-config
+        ├── doctor-workflow
+        ├── prod
+        ├── dev
+    ├── Dockerfile
+    ├── config
+        ├── state
+        ├── base
+        ├── _dsl_helpers
+        ├── _cql_tree_builder
+        ├── _interpreter_actions
+        ├── oql_parser
+    ├── core/
+        ├── oql_versioning
+        ├── parser
+        ├── _func_resolver
+        ├── executor
+        ├── _oql_adapter
+        ├── interpreter
+        ├── _cql_tokenizer
+        ├── _line_parsers
+        ├── safe_eval
+        ├── _compare
+        ├── cql_parser
+        ├── _firmware_executor
+        ├── _value_normalizers
+        ├── _sensor_evaluator
+        ├── hardware_diagnose/
+        ├── plugin_cli
+        ├── cql_cli/
+            ├── doctor
+            ├── health
+            ├── __main__
+            ├── modbus_probe
+            ├── shell
+            ├── benchmark
+            ├── discovery
+            ├── report
+            ├── calibration
+            ├── _utils
+        ├── xml_import/
+            ├── parser
+            ├── generators
+            ├── models
+            ├── commands
+            ├── utils
+            ├── main
+            ├── preflight
+        ├── execution
+        ├── dsl_models
+        ├── scenario
+        ├── peripheral
+        ├── config_paths
+        ├── protocol
+        ├── config_schema
+        ├── gateway
+        ├── registry
+        ├── control_proxy
+    ├── hardware/
+        ├── peripheral_mapping
+        ├── plugin_gateway
+        ├── discovery
+        ├── firmware_adapter
+            ├── base
+            ├── registry
+            ├── piadc
+        ├── plugins/
+            ├── modbus
+            ├── lung
+            ├── motor
+            ├── _shared
+            ├── gpio
+        ├── drivers/
+            ├── spi
+            ├── mqtt
+        ├── html_report
+    ├── reporters/
+        ├── json_reporter
+        ├── junit
+        ├── sample_data
+    ├── utils/
+        ├── release_version
+        ├── _endpoint_helpers
+        ├── file_ops
+        ├── logs_query
+        ├── config_factory
+        ├── event_server
+        ├── version_endpoint
+        ├── event_store
+        ├── logger
+        ├── version
+        ├── state
+        ├── plugins
+        ├── scenarios
+        ├── execution
+        ├── peripherals
+    ├── api/
+        ├── hardware
+        ├── logs
+        ├── editor
+        ├── main
+            ├── execution_ctrl
+        ├── OQL-CHEATSHEET
+            ├── README
+        ├── schema
+    ├── dsl/
+    ├── oql_v4_validator
+    ├── hardware-check
+    ├── fix_brackets_to_v4
+    ├── oql_v2_validator
+    ├── migrate_to_v4
+    ├── oql_v2_to_v4_migrate_db
+    ├── scenarios_export
+            ├── toon
+            ├── toon
+            ├── toon
+            ├── toon
+            ├── toon
+    ├── manifest
+```
 
 ## API Overview
 
 ### Classes
 
+- **`Settings`** — Application settings loaded from environment variables and .env file
 - **`StateManager`** — —
-- **`ScenarioOrchestrator`** — —
-- **`CqlInterpreter`** — CQL interpreter with three modes:
-- **`SafeEvalError`** — Raised when an expression cannot be safely evaluated.
-- **`FirmwareExecutor`** — Executes hardware actions via plugin gateway or legacy firmware.
-- **`ValueNormalizer`** — Normalizes DSL values to hardware-compatible formats.
-- **`SensorEvaluator`** — Evaluates sensor conditions and manages sensor values.
-- **`SensorParam`** — Parameter measurement from an operation.
-- **`Output`** — Hardware output setting.
-- **`Operation`** — Single test operation (step).
-- **`TestRun`** — A test run (scenario) within a device type.
-- **`DeviceReport`** — Parsed device test report.
 - **`StepStatus`** — —
 - **`StepResult`** — —
 - **`ScriptResult`** — —
@@ -214,7 +272,26 @@ oqlos/
 - **`InterpreterOutput`** — Collects interpreter output lines for display or testing, and optionally broadcasts events.
 - **`BaseInterpreter`** — Abstract base for language interpreters.
 - **`EventBridge`** — Optional WebSocket bridge to DSL Event Server (port 8104).
+- **`OqlCmd`** — A single command line inside a block.
+- **`OqlBlock`** — A named block: ``GOAL``, ``CONFIG``, or ``MACRO``.
+- **`OqlDoc`** — Parsed OQL document.
+- **`OqlVersionInfo`** — Resolved OQL version metadata for a source document.
+- **`ScenarioOrchestrator`** — —
+- **`CqlInterpreter`** — CQL interpreter with three modes:
+- **`SafeEvalError`** — Raised when an expression cannot be safely evaluated.
+- **`FirmwareExecutor`** — Executes hardware actions via plugin gateway or legacy firmware.
+- **`ValueNormalizer`** — Normalizes DSL values to hardware-compatible formats.
+- **`SensorEvaluator`** — Evaluates sensor conditions and manages sensor values.
 - **`UsbDevice`** — USB device information.
+- **`SensorParam`** — Parameter measurement from an operation.
+- **`Output`** — Hardware output setting.
+- **`Operation`** — Single test operation (step).
+- **`TestRun`** — A test run (scenario) within a device type.
+- **`DeviceReport`** — Parsed device test report.
+- **`ScenarioFetchError`** — Raised when an HTTP scenario target is not runnable OQL/CQL source.
+- **`ExecutionRequest`** — —
+- **`ExecutionStatus`** — —
+- **`CommandEnvelope`** — —
 - **`CqlMetadata`** — —
 - **`CqlInterval`** — —
 - **`CqlCondition`** — Sensor condition: AI01 ∈ [min, max] unit | ACTION 'msg'
@@ -223,12 +300,22 @@ oqlos/
 - **`CqlGoal`** — A test goal within a scenario.
 - **`CqlScenario`** — A named scenario block: @Namespace.Name
 - **`CqlDocument`** — Root AST node for a .cql file.
-- **`Settings`** — Application settings loaded from environment variables and .env file
+- **`Step`** — —
+- **`ValidationRule`** — —
+- **`Goal`** — —
+- **`Scenario`** — —
+- **`PeripheralType`** — —
+- **`PeripheralStatus`** — —
+- **`PeripheralMode`** — —
+- **`Peripheral`** — —
 - **`ProtocolType`** — Supported hardware communication protocols.
 - **`HardwareProtocol`** — Base class for all hardware drivers.
 - **`UnitType`** — Standard unit types for hardware parameters.
 - **`HardwareGateway`** — Single entry-point for all physical hardware I/O.
 - **`DriverRegistry`** — Registry for hardware drivers. Allows mapping ProtocolType to specific HardwareProtocol implementations. 
+- **`OqlosHardwareProxyConfig`** — —
+- **`HardwareProxyError`** — Error raised by the OqlOS hardware proxy layer.
+- **`OqlosHardwareProxy`** — Proxy and command mapper for runtime hardware control via OqlOS.
 - **`PluginHardwareGateway`** — Simplified hardware gateway using plugin architecture.
 - **`FirmwareAdapter`** — HTTP bridge between CQL interpreter and firmware simulator.
 - **`PluginStatus`** — Status of a hardware plugin.
@@ -237,23 +324,18 @@ oqlos/
 - **`ConversionConfig`** — Describes how to convert a logical value to a hardware value.
 - **`PeripheralConfig`** — Configuration for a single peripheral (sensor / actuator).
 - **`PluginConfig`** — Standardized configuration schema for hardware plugins.
+- **`OqlosConfigDocument`** — Top-level ``oqlos.yaml`` schema.
 - **`PluginHealth`** — Health check result for a hardware plugin.
 - **`HardwarePlugin`** — Base interface for hardware integration plugins.
-- **`ExecutionRequest`** — —
-- **`ExecutionStatus`** — —
-- **`CommandEnvelope`** — —
 - **`PluginRegistry`** — Central registry for hardware plugins.
-- **`ModbusPlugin`** — Plugin for Waveshare Modbus RTU IO 8CH valve controller.
 - **`PiadcPlugin`** — Plugin for piADC (ADS1115) 16-bit ADC sensor.
+- **`ModbusPlugin`** — Plugin for Waveshare Modbus RTU IO 8CH valve controller.
 - **`LungPlugin`** — Plugin for Pololu Tic T249 stepper motor (artificial lung).
+- **`MotorPlugin`** — Plugin for DFRobot DRI0050 PWM motor driver.
 - **`GpioDriver`** — Driver for direct GPIO control.
 - **`SpiDriver`** — SPI driver for HAL.
 - **`MqttDriver`** — MQTT driver for the Hardware Abstraction Layer.
-- **`MotorPlugin`** — Plugin for DFRobot DRI0050 PWM motor driver.
-- **`Step`** — —
-- **`ValidationRule`** — —
-- **`Goal`** — —
-- **`Scenario`** — —
+- **`JUnitReporter`** — Generate JUnit XML from a ScriptResult.
 - **`PathEscapeError`** — Raised when a resolved path would escape the base directory.
 - **`LogsQueryService`** — Read-only query service for nfo logs SQLite database.
 - **`ConnectionManager`** — Tracks connected WebSocket clients and broadcasts messages.
@@ -262,16 +344,14 @@ oqlos/
 - **`FileInfo`** — —
 - **`FileContent`** — —
 - **`ExecutionRequest`** — —
-- **`JUnitReporter`** — Generate JUnit XML from a ScriptResult.
 - **`DslDialect`** — Supported DSL dialect metadata.
 - **`DslItem`** — A reusable schema item visible to editor clients.
 - **`DslFunctionBinding`** — Object to function relationship used by visual builders.
 - **`DslParamUnitBinding`** — Param to unit relationship used by visual builders.
 - **`DslSchema`** — Complete editor schema shared by GUI and runtime tooling.
-- **`PeripheralType`** — —
-- **`PeripheralStatus`** — —
-- **`PeripheralMode`** — —
-- **`Peripheral`** — —
+- **`Issue`** — —
+- **`Issue`** — —
+- **`MigrationResult`** — —
 
 ### Functions
 
@@ -282,8 +362,8 @@ oqlos/
 - `load_env_file(env_path)` — Load .env file into environment variables.
 - `run_oql_scenario(scenario_path, mode, firmware_url)` — Run OQL scenario with loaded configuration.
 - `main()` — —
-- `parse_dsl_to_goal_with_issues(dsl, scenario_id)` — Parse DSL and return a runtime goal plus invalid runtime lines.
-- `parse_dsl_to_goal(dsl, scenario_id)` — Parse DSL string to a runtime Goal with Steps.
+- `print()` — —
+- `get_settings()` — Get the application settings instance.
 - `exec_action_task(interp, act)` — Execute TASK action.
 - `exec_action_save(interp, act)` — Execute SAVE action.
 - `parse_wait_secs(raw)` — Parse a WAIT value to seconds. Default unit is ms.
@@ -307,17 +387,44 @@ oqlos/
 - `exec_action_loop_block(interp, act)` — Execute LOOP block action.
 - `exec_action_set(interp, act)` — Execute SET action with intelligent dispatch.
 - `exec_action_action(interp, act)` — Execute generic ACTION.
+- `to_num(raw)` — Convert '6.0' → 6.0, '3' → 3, '-10,5' → -10.5 (accepts comma).
+- `parse_duration(token)` — Parse ``3s``, ``500ms``, ``3000`` (bare number defaults to ``ms``).
+- `duration_to_ms(token)` — Convert a duration token into integer milliseconds.
+- `tokenize(rest)` — Split a command tail into tokens.
+- `parse_SET(tokens, ln, raw)` — —
+- `parse_GET(tokens, ln, raw)` — —
+- `parse_WAIT(tokens, ln, raw)` — —
+- `parse_IF_DELTA(tokens, ln, raw)` — —
+- `parse_SAVE(tokens, ln, raw)` — —
+- `parse_CHECK(rest, ln, raw)` — —
+- `parse_IF(rest, ln, raw)` — —
+- `parse_MIN(tokens, ln, raw)` — —
+- `parse_MAX(tokens, ln, raw)` — —
+- `parse_SAMPLE(tokens, ln, raw)` — —
+- `parse_LOG(tokens, ln, raw)` — —
+- `parse_ERROR(tokens, ln, raw)` — —
+- `parse_CORRECT(tokens, ln, raw)` — —
+- `parse_CALL(tokens, ln, raw)` — —
+- `parse_INCLUDE(tokens, ln, raw)` — —
+- `parse_FUNC_CALL(tokens, ln, raw)` — —
+- `parse_REPEAT(tokens, ln, raw)` — —
+- `parse_oql(text, filename)` — Parse OQL source into an :class:`OqlDoc`.
+- `format_doc(doc)` — Pretty-print for ad-hoc debugging.
+- `first_meaningful_line(text)` — Return first non-empty/non-comment line as (line_no, text).
+- `extract_declared_version(text)` — Extract VERSION header value when present on first meaningful line.
+- `resolve_oql_version(text)` — Resolve OQL version from source text with backward-compatible default.
+- `is_supported_oql_version(version)` — —
+- `parse_dsl_to_goal_with_issues(dsl, scenario_id)` — Parse DSL and return a runtime goal plus invalid runtime lines.
+- `parse_dsl_to_goal(dsl, scenario_id)` — Parse DSL string to a runtime Goal with Steps.
 - `safe_eval_condition(expr, context)` — Evaluate a simple comparison expression without using eval().
+- `is_flat_oql(source)` — Heuristic: detect flat OQL source (v3/v4).
+- `oql_doc_to_cql(doc)` — Convert a parsed :class:`OqlDoc` into a :class:`CqlDocument`.
+- `parse_flat_oql(source, filename)` — Convenience: parse flat OQL directly to a :class:`CqlDocument`.
 - `safe_eval(expr, context)` — Evaluate a simple expression safely without using eval().
 - `resolve_compare(left, op, right)` — Evaluate a single comparison: left op right.
 - `resolve_compare_chain(node, resolve_value)` — Evaluate a chained comparison using the caller's node resolver.
 - `parse_cql(source, filename)` — Parse CQL source into AST.
 - `validate_cql(doc)` — Validate a parsed CQL document. Returns list of issues.
-- `check_firmware_health(url)` — Check firmware health via HTTP API.
-- `check_firmware_identify(url)` — Get detailed hardware identification.
-- `cmd_health(url)` — Health command — check firmware health, return formatted string.
-- `cmd_diagnose(url)` — Full diagnostic command — combines USB + I2C + health + identify.
-- `main()` — —
 - `cmd_list(args)` — List all registered plugins.
 - `cmd_status(args)` — Show status of all plugins.
 - `cmd_capabilities(args)` — Show capabilities of a specific plugin.
@@ -329,8 +436,28 @@ oqlos/
 - `cmd_reload(args)` — Reload plugin configurations from YAML file.
 - `cmd_peripherals(args)` — Show peripheral definitions for a plugin (from loaded config).
 - `main()` — —
+- `detect_hardware(firmware_url)` — Collect local and firmware-side hardware discovery signals.
+- `build_doctor_report(firmware_url)` — Run smart detection, analyze problems, and optionally apply safe fixes.
+- `apply_safe_fixes(detection, repairs)` — Apply safe doctor repairs. Currently limited to oqlos.yaml Modbus params.
+- `format_detection(detection)` — Format smart detection output for operators.
+- `format_doctor(report)` — Format a doctor report for operators.
+- `main()` — Run the hardware diagnostics CLI without importing __main__ at package import time.
+- `check_firmware_health(url)` — Check firmware health via HTTP API.
+- `check_firmware_identify(url)` — Get detailed hardware identification.
+- `cmd_health(url)` — Health command — check firmware health, return formatted string.
+- `cmd_diagnose(url)` — Full diagnostic command — combines USB + I2C + health + identify.
+- `main()` — —
+- `add_modbus_probe_arguments(parser)` — Add direct probe arguments to an argparse parser.
+- `probe_options_from_args(args)` — Build probe options from CLI args, falling back to the legacy MODBUS_* env.
+- `run_modbus_probe_from_args(args)` — Run the direct Modbus probe using CLI args with env fallback.
+- `run_modbus_probe_from_env()` — Run the direct Modbus probe using the legacy MODBUS_* environment contract.
+- `run_modbus_probe()` — Try all requested Modbus RTU read combinations and return JSON-safe results.
+- `main(argv)` — —
 - `interactive_shell(url)` — Run the interactive hardware diagnostic REPL.
 - `run_benchmark(url, duration)` — Run HTTP performance benchmark against firmware health endpoint.
+- `list_usb_serial_devices()` — Detect all USB-to-serial devices.
+- `list_i2c_buses()` — List available I2C buses.
+- `detect_chips_on_i2c(bus)` — Detect chips on I2C bus using i2cdetect.
 - `format_peripheral_table(devices)` — Format USB devices as an ASCII table.
 - `save_diagnostic_report(filename, url)` — Save full diagnostic report as JSON.
 - `run_calibration_test(url)` — Run calibration test for all hardware components.
@@ -356,23 +483,35 @@ oqlos/
 - `build_single_command_scenario(command)` — Wrap a single OQL command line in a minimal scenario document.
 - `resolve_required_adapter(command)` — Infer the hardware adapter required by a single command, if any.
 - `validate_directory(d, interpreter_class)` — Validate all .cql and .oql files in a directory tree.
+- `create_file_parser()` — Create argument parser for file-based execution.
+- `create_run_parser()` — Create parser for explicit `oqlctl run` scenario execution.
+- `create_hardware_parser(action)` — Create parser for oqlctl hardware utility subcommands.
+- `create_cmd_parser()` — Create argument parser for single command execution.
+- `run_file_mode(args)` — Execute file-based CQL/OQL processing.
+- `run_hardware_mode(action, argv)` — Run oqlctl status/identify/detect/doctor subcommands.
+- `run_cmd_mode(argv)` — Execute single command mode.
+- `main()` — Main entry point - delegates to dispatcher.
 - `ensure_firmware_running(firmware_url)` — Attempt to start firmware service if it's not available.
 - `check_firmware_state(firmware_url, yaml_output, quiet)` — Check firmware health and identify state.
 - `check_required_adapter(command, adapters, yaml_output, quiet)` — Check if the required adapter for a command is available.
+- `check_required_adapter_health(required_adapter, health, yaml_output, quiet)` — Check required adapter service health when firmware exposes it.
 - `emit_preflight_success(firmware_url, health, identify, required_adapter)` — Emit preflight success output in appropriate format.
 - `preflight_hardware(command, firmware_url)` — Check whether the requested command can run on real hardware.
-- `create_file_parser()` — Create argument parser for file-based execution.
-- `create_cmd_parser()` — Create argument parser for single command execution.
-- `run_file_mode(args)` — Execute file-based CQL/OQL processing.
-- `run_cmd_mode(argv)` — Execute single command mode.
-- `main()` — Main entry point - dispatches to appropriate mode.
-- `list_usb_serial_devices()` — Detect all USB-to-serial devices.
-- `list_i2c_buses()` — List available I2C buses.
-- `detect_chips_on_i2c(bus)` — Detect chips on I2C bus using i2cdetect.
-- `get_settings()` — Get the application settings instance.
+- `resolve_oqlos_config_path(config_path)` — Resolve the canonical ``oqlos.yaml`` path.
 - `get_hardware_config(device_id)` — Return the PluginConfig for *device_id* (loaded from unified YAML).
 - `register_hardware_config(config)` — No-op shim — configs live in the unified YAML now.
 - `load_config_from_yaml(config_path)` — Load plugin configs from the **unified** YAML format.
+- `build_dynamic_schema_models(config_path)` — Build runtime Pydantic schema models from ``oqlos.yaml``.
+- `candidate_oqlos_bases(api_base)` — Return the configured OqlOS base URL plus the common 8200/8202 fallback.
+- `is_oqlos_unavailable(exc)` — —
+- `oqlos_error_detail(exc)` — —
+- `normalize_modbus_valve_id(raw)` — —
+- `resolve_modbus_target(command, args)` — —
+- `resolve_pump_target(command, args)` — —
+- `resolve_lung_target(command, args)` — —
+- `resolve_piadc_target(command, args)` — —
+- `resolve_diagnostic_target(peripheral, command, args)` — —
+- `extract_command_failure(result)` — —
 - `resolve_target_to_plugin(target)` — Resolve a DSL target name to its plugin ID.
 - `register_custom_mapping(target, plugin_id)` — Register a custom peripheral-to-plugin mapping.
 - `get_all_mappings()` — Get all peripheral-to-plugin mappings.
@@ -381,12 +520,18 @@ oqlos/
 - `probe_waveshare_modbus(preferred_port, preferred_baud, preferred_parity, timeout)` — Probe serial ports and return the first working Modbus RTU configuration.
 - `get_pluggy_manager()` — Return the global pluggy PluginManager for third-party drivers.
 - `dynamic_peripheral_model(peripheral)` — Generate a runtime Pydantic model from a ``PeripheralConfig``.
-- `build_dynamic_schema_models(config_path)` — Build runtime Pydantic schema models for all plugins/peripherals declared in ``oqlos.yaml``.
+- `dynamic_plugin_schema_models(config)` — Build runtime Pydantic models for all plugin peripherals.
 - `http_health_check(client, base_url, label)` — Shared HTTP health check — GET {base_url}/health.
 - `not_connected_health(label)` — Return error health when plugin has no active client.
 - `health_check_exception(exc)` — Return error health for unexpected exceptions.
 - `http_disconnect(client, label)` — Close an httpx client (if open) and log disconnect.
+- `render_html_report(data_json)` — Render a self-contained HTML report from an ``oqlos-report-v1`` JSON string.
+- `report_json(result)` — Format a ScriptResult as the canonical ``data.json`` for report rendering.
+- `report_junit(result, suite_name)` — Convenience function — wraps JUnitReporter().generate().
 - `load_sample_scenarios(state_manager)` — Load sample scenarios for testing
+- `clean_version(raw)` — Normalize a raw version string to plain semver text.
+- `resolve_release_version(project_root)` — Resolve the release version for the given project root.
+- `main()` — —
 - `serve_html_page(file_path)` — Serve a static HTML file when present, else return a small fallback page.
 - `make_collection_route(route_name, get_collection)` — Create a trivial list-all route for dict-backed state collections.
 - `list_files(base, pattern, recursive)` — List files (not directories) matching *pattern* under *base*.
@@ -399,17 +544,6 @@ oqlos/
 - `build_version_payload(service_name, version)` — Build a canonical JSON payload for a version endpoint.
 - `create_version_router()` — Create a FastAPI router that exposes a single `/version` endpoint.
 - `get_logger(name)` — —
-- `clean_version(raw)` — Normalize a raw version string to plain semver text.
-- `resolve_release_version(project_root)` — Resolve the release version for the given project root.
-- `main()` — —
-- `list_plugins()` — List all registered hardware plugins.
-- `get_plugin_status()` — Get overall status of all plugins.
-- `get_plugin_info(plugin_id)` — Get information about a specific plugin.
-- `get_plugin_health(plugin_id)` — Get health status of a specific plugin.
-- `connect_plugin(plugin_id, config)` — Connect to a hardware plugin.
-- `disconnect_plugin(plugin_id)` — Disconnect from a hardware plugin.
-- `execute_plugin_command(plugin_id, command)` — Execute a command on a hardware plugin.
-- `validate_plugin_configs(configs)` — Validate configurations for multiple plugins.
 - `get_state()` — Get current system state
 - `stream_values(param, min, max, period)` — SSE endpoint for live value streaming.
 - `get_current_value(param)` — Get current value for a parameter (single request, not streaming).
@@ -418,6 +552,18 @@ oqlos/
 - `fetch_variables(source)` — Fetch variables (Peripheral State Table) from backend DB; tolerate dev HTML by returning [].
 - `fetch_protocol_steps(scenario, source)` — Fetch protocol steps for preview.
 - `post_commands(env, background_tasks)` — Command bus endpoint used by frontend.
+- `ensure_plugins_initialized()` — Register and discover plugins once per process.
+- `list_plugins()` — List all registered hardware plugins.
+- `get_plugin_status()` — Get overall status of all plugins.
+- `get_plugin_info(plugin_id)` — Get information about a specific plugin.
+- `get_plugin_health(plugin_id)` — Get health status of a specific plugin.
+- `connect_plugin(plugin_id, config)` — Connect to a hardware plugin.
+- `disconnect_plugin(plugin_id)` — Disconnect from a hardware plugin.
+- `execute_plugin_command(plugin_id, command)` — Execute a command on a hardware plugin.
+- `validate_plugin_configs(configs)` — Validate configurations for multiple plugins.
+- `get_scenario(scenario_id)` — Get specific scenario
+- `fetch_scenarios(source)` — Fetch scenarios from backend DB or external JSON and normalize shape.
+- `register_dsl(payload)` — Register one or many scenarios defined as DSL strings.
 - `start_execution(request)` — Start scenario execution
 - `execute_step(payload)` — Execute a single DSL step within the current (or new) execution.
 - `get_execution(execution_id)` — Get execution status
@@ -432,12 +578,13 @@ oqlos/
 - `reset_peripherals()` — Reset all peripherals
 - `set_hardware_gateway(gw)` — —
 - `hardware_health()` — Return connectivity status for all hardware services.
-- `hardware_identify()` — Return full hardware identification: registry + live probe results.
+- `hardware_identify(scan)` — Return hardware identification with conditional live scanning for low latency.
 - `set_valve(valve_id, value)` — Directly set a valve (for manual testing).
 - `set_pump(power_pct)` — Directly set pump power % (for manual testing).
 - `read_sensor(sensor_id)` — Read a sensor value directly from hardware.
 - `set_lung(steps, speed, cycles, pause)` — Start artificial lung reciprocating motion (tic249 stepper).
 - `stop_lung()` — Emergency stop the artificial lung motor.
+- `disable_lung()` — De-energize the artificial lung motor (release coils).
 - `get_logs(level, function, module, q)` — Browse nfo logs from shared SQLite database.
 - `get_log_stats()` — Summary statistics from logs database.
 - `list_files()` — List all entries in the scenarios directory.
@@ -451,7 +598,9 @@ oqlos/
 - `websocket_endpoint(websocket)` — —
 - `run()` — Entry point for ``oqlos-server`` console script.
 - `set_dependencies(sm, orch)` — Set state_manager + orchestrator (called once from main.py).
-- `report_junit(result, suite_name)` — Convenience function — wraps JUnitReporter().generate().
+- `get_default_dsl_schema()` — Return the canonical cross-project schema used by editor clients.
+- `validate_oql_v4(text, source)` — —
+- `main()` — —
 - `log_info()` — —
 - `log_warn()` — —
 - `log_error()` — —
@@ -463,78 +612,117 @@ oqlos/
 - `generate_report()` — —
 - `full_diagnostic()` — —
 - `main()` — —
-- `get_default_dsl_schema()` — Return the canonical cross-project schema used by editor clients.
-- `get_scenario(scenario_id)` — Get specific scenario
-- `fetch_scenarios(source)` — Fetch scenarios from backend DB or external JSON and normalize shape.
-- `register_dsl(payload)` — Register one or many scenarios defined as DSL strings.
+- `needs_migration(text)` — Check if text contains v2 bracket syntax, legacy MIN/MAX, PUMP, or old IF sentinels.
+- `main()` — —
+- `validate_oql_v2_legacy(text, source)` — —
+- `main()` — —
+- `find_oql_files(root_dir)` — Znajdź wszystkie pliki .oql poza venv/.venv.
+- `has_version_header(content)` — Sprawdź czy plik ma nagłówek VERSION: X.
+- `extract_version(content)` — Wyciągnij numer wersji z pliku.
+- `migrate_content(content, filename)` — Zmigruj zawartość pliku do VERSION: 4.
+- `main()` — —
+- `check_database()` — Sprawdź scenariusze w bazie danych przez API.
+- `migrate_v2_to_v4(text)` — —
+- `main()` — —
+- `export_all_zip(base, out_path)` — —
+- `export_one_bash(base, sid, out_path)` — —
+- `import_scenarios(base, dir_path, validate)` — —
+- `main(argv)` — —
 
 
 ## Project Structure
 
+📄 `CHANGELOG`
+📄 `README`
+📄 `TODO`
+📄 `Taskfile`
+📄 `Taskfile.testql`
+📄 `docker.Dockerfile`
+📄 `docker.docker-compose.dev`
+📄 `docker.docker-compose.prod`
+📄 `docs.HARDWARE_DIAGNOSTICS`
+📄 `docs.OQL_V4_MIGRATION_MANUAL`
+📄 `docs.README`
+📄 `docs.cql-examples`
+📄 `docs.cql-spec`
+📄 `docs.oql-spec`
+📄 `docs.oql_v2_llm_validator.schema`
+📄 `docs.oql_v4_llm_validator.schema`
+📄 `examples.hardware.doctor-workflow` (3 functions)
+📄 `examples.plugin-config`
+📄 `goal`
+📄 `hw_diagnostic_20260415_133138`
+📄 `openapi`
 📦 `oqlos`
 📦 `oqlos.api`
 📄 `oqlos.api.editor` (5 functions, 3 classes)
 📄 `oqlos.api.execution` (16 functions)
-📄 `oqlos.api.hardware` (16 functions)
+📄 `oqlos.api.hardware` (31 functions)
 📄 `oqlos.api.logs` (3 functions)
-📄 `oqlos.api.main` (6 functions)
+📄 `oqlos.api.main` (9 functions)
 📄 `oqlos.api.peripherals` (4 functions)
-📄 `oqlos.api.plugins` (8 functions)
+📄 `oqlos.api.plugins` (9 functions)
 📄 `oqlos.api.scenarios` (16 functions)
 📄 `oqlos.api.state` (16 functions)
-📦 `oqlos.api.utils`
 📄 `oqlos.api.utils.execution_ctrl` (3 functions)
 📄 `oqlos.api.version`
 📄 `oqlos.config` (1 functions, 1 classes)
 📦 `oqlos.core`
 📄 `oqlos.core._compare` (2 functions)
-📄 `oqlos.core._cql_tokenizer` (25 functions)
+📄 `oqlos.core._cql_tokenizer` (27 functions)
+📄 `oqlos.core._cql_tree_builder` (9 functions)
 📄 `oqlos.core._dsl_helpers` (12 functions)
 📄 `oqlos.core._firmware_executor` (9 functions, 1 classes)
 📄 `oqlos.core._func_resolver` (4 functions)
-📄 `oqlos.core._interpreter_actions` (44 functions)
+📄 `oqlos.core._interpreter_actions` (48 functions)
 📄 `oqlos.core._line_parsers` (9 functions)
+📄 `oqlos.core._oql_adapter` (14 functions, 1 classes)
 📄 `oqlos.core._sensor_evaluator` (6 functions, 1 classes)
 📄 `oqlos.core._value_normalizers` (7 functions, 1 classes)
 📄 `oqlos.core.base` (28 functions, 7 classes)
-📄 `oqlos.core.cql_parser` (27 functions, 1 classes)
+📄 `oqlos.core.cql_parser` (30 functions, 1 classes)
 📄 `oqlos.core.executor` (21 functions, 1 classes)
-📄 `oqlos.core.interpreter` (38 functions, 1 classes)
+📄 `oqlos.core.interpreter` (46 functions, 1 classes)
+📄 `oqlos.core.oql_parser` (31 functions, 3 classes)
+📄 `oqlos.core.oql_versioning` (4 functions, 1 classes)
 📄 `oqlos.core.parser` (5 functions)
 📄 `oqlos.core.safe_eval` (10 functions, 1 classes)
 📄 `oqlos.core.state` (3 functions, 1 classes)
 📦 `oqlos.dsl`
 📄 `oqlos.dsl.schema` (6 functions, 5 classes)
 📦 `oqlos.hardware`
-📄 `oqlos.hardware.config_schema` (3 functions, 1 classes)
+📄 `oqlos.hardware.config_paths` (1 functions)
+📄 `oqlos.hardware.config_schema` (4 functions, 1 classes)
+📄 `oqlos.hardware.control_proxy` (31 functions, 3 classes)
 📄 `oqlos.hardware.discovery` (8 functions)
 📦 `oqlos.hardware.drivers`
 📄 `oqlos.hardware.drivers.gpio` (7 functions, 1 classes)
 📄 `oqlos.hardware.drivers.mqtt` (9 functions, 1 classes)
 📄 `oqlos.hardware.drivers.spi` (7 functions, 1 classes)
-📄 `oqlos.hardware.firmware_adapter` (23 functions, 1 classes)
+📄 `oqlos.hardware.firmware_adapter` (24 functions, 1 classes)
 📄 `oqlos.hardware.gateway` (25 functions, 5 classes)
 📄 `oqlos.hardware.peripheral_mapping` (4 functions)
-📄 `oqlos.hardware.plugin_gateway` (14 functions, 1 classes)
+📄 `oqlos.hardware.plugin_gateway` (15 functions, 1 classes)
 📦 `oqlos.hardware.plugins`
 📄 `oqlos.hardware.plugins._shared` (4 functions)
-📄 `oqlos.hardware.plugins.base` (19 functions, 8 classes)
-📄 `oqlos.hardware.plugins.lung` (17 functions, 1 classes)
-📄 `oqlos.hardware.plugins.modbus` (7 functions, 1 classes)
-📄 `oqlos.hardware.plugins.motor` (17 functions, 1 classes)
-📄 `oqlos.hardware.plugins.piadc` (7 functions, 1 classes)
+📄 `oqlos.hardware.plugins.base` (21 functions, 9 classes)
+📄 `oqlos.hardware.plugins.lung` (19 functions, 1 classes)
+📄 `oqlos.hardware.plugins.modbus` (9 functions, 1 classes)
+📄 `oqlos.hardware.plugins.motor` (18 functions, 1 classes)
+📄 `oqlos.hardware.plugins.piadc` (12 functions, 1 classes)
 📄 `oqlos.hardware.plugins.registry` (14 functions, 1 classes)
 📄 `oqlos.hardware.protocol` (6 functions, 2 classes)
 📄 `oqlos.hardware.registry` (3 functions, 1 classes)
-📦 `oqlos.ide`
-📦 `oqlos.models`
 📄 `oqlos.models.dsl_models` (8 classes)
 📄 `oqlos.models.execution` (3 classes)
 📄 `oqlos.models.peripheral` (4 classes)
 📄 `oqlos.models.scenario` (4 classes)
 📦 `oqlos.reporters`
+📄 `oqlos.reporters.html_report` (5 functions)
+📄 `oqlos.reporters.json_reporter` (2 functions)
 📄 `oqlos.reporters.junit` (3 functions, 1 classes)
-📦 `oqlos.shared`
+📄 `oqlos.scenarios.OQL-CHEATSHEET`
+📄 `oqlos.scenarios.examples.README`
 📄 `oqlos.shared._endpoint_helpers` (2 functions)
 📄 `oqlos.shared.config_factory` (1 functions)
 📄 `oqlos.shared.event_server` (11 functions, 2 classes)
@@ -544,21 +732,22 @@ oqlos/
 📄 `oqlos.shared.logs_query` (5 functions, 1 classes)
 📄 `oqlos.shared.release_version` (7 functions)
 📄 `oqlos.shared.version_endpoint` (2 functions)
-📦 `oqlos.tools`
 📦 `oqlos.tools.cql_cli` (2 functions)
 📄 `oqlos.tools.cql_cli.commands` (5 functions)
-📄 `oqlos.tools.cql_cli.main` (5 functions)
-📄 `oqlos.tools.cql_cli.preflight` (10 functions)
+📄 `oqlos.tools.cql_cli.main` (16 functions, 1 classes)
+📄 `oqlos.tools.cql_cli.preflight` (12 functions)
 📄 `oqlos.tools.cql_cli.utils` (10 functions)
-📦 `oqlos.tools.hardware_diagnose`
-📄 `oqlos.tools.hardware_diagnose.__main__` (5 functions)
+📦 `oqlos.tools.hardware_diagnose` (1 functions)
+📄 `oqlos.tools.hardware_diagnose.__main__` (8 functions)
 📄 `oqlos.tools.hardware_diagnose.benchmark` (1 functions)
 📄 `oqlos.tools.hardware_diagnose.calibration` (4 functions)
 📄 `oqlos.tools.hardware_diagnose.discovery` (5 functions, 1 classes)
-📄 `oqlos.tools.hardware_diagnose.health` (5 functions)
+📄 `oqlos.tools.hardware_diagnose.doctor` (27 functions)
+📄 `oqlos.tools.hardware_diagnose.health` (7 functions)
+📄 `oqlos.tools.hardware_diagnose.modbus_probe` (16 functions)
 📄 `oqlos.tools.hardware_diagnose.report` (2 functions)
 📄 `oqlos.tools.hardware_diagnose.shell` (5 functions)
-📄 `oqlos.tools.plugin_cli` (13 functions)
+📄 `oqlos.tools.plugin_cli` (14 functions)
 📦 `oqlos.tools.xml_import`
 📄 `oqlos.tools.xml_import._utils` (6 functions)
 📄 `oqlos.tools.xml_import.generators` (18 functions)
@@ -567,13 +756,29 @@ oqlos/
 📦 `oqlos.utils`
 📄 `oqlos.utils.sample_data` (1 functions)
 📄 `project`
+📄 `pyproject`
+📄 `pyqual`
+📄 `scenarios.manifest`
+📄 `scripts.fix_brackets_to_v4` (2 functions)
 📄 `scripts.hardware-check` (11 functions)
+📄 `scripts.migrate_to_v4` (6 functions)
+📄 `scripts.oql_v2_to_v4_migrate_db` (17 functions, 1 classes)
+📄 `scripts.oql_v2_validator` (9 functions, 1 classes)
+📄 `scripts.oql_v4_validator` (10 functions, 1 classes)
+📄 `scripts.scenarios_export` (13 functions)
 📄 `setup_hardware_and_run_oql` (7 functions)
+📄 `sumd`
+📄 `testql-contracts.testql.toon`
+📄 `testql-scenarios.cross-project-integration.testql.toon`
+📄 `testql-scenarios.generated-api-integration.testql.toon`
+📄 `testql-scenarios.generated-api-smoke.testql.toon`
+📄 `testql-scenarios.generated-from-pytests.testql.toon`
+📄 `testql-scenarios.generated-from-scenarios.testql.toon`
 
 ## Requirements
 
 - Python >= >=3.10
-- fastapi >=0.110- uvicorn >=0.28- pydantic >=2.0- pydantic-settings >=2.2.0- pyserial >=3.5- pymodbus >=3.6- httpx >=0.25- nfo >=0.2.3- goal >=2.1.0- costs >=0.1.20- pfix >=0.1.60- paho-mqtt >=1.6.1- pluggy >=1.4- PyYAML >=6.0
+- fastapi >=0.110- uvicorn >=0.28- pydantic >=2.0- pydantic-settings >=2.2.0- pyserial >=3.5- pymodbus >=3.6- httpx >=0.25- nfo >=0.2.3- goal >=2.1.0- costs >=0.1.20- pfix >=0.1.60- paho-mqtt >=1.6.1- pluggy >=1.4- PyYAML >=6.0- testql >=0.2.0
 
 ## Contributing
 
@@ -581,8 +786,7 @@ oqlos/
 - Tom Softreck <tom@sapletta.com>
 - Tom Sapletta <tom-sapletta-com@users.noreply.github.com>
 
-We welcome contributions! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
-
+We welcome contributions! Open an issue or pull request to get started.
 ### Development Setup
 
 ```bash
@@ -599,10 +803,6 @@ pytest
 
 ## Documentation
 
-- 📖 [Full Documentation](https://github.com/oqlos/oqlos/tree/main/docs) — API reference, module docs, architecture
-- 🚀 [Getting Started](https://github.com/oqlos/oqlos/blob/main/docs/getting-started.md) — Quick start guide
-- 📚 [API Reference](https://github.com/oqlos/oqlos/blob/main/docs/api.md) — Complete API documentation
-- 🔧 [Configuration](https://github.com/oqlos/oqlos/blob/main/docs/configuration.md) — Configuration options
 - 💡 [Examples](./examples) — Usage examples and code samples
 
 ### Generated Files
@@ -610,16 +810,6 @@ pytest
 | Output | Description | Link |
 |--------|-------------|------|
 | `README.md` | Project overview (this file) | — |
-| `docs/api.md` | Consolidated API reference | [View](./docs/api.md) |
-| `docs/modules.md` | Module reference with metrics | [View](./docs/modules.md) |
-| `docs/architecture.md` | Architecture with diagrams | [View](./docs/architecture.md) |
-| `docs/dependency-graph.md` | Dependency graphs | [View](./docs/dependency-graph.md) |
-| `docs/coverage.md` | Docstring coverage report | [View](./docs/coverage.md) |
-| `docs/getting-started.md` | Getting started guide | [View](./docs/getting-started.md) |
-| `docs/configuration.md` | Configuration reference | [View](./docs/configuration.md) |
-| `docs/api-changelog.md` | API change tracking | [View](./docs/api-changelog.md) |
-| `CONTRIBUTING.md` | Contribution guidelines | [View](./CONTRIBUTING.md) |
-| `examples/` | Usage examples | [Browse](./examples) |
-| `mkdocs.yml` | MkDocs configuration | — |
+| `examples` | Usage examples and code samples | [View](./examples) |
 
 <!-- code2docs:end -->

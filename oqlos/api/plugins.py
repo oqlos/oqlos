@@ -115,10 +115,9 @@ async def execute_plugin_command(plugin_id: str, command: dict[str, Any]):
     params = command.get("params", {})
 
     result = await instance.execute_command(command_name, params)
-    if result.get("success"):
+    if isinstance(result, dict):
         return result
-    else:
-        raise HTTPException(status_code=500, detail=result.get("error", "Command failed"))
+    return {"success": False, "error": "Invalid plugin response", "result": result}
 
 
 @router.post("/validate")

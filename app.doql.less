@@ -2,35 +2,75 @@
 
 app {
   name: oqlos;
-  version: 0.1.1;
+  version: 0.1.13;
+}
+
+dependencies {
+  runtime: "fastapi>=0.110, uvicorn>=0.28, pydantic>=2.0, pydantic-settings>=2.2.0, pyserial>=3.5, pymodbus>=3.6, httpx>=0.25, nfo>=0.2.3, goal>=2.1.0, costs>=0.1.20, pfix>=0.1.60, paho-mqtt>=1.6.1, pluggy>=1.4, PyYAML>=6.0, testql>=0.2.0";
+  dev: "pytest, pytest-asyncio, httpx, websockets>=13.0, goal>=2.1.0, costs>=0.1.20, pfix>=0.1.60, paho-mqtt>=1.6.1";
 }
 
 entity[name="ExecutionStatus"] {
-
+  executionId: string!;
+  scenarioId: string!;
+  status: string!;
+  currentGoal: str | None;
+  currentStep: str | None;
+  progress: float!;
 }
 
 entity[name="CommandEnvelope"] {
-
+  command: string!;
+  data: dict[str, Any] | None;
 }
 
 entity[name="Step"] {
-
+  id: string!;
+  action: string!;
+  label: str | None;
+  peripheral: str | None;
+  value: json!;
+  duration: int | None;
+  condition: str | None;
 }
 
 entity[name="ValidationRule"] {
-
+  peripheral: string!;
+  condition: string!;
+  errorMessage: string!;
 }
 
 entity[name="Goal"] {
-
+  id: string!;
+  name: string!;
+  description: string!;
+  steps: list[Step]!;
+  expectedResult: string!;
+  validationCriteria: list[ValidationRule]!;
 }
 
 entity[name="Scenario"] {
-
+  id: string!;
+  name: string!;
+  description: string!;
+  device: string!;
+  protocol: string!;
+  code: str | None;
+  slug: str | None;
+  goals: list[Goal]!;
 }
 
 entity[name="Peripheral"] {
-
+  id: string!;
+  type: PeripheralType!;
+  name: string!;
+  currentValue: json!;
+  targetValue: json!;
+  unit: str | None;
+  range: dict[str, float] | None;
+  status: PeripheralStatus!;
+  mode: PeripheralMode!;
+  dependencies: list[str]!;
 }
 
 interface[type="api"] {
@@ -52,6 +92,21 @@ integration[name="modbus"] {
 workflow[name="install"] {
   trigger: manual;
   step-1: run cmd=pip install -e .[dev];
+}
+
+workflow[name="deps:update"] {
+  trigger: manual;
+  step-1: run cmd=PIP="pip"
+[ -f "{{.PWD}}/.venv/bin/pip" ] && PIP="{{.PWD}}/.venv/bin/pip"
+$PIP install --upgrade pip
+OUTDATED=$($PIP list --outdated --format=columns 2>/dev/null | tail -n +3 | awk '{print $1}')
+if [ -z "$OUTDATED" ]; then
+  echo "✅ All packages are up to date."
+else
+  echo "📦 Upgrading: $OUTDATED"
+  echo "$OUTDATED" | xargs $PIP install --upgrade
+  echo "✅ Done."
+fi;
 }
 
 workflow[name="quality"] {
@@ -96,12 +151,12 @@ workflow[name="clean"] {
 
 workflow[name="hardware:check"] {
   trigger: manual;
-  step-1: run cmd=oqlctl --status || echo "Hardware not available (mock mode)";
+  step-1: run cmd=oqlctl doctor || echo "Hardware doctor reported issues";
 }
 
 workflow[name="hardware:identify"] {
   trigger: manual;
-  step-1: run cmd=oqlctl --identify;
+  step-1: run cmd=oqlctl identify;
 }
 
 workflow[name="doql:adopt"] {
@@ -155,6 +210,7 @@ deploy {
 environment[name="local"] {
   runtime: docker-compose;
   env_file: .env;
+  python_version: >=3.10;
 }
 
 environment[name="dev"] {

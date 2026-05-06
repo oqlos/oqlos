@@ -1,53 +1,54 @@
-# oqlos | 704 func | 75f | 17642L | python | 2026-04-16
+# oqlos | 981 func | 93f | 28558L | python | 2026-05-06
+# generated in 0.00s
 
 HEALTH:
-  CC̄=3.7  critical=51 (limit:10)  dup=1  cycles=0
+  CC̄=4.1  critical=86 (limit:10)  dup=2  cycles=0
 
 ALERTS[20]:
-  !!! high_fan_out     main = 26 (limit:10)
-  !!! high_fan_out     exec_action_assert = 20 (limit:10)
-  !!! high_fan_out     FirmwareAdapter.set_peripheral = 20 (limit:10)
-  !!  cc_exceeded      CqlInterpreter._evaluate_inline_condition_expression = 24 (limit:15)
-  !!  cc_exceeded      exec_action_func = 23 (limit:15)
-  !!  cc_exceeded      exec_action_assert = 22 (limit:15)
-  !!  high_fan_out     main = 18 (limit:10)
-  !!  high_fan_out     _handle_start = 18 (limit:10)
-  !!  high_fan_out     generate_goals_json = 17 (limit:10)
-  !!  high_fan_out     CqlInterpreter._evaluate_inline_condition_expression = 16 (limit:10)
+  !!! cc_exceeded      migrate_v2_to_v4 = 55 (limit:15)
+  !!! cc_exceeded      parse_oql = 49 (limit:15)
+  !!! high_fan_out     migrate_v2_to_v4 = 45 (limit:10)
+  !!! cc_exceeded      _cmd_to_actions = 37 (limit:15)
+  !!! high_fan_out     parse_oql = 36 (limit:10)
+  !!! high_fan_out     main = 29 (limit:10)
+  !!! cc_exceeded      _analyze_firmware_access = 25 (limit:15)
+  !!! high_fan_out     hardware_identify = 23 (limit:10)
+  !!! high_fan_out     main = 22 (limit:10)
+  !!! high_fan_out     FirmwareAdapter.set_peripheral = 21 (limit:10)
 
-MODULES[98] (top by size):
-  M[oqlos/core/_interpreter_actions.py] 703L C:0 F:36 CC↑23 D:1 (python)
-  M[oqlos/core/interpreter.py] 530L C:1 F:38 CC↑24 D:0 (python)
-  M[oqlos/tools/xml_import/generators.py] 442L C:0 F:18 CC↑14 D:0 (python)
-  M[oqlos/core/cql_parser.py] 432L C:1 F:27 CC↑18 D:2 (python)
-  M[oqlos/hardware/firmware_adapter.py] 428L C:1 F:23 CC↑12 D:0 (python)
-  M[oqlos/hardware/gateway.py] 415L C:5 F:25 CC↑7 D:0 (python)
-  M[oqlos/core/_cql_tokenizer.py] 386L C:0 F:25 CC↑5 D:0 (python)
-  M[oqlos/core/executor.py] 383L C:1 F:21 CC↑14 D:0 (python)
-  M[oqlos/hardware/plugins/motor.py] 376L C:1 F:17 CC↑14 D:0 (python)
-  M[oqlos/api/state.py] 370L C:0 F:16 CC↑13 D:0 (python)
-  M[oqlos/api/execution.py] 354L C:0 F:16 CC↑11 D:0 (python)
-  M[oqlos/hardware/plugin_gateway.py] 348L C:1 F:14 CC↑6 D:0 (python)
-  M[oqlos/tools/plugin_cli.py] 342L C:0 F:13 CC↑8 D:0 (python)
-  M[scripts/hardware-check.sh] 340L C:0 F:11 CC↑0 D:0 (shell)
-  M[setup_hardware_and_run_oql.py] 333L C:0 F:7 CC↑12 D:0 (python)
-  LANGS: python:96/shell:2
+MODULES[142] (top by size):
+  M[openapi.yaml] 1035L C:0 F:0 CC↑0 D:0 (yaml)
+  M[docs/README.md] 815L C:0 F:0 CC↑0 D:0 (md)
+  M[oqlos/core/_interpreter_actions.py] 771L C:0 F:48 CC↑13 D:1 (python)
+  M[oqlos/tools/hardware_diagnose/doctor.py] 764L C:0 F:27 CC↑25 D:2 (python)
+  M[oqlos/core/oql_parser.py] 666L C:3 F:31 CC↑49 D:2 (python)
+  M[oqlos/core/interpreter.py] 665L C:1 F:46 CC↑17 D:0 (python)
+  M[scripts/oql_v2_to_v4_migrate_db.py] 628L C:1 F:17 CC↑55 D:1 (python)
+  M[oqlos/api/hardware.py] 615L C:0 F:31 CC↑24 D:1 (python)
+  M[docs/cql-examples.md] 588L C:0 F:0 CC↑0 D:0 (md)
+  M[README.md] 583L C:0 F:0 CC↑0 D:0 (md)
+  M[oqlos/hardware/control_proxy.py] 528L C:3 F:31 CC↑9 D:0 (python)
+  M[goal.yaml] 511L C:0 F:0 CC↑0 D:0 (yaml)
+  M[oqlos/core/_oql_adapter.py] 489L C:1 F:14 CC↑37 D:2 (python)
+  M[oqlos/core/cql_parser.py] 477L C:1 F:30 CC↑8 D:2 (python)
+  M[oqlos/hardware/firmware_adapter.py] 467L C:1 F:24 CC↑19 D:0 (python)
+  LANGS: python:107/md:11/yaml:10/json:5/yml:4/shell:3/other:1/toml:1
 
 HOTSPOTS[10]:
-  ★ main fan=26  // Orchestrates 26 calls
-  ★ exec_action_assert fan=20  // Execute ASSERT_* actions for dry-run diagnostics and API checks.
-  ★ FirmwareAdapter.set_peripheral fan=20  // Set peripheral value via firmware API.
+  ★ migrate_v2_to_v4 fan=45  // Orchestrates 45 calls
+  ★ parse_oql fan=36  // Parse OQL source into an :class:`OqlDoc`.
 
-Routes pump commands to POST /api/v1/har
-  ★ main fan=18  // Orchestrates 18 calls
-  ★ _handle_start fan=18  // Orchestrates 18 calls
+The parser never raises — all problem
+  ★ main fan=29  // Orchestrates 29 calls
+  ★ hardware_identify fan=23  // Return hardware identification with conditional live scanning for low latency.
+  ★ main fan=22  // Orchestrates 22 calls
 
-REFACTOR[10]:
-  [1] H/H Split god module oqlos/core/interpreter.py (530L, 1 classes)
-  [2] H/H Split god module oqlos/core/_interpreter_actions.py (703L, 0 classes)
-  [3] M/L Split exec_action_func (CC=23 → target CC<10)
-  [4] M/L Split exec_action_assert (CC=22 → target CC<10)
-  [5] M/L Split CqlInterpreter._evaluate_inline_condition_expression (CC=24 → target CC<10)
+REFACTOR[15]:
+  [1] H/L Split parse_oql (CC=49)
+  [2] H/L Split _cmd_to_actions (CC=37)
+  [3] H/L Split _analyze_firmware_access (CC=25)
+  [4] H/L Split migrate_v2_to_v4 (CC=55)
+  [5] H/H Split god module scripts/oql_v2_to_v4_migrate_db.py (628L, 1 classes)
 
 EVOLUTION:
-  2026-04-16 CC̄=3.7 crit=51 17642L // Automated analysis
+  2026-05-06 CC̄=4.1 crit=86 28558L // Automated analysis

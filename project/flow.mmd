@@ -1,25 +1,26 @@
 flowchart TD
+%% generated in 0.02s
 
     %% Entry points (blue)
     classDef entry fill:#4dabf7,stroke:#1971c2,color:#fff
 
     subgraph Core
+        setup_hardware_and_run_oql__main["main"]
         oqlos__core__state__StateManager__initialize_peripherals["initialize_peripherals"]
         oqlos__core__state__StateManager__broadcast_event["broadcast_event"]
-        setup_hardware_and_run_oql__main["main"]
-        oqlos__core___dsl_helpers___parse_numeric_value["_parse_numeric_value"]
-        oqlos__core___dsl_helpers___map_pump_action["_map_pump_action"]
-        oqlos__core___dsl_helpers___map_action_value["_map_action_value"]
-        oqlos__core___interpreter_actions__exec_action_task["exec_action_task"]
-        oqlos__core___interpreter_actions__exec_action_log["exec_action_log"]
-        oqlos__core___interpreter_actions__exec_action_error["exec_action_error"]
-        oqlos__core___interpreter_actions__exec_action_else["exec_action_else"]
-        oqlos__core___interpreter_actions__exec_action_sample["exec_action_sample"]
-        oqlos__core___interpreter_actions__exec_action_func["exec_action_func"]
-        oqlos__core___interpreter_actions__exec_action_goto["exec_action_goto"]
-        oqlos__core___interpreter_actions__exec_action_api["exec_action_api"]
-        oqlos__core___interpreter_actions__exec_action_expect["exec_action_expect"]
-        ...["+470 more"]
+        oqlos__core__base__ScriptResult__summary["summary"]
+        oqlos__core__base__VariableStore__get["get"]
+        oqlos__core__base__VariableStore__has["has"]
+        oqlos__core__base__VariableStore__clear["clear"]
+        oqlos__core__base__VariableStore__interpolate["interpolate"]
+        oqlos__core__base__InterpreterOutput__emit["emit"]
+        oqlos__core__base__InterpreterOutput___broadcast_event["_broadcast_event"]
+        oqlos__core__base__InterpreterOutput__info["info"]
+        oqlos__core__base__InterpreterOutput__ok["ok"]
+        oqlos__core__base__InterpreterOutput__fail["fail"]
+        oqlos__core__base__InterpreterOutput__warn["warn"]
+        oqlos__core__base__InterpreterOutput__error["error"]
+        ...["+575 more"]
     end
 
-    class oqlos__core__state__StateManager__initialize_peripherals,oqlos__core__state__StateManager__broadcast_event,setup_hardware_and_run_oql__main,oqlos__core___interpreter_actions__exec_action_task,oqlos__core___interpreter_actions__exec_action_log,oqlos__core___interpreter_actions__exec_action_error,oqlos__core___interpreter_actions__exec_action_else,oqlos__core___interpreter_actions__exec_action_sample,oqlos__core___interpreter_actions__exec_action_func,oqlos__core___interpreter_actions__exec_action_goto entry
+    class setup_hardware_and_run_oql__main,oqlos__core__state__StateManager__initialize_peripherals,oqlos__core__state__StateManager__broadcast_event,oqlos__core__base__ScriptResult__summary,oqlos__core__base__VariableStore__get,oqlos__core__base__VariableStore__has,oqlos__core__base__VariableStore__clear,oqlos__core__base__VariableStore__interpolate,oqlos__core__base__InterpreterOutput__emit,oqlos__core__base__InterpreterOutput___broadcast_event entry

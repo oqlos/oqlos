@@ -1,40 +1,67 @@
-# redup/duplication | 13 groups | 99f 14917L | 2026-04-16
+# redup/duplication | 24 groups | 114f 21580L | 2026-05-06
 
 SUMMARY:
-  files_scanned: 99
-  total_lines:   14917
-  dup_groups:    13
-  dup_fragments: 28
-  saved_lines:   85
-  scan_ms:       9436
+  files_scanned: 114
+  total_lines:   21580
+  dup_groups:    24
+  dup_fragments: 53
+  saved_lines:   205
+  scan_ms:       5327
 
 HOTSPOTS[7] (files with most duplication):
-  oqlos/hardware/plugins/lung.py  dup=26L  groups=3  frags=3  (0.2%)
-  oqlos/core/_cql_tokenizer.py  dup=25L  groups=2  frags=5  (0.2%)
-  oqlos/hardware/plugins/motor.py  dup=22L  groups=2  frags=2  (0.1%)
+  scripts/oql_v4_validator.py  dup=105L  groups=6  frags=6  (0.5%)
+  scripts/oql_v2_validator.py  dup=104L  groups=6  frags=6  (0.5%)
+  oqlos/core/oql_parser.py  dup=39L  groups=4  frags=11  (0.2%)
+  oqlos/core/_cql_tokenizer.py  dup=25L  groups=2  frags=5  (0.1%)
   oqlos/dsl/schema.py  dup=20L  groups=1  frags=2  (0.1%)
   oqlos/hardware/plugins/_shared.py  dup=14L  groups=1  frags=2  (0.1%)
-  oqlos/core/_interpreter_actions.py  dup=12L  groups=2  frags=4  (0.1%)
-  oqlos/hardware/gateway.py  dup=10L  groups=1  frags=2  (0.1%)
+  oqlos/api/hardware.py  dup=13L  groups=2  frags=3  (0.1%)
 
-DUPLICATES[13] (ranked by impact):
-  [f0b3386dd1ca238b]   STRU  health_check  L=17 N=2 saved=17 sim=1.00
-      oqlos/hardware/plugins/lung.py:86-102  (health_check)
-      oqlos/hardware/plugins/motor.py:112-128  (health_check)
+DUPLICATES[24] (ranked by impact):
+  [38f02069ea7900c5]   EXAC  _extract_code_from_json  L=23 N=2 saved=23 sim=1.00
+      scripts/oql_v2_validator.py:44-66  (_extract_code_from_json)
+      scripts/oql_v4_validator.py:47-69  (_extract_code_from_json)
+  [afdde28445d6d6b4]   EXAC  _load_source  L=23 N=2 saved=23 sim=1.00
+      scripts/oql_v2_validator.py:93-115  (_load_source)
+      scripts/oql_v4_validator.py:97-119  (_load_source)
+  [d6c31178d5aba62b]   EXAC  _build_api_fallback_urls  L=22 N=2 saved=22 sim=1.00
+      scripts/oql_v2_validator.py:69-90  (_build_api_fallback_urls)
+      scripts/oql_v4_validator.py:72-94  (_build_api_fallback_urls)
+  [cfdd91c38cd306d0]   STRU  main  L=20 N=2 saved=20 sim=1.00
+      scripts/oql_v2_validator.py:293-312  (main)
+      scripts/oql_v4_validator.py:339-358  (main)
+  [853a7ea03d2afa3c]   EXAC  _fetch_url  L=13 N=2 saved=13 sim=1.00
+      scripts/oql_v2_validator.py:29-41  (_fetch_url)
+      scripts/oql_v4_validator.py:32-44  (_fetch_url)
   [cec388e17126d04a]   STRU  _try_task  L=5 N=3 saved=10 sim=1.00
-      oqlos/core/_cql_tokenizer.py:157-161  (_try_task)
-      oqlos/core/_cql_tokenizer.py:236-240  (_try_if_fail_block)
-      oqlos/core/_cql_tokenizer.py:350-354  (_try_save_ws)
+      oqlos/core/_cql_tokenizer.py:160-164  (_try_task)
+      oqlos/core/_cql_tokenizer.py:239-243  (_try_if_fail_block)
+      oqlos/core/_cql_tokenizer.py:365-369  (_try_save_ws)
+  [e904202e73f30c8e]   STRU  parse_SET  L=5 N=3 saved=10 sim=1.00
+      oqlos/core/oql_parser.py:240-244  (parse_SET)
+      oqlos/core/oql_parser.py:342-346  (parse_MIN)
+      oqlos/core/oql_parser.py:349-353  (parse_MAX)
   [d884e769a616fa58]   STRU  _merge_object_function_map  L=10 N=2 saved=10 sim=1.00
       oqlos/dsl/schema.py:99-108  (_merge_object_function_map)
       oqlos/dsl/schema.py:111-120  (_merge_param_unit_map)
   [43e47beaf70d4a45]   STRU  disconnect  L=5 N=3 saved=10 sim=1.00
-      oqlos/hardware/plugins/lung.py:80-84  (disconnect)
-      oqlos/hardware/plugins/motor.py:106-110  (disconnect)
-      oqlos/hardware/plugins/piadc.py:73-77  (disconnect)
+      oqlos/hardware/plugins/lung.py:83-87  (disconnect)
+      oqlos/hardware/plugins/motor.py:109-113  (disconnect)
+      oqlos/hardware/plugins/piadc.py:141-145  (disconnect)
   [8b32652353801ed5]   STRU  not_connected_health  L=7 N=2 saved=7 sim=1.00
       oqlos/hardware/plugins/_shared.py:39-45  (not_connected_health)
       oqlos/hardware/plugins/_shared.py:48-54  (health_check_exception)
+  [f2e79a21a9cb963b]   STRU  parse_GET  L=3 N=3 saved=6 sim=1.00
+      oqlos/core/oql_parser.py:247-249  (parse_GET)
+      oqlos/core/oql_parser.py:299-301  (parse_SAVE)
+      oqlos/core/oql_parser.py:395-397  (parse_INCLUDE)
+  [e38bd975e24c0e35]   STRU  parse_LOG  L=3 N=3 saved=6 sim=1.00
+      oqlos/core/oql_parser.py:375-377  (parse_LOG)
+      oqlos/core/oql_parser.py:380-382  (parse_ERROR)
+      oqlos/core/oql_parser.py:385-387  (parse_CORRECT)
+  [ced4a13b5d82a294]   EXAC  _read_text_file  L=5 N=2 saved=5 sim=1.00
+      oqlos/api/hardware.py:77-81  (_read_text_file)
+      oqlos/hardware/plugins/piadc.py:46-50  (_read_text_file)
   [c7eda7834116d40a]   EXAC  status  L=5 N=2 saved=5 sim=1.00
       oqlos/hardware/gateway.py:130-134  (status)
       oqlos/hardware/gateway.py:186-190  (status)
@@ -42,11 +69,14 @@ DUPLICATES[13] (ranked by impact):
       oqlos/api/execution.py:194-198  (get_execution)
       oqlos/api/peripherals.py:18-22  (get_peripheral)
   [b13c2884a460682f]   STRU  _try_var  L=5 N=2 saved=5 sim=1.00
-      oqlos/core/_cql_tokenizer.py:304-308  (_try_var)
-      oqlos/core/_cql_tokenizer.py:334-338  (_try_api)
-  [137f276b5dc444f9]   STRU  __init__  L=4 N=2 saved=4 sim=1.00
-      oqlos/hardware/plugins/lung.py:35-38  (__init__)
-      oqlos/hardware/plugins/piadc.py:35-38  (__init__)
+      oqlos/core/_cql_tokenizer.py:319-323  (_try_var)
+      oqlos/core/_cql_tokenizer.py:349-353  (_try_api)
+  [9971ed85b248c028]   STRU  stop_lung  L=4 N=2 saved=4 sim=1.00
+      oqlos/api/hardware.py:605-608  (stop_lung)
+      oqlos/api/hardware.py:612-615  (disable_lung)
+  [16bcc3fe9b37ffa3]   EXAC  _looks_like_html  L=3 N=2 saved=3 sim=1.00
+      scripts/oql_v2_validator.py:24-26  (_looks_like_html)
+      scripts/oql_v4_validator.py:27-29  (_looks_like_html)
   [ad79a9de6949934f]   STRU  _func_sum  L=3 N=2 saved=3 sim=1.00
       oqlos/core/_interpreter_actions.py:347-349  (_func_sum)
       oqlos/core/_interpreter_actions.py:388-390  (_func_add)
@@ -56,76 +86,125 @@ DUPLICATES[13] (ranked by impact):
   [697b748fa91d3f41]   STRU  _resolve_compare  L=3 N=2 saved=3 sim=1.00
       oqlos/core/executor.py:11-13  (_resolve_compare)
       oqlos/core/safe_eval.py:90-92  (_eval_compare)
+  [9332a01903afbac2]   STRU  parse_CALL  L=3 N=2 saved=3 sim=1.00
+      oqlos/core/oql_parser.py:390-392  (parse_CALL)
+      oqlos/core/oql_parser.py:400-402  (parse_FUNC_CALL)
   [a17e1e3392ea6e68]   STRU  check_firmware_health  L=3 N=2 saved=3 sim=1.00
-      oqlos/tools/hardware_diagnose/health.py:19-21  (check_firmware_health)
-      oqlos/tools/hardware_diagnose/health.py:24-26  (check_firmware_identify)
+      oqlos/tools/hardware_diagnose/health.py:21-23  (check_firmware_health)
+      oqlos/tools/hardware_diagnose/health.py:26-28  (check_firmware_identify)
+  [2d86fcaf9ce3978c]   STRU  _env_int  L=3 N=2 saved=3 sim=1.00
+      oqlos/tools/hardware_diagnose/modbus_probe.py:23-25  (_env_int)
+      oqlos/tools/hardware_diagnose/modbus_probe.py:53-55  (_env_float)
 
-REFACTOR[13] (ranked by priority):
-  [1] ○ extract_function   → oqlos/hardware/plugins/utils/health_check.py
-      WHY: 2 occurrences of 17-line block across 2 files — saves 17 lines
-      FILES: oqlos/hardware/plugins/lung.py, oqlos/hardware/plugins/motor.py
-  [2] ○ extract_function   → oqlos/core/utils/_try_task.py
+REFACTOR[24] (ranked by priority):
+  [1] ○ extract_function   → scripts/utils/_extract_code_from_json.py
+      WHY: 2 occurrences of 23-line block across 2 files — saves 23 lines
+      FILES: scripts/oql_v2_validator.py, scripts/oql_v4_validator.py
+  [2] ○ extract_function   → scripts/utils/_load_source.py
+      WHY: 2 occurrences of 23-line block across 2 files — saves 23 lines
+      FILES: scripts/oql_v2_validator.py, scripts/oql_v4_validator.py
+  [3] ○ extract_function   → scripts/utils/_build_api_fallback_urls.py
+      WHY: 2 occurrences of 22-line block across 2 files — saves 22 lines
+      FILES: scripts/oql_v2_validator.py, scripts/oql_v4_validator.py
+  [4] ○ extract_function   → scripts/utils/main.py
+      WHY: 2 occurrences of 20-line block across 2 files — saves 20 lines
+      FILES: scripts/oql_v2_validator.py, scripts/oql_v4_validator.py
+  [5] ○ extract_function   → scripts/utils/_fetch_url.py
+      WHY: 2 occurrences of 13-line block across 2 files — saves 13 lines
+      FILES: scripts/oql_v2_validator.py, scripts/oql_v4_validator.py
+  [6] ○ extract_function   → oqlos/core/utils/_try_task.py
       WHY: 3 occurrences of 5-line block across 1 files — saves 10 lines
       FILES: oqlos/core/_cql_tokenizer.py
-  [3] ○ extract_function   → oqlos/dsl/utils/_merge_object_function_map.py
+  [7] ○ extract_function   → oqlos/core/utils/parse_SET.py
+      WHY: 3 occurrences of 5-line block across 1 files — saves 10 lines
+      FILES: oqlos/core/oql_parser.py
+  [8] ○ extract_function   → oqlos/dsl/utils/_merge_object_function_map.py
       WHY: 2 occurrences of 10-line block across 1 files — saves 10 lines
       FILES: oqlos/dsl/schema.py
-  [4] ○ extract_function   → oqlos/hardware/plugins/utils/disconnect.py
+  [9] ○ extract_function   → oqlos/hardware/plugins/utils/disconnect.py
       WHY: 3 occurrences of 5-line block across 3 files — saves 10 lines
       FILES: oqlos/hardware/plugins/lung.py, oqlos/hardware/plugins/motor.py, oqlos/hardware/plugins/piadc.py
-  [5] ○ extract_function   → oqlos/hardware/plugins/utils/not_connected_health.py
+  [10] ○ extract_function   → oqlos/hardware/plugins/utils/not_connected_health.py
       WHY: 2 occurrences of 7-line block across 1 files — saves 7 lines
       FILES: oqlos/hardware/plugins/_shared.py
-  [6] ○ extract_function   → oqlos/hardware/utils/status.py
+  [11] ○ extract_function   → oqlos/core/utils/parse_GET.py
+      WHY: 3 occurrences of 3-line block across 1 files — saves 6 lines
+      FILES: oqlos/core/oql_parser.py
+  [12] ○ extract_function   → oqlos/core/utils/parse_LOG.py
+      WHY: 3 occurrences of 3-line block across 1 files — saves 6 lines
+      FILES: oqlos/core/oql_parser.py
+  [13] ○ extract_function   → oqlos/utils/_read_text_file.py
+      WHY: 2 occurrences of 5-line block across 2 files — saves 5 lines
+      FILES: oqlos/api/hardware.py, oqlos/hardware/plugins/piadc.py
+  [14] ○ extract_function   → oqlos/hardware/utils/status.py
       WHY: 2 occurrences of 5-line block across 1 files — saves 5 lines
       FILES: oqlos/hardware/gateway.py
-  [7] ○ extract_function   → oqlos/api/utils/get_execution.py
+  [15] ○ extract_function   → oqlos/api/utils/get_execution.py
       WHY: 2 occurrences of 5-line block across 2 files — saves 5 lines
       FILES: oqlos/api/execution.py, oqlos/api/peripherals.py
-  [8] ○ extract_function   → oqlos/core/utils/_try_var.py
+  [16] ○ extract_function   → oqlos/core/utils/_try_var.py
       WHY: 2 occurrences of 5-line block across 1 files — saves 5 lines
       FILES: oqlos/core/_cql_tokenizer.py
-  [9] ○ extract_function   → oqlos/hardware/plugins/utils/__init__.py
-      WHY: 2 occurrences of 4-line block across 2 files — saves 4 lines
-      FILES: oqlos/hardware/plugins/lung.py, oqlos/hardware/plugins/piadc.py
-  [10] ○ extract_function   → oqlos/core/utils/_func_sum.py
+  [17] ○ extract_function   → oqlos/api/utils/stop_lung.py
+      WHY: 2 occurrences of 4-line block across 1 files — saves 4 lines
+      FILES: oqlos/api/hardware.py
+  [18] ○ extract_function   → scripts/utils/_looks_like_html.py
+      WHY: 2 occurrences of 3-line block across 2 files — saves 3 lines
+      FILES: scripts/oql_v2_validator.py, scripts/oql_v4_validator.py
+  [19] ○ extract_function   → oqlos/core/utils/_func_sum.py
       WHY: 2 occurrences of 3-line block across 1 files — saves 3 lines
       FILES: oqlos/core/_interpreter_actions.py
-  [11] ○ extract_function   → oqlos/core/utils/_func_min.py
+  [20] ○ extract_function   → oqlos/core/utils/_func_min.py
       WHY: 2 occurrences of 3-line block across 1 files — saves 3 lines
       FILES: oqlos/core/_interpreter_actions.py
-  [12] ○ extract_function   → oqlos/core/utils/_resolve_compare.py
+  [21] ○ extract_function   → oqlos/core/utils/_resolve_compare.py
       WHY: 2 occurrences of 3-line block across 2 files — saves 3 lines
       FILES: oqlos/core/executor.py, oqlos/core/safe_eval.py
-  [13] ○ extract_function   → oqlos/tools/hardware_diagnose/utils/check_firmware_health.py
+  [22] ○ extract_function   → oqlos/core/utils/parse_CALL.py
+      WHY: 2 occurrences of 3-line block across 1 files — saves 3 lines
+      FILES: oqlos/core/oql_parser.py
+  [23] ○ extract_function   → oqlos/tools/hardware_diagnose/utils/check_firmware_health.py
       WHY: 2 occurrences of 3-line block across 1 files — saves 3 lines
       FILES: oqlos/tools/hardware_diagnose/health.py
+  [24] ○ extract_function   → oqlos/tools/hardware_diagnose/utils/_env_int.py
+      WHY: 2 occurrences of 3-line block across 1 files — saves 3 lines
+      FILES: oqlos/tools/hardware_diagnose/modbus_probe.py
 
-QUICK_WINS[5] (low risk, high savings — do first):
-  [1] extract_function   saved=17L  → oqlos/hardware/plugins/utils/health_check.py
-      FILES: lung.py, motor.py
-  [2] extract_function   saved=10L  → oqlos/core/utils/_try_task.py
+QUICK_WINS[12] (low risk, high savings — do first):
+  [1] extract_function   saved=23L  → scripts/utils/_extract_code_from_json.py
+      FILES: oql_v2_validator.py, oql_v4_validator.py
+  [2] extract_function   saved=23L  → scripts/utils/_load_source.py
+      FILES: oql_v2_validator.py, oql_v4_validator.py
+  [3] extract_function   saved=22L  → scripts/utils/_build_api_fallback_urls.py
+      FILES: oql_v2_validator.py, oql_v4_validator.py
+  [4] extract_function   saved=20L  → scripts/utils/main.py
+      FILES: oql_v2_validator.py, oql_v4_validator.py
+  [5] extract_function   saved=13L  → scripts/utils/_fetch_url.py
+      FILES: oql_v2_validator.py, oql_v4_validator.py
+  [6] extract_function   saved=10L  → oqlos/core/utils/_try_task.py
       FILES: _cql_tokenizer.py
-  [3] extract_function   saved=10L  → oqlos/dsl/utils/_merge_object_function_map.py
+  [7] extract_function   saved=10L  → oqlos/core/utils/parse_SET.py
+      FILES: oql_parser.py
+  [8] extract_function   saved=10L  → oqlos/dsl/utils/_merge_object_function_map.py
       FILES: schema.py
-  [4] extract_function   saved=10L  → oqlos/hardware/plugins/utils/disconnect.py
+  [9] extract_function   saved=10L  → oqlos/hardware/plugins/utils/disconnect.py
       FILES: lung.py, motor.py, piadc.py
-  [5] extract_function   saved=7L  → oqlos/hardware/plugins/utils/not_connected_health.py
+  [10] extract_function   saved=7L  → oqlos/hardware/plugins/utils/not_connected_health.py
       FILES: _shared.py
 
-EFFORT_ESTIMATE (total ≈ 2.8h):
-  medium health_check                        saved=17L  ~34min
+EFFORT_ESTIMATE (total ≈ 6.8h):
+  medium _extract_code_from_json             saved=23L  ~46min
+  medium _load_source                        saved=23L  ~46min
+  medium _build_api_fallback_urls            saved=22L  ~44min
+  medium main                                saved=20L  ~40min
+  easy   _fetch_url                          saved=13L  ~26min
   easy   _try_task                           saved=10L  ~20min
+  easy   parse_SET                           saved=10L  ~20min
   easy   _merge_object_function_map          saved=10L  ~20min
   easy   disconnect                          saved=10L  ~20min
   easy   not_connected_health                saved=7L  ~14min
-  easy   status                              saved=5L  ~10min
-  easy   get_execution                       saved=5L  ~10min
-  easy   _try_var                            saved=5L  ~10min
-  easy   __init__                            saved=4L  ~8min
-  easy   _func_sum                           saved=3L  ~6min
-  ... +3 more (~18min)
+  ... +14 more (~114min)
 
 METRICS-TARGET:
-  dup_groups:  13 → 0
-  saved_lines: 85 lines recoverable
+  dup_groups:  24 → 0
+  saved_lines: 205 lines recoverable
