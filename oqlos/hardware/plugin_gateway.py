@@ -143,6 +143,44 @@ class PluginHardwareGateway:
         if not self._init_done and self.mode == "real":
             await self._initialize_plugins()
 
+    async def _get_or_connect_plugin(self, plugin_id: str) -> Any | None:
+        """Return a connected plugin, retrying plugins that were unavailable at startup."""
+        await self.ensure_initialized()
+
+        plugin = self._plugins.get(plugin_id)
+        if plugin:
+            return plugin
+
+        instance = PluginRegistry.get_instance(plugin_id)
+        if instance:
+            try:
+                health = await instance.health_check()
+                if health.compatible:
+                    self._plugins[plugin_id] = instance
+                    logger.info("Plugin %s recovered after startup and is now connected", plugin_id)
+                    return instance
+            except Exception as exc:
+                logger.debug("Health check before reconnect failed for plugin %s: %s", plugin_id, exc)
+
+        config = self._plugin_configs.get(plugin_id)
+        if not config or not config.enabled:
+            return None
+
+        try:
+            if instance is None:
+                instance = await PluginRegistry.create_instance(plugin_id, config)
+            success = await instance.connect()
+        except Exception as exc:
+            logger.error("Failed to reconnect plugin %s: %s", plugin_id, exc)
+            return None
+
+        if success:
+            self._plugins[plugin_id] = instance
+            logger.info("Plugin %s reconnected on demand", plugin_id)
+            return instance
+
+        return None
+
     async def _initialize_plugins(self) -> None:
         """Initialize all enabled plugins in parallel."""
         if self._init_done:
@@ -183,8 +221,7 @@ class PluginHardwareGateway:
             logger.info("[HW mock] SET_VALVE %s → %s", valve_id, value)
             return True
 
-        await self.ensure_initialized()
-        plugin = self._plugins.get("modbus-io")
+        plugin = await self._get_or_connect_plugin("modbus-io")
         if not plugin:
             logger.error("Modbus plugin not available")
             return False
@@ -202,8 +239,7 @@ class PluginHardwareGateway:
             logger.info("[HW mock] SET_PUMP %.1f%%", power_pct)
             return {"success": True, "data": {"power_pct": power_pct, "mock": True}}
 
-        await self.ensure_initialized()
-        plugin = self._plugins.get("motor-dri0050")
+        plugin = await self._get_or_connect_plugin("motor-dri0050")
         if not plugin:
             logger.error("Motor plugin not available")
             return {"success": False, "error": "Motor plugin not available"}
@@ -221,8 +257,7 @@ class PluginHardwareGateway:
             logger.info("[HW mock] READ_SENSOR %s → None", sensor_id)
             return None
 
-        await self.ensure_initialized()
-        plugin = self._plugins.get("piadc")
+        plugin = await self._get_or_connect_plugin("piadc")
         if not plugin:
             logger.error("PiADC plugin not available")
             return None

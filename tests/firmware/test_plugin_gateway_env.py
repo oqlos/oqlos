@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import asyncio
+
 from oqlos.hardware.plugin_gateway import PluginHardwareGateway
-from oqlos.hardware.plugins import PluginConfig
+from oqlos.hardware.plugins import PluginConfig, PluginHealth, PluginRegistry, PluginStatus
 
 
 def test_plugin_gateway_env_overrides_service_urls(monkeypatch):
@@ -62,3 +64,38 @@ def test_plugin_gateway_env_overrides_modbus_params(monkeypatch):
         "parity": "E",
         "device_id": 7,
     }
+
+
+def test_set_pump_uses_registry_instance_that_recovers_after_startup(monkeypatch):
+    class RecoveredMotorPlugin:
+        async def health_check(self):
+            return PluginHealth(
+                status=PluginStatus.CONNECTED,
+                message="Motor is healthy",
+                compatible=True,
+            )
+
+        async def execute_command(self, command, params):
+            return {"success": True, "command": command, "data": params}
+
+    plugin = RecoveredMotorPlugin()
+    gateway = PluginHardwareGateway(mode="mock")
+    gateway.mode = "real"
+    gateway._init_done = True
+    gateway._plugin_configs = {
+        "motor-dri0050": PluginConfig(
+            plugin_id="motor-dri0050",
+            connection_params={"base_url": "http://motor:8203"},
+        )
+    }
+
+    monkeypatch.setattr(
+        PluginRegistry,
+        "get_instance",
+        classmethod(lambda cls, plugin_id: plugin if plugin_id == "motor-dri0050" else None),
+    )
+
+    result = asyncio.run(gateway.set_pump(20))
+
+    assert result == {"success": True, "command": "set_speed", "data": {"power_pct": 20}}
+    assert gateway._plugins["motor-dri0050"] is plugin
