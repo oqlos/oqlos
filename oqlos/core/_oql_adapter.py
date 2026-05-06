@@ -17,10 +17,8 @@ The adapter also performs two lightweight transformations:
 
 from __future__ import annotations
 
-import os
 import re
 from pathlib import Path
-from typing import Iterable
 
 from oqlos.models.dsl_models import (
     CqlAction,

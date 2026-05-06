@@ -272,6 +272,31 @@ def test_adapter_config_prefix():
     assert names[-1] == "test"
 
 
+def test_version4_set_accepts_textual_hardware_values():
+    src = textwrap.dedent(
+        f"""
+        VERSION: {OQL_VERSION_CURRENT}
+        GOAL:
+          SET NAME 'Hardware smoke'
+          SET 'zawor 3' 'ON'
+          SET 'PUMP' '5l'
+          SET 'WAIT' '1s'
+          SET 'PUMP' 'OFF'
+        """
+    )
+
+    cdoc = parse_flat_oql(src, "hardware-smoke.oql")
+
+    assert cdoc.errors == []
+    actions = cdoc.goals[0].steps[0].actions
+    assert [(a.kind, a.target, a.args) for a in actions] == [
+        ("set", "zawor 3", "ON"),
+        ("set", "PUMP", "5l"),
+        ("set", "WAIT", "1s"),
+        ("set", "PUMP", "OFF"),
+    ]
+
+
 # ── MACRO / CALL / INCLUDE ───────────────────────────────────────
 
 

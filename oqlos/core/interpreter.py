@@ -132,12 +132,14 @@ class CqlInterpreter(BaseInterpreter):
         return self._normalizer.normalize_lung_value(raw_value)
 
     def parse(self, source: str, filename: str = "<string>") -> CqlDocument:
-        # Use OQL parser for .oql files, CQL parser otherwise
+        # Use the OQL parser for flat OQL files; some .oql examples contain
+        # ConnectGo/CQL syntax and must stay on the CQL parser path.
         if filename.endswith('.oql'):
+            from oqlos.core._oql_adapter import is_flat_oql, oql_doc_to_cql
             from oqlos.core.oql_parser import parse_oql
-            from oqlos.core._oql_adapter import oql_doc_to_cql
-            oql_doc = parse_oql(source, filename)
-            return oql_doc_to_cql(oql_doc)
+            if is_flat_oql(source):
+                oql_doc = parse_oql(source, filename)
+                return oql_doc_to_cql(oql_doc)
         return parse_cql(source, filename)
 
     def _print_header(self, doc: CqlDocument, name: str) -> None:

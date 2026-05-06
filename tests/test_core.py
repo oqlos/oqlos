@@ -268,6 +268,16 @@ class TestCqlInterpreter:
         result = interp.run(CQL_SIMPLE)
         assert "AI01" in result.variables
 
+    def test_connectgo_oql_example_file_dry_runs(self):
+        path = Path(__file__).resolve().parents[1] / "oqlos" / "scenarios" / "examples" / "mask-leak-test.oql"
+        interp = CqlInterpreter(mode="dry-run", quiet=True)
+        result = interp.run_file(str(path))
+
+        assert result.ok is True
+        assert result.errors == []
+        assert result.warnings == []
+        assert result.passed > 0
+
 
 class TestCqlExecuteMode:
     def test_execute_mode_initializes_firmware(self):
@@ -318,6 +328,43 @@ class TestCqlExecuteMode:
 
         assert result.ok is True
         assert calls == [("PUMP", 50.0)]
+
+    def test_version4_textual_hardware_set_values_execute(self, monkeypatch):
+        calls: list[tuple[str, object]] = []
+
+        class FakeFirmware:
+            def set_peripheral(self, target: str, value):
+                calls.append((target, value))
+                return {"ok": True}
+
+        monkeypatch.setattr(
+            oql_config,
+            "get_settings",
+            lambda: SimpleNamespace(pump_flow_full_scale_lpm=10.0),
+        )
+
+        interp = CqlInterpreter(mode="execute", quiet=True, skip_waits=True)
+        monkeypatch.setattr(interp, "_get_firmware", lambda: FakeFirmware())
+
+        src = """VERSION: 4
+GOAL:
+  SET NAME 'Hardware smoke'
+  SET 'zawor 3' 'ON'
+  SET 'PUMP' '5l'
+  SET 'WAIT' '1s'
+  SET 'zawor 1' 'OFF'
+  SET 'PUMP' 'OFF'
+"""
+
+        result = interp.run(src)
+
+        assert result.ok is True
+        assert calls == [
+            ("zawor 3", True),
+            ("PUMP", 50.0),
+            ("zawor 1", False),
+            ("PUMP", 0.0),
+        ]
 
     def test_pump_flow_scale_can_be_overridden_in_config_block(self, monkeypatch):
         calls: list[tuple[str, float]] = []

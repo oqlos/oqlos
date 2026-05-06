@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Optional
 
 from .oql_versioning import (
     OQL_VERSION_CURRENT,
@@ -237,10 +237,17 @@ def _split_value_unit(tokens: list[str]) -> tuple[float | int, Optional[str]]:
     return value, unit
 
 
+def _split_set_value_unit(tokens: list[str]) -> tuple[float | int | str, Optional[str]]:
+    try:
+        return _split_value_unit(tokens)
+    except ValueError:
+        return " ".join(tokens), None
+
+
 def parse_SET(tokens: list[str], ln: int, raw: str) -> OqlCmd:
     _require(tokens, 2, "SET", ln, "target value [unit]")
     target = tokens[0]
-    value, unit = _split_value_unit(tokens[1:])
+    value, unit = _split_set_value_unit(tokens[1:])
     return OqlCmd("SET", {"target": target, "value": value, "unit": unit}, ln, raw)
 
 
