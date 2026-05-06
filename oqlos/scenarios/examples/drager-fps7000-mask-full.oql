@@ -4,7 +4,8 @@ DEVICE_TYPE: 'BA'
 DEVICE_MODEL: 'FPS 7000'
 MANUFACTURER: 'Dräger'
 
-GOAL: Pełny test maski
+GOAL:
+  SET NAME 'Pełny test maski'
   SET 'pompa 1' '0 l/min'
   SET 'Operator' 'confirm'
   SAVE 'operator.result'

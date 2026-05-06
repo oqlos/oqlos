@@ -7,6 +7,7 @@ Run: cd oqlos && python -m pytest tests/ -v
 from __future__ import annotations
 
 import pytest
+from pathlib import Path
 from types import SimpleNamespace
 
 import oqlos.config as oql_config
@@ -196,6 +197,22 @@ class TestCqlParser:
         assert c.value_max == 8.0
         assert c.on_fail == "ERROR"
 
+    def test_connectgo_example_file(self):
+        path = Path(__file__).resolve().parents[1] / "oqlos" / "scenarios" / "examples" / "pss7000.connectgo"
+        doc = parse_cql(path.read_text(encoding="utf-8"), str(path))
+        issues = validate_cql(doc)
+
+        assert issues == []
+        assert doc.warnings == []
+        assert len(doc.scenarios) == 3
+        assert [(s.namespace, s.name, len(s.goals)) for s in doc.scenarios] == [
+            ("PSS7000", "TestPrzezAdapter", 8),
+            ("PSS7000", "TestPrzezMaske", 8),
+            ("PSS7000", "TestFenzyZenith", 7),
+        ]
+        assert len(doc.intervals) == 7
+        assert sum(len(g.steps) for s in doc.scenarios for g in s.goals) == 23
+
 
 class TestCqlValidator:
     def test_valid_document(self):
@@ -279,6 +296,28 @@ class TestCqlExecuteMode:
 
         assert result.ok is True
         assert calls == [("pompa 1", 50.0)]
+
+    def test_pump_compact_liter_value_uses_flow_scale(self, monkeypatch):
+        calls: list[tuple[str, float]] = []
+
+        class FakeFirmware:
+            def set_peripheral(self, target: str, value):
+                calls.append((target, value))
+                return {"ok": True}
+
+        monkeypatch.setattr(
+            oql_config,
+            "get_settings",
+            lambda: SimpleNamespace(pump_flow_full_scale_lpm=10.0),
+        )
+
+        interp = CqlInterpreter(mode="execute", quiet=True)
+        monkeypatch.setattr(interp, "_get_firmware", lambda: FakeFirmware())
+
+        result = interp.run("SCENARIO: Pump\nGOAL: Demo\n  SET 'PUMP' '5l'\n")
+
+        assert result.ok is True
+        assert calls == [("PUMP", 50.0)]
 
     def test_pump_flow_scale_can_be_overridden_in_config_block(self, monkeypatch):
         calls: list[tuple[str, float]] = []

@@ -12,9 +12,11 @@ from oqlos.models.dsl_models import CqlAction, CqlCondition
 
 RE_METADATA_KV = re.compile(r'^(SCENARIO|DEVICE_TYPE|DEVICE_MODEL|MANUFACTURER)\s*:\s*"?(.+?)"?\s*$', re.IGNORECASE)
 RE_INTERVAL = re.compile(r'^\s*-\s+(tt#\d+)\s*:\s*"(.+?)"\s+period\s*:\s*(\d+)\s*months?\s*$', re.IGNORECASE)
+RE_INTERVAL_MAP = re.compile(r'^\s*(tt#\d+)\s*:\s*\{name:\s*"(.+?)"\s*,\s*period:\s*(\d+)\s*\}\s*$', re.IGNORECASE)
 RE_SCENARIO = re.compile(r'^@(\w+(?:\.\w+)*)\s*$', re.IGNORECASE)
 RE_GOAL_SIMPLE = re.compile(r'^GOAL\s*:\s*(.+)$', re.IGNORECASE)
 RE_GOAL_NAMED = re.compile(r'^  (\w[\w\s]*\w)\s*:\s*$')
+RE_GOAL_NAMED_TOP = re.compile(r'^(\w[\w\s]*\w)\s*:\s*$')
 RE_CONFIG_SIMPLE = re.compile(r'^CONFIG\s*:\s*(.+)$', re.IGNORECASE)
 RE_CONFIG_NAMED = re.compile(r'^  CONFIG\s+(\w[\w\s]*\w)\s*:\s*$', re.IGNORECASE)
 RE_STEP_NUM = re.compile(r'^\s+(\d+(?:\.\d+)?)\s*[.)]?\s*(.+?):\s*$', re.IGNORECASE)
@@ -26,6 +28,7 @@ RE_TASK_BRACKET = re.compile(r'^\s*TASK\s*:\s*(.+)$', re.IGNORECASE)
 # Flat DSL Patterns (No arrows)
 RE_SAVE = re.compile(r"^\s*SAVE\s+['\"](.+?)['\"](?:\s+['\"](.+?)['\"])?\s*$", re.IGNORECASE)
 RE_SAVE_BRACKET = re.compile(r"^\s*SAVE\s+\[([^\]]+)\](?:\s+\[([^\]]+)\])?\s*$", re.IGNORECASE)
+RE_SAVE_CHECK = re.compile(r"^\s*✓SAVE\s+(.+?)\s*$", re.IGNORECASE)
 RE_WAIT = re.compile(r"^\s*WAIT\s+['\"]?([\d.]+)\s*(?:ms|s)?['\"]?\s*$", re.IGNORECASE)
 RE_SET = re.compile(r"^\s*SET\s+['\"](.+?)['\"]\s+['\"](.+?)['\"]\s*$", re.IGNORECASE)
 RE_SET_BRACKET = re.compile(r"^\s*SET\s*\[([^\]]+)\]\s*=\s*\[([^\]]+)\]\s*$", re.IGNORECASE)
@@ -47,10 +50,10 @@ RE_SHELL = re.compile(r"^\s*(SHELL_EXPORT|SAVE_JSON|GET_SENSOR)\s+.*$", re.IGNOR
 
 # Legacy / Specific patterns
 RE_CONDITION_RANGE = re.compile(
-    r'^\s+(?:Δ?)(AI\d+|Timer|[\w\s-]+)\s*([∈∊])\s*\[([-\d.]+)\s*,\s*([-\d.]+)\]\s*(\w+)?\s*\|\s*(\w+)\s*(?:"(.+?)")?\s*$', re.IGNORECASE
+    r'^\s+(?:Δ?)(AI\d+|Timer|[\w\s-]+)\s*([∈∊])\s*\[([-\d.]+)\s*,\s*([-\d.]+)\]\s*(\w+)?(?:\s*\|\s*(\w+)\s*(?:"(.+?)")?)?(?:\s*#.*)?\s*$', re.IGNORECASE
 )
 RE_CONDITION_CMP = re.compile(
-    r'^\s+(?:Δ?)(AI\d+|Timer|[\w\s-]+)\s*([≤≥<>=]+)\s*([-\d.]+)\s*(\w+)?\s*\|\s*(\w+)\s*(?:"(.+?)")?\s*$', re.IGNORECASE
+    r'^\s+(?:Δ?)(AI\d+|Timer|[\w\s-]+)\s*([≤≥<>=]+)\s*([-\d.]+)\s*(\w+)?(?:\s*\|\s*(\w+)\s*(?:"(.+?)")?)?(?:\s*#.*)?\s*$', re.IGNORECASE
 )
 
 # IF / Scoping Patterns
@@ -164,7 +167,7 @@ def _try_task(line: str, stripped: str) -> CqlAction | None:
     return CqlAction(kind="task", args=m.group(1).strip(), raw=stripped)
 
 def _try_save(line: str, stripped: str) -> CqlAction | None:
-    m = _match_first(line, RE_SAVE, RE_SAVE_BRACKET)
+    m = _match_first(line, RE_SAVE, RE_SAVE_BRACKET, RE_SAVE_CHECK)
     if not m:
         return None
     target = m.group(1).strip()

@@ -17,6 +17,7 @@ from ._cql_tokenizer import (
     RE_SCENARIO,
     RE_GOAL_SIMPLE,
     RE_GOAL_NAMED,
+    RE_GOAL_NAMED_TOP,
     RE_CONFIG_SIMPLE,
     RE_CONFIG_NAMED,
     RE_STEP_NUM,
@@ -87,6 +88,11 @@ def _parse_goal_line(
 
     if indent == 2 and current_scenario:
         m = RE_GOAL_NAMED.match(line)
+        if m:
+            return CqlGoal(name=m.group(1).strip())
+
+    if indent == 0 and current_scenario:
+        m = RE_GOAL_NAMED_TOP.match(line)
         if m:
             return CqlGoal(name=m.group(1).strip())
 

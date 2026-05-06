@@ -395,9 +395,13 @@ def is_flat_oql(source: str) -> bool:
     """
 
     version_re = re.compile(r"^\s*VERSION\s*:\s*\d+\s*$", re.M | re.IGNORECASE)
+    connectgo_re = re.compile(r"^\s*@\w+(?:\.\w+)*\s*$", re.M)
     block_re = re.compile(r"^\s*(GOAL|CONFIG|MACRO)\s+[^\s:][^:]*:\s*$", re.M)
     legacy_re = re.compile(r"^\s*(GOAL|CONFIG)\s*:\s*\S", re.M)
     include_re = re.compile(r"^\s*INCLUDE\s+[\"']", re.M)
+
+    if connectgo_re.search(source):
+        return False
 
     if version_re.search(source):
         return True

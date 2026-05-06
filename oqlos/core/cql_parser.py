@@ -15,7 +15,7 @@ from oqlos.models.dsl_models import (
     CqlScenario,
     CqlStep,
 )
-from ._cql_tokenizer import RE_BLOCK_HEADER, RE_INTERVAL, RE_STEP_NUM
+from ._cql_tokenizer import RE_BLOCK_HEADER, RE_INTERVAL, RE_INTERVAL_MAP
 from ._cql_tree_builder import (
     _ensure_goal_for_step,
     _ensure_step_for_actions,
@@ -153,7 +153,7 @@ class _ParseState:
             return True
 
         if self.in_intervals_block:
-            m = RE_INTERVAL.match(line)
+            m = RE_INTERVAL.match(line) or RE_INTERVAL_MAP.match(line)
             if m:
                 self.doc.intervals.append(CqlInterval(
                     code=m.group(1), label=m.group(2), period_months=int(m.group(3))

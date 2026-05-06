@@ -26,6 +26,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - low VIN (missing motor supply),
   - Modbus adapter-present but device-silent mode.
 
+## [0.1.16] - 2026-05-06
+
+### Docs
+- Update README.md
+
+### Test
+- Update tests/test_core.py
+
+### Other
+- Update oqlos/core/_cql_tokenizer.py
+- Update oqlos/core/_cql_tree_builder.py
+- Update oqlos/core/_oql_adapter.py
+- Update oqlos/core/_value_normalizers.py
+- Update oqlos/core/cql_parser.py
+- Update oqlos/scenarios/examples/drager-fps7000-mask-full.oql
+- Update uv.lock
+
 ## [0.1.15] - 2026-05-06
 
 ### Docs

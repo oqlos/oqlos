@@ -72,7 +72,7 @@ class ValueNormalizer:
             return 0.0
 
         compact = lowered.replace(" ", "")
-        if "l/min" in compact or compact.endswith("lpm"):
+        if "l/min" in compact or compact.endswith("lpm") or (compact.endswith("l") and not compact.endswith("ml")):
             scale = self._get_pump_flow_full_scale_lpm()
             if scale <= 0:
                 return 0.0
