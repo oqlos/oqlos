@@ -241,7 +241,7 @@ def test_doctor_explains_remote_firmware_cannot_use_local_usb(monkeypatch, tmp_p
             "detected": 0,
             "total": 4,
             "adapters": [
-                {"id": "piadc", "status": "no-access"},
+                {"id": "modbus-adc", "status": "no-access"},
                 {"id": "motor-dri0050", "status": "offline"},
                 {"id": "modbus-io", "status": "no-access"},
             ],

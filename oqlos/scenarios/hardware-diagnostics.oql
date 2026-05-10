@@ -1,7 +1,7 @@
 VERSION: 4
 SCENARIO: Hardware Diagnostics
 DEVICE_TYPE: TEST_EQUIPMENT
-DESCRIPTION: Smoke-test dla pompy, zaworów, płuca i czujników piADC.
+DESCRIPTION: Smoke-test dla pompy, zaworów, płuca i czujników Modbus ADC.
 
 INCLUDE 'lib/hardware.oql'
 INCLUDE 'lib/peripherals.oql'
@@ -28,7 +28,7 @@ GOAL:
 
 GOAL:
   SET NAME 'smoke sensors'
-  LOG 'Test: czujniki ADS1115 (AI01/AI02/AI03)'
+  LOG 'Test: czujniki Modbus ADC (AI01/AI02/AI03)'
   CALL hw-sensors-baseline
   # sanity-checki zakresów przy braku ciśnienia
   IF 'AI01' '-5 .. 5 V'

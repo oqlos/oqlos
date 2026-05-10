@@ -38,7 +38,7 @@ def test_cmd_executes_single_command(monkeypatch):
         captured.setdefault("health_urls", []).append(url)
         return {
             "mode": "real",
-            "piadc": "ok",
+            "modbus-adc": "ok",
             "motor": "ok",
             "lung": "ok",
             "modbus": "ok",
@@ -51,7 +51,7 @@ def test_cmd_executes_single_command(monkeypatch):
             "detected": 4,
             "total": 4,
             "adapters": [
-                {"id": "piadc", "status": "ok"},
+                {"id": "modbus-adc", "status": "ok"},
                 {"id": "motor-tic249", "status": "ok"},
                 {"id": "motor-dri0050", "status": "ok"},
                 {"id": "modbus-io", "status": "ok"},

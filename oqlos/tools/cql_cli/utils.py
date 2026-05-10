@@ -19,6 +19,7 @@ _PERIPHERAL_ADAPTERS = {
     "valve": "modbus-io",
     "lung": "motor-tic249",
 }
+_SENSOR_ADAPTER = "modbus-adc"
 
 _SENSOR_ACTION_KINDS = {"val", "min", "max", "condition", "sample"}
 
@@ -121,10 +122,10 @@ def resolve_required_adapter(command: str) -> tuple[str | None, str | None]:
         return _resolve_peripheral_adapter(action.target)
 
     if action.kind in _SENSOR_ACTION_KINDS:
-        return "piadc", _resolve_sensor_target(action)
+        return _SENSOR_ADAPTER, _resolve_sensor_target(action)
 
     if action.kind in {"if_block", "if_else"} and action.condition and action.condition.sensor:
-        return "piadc", action.condition.sensor
+        return _SENSOR_ADAPTER, action.condition.sensor
 
     return None, None
 

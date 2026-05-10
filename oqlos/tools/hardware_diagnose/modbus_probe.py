@@ -7,6 +7,14 @@ import json
 import os
 from typing import Any
 
+try:
+    from pimodbus.discovery import run_probe_matrix
+except ModuleNotFoundError:
+    from oqlos.hardware.discovery import _ensure_local_pimodbus_on_path
+
+    _ensure_local_pimodbus_on_path()
+    from pimodbus.discovery import run_probe_matrix
+
 
 READ_METHODS = {
     "read_coils": "read_coils",
@@ -171,78 +179,16 @@ def run_modbus_probe(
     timeout: float,
 ) -> dict[str, Any]:
     """Try all requested Modbus RTU read combinations and return JSON-safe results."""
-    try:
-        from pymodbus.client import ModbusSerialClient  # type: ignore
-    except Exception as exc:
-        return {"ok": False, "error": f"pymodbus import failed: {exc}"}
-
-    results: list[dict[str, Any]] = []
-    ok = False
-
-    for serial_port in serials:
-        for baudrate in baudrates:
-            for parity in parities:
-                for device_id in device_ids:
-                    for function in functions:
-                        method_name = READ_METHODS.get(function)
-                        if not method_name:
-                            results.append({
-                                "serial_port": serial_port,
-                                "baudrate": baudrate,
-                                "parity": parity,
-                                "device_id": device_id,
-                                "function": function,
-                                "ok": False,
-                                "error": "unsupported read function",
-                            })
-                            continue
-
-                        for address in addresses:
-                            for count in counts:
-                                client: Any = None
-                                item: dict[str, Any] = {
-                                    "serial_port": serial_port,
-                                    "baudrate": baudrate,
-                                    "parity": parity,
-                                    "device_id": device_id,
-                                    "function": method_name,
-                                    "address": address,
-                                    "count": count,
-                                    "timeout": timeout,
-                                }
-
-                                try:
-                                    client = ModbusSerialClient(
-                                        port=serial_port,
-                                        baudrate=baudrate,
-                                        stopbits=1,
-                                        bytesize=8,
-                                        parity=parity,
-                                        timeout=timeout,
-                                    )
-                                    item["open"] = bool(client.connect())
-                                    if not item["open"]:
-                                        item["ok"] = False
-                                        item["error"] = "serial connection failed"
-                                        continue
-
-                                    method = getattr(client, method_name)
-                                    result = method(address=address, count=count, device_id=device_id)
-                                    item["response"] = str(result)
-                                    item["ok"] = bool(result and not result.isError())
-                                    ok = ok or item["ok"]
-                                except Exception as exc:
-                                    item["ok"] = False
-                                    item["error"] = repr(exc)
-                                finally:
-                                    if client is not None:
-                                        try:
-                                            client.close()
-                                        except Exception:
-                                            pass
-                                    results.append(item)
-
-    return {"ok": ok, "results": results}
+    return run_probe_matrix(
+        serials=serials,
+        baudrates=baudrates,
+        parities=parities,
+        device_ids=device_ids,
+        functions=functions,
+        addresses=addresses,
+        counts=counts,
+        timeout=timeout,
+    )
 
 
 def main(argv: list[str] | None = None) -> int:

@@ -19,7 +19,8 @@ from oqlos.tools.hardware_diagnose.health import check_firmware_health, check_fi
 
 
 _HEALTH_KEYS_BY_ADAPTER = {
-    "piadc": ("piadc",),
+    "modbus-adc": ("modbus-adc",),
+    "piadc": ("modbus-adc", "piadc"),
     "motor-dri0050": ("motor-dri0050", "motor"),
     "motor-tic249": ("motor-tic249", "lung"),
     "modbus-io": ("modbus-io", "modbus"),

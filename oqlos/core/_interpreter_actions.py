@@ -155,7 +155,7 @@ def _mock_api_response(interp: "CqlInterpreter", endpoint: str) -> dict[str, Any
     if normalized == "/api/v1/hardware/health":
         return {
             "mode": "real",
-            "piadc": "ok",
+            "modbus-adc": "ok",
             "motor": "ok",
             "modbus": "ttyACM0",
         }
@@ -165,7 +165,7 @@ def _mock_api_response(interp: "CqlInterpreter", endpoint: str) -> dict[str, Any
                 "motor-dri0050": {"status": "ok"},
                 "motor-tic249": {"status": "ok"},
                 "modbus-io": {"status": "ok"},
-                "piadc": {"status": "ok"},
+                "modbus-adc": {"status": "ok"},
             }
         }
     if normalized == "/api/v1/peripherals":

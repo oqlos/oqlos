@@ -37,6 +37,7 @@ class ModbusPlugin(HardwarePlugin):
     def __init__(self, config: PluginConfig):
         super().__init__(config)
         self._client: Any = None
+        self._bus: Any = None
         self._mode = "unknown"
 
     def validate_config(self) -> list[str]:
@@ -75,25 +76,24 @@ class ModbusPlugin(HardwarePlugin):
         try:
             if self.config.connection_type == "modbus-rtu":
                 try:
-                    from pymodbus.client import ModbusSerialClient
+                    from pimodbus.client import get_rtu_bus
+                    from pimodbus.config import RtuBusSettings
                 except ImportError:
-                    logger.error("pymodbus not installed for modbus-rtu connection")
+                    logger.error("pimodbus not installed for modbus-rtu connection")
                     self._status = PluginStatus.INCOMPATIBLE
                     return False
 
                 serial_port = self.config.connection_params.get("serial_port", "/dev/ttyACM0")
                 baudrate = self.config.connection_params.get("baudrate", 19200)
                 parity = self.config.connection_params.get("parity", "N")
-
-                self._client = ModbusSerialClient(
-                    port=serial_port,
+                settings = RtuBusSettings(
+                    serial_port=serial_port,
                     baudrate=baudrate,
-                    stopbits=1,
-                    bytesize=8,
                     parity=parity,
                     timeout=self.config.timeout,
                 )
-                if self._client.connect():
+                self._bus = get_rtu_bus(settings)
+                if await self._bus.connect():
                     self._mode = "rtu"
                     self._status = PluginStatus.CONNECTED
                     logger.info(f"Connected to modbus-rtu at {serial_port}@{baudrate} 8{parity}1")
@@ -129,6 +129,9 @@ class ModbusPlugin(HardwarePlugin):
 
     async def disconnect(self) -> None:
         """Disconnect from modbus device."""
+        if self._bus:
+            await self._bus.close()
+            self._bus = None
         if self._client:
             if self._mode == "rtu":
                 self._client.close()
@@ -140,7 +143,7 @@ class ModbusPlugin(HardwarePlugin):
 
     async def health_check(self) -> PluginHealth:
         """Check modbus health and compatibility."""
-        if not self._client:
+        if not self._client and not self._bus:
             return PluginHealth(
                 status=PluginStatus.ERROR,
                 message="Not connected to modbus",
@@ -151,14 +154,11 @@ class ModbusPlugin(HardwarePlugin):
             # Try to read a coil to test connection
             if self._mode == "rtu":
                 try:
-                    result = await asyncio.wait_for(
-                        asyncio.to_thread(
-                            self._client.read_coils,
-                            address=0,
-                            count=1,
-                            device_id=self._device_id(),
-                        ),
-                        timeout=self._rtu_timeout(),
+                    result = await self._rtu_call(
+                        "read_coils",
+                        address=0,
+                        count=1,
+                        device_id=self._device_id(),
                     )
                 except asyncio.TimeoutError:
                     return PluginHealth(
@@ -205,7 +205,7 @@ class ModbusPlugin(HardwarePlugin):
 
     async def execute_command(self, command: str, params: dict[str, Any]) -> dict[str, Any]:
         """Execute modbus command."""
-        if not self._client:
+        if not self._client and not self._bus:
             return {"success": False, "error": "Not connected to modbus"}
 
         try:
@@ -216,14 +216,11 @@ class ModbusPlugin(HardwarePlugin):
                     return {"success": False, "error": "coil must be a non-negative integer"}
 
                 if self._mode == "rtu":
-                    result = await asyncio.wait_for(
-                        asyncio.to_thread(
-                            self._client.write_coil,
-                            address=coil,
-                            value=value,
-                            device_id=self._device_id(),
-                        ),
-                        timeout=self._rtu_timeout(),
+                    result = await self._rtu_call(
+                        "write_coil",
+                        address=coil,
+                        value=value,
+                        device_id=self._device_id(),
                     )
                     success = hasattr(result, "function_code") and not getattr(result, "isError", lambda: True)()
                 else:
@@ -261,6 +258,15 @@ class ModbusPlugin(HardwarePlugin):
             return max(0.1, float(self.config.timeout))
         except (TypeError, ValueError):
             return 2.0
+
+    async def _rtu_call(self, method_name: str, **kwargs: Any) -> Any:
+        if self._bus is not None:
+            method = getattr(self._bus, method_name)
+            return await method(timeout=self._rtu_timeout(), **kwargs)
+        return await asyncio.wait_for(
+            asyncio.to_thread(getattr(self._client, method_name), **kwargs),
+            timeout=self._rtu_timeout(),
+        )
 
     def _device_id(self) -> int:
         try:

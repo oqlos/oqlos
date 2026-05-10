@@ -71,26 +71,26 @@ _PERIPHERAL_TO_PLUGIN_MAP = {
     "pluco": "motor-tic249",
 
     # Sensor targets
-    "nc-sensor": "piadc",
-    "nc_sensor": "piadc",
-    "ciśnienie-nc": "piadc",
-    "cisnienie-nc": "piadc",
-    "nadciśnienie": "piadc",
-    "nadcisnienie": "piadc",
-    "AI01": "piadc",
+    "nc-sensor": "modbus-adc",
+    "nc_sensor": "modbus-adc",
+    "ciśnienie-nc": "modbus-adc",
+    "cisnienie-nc": "modbus-adc",
+    "nadciśnienie": "modbus-adc",
+    "nadcisnienie": "modbus-adc",
+    "AI01": "modbus-adc",
 
-    "sc-sensor": "piadc",
-    "ciśnienie-sc": "piadc",
-    "cisnienie-sc": "piadc",
-    "AI02": "piadc",
+    "sc-sensor": "modbus-adc",
+    "ciśnienie-sc": "modbus-adc",
+    "cisnienie-sc": "modbus-adc",
+    "AI02": "modbus-adc",
 
-    "wc-sensor": "piadc",
-    "ciśnienie-wc": "piadc",
-    "cisnienie-wc": "piadc",
-    "AI03": "piadc",
+    "wc-sensor": "modbus-adc",
+    "ciśnienie-wc": "modbus-adc",
+    "cisnienie-wc": "modbus-adc",
+    "AI03": "modbus-adc",
 
-    "pressure-sensor": "piadc",
-    "pressure_sensor": "piadc",
+    "pressure-sensor": "modbus-adc",
+    "pressure_sensor": "modbus-adc",
 }
 
 

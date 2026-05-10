@@ -8,6 +8,7 @@ import time
 from oqlos.hardware.plugins.base import PluginConfig, PluginStatus
 from oqlos.hardware.plugins.lung import LungPlugin
 from oqlos.hardware.plugins.modbus import ModbusPlugin
+from oqlos.hardware.plugins.modbus_adc import ModbusAdcPlugin
 from oqlos.hardware.plugins.piadc import PiadcPlugin
 from oqlos.hardware.plugins.registry import PluginRegistry
 
@@ -66,6 +67,7 @@ class _BlockingModbusClient:
 
 class _OkModbusResult:
     function_code = 5
+    registers = [101, 202, 303, 404, 505, 606, 707, 808]
 
     def isError(self):
         return False
@@ -82,6 +84,15 @@ class _CapturingModbusClient:
 
     def write_coil(self, **kwargs):
         self.write_kwargs = kwargs
+        return _OkModbusResult()
+
+
+class _CapturingModbusAdcClient:
+    def __init__(self):
+        self.read_kwargs = None
+
+    def read_input_registers(self, **kwargs):
+        self.read_kwargs = kwargs
         return _OkModbusResult()
 
 
@@ -189,6 +200,55 @@ def test_modbus_rtu_health_timeout_does_not_block_event_loop():
     assert elapsed < 0.15
     assert health.status == PluginStatus.ERROR
     assert "timed out" in health.message
+
+
+def test_modbus_adc_health_reads_input_registers():
+    client = _CapturingModbusAdcClient()
+    plugin = ModbusAdcPlugin(
+        PluginConfig(
+            plugin_id="modbus-adc",
+            enabled=True,
+            connection_type="modbus-rtu",
+            connection_params={"serial_port": "/dev/ttyUSB0", "device_id": 1, "read_address": 0, "read_count": 8},
+            timeout=0.5,
+        )
+    )
+    plugin._client = client
+
+    health = asyncio.run(plugin.health_check())
+
+    assert health.status == PluginStatus.CONNECTED
+    assert health.compatible is True
+    assert health.details["registers"] == _OkModbusResult.registers
+    assert client.read_kwargs == {"address": 0, "count": 8, "device_id": 1}
+
+
+def test_modbus_adc_read_sensor_uses_channel_conversion():
+    client = _CapturingModbusAdcClient()
+    plugin = ModbusAdcPlugin(
+        PluginConfig(
+            plugin_id="modbus-adc",
+            enabled=True,
+            connection_type="modbus-rtu",
+            connection_params={"serial_port": "/dev/ttyUSB0"},
+            peripherals={
+                "ai01": {
+                    "name": "AI01",
+                    "type": "sensor",
+                    "scale": {"min": 0, "max": 5, "unit": "V"},
+                    "conversion": {"type": "linear", "scale": 0.001, "offset": 0},
+                },
+            },
+        )
+    )
+    plugin._client = client
+
+    result = asyncio.run(plugin.execute_command("read_sensor", {"sensor_id": "ai01"}))
+
+    assert result["success"] is True
+    assert result["data"] == 0.101
+    assert result["details"]["raw"] == 101
+    assert result["details"]["unit"] == "V"
 
 
 def test_modbus_rtu_uses_configured_device_id_for_health_and_writes():

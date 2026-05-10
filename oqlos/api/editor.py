@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import pathlib
 from typing import Any
 
@@ -20,7 +21,21 @@ from oqlos.shared.file_ops import (
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/editor", tags=["editor"])
 
-SCENARIOS_DIR = pathlib.Path("/home/tom/github/oqlos/oqlos/oqlos/scenarios")
+
+def _default_scenarios_dir() -> pathlib.Path:
+    """Locate the ``scenarios/`` directory shipped with the package.
+
+    Honours the ``OQLOS_SCENARIOS_DIR`` env var so deployments can point
+    at an external library, and falls back to ``oqlos/scenarios`` next to
+    this package — the same directory used by ``oqlos.core._oql_adapter``.
+    """
+    override = os.environ.get("OQLOS_SCENARIOS_DIR")
+    if override:
+        return pathlib.Path(override)
+    return pathlib.Path(__file__).resolve().parent.parent / "scenarios"
+
+
+SCENARIOS_DIR = _default_scenarios_dir()
 
 
 class FileInfo(BaseModel):

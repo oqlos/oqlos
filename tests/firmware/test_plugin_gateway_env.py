@@ -66,6 +66,42 @@ def test_plugin_gateway_env_overrides_modbus_params(monkeypatch):
     }
 
 
+def test_plugin_gateway_env_overrides_modbus_adc_params(monkeypatch):
+    gateway = PluginHardwareGateway(mode="mock")
+    gateway._plugin_configs = {
+        "modbus-adc": PluginConfig(
+            plugin_id="modbus-adc",
+            connection_type="modbus-rtu",
+            connection_params={
+                "serial_port": "/dev/ttyUSB0",
+                "baudrate": 9600,
+                "parity": "N",
+                "device_id": 1,
+                "read_address": 0,
+                "read_count": 8,
+            },
+        ),
+    }
+
+    monkeypatch.setenv("OQLOS_MODBUS_ADC_SERIAL_PORT", "/dev/serial/by-id/test-adc")
+    monkeypatch.setenv("OQLOS_MODBUS_ADC_BAUD", "19200")
+    monkeypatch.setenv("OQLOS_MODBUS_ADC_PARITY", "E")
+    monkeypatch.setenv("OQLOS_MODBUS_ADC_DEVICE_ID", "3")
+    monkeypatch.setenv("OQLOS_MODBUS_ADC_READ_ADDRESS", "2")
+    monkeypatch.setenv("OQLOS_MODBUS_ADC_READ_COUNT", "4")
+
+    gateway._apply_env_overrides()
+
+    assert gateway._plugin_configs["modbus-adc"].connection_params == {
+        "serial_port": "/dev/serial/by-id/test-adc",
+        "baudrate": 19200,
+        "parity": "E",
+        "device_id": 3,
+        "read_address": 2,
+        "read_count": 4,
+    }
+
+
 def test_set_pump_uses_registry_instance_that_recovers_after_startup(monkeypatch):
     class RecoveredMotorPlugin:
         async def health_check(self):

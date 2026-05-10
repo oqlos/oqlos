@@ -20,6 +20,7 @@ from .base import (
 )
 from .registry import PluginRegistry
 from .piadc import PiadcPlugin
+from .modbus_adc import ModbusAdcPlugin
 from .motor import MotorPlugin
 from .modbus import ModbusPlugin
 from .lung import LungPlugin
@@ -41,6 +42,7 @@ __all__ = [
     "hookspec",
     "PluginRegistry",
     "PiadcPlugin",
+    "ModbusAdcPlugin",
     "MotorPlugin",
     "ModbusPlugin",
     "LungPlugin",

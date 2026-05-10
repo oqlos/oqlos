@@ -20,14 +20,15 @@ PERIPHERAL_STATUS_COMMANDS: dict[str, str] = {
     "modbus-io": "health",
     "motor-dri0050": "status",
     "motor-tic249": "status",
+    "modbus-adc": "read_sensor",
     "piadc": "read_sensor",
 }
 
 FALLBACK_ADAPTERS: list[dict[str, str]] = [
     {
-        "id": "piadc",
-        "name": "piADC (ADS1115)",
-        "protocol": "I2C + REST",
+        "id": "modbus-adc",
+        "name": "Waveshare Modbus RTU Analog Input 8CH",
+        "protocol": "Modbus RTU (RS485)",
     },
     {
         "id": "motor-tic249",
@@ -331,7 +332,7 @@ class OqlosHardwareProxy:
             result = await self._proxy_oqlos_request("GET", f"/api/v1/plugins/{peripheral}/health")
             return command, result, bool(result.get("compatible")) if isinstance(result, dict) else False
 
-        if peripheral == "piadc":
+        if peripheral in {"modbus-adc", "piadc"}:
             result = await self._proxy_oqlos_request("GET", "/api/v1/hardware/sensor/ai01")
             ok = not (isinstance(result, dict) and result.get("success") is False)
             return command, result, ok
@@ -406,8 +407,9 @@ class OqlosHardwareProxy:
             "platform": {
                 "detected": "unknown",
                 "selected": "unknown",
-                "piadc_driver_role": "unknown",
-                "piadc_local_probe_allowed": False,
+                "analog_input_driver_role": "unknown",
+                "modbus_adc_driver_role": "unknown",
+                "modbus_adc_local_probe_allowed": False,
             },
             "detected": 0,
             "total": len(adapters),
@@ -511,11 +513,11 @@ def resolve_lung_target(command: str, args: dict[str, Any]) -> tuple[str, str, d
     raise HardwareProxyError(400, f"Unsupported diagnostic command '{command}' for peripheral 'motor-tic249'")
 
 
-def resolve_piadc_target(command: str, args: dict[str, Any]) -> tuple[str, str, dict[str, Any] | None]:
+def resolve_modbus_adc_target(command: str, args: dict[str, Any]) -> tuple[str, str, dict[str, Any] | None]:
     if command == "read_sensor":
         sensor_id = str(args.get("sensor_id") or "ai01")
         return "GET", f"/api/v1/hardware/sensor/{sensor_id}", None
-    raise HardwareProxyError(400, f"Unsupported diagnostic command '{command}' for peripheral 'piadc'")
+    raise HardwareProxyError(400, f"Unsupported diagnostic command '{command}' for peripheral 'modbus-adc'")
 
 
 def resolve_diagnostic_target(
@@ -527,7 +529,8 @@ def resolve_diagnostic_target(
         "modbus-io": resolve_modbus_target,
         "motor-dri0050": resolve_pump_target,
         "motor-tic249": resolve_lung_target,
-        "piadc": resolve_piadc_target,
+        "modbus-adc": resolve_modbus_adc_target,
+        "piadc": resolve_modbus_adc_target,
     }
     resolver = resolvers.get(peripheral)
     if not resolver:

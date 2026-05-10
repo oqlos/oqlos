@@ -3,27 +3,63 @@
 
 plugins:
   # -----------------------------------------------------------------------
-  # piADC — ADS1115 16-bit ADC sensor
+  # Waveshare Modbus RTU Analog Input 8CH — pressure/analog sensors
   # -----------------------------------------------------------------------
-  piadc:
+  modbus-adc:
     enabled: true
-    connection_type: http
+    connection_type: modbus-rtu
     connection_params:
-      base_url: http://localhost:8204
+      serial_port: /dev/modbus-bus
+      baudrate: 9600
+      parity: N
+      device_id: 2
+      read_address: 0
+      read_count: 8
     timeout: 2.0
     retry_count: 3
     metadata:
-      description: "ADS1115 16-bit ADC — 4-channel analog input sensor"
+      description: "Waveshare Modbus RTU Analog Input 8CH — 8-channel analog input sensor"
+      wiki: "https://www.waveshare.com/wiki/Modbus_RTU_Analog_Input_8CH"
     peripherals:
-      voltage:
-        name: voltage
+      ai01:
+        name: AI01 NC pressure
         type: sensor
-        scale: {min: 0, max: 5.0, default: 0, unit: V}
+        scale: {min: 0, max: 20000, default: 0, unit: raw}
         conversion: {type: none}
-      pressure:
-        name: pressure
+      ai02:
+        name: AI02 SC pressure
         type: sensor
-        scale: {min: 0, max: 10, default: 0, unit: bar}
+        scale: {min: 0, max: 20000, default: 0, unit: raw}
+        conversion: {type: none}
+      ai03:
+        name: AI03 WC pressure
+        type: sensor
+        scale: {min: 0, max: 20000, default: 0, unit: raw}
+        conversion: {type: none}
+      ai04:
+        name: AI04 spare
+        type: sensor
+        scale: {min: 0, max: 20000, default: 0, unit: raw}
+        conversion: {type: none}
+      ai05:
+        name: AI05 spare
+        type: sensor
+        scale: {min: 0, max: 20000, default: 0, unit: raw}
+        conversion: {type: none}
+      ai06:
+        name: AI06 spare
+        type: sensor
+        scale: {min: 0, max: 20000, default: 0, unit: raw}
+        conversion: {type: none}
+      ai07:
+        name: AI07 spare
+        type: sensor
+        scale: {min: 0, max: 20000, default: 0, unit: raw}
+        conversion: {type: none}
+      ai08:
+        name: AI08 spare
+        type: sensor
+        scale: {min: 0, max: 20000, default: 0, unit: raw}
         conversion: {type: none}
 
   # -----------------------------------------------------------------------
@@ -74,9 +110,10 @@ plugins:
     enabled: true
     connection_type: modbus-rtu
     connection_params:
-      serial_port: /dev/serial/by-id/usb-1a86_USB_Single_Serial_5958006895-if00
-      baudrate: 19200
+      serial_port: /dev/modbus-bus
+      baudrate: 9600
       parity: N
+      device_id: 1
     timeout: 2.0
     retry_count: 3
     metadata:

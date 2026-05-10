@@ -19,6 +19,7 @@ from oqlos.hardware.plugins import (
     PluginConfig,
     PluginRegistry,
     PiadcPlugin,
+    ModbusAdcPlugin,
     MotorPlugin,
     ModbusPlugin,
     LungPlugin,
@@ -28,6 +29,7 @@ logger = logging.getLogger(__name__)
 
 # Register built-in plugins
 PluginRegistry.register(PiadcPlugin)
+PluginRegistry.register(ModbusAdcPlugin)
 PluginRegistry.register(MotorPlugin)
 PluginRegistry.register(ModbusPlugin)
 PluginRegistry.register(LungPlugin)
@@ -116,27 +118,122 @@ class PluginHardwareGateway:
             self._plugin_configs[plugin_id].connection_params["base_url"] = value.rstrip("/")
             logger.info("Hardware plugin %s base_url overridden by env", plugin_id)
 
-        modbus = self._plugin_configs.get("modbus-io")
-        if modbus is None:
+        self._apply_shared_modbus_bus_env_overrides()
+        self._apply_modbus_env_overrides(
+            "modbus-io",
+            {
+                "serial_port": ("OQLOS_MODBUS_SERIAL_PORT", "MODBUS_SERIAL_PORT"),
+                "baudrate": ("OQLOS_MODBUS_BAUD", "MODBUS_BAUD", "MODBUS_BAUD_RATE"),
+                "parity": ("OQLOS_MODBUS_PARITY", "MODBUS_PARITY"),
+                "device_id": ("OQLOS_MODBUS_DEVICE_ID", "MODBUS_DEVICE_ID"),
+            },
+        )
+        self._apply_modbus_env_overrides(
+            "modbus-adc",
+            {
+                "serial_port": ("OQLOS_MODBUS_ADC_SERIAL_PORT", "MODBUS_ADC_SERIAL_PORT"),
+                "baudrate": ("OQLOS_MODBUS_ADC_BAUD", "MODBUS_ADC_BAUD", "MODBUS_ADC_BAUD_RATE"),
+                "parity": ("OQLOS_MODBUS_ADC_PARITY", "MODBUS_ADC_PARITY"),
+                "device_id": ("OQLOS_MODBUS_ADC_DEVICE_ID", "MODBUS_ADC_DEVICE_ID"),
+                "read_address": ("OQLOS_MODBUS_ADC_READ_ADDRESS", "MODBUS_ADC_READ_ADDRESS"),
+                "read_count": ("OQLOS_MODBUS_ADC_READ_COUNT", "MODBUS_ADC_READ_COUNT"),
+            },
+        )
+        self._log_modbus_preflight()
+
+    def _apply_shared_modbus_bus_env_overrides(self) -> None:
+        """Apply one-bus RS485 aliases before per-plugin overrides."""
+        shared_serial = next((
+            os.getenv(name)
+            for name in (
+                "OQLOS_MODBUS_BUS_SERIAL_PORT",
+                "MODBUS_BUS_SERIAL_PORT",
+                "OQLOS_MODBUS_SHARED_SERIAL_PORT",
+                "MODBUS_SHARED_SERIAL_PORT",
+            )
+            if os.getenv(name)
+        ), None)
+        shared_baud = next((
+            os.getenv(name)
+            for name in ("OQLOS_MODBUS_BUS_BAUD", "MODBUS_BUS_BAUD", "MODBUS_SHARED_BAUD")
+            if os.getenv(name)
+        ), None)
+        shared_parity = next((
+            os.getenv(name)
+            for name in ("OQLOS_MODBUS_BUS_PARITY", "MODBUS_BUS_PARITY", "MODBUS_SHARED_PARITY")
+            if os.getenv(name)
+        ), None)
+
+        for plugin_id in ("modbus-io", "modbus-adc"):
+            plugin_config = self._plugin_configs.get(plugin_id)
+            if plugin_config is None:
+                continue
+            if shared_serial:
+                plugin_config.connection_params["serial_port"] = shared_serial
+            if shared_baud:
+                try:
+                    plugin_config.connection_params["baudrate"] = int(shared_baud)
+                except ValueError:
+                    logger.warning("Ignoring invalid shared Modbus baud override: %s", shared_baud)
+            if shared_parity:
+                plugin_config.connection_params["parity"] = shared_parity.upper()
+
+    def _apply_modbus_env_overrides(
+        self,
+        plugin_id: str,
+        overrides: dict[str, tuple[str, ...]],
+    ) -> None:
+        plugin_config = self._plugin_configs.get(plugin_id)
+        if plugin_config is None:
             return
 
-        modbus_overrides = {
-            "serial_port": ("OQLOS_MODBUS_SERIAL_PORT", "MODBUS_SERIAL_PORT"),
-            "baudrate": ("OQLOS_MODBUS_BAUD", "MODBUS_BAUD", "MODBUS_BAUD_RATE"),
-            "parity": ("OQLOS_MODBUS_PARITY", "MODBUS_PARITY"),
-            "device_id": ("OQLOS_MODBUS_DEVICE_ID", "MODBUS_DEVICE_ID"),
-        }
-        for param_name, env_names in modbus_overrides.items():
+        for param_name, env_names in overrides.items():
             value = next((os.getenv(name) for name in env_names if os.getenv(name)), None)
             if value is None:
                 continue
-            if param_name in {"baudrate", "device_id"}:
+            if param_name in {"baudrate", "device_id", "read_address", "read_count"}:
                 try:
-                    modbus.connection_params[param_name] = int(value)
+                    plugin_config.connection_params[param_name] = int(value)
                 except ValueError:
-                    logger.warning("Ignoring invalid Modbus %s override: %s", param_name, value)
+                    logger.warning("Ignoring invalid %s %s override: %s", plugin_id, param_name, value)
             else:
-                modbus.connection_params[param_name] = value
+                plugin_config.connection_params[param_name] = value
+
+    def modbus_preflight_report(self) -> dict[str, Any]:
+        """Validate Modbus RTU topology with the shared pimodbus rules."""
+        try:
+            from pimodbus.config import validate_plugin_configs
+        except ImportError as exc:
+            return {
+                "ok": False,
+                "topology": "unknown",
+                "modules": [],
+                "issues": [
+                    {
+                        "severity": "error",
+                        "code": "pimodbus_unavailable",
+                        "message": f"pimodbus library is not available: {exc}",
+                        "modules": ["modbus-io", "modbus-adc"],
+                        "repair": {"install": "/home/tom/github/maskservice/pimodbus"},
+                    }
+                ],
+                "recommended": {},
+            }
+
+        configs: dict[str, Any] = {}
+        for plugin_id, config in self._plugin_configs.items():
+            if plugin_id in {"modbus-io", "modbus-adc"}:
+                configs[plugin_id] = config.model_dump(mode="python")
+        return validate_plugin_configs(configs).to_dict()
+
+    def _log_modbus_preflight(self) -> None:
+        report = self.modbus_preflight_report()
+        for issue in report.get("issues", []):
+            message = issue.get("message", "")
+            if issue.get("severity") == "error":
+                logger.error("Modbus preflight: %s", message)
+            else:
+                logger.warning("Modbus preflight: %s", message)
 
     async def ensure_initialized(self) -> None:
         """Await this to guarantee all plugins are connected."""
@@ -252,14 +349,14 @@ class PluginHardwareGateway:
             return {"success": False, "error": str(exc)}
 
     async def read_sensor(self, sensor_id: str) -> float | None:
-        """Read sensor value using piadc plugin."""
+        """Read sensor value using the Modbus ADC plugin."""
         if not self.is_real:
             logger.info("[HW mock] READ_SENSOR %s → None", sensor_id)
             return None
 
-        plugin = await self._get_or_connect_plugin("piadc")
+        plugin = await self._get_or_connect_plugin("modbus-adc")
         if not plugin:
-            logger.error("PiADC plugin not available")
+            logger.error("Modbus ADC plugin not available")
             return None
 
         try:

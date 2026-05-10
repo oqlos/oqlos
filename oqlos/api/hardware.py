@@ -16,7 +16,7 @@ from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query
 from oqlos.config import get_settings
-from oqlos.hardware.discovery import list_serial_ports, probe_waveshare_modbus
+from oqlos.hardware.discovery import list_serial_ports, probe_waveshare_modbus, probe_waveshare_modbus_adc
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/hardware", tags=["hardware"])
@@ -27,13 +27,25 @@ _settings = get_settings()
 # Static hardware registry — describes adapters available in the system
 _HARDWARE_REGISTRY: list[dict[str, Any]] = [
     {
-        "id": "piadc",
-        "name": "piADC (ADS1115)",
-        "version": "1.0.2",
-        "protocol": "I2C + REST",
-        "description": "ADS1115 16-bit ADC - 4-channel analog input",
-        "repo": "piadc",
-        "channels": {"0": "NC sensor (mbar)", "1": "SC sensor (bar)", "2": "WC sensor (bar)", "3": "spare"},
+        "id": "modbus-adc",
+        "name": "Waveshare Modbus RTU Analog Input 8CH",
+        "version": "1.0.0",
+        "protocol": "Modbus RTU (RS485)",
+        "description": "8-channel analog input module - pressure sensors",
+        "repo": "waveshare-modbus-rtu-analog-input-8ch",
+        "channels": {
+            "0": "AI01 NC sensor",
+            "1": "AI02 SC sensor",
+            "2": "AI03 WC sensor",
+            "3": "AI04 spare",
+            "4": "AI05 spare",
+            "5": "AI06 spare",
+            "6": "AI07 spare",
+            "7": "AI08 spare",
+        },
+        "interface": "RS485 via USB serial adapter",
+        "default_config": "9600 baud, N-8-1, slave address 1, input registers 0x0000-0x0007",
+        "wiki": "https://www.waveshare.com/wiki/Modbus_RTU_Analog_Input_8CH",
     },
     {
         "id": "motor-tic249",
@@ -177,20 +189,25 @@ def _detect_runtime_platform() -> dict[str, Any]:
         detected = "unknown"
 
     piadc_selected = _selected_piadc_platform()
-    if piadc_selected == "auto":
-        piadc_role = "rpi-hat-local" if is_rpi else "external-rpi-required"
-    elif piadc_selected == "raspberry-pi":
-        piadc_role = "rpi-hat-local"
-    elif piadc_selected == "generic-linux":
-        piadc_role = "generic-linux-smbus"
-    elif piadc_selected in {"desktop", "external-rpi"}:
-        piadc_role = "external-rpi-required"
-    else:
-        piadc_role = "unknown-selection"
+    modbus_adc_serial = (
+        os.getenv("OQLOS_MODBUS_ADC_SERIAL_PORT")
+        or os.getenv("MODBUS_ADC_SERIAL_PORT")
+        or os.getenv("OQLOS_MODBUS_BUS_SERIAL_PORT")
+        or os.getenv("MODBUS_BUS_SERIAL_PORT")
+        or _settings.modbus_adc_serial_port
+    )
+    modbus_io_serial = (
+        os.getenv("OQLOS_MODBUS_SERIAL_PORT")
+        or os.getenv("MODBUS_SERIAL_PORT")
+        or os.getenv("OQLOS_MODBUS_BUS_SERIAL_PORT")
+        or os.getenv("MODBUS_BUS_SERIAL_PORT")
+        or _settings.modbus_serial_port
+    )
 
     return {
         "selected": _selected_hardware_platform(),
         "piadc_selected": piadc_selected,
+        "modbus_adc_selected": "modbus-rtu",
         "detected": detected,
         "is_raspberry_pi": is_rpi,
         "raspberry_pi_model": board_model if is_rpi else "",
@@ -204,8 +221,14 @@ def _detect_runtime_platform() -> dict[str, Any]:
         "python": sys.version.split()[0],
         "in_container": in_container,
         "is_wsl": is_wsl,
-        "piadc_driver_role": piadc_role,
-        "piadc_local_probe_allowed": _local_ads1115_probe_allowed(),
+        "analog_input_driver_role": "modbus-rtu",
+        "modbus_bus_serial_port": modbus_io_serial if modbus_io_serial == modbus_adc_serial else "",
+        "modbus_io_serial_port": modbus_io_serial,
+        "modbus_adc_driver_role": "modbus-rtu",
+        "modbus_adc_serial_port": modbus_adc_serial,
+        "modbus_adc_local_probe_allowed": True,
+        "piadc_driver_role": "replaced-by-modbus-adc",
+        "piadc_local_probe_allowed": False,
         "i2c_buses": sorted(glob.glob("/dev/i2c-*")),
         "serial_ports": [port.get("device") for port in list_serial_ports()],
     }
@@ -348,10 +371,25 @@ def _probe_modbus_rtu() -> dict[str, Any]:
         preferred_port=_settings.modbus_serial_port,
         preferred_baud=_settings.modbus_baud,
         preferred_parity=_settings.modbus_parity,
+        preferred_device_id=_settings.modbus_device_id,
     )
     if probe.get("connected") and not probe.get("modbus_device_responds", True):
         note = probe.get("note") or "USB serial adapter detected"
         probe["note"] = f"{note} (check power or RS485 wiring if this is unexpected)"
+    return probe
+
+
+def _probe_modbus_adc_rtu() -> dict[str, Any]:
+    """Detect the Waveshare Modbus RTU Analog Input 8CH module."""
+    probe = probe_waveshare_modbus_adc(
+        preferred_port=_settings.modbus_adc_serial_port,
+        preferred_baud=_settings.modbus_adc_baud,
+        preferred_parity=_settings.modbus_adc_parity,
+        preferred_device_id=_settings.modbus_adc_device_id,
+    )
+    if probe.get("connected") and not probe.get("modbus_device_responds", True):
+        note = probe.get("note") or "USB serial adapter detected"
+        probe["note"] = f"{note} (check power, address, baudrate, or RS485 wiring if this is unexpected)"
     return probe
 
 
@@ -367,8 +405,8 @@ def _probe_all_hardware(ids: set[str] | None = None) -> dict[str, Any]:
         results["motor-tic249"] = _probe_tic249(usb_devices or [])
     if "motor-dri0050" in selected:
         results["motor-dri0050"] = _probe_dri0050(usb_devices or [])
-    if "piadc" in selected:
-        results["piadc"] = _probe_i2c_ads1115()
+    if "modbus-adc" in selected:
+        results["modbus-adc"] = _probe_modbus_adc_rtu()
     if "modbus-io" in selected:
         results["modbus-io"] = _probe_modbus_rtu()
     return results
@@ -381,6 +419,7 @@ def _collect_hardware_diagnostics() -> dict[str, Any]:
         "usb_devices": _scan_usb_devices(),
         "serial_ports": list_serial_ports(),
         "i2c_buses": sorted(glob.glob("/dev/i2c-*")),
+        "modbus_preflight": _modbus_preflight_report(),
     }
 
 
@@ -411,6 +450,7 @@ def _modbus_health_is_no_response(health_entry: dict[str, Any]) -> bool:
     message = str(health_entry.get("message") or "")
     return (
         "read_coils" in message
+        or "read_input_registers" in message
         or "No response" in message
         or "timed out" in message
     )
@@ -421,6 +461,51 @@ def _probe_selected_hardware(ids: set[str]) -> dict[str, Any]:
     if len(inspect.signature(_probe_all_hardware).parameters) == 0:
         return _probe_all_hardware()  # type: ignore[call-arg]
     return _probe_all_hardware(ids)
+
+
+def _modbus_preflight_report() -> dict[str, Any]:
+    gateway = _gateway
+    if gateway is not None and hasattr(gateway, "modbus_preflight_report"):
+        try:
+            report = gateway.modbus_preflight_report()
+            if isinstance(report, dict):
+                return report
+        except Exception as exc:
+            return {
+                "ok": False,
+                "topology": "unknown",
+                "modules": [],
+                "issues": [
+                    {
+                        "severity": "error",
+                        "code": "modbus_preflight_exception",
+                        "message": str(exc),
+                        "modules": ["modbus-io", "modbus-adc"],
+                        "repair": {},
+                    }
+                ],
+                "recommended": {},
+            }
+    return {"ok": True, "topology": "unknown", "modules": [], "issues": [], "recommended": {}}
+
+
+def _modbus_repair_guidance(health: dict[str, Any] | None = None) -> dict[str, Any]:
+    try:
+        from pimodbus.repair import build_runtime_repair_guidance
+    except ImportError as exc:
+        return {
+            "available": False,
+            "error": f"pimodbus repair module is not available: {exc}",
+        }
+
+    return build_runtime_repair_guidance(
+        serial_port=_settings.modbus_serial_port,
+        baudrate=_settings.modbus_baud,
+        parity=_settings.modbus_parity,
+        io_device_id=_settings.modbus_device_id,
+        adc_device_id=_settings.modbus_adc_device_id,
+        health=health or {},
+    )
 
 
 def set_hardware_gateway(gw: HardwareGateway) -> None:
@@ -464,11 +549,22 @@ async def hardware_identify(
     elif scan_mode == "auto" and _needs_live_scan(health):
         scan_ids = _unhealthy_plugin_ids(health)
 
+    scan_skip_reason = "plugin-health compatible" if scan_mode == "auto" else "scan=never"
+    skipped_owned_modbus_probe = False
+
     modbus_health = health.get("modbus-io")
     if isinstance(modbus_health, dict) and _modbus_health_is_no_response(modbus_health):
         # The plugin already owns the serial port. A second in-process probe can
         # report a misleading lock/access error instead of the real no-response state.
+        skipped_owned_modbus_probe = "modbus-io" in scan_ids or skipped_owned_modbus_probe
         scan_ids.discard("modbus-io")
+    modbus_adc_health = health.get("modbus-adc")
+    if isinstance(modbus_adc_health, dict) and _modbus_health_is_no_response(modbus_adc_health):
+        skipped_owned_modbus_probe = "modbus-adc" in scan_ids or skipped_owned_modbus_probe
+        scan_ids.discard("modbus-adc")
+
+    if skipped_owned_modbus_probe:
+        scan_skip_reason = "plugin owns Modbus serial port; skipped duplicate no-response probe"
 
     should_scan = bool(scan_ids)
     if should_scan:
@@ -479,7 +575,7 @@ async def hardware_identify(
         probes = {}
         diagnostics = {
             "scan_skipped": True,
-            "scan_skip_reason": "plugin-health compatible" if scan_mode == "auto" else "scan=never",
+            "scan_skip_reason": scan_skip_reason,
         }
 
     adapters = []
@@ -499,7 +595,7 @@ async def hardware_identify(
             if health_entry.get("compatible"):
                 entry["status"] = "ok"
             elif health_entry.get("status") == "error":
-                if hw_id == "modbus-io" and _modbus_health_is_no_response(health_entry):
+                if hw_id in {"modbus-io", "modbus-adc"} and _modbus_health_is_no_response(health_entry):
                     entry["status"] = "adapter-only"
                     entry["probe"]["diagnosis"] = (
                         "serial adapter is open in OqlOS, but the Modbus device did not answer"
@@ -510,7 +606,7 @@ async def hardware_identify(
                 entry["status"] = "offline"
         elif probe.get("connected"):
             # For modbus-io: adapter present but module may not respond
-            if hw_id == "modbus-io" and not probe.get("modbus_device_responds", True):
+            if hw_id in {"modbus-io", "modbus-adc"} and not probe.get("modbus_device_responds", True):
                 entry["status"] = "adapter-only"
             else:
                 entry["status"] = "ok"
@@ -533,6 +629,8 @@ async def hardware_identify(
             "health": health,
             "scan_mode": scan_mode,
             "scan_performed": should_scan,
+            "modbus_preflight": _modbus_preflight_report(),
+            "modbus_repair": _modbus_repair_guidance(health),
             **diagnostics,
         },
     }
@@ -556,14 +654,14 @@ async def set_pump(power_pct: float = 0.0):
 async def read_sensor(sensor_id: str):
     """Read a sensor value directly from hardware."""
     health = await _gw().health()
-    piadc_health = health.get("piadc")
-    if health.get("mode") == "real" and isinstance(piadc_health, dict) and not piadc_health.get("compatible"):
+    modbus_adc_health = health.get("modbus-adc")
+    if health.get("mode") == "real" and isinstance(modbus_adc_health, dict) and not modbus_adc_health.get("compatible"):
         raise HTTPException(
             status_code=503,
             detail={
-                "message": "piADC is not available for real sensor readings",
+                "message": "Modbus ADC is not available for real sensor readings",
                 "sensor_id": sensor_id,
-                "piadc": piadc_health,
+                "modbus_adc": modbus_adc_health,
             },
         )
 

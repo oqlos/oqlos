@@ -11,7 +11,7 @@ class _FakeGateway:
     async def health(self) -> dict[str, str]:
         return {
             "mode": "real",
-            "piadc": "ok",
+            "modbus-adc": "ok",
             "motor": "ok",
             "modbus": "ok",
         }
@@ -55,29 +55,15 @@ def test_collect_hardware_diagnostics_exposes_ports(monkeypatch):
     assert diagnostics["i2c_buses"] == ["/dev/i2c-0"]
 
 
-def test_piadc_local_probe_is_skipped_on_non_rpi(monkeypatch):
-    monkeypatch.setenv("ADS1115_ALLOW_NON_RPI", "false")
-    monkeypatch.setenv("PIADC_URL", "http://rpi.local:8204")
-    monkeypatch.setattr(hw, "_is_raspberry_pi_host", lambda: False)
-
-    result = hw._probe_i2c_ads1115()
-
-    assert result["connected"] is False
-    assert result["skipped"] is True
-    assert result["remote_url"] == "http://rpi.local:8204"
-    assert "Raspberry Pi" in result["reason"]
-
-
-def test_platform_selection_can_force_generic_linux_probe(monkeypatch):
-    monkeypatch.setenv("PIADC_PLATFORM", "generic-linux")
-    monkeypatch.setenv("ADS1115_ALLOW_NON_RPI", "false")
-    monkeypatch.setattr(hw, "_is_raspberry_pi_host", lambda: False)
+def test_platform_reports_modbus_adc_as_analog_input(monkeypatch):
+    monkeypatch.setenv("OQLOS_MODBUS_ADC_SERIAL_PORT", "/dev/modbus-adc")
 
     platform = hw._detect_runtime_platform()
 
-    assert platform["piadc_selected"] == "generic-linux"
-    assert platform["piadc_driver_role"] == "generic-linux-smbus"
-    assert platform["piadc_local_probe_allowed"] is True
+    assert platform["analog_input_driver_role"] == "modbus-rtu"
+    assert platform["modbus_adc_driver_role"] == "modbus-rtu"
+    assert platform["modbus_adc_serial_port"] == "/dev/modbus-adc"
+    assert platform["piadc_driver_role"] == "replaced-by-modbus-adc"
 
 
 def test_hardware_identify_includes_diagnostics(monkeypatch):
@@ -88,7 +74,7 @@ def test_hardware_identify_includes_diagnostics(monkeypatch):
         lambda: {
             "motor-tic249": {"connected": False},
             "motor-dri0050": {"connected": True, "serial_port": "/dev/ttyUSB0"},
-            "piadc": {"connected": False},
+            "modbus-adc": {"connected": False},
             "modbus-io": {"connected": False},
         },
     )
@@ -117,7 +103,7 @@ class _ModbusTimeoutGateway:
     async def health(self) -> dict[str, object]:
         return {
             "mode": "real",
-            "piadc": {"status": "connected", "compatible": True},
+            "modbus-adc": {"status": "connected", "compatible": True},
             "motor-tic249": {"status": "connected", "compatible": True},
             "motor-dri0050": {"status": "connected", "compatible": True},
             "modbus-io": {

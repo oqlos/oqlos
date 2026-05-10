@@ -13,6 +13,7 @@ from oqlos.hardware.plugins import (
     PluginHealth,
     PluginRegistry,
     PiadcPlugin,
+    ModbusAdcPlugin,
     MotorPlugin,
     ModbusPlugin,
     LungPlugin,
@@ -28,6 +29,7 @@ def ensure_plugins_initialized() -> None:
         return
 
     PluginRegistry.register(PiadcPlugin)
+    PluginRegistry.register(ModbusAdcPlugin)
     PluginRegistry.register(MotorPlugin)
     PluginRegistry.register(ModbusPlugin)
     PluginRegistry.register(LungPlugin)

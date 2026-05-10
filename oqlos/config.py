@@ -45,19 +45,77 @@ class Settings(BaseSettings):
     # Modbus RTU Configuration
     modbus_serial_port: str = Field(
         default="/dev/ttyACM1",
-        validation_alias=AliasChoices("OQLOS_MODBUS_SERIAL_PORT", "MODBUS_SERIAL_PORT"),
+        validation_alias=AliasChoices(
+            "OQLOS_MODBUS_SERIAL_PORT",
+            "MODBUS_SERIAL_PORT",
+            "OQLOS_MODBUS_BUS_SERIAL_PORT",
+            "MODBUS_BUS_SERIAL_PORT",
+        ),
     )
     modbus_baud: int = Field(
         default=19200,
-        validation_alias=AliasChoices("OQLOS_MODBUS_BAUD", "MODBUS_BAUD", "MODBUS_BAUD_RATE"),
+        validation_alias=AliasChoices(
+            "OQLOS_MODBUS_BAUD",
+            "MODBUS_BAUD",
+            "MODBUS_BAUD_RATE",
+            "OQLOS_MODBUS_BUS_BAUD",
+            "MODBUS_BUS_BAUD",
+        ),
     )
     modbus_parity: str = Field(
         default="N",
-        validation_alias=AliasChoices("OQLOS_MODBUS_PARITY", "MODBUS_PARITY"),
+        validation_alias=AliasChoices(
+            "OQLOS_MODBUS_PARITY",
+            "MODBUS_PARITY",
+            "OQLOS_MODBUS_BUS_PARITY",
+            "MODBUS_BUS_PARITY",
+        ),
     )
     modbus_device_id: int = Field(
         default=1,
         validation_alias=AliasChoices("OQLOS_MODBUS_DEVICE_ID", "MODBUS_DEVICE_ID"),
+    )
+
+    # Modbus RTU Analog Input 8CH Configuration
+    modbus_adc_serial_port: str = Field(
+        default="/dev/ttyUSB0",
+        validation_alias=AliasChoices(
+            "OQLOS_MODBUS_ADC_SERIAL_PORT",
+            "MODBUS_ADC_SERIAL_PORT",
+            "OQLOS_MODBUS_BUS_SERIAL_PORT",
+            "MODBUS_BUS_SERIAL_PORT",
+        ),
+    )
+    modbus_adc_baud: int = Field(
+        default=9600,
+        validation_alias=AliasChoices(
+            "OQLOS_MODBUS_ADC_BAUD",
+            "MODBUS_ADC_BAUD",
+            "MODBUS_ADC_BAUD_RATE",
+            "OQLOS_MODBUS_BUS_BAUD",
+            "MODBUS_BUS_BAUD",
+        ),
+    )
+    modbus_adc_parity: str = Field(
+        default="N",
+        validation_alias=AliasChoices(
+            "OQLOS_MODBUS_ADC_PARITY",
+            "MODBUS_ADC_PARITY",
+            "OQLOS_MODBUS_BUS_PARITY",
+            "MODBUS_BUS_PARITY",
+        ),
+    )
+    modbus_adc_device_id: int = Field(
+        default=1,
+        validation_alias=AliasChoices("OQLOS_MODBUS_ADC_DEVICE_ID", "MODBUS_ADC_DEVICE_ID"),
+    )
+    modbus_adc_read_address: int = Field(
+        default=0,
+        validation_alias=AliasChoices("OQLOS_MODBUS_ADC_READ_ADDRESS", "MODBUS_ADC_READ_ADDRESS"),
+    )
+    modbus_adc_read_count: int = Field(
+        default=8,
+        validation_alias=AliasChoices("OQLOS_MODBUS_ADC_READ_COUNT", "MODBUS_ADC_READ_COUNT"),
     )
     
     # Modbus TCP Fallback
