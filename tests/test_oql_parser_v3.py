@@ -297,6 +297,45 @@ def test_version4_set_accepts_textual_hardware_values():
     ]
 
 
+def test_version4_repeat_count_expands_indented_block():
+    src = textwrap.dedent(
+        f"""
+        VERSION: {OQL_VERSION_CURRENT}
+        GOAL:
+          REPEAT 2:
+            SET NAME 'Test spadku cisnienia automatu'
+            SET 'motor 2' 'direction left'
+            SET 'motor 2' 'acceleration 100%/s'
+            SET 'motor 2' '500000 steps/s'
+            WAIT 3s
+            SET 'motor 2' 'direction right'
+            SET 'motor 2' '500000 steps/s'
+            WAIT 3s
+        """
+    )
+
+    cdoc = parse_flat_oql(src, "repeat.oql")
+
+    assert cdoc.errors == []
+    actions = cdoc.goals[0].steps[0].actions
+    assert [(a.kind, a.target, a.args) for a in actions] == [
+        ("set", "motor 2", "direction left"),
+        ("set", "motor 2", "acceleration 100%/s"),
+        ("set", "motor 2", "500000 steps/s"),
+        ("wait", "", "3s"),
+        ("set", "motor 2", "direction right"),
+        ("set", "motor 2", "500000 steps/s"),
+        ("wait", "", "3s"),
+        ("set", "motor 2", "direction left"),
+        ("set", "motor 2", "acceleration 100%/s"),
+        ("set", "motor 2", "500000 steps/s"),
+        ("wait", "", "3s"),
+        ("set", "motor 2", "direction right"),
+        ("set", "motor 2", "500000 steps/s"),
+        ("wait", "", "3s"),
+    ]
+
+
 # ── MACRO / CALL / INCLUDE ───────────────────────────────────────
 
 

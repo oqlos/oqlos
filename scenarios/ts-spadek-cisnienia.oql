@@ -2,9 +2,9 @@ VERSION: 4
 GOAL:
   SET NAME 'Test spadku ciśnienia automatu'
   LOG 'TASK Ustaw przepływ regulator 50 l/min'
-  SET pompa_1 1
+  SET 'pompa_1' '1'
   SAMPLE ciśnienie START 50ms
-  SET czas_pomiaru = 10s
+  SET 'czas_pomiaru' '10s'
   WAIT 10s
   SAMPLE ciśnienie STOP
   LOG 'CALC dp_srednie = AVG ciśnienie'
@@ -12,4 +12,4 @@ GOAL:
     CORRECT 'dp_srednie w zakresie 0.5 .. 3.5 mbar'
     ERROR 'dp_srednie poza zakresem 0.5 .. 3.5 mbar'
   LOG 'VAL dp_srednie mbar'
-  SET pompa_1 0
+  SET 'pompa_1' '0'

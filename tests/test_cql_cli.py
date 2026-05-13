@@ -171,6 +171,41 @@ def test_run_subcommand_executes_scenario_file(monkeypatch, tmp_path):
     assert captured["init"]["mode"] == "dry-run"
 
 
+def test_format_subcommand_prints_canonical_set_syntax(monkeypatch, tmp_path, capsys):
+    scenario_file = tmp_path / "legacy.oql"
+    scenario_file.write_text(
+        "VERSION: 4\n"
+        "GOAL:\n"
+        "  SET [zawor 3] = [ON]\n"
+        "  SET tryb = TEST\n"
+        "  SET [motor 2] limit 1000 steps/s\n"
+        "  SET NAME [Keep goal name syntax]\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(sys, "argv", ["oqlctl", "format", str(scenario_file)])
+
+    cql_cli.main()
+
+    assert capsys.readouterr().out == (
+        "VERSION: 4\n"
+        "GOAL:\n"
+        "  SET 'zawor 3' 'ON'\n"
+        "  SET 'tryb' 'TEST'\n"
+        "  SET 'motor 2' 'limit 1000 steps/s'\n"
+        "  SET NAME 'Keep goal name syntax'\n"
+    )
+
+
+def test_format_subcommand_write_updates_file(monkeypatch, tmp_path):
+    scenario_file = tmp_path / "legacy.oql"
+    scenario_file.write_text("GOAL:\n  SET valve-nc 1\n", encoding="utf-8")
+    monkeypatch.setattr(sys, "argv", ["oqlctl", "format", str(scenario_file), "--write"])
+
+    cql_cli.main()
+
+    assert scenario_file.read_text(encoding="utf-8") == "GOAL:\n  SET 'valve-nc' '1'\n"
+
+
 def test_run_subcommand_fetches_scenario_url(monkeypatch):
     import importlib
 

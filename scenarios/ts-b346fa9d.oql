@@ -3,7 +3,6 @@ GOAL:
   SET NAME 'Sprawdzenie szczelnosci maski'
   SET 'zawor 1' 'ON'
   SET 'PUMP' '5l'
-  SET 'WAIT' '1s'
+  WAIT 1s
   SET 'zawor 1' 'OFF'
   SET 'PUMP' 'OFF'
-

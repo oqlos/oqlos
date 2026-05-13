@@ -3,12 +3,12 @@ GOAL:
   SET NAME 'Inicjalizacja pomiaru kaskadowego'
   LOG 'TASK Kalibruj czujnik niskiego ciśnienia'
   LOG 'TASK Kalibruj czujnik średniego ciśnienia'
-  SET próg_przełączenia = 50mbar
-  SET czas_pomiaru_delta = 60s
+  SET 'próg_przełączenia' '50mbar'
+  SET 'czas_pomiaru_delta' '60s'
 
 GOAL:
   SET NAME 'Monitoring niskiego ciśnienia'
-  SET czujnik_niskiego_ciśnienia 1
+  SET 'czujnik_niskiego_ciśnienia' '1'
   SAMPLE ciśnienie_niskie START 100ms
   WAIT 5s
   LOG 'VAL ciśnienie_niskie mbar'
@@ -21,8 +21,8 @@ GOAL:
 
 GOAL:
   SET NAME 'Pomiar delta na średnim ciśnieniu'
-  SET czujnik_niskiego_ciśnienia 0
-  SET czujnik_średniego_ciśnienia 1
+  SET 'czujnik_niskiego_ciśnienia' '0'
+  SET 'czujnik_średniego_ciśnienia' '1'
   SAMPLE ciśnienie_średnie START 100ms
   LOG 'VAL ciśnienie_start mbar'
   WAIT 60s

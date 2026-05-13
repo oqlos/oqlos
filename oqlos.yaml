@@ -67,13 +67,25 @@ plugins:
   # -----------------------------------------------------------------------
   motor-dri0050:
     enabled: true
-    connection_type: http
+    # DRI0050 has its own CH340 USB-UART adapter (NOT on the shared RS485 bus).
+    # Mapped as /dev/dri0050 in docker-compose.hardware.yml.
+    connection_type: modbus-rtu
     connection_params:
-      base_url: http://localhost:8203
+      serial_port: /dev/dri0050
+      baudrate: 9600
+      parity: N
+      stopbits: 1
+      bytesize: 8
+      device_id: 50
+      # Register addresses (DFRobot DRI0050 V1.0 — from driver.py)
+      pid_register: 0x0000        # read-only Product ID
+      duty_register: 0x0006       # 0-255 duty cycle (0%=0, 100%=255)
+      frequency_register: 0x0007  # prescaler: freq = 12MHz/256/(val+1)
+      enable_register: 0x0008     # 0=off, 1=on
     timeout: 2.0
     retry_count: 3
     metadata:
-      description: "PWM motor & LED strip driver via CLI or HTTP"
+      description: "PWM motor & LED strip driver — Modbus RTU on shared RS485 bus"
     peripherals:
       speed:
         name: speed
@@ -147,5 +159,5 @@ plugins:
       speed:
         name: speed
         type: lung
-        scale: {min: 0, max: 200000, default: 100000, unit: "steps/s"}
+        scale: {min: 0, max: 1000, default: 1000, unit: "steps/s"}
         conversion: {type: none}

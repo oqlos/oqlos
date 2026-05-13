@@ -26,7 +26,7 @@ GOAL:
   SET 'PUMP' 'off'
   SET 'czas pomiaru' '60 s'
   SET 'timer' '0 s'
-  SET 'WAIT'_'timer = czas pomiaru'
+  WAIT 60s
   IF 'delta' 'ciśnienia SC' '-0.3 bar' .. ciśnienia SC' '0.6 bar'
     CORRECT 'delta w zakresie ciśnienia SC' '-0.3 bar' .. ciśnienia SC' '0.6 bar'
     ERROR 'delta poza zakresem ciśnienia SC' '-0.3 bar' .. ciśnienia SC' '0.6 bar'
@@ -63,13 +63,13 @@ GOAL:
   SET 'PUMP' 'off'
   SET 'czas obserwacji' '5 s'
   SET 'timer' '0 s'
-  SET 'WAIT'_'timer = czas obserwacji'
+  WAIT 5s
   SAVE 'wynik operatora'
 GOAL:
   SET NAME 'Kontrola spadku ciśnienia WC'
   SET 'czas pomiaru' '60 s'
   SET 'timer' '0 s'
-  SET 'WAIT'_'timer = czas pomiaru'
+  WAIT 60s
   IF 'spadek' '-∞ .. ciśnienia' '10 bar'
     CORRECT 'spadek w zakresie -∞ .. ciśnienia' '10 bar'
     ERROR 'spadek poza zakresem -∞ .. ciśnienia' '10 bar'
@@ -113,7 +113,7 @@ GOAL:
   SET NAME 'Test szczelności automatu - pomiar końcowy'
   SET 'czas stabilizacji' '60 s'
   SET 'timer' '0 s'
-  SET 'WAIT'_'timer = czas stabilizacji'
+  WAIT 60s
   IF 'ciśnienie' 'NC końcowe' '6.5 mbar' .. ∞'
     CORRECT 'ciśnienie w zakresie NC końcowe' '6.5 mbar' .. ∞'
     ERROR 'ciśnienie poza zakresem NC końcowe' '6.5 mbar' .. ∞'

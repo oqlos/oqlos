@@ -2,7 +2,7 @@ VERSION: 4
 GOAL:
   SET NAME 'Kalibracja punktu zero'
   LOG 'TASK Resetuj czujnik ciśnienia'
-  SET ciśnienie_ref = 0mbar
+  SET 'ciśnienie_ref' '0mbar'
   WAIT 5s
   SAMPLE ciśnienie_raw START 100ms
   WAIT 10s
@@ -20,8 +20,8 @@ GOAL:
 
 GOAL:
   SET NAME 'Kalibracja punktu span'
-  SET ciśnienie_ref = 1000mbar
-  SET źródło_ciśnienia 1
+  SET 'ciśnienie_ref' '1000mbar'
+  SET 'źródło_ciśnienia' '1'
   WAIT 10s
   SAMPLE ciśnienie_raw START 100ms
   WAIT 10s
@@ -37,13 +37,13 @@ GOAL:
     CORRECT 'span_error w zakresie 10 .. ∞'
     ERROR 'span_error poza zakresem 10 .. ∞'
   ERROR 'Błąd span poza tolerancją'
-  SET źródło_ciśnienia 0
+  SET 'źródło_ciśnienia' '0'
   SAVE span_measured-kalibracja
 
 GOAL:
   SET NAME 'Weryfikacja kalibracji'
-  SET ciśnienie_ref = 500mbar
-  SET źródło_ciśnienia 1
+  SET 'ciśnienie_ref' '500mbar'
+  SET 'źródło_ciśnienia' '1'
   WAIT 5s
   LOG 'VAL ciśnienie_weryfikacja mbar'
   LOG 'CALC weryfikacja_error = DIFF ciśnienie_weryfikacja ciśnienie_ref'
@@ -54,5 +54,5 @@ GOAL:
     CORRECT 'weryfikacja_error w zakresie 5 .. ∞'
     ERROR 'weryfikacja_error poza zakresem 5 .. ∞'
   ERROR 'Weryfikacja kalibracji negatywna'
-  SET źródło_ciśnienia 0
+  SET 'źródło_ciśnienia' '0'
   LOG 'TASK Generuj certyfikat kalibracji'

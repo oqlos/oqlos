@@ -248,7 +248,7 @@ class TestFirmwareAdapterLung:
 class TestHardwareGatewayLung:
     def test_set_lung_mock(self):
         gw = HardwareGateway(mode="mock")
-        result = asyncio.run(gw.set_lung(steps=500, speed=100000, cycles=5, pause=0.5))
+        result = asyncio.run(gw.set_lung(steps=500, speed=10_000_000, cycles=5, pause=0.5))
         assert result is True
 
     def test_stop_lung_mock(self):

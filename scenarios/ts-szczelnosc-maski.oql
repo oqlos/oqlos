@@ -1,9 +1,9 @@
 VERSION: 4
 GOAL:
   SET NAME 'Test szczelności maski'
-  SET pompa_podciśnieniowa 1
-  SET podciśnienie = -10mbar
-  SET czas = 60s
+  SET 'pompa_podciśnieniowa' '1'
+  SET 'podciśnienie' '-10mbar'
+  SET 'czas' '60s'
   IF 'szczelność' '95 .. 100 %'
     CORRECT 'szczelność w zakresie 95 .. 100 %'
     ERROR 'szczelność poza zakresem 95 .. 100 %'

@@ -25,7 +25,7 @@ GOAL:
   SET NAME 'Zmiana średniego ciśnienia'
   SET 'czas pomiaru' '60 s'
   SET 'timer' '0 s'
-  SET 'WAIT'_'timer = czas pomiaru'
+  WAIT 60s
   IF 'delta' 'ciśnienia SC' '-1.0 bar' .. ciśnienia SC' '0.5 bar'
     CORRECT 'delta w zakresie ciśnienia SC' '-1.0 bar' .. ciśnienia SC' '0.5 bar'
     ERROR 'delta poza zakresem ciśnienia SC' '-1.0 bar' .. ciśnienia SC' '0.5 bar'
@@ -39,12 +39,12 @@ GOAL:
   SET 'PUMP' 'off'
   SET 'czas obserwacji' '5 s'
   SET 'timer' '0 s'
-  SET 'WAIT'_'timer = czas obserwacji'
+  WAIT 5s
 GOAL:
   SET NAME 'Kontrola spadku ciśnienia (max 3 bar/10s)'
   SET 'czas pomiaru' '10 s'
   SET 'timer' '0 s'
-  SET 'WAIT'_'timer = czas pomiaru'
+  WAIT 10s
   IF 'spadek' '-∞ .. ciśnienia' '3 bar'
     CORRECT 'spadek w zakresie -∞ .. ciśnienia' '3 bar'
     ERROR 'spadek poza zakresem -∞ .. ciśnienia' '3 bar'
@@ -98,7 +98,7 @@ GOAL:
   SET NAME 'Test szczelności automatu oddechowego'
   SET 'czas stabilizacji' '5 s'
   SET 'timer' '0 s'
-  SET 'WAIT'_'timer = czas stabilizacji'
+  WAIT 5s
   IF 'ciśnienie' '-∞ .. NC końcowe' '-4.0 mbar'
     CORRECT 'ciśnienie w zakresie -∞ .. NC końcowe' '-4.0 mbar'
     ERROR 'ciśnienie poza zakresem -∞ .. NC końcowe' '-4.0 mbar'

@@ -4,7 +4,7 @@ SCENARIO: XML Example — Pressure Window
 GOAL:
   SET NAME 'XML Example — Pressure Window'
   LOG 'TASK Włącz zawór BO02'
-  SET PUMP 5bar
+  SET 'PUMP' '5bar'
   LOG 'TASK Potwierdź Potwierdź montaż maski'
   WAIT 7s
   IF 'Ciśnienie_maski' '-12.0 .. -8.5 mbar'

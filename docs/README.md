@@ -585,6 +585,33 @@ oqlos/
 - `set_lung(steps, speed, cycles, pause)` — Start artificial lung reciprocating motion (tic249 stepper).
 - `stop_lung()` — Emergency stop the artificial lung motor.
 - `disable_lung()` — De-energize the artificial lung motor (release coils).
+
+### Artificial Lung Volume Commands
+
+For OQL motor 2 reciprocating motion, the interpreter can calculate cycles from
+the requested volume. The default calibration is `cycle volume 5 l`, meaning one
+full back-and-forth cycle transfers 5 liters. Example: 50 liters in 30 seconds
+requires 10 cycles and, with `stroke 1000 steps`, about 667 steps/s.
+
+```oql
+VERSION: 4
+GOAL:
+  SET NAME 'Przetlocz 50 litrow w 30 sekund'
+  SET 'motor 2' 'reciprocating motion'
+  SET 'motor 2' 'stroke 1000 steps'
+  SET 'motor 2' 'volume 50 l'
+  SET 'motor 2' 'duration 30s'
+  SET 'motor 2' 'acceleration 100%/s'
+  SET 'motor 2' 'reverse on limit'
+  SET 'motor 2' 'start'
+  WAIT 30s
+  SET 'motor 2' 'stop'
+```
+
+Use `SET 'motor 2' 'cycle volume N l'` when the calibrated volume per cycle is
+different from 5 liters. Plain `start` defaults to the left/reverse direction;
+use `start right direction` or `start left direction` when the initial direction
+must be explicit.
 - `get_logs(level, function, module, q)` — Browse nfo logs from shared SQLite database.
 - `get_log_stats()` — Summary statistics from logs database.
 - `list_files()` — List all entries in the scenarios directory.
@@ -813,3 +840,35 @@ pytest
 | `examples` | Usage examples and code samples | [View](./examples) |
 
 <!-- code2docs:end -->
+## Motor 2 / Artificial Lung Runtime Contract
+
+OQL keeps artificial-lung scenarios readable:
+
+```oql
+SET 'motor 2' 'volume 50 l'
+SET 'motor 2' 'duration 30s'
+SET 'motor 2' 'start'
+```
+
+The runtime contract is modeled in `oqlos.core.motor2_runtime`. Store physical defaults in the
+MAP/UI layer and keep the algorithm in OqlOS/runtime handlers:
+
+```json
+{
+  "motor2": {
+    "peripheralId": "motor-tic249",
+    "strokeSteps": 1000,
+    "cycleVolumeLiters": 5,
+    "maxStepsPerSecond": 1000,
+    "defaultSpeedStepsPerSecond": 1000,
+    "accelerationPercentPerSecond": 300,
+    "limitMode": "reverse_on_limit",
+    "startDirection": "left"
+  }
+}
+```
+
+For `volume 50 l` and `cycleVolumeLiters = 5`, the runtime plans 10 cycles. If a duration is
+provided, it computes nominal `steps/s` from half-cycles and stroke size, then clamps it to the
+configured maximum. Hardware services remain responsible for final safety checks, limits, and
+stop/de-energize behavior.

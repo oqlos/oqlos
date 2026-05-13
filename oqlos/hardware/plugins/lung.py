@@ -11,6 +11,7 @@ import httpx
 
 from .base import HardwarePlugin, PluginConfig, PluginHealth, PluginStatus
 from ._shared import not_connected_health, health_check_exception, http_disconnect
+from oqlos.hardware.tic249_units import TIC249_DEFAULT_TARGET_VELOCITY
 
 logger = logging.getLogger(__name__)
 
@@ -188,9 +189,18 @@ class LungPlugin(HardwarePlugin):
     async def _handle_reciprocate_http(self, params: dict[str, Any]) -> dict[str, Any]:
         """Handle reciprocate command via HTTP."""
         steps = params.get("steps", 500)
-        speed = params.get("speed", 100000)
+        speed = params.get("speed", TIC249_DEFAULT_TARGET_VELOCITY)
         cycles = params.get("cycles", 5)
         pause = params.get("pause", 0.5)
+        payload: dict[str, Any] = {
+            "steps": steps,
+            "speed": speed,
+            "cycles": cycles,
+            "pause": pause,
+        }
+        for key in ("direction", "start_direction", "acceleration", "limit_mode"):
+            if key in params:
+                payload[key] = params[key]
 
         runtime = await self._runtime_status()
         blocked_reason = self._runtime_block_reason(runtime)
@@ -203,7 +213,7 @@ class LungPlugin(HardwarePlugin):
 
         resp = await self._client.post(
             f"{self._base_url}/api/reciprocate",
-            json={"steps": steps, "speed": speed, "cycles": cycles, "pause": pause},
+            json=payload,
         )
         if resp.status_code < 300:
             return {"success": True, "data": resp.json()}
@@ -212,7 +222,7 @@ class LungPlugin(HardwarePlugin):
     async def _handle_reciprocate_usb(self, params: dict[str, Any]) -> dict[str, Any]:
         """Handle reciprocate command via USB (placeholder)."""
         steps = params.get("steps", 500)
-        speed = params.get("speed", 100000)
+        speed = params.get("speed", TIC249_DEFAULT_TARGET_VELOCITY)
         return {"success": True, "data": {"steps": steps, "speed": speed}}
 
     async def _handle_stop_http(self) -> dict[str, Any]:

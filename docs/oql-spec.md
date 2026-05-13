@@ -109,10 +109,10 @@ valve-bo06        # OK
 AI01              # OK
 ```
 
-Dla nazw ze spacjami użyj nawiasów kwadratowych:
+Kanoniczny zapis `SET` używa pojedynczych cudzysłowów dla nazwy i wartości:
 
 ```oql
-SET [pompa głównego obiegu] 5 l/min
+SET 'pompa głównego obiegu' '5 l/min'
 SAVE [wynik testu maski]
 ```
 

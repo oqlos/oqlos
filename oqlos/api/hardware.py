@@ -17,6 +17,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Query
 from oqlos.config import get_settings
 from oqlos.hardware.discovery import list_serial_ports, probe_waveshare_modbus, probe_waveshare_modbus_adc
+from oqlos.hardware.tic249_units import TIC249_DEFAULT_TARGET_VELOCITY
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/hardware", tags=["hardware"])
@@ -670,7 +671,7 @@ async def read_sensor(sensor_id: str):
 
 
 @router.post("/lung")
-async def set_lung(steps: int = 500, speed: int = 100000, cycles: int = 5, pause: float = 0.5):
+async def set_lung(steps: int = 500, speed: int = TIC249_DEFAULT_TARGET_VELOCITY, cycles: int = 5, pause: float = 0.5):
     """Start artificial lung reciprocating motion (tic249 stepper)."""
     detailed_result: dict[str, Any] | None = None
     if hasattr(_gw(), "set_lung_result"):

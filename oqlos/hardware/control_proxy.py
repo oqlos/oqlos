@@ -13,6 +13,8 @@ from typing import Any, Mapping
 
 import httpx
 
+from oqlos.hardware.tic249_units import TIC249_DEFAULT_TARGET_VELOCITY
+
 
 _DEFAULT_OQLOS_API_BASE = "http://host.docker.internal:8202"
 
@@ -502,7 +504,7 @@ def resolve_lung_target(command: str, args: dict[str, Any]) -> tuple[str, str, d
     if command == "lung_start":
         return "POST", "/api/v1/hardware/lung", {
             "steps": int(args.get("steps", 500)),
-            "speed": int(args.get("speed", 100000)),
+            "speed": int(args.get("speed", TIC249_DEFAULT_TARGET_VELOCITY)),
             "cycles": int(args.get("cycles", 3)),
             "pause": float(args.get("pause", 0.5)),
         }

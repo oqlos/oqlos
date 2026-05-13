@@ -11,8 +11,10 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import oqlos.config as oql_config
+import oqlos.core._interpreter_actions as interpreter_actions
 from oqlos.core.base import VariableStore, StepStatus
 from oqlos.core.interpreter import CqlInterpreter
+from oqlos.core.motor2_runtime import build_motor2_reciprocating_plan, normalize_motor2_runtime_config
 from oqlos.core.cql_parser import parse_cql, validate_cql
 from oqlos.hardware.firmware_adapter import FirmwareAdapter, _parse_numeric, _PERIPHERAL_MAP, _SENSOR_MAP
 from oqlos.shared.event_store import EventStore
@@ -365,6 +367,220 @@ GOAL:
             ("zawor 1", False),
             ("PUMP", 0.0),
         ]
+
+    def test_motor2_reciprocating_oql_execute_uses_reciprocate_not_relative_move(self, monkeypatch):
+        reciprocate_calls: list[dict[str, object]] = []
+        stop_calls: list[bool] = []
+
+        def fake_reciprocate(direction, steps, speed_raw, acceleration_raw, cycles, pause, limit_mode):
+            reciprocate_calls.append(
+                {
+                    "direction": direction,
+                    "steps": steps,
+                    "speed_raw": speed_raw,
+                    "acceleration_raw": acceleration_raw,
+                    "cycles": cycles,
+                    "pause": pause,
+                    "limit_mode": limit_mode,
+                }
+            )
+
+        monkeypatch.setattr(interpreter_actions, "_post_motor2_reciprocate", fake_reciprocate)
+        monkeypatch.setattr(interpreter_actions, "_post_motor2_stop", lambda: stop_calls.append(True))
+        monkeypatch.setattr(
+            interpreter_actions,
+            "_post_motor2_move_relative",
+            lambda *args, **kwargs: pytest.fail("limit steps/s must not be executed as a relative move"),
+        )
+
+        src = """VERSION: 4
+GOAL:
+  SET 'motor 2' 'reciprocating motion'
+  SET 'motor 2' 'limit 1000 steps/s'
+  SET 'motor 2' 'acceleration 100%/s'
+  SET 'motor 2' 'reverse on limit'
+  SET 'motor 2' 'start left direction'
+  SET 'motor 2' 'stop'
+"""
+
+        interp = CqlInterpreter(mode="execute", quiet=True)
+        result = interp.run(src)
+
+        assert result.ok is True
+        assert reciprocate_calls == [
+            {
+                "direction": "left",
+                "steps": 1000,
+                "speed_raw": 10_000_000,
+                "acceleration_raw": 100_000,
+                "cycles": 1_000_000,
+                "pause": 0.0,
+                "limit_mode": "reverse_on_limit",
+            }
+        ]
+        assert stop_calls == [True]
+
+    def test_motor2_runtime_config_builds_volume_duration_plan(self):
+        cfg = normalize_motor2_runtime_config(
+            {
+                "strokeSteps": 1000,
+                "cycleVolumeLiters": 5,
+                "maxStepsPerSecond": 1000,
+                "defaultSpeedStepsPerSecond": 1000,
+                "accelerationPercentPerSecond": 300,
+                "limitMode": "reverse on limit",
+                "startDirection": "left",
+            }
+        )
+
+        plan = build_motor2_reciprocating_plan(
+            cfg,
+            volume_liters=50,
+            duration_seconds=30,
+        )
+
+        assert plan.cycles == 10
+        assert plan.steps == 1000
+        assert plan.requested_steps_per_second == 667
+        assert plan.effective_steps_per_second == 667
+        assert plan.acceleration_percent_per_second == 300
+        assert plan.limit_mode == "reverse_on_limit"
+        assert plan.direction == "left"
+
+    def test_motor2_volume_duration_reciprocating_calculates_cycles_and_speed(self, monkeypatch):
+        reciprocate_calls: list[dict[str, object]] = []
+
+        def fake_reciprocate(direction, steps, speed_raw, acceleration_raw, cycles, pause, limit_mode):
+            reciprocate_calls.append(
+                {
+                    "direction": direction,
+                    "steps": steps,
+                    "speed_raw": speed_raw,
+                    "acceleration_raw": acceleration_raw,
+                    "cycles": cycles,
+                    "pause": pause,
+                    "limit_mode": limit_mode,
+                }
+            )
+
+        monkeypatch.setattr(interpreter_actions, "_post_motor2_reciprocate", fake_reciprocate)
+
+        src = """VERSION: 4
+GOAL:
+  SET 'motor 2' 'reciprocating motion'
+  SET 'motor 2' 'stroke 1000 steps'
+  SET 'motor 2' 'volume 50 l'
+  SET 'motor 2' 'duration 30s'
+  SET 'motor 2' 'acceleration 100%/s'
+  SET 'motor 2' 'reverse on limit'
+  SET 'motor 2' 'start left direction'
+"""
+
+        interp = CqlInterpreter(mode="execute", quiet=True)
+        result = interp.run(src)
+
+        assert result.ok is True
+        assert reciprocate_calls == [
+            {
+                "direction": "left",
+                "steps": 1000,
+                "speed_raw": 6_670_000,
+                "acceleration_raw": 66_700,
+                "cycles": 10,
+                "pause": 0.0,
+                "limit_mode": "reverse_on_limit",
+            }
+        ]
+
+    def test_motor2_volume_start_without_direction_defaults_left(self, monkeypatch):
+        reciprocate_calls: list[dict[str, object]] = []
+
+        def fake_reciprocate(direction, steps, speed_raw, acceleration_raw, cycles, pause, limit_mode):
+            reciprocate_calls.append(
+                {
+                    "direction": direction,
+                    "steps": steps,
+                    "speed_raw": speed_raw,
+                    "cycles": cycles,
+                    "limit_mode": limit_mode,
+                }
+            )
+
+        monkeypatch.setattr(interpreter_actions, "_post_motor2_reciprocate", fake_reciprocate)
+
+        src = """VERSION: 4
+GOAL:
+  SET 'motor 2' 'reciprocating motion'
+  SET 'motor 2' 'stroke 1000 steps'
+  SET 'motor 2' 'volume 50 l'
+  SET 'motor 2' 'duration 30s'
+  SET 'motor 2' 'reverse on limit'
+  SET 'motor 2' 'start'
+"""
+
+        interp = CqlInterpreter(mode="execute", quiet=True)
+        result = interp.run(src)
+
+        assert result.ok is True
+        assert reciprocate_calls == [
+            {
+                "direction": "left",
+                "steps": 1000,
+                "speed_raw": 6_670_000,
+                "cycles": 10,
+                "limit_mode": "reverse_on_limit",
+            }
+        ]
+
+    def test_motor2_acceleration_percent_above_100_is_preserved(self, monkeypatch):
+        move_calls: list[dict[str, object]] = []
+
+        def fake_move_relative(direction, steps, speed_raw, acceleration_raw):
+            move_calls.append(
+                {
+                    "direction": direction,
+                    "steps": steps,
+                    "speed_raw": speed_raw,
+                    "acceleration_raw": acceleration_raw,
+                }
+            )
+
+        monkeypatch.setattr(interpreter_actions, "_post_motor2_move_relative", fake_move_relative)
+
+        src = """VERSION: 4
+GOAL:
+  SET 'motor 2' 'direction left'
+  SET 'motor 2' 'acceleration 200%/s'
+  SET 'motor 2' '1000 steps/s'
+"""
+
+        interp = CqlInterpreter(mode="execute", quiet=True)
+        result = interp.run(src)
+
+        assert result.ok is True
+        assert move_calls == [
+            {
+                "direction": "left",
+                "steps": 1000,
+                "speed_raw": 10_000_000,
+                "acceleration_raw": 200_000,
+            }
+        ]
+
+    def test_repeat_stop_is_accepted_in_expanded_oql_repeat_blocks(self):
+        src = """VERSION: 4
+GOAL:
+  REPEAT 3:
+    SET 'loop marker' 'before stop'
+    REPEAT STOP
+    SET 'loop marker' 'after stop'
+"""
+
+        interp = CqlInterpreter(mode="dry-run", quiet=True)
+        result = interp.run(src)
+
+        assert result.ok is True
+        assert not result.errors
 
     def test_pump_flow_scale_can_be_overridden_in_config_block(self, monkeypatch):
         calls: list[tuple[str, float]] = []

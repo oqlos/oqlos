@@ -128,7 +128,7 @@ Szybkie sprawdzenie:
 ```bash
 curl -sS 'http://127.0.0.1:8202/api/v1/hardware/identify?scan=auto' | jq '.diagnostics'
 curl -sS 'http://127.0.0.1:8205/api/status' | jq '{forward_limit_active,reverse_limit_active,low_vin,vin_voltage}'
-curl -sS -X POST 'http://127.0.0.1:8202/api/v1/hardware/lung?steps=500&speed=100000&cycles=1&pause=0.5' | jq
+curl -sS -X POST 'http://127.0.0.1:8202/api/v1/hardware/lung?steps=500&speed=10000000&cycles=1&pause=0.5' | jq
 ```
 
 ## Komendy w shellu

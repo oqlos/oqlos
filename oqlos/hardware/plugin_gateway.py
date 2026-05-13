@@ -24,6 +24,7 @@ from oqlos.hardware.plugins import (
     ModbusPlugin,
     LungPlugin,
 )
+from oqlos.hardware.tic249_units import TIC249_DEFAULT_TARGET_VELOCITY
 
 logger = logging.getLogger(__name__)
 
@@ -371,7 +372,7 @@ class PluginHardwareGateway:
     async def set_lung_result(
         self,
         steps: int = 500,
-        speed: int = 100000,
+        speed: int = TIC249_DEFAULT_TARGET_VELOCITY,
         cycles: int = 5,
         pause: float = 0.5,
     ) -> dict[str, Any]:
@@ -407,7 +408,7 @@ class PluginHardwareGateway:
             logger.error("PluginHardwareGateway.set_lung error: %s", exc)
             return {"success": False, "error": str(exc)}
 
-    async def set_lung(self, steps: int = 500, speed: int = 100000, cycles: int = 5, pause: float = 0.5) -> bool:
+    async def set_lung(self, steps: int = 500, speed: int = TIC249_DEFAULT_TARGET_VELOCITY, cycles: int = 5, pause: float = 0.5) -> bool:
         """Compatibility bool API for scenario executor paths."""
         result = await self.set_lung_result(steps=steps, speed=speed, cycles=cycles, pause=pause)
         return bool(result.get("success", False))

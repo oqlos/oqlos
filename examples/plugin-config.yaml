@@ -124,5 +124,5 @@ plugins:
       speed:
         name: speed
         type: lung
-        scale: {min: 0, max: 200000, default: 100000, unit: "steps/s"}
+        scale: {min: 0, max: 1000, default: 1000, unit: "steps/s"}
         conversion: {type: none}

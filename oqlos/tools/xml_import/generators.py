@@ -52,21 +52,31 @@ def _mode_action(mode: str) -> str:
 # ── Shared CQL helpers (used by generate_cql and _generate_cql_for_goal) ──
 
 
+def _quote_oql(value: Any) -> str:
+    """Quote an OQL token with the canonical single-quoted SET syntax."""
+    text = str(value or "").strip()
+    return "'" + text.replace("\\", "\\\\").replace("'", "\\'") + "'"
+
+
+def _emit_set(a: callable, target: str, value: Any, *, indent: str = "  ") -> None:
+    a(f"{indent}SET {_quote_oql(target)} {_quote_oql(value)}")
+
+
 def _emit_cql_output(out, a: callable) -> None:
     """Emit CQL SET line for a single output."""
     if is_pump_output(out.name):
         if out.value.lower() == "off":
-            a("  SET [pompa] = [0]")
+            _emit_set(a, "pompa", "0")
         elif out.value.lower() == "on":
-            a("  SET [pompa] = [1]")
+            _emit_set(a, "pompa", "1")
         else:
             raw_value = re.sub(r"\s+", " ", out.value.strip())
             raw_value = re.sub(r"^(\d+(?:[\.,]\d+)?)([A-Za-z%]+)$", r"\1 \2", raw_value)
-            a(f"  SET [pompa] = [{raw_value}]")
+            _emit_set(a, "pompa", raw_value)
     elif is_compressor_output(out.name):
-        a(f"  SET [sprężarka] = [{normalize_set_value(out.value, default_unit='l/min')}]")
+        _emit_set(a, "sprężarka", normalize_set_value(out.value, default_unit="l/min"))
     else:
-        a(f"  SET [{normalize_output_name(out.name)}] = [{normalize_set_value(out.value)}]")
+        _emit_set(a, normalize_output_name(out.name), normalize_set_value(out.value))
 
 
 def _emit_cql_param(p, a: callable, *, indent: str = "  ") -> None:
@@ -74,7 +84,7 @@ def _emit_cql_param(p, a: callable, *, indent: str = "  ") -> None:
     if p.mode == "Off":
         return
     if p.sensor == "operator":
-        a(f'{indent}SET [{p.description}] = [1]')
+        _emit_set(a, p.description, "1", indent=indent)
         if p.save:
             a(f"{indent}SAVE [{p.description}]")
         return

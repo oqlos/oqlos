@@ -93,6 +93,17 @@ def _quote(value: str) -> str:
     return f"'{safe}'"
 
 
+def _format_set(target: str, value: str) -> str:
+    return f"SET {_quote(_normalize_bracket_tokens(target).strip())} {_quote(_normalize_bracket_tokens(value).strip())}"
+
+
+def _strip_outer_quotes(value: str) -> str:
+    stripped = value.strip()
+    if len(stripped) >= 2 and stripped[0] == stripped[-1] and stripped[0] in {"'", '"'}:
+        return stripped[1:-1]
+    return stripped
+
+
 def _extract_num_unit(value: str) -> tuple[str, str]:
     """Split '3.5mbar' into ('3.5', 'mbar'), or '100%' into ('100', '%)."""
     m = re.match(r"^(-?\d+(?:[.,]\d+)?)(.*)$", value.strip())
@@ -418,14 +429,8 @@ def migrate_v2_to_v4(text: str) -> str:
                 identifier = _normalize_bracket_tokens(identifier)
                 # Remove brackets from value if present
                 value = _normalize_bracket_tokens(value)
-                # Keep brackets for multi-word identifiers
-                identifier_v4 = _to_v4_token(identifier)
-                # Don't join value if it's already quoted
-                if value.startswith("'") or value.startswith('"'):
-                    value_joined = value
-                else:
-                    value_joined = _join_value_unit(value)
-                out.append(f"  SET {identifier_v4} = {value_joined}")
+                value_joined = value if value.startswith(("'", '"')) else _join_value_unit(value)
+                out.append(f"  {_format_set(identifier, _strip_outer_quotes(value_joined))}")
                 continue
 
         # Handle SET without = (e.g., SET [czujnik LP] 0, SET pompa 1)
@@ -445,19 +450,13 @@ def migrate_v2_to_v4(text: str) -> str:
                 else:
                     identifier = rest.strip()
                     value = ""
-            # Convert identifier: spaces → underscores
-            identifier_v4 = identifier.replace(" ", "_")
             # Remove brackets from value if present
             value = _normalize_bracket_tokens(value)
-            # Don't join value if it's already quoted
-            if value.startswith("'") or value.startswith('"'):
-                value_joined = value
-            else:
-                value_joined = _join_value_unit(value)
+            value_joined = value if value.startswith(("'", '"')) else _join_value_unit(value)
             if value_joined:
-                out.append(f"  SET {identifier_v4} {value_joined}")
+                out.append(f"  {_format_set(identifier, _strip_outer_quotes(value_joined))}")
             else:
-                out.append(f"  SET {identifier_v4}")
+                out.append(f"  SET {_quote(identifier)} ''")
             continue
 
         # Handle PUMP: PUMP off → SET PUMP 0, PUMP 10l → SET PUMP 10l
@@ -465,10 +464,10 @@ def migrate_v2_to_v4(text: str) -> str:
         if pump_match:
             value = _normalize_bracket_tokens(pump_match.group(1).strip())
             if value.lower() in {"off", "0"}:
-                out.append("  SET PUMP 0")
+                out.append(f"  {_format_set('PUMP', '0')}")
             else:
                 value_joined = _join_value_unit(value)
-                out.append(f"  SET PUMP {value_joined}")
+                out.append(f"  {_format_set('PUMP', value_joined)}")
             continue
 
         if re.match(r"^(SCENARIO|VERSION|GOAL:|CONFIG|MACRO|FUNC:)\b", normalized, re.IGNORECASE):

@@ -38,6 +38,7 @@ from oqlos.hardware.discovery import (
     DEFAULT_MODBUS_SERIAL,
     probe_waveshare_modbus,
 )
+from oqlos.hardware.tic249_units import TIC249_DEFAULT_TARGET_VELOCITY
 
 logger = logging.getLogger(__name__)
 
@@ -150,7 +151,7 @@ class _Tic249LungAdapter:
         self._base = base_url.rstrip("/")
 
     async def reciprocate(
-        self, steps: int = 500, speed: int = 100000, cycles: int = 5, pause: float = 0.5
+        self, steps: int = 500, speed: int = TIC249_DEFAULT_TARGET_VELOCITY, cycles: int = 5, pause: float = 0.5
     ) -> dict[str, Any]:
         """Start reciprocating (back-and-forth) lung motion."""
         async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
@@ -361,7 +362,7 @@ class HardwareGateway:
             logger.error("HardwareGateway.read_sensor error: %s", exc)
             return None
 
-    async def set_lung(self, steps: int = 500, speed: int = 100000, cycles: int = 5, pause: float = 0.5) -> bool:
+    async def set_lung(self, steps: int = 500, speed: int = TIC249_DEFAULT_TARGET_VELOCITY, cycles: int = 5, pause: float = 0.5) -> bool:
         """Start artificial lung reciprocating motion (tic249 stepper)."""
         if not self.is_real:
             logger.info("[HW mock] SET_LUNG steps=%d speed=%d cycles=%d pause=%.1f", steps, speed, cycles, pause)

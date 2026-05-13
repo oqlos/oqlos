@@ -14,6 +14,15 @@ from urllib.parse import urlparse
 
 import httpx
 
+try:
+    from pimodbus.client import get_rtu_bus
+    from pimodbus.config import RtuBusSettings
+    _HAS_PIMODBUS = True
+except ImportError:  # pragma: no cover
+    get_rtu_bus = None  # type: ignore
+    RtuBusSettings = None  # type: ignore
+    _HAS_PIMODBUS = False
+
 from .base import HardwarePlugin, PluginConfig, PluginHealth, PluginStatus
 from ._shared import http_health_check, not_connected_health, health_check_exception, http_disconnect
 
@@ -43,6 +52,17 @@ class MotorPlugin(HardwarePlugin):
         self._base_url = self.config.connection_params.get("base_url", "http://localhost:49055").rstrip("/")
         self._cli_command = self.config.connection_params.get("command")
         self._cli_port = self.config.connection_params.get("port")
+        # pimodbus shared RTU bus (singleton — same bus as modbus-adc/io)
+        self._bus: Any = None
+        params = self.config.connection_params
+        self._mb_serial_port: str = params.get("serial_port", "/dev/modbus-bus")
+        self._mb_baud: int = int(params.get("baudrate", 9600))
+        self._mb_parity: str = str(params.get("parity", "N"))
+        self._mb_slave: int = int(params.get("device_id", 50))  # DRI0050 default 0x32
+        self._mb_pid_reg: int = int(params.get("pid_register", 0x0000))
+        self._mb_duty_reg: int = int(params.get("duty_register", 0x0006))
+        self._mb_freq_reg: int = int(params.get("frequency_register", 0x0007))
+        self._mb_enable_reg: int = int(params.get("enable_register", 0x0008))
 
     def validate_config(self) -> list[str]:
         """Validate motor-specific configuration."""
@@ -97,10 +117,32 @@ class MotorPlugin(HardwarePlugin):
                 logger.info(f"Connected to motor via CLI: {self._cli_command}")
                 return True
             else:
-                # Modbus RTU connection would be implemented here
-                self._status = PluginStatus.CONNECTED
-                logger.info(f"Connected to motor via modbus-rtu")
-                return True
+                # Modbus RTU via pimodbus shared bus (singleton)
+                if not _HAS_PIMODBUS:
+                    self._status = PluginStatus.ERROR
+                    logger.error("pimodbus not installed; cannot use modbus-rtu motor")
+                    return False
+                settings = RtuBusSettings(
+                    serial_port=self._mb_serial_port,
+                    baudrate=self._mb_baud,
+                    parity=self._mb_parity,
+                    timeout=self.config.timeout,
+                )
+                self._bus = get_rtu_bus(settings)
+                if await self._bus.connect():
+                    self._status = PluginStatus.CONNECTED
+                    logger.info(
+                        "Connected to motor via pimodbus on %s slave=%d",
+                        self._mb_serial_port,
+                        self._mb_slave,
+                    )
+                    return True
+                else:
+                    self._status = PluginStatus.ERROR
+                    logger.error(
+                        "pimodbus connect failed for motor on %s", self._mb_serial_port
+                    )
+                    return False
         except Exception as exc:
             self._status = PluginStatus.ERROR
             logger.error(f"Failed to connect to motor: {exc}")
@@ -110,6 +152,10 @@ class MotorPlugin(HardwarePlugin):
         """Disconnect from motor service."""
         await http_disconnect(self._client, "motor")
         self._client = None
+        if self._bus is not None:
+            # Don't close the shared bus — other plugins use it.
+            # Just drop our reference.
+            self._bus = None
         self._status = PluginStatus.CONFIGURED
 
     async def health_check(self) -> PluginHealth:
@@ -132,11 +178,45 @@ class MotorPlugin(HardwarePlugin):
                             version=health.version,
                         )
                 return health
-            else:
-                # Modbus RTU health check would be implemented here
+            elif self.config.connection_type == "modbus-rtu":
+                if self._bus is None:
+                    return PluginHealth(
+                        status=PluginStatus.ERROR,
+                        message="Motor modbus bus not connected",
+                        compatible=False,
+                    )
+                try:
+                    rr = await self._bus.call(
+                        "read_holding_registers",
+                        address=self._mb_pid_reg,
+                        count=1,
+                        device_id=self._mb_slave,
+                    )
+                except asyncio.TimeoutError:
+                    return PluginHealth(
+                        status=PluginStatus.ERROR,
+                        message=f"Motor (modbus-rtu) PID read timed out (slave={self._mb_slave}, reg=0x{self._mb_pid_reg:04X})",
+                        details={"slave": self._mb_slave, "register": self._mb_pid_reg},
+                        compatible=False,
+                    )
+                if rr is None or (hasattr(rr, "isError") and rr.isError()):
+                    return PluginHealth(
+                        status=PluginStatus.ERROR,
+                        message=f"Motor (modbus-rtu) PID read failed: {rr}",
+                        details={"slave": self._mb_slave, "register": self._mb_pid_reg},
+                        compatible=False,
+                    )
+                pid = getattr(rr, "registers", [None])[0]
                 return PluginHealth(
                     status=PluginStatus.CONNECTED,
-                    message="Motor (modbus-rtu) is healthy",
+                    message=f"Motor (modbus-rtu) is healthy, PID=0x{pid:04X}" if pid is not None else "Motor (modbus-rtu) connected (PID unknown)",
+                    details={"slave": self._mb_slave, "pid": pid},
+                    compatible=True,
+                )
+            else:
+                return PluginHealth(
+                    status=PluginStatus.CONNECTED,
+                    message="Motor is healthy (no health probe for this transport)",
                     compatible=True,
                 )
         except Exception as exc:
@@ -214,13 +294,40 @@ class MotorPlugin(HardwarePlugin):
         return {"success": False, "error": stderr.decode().strip()}
 
     async def _handle_set_speed_modbus(self, power_pct: float, start_time: float) -> dict[str, Any]:
-        """Handle set_speed command via Modbus RTU (placeholder)."""
+        """Handle set_speed via Modbus RTU.
+
+        Writes Duty (0-1000 = 0-100%) and Enable=1 to DRI0050 holding registers.
+        """
+        if self._bus is None:
+            return {"success": False, "error": "Motor modbus bus not connected"}
+        duty_value = int(round(max(0.0, min(100.0, power_pct)) * 2.55))  # 0-100% → 0-255
+        try:
+            wr_duty = await self._bus.call(
+                "write_register",
+                address=self._mb_duty_reg,
+                value=duty_value,
+                device_id=self._mb_slave,
+            )
+            if hasattr(wr_duty, "isError") and wr_duty.isError():
+                return {"success": False, "error": f"write Duty failed: {wr_duty}"}
+            wr_en = await self._bus.call(
+                "write_register",
+                address=self._mb_enable_reg,
+                value=1,
+                device_id=self._mb_slave,
+            )
+            if hasattr(wr_en, "isError") and wr_en.isError():
+                return {"success": False, "error": f"write Enable failed: {wr_en}"}
+        except Exception as exc:
+            return {"success": False, "error": f"modbus exception: {exc}"}
         duration_ms = (time.monotonic() - start_time) * 1000
         return {
             "success": True,
             "data": {
                 "power_pct": power_pct,
-                "pwm_value": power_pct * 10,
+                "pwm_value": duty_value,
+                "duty_register": self._mb_duty_reg,
+                "slave": self._mb_slave,
                 "duration_ms": duration_ms,
                 "timestamp": time.time(),
             },
@@ -268,12 +375,30 @@ class MotorPlugin(HardwarePlugin):
         return {"success": False, "error": stderr.decode().strip()}
 
     async def _handle_stop_modbus(self, start_time: float) -> dict[str, Any]:
-        """Handle stop command via Modbus RTU (placeholder)."""
+        """Handle stop via Modbus RTU — Duty=0 + Enable=0."""
+        if self._bus is None:
+            return {"success": False, "error": "Motor modbus bus not connected"}
+        try:
+            await self._bus.call(
+                "write_register",
+                address=self._mb_duty_reg,
+                value=0,
+                device_id=self._mb_slave,
+            )
+            await self._bus.call(
+                "write_register",
+                address=self._mb_enable_reg,
+                value=0,
+                device_id=self._mb_slave,
+            )
+        except Exception as exc:
+            return {"success": False, "error": f"modbus exception: {exc}"}
         duration_ms = (time.monotonic() - start_time) * 1000
         return {
             "success": True,
             "data": {
                 "stopped": True,
+                "slave": self._mb_slave,
                 "duration_ms": duration_ms,
                 "timestamp": time.time(),
             },
@@ -314,11 +439,33 @@ class MotorPlugin(HardwarePlugin):
         }
 
     async def _handle_status_modbus(self, start_time: float) -> dict[str, Any]:
-        """Handle status command via Modbus RTU (placeholder)."""
+        """Read Duty + Enable holding registers from DRI0050."""
+        if self._bus is None:
+            return {"success": False, "error": "Motor modbus bus not connected"}
+        try:
+            rr = await self._bus.call(
+                "read_holding_registers",
+                address=self._mb_duty_reg,
+                count=3,  # Duty, Frequency, Enable (consecutive 0x07-0x09)
+                device_id=self._mb_slave,
+            )
+            if hasattr(rr, "isError") and rr.isError():
+                return {"success": False, "error": f"read failed: {rr}"}
+            regs = getattr(rr, "registers", [])
+            duty = regs[0] if len(regs) > 0 else 0
+            freq = regs[1] if len(regs) > 1 else 0
+            enable = regs[2] if len(regs) > 2 else 0
+        except Exception as exc:
+            return {"success": False, "error": f"modbus exception: {exc}"}
         duration_ms = (time.monotonic() - start_time) * 1000
         return {
             "success": True,
             "data": {
+                "duty": duty,
+                "power_pct": round(duty / 2.55, 2),
+                "frequency_hz": freq,
+                "enabled": bool(enable),
+                "slave": self._mb_slave,
                 "duration_ms": duration_ms,
                 "timestamp": time.time(),
             },

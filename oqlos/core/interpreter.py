@@ -57,6 +57,7 @@ class CqlInterpreter(BaseInterpreter):
         self.mode = mode  # validate, dry-run, execute
         self._skip_waits = skip_waits
         self._goal_skipped = False  # Track if current goal execution should be skipped (flat IF)
+        self._loop_break = False  # Track REPEAT STOP inside loop bodies
         self._yaml_output = yaml_output
 
         # Initialize specialized components

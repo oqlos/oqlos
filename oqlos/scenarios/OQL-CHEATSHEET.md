@@ -85,8 +85,8 @@ Dwie opcje:
 SET pompa-główna 5 l/min
 SAVE ciśnienie-końcowe
 
-# nawiasy kwadratowe (escape)
-SET [pompa głównego obiegu] 5 l/min
+# kanoniczny SET dla nazw/wartości ze spacjami
+SET 'pompa głównego obiegu' '5 l/min'
 SAVE [wynik testu maski]
 ```
 

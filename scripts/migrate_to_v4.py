@@ -21,6 +21,11 @@ from typing import Optional
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from oqlos.core.oql_versioning import OQL_VERSION_CURRENT
+from oqlos.tools.cql_cli.formatting import canonicalize_oql_text
+
+
+def _quote_oql(value: str) -> str:
+    return "'" + str(value or "").strip().replace("\\", "\\\\").replace("'", "\\'") + "'"
 
 
 def find_oql_files(root_dir: Path) -> list[Path]:
@@ -91,11 +96,7 @@ def migrate_content(content: str, filename: str) -> tuple[str, list[str]]:
             
             new_lines.append("GOAL:")
             
-            # Jeśli nazwa ma spacje, użyj nawiasów kwadratowych
-            if " " in goal_name or "-" in goal_name:
-                new_lines.append(f"  SET NAME [{goal_name}]")
-            else:
-                new_lines.append(f"  SET NAME '{goal_name}'")
+            new_lines.append(f"  SET NAME {_quote_oql(goal_name)}")
             
             changes.append(f"GOAL: {goal_match.group(2)} -> GOAL: + SET NAME")
             i += 1
@@ -121,21 +122,10 @@ def migrate_content(content: str, filename: str) -> tuple[str, list[str]]:
             i += 1
             continue
         
-        # 5. Zamiana SET 'x' 'y' na SET x y (gdy x i y są bez spacji)
+        # 5. Zachowaj kanoniczne SET 'x' 'y'; pozostałe SET-y normalizuje post-process
         set_match = re.match(r"^SET\s+['\"]([^'\"]+)['\"]\s+['\"]([^'\"]+)['\"](.*)$", stripped, re.IGNORECASE)
         if set_match:
-            target = set_match.group(1)
-            value = set_match.group(2)
-            rest = set_match.group(3)
-            
-            # Jeśli target ma spacje, użyj nawiasów kwadratowych
-            if " " in target:
-                new_target = f"[{target}]"
-            else:
-                new_target = target
-            
-            new_lines.append(f"  SET {new_target} {value}{rest}")
-            changes.append(f"SET '{target}' '{value}' -> SET {new_target} {value}")
+            new_lines.append(f"  SET {_quote_oql(set_match.group(1))} {_quote_oql(set_match.group(2))}{set_match.group(3)}")
             i += 1
             continue
         
@@ -179,7 +169,7 @@ def migrate_content(content: str, filename: str) -> tuple[str, list[str]]:
         new_lines.append(line)
         i += 1
     
-    return "\n".join(new_lines), changes
+    return canonicalize_oql_text("\n".join(new_lines)), changes
 
 
 def main() -> int:

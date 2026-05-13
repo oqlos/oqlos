@@ -21,6 +21,7 @@ except ImportError:
     httpx = None  # type: ignore
 
 from oqlos.config import get_settings
+from oqlos.hardware.tic249_units import TIC249_DEFAULT_TARGET_VELOCITY
 
 
 # ── Peripheral name mapping ──────────────────────────────────────────────────
@@ -239,7 +240,7 @@ class FirmwareAdapter:
             val_num = _parse_numeric(value)
             cycles = int(val_num) if val_num > 0 else 0
             if cycles > 0:
-                payload = {"steps": 500, "speed": 100000, "cycles": cycles, "pause": 0.5}
+                payload = {"steps": 500, "speed": TIC249_DEFAULT_TARGET_VELOCITY, "cycles": cycles, "pause": 0.5}
                 try:
                     r = self._get_client().post(
                         "/api/v1/hardware/lung",

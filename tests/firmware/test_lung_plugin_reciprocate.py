@@ -62,7 +62,7 @@ def test_ready_false_does_not_block_reciprocate_start():
     result = asyncio.run(
         plugin.execute_command(
             "reciprocate",
-            {"steps": 500, "speed": 100000, "cycles": 3, "pause": 0.5},
+            {"steps": 500, "speed": 10_000_000, "cycles": 3, "pause": 0.5},
         )
     )
 
@@ -70,6 +70,6 @@ def test_ready_false_does_not_block_reciprocate_start():
     assert client.posts == [
         (
             "http://localhost:8205/api/reciprocate",
-            {"steps": 500, "speed": 100000, "cycles": 3, "pause": 0.5},
+            {"steps": 500, "speed": 10_000_000, "cycles": 3, "pause": 0.5},
         )
     ]

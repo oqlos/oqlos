@@ -5,11 +5,11 @@ GOAL:
   SET NAME 'XML Example — Valve Cycle'
   LOG 'TASK Włącz zawór BO13'
   LOG 'TASK Włącz zawór BO14'
-  SET PUMP 3bar
+  SET 'PUMP' '3bar'
   WAIT 2s
   LOG 'TASK Wyłącz zawór BO13'
   LOG 'TASK Wyłącz zawór BO14'
-  SET PUMP 0
+  SET 'PUMP' '0'
   IF 'Stabilność_układu' > '1.5 bar'
   CORRECT 'Stabilność_układu w zakresie 1.5 .. ∞ bar'
   ERROR 'Stabilność_układu poza zakresem 1.5 .. ∞ bar'

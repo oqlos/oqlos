@@ -2,18 +2,18 @@ VERSION: 4
 GOAL:
   SET NAME 'Przygotowanie testu ciśnieniowego'
   LOG 'TASK Resetuj system'
-  SET zasilanie 1
-  SET tryb = TEST
+  SET 'zasilanie' '1'
+  SET 'tryb' 'TEST'
   WAIT 2s
 
 GOAL:
   SET NAME 'Test na niskim zakresie'
   LOG 'TASK Wybierz czujnik LP'
-  SET ciśnienie_docelowe = 100mbar
-  SET pompa 1
+  SET 'ciśnienie_docelowe' '100mbar'
+  SET 'pompa' '1'
   WAIT 5s
   SAMPLE ciśnienie_LP START 50ms
-  SET czas_stabilizacji = 30s
+  SET 'czas_stabilizacji' '30s'
   WAIT 30s
   SAMPLE ciśnienie_LP STOP
   LOG 'CALC średnie_LP = AVG ciśnienie_LP'
@@ -34,12 +34,12 @@ GOAL:
 
 GOAL:
   SET NAME 'Test na średnim zakresie'
-  SET czujnik_LP 0
+  SET 'czujnik_LP' '0'
   LOG 'TASK Wybierz czujnik MP'
-  SET ciśnienie_docelowe = 500mbar
+  SET 'ciśnienie_docelowe' '500mbar'
   WAIT 5s
   SAMPLE ciśnienie_MP START 50ms
-  SET czas_pomiaru = 60s
+  SET 'czas_pomiaru' '60s'
   WAIT 60s
   SAMPLE ciśnienie_MP STOP
   LOG 'CALC średnie_MP = AVG ciśnienie_MP'
@@ -58,7 +58,7 @@ GOAL:
 
 GOAL:
   SET NAME 'Zakończenie'
-  SET pompa 0
-  SET czujnik_MP 0
-  SET tryb = IDLE
+  SET 'pompa' '0'
+  SET 'czujnik_MP' '0'
+  SET 'tryb' 'IDLE'
   LOG 'TASK Generuj raport'

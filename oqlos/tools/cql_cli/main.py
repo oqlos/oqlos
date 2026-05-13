@@ -22,6 +22,7 @@ from oqlos.tools.cql_cli.commands import (
     run_single_command,
     execute_command_with_cleanup,
 )
+from oqlos.tools.cql_cli.formatting import canonicalize_oql_text
 from oqlos.tools.cql_cli.preflight import preflight_hardware
 
 
@@ -97,6 +98,17 @@ def create_hardware_parser(action: str) -> argparse.ArgumentParser:
     parser.add_argument("--config", help="Path to oqlos.yaml (default: auto-detect)")
     if action == "doctor":
         parser.add_argument("--fix", action="store_true", help="Apply safe doctor repairs")
+    return parser
+
+
+def create_format_parser() -> argparse.ArgumentParser:
+    """Create parser for `oqlctl format`."""
+    parser = argparse.ArgumentParser(
+        prog="oqlctl format",
+        description="Format an OQL/CQL file to canonical OQL syntax.",
+    )
+    parser.add_argument("file", help="CQL/OQL file to format")
+    parser.add_argument("--write", "-w", action="store_true", help="Write changes back to the file")
     return parser
 
 
@@ -342,6 +354,18 @@ def run_cmd_mode(argv: list[str]) -> None:
     execute_command_with_cleanup(args, result, yaml_output, args.quiet)
 
 
+def run_format_mode(argv: list[str]) -> None:
+    """Format a local OQL/CQL file."""
+    args = create_format_parser().parse_args(argv)
+    path = Path(args.file)
+    source = path.read_text(encoding="utf-8")
+    formatted = canonicalize_oql_text(source)
+    if args.write:
+        path.write_text(formatted, encoding="utf-8")
+        return
+    print(formatted, end="")
+
+
 def _dispatch_to_mode(argv: list[str]) -> None:
     """Dispatch to appropriate CLI mode based on arguments."""
     # Empty args - show help
@@ -357,6 +381,10 @@ def _dispatch_to_mode(argv: list[str]) -> None:
     if argv[0] == "run":
         args = create_run_parser().parse_args(argv[1:])
         run_file_mode(args)
+        return
+
+    if argv[0] == "format":
+        run_format_mode(argv[1:])
         return
 
     # Not cmd mode - file mode

@@ -446,6 +446,51 @@ BASE_COMMANDS: tuple[str, ...] = (
 
 # ── Main parser ──────────────────────────────────────────────────
 
+REPEAT_BLOCK_RE = re.compile(r"^(\s*)REPEAT\s+(\d+)\s*:\s*$", re.IGNORECASE)
+
+
+def _line_indent(line: str) -> int:
+    expanded = str(line or "").replace("\t", "    ")
+    return len(expanded) - len(expanded.lstrip(" "))
+
+
+def _expand_repeat_block_lines(lines: list[str]) -> list[str]:
+    expanded: list[str] = []
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        match = REPEAT_BLOCK_RE.match(line)
+        if not match:
+            expanded.append(line)
+            i += 1
+            continue
+
+        repeat_indent = _line_indent(match.group(1))
+        count = max(0, int(match.group(2)))
+        block: list[str] = []
+        j = i + 1
+        while j < len(lines):
+            candidate = lines[j]
+            if candidate.strip() and _line_indent(candidate) <= repeat_indent:
+                break
+            block.append(candidate)
+            j += 1
+
+        if not block:
+            expanded.append(line)
+            i += 1
+            continue
+
+        block_expanded = _expand_repeat_block_lines(block)
+        for _ in range(count):
+            expanded.extend(block_expanded)
+        i = j
+    return expanded
+
+
+def _expand_repeat_blocks(text: str) -> list[str]:
+    return _expand_repeat_block_lines((text or "").splitlines())
+
 
 def parse_oql(text: str, filename: str = "<string>") -> OqlDoc:
     """Parse OQL source into an :class:`OqlDoc`.
@@ -484,7 +529,7 @@ def parse_oql(text: str, filename: str = "<string>") -> OqlDoc:
 
     current: OqlBlock | None = None
 
-    for ln, raw in enumerate(text.splitlines(), 1):
+    for ln, raw in enumerate(_expand_repeat_blocks(text), 1):
         line = raw.strip()
 
         # blank / comment
