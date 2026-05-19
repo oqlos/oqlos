@@ -58,14 +58,14 @@ def test_probe_waveshare_modbus_detects_working_port(monkeypatch):
             {"device": "/dev/ttyACM1", "product": "USB Single Serial", "manufacturer": "QinHeng", "serial_number": "5958006895"},
         ],
     )
-    _install_fake_pymodbus(monkeypatch, responsive_port="/dev/ttyACM1", responsive_baud=19200)
+    _install_fake_pymodbus(monkeypatch, responsive_port="/dev/ttyACM1", responsive_baud=9600)
 
     result = modbus_discovery.probe_waveshare_modbus()
 
     assert result["connected"] is True
     assert result["modbus_device_responds"] is True
     assert result["serial_port"] == "/dev/ttyACM1"
-    assert result["baudrate"] == 19200
+    assert result["baudrate"] == 9600
     assert result["parity"] == "N"
     assert result["adapter"] == "USB Single Serial"
 
@@ -85,6 +85,26 @@ def test_probe_waveshare_modbus_reports_adapter_only_when_no_response(monkeypatc
     assert result["connected"] is True
     assert result["modbus_device_responds"] is False
     assert result["serial_port"] == "/dev/ttyACM1"
-    assert result["baudrate"] == 19200
+    assert result["baudrate"] == 9600
     assert result["parity"] == "N"
     assert "No Modbus RTU response" in result["note"]
+
+
+def test_probe_waveshare_modbus_can_scan_high_baud_when_enabled(monkeypatch):
+    monkeypatch.setenv("PIMODBUS_ALLOW_HIGH_BAUD_SCAN", "1")
+    monkeypatch.setattr(
+        modbus_discovery,
+        "list_serial_ports",
+        lambda: [
+            {"device": "/dev/ttyACM1", "product": "USB Single Serial", "manufacturer": "QinHeng", "serial_number": "5958006895"},
+        ],
+    )
+    _install_fake_pymodbus(monkeypatch, responsive_port="/dev/ttyACM1", responsive_baud=19200)
+
+    result = modbus_discovery.probe_waveshare_modbus()
+
+    assert result["connected"] is True
+    assert result["modbus_device_responds"] is True
+    assert result["serial_port"] == "/dev/ttyACM1"
+    assert result["baudrate"] == 19200
+    assert result["parity"] == "N"

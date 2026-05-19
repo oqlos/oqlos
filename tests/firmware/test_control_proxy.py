@@ -8,6 +8,7 @@ import httpx
 import pytest
 
 from oqlos.hardware.control_proxy import (
+    FALLBACK_ADAPTERS,
     HardwareProxyError,
     OqlosHardwareProxy,
     OqlosHardwareProxyConfig,
@@ -73,7 +74,7 @@ def test_identify_returns_unavailable_payload_after_connection_failures():
 
     assert payload["mode"] == "unavailable"
     assert payload["detected"] == 0
-    assert payload["total"] == 4
+    assert payload["total"] == len(FALLBACK_ADAPTERS)
     assert {adapter["status"] for adapter in payload["adapters"]} == {"no-access"}
     assert payload["diagnostics"]["health"]["detail"]["timeout_seconds"] == 15
 
@@ -119,6 +120,64 @@ def test_peripheral_status_proxies_plugin_health():
     assert payload["command"] == "health"
     assert calls[0][0] == "GET"
     assert calls[0][1].endswith("/api/v1/plugins/modbus-io/health")
+
+
+def test_peripheral_status_artificial_lung_uses_logical_lung_api():
+    calls = []
+
+    class FakeClient:
+        async def request(self, method, target, params=None, json=None, timeout=None):
+            calls.append((method, target, params, json))
+            return FakeOqlosResponse({"success": True, "data": {"connected": True}})
+
+    payload = run(proxy_with_client(FakeClient()).peripheral_status("artificial-lung"))
+
+    assert payload["ok"] is True
+    assert payload["peripheral_id"] == "artificial-lung"
+    assert payload["command"] == "status"
+    assert calls[0][0] == "GET"
+    assert calls[0][1].endswith("/api/v1/hardware/artificial-lung/status")
+
+
+def test_artificial_lung_diagnostic_resolves_to_logical_lung_api():
+    method, path, params = resolve_diagnostic_target("artificial-lung", "lung_stop", {})
+
+    assert method == "POST"
+    assert path == "/api/v1/hardware/artificial-lung/command"
+    assert params == {"command": "lung_stop", "args": {}}
+
+
+def test_peripheral_status_rtc_uses_hardware_rtc_status():
+    calls = []
+
+    class FakeClient:
+        async def request(self, method, target, params=None, json=None, timeout=None):
+            calls.append((method, target, params, json))
+            return FakeOqlosResponse({"ok": True, "peripheral_id": "rtc", "result": {"data": {"connected": True}}})
+
+    payload = run(proxy_with_client(FakeClient()).peripheral_status("rtc"))
+
+    assert payload["ok"] is True
+    assert payload["peripheral_id"] == "rtc"
+    assert calls[0][0] == "GET"
+    assert calls[0][1].endswith("/api/v1/hardware/rtc/status")
+
+
+def test_rtc_diagnostic_uses_hardware_rtc_command():
+    calls = []
+
+    class FakeClient:
+        async def request(self, method, target, params=None, json=None, timeout=None):
+            calls.append((method, target, params, json))
+            return FakeOqlosResponse({"ok": True, "peripheral_id": "rtc", "command": "sync_to_system"})
+
+    payload = run(proxy_with_client(FakeClient()).diagnostic_command("rtc", "sync_to_system", {"force": True}))
+
+    assert payload["ok"] is True
+    assert payload["peripheral_id"] == "rtc"
+    assert calls[0][0] == "POST"
+    assert calls[0][1].endswith("/api/v1/hardware/rtc/command")
+    assert calls[0][3] == {"command": "sync_to_system", "args": {"force": True}}
 
 
 def test_peripheral_status_returns_structured_payload_for_plugin_500():

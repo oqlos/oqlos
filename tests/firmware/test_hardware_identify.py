@@ -91,8 +91,12 @@ def test_hardware_identify_includes_diagnostics(monkeypatch):
     result = asyncio.run(hw.hardware_identify())
 
     assert result["mode"] == "real"
-    assert result["detected"] == 1
-    assert result["total"] == 4
+    statuses = {adapter["id"]: adapter["status"] for adapter in result["adapters"]}
+    assert statuses["motor-dri0050"] == "ok"
+    assert statuses["modbus-io"] in {"offline", "no-access", "adapter-only"}
+    assert statuses["modbus-adc"] in {"offline", "no-access", "adapter-only"}
+    assert result["detected"] == sum(1 for status in statuses.values() if status in {"ok", "adapter-only"})
+    assert result["total"] == len(result["adapters"])
     assert result["diagnostics"]["health"]["motor"] == "ok"
     assert result["diagnostics"]["serial_ports"][0]["device"] == "/dev/ttyUSB0"
     assert "platform" in result

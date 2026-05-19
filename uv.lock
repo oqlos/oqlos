@@ -2050,7 +2050,7 @@ wheels = [
 
 [[package]]
 name = "oqlos"
-version = "0.1.18"
+version = "0.1.19"
 source = { editable = "." }
 dependencies = [
     { name = "costs" },
@@ -2065,6 +2065,7 @@ dependencies = [
     { name = "pydantic-settings" },
     { name = "pymodbus" },
     { name = "pyserial" },
+    { name = "pytest-asyncio" },
     { name = "pyyaml" },
     { name = "testql" },
     { name = "uvicorn" },
@@ -2117,6 +2118,7 @@ requires-dist = [
     { name = "pymodbus", specifier = ">=3.6" },
     { name = "pyserial", specifier = ">=3.5" },
     { name = "pytest", marker = "extra == 'dev'" },
+    { name = "pytest-asyncio", specifier = ">=0.23" },
     { name = "pytest-asyncio", marker = "extra == 'dev'" },
     { name = "pyyaml", specifier = ">=6.0" },
     { name = "rpi-gpio", marker = "extra == 'rpi'", specifier = ">=0.7" },

@@ -36,7 +36,7 @@ _ensure_local_pimodbus_on_path()
 from pimodbus.discovery import list_serial_ports, probe_modbus_adc, probe_modbus_io  # noqa: E402
 
 DEFAULT_MODBUS_SERIAL = os.getenv("MODBUS_SERIAL_PORT") or os.getenv("MODBUS_BUS_SERIAL_PORT") or "/dev/ttyACM1"
-DEFAULT_MODBUS_BAUD = int(os.getenv("MODBUS_BAUD") or os.getenv("MODBUS_BUS_BAUD") or "19200")
+DEFAULT_MODBUS_BAUD = int(os.getenv("MODBUS_BAUD") or os.getenv("MODBUS_BUS_BAUD") or "9600")
 DEFAULT_MODBUS_PARITY = (os.getenv("MODBUS_PARITY") or os.getenv("MODBUS_BUS_PARITY") or "N").upper()
 DEFAULT_MODBUS_DEVICE_ID = int(os.getenv("MODBUS_DEVICE_ID", "1"))
 DEFAULT_MODBUS_ADC_SERIAL = os.getenv("MODBUS_ADC_SERIAL_PORT") or os.getenv("MODBUS_BUS_SERIAL_PORT") or "/dev/ttyUSB0"

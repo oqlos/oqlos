@@ -21,7 +21,7 @@ class ModbusPlugin(HardwarePlugin):
         connection_type: "modbus-rtu" or "modbus-tcp"
         connection_params:
             serial_port: e.g., "/dev/ttyACM0" (for RTU)
-            baudrate: e.g., 19200 (for RTU)
+            baudrate: e.g., 9600 (for RTU)
             parity: e.g., "N" (for RTU)
             host: e.g., "localhost" (for TCP)
             port: e.g., 502 (for TCP)
@@ -47,7 +47,7 @@ class ModbusPlugin(HardwarePlugin):
             serial_port = self.config.connection_params.get("serial_port")
             if not serial_port:
                 errors.append("serial_port is required in connection_params for modbus-rtu")
-            baudrate = self.config.connection_params.get("baudrate", 19200)
+            baudrate = self.config.connection_params.get("baudrate", 9600)
             if not isinstance(baudrate, int) or baudrate <= 0:
                 errors.append("baudrate must be a positive integer")
             parity = self.config.connection_params.get("parity", "N")
@@ -84,7 +84,7 @@ class ModbusPlugin(HardwarePlugin):
                     return False
 
                 serial_port = self.config.connection_params.get("serial_port", "/dev/ttyACM0")
-                baudrate = self.config.connection_params.get("baudrate", 19200)
+                baudrate = self.config.connection_params.get("baudrate", 9600)
                 parity = self.config.connection_params.get("parity", "N")
                 settings = RtuBusSettings(
                     serial_port=serial_port,
@@ -295,7 +295,7 @@ class ModbusPlugin(HardwarePlugin):
                     "type": "object",
                     "properties": {
                         "serial_port": {"type": "string"},
-                        "baudrate": {"type": "integer", "default": 19200},
+                        "baudrate": {"type": "integer", "default": 9600},
                         "parity": {"type": "string", "enum": ["N", "E", "O"], "default": "N"},
                         "device_id": {"type": "integer", "default": 1, "minimum": 1},
                         "host": {"type": "string"},

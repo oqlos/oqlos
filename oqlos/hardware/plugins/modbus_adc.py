@@ -48,6 +48,18 @@ _SENSOR_CHANNEL_ALIASES: dict[str, int] = {
     "ai8": 7,
 }
 
+# Semantic aliases used in scenarios and shell diagnostics.
+# IPx = input pressure x, IVx = input voltage x, IAx = input current x.
+for idx in range(8):
+    ch = idx
+    n = idx + 1
+    _SENSOR_CHANNEL_ALIASES[f"ip{n}"] = ch
+    _SENSOR_CHANNEL_ALIASES[f"iv{n}"] = ch
+    _SENSOR_CHANNEL_ALIASES[f"ia{n}"] = ch
+    _SENSOR_CHANNEL_ALIASES[f"input-pressure-{n}"] = ch
+    _SENSOR_CHANNEL_ALIASES[f"input-voltage-{n}"] = ch
+    _SENSOR_CHANNEL_ALIASES[f"input-current-{n}"] = ch
+
 
 def _resolve_channel(raw: Any) -> int | None:
     sensor_key = str(raw).strip()

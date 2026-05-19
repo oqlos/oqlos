@@ -53,7 +53,7 @@ class Settings(BaseSettings):
         ),
     )
     modbus_baud: int = Field(
-        default=19200,
+        default=9600,
         validation_alias=AliasChoices(
             "OQLOS_MODBUS_BAUD",
             "MODBUS_BAUD",

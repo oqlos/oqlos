@@ -14,9 +14,13 @@ import platform
 import sys
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Body, HTTPException, Query
 from oqlos.config import get_settings
 from oqlos.hardware.discovery import list_serial_ports, probe_waveshare_modbus, probe_waveshare_modbus_adc
+from oqlos.hardware.artificial_lung import execute_command as execute_artificial_lung_command
+from oqlos.hardware.artificial_lung import get_peripheral_status as get_artificial_lung_status
+from oqlos.hardware.identify_enrichment import enrich_identify_payload
+from oqlos.hardware.rtc_probe import build_rtc_peripheral_status, run_rtc_command
 from oqlos.hardware.tic249_units import TIC249_DEFAULT_TARGET_VELOCITY
 
 logger = logging.getLogger(__name__)
@@ -76,7 +80,7 @@ _HARDWARE_REGISTRY: list[dict[str, Any]] = [
         "digital_outputs": "DO1-DO8 (5-40V, open-drain, 500mA/ch)",
         "digital_inputs": "DI1-DI8 (5-36V, optocoupler isolated)",
         "interface": "RS485 via USB serial adapter",
-        "default_config": "19200 baud, N-8-1, slave address 1",
+        "default_config": "9600 baud, N-8-1, slave address 1",
         "wiki": "https://www.waveshare.com/wiki/Modbus_RTU_IO_8CH",
     },
 ]
@@ -619,11 +623,10 @@ async def hardware_identify(
         adapters.append(entry)
 
     mode = health.get("mode", "mock")
-    connected_count = sum(1 for a in adapters if a["status"] == "ok")
-    return {
+    payload = {
         "mode": mode,
         "platform": _detect_runtime_platform(),
-        "detected": connected_count,
+        "detected": sum(1 for a in adapters if a["status"] == "ok"),
         "total": len(adapters),
         "adapters": adapters,
         "diagnostics": {
@@ -635,6 +638,7 @@ async def hardware_identify(
             **diagnostics,
         },
     }
+    return enrich_identify_payload(payload)
 
 
 @router.post("/valve/{valve_id}")
@@ -712,3 +716,43 @@ async def disable_lung():
     """De-energize the artificial lung motor (release coils)."""
     ok = await _gw().disable_lung()
     return {"ok": ok, "status": "de-energized"}
+
+
+@router.get("/artificial-lung/status")
+async def artificial_lung_status():
+    """Logical lung state merged with motor connectivity hints."""
+    return await get_artificial_lung_status(_gw())
+
+
+@router.post("/artificial-lung/command")
+async def artificial_lung_command(payload: dict[str, Any] = Body(default_factory=dict)):
+    """Execute artificial-lung logical commands (set_lpm, lung_*, emergency_stop)."""
+    command = str(payload.get("command") or "").strip()
+    if not command:
+        raise HTTPException(status_code=400, detail="command is required")
+    args = payload.get("args")
+    if args is None:
+        args = {}
+    if not isinstance(args, dict):
+        raise HTTPException(status_code=400, detail="args must be an object")
+    return await execute_artificial_lung_command(command, args, _gw())
+
+
+@router.get("/rtc/status")
+async def rtc_status():
+    """Return runtime status for the RTC sidecar."""
+    return await asyncio.to_thread(build_rtc_peripheral_status)
+
+
+@router.post("/rtc/command")
+async def rtc_command(payload: dict[str, Any] = Body(default_factory=dict)):
+    """Execute a diagnostic command against the RTC sidecar."""
+    command = str(payload.get("command") or "").strip()
+    if not command:
+        raise HTTPException(status_code=400, detail="command is required")
+    args = payload.get("args")
+    if args is None:
+        args = {}
+    if not isinstance(args, dict):
+        raise HTTPException(status_code=400, detail="args must be an object")
+    return await asyncio.to_thread(run_rtc_command, command, args)
