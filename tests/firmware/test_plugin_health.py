@@ -87,6 +87,14 @@ class _CapturingModbusClient:
         return _OkModbusResult()
 
 
+class _CapturingAsyncModbusBus(_CapturingModbusClient):
+    async def read_coils(self, **kwargs):
+        return super().read_coils(**kwargs)
+
+    async def write_coil(self, **kwargs):
+        return super().write_coil(**kwargs)
+
+
 class _CapturingModbusAdcClient:
     def __init__(self):
         self.read_kwargs = None
@@ -273,6 +281,30 @@ def test_modbus_rtu_uses_configured_device_id_for_health_and_writes():
     assert client.read_kwargs["device_id"] == 7
     assert client.write_kwargs["device_id"] == 7
     assert result["success"] is True
+
+
+def test_modbus_rtu_health_infers_mode_from_connected_bus():
+    client = _CapturingAsyncModbusBus()
+    plugin = ModbusPlugin(
+        PluginConfig(
+            plugin_id="modbus-io",
+            enabled=True,
+            connection_type="modbus-rtu",
+            connection_params={"serial_port": "/dev/ttyACM0", "device_id": 3},
+            timeout=0.1,
+        )
+    )
+    plugin._bus = client
+    plugin._mode = "unknown"
+
+    health = asyncio.run(plugin.health_check())
+    result = asyncio.run(plugin.execute_command("set_coil", {"coil": 1, "value": True}))
+
+    assert health.status == PluginStatus.CONNECTED
+    assert health.compatible is True
+    assert health.details["device_id"] == 3
+    assert result["success"] is True
+    assert plugin._mode == "rtu"
 
 
 def test_plugin_registry_health_checks_run_concurrently_with_timeout(monkeypatch):

@@ -828,6 +828,20 @@ pip install -e ".[dev]"
 pytest
 ```
 
+### Local `hardware_client` source fallback (dev)
+
+`oqlos.hardware.control_proxy` can load `hardware_client` from a local source
+tree when the package is not available in the active virtualenv.
+
+For multi-repo development, set:
+
+```bash
+export OQLOS_HARDWARE_CLIENT_SRC=/home/tom/github/maskservice/c2004/packages/hardware-client-py/src
+```
+
+This keeps local test runs and `goal -a` stable even when environment sync
+tools reinstall dependencies.
+
 ## Documentation
 
 - 💡 [Examples](./examples) — Usage examples and code samples

@@ -135,3 +135,34 @@ def test_set_pump_uses_registry_instance_that_recovers_after_startup(monkeypatch
 
     assert result == {"success": True, "command": "set_speed", "data": {"power_pct": 20}}
     assert gateway._plugins["motor-dri0050"] is plugin
+
+
+def test_health_reports_configured_disabled_plugins(monkeypatch):
+    async def _empty_health_results(cls, timeout=None):
+        return {}
+
+    gateway = PluginHardwareGateway(mode="mock")
+    gateway.mode = "real"
+    gateway._init_done = True
+    gateway._plugin_configs = {
+        "modbus-adc": PluginConfig(
+            plugin_id="modbus-adc",
+            enabled=False,
+            connection_type="modbus-rtu",
+            connection_params={"serial_port": "/dev/serial/by-id/adc-not-present"},
+        ),
+    }
+
+    monkeypatch.setattr(
+        PluginRegistry,
+        "health_check_all",
+        classmethod(_empty_health_results),
+    )
+
+    result = asyncio.run(gateway.health())
+
+    assert result["modbus-adc"] == {
+        "status": "disabled",
+        "message": "Plugin is disabled in OqlOS configuration",
+        "compatible": False,
+    }

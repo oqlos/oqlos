@@ -17,6 +17,21 @@ class _FakeGateway:
         }
 
 
+class _UnavailableAdcGateway:
+    async def health(self) -> dict[str, object]:
+        return {
+            "mode": "real",
+            "modbus-adc": {
+                "status": "error",
+                "message": "Modbus ADC read_input_registers timed out after 2.0s",
+                "compatible": False,
+            },
+        }
+
+    async def read_sensor(self, sensor_id: str) -> float:
+        raise AssertionError(f"unexpected live read for {sensor_id}")
+
+
 def test_collect_hardware_diagnostics_exposes_ports(monkeypatch):
     monkeypatch.setattr(
         hw,
@@ -101,6 +116,51 @@ def test_hardware_identify_includes_diagnostics(monkeypatch):
     assert result["diagnostics"]["serial_ports"][0]["device"] == "/dev/ttyUSB0"
     assert "platform" in result
     assert any(adapter["id"] == "motor-dri0050" for adapter in result["adapters"])
+
+
+def test_read_sensors_batch_reports_unavailable_modbus_without_503(monkeypatch):
+    monkeypatch.setattr(hw, "_gateway", _UnavailableAdcGateway())
+
+    result = asyncio.run(hw.read_sensors_batch(sensor_ids="ai01,ai02,ai03"))
+
+    assert result["ok"] is False
+    assert result["sensors"]["ai01"]["ok"] is False
+    assert result["sensors"]["ai01"]["value"] is None
+    assert "modbus_adc" in result["diagnostics"]
+
+
+def test_hardware_temperature_returns_compatible_payload(monkeypatch):
+    monkeypatch.setattr(
+        hw,
+        "_read_cpu_temperature",
+        lambda: {"cpu_temp_celsius": None, "source": None, "available": False},
+    )
+
+    result = asyncio.run(hw.hardware_temperature())
+
+    assert result["ok"] is False
+    assert result["result"]["data"]["available"] is False
+    assert result["peripheral_id"] == "cpu-temperature"
+
+
+def test_hardware_diagnose_keeps_sensor_errors_in_payload(monkeypatch):
+    monkeypatch.setattr(hw, "_gateway", _UnavailableAdcGateway())
+
+    result = asyncio.run(hw.hardware_diagnose())
+
+    assert result["ok"] is True
+    assert result["gateway_mode"] == "real"
+    assert result["sensors"]["ai01"]["ok"] is False
+
+
+def test_modbus_adc_raw_reports_unavailable_health_without_404(monkeypatch):
+    monkeypatch.setattr(hw, "_gateway", _UnavailableAdcGateway())
+
+    result = asyncio.run(hw.read_modbus_adc_raw())
+
+    assert result["ok"] is False
+    assert result["error"] == "modbus-adc not compatible"
+    assert result["modbus_adc_health"]["compatible"] is False
 
 
 class _ModbusTimeoutGateway:

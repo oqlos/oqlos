@@ -67,19 +67,9 @@ plugins:
   # -----------------------------------------------------------------------
   motor-dri0050:
     enabled: true
-    connection_type: modbus-rtu
+    connection_type: http
     connection_params:
-      serial_port: /dev/serial/by-id/usb-1a86_USB2.0-Serial-if00-port0
-      baudrate: 9600
-      parity: N
-      stopbits: 1
-      bytesize: 8
-      device_id: 50
-      # Register addresses (DFRobot DRI0050 V1.0 — from driver.py)
-      pid_register: 0x0000        # read-only Product ID
-      duty_register: 0x0006       # 0-255 duty cycle (0%=0, 100%=255)
-      frequency_register: 0x0007  # prescaler: freq = 12MHz/256/(val+1)
-      enable_register: 0x0008     # 0=off, 1=on
+      base_url: http://host.docker.internal:8203
     timeout: 2.0
     retry_count: 3
     metadata:

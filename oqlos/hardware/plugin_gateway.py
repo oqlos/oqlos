@@ -500,5 +500,20 @@ class PluginHardwareGateway:
                 "message": health.message,
                 "compatible": health.compatible,
             }
+        for plugin_id, config in self._plugin_configs.items():
+            if plugin_id in result:
+                continue
+            if not config.enabled:
+                result[plugin_id] = {
+                    "status": "disabled",
+                    "message": "Plugin is disabled in OqlOS configuration",
+                    "compatible": False,
+                }
+            else:
+                result[plugin_id] = {
+                    "status": "error",
+                    "message": "Plugin is configured but no active instance is connected",
+                    "compatible": False,
+                }
 
         return result

@@ -26,6 +26,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - low VIN (missing motor supply),
   - Modbus adapter-present but device-silent mode.
 
+## [0.1.22] - 2026-05-27
+
+### Docs
+- Update README.md
+- Update docs/README.md
+
+### Test
+- Update tests/firmware/test_hardware_identify.py
+- Update tests/firmware/test_plugin_gateway_env.py
+- Update tests/firmware/test_plugin_health.py
+
+### Other
+- Update oqlos.yaml
+- Update oqlos/api/hardware.py
+- Update oqlos/hardware/plugin_gateway.py
+- Update oqlos/hardware/plugins/modbus.py
+- Update uv.lock
+
 ## [0.1.21] - 2026-05-19
 
 ### Docs

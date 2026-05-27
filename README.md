@@ -3,17 +3,17 @@
 
 ## AI Cost Tracking
 
-![PyPI](https://img.shields.io/badge/pypi-costs-blue) ![Version](https://img.shields.io/badge/version-0.1.21-blue) ![Python](https://img.shields.io/badge/python-3.9+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
-![AI Cost](https://img.shields.io/badge/AI%20Cost-$6.60-orange) ![Human Time](https://img.shields.io/badge/Human%20Time-31.2h-blue) ![Model](https://img.shields.io/badge/Model-openrouter%2Fqwen%2Fqwen3--coder--next-lightgrey)
+![PyPI](https://img.shields.io/badge/pypi-costs-blue) ![Version](https://img.shields.io/badge/version-0.1.22-blue) ![Python](https://img.shields.io/badge/python-3.9+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
+![AI Cost](https://img.shields.io/badge/AI%20Cost-$6.75-orange) ![Human Time](https://img.shields.io/badge/Human%20Time-31.2h-blue) ![Model](https://img.shields.io/badge/Model-openrouter%2Fqwen%2Fqwen3--coder--next-lightgrey)
 
-- 🤖 **LLM usage:** $6.6000 (44 commits)
+- 🤖 **LLM usage:** $6.7500 (45 commits)
 - 👤 **Human dev:** ~$3116 (31.2h @ $100/h, 30min dedup)
 
-Generated on 2026-05-19 using [openrouter/qwen/qwen3-coder-next](https://openrouter.ai/qwen/qwen3-coder-next)
+Generated on 2026-05-27 using [openrouter/qwen/qwen3-coder-next](https://openrouter.ai/qwen/qwen3-coder-next)
 
 ---
 
-![Version](https://img.shields.io/badge/version-0.1.21-blue) ![Python](https://img.shields.io/badge/python-3.10+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
+![Version](https://img.shields.io/badge/version-0.1.22-blue) ![Python](https://img.shields.io/badge/python-3.10+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
 
 
 OqlOS is the core runtime for executing OQL (Operation Query Language) hardware testing scenarios. It provides the execution engine, hardware abstraction layer, and API server for running automated hardware tests.
@@ -27,6 +27,20 @@ pip install -e ".[dev]"
 # Basic installation
 pip install -e .
 ```
+
+### Local `hardware_client` source fallback (dev)
+
+`oqlos.hardware.control_proxy` can load `hardware_client` from a local source
+tree when the package is not available in the current virtualenv.
+
+If you work in a multi-repo checkout, set:
+
+```bash
+export OQLOS_HARDWARE_CLIENT_SRC=/home/tom/github/maskservice/c2004/packages/hardware-client-py/src
+```
+
+This keeps local test runs and `goal -a` stable even when environment sync
+tools reinstall dependencies.
 
 ### CLI Quick Check (step by step)
 

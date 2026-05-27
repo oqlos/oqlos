@@ -152,7 +152,8 @@ class ModbusPlugin(HardwarePlugin):
 
         try:
             # Try to read a coil to test connection
-            if self._mode == "rtu":
+            if self._mode == "rtu" or (self._bus is not None and self.config.connection_type == "modbus-rtu"):
+                self._mode = "rtu"
                 try:
                     result = await self._rtu_call(
                         "read_coils",
@@ -215,7 +216,8 @@ class ModbusPlugin(HardwarePlugin):
                 if not isinstance(coil, int) or coil < 0:
                     return {"success": False, "error": "coil must be a non-negative integer"}
 
-                if self._mode == "rtu":
+                if self._mode == "rtu" or (self._bus is not None and self.config.connection_type == "modbus-rtu"):
+                    self._mode = "rtu"
                     result = await self._rtu_call(
                         "write_coil",
                         address=coil,

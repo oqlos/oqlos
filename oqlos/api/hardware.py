@@ -674,6 +674,212 @@ async def read_sensor(sensor_id: str):
     return {"sensor_id": sensor_id, "value": value}
 
 
+def _read_cpu_temperature() -> dict[str, Any]:
+    """Best-effort CPU temperature read for HUI status panels."""
+    thermal_paths = [
+        pathlib.Path("/sys/class/thermal/thermal_zone0/temp"),
+        *sorted(pathlib.Path("/sys/class/thermal").glob("thermal_zone*/temp")),
+    ]
+    seen: set[pathlib.Path] = set()
+    for path in thermal_paths:
+        if path in seen:
+            continue
+        seen.add(path)
+        try:
+            raw = path.read_text(encoding="utf-8").strip()
+            if not raw:
+                continue
+            temp_millidegrees = float(raw)
+        except (OSError, ValueError):
+            continue
+        return {
+            "cpu_temp_celsius": round(temp_millidegrees / 1000, 1),
+            "source": str(path),
+            "available": True,
+        }
+    return {
+        "cpu_temp_celsius": None,
+        "source": None,
+        "available": False,
+    }
+
+
+@router.get("/temperature")
+async def hardware_temperature() -> dict[str, Any]:
+    """Read CPU temperature, returning an HUI-compatible unavailable payload if absent."""
+    temp_data = _read_cpu_temperature()
+    return {
+        "ok": bool(temp_data["available"]),
+        "peripheral_id": "cpu-temperature",
+        "command": "read_temperature",
+        **({"error": "Temperature sensor not available"} if not temp_data["available"] else {}),
+        "result": {
+            "success": bool(temp_data["available"]),
+            "data": temp_data,
+        },
+    }
+
+
+@router.get("/sensors/batch")
+async def read_sensors_batch(
+    sensor_ids: str = Query(
+        default="ai01,ai02,ai03",
+        description="Comma-separated sensor IDs",
+    ),
+) -> dict[str, Any]:
+    """Read multiple sensors without making HUI fall back to repeated failing requests."""
+    ids = [sensor_id.strip() for sensor_id in sensor_ids.split(",") if sensor_id.strip()]
+    health = await _gw().health()
+    modbus_adc_health = health.get("modbus-adc")
+    modbus_unavailable = (
+        health.get("mode") == "real"
+        and isinstance(modbus_adc_health, dict)
+        and not modbus_adc_health.get("compatible")
+    )
+
+    sensors: dict[str, dict[str, Any]] = {}
+    for sensor_id in ids:
+        if modbus_unavailable:
+            sensors[sensor_id] = {
+                "sensor_id": sensor_id,
+                "value": None,
+                "ok": False,
+                "error": "Modbus ADC is not available for real sensor readings",
+                "modbus_adc": modbus_adc_health,
+            }
+            continue
+        try:
+            value = await _gw().read_sensor(sensor_id)
+            sensors[sensor_id] = {
+                "sensor_id": sensor_id,
+                "value": value,
+                "ok": value is not None,
+            }
+        except Exception as exc:
+            sensors[sensor_id] = {
+                "sensor_id": sensor_id,
+                "value": None,
+                "ok": False,
+                "error": str(exc),
+            }
+
+    return {
+        "ok": all(sensor.get("ok") for sensor in sensors.values()) if sensors else False,
+        "sensors": sensors,
+        "diagnostics": {
+            "mode": health.get("mode"),
+            **({"modbus_adc": modbus_adc_health} if modbus_unavailable else {}),
+        },
+    }
+
+
+@router.get("/diagnose")
+async def hardware_diagnose() -> dict[str, Any]:
+    """Return HUI-friendly hardware diagnostics without failing the request."""
+    try:
+        health = await _gw().health()
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)}
+
+    modbus_adc_health = health.get("modbus-adc")
+    modbus_unavailable = (
+        health.get("mode") == "real"
+        and isinstance(modbus_adc_health, dict)
+        and not modbus_adc_health.get("compatible")
+    )
+    sensors: dict[str, dict[str, Any]] = {}
+    for sensor_id in ("ai01", "ai02", "ai03"):
+        if modbus_unavailable:
+            sensors[sensor_id] = {
+                "sensor_id": sensor_id,
+                "value": None,
+                "ok": False,
+                "error": "Modbus ADC is not available for real sensor readings",
+                "modbus_adc": modbus_adc_health,
+            }
+            continue
+        try:
+            value = await _gw().read_sensor(sensor_id)
+            sensors[sensor_id] = {"sensor_id": sensor_id, "value": value, "ok": value is not None}
+        except Exception as exc:
+            sensors[sensor_id] = {
+                "sensor_id": sensor_id,
+                "value": None,
+                "ok": False,
+                "error": str(exc),
+            }
+
+    return {
+        "ok": True,
+        "gateway_mode": health.get("mode", "unknown"),
+        "gateway_health": health,
+        "sensors": sensors,
+    }
+
+
+@router.get("/modbus-adc/raw")
+async def read_modbus_adc_raw() -> dict[str, Any]:
+    """Return raw Modbus ADC diagnostics for HUI troubleshooting."""
+    try:
+        health = await _gw().health()
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)}
+
+    modbus_adc_health = health.get("modbus-adc")
+    if not isinstance(modbus_adc_health, dict):
+        return {
+            "ok": False,
+            "error": "modbus-adc health not available",
+            "gateway_mode": health.get("mode"),
+            "gateway_health": health,
+        }
+    if not modbus_adc_health.get("compatible"):
+        return {
+            "ok": False,
+            "error": "modbus-adc not compatible",
+            "gateway_mode": health.get("mode"),
+            "modbus_adc_health": modbus_adc_health,
+        }
+
+    try:
+        plugin = await _gw()._get_or_connect_plugin("modbus-adc")
+    except Exception as exc:
+        return {
+            "ok": False,
+            "error": str(exc),
+            "gateway_mode": health.get("mode"),
+            "modbus_adc_health": modbus_adc_health,
+        }
+    if not plugin:
+        return {
+            "ok": False,
+            "error": "modbus-adc plugin not available",
+            "gateway_mode": health.get("mode"),
+            "modbus_adc_health": modbus_adc_health,
+        }
+
+    result = await plugin.execute_command("read_all", {})
+    if not result.get("success"):
+        return {
+            "ok": False,
+            "error": result.get("error", "Unknown error from modbus-adc plugin"),
+            "gateway_mode": health.get("mode"),
+            "modbus_adc_health": modbus_adc_health,
+            "plugin_result": result,
+        }
+
+    return {
+        "ok": True,
+        "gateway_mode": health.get("mode"),
+        "modbus_adc_config": {
+            "serial_port": getattr(plugin.config, "serial_port", "unknown"),
+            "baudrate": getattr(plugin.config, "baudrate", "unknown"),
+            "device_id": getattr(plugin.config, "device_id", "unknown"),
+        },
+        "raw_data": result.get("data", {}),
+    }
+
+
 @router.post("/lung")
 async def set_lung(steps: int = 500, speed: int = TIC249_DEFAULT_TARGET_VELOCITY, cycles: int = 5, pause: float = 0.5):
     """Start artificial lung reciprocating motion (tic249 stepper)."""
