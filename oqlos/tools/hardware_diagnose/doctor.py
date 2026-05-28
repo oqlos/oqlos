@@ -13,7 +13,7 @@ from urllib.parse import urlparse
 import yaml
 
 from oqlos.hardware.config_paths import resolve_oqlos_config_path
-from oqlos.hardware.discovery import probe_waveshare_modbus
+from oqlos.hardware.discovery import probe_waveshare_modbus, probe_waveshare_modbus_adc
 from oqlos.hardware.plugins.registry import PluginRegistry
 from oqlos.tools.hardware_diagnose.discovery import (
     UsbDevice,
@@ -75,6 +75,27 @@ def _probe_modbus(probe_timeout: float) -> dict[str, Any]:
     try:
         with redirect_stdout(capture), redirect_stderr(capture):
             result = probe_waveshare_modbus(timeout=probe_timeout)
+    except Exception as exc:
+        result = {
+            "connected": False,
+            "reason": str(exc),
+            "modbus_device_responds": False,
+        }
+
+    diagnostic_output = [
+        line.strip() for line in capture.getvalue().splitlines()
+        if line.strip()
+    ]
+    if diagnostic_output:
+        result["diagnostic_output"] = diagnostic_output[-10:]
+    return result
+
+
+def _probe_modbus_adc(probe_timeout: float) -> dict[str, Any]:
+    capture = StringIO()
+    try:
+        with redirect_stdout(capture), redirect_stderr(capture):
+            result = probe_waveshare_modbus_adc(timeout=probe_timeout)
     except Exception as exc:
         result = {
             "connected": False,
@@ -179,6 +200,7 @@ def detect_hardware(
     usb_serial = _usb_serial_only(usb_devices)
 
     modbus_probe = _probe_modbus(probe_timeout)
+    modbus_adc_probe = _probe_modbus_adc(probe_timeout)
 
     result: dict[str, Any] = {
         "config": _load_config_summary(config_path),
@@ -190,6 +212,7 @@ def detect_hardware(
         },
         "probes": {
             "modbus": modbus_probe,
+            "modbus_adc": modbus_adc_probe,
         },
     }
 
@@ -239,6 +262,14 @@ def _modbus_config(config: dict[str, Any]) -> dict[str, Any] | None:
     return modbus if isinstance(modbus, dict) else None
 
 
+def _modbus_adc_config(config: dict[str, Any]) -> dict[str, Any] | None:
+    plugins = config.get("plugins")
+    if not isinstance(plugins, dict):
+        return None
+    adc = plugins.get("modbus-adc")
+    return adc if isinstance(adc, dict) else None
+
+
 def _expected_modbus_params(modbus_probe: dict[str, Any]) -> dict[str, Any] | None:
     if not modbus_probe.get("modbus_device_responds"):
         return None
@@ -252,6 +283,116 @@ def _expected_modbus_params(modbus_probe: dict[str, Any]) -> dict[str, Any] | No
         "baudrate": int(baudrate),
         "parity": str(parity),
     }
+
+
+def _expected_modbus_adc_params(modbus_adc_probe: dict[str, Any]) -> dict[str, Any] | None:
+    if not modbus_adc_probe.get("modbus_device_responds"):
+        return None
+    serial_port = modbus_adc_probe.get("serial_port")
+    baudrate = modbus_adc_probe.get("baudrate")
+    parity = modbus_adc_probe.get("parity")
+    device_id = modbus_adc_probe.get("device_id")
+    if not serial_port or not baudrate or not parity:
+        return None
+    result = {"serial_port": serial_port, "baudrate": int(baudrate), "parity": str(parity)}
+    if device_id is not None:
+        result["device_id"] = int(device_id)
+    return result
+
+
+def _analyze_modbus_adc_config(detection: dict[str, Any], issues: list[Issue]) -> None:
+    if _firmware_is_remote(detection):
+        return
+
+    config = detection.get("config", {})
+    modbus_adc_probe = detection.get("probes", {}).get("modbus_adc", {})
+    expected = _expected_modbus_adc_params(modbus_adc_probe)
+
+    if not expected:
+        if _firmware_modbus_adc_health_ok(detection):
+            return
+        if modbus_adc_probe.get("connected"):
+            _add_issue(
+                issues,
+                severity="warn",
+                code="modbus_adc_adapter_only",
+                message=(
+                    "USB serial adapter is visible, but the Modbus ADC device did "
+                    "not answer. Check RS485 wiring, power, slave address and baudrate."
+                ),
+            )
+        else:
+            _add_issue(
+                issues,
+                severity="warn",
+                code="modbus_adc_not_detected",
+                message=f"Modbus ADC device was not detected: {modbus_adc_probe.get('reason', 'unknown reason')}",
+            )
+        return
+
+    if not config.get("ok"):
+        return
+
+    adc = _modbus_adc_config(config)
+    if not adc:
+        _add_issue(
+            issues,
+            severity="warn",
+            code="modbus_adc_config_missing",
+            message="oqlos.yaml does not define the modbus-adc plugin.",
+        )
+        return
+
+    if not adc.get("enabled", True):
+        _add_issue(
+            issues,
+            severity="warn",
+            code="modbus_adc_disabled_but_present",
+            message=(
+                f"Modbus ADC device responds on {expected['serial_port']} @ {expected['baudrate']} "
+                f"8{expected['parity']}1 (device_id={expected.get('device_id', '?')}), "
+                "but modbus-adc is disabled in oqlos.yaml."
+            ),
+            repair={
+                "id": "enable_modbus_adc_config",
+                "safe": True,
+                "detected": expected,
+            },
+        )
+        return
+
+    current = adc.get("connection_params") or {}
+    mismatches = {
+        key: {"current": current.get(key), "detected": value}
+        for key, value in expected.items()
+        if current.get(key) != value
+    }
+    if mismatches:
+        _add_issue(
+            issues,
+            severity="error",
+            code="modbus_adc_config_mismatch",
+            message=(
+                "oqlos.yaml Modbus ADC settings do not match the responding device "
+                f"({expected['serial_port']} @ {expected['baudrate']} 8{expected['parity']}1, "
+                f"device_id={expected.get('device_id', '?')})."
+            ),
+            repair={
+                "id": "update_modbus_adc_config",
+                "safe": True,
+                "mismatches": mismatches,
+                "detected": expected,
+            },
+        )
+
+
+def _firmware_modbus_adc_health_ok(detection: dict[str, Any]) -> bool:
+    firmware = detection.get("firmware") or {}
+    health = firmware.get("health") or {}
+    adc_health = health.get("modbus-adc")
+    if isinstance(adc_health, dict):
+        return bool(adc_health.get("compatible"))
+    return False
 
 
 def _analyze_modbus_config(detection: dict[str, Any], issues: list[Issue]) -> None:
@@ -553,6 +694,7 @@ def build_doctor_report(
     )
     issues: list[Issue] = []
     _analyze_modbus_config(detection, issues)
+    _analyze_modbus_adc_config(detection, issues)
     _analyze_serial_port_owners(detection, issues)
     _analyze_firmware_access(detection, issues)
 
@@ -592,14 +734,21 @@ def apply_safe_fixes(
     """Apply safe doctor repairs. Currently limited to oqlos.yaml Modbus params."""
     applied: list[dict[str, Any]] = []
     for repair in repairs:
-        if repair.get("id") != "update_modbus_config" or not repair.get("safe"):
+        if not repair.get("safe"):
             continue
-        detected = repair.get("detected") or _expected_modbus_params(
-            detection.get("probes", {}).get("modbus", {})
-        )
-        if not detected:
-            continue
-        applied.append(_update_modbus_config(config_path, detected))
+        repair_id = repair.get("id")
+        if repair_id == "update_modbus_config":
+            detected = repair.get("detected") or _expected_modbus_params(
+                detection.get("probes", {}).get("modbus", {})
+            )
+            if detected:
+                applied.append(_update_modbus_config(config_path, detected))
+        elif repair_id in ("update_modbus_adc_config", "enable_modbus_adc_config"):
+            detected = repair.get("detected") or _expected_modbus_adc_params(
+                detection.get("probes", {}).get("modbus_adc", {})
+            )
+            if detected:
+                applied.append(_update_modbus_adc_config(config_path, detected))
     return applied
 
 
@@ -636,6 +785,47 @@ def _update_modbus_config(
             "baudrate": int(detected["baudrate"]),
             "parity": str(detected["parity"]),
         },
+    }
+
+
+def _update_modbus_adc_config(
+    config_path: str | Path | None,
+    detected: dict[str, Any],
+) -> dict[str, Any]:
+    path = resolve_oqlos_config_path(config_path)
+    original = path.read_text(encoding="utf-8")
+    backup = path.with_suffix(path.suffix + ".bak")
+    shutil.copy2(path, backup)
+
+    data = yaml.safe_load(original) or {}
+    plugins = data.setdefault("plugins", {})
+    adc = plugins.setdefault("modbus-adc", {})
+    adc["enabled"] = True
+    adc["connection_type"] = "modbus-rtu"
+    params = adc.setdefault("connection_params", {})
+    params["serial_port"] = detected["serial_port"]
+    params["baudrate"] = int(detected["baudrate"])
+    params["parity"] = str(detected["parity"])
+    if "device_id" in detected:
+        params["device_id"] = int(detected["device_id"])
+
+    path.write_text(
+        yaml.safe_dump(data, sort_keys=False, allow_unicode=True),
+        encoding="utf-8",
+    )
+
+    changes: dict[str, Any] = {
+        "serial_port": detected["serial_port"],
+        "baudrate": int(detected["baudrate"]),
+        "parity": str(detected["parity"]),
+    }
+    if "device_id" in detected:
+        changes["device_id"] = int(detected["device_id"])
+    return {
+        "id": "update_modbus_adc_config",
+        "path": str(path),
+        "backup": str(backup),
+        "changes": changes,
     }
 
 
