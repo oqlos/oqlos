@@ -32,19 +32,16 @@ from oqlos.api.plugins import ensure_plugins_initialized
 from oqlos.api.utils.execution_ctrl import set_dependencies as set_shared_dependencies
 from oqlos.api.hardware import set_hardware_gateway
 from oqlos.utils import load_sample_scenarios
+from oqlos.utils.hui_scenario import register_hui_test_scenario
 from oqlos.config import FIRMWARE_PORT, SERVICE_NAME, SERVICE_VERSION
 from oqlos.shared._endpoint_helpers import serve_html_page
 
 if TYPE_CHECKING:
     from oqlos.hardware.plugin_gateway import PluginHardwareGateway
 
-logging.basicConfig(level=logging.INFO)
-try:
-    from oqlos.shared.logger import get_logger  # type: ignore
-except ModuleNotFoundError:
-    def get_logger(name: str) -> logging.Logger:
-        return logging.getLogger(name)
+from oqlos.shared.logger import configure_oqlos_logging, get_logger
 
+configure_oqlos_logging()
 logger = get_logger(__name__)
 
 # Initialize nfo logging (safe fallback if not installed)
@@ -59,6 +56,17 @@ STATIC_DIR = Path(__file__).parent
 @asynccontextmanager
 async def _app_lifespan(_: FastAPI):
     _initialize_runtime_dependencies()
+    if hardware is not None and hasattr(hardware, "ensure_initialized"):
+        logger.info("Awaiting hardware plugin initialization…")
+        await hardware.ensure_initialized()
+        summary = getattr(hardware, "last_init_summary", None)
+        if isinstance(summary, dict):
+            logger.info(
+                "Hardware init summary: connected=%s failed=%s disabled=%s",
+                summary.get("connected"),
+                summary.get("failed"),
+                summary.get("disabled"),
+            )
     yield
 
 
@@ -122,6 +130,7 @@ def _initialize_runtime_dependencies() -> None:
     set_shared_dependencies(state_manager, orchestrator)
     set_hardware_gateway(hardware)
     load_sample_scenarios(state_manager)
+    register_hui_test_scenario(state_manager)
 
 # ============= Basic Endpoints =============
 

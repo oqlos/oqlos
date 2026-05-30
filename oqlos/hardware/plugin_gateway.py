@@ -58,17 +58,12 @@ class PluginHardwareGateway:
 
         self._init_done = False
         self._init_lock = asyncio.Lock()
+        self.last_init_summary: dict[str, Any] = {}
         if self.mode == "real":
-            # Load hardware configuration schema
             self._load_hardware_schema(config_path)
-            # Schedule async plugin init — will run on first await or event-loop tick
-            try:
-                loop = asyncio.get_running_loop()
-                loop.create_task(self._initialize_plugins())
-            except RuntimeError:
-                # No running loop yet (e.g. called from synchronous __init__)
-                # Will be initialized lazily via ensure_initialized()
-                logger.info("No running event loop — plugins will init on first use")
+            logger.info(
+                "PluginHardwareGateway ready (real); plugins connect on ensure_initialized()"
+            )
         else:
             self._init_done = True
             logger.info("PluginHardwareGateway: mode=mock (plugins not initialized)")
@@ -119,6 +114,7 @@ class PluginHardwareGateway:
             self._plugin_configs[plugin_id].connection_params["base_url"] = value.rstrip("/")
             logger.info("Hardware plugin %s base_url overridden by env", plugin_id)
 
+        self._apply_plugin_enable_env_overrides()
         self._apply_shared_modbus_bus_env_overrides()
         self._apply_modbus_env_overrides(
             "modbus-io",
@@ -141,6 +137,43 @@ class PluginHardwareGateway:
             },
         )
         self._log_modbus_preflight()
+
+    def _apply_plugin_enable_env_overrides(self) -> None:
+        """Disable optional plugins on benches (motors/piadc) to avoid extra serial/USB churn."""
+        allow_csv = next(
+            (
+                os.getenv(name)
+                for name in ("OQLOS_HARDWARE_PLUGINS", "C2004_HARDWARE_PLUGINS")
+                if os.getenv(name)
+            ),
+            None,
+        )
+        disable_csv = next(
+            (
+                os.getenv(name)
+                for name in ("OQLOS_DISABLE_PLUGINS", "C2004_HARDWARE_DISABLE_PLUGINS")
+                if os.getenv(name)
+            ),
+            None,
+        )
+
+        if allow_csv:
+            allowed = {part.strip() for part in allow_csv.split(",") if part.strip()}
+            for plugin_id, plugin_config in self._plugin_configs.items():
+                plugin_config.enabled = plugin_id in allowed
+            logger.info("Hardware plugins allow-list from env: %s", sorted(allowed))
+            return
+
+        if not disable_csv:
+            return
+
+        disabled = {part.strip() for part in disable_csv.split(",") if part.strip()}
+        for plugin_id in disabled:
+            plugin_config = self._plugin_configs.get(plugin_id)
+            if plugin_config is None:
+                continue
+            plugin_config.enabled = False
+            logger.info("Hardware plugin %s disabled via env", plugin_id)
 
     def _apply_shared_modbus_bus_env_overrides(self) -> None:
         """Apply one-bus RS485 aliases before per-plugin overrides."""
@@ -288,26 +321,82 @@ class PluginHardwareGateway:
             if self._init_done:
                 return
 
+            summary: dict[str, Any] = {"connected": [], "failed": [], "disabled": []}
+
             async def _connect_one(plugin_id: str, config: PluginConfig) -> None:
                 if not config.enabled:
-                    logger.info(f"Plugin {plugin_id} is disabled, skipping")
+                    logger.info("Plugin %s is disabled, skipping", plugin_id)
+                    summary["disabled"].append(plugin_id)
                     return
+                port_hint = ""
+                if config.connection_type == "modbus-rtu":
+                    port_hint = str(config.connection_params.get("serial_port") or "")
+                elif config.connection_params.get("base_url"):
+                    port_hint = str(config.connection_params.get("base_url"))
                 try:
+                    logger.info(
+                        "Initializing plugin %s (%s)%s",
+                        plugin_id,
+                        config.connection_type,
+                        f" port={port_hint}" if port_hint else "",
+                    )
                     instance = await PluginRegistry.create_instance(plugin_id, config)
                     success = await instance.connect()
                     if success:
                         self._plugins[plugin_id] = instance
-                        logger.info(f"Plugin {plugin_id} initialized and connected")
+                        summary["connected"].append(plugin_id)
+                        logger.info("Plugin %s connected%s", plugin_id, f" ({port_hint})" if port_hint else "")
                     else:
-                        logger.error(f"Failed to connect plugin {plugin_id}")
+                        summary["failed"].append({"plugin_id": plugin_id, "reason": "connect returned false"})
+                        logger.error(
+                            "Plugin %s connect() returned false%s",
+                            plugin_id,
+                            f" ({port_hint})" if port_hint else "",
+                        )
                 except Exception as exc:
-                    logger.error(f"Failed to initialize plugin {plugin_id}: {exc}")
+                    summary["failed"].append({"plugin_id": plugin_id, "reason": str(exc)})
+                    logger.error(
+                        "Failed to initialize plugin %s: %s",
+                        plugin_id,
+                        exc,
+                        exc_info=True,
+                    )
 
-            await asyncio.gather(*[
-                _connect_one(pid, cfg)
+            modbus_plugin_ids = ("modbus-io", "modbus-adc")
+            other_plugins = [
+                (pid, cfg)
                 for pid, cfg in self._plugin_configs.items()
-            ])
+                if pid not in modbus_plugin_ids
+            ]
+            modbus_plugins = [
+                (pid, self._plugin_configs[pid])
+                for pid in modbus_plugin_ids
+                if pid in self._plugin_configs
+            ]
+
+            if other_plugins:
+                await asyncio.gather(*[_connect_one(pid, cfg) for pid, cfg in other_plugins])
+            # Shared RS485 bus: connect Modbus plugins sequentially to avoid port races.
+            for pid, cfg in modbus_plugins:
+                if cfg.enabled:
+                    await _connect_one(pid, cfg)
+                else:
+                    summary["disabled"].append(pid)
+            self.last_init_summary = summary
             self._init_done = True
+            if summary["failed"]:
+                logger.warning(
+                    "Hardware init finished with failures: connected=%s failed=%s disabled=%s",
+                    summary["connected"],
+                    summary["failed"],
+                    summary["disabled"],
+                )
+            else:
+                logger.info(
+                    "Hardware init finished: connected=%s disabled=%s",
+                    summary["connected"],
+                    summary["disabled"],
+                )
 
     @property
     def is_real(self) -> bool:
@@ -492,6 +581,10 @@ class PluginHardwareGateway:
         if not self.is_real:
             result["note"] = "mock mode — no hardware calls"
             return result
+
+        await self.ensure_initialized()
+        if self.last_init_summary:
+            result["init_summary"] = self.last_init_summary
 
         health_results = await PluginRegistry.health_check_all(timeout=2.5)
         for plugin_id, health in health_results.items():

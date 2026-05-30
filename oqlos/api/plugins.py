@@ -7,10 +7,12 @@ from __future__ import annotations
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import JSONResponse
 
 from oqlos.hardware.plugins import (
     PluginConfig,
     PluginHealth,
+    PluginStatus,
     PluginRegistry,
     PiadcPlugin,
     ModbusAdcPlugin,
@@ -37,6 +39,23 @@ def ensure_plugins_initialized() -> None:
     _PLUGINS_INITIALIZED = True
 
 router = APIRouter(prefix="/api/v1/plugins", tags=["plugins"])
+
+_HEALTH_HTTP_OK = frozenset({PluginStatus.CONNECTED.value, PluginStatus.CONFIGURED.value})
+
+
+def _plugin_health_http_status(health: PluginHealth) -> int:
+    """Map plugin health to HTTP status — errors must not masquerade as 200 OK."""
+    return 200 if health.status.value in _HEALTH_HTTP_OK else 503
+
+
+def _plugin_health_body(health: PluginHealth) -> dict[str, Any]:
+    return {
+        "status": health.status.value,
+        "message": health.message,
+        "compatible": health.compatible,
+        "version": health.version,
+        "details": health.details,
+    }
 
 
 @router.get("/")
@@ -65,14 +84,16 @@ async def get_plugin_health(plugin_id: str):
     """Get health status of a specific plugin."""
     health = await PluginRegistry.health_check(plugin_id)
     if not health:
-        raise HTTPException(status_code=404, detail=f"No active instance for plugin '{plugin_id}'")
-    return {
-        "status": health.status.value,
-        "message": health.message,
-        "compatible": health.compatible,
-        "version": health.version,
-        "details": health.details,
-    }
+        body = {
+            "status": PluginStatus.ERROR.value,
+            "message": f"No active instance for plugin '{plugin_id}'",
+            "compatible": False,
+            "version": "unknown",
+            "details": {},
+        }
+        return JSONResponse(content=body, status_code=503)
+    body = _plugin_health_body(health)
+    return JSONResponse(content=body, status_code=_plugin_health_http_status(health))
 
 
 @router.post("/{plugin_id}/connect")
@@ -106,10 +127,25 @@ async def disconnect_plugin(plugin_id: str):
         raise HTTPException(status_code=500, detail=f"Failed to disconnect from plugin '{plugin_id}'")
 
 
+async def _resolve_plugin_instance(plugin_id: str) -> Any | None:
+    """Return a connected plugin instance, creating one on demand when needed."""
+    instance = PluginRegistry.get_instance(plugin_id)
+    if instance is not None:
+        return instance
+    try:
+        from oqlos.api.hardware import _gw
+
+        gateway = _gw()
+        await gateway.ensure_initialized()
+        return await gateway._get_or_connect_plugin(plugin_id)
+    except Exception:
+        return None
+
+
 @router.post("/{plugin_id}/execute")
 async def execute_plugin_command(plugin_id: str, command: dict[str, Any]):
     """Execute a command on a hardware plugin."""
-    instance = PluginRegistry.get_instance(plugin_id)
+    instance = await _resolve_plugin_instance(plugin_id)
     if not instance:
         raise HTTPException(status_code=404, detail=f"No active instance for plugin '{plugin_id}'")
 

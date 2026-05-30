@@ -129,12 +129,17 @@ async def execute_step(payload: dict[str, Any]):
         exec_obj = _ctrl.orchestrator.current_execution
         execution_id = exec_obj.executionId
     else:
-        execution_id = await _ctrl.orchestrator.execute_scenario(
-            scenario_id=scenario_id,
-            goals=[],
-            mode="step",
-            speed=1.0,
-        )
+        try:
+            execution_id = await _ctrl.orchestrator.execute_scenario(
+                scenario_id=scenario_id,
+                goals=[],
+                mode="step",
+                speed=1.0,
+            )
+        except ValueError as exc:
+            if "not found" in str(exc).lower():
+                raise HTTPException(status_code=404, detail=str(exc)) from exc
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
         exec_obj = _ctrl.state_manager.executions.get(execution_id)
 
     # Build a Step model and delegate to orchestrator

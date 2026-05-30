@@ -153,6 +153,11 @@ class Settings(BaseSettings):
         default="INFO",
         validation_alias=AliasChoices("OQLOS_LOG_LEVEL", "LOG_LEVEL"),
     )
+    log_file: str = Field(
+        default="",
+        validation_alias=AliasChoices("OQLOS_LOG_FILE", "OQLOS_HARDWARE_LOG_FILE"),
+        description="Optional log file path (e.g. ~/maskservice/logs/oqlos-hardware-api.log)",
+    )
     
     # CORS Settings
     cors_origins: str = Field(

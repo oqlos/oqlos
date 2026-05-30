@@ -137,6 +137,40 @@ def test_set_pump_uses_registry_instance_that_recovers_after_startup(monkeypatch
     assert gateway._plugins["motor-dri0050"] is plugin
 
 
+def test_plugin_gateway_disable_plugins_env(monkeypatch):
+    gateway = PluginHardwareGateway(mode="mock")
+    gateway._plugin_configs = {
+        "modbus-io": PluginConfig(plugin_id="modbus-io", enabled=True),
+        "motor-dri0050": PluginConfig(plugin_id="motor-dri0050", enabled=True),
+        "motor-tic249": PluginConfig(plugin_id="motor-tic249", enabled=True),
+    }
+
+    monkeypatch.setenv("OQLOS_DISABLE_PLUGINS", "motor-dri0050,motor-tic249")
+
+    gateway._apply_env_overrides()
+
+    assert gateway._plugin_configs["modbus-io"].enabled is True
+    assert gateway._plugin_configs["motor-dri0050"].enabled is False
+    assert gateway._plugin_configs["motor-tic249"].enabled is False
+
+
+def test_plugin_gateway_allow_list_plugins_env(monkeypatch):
+    gateway = PluginHardwareGateway(mode="mock")
+    gateway._plugin_configs = {
+        "modbus-io": PluginConfig(plugin_id="modbus-io", enabled=True),
+        "modbus-adc": PluginConfig(plugin_id="modbus-adc", enabled=True),
+        "motor-dri0050": PluginConfig(plugin_id="motor-dri0050", enabled=True),
+    }
+
+    monkeypatch.setenv("OQLOS_HARDWARE_PLUGINS", "modbus-io,modbus-adc")
+
+    gateway._apply_env_overrides()
+
+    assert gateway._plugin_configs["modbus-io"].enabled is True
+    assert gateway._plugin_configs["modbus-adc"].enabled is True
+    assert gateway._plugin_configs["motor-dri0050"].enabled is False
+
+
 def test_health_reports_configured_disabled_plugins(monkeypatch):
     async def _empty_health_results(cls, timeout=None):
         return {}

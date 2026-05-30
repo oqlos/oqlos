@@ -9,10 +9,35 @@ import logging
 from typing import Any
 
 from .base import HardwarePlugin, PeripheralConfig, PluginConfig, PluginHealth, PluginStatus
+from ._rtu_serial import reopen_rtu_after_stale, serial_error_is_stale
 
 logger = logging.getLogger(__name__)
 
 _SENSOR_CHANNEL_ALIASES: dict[str, int] = {
+    "v1": 0,
+    "v2": 1,
+    "v3": 2,
+    "v4": 3,
+    "v5": 4,
+    "v6": 5,
+    "v7": 6,
+    "v8": 7,
+    "vi1": 0,
+    "vi2": 1,
+    "vi3": 2,
+    "vi4": 3,
+    "vi5": 4,
+    "vi6": 5,
+    "vi7": 6,
+    "vi8": 7,
+    "pi1": 0,
+    "pi2": 1,
+    "pi3": 2,
+    "pi4": 3,
+    "pi5": 4,
+    "pi6": 5,
+    "pi7": 6,
+    "pi8": 7,
     "ai01": 0,
     "ai1": 0,
     "nc-sensor": 0,
@@ -204,6 +229,16 @@ class ModbusAdcPlugin(HardwarePlugin):
                 compatible=False,
             )
         except Exception as exc:
+            if (
+                not getattr(self, "_rtu_reopen_health_attempt", False)
+                and serial_error_is_stale(exc)
+                and await reopen_rtu_after_stale(self, exc, label="modbus-adc")
+            ):
+                self._rtu_reopen_health_attempt = True
+                try:
+                    return await self.health_check()
+                finally:
+                    self._rtu_reopen_health_attempt = False
             return PluginHealth(
                 status=PluginStatus.ERROR,
                 message=f"Health check exception: {exc}",

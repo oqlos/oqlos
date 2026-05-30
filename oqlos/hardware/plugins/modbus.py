@@ -9,6 +9,7 @@ import logging
 from typing import Any
 
 from .base import HardwarePlugin, PluginConfig, PluginHealth, PluginStatus
+from ._rtu_serial import reopen_rtu_after_stale, serial_error_is_stale
 
 logger = logging.getLogger(__name__)
 
@@ -196,6 +197,16 @@ class ModbusPlugin(HardwarePlugin):
                         compatible=False,
                     )
         except Exception as exc:
+            if (
+                not getattr(self, "_rtu_reopen_health_attempt", False)
+                and serial_error_is_stale(exc)
+                and await reopen_rtu_after_stale(self, exc, label="modbus-io")
+            ):
+                self._rtu_reopen_health_attempt = True
+                try:
+                    return await self.health_check()
+                finally:
+                    self._rtu_reopen_health_attempt = False
             return PluginHealth(
                 status=PluginStatus.ERROR,
                 message=f"Health check exception: {exc}",

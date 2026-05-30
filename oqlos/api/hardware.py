@@ -15,6 +15,7 @@ import sys
 from typing import Any
 
 from fastapi import APIRouter, Body, HTTPException, Query
+from fastapi.responses import JSONResponse
 from oqlos.config import get_settings
 from oqlos.hardware.discovery import list_serial_ports, probe_waveshare_modbus, probe_waveshare_modbus_adc
 from oqlos.hardware.artificial_lung import execute_command as execute_artificial_lung_command
@@ -194,20 +195,9 @@ def _detect_runtime_platform() -> dict[str, Any]:
         detected = "unknown"
 
     piadc_selected = _selected_piadc_platform()
-    modbus_adc_serial = (
-        os.getenv("OQLOS_MODBUS_ADC_SERIAL_PORT")
-        or os.getenv("MODBUS_ADC_SERIAL_PORT")
-        or os.getenv("OQLOS_MODBUS_BUS_SERIAL_PORT")
-        or os.getenv("MODBUS_BUS_SERIAL_PORT")
-        or _settings.modbus_adc_serial_port
-    )
-    modbus_io_serial = (
-        os.getenv("OQLOS_MODBUS_SERIAL_PORT")
-        or os.getenv("MODBUS_SERIAL_PORT")
-        or os.getenv("OQLOS_MODBUS_BUS_SERIAL_PORT")
-        or os.getenv("MODBUS_BUS_SERIAL_PORT")
-        or _settings.modbus_serial_port
-    )
+    modbus_ports = _modbus_runtime_serial_ports()
+    modbus_io_serial = modbus_ports["io_serial_port"]
+    modbus_adc_serial = modbus_ports["adc_serial_port"]
 
     return {
         "selected": _selected_hardware_platform(),
@@ -227,7 +217,11 @@ def _detect_runtime_platform() -> dict[str, Any]:
         "in_container": in_container,
         "is_wsl": is_wsl,
         "analog_input_driver_role": "modbus-rtu",
-        "modbus_bus_serial_port": modbus_io_serial if modbus_io_serial == modbus_adc_serial else "",
+        "modbus_topology": modbus_ports["topology"],
+        "modbus_topology_mode": modbus_ports["topology_mode"],
+        "modbus_bus_serial_port": modbus_ports.get("shared_serial_port") or (
+            modbus_io_serial if modbus_io_serial == modbus_adc_serial else ""
+        ),
         "modbus_io_serial_port": modbus_io_serial,
         "modbus_adc_driver_role": "modbus-rtu",
         "modbus_adc_serial_port": modbus_adc_serial,
@@ -533,6 +527,141 @@ def _modbus_io_device_ids() -> list[int]:
     return _parse_csv_ints(configured, [_settings.modbus_device_id])
 
 
+def _modbus_topology_mode() -> str:
+    """How RS485 wiring is interpreted: auto-detect, one adapter, or point-to-point."""
+    raw = (os.getenv("OQLOS_MODBUS_TOPOLOGY") or os.getenv("MODBUS_TOPOLOGY") or "auto").strip().lower()
+    if raw in {"shared", "shared-bus", "one-bus", "single-adapter", "single"}:
+        return "shared-bus"
+    if raw in {"separate", "separate-adapters", "p2p", "point-to-point", "dual-adapter", "dual"}:
+        return "separate-adapters"
+    return "auto"
+
+
+def _modbus_runtime_serial_ports() -> dict[str, Any]:
+    """Resolve IO vs ADC serial ports for shared-bus or separate USB-RS485 adapters."""
+    bus_port = (
+        os.getenv("OQLOS_MODBUS_BUS_SERIAL_PORT")
+        or os.getenv("MODBUS_BUS_SERIAL_PORT")
+        or os.getenv("OQLOS_MODBUS_SHARED_SERIAL_PORT")
+        or os.getenv("MODBUS_SHARED_SERIAL_PORT")
+        or ""
+    ).strip()
+    io_port = (
+        os.getenv("OQLOS_MODBUS_SERIAL_PORT")
+        or os.getenv("MODBUS_SERIAL_PORT")
+        or str(_settings.modbus_serial_port or "")
+    ).strip()
+    adc_port = (
+        os.getenv("OQLOS_MODBUS_ADC_SERIAL_PORT")
+        or os.getenv("MODBUS_ADC_SERIAL_PORT")
+        or str(_settings.modbus_adc_serial_port or "")
+    ).strip()
+    mode = _modbus_topology_mode()
+
+    if mode == "shared-bus":
+        shared = bus_port or io_port or adc_port
+        io_port = shared
+        adc_port = shared
+        topology = "shared-bus"
+    elif mode == "separate-adapters":
+        topology = "separate-adapters"
+        if not adc_port:
+            adc_port = io_port
+    elif bus_port:
+        io_port = bus_port
+        adc_port = bus_port
+        topology = "shared-bus"
+    else:
+        if not adc_port:
+            adc_port = io_port
+        topology = "separate-adapters" if (io_port and adc_port and io_port != adc_port) else "shared-bus"
+
+    return {
+        "io_serial_port": io_port,
+        "adc_serial_port": adc_port,
+        "shared_serial_port": io_port if topology == "shared-bus" else "",
+        "topology": topology,
+        "topology_mode": mode,
+    }
+
+
+def _diagnose_shared_bus_matrix(
+    *,
+    serial_port: str,
+    target_baudrate: int,
+    target_parity: str,
+    io_device_id: int,
+    adc_device_id: int,
+    device_ids: list[int],
+    required_roles: list[str] | None = None,
+    timeout_fast: float = 0.5,
+    timeout_full: float = 0.35,
+):
+    from pimodbus.repair import diagnose_shared_bus
+
+    baud_sequence = [4800, 9600, 19200, 38400, 57600, 115200]
+    target_report = diagnose_shared_bus(
+        serial_port=serial_port,
+        target_baudrate=target_baudrate,
+        target_parity=target_parity,
+        io_device_id=io_device_id,
+        adc_device_id=adc_device_id,
+        baudrates=[int(target_baudrate)],
+        parities=[str(target_parity).upper()],
+        device_ids=device_ids,
+        timeout=timeout_fast,
+        scan_all_ports=True,
+        required_roles=required_roles,
+    )
+    if target_report.ok:
+        return target_report
+    return diagnose_shared_bus(
+        serial_port=serial_port,
+        target_baudrate=target_baudrate,
+        target_parity=target_parity,
+        io_device_id=io_device_id,
+        adc_device_id=adc_device_id,
+        baudrates=baud_sequence,
+        parities=["N", "E", "O"],
+        device_ids=device_ids,
+        timeout=timeout_full,
+        scan_all_ports=True,
+        required_roles=required_roles,
+    )
+
+
+def _merge_waveshare_scan_dicts(*reports: dict[str, Any]) -> dict[str, Any]:
+    hits: list[dict[str, Any]] = []
+    issues: list[dict[str, Any]] = []
+    recommendations: list[str] = []
+    actions: list[dict[str, Any]] = []
+    targets: list[dict[str, Any]] = []
+    for report in reports:
+        if not isinstance(report, dict):
+            continue
+        hits.extend(list(report.get("hits") or []))
+        issues.extend(list(report.get("issues") or []))
+        for recommendation in report.get("recommendations") or []:
+            text = str(recommendation)
+            if text and text not in recommendations:
+                recommendations.append(text)
+        actions.extend(list(report.get("actions") or []))
+        target = report.get("target")
+        if isinstance(target, dict):
+            targets.append(target)
+    merged_target = targets[0] if len(targets) == 1 else {"buses": targets}
+    return {
+        "ok": False,
+        "safe_to_auto_apply": all(bool(report.get("safe_to_auto_apply")) for report in reports if isinstance(report, dict)),
+        "target": merged_target,
+        "hits": hits,
+        "issues": issues,
+        "actions": actions,
+        "recommendations": recommendations,
+        "probe_summary": reports[-1].get("probe_summary") if reports else {},
+    }
+
+
 def _read_output_control_modes(
     serial_port: str,
     baudrate: int,
@@ -570,39 +699,321 @@ def _read_output_control_modes(
             pass
 
 
-def _build_waveshare_diagnose_report() -> dict[str, Any]:
+def _modbus_plugins_healthy(health: dict[str, Any] | None) -> bool:
+    """True when both Modbus plugins report compatible (ports held by firmware)."""
+    if not isinstance(health, dict):
+        return False
+    return _is_plugin_compatible(health.get("modbus-io")) and _is_plugin_compatible(
+        health.get("modbus-adc")
+    )
+
+
+def _modbus_health_serial_stale(health: dict[str, Any] | None) -> bool:
+    """True when Modbus plugins hit EIO — typical after USB re-enumeration (tty remap)."""
+    if not isinstance(health, dict):
+        return False
+    for plugin_id in ("modbus-io", "modbus-adc"):
+        entry = health.get(plugin_id)
+        if not isinstance(entry, dict):
+            continue
+        message = str(entry.get("message") or "").lower()
+        if "errno 5" in message or "input/output error" in message:
+            return True
+    return False
+
+
+def _build_waveshare_serial_stale_report(
+    health: dict[str, Any],
+    *,
+    ports: dict[str, Any],
+    io_ids: list[int],
+    adc_id: int,
+    baud_sequence: list[int],
+) -> dict[str, Any]:
+    """Do not run matrix scan on stale handles — restart OqlOS to reopen tty/by-id."""
+    io_port = ports["io_serial_port"] or str(_settings.modbus_serial_port)
+    adc_port = ports["adc_serial_port"] or io_port
+    skip_reason = "Modbus serial handle stale (USB re-enumeration); restart OqlOS"
+    per_slave: dict[str, Any] = {}
+    for io_id in io_ids:
+        per_slave[f"modbus-io-{io_id}"] = {
+            "ok": False,
+            "status": "serial-stale",
+            "device_id": io_id,
+            "source": "plugin-health",
+            "message": str((health.get("modbus-io") or {}).get("message") or skip_reason),
+        }
+    per_slave[f"modbus-adc-{adc_id}"] = {
+        "ok": False,
+        "status": "serial-stale",
+        "device_id": adc_id,
+        "source": "plugin-health",
+        "message": str((health.get("modbus-adc") or {}).get("message") or skip_reason),
+    }
+    return {
+        "ok": False,
+        "serial_handles_stale": True,
+        "baud_sequence": baud_sequence,
+        "io_device_ids": io_ids,
+        "adc_device_id": adc_id,
+        "topology": ports["topology"],
+        "io_serial_port": io_port,
+        "adc_serial_port": adc_port,
+        "waveshare_scan": {
+            "ok": False,
+            "scan_skipped": True,
+            "scan_skip_reason": skip_reason,
+            "issues": [
+                {
+                    "severity": "error",
+                    "code": "serial_handle_stale",
+                    "message": skip_reason,
+                    "roles": ["modbus-io", "modbus-adc"],
+                }
+            ],
+            "recommendations": [
+                "USB adapters are visible but OqlOS still holds old tty handles (e.g. ttyACM1→ttyACM2).",
+                "Run: cd c2004 && make hardware-oqlos-only",
+                "Or: systemctl --user restart oqlos-hardware-api.service",
+                "Then refresh hardware-status before running valve/ADC tests.",
+            ],
+            "topology": ports["topology"],
+            "ports_scanned": [
+                {"role": "modbus-io", "serial_port": io_port},
+                {"role": "modbus-adc", "serial_port": adc_port},
+            ],
+        },
+        "per_slave": per_slave,
+    }
+
+
+def _build_waveshare_from_plugin_health(
+    health: dict[str, Any],
+    *,
+    ports: dict[str, Any],
+    io_ids: list[int],
+    adc_id: int,
+    target_baud: int,
+    target_parity: str,
+    baud_sequence: list[int],
+) -> dict[str, Any]:
+    """Skip RS485 matrix scan when OqlOS plugins already own the serial ports."""
+    io_port = ports["io_serial_port"] or str(_settings.modbus_serial_port)
+    adc_port = ports["adc_serial_port"] or io_port
+    separate = ports["topology"] == "separate-adapters"
+    skip_reason = "plugin owns Modbus serial port; inline scan skipped"
+    per_slave: dict[str, Any] = {}
+    hits: list[dict[str, Any]] = []
+
+    for io_id in io_ids:
+        key = f"modbus-io-{io_id}"
+        per_slave[key] = {
+            "ok": True,
+            "status": "connected",
+            "device_id": io_id,
+            "source": "plugin-health",
+            "message": str((health.get("modbus-io") or {}).get("message") or "Modbus RTU is healthy"),
+            "detected": {
+                "serial_port": io_port,
+                "baudrate": target_baud,
+                "parity": target_parity,
+            },
+            "output_modes_registers_0x1000_0x1007": {
+                "ok": None,
+                "skipped": True,
+                "reason": skip_reason,
+            },
+        }
+        hits.append(
+            {
+                "role": "modbus-io",
+                "serial_port": io_port,
+                "baudrate": target_baud,
+                "parity": target_parity,
+                "device_id": io_id,
+                "function": "read_coils",
+                "source": "plugin-health",
+            }
+        )
+
+    adc_key = f"modbus-adc-{adc_id}"
+    per_slave[adc_key] = {
+        "ok": True,
+        "status": "connected",
+        "device_id": adc_id,
+        "source": "plugin-health",
+        "message": str((health.get("modbus-adc") or {}).get("message") or "Modbus ADC is healthy"),
+        "detected": {
+            "serial_port": adc_port,
+            "baudrate": target_baud,
+            "parity": target_parity,
+        },
+    }
+    hits.append(
+        {
+            "role": "modbus-adc",
+            "serial_port": adc_port,
+            "baudrate": target_baud,
+            "parity": target_parity,
+            "device_id": adc_id,
+            "function": "read_input_registers",
+            "source": "plugin-health",
+        }
+    )
+
+    scan_target: dict[str, Any]
+    if separate:
+        scan_target = {
+            "buses": [
+                {
+                    "serial_port": io_port,
+                    "baudrate": target_baud,
+                    "parity": target_parity,
+                    "io_device_id": int(_settings.modbus_device_id),
+                    "adc_device_id": adc_id,
+                },
+                {
+                    "serial_port": adc_port,
+                    "baudrate": target_baud,
+                    "parity": target_parity,
+                    "io_device_id": int(_settings.modbus_device_id),
+                    "adc_device_id": adc_id,
+                },
+            ]
+        }
+        ports_scanned = [
+            {"role": "modbus-io", "serial_port": io_port},
+            {"role": "modbus-adc", "serial_port": adc_port},
+        ]
+    else:
+        scan_target = {
+            "serial_port": io_port,
+            "baudrate": target_baud,
+            "parity": target_parity,
+            "io_device_id": int(_settings.modbus_device_id),
+            "adc_device_id": adc_id,
+        }
+        ports_scanned = []
+
+    return {
+        "ok": True,
+        "baud_sequence": baud_sequence,
+        "io_device_ids": io_ids,
+        "adc_device_id": adc_id,
+        "topology": ports["topology"],
+        "io_serial_port": io_port,
+        "adc_serial_port": adc_port,
+        "waveshare_scan": {
+            "ok": True,
+            "safe_to_auto_apply": False,
+            "scan_skipped": True,
+            "scan_skip_reason": skip_reason,
+            "target": scan_target,
+            "hits": hits,
+            "issues": [],
+            "actions": [],
+            "recommendations": [
+                "Modbus IO/ADC are healthy via OqlOS plugins. For UART/register deep-check, "
+                "use hardware restart wizard (exclusive scan) or stop OqlOS before pimodbus diagnose.",
+            ],
+            "topology": ports["topology"],
+            "ports_scanned": ports_scanned,
+        },
+        "per_slave": per_slave,
+        "plugin_health_deferred": True,
+    }
+
+
+def _build_waveshare_diagnose_report(health: dict[str, Any] | None = None) -> dict[str, Any]:
     baud_sequence = [4800, 9600, 19200, 38400, 57600, 115200]
     io_ids = _modbus_io_device_ids()
-    target_ids = sorted(set([*io_ids, _settings.modbus_adc_device_id]))
+    adc_id = int(_settings.modbus_adc_device_id)
+    target_ids = sorted(set([*io_ids, adc_id]))
+    ports = _modbus_runtime_serial_ports()
+    separate = ports["topology"] == "separate-adapters"
+    io_port = ports["io_serial_port"] or str(_settings.modbus_serial_port)
+    adc_port = ports["adc_serial_port"] or io_port
+
+    target_baud = int(_settings.modbus_baud)
+    target_parity = str(_settings.modbus_parity)
+    io_device_id = int(_settings.modbus_device_id)
+
+    if _modbus_plugins_healthy(health):
+        return _build_waveshare_from_plugin_health(
+            health or {},
+            ports=ports,
+            io_ids=io_ids,
+            adc_id=adc_id,
+            target_baud=target_baud,
+            target_parity=target_parity,
+            baud_sequence=baud_sequence,
+        )
+
+    if _modbus_health_serial_stale(health):
+        return _build_waveshare_serial_stale_report(
+            health or {},
+            ports=ports,
+            io_ids=io_ids,
+            adc_id=adc_id,
+            baud_sequence=baud_sequence,
+        )
 
     try:
         from pimodbus.config import RtuBusSettings
         from pimodbus.provisioning import read_device_config
-        from pimodbus.repair import diagnose_shared_bus
     except Exception as exc:
         return {
             "ok": False,
             "error": f"pimodbus is not available: {exc}",
             "baud_sequence": baud_sequence,
             "io_device_ids": io_ids,
-            "adc_device_id": _settings.modbus_adc_device_id,
+            "adc_device_id": adc_id,
+            "topology": ports["topology"],
         }
 
-    report = diagnose_shared_bus(
-        serial_port=_settings.modbus_serial_port,
-        target_baudrate=_settings.modbus_baud,
-        target_parity=_settings.modbus_parity,
-        io_device_id=_settings.modbus_device_id,
-        adc_device_id=_settings.modbus_adc_device_id,
-        baudrates=baud_sequence,
-        parities=["N", "E", "O"],
-        device_ids=target_ids,
-        timeout=0.35,
-        scan_all_ports=False,
-    )
-    report_dict = report.to_dict()
+    if separate:
+        io_report = _diagnose_shared_bus_matrix(
+            serial_port=io_port,
+            target_baudrate=target_baud,
+            target_parity=target_parity,
+            io_device_id=io_device_id,
+            adc_device_id=adc_id,
+            device_ids=io_ids,
+            required_roles=["modbus-io"],
+        )
+        adc_report = _diagnose_shared_bus_matrix(
+            serial_port=adc_port,
+            target_baudrate=target_baud,
+            target_parity=target_parity,
+            io_device_id=io_device_id,
+            adc_device_id=adc_id,
+            device_ids=[adc_id],
+            required_roles=["modbus-adc"],
+        )
+        report_ok = bool(io_report.ok and adc_report.ok)
+        report_dict = _merge_waveshare_scan_dicts(io_report.to_dict(), adc_report.to_dict())
+        report_dict["ok"] = report_ok
+        report_dict["topology"] = "separate-adapters"
+        report_dict["ports_scanned"] = [
+            {"role": "modbus-io", "serial_port": io_port},
+            {"role": "modbus-adc", "serial_port": adc_port},
+        ]
+    else:
+        report = _diagnose_shared_bus_matrix(
+            serial_port=io_port,
+            target_baudrate=target_baud,
+            target_parity=target_parity,
+            io_device_id=io_device_id,
+            adc_device_id=adc_id,
+            device_ids=target_ids,
+        )
+        report_ok = bool(report.ok)
+        report_dict = report.to_dict()
+        report_dict["topology"] = "shared-bus"
+
     hits = list(report_dict.get("hits") or [])
     io_hits = [hit for hit in hits if hit.get("role") == "modbus-io"]
+    adc_hits = [hit for hit in hits if hit.get("role") == "modbus-adc"]
 
     per_slave: dict[str, Any] = {}
     for io_id in io_ids:
@@ -616,9 +1027,9 @@ def _build_waveshare_diagnose_report() -> dict[str, Any]:
             }
             continue
         settings = RtuBusSettings(
-            serial_port=str(hit.get("serial_port") or _settings.modbus_serial_port),
-            baudrate=int(hit.get("baudrate") or _settings.modbus_baud),
-            parity=str(hit.get("parity") or _settings.modbus_parity),
+            serial_port=str(hit.get("serial_port") or io_port),
+            baudrate=int(hit.get("baudrate") or target_baud),
+            parity=str(hit.get("parity") or target_parity),
             timeout=1.5,
         )
         config = read_device_config(settings, device_id=io_id).to_dict()
@@ -647,11 +1058,47 @@ def _build_waveshare_diagnose_report() -> dict[str, Any]:
             "output_modes_registers_0x1000_0x1007": control_modes,
         }
 
+    adc_hit = next((entry for entry in adc_hits if int(entry.get("device_id", -1)) == adc_id), None)
+    if not adc_hit:
+        per_slave[f"modbus-adc-{adc_id}"] = {
+            "ok": False,
+            "status": "no-response",
+            "device_id": adc_id,
+            "message": "No Modbus RTU response for ADC slave id in Waveshare scan matrix",
+        }
+    else:
+        settings = RtuBusSettings(
+            serial_port=str(adc_hit.get("serial_port") or adc_port),
+            baudrate=int(adc_hit.get("baudrate") or target_baud),
+            parity=str(adc_hit.get("parity") or target_parity),
+            timeout=1.5,
+        )
+        config = read_device_config(settings, device_id=adc_id).to_dict()
+        per_slave[f"modbus-adc-{adc_id}"] = {
+            "ok": True,
+            "status": "ok",
+            "device_id": adc_id,
+            "detected": {
+                "serial_port": settings.serial_port,
+                "baudrate": settings.baudrate,
+                "parity": settings.parity,
+                "function": adc_hit.get("function"),
+            },
+            "slave_address_register_0x4000": config.get("device_id"),
+            "uart_register_0x2000": {
+                "baudrate": config.get("baudrate"),
+                "parity": config.get("parity"),
+            },
+        }
+
     return {
-        "ok": bool(report_dict.get("ok")),
+        "ok": report_ok,
         "baud_sequence": baud_sequence,
         "io_device_ids": io_ids,
-        "adc_device_id": _settings.modbus_adc_device_id,
+        "adc_device_id": adc_id,
+        "topology": ports["topology"],
+        "io_serial_port": io_port,
+        "adc_serial_port": adc_port,
         "waveshare_scan": report_dict,
         "per_slave": per_slave,
     }
@@ -664,7 +1111,10 @@ def _modbus_wizard_target_ids() -> list[int]:
 def _modbus_wizard_plan() -> dict[str, Any]:
     io_ids = _modbus_io_device_ids()
     adc_id = int(_settings.modbus_adc_device_id)
-    serial_port = str(_settings.modbus_serial_port)
+    ports = _modbus_runtime_serial_ports()
+    io_port = ports["io_serial_port"] or str(_settings.modbus_serial_port)
+    adc_port = ports["adc_serial_port"] or io_port
+    separate = ports["topology"] == "separate-adapters"
     target_baud = int(_settings.modbus_baud)
     target_parity = str(_settings.modbus_parity).upper()
 
@@ -673,12 +1123,17 @@ def _modbus_wizard_plan() -> dict[str, Any]:
         configure_steps.append(
             {
                 "step": f"configure-modbus-io-{io_id}",
+                "serial_port": io_port,
                 "instruction": (
-                    f"Podlacz tylko modul Modbus IO na RS485 ({serial_port}). "
+                    f"Podlacz tylko modul Modbus IO na adapterze RS485 ({io_port}). "
+                    "Odizoluj pozostale moduly od A/B."
+                    if separate
+                    else f"Podlacz tylko modul Modbus IO na RS485 ({io_port}). "
                     "Odizoluj pozostale moduly od A/B."
                 ),
                 "program_target": {
                     "module_role": "modbus-io",
+                    "serial_port": io_port,
                     "new_device_id": io_id,
                     "new_baudrate": target_baud,
                     "new_parity": target_parity,
@@ -688,12 +1143,17 @@ def _modbus_wizard_plan() -> dict[str, Any]:
     configure_steps.append(
         {
             "step": f"configure-modbus-adc-{adc_id}",
+            "serial_port": adc_port,
             "instruction": (
-                f"Podlacz tylko modul Modbus ADC na RS485 ({serial_port}). "
+                f"Podlacz tylko modul Modbus ADC na osobnym adapterze RS485 ({adc_port}). "
+                "Odizoluj pozostale moduly od A/B."
+                if separate
+                else f"Podlacz tylko modul Modbus ADC na RS485 ({adc_port}). "
                 "Odizoluj pozostale moduly od A/B."
             ),
             "program_target": {
                 "module_role": "modbus-adc",
+                "serial_port": adc_port,
                 "new_device_id": adc_id,
                 "new_baudrate": target_baud,
                 "new_parity": target_parity,
@@ -703,14 +1163,22 @@ def _modbus_wizard_plan() -> dict[str, Any]:
     configure_steps.append(
         {
             "step": "final-check-all-connected",
-            "instruction": "Podlacz wszystkie moduly razem i uruchom waveshare-diagnose.",
+            "instruction": (
+                "Oba moduly podlaczone do swoich adapterow USB (IO i ADC osobno) — uruchom finalna diagnostyke."
+                if separate
+                else "Podlacz wszystkie moduly razem i uruchom waveshare-diagnose."
+            ),
             "verify_endpoint": "/api/v1/hardware/modbus/waveshare-diagnose",
         }
     )
 
     return {
         "ok": True,
-        "serial_port": serial_port,
+        "serial_port": io_port,
+        "io_serial_port": io_port,
+        "adc_serial_port": adc_port,
+        "topology": ports["topology"],
+        "topology_mode": ports.get("topology_mode", "auto"),
         "target_baudrate": target_baud,
         "target_parity": target_parity,
         "target_ids": _modbus_wizard_target_ids(),
@@ -723,6 +1191,7 @@ def _modbus_wizard_probe_isolated(
     baudrates: list[int],
     parities: list[str],
     device_ids: list[int],
+    required_roles: list[str] | None = None,
 ) -> dict[str, Any]:
     try:
         from pimodbus.repair import diagnose_shared_bus
@@ -757,6 +1226,7 @@ def _modbus_wizard_probe_isolated(
             device_ids=device_ids,
             timeout=1.0,
             scan_all_ports=False,
+            required_roles=required_roles,
         )
         report_dict = report.to_dict()
         all_scans.append({"serial_port": serial, "scan": report_dict})
@@ -802,57 +1272,154 @@ def _modbus_wizard_program_isolated(
         }
     try:
         from pimodbus.config import RtuBusSettings
-        from pimodbus.provisioning import read_device_config, write_device_address, write_uart_config
+        from pimodbus.provisioning import (
+            UART_REGISTER,
+            read_device_config,
+            uart_register_value,
+            write_device_address,
+            write_uart_config,
+            _open_client,
+            _read_holding_register,
+        )
     except Exception as exc:
         return {"ok": False, "error": f"pimodbus is not available: {exc}"}
 
-    source_settings = RtuBusSettings(
+    line_parity = str(new_parity).upper()
+    bus_settings = RtuBusSettings(
         serial_port=serial_port,
-        baudrate=int(_settings.modbus_baud),
-        parity=str(_settings.modbus_parity),
+        baudrate=int(new_baudrate),
+        parity=line_parity,
         timeout=2.0,
+    )
+
+    verify_settings = bus_settings
+    config_read_error = ""
+    try:
+        existing = read_device_config(verify_settings, device_id=int(current_device_id)).to_dict()
+    except Exception as exc:
+        config_read_error = str(exc)
+        if int(current_device_id) == int(new_device_id):
+            return {
+                "ok": True,
+                "verified": False,
+                "writes": {
+                    "set_address": True,
+                    "set_uart": True,
+                    "skipped": True,
+                    "config_read_error": config_read_error,
+                },
+                "verify": {},
+                "target": {
+                    "device_id": int(new_device_id),
+                    "baudrate": int(new_baudrate),
+                    "parity": line_parity,
+                    "serial_port": serial_port,
+                },
+                "note": "Probe reported target slave ID; skipped provisioning writes (config registers unreadable).",
+            }
+        return {"ok": False, "error": config_read_error}
+
+    existing_id = int(existing.get("device_id") or -1)
+    existing_baud = int(existing.get("baudrate") or 0)
+    existing_parity = str(existing.get("parity") or "").upper()
+    already_configured = (
+        existing_id == int(new_device_id)
+        and existing_baud == int(new_baudrate)
+        and existing_parity == line_parity
     )
 
     writes: dict[str, Any] = {
         "set_address": False,
         "set_uart": False,
+        "skipped": already_configured,
     }
-    writes["set_address"] = bool(
-        write_device_address(
-            source_settings,
-            current_device_id=int(current_device_id),
-            new_device_id=int(new_device_id),
-        )
-    )
-    writes["set_uart"] = bool(
-        write_uart_config(
-            source_settings,
-            device_id=int(new_device_id),
-            baudrate=int(new_baudrate),
-            parity=str(new_parity),
-        )
-    )
+    if already_configured:
+        writes["set_address"] = True
+        writes["set_uart"] = True
+    else:
+        import time
 
-    verify_settings = RtuBusSettings(
-        serial_port=serial_port,
-        baudrate=int(new_baudrate),
-        parity=str(new_parity),
-        timeout=2.0,
+        uart_target = uart_register_value(int(new_baudrate), line_parity)
+        cur_id = int(current_device_id)
+        new_id = int(new_device_id)
+
+        def _uart_register_value(device_id: int) -> int | None:
+            client = _open_client(bus_settings)
+            try:
+                return _read_holding_register(client, UART_REGISTER, device_id)
+            finally:
+                client.close()
+
+        uart_at_current = _uart_register_value(cur_id)
+        if uart_at_current is not None and int(uart_at_current) == int(uart_target):
+            writes["set_uart"] = True
+        else:
+            writes["set_uart"] = bool(
+                write_uart_config(
+                    bus_settings,
+                    device_id=cur_id,
+                    baudrate=int(new_baudrate),
+                    parity=line_parity,
+                )
+            )
+
+        if cur_id != new_id:
+            writes["set_address"] = bool(
+                write_device_address(
+                    bus_settings,
+                    current_device_id=cur_id,
+                    new_device_id=new_id,
+                )
+            )
+            time.sleep(0.2)
+        else:
+            writes["set_address"] = True
+
+        if not writes["set_uart"]:
+            for attempt, device_id in enumerate((new_id, new_id, cur_id)):
+                if attempt == 1:
+                    time.sleep(0.15)
+                uart_value = _uart_register_value(device_id)
+                if uart_value is not None and int(uart_value) == int(uart_target):
+                    writes["set_uart"] = True
+                    break
+            if not writes["set_uart"]:
+                writes["set_uart"] = bool(
+                    write_uart_config(
+                        bus_settings,
+                        device_id=new_id,
+                        baudrate=int(new_baudrate),
+                        parity=line_parity,
+                    )
+                )
+
+    verify_error = ""
+    try:
+        verify = read_device_config(verify_settings, device_id=int(new_device_id)).to_dict()
+    except Exception as exc:
+        verify = {}
+        verify_error = str(exc)
+    verified = (
+        int(verify.get("device_id") or -1) == int(new_device_id)
+        and int(verify.get("baudrate") or 0) == int(new_baudrate)
+        and str(verify.get("parity") or "").upper() == line_parity
     )
-    verify = read_device_config(verify_settings, device_id=int(new_device_id)).to_dict()
-    verified = int(verify.get("device_id") or -1) == int(new_device_id)
-    return {
-        "ok": bool(writes["set_address"] and writes["set_uart"]),
+    ok = bool(verified or (writes["set_address"] and writes["set_uart"]))
+    result: dict[str, Any] = {
+        "ok": ok,
         "writes": writes,
         "verify": verify,
         "target": {
             "device_id": int(new_device_id),
             "baudrate": int(new_baudrate),
-            "parity": str(new_parity).upper(),
+            "parity": line_parity,
             "serial_port": serial_port,
         },
         "verified": bool(verified),
     }
+    if verify_error and not ok:
+        result["error"] = verify_error
+    return result
 
 
 def set_hardware_gateway(gw: HardwareGateway) -> None:
@@ -866,12 +1433,39 @@ def _gw() -> HardwareGateway:
     return _gateway
 
 
+def _hardware_health_overall_ok(payload: dict[str, Any]) -> bool:
+    """True when every enabled plugin entry in the health payload is compatible."""
+    skip_keys = {
+        "mode",
+        "note",
+        "platform",
+        "modbus",
+        "overall_ok",
+        "degraded",
+        "init_summary",
+    }
+    for key, entry in payload.items():
+        if key in skip_keys or not isinstance(entry, dict):
+            continue
+        if entry.get("status") == "disabled":
+            continue
+        if entry.get("compatible") is not True:
+            return False
+    return True
+
+
 @router.get("/health")
 async def hardware_health():
     """Return connectivity status for all hardware services."""
     payload = await _gw().health()
     if isinstance(payload, dict):
         payload["platform"] = _detect_runtime_platform()
+        if payload.get("mode") == "real":
+            overall_ok = _hardware_health_overall_ok(payload)
+            payload["overall_ok"] = overall_ok
+            payload["degraded"] = not overall_ok
+            if not overall_ok:
+                return JSONResponse(content=payload, status_code=503)
     return payload
 
 
@@ -1162,7 +1756,17 @@ async def hardware_diagnose() -> dict[str, Any]:
 @router.get("/modbus/waveshare-diagnose")
 async def hardware_modbus_waveshare_diagnose() -> dict[str, Any]:
     """Run Waveshare-focused Modbus scan matrix and per-slave register checks."""
-    return await asyncio.to_thread(_build_waveshare_diagnose_report)
+    health = await _gw().health()
+    return await asyncio.to_thread(_build_waveshare_diagnose_report, health)
+
+
+@router.get("/stack/snapshot")
+async def hardware_stack_snapshot() -> dict[str, Any]:
+    """Single autodetect + configuration-cycle snapshot (health, ports, wizard plan)."""
+    from oqlos.hardware.stack_snapshot import build_hardware_stack_snapshot
+
+    health = await _gw().health()
+    return await asyncio.to_thread(build_hardware_stack_snapshot, health)
 
 
 @router.get("/modbus/wizard/plan")
@@ -1177,13 +1781,24 @@ async def hardware_modbus_wizard_probe_isolated(
     baudrates: list[int] | None = Body(default=None),
     parities: list[str] | None = Body(default=None),
     device_ids: list[int] | None = Body(default=None),
+    module_role: str = Body(default=""),
 ) -> dict[str, Any]:
     """Probe one isolated module before writing address/UART settings."""
     serial = serial_port or str(_settings.modbus_serial_port)
-    scan_bauds = baudrates or [4800, 9600, 19200, 38400, 57600, 115200]
+    # Waveshare IO/ADC default 9600 N — probe it before legacy high-speed guesses.
+    scan_bauds = baudrates or [9600, 4800, 19200, 38400, 57600, 115200]
     scan_parities = [str(value).upper() for value in (parities or ["N", "E", "O"])]
     scan_ids = device_ids or [1, 2, 3, 4, 5, 8, 16, 32, 64, 128, 247]
-    return await asyncio.to_thread(_modbus_wizard_probe_isolated, serial, scan_bauds, scan_parities, scan_ids)
+    role = str(module_role or "").strip()
+    required_roles = [role] if role in {"modbus-io", "modbus-adc"} else None
+    return await asyncio.to_thread(
+        _modbus_wizard_probe_isolated,
+        serial,
+        scan_bauds,
+        scan_parities,
+        scan_ids,
+        required_roles,
+    )
 
 
 @router.post("/modbus/wizard/program-isolated")
