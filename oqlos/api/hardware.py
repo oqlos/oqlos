@@ -1465,7 +1465,7 @@ async def hardware_health():
             payload["overall_ok"] = overall_ok
             payload["degraded"] = not overall_ok
             if not overall_ok:
-                return JSONResponse(content=payload, status_code=503)
+                payload["status"] = "degraded"
     return payload
 
 
@@ -1767,6 +1767,37 @@ async def hardware_stack_snapshot() -> dict[str, Any]:
 
     health = await _gw().health()
     return await asyncio.to_thread(build_hardware_stack_snapshot, health)
+
+
+@router.get("/diagnosis")
+async def hardware_diagnosis_route(
+    scan: str = Query(default="never", description="Identify scan mode passed before diagnosis"),
+) -> dict[str, Any]:
+    """Per-device diagnosis plan (environment + recommended actions)."""
+    from oqlos.hardware.diagnosis import build_diagnosis_report, report_to_dict
+
+    identify_payload = await hardware_identify(scan=scan)
+    report = build_diagnosis_report(identify_payload)
+    return report_to_dict(report)
+
+
+@router.post("/recover")
+async def hardware_recover_route(
+    scope: str = Query(default="safe", description="Recovery scope: safe = in-process plugin reconnect only"),
+) -> dict[str, Any]:
+    """Safe auto-recovery inside OqlOS; host sidecar steps are returned as host_actions."""
+    from oqlos.hardware.diagnosis import build_diagnosis_report, execute_safe_recover, report_to_dict
+
+    if scope.strip().lower() != "safe":
+        raise HTTPException(status_code=400, detail="Only scope=safe is supported via API")
+    identify_payload = await hardware_identify(scan="never")
+    report = build_diagnosis_report(identify_payload)
+    execution = await execute_safe_recover(_gw(), report)
+    return {
+        **execution,
+        "device_diagnosis": report_to_dict(report),
+        "source": "oqlos.hardware.recover",
+    }
 
 
 @router.get("/modbus/wizard/plan")

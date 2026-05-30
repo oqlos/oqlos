@@ -13,7 +13,16 @@ def _request_firmware_json(url: str, endpoint: str, *, timeout: float) -> dict:
         import httpx
 
         response = httpx.get(f"{url}{endpoint}", timeout=timeout)
-        return response.json() if response.status_code == 200 else {"error": f"HTTP {response.status_code}"}
+        if response.status_code == 200:
+            return response.json()
+        if response.status_code == 503 and endpoint.endswith("/health"):
+            try:
+                payload = response.json()
+            except Exception:
+                payload = None
+            if isinstance(payload, dict) and str(payload.get("mode", "")).lower() == "real":
+                return payload
+        return {"error": f"HTTP {response.status_code}"}
     except Exception as exc:
         return {"error": str(exc)}
 

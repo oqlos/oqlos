@@ -46,14 +46,13 @@ class _FakeGateway:
         }
 
 
-def test_hardware_health_endpoint_returns_503_when_degraded(monkeypatch):
+def test_hardware_health_endpoint_returns_200_when_degraded(monkeypatch):
     monkeypatch.setattr(hw, "_gw", lambda: _FakeGateway())
     monkeypatch.setattr(hw, "_detect_runtime_platform", lambda: {"detected": "desktop-linux"})
 
-    response = asyncio.run(hw.hardware_health())
+    payload = asyncio.run(hw.hardware_health())
 
-    assert response.status_code == 503
-    assert response.body
-    body = response.body.decode("utf-8").replace(" ", "")
-    assert '"degraded":true' in body
-    assert '"overall_ok":false' in body
+    assert isinstance(payload, dict)
+    assert payload.get("degraded") is True
+    assert payload.get("overall_ok") is False
+    assert payload.get("status") == "degraded"
