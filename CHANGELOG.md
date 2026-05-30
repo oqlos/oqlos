@@ -26,6 +26,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - low VIN (missing motor supply),
   - Modbus adapter-present but device-silent mode.
 
+## [0.1.26] - 2026-05-30
+
+### Docs
+- Update README.md
+
+### Test
+- Update tests/firmware/test_rtc_probe.py
+
+### Other
+- Update oqlos/hardware/rtc_probe.py
+- Update uv.lock
+
 ## [0.1.25] - 2026-05-30
 
 ### Docs

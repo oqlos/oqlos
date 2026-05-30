@@ -5,10 +5,25 @@ from __future__ import annotations
 import asyncio
 
 from oqlos.api import hardware as hardware_api
-from oqlos.hardware.rtc_probe import RTC_PERIPHERAL_ID, build_rtc_peripheral_status, enrich_rtc_adapter, run_rtc_command
+from oqlos.hardware.rtc_probe import (
+    RTC_PERIPHERAL_ID,
+    build_rtc_peripheral_status,
+    enrich_rtc_adapter,
+    is_rtc_hardware_enabled,
+    run_rtc_command,
+)
+
+
+def test_enrich_rtc_adapter_skips_when_disabled(monkeypatch) -> None:
+    monkeypatch.delenv("OQLOS_ENABLE_RTC", raising=False)
+    monkeypatch.delenv("C2004_HARDWARE_ENABLE_RTC", raising=False)
+    payload = {"adapters": [{"id": "modbus-io", "status": "ok"}], "total": 1, "detected": 1}
+    assert enrich_rtc_adapter(payload) == payload
+    assert is_rtc_hardware_enabled() is False
 
 
 def test_enrich_rtc_adapter_appends_rtc(monkeypatch) -> None:
+    monkeypatch.setenv("OQLOS_ENABLE_RTC", "1")
     monkeypatch.setattr(
         "oqlos.hardware.rtc_probe.build_rtc_adapter_entry",
         lambda: {
@@ -39,6 +54,7 @@ def test_enrich_rtc_adapter_idempotent() -> None:
 
 
 def test_build_rtc_peripheral_status_reads_sidecar(monkeypatch) -> None:
+    monkeypatch.setenv("OQLOS_ENABLE_RTC", "1")
     calls = []
 
     def fake_request(method, path, *, json_body=None, timeout=2.0):
@@ -68,6 +84,7 @@ def test_build_rtc_peripheral_status_reads_sidecar(monkeypatch) -> None:
 
 
 def test_run_rtc_command_posts_to_sidecar(monkeypatch) -> None:
+    monkeypatch.setenv("OQLOS_ENABLE_RTC", "1")
     calls = []
 
     def fake_request(method, path, *, json_body=None, timeout=2.0):

@@ -13,6 +13,15 @@ logger = logging.getLogger(__name__)
 RTC_PERIPHERAL_ID = "rtc"
 PIRTC_DEFAULT_URL = "http://localhost:8125"
 _REQUEST_TIMEOUT_SECONDS = 2.0
+_RTC_ENABLE_TRUTHY = frozenset({"1", "true", "yes", "on"})
+
+
+def is_rtc_hardware_enabled() -> bool:
+    """RTC is opt-in: production RPi5 with Waveshare HAT (OQLOS_ENABLE_RTC=1)."""
+    for name in ("OQLOS_ENABLE_RTC", "C2004_HARDWARE_ENABLE_RTC"):
+        if os.environ.get(name, "").strip().lower() in _RTC_ENABLE_TRUTHY:
+            return True
+    return False
 
 
 def get_pirtc_base_url() -> str:
@@ -59,6 +68,13 @@ def _pirtc_request_sync(
 
 def build_rtc_peripheral_status() -> dict[str, Any]:
     """Return the runtime status payload for the RTC sidecar."""
+    if not is_rtc_hardware_enabled():
+        return {
+            "ok": False,
+            "peripheral_id": RTC_PERIPHERAL_ID,
+            "error": "RTC disabled (set OQLOS_ENABLE_RTC=1 on RPi5 with WatchDog HAT)",
+            "result": {"data": {"connected": False, "enabled": False}},
+        }
     ok, payload, error = _pirtc_request_sync("GET", "/api/status", timeout=3.0)
     if not ok:
         return {
@@ -100,6 +116,14 @@ def build_rtc_peripheral_status() -> dict[str, Any]:
 
 def run_rtc_command(command: str, args: dict[str, Any] | None = None) -> dict[str, Any]:
     """Execute a diagnostic command against the RTC sidecar."""
+    if not is_rtc_hardware_enabled():
+        return {
+            "ok": False,
+            "peripheral_id": RTC_PERIPHERAL_ID,
+            "command": command,
+            "error": "RTC disabled (set OQLOS_ENABLE_RTC=1 on RPi5 with WatchDog HAT)",
+            "result": {},
+        }
     mapping = _RTC_COMMAND_MAP.get(command)
     if not mapping:
         return {
@@ -157,6 +181,8 @@ def build_rtc_adapter_entry() -> dict[str, Any]:
 
 
 def enrich_rtc_adapter(payload: dict[str, Any]) -> dict[str, Any]:
+    if not is_rtc_hardware_enabled():
+        return payload
     if not isinstance(payload, dict):
         return payload
     adapters = list(payload.get("adapters") or [])
