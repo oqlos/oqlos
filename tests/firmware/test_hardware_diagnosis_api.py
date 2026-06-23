@@ -36,3 +36,74 @@ def test_build_diagnosis_report_motors_error():
         a for dev in payload["devices"].values() for a in dev["recommended_actions"] if a.get("scope") == "host"
     ]
     assert any(a["kind"] == "docker" for a in host_actions)
+
+
+def test_motors_only_no_global_make_hardware_up():
+    identify = {
+        "platform": {"modbus_topology": "separate-adapters"},
+        "diagnostics": {
+            "health": {
+                "modbus-io": {"status": "connected", "compatible": True, "message": "ok"},
+                "modbus-adc": {"status": "connected", "compatible": True, "message": "ok"},
+                "motor-dri0050": {
+                    "status": "error",
+                    "compatible": False,
+                    "message": "All connection attempts failed",
+                },
+            },
+        },
+        "adapters": [],
+    }
+    report = build_diagnosis_report(identify)
+    payload = report_to_dict(report)
+    global_make = [a for a in payload["global_actions"] if a.get("make_target") == "hardware-up"]
+    assert global_make == []
+    dri = payload["devices"]["motor-dri0050"]
+    assert any(a["id"] == "dri0050-ensure-sidecar" for a in dri["recommended_actions"])
+    assert not any(str(a.get("command") or "").startswith("systemctl") for a in dri["recommended_actions"])
+
+
+def test_recover_targets_skip_devices_ok_in_report():
+    from oqlos.hardware.diagnosis import DiagnosisReport, DeviceDiagnosis, _recover_targets
+
+    report = DiagnosisReport(
+        environment={},
+        devices={
+            "modbus-io": DeviceDiagnosis(
+                device_id="modbus-io",
+                display_name="IO",
+                status="ok",
+                health_summary="ok",
+            ),
+            "motor-dri0050": DeviceDiagnosis(
+                device_id="motor-dri0050",
+                display_name="DRI",
+                status="error",
+                health_summary="down",
+            ),
+        },
+        global_actions=[],
+        ok=False,
+        message="",
+    )
+    health = {
+        "modbus-io": {"status": "error", "compatible": False, "message": "transient"},
+        "motor-dri0050": {"status": "error", "compatible": False, "message": "down"},
+    }
+    targets = _recover_targets(report, health)
+    assert targets == ["motor-dri0050"]
+
+
+def test_host_actions_filtered_motor_only_no_make():
+    from oqlos.hardware.diagnosis import DiagnosisReport, _host_actions_from_report
+
+    report = DiagnosisReport(
+        environment={},
+        devices={},
+        global_actions=[],
+        ok=False,
+        message="",
+        requires_full_stack_restart=False,
+    )
+    host = _host_actions_from_report(report, still_failed=["motor-dri0050"])
+    assert not any(a.get("kind") == "make_target" for a in host)

@@ -72,7 +72,17 @@ def _health_map(identify: dict[str, Any]) -> dict[str, Any]:
     return health if isinstance(health, dict) else {}
 
 
+def plugin_is_healthy(entry: dict[str, Any] | None) -> bool:
+    """Stable OK — do not disconnect/reconnect when true."""
+    if not isinstance(entry, dict):
+        return False
+    status = str(entry.get("status") or "").lower()
+    return entry.get("compatible") is True and status in {"connected", "ok", "healthy"}
+
+
 def plugin_needs_repair(plugin_id: str, entry: dict[str, Any] | None) -> bool:
+    if plugin_is_healthy(entry):
+        return False
     if not isinstance(entry, dict):
         return False
     message = str(entry.get("message") or "").lower()
@@ -84,6 +94,11 @@ def plugin_needs_repair(plugin_id: str, entry: dict[str, Any] | None) -> bool:
     if status in {"error", "offline", "disabled", "no-access", "device-stale"}:
         return True
     return False
+
+
+def _report_device_status(report: DiagnosisReport, plugin_id: str) -> str:
+    dev = report.devices.get(plugin_id)
+    return str(dev.status if dev else "")
 
 
 def modbus_plugins_need_repair(identify: dict[str, Any] | None) -> bool:
@@ -213,19 +228,6 @@ def build_diagnosis_report(identify: dict[str, Any]) -> DiagnosisReport:
                         detail="Bezpieczne odświeżenie połączenia w procesie OqlOS.",
                     ),
                 )
-                dev.recommended_actions.append(
-                    DiagnosisAction(
-                        id=f"{plugin_id}-hardware-up",
-                        device_id=plugin_id,
-                        label="make hardware-up (host)",
-                        kind="make_target",
-                        priority=25,
-                        make_target="hardware-up",
-                        command=f"cd {c2004_root} && make hardware-up",
-                        auto_executable=bool(host_recover),
-                        scope="host",
-                    ),
-                )
         elif plugin_id == "motor-tic249" and status != "ok":
             if "errno 19" in msg:
                 dev.issues.append("USB Tic — martwy handle po replug.")
@@ -253,27 +255,23 @@ def build_diagnosis_report(identify: dict[str, Any]) -> DiagnosisReport:
                 ],
             )
         elif plugin_id == "motor-dri0050" and status != "ok":
+            if "connection attempts failed" in msg or "503" in msg:
+                dev.issues.append(
+                    "Sidecar DRI0050 (:8203) niedostępny lub /health=503 — OqlOS uruchomi ponownie systemd-run.",
+                )
+            if "errno 5" in msg or "input/output error" in msg:
+                dev.issues.append("Martwy handle USB RS485 pompy — odłącz/podłącz kabel pompy.")
             dev.recommended_actions.extend(
                 [
                     DiagnosisAction(
-                        id="dri0050-restart-sidecar",
+                        id="dri0050-ensure-sidecar",
                         device_id=plugin_id,
-                        label="Restart dri0050-motor-api",
-                        kind="systemd",
-                        priority=10,
-                        command="systemctl --user restart dri0050-motor-api",
-                        auto_executable=bool(host_recover),
-                        scope="host",
-                    ),
-                    DiagnosisAction(
-                        id="dri0050-restart-oqlos",
-                        device_id=plugin_id,
-                        label="Restart oqlos-hardware-api",
-                        kind="systemd",
-                        priority=15,
-                        command="systemctl --user restart oqlos-hardware-api.service",
-                        auto_executable=bool(host_recover),
-                        scope="host",
+                        label="Uruchom dri0050-motor-api (OqlOS)",
+                        kind="oqlos",
+                        priority=5,
+                        auto_executable=True,
+                        scope="oqlos",
+                        detail="systemd-run jak make hardware-up, bez restartu całego stacku.",
                     ),
                     DiagnosisAction(
                         id="dri0050-reconnect",
@@ -299,7 +297,7 @@ def build_diagnosis_report(identify: dict[str, Any]) -> DiagnosisReport:
     )
 
     global_actions: list[DiagnosisAction] = []
-    modbus_bad = any(devices[d].status == "error" for d in ("modbus-io", "modbus-adc"))
+    modbus_bad = modbus_plugins_need_repair(identify)
     motors_bad = any(devices[d].status == "error" for d in ("motor-tic249", "motor-dri0050"))
     if modbus_bad and motors_bad:
         global_actions.append(
@@ -357,29 +355,70 @@ def build_diagnosis_report(identify: dict[str, Any]) -> DiagnosisReport:
     )
 
 
-def _host_actions_from_report(report: DiagnosisReport) -> list[dict[str, Any]]:
+def _host_actions_from_report(
+    report: DiagnosisReport,
+    *,
+    still_failed: list[str] | None = None,
+) -> list[dict[str, Any]]:
     actions: list[DiagnosisAction] = list(report.global_actions)
     for dev in report.devices.values():
         actions.extend(dev.recommended_actions)
     host: list[dict[str, Any]] = []
     seen: set[str] = set()
+    saw_make = False
+    failed = set(still_failed or [])
+    motor_only = bool(failed) and all(pid.startswith("motor") for pid in failed)
     for action in sorted(actions, key=lambda a: (a.priority, a.id)):
         if action.scope != "host" or action.id in seen:
+            continue
+        if action.kind == "make_target":
+            if saw_make:
+                continue
+            modbus_still = any(pid.startswith("modbus") for pid in failed)
+            if motor_only and not modbus_still:
+                continue
+            saw_make = True
+        if action.id.endswith("-hardware-up"):
+            continue
+        if action.id.startswith("dri0050-restart"):
             continue
         seen.add(action.id)
         host.append(_action_dict(action))
     return host
 
 
+def _recover_targets(report: DiagnosisReport, health: dict[str, Any]) -> list[str]:
+    """Only plugins marked error in diagnosis AND unhealthy in live health."""
+    targets: list[str] = []
+    for pid in _OQLOS_SAFE_PLUGINS:
+        if _report_device_status(report, pid) != "error":
+            continue
+        entry = health.get(pid) if isinstance(health.get(pid), dict) else {}
+        if plugin_is_healthy(entry):
+            continue
+        if plugin_needs_repair(pid, entry):
+            targets.append(pid)
+    return targets
+
+
 async def execute_safe_recover(gateway: Any, report: DiagnosisReport) -> dict[str, Any]:
     """Reconnect failed plugins inside OqlOS; return host_actions for sidecars."""
+    from oqlos.hardware.sidecar_control import ensure_dri0050_sidecar
+
     repairs: list[dict[str, Any]] = []
     health_before = await gateway.health()
-    targets = [
-        pid
-        for pid in _OQLOS_SAFE_PLUGINS
-        if plugin_needs_repair(pid, health_before.get(pid) if isinstance(health_before.get(pid), dict) else {})
-    ]
+    targets = _recover_targets(report, health_before)
+    if "motor-dri0050" in targets:
+        entry = health_before.get("motor-dri0050") if isinstance(health_before.get("motor-dri0050"), dict) else {}
+        msg = str(entry.get("message") or "").lower()
+        force = (
+            "connection attempts failed" in msg
+            or "http 503" in msg
+            or "503" in msg
+            or "connect returned false" in msg
+            or not entry
+        )
+        repairs.append(await ensure_dri0050_sidecar(force_restart=force))
     if not targets and report.requires_full_stack_restart:
         return {
             "ok": False,
@@ -413,6 +452,6 @@ async def execute_safe_recover(gateway: Any, report: DiagnosisReport) -> dict[st
         "ok": not still_bad,
         "strategy": "oqlos-safe",
         "repairs": repairs,
-        "host_actions": _host_actions_from_report(report),
+        "host_actions": _host_actions_from_report(report, still_failed=still_bad),
         "still_failed": still_bad,
     }
