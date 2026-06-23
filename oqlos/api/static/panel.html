@@ -51,6 +51,7 @@
   .entry .title{font-weight:600}
   .entry .time{color:var(--muted);font-size:11px}
   button.cp{font-size:11px;padding:3px 8px;background:var(--bg)}
+  button.grun{font-size:11px;padding:2px 8px}
   .entry .sent{margin-top:5px;font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
   .entry .sent code{background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:2px 7px;color:#cbd5e1;font-size:11px;word-break:break-all}
   .entry .sent .arrow{color:var(--accent);font-weight:600}
@@ -72,6 +73,7 @@
   <span id="svcBadge" class="badge">—</span>
   <div class="spacer"></div>
   <button onclick="refreshStatus()">⟳ Odśwież status</button>
+  <label style="font-size:12px;display:inline-flex;align-items:center;gap:5px;color:var(--muted)"><input type="checkbox" id="autoRefresh" onchange="toggleAuto()"> auto 10s</label>
   <button onclick="copyAllResults(this)" title="Kopiuj wszystkie wyniki (komendy + odpowiedzi) do schowka jako JSON">📋 Kopiuj wszystko</button>
   <button onclick="downloadResults()" title="Pobierz wszystkie wyniki (komendy + odpowiedzi) do pliku JSON">⬇ Pobierz JSON</button>
   <button onclick="clearLog()">Wyczyść log</button>
@@ -122,7 +124,10 @@
 
     <div class="card">
       <h2>Wyniki</h2>
-      <div class="body"><div id="log"><span class="muted">Brak wyników — uruchom komendę lub scenariusz.</span></div></div>
+      <div class="body">
+        <input id="logFilter" placeholder="filtruj wyniki (tytuł / komenda / odpowiedź)…" oninput="filterLog()" style="width:100%;margin-bottom:8px">
+        <div id="log"><span class="muted">Brak wyników — uruchom komendę lub scenariusz.</span></div>
+      </div>
     </div>
   </div>
 </div>
@@ -270,6 +275,7 @@ function logEntry(title, env, status, sent){
     sent: sent||null, ok: !!(env&&env.ok), node_id: env?env.node_id:null,
     received_summary: recv, response: env,
   });
+  if($('#logFilter') && $('#logFilter').value) filterLog();
 }
 
 function resultsDoc(){
@@ -318,11 +324,35 @@ function renderGroups(){
   for(const g of GROUPS){
     const div=document.createElement('div'); div.className='group';
     const btns=g.items.map((it,i)=>`<button class="${it.act?'act':''}" data-g="${g.title}" data-i="${i}" title="${it.kind==='manage'?'manage: '+it.verb:it.oql}">${it.label}</button>`).join('');
-    div.innerHTML=`<div class="glabel"><span class="dot" style="background:${g.color}"></span>${g.title}</div><div class="btns">${btns}</div>`;
+    div.innerHTML=`<div class="glabel"><span class="dot" style="background:${g.color}"></span>${g.title}`
+      +`<span style="flex:1"></span><button class="grun" data-grp="${g.title}" title="Uruchom wszystkie komendy w tej grupie po kolei">▶ grupa</button></div>`
+      +`<div class="btns">${btns}</div>`;
     c.appendChild(div);
   }
-  c.querySelectorAll('button').forEach(b=>{
+  c.querySelectorAll('.btns button').forEach(b=>{
     b.onclick=()=>{ const g=GROUPS.find(x=>x.title===b.dataset.g); runItem(g.items[+b.dataset.i]); };
+  });
+  c.querySelectorAll('button.grun').forEach(b=>{ b.onclick=()=>runGroup(b.dataset.grp, b); });
+}
+
+async function runGroup(title, btn){
+  const g=GROUPS.find(x=>x.title===title); if(!g) return;
+  if(g.items.some(it=>it.act) && !confirm('Grupa „'+title+'" zawiera akcje na realnym sprzęcie. Uruchomić wszystkie po kolei?')) return;
+  const o=btn?btn.textContent:''; if(btn){ btn.disabled=true; btn.textContent='… działa'; }
+  for(const it of g.items){ await runItem(it); await new Promise(r=>setTimeout(r,250)); }
+  if(btn){ btn.textContent=o; btn.disabled=false; }
+}
+
+let _autoTimer=null;
+function toggleAuto(){
+  if($('#autoRefresh').checked){ refreshStatus(); _autoTimer=setInterval(refreshStatus, 10000); }
+  else { clearInterval(_autoTimer); _autoTimer=null; }
+}
+
+function filterLog(){
+  const q=($('#logFilter').value||'').trim().toLowerCase();
+  document.querySelectorAll('#log .entry').forEach(e=>{
+    e.style.display = (!q || e.textContent.toLowerCase().includes(q)) ? '' : 'none';
   });
 }
 
