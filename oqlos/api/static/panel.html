@@ -44,6 +44,15 @@
   select,textarea,input{font:inherit;color:var(--text);background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:7px}
   select{width:100%}
   textarea{width:100%;min-height:230px;resize:vertical;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;tab-size:2}
+  .editor-wrap{display:flex;gap:10px;align-items:stretch}
+  .editor-wrap textarea{flex:1;min-width:0}
+  .snip-palette{width:190px;flex:none;max-height:248px;overflow:auto;border:1px solid var(--border);border-radius:7px;background:var(--bg);padding:8px}
+  .snip-palette .sg{margin-bottom:9px}
+  .snip-palette .sgl{font-size:11px;font-weight:600;color:var(--muted);margin-bottom:5px;display:flex;align-items:center;gap:5px}
+  .snip-palette .sgl .dot{width:8px;height:8px;border-radius:50%;flex:none}
+  .snip-btn{display:block;width:100%;text-align:left;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;padding:4px 7px;margin-bottom:3px;border:1px solid var(--border);border-radius:5px;background:var(--panel2);color:var(--text);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .snip-btn:hover{border-color:#3b82f6;background:var(--panel)}
+  @media(max-width:900px){.editor-wrap{flex-direction:column}.snip-palette{width:auto;max-height:170px}}
   .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
   .toggle{display:inline-flex;border:1px solid var(--border);border-radius:7px;overflow:hidden}
   .toggle label{padding:6px 12px;cursor:pointer;font-size:12px;background:var(--panel2)}
@@ -133,7 +142,10 @@
     <div class="card">
       <h2>Edytor scenariusza (OQL)</h2>
       <div class="body">
-        <textarea id="editor" spellcheck="false" placeholder="VERSION: 4&#10;SCENARIO: Mój test&#10;GOAL:&#10;  SET NAME 'Opis'&#10;  SET 'valve-1' 'open'&#10;  WAIT 1 s&#10;  GET 'ai01'"></textarea>
+        <div class="editor-wrap">
+          <textarea id="editor" spellcheck="false" placeholder="VERSION: 4&#10;SCENARIO: Mój test&#10;GOAL:&#10;  SET NAME 'Opis'&#10;  SET 'valve-1' 'open'&#10;  WAIT 1 s&#10;  GET 'ai01'"></textarea>
+          <div id="snippets" class="snip-palette" title="Kliknij komendę OQL — wstawi się w edytorze w miejscu kursora"></div>
+        </div>
         <div class="row" style="margin-top:9px">
           <span class="muted" style="font-size:12px">Tryb:</span>
           <span class="toggle">
@@ -202,6 +214,65 @@ const GROUPS = [
     {label:"Reset USB CH340 (1a86)", kind:"manage", verb:"usb-reset", args:{vendor_id:"1a86"}, act:true},
   ]},
 ];
+
+// Wstawiane do edytora w miejscu kursora (gotowe linie OQL per urządzenie).
+const OQL_SNIPPETS = [
+  {title:"Struktura", color:"#64748b", items:[
+    {label:"VERSION: 4", t:"VERSION: 4\n"},
+    {label:"SCENARIO: …", t:"SCENARIO: Mój test\n"},
+    {label:"GOAL:", t:"GOAL:\n"},
+    {label:"SET NAME '…'", t:"  SET NAME 'Opis'\n"},
+    {label:"WAIT 1 s", t:"  WAIT 1 s\n"},
+    {label:"WAIT 500 ms", t:"  WAIT 500 ms\n"},
+  ]},
+  {title:"Zawory", color:"#10b981", items:[
+    {label:"valve-1 open", t:"  SET 'valve-1' 'open'\n"},
+    {label:"valve-1 closed", t:"  SET 'valve-1' 'closed'\n"},
+    {label:"valve-2 open", t:"  SET 'valve-2' 'open'\n"},
+    {label:"valve-2 closed", t:"  SET 'valve-2' 'closed'\n"},
+    {label:"valve-NC open", t:"  SET 'valve-NC' 'open'\n"},
+    {label:"valve-NC closed", t:"  SET 'valve-NC' 'closed'\n"},
+  ]},
+  {title:"Pompa", color:"#f59e0b", items:[
+    {label:"pump 0%", t:"  SET 'pump' 0\n"},
+    {label:"pump 25%", t:"  SET 'pump' 25\n"},
+    {label:"pump 50%", t:"  SET 'pump' 50\n"},
+    {label:"pump 100%", t:"  SET 'pump' 100\n"},
+  ]},
+  {title:"Sensory (ADC)", color:"#06b6d4", items:[
+    {label:"GET ai01", t:"  GET 'ai01'\n"},
+    {label:"GET ai02", t:"  GET 'ai02'\n"},
+    {label:"GET ai03", t:"  GET 'ai03'\n"},
+  ]},
+];
+
+// Wstaw tekst w edytorze dokładnie w miejscu kursora (lub na końcu zaznaczenia).
+function insertAtCursor(text){
+  const ta = $('#editor');
+  const s = ta.selectionStart ?? ta.value.length;
+  const e = ta.selectionEnd ?? ta.value.length;
+  ta.value = ta.value.slice(0, s) + text + ta.value.slice(e);
+  const pos = s + text.length;
+  ta.selectionStart = ta.selectionEnd = pos;
+  ta.focus();
+}
+
+function renderSnippets(){
+  const c = $('#snippets'); if(!c) return; c.innerHTML='';
+  OQL_SNIPPETS.forEach(g=>{
+    const wrap=document.createElement('div'); wrap.className='sg';
+    const lab=document.createElement('div'); lab.className='sgl';
+    lab.innerHTML=`<span class="dot" style="background:${g.color}"></span>${esc(g.title)}`;
+    wrap.appendChild(lab);
+    g.items.forEach(it=>{
+      const b=document.createElement('button'); b.className='snip-btn';
+      b.textContent=it.label; b.title='Wstaw: '+it.t.trim();
+      b.onclick=()=>insertAtCursor(it.t);
+      wrap.appendChild(b);
+    });
+    c.appendChild(wrap);
+  });
+}
 
 const BUILTIN_SCENARIOS = [
   {name:"— wybierz scenariusz —", oql:""},
@@ -557,6 +628,7 @@ document.addEventListener('keydown', e=>{
 });
 
 renderGroups();
+renderSnippets();
 rebuildScenarios();
 refreshStatus();
 loadServerScenarios();
