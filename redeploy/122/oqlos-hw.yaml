@@ -1,0 +1,66 @@
+# OqlOS hardware-node plugin config (boardnet / 192.168.188.122).
+#
+# This is the base config copied to /home/pi/maskservice/config/oqlos-real.yaml by
+# the `apply-oqlos-hw-config` deploy step, which then AUTODETECTS and rewrites the
+# Modbus serial_port / baudrate / device_id in place. Do NOT hardcode-trust the
+# serial-by-id strings below — they are placeholders; the USB adapters on boardnet may
+# enumerate differently than on pi109.
+#
+# Motor sidecars run on THIS Pi at loopback (127.0.0.1), never host.docker.internal.
+
+plugins:
+  # Waveshare Modbus RTU Analog Input 8CH — pressure/analog sensors
+  modbus-adc:
+    enabled: true
+    connection_type: modbus-rtu
+    connection_params:
+      serial_port: /dev/ttyUSB0          # autodetected at deploy
+      baudrate: 9600
+      parity: N
+      device_id: 2
+      read_address: 0
+      read_count: 8
+    timeout: 2.0
+    retry_count: 3
+    peripherals:
+      ai01: {name: AI01 NC pressure, type: sensor, scale: {min: 0, max: 20000, default: 0, unit: raw}, conversion: {type: none}}
+      ai02: {name: AI02 SC pressure, type: sensor, scale: {min: 0, max: 20000, default: 0, unit: raw}, conversion: {type: none}}
+      ai03: {name: AI03 WC pressure, type: sensor, scale: {min: 0, max: 20000, default: 0, unit: raw}, conversion: {type: none}}
+
+  # DFRobot DRI0050 — PWM pump driver (sidecar on this Pi)
+  motor-dri0050:
+    enabled: true
+    connection_type: http
+    connection_params:
+      base_url: http://127.0.0.1:8203
+    timeout: 2.0
+    retry_count: 3
+    peripherals:
+      speed: {name: speed, type: pump, scale: {min: 0, max: 100, default: 0, unit: "l/min"}, conversion: {type: linear, scale: 0.1, offset: 0}}
+      power: {name: power, type: pump, scale: {min: 0, max: 100, default: 0, unit: "%"}, conversion: {type: linear, scale: 0.02, offset: 0}}
+
+  # Waveshare Modbus RTU IO 8CH — valve controller
+  modbus-io:
+    enabled: true
+    connection_type: modbus-rtu
+    connection_params:
+      serial_port: /dev/ttyACM0          # autodetected at deploy
+      baudrate: 9600
+      parity: N
+      device_id: 1
+    timeout: 2.0
+    retry_count: 3
+    peripherals:
+      state: {name: state, type: valve, scale: {min: 0, max: 1, default: 0, unit: ""}, raster: [0, 1], conversion: {type: none}}
+
+  # Pololu Tic T249 — stepper motor / artificial lung (sidecar on this Pi)
+  motor-tic249:
+    enabled: true
+    connection_type: http
+    connection_params:
+      base_url: http://127.0.0.1:8205
+    timeout: 2.0
+    retry_count: 3
+    peripherals:
+      steps: {name: steps, type: lung, scale: {min: 0, max: 10000, default: 500, unit: steps}, conversion: {type: none}}
+      speed: {name: speed, type: lung, scale: {min: 0, max: 1000, default: 1000, unit: "steps/s"}, conversion: {type: none}}
