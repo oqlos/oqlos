@@ -103,6 +103,24 @@
         <div class="hint">Wybór wczytuje scenariusz do edytora. Lista: szablony wbudowane + <b>[moje]</b> (zapisane w przeglądarce) + z serwera.</div>
       </div>
     </div>
+
+    <div class="card">
+      <h2>Monitor na żywo</h2>
+      <div class="body">
+        <div class="row">
+          <select id="monMetric" style="flex:1">
+            <option value="cpu">CPU temp (°C)</option>
+            <option value="ai01">Sensor AI01</option>
+            <option value="ai02">Sensor AI02</option>
+            <option value="ai03">Sensor AI03</option>
+          </select>
+          <input id="monInterval" type="number" min="1" max="60" value="3" style="width:62px" title="interwał (s)">
+          <button id="monBtn" onclick="toggleMonitor(this)">▶ start</button>
+        </div>
+        <canvas id="monChart" width="320" height="80" style="width:100%;height:80px;margin-top:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px"></canvas>
+        <div class="hint"><b id="monVal">—</b> · <span id="monMeta" class="muted"></span></div>
+      </div>
+    </div>
   </div>
 
   <!-- RIGHT: editor + results -->
@@ -256,17 +274,26 @@ function classify(env, status){
   return {cls:'fail', label:'BŁĄD', hint:'realny błąd'};
 }
 
-function logEntry(title, env, status, sent){
+let _entryId=0; const _reqs={};
+async function replay(id){
+  const r=_reqs[id]; if(!r) return;
+  const {status,data}=await api(r.ep, r.body);
+  logEntry((r.title||'replay')+' (powtórzone)', data, status, 'POST '+r.ep+'  '+JSON.stringify(r.body), {ep:r.ep, body:r.body, title:r.title});
+}
+
+function logEntry(title, env, status, sent, req){
   const log=$('#log'); if(log.firstChild && log.firstChild.classList===undefined) log.innerHTML='';
   const c=classify(env, status);
   const recv=summarize(env);
   const t=new Date();
+  const id=++_entryId; if(req) _reqs[id]={ep:req.ep, body:req.body, title:req.title||title};
   const e=document.createElement('div'); e.className='entry';
   e.innerHTML=`<div class="top">
       <span class="badge ${c.cls}" title="${esc(c.hint)}">${c.label}</span>
       <span class="title">${esc(title)}</span>
       ${env&&env.node_id?`<span class="badge">${esc(env.node_id)}</span>`:''}
       <span class="spacer" style="flex:1"></span>
+      ${req?`<button class="cp" onclick="replay(${id})" title="Powtórz tę samą komendę">↻ powtórz</button>`:''}
       <button class="cp" onclick="copyEntryJson(this)" title="Kopiuj surowy JSON odpowiedzi">📋 JSON</button>
       <span class="time">${t.toLocaleTimeString('pl-PL')}</span>
     </div>
@@ -308,7 +335,7 @@ async function runManage(verb, args, label){
   const sent='POST /api/v1/oql/manage  '+JSON.stringify(payload);
   const {status,data}=await api('/api/v1/oql/manage', payload);
   if(status===503) banner('Transport OQL wyłączony (rola ≠ controller). Uruchom oqlos w roli controller, aby sterować węzłem sprzętowym.');
-  logEntry(label||('manage: '+verb), data, status, sent);
+  logEntry(label||('manage: '+verb), data, status, sent, {ep:'/api/v1/oql/manage', body:payload, title:label||('manage: '+verb)});
 }
 async function runOql(oql, kind, label){
   const k=kind||'command', m=mode();
@@ -316,7 +343,7 @@ async function runOql(oql, kind, label){
   const sent='POST /api/v1/oql/execute  '+JSON.stringify({kind:k, mode:m, oql});
   const {status,data}=await api('/api/v1/oql/execute', payload);
   if(status===503) banner('Transport OQL wyłączony (rola ≠ controller). Uruchom oqlos w roli controller.');
-  logEntry(label||('OQL: '+oql.split('\n')[0]), data, status, sent);
+  logEntry(label||('OQL: '+oql.split('\n')[0]), data, status, sent, {ep:'/api/v1/oql/execute', body:payload, title:label||('OQL: '+oql.split('\n')[0])});
 }
 
 function runItem(it){
@@ -468,6 +495,39 @@ async function refreshStatus(){
   else if(status>=200&&status<300&&data&&data.ok){
     nb.className='badge ok'; nb.textContent='węzeł: '+(data.node_id||'?')+' · '+((data.result||{}).mode||'?');
   } else { nb.className='badge fail'; nb.textContent='węzeł niedostępny'; }
+}
+
+// --- Monitor na żywo (sparkline) ---
+let _monTimer=null, _monData=[];
+async function monPoll(){
+  const metric=$('#monMetric').value; let val=null, unit='';
+  try{
+    if(metric==='cpu'){
+      const {data}=await api('/api/v1/oql/manage',{verb:'pi-diagnostics'});
+      val=(data&&data.result)?data.result.cpu_temp_c:null; unit=' °C';
+    } else {
+      const {data}=await api('/api/v1/oql/manage',{verb:'sensor',args:{sensor_id:metric}});
+      val=(data&&data.ok&&data.result)?data.result.value:null;
+    }
+  }catch(e){ val=null; }
+  if(val!=null && !isNaN(+val)){ _monData.push(+val); if(_monData.length>120) _monData.shift(); }
+  $('#monVal').textContent=(val!=null?val:'N/A')+unit;
+  $('#monMeta').textContent=_monData.length?('min '+Math.min(..._monData).toFixed(1)+' / max '+Math.max(..._monData).toFixed(1)+' / n='+_monData.length):'brak danych';
+  drawSpark();
+}
+function drawSpark(){
+  const c=$('#monChart'); if(!c) return; const ctx=c.getContext('2d'); const W=c.width,H=c.height;
+  ctx.clearRect(0,0,W,H);
+  if(_monData.length<2) return;
+  const min=Math.min(..._monData), max=Math.max(..._monData), rng=(max-min)||1;
+  ctx.strokeStyle='#3b82f6'; ctx.lineWidth=2; ctx.beginPath();
+  _monData.forEach((v,i)=>{ const x=i/(_monData.length-1)*(W-4)+2; const y=H-3-((v-min)/rng)*(H-8); i?ctx.lineTo(x,y):ctx.moveTo(x,y); });
+  ctx.stroke();
+}
+function toggleMonitor(btn){
+  if(_monTimer){ clearInterval(_monTimer); _monTimer=null; btn.textContent='▶ start'; return; }
+  _monData=[]; const iv=Math.max(1,Math.min(60,+$('#monInterval').value||3))*1000;
+  btn.textContent='⏸ stop'; monPoll(); _monTimer=setInterval(monPoll, iv);
 }
 
 renderGroups();
