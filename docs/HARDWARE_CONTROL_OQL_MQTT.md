@@ -113,17 +113,34 @@ strona startowa z linkami pod **`/`**.
 - Aby był dostępny z innych urządzeń, controller musi nasłuchiwać na `--host 0.0.0.0`.
 
 Funkcje:
-- **Predefiniowane grupy komend** (klik = wykonanie): Diagnostyka, Zawory, Pompa,
-  Płuco (Tic T249), Sensory (ADC), Diagnostyka RPi3 / USB.
+- **Predefiniowane grupy komend** (klik = wykonanie; **▶ grupa** = uruchom całą grupę po kolei):
+  Diagnostyka, Zawory, Pompa, Płuco (Tic T249), Sensory (ADC), Diagnostyka RPi3 / USB.
 - **Edytor scenariuszy OQL** z trybem **Wykonaj / Symulacja / Walidacja** (wysyła jako
   `kind=script` przez `/api/v1/oql/execute`).
-- **Gotowe scenariusze** (dropdown): szablony wbudowane + z serwera (`/api/v1/scenarios/fetch`).
-- Nagłówek pokazuje status węzła (`node_id` + `mode`); log wyników z surowym JSON.
+- **Scenariusze**: szablony wbudowane + **[moje]** (zapis/usuwanie w przeglądarce, localStorage)
+  + **[serwer]** (`/api/v1/scenarios/fetch`). Zapis: `💾 Zapisz bieżący` / usuwanie: `🗑 Usuń wybrany`.
+- **Monitor na żywo**: wykres (sparkline) wybranej metryki — temperatura CPU (`pi-diagnostics`)
+  lub sensor — odpytywany co N sekund.
+- **Wyniki**: każdy wpis pokazuje **`→ wysłano`** (dokładny request) i **`← odebrano`** (dane),
+  plus pełny JSON; przyciski **📋** (kopiuj komendę/JSON), **↻ powtórz** (replay).
+- **Kolory statusu**: 🟢 OK · 🟡 N/D (sprzęt niedostępny / brak uprawnień — także gdy
+  `result.success/ok=false`) · 🔴 BŁĄD.
+- **Eksport**: `📋 Kopiuj wszystko`, `⬇ JSON`, `⬇ CSV`. **Auto-refresh** statusu (10 s).
+  **Filtr** wyników (po tytule / komendzie / odpowiedzi). **🌓 motyw** jasny/ciemny (zapamiętany).
+- **Skróty**: `Ctrl+Enter` uruchom · `Ctrl+S` zapisz scenariusz · `/` filtr · `Esc` wyczyść filtr.
+- Nagłówek pokazuje status węzła (`node_id` + `mode`).
 
 Jeśli panel działa na instancji bez roli controller, `/api/v1/oql/*` zwróci **503** i panel
 pokaże baner — uruchom OqlOS w roli controller.
 
 Pliki: `oqlos/api/static/panel.html`, `oqlos/api/index.html` (route `/panel`, `/` w `oqlos/api/main.py`).
+
+### Integracja z connect-scenario (zweryfikowana)
+`connect-scenario` działa na obu transportach:
+- **HTTP proxy** (`OQLOS_API_URL=http://<hw-pi>:8202`) — `/api/v3/hardware/*` → węzeł, `mode=real`.
+- **OQL-over-MQTT** (`HARDWARE_TRANSPORT=mqtt`, `OQLOS_OQL_CONTROLLER_URL=http://127.0.0.1:8202`):
+  `POST /api/v3/hardware/cqrs/command` → lokalny controller → MQTT → agent → realny sprzęt;
+  odpowiedź ma `transport: "mqtt"`, zdarzenie CQRS jest zapisywane.
 
 ---
 
