@@ -1,5 +1,14 @@
 # OqlOS Documentation
 
+## Spis treści
+
+- **[Sterowanie sprzętem przez OQL-over-MQTT + Panel testowy](HARDWARE_CONTROL_OQL_MQTT.md)**
+  — architektura controller/agent/broker, uruchomienie, panel `/panel`, API `/api/v1/oql/*`,
+  pełna lista verbów `manage` (w tym `usb-list`, `pi-diagnostics`, `usb-reset`), wdrożenie, troubleshooting.
+- [Hardware Diagnostics](HARDWARE_DIAGNOSTICS.md)
+- [OQL v4 Migration Manual](OQL_V4_MIGRATION_MANUAL.md)
+- [OQL spec](oql-spec.md) · [CQL spec](cql-spec.md) · [CQL examples](cql-examples.md)
+
 ## Hardware Operator Entry Points
 
 Before running scenarios in `execute` mode, use the hardware doctor:
