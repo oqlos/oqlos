@@ -75,7 +75,8 @@
   <button onclick="refreshStatus()">⟳ Odśwież status</button>
   <label style="font-size:12px;display:inline-flex;align-items:center;gap:5px;color:var(--muted)"><input type="checkbox" id="autoRefresh" onchange="toggleAuto()"> auto 10s</label>
   <button onclick="copyAllResults(this)" title="Kopiuj wszystkie wyniki (komendy + odpowiedzi) do schowka jako JSON">📋 Kopiuj wszystko</button>
-  <button onclick="downloadResults()" title="Pobierz wszystkie wyniki (komendy + odpowiedzi) do pliku JSON">⬇ Pobierz JSON</button>
+  <button onclick="downloadResults()" title="Pobierz wszystkie wyniki (komendy + odpowiedzi) do pliku JSON">⬇ JSON</button>
+  <button onclick="downloadCsv()" title="Pobierz wyniki do pliku CSV (do arkusza)">⬇ CSV</button>
   <button onclick="clearLog()">Wyczyść log</button>
 </header>
 <div id="banner" class="banner"></div>
@@ -95,7 +96,11 @@
       <h2>Gotowe scenariusze</h2>
       <div class="body">
         <select id="scenarioSel" onchange="loadScenario()"></select>
-        <div class="hint">Wybór wczytuje scenariusz do edytora. Lista łączy szablony wbudowane i scenariusze z serwera.</div>
+        <div class="row" style="margin-top:8px">
+          <button onclick="saveScenario()" title="Zapisz zawartość edytora jako własny scenariusz (w przeglądarce)">💾 Zapisz bieżący</button>
+          <button onclick="deleteScenario()" title="Usuń wybrany własny scenariusz [moje]">🗑 Usuń wybrany</button>
+        </div>
+        <div class="hint">Wybór wczytuje scenariusz do edytora. Lista: szablony wbudowane + <b>[moje]</b> (zapisane w przeglądarce) + z serwera.</div>
       </div>
     </div>
   </div>
@@ -357,6 +362,15 @@ function filterLog(){
 }
 
 let SCENARIOS = BUILTIN_SCENARIOS.slice();
+let SERVER_SCENARIOS = [];
+const _MY_KEY='oqlos_panel_scenarios';
+function myScenarios(){ try{ return JSON.parse(localStorage.getItem(_MY_KEY)||'[]'); }catch(e){ return []; } }
+function setMyScenarios(arr){ try{ localStorage.setItem(_MY_KEY, JSON.stringify(arr)); }catch(e){ banner('Nie udało się zapisać (localStorage).'); } }
+function rebuildScenarios(){
+  const mine=myScenarios().map(s=>({name:'[moje] '+s.name, oql:s.oql, _my:true, _name:s.name}));
+  SCENARIOS=BUILTIN_SCENARIOS.concat(mine).concat(SERVER_SCENARIOS);
+  renderScenarios();
+}
 function renderScenarios(){
   const sel=$('#scenarioSel'); sel.innerHTML='';
   SCENARIOS.forEach((s,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=s.name; sel.appendChild(o); });
@@ -364,6 +378,34 @@ function renderScenarios(){
 function loadScenario(){
   const i=+$('#scenarioSel').value; const s=SCENARIOS[i];
   if(s && s.oql) $('#editor').value=s.oql;
+}
+function saveScenario(){
+  const oql=$('#editor').value.trim();
+  if(!oql){ banner('Edytor jest pusty — nie ma czego zapisać.'); return; }
+  const name=(prompt('Nazwa scenariusza:')||'').trim();
+  if(!name) return;
+  const arr=myScenarios().filter(s=>s.name!==name); arr.push({name, oql}); setMyScenarios(arr);
+  rebuildScenarios();
+  const idx=SCENARIOS.findIndex(s=>s._my && s._name===name); if(idx>=0) $('#scenarioSel').value=idx;
+  banner('Zapisano scenariusz „'+name+'" (w przeglądarce).');
+}
+function deleteScenario(){
+  const s=SCENARIOS[+$('#scenarioSel').value];
+  if(!s || !s._my){ banner('Wybierz własny scenariusz [moje] do usunięcia.'); return; }
+  setMyScenarios(myScenarios().filter(x=>x.name!==s._name));
+  rebuildScenarios(); banner('Usunięto „'+s._name+'".');
+}
+function downloadCsv(){
+  if(!RESULTS.length){ banner('Brak wyników do pobrania.'); return; }
+  const cols=['ts','title','status','class','ok','node_id','sent','received_summary'];
+  const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""').replace(/\r?\n/g,' ')+'"';
+  const lines=[cols.join(',')].concat(RESULTS.map(r=>cols.map(c=>q(r[c])).join(',')));
+  const blob=new Blob(['﻿'+lines.join('\r\n')], {type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob); const a=document.createElement('a');
+  const stamp=new Date().toISOString().replace(/[:.]/g,'-').slice(0,19);
+  a.href=url; a.download='oqlos-panel-results-'+stamp+'.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 1500);
 }
 function runEditor(){
   const txt=$('#editor').value.trim();
@@ -406,10 +448,10 @@ async function loadServerScenarios(){
   try{
     const r=await fetch('/api/v1/scenarios/fetch'); if(!r.ok) return;
     const list=await r.json(); if(!Array.isArray(list)) return;
-    const extra=list.map(s=>({name:'[serwer] '+(s.id||s.name||'?'),
+    SERVER_SCENARIOS=list.map(s=>({name:'[serwer] '+(s.id||s.name||'?'),
       oql:(typeof s.source==='string'&&s.source)?s.source:null, _srv:s}))
-      .filter(s=>s.name);
-    if(extra.length){ SCENARIOS=BUILTIN_SCENARIOS.concat(extra); renderScenarios(); }
+      .filter(s=>s.name && s.oql);
+    rebuildScenarios();
   }catch(e){}
 }
 
@@ -429,7 +471,7 @@ async function refreshStatus(){
 }
 
 renderGroups();
-renderScenarios();
+rebuildScenarios();
 refreshStatus();
 loadServerScenarios();
 </script>
