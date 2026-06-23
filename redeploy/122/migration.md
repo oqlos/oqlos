@@ -364,6 +364,15 @@ if [ ! -x /home/pi/oqlos/venv/bin/oqlos-server ]; then
 else
   echo "INFO: uzywam istniejacego /home/pi/oqlos/venv"
 fi
+# oqlos.hardware REQUIRES the c2004 hardware_client package and pimodbus (the
+# Modbus driver layer). Without them `oqlos.hardware`/`oqlos-modbus-probe` fail to
+# import on a clean Pi. Install both editable into the oqlos venv.
+[ -d /home/pi/maskservice/hardware-client-py ] && \
+  /home/pi/oqlos/venv/bin/pip install -q -e /home/pi/maskservice/hardware-client-py && \
+  echo "PASS: hardware_client zainstalowany" || echo "WARN: brak hardware-client-py (uruchom sync_hardware_client)"
+[ -f /home/pi/maskservice/pimodbus/pyproject.toml ] && \
+  /home/pi/oqlos/venv/bin/pip install -q -e /home/pi/maskservice/pimodbus && \
+  echo "PASS: pimodbus zainstalowany" || echo "INFO: pimodbus przez PYTHONPATH"
 
 # Base config from the hardware-node yaml (loopback motor URLs already applied).
 cp /home/pi/maskservice/boardnet-config/oqlos-hw.yaml /home/pi/maskservice/config/oqlos-real.yaml
@@ -568,6 +577,13 @@ extra_steps:
     src: /home/tom/github/oqlos/oqlos/redeploy/122/
     dst: ~/maskservice/boardnet-config/
     excludes: [.git/]
+
+  - id: sync_hardware_client
+    action: rsync
+    description: "Sync c2004 hardware_client (wymagany przez oqlos.hardware)"
+    src: /home/tom/github/maskservice/c2004/packages/hardware-client-py/
+    dst: ~/maskservice/hardware-client-py/
+    excludes: [.git/, __pycache__/, "*.egg-info/"]
 
   - id: sync_pimodbus
     action: rsync

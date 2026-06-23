@@ -165,6 +165,48 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("OQLOS_CORS_ORIGINS", "CORS_ORIGINS"),
     )
 
+    # ------------------------------------------------------------------
+    # OQL-over-MQTT transport (inter-node hardware control)
+    # ------------------------------------------------------------------
+    # role: off | controller | agent | both
+    #   off        — no MQTT transport (default; preserves single-process behavior)
+    #   controller — publish OQL and await responses (runs on the app node, e.g. pi109)
+    #   agent      — subscribe, execute OQL against local hardware, reply (runs on the hardware Pi)
+    #   both       — start both against the same broker (dev/loopback)
+    oql_transport_role: str = Field(
+        default="off",
+        validation_alias=AliasChoices("OQLOS_OQL_TRANSPORT_ROLE", "OQL_TRANSPORT_ROLE"),
+    )
+    # Identifies the hardware node. The controller targets this id; the agent answers for it.
+    oql_node_id: str = Field(
+        default="default",
+        validation_alias=AliasChoices("OQLOS_OQL_NODE_ID", "OQL_NODE_ID"),
+    )
+    oql_mqtt_host: str = Field(
+        default="localhost",
+        validation_alias=AliasChoices("OQLOS_OQL_MQTT_HOST", "OQL_MQTT_HOST", "OQLOS_MQTT_HOST"),
+    )
+    oql_mqtt_port: int = Field(
+        default=1883,
+        validation_alias=AliasChoices("OQLOS_OQL_MQTT_PORT", "OQL_MQTT_PORT", "OQLOS_MQTT_PORT"),
+    )
+    oql_mqtt_username: str = Field(
+        default="",
+        validation_alias=AliasChoices("OQLOS_OQL_MQTT_USERNAME", "OQL_MQTT_USERNAME"),
+    )
+    oql_mqtt_password: str = Field(
+        default="",
+        validation_alias=AliasChoices("OQLOS_OQL_MQTT_PASSWORD", "OQL_MQTT_PASSWORD"),
+    )
+    oql_topic_prefix: str = Field(
+        default="oqlos/c2004",
+        validation_alias=AliasChoices("OQLOS_OQL_TOPIC_PREFIX", "OQL_TOPIC_PREFIX"),
+    )
+    oql_default_timeout_ms: int = Field(
+        default=15000,
+        validation_alias=AliasChoices("OQLOS_OQL_TIMEOUT_MS", "OQL_TIMEOUT_MS"),
+    )
+
 
 # Load settings
 _settings = Settings()

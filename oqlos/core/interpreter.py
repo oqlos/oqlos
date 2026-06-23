@@ -52,6 +52,7 @@ class CqlInterpreter(BaseInterpreter):
         bridge_url: str | None = None,
         yaml_output: bool = False,
         use_plugin_gateway: bool = True,
+        gateway: Any = None,
     ):
         super().__init__(variables=variables, quiet=quiet, bridge_url=bridge_url)
         self.mode = mode  # validate, dry-run, execute
@@ -74,6 +75,7 @@ class CqlInterpreter(BaseInterpreter):
             vars_store=self.vars,
             output_handler=self.out,
             normalizer=self._normalizer,
+            gateway=gateway,
         )
 
     # --- Delegated properties for backward compatibility ---

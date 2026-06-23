@@ -15,6 +15,7 @@ the MQTT agent shares — so no second gateway is constructed.
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any, Awaitable, Callable
 
 # Verbs that take no arguments map straight to a zero-arg handler.
@@ -112,8 +113,41 @@ def _resolve(verb: str) -> Callable[[dict[str, Any]], Awaitable[Any]]:
         return lambda a: hw.rtc_command(a.get("payload", {}))
     if key == "diagnostic-command":
         return _run_diagnostic_command
+    if key in ("usb-list", "list-usb"):
+        return _usb_list
+    if key == "pi-diagnostics":
+        return _pi_diagnostics
+    if key == "usb-reset":
+        return _usb_reset
 
     raise ValueError(f"unknown manage verb: {verb!r}")
+
+
+async def _usb_list(a: dict[str, Any]) -> dict[str, Any]:
+    """Enumerate USB devices on the node (runs in a thread; reads sysfs)."""
+    from oqlos.hardware import usb_diagnostics as u
+
+    devices = await asyncio.to_thread(u.list_usb_devices)
+    return {"ok": True, "count": len(devices), "devices": devices}
+
+
+async def _pi_diagnostics(a: dict[str, Any]) -> dict[str, Any]:
+    """Raspberry Pi system diagnostics snapshot."""
+    from oqlos.hardware import usb_diagnostics as u
+
+    return await asyncio.to_thread(u.pi_system_diagnostics)
+
+
+async def _usb_reset(a: dict[str, Any]) -> dict[str, Any]:
+    """Driver-level reset/re-enumeration of a USB device (best-effort; may need root)."""
+    from oqlos.hardware import usb_diagnostics as u
+
+    return await asyncio.to_thread(
+        u.reset_usb_device,
+        a.get("vendor_id"),
+        a.get("product_id"),
+        a.get("dev_node"),
+    )
 
 
 async def _run_diagnostic_command(a: dict[str, Any]) -> dict[str, Any]:
@@ -152,5 +186,8 @@ def list_manage_verbs() -> list[str]:
             "artificial-lung-command",
             "rtc-command",
             "diagnostic-command",
+            "usb-list",
+            "pi-diagnostics",
+            "usb-reset",
         }
     )

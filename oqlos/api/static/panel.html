@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>OqlOS — Panel testowy</title>
+<style>
+  :root{
+    --bg:#0f1419; --panel:#1a2029; --panel2:#232b36; --border:#2e3a48;
+    --text:#e6edf3; --muted:#8b98a5; --accent:#3b82f6;
+    --ok:#22c55e; --fail:#ef4444; --warn:#f59e0b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:14px/1.45 system-ui,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text)}
+  header{display:flex;align-items:center;gap:14px;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:5}
+  header h1{font-size:16px;margin:0;font-weight:600}
+  .badge{padding:3px 9px;border-radius:999px;font-size:12px;font-weight:600;border:1px solid var(--border)}
+  .badge.ok{background:rgba(34,197,94,.15);color:var(--ok);border-color:var(--ok)}
+  .badge.fail{background:rgba(239,68,68,.15);color:var(--fail);border-color:var(--fail)}
+  .badge.warn{background:rgba(245,158,11,.15);color:var(--warn);border-color:var(--warn)}
+  .spacer{flex:1}
+  button{cursor:pointer;font:inherit;color:var(--text);background:var(--panel2);border:1px solid var(--border);border-radius:7px;padding:6px 11px}
+  button:hover{border-color:var(--accent)}
+  button:active{transform:translateY(1px)}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+  .wrap{display:grid;grid-template-columns:340px 1fr;gap:14px;padding:14px;max-width:1500px;margin:0 auto}
+  @media(max-width:900px){.wrap{grid-template-columns:1fr}}
+  .col{display:flex;flex-direction:column;gap:14px;min-width:0}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+  .card h2{font-size:13px;margin:0;padding:9px 12px;background:var(--panel2);border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+  .card .body{padding:11px 12px}
+  .group{margin-bottom:12px}
+  .group:last-child{margin-bottom:0}
+  .group .glabel{font-size:12px;font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+  .dot{width:9px;height:9px;border-radius:50%}
+  .btns{display:flex;flex-wrap:wrap;gap:6px}
+  .btns button{font-size:12px;padding:5px 9px}
+  .act::after{content:"●";color:var(--warn);margin-left:5px;font-size:9px}
+  select,textarea,input{font:inherit;color:var(--text);background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:7px}
+  select{width:100%}
+  textarea{width:100%;min-height:230px;resize:vertical;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;tab-size:2}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .toggle{display:inline-flex;border:1px solid var(--border);border-radius:7px;overflow:hidden}
+  .toggle label{padding:6px 12px;cursor:pointer;font-size:12px;background:var(--panel2)}
+  .toggle input{display:none}
+  .toggle input:checked + label{background:var(--accent);color:#fff;font-weight:600}
+  #log{display:flex;flex-direction:column;gap:8px;max-height:60vh;overflow:auto}
+  .entry{border:1px solid var(--border);border-radius:8px;background:var(--panel2);padding:8px 10px}
+  .entry .top{display:flex;align-items:center;gap:8px;font-size:12px}
+  .entry .title{font-weight:600}
+  .entry .time{color:var(--muted);font-size:11px}
+  .entry .summary{margin-top:4px;font-size:13px;color:var(--text);white-space:pre-wrap;font-family:ui-monospace,Menlo,monospace}
+  .entry pre{margin:6px 0 0;font-size:11px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px;overflow:auto;max-height:300px}
+  details summary{cursor:pointer;color:var(--muted);font-size:11px;margin-top:4px}
+  .muted{color:var(--muted)}
+  .hint{font-size:11px;color:var(--muted);margin-top:6px}
+  .banner{display:none;padding:8px 12px;background:rgba(245,158,11,.12);border:1px solid var(--warn);border-radius:8px;color:var(--warn);font-size:12px;margin:0 14px}
+</style>
+</head>
+<body>
+<header>
+  <h1>OqlOS · Panel testowy</h1>
+  <span id="nodeBadge" class="badge warn">łączenie…</span>
+  <span id="svcBadge" class="badge">—</span>
+  <div class="spacer"></div>
+  <button onclick="refreshStatus()">⟳ Odśwież status</button>
+  <button onclick="clearLog()">Wyczyść log</button>
+</header>
+<div id="banner" class="banner"></div>
+
+<div class="wrap">
+  <!-- LEFT: predefined groups + scenarios -->
+  <div class="col">
+    <div class="card">
+      <h2>Predefiniowane grupy komend</h2>
+      <div class="body" id="groups"></div>
+      <div class="body" style="border-top:1px solid var(--border)">
+        <span class="hint">● = akcja na realnym sprzęcie (w trybie <b>Wykonaj</b>). Komendy OQL respektują przełącznik trybu poniżej.</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Gotowe scenariusze</h2>
+      <div class="body">
+        <select id="scenarioSel" onchange="loadScenario()"></select>
+        <div class="hint">Wybór wczytuje scenariusz do edytora. Lista łączy szablony wbudowane i scenariusze z serwera.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: editor + results -->
+  <div class="col">
+    <div class="card">
+      <h2>Edytor scenariusza (OQL)</h2>
+      <div class="body">
+        <textarea id="editor" spellcheck="false" placeholder="VERSION: 4&#10;SCENARIO: Mój test&#10;GOAL:&#10;  SET NAME 'Opis'&#10;  SET 'valve-1' 'open'&#10;  WAIT 1 s&#10;  GET 'ai01'"></textarea>
+        <div class="row" style="margin-top:9px">
+          <span class="muted" style="font-size:12px">Tryb:</span>
+          <span class="toggle">
+            <input type="radio" name="mode" id="m_exec" value="execute"><label for="m_exec">Wykonaj</label>
+            <input type="radio" name="mode" id="m_dry" value="dry-run" checked><label for="m_dry">Symulacja</label>
+            <input type="radio" name="mode" id="m_val" value="validate"><label for="m_val">Walidacja</label>
+          </span>
+          <div class="spacer"></div>
+          <button class="primary" onclick="runEditor()">▶ Uruchom scenariusz</button>
+          <button onclick="document.getElementById('editor').value=''">Wyczyść edytor</button>
+        </div>
+        <div class="hint">„Uruchom” wysyła całość jako skrypt OQL przez <code>/api/v1/oql/execute</code> (kind=script) — trafia do węzła sprzętowego przez MQTT.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Wyniki</h2>
+      <div class="body"><div id="log"><span class="muted">Brak wyników — uruchom komendę lub scenariusz.</span></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const GROUPS = [
+  {title:"Diagnostyka", color:"#3b82f6", items:[
+    {label:"Health", kind:"manage", verb:"health"},
+    {label:"Identify", kind:"manage", verb:"identify", args:{scan:"never"}},
+    {label:"Diagnose", kind:"manage", verb:"diagnose"},
+    {label:"Stack snapshot", kind:"manage", verb:"stack-snapshot"},
+    {label:"Temperatura", kind:"manage", verb:"temperature"},
+    {label:"Recover (safe)", kind:"manage", verb:"recover", args:{scope:"safe"}, act:true},
+  ]},
+  {title:"Zawory", color:"#10b981", items:[
+    {label:"valve-1 OPEN", kind:"oql", oql:"SET 'valve-1' 'open'", act:true},
+    {label:"valve-1 CLOSE", kind:"oql", oql:"SET 'valve-1' 'closed'", act:true},
+    {label:"valve-2 OPEN", kind:"oql", oql:"SET 'valve-2' 'open'", act:true},
+    {label:"valve-2 CLOSE", kind:"oql", oql:"SET 'valve-2' 'closed'", act:true},
+    {label:"NC OPEN", kind:"oql", oql:"SET 'valve-NC' 'open'", act:true},
+    {label:"NC CLOSE", kind:"oql", oql:"SET 'valve-NC' 'closed'", act:true},
+  ]},
+  {title:"Pompa", color:"#f59e0b", items:[
+    {label:"0%", kind:"oql", oql:"SET 'pump' 0", act:true},
+    {label:"25%", kind:"oql", oql:"SET 'pump' 25", act:true},
+    {label:"50%", kind:"oql", oql:"SET 'pump' 50", act:true},
+    {label:"100%", kind:"oql", oql:"SET 'pump' 100", act:true},
+    {label:"STOP", kind:"manage", verb:"pump", args:{power_pct:0}, act:true},
+  ]},
+  {title:"Płuco (Tic T249)", color:"#a855f7", items:[
+    {label:"Status", kind:"manage", verb:"diagnostic-command", args:{peripheral_id:"motor-tic249", command:"status"}},
+    {label:"Stop", kind:"manage", verb:"lung-stop", act:true},
+    {label:"Disable", kind:"manage", verb:"lung-disable", act:true},
+  ]},
+  {title:"Sensory (ADC)", color:"#06b6d4", items:[
+    {label:"AI01", kind:"manage", verb:"sensor", args:{sensor_id:"ai01"}},
+    {label:"AI02", kind:"manage", verb:"sensor", args:{sensor_id:"ai02"}},
+    {label:"AI03", kind:"manage", verb:"sensor", args:{sensor_id:"ai03"}},
+  ]},
+  {title:"Diagnostyka RPi3 / USB", color:"#ec4899", items:[
+    {label:"Lista urządzeń USB", kind:"manage", verb:"usb-list"},
+    {label:"Diagnostyka Pi", kind:"manage", verb:"pi-diagnostics"},
+    {label:"Reset USB Tic (1ffb)", kind:"manage", verb:"usb-reset", args:{vendor_id:"1ffb"}, act:true},
+    {label:"Reset USB CH340 (1a86)", kind:"manage", verb:"usb-reset", args:{vendor_id:"1a86"}, act:true},
+  ]},
+];
+
+const BUILTIN_SCENARIOS = [
+  {name:"— wybierz scenariusz —", oql:""},
+  {name:"Health-check sensorów", oql:
+`VERSION: 4
+SCENARIO: Health-check sensorow
+GOAL:
+  SET NAME 'Odczyt sensorow ADC'
+  GET 'ai01'
+  GET 'ai02'
+  GET 'ai03'`},
+  {name:"Test zaworów (sekwencja)", oql:
+`VERSION: 4
+SCENARIO: Test zaworow
+GOAL:
+  SET NAME 'Sekwencja otwarcia/zamkniecia'
+  SET 'valve-1' 'open'
+  WAIT 1 s
+  SET 'valve-1' 'closed'
+  SET 'valve-2' 'open'
+  WAIT 1 s
+  SET 'valve-2' 'closed'`},
+  {name:"Test pompy (rampa)", oql:
+`VERSION: 4
+SCENARIO: Rampa pompy
+GOAL:
+  SET NAME 'Rampa mocy pompy'
+  SET 'pump' 25
+  WAIT 1 s
+  SET 'pump' 50
+  WAIT 1 s
+  SET 'pump' 0`},
+];
+
+const $ = s => document.querySelector(s);
+function mode(){ return document.querySelector('input[name=mode]:checked').value; }
+function banner(msg){ const b=$('#banner'); if(!msg){b.style.display='none';return;} b.textContent=msg; b.style.display='block'; }
+
+async function api(path, body){
+  const r = await fetch(path, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
+  let data=null; try{ data=await r.json(); }catch(e){}
+  return {status:r.status, data};
+}
+
+function summarize(env){
+  if(!env) return 'brak odpowiedzi';
+  const res = env.result;
+  if(res && typeof res==='object'){
+    if('devices' in res){
+      const list=(res.devices||[]).map(d=>`${d.vendor_id}:${d.product_id} ${d.product||d.vendor||''}${d.tty&&d.tty.length?' ['+d.tty.join(',')+']':''} @${d.port_path}`);
+      return `${res.count} urządzeń USB\n  · ` + list.join('\n  · ');
+    }
+    if('cpu_temp_c' in res) return `${res.model||'Pi'} · CPU ${res.cpu_temp_c}°C · USB×${res.usb_device_count} · porty: ${(res.serial_ports||[]).join(', ')||'—'}`;
+    if('passed' in res) return `kroki: ${res.passed} OK / ${res.failed} błąd (z ${res.total||'?'})${res.errors&&res.errors.length?' · '+res.errors.join('; '):''}`;
+    if('mode' in res) return `mode=${res.mode}${res.overall_ok!==undefined?' · overall_ok='+res.overall_ok:''}`;
+    if('value' in res) return `${res.sensor_id||''} = ${res.value}`;
+    if('reset' in res || 'success' in res) return res.success?('reset OK: '+(res.reset||'')):('błąd: '+(res.error||env.error||'?'));
+    return JSON.stringify(res).slice(0,140);
+  }
+  return env.error || (env.ok?'OK':'błąd');
+}
+
+function logEntry(title, env, status){
+  const log=$('#log'); if(log.firstChild && log.firstChild.classList===undefined) log.innerHTML='';
+  const ok = status>=200 && status<300 && env && env.ok;
+  const e=document.createElement('div'); e.className='entry';
+  const t=new Date().toLocaleTimeString('pl-PL');
+  e.innerHTML=`<div class="top">
+      <span class="badge ${ok?'ok':'fail'}">${ok?'OK':(status===503?'503':'BŁĄD')}</span>
+      <span class="title">${title}</span>
+      ${env&&env.node_id?`<span class="badge">${env.node_id}</span>`:''}
+      <span class="spacer" style="flex:1"></span><span class="time">${t}</span>
+    </div>
+    <div class="summary">${summarize(env)}</div>
+    <details><summary>surowa odpowiedź</summary><pre>${env?JSON.stringify(env,null,2):'(brak)'}</pre></details>`;
+  log.prepend(e);
+}
+
+async function runManage(verb, args, label){
+  const {status,data}=await api('/api/v1/oql/manage', {verb, args:args||{}});
+  if(status===503) banner('Transport OQL wyłączony (rola ≠ controller). Uruchom oqlos w roli controller, aby sterować węzłem sprzętowym.');
+  logEntry(label||('manage: '+verb), data, status);
+}
+async function runOql(oql, kind, label){
+  const {status,data}=await api('/api/v1/oql/execute', {oql, kind:kind||'command', mode:mode()});
+  if(status===503) banner('Transport OQL wyłączony (rola ≠ controller). Uruchom oqlos w roli controller.');
+  logEntry(label||('OQL: '+oql.split('\n')[0]), data, status);
+}
+
+function runItem(it){
+  if(it.kind==='manage') return runManage(it.verb, it.args, it.label+(it.verb?' ('+it.verb+')':''));
+  return runOql(it.oql, 'command', 'OQL · '+it.label);
+}
+
+function renderGroups(){
+  const c=$('#groups'); c.innerHTML='';
+  for(const g of GROUPS){
+    const div=document.createElement('div'); div.className='group';
+    const btns=g.items.map((it,i)=>`<button class="${it.act?'act':''}" data-g="${g.title}" data-i="${i}" title="${it.kind==='manage'?'manage: '+it.verb:it.oql}">${it.label}</button>`).join('');
+    div.innerHTML=`<div class="glabel"><span class="dot" style="background:${g.color}"></span>${g.title}</div><div class="btns">${btns}</div>`;
+    c.appendChild(div);
+  }
+  c.querySelectorAll('button').forEach(b=>{
+    b.onclick=()=>{ const g=GROUPS.find(x=>x.title===b.dataset.g); runItem(g.items[+b.dataset.i]); };
+  });
+}
+
+let SCENARIOS = BUILTIN_SCENARIOS.slice();
+function renderScenarios(){
+  const sel=$('#scenarioSel'); sel.innerHTML='';
+  SCENARIOS.forEach((s,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=s.name; sel.appendChild(o); });
+}
+function loadScenario(){
+  const i=+$('#scenarioSel').value; const s=SCENARIOS[i];
+  if(s && s.oql) $('#editor').value=s.oql;
+}
+function runEditor(){
+  const txt=$('#editor').value.trim();
+  if(!txt){ banner('Edytor jest pusty.'); return; }
+  banner('');
+  runOql(txt, 'script', 'Scenariusz ('+mode()+')');
+}
+function clearLog(){ $('#log').innerHTML='<span class="muted">Log wyczyszczony.</span>'; }
+
+async function loadServerScenarios(){
+  try{
+    const r=await fetch('/api/v1/scenarios/fetch'); if(!r.ok) return;
+    const list=await r.json(); if(!Array.isArray(list)) return;
+    const extra=list.map(s=>({name:'[serwer] '+(s.id||s.name||'?'),
+      oql:(typeof s.source==='string'&&s.source)?s.source:null, _srv:s}))
+      .filter(s=>s.name);
+    if(extra.length){ SCENARIOS=BUILTIN_SCENARIOS.concat(extra); renderScenarios(); }
+  }catch(e){}
+}
+
+async function refreshStatus(){
+  banner('');
+  try{
+    const r=await fetch('/health'); const h=await r.json();
+    $('#svcBadge').textContent=(h.service||'oqlos')+' v'+(h.version||'?');
+  }catch(e){ $('#svcBadge').textContent='offline'; }
+  const {status,data}=await api('/api/v1/oql/manage', {verb:'health'});
+  const nb=$('#nodeBadge');
+  if(status===503){ nb.className='badge warn'; nb.textContent='transport OFF (nie-controller)';
+    banner('Ten panel działa najlepiej na instancji oqlos w roli controller — wtedy steruje zdalnym węzłem sprzętowym przez MQTT.'); }
+  else if(status>=200&&status<300&&data&&data.ok){
+    nb.className='badge ok'; nb.textContent='węzeł: '+(data.node_id||'?')+' · '+((data.result||{}).mode||'?');
+  } else { nb.className='badge fail'; nb.textContent='węzeł niedostępny'; }
+}
+
+renderGroups();
+renderScenarios();
+refreshStatus();
+loadServerScenarios();
+</script>
+</body>
+</html>

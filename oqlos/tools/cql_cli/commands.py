@@ -34,9 +34,14 @@ def run_source(
     firmware_url: str,
     skip_waits: bool,
     bridge_url: str | None = None,
-    yaml_output: bool = False
+    yaml_output: bool = False,
+    gateway: object | None = None,
 ) -> object:
-    """Execute a CQL source string with a configured interpreter."""
+    """Execute a CQL source string with a configured interpreter.
+
+    ``gateway`` lets a caller (e.g. the OQL-over-MQTT agent) inject an
+    already-initialized PluginHardwareGateway so serial ports are not reopened.
+    """
     interp = CqlInterpreter(
         mode=mode,
         quiet=quiet,
@@ -45,6 +50,7 @@ def run_source(
         skip_waits=skip_waits,
         bridge_url=bridge_url,
         yaml_output=yaml_output,
+        gateway=gateway,
     )
     result = interp.run(source, filename)
     if yaml_output:
@@ -61,7 +67,8 @@ def run_single_command(
     firmware_url: str,
     skip_waits: bool,
     bridge_url: str | None = None,
-    yaml_output: bool = False
+    yaml_output: bool = False,
+    gateway: object | None = None,
 ) -> object:
     """Execute one OQL command line by wrapping it in a minimal scenario."""
     source = build_single_command_scenario(command)
@@ -75,6 +82,7 @@ def run_single_command(
         skip_waits=skip_waits,
         bridge_url=bridge_url,
         yaml_output=yaml_output,
+        gateway=gateway,
     )
 
 

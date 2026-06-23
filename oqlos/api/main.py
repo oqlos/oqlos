@@ -31,9 +31,10 @@ from oqlos.api import plugins as plugins_router
 from oqlos.api.plugins import ensure_plugins_initialized
 from oqlos.api.utils.execution_ctrl import set_dependencies as set_shared_dependencies
 from oqlos.api.hardware import set_hardware_gateway
+from oqlos.api.oql_mqtt import router as oql_router, set_oql_controller, oql_ws as _oql_ws_handler
 from oqlos.utils import load_sample_scenarios
 from oqlos.utils.hui_scenario import register_hui_test_scenario
-from oqlos.config import FIRMWARE_PORT, SERVICE_NAME, SERVICE_VERSION
+from oqlos.config import FIRMWARE_PORT, SERVICE_NAME, SERVICE_VERSION, get_settings
 from oqlos.shared._endpoint_helpers import serve_html_page
 
 if TYPE_CHECKING:
@@ -67,7 +68,11 @@ async def _app_lifespan(_: FastAPI):
                 summary.get("failed"),
                 summary.get("disabled"),
             )
-    yield
+    await _start_oql_transport()
+    try:
+        yield
+    finally:
+        await _stop_oql_transport()
 
 
 # Create FastAPI app
@@ -91,6 +96,10 @@ hardware: "PluginHardwareGateway | None" = None
 state_manager: StateManager | None = None
 orchestrator: ScenarioOrchestrator | None = None
 
+# OQL-over-MQTT transport endpoints (created in lifespan when a role is selected).
+_oql_controller = None
+_oql_agent = None
+
 # Include API routers
 app.include_router(scenarios_router)
 app.include_router(peripherals_router)
@@ -101,6 +110,7 @@ app.include_router(version_router)
 app.include_router(hardware_router)
 app.include_router(editor_router)
 app.include_router(plugins_router.router)
+app.include_router(oql_router)
 
 # Compatibility: expose the same API under /firmware/* (frontend expects this prefix)
 app.include_router(scenarios_router, prefix="/firmware")
@@ -110,6 +120,7 @@ app.include_router(state_router, prefix="/firmware")
 app.include_router(logs_router, prefix="/firmware")
 app.include_router(version_router, prefix="/firmware")
 app.include_router(hardware_router, prefix="/firmware")
+app.include_router(oql_router, prefix="/firmware")
 
 def _initialize_runtime_dependencies() -> None:
     """Initialize runtime dependency graph once per process."""
@@ -132,6 +143,58 @@ def _initialize_runtime_dependencies() -> None:
     load_sample_scenarios(state_manager)
     register_hui_test_scenario(state_manager)
 
+
+async def _start_oql_transport() -> None:
+    """Start the OQL-over-MQTT controller and/or agent per configured role.
+
+    role: off (default) | controller | agent | both. ``off`` is a no-op so the
+    single-process behavior is unchanged.
+    """
+    global _oql_controller, _oql_agent
+
+    settings = get_settings()
+    role = (settings.oql_transport_role or "off").strip().lower()
+    if role == "off":
+        return
+
+    from oqlos.hardware.transport.mqtt_oql_bridge import OqlMqttController, OqlMqttAgent
+
+    broker = dict(
+        host=settings.oql_mqtt_host,
+        port=settings.oql_mqtt_port,
+        node_id=settings.oql_node_id,
+        topic_prefix=settings.oql_topic_prefix,
+        username=settings.oql_mqtt_username or None,
+        password=settings.oql_mqtt_password or None,
+    )
+
+    if role in ("controller", "both"):
+        _oql_controller = OqlMqttController(
+            default_timeout_ms=settings.oql_default_timeout_ms, **broker
+        )
+        await _oql_controller.start()
+        set_oql_controller(_oql_controller)
+        logger.info("OQL transport: controller started (node=%s)", settings.oql_node_id)
+
+    if role in ("agent", "both"):
+        if hardware is None:
+            logger.error("OQL transport: agent role needs an initialized hardware gateway")
+        else:
+            _oql_agent = OqlMqttAgent(gateway=hardware, **broker)
+            await _oql_agent.start()
+            logger.info("OQL transport: agent started (node=%s)", settings.oql_node_id)
+
+
+async def _stop_oql_transport() -> None:
+    global _oql_controller, _oql_agent
+    if _oql_agent is not None:
+        await _oql_agent.stop()
+        _oql_agent = None
+    if _oql_controller is not None:
+        await _oql_controller.stop()
+        _oql_controller = None
+    set_oql_controller(None)
+
 # ============= Basic Endpoints =============
 
 @app.get("/", response_class=HTMLResponse)
@@ -150,6 +213,15 @@ async def editor_page():
         STATIC_DIR / "static" / "editor.html",
         missing_title="Scenario Editor",
         missing_message="editor.html not found.",
+    )
+
+@app.get("/panel", response_class=HTMLResponse)
+async def panel_page():
+    """Serve the test panel UI (predefined command groups, custom + ready-made scenarios)."""
+    return serve_html_page(
+        STATIC_DIR / "static" / "panel.html",
+        missing_title="OqlOS Panel",
+        missing_message="panel.html not found.",
     )
 
 @app.get("/health")
@@ -202,6 +274,12 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         if websocket in manager.websocket_connections:
             manager.websocket_connections.remove(websocket)
+
+
+@app.websocket("/ws/oql")
+async def oql_websocket_alias(websocket: WebSocket):
+    """Convenience alias for the OQL channel (also at /api/v1/oql/ws)."""
+    await _oql_ws_handler(websocket)
 
 def _parse_server_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(

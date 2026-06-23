@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>OqlOS</title>
+<style>
+  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+       font:15px/1.5 system-ui,Segoe UI,Roboto,sans-serif;background:#0f1419;color:#e6edf3}
+  .card{background:#1a2029;border:1px solid #2e3a48;border-radius:14px;padding:28px 32px;max-width:520px;width:90%}
+  h1{margin:0 0 4px;font-size:22px}
+  .sub{color:#8b98a5;margin:0 0 20px;font-size:13px}
+  a.link{display:flex;align-items:center;gap:12px;padding:13px 15px;margin:9px 0;border-radius:10px;
+         background:#232b36;border:1px solid #2e3a48;color:#e6edf3;text-decoration:none}
+  a.link:hover{border-color:#3b82f6}
+  a.link .t{font-weight:600}
+  a.link .d{color:#8b98a5;font-size:12px}
+  a.link .ic{font-size:20px;width:26px;text-align:center}
+  .foot{margin-top:16px;color:#8b98a5;font-size:12px}
+  .badge{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid #2e3a48;font-size:11px;color:#8b98a5}
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>OqlOS</h1>
+    <p class="sub">Operation Query Language — runtime sterowania sprzętem <span id="node" class="badge">…</span></p>
+    <a class="link" href="/panel"><span class="ic">🧪</span><span><span class="t">Panel testowy</span><br><span class="d">Predefiniowane grupy komend, własne i gotowe scenariusze, diagnostyka RPi/USB</span></span></a>
+    <a class="link" href="/editor"><span class="ic">📝</span><span><span class="t">Edytor scenariuszy</span><br><span class="d">Edycja i uruchamianie scenariuszy OQL</span></span></a>
+    <a class="link" href="/docs"><span class="ic">📚</span><span><span class="t">API (Swagger)</span><br><span class="d">Dokumentacja REST/OQL-over-MQTT</span></span></a>
+    <a class="link" href="/health"><span class="ic">❤️</span><span><span class="t">Health</span><br><span class="d">Status usługi</span></span></a>
+    <p class="foot">Aby sterować zdalnym węzłem sprzętowym, uruchom OqlOS w roli <b>controller</b>.</p>
+  </div>
+<script>
+  fetch('/api/v1/oql/manage',{method:'POST',headers:{'Content-Type':'application/json'},body:'{"verb":"health"}'})
+    .then(r=>r.ok?r.json():null).then(d=>{const n=document.getElementById('node');
+      if(d&&d.ok){n.textContent='węzeł: '+(d.node_id||'?')+' · '+((d.result||{}).mode||'');}
+      else{n.textContent='transport OFF';}}).catch(()=>{document.getElementById('node').textContent='—';});
+</script>
+</body>
+</html>

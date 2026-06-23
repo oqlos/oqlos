@@ -34,6 +34,7 @@ class FirmwareExecutor:
         vars_store: Any = None,
         output_handler: Any = None,
         normalizer: Any = None,
+        gateway: "PluginHardwareGateway | None" = None,
     ):
         """
         Initialize firmware executor.
@@ -45,6 +46,10 @@ class FirmwareExecutor:
             vars_store: VariableStore for value interpolation and storage
             output_handler: InterpreterOutput for emitting messages
             normalizer: ValueNormalizer for value normalization
+            gateway: An already-initialized PluginHardwareGateway to reuse. When
+                provided, the executor does NOT construct its own gateway — this
+                lets the OQL-over-MQTT agent share the app's singleton gateway so
+                the RS485/USB serial ports are not opened twice.
         """
         self.mode = mode
         self._firmware_url = firmware_url
@@ -55,8 +60,12 @@ class FirmwareExecutor:
         self._firmware = None
         self._plugin_gateway: PluginHardwareGateway | None = None
 
-        # Use plugin gateway instead of old hardware system
-        if use_plugin_gateway:
+        # Use plugin gateway instead of old hardware system. Prefer an injected,
+        # already-initialized gateway over constructing a fresh one.
+        if gateway is not None:
+            self._plugin_gateway = gateway
+            self._use_plugin_gateway = True
+        elif use_plugin_gateway:
             self._plugin_gateway = PluginHardwareGateway(mode=mode)
 
     def _get_firmware(self):
