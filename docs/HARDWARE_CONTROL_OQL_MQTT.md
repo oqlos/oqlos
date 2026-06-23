@@ -11,6 +11,29 @@ Dokumentacja warstwy sterowania sprzętem OqlOS na **dedykowanym węźle sprzęt
 
 ---
 
+## 0. Granica: gdzie żyje sprzęt (firmware-sim vs oqlos)
+
+Zasada: **sterowniki fizyczne sprzętu są w oqlos i sidecarach, NIE w kodzie aplikacji c2004.**
+Zweryfikowane audytem — w kodzie aplikacji c2004 nie ma `pyusb`/`ticlib`/`pymodbus`/`RPi.GPIO`/
+`smbus`; c2004 rozmawia ze sprzętem wyłącznie przez oqlos (HTTP proxy `:8202` + OQL-over-MQTT).
+
+API firmware na **`:8202`** ma DWA źródła zależnie od środowiska — to celowe, nie duplikat:
+
+| Środowisko | Dostawca `:8202` | Uwaga |
+|-----------|------------------|-------|
+| **Docker** (dev/prod/vps) | usługa `c2004-firmware` (`backend/firmware/`) — symulator/mock | routowana przez Traefik (`/firmware`), używana przez frontend (`VITE_FIRMWARE_URL`) |
+| **Realny sprzęt** (pi109) | `oqlos-hardware-api` (host systemd) | `c2004-firmware` jest **zamaskowany**; oqlos przejmuje `:8202` |
+| **Dedykowany węzeł sprzętowy** (boardnet) | `oqlos` rola `agent` (`:8202` loopback) | transport do niego = **MQTT**, nie HTTP |
+
+Czyli: **firmware-sim = backend `:8202` dla docker/dev/prod**; **oqlos = `:8202` na realnym sprzęcie**.
+`backend/firmware/` NIE jest legacy do usunięcia — to aktywny, produkcyjny (Traefik) backend docker.
+
+W c2004 pozostała tylko **diagnostyka host-coupled** (analiza `serial_ports` z oqlos, host
+`make`/`systemctl`) — nie otwiera urządzeń. Legacy bridge'y skanera/modbus/rtc zostały usunięte
+(zastąpione przez `oqlos.hardware.scanner_probe` / `modbus_identify` / `rtc_probe`).
+
+---
+
 ## 1. Architektura i role
 
 ```
