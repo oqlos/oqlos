@@ -1,0 +1,70 @@
+"""HTTP semantics for POST /api/v1/oql/execute (controller injected)."""
+
+from __future__ import annotations
+
+import pytest
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+
+from oqlos.api.oql_mqtt import router, set_oql_controller
+from oqlos.hardware.transport.mqtt_oql_bridge import OqlResponse
+
+
+class _FakeController:
+    def __init__(self, response: OqlResponse):
+        self._response = response
+        self.calls: list[dict] = []
+
+    async def execute(self, oql, **kwargs):
+        self.calls.append({"oql": oql, **kwargs})
+        return self._response
+
+
+@pytest.fixture
+def client():
+    app = FastAPI()
+    app.include_router(router)
+    return TestClient(app)
+
+
+def test_execute_returns_503_when_transport_disabled(client):
+    set_oql_controller(None)
+    resp = client.post("/api/v1/oql/execute", json={"oql": "SET 'VALVE-NC' 'open'"})
+    assert resp.status_code == 503
+
+
+def test_execute_dispatches_to_controller(client):
+    fake = _FakeController(
+        OqlResponse("c1", ok=True, result={"ok": True, "passed": 1}, error=None, node_id="pi-hw")
+    )
+    set_oql_controller(fake)
+    try:
+        resp = client.post(
+            "/api/v1/oql/execute",
+            json={"oql": "SET 'VALVE-NC' 'open'", "mode": "execute", "timeout_ms": 3000},
+        )
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["ok"] is True
+        assert body["node_id"] == "pi-hw"
+        assert body["result"]["passed"] == 1
+        # timeout_ms is converted to seconds for the controller.
+        assert fake.calls[0]["timeout"] == pytest.approx(3.0)
+        assert fake.calls[0]["oql"] == "SET 'VALVE-NC' 'open'"
+    finally:
+        set_oql_controller(None)
+
+
+def test_execute_surfaces_remote_error_as_ok_false(client):
+    fake = _FakeController(
+        OqlResponse("c1", ok=False, result=None, error="remote OQL execution timed out", node_id="pi-hw")
+    )
+    set_oql_controller(fake)
+    try:
+        resp = client.post("/api/v1/oql/execute", json={"oql": "SET 'VALVE-NC' 'open'"})
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["ok"] is False
+        assert "timed out" in body["error"]
+    finally:
+        set_oql_controller(None)

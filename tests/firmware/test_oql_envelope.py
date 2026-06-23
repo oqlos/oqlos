@@ -1,0 +1,60 @@
+"""Envelope (de)serialization for the OQL-over-MQTT transport."""
+
+from __future__ import annotations
+
+import json
+
+from oqlos.hardware.transport import OqlRequest, OqlResponse, build_topics
+from oqlos.tools.cql_cli.commands import run_single_command
+from oqlos.tools.cql_cli.utils import build_result_payload
+
+
+def test_request_json_roundtrip():
+    req = OqlRequest(
+        correlation_id="c1",
+        oql="SET 'VALVE-NC' 'open'",
+        reply_to="oqlos/c2004/pi-hw/oql/response/c1",
+        kind="command",
+        sensors={"AI01": 7.5},
+        skip_waits=True,
+        timeout_ms=5000,
+        source="test",
+    )
+    back = OqlRequest.from_json(req.to_json())
+    assert back.correlation_id == "c1"
+    assert back.oql == "SET 'VALVE-NC' 'open'"
+    assert back.sensors == {"AI01": 7.5}
+    assert back.timeout_ms == 5000
+    assert json.loads(req.to_json())["v"] == 1
+
+
+def test_response_json_roundtrip():
+    resp = OqlResponse("c1", ok=True, result={"ok": True, "passed": 1}, error=None, node_id="pi-hw")
+    back = OqlResponse.from_json(resp.to_json())
+    assert back.correlation_id == "c1"
+    assert back.ok is True
+    assert back.result == {"ok": True, "passed": 1}
+    assert back.node_id == "pi-hw"
+
+
+def test_topics_layout():
+    t = build_topics("oqlos/c2004", "pi-hw")
+    assert t.request == "oqlos/c2004/pi-hw/oql/request"
+    assert t.response_for("abc") == "oqlos/c2004/pi-hw/oql/response/abc"
+    assert t.response_wildcard == "oqlos/c2004/pi-hw/oql/response/+"
+    assert t.events == "oqlos/c2004/pi-hw/oql/events"
+    assert t.status == "oqlos/c2004/pi-hw/oql/status"
+
+
+def test_build_result_payload_is_json_serializable():
+    result = run_single_command(
+        "SET 'VALVE-NC' 'open'",
+        mode="dry-run",
+        quiet=True,
+        sensors={},
+        firmware_url="http://localhost:8202",
+        skip_waits=True,
+    )
+    payload = build_result_payload(result)
+    # Must survive a JSON round-trip (it crosses the MQTT wire).
+    assert json.loads(json.dumps(payload))["ok"] is True
