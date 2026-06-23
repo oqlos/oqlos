@@ -72,6 +72,7 @@
   <span id="svcBadge" class="badge">—</span>
   <div class="spacer"></div>
   <button onclick="refreshStatus()">⟳ Odśwież status</button>
+  <button onclick="copyAllResults(this)" title="Kopiuj wszystkie wyniki (komendy + odpowiedzi) do schowka jako JSON">📋 Kopiuj wszystko</button>
   <button onclick="downloadResults()" title="Pobierz wszystkie wyniki (komendy + odpowiedzi) do pliku JSON">⬇ Pobierz JSON</button>
   <button onclick="clearLog()">Wyczyść log</button>
 </header>
@@ -224,7 +225,8 @@ function summarize(env){
     if('passed' in res) return `kroki: ${res.passed} OK / ${res.failed} błąd (z ${res.total||'?'})${res.errors&&res.errors.length?' · '+res.errors.join('; '):''}`;
     if('mode' in res) return `mode=${res.mode}${res.overall_ok!==undefined?' · overall_ok='+res.overall_ok:''}`;
     if('value' in res) return `${res.sensor_id||''} = ${res.value}`;
-    if('reset' in res || 'success' in res) return res.success?('reset OK: '+(res.reset||'')):('błąd: '+(res.error||env.error||'?'));
+    if('reset' in res) return res.success?('reset OK: '+(res.reset||'')):('błąd: '+(res.error||env.error||'?'));
+    if('success' in res) return res.success?(res.data!==undefined?JSON.stringify(res.data):'success'):('błąd: '+(res.error||env.error||'?'));
     return JSON.stringify(res).slice(0,140);
   }
   return env.error || (env.ok?'OK':'błąd');
@@ -270,10 +272,17 @@ function logEntry(title, env, status, sent){
   });
 }
 
+function resultsDoc(){
+  return { exported_at:new Date().toISOString(), node:($('#nodeBadge').textContent||''),
+           count:RESULTS.length, results:RESULTS };
+}
+function copyAllResults(btn){
+  if(!RESULTS.length){ banner('Brak wyników do skopiowania.'); return; }
+  copyText(JSON.stringify(resultsDoc(),null,2), btn);
+}
 function downloadResults(){
   if(!RESULTS.length){ banner('Brak wyników do pobrania.'); return; }
-  const doc={ exported_at:new Date().toISOString(), node:($('#nodeBadge').textContent||''),
-              count:RESULTS.length, results:RESULTS };
+  const doc=resultsDoc();
   const blob=new Blob([JSON.stringify(doc,null,2)], {type:'application/json'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
