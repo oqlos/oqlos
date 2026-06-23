@@ -14,9 +14,14 @@ class _FakeController:
     def __init__(self, response: OqlResponse):
         self._response = response
         self.calls: list[dict] = []
+        self.manage_calls: list[dict] = []
 
     async def execute(self, oql, **kwargs):
         self.calls.append({"oql": oql, **kwargs})
+        return self._response
+
+    async def manage(self, verb, args=None, *, timeout=None):
+        self.manage_calls.append({"verb": verb, "args": args, "timeout": timeout})
         return self._response
 
 
@@ -62,6 +67,49 @@ def test_execute_surfaces_remote_error_as_ok_false(client):
     set_oql_controller(fake)
     try:
         resp = client.post("/api/v1/oql/execute", json={"oql": "SET 'VALVE-NC' 'open'"})
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["ok"] is False
+        assert "timed out" in body["error"]
+    finally:
+        set_oql_controller(None)
+
+
+def test_manage_returns_503_when_transport_disabled(client):
+    set_oql_controller(None)
+    resp = client.post("/api/v1/oql/manage", json={"verb": "usb-list"})
+    assert resp.status_code == 503
+
+
+def test_manage_dispatches_verb_and_args(client):
+    fake = _FakeController(
+        OqlResponse("c1", ok=True, result={"count": 6, "devices": []}, error=None, node_id="boardnet")
+    )
+    set_oql_controller(fake)
+    try:
+        resp = client.post(
+            "/api/v1/oql/manage",
+            json={"verb": "usb-reset", "args": {"vendor_id": "1ffb"}, "timeout_ms": 5000},
+        )
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["ok"] is True
+        assert body["result"]["count"] == 6
+        call = fake.manage_calls[0]
+        assert call["verb"] == "usb-reset"
+        assert call["args"] == {"vendor_id": "1ffb"}
+        assert call["timeout"] == pytest.approx(5.0)
+    finally:
+        set_oql_controller(None)
+
+
+def test_manage_surfaces_remote_error(client):
+    fake = _FakeController(
+        OqlResponse("c1", ok=False, result=None, error="remote OQL execution timed out", node_id="boardnet")
+    )
+    set_oql_controller(fake)
+    try:
+        resp = client.post("/api/v1/oql/manage", json={"verb": "health"})
         assert resp.status_code == 200
         body = resp.json()
         assert body["ok"] is False

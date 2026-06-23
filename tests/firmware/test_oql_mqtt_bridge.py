@@ -150,6 +150,22 @@ async def test_command_round_trip_executes_oql(broker):
 
 
 @pytest.mark.asyncio
+async def test_manage_usb_list_round_trip(broker):
+    # End-to-end: controller.manage('usb-list') -> broker -> agent -> run_manage_verb
+    # -> usb_diagnostics.list_usb_devices -> response back over the bridge.
+    controller, agent = await _make_pair(broker)
+    try:
+        resp = await controller.manage("usb-list", timeout=3.0)
+        assert resp.ok is True
+        assert isinstance(resp.result, dict)
+        assert "count" in resp.result and isinstance(resp.result["devices"], list)
+        assert resp.result["count"] == len(resp.result["devices"])
+    finally:
+        await agent.stop()
+        await controller.stop()
+
+
+@pytest.mark.asyncio
 async def test_concurrent_requests_resolve_their_own_correlation(broker):
     controller, agent = await _make_pair(broker)
     try:
