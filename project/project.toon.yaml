@@ -1,54 +1,52 @@
-# oqlos | 981 func | 93f | 28558L | python | 2026-05-06
+# oqlos | 1255 func | 112f | 37874L | python | 2026-06-30
 # generated in 0.00s
 
 HEALTH:
-  CC̄=4.1  critical=86 (limit:10)  dup=2  cycles=0
+  CC̄=4.2  critical=116 (limit:10)  dup=2  cycles=0
 
 ALERTS[20]:
-  !!! cc_exceeded      migrate_v2_to_v4 = 55 (limit:15)
-  !!! cc_exceeded      parse_oql = 49 (limit:15)
-  !!! high_fan_out     migrate_v2_to_v4 = 45 (limit:10)
-  !!! cc_exceeded      _cmd_to_actions = 37 (limit:15)
-  !!! high_fan_out     parse_oql = 36 (limit:10)
+  !!! cc_exceeded      migrate_v2_to_v4 = 53 (limit:15)
+  !!! high_fan_out     migrate_v2_to_v4 = 46 (limit:10)
+  !!! cc_exceeded      _modbus_wizard_program_isolated = 30 (limit:15)
+  !!! cc_exceeded      hardware_identify = 29 (limit:15)
   !!! high_fan_out     main = 29 (limit:10)
-  !!! cc_exceeded      _analyze_firmware_access = 25 (limit:15)
-  !!! high_fan_out     hardware_identify = 23 (limit:10)
-  !!! high_fan_out     main = 22 (limit:10)
-  !!! high_fan_out     FirmwareAdapter.set_peripheral = 21 (limit:10)
+  !!! cc_exceeded      _build_waveshare_diagnose_report = 27 (limit:15)
+  !!! high_fan_out     hardware_identify = 26 (limit:10)
+  !!! cc_exceeded      build_diagnosis_report = 25 (limit:15)
+  !!! high_fan_out     build_diagnosis_report = 25 (limit:10)
+  !!! high_fan_out     _build_waveshare_diagnose_report = 23 (limit:10)
 
-MODULES[142] (top by size):
+MODULES[173] (top by size):
+  M[oqlos/api/hardware.py] 2054L C:0 F:73 CC↑30 D:2 (python)
+  M[oqlos/core/_interpreter_actions.py] 1245L C:0 F:83 CC↑18 D:1 (python)
   M[openapi.yaml] 1035L C:0 F:0 CC↑0 D:0 (yaml)
-  M[docs/README.md] 815L C:0 F:0 CC↑0 D:0 (md)
-  M[oqlos/core/_interpreter_actions.py] 771L C:0 F:48 CC↑13 D:1 (python)
-  M[oqlos/tools/hardware_diagnose/doctor.py] 764L C:0 F:27 CC↑25 D:2 (python)
-  M[oqlos/core/oql_parser.py] 666L C:3 F:31 CC↑49 D:2 (python)
-  M[oqlos/core/interpreter.py] 665L C:1 F:46 CC↑17 D:0 (python)
-  M[scripts/oql_v2_to_v4_migrate_db.py] 628L C:1 F:17 CC↑55 D:1 (python)
-  M[oqlos/api/hardware.py] 615L C:0 F:31 CC↑24 D:1 (python)
+  M[openapi_spec.yaml] 1035L C:0 F:0 CC↑0 D:0 (yaml)
+  M[oqlos/tools/hardware_diagnose/doctor.py] 1003L C:0 F:41 CC↑13 D:2 (python)
+  M[docs/README.md] 999L C:0 F:0 CC↑0 D:0 (md)
+  M[oqlos/core/oql_parser.py] 762L C:3 F:43 CC↑14 D:2 (python)
+  M[oqlos/core/interpreter.py] 676L C:1 F:47 CC↑11 D:0 (python)
+  M[redeploy/122/migration.md] 655L C:0 F:0 CC↑0 D:0 (md)
+  M[redeploy/pi-hw/migration.md] 639L C:0 F:0 CC↑0 D:0 (md)
+  M[scripts/oql_v2_to_v4_migrate_db.py] 627L C:1 F:19 CC↑53 D:1 (python)
+  M[oqlos/hardware/plugin_gateway.py] 612L C:1 F:21 CC↑14 D:0 (python)
+  M[README.md] 597L C:0 F:0 CC↑0 D:0 (md)
   M[docs/cql-examples.md] 588L C:0 F:0 CC↑0 D:0 (md)
-  M[README.md] 583L C:0 F:0 CC↑0 D:0 (md)
-  M[oqlos/hardware/control_proxy.py] 528L C:3 F:31 CC↑9 D:0 (python)
-  M[goal.yaml] 511L C:0 F:0 CC↑0 D:0 (yaml)
-  M[oqlos/core/_oql_adapter.py] 489L C:1 F:14 CC↑37 D:2 (python)
-  M[oqlos/core/cql_parser.py] 477L C:1 F:30 CC↑8 D:2 (python)
-  M[oqlos/hardware/firmware_adapter.py] 467L C:1 F:24 CC↑19 D:0 (python)
-  LANGS: python:107/md:11/yaml:10/json:5/yml:4/shell:3/other:1/toml:1
+  M[oqlos/hardware/plugins/motor.py] 543L C:1 F:18 CC↑17 D:0 (python)
+  LANGS: python:127/md:16/yaml:13/json:5/yml:4/shell:4/conf:2/other:1/toml:1
 
 HOTSPOTS[10]:
-  ★ migrate_v2_to_v4 fan=45  // Orchestrates 45 calls
-  ★ parse_oql fan=36  // Parse OQL source into an :class:`OqlDoc`.
-
-The parser never raises — all problem
+  ★ migrate_v2_to_v4 fan=46  // Orchestrates 46 calls
   ★ main fan=29  // Orchestrates 29 calls
-  ★ hardware_identify fan=23  // Return hardware identification with conditional live scanning for low latency.
-  ★ main fan=22  // Orchestrates 22 calls
+  ★ hardware_identify fan=26  // Return hardware identification with conditional live scanning for low latency.
+  ★ build_diagnosis_report fan=25  // Build per-device diagnosis from an identify payload (same shape as GET /identify
+  ★ _build_waveshare_diagnose_report fan=23  // Orchestrates 23 calls
 
 REFACTOR[15]:
-  [1] H/L Split parse_oql (CC=49)
-  [2] H/L Split _cmd_to_actions (CC=37)
-  [3] H/L Split _analyze_firmware_access (CC=25)
-  [4] H/L Split migrate_v2_to_v4 (CC=55)
-  [5] H/H Split god module scripts/oql_v2_to_v4_migrate_db.py (628L, 1 classes)
+  [1] H/L Split migrate_v2_to_v4 (CC=53)
+  [2] H/L Split build_diagnosis_report (CC=25)
+  [3] H/L Split _build_waveshare_diagnose_report (CC=27)
+  [4] H/L Split _modbus_wizard_program_isolated (CC=30)
+  [5] H/L Split hardware_identify (CC=29)
 
 EVOLUTION:
-  2026-05-06 CC̄=4.1 crit=86 28558L // Automated analysis
+  2026-06-30 CC̄=4.2 crit=116 37874L // Automated analysis
