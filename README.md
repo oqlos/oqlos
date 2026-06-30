@@ -28,19 +28,12 @@ pip install -e ".[dev]"
 pip install -e .
 ```
 
-### Local `hardware_client` source fallback (dev)
+### Hardware Client Contract
 
-`oqlos.hardware.control_proxy` can load `hardware_client` from a local source
-tree when the package is not available in the current virtualenv.
-
-If you work in a multi-repo checkout, set:
-
-```bash
-export OQLOS_HARDWARE_CLIENT_SRC=/home/tom/github/maskservice/c2004/packages/hardware-client-py/src
-```
-
-This keeps local test runs and `goal -a` stable even when environment sync
-tools reinstall dependencies.
+The shared hardware REST contract lives in `oqlos.hardware.client`. Legacy
+c2004 imports from `hardware_client.*` are compatibility facades over this
+OqlOS-owned module, so OqlOS no longer depends on c2004 for hardware API
+resolvers or proxy helpers.
 
 ### CLI Quick Check (step by step)
 
@@ -157,7 +150,7 @@ DEVICE_TYPE: BA
 
 GOAL:
   SET NAME 'Check'
-  SET pompa-1 5.0 l/min
+  SET 'pompa-1' '5.0 l/min'
   WAIT 500ms
   GET AI01
   IF AI01 0.5 .. 0.8 V
@@ -177,6 +170,76 @@ OQL v3 is a flat, quote-free syntax with 12 base commands
 specification and `oqlos/scenarios/OQL-CHEATSHEET.md` for a quick
 reference.  The interpreter still parses legacy v1/v2 scripts with
 quoted identifiers for backward compatibility.
+
+### Motor control via OQL
+
+Motors are actuated with `SET`. Two motors are wired through the hardware
+gateway: the **pump** (DFRobot DRI0050, sidecar `:8203`) and the **artificial
+lung** stepper (Pololu Tic T249, sidecar `:8205`).
+
+```text
+GOAL: Motor control
+  # Pump (DRI0050) — quote the value when it carries a unit:
+  SET 'pompa-1' '5.0 l/min'      # run pump at 5 l/min
+  WAIT 2s
+  SET 'pompa-1' '0'              # stop pump
+
+  # Artificial lung (Tic T249) — reciprocating stepper:
+  SET 'Pojemność płuca' '2.5l'   # stroke volume
+  SET 'Ilość cykli płuca' '20'   # cycle count
+  SET 'Płuco' 'Start'            # energize + reciprocate
+  WAIT 5s
+  SET 'Płuco' 'Stop'             # halt + de-energize
+```
+
+Notes (verified):
+
+- **Quote unit-bearing values.** `SET 'pompa-1' '5.0 l/min'` parses; the
+  bare form `SET pompa-1 5 l/min` is currently rejected as `unrecognized`.
+- **`dry-run` / mock** parses and dispatches every motor `SET` without touching
+  hardware. **`execute`** sends real HTTP to the motor sidecars — if they are
+  down you get `[Errno 111] Connection refused`; physical actuation also needs
+  USB access to the device (udev rule / device-group membership on the Pi).
+- Shipped examples: `oqlos/scenarios/test-pompy.oql` (pump),
+  `oqlos/scenarios/hardware-lung-smoke.oql` (lung).
+
+### API examples (curl)
+
+Hardware control routes take **query params** (not a JSON body); the OQL routes
+take JSON. A runnable, mock-safe script lives at `examples/curl-quickstart.sh`
+(read-only by default; `OQL_ACTUATE=1` also exercises the motors).
+
+```bash
+# Start a sandbox first:
+OQLOS_HARDWARE_MODE=mock oqlos-server --host 127.0.0.1 --port 8202
+
+BASE=http://127.0.0.1:8202
+
+# --- read-only ---
+curl -s $BASE/api/v1/health
+curl -s $BASE/api/v1/hardware/identify
+curl -s $BASE/api/v1/hardware/sensor/AI01          # {"sensor_id":"AI01","value":...}
+
+# --- direct hardware control (query params) ---
+curl -s -X POST "$BASE/api/v1/hardware/pump?power_pct=50"      # pump 50 %
+curl -s -X POST "$BASE/api/v1/hardware/valve/V1?value=true"   # open valve V1
+curl -s -X POST "$BASE/api/v1/hardware/lung?steps=500&speed=1000&cycles=3&pause=0.5"
+curl -s -X POST "$BASE/api/v1/hardware/lung/stop"
+
+# --- OQL over MQTT (needs OQLOS_OQL_TRANSPORT_ROLE=controller + broker) ---
+curl -s -X POST "$BASE/api/v1/oql/execute" -H 'Content-Type: application/json' \
+  -d '{"oql":"SET \"pompa-1\" \"5.0 l/min\"","kind":"command","mode":"execute"}'
+curl -s -X POST "$BASE/api/v1/oql/manage" -H 'Content-Type: application/json' \
+  -d '{"verb":"identify","args":{"scan":"never"}}'
+# On a non-controller node these return: {"detail":"OQL MQTT transport is disabled (role=off)"}
+```
+
+Or just run the script:
+
+```bash
+bash examples/curl-quickstart.sh                 # read-only probes
+OQL_ACTUATE=1 bash examples/curl-quickstart.sh   # also actuate (mock-safe)
+```
 
 ## Package Structure
 
@@ -560,13 +623,64 @@ Notes:
 
 ## Docker Deployment
 
-```bash
-# Development
-docker-compose -f docker/docker-compose.dev.yml up
+### Run locally (mock hardware)
 
-# Production
-docker-compose -f docker/docker-compose.prod.yml up -d
+The reliable single-service path — exposes the API directly on `:8200`, no
+reverse proxy, no port-80 conflict:
+
+```bash
+# build + start just the API in mock mode
+docker compose -f docker/docker-compose.dev.yml up -d --build oqlos-api
+
+# smoke test
+curl -s http://127.0.0.1:8200/api/v1/health
+curl -s -X POST "http://127.0.0.1:8200/api/v1/hardware/pump?power_pct=50"
+bash examples/curl-quickstart.sh          # full read-only sweep against :8200
+
+# stop
+docker compose -f docker/docker-compose.dev.yml down
 ```
+
+Full stack (adds a `traefik` reverse proxy on `:80`, routing
+`Host: api.oqlos.localhost` → the API):
+
+```bash
+docker compose -f docker/docker-compose.dev.yml up -d --build
+curl -s -H 'Host: api.oqlos.localhost' http://127.0.0.1/api/v1/health
+```
+
+> If `:80` is already taken on the host, traefik fails with *"port is already
+> allocated"* — either free `:80`, remap the traefik `ports:` entry, or just use
+> the single-service `oqlos-api` form above.
+
+Production image (real hardware mode, `:8200`):
+
+```bash
+docker compose -f docker/docker-compose.prod.yml up -d --build
+```
+
+> The image installs `pip install -e .` only; the external `pimodbus` library is
+> **not** bundled. Mock mode and the HTTP/OQL API run without it; real Modbus
+> probing needs `pimodbus` on `PYTHONPATH` (hardware nodes add it at deploy).
+
+### What Docker emulates (and what it does not)
+
+The `dev` compose is a **single-node, mock-hardware emulation** of the runtime:
+`traefik` exposes the HTTP/REST/web UI on port `80`, and `oqlos-api` runs with
+`OQLOS_HARDWARE_MODE=mock` — every peripheral is simulated, so motor/valve/sensor
+`SET`/`GET` succeed without any physical device. Good for developing scenarios
+and exercising the API/web panel.
+
+It does **not** emulate the production Raspberry Pi 3 topology:
+
+- no MQTT broker (mosquitto) and no **OQL-over-MQTT agent/controller** split — the
+  compose runs the runtime directly over HTTP, not the distributed transport;
+- no real Modbus / Tic249 / DRI0050 / RTC devices (mock only).
+
+For the real distributed deployment onto a dedicated RPi3 hardware node
+(mosquitto `:1883` + agent on loopback `:8202` + sidecars), use the redeploy
+runbooks: `redeploy/122/migration.md` (boardnet, 192.168.188.122) or
+`redeploy/pi-hw/migration.md` (192.168.188.110). See **Ports** in those RUNBOOKs.
 
 ## Testing
 

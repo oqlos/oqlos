@@ -96,6 +96,24 @@ def _enrich_modbus_adapter(
     return adapter
 
 
+def _enrich_by_device_id(
+    hw_id: str,
+    adapter: dict,
+    probe: dict,
+    status: str,
+    lowered: str,
+    adapter_visible: bool,
+) -> dict | None:
+    """Dispatch to the per-device enricher; return enriched adapter or None."""
+    if hw_id == "motor-tic249":
+        return _enrich_motor_tic249(adapter, probe, status, lowered, adapter_visible)
+    if hw_id == "motor-dri0050":
+        return _enrich_motor_dri0050(adapter, probe, status, lowered)
+    if hw_id in {"modbus-io", "modbus-adc"}:
+        return _enrich_modbus_adapter(adapter, probe, status, lowered, adapter_visible)
+    return None
+
+
 def enrich_adapter_entry(adapter: dict[str, Any]) -> dict[str, Any]:
     hw_id = str(adapter.get("id") or "")
     status = str(adapter.get("status") or "")
@@ -110,20 +128,9 @@ def enrich_adapter_entry(adapter: dict[str, Any]) -> dict[str, Any]:
     local_probe = probe.get("local_probe") if isinstance(probe.get("local_probe"), dict) else {}
     adapter_visible = bool(local_probe.get("connected")) or bool(local_probe.get("by_id_present"))
 
-    if hw_id == "motor-tic249":
-        result = _enrich_motor_tic249(adapter, probe, status, lowered, adapter_visible)
-        if result is not None:
-            return result
-
-    if hw_id == "motor-dri0050":
-        result = _enrich_motor_dri0050(adapter, probe, status, lowered)
-        if result is not None:
-            return result
-
-    if hw_id in {"modbus-io", "modbus-adc"}:
-        result = _enrich_modbus_adapter(adapter, probe, status, lowered, adapter_visible)
-        if result is not None:
-            return result
+    device_result = _enrich_by_device_id(hw_id, adapter, probe, status, lowered, adapter_visible)
+    if device_result is not None:
+        return device_result
 
     if hw_id == "rtc" and status in {"no-access", "adapter-only"}:
         probe.setdefault(

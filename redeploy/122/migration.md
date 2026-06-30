@@ -152,9 +152,27 @@ exit 1
 SCRIPT
 chmod +x /home/pi/maskservice/scripts/wait-hw-tic249-ready.sh
 
+cat > /home/pi/maskservice/scripts/tic249-deenergize-best-effort.sh << 'SCRIPT'
+#!/bin/bash
+set +e
+for url in http://127.0.0.1:8205 http://127.0.0.1:5000; do
+  curl -fsS --max-time 2 -X POST "$url/api/stop" >/dev/null 2>&1 || true
+  curl -fsS --max-time 2 -H 'Content-Type: application/json' -d '{"enable":false}' "$url/api/energize" >/dev/null 2>&1 || true
+done
+if command -v ticcmd >/dev/null 2>&1; then
+  ticcmd --deenergize >/dev/null 2>&1 || true
+fi
+if [ -x /home/pi/maskservice/rpi-motor-tic249/pololu-tic-1.8.1-linux-rpi/ticcmd ]; then
+  /home/pi/maskservice/rpi-motor-tic249/pololu-tic-1.8.1-linux-rpi/ticcmd --deenergize >/dev/null 2>&1 || true
+fi
+exit 0
+SCRIPT
+chmod +x /home/pi/maskservice/scripts/tic249-deenergize-best-effort.sh
+
 cat > /home/pi/.config/systemd/user/hw-tic249.service << 'UNIT'
 [Unit]
 Description=Maskservice Pololu Tic T249 hardware adapter
+After=network-online.target
 
 [Service]
 Type=simple
@@ -164,9 +182,14 @@ Environment=FLASK_HOST=0.0.0.0
 Environment=FLASK_PORT=8205
 Environment=USB_PRODUCT_ID=0x00c9
 Environment=LOG_LEVEL=INFO
+ExecStartPre=/home/pi/maskservice/scripts/tic249-deenergize-best-effort.sh
 ExecStart=/home/pi/maskservice/rpi-motor-tic249/.venv/bin/python web_panel.py
+ExecStop=/home/pi/maskservice/scripts/tic249-deenergize-best-effort.sh
+ExecStopPost=/home/pi/maskservice/scripts/tic249-deenergize-best-effort.sh
 Restart=always
 RestartSec=3
+KillSignal=SIGINT
+TimeoutStopSec=20
 StandardOutput=append:/home/pi/maskservice/logs/hw-tic249.log
 StandardError=append:/home/pi/maskservice/logs/hw-tic249.log
 
@@ -180,6 +203,15 @@ sleep 3
 systemctl --user is-active hw-tic249.service
 if /home/pi/maskservice/scripts/wait-hw-tic249-ready.sh; then
   echo "PASS: hw-tic249 aktywny i widzi Pololu Tic"
+  /home/pi/maskservice/scripts/tic249-deenergize-best-effort.sh
+  if curl -sf http://localhost:8205/api/status | grep -Eq '"energized"[[:space:]]*:[[:space:]]*false'; then
+    echo "PASS: hw-tic249 po starcie jest de-energized"
+  elif [ "${PIHW_ALLOW_MISSING_HARDWARE:-1}" = "1" ]; then
+    echo "WARN: hw-tic249 nie potwierdzil energized=false — PIHW_ALLOW_MISSING_HARDWARE=1"
+  else
+    echo "FAIL: hw-tic249 nie potwierdzil energized=false po starcie" >&2
+    exit 1
+  fi
 elif [ "${PIHW_ALLOW_MISSING_HARDWARE:-1}" = "1" ]; then
   echo "WARN: hw-tic249 bez Pololu USB — PIHW_ALLOW_MISSING_HARDWARE=1, pomijam"
   exit 0
@@ -467,9 +499,14 @@ Environment=OQLOS_OQL_TOPIC_PREFIX=oqlos/c2004
 Environment=OQLOS_OQL_MQTT_HOST=127.0.0.1
 Environment=OQLOS_OQL_MQTT_PORT=1883
 ExecStartPre=/bin/bash -lc 'if /home/pi/maskservice/scripts/wait-hw-tic249-ready.sh; then exit 0; fi; [ "${PIHW_ALLOW_MISSING_HARDWARE:-1}" = "1" ] && exit 0; exit 1'
+ExecStartPre=/home/pi/maskservice/scripts/tic249-deenergize-best-effort.sh
 ExecStart=/home/pi/oqlos/venv/bin/oqlos-server --host 127.0.0.1 --port 8202
+ExecStop=/home/pi/maskservice/scripts/tic249-deenergize-best-effort.sh
+ExecStopPost=/home/pi/maskservice/scripts/tic249-deenergize-best-effort.sh
 Restart=always
 RestartSec=3
+KillSignal=SIGINT
+TimeoutStopSec=25
 StandardOutput=append:/home/pi/maskservice/logs/oqlos-hardware-api.log
 StandardError=append:/home/pi/maskservice/logs/oqlos-hardware-api.log
 
@@ -494,43 +531,340 @@ echo "PASS: oqlos-hardware-api (agent) uruchomiony (HTTP :8202 loopback, agent n
 ```bash markpact:ref assert-hw-node-healthy
 #!/bin/bash
 set -euo pipefail
-# 1) mosquitto up
-systemctl --user is-active mosquitto.service >/dev/null 2>&1 || { echo "FAIL: mosquitto nieaktywny"; exit 1; }
+ALLOW_MISSING="${PIHW_ALLOW_MISSING_HARDWARE:-1}"
+TMPDIR=$(mktemp -d)
+trap 'rm -rf "$TMPDIR"' EXIT
+failures=0
+warnings=0
 
-# 2) oqlos plugins compatible (local HTTP :8202)
-ok=0; streak=0
-for i in {1..45}; do
-  io=$(curl -sf http://127.0.0.1:8202/api/v1/plugins/modbus-io/health 2>/dev/null || true)
-  tic=$(curl -sf http://127.0.0.1:8202/api/v1/plugins/motor-tic249/health 2>/dev/null || true)
-  if echo "$io" | grep -Eq '"compatible"[[:space:]]*:[[:space:]]*true' \
-     && echo "$tic" | grep -Eq '"compatible"[[:space:]]*:[[:space:]]*true'; then
-    streak=$((streak+1)); echo "INFO: modbus-io+tic OK (streak ${streak}/3, $i/45)"
-    [ "$streak" -ge 3 ] && { ok=1; break; }
-  else streak=0; fi
-  sleep 2
-done
-if [ "$ok" != "1" ]; then
-  if [ "${PIHW_ALLOW_MISSING_HARDWARE:-1}" = "1" ]; then
-    echo "WARN: plugins nie compatible — PIHW_ALLOW_MISSING_HARDWARE=1"
+_pass() { echo "PASS: $*"; }
+_fail() { echo "FAIL: $*" >&2; failures=$((failures + 1)); }
+_warn_or_fail() {
+  if [ "$ALLOW_MISSING" = "1" ]; then
+    echo "WARN: $*"
+    warnings=$((warnings + 1))
   else
-    echo "FAIL: oqlos plugins nie osiagnely compatible=true"; exit 1
+    _fail "$*"
+  fi
+}
+
+_check_service() {
+  local unit="$1"
+  local required="${2:-1}"
+  if systemctl --user is-active "$unit" >/dev/null 2>&1; then
+    _pass "$unit active"
+    return 0
+  fi
+  systemctl --user status "$unit" --no-pager -n 40 || true
+  if [ "$required" = "1" ]; then
+    _fail "$unit nieaktywny"
+  else
+    _warn_or_fail "$unit nieaktywny lub brak jednostki"
+  fi
+}
+
+_curl_get() {
+  local url="$1"
+  local out="$2"
+  local timeout="${3:-8}"
+  curl -sf --max-time "$timeout" "$url" > "$out"
+}
+
+_curl_post() {
+  local url="$1"
+  local out="$2"
+  local data="${3:-{}}"
+  local timeout="${4:-8}"
+  curl -sf --max-time "$timeout" -H 'Content-Type: application/json' -d "$data" "$url" > "$out"
+}
+
+_check_service mosquitto.service 1
+_check_service hw-tic249.service 0
+_check_service dri0050-motor-api.service 0
+_check_service pirtc-api.service 0
+_check_service oqlos-hardware-api.service 1
+
+if ss -tlnp 2>/dev/null | grep -q ':8200'; then
+  _warn_or_fail "stary/duplikowany OqlOS nadal slucha na :8200"
+else
+  _pass "brak duplikatu OqlOS na :8200"
+fi
+
+if _curl_get http://127.0.0.1:8202/health "$TMPDIR/oqlos-health.json"; then
+  if python3 - "$TMPDIR/oqlos-health.json" <<'PY'
+import json, sys
+data = json.load(open(sys.argv[1], encoding="utf-8"))
+raise SystemExit(0 if data.get("status") == "ok" else 1)
+PY
+  then
+    _pass "OqlOS HTTP :8202 /health OK"
+  else
+    _fail "OqlOS /health nie zwrocil status=ok"
+  fi
+else
+  _fail "OqlOS HTTP :8202 nie odpowiada"
+fi
+
+if _curl_get http://127.0.0.1:8202/api/v1/hardware/health "$TMPDIR/oqlos-hardware-health.json" 12; then
+  if ! python3 - "$TMPDIR/oqlos-hardware-health.json" "$ALLOW_MISSING" <<'PY'
+import json, sys
+path, allow = sys.argv[1], sys.argv[2]
+data = json.load(open(path, encoding="utf-8"))
+failed = 0
+if data.get("mode") != "real":
+    print(f"FAIL: OqlOS mode={data.get('mode')!r}, oczekiwano real")
+    failed += 1
+else:
+    print("PASS: OqlOS hardware mode=real")
+
+for plugin_id in ("motor-tic249", "motor-dri0050", "modbus-io", "modbus-adc"):
+    entry = data.get(plugin_id) or {}
+    compatible = bool(entry.get("compatible"))
+    status = entry.get("status", "missing")
+    message = entry.get("message", "")
+    if compatible:
+        print(f"PASS: plugin {plugin_id} compatible=true")
+    elif allow == "1":
+        print(f"WARN: plugin {plugin_id} compatible=false status={status} {message}")
+    else:
+        print(f"FAIL: plugin {plugin_id} compatible=false status={status} {message}")
+        failed += 1
+raise SystemExit(1 if failed else 0)
+PY
+  then
+    failures=$((failures + 1))
+  fi
+else
+  _fail "OqlOS /api/v1/hardware/health nie odpowiada"
+fi
+
+# Tic249: connect/stop/de-energize sa best-effort; warunkiem jest koncowy status bez ruchu.
+if ! _curl_post http://127.0.0.1:8205/api/connect "$TMPDIR/tic-connect.json" '{}' 8 >/dev/null 2>&1; then
+  echo "INFO: Tic249 /api/connect nie powiodl sie, kontynuuje przez stop/deenergize/status"
+fi
+if ! curl -fsS --max-time 4 -X POST http://127.0.0.1:8205/api/stop >/dev/null 2>&1; then
+  echo "INFO: Tic249 /api/stop nie powiodl sie, sprawdzam koncowy status"
+fi
+if ! _curl_post http://127.0.0.1:8205/api/energize "$TMPDIR/tic-deenergize.json" '{"enable":false}' 4 >/dev/null 2>&1; then
+  echo "INFO: Tic249 /api/energize(false) nie powiodl sie, sprawdzam koncowy status"
+fi
+if _curl_get http://127.0.0.1:8205/api/status "$TMPDIR/tic-status.json" 6; then
+  if ! python3 - "$TMPDIR/tic-status.json" "$ALLOW_MISSING" <<'PY'
+import json, sys
+path, allow = sys.argv[1], sys.argv[2]
+data = json.load(open(path, encoding="utf-8"))
+failed = 0
+if data.get("connected") is True:
+    print("PASS: Tic249 sidecar connected=true")
+elif allow == "1":
+    print(f"WARN: Tic249 sidecar connected={data.get('connected')!r}")
+else:
+    print(f"FAIL: Tic249 sidecar connected={data.get('connected')!r}")
+    failed += 1
+if data.get("energized") is False:
+    print("PASS: Tic249 energized=false")
+else:
+    print(f"FAIL: Tic249 nie jest de-energized: energized={data.get('energized')!r}")
+    failed += 1
+if data.get("low_vin") is True:
+    if allow == "1":
+        print("WARN: Tic249 low_vin=true")
+    else:
+        print("FAIL: Tic249 low_vin=true")
+        failed += 1
+raise SystemExit(1 if failed else 0)
+PY
+  then
+    failures=$((failures + 1))
+  fi
+else
+  _warn_or_fail "Tic249 sidecar :8205 nie zwrocil status po stop/deenergize"
+fi
+
+# DRI0050: tylko stop/status; test nie uruchamia pompy.
+if curl -fsS --max-time 5 -X POST http://127.0.0.1:8203/api/stop >/dev/null 2>&1 \
+   && _curl_get http://127.0.0.1:8203/api/status "$TMPDIR/dri-status.json" 6; then
+  if grep -Eq '"enabled"[[:space:]]*:[[:space:]]*false' "$TMPDIR/dri-status.json"; then
+    _pass "DRI0050 :8203 stop/status OK, enabled=false"
+  else
+    _warn_or_fail "DRI0050 :8203 nie potwierdzil enabled=false po stop"
+  fi
+else
+  _warn_or_fail "DRI0050 :8203 nie odpowiada na stop/status"
+fi
+
+# piRTC: status bez mocka, jesli HAT jest obecny.
+if _curl_get http://127.0.0.1:8125/api/status "$TMPDIR/pirtc-status.json" 6; then
+  if python3 - "$TMPDIR/pirtc-status.json" <<'PY'
+import json, sys
+data = json.load(open(sys.argv[1], encoding="utf-8"))
+raise SystemExit(0 if data.get("available") is True and data.get("mock") is False else 1)
+PY
+  then
+    _pass "piRTC :8125 available=true mock=false"
+  else
+    _warn_or_fail "piRTC :8125 status nie potwierdza available=true mock=false"
+  fi
+else
+  _warn_or_fail "piRTC :8125 nie odpowiada"
+fi
+
+# Modbus ADC/sensory: bez zapisu, tylko odczyt diagnostyczny.
+if _curl_get http://127.0.0.1:8202/api/v1/hardware/modbus-adc/raw "$TMPDIR/modbus-adc-raw.json" 12; then
+  if grep -Eq '"ok"[[:space:]]*:[[:space:]]*true|\"success\"[[:space:]]*:[[:space:]]*true' "$TMPDIR/modbus-adc-raw.json"; then
+    _pass "Modbus ADC raw read OK"
+  else
+    _warn_or_fail "Modbus ADC raw endpoint odpowiedzial, ale bez ok=true"
+  fi
+else
+  _warn_or_fail "Modbus ADC raw read nie odpowiada"
+fi
+
+if _curl_get 'http://127.0.0.1:8202/api/v1/hardware/sensors/batch?sensor_ids=ai01,ai02,ai03' "$TMPDIR/sensors.json" 12; then
+  if grep -Eq '"ok"[[:space:]]*:[[:space:]]*true' "$TMPDIR/sensors.json"; then
+    _pass "Sensory AI01-AI03 batch OK"
+  else
+    _warn_or_fail "Sensory AI01-AI03 batch bez ok=true"
+  fi
+else
+  _warn_or_fail "Sensory AI01-AI03 batch nie odpowiada"
+fi
+
+if _curl_get 'http://127.0.0.1:8202/api/v1/hardware/identify?scan=never' "$TMPDIR/identify.json" 12; then
+  _pass "OqlOS identify(scan=never) odpowiada"
+else
+  _fail "OqlOS identify(scan=never) nie odpowiada"
+fi
+
+# OQL-over-MQTT agent round-trips: ping, health, usb-list, pi-diagnostics, lung-disable.
+PW=$(grep -E '^OQLOS_OQL_MQTT_PASSWORD=' /home/pi/maskservice/config/oql-mqtt.env 2>/dev/null | head -1 | cut -d= -f2- || true)
+NODE="${OQLOS_OQL_NODE_ID:-boardnet}"
+PREFIX="${OQLOS_OQL_TOPIC_PREFIX:-oqlos/c2004}"
+if [ -z "$PW" ] || [ "$PW" = "CHANGE_ME_ON_PI" ]; then
+  _fail "brak poprawnego OQLOS_OQL_MQTT_PASSWORD w /home/pi/maskservice/config/oql-mqtt.env"
+else
+  _mqtt_rpc() {
+    local kind="$1"
+    local oql="$2"
+    local args_json="${3:-null}"
+    local timeout="${4:-10}"
+    local corr="assert-$(date +%s)-$RANDOM"
+    local out="$TMPDIR/$corr.response.json"
+    local req="$TMPDIR/$corr.request.json"
+    local err="$TMPDIR/$corr.sub.err"
+
+    python3 - "$corr" "$kind" "$oql" "$args_json" "$PREFIX" "$NODE" <<'PY' > "$req"
+import json, sys
+corr, kind, oql, args_raw, prefix, node = sys.argv[1:7]
+args = json.loads(args_raw)
+payload = {
+    "correlation_id": corr,
+    "kind": kind,
+    "oql": oql,
+    "reply_to": f"{prefix.rstrip('/')}/{node}/oql/response/{corr}",
+}
+if args is not None:
+    payload["args"] = args
+print(json.dumps(payload, ensure_ascii=False))
+PY
+
+    mosquitto_sub -h 127.0.0.1 -p 1883 -u oqlos -P "$PW" \
+      -t "$PREFIX/$NODE/oql/response/$corr" -C 1 -W "$timeout" > "$out" 2>"$err" &
+    local sub=$!
+    sleep 1
+    mosquitto_pub -h 127.0.0.1 -p 1883 -u oqlos -P "$PW" \
+      -t "$PREFIX/$NODE/oql/request" -f "$req"
+    if wait "$sub"; then
+      cat "$out"
+      return 0
+    fi
+    cat "$err" >&2 || true
+    return 1
+  }
+
+  _mqtt_envelope_ok() {
+    local file="$1"
+    local label="$2"
+    local required="${3:-1}"
+    if python3 - "$file" <<'PY'
+import json, sys
+data = json.load(open(sys.argv[1], encoding="utf-8"))
+raise SystemExit(0 if data.get("ok") is True else 1)
+PY
+    then
+      _pass "$label"
+    elif [ "$required" = "1" ]; then
+      _fail "$label zwrocil ok!=true"
+    else
+      _warn_or_fail "$label zwrocil ok!=true"
+    fi
+  }
+
+  if _mqtt_rpc ping "" null 10 > "$TMPDIR/mqtt-ping.json"; then
+    _mqtt_envelope_ok "$TMPDIR/mqtt-ping.json" "MQTT ping/pong agent OK" 1
+  else
+    _fail "brak odpowiedzi MQTT ping/pong agenta"
+  fi
+
+  if _mqtt_rpc manage health '{}' 12 > "$TMPDIR/mqtt-health.json"; then
+    _mqtt_envelope_ok "$TMPDIR/mqtt-health.json" "MQTT manage health OK" 1
+  else
+    _fail "brak odpowiedzi MQTT manage health"
+  fi
+
+  if _mqtt_rpc manage usb-list '{}' 12 > "$TMPDIR/mqtt-usb-list.json"; then
+    _mqtt_envelope_ok "$TMPDIR/mqtt-usb-list.json" "MQTT manage usb-list OK" 1
+    if ! python3 - "$TMPDIR/mqtt-usb-list.json" "$ALLOW_MISSING" <<'PY'
+import json, sys
+path, allow = sys.argv[1], sys.argv[2]
+data = json.load(open(path, encoding="utf-8"))
+devices = (((data.get("result") or {}).get("devices")) or [])
+ids = {(str(d.get("vendor_id", "")).lower(), str(d.get("product_id", "")).lower()) for d in devices}
+failed = 0
+for vid, pid, label in (
+    ("1ffb", "00c9", "Pololu Tic T249"),
+    ("1a86", "7523", "CH340 Modbus/serial adapter"),
+):
+    if (vid, pid) in ids:
+        print(f"PASS: usb-list widzi {label} ({vid}:{pid})")
+    elif allow == "1":
+        print(f"WARN: usb-list nie widzi {label} ({vid}:{pid})")
+    else:
+        print(f"FAIL: usb-list nie widzi {label} ({vid}:{pid})")
+        failed += 1
+raise SystemExit(1 if failed else 0)
+PY
+    then
+      failures=$((failures + 1))
+    fi
+  else
+    _fail "brak odpowiedzi MQTT manage usb-list"
+  fi
+
+  if _mqtt_rpc manage pi-diagnostics '{}' 12 > "$TMPDIR/mqtt-pi-diag.json"; then
+    _mqtt_envelope_ok "$TMPDIR/mqtt-pi-diag.json" "MQTT manage pi-diagnostics OK" 1
+  else
+    _fail "brak odpowiedzi MQTT manage pi-diagnostics"
+  fi
+
+  if _mqtt_rpc manage lung-disable '{}' 12 > "$TMPDIR/mqtt-lung-disable.json"; then
+    _mqtt_envelope_ok "$TMPDIR/mqtt-lung-disable.json" "MQTT manage lung-disable OK" 0
+    if _curl_get http://127.0.0.1:8205/api/status "$TMPDIR/tic-after-mqtt-disable.json" 6 \
+       && grep -Eq '"energized"[[:space:]]*:[[:space:]]*false' "$TMPDIR/tic-after-mqtt-disable.json"; then
+      _pass "Tic249 po MQTT lung-disable pozostaje energized=false"
+    else
+      _fail "Tic249 po MQTT lung-disable nie potwierdzil energized=false"
+    fi
+  else
+    _warn_or_fail "brak odpowiedzi MQTT manage lung-disable"
   fi
 fi
 
-# 3) MQTT agent round-trip: publish a ping request, expect a response.
-PW=$(grep -E '^OQLOS_OQL_MQTT_PASSWORD=' /home/pi/maskservice/config/oql-mqtt.env 2>/dev/null | head -1 | cut -d= -f2- || true)
-CORR="assert-$(date +%s)"
-REQ="{\"correlation_id\":\"$CORR\",\"oql\":\"\",\"kind\":\"ping\",\"reply_to\":\"oqlos/c2004/boardnet/oql/response/$CORR\"}"
-mosquitto_sub -h 127.0.0.1 -p 1883 -u oqlos -P "$PW" \
-  -t "oqlos/c2004/boardnet/oql/response/$CORR" -C 1 -W 8 > /tmp/oql_pong.json 2>/dev/null &
-SUB=$!
-sleep 1
-mosquitto_pub -h 127.0.0.1 -p 1883 -u oqlos -P "$PW" -t "oqlos/c2004/boardnet/oql/request" -m "$REQ"
-if wait "$SUB" && grep -q '"ok"' /tmp/oql_pong.json; then
-  echo "PASS: OQL-over-MQTT agent odpowiedział na ping ($(cat /tmp/oql_pong.json))"
-else
-  echo "FAIL: brak odpowiedzi agenta OQL-over-MQTT na ping (sprawdź broker auth + rolę agent)"; exit 1
+if [ "$failures" -gt 0 ]; then
+  echo "FAIL: smoke-test osprzetu zakonczony bledami: failures=$failures warnings=$warnings" >&2
+  exit 1
 fi
+echo "PASS: pelny smoke-test osprzetu zakonczony (warnings=$warnings, PIHW_ALLOW_MISSING_HARDWARE=$ALLOW_MISSING)"
 ```
 
 ```yaml markpact:config
@@ -638,7 +972,7 @@ extra_steps:
 
   - id: assert_hw_node_healthy
     action: inline_script
-    description: "Asercja: mosquitto + plugins compatible + agent ping/pong"
+    description: "Asercja: pełny smoke-test osprzętu, sidecarów, pluginów i MQTT"
     command_ref: assert-hw-node-healthy
-    timeout: 180
+    timeout: 300
 ```

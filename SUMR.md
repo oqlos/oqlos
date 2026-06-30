@@ -550,74 +550,72 @@ class Settings:  # Application settings loaded from environment variables and .
 
 ## Call Graph
 
-*438 nodes · 500 edges · 68 modules · CC̄=4.2*
+*406 nodes · 500 edges · 44 modules · CC̄=4.1*
 
 ### Hubs (by degree)
 
 | Function | CC | in | out | total |
 |----------|----|----|-----|-------|
-| `print` *(in examples.hardware.doctor-workflow)* | 0 | 226 | 0 | **226** |
-| `_resolve` *(in oqlos.hardware.transport.manage_ops)* | 5 | 1 | 51 | **52** |
-| `list_usb_devices` *(in oqlos.hardware.usb_diagnostics)* | 13 ⚠ | 2 | 33 | **35** |
+| `print` *(in examples.hardware.doctor-workflow)* | 0 | 225 | 0 | **225** |
 | `canonicalize_oql_line` *(in oqlos.tools.cql_cli.formatting)* | 14 ⚠ | 1 | 31 | **32** |
 | `oql_doc_to_cql` *(in oqlos.core._oql_adapter)* | 12 ⚠ | 2 | 30 | **32** |
 | `normalize_motor2_runtime_config` *(in oqlos.core.motor2_runtime)* | 12 ⚠ | 1 | 29 | **30** |
-| `_safe_resolve` *(in oqlos.core.executor)* | 14 ⚠ | 7 | 21 | **28** |
+| `build_diagnosis_report` *(in oqlos.hardware.diagnosis)* | 13 ⚠ | 2 | 28 | **30** |
+| `format_detection` *(in oqlos.tools.hardware_diagnose.doctor)* | 10 ⚠ | 3 | 25 | **28** |
 | `probe_options_from_args` *(in oqlos.tools.hardware_diagnose.modbus_probe)* | 2 | 1 | 27 | **28** |
+| `_safe_resolve` *(in oqlos.core.executor)* | 14 ⚠ | 7 | 21 | **28** |
 
 ```toon markpact:analysis path=project/calls.toon.yaml
 # code2llm call graph | /home/tom/github/oqlos/oqlos
-# generated in 0.21s
-# nodes: 438 | edges: 500 | modules: 68
-# CC̄=4.2
+# generated in 0.20s
+# nodes: 406 | edges: 500 | modules: 44
+# CC̄=4.1
 
 HUBS[20]:
   examples.hardware.doctor-workflow.print
-    CC=0  in:226  out:0  total:226
-  oqlos.hardware.transport.manage_ops._resolve
-    CC=5  in:1  out:51  total:52
-  oqlos.hardware.usb_diagnostics.list_usb_devices
-    CC=13  in:2  out:33  total:35
+    CC=0  in:225  out:0  total:225
   oqlos.tools.cql_cli.formatting.canonicalize_oql_line
     CC=14  in:1  out:31  total:32
   oqlos.core._oql_adapter.oql_doc_to_cql
     CC=12  in:2  out:30  total:32
   oqlos.core.motor2_runtime.normalize_motor2_runtime_config
     CC=12  in:1  out:29  total:30
-  oqlos.core.executor._safe_resolve
-    CC=14  in:7  out:21  total:28
+  oqlos.hardware.diagnosis.build_diagnosis_report
+    CC=13  in:2  out:28  total:30
+  oqlos.tools.hardware_diagnose.doctor.format_detection
+    CC=10  in:3  out:25  total:28
   oqlos.tools.hardware_diagnose.modbus_probe.probe_options_from_args
     CC=2  in:1  out:27  total:28
-  oqlos.hardware.usb_diagnostics.pi_system_diagnostics
-    CC=9  in:0  out:28  total:28
-  oqlos.hardware.rtc_probe.build_rtc_peripheral_status
-    CC=11  in:0  out:27  total:27
+  oqlos.core.executor._safe_resolve
+    CC=14  in:7  out:21  total:28
   setup_hardware_and_run_oql.run_oql_scenario
     CC=8  in:1  out:24  total:25
-  oqlos.core.oql_parser.parse_oql
-    CC=14  in:3  out:21  total:24
   oqlos.core.parser.parse_dsl_to_goal_with_issues
     CC=13  in:3  out:21  total:24
+  oqlos.core.oql_parser.parse_oql
+    CC=14  in:3  out:21  total:24
   oqlos.core._line_parsers._parse_if_condition
     CC=9  in:1  out:22  total:23
+  oqlos.core._interpreter_actions._motor2_build_plan
+    CC=12  in:1  out:22  total:23
+  oqlos.core._interpreter_actions._try_exec_motor2_set
+    CC=13  in:1  out:22  total:23
   oqlos.tools.hardware_diagnose.doctor._analyze_modbus_adc_config
     CC=12  in:1  out:22  total:23
   oqlos.tools.hardware_diagnose.doctor.format_doctor
     CC=6  in:2  out:21  total:23
-  oqlos.core._line_parsers._parse_set_line
-    CC=12  in:1  out:21  total:22
   oqlos.tools.hardware_diagnose.shell._dispatch_command
     CC=6  in:1  out:21  total:22
+  oqlos.tools.xml_import.parser._parse_operation_params
+    CC=9  in:1  out:21  total:22
   oqlos.tools.hardware_diagnose.health.cmd_diagnose
     CC=6  in:2  out:20  total:22
-  oqlos.tools.cql_cli.commands.handle_list_command
-    CC=7  in:1  out:21  total:22
+  oqlos.core._line_parsers._parse_set_line
+    CC=12  in:1  out:21  total:22
 
 MODULES:
   examples.hardware.doctor-workflow  [1 funcs]
     print  CC=0  out:0
-  oqlos.api.plugins  [1 funcs]
-    validate_plugin_configs  CC=3  out:11
   oqlos.config  [1 funcs]
     get_settings  CC=1  out:0
   oqlos.core._compare  [2 funcs]
@@ -660,12 +658,17 @@ MODULES:
     _extract_func_name  CC=7  out:7
     _guard_recursion  CC=3  out:5
     _parse_func_call  CC=5  out:4
-  oqlos.core._interpreter_actions  [5 funcs]
-    exec_action_min_max  CC=3  out:5
-    exec_action_save  CC=4  out:6
-    exec_action_set  CC=9  out:11
-    exec_action_val  CC=3  out:4
-    exec_action_wait  CC=3  out:4
+  oqlos.core._interpreter_actions  [56 funcs]
+    _assert_json  CC=6  out:9
+    _assert_sensor  CC=4  out:9
+    _assert_status  CC=5  out:7
+    _assert_valve  CC=5  out:8
+    _coerce_expected_value  CC=7  out:8
+    _compare_values  CC=10  out:8
+    _do_sleep  CC=3  out:10
+    _drop_command_token  CC=6  out:5
+    _exec_set_wait  CC=3  out:7
+    _extract_action_tokens  CC=5  out:4
   oqlos.core._line_parsers  [9 funcs]
     _parse_action_line  CC=10  out:18
     _parse_if_condition  CC=9  out:22
@@ -717,16 +720,17 @@ MODULES:
     _exec_flat_action  CC=6  out:6
     execute  CC=4  out:9
     parse  CC=3  out:5
-  oqlos.core.motor2_runtime  [9 funcs]
+  oqlos.core.motor2_runtime  [11 funcs]
     _coerce_int  CC=3  out:6
     _compute_motor2_cycles  CC=3  out:7
     _compute_motor2_speed  CC=4  out:6
     _normalize_motor2_direction  CC=4  out:2
     _pick  CC=4  out:0
     build_motor2_reciprocating_plan  CC=7  out:8
+    motor2_acceleration_raw  CC=2  out:8
     motor2_max_steps_per_second  CC=2  out:3
     motor2_speed_for_duration  CC=1  out:9
-    normalize_motor2_runtime_config  CC=12  out:29
+    motor2_speed_raw  CC=1  out:5
   oqlos.core.oql_parser  [31 funcs]
     _check_unnamed_goals  CC=5  out:1
     _expand_repeat_block_lines  CC=8  out:16
@@ -757,150 +761,24 @@ MODULES:
     _eval_node  CC=2  out:5
     _eval_unary_op  CC=3  out:5
     safe_eval  CC=3  out:4
-  oqlos.hardware.artificial_lung  [10 funcs]
-    _clamp_lpm  CC=2  out:3
-    _command_response  CC=2  out:1
-    _lung_cmd_emergency_stop  CC=3  out:3
-    _lung_cmd_lung_cycle  CC=4  out:12
-    _lung_cmd_lung_start  CC=4  out:11
-    _lung_cmd_lung_status  CC=2  out:3
-    _lung_cmd_lung_stop  CC=3  out:3
-    _lung_cmd_set_lpm  CC=1  out:3
-    execute_command  CC=4  out:6
-    get_peripheral_status  CC=6  out:8
   oqlos.hardware.config_paths  [1 funcs]
     resolve_oqlos_config_path  CC=6  out:13
-  oqlos.hardware.config_schema  [2 funcs]
-    build_dynamic_schema_models  CC=2  out:4
-    get_hardware_config  CC=2  out:4
+  oqlos.hardware.diagnosis  [21 funcs]
+    _action_dict  CC=1  out:0
+    _adapter_index  CC=5  out:5
+    _add_modbus_device_actions  CC=5  out:5
+    _build_report_global_actions  CC=4  out:6
+    _build_stack_snapshot  CC=2  out:1
+    _diagnose_barcode_scanner  CC=9  out:9
+    _diagnose_plugin_devices  CC=11  out:14
+    _health_map  CC=4  out:5
+    _host_actions_from_report  CC=7  out:13
+    _infer_status  CC=7  out:5
   oqlos.hardware.discovery  [2 funcs]
     probe_waveshare_modbus  CC=5  out:2
     probe_waveshare_modbus_adc  CC=5  out:2
-  oqlos.hardware.gateway  [1 funcs]
-    __init__  CC=6  out:13
-  oqlos.hardware.identify_enrichment  [1 funcs]
-    enrich_identify_payload  CC=2  out:4
-  oqlos.hardware.modbus_identify  [8 funcs]
-    _device_to_candidate  CC=8  out:10
-    _infer_modbus_serial_port  CC=10  out:9
-    _is_modbus_candidate  CC=5  out:3
-    _usb_blob  CC=3  out:4
-    collect_modbus_serial_candidates  CC=6  out:6
-    enrich_modbus_identify  CC=1  out:2
-    enrich_modbus_serial_hints  CC=10  out:12
-    enrich_platform_modbus_ports  CC=10  out:13
-  oqlos.hardware.plugin_gateway  [4 funcs]
-    __init__  CC=3  out:6
-    _load_hardware_schema  CC=3  out:8
-    modbus_preflight_report  CC=4  out:4
-    reload_configs  CC=5  out:11
-  oqlos.hardware.plugins._rtu_serial  [2 funcs]
-    reopen_rtu_after_stale  CC=4  out:6
-    serial_error_is_stale  CC=4  out:2
-  oqlos.hardware.plugins._shared  [4 funcs]
-    health_check_exception  CC=1  out:1
-    http_disconnect  CC=2  out:2
-    http_health_check  CC=2  out:5
-    not_connected_health  CC=1  out:1
-  oqlos.hardware.plugins.base  [3 funcs]
-    dynamic_peripheral_model  CC=5  out:8
-    dynamic_plugin_schema_models  CC=2  out:7
-    get_pluggy_manager  CC=1  out:0
-  oqlos.hardware.plugins.lung  [3 funcs]
-    _health_check_http  CC=11  out:14
-    disconnect  CC=1  out:1
-    health_check  CC=5  out:4
-  oqlos.hardware.plugins.modbus  [1 funcs]
-    health_check  CC=11  out:9
-  oqlos.hardware.plugins.modbus_adc  [5 funcs]
-    _read_registers  CC=6  out:16
-    execute_command  CC=10  out:11
-    health_check  CC=8  out:16
-    _modbus_error  CC=2  out:4
-    _resolve_channel  CC=3  out:8
-  oqlos.hardware.plugins.motor  [2 funcs]
-    disconnect  CC=2  out:1
-    health_check  CC=17  out:19
-  oqlos.hardware.plugins.piadc  [8 funcs]
-    _read_blocker  CC=7  out:6
-    disconnect  CC=1  out:1
-    execute_command  CC=11  out:11
-    health_check  CC=8  out:12
-    _is_raspberry_pi_host  CC=1  out:5
-    _read_text_file  CC=2  out:3
-    _requires_remote_rpi_hint  CC=5  out:4
-    _resolve_sensor_channel  CC=2  out:6
-  oqlos.hardware.plugins.registry  [1 funcs]
-    discover_entry_point_plugins  CC=6  out:12
-  oqlos.hardware.rtc_probe  [7 funcs]
-    _pirtc_request_sync  CC=8  out:10
-    build_rtc_adapter_entry  CC=8  out:13
-    build_rtc_peripheral_status  CC=11  out:27
-    enrich_rtc_adapter  CC=8  out:11
-    get_pirtc_base_url  CC=1  out:2
-    is_rtc_hardware_enabled  CC=3  out:3
-    run_rtc_command  CC=4  out:4
-  oqlos.hardware.scanner_probe  [13 funcs]
-    _canonical_match_key  CC=8  out:10
-    _is_likely_scanner_input  CC=10  out:4
-    _is_likely_scanner_usb_blob  CC=7  out:4
-    _match_blob  CC=3  out:4
-    _match_priority  CC=8  out:4
-    _merge_matches  CC=6  out:5
-    _scan_diagnostics_usb_matches  CC=14  out:17
-    _scan_input_matches  CC=8  out:15
-    _scan_lsusb_matches  CC=5  out:8
-    _usb_product_blob  CC=3  out:4
-  oqlos.hardware.sidecar_control  [7 funcs]
-    _dri0050_paths  CC=9  out:16
-    _free_api_port  CC=7  out:10
-    _http_sidecar_healthy  CC=4  out:4
-    _modbus_serial_candidates  CC=4  out:6
-    _run_cmd  CC=3  out:6
-    ensure_dri0050_sidecar  CC=13  out:15
-    resolve_dri0050_serial  CC=13  out:16
-  oqlos.hardware.stack_snapshot  [4 funcs]
-    _build_recommended_actions  CC=8  out:8
-    _get_modbus_preflight  CC=5  out:4
-    _lazy_hardware_api  CC=1  out:0
+  oqlos.hardware.stack_snapshot  [1 funcs]
     build_hardware_stack_snapshot  CC=3  out:11
-  oqlos.hardware.transport.manage_ops  [2 funcs]
-    _resolve  CC=5  out:51
-    run_manage_verb  CC=3  out:3
-  oqlos.hardware.transport.mqtt_oql_bridge  [5 funcs]
-    _run_manage  CC=3  out:8
-    _run_oql  CC=5  out:11
-    __init__  CC=4  out:5
-    _make_client  CC=4  out:3
-    build_topics  CC=1  out:2
-  oqlos.hardware.usb_diagnostics  [5 funcs]
-    _find_tty  CC=5  out:16
-    _read  CC=2  out:3
-    list_usb_devices  CC=13  out:33
-    pi_system_diagnostics  CC=9  out:28
-    reset_usb_device  CC=12  out:6
-  oqlos.reporters.html_report  [3 funcs]
-    _render_goal  CC=10  out:13
-    _render_step  CC=7  out:19
-    _render_thresholds_table  CC=2  out:12
-  oqlos.reporters.json_reporter  [5 funcs]
-    _collect_thresholds  CC=8  out:4
-    _extract_metadata  CC=2  out:4
-    _group_steps_into_goals  CC=6  out:11
-    _step_to_dict  CC=6  out:1
-    report_json  CC=2  out:8
-  oqlos.shared.file_ops  [3 funcs]
-    _ensure_safe_path  CC=2  out:6
-    read_file  CC=3  out:6
-    write_file  CC=1  out:3
-  oqlos.shared.release_version  [7 funcs]
-    _read_version_from_package_json  CC=4  out:5
-    _read_version_from_text  CC=4  out:4
-    _run_git  CC=4  out:3
-    _version_candidates  CC=1  out:0
-    clean_version  CC=6  out:5
-    main  CC=1  out:2
-    resolve_release_version  CC=11  out:12
   oqlos.tools.cql_cli  [2 funcs]
     _sync_compat_symbols  CC=1  out:0
     main  CC=1  out:2
@@ -946,6 +824,16 @@ MODULES:
     parse_sensor_overrides  CC=3  out:4
     resolve_required_adapter  CC=8  out:3
     validate_directory  CC=5  out:15
+  oqlos.tools.hardware_diagnose.__main__  [9 funcs]
+    _handle_report_action  CC=3  out:4
+    _print_benchmark  CC=3  out:11
+    _print_calibrate  CC=6  out:9
+    _print_detect  CC=2  out:4
+    _print_diagnose  CC=3  out:9
+    _print_doctor  CC=2  out:4
+    _print_health  CC=2  out:5
+    _print_list  CC=3  out:8
+    _print_modbus_probe  CC=2  out:5
   oqlos.tools.hardware_diagnose.benchmark  [1 funcs]
     run_benchmark  CC=6  out:15
   oqlos.tools.hardware_diagnose.calibration  [4 funcs]
@@ -958,7 +846,7 @@ MODULES:
     detect_chips_on_i2c  CC=8  out:10
     list_i2c_buses  CC=1  out:2
     list_usb_serial_devices  CC=7  out:9
-  oqlos.tools.hardware_diagnose.doctor  [39 funcs]
+  oqlos.tools.hardware_diagnose.doctor  [40 funcs]
     _adapter_health_status  CC=3  out:1
     _add_issue  CC=2  out:1
     _analyze_firmware_access  CC=7  out:11
@@ -1061,34 +949,34 @@ EDGES:
   oqlos.core._dsl_helpers._map_action_value → oqlos.core._dsl_helpers._map_lung_action
   oqlos.core._dsl_helpers._map_action_value → oqlos.core._dsl_helpers._looks_like_sensor_object
   oqlos.core._dsl_helpers._map_action_value → oqlos.core._dsl_helpers._map_wait_action
-  oqlos.core.oql_parser.parse_duration → oqlos.core.oql_parser.to_num
-  oqlos.core.oql_parser.duration_to_ms → oqlos.core.oql_parser.parse_duration
-  oqlos.core.oql_parser._split_value_unit → oqlos.core.oql_parser.to_num
-  oqlos.core.oql_parser._split_set_value_unit → oqlos.core.oql_parser._split_value_unit
-  oqlos.core.oql_parser.parse_SET → oqlos.core.oql_parser._require
-  oqlos.core.oql_parser.parse_SET → oqlos.core.oql_parser._split_set_value_unit
-  oqlos.core.oql_parser.parse_GET → oqlos.core.oql_parser._require
-  oqlos.core.oql_parser.parse_WAIT → oqlos.core.oql_parser._require
-  oqlos.core.oql_parser.parse_WAIT → oqlos.core.oql_parser.parse_duration
-  oqlos.core.oql_parser.parse_WAIT → oqlos.core.oql_parser.duration_to_ms
-  oqlos.core.oql_parser.parse_IF_DELTA → oqlos.core.oql_parser._require
-  oqlos.core.oql_parser.parse_IF_DELTA → oqlos.core.oql_parser.to_num
-  oqlos.core.oql_parser.parse_IF_DELTA → oqlos.core.oql_parser.duration_to_ms
-  oqlos.core.oql_parser.parse_SAVE → oqlos.core.oql_parser._require
-  oqlos.core.oql_parser.parse_CHECK → oqlos.core.oql_parser.to_num
-  oqlos.core.oql_parser.parse_IF → oqlos.core.oql_parser.to_num
-  oqlos.core.oql_parser.parse_MIN → oqlos.core.oql_parser._require
-  oqlos.core.oql_parser.parse_MIN → oqlos.core.oql_parser._split_value_unit
-  oqlos.core.oql_parser.parse_MAX → oqlos.core.oql_parser._require
-  oqlos.core.oql_parser.parse_MAX → oqlos.core.oql_parser._split_value_unit
-  oqlos.core.oql_parser.parse_SAMPLE → oqlos.core.oql_parser._require
-  oqlos.core.oql_parser.parse_SAMPLE → oqlos.core.oql_parser.duration_to_ms
-  oqlos.core.oql_parser.parse_CALL → oqlos.core.oql_parser._require
-  oqlos.core.oql_parser.parse_INCLUDE → oqlos.core.oql_parser._require
-  oqlos.core.oql_parser.parse_FUNC_CALL → oqlos.core.oql_parser._require
-  oqlos.core.oql_parser._expand_repeat_block_lines → oqlos.core.oql_parser._line_indent
-  oqlos.core.oql_parser._expand_repeat_blocks → oqlos.core.oql_parser._expand_repeat_block_lines
-  oqlos.core.oql_parser._handle_top_level_line → oqlos.core.oql_parser.tokenize
+  oqlos.core._interpreter_actions._drop_command_token → oqlos.core._interpreter_actions._extract_action_tokens
+  oqlos.core._interpreter_actions._compare_values → oqlos.core._interpreter_actions._coerce_expected_value
+  oqlos.core._interpreter_actions._format_set_command → oqlos.core._interpreter_actions._oql_quote
+  oqlos.core._interpreter_actions.exec_action_wait → oqlos.core._interpreter_actions.parse_wait_secs
+  oqlos.core._interpreter_actions.exec_action_wait → oqlos.core._interpreter_actions._do_sleep
+  oqlos.core._interpreter_actions.exec_action_func → oqlos.core._interpreter_actions._resolve_numeric_token
+  oqlos.core._interpreter_actions.exec_action_api → oqlos.core._interpreter_actions._mock_api_response
+  oqlos.core._interpreter_actions.exec_action_expect → oqlos.core._interpreter_actions._drop_command_token
+  oqlos.core._interpreter_actions.exec_action_expect → oqlos.core._interpreter_actions._mark_success
+  oqlos.core._interpreter_actions._assert_status → oqlos.core._interpreter_actions._record_failure
+  oqlos.core._interpreter_actions._assert_status → oqlos.core._interpreter_actions._coerce_expected_value
+  oqlos.core._interpreter_actions._assert_json → oqlos.core._interpreter_actions._get_nested_value
+  oqlos.core._interpreter_actions._assert_json → oqlos.core._interpreter_actions._record_failure
+  oqlos.core._interpreter_actions._assert_json → oqlos.core._interpreter_actions._compare_values
+  oqlos.core._interpreter_actions._assert_sensor → oqlos.core._interpreter_actions._record_failure
+  oqlos.core._interpreter_actions._assert_sensor → oqlos.core._interpreter_actions._mark_success
+  oqlos.core._interpreter_actions._assert_valve → oqlos.core._interpreter_actions._lookup_peripheral_state
+  oqlos.core._interpreter_actions._assert_valve → oqlos.core._interpreter_actions._normalize_bool
+  oqlos.core._interpreter_actions._assert_valve → oqlos.core._interpreter_actions._mark_success
+  oqlos.core._interpreter_actions._assert_valve → oqlos.core._interpreter_actions._record_failure
+  oqlos.core._interpreter_actions.exec_action_assert → oqlos.core._interpreter_actions._drop_command_token
+  oqlos.core._interpreter_actions.exec_action_assert → oqlos.core._interpreter_actions._record_failure
+  oqlos.core._interpreter_actions.exec_action_shell → oqlos.core._interpreter_actions._drop_command_token
+  oqlos.core._interpreter_actions.exec_action_shell → oqlos.core._interpreter_actions._record_failure
+  oqlos.core._interpreter_actions.exec_action_set → oqlos.core._interpreter_actions._try_exec_motor2_set
+  oqlos.core._interpreter_actions.exec_action_set → oqlos.core._interpreter_actions._exec_set_wait
+  oqlos.core._interpreter_actions.exec_action_set → oqlos.core._interpreter_actions._format_set_command
+  oqlos.core._interpreter_actions._parse_motor2_duration_seconds → oqlos.core._interpreter_actions._parse_motor2_float
 ```
 
 ## Test Contracts
@@ -1141,57 +1029,55 @@ EDGES:
 
 ```toon markpact:analysis path=project/calls.toon.yaml
 # code2llm call graph | /home/tom/github/oqlos/oqlos
-# generated in 0.21s
-# nodes: 438 | edges: 500 | modules: 68
-# CC̄=4.2
+# generated in 0.20s
+# nodes: 406 | edges: 500 | modules: 44
+# CC̄=4.1
 
 HUBS[20]:
   examples.hardware.doctor-workflow.print
-    CC=0  in:226  out:0  total:226
-  oqlos.hardware.transport.manage_ops._resolve
-    CC=5  in:1  out:51  total:52
-  oqlos.hardware.usb_diagnostics.list_usb_devices
-    CC=13  in:2  out:33  total:35
+    CC=0  in:225  out:0  total:225
   oqlos.tools.cql_cli.formatting.canonicalize_oql_line
     CC=14  in:1  out:31  total:32
   oqlos.core._oql_adapter.oql_doc_to_cql
     CC=12  in:2  out:30  total:32
   oqlos.core.motor2_runtime.normalize_motor2_runtime_config
     CC=12  in:1  out:29  total:30
-  oqlos.core.executor._safe_resolve
-    CC=14  in:7  out:21  total:28
+  oqlos.hardware.diagnosis.build_diagnosis_report
+    CC=13  in:2  out:28  total:30
+  oqlos.tools.hardware_diagnose.doctor.format_detection
+    CC=10  in:3  out:25  total:28
   oqlos.tools.hardware_diagnose.modbus_probe.probe_options_from_args
     CC=2  in:1  out:27  total:28
-  oqlos.hardware.usb_diagnostics.pi_system_diagnostics
-    CC=9  in:0  out:28  total:28
-  oqlos.hardware.rtc_probe.build_rtc_peripheral_status
-    CC=11  in:0  out:27  total:27
+  oqlos.core.executor._safe_resolve
+    CC=14  in:7  out:21  total:28
   setup_hardware_and_run_oql.run_oql_scenario
     CC=8  in:1  out:24  total:25
-  oqlos.core.oql_parser.parse_oql
-    CC=14  in:3  out:21  total:24
   oqlos.core.parser.parse_dsl_to_goal_with_issues
     CC=13  in:3  out:21  total:24
+  oqlos.core.oql_parser.parse_oql
+    CC=14  in:3  out:21  total:24
   oqlos.core._line_parsers._parse_if_condition
     CC=9  in:1  out:22  total:23
+  oqlos.core._interpreter_actions._motor2_build_plan
+    CC=12  in:1  out:22  total:23
+  oqlos.core._interpreter_actions._try_exec_motor2_set
+    CC=13  in:1  out:22  total:23
   oqlos.tools.hardware_diagnose.doctor._analyze_modbus_adc_config
     CC=12  in:1  out:22  total:23
   oqlos.tools.hardware_diagnose.doctor.format_doctor
     CC=6  in:2  out:21  total:23
-  oqlos.core._line_parsers._parse_set_line
-    CC=12  in:1  out:21  total:22
   oqlos.tools.hardware_diagnose.shell._dispatch_command
     CC=6  in:1  out:21  total:22
+  oqlos.tools.xml_import.parser._parse_operation_params
+    CC=9  in:1  out:21  total:22
   oqlos.tools.hardware_diagnose.health.cmd_diagnose
     CC=6  in:2  out:20  total:22
-  oqlos.tools.cql_cli.commands.handle_list_command
-    CC=7  in:1  out:21  total:22
+  oqlos.core._line_parsers._parse_set_line
+    CC=12  in:1  out:21  total:22
 
 MODULES:
   examples.hardware.doctor-workflow  [1 funcs]
     print  CC=0  out:0
-  oqlos.api.plugins  [1 funcs]
-    validate_plugin_configs  CC=3  out:11
   oqlos.config  [1 funcs]
     get_settings  CC=1  out:0
   oqlos.core._compare  [2 funcs]
@@ -1234,12 +1120,17 @@ MODULES:
     _extract_func_name  CC=7  out:7
     _guard_recursion  CC=3  out:5
     _parse_func_call  CC=5  out:4
-  oqlos.core._interpreter_actions  [5 funcs]
-    exec_action_min_max  CC=3  out:5
-    exec_action_save  CC=4  out:6
-    exec_action_set  CC=9  out:11
-    exec_action_val  CC=3  out:4
-    exec_action_wait  CC=3  out:4
+  oqlos.core._interpreter_actions  [56 funcs]
+    _assert_json  CC=6  out:9
+    _assert_sensor  CC=4  out:9
+    _assert_status  CC=5  out:7
+    _assert_valve  CC=5  out:8
+    _coerce_expected_value  CC=7  out:8
+    _compare_values  CC=10  out:8
+    _do_sleep  CC=3  out:10
+    _drop_command_token  CC=6  out:5
+    _exec_set_wait  CC=3  out:7
+    _extract_action_tokens  CC=5  out:4
   oqlos.core._line_parsers  [9 funcs]
     _parse_action_line  CC=10  out:18
     _parse_if_condition  CC=9  out:22
@@ -1291,16 +1182,17 @@ MODULES:
     _exec_flat_action  CC=6  out:6
     execute  CC=4  out:9
     parse  CC=3  out:5
-  oqlos.core.motor2_runtime  [9 funcs]
+  oqlos.core.motor2_runtime  [11 funcs]
     _coerce_int  CC=3  out:6
     _compute_motor2_cycles  CC=3  out:7
     _compute_motor2_speed  CC=4  out:6
     _normalize_motor2_direction  CC=4  out:2
     _pick  CC=4  out:0
     build_motor2_reciprocating_plan  CC=7  out:8
+    motor2_acceleration_raw  CC=2  out:8
     motor2_max_steps_per_second  CC=2  out:3
     motor2_speed_for_duration  CC=1  out:9
-    normalize_motor2_runtime_config  CC=12  out:29
+    motor2_speed_raw  CC=1  out:5
   oqlos.core.oql_parser  [31 funcs]
     _check_unnamed_goals  CC=5  out:1
     _expand_repeat_block_lines  CC=8  out:16
@@ -1331,150 +1223,24 @@ MODULES:
     _eval_node  CC=2  out:5
     _eval_unary_op  CC=3  out:5
     safe_eval  CC=3  out:4
-  oqlos.hardware.artificial_lung  [10 funcs]
-    _clamp_lpm  CC=2  out:3
-    _command_response  CC=2  out:1
-    _lung_cmd_emergency_stop  CC=3  out:3
-    _lung_cmd_lung_cycle  CC=4  out:12
-    _lung_cmd_lung_start  CC=4  out:11
-    _lung_cmd_lung_status  CC=2  out:3
-    _lung_cmd_lung_stop  CC=3  out:3
-    _lung_cmd_set_lpm  CC=1  out:3
-    execute_command  CC=4  out:6
-    get_peripheral_status  CC=6  out:8
   oqlos.hardware.config_paths  [1 funcs]
     resolve_oqlos_config_path  CC=6  out:13
-  oqlos.hardware.config_schema  [2 funcs]
-    build_dynamic_schema_models  CC=2  out:4
-    get_hardware_config  CC=2  out:4
+  oqlos.hardware.diagnosis  [21 funcs]
+    _action_dict  CC=1  out:0
+    _adapter_index  CC=5  out:5
+    _add_modbus_device_actions  CC=5  out:5
+    _build_report_global_actions  CC=4  out:6
+    _build_stack_snapshot  CC=2  out:1
+    _diagnose_barcode_scanner  CC=9  out:9
+    _diagnose_plugin_devices  CC=11  out:14
+    _health_map  CC=4  out:5
+    _host_actions_from_report  CC=7  out:13
+    _infer_status  CC=7  out:5
   oqlos.hardware.discovery  [2 funcs]
     probe_waveshare_modbus  CC=5  out:2
     probe_waveshare_modbus_adc  CC=5  out:2
-  oqlos.hardware.gateway  [1 funcs]
-    __init__  CC=6  out:13
-  oqlos.hardware.identify_enrichment  [1 funcs]
-    enrich_identify_payload  CC=2  out:4
-  oqlos.hardware.modbus_identify  [8 funcs]
-    _device_to_candidate  CC=8  out:10
-    _infer_modbus_serial_port  CC=10  out:9
-    _is_modbus_candidate  CC=5  out:3
-    _usb_blob  CC=3  out:4
-    collect_modbus_serial_candidates  CC=6  out:6
-    enrich_modbus_identify  CC=1  out:2
-    enrich_modbus_serial_hints  CC=10  out:12
-    enrich_platform_modbus_ports  CC=10  out:13
-  oqlos.hardware.plugin_gateway  [4 funcs]
-    __init__  CC=3  out:6
-    _load_hardware_schema  CC=3  out:8
-    modbus_preflight_report  CC=4  out:4
-    reload_configs  CC=5  out:11
-  oqlos.hardware.plugins._rtu_serial  [2 funcs]
-    reopen_rtu_after_stale  CC=4  out:6
-    serial_error_is_stale  CC=4  out:2
-  oqlos.hardware.plugins._shared  [4 funcs]
-    health_check_exception  CC=1  out:1
-    http_disconnect  CC=2  out:2
-    http_health_check  CC=2  out:5
-    not_connected_health  CC=1  out:1
-  oqlos.hardware.plugins.base  [3 funcs]
-    dynamic_peripheral_model  CC=5  out:8
-    dynamic_plugin_schema_models  CC=2  out:7
-    get_pluggy_manager  CC=1  out:0
-  oqlos.hardware.plugins.lung  [3 funcs]
-    _health_check_http  CC=11  out:14
-    disconnect  CC=1  out:1
-    health_check  CC=5  out:4
-  oqlos.hardware.plugins.modbus  [1 funcs]
-    health_check  CC=11  out:9
-  oqlos.hardware.plugins.modbus_adc  [5 funcs]
-    _read_registers  CC=6  out:16
-    execute_command  CC=10  out:11
-    health_check  CC=8  out:16
-    _modbus_error  CC=2  out:4
-    _resolve_channel  CC=3  out:8
-  oqlos.hardware.plugins.motor  [2 funcs]
-    disconnect  CC=2  out:1
-    health_check  CC=17  out:19
-  oqlos.hardware.plugins.piadc  [8 funcs]
-    _read_blocker  CC=7  out:6
-    disconnect  CC=1  out:1
-    execute_command  CC=11  out:11
-    health_check  CC=8  out:12
-    _is_raspberry_pi_host  CC=1  out:5
-    _read_text_file  CC=2  out:3
-    _requires_remote_rpi_hint  CC=5  out:4
-    _resolve_sensor_channel  CC=2  out:6
-  oqlos.hardware.plugins.registry  [1 funcs]
-    discover_entry_point_plugins  CC=6  out:12
-  oqlos.hardware.rtc_probe  [7 funcs]
-    _pirtc_request_sync  CC=8  out:10
-    build_rtc_adapter_entry  CC=8  out:13
-    build_rtc_peripheral_status  CC=11  out:27
-    enrich_rtc_adapter  CC=8  out:11
-    get_pirtc_base_url  CC=1  out:2
-    is_rtc_hardware_enabled  CC=3  out:3
-    run_rtc_command  CC=4  out:4
-  oqlos.hardware.scanner_probe  [13 funcs]
-    _canonical_match_key  CC=8  out:10
-    _is_likely_scanner_input  CC=10  out:4
-    _is_likely_scanner_usb_blob  CC=7  out:4
-    _match_blob  CC=3  out:4
-    _match_priority  CC=8  out:4
-    _merge_matches  CC=6  out:5
-    _scan_diagnostics_usb_matches  CC=14  out:17
-    _scan_input_matches  CC=8  out:15
-    _scan_lsusb_matches  CC=5  out:8
-    _usb_product_blob  CC=3  out:4
-  oqlos.hardware.sidecar_control  [7 funcs]
-    _dri0050_paths  CC=9  out:16
-    _free_api_port  CC=7  out:10
-    _http_sidecar_healthy  CC=4  out:4
-    _modbus_serial_candidates  CC=4  out:6
-    _run_cmd  CC=3  out:6
-    ensure_dri0050_sidecar  CC=13  out:15
-    resolve_dri0050_serial  CC=13  out:16
-  oqlos.hardware.stack_snapshot  [4 funcs]
-    _build_recommended_actions  CC=8  out:8
-    _get_modbus_preflight  CC=5  out:4
-    _lazy_hardware_api  CC=1  out:0
+  oqlos.hardware.stack_snapshot  [1 funcs]
     build_hardware_stack_snapshot  CC=3  out:11
-  oqlos.hardware.transport.manage_ops  [2 funcs]
-    _resolve  CC=5  out:51
-    run_manage_verb  CC=3  out:3
-  oqlos.hardware.transport.mqtt_oql_bridge  [5 funcs]
-    _run_manage  CC=3  out:8
-    _run_oql  CC=5  out:11
-    __init__  CC=4  out:5
-    _make_client  CC=4  out:3
-    build_topics  CC=1  out:2
-  oqlos.hardware.usb_diagnostics  [5 funcs]
-    _find_tty  CC=5  out:16
-    _read  CC=2  out:3
-    list_usb_devices  CC=13  out:33
-    pi_system_diagnostics  CC=9  out:28
-    reset_usb_device  CC=12  out:6
-  oqlos.reporters.html_report  [3 funcs]
-    _render_goal  CC=10  out:13
-    _render_step  CC=7  out:19
-    _render_thresholds_table  CC=2  out:12
-  oqlos.reporters.json_reporter  [5 funcs]
-    _collect_thresholds  CC=8  out:4
-    _extract_metadata  CC=2  out:4
-    _group_steps_into_goals  CC=6  out:11
-    _step_to_dict  CC=6  out:1
-    report_json  CC=2  out:8
-  oqlos.shared.file_ops  [3 funcs]
-    _ensure_safe_path  CC=2  out:6
-    read_file  CC=3  out:6
-    write_file  CC=1  out:3
-  oqlos.shared.release_version  [7 funcs]
-    _read_version_from_package_json  CC=4  out:5
-    _read_version_from_text  CC=4  out:4
-    _run_git  CC=4  out:3
-    _version_candidates  CC=1  out:0
-    clean_version  CC=6  out:5
-    main  CC=1  out:2
-    resolve_release_version  CC=11  out:12
   oqlos.tools.cql_cli  [2 funcs]
     _sync_compat_symbols  CC=1  out:0
     main  CC=1  out:2
@@ -1520,6 +1286,16 @@ MODULES:
     parse_sensor_overrides  CC=3  out:4
     resolve_required_adapter  CC=8  out:3
     validate_directory  CC=5  out:15
+  oqlos.tools.hardware_diagnose.__main__  [9 funcs]
+    _handle_report_action  CC=3  out:4
+    _print_benchmark  CC=3  out:11
+    _print_calibrate  CC=6  out:9
+    _print_detect  CC=2  out:4
+    _print_diagnose  CC=3  out:9
+    _print_doctor  CC=2  out:4
+    _print_health  CC=2  out:5
+    _print_list  CC=3  out:8
+    _print_modbus_probe  CC=2  out:5
   oqlos.tools.hardware_diagnose.benchmark  [1 funcs]
     run_benchmark  CC=6  out:15
   oqlos.tools.hardware_diagnose.calibration  [4 funcs]
@@ -1532,7 +1308,7 @@ MODULES:
     detect_chips_on_i2c  CC=8  out:10
     list_i2c_buses  CC=1  out:2
     list_usb_serial_devices  CC=7  out:9
-  oqlos.tools.hardware_diagnose.doctor  [39 funcs]
+  oqlos.tools.hardware_diagnose.doctor  [40 funcs]
     _adapter_health_status  CC=3  out:1
     _add_issue  CC=2  out:1
     _analyze_firmware_access  CC=7  out:11
@@ -1635,60 +1411,48 @@ EDGES:
   oqlos.core._dsl_helpers._map_action_value → oqlos.core._dsl_helpers._map_lung_action
   oqlos.core._dsl_helpers._map_action_value → oqlos.core._dsl_helpers._looks_like_sensor_object
   oqlos.core._dsl_helpers._map_action_value → oqlos.core._dsl_helpers._map_wait_action
-  oqlos.core.oql_parser.parse_duration → oqlos.core.oql_parser.to_num
-  oqlos.core.oql_parser.duration_to_ms → oqlos.core.oql_parser.parse_duration
-  oqlos.core.oql_parser._split_value_unit → oqlos.core.oql_parser.to_num
-  oqlos.core.oql_parser._split_set_value_unit → oqlos.core.oql_parser._split_value_unit
-  oqlos.core.oql_parser.parse_SET → oqlos.core.oql_parser._require
-  oqlos.core.oql_parser.parse_SET → oqlos.core.oql_parser._split_set_value_unit
-  oqlos.core.oql_parser.parse_GET → oqlos.core.oql_parser._require
-  oqlos.core.oql_parser.parse_WAIT → oqlos.core.oql_parser._require
-  oqlos.core.oql_parser.parse_WAIT → oqlos.core.oql_parser.parse_duration
-  oqlos.core.oql_parser.parse_WAIT → oqlos.core.oql_parser.duration_to_ms
-  oqlos.core.oql_parser.parse_IF_DELTA → oqlos.core.oql_parser._require
-  oqlos.core.oql_parser.parse_IF_DELTA → oqlos.core.oql_parser.to_num
-  oqlos.core.oql_parser.parse_IF_DELTA → oqlos.core.oql_parser.duration_to_ms
-  oqlos.core.oql_parser.parse_SAVE → oqlos.core.oql_parser._require
-  oqlos.core.oql_parser.parse_CHECK → oqlos.core.oql_parser.to_num
-  oqlos.core.oql_parser.parse_IF → oqlos.core.oql_parser.to_num
-  oqlos.core.oql_parser.parse_MIN → oqlos.core.oql_parser._require
-  oqlos.core.oql_parser.parse_MIN → oqlos.core.oql_parser._split_value_unit
-  oqlos.core.oql_parser.parse_MAX → oqlos.core.oql_parser._require
-  oqlos.core.oql_parser.parse_MAX → oqlos.core.oql_parser._split_value_unit
-  oqlos.core.oql_parser.parse_SAMPLE → oqlos.core.oql_parser._require
-  oqlos.core.oql_parser.parse_SAMPLE → oqlos.core.oql_parser.duration_to_ms
-  oqlos.core.oql_parser.parse_CALL → oqlos.core.oql_parser._require
-  oqlos.core.oql_parser.parse_INCLUDE → oqlos.core.oql_parser._require
-  oqlos.core.oql_parser.parse_FUNC_CALL → oqlos.core.oql_parser._require
-  oqlos.core.oql_parser._expand_repeat_block_lines → oqlos.core.oql_parser._line_indent
-  oqlos.core.oql_parser._expand_repeat_blocks → oqlos.core.oql_parser._expand_repeat_block_lines
-  oqlos.core.oql_parser._handle_top_level_line → oqlos.core.oql_parser.tokenize
+  oqlos.core._interpreter_actions._drop_command_token → oqlos.core._interpreter_actions._extract_action_tokens
+  oqlos.core._interpreter_actions._compare_values → oqlos.core._interpreter_actions._coerce_expected_value
+  oqlos.core._interpreter_actions._format_set_command → oqlos.core._interpreter_actions._oql_quote
+  oqlos.core._interpreter_actions.exec_action_wait → oqlos.core._interpreter_actions.parse_wait_secs
+  oqlos.core._interpreter_actions.exec_action_wait → oqlos.core._interpreter_actions._do_sleep
+  oqlos.core._interpreter_actions.exec_action_func → oqlos.core._interpreter_actions._resolve_numeric_token
+  oqlos.core._interpreter_actions.exec_action_api → oqlos.core._interpreter_actions._mock_api_response
+  oqlos.core._interpreter_actions.exec_action_expect → oqlos.core._interpreter_actions._drop_command_token
+  oqlos.core._interpreter_actions.exec_action_expect → oqlos.core._interpreter_actions._mark_success
+  oqlos.core._interpreter_actions._assert_status → oqlos.core._interpreter_actions._record_failure
+  oqlos.core._interpreter_actions._assert_status → oqlos.core._interpreter_actions._coerce_expected_value
+  oqlos.core._interpreter_actions._assert_json → oqlos.core._interpreter_actions._get_nested_value
+  oqlos.core._interpreter_actions._assert_json → oqlos.core._interpreter_actions._record_failure
+  oqlos.core._interpreter_actions._assert_json → oqlos.core._interpreter_actions._compare_values
+  oqlos.core._interpreter_actions._assert_sensor → oqlos.core._interpreter_actions._record_failure
+  oqlos.core._interpreter_actions._assert_sensor → oqlos.core._interpreter_actions._mark_success
+  oqlos.core._interpreter_actions._assert_valve → oqlos.core._interpreter_actions._lookup_peripheral_state
+  oqlos.core._interpreter_actions._assert_valve → oqlos.core._interpreter_actions._normalize_bool
+  oqlos.core._interpreter_actions._assert_valve → oqlos.core._interpreter_actions._mark_success
+  oqlos.core._interpreter_actions._assert_valve → oqlos.core._interpreter_actions._record_failure
+  oqlos.core._interpreter_actions.exec_action_assert → oqlos.core._interpreter_actions._drop_command_token
+  oqlos.core._interpreter_actions.exec_action_assert → oqlos.core._interpreter_actions._record_failure
+  oqlos.core._interpreter_actions.exec_action_shell → oqlos.core._interpreter_actions._drop_command_token
+  oqlos.core._interpreter_actions.exec_action_shell → oqlos.core._interpreter_actions._record_failure
+  oqlos.core._interpreter_actions.exec_action_set → oqlos.core._interpreter_actions._try_exec_motor2_set
+  oqlos.core._interpreter_actions.exec_action_set → oqlos.core._interpreter_actions._exec_set_wait
+  oqlos.core._interpreter_actions.exec_action_set → oqlos.core._interpreter_actions._format_set_command
+  oqlos.core._interpreter_actions._parse_motor2_duration_seconds → oqlos.core._interpreter_actions._parse_motor2_float
 ```
 
 ### Code Analysis (`project/analysis.toon.yaml`)
 
 ```toon markpact:analysis path=project/analysis.toon.yaml
-# code2llm | 190f 40737L | python:143,md:16,yaml:13,json:5,shell:5,yml:4,conf:2,toml:1 | 2026-06-30
+# code2llm | 191f 41133L | python:143,md:16,yaml:13,shell:6,json:5,yml:4,conf:2,toml:1 | 2026-06-30
 # generated in 0.07s
-# CC̅=4.2 | critical:11/1395 | dups:0 | cycles:0
+# CC̅=4.2 | critical:0/1441 | dups:0 | cycles:0
 
-HEALTH[11]:
-  🟡 CC    migrate_v2_to_v4 CC=53 (limit:15)
-  🟡 CC    enrich_adapter_entry CC=33 (limit:15)
-  🟡 CC    _build_waveshare_diagnose_report CC=27 (limit:15)
-  🟡 CC    build_diagnosis_report CC=25 (limit:15)
-  🟡 CC    main CC=24 (limit:15)
-  🟡 CC    _rewrite_legacy_if CC=20 (limit:15)
-  🟡 CC    run_extended_motor_tic249_command CC=19 (limit:15)
-  🟡 CC    adapter_status_from_health CC=17 (limit:15)
-  🟡 CC    health_check CC=17 (limit:15)
-  🟡 CC    _modbus_wizard_program_isolated CC=16 (limit:15)
-  🟡 CC    _modbus_io_instance_ids CC=15 (limit:15)
+HEALTH[0]: ok
 
-REFACTOR[1]:
-  1. split 11 high-CC methods  (CC>15)
+REFACTOR[0]: none needed
 
-PIPELINES[661]:
+PIPELINES[681]:
   [1] Src [main]: main → run_oql_scenario → print
       PURITY: 100% pure
   [2] Src [__init__]: __init__
@@ -1794,7 +1558,7 @@ LAYERS:
   ./                              CC̄=6.9    ←in:0  →out:0
   │ !! openapi_spec.yaml         1035L  0C    0m  CC=0.0    ←0
   │ !! openapi.yaml              1035L  0C    0m  CC=0.0    ←0
-  │ !! README.md                  641L  0C    0m  CC=0.0    ←0
+  │ !! README.md                  711L  0C    0m  CC=0.0    ←0
   │ !! goal.yaml                  511L  0C    0m  CC=0.0    ←0
   │ CHANGELOG.md               496L  0C    0m  CC=0.0    ←0
   │ hw_diagnostic_20260415_133138.json   340L  0C    0m  CC=0.0    ←0
@@ -1808,27 +1572,16 @@ LAYERS:
   │ project.sh                  43L  0C    0m  CC=0.0    ←0
   │ TODO.md                     36L  0C    0m  CC=0.0    ←0
   │
-  scripts/                        CC̄=4.6    ←in:0  →out:70  !! split
-  │ !! oql_v2_to_v4_migrate_db    627L  1C   19m  CC=53     ←1
-  │ hardware-check.sh          340L  0C   11m  CC=0.0    ←0
-  │ migrate_to_v4              340L  0C   19m  CC=11     ←0
-  │ scenarios_export           296L  0C   13m  CC=8      ←0
-  │ oql_v4_validator           281L  1C    8m  CC=8      ←1
-  │ oql_v2_validator           224L  1C    6m  CC=9      ←0
-  │ oql_validator_common       129L  0C    6m  CC=11     ←2
-  │ oql-stack.sh               104L  0C    5m  CC=0.0    ←0
-  │ fix_brackets_to_v4          95L  0C    2m  CC=14     ←0
-  │
   oqlos/                          CC̄=4.2    ←in:8  →out:0
-  │ !! hardware                  2165L  0C   83m  CC=27     ←2
+  │ !! hardware                  2252L  0C   89m  CC=14     ←2
   │ !! _interpreter_actions      1255L  0C   85m  CC=14     ←1
   │ !! doctor                    1003L  0C   41m  CC=13     ←2
   │ !! oql_parser                 762L  3C   43m  CC=14     ←2
   │ !! interpreter                676L  1C   47m  CC=11     ←0
+  │ !! tic249_extended            627L  0C   30m  CC=14     ←0
   │ !! plugin_gateway             612L  1C   21m  CC=14     ←0
-  │ !! tic249_extended            597L  0C   27m  CC=19     ←0
-  │ !! diagnosis                  550L  3C   23m  CC=25     ←1
-  │ !! motor                      543L  1C   18m  CC=17     ←0
+  │ !! diagnosis                  562L  3C   26m  CC=13     ←1
+  │ !! motor                      549L  1C   20m  CC=14     ←0
   │ mqtt_oql_bridge            494L  6C   23m  CC=5      ←0
   │ firmware_adapter           481L  1C   26m  CC=12     ←0
   │ cql_parser                 477L  1C   30m  CC=8      ←2
@@ -1846,6 +1599,7 @@ LAYERS:
   │ lung                       353L  1C   20m  CC=14     ←0
   │ plugin_cli                 343L  0C   14m  CC=8      ←3
   │ modbus                     335L  1C   16m  CC=11     ←0
+  │ identify_enrich            333L  0C   18m  CC=13     ←0
   │ registry                   332L  1C   14m  CC=6      ←0
   │ preflight                  329L  0C   12m  CC=13     ←1
   │ base                       320L  7C   25m  CC=7      ←19
@@ -1854,7 +1608,6 @@ LAYERS:
   │ piadc                      272L  1C   12m  CC=11     ←0
   │ html_report                266L  0C    5m  CC=10     ←0
   │ scanner_probe              262L  0C   13m  CC=14     ←1
-  │ !! identify_enrich            260L  0C   10m  CC=33     ←0
   │ scenarios                  251L  0C   16m  CC=11     ←0
   │ hui_actions                247L  0C   12m  CC=7      ←1
   │ _line_parsers              246L  0C    9m  CC=12     ←1
@@ -1897,6 +1650,7 @@ LAYERS:
   │ mqtt                       119L  1C    9m  CC=3      ←0
   │ health                     117L  0C    7m  CC=8      ←7
   │ file_ops                   108L  1C    5m  CC=4      ←1
+  │ discovery                  103L  0C    3m  CC=5      ←2
   │ _utils                     101L  0C    6m  CC=12     ←1
   │ __init__                   100L  0C    0m  CC=0.0    ←0
   │ discovery                   99L  1C    5m  CC=8      ←5
@@ -1910,7 +1664,6 @@ LAYERS:
   │ config                      88L  1C    5m  CC=6      ←1
   │ dsl_models                  87L  8C    0m  CC=0.0    ←0
   │ junit                       86L  1C    3m  CC=8      ←0
-  │ discovery                   85L  0C    3m  CC=5      ←2
   │ config_factory              84L  0C    1m  CC=1      ←0
   │ event_store                 77L  1C   10m  CC=3      ←0
   │ __init__                    73L  0C    1m  CC=1      ←0
@@ -1958,6 +1711,18 @@ LAYERS:
   │ __init__                     3L  0C    0m  CC=0.0    ←0
   │ __init__                     0L  0C    0m  CC=0.0    ←0
   │
+  scripts/                        CC̄=3.8    ←in:0  →out:69  !! split
+  │ !! oql_v2_to_v4_migrate_db    662L  1C   43m  CC=14     ←1
+  │ hardware-check.sh          340L  0C   11m  CC=0.0    ←0
+  │ migrate_to_v4              340L  0C   19m  CC=11     ←0
+  │ scenarios_export           296L  0C   13m  CC=8      ←0
+  │ oql_v4_validator           281L  1C    8m  CC=8      ←1
+  │ oql_v2_validator           224L  1C    6m  CC=9      ←0
+  │ oql_validator_common       129L  0C    6m  CC=11     ←2
+  │ oql-stack.sh               104L  0C    5m  CC=0.0    ←0
+  │ fix_brackets_to_v4          95L  0C    2m  CC=14     ←0
+  │ provision-rpi-sudo.sh       67L  0C    0m  CC=0.0    ←0
+  │
   examples/                       CC̄=0.0    ←in:0  →out:0
   │ plugin-config.yaml         128L  0C    0m  CC=0.0    ←0
   │ curl-quickstart.sh          74L  0C    0m  CC=0.0    ←0
@@ -1985,8 +1750,8 @@ LAYERS:
   │ mosquitto.conf              19L  0C    0m  CC=0.0    ←0
   │
   docker/                         CC̄=0.0    ←in:0  →out:0
-  │ docker-compose.dev.yml      30L  0C    0m  CC=0.0    ←0
-  │ docker-compose.prod.yml     20L  0C    0m  CC=0.0    ←0
+  │ docker-compose.dev.yml      29L  0C    0m  CC=0.0    ←0
+  │ docker-compose.prod.yml     19L  0C    0m  CC=0.0    ←0
   │ Dockerfile                  11L  0C    0m  CC=0.0    ←0
   │
   testql-scenarios/               CC̄=0.0    ←in:0  →out:0
@@ -2004,9 +1769,9 @@ LAYERS:
 
 COUPLING:
                                        examples.hardware                 oqlos.tools                     scripts              oqlos.hardware                   oqlos.api                  oqlos.core  setup_hardware_and_run_oql                oqlos.shared                       oqlos                 oqlos.utils                   oqlos.dsl
-           examples.hardware                          ──                        ←125                         ←65                                                                                  ←2                         ←27                          ←7                                                                                      hub
+           examples.hardware                          ──                        ←125                         ←64                                                                                  ←2                         ←27                          ←7                                                                                      hub
                  oqlos.tools                         125                          ──                          ←3                           6                                                      10                                                                                                                                              hub
-                     scripts                          65                           3                          ──                           1                                                       1                                                                                                                                              !! fan-out
+                     scripts                          64                           3                          ──                           1                                                       1                                                                                                                                              !! fan-out
               oqlos.hardware                                                       3                          ←1                          ──                           1                           8                                                                                   3                                                          hub
                    oqlos.api                                                                                                              14                          ──                           8                                                       8                           1                           2                              !! fan-out
                   oqlos.core                           2                         ←10                          ←1                          ←8                          ←8                          ──                                                      ←1                           3                                                      ←1  hub
@@ -2016,18 +1781,18 @@ COUPLING:
                  oqlos.utils                                                                                                                                          ←2                                                                                                                                          ──                            
                    oqlos.dsl                                                                                                                                                                       1                                                                                                                                          ──
   CYCLES: none
-  HUB: oqlos.tools/ (fan-in=6)
-  HUB: oqlos/ (fan-in=8)
   HUB: oqlos.hardware/ (fan-in=21)
-  HUB: examples.hardware/ (fan-in=226)
+  HUB: oqlos.tools/ (fan-in=6)
   HUB: oqlos.core/ (fan-in=29)
   HUB: oqlos.shared/ (fan-in=8)
+  HUB: oqlos/ (fan-in=8)
+  HUB: examples.hardware/ (fan-in=225)
+  SMELL: oqlos.hardware/ fan-out=15 → split needed
   SMELL: oqlos.tools/ fan-out=141 → split needed
   SMELL: oqlos.api/ fan-out=33 → split needed
-  SMELL: oqlos.hardware/ fan-out=15 → split needed
-  SMELL: scripts/ fan-out=70 → split needed
-  SMELL: setup_hardware_and_run_oql/ fan-out=27 → split needed
   SMELL: oqlos.shared/ fan-out=9 → split needed
+  SMELL: setup_hardware_and_run_oql/ fan-out=27 → split needed
+  SMELL: scripts/ fan-out=69 → split needed
 
 EXTERNAL:
   validation: run `vallm batch .` → validation.toon
@@ -2037,15 +1802,15 @@ EXTERNAL:
 ### Duplication (`project/duplication.toon.yaml`)
 
 ```toon markpact:analysis path=project/duplication.toon.yaml
-# redup/duplication | 67 groups | 149f 29992L | 2026-06-30
+# redup/duplication | 70 groups | 149f 30253L | 2026-06-30
 
 SUMMARY:
   files_scanned: 149
-  total_lines:   29992
-  dup_groups:    67
-  dup_fragments: 147
-  saved_lines:   486
-  scan_ms:       90316
+  total_lines:   30253
+  dup_groups:    70
+  dup_fragments: 154
+  saved_lines:   508
+  scan_ms:       102269
 
 HOTSPOTS[7] (files with most duplication):
   oqlos/core/_cql_tokenizer.py  dup=92L  groups=7  frags=16  (0.3%)
@@ -2056,41 +1821,41 @@ HOTSPOTS[7] (files with most duplication):
   oqlos/core/interpreter.py  dup=41L  groups=5  frags=11  (0.1%)
   oqlos/core/oql_parser.py  dup=39L  groups=4  frags=11  (0.1%)
 
-DUPLICATES[67] (ranked by impact):
+DUPLICATES[70] (ranked by impact):
   [7d4abed6d875568b]   STRU  _probe_modbus  L=19 N=2 saved=19 sim=1.00
       oqlos/tools/hardware_diagnose/doctor.py:73-91  (_probe_modbus)
       oqlos/tools/hardware_diagnose/doctor.py:94-112  (_probe_modbus_adc)
-  [F0033]   FUZZ  _handle_stop_cli  L=21 N=2 saved=21 sim=0.88
-      oqlos/hardware/plugins/motor.py:355-375  (_handle_stop_cli)
-      oqlos/hardware/plugins/motor.py:272-294  (_handle_set_speed_cli)
+  [F0035]   FUZZ  _handle_stop_cli  L=21 N=2 saved=21 sim=0.88
+      oqlos/hardware/plugins/motor.py:361-381  (_handle_stop_cli)
+      oqlos/hardware/plugins/motor.py:278-300  (_handle_set_speed_cli)
   [F0016]   FUZZ  info  L=5 N=5 saved=20 sim=0.91
       oqlos/core/base.py:156-160  (info)
       oqlos/core/base.py:162-166  (ok)
       oqlos/core/base.py:168-172  (fail)
       oqlos/core/base.py:174-178  (warn)
       oqlos/core/base.py:180-184  (error)
-  [F0032]   FUZZ  _health_status_is_ok  L=18 N=2 saved=18 sim=1.00
+  [F0034]   FUZZ  _health_status_is_ok  L=18 N=2 saved=18 sim=1.00
       oqlos/tools/hardware_diagnose/doctor.py:638-655  (_health_status_is_ok)
       oqlos/tools/cql_cli/preflight.py:187-205  (_health_status_is_ok)
-  [F0030]   FUZZ  stop_lung  L=18 N=2 saved=18 sim=0.94
+  [F0032]   FUZZ  stop_lung  L=18 N=2 saved=18 sim=0.94
       oqlos/hardware/plugin_gateway.py:505-522  (stop_lung)
       oqlos/hardware/plugin_gateway.py:524-541  (disable_lung)
-  [F0031]   FUZZ  _handle_stop_http  L=18 N=2 saved=18 sim=0.89
-      oqlos/hardware/plugins/motor.py:336-353  (_handle_stop_http)
-      oqlos/hardware/plugins/motor.py:407-425  (_handle_status_http)
-  [F0029]   FUZZ  probe_waveshare_modbus  L=16 N=2 saved=16 sim=0.90
-      oqlos/hardware/discovery.py:50-65  (probe_waveshare_modbus)
-      oqlos/hardware/discovery.py:68-85  (probe_waveshare_modbus_adc)
+  [F0033]   FUZZ  _handle_stop_http  L=18 N=2 saved=18 sim=0.89
+      oqlos/hardware/plugins/motor.py:342-359  (_handle_stop_http)
+      oqlos/hardware/plugins/motor.py:413-431  (_handle_status_http)
+  [F0031]   FUZZ  probe_waveshare_modbus  L=16 N=2 saved=16 sim=0.90
+      oqlos/hardware/discovery.py:68-83  (probe_waveshare_modbus)
+      oqlos/hardware/discovery.py:86-103  (probe_waveshare_modbus_adc)
   [c475266f1ca335a8]   STRU  _probe_modbus_rtu  L=12 N=2 saved=12 sim=1.00
       oqlos/api/hardware.py:382-393  (_probe_modbus_rtu)
       oqlos/api/hardware.py:396-407  (_probe_modbus_adc_rtu)
-  [F0028]   FUZZ  _append_nested_action  L=12 N=2 saved=12 sim=0.99
+  [F0030]   FUZZ  _append_nested_action  L=12 N=2 saved=12 sim=0.99
       oqlos/core/cql_parser.py:247-258  (_append_nested_action)
       oqlos/core/cql_parser.py:260-271  (_append_loop_action)
-  [F0026]   FUZZ  _exec_set_peripheral  L=11 N=2 saved=11 sim=0.94
+  [F0028]   FUZZ  _exec_set_peripheral  L=11 N=2 saved=11 sim=0.94
       oqlos/core/interpreter.py:319-329  (_exec_set_peripheral)
       oqlos/core/_firmware_executor.py:197-210  (exec_set_peripheral)
-  [F0027]   FUZZ  _http_sidecar_listening  L=11 N=2 saved=11 sim=0.92
+  [F0029]   FUZZ  _http_sidecar_listening  L=11 N=2 saved=11 sim=0.92
       oqlos/hardware/sidecar_control.py:98-108  (_http_sidecar_listening)
       oqlos/hardware/sidecar_control.py:111-121  (_http_sidecar_healthy)
   [072bf17442930dfb]   STRU  _try_task  L=5 N=3 saved=10 sim=1.00
@@ -2112,9 +1877,9 @@ DUPLICATES[67] (ranked by impact):
   [d884e769a616fa58]   STRU  _merge_object_function_map  L=10 N=2 saved=10 sim=1.00
       oqlos/dsl/schema.py:99-108  (_merge_object_function_map)
       oqlos/dsl/schema.py:111-120  (_merge_param_unit_map)
-  [F0025]   FUZZ  artificial_lung_command  L=11 N=2 saved=11 sim=0.86
-      oqlos/api/hardware.py:2135-2145  (artificial_lung_command)
-      oqlos/api/hardware.py:2155-2165  (rtc_command)
+  [F0027]   FUZZ  artificial_lung_command  L=11 N=2 saved=11 sim=0.86
+      oqlos/api/hardware.py:2222-2232  (artificial_lung_command)
+      oqlos/api/hardware.py:2242-2252  (rtc_command)
   [F0013]   FUZZ  _try_set  L=5 N=3 saved=10 sim=0.88
       oqlos/core/_cql_tokenizer.py:179-183  (_try_set)
       oqlos/core/_cql_tokenizer.py:282-286  (_try_val)
@@ -2123,10 +1888,17 @@ DUPLICATES[67] (ranked by impact):
       oqlos/hardware/gateway.py:92-96  (read_channel)
       oqlos/hardware/gateway.py:125-129  (_stop)
       oqlos/hardware/gateway.py:165-169  (stop)
+  [F0020]   FUZZ  _mig_goto  L=5 N=3 saved=10 sim=0.85
+      scripts/oql_v2_to_v4_migrate_db.py:377-381  (_mig_goto)
+      scripts/oql_v2_to_v4_migrate_db.py:391-395  (_mig_else_info)
+      scripts/oql_v2_to_v4_migrate_db.py:398-402  (_mig_set_name)
   [d355cbab0dee9921]   STRU  float_from_env  L=8 N=2 saved=8 sim=1.00
       oqlos/hardware/client/config.py:12-19  (float_from_env)
       oqlos/hardware/client/config.py:22-29  (int_from_env)
-  [F0023]   FUZZ  _make_args_parser  L=8 N=2 saved=8 sim=0.91
+  [F0026]   FUZZ  _mig_minmax_eq  L=8 N=2 saved=8 sim=0.92
+      scripts/oql_v2_to_v4_migrate_db.py:313-320  (_mig_minmax_eq)
+      scripts/oql_v2_to_v4_migrate_db.py:323-330  (_mig_minmax_simple)
+  [F0024]   FUZZ  _make_args_parser  L=8 N=2 saved=8 sim=0.91
       oqlos/core/_cql_tokenizer.py:97-104  (_make_args_parser)
       oqlos/core/_cql_tokenizer.py:116-123  (_make_method_parser)
   [46f8a3999370b808]   STRU  editor_page  L=7 N=2 saved=7 sim=1.00
@@ -2138,7 +1910,7 @@ DUPLICATES[67] (ranked by impact):
   [9467529f149d5e22]   STRU  _migrate_wait_line  L=7 N=2 saved=7 sim=1.00
       scripts/migrate_to_v4.py:115-121  (_migrate_wait_line)
       scripts/migrate_to_v4.py:139-145  (_migrate_save_line)
-  [F0024]   FUZZ  _try_arrow_action  L=8 N=2 saved=8 sim=0.86
+  [F0025]   FUZZ  _try_arrow_action  L=8 N=2 saved=8 sim=0.86
       oqlos/core/_cql_tokenizer.py:154-161  (_try_arrow_action)
       oqlos/core/_cql_tokenizer.py:331-338  (_try_func)
   [b81931e6691429a5]   EXAC  modbus_plugins_need_repair  L=6 N=2 saved=6 sim=1.00
@@ -2155,21 +1927,21 @@ DUPLICATES[67] (ranked by impact):
   [25c8d2950ffc3336]   STRU  _modbus_config  L=6 N=2 saved=6 sim=1.00
       oqlos/tools/hardware_diagnose/doctor.py:257-262  (_modbus_config)
       oqlos/tools/hardware_diagnose/doctor.py:265-270  (_modbus_adc_config)
-  [F0022]   FUZZ  _handle_stop_http  L=6 N=2 saved=6 sim=0.97
+  [F0023]   FUZZ  _handle_stop_http  L=6 N=2 saved=6 sim=0.97
       oqlos/hardware/plugins/lung.py:234-239  (_handle_stop_http)
       oqlos/hardware/plugins/lung.py:275-280  (_handle_status_http)
   [F0005]   FUZZ  _execute_firmware_action  L=3 N=3 saved=6 sim=0.93
       oqlos/core/interpreter.py:335-337  (_execute_firmware_action)
       oqlos/core/interpreter.py:339-341  (_execute_plugin_action)
       oqlos/core/interpreter.py:343-345  (_execute_legacy_firmware_action)
-  [F0020]   FUZZ  hui_hold_start  L=6 N=2 saved=6 sim=0.91
-      oqlos/api/hardware.py:1710-1715  (hui_hold_start)
-      oqlos/api/hardware.py:1725-1730  (hui_al_start)
+  [F0021]   FUZZ  hui_hold_start  L=6 N=2 saved=6 sim=0.91
+      oqlos/api/hardware.py:1797-1802  (hui_hold_start)
+      oqlos/api/hardware.py:1812-1817  (hui_al_start)
   [F0002]   FUZZ  _firmware  L=3 N=3 saved=6 sim=0.89
       oqlos/core/interpreter.py:94-96  (_firmware)
       oqlos/core/interpreter.py:104-106  (_firmware_url)
       oqlos/core/interpreter.py:331-333  (_get_firmware)
-  [F0021]   FUZZ  _parse_motor2_steps  L=6 N=2 saved=6 sim=0.86
+  [F0022]   FUZZ  _parse_motor2_steps  L=6 N=2 saved=6 sim=0.86
       oqlos/core/_interpreter_actions.py:890-895  (_parse_motor2_steps)
       oqlos/core/_interpreter_actions.py:774-781  (_parse_motor2_speed_steps)
   [ced4a13b5d82a294]   EXAC  _read_text_file  L=5 N=2 saved=5 sim=1.00
@@ -2218,8 +1990,11 @@ DUPLICATES[67] (ranked by impact):
       oqlos/hardware/transport/mqtt_oql_bridge.py:109-112  (to_json)
       oqlos/hardware/transport/mqtt_oql_bridge.py:141-144  (to_json)
   [e46400023b9f2fe9]   STRU  stop_lung  L=4 N=2 saved=4 sim=1.00
-      oqlos/api/hardware.py:2115-2118  (stop_lung)
-      oqlos/api/hardware.py:2122-2125  (disable_lung)
+      oqlos/api/hardware.py:2202-2205  (stop_lung)
+      oqlos/api/hardware.py:2209-2212  (disable_lung)
+  [8fd712f8bc1fd43b]   STRU  _mig_calc  L=4 N=2 saved=4 sim=1.00
+      scripts/oql_v2_to_v4_migrate_db.py:343-346  (_mig_calc)
+      scripts/oql_v2_to_v4_migrate_db.py:349-352  (_mig_val)
   [F0010]   FUZZ  __init__  L=4 N=2 saved=4 sim=0.91
       oqlos/hardware/plugins/modbus_adc.py:119-122  (__init__)
       oqlos/hardware/plugins/modbus.py:38-42  (__init__)
@@ -2227,8 +2002,8 @@ DUPLICATES[67] (ranked by impact):
       oqlos/hardware/plugins/piadc.py:103-106  (__init__)
       oqlos/hardware/plugins/lung.py:36-40  (__init__)
   [5d5dbdb19a59c8f4]   STRU  hui_shutdown  L=3 N=2 saved=3 sim=1.00
-      oqlos/api/hardware.py:1704-1706  (hui_shutdown)
-      oqlos/api/hardware.py:1734-1736  (hui_al_stop)
+      oqlos/api/hardware.py:1791-1793  (hui_shutdown)
+      oqlos/api/hardware.py:1821-1823  (hui_al_stop)
   [7e9c7774bc69259a]   STRU  _func_sum  L=3 N=2 saved=3 sim=1.00
       oqlos/core/_interpreter_actions.py:367-369  (_func_sum)
       oqlos/core/_interpreter_actions.py:408-410  (_func_add)
@@ -2272,7 +2047,7 @@ DUPLICATES[67] (ranked by impact):
       oqlos/hardware/plugins/registry.py:70-72  (get_plugin_class)
       oqlos/hardware/plugins/registry.py:120-122  (get_instance)
 
-REFACTOR[67] (ranked by priority):
+REFACTOR[70] (ranked by priority):
   [1] ○ extract_function   → oqlos/tools/hardware_diagnose/utils/_probe_modbus.py
       WHY: 2 occurrences of 19-line block across 1 files — saves 19 lines
       FILES: oqlos/tools/hardware_diagnose/doctor.py
@@ -2330,152 +2105,161 @@ REFACTOR[67] (ranked by priority):
   [19] ○ extract_function   → oqlos/hardware/utils/read_channel.py
       WHY: 3 occurrences of 5-line block across 1 files — saves 10 lines
       FILES: oqlos/hardware/gateway.py
-  [20] ○ extract_function   → oqlos/hardware/client/utils/float_from_env.py
+  [20] ○ extract_function   → scripts/utils/_mig_goto.py
+      WHY: 3 occurrences of 5-line block across 1 files — saves 10 lines
+      FILES: scripts/oql_v2_to_v4_migrate_db.py
+  [21] ○ extract_function   → oqlos/hardware/client/utils/float_from_env.py
       WHY: 2 occurrences of 8-line block across 1 files — saves 8 lines
       FILES: oqlos/hardware/client/config.py
-  [21] ○ extract_function   → oqlos/core/utils/_make_args_parser.py
+  [22] ○ extract_function   → scripts/utils/_mig_minmax_eq.py
+      WHY: 2 occurrences of 8-line block across 1 files — saves 8 lines
+      FILES: scripts/oql_v2_to_v4_migrate_db.py
+  [23] ○ extract_function   → oqlos/core/utils/_make_args_parser.py
       WHY: 2 occurrences of 8-line block across 1 files — saves 8 lines
       FILES: oqlos/core/_cql_tokenizer.py
-  [22] ○ extract_function   → oqlos/api/utils/editor_page.py
+  [24] ○ extract_function   → oqlos/api/utils/editor_page.py
       WHY: 2 occurrences of 7-line block across 1 files — saves 7 lines
       FILES: oqlos/api/main.py
-  [23] ○ extract_function   → oqlos/hardware/plugins/utils/not_connected_health.py
+  [25] ○ extract_function   → oqlos/hardware/plugins/utils/not_connected_health.py
       WHY: 2 occurrences of 7-line block across 1 files — saves 7 lines
       FILES: oqlos/hardware/plugins/_shared.py
-  [24] ○ extract_function   → scripts/utils/_migrate_wait_line.py
+  [26] ○ extract_function   → scripts/utils/_migrate_wait_line.py
       WHY: 2 occurrences of 7-line block across 1 files — saves 7 lines
       FILES: scripts/migrate_to_v4.py
-  [25] ○ extract_function   → oqlos/core/utils/_try_arrow_action.py
+  [27] ○ extract_function   → oqlos/core/utils/_try_arrow_action.py
       WHY: 2 occurrences of 8-line block across 1 files — saves 8 lines
       FILES: oqlos/core/_cql_tokenizer.py
-  [26] ○ extract_function   → oqlos/hardware/utils/modbus_plugins_need_repair.py
+  [28] ○ extract_function   → oqlos/hardware/utils/modbus_plugins_need_repair.py
       WHY: 2 occurrences of 6-line block across 2 files — saves 6 lines
       FILES: oqlos/hardware/client/autorepair.py, oqlos/hardware/diagnosis.py
-  [27] ○ extract_function   → oqlos/core/utils/parse_GET.py
+  [29] ○ extract_function   → oqlos/core/utils/parse_GET.py
       WHY: 3 occurrences of 3-line block across 1 files — saves 6 lines
       FILES: oqlos/core/oql_parser.py
-  [28] ○ extract_function   → oqlos/core/utils/parse_LOG.py
+  [30] ○ extract_function   → oqlos/core/utils/parse_LOG.py
       WHY: 3 occurrences of 3-line block across 1 files — saves 6 lines
       FILES: oqlos/core/oql_parser.py
-  [29] ○ extract_function   → oqlos/tools/hardware_diagnose/utils/_modbus_config.py
+  [31] ○ extract_function   → oqlos/tools/hardware_diagnose/utils/_modbus_config.py
       WHY: 2 occurrences of 6-line block across 1 files — saves 6 lines
       FILES: oqlos/tools/hardware_diagnose/doctor.py
-  [30] ○ extract_class      → oqlos/hardware/plugins/utils/_handle_stop_http.py
+  [32] ○ extract_class      → oqlos/hardware/plugins/utils/_handle_stop_http.py
       WHY: 2 occurrences of 6-line block across 1 files — saves 6 lines
       FILES: oqlos/hardware/plugins/lung.py
-  [31] ○ extract_class      → oqlos/core/utils/_execute_firmware_action.py
+  [33] ○ extract_class      → oqlos/core/utils/_execute_firmware_action.py
       WHY: 3 occurrences of 3-line block across 1 files — saves 6 lines
       FILES: oqlos/core/interpreter.py
-  [32] ○ extract_function   → oqlos/api/utils/hui_hold_start.py
+  [34] ○ extract_function   → oqlos/api/utils/hui_hold_start.py
       WHY: 2 occurrences of 6-line block across 1 files — saves 6 lines
       FILES: oqlos/api/hardware.py
-  [33] ○ extract_class      → oqlos/core/utils/_firmware.py
+  [35] ○ extract_class      → oqlos/core/utils/_firmware.py
       WHY: 3 occurrences of 3-line block across 1 files — saves 6 lines
       FILES: oqlos/core/interpreter.py
-  [34] ○ extract_function   → oqlos/core/utils/_parse_motor2_steps.py
+  [36] ○ extract_function   → oqlos/core/utils/_parse_motor2_steps.py
       WHY: 2 occurrences of 6-line block across 1 files — saves 6 lines
       FILES: oqlos/core/_interpreter_actions.py
-  [35] ○ extract_function   → oqlos/utils/_read_text_file.py
+  [37] ○ extract_function   → oqlos/utils/_read_text_file.py
       WHY: 2 occurrences of 5-line block across 2 files — saves 5 lines
       FILES: oqlos/api/hardware.py, oqlos/hardware/plugins/piadc.py
-  [36] ○ extract_function   → oqlos/hardware/utils/status.py
+  [38] ○ extract_function   → oqlos/hardware/utils/status.py
       WHY: 2 occurrences of 5-line block across 1 files — saves 5 lines
       FILES: oqlos/hardware/gateway.py
-  [37] ○ extract_function   → oqlos/hardware/plugins/utils/_rtu_timeout.py
+  [39] ○ extract_function   → oqlos/hardware/plugins/utils/_rtu_timeout.py
       WHY: 2 occurrences of 5-line block across 2 files — saves 5 lines
       FILES: oqlos/hardware/plugins/modbus.py, oqlos/hardware/plugins/modbus_adc.py
-  [38] ○ extract_function   → oqlos/hardware/plugins/utils/_device_id.py
+  [40] ○ extract_function   → oqlos/hardware/plugins/utils/_device_id.py
       WHY: 2 occurrences of 5-line block across 2 files — saves 5 lines
       FILES: oqlos/hardware/plugins/modbus.py, oqlos/hardware/plugins/modbus_adc.py
-  [39] ○ extract_function   → oqlos/api/utils/get_execution.py
+  [41] ○ extract_function   → oqlos/api/utils/get_execution.py
       WHY: 2 occurrences of 5-line block across 2 files — saves 5 lines
       FILES: oqlos/api/execution.py, oqlos/api/peripherals.py
-  [40] ○ extract_function   → oqlos/core/utils/_try_var.py
+  [42] ○ extract_function   → oqlos/core/utils/_try_var.py
       WHY: 2 occurrences of 5-line block across 1 files — saves 5 lines
       FILES: oqlos/core/_cql_tokenizer.py
-  [41] ○ extract_function   → oqlos/hardware/plugins/utils/disconnect.py
+  [43] ○ extract_function   → oqlos/hardware/plugins/utils/disconnect.py
       WHY: 2 occurrences of 5-line block across 2 files — saves 5 lines
       FILES: oqlos/hardware/plugins/lung.py, oqlos/hardware/plugins/piadc.py
-  [42] ○ extract_function   → oqlos/hardware/utils/_match_blob.py
+  [44] ○ extract_function   → oqlos/hardware/utils/_match_blob.py
       WHY: 2 occurrences of 5-line block across 1 files — saves 5 lines
       FILES: oqlos/hardware/scanner_probe.py
-  [43] ○ extract_function   → oqlos/core/utils/parser.py
+  [45] ○ extract_function   → oqlos/core/utils/parser.py
       WHY: 2 occurrences of 5-line block across 1 files — saves 5 lines
       FILES: oqlos/core/_cql_tokenizer.py
-  [44] ○ extract_class      → oqlos/hardware/plugins/utils/_read_address.py
+  [46] ○ extract_class      → oqlos/hardware/plugins/utils/_read_address.py
       WHY: 2 occurrences of 5-line block across 1 files — saves 5 lines
       FILES: oqlos/hardware/plugins/modbus_adc.py
-  [45] ○ extract_class      → oqlos/core/utils/_handle_scenario_attrs.py
+  [47] ○ extract_class      → oqlos/core/utils/_handle_scenario_attrs.py
       WHY: 2 occurrences of 5-line block across 1 files — saves 5 lines
       FILES: oqlos/core/cql_parser.py
-  [46] ○ extract_function   → oqlos/core/utils/_try_repeat_start.py
+  [48] ○ extract_function   → oqlos/core/utils/_try_repeat_start.py
       WHY: 2 occurrences of 5-line block across 1 files — saves 5 lines
       FILES: oqlos/core/_cql_tokenizer.py
-  [47] ○ extract_function   → oqlos/core/utils/_motor2_set_mode.py
+  [49] ○ extract_function   → oqlos/core/utils/_motor2_set_mode.py
       WHY: 2 occurrences of 5-line block across 1 files — saves 5 lines
       FILES: oqlos/core/_interpreter_actions.py
-  [48] ○ extract_function   → oqlos/hardware/utils/_health_map.py
+  [50] ○ extract_function   → oqlos/hardware/utils/_health_map.py
       WHY: 2 occurrences of 4-line block across 2 files — saves 4 lines
       FILES: oqlos/hardware/client/autorepair.py, oqlos/hardware/diagnosis.py
-  [49] ○ extract_function   → oqlos/hardware/transport/utils/to_json.py
+  [51] ○ extract_function   → oqlos/hardware/transport/utils/to_json.py
       WHY: 2 occurrences of 4-line block across 1 files — saves 4 lines
       FILES: oqlos/hardware/transport/mqtt_oql_bridge.py
-  [50] ○ extract_function   → oqlos/api/utils/stop_lung.py
+  [52] ○ extract_function   → oqlos/api/utils/stop_lung.py
       WHY: 2 occurrences of 4-line block across 1 files — saves 4 lines
       FILES: oqlos/api/hardware.py
-  [51] ○ extract_function   → oqlos/hardware/plugins/utils/__init__.py
+  [53] ○ extract_function   → scripts/utils/_mig_calc.py
+      WHY: 2 occurrences of 4-line block across 1 files — saves 4 lines
+      FILES: scripts/oql_v2_to_v4_migrate_db.py
+  [54] ○ extract_function   → oqlos/hardware/plugins/utils/__init__.py
       WHY: 2 occurrences of 4-line block across 2 files — saves 4 lines
       FILES: oqlos/hardware/plugins/modbus.py, oqlos/hardware/plugins/modbus_adc.py
-  [52] ○ extract_function   → oqlos/hardware/plugins/utils/__init__.py
+  [55] ○ extract_function   → oqlos/hardware/plugins/utils/__init__.py
       WHY: 2 occurrences of 4-line block across 2 files — saves 4 lines
       FILES: oqlos/hardware/plugins/lung.py, oqlos/hardware/plugins/piadc.py
-  [53] ○ extract_function   → oqlos/api/utils/hui_shutdown.py
+  [56] ○ extract_function   → oqlos/api/utils/hui_shutdown.py
       WHY: 2 occurrences of 3-line block across 1 files — saves 3 lines
       FILES: oqlos/api/hardware.py
-  [54] ○ extract_function   → oqlos/core/utils/_func_sum.py
+  [57] ○ extract_function   → oqlos/core/utils/_func_sum.py
       WHY: 2 occurrences of 3-line block across 1 files — saves 3 lines
       FILES: oqlos/core/_interpreter_actions.py
-  [55] ○ extract_function   → oqlos/core/utils/_func_min.py
+  [58] ○ extract_function   → oqlos/core/utils/_func_min.py
       WHY: 2 occurrences of 3-line block across 1 files — saves 3 lines
       FILES: oqlos/core/_interpreter_actions.py
-  [56] ○ extract_function   → oqlos/core/utils/_lower_min.py
+  [59] ○ extract_function   → oqlos/core/utils/_lower_min.py
       WHY: 2 occurrences of 3-line block across 1 files — saves 3 lines
       FILES: oqlos/core/_oql_adapter.py
-  [57] ○ extract_function   → oqlos/core/utils/_resolve_compare.py
+  [60] ○ extract_function   → oqlos/core/utils/_resolve_compare.py
       WHY: 2 occurrences of 3-line block across 2 files — saves 3 lines
       FILES: oqlos/core/executor.py, oqlos/core/safe_eval.py
-  [58] ○ extract_function   → oqlos/core/utils/parse_CALL.py
+  [61] ○ extract_function   → oqlos/core/utils/parse_CALL.py
       WHY: 2 occurrences of 3-line block across 1 files — saves 3 lines
       FILES: oqlos/core/oql_parser.py
-  [59] ○ extract_function   → oqlos/tools/hardware_diagnose/utils/check_firmware_health.py
+  [62] ○ extract_function   → oqlos/tools/hardware_diagnose/utils/check_firmware_health.py
       WHY: 2 occurrences of 3-line block across 1 files — saves 3 lines
       FILES: oqlos/tools/hardware_diagnose/health.py
-  [60] ○ extract_function   → oqlos/tools/hardware_diagnose/utils/_env_int.py
+  [63] ○ extract_function   → oqlos/tools/hardware_diagnose/utils/_env_int.py
       WHY: 2 occurrences of 3-line block across 1 files — saves 3 lines
       FILES: oqlos/tools/hardware_diagnose/modbus_probe.py
-  [61] ○ extract_function   → oqlos/utils/_oql_quote.py
+  [64] ○ extract_function   → oqlos/utils/_oql_quote.py
       WHY: 2 occurrences of 3-line block across 2 files — saves 3 lines
       FILES: oqlos/core/_interpreter_actions.py, oqlos/tools/xml_import/generators.py
-  [62] ○ extract_class      → oqlos/core/utils/_firmware.py
+  [65] ○ extract_class      → oqlos/core/utils/_firmware.py
       WHY: 2 occurrences of 3-line block across 1 files — saves 3 lines
       FILES: oqlos/core/interpreter.py
-  [63] ○ extract_class      → oqlos/core/utils/_normalize_valve_value.py
+  [66] ○ extract_class      → oqlos/core/utils/_normalize_valve_value.py
       WHY: 2 occurrences of 3-line block across 1 files — saves 3 lines
       FILES: oqlos/core/interpreter.py
-  [64] ○ extract_function   → oqlos/hardware/utils/discover.py
+  [67] ○ extract_function   → oqlos/hardware/utils/discover.py
       WHY: 2 occurrences of 3-line block across 2 files — saves 3 lines
       FILES: oqlos/hardware/drivers/mqtt.py, oqlos/hardware/protocol.py
-  [65] ○ extract_class      → oqlos/hardware/plugins/utils/_handle_stop_usb.py
+  [68] ○ extract_class      → oqlos/hardware/plugins/utils/_handle_stop_usb.py
       WHY: 2 occurrences of 3-line block across 1 files — saves 3 lines
       FILES: oqlos/hardware/plugins/lung.py
-  [66] ○ extract_class      → oqlos/hardware/plugins/utils/connect.py
+  [69] ○ extract_class      → oqlos/hardware/plugins/utils/connect.py
       WHY: 2 occurrences of 3-line block across 1 files — saves 3 lines
       FILES: oqlos/hardware/plugins/base.py
-  [67] ○ extract_class      → oqlos/hardware/plugins/utils/get_plugin_class.py
+  [70] ○ extract_class      → oqlos/hardware/plugins/utils/get_plugin_class.py
       WHY: 2 occurrences of 3-line block across 1 files — saves 3 lines
       FILES: oqlos/hardware/plugins/registry.py
 
-QUICK_WINS[34] (low risk, high savings — do first):
+QUICK_WINS[36] (low risk, high savings — do first):
   [2] extract_class      saved=21L  → oqlos/hardware/plugins/utils/_handle_stop_cli.py
       FILES: motor.py
   [3] extract_class      saved=20L  → oqlos/core/utils/info.py
@@ -2497,7 +2281,7 @@ QUICK_WINS[34] (low risk, high savings — do first):
   [10] extract_function   saved=11L  → oqlos/core/utils/_exec_set_peripheral.py
       FILES: _firmware_executor.py, interpreter.py
 
-EFFORT_ESTIMATE (total ≈ 16.2h):
+EFFORT_ESTIMATE (total ≈ 16.9h):
   medium _probe_modbus                       saved=19L  ~38min
   medium _handle_stop_cli                    saved=21L  ~42min
   medium info                                saved=20L  ~40min
@@ -2508,67 +2292,43 @@ EFFORT_ESTIMATE (total ≈ 16.2h):
   easy   _probe_modbus_rtu                   saved=12L  ~24min
   easy   _append_nested_action               saved=12L  ~24min
   easy   _exec_set_peripheral                saved=11L  ~22min
-  ... +57 more (~642min)
+  ... +60 more (~686min)
 
 METRICS-TARGET:
-  dup_groups:  67 → 0
-  saved_lines: 486 lines recoverable
+  dup_groups:  70 → 0
+  saved_lines: 508 lines recoverable
 ```
 
 ### Evolution / Churn (`project/evolution.toon.yaml`)
 
 ```toon markpact:analysis path=project/evolution.toon.yaml
-# code2llm/evolution | 1305 func | 116f | 2026-06-30
+# code2llm/evolution | 1327 func | 116f | 2026-06-30
 # generated in 0.00s
 
-NEXT[9] (ranked by impact):
+NEXT[3] (ranked by impact):
   [1] !! SPLIT           oqlos/api/hardware.py
-      WHY: 2165L, 0 classes, max CC=27
-      EFFORT: ~4h  IMPACT: 58455
+      WHY: 2252L, 0 classes, max CC=14
+      EFFORT: ~4h  IMPACT: 31528
 
   [2] !! SPLIT           oqlos/core/_interpreter_actions.py
       WHY: 1255L, 0 classes, max CC=14
       EFFORT: ~4h  IMPACT: 17570
 
-  [3] !! SPLIT-FUNC      build_diagnosis_report  CC=25  fan=25
-      WHY: CC=25 exceeds 15
-      EFFORT: ~1h  IMPACT: 625
-
-  [4] !! SPLIT-FUNC      _build_waveshare_diagnose_report  CC=27  fan=23
-      WHY: CC=27 exceeds 15
-      EFFORT: ~1h  IMPACT: 621
-
-  [5] !! SPLIT-FUNC      enrich_adapter_entry  CC=33  fan=13
-      WHY: CC=33 exceeds 15
-      EFFORT: ~1h  IMPACT: 429
-
-  [6] !  SPLIT-FUNC      run_extended_motor_tic249_command  CC=19  fan=18
-      WHY: CC=19 exceeds 15
-      EFFORT: ~1h  IMPACT: 342
-
-  [7] !  SPLIT-FUNC      _modbus_wizard_program_isolated  CC=16  fan=14
-      WHY: CC=16 exceeds 15
-      EFFORT: ~1h  IMPACT: 224
-
-  [8] !  SPLIT-FUNC      MotorPlugin.health_check  CC=17  fan=13
-      WHY: CC=17 exceeds 15
-      EFFORT: ~1h  IMPACT: 221
-
-  [9] !! SPLIT           docs/README.md
+  [3] !! SPLIT           docs/README.md
       WHY: 1089L, 0 classes, max CC=0
       EFFORT: ~4h  IMPACT: 0
 
 
 RISKS[3]:
-  ⚠ Splitting oqlos/api/hardware.py may break 83 import paths
+  ⚠ Splitting oqlos/api/hardware.py may break 89 import paths
   ⚠ Splitting oqlos/core/_interpreter_actions.py may break 85 import paths
   ⚠ Splitting docs/README.md may break 0 import paths
 
 METRICS-TARGET:
   CC̄:          4.2 → ≤2.9
-  max-CC:      33 → ≤16
+  max-CC:      14 → ≤7
   god-modules: 17 → 0
-  high-CC(≥15): 8 → ≤4
+  high-CC(≥15): 0 → ≤0
   hub-types:   0 → ≤0
 
 PATTERNS (language parser shared logic):
@@ -2596,7 +2356,7 @@ PATTERNS (language parser shared logic):
     - Standardized FunctionInfo/ClassInfo models
 
 HISTORY:
-  prev CC̄=4.2 → now CC̄=4.2
+  prev CC̄=4.1 → now CC̄=4.2
 ```
 
 ### Validation (`project/validation.toon.yaml`)

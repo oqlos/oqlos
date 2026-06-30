@@ -553,6 +553,37 @@ async def _handle_move_relative_command(
     return "move", params
 
 
+async def _try_disable_fallback(
+    hardware_proxy: "OqlosHardwareProxy", command: str
+) -> "dict[str, Any] | None":
+    """Try deenergize/disable fallback if command is a disable command; return response or None."""
+    if command not in _DISABLE_COMMANDS:
+        return None
+    fallback_result, fallback_name = await _attempt_disable_deenergize(hardware_proxy, command)
+    if fallback_result is not None and fallback_name is not None:
+        return _disable_success_response(command, fallback_result, fallback_name)
+    return None
+
+
+async def _try_sidecar_reciprocate(
+    command: str, plugin_command: str, params: "dict[str, Any]"
+) -> "dict[str, Any] | None":
+    """Try the Tic249 sidecar reciprocate path; return response dict or None."""
+    if plugin_command != _RECIPROCATE_PLUGIN_COMMAND or not _sidecar_reciprocate_preferred():
+        return None
+    sidecar_result, sidecar_base = await _attempt_reciprocate_via_sidecar(params)
+    if sidecar_result is None or sidecar_base is None:
+        return None
+    return {
+        "ok": True,
+        "peripheral_id": "motor-tic249",
+        "command": command,
+        "target": {"method": "POST", "path": f"{sidecar_base}/api/reciprocate", "params": params},
+        "result": sidecar_result,
+        "note": "Reciprocate via Tic249 sidecar (physical limit switches; set TIC249_RECIPROCATE_VIA_SIDECAR=0 to use OqlOS plugin only)",
+    }
+
+
 async def run_extended_motor_tic249_command(
     hardware_proxy: OqlosHardwareProxy,
     command: str,
@@ -564,22 +595,13 @@ async def run_extended_motor_tic249_command(
     if command == "move_relative":
         plugin_command, params = await _handle_move_relative_command(hardware_proxy, command_args)
 
-    if command in _DISABLE_COMMANDS:
-        fallback_result, fallback_name = await _attempt_disable_deenergize(hardware_proxy, command)
-        if fallback_result is not None and fallback_name is not None:
-            return _disable_success_response(command, fallback_result, fallback_name)
+    disable_response = await _try_disable_fallback(hardware_proxy, command)
+    if disable_response is not None:
+        return disable_response
 
-    if plugin_command == _RECIPROCATE_PLUGIN_COMMAND and _sidecar_reciprocate_preferred():
-        sidecar_result, sidecar_base = await _attempt_reciprocate_via_sidecar(params)
-        if sidecar_result is not None and sidecar_base is not None:
-            return {
-                "ok": True,
-                "peripheral_id": "motor-tic249",
-                "command": command,
-                "target": {"method": "POST", "path": f"{sidecar_base}/api/reciprocate", "params": params},
-                "result": sidecar_result,
-                "note": "Reciprocate via Tic249 sidecar (physical limit switches; set TIC249_RECIPROCATE_VIA_SIDECAR=0 to use OqlOS plugin only)",
-            }
+    sidecar_response = await _try_sidecar_reciprocate(command, plugin_command, params)
+    if sidecar_response is not None:
+        return sidecar_response
 
     try:
         result = await _execute(hardware_proxy, plugin_command, params)
@@ -591,10 +613,10 @@ async def run_extended_motor_tic249_command(
 
     result = _normalize_target_state(command, result)
     failure = _failure(result)
-    if failure and command in _DISABLE_COMMANDS:
-        fallback_result, fallback_name = await _attempt_disable_deenergize(hardware_proxy, command)
-        if fallback_result is not None and fallback_name is not None:
-            return _disable_success_response(command, fallback_result, fallback_name)
+    if failure:
+        disable_response = await _try_disable_fallback(hardware_proxy, command)
+        if disable_response is not None:
+            return disable_response
     return {
         "ok": failure is None,
         "peripheral_id": "motor-tic249",

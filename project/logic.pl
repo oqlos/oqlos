@@ -10,7 +10,7 @@ project_file('oqlos/__init__.py', 4, 'python').
 project_file('oqlos/api/__init__.py', 18, 'python').
 project_file('oqlos/api/editor.py', 142, 'python').
 project_file('oqlos/api/execution.py', 360, 'python').
-project_file('oqlos/api/hardware.py', 2241, 'python').
+project_file('oqlos/api/hardware.py', 2253, 'python').
 project_file('oqlos/api/logs.py', 46, 'python').
 project_file('oqlos/api/main.py', 311, 'python').
 project_file('oqlos/api/oql_mqtt.py', 152, 'python').
@@ -55,13 +55,13 @@ project_file('oqlos/hardware/client/config.py', 89, 'python').
 project_file('oqlos/hardware/client/constants.py', 70, 'python').
 project_file('oqlos/hardware/client/errors.py', 27, 'python').
 project_file('oqlos/hardware/client/http_helpers.py', 27, 'python').
-project_file('oqlos/hardware/client/identify_enrich.py', 327, 'python').
+project_file('oqlos/hardware/client/identify_enrich.py', 334, 'python').
 project_file('oqlos/hardware/client/modbus_repair.py', 165, 'python').
 project_file('oqlos/hardware/client/platform.py', 51, 'python').
 project_file('oqlos/hardware/client/proxy.py', 461, 'python').
 project_file('oqlos/hardware/client/resolvers.py', 129, 'python').
 project_file('oqlos/hardware/client/tic249_arg_contract.py', 66, 'python').
-project_file('oqlos/hardware/client/tic249_extended.py', 606, 'python').
+project_file('oqlos/hardware/client/tic249_extended.py', 628, 'python').
 project_file('oqlos/hardware/client/tic249_rig_direction.py', 44, 'python').
 project_file('oqlos/hardware/config_paths.py', 42, 'python').
 project_file('oqlos/hardware/config_schema.py', 146, 'python').
@@ -152,10 +152,11 @@ project_file('scripts/fix_brackets_to_v4.py', 96, 'python').
 project_file('scripts/hardware-check.sh', 341, 'shell').
 project_file('scripts/migrate_to_v4.py', 341, 'python').
 project_file('scripts/oql-stack.sh', 105, 'shell').
-project_file('scripts/oql_v2_to_v4_migrate_db.py', 653, 'python').
+project_file('scripts/oql_v2_to_v4_migrate_db.py', 663, 'python').
 project_file('scripts/oql_v2_validator.py', 225, 'python').
 project_file('scripts/oql_v4_validator.py', 282, 'python').
 project_file('scripts/oql_validator_common.py', 130, 'python').
+project_file('scripts/provision-rpi-sudo.sh', 68, 'shell').
 project_file('scripts/scenarios_export.py', 297, 'python').
 project_file('setup_hardware_and_run_oql.py', 334, 'python').
 project_file('tests/firmware/test_artificial_lung.py', 44, 'python').
@@ -276,7 +277,9 @@ python_function('oqlos/api/hardware.py', '_probe_waveshare_separate', 7, 2, 4).
 python_function('oqlos/api/hardware.py', '_probe_waveshare_shared_bus', 6, 1, 3).
 python_function('oqlos/api/hardware.py', '_read_waveshare_io_slave_config', 5, 8, 8).
 python_function('oqlos/api/hardware.py', '_read_waveshare_adc_slave_config', 5, 8, 7).
-python_function('oqlos/api/hardware.py', '_build_waveshare_diagnose_report', 1, 15, 16).
+python_function('oqlos/api/hardware.py', '_resolve_waveshare_ports', 1, 3, 1).
+python_function('oqlos/api/hardware.py', '_split_hits_by_role', 1, 5, 1).
+python_function('oqlos/api/hardware.py', '_build_waveshare_diagnose_report', 1, 9, 18).
 python_function('oqlos/api/hardware.py', '_modbus_wizard_target_ids', 0, 1, 4).
 python_function('oqlos/api/hardware.py', '_modbus_wizard_plan', 0, 7, 8).
 python_function('oqlos/api/hardware.py', '_collect_wizard_serial_candidates', 1, 10, 5).
@@ -686,7 +689,8 @@ python_function('oqlos/hardware/client/identify_enrich.py', '_enrich_disabled', 
 python_function('oqlos/hardware/client/identify_enrich.py', '_enrich_motor_tic249', 5, 5, 0).
 python_function('oqlos/hardware/client/identify_enrich.py', '_enrich_motor_dri0050', 4, 5, 0).
 python_function('oqlos/hardware/client/identify_enrich.py', '_enrich_modbus_adapter', 5, 11, 3).
-python_function('oqlos/hardware/client/identify_enrich.py', 'enrich_adapter_entry', 1, 18, 12).
+python_function('oqlos/hardware/client/identify_enrich.py', '_enrich_by_device_id', 6, 4, 3).
+python_function('oqlos/hardware/client/identify_enrich.py', 'enrich_adapter_entry', 1, 13, 10).
 python_function('oqlos/hardware/client/identify_enrich.py', '_adapter_status_modbus', 4, 6, 0).
 python_function('oqlos/hardware/client/identify_enrich.py', '_adapter_status_tic249', 4, 5, 0).
 python_function('oqlos/hardware/client/identify_enrich.py', 'adapter_status_from_health', 2, 10, 7).
@@ -747,7 +751,9 @@ python_function('oqlos/hardware/client/tic249_extended.py', '_lung_disable_fallb
 python_function('oqlos/hardware/client/tic249_extended.py', '_normalize_target_state', 2, 12, 4).
 python_function('oqlos/hardware/client/tic249_extended.py', '_handle_hardware_proxy_error', 5, 8, 6).
 python_function('oqlos/hardware/client/tic249_extended.py', '_handle_move_relative_command', 2, 3, 9).
-python_function('oqlos/hardware/client/tic249_extended.py', 'run_extended_motor_tic249_command', 3, 17, 11).
+python_function('oqlos/hardware/client/tic249_extended.py', '_try_disable_fallback', 2, 4, 2).
+python_function('oqlos/hardware/client/tic249_extended.py', '_try_sidecar_reciprocate', 3, 5, 2).
+python_function('oqlos/hardware/client/tic249_extended.py', 'run_extended_motor_tic249_command', 3, 10, 9).
 python_function('oqlos/hardware/client/tic249_rig_direction.py', 'rig_direction_to_plugin', 1, 4, 3).
 python_function('oqlos/hardware/client/tic249_rig_direction.py', 'apply_rig_direction_to_plugin_params', 2, 5, 4).
 python_function('oqlos/hardware/config_paths.py', 'resolve_oqlos_config_path', 1, 6, 7).
@@ -1156,7 +1162,9 @@ python_function('scripts/oql_v2_to_v4_migrate_db.py', '_build_write_payload', 2,
 python_function('scripts/oql_v2_to_v4_migrate_db.py', '_build_write_url', 2, 3, 2).
 python_function('scripts/oql_v2_to_v4_migrate_db.py', '_process_row', 3, 6, 9).
 python_function('scripts/oql_v2_to_v4_migrate_db.py', '_apply_row_update', 4, 3, 6).
-python_function('scripts/oql_v2_to_v4_migrate_db.py', 'main', 0, 20, 19).
+python_function('scripts/oql_v2_to_v4_migrate_db.py', '_filter_rows', 2, 5, 3).
+python_function('scripts/oql_v2_to_v4_migrate_db.py', '_build_migration_report', 5, 6, 3).
+python_function('scripts/oql_v2_to_v4_migrate_db.py', 'main', 0, 11, 18).
 python_function('scripts/oql_v2_validator.py', '_line_number', 1, 1, 0).
 python_function('scripts/oql_v2_validator.py', '_validate_version_header_v2', 1, 7, 6).
 python_function('scripts/oql_v2_validator.py', '_validate_line_v2', 3, 9, 4).

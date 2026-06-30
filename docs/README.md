@@ -49,8 +49,8 @@ Detailed guide: [Hardware Diagnostics](HARDWARE_DIAGNOSTICS.md).
 
 <!-- code2docs:start --># oqlos
 
-![version](https://img.shields.io/badge/version-0.1.0-blue) ![python](https://img.shields.io/badge/python-%3E%3D3.10-blue) ![coverage](https://img.shields.io/badge/coverage-unknown-lightgrey) ![functions](https://img.shields.io/badge/functions-981-green)
-> **981** functions | **95** classes | **150** files | CC̄ = 4.2
+![version](https://img.shields.io/badge/version-0.1.0-blue) ![python](https://img.shields.io/badge/python-%3E%3D3.10-blue) ![coverage](https://img.shields.io/badge/coverage-unknown-lightgrey) ![functions](https://img.shields.io/badge/functions-1463-green)
+> **1463** functions | **111** classes | **198** files | CC̄ = 4.2
 
 > Auto-generated project documentation from source code analysis.
 
@@ -132,6 +132,7 @@ oqlos/
 ├── sumd
 ├── pyproject
     ├── testql
+├── openapi_spec
         ├── toon
 ├── TODO
 ├── CHANGELOG
@@ -146,8 +147,18 @@ oqlos/
         ├── schema
     ├── HARDWARE_DIAGNOSTICS
     ├── OQL_V4_MIGRATION_MANUAL
+    ├── HARDWARE_CONTROL_OQL_MQTT
     ├── README
+        ├── mosquitto
+        ├── oqlos-hw
+        ├── migration
+        ├── RUNBOOK
+        ├── mosquitto
+        ├── oqlos-hw
+        ├── migration
+        ├── RUNBOOK
     ├── plugin-config
+    ├── curl-quickstart
         ├── doctor-workflow
         ├── prod
         ├── dev
@@ -159,6 +170,7 @@ oqlos/
         ├── _cql_tree_builder
         ├── _interpreter_actions
         ├── oql_parser
+        ├── motor2_runtime
     ├── core/
         ├── oql_versioning
         ├── parser
@@ -176,7 +188,6 @@ oqlos/
         ├── _sensor_evaluator
         ├── hardware_diagnose/
         ├── plugin_cli
-        ├── cql_cli/
             ├── doctor
             ├── health
             ├── __main__
@@ -192,6 +203,8 @@ oqlos/
             ├── generators
             ├── models
             ├── commands
+        ├── cql_cli/
+            ├── formatting
             ├── utils
             ├── main
             ├── preflight
@@ -200,16 +213,45 @@ oqlos/
         ├── scenario
         ├── peripheral
         ├── config_paths
+        ├── diagnosis
         ├── protocol
         ├── config_schema
+        ├── rtc_probe
         ├── gateway
+        ├── hui_actions
         ├── registry
+        ├── sidecar_control
         ├── control_proxy
+        ├── scanner_probe
     ├── hardware/
         ├── peripheral_mapping
+        ├── stack_snapshot
+        ├── tic249_units
+        ├── modbus_identify
         ├── plugin_gateway
         ├── discovery
         ├── firmware_adapter
+        ├── identify_enrichment
+        ├── artificial_lung
+        ├── usb_diagnostics
+        ├── transport/
+            ├── manage_ops
+            ├── mqtt_oql_bridge
+            ├── config
+            ├── proxy
+            ├── tic249_extended
+            ├── errors
+            ├── autorepair
+            ├── http_helpers
+        ├── client/
+            ├── resolvers
+            ├── adc
+            ├── modbus_repair
+            ├── platform
+            ├── tic249_rig_direction
+            ├── tic249_arg_contract
+            ├── identify_enrich
+            ├── constants
             ├── base
             ├── registry
             ├── piadc
@@ -218,6 +260,8 @@ oqlos/
             ├── lung
             ├── motor
             ├── _shared
+            ├── _rtu_serial
+            ├── modbus_adc
             ├── gpio
         ├── drivers/
             ├── spi
@@ -228,6 +272,7 @@ oqlos/
         ├── junit
         ├── sample_data
     ├── utils/
+        ├── hui_scenario
         ├── release_version
         ├── _endpoint_helpers
         ├── file_ops
@@ -248,13 +293,17 @@ oqlos/
         ├── logs
         ├── editor
         ├── main
+        ├── oql_mqtt
             ├── execution_ctrl
         ├── OQL-CHEATSHEET
             ├── README
         ├── schema
     ├── dsl/
+    ├── oql_validator_common
+    ├── provision-rpi-sudo
     ├── oql_v4_validator
     ├── hardware-check
+    ├── oql-stack
     ├── fix_brackets_to_v4
     ├── oql_v2_validator
     ├── migrate_to_v4
@@ -284,6 +333,8 @@ oqlos/
 - **`OqlCmd`** — A single command line inside a block.
 - **`OqlBlock`** — A named block: ``GOAL``, ``CONFIG``, or ``MACRO``.
 - **`OqlDoc`** — Parsed OQL document.
+- **`Motor2RuntimeConfig`** — —
+- **`Motor2ReciprocatingPlan`** — —
 - **`OqlVersionInfo`** — Resolved OQL version metadata for a source document.
 - **`ScenarioOrchestrator`** — —
 - **`CqlInterpreter`** — CQL interpreter with three modes:
@@ -317,16 +368,25 @@ oqlos/
 - **`PeripheralStatus`** — —
 - **`PeripheralMode`** — —
 - **`Peripheral`** — —
+- **`DiagnosisAction`** — —
+- **`DeviceDiagnosis`** — —
+- **`DiagnosisReport`** — —
 - **`ProtocolType`** — Supported hardware communication protocols.
 - **`HardwareProtocol`** — Base class for all hardware drivers.
 - **`UnitType`** — Standard unit types for hardware parameters.
 - **`HardwareGateway`** — Single entry-point for all physical hardware I/O.
 - **`DriverRegistry`** — Registry for hardware drivers. Allows mapping ProtocolType to specific HardwareProtocol implementations. 
-- **`OqlosHardwareProxyConfig`** — —
-- **`HardwareProxyError`** — Error raised by the OqlOS hardware proxy layer.
-- **`OqlosHardwareProxy`** — Proxy and command mapper for runtime hardware control via OqlOS.
+- **`OqlosHardwareProxy`** — OqlOS-local proxy label for unavailable identify payloads.
 - **`PluginHardwareGateway`** — Simplified hardware gateway using plugin architecture.
 - **`FirmwareAdapter`** — HTTP bridge between CQL interpreter and firmware simulator.
+- **`Topics`** — Resolved topic strings for one node.
+- **`OqlRequest`** — A request to execute on a remote node.
+- **`OqlResponse`** — The result of executing OQL on a remote node.
+- **`OqlMqttController`** — Publishes OQL and awaits a correlated response.
+- **`OqlMqttAgent`** — Subscribes to OQL requests, executes them locally, and replies.
+- **`OqlosHardwareProxyConfig`** — —
+- **`OqlosHardwareProxy`** — —
+- **`HardwareProxyError`** — —
 - **`PluginStatus`** — Status of a hardware plugin.
 - **`HardwareDriverSpec`** — Pluggy hookspec for hardware drivers.
 - **`ScaleConfig`** — Scale / range definition for a peripheral parameter.
@@ -341,6 +401,7 @@ oqlos/
 - **`ModbusPlugin`** — Plugin for Waveshare Modbus RTU IO 8CH valve controller.
 - **`LungPlugin`** — Plugin for Pololu Tic T249 stepper motor (artificial lung).
 - **`MotorPlugin`** — Plugin for DFRobot DRI0050 PWM motor driver.
+- **`ModbusAdcPlugin`** — Plugin for Waveshare Modbus RTU Analog Input 8CH.
 - **`GpioDriver`** — Driver for direct GPIO control.
 - **`SpiDriver`** — SPI driver for HAL.
 - **`MqttDriver`** — MQTT driver for the Hardware Abstraction Layer.
@@ -353,6 +414,9 @@ oqlos/
 - **`FileInfo`** — —
 - **`FileContent`** — —
 - **`ExecutionRequest`** — —
+- **`OqlExecuteRequest`** — —
+- **`OqlManageRequest`** — —
+- **`OqlExecuteResponse`** — —
 - **`DslDialect`** — Supported DSL dialect metadata.
 - **`DslItem`** — A reusable schema item visible to editor clients.
 - **`DslFunctionBinding`** — Object to function relationship used by visual builders.
@@ -394,6 +458,7 @@ oqlos/
 - `exec_action_if_fail_block(interp, act)` — Execute IF_FAIL block when a tracked diagnostic target has failed.
 - `exec_action_if_block(interp, act)` — Execute IF block action.
 - `exec_action_loop_block(interp, act)` — Execute LOOP block action.
+- `exec_action_endloop(interp, act)` — Execute REPEAT STOP as a break for the current loop.
 - `exec_action_set(interp, act)` — Execute SET action with intelligent dispatch.
 - `exec_action_action(interp, act)` — Execute generic ACTION.
 - `to_num(raw)` — Convert '6.0' → 6.0, '3' → 3, '-10,5' → -10.5 (accepts comma).
@@ -419,6 +484,12 @@ oqlos/
 - `parse_REPEAT(tokens, ln, raw)` — —
 - `parse_oql(text, filename)` — Parse OQL source into an :class:`OqlDoc`.
 - `format_doc(doc)` — Pretty-print for ad-hoc debugging.
+- `motor2_max_steps_per_second(default)` — —
+- `normalize_motor2_runtime_config(source)` — —
+- `motor2_speed_for_duration(steps, cycles, duration_seconds)` — —
+- `motor2_acceleration_raw(steps_per_second, percent, max_steps_per_second)` — —
+- `motor2_speed_raw(steps_per_second, max_steps_per_second)` — —
+- `build_motor2_reciprocating_plan(config)` — —
 - `first_meaningful_line(text)` — Return first non-empty/non-comment line as (line_no, text).
 - `extract_declared_version(text)` — Extract VERSION header value when present on first meaningful line.
 - `resolve_oql_version(text)` — Resolve OQL version from source text with backward-compatible default.
@@ -485,6 +556,8 @@ oqlos/
 - `handle_list_command(argv)` — Handle the 'cmd list' subcommand.
 - `execute_command_with_cleanup(args, result, yaml_output, quiet)` — Execute command with continuous mode and cleanup handling.
 - `main()` — —
+- `canonicalize_oql_text(text)` — Return text with legacy SET forms rewritten to canonical OQL v4 style.
+- `canonicalize_oql_line(line)` — Canonicalize one OQL line while preserving indentation.
 - `output_yaml(data, quiet)` — Output data as YAML to stdout.
 - `parse_sensor_overrides(sensor_args)` — Parse `-s name=value` overrides into a sensor mapping.
 - `build_result_payload(result)` — Convert a script result into a JSON-friendly payload.
@@ -495,10 +568,12 @@ oqlos/
 - `create_file_parser()` — Create argument parser for file-based execution.
 - `create_run_parser()` — Create parser for explicit `oqlctl run` scenario execution.
 - `create_hardware_parser(action)` — Create parser for oqlctl hardware utility subcommands.
+- `create_format_parser()` — Create parser for `oqlctl format`.
 - `create_cmd_parser()` — Create argument parser for single command execution.
 - `run_file_mode(args)` — Execute file-based CQL/OQL processing.
 - `run_hardware_mode(action, argv)` — Run oqlctl status/identify/detect/doctor subcommands.
 - `run_cmd_mode(argv)` — Execute single command mode.
+- `run_format_mode(argv)` — Format a local OQL/CQL file.
 - `main()` — Main entry point - delegates to dispatcher.
 - `ensure_firmware_running(firmware_url)` — Attempt to start firmware service if it's not available.
 - `check_firmware_state(firmware_url, yaml_output, quiet)` — Check firmware health and identify state.
@@ -507,26 +582,94 @@ oqlos/
 - `emit_preflight_success(firmware_url, health, identify, required_adapter)` — Emit preflight success output in appropriate format.
 - `preflight_hardware(command, firmware_url)` — Check whether the requested command can run on real hardware.
 - `resolve_oqlos_config_path(config_path)` — Resolve the canonical ``oqlos.yaml`` path.
+- `is_stale_hardware_message(message)` — —
+- `is_stale_hardware_entry(entry)` — —
+- `plugin_is_healthy(entry)` — Stable OK — do not disconnect/reconnect when true.
+- `plugin_needs_repair(plugin_id, entry)` — —
+- `modbus_plugins_need_repair(identify)` — —
+- `report_to_dict(report)` — —
+- `build_diagnosis_report(identify)` — Build per-device diagnosis from an identify payload (same shape as GET /identify).
+- `execute_safe_recover(gateway, report)` — Reconnect failed plugins inside OqlOS; return host_actions for sidecars.
 - `get_hardware_config(device_id)` — Return the PluginConfig for *device_id* (loaded from unified YAML).
 - `register_hardware_config(config)` — No-op shim — configs live in the unified YAML now.
 - `load_config_from_yaml(config_path)` — Load plugin configs from the **unified** YAML format.
 - `build_dynamic_schema_models(config_path)` — Build runtime Pydantic schema models from ``oqlos.yaml``.
-- `candidate_oqlos_bases(api_base)` — Return the configured OqlOS base URL plus the common 8200/8202 fallback.
-- `is_oqlos_unavailable(exc)` — —
-- `oqlos_error_detail(exc)` — —
-- `normalize_modbus_valve_id(raw)` — —
-- `resolve_modbus_target(command, args)` — —
-- `resolve_pump_target(command, args)` — —
-- `resolve_lung_target(command, args)` — —
-- `resolve_piadc_target(command, args)` — —
-- `resolve_diagnostic_target(peripheral, command, args)` — —
-- `extract_command_failure(result)` — —
+- `is_rtc_hardware_enabled()` — RTC is opt-in: production RPi5 with Waveshare HAT (OQLOS_ENABLE_RTC=1).
+- `get_pirtc_base_url()` — —
+- `build_rtc_peripheral_status()` — Return the runtime status payload for the RTC sidecar.
+- `run_rtc_command(command, args)` — Execute a diagnostic command against the RTC sidecar.
+- `build_rtc_adapter_entry()` — —
+- `enrich_rtc_adapter(payload)` — —
+- `shutdown_all_hui_hardware(gateway)` — —
+- `list_hui_actions()` — —
+- `start_hui_hold(gateway, key)` — —
+- `stop_hui_hold(gateway, key)` — —
+- `start_hui_artificial_lung(gateway)` — —
+- `stop_hui_artificial_lung(gateway)` — —
+- `resolve_dri0050_serial(configured)` — Pick pump USB-serial: env, stable by-id, then ttyUSB not used by Modbus.
+- `ensure_dri0050_sidecar()` — Start or restart dri0050-motor-api via systemd-run (same as make hardware-up).
+- `resolve_scanner_presence(diagnostics)` — —
+- `build_scanner_adapter_entry(diagnostics)` — —
+- `enrich_scanner_adapter(payload)` — —
 - `resolve_target_to_plugin(target)` — Resolve a DSL target name to its plugin ID.
 - `register_custom_mapping(target, plugin_id)` — Register a custom peripheral-to-plugin mapping.
 - `get_all_mappings()` — Get all peripheral-to-plugin mappings.
 - `generate_dynamic_valve_mappings(max_valve_count)` — Generate dynamic valve mappings for numbered valves.
-- `list_serial_ports()` — Return USB serial ports with best-effort metadata.
-- `probe_waveshare_modbus(preferred_port, preferred_baud, preferred_parity, timeout)` — Probe serial ports and return the first working Modbus RTU configuration.
+- `build_hardware_stack_snapshot(health)` — Collect platform, plugin health, Modbus preflight, stale-serial state, and wizard plan.
+- `collect_modbus_serial_candidates(diagnostics)` — —
+- `enrich_platform_modbus_ports(payload)` — —
+- `enrich_modbus_serial_hints(payload)` — —
+- `enrich_modbus_identify(payload)` — —
+- `probe_waveshare_modbus(preferred_port, preferred_baud, preferred_parity, preferred_device_id)` — Probe serial ports and return the first working Modbus IO configuration.
+- `probe_waveshare_modbus_adc(preferred_port, preferred_baud, preferred_parity, preferred_device_id)` — Probe serial ports for the Waveshare Modbus RTU Analog Input 8CH module.
+- `enrich_identify_payload(payload)` — Apply platform-specific enrichment after core plugin identify.
+- `get_peripheral_status(gateway)` — —
+- `execute_command(command, args, gateway)` — —
+- `list_usb_devices()` — Enumerate connected USB devices (sysfs; no root needed).
+- `pi_system_diagnostics()` — Raspberry Pi health snapshot: model, temp, throttling, memory, uptime, ports.
+- `reset_usb_device(vendor_id, product_id, dev_node)` — Driver-level reset / re-enumeration of a USB device (needs root or udev rw).
+- `run_manage_verb(verb, args)` — Execute a management verb and return a JSON-serializable result dict.
+- `list_manage_verbs()` — Return the supported verb names (for discovery/tests).
+- `build_topics(prefix, node_id)` — —
+- `float_from_env(env, key, default)` — —
+- `int_from_env(env, key, default)` — —
+- `candidate_oqlos_bases(api_base)` — —
+- `run_extended_motor_tic249_command(hardware_proxy, command, args)` — —
+- `is_oqlos_unavailable(exc)` — —
+- `oqlos_error_detail(exc)` — —
+- `plugin_needs_repair(plugin_id, entry)` — —
+- `modbus_plugins_need_repair(identify)` — —
+- `analyze_repair_needs(identify)` — Return whether host stack restart is recommended and human-readable reasons.
+- `modbus_exclusive_scan_recommended(identify)` — —
+- `overall_stack_healthy(identify)` — —
+- `build_summary()` — —
+- `safe_response_payload(response)` — —
+- `response_error_message(payload)` — —
+- `normalize_modbus_valve_id(raw)` — —
+- `resolve_modbus_target(command, args)` — —
+- `resolve_pump_target(command, args)` — —
+- `resolve_artificial_lung_target(command, args)` — —
+- `resolve_lung_target(command, args)` — —
+- `resolve_modbus_adc_target(command, args)` — —
+- `resolve_rtc_target(command, args)` — —
+- `resolve_diagnostic_target(peripheral, command, args)` — —
+- `extract_command_failure(result)` — —
+- `adc_sensor_alias(raw_sensor_id)` — —
+- `normalize_adc_read_result(result, requested_sensor_id)` — —
+- `normalize_adc_read_all_result(result)` — —
+- `rewrite_modbus_repair(payload)` — Replace upstream docker-gateway commands with the configured host workflow.
+- `is_raspberry_pi()` — Return True when running on a Raspberry Pi.
+- `is_docker()` — Return True when running inside a Docker container.
+- `get_default_oqlos_api_base()` — Return the default OqlOS API base URL for the current platform.
+- `rig_direction_to_plugin(direction)` — Map rig/OQL direction token to OqlOS motor-tic249 plugin direction.
+- `apply_rig_direction_to_plugin_params(params, args)` — Set ``direction`` and ``start_direction`` on reciprocate params from rig/OQL args.
+- `canonicalize_motor2_runtime_key(key)` — —
+- `tic249_runtime_args_from_config(runtime_config)` — —
+- `enrich_adapter_entry(adapter)` — —
+- `adapter_status_from_health(hw_id, health_entry)` — Map plugin health entries to identify adapter status labels.
+- `count_detected_adapters(adapters)` — —
+- `enrich_identify_payload(payload)` — —
+- `enrich_hardware_identify(payload)` — Apply OqlOS identify enrichment and host repair command normalization.
 - `get_pluggy_manager()` — Return the global pluggy PluginManager for third-party drivers.
 - `dynamic_peripheral_model(peripheral)` — Generate a runtime Pydantic model from a ``PeripheralConfig``.
 - `dynamic_plugin_schema_models(config)` — Build runtime Pydantic models for all plugin peripherals.
@@ -534,10 +677,13 @@ oqlos/
 - `not_connected_health(label)` — Return error health when plugin has no active client.
 - `health_check_exception(exc)` — Return error health for unexpected exceptions.
 - `http_disconnect(client, label)` — Close an httpx client (if open) and log disconnect.
+- `serial_error_is_stale(exc)` — —
+- `reopen_rtu_after_stale(plugin, exc)` — Close and reopen the RTU bus after USB tty re-enumeration (EIO).
 - `render_html_report(data_json)` — Render a self-contained HTML report from an ``oqlos-report-v1`` JSON string.
 - `report_json(result)` — Format a ScriptResult as the canonical ``data.json`` for report rendering.
 - `report_junit(result, suite_name)` — Convenience function — wraps JUnitReporter().generate().
 - `load_sample_scenarios(state_manager)` — Load sample scenarios for testing
+- `register_hui_test_scenario(state_manager)` — Register ts-c20 so POST /api/v1/execution/step accepts test-hui manual actions.
 - `clean_version(raw)` — Normalize a raw version string to plain semver text.
 - `resolve_release_version(project_root)` — Resolve the release version for the given project root.
 - `main()` — —
@@ -552,6 +698,7 @@ oqlos/
 - `main()` — —
 - `build_version_payload(service_name, version)` — Build a canonical JSON payload for a version endpoint.
 - `create_version_router()` — Create a FastAPI router that exposes a single `/version` endpoint.
+- `configure_oqlos_logging()` — Configure root logging for oqlos-server.
 - `get_logger(name)` — —
 - `get_state()` — Get current system state
 - `stream_values(param, min, max, period)` — SSE endpoint for live value streaming.
@@ -590,37 +737,31 @@ oqlos/
 - `hardware_identify(scan)` — Return hardware identification with conditional live scanning for low latency.
 - `set_valve(valve_id, value)` — Directly set a valve (for manual testing).
 - `set_pump(power_pct)` — Directly set pump power % (for manual testing).
+- `hui_actions()` — Return OqlOS-owned HUI action recipes.
+- `hui_shutdown()` — Stop HUI pump/valve actions using the canonical OqlOS recipe.
+- `hui_hold_start(key)` — Start a named HUI hold action.
+- `hui_hold_stop(key)` — Stop a named HUI hold action and return hardware to a safe state.
+- `hui_al_start()` — Start the HUI artificial-lung action.
+- `hui_al_stop()` — Stop the HUI artificial-lung action.
 - `read_sensor(sensor_id)` — Read a sensor value directly from hardware.
+- `hardware_temperature()` — Read CPU temperature, returning an HUI-compatible unavailable payload if absent.
+- `read_sensors_batch(sensor_ids)` — Read multiple sensors without making HUI fall back to repeated failing requests.
+- `hardware_diagnose()` — Return HUI-friendly hardware diagnostics without failing the request.
+- `hardware_modbus_waveshare_diagnose()` — Run Waveshare-focused Modbus scan matrix and per-slave register checks.
+- `hardware_stack_snapshot()` — Single autodetect + configuration-cycle snapshot (health, ports, wizard plan).
+- `hardware_diagnosis_route(scan)` — Per-device diagnosis plan (environment + recommended actions).
+- `hardware_recover_route(scope)` — Safe auto-recovery inside OqlOS; host sidecar steps are returned as host_actions.
+- `hardware_modbus_wizard_plan()` — Return guided step-by-step Modbus configuration plan.
+- `hardware_modbus_wizard_probe_isolated(serial_port, baudrates, parities, device_ids)` — Probe one isolated module before writing address/UART settings.
+- `hardware_modbus_wizard_program_isolated(serial_port, current_device_id, new_device_id, new_baudrate)` — Program one isolated module (address + UART), then verify config.
+- `read_modbus_adc_raw()` — Return raw Modbus ADC diagnostics for HUI troubleshooting.
 - `set_lung(steps, speed, cycles, pause)` — Start artificial lung reciprocating motion (tic249 stepper).
 - `stop_lung()` — Emergency stop the artificial lung motor.
 - `disable_lung()` — De-energize the artificial lung motor (release coils).
-
-### Artificial Lung Volume Commands
-
-For OQL motor 2 reciprocating motion, the interpreter can calculate cycles from
-the requested volume. The default calibration is `cycle volume 5 l`, meaning one
-full back-and-forth cycle transfers 5 liters. Example: 50 liters in 30 seconds
-requires 10 cycles and, with `stroke 1000 steps`, about 667 steps/s.
-
-```oql
-VERSION: 4
-GOAL:
-  SET NAME 'Przetlocz 50 litrow w 30 sekund'
-  SET 'motor 2' 'reciprocating motion'
-  SET 'motor 2' 'stroke 1000 steps'
-  SET 'motor 2' 'volume 50 l'
-  SET 'motor 2' 'duration 30s'
-  SET 'motor 2' 'acceleration 100%/s'
-  SET 'motor 2' 'reverse on limit'
-  SET 'motor 2' 'start'
-  WAIT 30s
-  SET 'motor 2' 'stop'
-```
-
-Use `SET 'motor 2' 'cycle volume N l'` when the calibrated volume per cycle is
-different from 5 liters. Plain `start` defaults to the left/reverse direction;
-use `start right direction` or `start left direction` when the initial direction
-must be explicit.
+- `artificial_lung_status()` — Logical lung state merged with motor connectivity hints.
+- `artificial_lung_command(payload)` — Execute artificial-lung logical commands (set_lpm, lung_*, emergency_stop).
+- `rtc_status()` — Return runtime status for the RTC sidecar.
+- `rtc_command(payload)` — Execute a diagnostic command against the RTC sidecar.
 - `get_logs(level, function, module, q)` — Browse nfo logs from shared SQLite database.
 - `get_log_stats()` — Summary statistics from logs database.
 - `list_files()` — List all entries in the scenarios directory.
@@ -629,12 +770,25 @@ must be explicit.
 - `execute_scenario(request)` — Execute a scenario file using oqlos runtime.
 - `index_page()` — Serve the firmware UI (index.html) at root
 - `editor_page()` — Serve the scenario editor UI
+- `panel_page()` — Serve the test panel UI (predefined command groups, custom + ready-made scenarios).
 - `health_check()` — Health check endpoint for tests and frontend compatibility probes.
 - `status()` — —
 - `websocket_endpoint(websocket)` — —
+- `oql_websocket_alias(websocket)` — Convenience alias for the OQL channel (also at /api/v1/oql/ws).
 - `run()` — Entry point for ``oqlos-server`` console script.
+- `set_oql_controller(controller)` — Install (or clear) the process-global controller used by the routes.
+- `get_oql_controller()` — —
+- `execute_oql(req)` — —
+- `manage_hardware(req)` — Run a remote management/diagnostic verb over MQTT.
+- `oql_ws(websocket)` — Bidirectional OQL channel: client sends OQL frames, receives results.
 - `set_dependencies(sm, orch)` — Set state_manager + orchestrator (called once from main.py).
 - `get_default_dsl_schema()` — Return the canonical cross-project schema used by editor clients.
+- `looks_like_html(text)` — —
+- `extract_code_from_json(data)` — —
+- `fetch_url(url, timeout)` — —
+- `build_api_fallback_urls(url)` — —
+- `load_source(file_path, url)` — —
+- `run_validator_cli(description, validate, argv)` — —
 - `validate_oql_v4(text, source)` — —
 - `main()` — —
 - `log_info()` — —
@@ -648,6 +802,11 @@ must be explicit.
 - `generate_report()` — —
 - `full_diagnostic()` — —
 - `main()` — —
+- `up_broker()` — —
+- `up_agent()` — —
+- `up_controller()` — —
+- `cmd_down()` — —
+- `cmd_status()` — —
 - `needs_migration(text)` — Check if text contains v2 bracket syntax, legacy MIN/MAX, PUMP, or old IF sentinels.
 - `main()` — —
 - `validate_oql_v2_legacy(text, source)` — —
@@ -676,6 +835,7 @@ must be explicit.
 📄 `docker.Dockerfile`
 📄 `docker.docker-compose.dev`
 📄 `docker.docker-compose.prod`
+📄 `docs.HARDWARE_CONTROL_OQL_MQTT`
 📄 `docs.HARDWARE_DIAGNOSTICS`
 📄 `docs.OQL_V4_MIGRATION_MANUAL`
 📄 `docs.README`
@@ -684,20 +844,23 @@ must be explicit.
 📄 `docs.oql-spec`
 📄 `docs.oql_v2_llm_validator.schema`
 📄 `docs.oql_v4_llm_validator.schema`
+📄 `examples.curl-quickstart`
 📄 `examples.hardware.doctor-workflow` (3 functions)
 📄 `examples.plugin-config`
 📄 `goal`
 📄 `hw_diagnostic_20260415_133138`
 📄 `openapi`
+📄 `openapi_spec`
 📦 `oqlos`
 📦 `oqlos.api`
-📄 `oqlos.api.editor` (5 functions, 3 classes)
+📄 `oqlos.api.editor` (6 functions, 3 classes)
 📄 `oqlos.api.execution` (16 functions)
-📄 `oqlos.api.hardware` (31 functions)
+📄 `oqlos.api.hardware` (89 functions)
 📄 `oqlos.api.logs` (3 functions)
-📄 `oqlos.api.main` (9 functions)
+📄 `oqlos.api.main` (13 functions)
+📄 `oqlos.api.oql_mqtt` (6 functions, 3 classes)
 📄 `oqlos.api.peripherals` (4 functions)
-📄 `oqlos.api.plugins` (9 functions)
+📄 `oqlos.api.plugins` (12 functions)
 📄 `oqlos.api.scenarios` (16 functions)
 📄 `oqlos.api.state` (16 functions)
 📄 `oqlos.api.utils.execution_ctrl` (3 functions)
@@ -710,16 +873,17 @@ must be explicit.
 📄 `oqlos.core._dsl_helpers` (12 functions)
 📄 `oqlos.core._firmware_executor` (9 functions, 1 classes)
 📄 `oqlos.core._func_resolver` (4 functions)
-📄 `oqlos.core._interpreter_actions` (48 functions)
+📄 `oqlos.core._interpreter_actions` (85 functions)
 📄 `oqlos.core._line_parsers` (9 functions)
-📄 `oqlos.core._oql_adapter` (14 functions, 1 classes)
+📄 `oqlos.core._oql_adapter` (28 functions, 1 classes)
 📄 `oqlos.core._sensor_evaluator` (6 functions, 1 classes)
 📄 `oqlos.core._value_normalizers` (7 functions, 1 classes)
 📄 `oqlos.core.base` (28 functions, 7 classes)
 📄 `oqlos.core.cql_parser` (30 functions, 1 classes)
 📄 `oqlos.core.executor` (21 functions, 1 classes)
-📄 `oqlos.core.interpreter` (46 functions, 1 classes)
-📄 `oqlos.core.oql_parser` (31 functions, 3 classes)
+📄 `oqlos.core.interpreter` (47 functions, 1 classes)
+📄 `oqlos.core.motor2_runtime` (12 functions, 2 classes)
+📄 `oqlos.core.oql_parser` (43 functions, 3 classes)
 📄 `oqlos.core.oql_versioning` (4 functions, 1 classes)
 📄 `oqlos.core.parser` (5 functions)
 📄 `oqlos.core.safe_eval` (10 functions, 1 classes)
@@ -727,35 +891,66 @@ must be explicit.
 📦 `oqlos.dsl`
 📄 `oqlos.dsl.schema` (6 functions, 5 classes)
 📦 `oqlos.hardware`
+📄 `oqlos.hardware.artificial_lung` (10 functions)
+📦 `oqlos.hardware.client`
+📄 `oqlos.hardware.client.adc` (3 functions)
+📄 `oqlos.hardware.client.autorepair` (9 functions)
+📄 `oqlos.hardware.client.config` (5 functions, 1 classes)
+📄 `oqlos.hardware.client.constants`
+📄 `oqlos.hardware.client.errors` (3 functions, 1 classes)
+📄 `oqlos.hardware.client.http_helpers` (2 functions)
+📄 `oqlos.hardware.client.identify_enrich` (18 functions)
+📄 `oqlos.hardware.client.modbus_repair` (7 functions)
+📄 `oqlos.hardware.client.platform` (3 functions)
+📄 `oqlos.hardware.client.proxy` (29 functions, 1 classes)
+📄 `oqlos.hardware.client.resolvers` (10 functions)
+📄 `oqlos.hardware.client.tic249_arg_contract` (2 functions)
+📄 `oqlos.hardware.client.tic249_extended` (30 functions)
+📄 `oqlos.hardware.client.tic249_rig_direction` (2 functions)
 📄 `oqlos.hardware.config_paths` (1 functions)
 📄 `oqlos.hardware.config_schema` (4 functions, 1 classes)
-📄 `oqlos.hardware.control_proxy` (31 functions, 3 classes)
-📄 `oqlos.hardware.discovery` (8 functions)
+📄 `oqlos.hardware.control_proxy` (1 functions, 1 classes)
+📄 `oqlos.hardware.diagnosis` (26 functions, 3 classes)
+📄 `oqlos.hardware.discovery` (3 functions)
 📦 `oqlos.hardware.drivers`
 📄 `oqlos.hardware.drivers.gpio` (7 functions, 1 classes)
 📄 `oqlos.hardware.drivers.mqtt` (9 functions, 1 classes)
 📄 `oqlos.hardware.drivers.spi` (7 functions, 1 classes)
-📄 `oqlos.hardware.firmware_adapter` (24 functions, 1 classes)
+📄 `oqlos.hardware.firmware_adapter` (26 functions, 1 classes)
 📄 `oqlos.hardware.gateway` (25 functions, 5 classes)
+📄 `oqlos.hardware.hui_actions` (12 functions)
+📄 `oqlos.hardware.identify_enrichment` (1 functions)
+📄 `oqlos.hardware.modbus_identify` (8 functions)
 📄 `oqlos.hardware.peripheral_mapping` (4 functions)
-📄 `oqlos.hardware.plugin_gateway` (15 functions, 1 classes)
+📄 `oqlos.hardware.plugin_gateway` (21 functions, 1 classes)
 📦 `oqlos.hardware.plugins`
+📄 `oqlos.hardware.plugins._rtu_serial` (2 functions)
 📄 `oqlos.hardware.plugins._shared` (4 functions)
 📄 `oqlos.hardware.plugins.base` (21 functions, 9 classes)
-📄 `oqlos.hardware.plugins.lung` (19 functions, 1 classes)
-📄 `oqlos.hardware.plugins.modbus` (9 functions, 1 classes)
-📄 `oqlos.hardware.plugins.motor` (18 functions, 1 classes)
+📄 `oqlos.hardware.plugins.lung` (20 functions, 1 classes)
+📄 `oqlos.hardware.plugins.modbus` (16 functions, 1 classes)
+📄 `oqlos.hardware.plugins.modbus_adc` (17 functions, 1 classes)
+📄 `oqlos.hardware.plugins.motor` (20 functions, 1 classes)
 📄 `oqlos.hardware.plugins.piadc` (12 functions, 1 classes)
 📄 `oqlos.hardware.plugins.registry` (14 functions, 1 classes)
 📄 `oqlos.hardware.protocol` (6 functions, 2 classes)
 📄 `oqlos.hardware.registry` (3 functions, 1 classes)
+📄 `oqlos.hardware.rtc_probe` (7 functions)
+📄 `oqlos.hardware.scanner_probe` (13 functions)
+📄 `oqlos.hardware.sidecar_control` (8 functions)
+📄 `oqlos.hardware.stack_snapshot` (4 functions)
+📄 `oqlos.hardware.tic249_units`
+📦 `oqlos.hardware.transport`
+📄 `oqlos.hardware.transport.manage_ops` (7 functions)
+📄 `oqlos.hardware.transport.mqtt_oql_bridge` (34 functions, 6 classes)
+📄 `oqlos.hardware.usb_diagnostics` (5 functions)
 📄 `oqlos.models.dsl_models` (8 classes)
 📄 `oqlos.models.execution` (3 classes)
 📄 `oqlos.models.peripheral` (4 classes)
 📄 `oqlos.models.scenario` (4 classes)
 📦 `oqlos.reporters`
 📄 `oqlos.reporters.html_report` (5 functions)
-📄 `oqlos.reporters.json_reporter` (2 functions)
+📄 `oqlos.reporters.json_reporter` (5 functions)
 📄 `oqlos.reporters.junit` (3 functions, 1 classes)
 📄 `oqlos.scenarios.OQL-CHEATSHEET`
 📄 `oqlos.scenarios.examples.README`
@@ -764,21 +959,22 @@ must be explicit.
 📄 `oqlos.shared.event_server` (11 functions, 2 classes)
 📄 `oqlos.shared.event_store` (10 functions, 1 classes)
 📄 `oqlos.shared.file_ops` (5 functions, 1 classes)
-📄 `oqlos.shared.logger` (1 functions)
+📄 `oqlos.shared.logger` (2 functions)
 📄 `oqlos.shared.logs_query` (5 functions, 1 classes)
 📄 `oqlos.shared.release_version` (7 functions)
 📄 `oqlos.shared.version_endpoint` (2 functions)
 📦 `oqlos.tools.cql_cli` (2 functions)
 📄 `oqlos.tools.cql_cli.commands` (5 functions)
-📄 `oqlos.tools.cql_cli.main` (16 functions, 1 classes)
+📄 `oqlos.tools.cql_cli.formatting` (3 functions)
+📄 `oqlos.tools.cql_cli.main` (18 functions, 1 classes)
 📄 `oqlos.tools.cql_cli.preflight` (12 functions)
 📄 `oqlos.tools.cql_cli.utils` (10 functions)
 📦 `oqlos.tools.hardware_diagnose` (1 functions)
-📄 `oqlos.tools.hardware_diagnose.__main__` (8 functions)
+📄 `oqlos.tools.hardware_diagnose.__main__` (11 functions)
 📄 `oqlos.tools.hardware_diagnose.benchmark` (1 functions)
 📄 `oqlos.tools.hardware_diagnose.calibration` (4 functions)
 📄 `oqlos.tools.hardware_diagnose.discovery` (5 functions, 1 classes)
-📄 `oqlos.tools.hardware_diagnose.doctor` (27 functions)
+📄 `oqlos.tools.hardware_diagnose.doctor` (41 functions)
 📄 `oqlos.tools.hardware_diagnose.health` (7 functions)
 📄 `oqlos.tools.hardware_diagnose.modbus_probe` (16 functions)
 📄 `oqlos.tools.hardware_diagnose.report` (2 functions)
@@ -786,21 +982,33 @@ must be explicit.
 📄 `oqlos.tools.plugin_cli` (14 functions)
 📦 `oqlos.tools.xml_import`
 📄 `oqlos.tools.xml_import._utils` (6 functions)
-📄 `oqlos.tools.xml_import.generators` (18 functions)
+📄 `oqlos.tools.xml_import.generators` (20 functions)
 📄 `oqlos.tools.xml_import.models` (5 classes)
 📄 `oqlos.tools.xml_import.parser` (6 functions)
 📦 `oqlos.utils`
+📄 `oqlos.utils.hui_scenario` (1 functions)
 📄 `oqlos.utils.sample_data` (1 functions)
 📄 `project`
 📄 `pyproject`
 📄 `pyqual`
+📄 `redeploy.122.RUNBOOK`
+📄 `redeploy.122.migration`
+📄 `redeploy.122.mosquitto`
+📄 `redeploy.122.oqlos-hw`
+📄 `redeploy.pi-hw.RUNBOOK`
+📄 `redeploy.pi-hw.migration`
+📄 `redeploy.pi-hw.mosquitto`
+📄 `redeploy.pi-hw.oqlos-hw`
 📄 `scenarios.manifest`
 📄 `scripts.fix_brackets_to_v4` (2 functions)
 📄 `scripts.hardware-check` (11 functions)
-📄 `scripts.migrate_to_v4` (6 functions)
-📄 `scripts.oql_v2_to_v4_migrate_db` (17 functions, 1 classes)
-📄 `scripts.oql_v2_validator` (9 functions, 1 classes)
-📄 `scripts.oql_v4_validator` (10 functions, 1 classes)
+📄 `scripts.migrate_to_v4` (19 functions)
+📄 `scripts.oql-stack` (5 functions)
+📄 `scripts.oql_v2_to_v4_migrate_db` (43 functions, 1 classes)
+📄 `scripts.oql_v2_validator` (6 functions, 1 classes)
+📄 `scripts.oql_v4_validator` (8 functions, 1 classes)
+📄 `scripts.oql_validator_common` (6 functions)
+📄 `scripts.provision-rpi-sudo`
 📄 `scripts.scenarios_export` (13 functions)
 📄 `setup_hardware_and_run_oql` (7 functions)
 📄 `sumd`
@@ -814,7 +1022,7 @@ must be explicit.
 ## Requirements
 
 - Python >= >=3.10
-- fastapi >=0.110- uvicorn >=0.28- pydantic >=2.0- pydantic-settings >=2.2.0- pyserial >=3.5- pymodbus >=3.6- httpx >=0.25- nfo >=0.2.3- goal >=2.1.0- costs >=0.1.20- pfix >=0.1.60- paho-mqtt >=1.6.1- pluggy >=1.4- PyYAML >=6.0- testql >=0.2.0
+- fastapi >=0.110- uvicorn >=0.28- pydantic >=2.0- pydantic-settings >=2.2.0- pyserial >=3.5- pymodbus >=3.6- httpx >=0.25- nfo >=0.2.3- goal >=2.1.0- costs >=0.1.20- pfix >=0.1.60- paho-mqtt >=1.6.1- pluggy >=1.4- pytest-asyncio >=0.23- PyYAML >=6.0- testql >=0.2.0
 
 ## Contributing
 
@@ -836,20 +1044,6 @@ pip install -e ".[dev]"
 # Run tests
 pytest
 ```
-
-### Local `hardware_client` source fallback (dev)
-
-`oqlos.hardware.control_proxy` can load `hardware_client` from a local source
-tree when the package is not available in the active virtualenv.
-
-For multi-repo development, set:
-
-```bash
-export OQLOS_HARDWARE_CLIENT_SRC=/home/tom/github/maskservice/c2004/packages/hardware-client-py/src
-```
-
-This keeps local test runs and `goal -a` stable even when environment sync
-tools reinstall dependencies.
 
 ## Documentation
 

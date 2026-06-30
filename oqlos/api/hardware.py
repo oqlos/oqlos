@@ -1120,6 +1120,20 @@ def _read_waveshare_adc_slave_config(
     }
 
 
+def _resolve_waveshare_ports(ports: "dict[str, Any]") -> "tuple[str, str]":
+    """Return (io_port, adc_port) resolving fallbacks from settings."""
+    io_port = ports["io_serial_port"] or str(_settings.modbus_serial_port)
+    adc_port = ports["adc_serial_port"] or io_port
+    return io_port, adc_port
+
+
+def _split_hits_by_role(hits: list) -> "tuple[list, list]":
+    """Split scan hits into (io_hits, adc_hits) by role field."""
+    io_hits = [h for h in hits if h.get("role") == "modbus-io"]
+    adc_hits = [h for h in hits if h.get("role") == "modbus-adc"]
+    return io_hits, adc_hits
+
+
 def _build_waveshare_diagnose_report(health: dict[str, Any] | None = None) -> dict[str, Any]:
     baud_sequence = [4800, 9600, 19200, 38400, 57600, 115200]
     io_ids = _modbus_io_device_ids()
@@ -1127,8 +1141,7 @@ def _build_waveshare_diagnose_report(health: dict[str, Any] | None = None) -> di
     target_ids = sorted(set([*io_ids, adc_id]))
     ports = _modbus_runtime_serial_ports()
     separate = ports["topology"] == "separate-adapters"
-    io_port = ports["io_serial_port"] or str(_settings.modbus_serial_port)
-    adc_port = ports["adc_serial_port"] or io_port
+    io_port, adc_port = _resolve_waveshare_ports(ports)
 
     target_baud = int(_settings.modbus_baud)
     target_parity = str(_settings.modbus_parity)
@@ -1177,8 +1190,7 @@ def _build_waveshare_diagnose_report(health: dict[str, Any] | None = None) -> di
         )
 
     hits = list(report_dict.get("hits") or [])
-    io_hits = [hit for hit in hits if hit.get("role") == "modbus-io"]
-    adc_hits = [hit for hit in hits if hit.get("role") == "modbus-adc"]
+    io_hits, adc_hits = _split_hits_by_role(hits)
 
     per_slave: dict[str, Any] = {}
     for io_id in io_ids:

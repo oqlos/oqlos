@@ -1,12 +1,12 @@
-# redup/duplication | 70 groups | 149f 30202L | 2026-06-30
+# redup/duplication | 70 groups | 149f 30253L | 2026-06-30
 
 SUMMARY:
   files_scanned: 149
-  total_lines:   30202
+  total_lines:   30253
   dup_groups:    70
   dup_fragments: 154
   saved_lines:   508
-  scan_ms:       110578
+  scan_ms:       102269
 
 HOTSPOTS[7] (files with most duplication):
   oqlos/core/_cql_tokenizer.py  dup=92L  groups=7  frags=16  (0.3%)
@@ -74,8 +74,8 @@ DUPLICATES[70] (ranked by impact):
       oqlos/dsl/schema.py:99-108  (_merge_object_function_map)
       oqlos/dsl/schema.py:111-120  (_merge_param_unit_map)
   [F0027]   FUZZ  artificial_lung_command  L=11 N=2 saved=11 sim=0.86
-      oqlos/api/hardware.py:2210-2220  (artificial_lung_command)
-      oqlos/api/hardware.py:2230-2240  (rtc_command)
+      oqlos/api/hardware.py:2222-2232  (artificial_lung_command)
+      oqlos/api/hardware.py:2242-2252  (rtc_command)
   [F0013]   FUZZ  _try_set  L=5 N=3 saved=10 sim=0.88
       oqlos/core/_cql_tokenizer.py:179-183  (_try_set)
       oqlos/core/_cql_tokenizer.py:282-286  (_try_val)
@@ -131,8 +131,8 @@ DUPLICATES[70] (ranked by impact):
       oqlos/core/interpreter.py:339-341  (_execute_plugin_action)
       oqlos/core/interpreter.py:343-345  (_execute_legacy_firmware_action)
   [F0021]   FUZZ  hui_hold_start  L=6 N=2 saved=6 sim=0.91
-      oqlos/api/hardware.py:1785-1790  (hui_hold_start)
-      oqlos/api/hardware.py:1800-1805  (hui_al_start)
+      oqlos/api/hardware.py:1797-1802  (hui_hold_start)
+      oqlos/api/hardware.py:1812-1817  (hui_al_start)
   [F0002]   FUZZ  _firmware  L=3 N=3 saved=6 sim=0.89
       oqlos/core/interpreter.py:94-96  (_firmware)
       oqlos/core/interpreter.py:104-106  (_firmware_url)
@@ -186,8 +186,8 @@ DUPLICATES[70] (ranked by impact):
       oqlos/hardware/transport/mqtt_oql_bridge.py:109-112  (to_json)
       oqlos/hardware/transport/mqtt_oql_bridge.py:141-144  (to_json)
   [e46400023b9f2fe9]   STRU  stop_lung  L=4 N=2 saved=4 sim=1.00
-      oqlos/api/hardware.py:2190-2193  (stop_lung)
-      oqlos/api/hardware.py:2197-2200  (disable_lung)
+      oqlos/api/hardware.py:2202-2205  (stop_lung)
+      oqlos/api/hardware.py:2209-2212  (disable_lung)
   [8fd712f8bc1fd43b]   STRU  _mig_calc  L=4 N=2 saved=4 sim=1.00
       scripts/oql_v2_to_v4_migrate_db.py:343-346  (_mig_calc)
       scripts/oql_v2_to_v4_migrate_db.py:349-352  (_mig_val)
@@ -198,8 +198,8 @@ DUPLICATES[70] (ranked by impact):
       oqlos/hardware/plugins/piadc.py:103-106  (__init__)
       oqlos/hardware/plugins/lung.py:36-40  (__init__)
   [5d5dbdb19a59c8f4]   STRU  hui_shutdown  L=3 N=2 saved=3 sim=1.00
-      oqlos/api/hardware.py:1779-1781  (hui_shutdown)
-      oqlos/api/hardware.py:1809-1811  (hui_al_stop)
+      oqlos/api/hardware.py:1791-1793  (hui_shutdown)
+      oqlos/api/hardware.py:1821-1823  (hui_al_stop)
   [7e9c7774bc69259a]   STRU  _func_sum  L=3 N=2 saved=3 sim=1.00
       oqlos/core/_interpreter_actions.py:367-369  (_func_sum)
       oqlos/core/_interpreter_actions.py:408-410  (_func_add)

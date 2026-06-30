@@ -578,6 +578,37 @@ def _apply_row_update(
         return {"id": sid, "write_url": write_url, "error": str(exc)}
 
 
+def _filter_rows(rows: list, scenario_id: str | None) -> list:
+    """Return rows filtered to a single scenario id, or all rows if no filter given."""
+    if not scenario_id:
+        return rows
+    return [r for r in rows if str(r.get("id") or "").strip() == scenario_id]
+
+
+def _build_migration_report(
+    rows: list,
+    results: list,
+    args: "argparse.Namespace",
+    updates_preview: list,
+    updated_remote: list,
+) -> dict:
+    """Assemble the final JSON report dict for the migration run."""
+    return {
+        "ok": True,
+        "source_url": args.source_url,
+        "filtered_scenario": args.scenario,
+        "apply": args.apply,
+        "summary": {
+            "rows_input": len(rows),
+            "rows_changed": sum(1 for r in results if r.changed),
+            "rows_valid_after": sum(1 for r in results if r.valid_after),
+        },
+        "results": [asdict(r) for r in results],
+        "updates_preview": updates_preview,
+        "updated_remote": updated_remote,
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Migrate legacy OQL scenarios from DB payloads to VERSION: 4")
     parser.add_argument("--source-url", default="http://localhost:8100/connect-data/test-scenarios", help="GET endpoint returning rows/list")
@@ -596,8 +627,7 @@ def main() -> int:
         print(json.dumps({"ok": False, "fatal": f"Cannot fetch source rows: {exc}"}, ensure_ascii=False))
         return 2
 
-    if args.scenario:
-        rows = [r for r in rows if str(r.get("id") or "").strip() == args.scenario]
+    rows = _filter_rows(rows, args.scenario)
 
     base_dir = Path(__file__).resolve().parent.parent
     scenario_dir = base_dir / "oqlos" / "scenarios"
@@ -623,29 +653,9 @@ def main() -> int:
                 _apply_row_update(row, migrated_code, args.write_url, args.write_method)
             )
 
-    report = {
-        "ok": True,
-        "source_url": args.source_url,
-        "filtered_scenario": args.scenario,
-        "apply": args.apply,
-        "summary": {
-            "rows_input": len(rows),
-            "rows_changed": sum(1 for r in results if r.changed),
-            "rows_valid_after": sum(1 for r in results if r.valid_after),
-        },
-        "results": [asdict(r) for r in results],
-        "updates_preview": updates_preview,
-        "updated_remote": updated_remote,
-    }
-
-    if args.pretty:
-        print(json.dumps(report, ensure_ascii=False, indent=2))
-    else:
-        print(json.dumps(report, ensure_ascii=False))
-
-    if any(not r.valid_after for r in results):
-        return 1
-    return 0
+    report = _build_migration_report(rows, results, args, updates_preview, updated_remote)
+    print(json.dumps(report, ensure_ascii=False, indent=2 if args.pretty else None))
+    return 1 if any(not r.valid_after for r in results) else 0
 
 
 if __name__ == "__main__":

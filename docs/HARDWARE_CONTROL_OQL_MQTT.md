@@ -259,8 +259,9 @@ Implementacja: `oqlos/hardware/transport/manage_ops.py`, `oqlos/hardware/usb_dia
   controller, kieruje backend na broker boardnet.
 - Reverse-proxy: `c2004/connect-scenario/nginx.conf.template` — `location /oql-panel`,
   `/api/v1/oql/`, `/ws/oql` → `${OQLOS_CONTROLLER_URL}`.
-- **Zależności na Pi**: `oqlos.hardware` wymaga pakietów `hardware_client` (c2004) i `pimodbus`
-  — `redeploy/122` je synchronizuje i instaluje. Bez nich oqlos nie zaimportuje się na czystym Pi.
+- **Zależności na Pi**: `oqlos.hardware.client` jest częścią OqlOS; węzeł sprzętowy nie
+  wymaga już pakietu `hardware_client` z c2004. Zewnętrzny pozostaje tylko sterownik
+  Modbus (`pimodbus`), gdy używany jest bezpośredni dostęp do Waveshare/RTU.
 
 ---
 
