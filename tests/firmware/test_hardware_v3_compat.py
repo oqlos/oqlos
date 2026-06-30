@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from oqlos.api import hardware_v3
+from oqlos.api import _hw3_mapping, _hw3_models
 from oqlos.api.hardware_mapping_store import MappingStore
 
 
@@ -15,7 +16,7 @@ def _client() -> TestClient:
 
 def test_hardware_v3_mapping_round_trip(monkeypatch, tmp_path):
     store = MappingStore(tmp_path / "hardware-map.yaml")
-    monkeypatch.setattr(hardware_v3, "mapping_store", store)
+    monkeypatch.setattr(_hw3_mapping, "mapping_store", store)
     client = _client()
 
     schema = client.get("/api/v3/hardware/mapping/schema")
@@ -42,7 +43,7 @@ def test_hardware_v3_mapping_round_trip(monkeypatch, tmp_path):
 
 
 def test_hardware_v3_mapping_rejects_invalid_contract(monkeypatch, tmp_path):
-    monkeypatch.setattr(hardware_v3, "mapping_store", MappingStore(tmp_path / "hardware-map.yaml"))
+    monkeypatch.setattr(_hw3_mapping, "mapping_store", MappingStore(tmp_path / "hardware-map.yaml"))
     client = _client()
 
     response = client.put(
@@ -61,7 +62,7 @@ def test_hardware_v3_cqrs_events_record_diagnostic_failure(monkeypatch):
     async def _fake_run_manage_verb(verb, args=None):
         raise RuntimeError(f"not available: {verb}")
 
-    monkeypatch.setattr(hardware_v3, "run_manage_verb", _fake_run_manage_verb)
+    monkeypatch.setattr(_hw3_models, "run_manage_verb", _fake_run_manage_verb)
     response = client.post(
         "/api/v3/hardware/diagnostic-command",
         json={"peripheral_id": "motor-dri0050", "command": "pump_off", "args": {}},

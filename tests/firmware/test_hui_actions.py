@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
-from oqlos.hardware import hui_actions
+from oqlos.hardware import hui_actions, hui_hold
 
 
 def run(coro):
@@ -49,7 +49,7 @@ class FakeTic249Plugin:
 
 
 def test_hui_hold_profile_runs_inside_oqlos(monkeypatch) -> None:
-    monkeypatch.setattr(hui_actions, "_VALVE_STAGGER_SECONDS", 0)
+    monkeypatch.setattr(hui_hold, "_VALVE_STAGGER_SECONDS", 0)
     gateway = FakeGateway()
 
     payload = run(hui_actions.start_hui_hold(gateway, "head-inflate"))

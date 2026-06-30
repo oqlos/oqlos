@@ -246,6 +246,12 @@ const OQL_SNIPPETS = [
   ]},
 ];
 
+const DEFAULT_EDITOR_OQL = `VERSION: 4
+SCENARIO: Mój test
+GOAL:
+  SET NAME 'Opis'
+  SET 'pump' 25`;
+
 // Wstaw tekst w edytorze dokładnie w miejscu kursora (lub na końcu zaznaczenia).
 function insertAtCursor(text){
   const ta = $('#editor');
@@ -426,6 +432,14 @@ async function runOql(oql, kind, label){
   logEntry(label||('OQL: '+oql.split('\n')[0]), data, status, sent, {ep:'/api/v1/oql/execute', body:payload, title:label||('OQL: '+oql.split('\n')[0])});
 }
 
+function normalizeEditorOql(text){
+  const txt=(text||'').trim();
+  if(!txt) return txt;
+  const hasVersion=/^\s*VERSION\s*:\s*\d+\s*$/mi.test(txt);
+  const isNamedV4Goal=/^\s*GOAL\s*:\s*$/mi.test(txt) && /^[ \t]+SET\s+NAME\b/mi.test(txt);
+  return (!hasVersion && isNamedV4Goal) ? 'VERSION: 4\n'+txt : txt;
+}
+
 function runItem(it){
   if(it.kind==='manage') return runManage(it.verb, it.args, it.label+(it.verb?' ('+it.verb+')':''));
   return runOql(it.oql, 'command', 'OQL · '+it.label);
@@ -515,7 +529,7 @@ function downloadCsv(){
   setTimeout(()=>URL.revokeObjectURL(url), 1500);
 }
 function runEditor(){
-  const txt=$('#editor').value.trim();
+  const txt=normalizeEditorOql($('#editor').value);
   if(!txt){ banner('Edytor jest pusty.'); return; }
   banner('');
   runOql(txt, 'script', 'Scenariusz ('+mode()+')');
@@ -630,6 +644,7 @@ document.addEventListener('keydown', e=>{
 renderGroups();
 renderSnippets();
 rebuildScenarios();
+if(!$('#editor').value.trim()) $('#editor').value=DEFAULT_EDITOR_OQL;
 refreshStatus();
 loadServerScenarios();
 </script>

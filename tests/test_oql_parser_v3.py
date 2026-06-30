@@ -233,6 +233,7 @@ def test_is_flat_oql_detects_new_syntax():
     assert is_flat_oql("GOAL test:\n  SET x 0\n") is True
     assert is_flat_oql('INCLUDE "lib/x.oql"\nGOAL t:\n  SET x 0\n') is True
     assert is_flat_oql(f"VERSION: {OQL_VERSION_CURRENT}\nGOAL:\n  SET NAME 'x'\n") is True
+    assert is_flat_oql("SCENARIO: Test\nGOAL:\n  SET NAME 'x'\n  SET 'pump' 25\n") is True
 
 
 def test_is_flat_oql_rejects_legacy():

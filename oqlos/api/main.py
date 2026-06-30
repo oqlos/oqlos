@@ -204,30 +204,23 @@ async def _stop_oql_transport() -> None:
 
 @app.get("/", response_class=HTMLResponse)
 async def index_page():
-    """Serve the firmware UI (index.html) at root"""
+    return _serve_static_html("index.html", "Test Simulator Firmware", "index.html not found.")
+
+
+def _serve_static_html(relative_path: str, title: str, missing_message: str):
     return serve_html_page(
-        STATIC_DIR / "index.html",
-        missing_title="Test Simulator Firmware",
-        missing_message="index.html not found.",
+        STATIC_DIR / relative_path,
+        missing_title=title,
+        missing_message=missing_message,
     )
 
 @app.get("/editor", response_class=HTMLResponse)
 async def editor_page():
-    """Serve the scenario editor UI"""
-    return serve_html_page(
-        STATIC_DIR / "static" / "editor.html",
-        missing_title="Scenario Editor",
-        missing_message="editor.html not found.",
-    )
+    return _serve_static_html("static/editor.html", "Scenario Editor", "editor.html not found.")
 
 @app.get("/panel", response_class=HTMLResponse)
 async def panel_page():
-    """Serve the test panel UI (predefined command groups, custom + ready-made scenarios)."""
-    return serve_html_page(
-        STATIC_DIR / "static" / "panel.html",
-        missing_title="OqlOS Panel",
-        missing_message="panel.html not found.",
-    )
+    return _serve_static_html("static/panel.html", "OqlOS Panel", "panel.html not found.")
 
 # ---- Hardware UI SPA moved in from c2004 connect-scenario (hardware-status,
 # hardware-demo, hardware-restart, map-editor). Built with Vite (base=/ui/).
@@ -243,12 +236,7 @@ def _with_query(path: str, request: Request) -> str:
 
 @app.get("/hardware-status", response_class=HTMLResponse)
 async def hardware_status_page():
-    """Serve the direct hardware status page without the React iframe wrapper."""
-    return serve_html_page(
-        STATIC_DIR / "static" / "hardware-status.html",
-        missing_title="OqlOS Hardware Status",
-        missing_message="hardware-status.html not found.",
-    )
+    return _serve_static_html("static/hardware-status.html", "OqlOS Hardware Status", "hardware-status.html not found.")
 
 
 @app.get("/hardware-demo")
@@ -294,6 +282,7 @@ async def health_check():
     """Health check endpoint for tests and frontend compatibility probes."""
     return {
         "status": "ok",
+        "healthy": True,
         "service": SERVICE_NAME,
         "version": SERVICE_VERSION,
         "port": FIRMWARE_PORT,
@@ -310,10 +299,13 @@ async def status():
 
 # ============= WebSocket Endpoint =============
 
+async def _forward_websocket(websocket: WebSocket, handler) -> None:
+    await handler(websocket)
+
+
 @app.websocket("/ws/events/hardware")
 async def hardware_events_websocket_alias(websocket: WebSocket):
-    """Hardware command event stream used by the moved MAP editor."""
-    await _hardware_events_ws_handler(websocket)
+    await _forward_websocket(websocket, _hardware_events_ws_handler)
 
 
 @app.websocket("/ws")
@@ -347,8 +339,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
 @app.websocket("/ws/oql")
 async def oql_websocket_alias(websocket: WebSocket):
-    """Convenience alias for the OQL channel (also at /api/v1/oql/ws)."""
-    await _oql_ws_handler(websocket)
+    await _forward_websocket(websocket, _oql_ws_handler)
 
 def _parse_server_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(

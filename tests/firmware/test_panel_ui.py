@@ -25,6 +25,8 @@ from fastapi.testclient import TestClient
 from oqlos.api.oql_mqtt import router as oql_router, set_oql_controller
 from oqlos.hardware.transport.manage_ops import list_manage_verbs
 from oqlos.hardware.transport.mqtt_oql_bridge import OqlResponse
+from oqlos.tools.cql_cli.commands import run_source
+from oqlos.tools.cql_cli.utils import build_result_payload
 
 PANEL_HTML = Path(__file__).resolve().parents[2] / "oqlos" / "api" / "static" / "panel.html"
 
@@ -60,6 +62,17 @@ def test_panel_route_serves_html():
     assert 'id="editor"' in body
     assert "/api/v1/oql/execute" in body
     assert "/api/v1/oql/manage" in body
+
+
+def test_health_route_contains_redeploy_probe_token():
+    from oqlos.api.main import app
+
+    client = TestClient(app)
+    resp = client.get("/health")
+
+    assert resp.status_code == 200
+    assert resp.json()["status"] == "ok"
+    assert resp.json()["healthy"] is True
 
 
 # --------------------------------------------------------------------------- #
@@ -136,6 +149,32 @@ def test_panel_flow_script_payload_dispatches(client_with_controller):
     assert resp.status_code == 200
     assert fake.calls[0]["oql"] == script
     assert fake.calls[0]["mode"] == "dry-run"
+
+
+def test_panel_script_without_version_executes_named_goal():
+    """Regression: panel-composed GOAL/SET NAME scripts must not report zero steps."""
+    script = "SCENARIO: Mój test\nGOAL:\n  SET NAME 'Opis'\n  SET 'pump' 25"
+
+    payloads = {}
+    for mode in ("validate", "dry-run"):
+        result = run_source(
+            script,
+            "<mqtt>",
+            mode=mode,
+            quiet=True,
+            sensors={},
+            firmware_url="http://127.0.0.1:8202",
+            skip_waits=True,
+        )
+        payloads[mode] = build_result_payload(result)
+
+    assert payloads["validate"]["ok"] is True
+    assert payloads["validate"]["total"] == 1
+    assert payloads["validate"]["steps"][0]["status"] == "pending"
+    assert payloads["dry-run"]["ok"] is True
+    assert payloads["dry-run"]["total"] == 1
+    assert payloads["dry-run"]["passed"] == 1
+    assert payloads["dry-run"]["steps"][0]["name"] == "1. Opis"
 
 
 def test_panel_manage_payload_dispatches(client_with_controller):

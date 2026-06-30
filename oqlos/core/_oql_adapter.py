@@ -355,11 +355,31 @@ def _parse_macro_line(
 # ── Public entrypoint ────────────────────────────────────────────
 
 
+def _has_anonymous_named_goal(source: str) -> bool:
+    in_goal = False
+    for raw in source.splitlines():
+        stripped = raw.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        if re.match(r"^(GOAL|CONFIG|MACRO)\b.*:\s*$", stripped, re.IGNORECASE):
+            in_goal = bool(re.match(r"^GOAL\s*:\s*$", stripped, re.IGNORECASE))
+            continue
+        if not in_goal:
+            continue
+        if not raw.startswith((" ", "\t")):
+            in_goal = False
+            continue
+        if re.match(r"^[ \t]+SET\s+NAME\b", raw, re.IGNORECASE):
+            return True
+    return False
+
+
 def is_flat_oql(source: str) -> bool:
     """Heuristic: detect flat OQL source (v3/v4).
 
     Returns ``True`` when the text clearly uses OQL syntax, including:
     - explicit ``VERSION: 4`` header,
+    - anonymous ``GOAL:`` blocks named by an indented ``SET NAME`` line,
     - ``GOAL name:`` / ``CONFIG name:`` / ``MACRO name:`` style blocks,
     - top-level ``INCLUDE "..."`` directives.
 
@@ -370,7 +390,7 @@ def is_flat_oql(source: str) -> bool:
     version_re = re.compile(r"^\s*VERSION\s*:\s*\d+\s*$", re.M | re.IGNORECASE)
     connectgo_re = re.compile(r"^\s*@\w+(?:\.\w+)*\s*$", re.M)
     block_re = re.compile(r"^\s*(GOAL|CONFIG|MACRO)\s+[^\s:][^:]*:\s*$", re.M)
-    legacy_re = re.compile(r"^\s*(GOAL|CONFIG)\s*:\s*\S", re.M)
+    legacy_re = re.compile(r"^\s*(GOAL|CONFIG)[ \t]*:[ \t]*\S", re.M)
     include_re = re.compile(r"^\s*INCLUDE\s+[\"']", re.M)
 
     if connectgo_re.search(source):
@@ -379,7 +399,7 @@ def is_flat_oql(source: str) -> bool:
     if version_re.search(source):
         return True
 
-    has_new = bool(block_re.search(source) or include_re.search(source))
+    has_new = bool(block_re.search(source) or _has_anonymous_named_goal(source) or include_re.search(source))
     has_legacy = bool(legacy_re.search(source))
     if has_new and not has_legacy:
         return True

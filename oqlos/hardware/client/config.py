@@ -10,21 +10,19 @@ from oqlos.hardware.client.constants import DEFAULT_OQLOS_API_BASE
 
 
 def float_from_env(env: Mapping[str, str], key: str, default: float) -> float:
-    raw = env.get(key)
-    if raw in (None, ""):
-        return default
-    try:
-        return float(raw)
-    except (TypeError, ValueError):
-        return default
+    return _value_from_env(env, key, default, float)
 
 
 def int_from_env(env: Mapping[str, str], key: str, default: int) -> int:
+    return _value_from_env(env, key, default, int)
+
+
+def _value_from_env(env: Mapping[str, str], key: str, default, caster):
     raw = env.get(key)
     if raw in (None, ""):
         return default
     try:
-        return int(raw)
+        return caster(raw)
     except (TypeError, ValueError):
         return default
 

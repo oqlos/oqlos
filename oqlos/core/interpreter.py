@@ -162,11 +162,24 @@ class CqlInterpreter(BaseInterpreter):
             self.warnings.append(issue)
             self.out.warn(issue)
 
-    def _run_validation_mode(self, name: str, issues: list[str], t0: float) -> ScriptResult:
+    def _planned_step_results(self, all_goals: list[tuple[str, CqlGoal]]) -> list[StepResult]:
+        planned: list[StepResult] = []
+        for _sc_name, goal in all_goals:
+            for step in goal.steps:
+                planned.append(StepResult(name=f"{step.number}. {step.name}", status=StepStatus.PENDING))
+        return planned
+
+    def _run_validation_mode(
+        self,
+        name: str,
+        issues: list[str],
+        t0: float,
+        all_goals: list[tuple[str, CqlGoal]],
+    ) -> ScriptResult:
         """Return early result for validate mode."""
         ok = len(issues) == 0
         return ScriptResult(
-            source=name, ok=ok, steps=self.results,
+            source=name, ok=ok, steps=self._planned_step_results(all_goals),
             variables=self.vars.all(), errors=self.errors,
             warnings=self.warnings, duration_ms=(time.monotonic() - t0) * 1000,
         )
@@ -222,13 +235,14 @@ class CqlInterpreter(BaseInterpreter):
         issues = validate_cql(doc)
         self._collect_warnings(doc, issues)
 
+        all_goals = self._collect_all_goals(doc)
+
         if self.mode == "validate":
-            return self._run_validation_mode(name, issues, t0)
+            return self._run_validation_mode(name, issues, t0, all_goals)
 
         if self._sensor_eval._auto_mock:
             self._sensor_eval.seed_sensors_from_conditions(doc)
 
-        all_goals = self._collect_all_goals(doc)
         self._execute_all_goals(all_goals)
 
         return self._build_script_result(name, t0)

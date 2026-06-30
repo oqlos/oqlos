@@ -1,6 +1,6 @@
 # code2llm call graph | /home/tom/github/oqlos/oqlos
-# generated in 0.39s
-# nodes: 427 | edges: 500 | modules: 37
+# generated in 0.23s
+# nodes: 428 | edges: 500 | modules: 43
 # CC̄=4.1
 
 HUBS[20]:
@@ -10,10 +10,6 @@ HUBS[20]:
     CC=8  in:43  out:3  total:46
   frontend.src.utils.hardware-wizard-steps.list
     CC=2  in:40  out:0  total:40
-  frontend.src.pages.HardwareRestart.runCurrentStep
-    CC=96  in:0  out:34  total:34
-  oqlos.core._oql_adapter.oql_doc_to_cql
-    CC=12  in:2  out:30  total:32
   oqlos.core.motor2_runtime.normalize_motor2_runtime_config
     CC=12  in:1  out:29  total:30
   oqlos.core.executor._safe_resolve
@@ -24,24 +20,28 @@ HUBS[20]:
     CC=8  in:1  out:24  total:25
   frontend.src.pages.MapEditor.applyMapMutation
     CC=2  in:16  out:8  total:24
-  oqlos.core.parser.parse_dsl_to_goal_with_issues
-    CC=13  in:3  out:21  total:24
   oqlos.core.oql_parser.parse_oql
     CC=14  in:3  out:21  total:24
-  frontend.src.pages.HardwareRestart.log
-    CC=1  in:21  out:3  total:24
-  oqlos.core._action_motor2._try_exec_motor2_set
-    CC=13  in:1  out:22  total:23
+  oqlos.core.parser.parse_dsl_to_goal_with_issues
+    CC=13  in:3  out:21  total:24
   oqlos.core._action_motor2._motor2_build_plan
     CC=12  in:1  out:22  total:23
   oqlos.core._line_parsers._parse_if_condition
     CC=9  in:1  out:22  total:23
+  oqlos.tools.hardware_diagnose.doctor._analyze_modbus_adc_config
+    CC=12  in:1  out:22  total:23
+  oqlos.core._action_motor2._try_exec_motor2_set
+    CC=13  in:1  out:22  total:23
   oqlos.core._line_parsers._parse_set_line
     CC=12  in:1  out:21  total:22
   frontend.src.utils.useSelectionCollapsePanel.RAIL_HOVER_OPEN_MS
     CC=33  in:0  out:21  total:21
-  frontend.src.utils.useSelectionCollapsePanel.useSelectionCollapsePanel
+  frontend.src.utils.useSelectionCollapsePanel.RAIL_HOVER_CLOSE_MS
     CC=33  in:0  out:21  total:21
+  oqlos.hardware.config_paths.resolve_oqlos_config_path
+    CC=6  in:8  out:13  total:21
+  oqlos.core.base.VariableStore.set
+    CC=4  in:19  out:2  total:21
   oqlos.core._cql_tree_builder._parse_goal_line
     CC=12  in:1  out:20  total:21
 
@@ -114,17 +114,8 @@ MODULES:
     onNoteClick  CC=4  out:9
     playMelody  CC=9  out:11
     playNote  CC=5  out:7
-  frontend.src.pages.HardwareRestart  [31 funcs]
-    advanceOk  CC=3  out:2
-    attempt  CC=16  out:8
-    canRunCurrentStep  CC=1  out:4
-    confirmErrorKey  CC=1  out:4
-    confirmLabelKey  CC=1  out:4
-    currentStep  CC=1  out:4
-    isConfigureStep  CC=1  out:4
-    isSeparateAdapters  CC=1  out:4
-    loadPlan  CC=18  out:11
-    log  CC=1  out:3
+  frontend.src.pages.HardwareRestart  [1 funcs]
+    probe  CC=1  out:2
   frontend.src.pages.MapEditor  [49 funcs]
     addAction  CC=2  out:6
     addFunc  CC=2  out:6
@@ -180,7 +171,8 @@ MODULES:
     previewCollapse  CC=1  out:2
   oqlos.config  [1 funcs]
     get_settings  CC=1  out:0
-  oqlos.core._action_motor2  [26 funcs]
+  oqlos.core._action_motor2  [30 funcs]
+    _call_motor2_transport  CC=4  out:4
     _handle_motor2_reciprocating_setting  CC=2  out:4
     _motor2_acceleration_raw  CC=1  out:2
     _motor2_build_plan  CC=12  out:22
@@ -189,8 +181,7 @@ MODULES:
     _motor2_effective_steps_per_second  CC=1  out:4
     _motor2_max_steps_per_second  CC=1  out:1
     _motor2_reciprocating_state  CC=2  out:3
-    _motor2_speed_for_duration  CC=1  out:1
-    _motor2_speed_raw  CC=1  out:2
+    _motor2_set_state_value  CC=1  out:1
   oqlos.core._compare  [2 funcs]
     resolve_compare  CC=2  out:5
     resolve_compare_chain  CC=3  out:4
@@ -205,14 +196,12 @@ MODULES:
     _try_save  CC=5  out:7
     _try_set  CC=2  out:6
     _try_val  CC=2  out:4
-  oqlos.core._cql_tree_builder  [9 funcs]
+  oqlos.core._cql_tree_builder  [7 funcs]
     _ensure_goal_for_step  CC=4  out:3
     _ensure_step_for_actions  CC=3  out:2
     _parse_action_line  CC=4  out:3
-    _parse_goal_attrs  CC=4  out:7
     _parse_goal_line  CC=12  out:20
     _parse_metadata_kv  CC=6  out:5
-    _parse_scenario_attrs  CC=4  out:6
     _parse_scenario_line  CC=3  out:6
     _parse_step_line  CC=3  out:5
   oqlos.core._dsl_helpers  [12 funcs]
@@ -231,7 +220,7 @@ MODULES:
     _extract_func_name  CC=7  out:7
     _guard_recursion  CC=3  out:5
     _parse_func_call  CC=5  out:4
-  oqlos.core._interpreter_actions  [30 funcs]
+  oqlos.core._interpreter_actions  [27 funcs]
     _assert_json  CC=6  out:9
     _assert_sensor  CC=4  out:9
     _assert_status  CC=5  out:7
@@ -252,36 +241,31 @@ MODULES:
     _set_lung_step  CC=4  out:3
     _set_pump_step  CC=4  out:3
     _set_valve_step  CC=4  out:4
-  oqlos.core._oql_adapter  [15 funcs]
-    register  CC=1  out:1
-    _cmd_to_actions  CC=2  out:3
-    _fmt_value  CC=2  out:1
-    _load_includes  CC=12  out:15
-    _lower_call  CC=6  out:10
-    _lower_max  CC=1  out:3
-    _lower_min  CC=1  out:3
-    _lower_set  CC=1  out:3
-    _parse_macro_line  CC=8  out:10
-    _resolve_include  CC=6  out:8
+  oqlos.core._oql_adapter  [2 funcs]
+    is_flat_oql  CC=8  out:13
+    parse_flat_oql  CC=1  out:2
+  oqlos.core._sensor_evaluator  [2 funcs]
+    __init__  CC=3  out:2
+    collect_sensor_constraints  CC=10  out:5
   oqlos.core._value_normalizers  [1 funcs]
     coerce_float  CC=5  out:9
-  oqlos.core.base  [5 funcs]
+  oqlos.core.base  [6 funcs]
     send_event  CC=4  out:7
     emit  CC=5  out:3
     output_yaml  CC=4  out:2
     __init__  CC=2  out:1
     all  CC=3  out:3
-  oqlos.core.cql_parser  [11 funcs]
+    set  CC=4  out:2
+  oqlos.core.cql_parser  [9 funcs]
     _handle_goal  CC=3  out:5
-    _handle_goal_attrs  CC=3  out:1
     _handle_scenario  CC=2  out:3
-    _handle_scenario_attrs  CC=3  out:1
     _handle_step  CC=2  out:4
     _try_hierarchy  CC=7  out:6
     _try_top_level  CC=2  out:1
     _collect_all_goals  CC=2  out:2
     _validate_intervals  CC=6  out:1
     parse_cql  CC=2  out:6
+    validate_cql  CC=5  out:5
   oqlos.core.executor  [6 funcs]
     _execute_validate_step  CC=7  out:7
     validate_goal  CC=5  out:3
@@ -289,12 +273,6 @@ MODULES:
     _resolve_name_or_attr  CC=4  out:6
     _safe_resolve  CC=14  out:21
     safe_eval_condition  CC=2  out:5
-  oqlos.core.interpreter  [5 funcs]
-    __init__  CC=1  out:5
-    _build_script_result  CC=2  out:7
-    _exec_flat_action  CC=6  out:6
-    execute  CC=4  out:9
-    parse  CC=3  out:5
   oqlos.core.motor2_runtime  [11 funcs]
     _coerce_int  CC=3  out:6
     _compute_motor2_cycles  CC=3  out:7
@@ -336,6 +314,38 @@ MODULES:
     _eval_node  CC=2  out:5
     _eval_unary_op  CC=3  out:5
     safe_eval  CC=3  out:4
+  oqlos.hardware.config_paths  [1 funcs]
+    resolve_oqlos_config_path  CC=6  out:13
+  oqlos.hardware.health_status  [1 funcs]
+    health_status_is_ok  CC=11  out:9
+  oqlos.tools.hardware_diagnose.discovery  [2 funcs]
+    list_i2c_buses  CC=1  out:2
+    list_usb_serial_devices  CC=7  out:9
+  oqlos.tools.hardware_diagnose.doctor  [31 funcs]
+    _adapter_health_status  CC=3  out:1
+    _add_issue  CC=2  out:1
+    _analyze_firmware_access  CC=7  out:11
+    _analyze_modbus_adc_config  CC=12  out:22
+    _analyze_modbus_config  CC=11  out:20
+    _analyze_serial_port_owners  CC=13  out:19
+    _canonical_device_path  CC=2  out:3
+    _check_firmware_adapters  CC=7  out:9
+    _check_firmware_health_error  CC=3  out:2
+    _check_firmware_mode  CC=3  out:4
+  oqlos.tools.hardware_diagnose.health  [2 funcs]
+    check_firmware_health  CC=1  out:1
+    check_firmware_identify  CC=1  out:1
+  oqlos.tools.plugin_cli  [12 funcs]
+    _default_config_path  CC=1  out:2
+    _load_config_file  CC=4  out:16
+    cmd_capabilities  CC=2  out:6
+    cmd_connect  CC=4  out:6
+    cmd_disconnect  CC=2  out:4
+    cmd_execute  CC=3  out:7
+    cmd_health  CC=3  out:8
+    cmd_list  CC=3  out:9
+    cmd_peripherals  CC=8  out:16
+    cmd_reload  CC=4  out:10
   setup_hardware_and_run_oql  [6 funcs]
     detect_serial_devices  CC=12  out:7
     generate_env_content  CC=2  out:1

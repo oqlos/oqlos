@@ -11,7 +11,12 @@ import re
 import time
 from typing import Any, TYPE_CHECKING
 
-from oqlos.core._action_motor2 import _try_exec_motor2_set
+from oqlos.core._action_motor2 import (
+    _post_motor2_move_relative,
+    _post_motor2_reciprocate,
+    _post_motor2_stop,
+    _try_exec_motor2_set,
+)
 from oqlos.models.dsl_models import CqlAction, CqlCondition
 
 if TYPE_CHECKING:
@@ -359,14 +364,8 @@ def _func_sum(values: list[float]) -> float:
     return sum(values)
 
 
-def _func_min(values: list[float]) -> float:
-    """Find minimum value."""
-    return min(values) if values else 0.0
-
-
-def _func_max(values: list[float]) -> float:
-    """Find maximum value."""
-    return max(values) if values else 0.0
+def _func_reduce_or_zero(values: list[float], reducer) -> float:
+    return reducer(values) if values else 0.0
 
 
 def _func_sub(values: list[float]) -> float:
@@ -395,17 +394,15 @@ def _func_mul(values: list[float]) -> float:
     return result
 
 
-def _func_add(values: list[float]) -> float:
-    """Add all values (alias for SUM)."""
-    return sum(values)
+_func_add = _func_sum
 
 
 # Dispatch table for FUNC handlers: method -> handler function
 _FUNC_HANDLERS: dict[str, callable] = {
     "AVG": _func_avg,
     "SUM": _func_sum,
-    "MIN": _func_min,
-    "MAX": _func_max,
+    "MIN": lambda values: _func_reduce_or_zero(values, min),
+    "MAX": lambda values: _func_reduce_or_zero(values, max),
     "SUB": _func_sub,
     "DIV": _func_div,
     "MUL": _func_mul,

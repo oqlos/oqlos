@@ -95,30 +95,26 @@ def _dri0050_paths() -> tuple[Path, Path, str, str]:
     return repo_root, python, serial, freq
 
 
-async def _http_sidecar_listening(*, attempts: int = 4, timeout: float = 1.5) -> bool:
-    """Sidecar process up (any HTTP response), including 503 serial I/O."""
-    for _ in range(attempts):
-        try:
-            async with httpx.AsyncClient(timeout=timeout) as client:
-                await client.get(DRI0050_HEALTH_URL)
-            return True
-        except (httpx.HTTPError, OSError):
-            pass
-        await asyncio.sleep(0.25)
-    return False
-
-
-async def _http_sidecar_healthy(*, attempts: int = 12, timeout: float = 1.5) -> bool:
+async def _http_sidecar_probe(*, attempts: int, timeout: float, healthy_only: bool) -> bool:
     for _ in range(attempts):
         try:
             async with httpx.AsyncClient(timeout=timeout) as client:
                 resp = await client.get(DRI0050_HEALTH_URL)
-            if resp.status_code < 300:
+            if not healthy_only or resp.status_code < 300:
                 return True
         except (httpx.HTTPError, OSError):
             pass
         await asyncio.sleep(0.25)
     return False
+
+
+async def _http_sidecar_listening(*, attempts: int = 4, timeout: float = 1.5) -> bool:
+    """Sidecar process up (any HTTP response), including 503 serial I/O."""
+    return await _http_sidecar_probe(attempts=attempts, timeout=timeout, healthy_only=False)
+
+
+async def _http_sidecar_healthy(*, attempts: int = 12, timeout: float = 1.5) -> bool:
+    return await _http_sidecar_probe(attempts=attempts, timeout=timeout, healthy_only=True)
 
 
 async def _run_cmd(*args: str, timeout: float = 60.0) -> tuple[int, str, str]:

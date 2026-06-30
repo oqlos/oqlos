@@ -656,6 +656,21 @@ _curl_get() {
   curl -sf --max-time "$timeout" "$url" > "$out"
 }
 
+_wait_get() {
+  local url="$1"
+  local out="$2"
+  local attempts="${3:-45}"
+  local timeout="${4:-8}"
+  local i
+  for i in $(seq 1 "$attempts"); do
+    if _curl_get "$url" "$out" "$timeout"; then
+      return 0
+    fi
+    sleep 1
+  done
+  return 1
+}
+
 _curl_post() {
   local url="$1"
   local out="$2"
@@ -676,7 +691,7 @@ else
   _pass "brak duplikatu OqlOS na :8200"
 fi
 
-if _curl_get http://127.0.0.1:8202/health "$TMPDIR/oqlos-health.json"; then
+if _wait_get http://127.0.0.1:8202/health "$TMPDIR/oqlos-health.json" 45 3; then
   if python3 - "$TMPDIR/oqlos-health.json" <<'PY'
 import json, sys
 data = json.load(open(sys.argv[1], encoding="utf-8"))
@@ -1080,7 +1095,7 @@ target:
   strategy: systemd
   host: pi@boardnet.local
   remote_dir: ~/oqlos
-  verify_url: http://192.168.188.122:1883
+  verify_url: http://192.168.188.122:8202/health
 ```
 
 ```yaml markpact:steps

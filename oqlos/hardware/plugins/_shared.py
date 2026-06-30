@@ -37,19 +37,17 @@ async def http_health_check(
 
 
 def not_connected_health(label: str) -> PluginHealth:
-    """Return error health when plugin has no active client."""
-    return PluginHealth(
-        status=PluginStatus.ERROR,
-        message=f"Not connected to {label}",
-        compatible=False,
-    )
+    return _error_health(f"Not connected to {label}")
 
 
 def health_check_exception(exc: Exception) -> PluginHealth:
-    """Return error health for unexpected exceptions."""
+    return _error_health(f"Health check exception: {exc}")
+
+
+def _error_health(message: str) -> PluginHealth:
     return PluginHealth(
         status=PluginStatus.ERROR,
-        message=f"Health check exception: {exc}",
+        message=message,
         compatible=False,
     )
 

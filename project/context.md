@@ -5,12 +5,12 @@
 
 - **Project**: /home/tom/github/oqlos/oqlos
 - **Primary Language**: python
-- **Languages**: python: 149, javascript: 35, md: 18, yaml: 13, shell: 9
+- **Languages**: python: 153, javascript: 35, md: 18, yaml: 13, shell: 9
 - **Analysis Mode**: static
-- **Total Functions**: 2075
+- **Total Functions**: 2082
 - **Total Classes**: 123
-- **Modules**: 242
-- **Entry Points**: 1255
+- **Modules**: 246
+- **Entry Points**: 1254
 
 ## Architecture by Module
 
@@ -23,7 +23,7 @@
 - **File**: `hardware.py`
 
 ### frontend.src.pages.HardwareRestart
-- **Functions**: 73
+- **Functions**: 80
 - **File**: `HardwareRestart.jsx`
 
 ### frontend.src.api.hardwareApi
@@ -35,22 +35,17 @@
 - **File**: `useUrlConfig.js`
 
 ### oqlos.core._interpreter_actions
-- **Functions**: 51
+- **Functions**: 49
 - **File**: `_interpreter_actions.py`
 
 ### oqlos.core.interpreter
-- **Functions**: 47
+- **Functions**: 48
 - **Classes**: 1
 - **File**: `interpreter.py`
 
 ### frontend.src.pages.HardwareDemo
 - **Functions**: 46
 - **File**: `HardwareDemo.jsx`
-
-### oqlos.api.hardware_v3
-- **Functions**: 46
-- **Classes**: 9
-- **File**: `hardware_v3.py`
 
 ### oqlos.core.oql_parser
 - **Functions**: 43
@@ -66,10 +61,6 @@
 - **Functions**: 42
 - **File**: `doctor.py`
 
-### oqlos.core._action_motor2
-- **Functions**: 34
-- **File**: `_action_motor2.py`
-
 ### oqlos.hardware.transport.mqtt_oql_bridge
 - **Functions**: 34
 - **Classes**: 6
@@ -80,6 +71,10 @@
 - **Classes**: 1
 - **File**: `wsClient.js`
 
+### oqlos.core._action_motor2
+- **Functions**: 30
+- **File**: `_action_motor2.py`
+
 ### oqlos.core.cql_parser
 - **Functions**: 30
 - **Classes**: 1
@@ -89,20 +84,24 @@
 - **Functions**: 30
 - **File**: `tic249_extended.py`
 
+### oqlos.core.base
+- **Functions**: 29
+- **Classes**: 7
+- **File**: `base.py`
+
 ### oqlos.hardware.client.proxy
 - **Functions**: 29
 - **Classes**: 1
 - **File**: `proxy.py`
 
-### oqlos.core.base
-- **Functions**: 28
-- **Classes**: 7
-- **File**: `base.py`
-
 ### oqlos.core._oql_adapter
-- **Functions**: 28
+- **Functions**: 29
 - **Classes**: 1
 - **File**: `_oql_adapter.py`
+
+### oqlos.core._cql_tokenizer
+- **Functions**: 27
+- **File**: `_cql_tokenizer.py`
 
 ## Key Entry Points
 
@@ -127,9 +126,6 @@ valve commands to POST /api/v1/hardware/valve/{id} so t
 
 ### oqlos.tools.plugin_cli.main
 - **Calls**: argparse.ArgumentParser, parser.add_subparsers, subparsers.add_parser, subparsers.add_parser, subparsers.add_parser, caps_parser.add_argument, subparsers.add_parser, validate_parser.add_argument
-
-### frontend.src.pages.HardwareRestart.runCurrentStep
-- **Calls**: frontend.src.pages.HardwareRestart.useCallback, frontend.src.pages.HardwareRestart.setStepLog, frontend.src.pages.HardwareRestart.timestamp, frontend.src.pages.HardwareRestart.push, frontend.src.pages.HardwareRestart.setBusy, frontend.src.pages.HardwareRestart.log, frontend.src.pages.HardwareRestart.action, frontend.src.pages.HardwareRestart.formatHardwareApiError
 
 ### frontend.src.context.AppConfigProvider.AppConfigContext
 - **Calls**: frontend.src.context.AppConfigProvider.useUrlConfig, frontend.src.context.AppConfigProvider.useEffect, frontend.src.context.AppConfigProvider.setAttribute, frontend.src.context.AppConfigProvider.setProperty, frontend.src.context.AppConfigProvider.not, frontend.src.context.AppConfigProvider.join, frontend.src.context.AppConfigProvider.from, frontend.src.context.AppConfigProvider.querySelectorAll
@@ -165,12 +161,12 @@ valve commands to POST /api/v1/hardware/valve/{id} so t
 > Probe configured I2C bus(es) for ADS1115.
 - **Calls**: os.getenv, os.getenv, os.getenv, os.getenv, oqlos.api.hardware._local_ads1115_probe_allowed, int, frontend.src.utils.hardware-wizard-steps.list, None.join
 
-### oqlos.shared.event_server.EventServer._handle_message
-- **Calls**: json.loads, self._normalize_event, self.event_store.append, None.get, examples.hardware.doctor-workflow.print, data.get, data.get, data.get
-
 ### oqlos.hardware.plugin_gateway.PluginHardwareGateway._initialize_plugins
 > Initialize all enabled plugins in parallel.
 - **Calls**: logger.warning, logger.info, logger.info, None.append, str, config.connection_params.get, logger.info, self._plugin_configs.items
+
+### oqlos.shared.event_server.EventServer._handle_message
+- **Calls**: json.loads, self._normalize_event, self.event_store.append, None.get, examples.hardware.doctor-workflow.print, data.get, data.get, data.get
 
 ### oqlos.api.hardware.read_modbus_adc_raw
 > Return raw Modbus ADC diagnostics for HUI troubleshooting.
@@ -193,7 +189,7 @@ valve commands to POST /api/v1/hardware/valve/{id} so t
 
 ### oqlos.tools.xml_import.generators.generate_dsl
 > Generate human-readable DSL text from parsed report.
-- **Calls**: frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a
+- **Calls**: frontend.src.pages.HardwareDemo.a, frontend.src.pages.HardwareDemo.a, frontend.src.pages.HardwareDemo.a, frontend.src.pages.HardwareDemo.a, frontend.src.pages.HardwareDemo.a, frontend.src.pages.HardwareDemo.a, frontend.src.pages.HardwareDemo.a, frontend.src.pages.HardwareDemo.a
 
 ### oqlos.hardware.plugins.motor.MotorPlugin.__init__
 - **Calls**: None.__init__, None.rstrip, self.config.connection_params.get, self.config.connection_params.get, params.get, int, str, int
@@ -222,6 +218,9 @@ Expected payload::
         "step": { "action"
 - **Calls**: router.post, payload.get, payload.get, payload.get, Step, HTTPException, hasattr, _ctrl.state_manager.executions.get
 
+### oqlos.api.hardware._build_waveshare_diagnose_report
+- **Calls**: oqlos.api.hardware._modbus_io_device_ids, int, sorted, oqlos.api.hardware._modbus_runtime_serial_ports, oqlos.api.hardware._resolve_waveshare_ports, int, str, int
+
 ## Process Flows
 
 Key execution flows identified:
@@ -249,36 +248,31 @@ set_peripheral [oqlos.hardware.firmware_adapter.FirmwareAdapter]
 main [scripts.migrate_to_v4]
 ```
 
-### Flow 4: runCurrentStep
-```
-runCurrentStep [frontend.src.pages.HardwareRestart]
-```
-
-### Flow 5: AppConfigContext
+### Flow 4: AppConfigContext
 ```
 AppConfigContext [frontend.src.context.AppConfigProvider]
 ```
 
-### Flow 6: AppConfigProvider
+### Flow 5: AppConfigProvider
 ```
 AppConfigProvider [frontend.src.context.AppConfigProvider]
 ```
 
-### Flow 7: pi_system_diagnostics
+### Flow 6: pi_system_diagnostics
 ```
 pi_system_diagnostics [oqlos.hardware.usb_diagnostics]
   └─> _read
   └─> _read
 ```
 
-### Flow 8: useUrlConfig
+### Flow 7: useUrlConfig
 ```
 useUrlConfig [frontend.src.hooks.useUrlConfig]
   └─> parseParams
       └─> parseAppearanceParams
 ```
 
-### Flow 9: build_rtc_peripheral_status
+### Flow 8: build_rtc_peripheral_status
 ```
 build_rtc_peripheral_status [oqlos.hardware.rtc_probe]
   └─> _pirtc_request_sync
@@ -287,11 +281,18 @@ build_rtc_peripheral_status [oqlos.hardware.rtc_probe]
       └─> get_pirtc_base_url
 ```
 
-### Flow 10: _handle_start
+### Flow 9: _handle_start
 ```
 _handle_start [oqlos.api.state]
   └─> _extract_scenario_id
   └─> _extract_inline_dsl
+```
+
+### Flow 10: _modbus_wizard_program_isolated
+```
+_modbus_wizard_program_isolated [oqlos.api.hardware]
+  └─> _wizard_check_already_configured
+  └─> _wizard_verify_config
 ```
 
 ## Key Classes
@@ -300,7 +301,7 @@ _handle_start [oqlos.api.state]
 > CQL interpreter with three modes:
   - validate: parse + check structure
   - dry-run:  simulate execu
-- **Methods**: 50
+- **Methods**: 51
 - **Key Methods**: oqlos.core.interpreter.CqlInterpreter.__init__, oqlos.core.interpreter.CqlInterpreter.sensor_values, oqlos.core.interpreter.CqlInterpreter.sensor_values, oqlos.core.interpreter.CqlInterpreter._firmware, oqlos.core.interpreter.CqlInterpreter._firmware, oqlos.core.interpreter.CqlInterpreter._firmware_url, oqlos.core.interpreter.CqlInterpreter._firmware_url, oqlos.core.interpreter.CqlInterpreter._coerce_float, oqlos.core.interpreter.CqlInterpreter._resolve_peripheral_id, oqlos.core.interpreter.CqlInterpreter._get_pump_flow_full_scale_lpm
 - **Inherits**: BaseInterpreter
 
@@ -317,17 +318,17 @@ _handle_start [oqlos.api.state]
 - **Methods**: 25
 - **Key Methods**: frontend.src.api.wsClient.WsCqrsClient.super, frontend.src.api.wsClient.WsCqrsClient.connected, frontend.src.api.wsClient.WsCqrsClient.connect, frontend.src.api.wsClient.WsCqrsClient.reject, frontend.src.api.wsClient.WsCqrsClient.resolve, frontend.src.api.wsClient.WsCqrsClient.reject, frontend.src.api.wsClient.WsCqrsClient.disconnect, frontend.src.api.wsClient.WsCqrsClient.command, frontend.src.api.wsClient.WsCqrsClient.query, frontend.src.api.wsClient.WsCqrsClient.subscribe
 
-### oqlos.hardware.firmware_adapter.FirmwareAdapter
-> HTTP bridge between CQL interpreter and firmware simulator.
-- **Methods**: 23
-- **Key Methods**: oqlos.hardware.firmware_adapter.FirmwareAdapter.__init__, oqlos.hardware.firmware_adapter.FirmwareAdapter._get_client, oqlos.hardware.firmware_adapter.FirmwareAdapter.close, oqlos.hardware.firmware_adapter.FirmwareAdapter._get_lung_motor_url, oqlos.hardware.firmware_adapter.FirmwareAdapter.is_available, oqlos.hardware.firmware_adapter.FirmwareAdapter._resolve_peripheral, oqlos.hardware.firmware_adapter.FirmwareAdapter._raise_if_rejected, oqlos.hardware.firmware_adapter.FirmwareAdapter.set_peripheral, oqlos.hardware.firmware_adapter.FirmwareAdapter.pump_off, oqlos.hardware.firmware_adapter.FirmwareAdapter.pump_set
-
 ### oqlos.hardware.plugin_gateway.PluginHardwareGateway
 > Simplified hardware gateway using plugin architecture.
 
 Instead of hardcoded adapters, this gateway 
 - **Methods**: 23
 - **Key Methods**: oqlos.hardware.plugin_gateway.PluginHardwareGateway.__init__, oqlos.hardware.plugin_gateway.PluginHardwareGateway._load_hardware_schema, oqlos.hardware.plugin_gateway.PluginHardwareGateway._parse_plugin_configs, oqlos.hardware.plugin_gateway.PluginHardwareGateway._apply_env_overrides, oqlos.hardware.plugin_gateway.PluginHardwareGateway._apply_plugin_enable_env_overrides, oqlos.hardware.plugin_gateway.PluginHardwareGateway._apply_shared_modbus_bus_env_overrides, oqlos.hardware.plugin_gateway.PluginHardwareGateway._apply_modbus_env_overrides, oqlos.hardware.plugin_gateway.PluginHardwareGateway.modbus_preflight_report, oqlos.hardware.plugin_gateway.PluginHardwareGateway._log_modbus_preflight, oqlos.hardware.plugin_gateway.PluginHardwareGateway.ensure_initialized
+
+### oqlos.hardware.firmware_adapter.FirmwareAdapter
+> HTTP bridge between CQL interpreter and firmware simulator.
+- **Methods**: 23
+- **Key Methods**: oqlos.hardware.firmware_adapter.FirmwareAdapter.__init__, oqlos.hardware.firmware_adapter.FirmwareAdapter._get_client, oqlos.hardware.firmware_adapter.FirmwareAdapter.close, oqlos.hardware.firmware_adapter.FirmwareAdapter._get_lung_motor_url, oqlos.hardware.firmware_adapter.FirmwareAdapter.is_available, oqlos.hardware.firmware_adapter.FirmwareAdapter._resolve_peripheral, oqlos.hardware.firmware_adapter.FirmwareAdapter._raise_if_rejected, oqlos.hardware.firmware_adapter.FirmwareAdapter.set_peripheral, oqlos.hardware.firmware_adapter.FirmwareAdapter.pump_off, oqlos.hardware.firmware_adapter.FirmwareAdapter.pump_set
 
 ### oqlos.hardware.plugins.lung.LungPlugin
 > Plugin for Pololu Tic T249 stepper motor (artificial lung).
@@ -378,6 +379,11 @@ Manages:
 - **Methods**: 14
 - **Key Methods**: oqlos.hardware.plugins.registry.PluginRegistry.register, oqlos.hardware.plugins.registry.PluginRegistry.unregister, oqlos.hardware.plugins.registry.PluginRegistry.get_plugin_class, oqlos.hardware.plugins.registry.PluginRegistry.list_plugins, oqlos.hardware.plugins.registry.PluginRegistry.create_instance, oqlos.hardware.plugins.registry.PluginRegistry.get_instance, oqlos.hardware.plugins.registry.PluginRegistry.connect_plugin, oqlos.hardware.plugins.registry.PluginRegistry.disconnect_plugin, oqlos.hardware.plugins.registry.PluginRegistry.health_check, oqlos.hardware.plugins.registry.PluginRegistry.health_check_all
 
+### oqlos.core.base.InterpreterOutput
+> Collects interpreter output lines for display or testing, and optionally broadcasts events.
+- **Methods**: 11
+- **Key Methods**: oqlos.core.base.InterpreterOutput.__init__, oqlos.core.base.InterpreterOutput.emit, oqlos.core.base.InterpreterOutput._broadcast_event, oqlos.core.base.InterpreterOutput._emit_status, oqlos.core.base.InterpreterOutput.info, oqlos.core.base.InterpreterOutput.ok, oqlos.core.base.InterpreterOutput.fail, oqlos.core.base.InterpreterOutput.warn, oqlos.core.base.InterpreterOutput.error, oqlos.core.base.InterpreterOutput.step
+
 ### oqlos.shared.event_store.EventStore
 > Append-only event store with optional JSON file persistence.
 - **Methods**: 11
@@ -386,11 +392,6 @@ Manages:
 ### oqlos.api.hardware_mapping_store.MappingStore
 - **Methods**: 11
 - **Key Methods**: oqlos.api.hardware_mapping_store.MappingStore.__init__, oqlos.api.hardware_mapping_store.MappingStore.file_path, oqlos.api.hardware_mapping_store.MappingStore.storage_backend, oqlos.api.hardware_mapping_store.MappingStore._load_from_disk, oqlos.api.hardware_mapping_store.MappingStore.save, oqlos.api.hardware_mapping_store.MappingStore.get, oqlos.api.hardware_mapping_store.MappingStore.replace, oqlos.api.hardware_mapping_store.MappingStore.reset, oqlos.api.hardware_mapping_store.MappingStore.parse_text, oqlos.api.hardware_mapping_store.MappingStore.import_text
-
-### oqlos.core.base.InterpreterOutput
-> Collects interpreter output lines for display or testing, and optionally broadcasts events.
-- **Methods**: 10
-- **Key Methods**: oqlos.core.base.InterpreterOutput.__init__, oqlos.core.base.InterpreterOutput.emit, oqlos.core.base.InterpreterOutput._broadcast_event, oqlos.core.base.InterpreterOutput.info, oqlos.core.base.InterpreterOutput.ok, oqlos.core.base.InterpreterOutput.fail, oqlos.core.base.InterpreterOutput.warn, oqlos.core.base.InterpreterOutput.error, oqlos.core.base.InterpreterOutput.step, oqlos.core.base.InterpreterOutput.output_yaml
 
 ### oqlos.hardware.plugins.base.HardwarePlugin
 > Base interface for hardware integration plugins.
@@ -527,16 +528,6 @@ Key functions that process and transform data:
 - **Confidence**: 0.90
 - **Functions**: oqlos.core.executor._safe_resolve
 
-### recursion__load_includes
-- **Type**: recursion
-- **Confidence**: 0.90
-- **Functions**: oqlos.core._oql_adapter._load_includes
-
-### recursion__do_sleep
-- **Type**: recursion
-- **Confidence**: 0.90
-- **Functions**: oqlos.core.interpreter.CqlInterpreter._do_sleep
-
 ### recursion__command_error_message
 - **Type**: recursion
 - **Confidence**: 0.90
@@ -546,6 +537,16 @@ Key functions that process and transform data:
 - **Type**: recursion
 - **Confidence**: 0.90
 - **Functions**: scripts.oql_validator_common.extract_code_from_json
+
+### recursion__load_includes
+- **Type**: recursion
+- **Confidence**: 0.90
+- **Functions**: oqlos.core._oql_adapter._load_includes
+
+### recursion__do_sleep
+- **Type**: recursion
+- **Confidence**: 0.90
+- **Functions**: oqlos.core.interpreter.CqlInterpreter._do_sleep
 
 ### state_machine_WsCqrsClient
 - **Type**: state_machine
@@ -601,13 +602,12 @@ Functions exposed as public API (no underscore prefix):
 - `scripts.migrate_to_v4.main` - 46 calls
 - `scripts.fix_brackets_to_v4.main` - 42 calls
 - `oqlos.tools.plugin_cli.main` - 36 calls
-- `frontend.src.pages.HardwareRestart.runCurrentStep` - 34 calls
 - `oqlos.hardware.usb_diagnostics.list_usb_devices` - 33 calls
 - `frontend.src.context.AppConfigProvider.AppConfigContext` - 31 calls
 - `frontend.src.context.AppConfigProvider.AppConfigProvider` - 31 calls
 - `oqlos.tools.cql_cli.formatting.canonicalize_oql_line` - 31 calls
-- `oqlos.core._oql_adapter.oql_doc_to_cql` - 30 calls
 - `scripts.oql_v2_to_v4_migrate_db.main` - 30 calls
+- `oqlos.core._oql_adapter.oql_doc_to_cql` - 30 calls
 - `oqlos.core.motor2_runtime.normalize_motor2_runtime_config` - 29 calls
 - `oqlos.hardware.diagnosis.build_diagnosis_report` - 28 calls
 - `oqlos.hardware.usb_diagnostics.pi_system_diagnostics` - 28 calls
@@ -615,12 +615,12 @@ Functions exposed as public API (no underscore prefix):
 - `oqlos.tools.hardware_diagnose.modbus_probe.probe_options_from_args` - 27 calls
 - `oqlos.hardware.rtc_probe.build_rtc_peripheral_status` - 27 calls
 - `oqlos.hardware.client.modbus_repair.rewrite_modbus_repair` - 26 calls
+- `oqlos.tools.hardware_diagnose.doctor.format_detection` - 25 calls
 - `oqlos.hardware.client.resolvers.extract_command_failure` - 25 calls
 - `oqlos.hardware.client.identify_enrich.enrich_adapter_entry` - 25 calls
 - `oqlos.hardware.client.identify_enrich.enrich_identify_payload` - 25 calls
 - `oqlos.reporters.html_report.render_html_report` - 25 calls
 - `scripts.scenarios_export.export_all_zip` - 25 calls
-- `oqlos.tools.hardware_diagnose.doctor.format_detection` - 25 calls
 - `setup_hardware_and_run_oql.run_oql_scenario` - 24 calls
 - `oqlos.shared.logger.configure_oqlos_logging` - 23 calls
 - `oqlos.api.hardware.read_modbus_adc_raw` - 23 calls
@@ -631,6 +631,7 @@ Functions exposed as public API (no underscore prefix):
 - `frontend.src.utils.useSelectionCollapsePanel.useSelectionCollapsePanel` - 21 calls
 - `oqlos.core.oql_parser.parse_oql` - 21 calls
 - `oqlos.core.parser.parse_dsl_to_goal_with_issues` - 21 calls
+- `oqlos.tools.hardware_diagnose.doctor.format_doctor` - 21 calls
 - `oqlos.tools.hardware_diagnose.__main__.main` - 21 calls
 - `oqlos.tools.xml_import.generators.generate_dsl` - 21 calls
 - `oqlos.api.oql_mqtt.oql_ws` - 21 calls
@@ -656,11 +657,6 @@ graph TD
     main --> Path
     main --> add_subparsers
     main --> add_parser
-    runCurrentStep --> useCallback
-    runCurrentStep --> setStepLog
-    runCurrentStep --> timestamp
-    runCurrentStep --> push
-    runCurrentStep --> setBusy
     AppConfigContext --> useUrlConfig
     AppConfigContext --> useEffect
     AppConfigContext --> setAttribute
@@ -673,6 +669,11 @@ graph TD
     AppConfigProvider --> not
     pi_system_diagnostic --> _read
     pi_system_diagnostic --> _vcgencmd
+    pi_system_diagnostic --> splitlines
+    useUrlConfig --> useState
+    useUrlConfig --> parseParams
+    useUrlConfig --> useEffect
+    useUrlConfig --> setConfig
 ```
 
 ## Reverse Engineering Guidelines
