@@ -532,11 +532,11 @@ fi
 name: "oqlos pi-hw deploy"
 description: "OqlOS hardware node + mosquitto na pi@192.168.188.110 — systemd --user, OQL-over-MQTT agent"
 source:
-  strategy: podman_quadlet
+  strategy: systemd
   host: pi@192.168.188.110
   remote_dir: ~/oqlos
 target:
-  strategy: podman_quadlet
+  strategy: systemd
   host: pi@192.168.188.110
   remote_dir: ~/oqlos
   verify_url: http://192.168.188.110:1883

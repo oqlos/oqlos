@@ -4,6 +4,7 @@
 .code2llm_cache/control_proxy_1778095454737928126_18888.pkl
 .code2llm_cache/project_1778095988177832301_1318.pkl
 code2llm_output
+node_modules
 .idea
 venv
 .venv
@@ -229,3 +230,6 @@ __pycache__/
 *.egg-info/
 dist/
 build/
+
+# Manifest sumy kontrolnej deployu (generowany przez scripts/gen-checksums.sh)
+oqlos/_CHECKSUMS.sha256

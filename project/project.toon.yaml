@@ -1,8 +1,8 @@
-# oqlos | 1988 func | 159f | 53032L | python | 2026-06-30
+# oqlos | 2065 func | 163f | 54159L | python | 2026-06-30
 # generated in 0.00s
 
 HEALTH:
-  CC̄=4.2  critical=187 (limit:10)  dup=3  cycles=0
+  CC̄=4.1  critical=192 (limit:10)  dup=3  cycles=0
 
 ALERTS[20]:
   !!! cc_exceeded      runCurrentStep = 96 (limit:15)
@@ -16,13 +16,13 @@ ALERTS[20]:
   !!! cc_exceeded      useSelectionCollapsePanel = 33 (limit:15)
   !!! high_fan_out     AppConfigContext = 31 (limit:10)
 
-MODULES[235] (top by size):
+MODULES[239] (top by size):
   M[oqlos/api/hardware.py] 2252L C:0 F:89 CC↑14 D:2 (python)
   M[frontend/src/i18n/dictionaries.js] 1981L C:0 F:4 CC↑5 D:0 (javascript)
   M[frontend/src/pages/mapEditorDefaultMap.js] 1763L C:0 F:3 CC↑1 D:0 (javascript)
-  M[docs/README.md] 1682L C:0 F:0 CC↑0 D:0 (md)
+  M[docs/README.md] 1754L C:0 F:0 CC↑0 D:0 (md)
   M[frontend/src/pages/MapEditor.jsx] 1490L C:0 F:109 CC↑24 D:6 (javascript)
-  M[redeploy/122/migration.md] 1079L C:0 F:0 CC↑0 D:0 (md)
+  M[redeploy/122/migration.md] 1112L C:0 F:0 CC↑0 D:0 (md)
   M[openapi.yaml] 1035L C:0 F:0 CC↑0 D:0 (yaml)
   M[openapi_spec.yaml] 1035L C:0 F:0 CC↑0 D:0 (yaml)
   M[oqlos/tools/hardware_diagnose/doctor.py] 1003L C:0 F:41 CC↑13 D:2 (python)
@@ -32,7 +32,7 @@ MODULES[235] (top by size):
   M[oqlos/core/oql_parser.py] 762L C:3 F:43 CC↑14 D:2 (python)
   M[oqlos/core/interpreter.py] 676L C:1 F:47 CC↑11 D:0 (python)
   M[scripts/oql_v2_to_v4_migrate_db.py] 662L C:1 F:43 CC↑14 D:1 (python)
-  LANGS: python:144/javascript:35/md:16/yaml:13/shell:9/json:6/yml:4/typescript:3/other:2/conf:2/toml:1
+  LANGS: python:148/javascript:35/md:16/yaml:13/shell:9/json:6/yml:4/typescript:3/other:2/conf:2/toml:1
 
 HOTSPOTS[10]:
   ★ runCurrentStep fan=34  // Orchestrates 34 calls
@@ -49,4 +49,4 @@ REFACTOR[15]:
   [5] H/L Split summarizeFuncToHardware (CC=47)
 
 EVOLUTION:
-  2026-06-30 CC̄=4.2 crit=187 53032L // Automated analysis
+  2026-06-30 CC̄=4.1 crit=192 54159L // Automated analysis

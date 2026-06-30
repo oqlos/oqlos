@@ -18,13 +18,13 @@ SUMD - Structured Unified Markdown Descriptor for AI-aware project refactorizati
 ## Metadata
 
 - **name**: `oqlos`
-- **version**: `0.1.27`
+- **version**: `0.1.28`
 - **python_requires**: `>=3.10`
 - **license**: {'text': 'Apache-2.0'}
 - **ai_model**: `openrouter/qwen/qwen3-coder-next`
 - **ecosystem**: SUMD + DOQL + testql + taskfile
 - **openapi_title**: oqlos API v1.0.0
-- **generated_from**: pyproject.toml, Taskfile.yml, testql(6), openapi(49 ep), app.doql.less, pyqual.yaml, goal.yaml, .env.example, Dockerfile, docker-compose.dev.yml, src(1 mod), project/(6 analysis files)
+- **generated_from**: pyproject.toml, Taskfile.yml, Makefile, testql(6), openapi(49 ep), app.doql.less, pyqual.yaml, goal.yaml, .env.example, Dockerfile, docker-compose.dev.yml, src(1 mod), project/(6 analysis files)
 
 ## Architecture
 
@@ -39,7 +39,7 @@ SUMD (description) → DOQL/source (code) → taskfile (automation) → testql (
 
 app {
   name: oqlos;
-  version: 0.1.27;
+  version: 0.1.28;
 }
 
 dependencies {
@@ -132,6 +132,82 @@ integration[name="modbus"] {
   type: hardware;
 }
 
+workflow[name="test"] {
+  trigger: manual;
+  step-1: run cmd=$(PYTHON) -m pytest -q;
+}
+
+workflow[name="test-hw"] {
+  trigger: manual;
+  step-1: run cmd=scripts/test-hardware.sh $(PI);
+}
+
+workflow[name="smoke"] {
+  trigger: manual;
+  step-1: run cmd=awk '/```bash markpact:ref assert-hw-node-healthy/{f=1;next} f&&/^```/{f=0} f' \;
+  step-2: run cmd=redeploy/$(NODE)/migration.md > /tmp/oqlos-smoke.sh;
+  step-3: run cmd=scp -q /tmp/oqlos-smoke.sh $(PI):/tmp/oqlos-smoke.sh;
+  step-4: run cmd=ssh $(PI) 'export XDG_RUNTIME_DIR=/run/user/$$(id -u); bash /tmp/oqlos-smoke.sh';
+}
+
+workflow[name="checksums"] {
+  trigger: manual;
+  step-1: run cmd=scripts/gen-checksums.sh;
+}
+
+workflow[name="verify-rpi"] {
+  trigger: manual;
+  step-1: run cmd=scripts/verify-rpi-checksum.sh $(PI);
+}
+
+workflow[name="sync-rpi"] {
+  trigger: manual;
+  step-1: run cmd=rsync -rz --itemize-changes \;
+  step-2: run cmd=--exclude='__pycache__/' --exclude='*.pyc' --exclude='*.pyo' \;
+  step-3: run cmd=--exclude='.pytest_cache/' --exclude='*.log' \;
+  step-4: run cmd=oqlos/ $(PI):/home/pi/oqlos/oqlos/oqlos/;
+  step-5: run cmd=$(MAKE) verify-rpi PI=$(PI);
+}
+
+workflow[name="restart"] {
+  trigger: manual;
+  step-1: run cmd=ssh $(PI) 'export XDG_RUNTIME_DIR=/run/user/$$(id -u); \;
+  step-2: run cmd=systemctl --user restart oqlos-hardware-api; \;
+  step-3: run cmd=for i in $$(seq 1 20); do \;
+  step-4: run cmd=curl -sf --max-time 4 http://127.0.0.1:8202/health && { echo "  <- /health OK"; exit 0; }; \;
+  step-5: run cmd=sleep 1; \;
+  step-6: run cmd=done; \;
+  step-7: run cmd=echo "FAIL: agent nie podniosl /health w 20s" >&2; exit 1';
+}
+
+workflow[name="deploy"] {
+  trigger: manual;
+  step-1: run cmd=redeploy run redeploy/$(NODE)/migration.md;
+}
+
+workflow[name="redeploy"] {
+  trigger: manual;
+  step-1: run cmd=echo "Wdrożenie węzła sprzętowego:";
+  step-2: run cmd=echo "  make 122                 # boardnet (192.168.188.122)";
+  step-3: run cmd=echo "  make pi-hw               # pi-hw    (192.168.188.110)";
+  step-4: run cmd=echo "  make deploy NODE=122     # dowolny węzeł z redeploy/<NODE>/migration.md";
+}
+
+workflow[name="pi-hw"] {
+  trigger: manual;
+  step-1: run cmd=$(MAKE) deploy NODE=pi-hw PI=pi@192.168.188.110;
+}
+
+workflow[name="serve"] {
+  trigger: manual;
+  step-1: run cmd=$(PYTHON) -m uvicorn oqlos.api.main:app --host 0.0.0.0 --port $(PORT);
+}
+
+workflow[name="panel-url"] {
+  trigger: manual;
+  step-1: run cmd=echo "http://localhost:$(PORT)/panel";
+}
+
 workflow[name="install"] {
   trigger: manual;
   step-1: run cmd=pip install -e .[dev];
@@ -165,11 +241,6 @@ workflow[name="quality:fix"] {
 workflow[name="quality:report"] {
   trigger: manual;
   step-1: run cmd=pyqual report;
-}
-
-workflow[name="test"] {
-  trigger: manual;
-  step-1: run cmd=pytest -q;
 }
 
 workflow[name="lint"] {
@@ -550,74 +621,215 @@ class Settings:  # Application settings loaded from environment variables and .
 
 ## Call Graph
 
-*406 nodes · 500 edges · 44 modules · CC̄=4.1*
+*427 nodes · 500 edges · 37 modules · CC̄=4.1*
 
 ### Hubs (by degree)
 
 | Function | CC | in | out | total |
 |----------|----|----|-----|-------|
 | `print` *(in examples.hardware.doctor-workflow)* | 0 | 225 | 0 | **225** |
-| `canonicalize_oql_line` *(in oqlos.tools.cql_cli.formatting)* | 14 ⚠ | 1 | 31 | **32** |
+| `dict` *(in frontend.src.i18n.I18nProvider)* | 8 | 42 | 3 | **45** |
+| `list` *(in frontend.src.utils.hardware-wizard-steps)* | 2 | 40 | 0 | **40** |
+| `runCurrentStep` *(in frontend.src.pages.HardwareRestart)* | 96 ⚠ | 0 | 34 | **34** |
 | `oql_doc_to_cql` *(in oqlos.core._oql_adapter)* | 12 ⚠ | 2 | 30 | **32** |
 | `normalize_motor2_runtime_config` *(in oqlos.core.motor2_runtime)* | 12 ⚠ | 1 | 29 | **30** |
-| `build_diagnosis_report` *(in oqlos.hardware.diagnosis)* | 13 ⚠ | 2 | 28 | **30** |
-| `format_detection` *(in oqlos.tools.hardware_diagnose.doctor)* | 10 ⚠ | 3 | 25 | **28** |
-| `probe_options_from_args` *(in oqlos.tools.hardware_diagnose.modbus_probe)* | 2 | 1 | 27 | **28** |
 | `_safe_resolve` *(in oqlos.core.executor)* | 14 ⚠ | 7 | 21 | **28** |
+| `useUrlConfig` *(in frontend.src.hooks.useUrlConfig)* | 18 ⚠ | 0 | 27 | **27** |
 
 ```toon markpact:analysis path=project/calls.toon.yaml
 # code2llm call graph | /home/tom/github/oqlos/oqlos
-# generated in 0.20s
-# nodes: 406 | edges: 500 | modules: 44
+# generated in 0.22s
+# nodes: 427 | edges: 500 | modules: 37
 # CC̄=4.1
 
 HUBS[20]:
   examples.hardware.doctor-workflow.print
     CC=0  in:225  out:0  total:225
-  oqlos.tools.cql_cli.formatting.canonicalize_oql_line
-    CC=14  in:1  out:31  total:32
+  frontend.src.i18n.I18nProvider.dict
+    CC=8  in:42  out:3  total:45
+  frontend.src.utils.hardware-wizard-steps.list
+    CC=2  in:40  out:0  total:40
+  frontend.src.pages.HardwareRestart.runCurrentStep
+    CC=96  in:0  out:34  total:34
   oqlos.core._oql_adapter.oql_doc_to_cql
     CC=12  in:2  out:30  total:32
   oqlos.core.motor2_runtime.normalize_motor2_runtime_config
     CC=12  in:1  out:29  total:30
-  oqlos.hardware.diagnosis.build_diagnosis_report
-    CC=13  in:2  out:28  total:30
-  oqlos.tools.hardware_diagnose.doctor.format_detection
-    CC=10  in:3  out:25  total:28
-  oqlos.tools.hardware_diagnose.modbus_probe.probe_options_from_args
-    CC=2  in:1  out:27  total:28
   oqlos.core.executor._safe_resolve
     CC=14  in:7  out:21  total:28
+  frontend.src.hooks.useUrlConfig.useUrlConfig
+    CC=18  in:0  out:27  total:27
   setup_hardware_and_run_oql.run_oql_scenario
     CC=8  in:1  out:24  total:25
-  oqlos.core.parser.parse_dsl_to_goal_with_issues
-    CC=13  in:3  out:21  total:24
+  frontend.src.pages.MapEditor.applyMapMutation
+    CC=2  in:16  out:8  total:24
+  frontend.src.pages.HardwareRestart.log
+    CC=1  in:21  out:3  total:24
   oqlos.core.oql_parser.parse_oql
     CC=14  in:3  out:21  total:24
+  oqlos.core.parser.parse_dsl_to_goal_with_issues
+    CC=13  in:3  out:21  total:24
   oqlos.core._line_parsers._parse_if_condition
     CC=9  in:1  out:22  total:23
-  oqlos.core._interpreter_actions._motor2_build_plan
-    CC=12  in:1  out:22  total:23
-  oqlos.core._interpreter_actions._try_exec_motor2_set
+  oqlos.core._action_motor2._try_exec_motor2_set
     CC=13  in:1  out:22  total:23
-  oqlos.tools.hardware_diagnose.doctor._analyze_modbus_adc_config
+  oqlos.core._action_motor2._motor2_build_plan
     CC=12  in:1  out:22  total:23
-  oqlos.tools.hardware_diagnose.doctor.format_doctor
-    CC=6  in:2  out:21  total:23
-  oqlos.tools.hardware_diagnose.shell._dispatch_command
-    CC=6  in:1  out:21  total:22
-  oqlos.tools.xml_import.parser._parse_operation_params
-    CC=9  in:1  out:21  total:22
-  oqlos.tools.hardware_diagnose.health.cmd_diagnose
-    CC=6  in:2  out:20  total:22
   oqlos.core._line_parsers._parse_set_line
     CC=12  in:1  out:21  total:22
+  frontend.src.utils.useSelectionCollapsePanel.RAIL_HOVER_CLOSE_MS
+    CC=33  in:0  out:21  total:21
+  oqlos.core._cql_tree_builder._parse_goal_line
+    CC=12  in:1  out:20  total:21
+  frontend.src.utils.useSelectionCollapsePanel.RAIL_HOVER_OPEN_MS
+    CC=33  in:0  out:21  total:21
 
 MODULES:
   examples.hardware.doctor-workflow  [1 funcs]
     print  CC=0  out:0
+  frontend.src.api.hardware-api-log  [4 funcs]
+    isHardwareWizardPath  CC=2  out:3
+    keys  CC=2  out:0
+    logHardwareApiEvent  CC=6  out:4
+    summarizeHardwareApiBody  CC=11  out:5
+  frontend.src.api.hardwareApi  [17 funcs]
+    describeDetail  CC=13  out:6
+    durationMs  CC=8  out:5
+    extractDiagnosticFailure  CC=69  out:10
+    extractErrorPayload  CC=4  out:1
+    formatHardwareApiError  CC=8  out:2
+    get  CC=1  out:1
+    isIdempotentTic249Deenergized  CC=12  out:2
+    mode  CC=1  out:1
+    nestedOk  CC=6  out:3
+    normalized  CC=1  out:1
+  frontend.src.api.wsClient  [15 funcs]
+    _handleMessage  CC=13  out:10
+    _request  CC=3  out:12
+    _scheduleReconnect  CC=3  out:3
+    clearTimeout  CC=2  out:0
+    command  CC=1  out:1
+    connect  CC=5  out:10
+    connected  CC=3  out:0
+    delay  CC=2  out:2
+    pending  CC=4  out:4
+    query  CC=1  out:1
+  frontend.src.context.AppConfigProvider  [10 funcs]
+    all  CC=6  out:2
+    getInteractiveItems  CC=6  out:6
+    handleEncoderCommand  CC=15  out:7
+    items  CC=11  out:6
+    onKeyDown  CC=7  out:3
+    onMessage  CC=3  out:2
+    onWheel  CC=6  out:4
+    parseParentEnvelope  CC=6  out:0
+    raw  CC=2  out:1
+    removeHighlights  CC=1  out:3
+  frontend.src.hooks.useUrlConfig  [25 funcs]
+    applyParentContextPayload  CC=5  out:5
+    base  CC=3  out:3
+    ctx  CC=5  out:8
+    envelope  CC=9  out:8
+    fromUser  CC=2  out:2
+    incomingFont  CC=2  out:2
+    incomingLang  CC=2  out:2
+    incomingTheme  CC=2  out:2
+    mergeParentContext  CC=16  out:5
+    mergeParentSearchIntoChildUrl  CC=6  out:10
+  frontend.src.i18n.I18nProvider  [5 funcs]
+    I18nProvider  CC=13  out:8
+    dict  CC=8  out:3
+    getInitialLang  CC=5  out:1
+    t  CC=8  out:2
+    val  CC=2  out:2
+  frontend.src.pages.HardwareDemo  [15 funcs]
+    Ctx  CC=2  out:2
+    appendLog  CC=1  out:3
+    cancelled  CC=16  out:10
+    ensureAudioCtx  CC=4  out:4
+    fallbackDevice  CC=2  out:5
+    fb  CC=2  out:5
+    now  CC=1  out:1
+    onNoteClick  CC=4  out:9
+    playMelody  CC=9  out:11
+    playNote  CC=5  out:7
+  frontend.src.pages.HardwareRestart  [31 funcs]
+    advanceOk  CC=3  out:2
+    attempt  CC=16  out:8
+    canRunCurrentStep  CC=1  out:4
+    confirmErrorKey  CC=1  out:4
+    confirmLabelKey  CC=1  out:4
+    currentStep  CC=1  out:4
+    isConfigureStep  CC=1  out:4
+    isSeparateAdapters  CC=1  out:4
+    loadPlan  CC=18  out:11
+    log  CC=1  out:3
+  frontend.src.pages.MapEditor  [49 funcs]
+    addAction  CC=2  out:6
+    addFunc  CC=2  out:6
+    addObject  CC=2  out:6
+    addParam  CC=2  out:4
+    applyMapMutation  CC=2  out:8
+    clearServerHardwareEvents  CC=8  out:9
+    cloneDefaultMap  CC=1  out:2
+    cloneValue  CC=1  out:2
+    createInitialEditorState  CC=1  out:3
+    defaultMotor2  CC=3  out:2
+  frontend.src.utils.collapse-toggle-bridge  [2 funcs]
+    isInIframe  CC=4  out:0
+    postToParent  CC=4  out:8
+  frontend.src.utils.hardware-activity-log  [4 funcs]
+    createHardwareActivityLogEntry  CC=1  out:2
+    loggedRef  CC=2  out:4
+    prependHardwareActivityLogEntry  CC=1  out:2
+    usePageOpenedLog  CC=2  out:5
+  frontend.src.utils.hardware-wizard-steps  [1 funcs]
+    list  CC=2  out:0
+  frontend.src.utils.hardwareEventStream  [9 funcs]
+    buildHardwareEventsWsUrl  CC=10  out:3
+    commandName  CC=3  out:1
+    id  CC=3  out:1
+    matchesHardwareEventFilters  CC=9  out:4
+    normalizeHardwareEvent  CC=21  out:3
+    normalizeText  CC=2  out:1
+    peripheralId  CC=3  out:1
+    result  CC=3  out:1
+    timestamp  CC=3  out:1
+  frontend.src.utils.rbac.policy  [13 funcs]
+    canConnectRoleAccessPath  CC=2  out:3
+    canHostRoleAccessPath  CC=2  out:3
+    isAdminConnectRole  CC=1  out:1
+    isOperatorConnectRole  CC=4  out:1
+    isReadOnlyConnectRole  CC=2  out:1
+    matched  CC=5  out:1
+    matchesPattern  CC=3  out:3
+    normalizeConnectRole  CC=2  out:1
+    normalizeHostRole  CC=2  out:1
+    normalizePath  CC=6  out:4
+  frontend.src.utils.useSelectionCollapsePanel  [16 funcs]
+    RAIL_HOVER_CLOSE_MS  CC=33  out:21
+    RAIL_HOVER_OPEN_MS  CC=33  out:21
+    cancelAutoCollapse  CC=2  out:2
+    cancelPanelClose  CC=2  out:2
+    cancelRailOpen  CC=2  out:2
+    expand  CC=1  out:5
+    onMessage  CC=8  out:3
+    panelEnter  CC=1  out:2
+    panelLeave  CC=4  out:5
+    previewCollapse  CC=1  out:2
   oqlos.config  [1 funcs]
     get_settings  CC=1  out:0
+  oqlos.core._action_motor2  [26 funcs]
+    _handle_motor2_reciprocating_setting  CC=2  out:4
+    _motor2_acceleration_raw  CC=1  out:2
+    _motor2_build_plan  CC=12  out:22
+    _motor2_do_start  CC=4  out:10
+    _motor2_do_stop  CC=4  out:3
+    _motor2_effective_steps_per_second  CC=1  out:4
+    _motor2_max_steps_per_second  CC=1  out:1
+    _motor2_reciprocating_state  CC=2  out:3
+    _motor2_speed_for_duration  CC=1  out:1
+    _motor2_speed_raw  CC=1  out:2
   oqlos.core._compare  [2 funcs]
     resolve_compare  CC=2  out:5
     resolve_compare_chain  CC=3  out:4
@@ -658,7 +870,7 @@ MODULES:
     _extract_func_name  CC=7  out:7
     _guard_recursion  CC=3  out:5
     _parse_func_call  CC=5  out:4
-  oqlos.core._interpreter_actions  [56 funcs]
+  oqlos.core._interpreter_actions  [30 funcs]
     _assert_json  CC=6  out:9
     _assert_sensor  CC=4  out:9
     _assert_status  CC=5  out:7
@@ -679,7 +891,8 @@ MODULES:
     _set_lung_step  CC=4  out:3
     _set_pump_step  CC=4  out:3
     _set_valve_step  CC=4  out:4
-  oqlos.core._oql_adapter  [14 funcs]
+  oqlos.core._oql_adapter  [15 funcs]
+    register  CC=1  out:1
     _cmd_to_actions  CC=2  out:3
     _fmt_value  CC=2  out:1
     _load_includes  CC=12  out:15
@@ -689,14 +902,14 @@ MODULES:
     _lower_set  CC=1  out:3
     _parse_macro_line  CC=8  out:10
     _resolve_include  CC=6  out:8
-    _scenarios_root  CC=1  out:2
   oqlos.core._value_normalizers  [1 funcs]
     coerce_float  CC=5  out:9
-  oqlos.core.base  [4 funcs]
+  oqlos.core.base  [5 funcs]
+    send_event  CC=4  out:7
     emit  CC=5  out:3
     output_yaml  CC=4  out:2
+    __init__  CC=2  out:1
     all  CC=3  out:3
-    set  CC=4  out:2
   oqlos.core.cql_parser  [11 funcs]
     _handle_goal  CC=3  out:5
     _handle_goal_attrs  CC=3  out:1
@@ -715,7 +928,8 @@ MODULES:
     _resolve_name_or_attr  CC=4  out:6
     _safe_resolve  CC=14  out:21
     safe_eval_condition  CC=2  out:5
-  oqlos.core.interpreter  [4 funcs]
+  oqlos.core.interpreter  [5 funcs]
+    __init__  CC=1  out:5
     _build_script_result  CC=2  out:7
     _exec_flat_action  CC=6  out:6
     execute  CC=4  out:9
@@ -761,163 +975,6 @@ MODULES:
     _eval_node  CC=2  out:5
     _eval_unary_op  CC=3  out:5
     safe_eval  CC=3  out:4
-  oqlos.hardware.config_paths  [1 funcs]
-    resolve_oqlos_config_path  CC=6  out:13
-  oqlos.hardware.diagnosis  [21 funcs]
-    _action_dict  CC=1  out:0
-    _adapter_index  CC=5  out:5
-    _add_modbus_device_actions  CC=5  out:5
-    _build_report_global_actions  CC=4  out:6
-    _build_stack_snapshot  CC=2  out:1
-    _diagnose_barcode_scanner  CC=9  out:9
-    _diagnose_plugin_devices  CC=11  out:14
-    _health_map  CC=4  out:5
-    _host_actions_from_report  CC=7  out:13
-    _infer_status  CC=7  out:5
-  oqlos.hardware.discovery  [2 funcs]
-    probe_waveshare_modbus  CC=5  out:2
-    probe_waveshare_modbus_adc  CC=5  out:2
-  oqlos.hardware.stack_snapshot  [1 funcs]
-    build_hardware_stack_snapshot  CC=3  out:11
-  oqlos.tools.cql_cli  [2 funcs]
-    _sync_compat_symbols  CC=1  out:0
-    main  CC=1  out:2
-  oqlos.tools.cql_cli.commands  [5 funcs]
-    _run_continuous_mode  CC=4  out:20
-    execute_command_with_cleanup  CC=8  out:7
-    handle_list_command  CC=7  out:21
-    run_single_command  CC=1  out:2
-    run_source  CC=2  out:3
-  oqlos.tools.cql_cli.formatting  [2 funcs]
-    canonicalize_oql_line  CC=14  out:31
-    canonicalize_oql_text  CC=3  out:4
-  oqlos.tools.cql_cli.main  [18 funcs]
-    _create_interpreter  CC=1  out:1
-    _dispatch_to_mode  CC=8  out:13
-    _extract_scenario_source  CC=9  out:9
-    _fetch_scenario_source  CC=7  out:13
-    _looks_like_html  CC=3  out:5
-    _print_cli_error  CC=2  out:3
-    _run_hardware_flags  CC=9  out:14
-    _run_interpreter_target  CC=2  out:4
-    create_cmd_parser  CC=1  out:13
-    create_file_parser  CC=1  out:16
-  oqlos.tools.cql_cli.preflight  [12 funcs]
-    _emit_preflight_error  CC=2  out:2
-    _emit_text_preflight  CC=7  out:16
-    _emit_yaml_preflight  CC=6  out:8
-    _health_status_is_ok  CC=11  out:9
-    _is_firmware_running  CC=5  out:3
-    _start_firmware_service  CC=13  out:11
-    check_firmware_state  CC=8  out:14
-    check_required_adapter  CC=8  out:5
-    check_required_adapter_health  CC=5  out:4
-    emit_preflight_success  CC=3  out:2
-  oqlos.tools.cql_cli.utils  [10 funcs]
-    _extract_first_action  CC=5  out:2
-    _resolve_peripheral_adapter  CC=4  out:4
-    _resolve_sensor_target  CC=3  out:0
-    build_result_payload  CC=2  out:2
-    build_single_command_scenario  CC=2  out:3
-    normalize_target_name  CC=1  out:4
-    output_yaml  CC=2  out:2
-    parse_sensor_overrides  CC=3  out:4
-    resolve_required_adapter  CC=8  out:3
-    validate_directory  CC=5  out:15
-  oqlos.tools.hardware_diagnose.__main__  [9 funcs]
-    _handle_report_action  CC=3  out:4
-    _print_benchmark  CC=3  out:11
-    _print_calibrate  CC=6  out:9
-    _print_detect  CC=2  out:4
-    _print_diagnose  CC=3  out:9
-    _print_doctor  CC=2  out:4
-    _print_health  CC=2  out:5
-    _print_list  CC=3  out:8
-    _print_modbus_probe  CC=2  out:5
-  oqlos.tools.hardware_diagnose.benchmark  [1 funcs]
-    run_benchmark  CC=6  out:15
-  oqlos.tools.hardware_diagnose.calibration  [4 funcs]
-    _calibrate_pump  CC=3  out:8
-    _calibrate_sensors  CC=5  out:8
-    _calibrate_valves  CC=4  out:6
-    run_calibration_test  CC=2  out:8
-  oqlos.tools.hardware_diagnose.discovery  [4 funcs]
-    _run_shell_command  CC=2  out:2
-    detect_chips_on_i2c  CC=8  out:10
-    list_i2c_buses  CC=1  out:2
-    list_usb_serial_devices  CC=7  out:9
-  oqlos.tools.hardware_diagnose.doctor  [40 funcs]
-    _adapter_health_status  CC=3  out:1
-    _add_issue  CC=2  out:1
-    _analyze_firmware_access  CC=7  out:11
-    _analyze_modbus_adc_config  CC=12  out:22
-    _analyze_modbus_config  CC=11  out:20
-    _analyze_serial_port_owners  CC=13  out:19
-    _canonical_device_path  CC=2  out:3
-    _check_firmware_adapters  CC=7  out:9
-    _check_firmware_health_error  CC=3  out:2
-    _check_firmware_mode  CC=3  out:4
-  oqlos.tools.hardware_diagnose.health  [7 funcs]
-    _format_health_value  CC=8  out:9
-    _is_health_ok  CC=5  out:6
-    _request_firmware_json  CC=8  out:9
-    check_firmware_health  CC=1  out:1
-    check_firmware_identify  CC=1  out:1
-    cmd_diagnose  CC=6  out:20
-    cmd_health  CC=5  out:10
-  oqlos.tools.hardware_diagnose.modbus_probe  [16 funcs]
-    _arg_count_list  CC=3  out:2
-    _arg_int_list  CC=3  out:2
-    _arg_str_list  CC=2  out:1
-    _env_count_list  CC=2  out:2
-    _env_float  CC=2  out:2
-    _env_int  CC=2  out:2
-    _env_int_list  CC=5  out:5
-    _env_str_list  CC=3  out:2
-    _serials_from_env  CC=3  out:4
-    _split_values  CC=5  out:5
-  oqlos.tools.hardware_diagnose.report  [2 funcs]
-    format_peripheral_table  CC=12  out:3
-    save_diagnostic_report  CC=3  out:13
-  oqlos.tools.hardware_diagnose.shell  [5 funcs]
-    _cmd_benchmark  CC=4  out:8
-    _cmd_calibrate  CC=4  out:5
-    _cmd_list  CC=5  out:11
-    _dispatch_command  CC=6  out:21
-    interactive_shell  CC=6  out:8
-  oqlos.tools.plugin_cli  [12 funcs]
-    _default_config_path  CC=1  out:2
-    _load_config_file  CC=4  out:16
-    cmd_capabilities  CC=2  out:6
-    cmd_connect  CC=4  out:6
-    cmd_disconnect  CC=2  out:4
-    cmd_execute  CC=3  out:7
-    cmd_health  CC=3  out:8
-    cmd_list  CC=3  out:9
-    cmd_peripherals  CC=8  out:16
-    cmd_reload  CC=4  out:10
-  oqlos.tools.xml_import._utils  [3 funcs]
-    is_compressor_output  CC=5  out:2
-    is_pump_output  CC=4  out:2
-    normalize_output_name  CC=11  out:12
-  oqlos.tools.xml_import.generators  [15 funcs]
-    _append_sensor_assertion  CC=6  out:3
-    _build_steps_from_op  CC=10  out:14
-    _build_validation_criteria  CC=14  out:3
-    _emit_cql_output  CC=5  out:15
-    _emit_cql_param  CC=7  out:5
-    _emit_cql_sensor_param  CC=13  out:11
-    _emit_dsl_param  CC=10  out:13
-    _emit_dsl_sensors  CC=8  out:7
-    _emit_set  CC=1  out:3
-    _format_range  CC=9  out:0
-  oqlos.tools.xml_import.parser  [6 funcs]
-    _parse_intervals  CC=4  out:7
-    _parse_operation  CC=6  out:18
-    _parse_operation_params  CC=9  out:21
-    _parse_test_run  CC=7  out:19
-    _populate_report_fields  CC=1  out:16
-    parse_xml  CC=6  out:16
   setup_hardware_and_run_oql  [6 funcs]
     detect_serial_devices  CC=12  out:7
     generate_env_content  CC=2  out:1
@@ -933,50 +990,50 @@ EDGES:
   setup_hardware_and_run_oql.load_env_file → examples.hardware.doctor-workflow.print
   setup_hardware_and_run_oql.run_oql_scenario → examples.hardware.doctor-workflow.print
   setup_hardware_and_run_oql.main → setup_hardware_and_run_oql.run_oql_scenario
-  oqlos.core.base.InterpreterOutput.emit → examples.hardware.doctor-workflow.print
-  oqlos.core.base.InterpreterOutput.output_yaml → examples.hardware.doctor-workflow.print
-  oqlos.core._dsl_helpers._map_peripheral → oqlos.core._dsl_helpers._looks_like_valve_object
-  oqlos.core._dsl_helpers._map_peripheral → oqlos.core._dsl_helpers._looks_like_pump_object
-  oqlos.core._dsl_helpers._map_peripheral → oqlos.core._dsl_helpers._looks_like_lung_object
-  oqlos.core._dsl_helpers._map_peripheral → oqlos.core._dsl_helpers._looks_like_sensor_object
-  oqlos.core._dsl_helpers._map_pump_action → oqlos.core._dsl_helpers._parse_numeric_value
-  oqlos.core._dsl_helpers._map_lung_action → oqlos.core._dsl_helpers._parse_numeric_value
-  oqlos.core._dsl_helpers._map_action_value → oqlos.core._dsl_helpers._looks_like_valve_object
-  oqlos.core._dsl_helpers._map_action_value → oqlos.core._dsl_helpers._looks_like_pump_object
-  oqlos.core._dsl_helpers._map_action_value → oqlos.core._dsl_helpers._looks_like_lung_object
-  oqlos.core._dsl_helpers._map_action_value → oqlos.core._dsl_helpers._map_valve_action
-  oqlos.core._dsl_helpers._map_action_value → oqlos.core._dsl_helpers._map_pump_action
-  oqlos.core._dsl_helpers._map_action_value → oqlos.core._dsl_helpers._map_lung_action
-  oqlos.core._dsl_helpers._map_action_value → oqlos.core._dsl_helpers._looks_like_sensor_object
-  oqlos.core._dsl_helpers._map_action_value → oqlos.core._dsl_helpers._map_wait_action
-  oqlos.core._interpreter_actions._drop_command_token → oqlos.core._interpreter_actions._extract_action_tokens
-  oqlos.core._interpreter_actions._compare_values → oqlos.core._interpreter_actions._coerce_expected_value
-  oqlos.core._interpreter_actions._format_set_command → oqlos.core._interpreter_actions._oql_quote
-  oqlos.core._interpreter_actions.exec_action_wait → oqlos.core._interpreter_actions.parse_wait_secs
-  oqlos.core._interpreter_actions.exec_action_wait → oqlos.core._interpreter_actions._do_sleep
-  oqlos.core._interpreter_actions.exec_action_func → oqlos.core._interpreter_actions._resolve_numeric_token
-  oqlos.core._interpreter_actions.exec_action_api → oqlos.core._interpreter_actions._mock_api_response
-  oqlos.core._interpreter_actions.exec_action_expect → oqlos.core._interpreter_actions._drop_command_token
-  oqlos.core._interpreter_actions.exec_action_expect → oqlos.core._interpreter_actions._mark_success
-  oqlos.core._interpreter_actions._assert_status → oqlos.core._interpreter_actions._record_failure
-  oqlos.core._interpreter_actions._assert_status → oqlos.core._interpreter_actions._coerce_expected_value
-  oqlos.core._interpreter_actions._assert_json → oqlos.core._interpreter_actions._get_nested_value
-  oqlos.core._interpreter_actions._assert_json → oqlos.core._interpreter_actions._record_failure
-  oqlos.core._interpreter_actions._assert_json → oqlos.core._interpreter_actions._compare_values
-  oqlos.core._interpreter_actions._assert_sensor → oqlos.core._interpreter_actions._record_failure
-  oqlos.core._interpreter_actions._assert_sensor → oqlos.core._interpreter_actions._mark_success
-  oqlos.core._interpreter_actions._assert_valve → oqlos.core._interpreter_actions._lookup_peripheral_state
-  oqlos.core._interpreter_actions._assert_valve → oqlos.core._interpreter_actions._normalize_bool
-  oqlos.core._interpreter_actions._assert_valve → oqlos.core._interpreter_actions._mark_success
-  oqlos.core._interpreter_actions._assert_valve → oqlos.core._interpreter_actions._record_failure
-  oqlos.core._interpreter_actions.exec_action_assert → oqlos.core._interpreter_actions._drop_command_token
-  oqlos.core._interpreter_actions.exec_action_assert → oqlos.core._interpreter_actions._record_failure
-  oqlos.core._interpreter_actions.exec_action_shell → oqlos.core._interpreter_actions._drop_command_token
-  oqlos.core._interpreter_actions.exec_action_shell → oqlos.core._interpreter_actions._record_failure
-  oqlos.core._interpreter_actions.exec_action_set → oqlos.core._interpreter_actions._try_exec_motor2_set
-  oqlos.core._interpreter_actions.exec_action_set → oqlos.core._interpreter_actions._exec_set_wait
-  oqlos.core._interpreter_actions.exec_action_set → oqlos.core._interpreter_actions._format_set_command
-  oqlos.core._interpreter_actions._parse_motor2_duration_seconds → oqlos.core._interpreter_actions._parse_motor2_float
+  frontend.src.hooks.useUrlConfig.parseAppearanceParams → frontend.src.hooks.useUrlConfig.resolveViewportWidthPx
+  frontend.src.hooks.useUrlConfig.parseIdentityParams → frontend.src.hooks.useUrlConfig.resolveUserIdFromSearchParams
+  frontend.src.hooks.useUrlConfig.parseParams → frontend.src.hooks.useUrlConfig.parseAppearanceParams
+  frontend.src.hooks.useUrlConfig.parseParams → frontend.src.hooks.useUrlConfig.parseIdentityParams
+  frontend.src.hooks.useUrlConfig.parseParams → frontend.src.hooks.useUrlConfig.parseNavigationParams
+  frontend.src.hooks.useUrlConfig.parseUrlEmbedConfig → frontend.src.hooks.useUrlConfig.parseParams
+  frontend.src.hooks.useUrlConfig.mergeParentContext → frontend.src.hooks.useUrlConfig.resolveUserFromContextPayload
+  frontend.src.hooks.useUrlConfig.mergeParentContext → frontend.src.hooks.useUrlConfig.resolveViewportWidthPx
+  frontend.src.hooks.useUrlConfig.incomingFont → frontend.src.hooks.useUrlConfig.resolveViewportWidthPx
+  frontend.src.hooks.useUrlConfig.incomingLang → frontend.src.hooks.useUrlConfig.resolveViewportWidthPx
+  frontend.src.hooks.useUrlConfig.incomingTheme → frontend.src.hooks.useUrlConfig.resolveViewportWidthPx
+  frontend.src.hooks.useUrlConfig.fromUser → frontend.src.hooks.useUrlConfig.resolveViewportWidthPx
+  frontend.src.hooks.useUrlConfig.nextUser → frontend.src.hooks.useUrlConfig.resolveViewportWidthPx
+  frontend.src.hooks.useUrlConfig.roleCandidate → frontend.src.hooks.useUrlConfig.resolveViewportWidthPx
+  frontend.src.hooks.useUrlConfig.applyParentContextPayload → frontend.src.hooks.useUrlConfig.mergeParentSearchIntoChildUrl
+  frontend.src.hooks.useUrlConfig.applyParentContextPayload → frontend.src.hooks.useUrlConfig.parseParams
+  frontend.src.hooks.useUrlConfig.applyParentContextPayload → frontend.src.hooks.useUrlConfig.mergeParentContext
+  frontend.src.hooks.useUrlConfig.search → frontend.src.hooks.useUrlConfig.mergeParentSearchIntoChildUrl
+  frontend.src.hooks.useUrlConfig.search → frontend.src.hooks.useUrlConfig.applyParentContextPayload
+  frontend.src.hooks.useUrlConfig.base → frontend.src.hooks.useUrlConfig.mergeParentSearchIntoChildUrl
+  frontend.src.hooks.useUrlConfig.base → frontend.src.hooks.useUrlConfig.parseParams
+  frontend.src.hooks.useUrlConfig.useUrlConfig → frontend.src.hooks.useUrlConfig.parseParams
+  frontend.src.hooks.useUrlConfig.useUrlConfig → frontend.src.hooks.useUrlConfig.mergeParentSearchIntoChildUrl
+  frontend.src.hooks.useUrlConfig.onPop → frontend.src.hooks.useUrlConfig.mergeParentSearchIntoChildUrl
+  frontend.src.hooks.useUrlConfig.onPop → frontend.src.hooks.useUrlConfig.applyParentContextPayload
+  frontend.src.hooks.useUrlConfig.onPop → frontend.src.hooks.useUrlConfig.mergeParentContext
+  frontend.src.hooks.useUrlConfig.onMessage → frontend.src.hooks.useUrlConfig.mergeParentSearchIntoChildUrl
+  frontend.src.hooks.useUrlConfig.onMessage → frontend.src.hooks.useUrlConfig.applyParentContextPayload
+  frontend.src.hooks.useUrlConfig.onMessage → frontend.src.hooks.useUrlConfig.mergeParentContext
+  frontend.src.hooks.useUrlConfig.envelope → frontend.src.hooks.useUrlConfig.mergeParentSearchIntoChildUrl
+  frontend.src.hooks.useUrlConfig.envelope → frontend.src.hooks.useUrlConfig.applyParentContextPayload
+  frontend.src.hooks.useUrlConfig.envelope → frontend.src.hooks.useUrlConfig.mergeParentContext
+  frontend.src.hooks.useUrlConfig.ctx → frontend.src.hooks.useUrlConfig.mergeParentSearchIntoChildUrl
+  frontend.src.hooks.useUrlConfig.ctx → frontend.src.hooks.useUrlConfig.applyParentContextPayload
+  frontend.src.hooks.useUrlConfig.ctx → frontend.src.hooks.useUrlConfig.mergeParentContext
+  frontend.src.hooks.useUrlConfig.patch → frontend.src.hooks.useUrlConfig.parseParams
+  frontend.src.pages.MapEditor.fillMissingFields → frontend.src.pages.MapEditor.isPlainObject
+  frontend.src.pages.MapEditor.fillMissingFields → frontend.src.pages.MapEditor.cloneValue
+  frontend.src.pages.MapEditor.ensureRequiredDefaultMappings → frontend.src.pages.MapEditor.ensureMapShape
+  frontend.src.pages.MapEditor.ensureRequiredDefaultMappings → frontend.src.pages.MapEditor.fillMissingFields
+  frontend.src.pages.MapEditor.ensureRequiredDefaultMappings → frontend.src.pages.MapEditor.isPlainObject
+  frontend.src.pages.MapEditor.defaultMotor2 → frontend.src.pages.MapEditor.fillMissingFields
+  frontend.src.pages.MapEditor.defaultMotor2 → frontend.src.pages.MapEditor.isPlainObject
+  frontend.src.pages.MapEditor.defaultParam → frontend.src.pages.MapEditor.fillMissingFields
 ```
 
 ## Test Contracts
@@ -1029,57 +1086,198 @@ EDGES:
 
 ```toon markpact:analysis path=project/calls.toon.yaml
 # code2llm call graph | /home/tom/github/oqlos/oqlos
-# generated in 0.20s
-# nodes: 406 | edges: 500 | modules: 44
+# generated in 0.22s
+# nodes: 427 | edges: 500 | modules: 37
 # CC̄=4.1
 
 HUBS[20]:
   examples.hardware.doctor-workflow.print
     CC=0  in:225  out:0  total:225
-  oqlos.tools.cql_cli.formatting.canonicalize_oql_line
-    CC=14  in:1  out:31  total:32
+  frontend.src.i18n.I18nProvider.dict
+    CC=8  in:42  out:3  total:45
+  frontend.src.utils.hardware-wizard-steps.list
+    CC=2  in:40  out:0  total:40
+  frontend.src.pages.HardwareRestart.runCurrentStep
+    CC=96  in:0  out:34  total:34
   oqlos.core._oql_adapter.oql_doc_to_cql
     CC=12  in:2  out:30  total:32
   oqlos.core.motor2_runtime.normalize_motor2_runtime_config
     CC=12  in:1  out:29  total:30
-  oqlos.hardware.diagnosis.build_diagnosis_report
-    CC=13  in:2  out:28  total:30
-  oqlos.tools.hardware_diagnose.doctor.format_detection
-    CC=10  in:3  out:25  total:28
-  oqlos.tools.hardware_diagnose.modbus_probe.probe_options_from_args
-    CC=2  in:1  out:27  total:28
   oqlos.core.executor._safe_resolve
     CC=14  in:7  out:21  total:28
+  frontend.src.hooks.useUrlConfig.useUrlConfig
+    CC=18  in:0  out:27  total:27
   setup_hardware_and_run_oql.run_oql_scenario
     CC=8  in:1  out:24  total:25
-  oqlos.core.parser.parse_dsl_to_goal_with_issues
-    CC=13  in:3  out:21  total:24
+  frontend.src.pages.MapEditor.applyMapMutation
+    CC=2  in:16  out:8  total:24
+  frontend.src.pages.HardwareRestart.log
+    CC=1  in:21  out:3  total:24
   oqlos.core.oql_parser.parse_oql
     CC=14  in:3  out:21  total:24
+  oqlos.core.parser.parse_dsl_to_goal_with_issues
+    CC=13  in:3  out:21  total:24
   oqlos.core._line_parsers._parse_if_condition
     CC=9  in:1  out:22  total:23
-  oqlos.core._interpreter_actions._motor2_build_plan
-    CC=12  in:1  out:22  total:23
-  oqlos.core._interpreter_actions._try_exec_motor2_set
+  oqlos.core._action_motor2._try_exec_motor2_set
     CC=13  in:1  out:22  total:23
-  oqlos.tools.hardware_diagnose.doctor._analyze_modbus_adc_config
+  oqlos.core._action_motor2._motor2_build_plan
     CC=12  in:1  out:22  total:23
-  oqlos.tools.hardware_diagnose.doctor.format_doctor
-    CC=6  in:2  out:21  total:23
-  oqlos.tools.hardware_diagnose.shell._dispatch_command
-    CC=6  in:1  out:21  total:22
-  oqlos.tools.xml_import.parser._parse_operation_params
-    CC=9  in:1  out:21  total:22
-  oqlos.tools.hardware_diagnose.health.cmd_diagnose
-    CC=6  in:2  out:20  total:22
   oqlos.core._line_parsers._parse_set_line
     CC=12  in:1  out:21  total:22
+  frontend.src.utils.useSelectionCollapsePanel.RAIL_HOVER_CLOSE_MS
+    CC=33  in:0  out:21  total:21
+  oqlos.core._cql_tree_builder._parse_goal_line
+    CC=12  in:1  out:20  total:21
+  frontend.src.utils.useSelectionCollapsePanel.RAIL_HOVER_OPEN_MS
+    CC=33  in:0  out:21  total:21
 
 MODULES:
   examples.hardware.doctor-workflow  [1 funcs]
     print  CC=0  out:0
+  frontend.src.api.hardware-api-log  [4 funcs]
+    isHardwareWizardPath  CC=2  out:3
+    keys  CC=2  out:0
+    logHardwareApiEvent  CC=6  out:4
+    summarizeHardwareApiBody  CC=11  out:5
+  frontend.src.api.hardwareApi  [17 funcs]
+    describeDetail  CC=13  out:6
+    durationMs  CC=8  out:5
+    extractDiagnosticFailure  CC=69  out:10
+    extractErrorPayload  CC=4  out:1
+    formatHardwareApiError  CC=8  out:2
+    get  CC=1  out:1
+    isIdempotentTic249Deenergized  CC=12  out:2
+    mode  CC=1  out:1
+    nestedOk  CC=6  out:3
+    normalized  CC=1  out:1
+  frontend.src.api.wsClient  [15 funcs]
+    _handleMessage  CC=13  out:10
+    _request  CC=3  out:12
+    _scheduleReconnect  CC=3  out:3
+    clearTimeout  CC=2  out:0
+    command  CC=1  out:1
+    connect  CC=5  out:10
+    connected  CC=3  out:0
+    delay  CC=2  out:2
+    pending  CC=4  out:4
+    query  CC=1  out:1
+  frontend.src.context.AppConfigProvider  [10 funcs]
+    all  CC=6  out:2
+    getInteractiveItems  CC=6  out:6
+    handleEncoderCommand  CC=15  out:7
+    items  CC=11  out:6
+    onKeyDown  CC=7  out:3
+    onMessage  CC=3  out:2
+    onWheel  CC=6  out:4
+    parseParentEnvelope  CC=6  out:0
+    raw  CC=2  out:1
+    removeHighlights  CC=1  out:3
+  frontend.src.hooks.useUrlConfig  [25 funcs]
+    applyParentContextPayload  CC=5  out:5
+    base  CC=3  out:3
+    ctx  CC=5  out:8
+    envelope  CC=9  out:8
+    fromUser  CC=2  out:2
+    incomingFont  CC=2  out:2
+    incomingLang  CC=2  out:2
+    incomingTheme  CC=2  out:2
+    mergeParentContext  CC=16  out:5
+    mergeParentSearchIntoChildUrl  CC=6  out:10
+  frontend.src.i18n.I18nProvider  [5 funcs]
+    I18nProvider  CC=13  out:8
+    dict  CC=8  out:3
+    getInitialLang  CC=5  out:1
+    t  CC=8  out:2
+    val  CC=2  out:2
+  frontend.src.pages.HardwareDemo  [15 funcs]
+    Ctx  CC=2  out:2
+    appendLog  CC=1  out:3
+    cancelled  CC=16  out:10
+    ensureAudioCtx  CC=4  out:4
+    fallbackDevice  CC=2  out:5
+    fb  CC=2  out:5
+    now  CC=1  out:1
+    onNoteClick  CC=4  out:9
+    playMelody  CC=9  out:11
+    playNote  CC=5  out:7
+  frontend.src.pages.HardwareRestart  [31 funcs]
+    advanceOk  CC=3  out:2
+    attempt  CC=16  out:8
+    canRunCurrentStep  CC=1  out:4
+    confirmErrorKey  CC=1  out:4
+    confirmLabelKey  CC=1  out:4
+    currentStep  CC=1  out:4
+    isConfigureStep  CC=1  out:4
+    isSeparateAdapters  CC=1  out:4
+    loadPlan  CC=18  out:11
+    log  CC=1  out:3
+  frontend.src.pages.MapEditor  [49 funcs]
+    addAction  CC=2  out:6
+    addFunc  CC=2  out:6
+    addObject  CC=2  out:6
+    addParam  CC=2  out:4
+    applyMapMutation  CC=2  out:8
+    clearServerHardwareEvents  CC=8  out:9
+    cloneDefaultMap  CC=1  out:2
+    cloneValue  CC=1  out:2
+    createInitialEditorState  CC=1  out:3
+    defaultMotor2  CC=3  out:2
+  frontend.src.utils.collapse-toggle-bridge  [2 funcs]
+    isInIframe  CC=4  out:0
+    postToParent  CC=4  out:8
+  frontend.src.utils.hardware-activity-log  [4 funcs]
+    createHardwareActivityLogEntry  CC=1  out:2
+    loggedRef  CC=2  out:4
+    prependHardwareActivityLogEntry  CC=1  out:2
+    usePageOpenedLog  CC=2  out:5
+  frontend.src.utils.hardware-wizard-steps  [1 funcs]
+    list  CC=2  out:0
+  frontend.src.utils.hardwareEventStream  [9 funcs]
+    buildHardwareEventsWsUrl  CC=10  out:3
+    commandName  CC=3  out:1
+    id  CC=3  out:1
+    matchesHardwareEventFilters  CC=9  out:4
+    normalizeHardwareEvent  CC=21  out:3
+    normalizeText  CC=2  out:1
+    peripheralId  CC=3  out:1
+    result  CC=3  out:1
+    timestamp  CC=3  out:1
+  frontend.src.utils.rbac.policy  [13 funcs]
+    canConnectRoleAccessPath  CC=2  out:3
+    canHostRoleAccessPath  CC=2  out:3
+    isAdminConnectRole  CC=1  out:1
+    isOperatorConnectRole  CC=4  out:1
+    isReadOnlyConnectRole  CC=2  out:1
+    matched  CC=5  out:1
+    matchesPattern  CC=3  out:3
+    normalizeConnectRole  CC=2  out:1
+    normalizeHostRole  CC=2  out:1
+    normalizePath  CC=6  out:4
+  frontend.src.utils.useSelectionCollapsePanel  [16 funcs]
+    RAIL_HOVER_CLOSE_MS  CC=33  out:21
+    RAIL_HOVER_OPEN_MS  CC=33  out:21
+    cancelAutoCollapse  CC=2  out:2
+    cancelPanelClose  CC=2  out:2
+    cancelRailOpen  CC=2  out:2
+    expand  CC=1  out:5
+    onMessage  CC=8  out:3
+    panelEnter  CC=1  out:2
+    panelLeave  CC=4  out:5
+    previewCollapse  CC=1  out:2
   oqlos.config  [1 funcs]
     get_settings  CC=1  out:0
+  oqlos.core._action_motor2  [26 funcs]
+    _handle_motor2_reciprocating_setting  CC=2  out:4
+    _motor2_acceleration_raw  CC=1  out:2
+    _motor2_build_plan  CC=12  out:22
+    _motor2_do_start  CC=4  out:10
+    _motor2_do_stop  CC=4  out:3
+    _motor2_effective_steps_per_second  CC=1  out:4
+    _motor2_max_steps_per_second  CC=1  out:1
+    _motor2_reciprocating_state  CC=2  out:3
+    _motor2_speed_for_duration  CC=1  out:1
+    _motor2_speed_raw  CC=1  out:2
   oqlos.core._compare  [2 funcs]
     resolve_compare  CC=2  out:5
     resolve_compare_chain  CC=3  out:4
@@ -1120,7 +1318,7 @@ MODULES:
     _extract_func_name  CC=7  out:7
     _guard_recursion  CC=3  out:5
     _parse_func_call  CC=5  out:4
-  oqlos.core._interpreter_actions  [56 funcs]
+  oqlos.core._interpreter_actions  [30 funcs]
     _assert_json  CC=6  out:9
     _assert_sensor  CC=4  out:9
     _assert_status  CC=5  out:7
@@ -1141,7 +1339,8 @@ MODULES:
     _set_lung_step  CC=4  out:3
     _set_pump_step  CC=4  out:3
     _set_valve_step  CC=4  out:4
-  oqlos.core._oql_adapter  [14 funcs]
+  oqlos.core._oql_adapter  [15 funcs]
+    register  CC=1  out:1
     _cmd_to_actions  CC=2  out:3
     _fmt_value  CC=2  out:1
     _load_includes  CC=12  out:15
@@ -1151,14 +1350,14 @@ MODULES:
     _lower_set  CC=1  out:3
     _parse_macro_line  CC=8  out:10
     _resolve_include  CC=6  out:8
-    _scenarios_root  CC=1  out:2
   oqlos.core._value_normalizers  [1 funcs]
     coerce_float  CC=5  out:9
-  oqlos.core.base  [4 funcs]
+  oqlos.core.base  [5 funcs]
+    send_event  CC=4  out:7
     emit  CC=5  out:3
     output_yaml  CC=4  out:2
+    __init__  CC=2  out:1
     all  CC=3  out:3
-    set  CC=4  out:2
   oqlos.core.cql_parser  [11 funcs]
     _handle_goal  CC=3  out:5
     _handle_goal_attrs  CC=3  out:1
@@ -1177,7 +1376,8 @@ MODULES:
     _resolve_name_or_attr  CC=4  out:6
     _safe_resolve  CC=14  out:21
     safe_eval_condition  CC=2  out:5
-  oqlos.core.interpreter  [4 funcs]
+  oqlos.core.interpreter  [5 funcs]
+    __init__  CC=1  out:5
     _build_script_result  CC=2  out:7
     _exec_flat_action  CC=6  out:6
     execute  CC=4  out:9
@@ -1223,163 +1423,6 @@ MODULES:
     _eval_node  CC=2  out:5
     _eval_unary_op  CC=3  out:5
     safe_eval  CC=3  out:4
-  oqlos.hardware.config_paths  [1 funcs]
-    resolve_oqlos_config_path  CC=6  out:13
-  oqlos.hardware.diagnosis  [21 funcs]
-    _action_dict  CC=1  out:0
-    _adapter_index  CC=5  out:5
-    _add_modbus_device_actions  CC=5  out:5
-    _build_report_global_actions  CC=4  out:6
-    _build_stack_snapshot  CC=2  out:1
-    _diagnose_barcode_scanner  CC=9  out:9
-    _diagnose_plugin_devices  CC=11  out:14
-    _health_map  CC=4  out:5
-    _host_actions_from_report  CC=7  out:13
-    _infer_status  CC=7  out:5
-  oqlos.hardware.discovery  [2 funcs]
-    probe_waveshare_modbus  CC=5  out:2
-    probe_waveshare_modbus_adc  CC=5  out:2
-  oqlos.hardware.stack_snapshot  [1 funcs]
-    build_hardware_stack_snapshot  CC=3  out:11
-  oqlos.tools.cql_cli  [2 funcs]
-    _sync_compat_symbols  CC=1  out:0
-    main  CC=1  out:2
-  oqlos.tools.cql_cli.commands  [5 funcs]
-    _run_continuous_mode  CC=4  out:20
-    execute_command_with_cleanup  CC=8  out:7
-    handle_list_command  CC=7  out:21
-    run_single_command  CC=1  out:2
-    run_source  CC=2  out:3
-  oqlos.tools.cql_cli.formatting  [2 funcs]
-    canonicalize_oql_line  CC=14  out:31
-    canonicalize_oql_text  CC=3  out:4
-  oqlos.tools.cql_cli.main  [18 funcs]
-    _create_interpreter  CC=1  out:1
-    _dispatch_to_mode  CC=8  out:13
-    _extract_scenario_source  CC=9  out:9
-    _fetch_scenario_source  CC=7  out:13
-    _looks_like_html  CC=3  out:5
-    _print_cli_error  CC=2  out:3
-    _run_hardware_flags  CC=9  out:14
-    _run_interpreter_target  CC=2  out:4
-    create_cmd_parser  CC=1  out:13
-    create_file_parser  CC=1  out:16
-  oqlos.tools.cql_cli.preflight  [12 funcs]
-    _emit_preflight_error  CC=2  out:2
-    _emit_text_preflight  CC=7  out:16
-    _emit_yaml_preflight  CC=6  out:8
-    _health_status_is_ok  CC=11  out:9
-    _is_firmware_running  CC=5  out:3
-    _start_firmware_service  CC=13  out:11
-    check_firmware_state  CC=8  out:14
-    check_required_adapter  CC=8  out:5
-    check_required_adapter_health  CC=5  out:4
-    emit_preflight_success  CC=3  out:2
-  oqlos.tools.cql_cli.utils  [10 funcs]
-    _extract_first_action  CC=5  out:2
-    _resolve_peripheral_adapter  CC=4  out:4
-    _resolve_sensor_target  CC=3  out:0
-    build_result_payload  CC=2  out:2
-    build_single_command_scenario  CC=2  out:3
-    normalize_target_name  CC=1  out:4
-    output_yaml  CC=2  out:2
-    parse_sensor_overrides  CC=3  out:4
-    resolve_required_adapter  CC=8  out:3
-    validate_directory  CC=5  out:15
-  oqlos.tools.hardware_diagnose.__main__  [9 funcs]
-    _handle_report_action  CC=3  out:4
-    _print_benchmark  CC=3  out:11
-    _print_calibrate  CC=6  out:9
-    _print_detect  CC=2  out:4
-    _print_diagnose  CC=3  out:9
-    _print_doctor  CC=2  out:4
-    _print_health  CC=2  out:5
-    _print_list  CC=3  out:8
-    _print_modbus_probe  CC=2  out:5
-  oqlos.tools.hardware_diagnose.benchmark  [1 funcs]
-    run_benchmark  CC=6  out:15
-  oqlos.tools.hardware_diagnose.calibration  [4 funcs]
-    _calibrate_pump  CC=3  out:8
-    _calibrate_sensors  CC=5  out:8
-    _calibrate_valves  CC=4  out:6
-    run_calibration_test  CC=2  out:8
-  oqlos.tools.hardware_diagnose.discovery  [4 funcs]
-    _run_shell_command  CC=2  out:2
-    detect_chips_on_i2c  CC=8  out:10
-    list_i2c_buses  CC=1  out:2
-    list_usb_serial_devices  CC=7  out:9
-  oqlos.tools.hardware_diagnose.doctor  [40 funcs]
-    _adapter_health_status  CC=3  out:1
-    _add_issue  CC=2  out:1
-    _analyze_firmware_access  CC=7  out:11
-    _analyze_modbus_adc_config  CC=12  out:22
-    _analyze_modbus_config  CC=11  out:20
-    _analyze_serial_port_owners  CC=13  out:19
-    _canonical_device_path  CC=2  out:3
-    _check_firmware_adapters  CC=7  out:9
-    _check_firmware_health_error  CC=3  out:2
-    _check_firmware_mode  CC=3  out:4
-  oqlos.tools.hardware_diagnose.health  [7 funcs]
-    _format_health_value  CC=8  out:9
-    _is_health_ok  CC=5  out:6
-    _request_firmware_json  CC=8  out:9
-    check_firmware_health  CC=1  out:1
-    check_firmware_identify  CC=1  out:1
-    cmd_diagnose  CC=6  out:20
-    cmd_health  CC=5  out:10
-  oqlos.tools.hardware_diagnose.modbus_probe  [16 funcs]
-    _arg_count_list  CC=3  out:2
-    _arg_int_list  CC=3  out:2
-    _arg_str_list  CC=2  out:1
-    _env_count_list  CC=2  out:2
-    _env_float  CC=2  out:2
-    _env_int  CC=2  out:2
-    _env_int_list  CC=5  out:5
-    _env_str_list  CC=3  out:2
-    _serials_from_env  CC=3  out:4
-    _split_values  CC=5  out:5
-  oqlos.tools.hardware_diagnose.report  [2 funcs]
-    format_peripheral_table  CC=12  out:3
-    save_diagnostic_report  CC=3  out:13
-  oqlos.tools.hardware_diagnose.shell  [5 funcs]
-    _cmd_benchmark  CC=4  out:8
-    _cmd_calibrate  CC=4  out:5
-    _cmd_list  CC=5  out:11
-    _dispatch_command  CC=6  out:21
-    interactive_shell  CC=6  out:8
-  oqlos.tools.plugin_cli  [12 funcs]
-    _default_config_path  CC=1  out:2
-    _load_config_file  CC=4  out:16
-    cmd_capabilities  CC=2  out:6
-    cmd_connect  CC=4  out:6
-    cmd_disconnect  CC=2  out:4
-    cmd_execute  CC=3  out:7
-    cmd_health  CC=3  out:8
-    cmd_list  CC=3  out:9
-    cmd_peripherals  CC=8  out:16
-    cmd_reload  CC=4  out:10
-  oqlos.tools.xml_import._utils  [3 funcs]
-    is_compressor_output  CC=5  out:2
-    is_pump_output  CC=4  out:2
-    normalize_output_name  CC=11  out:12
-  oqlos.tools.xml_import.generators  [15 funcs]
-    _append_sensor_assertion  CC=6  out:3
-    _build_steps_from_op  CC=10  out:14
-    _build_validation_criteria  CC=14  out:3
-    _emit_cql_output  CC=5  out:15
-    _emit_cql_param  CC=7  out:5
-    _emit_cql_sensor_param  CC=13  out:11
-    _emit_dsl_param  CC=10  out:13
-    _emit_dsl_sensors  CC=8  out:7
-    _emit_set  CC=1  out:3
-    _format_range  CC=9  out:0
-  oqlos.tools.xml_import.parser  [6 funcs]
-    _parse_intervals  CC=4  out:7
-    _parse_operation  CC=6  out:18
-    _parse_operation_params  CC=9  out:21
-    _parse_test_run  CC=7  out:19
-    _populate_report_fields  CC=1  out:16
-    parse_xml  CC=6  out:16
   setup_hardware_and_run_oql  [6 funcs]
     detect_serial_devices  CC=12  out:7
     generate_env_content  CC=2  out:1
@@ -1395,176 +1438,199 @@ EDGES:
   setup_hardware_and_run_oql.load_env_file → examples.hardware.doctor-workflow.print
   setup_hardware_and_run_oql.run_oql_scenario → examples.hardware.doctor-workflow.print
   setup_hardware_and_run_oql.main → setup_hardware_and_run_oql.run_oql_scenario
-  oqlos.core.base.InterpreterOutput.emit → examples.hardware.doctor-workflow.print
-  oqlos.core.base.InterpreterOutput.output_yaml → examples.hardware.doctor-workflow.print
-  oqlos.core._dsl_helpers._map_peripheral → oqlos.core._dsl_helpers._looks_like_valve_object
-  oqlos.core._dsl_helpers._map_peripheral → oqlos.core._dsl_helpers._looks_like_pump_object
-  oqlos.core._dsl_helpers._map_peripheral → oqlos.core._dsl_helpers._looks_like_lung_object
-  oqlos.core._dsl_helpers._map_peripheral → oqlos.core._dsl_helpers._looks_like_sensor_object
-  oqlos.core._dsl_helpers._map_pump_action → oqlos.core._dsl_helpers._parse_numeric_value
-  oqlos.core._dsl_helpers._map_lung_action → oqlos.core._dsl_helpers._parse_numeric_value
-  oqlos.core._dsl_helpers._map_action_value → oqlos.core._dsl_helpers._looks_like_valve_object
-  oqlos.core._dsl_helpers._map_action_value → oqlos.core._dsl_helpers._looks_like_pump_object
-  oqlos.core._dsl_helpers._map_action_value → oqlos.core._dsl_helpers._looks_like_lung_object
-  oqlos.core._dsl_helpers._map_action_value → oqlos.core._dsl_helpers._map_valve_action
-  oqlos.core._dsl_helpers._map_action_value → oqlos.core._dsl_helpers._map_pump_action
-  oqlos.core._dsl_helpers._map_action_value → oqlos.core._dsl_helpers._map_lung_action
-  oqlos.core._dsl_helpers._map_action_value → oqlos.core._dsl_helpers._looks_like_sensor_object
-  oqlos.core._dsl_helpers._map_action_value → oqlos.core._dsl_helpers._map_wait_action
-  oqlos.core._interpreter_actions._drop_command_token → oqlos.core._interpreter_actions._extract_action_tokens
-  oqlos.core._interpreter_actions._compare_values → oqlos.core._interpreter_actions._coerce_expected_value
-  oqlos.core._interpreter_actions._format_set_command → oqlos.core._interpreter_actions._oql_quote
-  oqlos.core._interpreter_actions.exec_action_wait → oqlos.core._interpreter_actions.parse_wait_secs
-  oqlos.core._interpreter_actions.exec_action_wait → oqlos.core._interpreter_actions._do_sleep
-  oqlos.core._interpreter_actions.exec_action_func → oqlos.core._interpreter_actions._resolve_numeric_token
-  oqlos.core._interpreter_actions.exec_action_api → oqlos.core._interpreter_actions._mock_api_response
-  oqlos.core._interpreter_actions.exec_action_expect → oqlos.core._interpreter_actions._drop_command_token
-  oqlos.core._interpreter_actions.exec_action_expect → oqlos.core._interpreter_actions._mark_success
-  oqlos.core._interpreter_actions._assert_status → oqlos.core._interpreter_actions._record_failure
-  oqlos.core._interpreter_actions._assert_status → oqlos.core._interpreter_actions._coerce_expected_value
-  oqlos.core._interpreter_actions._assert_json → oqlos.core._interpreter_actions._get_nested_value
-  oqlos.core._interpreter_actions._assert_json → oqlos.core._interpreter_actions._record_failure
-  oqlos.core._interpreter_actions._assert_json → oqlos.core._interpreter_actions._compare_values
-  oqlos.core._interpreter_actions._assert_sensor → oqlos.core._interpreter_actions._record_failure
-  oqlos.core._interpreter_actions._assert_sensor → oqlos.core._interpreter_actions._mark_success
-  oqlos.core._interpreter_actions._assert_valve → oqlos.core._interpreter_actions._lookup_peripheral_state
-  oqlos.core._interpreter_actions._assert_valve → oqlos.core._interpreter_actions._normalize_bool
-  oqlos.core._interpreter_actions._assert_valve → oqlos.core._interpreter_actions._mark_success
-  oqlos.core._interpreter_actions._assert_valve → oqlos.core._interpreter_actions._record_failure
-  oqlos.core._interpreter_actions.exec_action_assert → oqlos.core._interpreter_actions._drop_command_token
-  oqlos.core._interpreter_actions.exec_action_assert → oqlos.core._interpreter_actions._record_failure
-  oqlos.core._interpreter_actions.exec_action_shell → oqlos.core._interpreter_actions._drop_command_token
-  oqlos.core._interpreter_actions.exec_action_shell → oqlos.core._interpreter_actions._record_failure
-  oqlos.core._interpreter_actions.exec_action_set → oqlos.core._interpreter_actions._try_exec_motor2_set
-  oqlos.core._interpreter_actions.exec_action_set → oqlos.core._interpreter_actions._exec_set_wait
-  oqlos.core._interpreter_actions.exec_action_set → oqlos.core._interpreter_actions._format_set_command
-  oqlos.core._interpreter_actions._parse_motor2_duration_seconds → oqlos.core._interpreter_actions._parse_motor2_float
+  frontend.src.hooks.useUrlConfig.parseAppearanceParams → frontend.src.hooks.useUrlConfig.resolveViewportWidthPx
+  frontend.src.hooks.useUrlConfig.parseIdentityParams → frontend.src.hooks.useUrlConfig.resolveUserIdFromSearchParams
+  frontend.src.hooks.useUrlConfig.parseParams → frontend.src.hooks.useUrlConfig.parseAppearanceParams
+  frontend.src.hooks.useUrlConfig.parseParams → frontend.src.hooks.useUrlConfig.parseIdentityParams
+  frontend.src.hooks.useUrlConfig.parseParams → frontend.src.hooks.useUrlConfig.parseNavigationParams
+  frontend.src.hooks.useUrlConfig.parseUrlEmbedConfig → frontend.src.hooks.useUrlConfig.parseParams
+  frontend.src.hooks.useUrlConfig.mergeParentContext → frontend.src.hooks.useUrlConfig.resolveUserFromContextPayload
+  frontend.src.hooks.useUrlConfig.mergeParentContext → frontend.src.hooks.useUrlConfig.resolveViewportWidthPx
+  frontend.src.hooks.useUrlConfig.incomingFont → frontend.src.hooks.useUrlConfig.resolveViewportWidthPx
+  frontend.src.hooks.useUrlConfig.incomingLang → frontend.src.hooks.useUrlConfig.resolveViewportWidthPx
+  frontend.src.hooks.useUrlConfig.incomingTheme → frontend.src.hooks.useUrlConfig.resolveViewportWidthPx
+  frontend.src.hooks.useUrlConfig.fromUser → frontend.src.hooks.useUrlConfig.resolveViewportWidthPx
+  frontend.src.hooks.useUrlConfig.nextUser → frontend.src.hooks.useUrlConfig.resolveViewportWidthPx
+  frontend.src.hooks.useUrlConfig.roleCandidate → frontend.src.hooks.useUrlConfig.resolveViewportWidthPx
+  frontend.src.hooks.useUrlConfig.applyParentContextPayload → frontend.src.hooks.useUrlConfig.mergeParentSearchIntoChildUrl
+  frontend.src.hooks.useUrlConfig.applyParentContextPayload → frontend.src.hooks.useUrlConfig.parseParams
+  frontend.src.hooks.useUrlConfig.applyParentContextPayload → frontend.src.hooks.useUrlConfig.mergeParentContext
+  frontend.src.hooks.useUrlConfig.search → frontend.src.hooks.useUrlConfig.mergeParentSearchIntoChildUrl
+  frontend.src.hooks.useUrlConfig.search → frontend.src.hooks.useUrlConfig.applyParentContextPayload
+  frontend.src.hooks.useUrlConfig.base → frontend.src.hooks.useUrlConfig.mergeParentSearchIntoChildUrl
+  frontend.src.hooks.useUrlConfig.base → frontend.src.hooks.useUrlConfig.parseParams
+  frontend.src.hooks.useUrlConfig.useUrlConfig → frontend.src.hooks.useUrlConfig.parseParams
+  frontend.src.hooks.useUrlConfig.useUrlConfig → frontend.src.hooks.useUrlConfig.mergeParentSearchIntoChildUrl
+  frontend.src.hooks.useUrlConfig.onPop → frontend.src.hooks.useUrlConfig.mergeParentSearchIntoChildUrl
+  frontend.src.hooks.useUrlConfig.onPop → frontend.src.hooks.useUrlConfig.applyParentContextPayload
+  frontend.src.hooks.useUrlConfig.onPop → frontend.src.hooks.useUrlConfig.mergeParentContext
+  frontend.src.hooks.useUrlConfig.onMessage → frontend.src.hooks.useUrlConfig.mergeParentSearchIntoChildUrl
+  frontend.src.hooks.useUrlConfig.onMessage → frontend.src.hooks.useUrlConfig.applyParentContextPayload
+  frontend.src.hooks.useUrlConfig.onMessage → frontend.src.hooks.useUrlConfig.mergeParentContext
+  frontend.src.hooks.useUrlConfig.envelope → frontend.src.hooks.useUrlConfig.mergeParentSearchIntoChildUrl
+  frontend.src.hooks.useUrlConfig.envelope → frontend.src.hooks.useUrlConfig.applyParentContextPayload
+  frontend.src.hooks.useUrlConfig.envelope → frontend.src.hooks.useUrlConfig.mergeParentContext
+  frontend.src.hooks.useUrlConfig.ctx → frontend.src.hooks.useUrlConfig.mergeParentSearchIntoChildUrl
+  frontend.src.hooks.useUrlConfig.ctx → frontend.src.hooks.useUrlConfig.applyParentContextPayload
+  frontend.src.hooks.useUrlConfig.ctx → frontend.src.hooks.useUrlConfig.mergeParentContext
+  frontend.src.hooks.useUrlConfig.patch → frontend.src.hooks.useUrlConfig.parseParams
+  frontend.src.pages.MapEditor.fillMissingFields → frontend.src.pages.MapEditor.isPlainObject
+  frontend.src.pages.MapEditor.fillMissingFields → frontend.src.pages.MapEditor.cloneValue
+  frontend.src.pages.MapEditor.ensureRequiredDefaultMappings → frontend.src.pages.MapEditor.ensureMapShape
+  frontend.src.pages.MapEditor.ensureRequiredDefaultMappings → frontend.src.pages.MapEditor.fillMissingFields
+  frontend.src.pages.MapEditor.ensureRequiredDefaultMappings → frontend.src.pages.MapEditor.isPlainObject
+  frontend.src.pages.MapEditor.defaultMotor2 → frontend.src.pages.MapEditor.fillMissingFields
+  frontend.src.pages.MapEditor.defaultMotor2 → frontend.src.pages.MapEditor.isPlainObject
+  frontend.src.pages.MapEditor.defaultParam → frontend.src.pages.MapEditor.fillMissingFields
 ```
 
 ### Code Analysis (`project/analysis.toon.yaml`)
 
 ```toon markpact:analysis path=project/analysis.toon.yaml
-# code2llm | 191f 41133L | python:143,md:16,yaml:13,shell:6,json:5,yml:4,conf:2,toml:1 | 2026-06-30
-# generated in 0.07s
-# CC̅=4.2 | critical:0/1441 | dups:0 | cycles:0
+# code2llm | 239f 54087L | python:148,javascript:35,md:16,yaml:13,shell:9,json:6,yml:4,typescript:3,conf:2,toml:1 | 2026-06-30
+# generated in 0.12s
+# CC̅=4.1 | critical:26/2065 | dups:0 | cycles:0
 
-HEALTH[0]: ok
+HEALTH[20]:
+  🔴 GOD   oqlos/api/hardware_v3.py = 606L, 9 classes, 44m, max CC=14
+  🟡 CC    mergeParentContext CC=16 (limit:15)
+  🟡 CC    useUrlConfig CC=18 (limit:15)
+  🟡 CC    readIntegrationMeta CC=15 (limit:15)
+  🟡 CC    setMetaField CC=24 (limit:15)
+  🟡 CC    editObjectActionArg CC=24 (limit:15)
+  🟡 CC    renderObjectActionEditor CC=21 (limit:15)
+  🟡 CC    loadPlan CC=18 (limit:15)
+  🟡 CC    runCurrentStep CC=96 (limit:15)
+  🟡 CC    runWithRetry CC=16 (limit:15)
+  🟡 CC    attempt CC=16 (limit:15)
+  🟡 CC    cancelled CC=16 (limit:15)
+  🟡 CC    normalizeHardwareEvent CC=21 (limit:15)
+  🟡 CC    RAIL_HOVER_OPEN_MS CC=33 (limit:15)
+  🟡 CC    RAIL_HOVER_CLOSE_MS CC=33 (limit:15)
+  🟡 CC    useSelectionCollapsePanel CC=33 (limit:15)
+  🟡 CC    summarizeFuncToHardware CC=47 (limit:15)
+  🟡 CC    objName CC=30 (limit:15)
+  🟡 CC    actName CC=30 (limit:15)
+  🟡 CC    selectWizardProbeCandidate CC=22 (limit:15)
 
-REFACTOR[0]: none needed
+REFACTOR[2]:
+  1. split oqlos/api/hardware_v3.py  (god module)
+  2. split 19 high-CC methods  (CC>15)
 
-PIPELINES[681]:
+PIPELINES[1049]:
   [1] Src [main]: main → run_oql_scenario → print
       PURITY: 100% pure
-  [2] Src [__init__]: __init__
+  [2] Src [LocalizedApp]: LocalizedApp
       PURITY: 100% pure
-  [3] Src [initialize_peripherals]: initialize_peripherals
+  [3] Src [useWsStatus]: useWsStatus
       PURITY: 100% pure
-  [4] Src [broadcast_event]: broadcast_event
+  [4] Src [client]: client
       PURITY: 100% pure
-  [5] Src [summary]: summary
+  [5] Src [onOpen]: onOpen
       PURITY: 100% pure
-  [6] Src [__init__]: __init__
+  [6] Src [onClose]: onClose
       PURITY: 100% pure
-  [7] Src [get]: get
+  [7] Src [DEFAULTS]: DEFAULTS
       PURITY: 100% pure
-  [8] Src [has]: has
+  [8] Src [n]: n
       PURITY: 100% pure
-  [9] Src [clear]: clear
+  [9] Src [parseUrlEmbedConfig]: parseUrlEmbedConfig → parseParams → parseAppearanceParams → resolveViewportWidthPx
       PURITY: 100% pure
-  [10] Src [interpolate]: interpolate
+  [10] Src [incomingFont]: incomingFont → resolveViewportWidthPx
       PURITY: 100% pure
-  [11] Src [emit]: emit → print
+  [11] Src [incomingLang]: incomingLang → resolveViewportWidthPx
       PURITY: 100% pure
-  [12] Src [_broadcast_event]: _broadcast_event
+  [12] Src [incomingTheme]: incomingTheme → resolveViewportWidthPx
       PURITY: 100% pure
-  [13] Src [info]: info
+  [13] Src [fromUser]: fromUser → resolveViewportWidthPx
       PURITY: 100% pure
-  [14] Src [ok]: ok
+  [14] Src [nextUser]: nextUser → resolveViewportWidthPx
       PURITY: 100% pure
-  [15] Src [fail]: fail
+  [15] Src [roleCandidate]: roleCandidate → resolveViewportWidthPx
       PURITY: 100% pure
-  [16] Src [warn]: warn
+  [16] Src [IFRAME_ONLY_SEARCH_PARAMS]: IFRAME_ONLY_SEARCH_PARAMS
       PURITY: 100% pure
-  [17] Src [error]: error
+  [17] Src [url]: url
       PURITY: 100% pure
-  [18] Src [step]: step
+  [18] Src [raw]: raw
       PURITY: 100% pure
-  [19] Src [run]: run
+  [19] Src [incoming]: incoming
       PURITY: 100% pure
-  [20] Src [run_file]: run_file
+  [20] Src [search]: search → mergeParentSearchIntoChildUrl
       PURITY: 100% pure
-  [21] Src [strip_comments]: strip_comments
+  [21] Src [base]: base → mergeParentSearchIntoChildUrl
       PURITY: 100% pure
-  [22] Src [connect]: connect
+  [22] Src [useUrlConfig]: useUrlConfig → parseParams → parseAppearanceParams → resolveViewportWidthPx
       PURITY: 100% pure
-  [23] Src [disconnect]: disconnect
+  [23] Src [onPop]: onPop → mergeParentSearchIntoChildUrl
       PURITY: 100% pure
-  [24] Src [send_event]: send_event
+  [24] Src [onMessage]: onMessage → mergeParentSearchIntoChildUrl
       PURITY: 100% pure
-  [25] Src [exec_action_task]: exec_action_task
+  [25] Src [envelope]: envelope → mergeParentSearchIntoChildUrl
       PURITY: 100% pure
-  [26] Src [exec_action_log]: exec_action_log
+  [26] Src [ctx]: ctx → mergeParentSearchIntoChildUrl
       PURITY: 100% pure
-  [27] Src [exec_action_error]: exec_action_error
+  [27] Src [patch]: patch → parseParams → parseAppearanceParams → resolveViewportWidthPx
       PURITY: 100% pure
-  [28] Src [exec_action_else]: exec_action_else
+  [28] Src [param]: param
       PURITY: 100% pure
-  [29] Src [exec_action_sample]: exec_action_sample
+  [29] Src [syncParentUrl]: syncParentUrl
       PURITY: 100% pure
-  [30] Src [_func_avg]: _func_avg
+  [30] Src [location]: location
       PURITY: 100% pure
-  [31] Src [_func_sum]: _func_sum
+  [31] Src [collapseEnabled]: collapseEnabled
       PURITY: 100% pure
-  [32] Src [_func_min]: _func_min
+  [32] Src [inPreview]: inPreview
       PURITY: 100% pure
-  [33] Src [_func_max]: _func_max
+  [33] Src [filtered]: filtered
       PURITY: 100% pure
-  [34] Src [_func_sub]: _func_sub
+  [34] Src [handleSelect]: handleSelect
       PURITY: 100% pure
-  [35] Src [_func_div]: _func_div
+  [35] Src [LIVE_EVENTS_LIMIT]: LIVE_EVENTS_LIMIT
       PURITY: 100% pure
-  [36] Src [_func_add]: _func_add
+  [36] Src [TIC249_TARGET_VELOCITY_SCALE]: TIC249_TARGET_VELOCITY_SCALE
       PURITY: 100% pure
-  [37] Src [exec_action_func]: exec_action_func → _resolve_numeric_token
+  [37] Src [GROUP_FOR_TAB]: GROUP_FOR_TAB
       PURITY: 100% pure
-  [38] Src [exec_action_goto]: exec_action_goto
+  [38] Src [SECTION_DESC_KEY]: SECTION_DESC_KEY
       PURITY: 100% pure
-  [39] Src [exec_action_api]: exec_action_api → _mock_api_response
+  [39] Src [EMPTY_KEY]: EMPTY_KEY
       PURITY: 100% pure
-  [40] Src [exec_action_expect]: exec_action_expect → _drop_command_token → _extract_action_tokens
+  [40] Src [META_FIELDS]: META_FIELDS
       PURITY: 100% pure
-  [41] Src [_assert_status]: _assert_status → _record_failure
+  [41] Src [PARAM_CONVERSION_ALGORITHMS]: PARAM_CONVERSION_ALGORITHMS
       PURITY: 100% pure
-  [42] Src [_assert_json]: _assert_json → _get_nested_value
+  [42] Src [value]: value
       PURITY: 100% pure
-  [43] Src [_assert_sensor]: _assert_sensor → _record_failure
+  [43] Src [shaped]: shaped
       PURITY: 100% pure
-  [44] Src [_assert_valve]: _assert_valve → _lookup_peripheral_state
+  [44] Src [defaultMotor2]: defaultMotor2 → fillMissingFields → isPlainObject
       PURITY: 100% pure
-  [45] Src [exec_action_assert]: exec_action_assert → _drop_command_token → _extract_action_tokens
+  [45] Src [defaultParam]: defaultParam → fillMissingFields → isPlainObject
       PURITY: 100% pure
-  [46] Src [exec_action_shell]: exec_action_shell → _drop_command_token → _extract_action_tokens
+  [46] Src [readIntegrationMeta]: readIntegrationMeta → firstBindingFromObjectMapping
       PURITY: 100% pure
-  [47] Src [exec_action_var_set]: exec_action_var_set
+  [47] Src [src]: src → isPlainObject
       PURITY: 100% pure
-  [48] Src [exec_action_condition]: exec_action_condition
+  [48] Src [createInitialEditorState]: createInitialEditorState → ensureRequiredDefaultMappings → ensureMapShape → isPlainObject
       PURITY: 100% pure
-  [49] Src [exec_action_if_fail_block]: exec_action_if_fail_block
+  [49] Src [seeded]: seeded
       PURITY: 100% pure
-  [50] Src [exec_action_if_block]: exec_action_if_block
+  [50] Src [wsOnline]: wsOnline
       PURITY: 100% pure
 
 LAYERS:
   ./                              CC̄=6.9    ←in:0  →out:0
   │ !! openapi_spec.yaml         1035L  0C    0m  CC=0.0    ←0
   │ !! openapi.yaml              1035L  0C    0m  CC=0.0    ←0
-  │ !! README.md                  711L  0C    0m  CC=0.0    ←0
+  │ !! README.md                  769L  0C    0m  CC=0.0    ←0
   │ !! goal.yaml                  511L  0C    0m  CC=0.0    ←0
   │ CHANGELOG.md               496L  0C    0m  CC=0.0    ←0
   │ hw_diagnostic_20260415_133138.json   340L  0C    0m  CC=0.0    ←0
   │ setup_hardware_and_run_oql   333L  0C    7m  CC=12     ←0
   │ Taskfile.yml               160L  0C    0m  CC=0.0    ←0
   │ sumd.json                  150L  0C    0m  CC=0.0    ←0
+  │ Makefile                    86L  0C    0m  CC=0.0    ←0
   │ pyproject.toml              81L  0C    0m  CC=0.0    ←0
   │ pyqual.yaml                 49L  0C    0m  CC=0.0    ←0
   │ testql-contracts.testql.toon.yaml    49L  0C    0m  CC=0.0    ←0
@@ -1572,27 +1638,71 @@ LAYERS:
   │ project.sh                  43L  0C    0m  CC=0.0    ←0
   │ TODO.md                     36L  0C    0m  CC=0.0    ←0
   │
-  oqlos/                          CC̄=4.2    ←in:8  →out:0
+  frontend/                       CC̄=4.3    ←in:0  →out:0
+  │ !! dictionaries.js           1981L  0C    4m  CC=5      ←0
+  │ !! mapEditorDefaultMap.js    1763L  0C    3m  CC=1      ←0
+  │ !! MapEditor.jsx             1490L  0C  109m  CC=24     ←6
+  │ !! hardware-status-presets-translations.js   795L  0C    0m  CC=0.0    ←0
+  │ !! HardwareRestart.jsx        660L  0C   70m  CC=96     ←3
+  │ !! HardwareDemo.jsx           585L  0C   41m  CC=16     ←0
+  │ !! hardwareApi.js             434L  0C   40m  CC=69     ←0
+  │ SidebarList.jsx            316L  0C    4m  CC=6      ←0
+  │ hardware-status-panel-translations.js   309L  0C    0m  CC=0.0    ←0
+  │ !! useUrlConfig.js            286L  0C   49m  CC=18     ←0
+  │ !! AppConfigProvider.jsx      206L  0C   24m  CC=44     ←6
+  │ !! useSelectionCollapsePanel.js   191L  0C   22m  CC=33     ←0
+  │ hardware-demo-extra-translations.js   183L  0C    0m  CC=0.0    ←0
+  │ wsClient.js                138L  1C   30m  CC=13     ←10
+  │ rbac.policy.js             118L  0C   20m  CC=6      ←0
+  │ !! hardware-wizard-steps.js   111L  0C   16m  CC=22     ←22
+  │ hardware-api-log.js         87L  0C    7m  CC=11     ←0
+  │ SharedNav.jsx               83L  0C    6m  CC=5      ←0
+  │ hardware-status-log-translations.js    81L  0C    0m  CC=0.0    ←0
+  │ I18nProvider.jsx            65L  0C   10m  CC=13     ←20
+  │ !! mapEditorFuncHardwareSummary.js    50L  0C   10m  CC=47     ←0
+  │ !! hardwareEventStream.js      47L  0C   21m  CC=21     ←1
+  │ collapse-toggle-bridge.js    46L  0C    6m  CC=4      ←0
+  │ designRem.js                43L  0C    2m  CC=1      ←0
+  │ parentUrlBridge.js          39L  0C    3m  CC=10     ←0
+  │ paths.ts                    39L  0C    4m  CC=2      ←0
+  │ hui-shell-key.js            38L  0C    5m  CC=5      ←0
+  │ vite.config.ts              36L  0C    0m  CC=0.0    ←0
+  │ hardware-activity-log.js    34L  0C    4m  CC=2      ←0
+  │ index.ts                    31L  0C    2m  CC=1      ←0
+  │ main.jsx                    30L  0C    1m  CC=1      ←0
+  │ HardwareStatus.jsx          28L  0C    1m  CC=5      ←0
+  │ useWsStatus.js              26L  0C    4m  CC=3      ←0
+  │ HardwareActivityLog.jsx     24L  0C    0m  CC=0.0    ←0
+  │ package.json                21L  0C    0m  CC=0.0    ←0
+  │ App.jsx                     21L  0C    0m  CC=0.0    ←0
+  │ hardware-restart-docs.js    11L  0C    2m  CC=2      ←0
+  │ hardware-wizard-plan.js     10L  0C    2m  CC=5      ←0
+  │ hardware-time.js             4L  0C    1m  CC=1      ←0
+  │
+  oqlos/                          CC̄=4.1    ←in:8  →out:0
   │ !! hardware                  2252L  0C   89m  CC=14     ←2
-  │ !! _interpreter_actions      1255L  0C   85m  CC=14     ←1
   │ !! doctor                    1003L  0C   41m  CC=13     ←2
+  │ !! _interpreter_actions       803L  0C   51m  CC=14     ←1
   │ !! oql_parser                 762L  3C   43m  CC=14     ←2
   │ !! interpreter                676L  1C   47m  CC=11     ←0
   │ !! tic249_extended            627L  0C   30m  CC=14     ←0
   │ !! plugin_gateway             612L  1C   21m  CC=14     ←0
+  │ !! hardware_v3                606L  9C   44m  CC=14     ←0
   │ !! diagnosis                  562L  3C   26m  CC=13     ←1
   │ !! motor                      549L  1C   20m  CC=14     ←0
-  │ mqtt_oql_bridge            494L  6C   23m  CC=5      ←0
+  │ mqtt_oql_bridge            494L  6C   34m  CC=5      ←0
   │ firmware_adapter           481L  1C   26m  CC=12     ←0
   │ cql_parser                 477L  1C   30m  CC=8      ←2
+  │ _action_motor2             470L  0C   34m  CC=13     ←1
   │ _oql_adapter               466L  1C   28m  CC=12     ←2
   │ proxy                      460L  1C   29m  CC=13     ←0
   │ generators                 452L  0C   20m  CC=14     ←0
-  │ gateway                    416L  5C   18m  CC=7      ←0
+  │ gateway                    416L  5C   25m  CC=7      ←0
   │ main                       412L  1C   18m  CC=9      ←2
   │ _cql_tokenizer             406L  0C   27m  CC=5      ←0
   │ modbus_adc                 398L  1C   17m  CC=12     ←0
   │ executor                   383L  1C   21m  CC=14     ←0
+  │ main                       379L  0C   20m  CC=8      ←0
   │ base                       370L  9C   21m  CC=5      ←3
   │ state                      370L  0C   16m  CC=13     ←0
   │ execution                  359L  0C   16m  CC=11     ←0
@@ -1602,8 +1712,7 @@ LAYERS:
   │ identify_enrich            333L  0C   18m  CC=13     ←0
   │ registry                   332L  1C   14m  CC=6      ←0
   │ preflight                  329L  0C   12m  CC=13     ←1
-  │ base                       320L  7C   25m  CC=7      ←19
-  │ main                       310L  0C   13m  CC=8      ←0
+  │ base                       320L  7C   28m  CC=7      ←15
   │ schema                     296L  5C    6m  CC=7      ←0
   │ piadc                      272L  1C   12m  CC=11     ←0
   │ html_report                266L  0C    5m  CC=10     ←0
@@ -1612,6 +1721,7 @@ LAYERS:
   │ hui_actions                247L  0C   12m  CC=7      ←1
   │ _line_parsers              246L  0C    9m  CC=12     ←1
   │ sidecar_control            226L  0C    8m  CC=13     ←1
+  │ !! manage_ops                 222L  0C    7m  CC=19     ←2
   │ config                     220L  1C    1m  CC=1      ←5
   │ _firmware_executor         210L  1C    9m  CC=11     ←0
   │ OQL-CHEATSHEET.md          210L  0C    0m  CC=0.0    ←0
@@ -1621,14 +1731,14 @@ LAYERS:
   │ commands                   186L  0C    5m  CC=8      ←2
   │ usb_diagnostics            185L  0C    5m  CC=13     ←0
   │ __main__                   184L  0C   11m  CC=6      ←0
-  │ manage_ops                 184L  0C    7m  CC=6      ←1
   │ parser                     183L  0C    5m  CC=13     ←2
   │ plugins                    181L  0C   12m  CC=3      ←2
   │ parser                     175L  0C    6m  CC=9      ←0
-  │ event_server               171L  2C   10m  CC=7      ←0
+  │ event_server               171L  2C   11m  CC=7      ←0
   │ _cql_tree_builder          167L  0C    9m  CC=12     ←2
   │ modbus_repair              164L  0C    7m  CC=13     ←1
   │ artificial_lung            162L  0C   10m  CC=6      ←0
+  │ hardware_mapping_store     152L  1C   13m  CC=8      ←1
   │ oql_mqtt                   151L  3C    6m  CC=6      ←1
   │ utils                      150L  0C   10m  CC=8      ←4
   │ _sensor_evaluator          145L  1C    6m  CC=10     ←0
@@ -1641,6 +1751,7 @@ LAYERS:
   │ peripheral_mapping         138L  0C    4m  CC=2      ←0
   │ json_reporter              138L  0C    5m  CC=8      ←0
   │ autorepair                 137L  0C    9m  CC=12     ←0
+  │ hardware_events            135L  0C   10m  CC=11     ←1
   │ _dsl_helpers               132L  0C   12m  CC=11     ←4
   │ modbus_identify            131L  0C    8m  CC=10     ←1
   │ resolvers                  128L  0C   10m  CC=10     ←1
@@ -1650,7 +1761,7 @@ LAYERS:
   │ mqtt                       119L  1C    9m  CC=3      ←0
   │ health                     117L  0C    7m  CC=8      ←7
   │ file_ops                   108L  1C    5m  CC=4      ←1
-  │ discovery                  103L  0C    3m  CC=5      ←2
+  │ discovery                  103L  0C    3m  CC=5      ←3
   │ _utils                     101L  0C    6m  CC=12     ←1
   │ __init__                   100L  0C    0m  CC=0.0    ←0
   │ discovery                   99L  1C    5m  CC=8      ←5
@@ -1660,6 +1771,7 @@ LAYERS:
   │ models                      90L  5C    0m  CC=0.0    ←0
   │ gpio                        89L  1C    7m  CC=6      ←0
   │ logger                      89L  0C    2m  CC=12     ←0
+  │ !! hardware_mapping_contract    89L  1C    4m  CC=19     ←1
   │ stack_snapshot              88L  0C    4m  CC=8      ←1
   │ config                      88L  1C    5m  CC=6      ←1
   │ dsl_models                  87L  8C    0m  CC=0.0    ←0
@@ -1673,7 +1785,7 @@ LAYERS:
   │ constants                   69L  0C    0m  CC=0.0    ←0
   │ control_proxy               68L  1C    1m  CC=1      ←0
   │ version_endpoint            66L  0C    2m  CC=3      ←0
-  │ tic249_arg_contract         65L  0C    2m  CC=8      ←0
+  │ tic249_arg_contract         65L  0C    2m  CC=8      ←2
   │ adc                         64L  0C    3m  CC=10     ←2
   │ report                      63L  0C    2m  CC=12     ←3
   │ formatting                  63L  0C    3m  CC=14     ←2
@@ -1711,7 +1823,7 @@ LAYERS:
   │ __init__                     3L  0C    0m  CC=0.0    ←0
   │ __init__                     0L  0C    0m  CC=0.0    ←0
   │
-  scripts/                        CC̄=3.8    ←in:0  →out:69  !! split
+  scripts/                        CC̄=3.8    ←in:0  →out:72  !! split
   │ !! oql_v2_to_v4_migrate_db    662L  1C   43m  CC=14     ←1
   │ hardware-check.sh          340L  0C   11m  CC=0.0    ←0
   │ migrate_to_v4              340L  0C   19m  CC=11     ←0
@@ -1721,7 +1833,10 @@ LAYERS:
   │ oql_validator_common       129L  0C    6m  CC=11     ←2
   │ oql-stack.sh               104L  0C    5m  CC=0.0    ←0
   │ fix_brackets_to_v4          95L  0C    2m  CC=14     ←0
+  │ test-hardware.sh            83L  0C    0m  CC=0.0    ←0
+  │ verify-rpi-checksum.sh      75L  0C    1m  CC=0.0    ←0
   │ provision-rpi-sudo.sh       67L  0C    0m  CC=0.0    ←0
+  │ gen-checksums.sh            24L  0C    0m  CC=0.0    ←0
   │
   examples/                       CC̄=0.0    ←in:0  →out:0
   │ plugin-config.yaml         128L  0C    0m  CC=0.0    ←0
@@ -1729,7 +1844,7 @@ LAYERS:
   │ doctor-workflow.sh          52L  0C    1m  CC=0.0    ←17
   │
   docs/                           CC̄=0.0    ←in:0  →out:0
-  │ !! README.md                 1089L  0C    0m  CC=0.0    ←0
+  │ !! README.md                 1682L  0C    0m  CC=0.0    ←0
   │ !! cql-examples.md            588L  0C    0m  CC=0.0    ←0
   │ HARDWARE_DIAGNOSTICS.md    389L  0C    0m  CC=0.0    ←0
   │ HARDWARE_CONTROL_OQL_MQTT.md   281L  0C    0m  CC=0.0    ←0
@@ -1740,7 +1855,7 @@ LAYERS:
   │ cql-spec.md                 78L  0C    0m  CC=0.0    ←0
   │
   redeploy/                       CC̄=0.0    ←in:0  →out:0
-  │ !! migration.md               644L  0C    0m  CC=0.0    ←0
+  │ !! migration.md              1112L  0C    0m  CC=0.0    ←0
   │ !! migration.md               639L  0C    0m  CC=0.0    ←0
   │ RUNBOOK.md                  87L  0C    0m  CC=0.0    ←0
   │ RUNBOOK.md                  87L  0C    0m  CC=0.0    ←0
@@ -1768,31 +1883,35 @@ LAYERS:
      oqlos/core/__init__.py                    0L
 
 COUPLING:
-                                       examples.hardware                 oqlos.tools                     scripts              oqlos.hardware                   oqlos.api                  oqlos.core  setup_hardware_and_run_oql                oqlos.shared                       oqlos                 oqlos.utils                   oqlos.dsl
-           examples.hardware                          ──                        ←125                         ←64                                                                                  ←2                         ←27                          ←7                                                                                      hub
-                 oqlos.tools                         125                          ──                          ←3                           6                                                      10                                                                                                                                              hub
-                     scripts                          64                           3                          ──                           1                                                       1                                                                                                                                              !! fan-out
-              oqlos.hardware                                                       3                          ←1                          ──                           1                           8                                                                                   3                                                          hub
-                   oqlos.api                                                                                                              14                          ──                           8                                                       8                           1                           2                              !! fan-out
-                  oqlos.core                           2                         ←10                          ←1                          ←8                          ←8                          ──                                                      ←1                           3                                                      ←1  hub
-  setup_hardware_and_run_oql                          27                                                                                                                                                                      ──                                                                                                                  !! fan-out
-                oqlos.shared                           7                                                                                                              ←8                           1                                                      ──                           1                                                          hub
-                       oqlos                                                                                                              ←3                          ←1                          ←3                                                      ←1                          ──                                                          hub
-                 oqlos.utils                                                                                                                                          ←2                                                                                                                                          ──                            
-                   oqlos.dsl                                                                                                                                                                       1                                                                                                                                          ──
+                                             oqlos.tools           examples.hardware                frontend.src              oqlos.hardware                     scripts                   oqlos.api                  oqlos.core  setup_hardware_and_run_oql                oqlos.shared                       oqlos                   oqlos.dsl             oqlos.reporters                 oqlos.utils
+                 oqlos.tools                          ──                         125                          88                           6                          ←3                                                      10                                                                                                                                                                          hub
+           examples.hardware                        ←125                          ──                                                                                 ←64                                                      ←2                         ←27                          ←7                                                                                                                  hub
+                frontend.src                         ←88                                                      ──                         ←71                          ←3                         ←18                         ←18                                                      ←4                                                      ←2                          ←2                              hub
+              oqlos.hardware                           3                                                      71                          ──                          ←1                           1                           6                                                                                   3                                                                                      hub
+                     scripts                           3                          64                           3                           1                          ──                                                       1                                                                                                                                                                          !! fan-out
+                   oqlos.api                                                                                  18                          21                                                      ──                           6                                                       9                           1                                                                                   2  !! fan-out
+                  oqlos.core                         ←10                           2                          18                          ←6                          ←1                          ←6                          ──                                                      ←1                           3                          ←1                                                          hub
+  setup_hardware_and_run_oql                                                      27                                                                                                                                                                      ──                                                                                                                                              !! fan-out
+                oqlos.shared                                                       7                           4                                                                                  ←9                           1                                                      ──                           1                                                                                      hub
+                       oqlos                                                                                                              ←3                                                      ←1                          ←3                                                      ←1                          ──                                                                                      hub
+                   oqlos.dsl                                                                                   2                                                                                                               1                                                                                                              ──                                                        
+             oqlos.reporters                                                                                   2                                                                                                                                                                                                                                                          ──                            
+                 oqlos.utils                                                                                                                                                                      ←2                                                                                                                                                                                                  ──
   CYCLES: none
-  HUB: oqlos.hardware/ (fan-in=21)
-  HUB: oqlos.tools/ (fan-in=6)
-  HUB: oqlos.core/ (fan-in=29)
-  HUB: oqlos.shared/ (fan-in=8)
   HUB: oqlos/ (fan-in=8)
+  HUB: oqlos.shared/ (fan-in=9)
   HUB: examples.hardware/ (fan-in=225)
-  SMELL: oqlos.hardware/ fan-out=15 → split needed
-  SMELL: oqlos.tools/ fan-out=141 → split needed
-  SMELL: oqlos.api/ fan-out=33 → split needed
-  SMELL: oqlos.shared/ fan-out=9 → split needed
+  HUB: oqlos.tools/ (fan-in=6)
+  HUB: oqlos.hardware/ (fan-in=28)
+  HUB: frontend.src/ (fan-in=206)
+  HUB: oqlos.core/ (fan-in=25)
+  SMELL: oqlos.api/ fan-out=57 → split needed
+  SMELL: oqlos.shared/ fan-out=13 → split needed
   SMELL: setup_hardware_and_run_oql/ fan-out=27 → split needed
-  SMELL: scripts/ fan-out=69 → split needed
+  SMELL: oqlos.tools/ fan-out=229 → split needed
+  SMELL: oqlos.hardware/ fan-out=84 → split needed
+  SMELL: scripts/ fan-out=72 → split needed
+  SMELL: oqlos.core/ fan-out=23 → split needed
 
 EXTERNAL:
   validation: run `vallm batch .` → validation.toon
@@ -1802,26 +1921,26 @@ EXTERNAL:
 ### Duplication (`project/duplication.toon.yaml`)
 
 ```toon markpact:analysis path=project/duplication.toon.yaml
-# redup/duplication | 70 groups | 149f 30253L | 2026-06-30
+# redup/duplication | 75 groups | 154f 31360L | 2026-06-30
 
 SUMMARY:
-  files_scanned: 149
-  total_lines:   30253
-  dup_groups:    70
-  dup_fragments: 154
-  saved_lines:   508
-  scan_ms:       102269
+  files_scanned: 154
+  total_lines:   31360
+  dup_groups:    75
+  dup_fragments: 167
+  saved_lines:   543
+  scan_ms:       109176
 
 HOTSPOTS[7] (files with most duplication):
   oqlos/core/_cql_tokenizer.py  dup=92L  groups=7  frags=16  (0.3%)
   oqlos/hardware/plugins/motor.py  dup=81L  groups=2  frags=4  (0.3%)
-  oqlos/api/hardware.py  dup=77L  groups=6  frags=11  (0.3%)
-  oqlos/core/_interpreter_actions.py  dup=69L  groups=7  frags=15  (0.2%)
+  oqlos/api/hardware.py  dup=77L  groups=6  frags=11  (0.2%)
   oqlos/tools/hardware_diagnose/doctor.py  dup=68L  groups=3  frags=5  (0.2%)
+  oqlos/core/_action_motor2.py  dup=54L  groups=4  frags=10  (0.2%)
   oqlos/core/interpreter.py  dup=41L  groups=5  frags=11  (0.1%)
   oqlos/core/oql_parser.py  dup=39L  groups=4  frags=11  (0.1%)
 
-DUPLICATES[70] (ranked by impact):
+DUPLICATES[75] (ranked by impact):
   [7d4abed6d875568b]   STRU  _probe_modbus  L=19 N=2 saved=19 sim=1.00
       oqlos/tools/hardware_diagnose/doctor.py:73-91  (_probe_modbus)
       oqlos/tools/hardware_diagnose/doctor.py:94-112  (_probe_modbus_adc)
@@ -1846,6 +1965,10 @@ DUPLICATES[70] (ranked by impact):
   [F0031]   FUZZ  probe_waveshare_modbus  L=16 N=2 saved=16 sim=0.90
       oqlos/hardware/discovery.py:68-83  (probe_waveshare_modbus)
       oqlos/hardware/discovery.py:86-103  (probe_waveshare_modbus_adc)
+  [46f8a3999370b808]   STRU  editor_page  L=7 N=3 saved=14 sim=1.00
+      oqlos/api/main.py:215-221  (editor_page)
+      oqlos/api/main.py:224-230  (panel_page)
+      oqlos/api/main.py:245-251  (hardware_status_page)
   [c475266f1ca335a8]   STRU  _probe_modbus_rtu  L=12 N=2 saved=12 sim=1.00
       oqlos/api/hardware.py:382-393  (_probe_modbus_rtu)
       oqlos/api/hardware.py:396-407  (_probe_modbus_adc_rtu)
@@ -1858,18 +1981,18 @@ DUPLICATES[70] (ranked by impact):
   [F0029]   FUZZ  _http_sidecar_listening  L=11 N=2 saved=11 sim=0.92
       oqlos/hardware/sidecar_control.py:98-108  (_http_sidecar_listening)
       oqlos/hardware/sidecar_control.py:111-121  (_http_sidecar_healthy)
+  [7d75abe7ccc177ba]   STRU  _motor2_set_limit  L=5 N=3 saved=10 sim=1.00
+      oqlos/core/_action_motor2.py:265-269  (_motor2_set_limit)
+      oqlos/core/_action_motor2.py:272-276  (_motor2_set_stroke)
+      oqlos/core/_action_motor2.py:300-304  (_motor2_set_cycles)
+  [7b4466372835176e]   STRU  _motor2_set_cycle_volume  L=5 N=3 saved=10 sim=1.00
+      oqlos/core/_action_motor2.py:279-283  (_motor2_set_cycle_volume)
+      oqlos/core/_action_motor2.py:286-290  (_motor2_set_volume)
+      oqlos/core/_action_motor2.py:293-297  (_motor2_set_duration)
   [072bf17442930dfb]   STRU  _try_task  L=5 N=3 saved=10 sim=1.00
       oqlos/core/_cql_tokenizer.py:163-167  (_try_task)
       oqlos/core/_cql_tokenizer.py:242-246  (_try_if_fail_block)
       oqlos/core/_cql_tokenizer.py:368-372  (_try_save_ws)
-  [7d75abe7ccc177ba]   STRU  _motor2_set_limit  L=5 N=3 saved=10 sim=1.00
-      oqlos/core/_interpreter_actions.py:995-999  (_motor2_set_limit)
-      oqlos/core/_interpreter_actions.py:1002-1006  (_motor2_set_stroke)
-      oqlos/core/_interpreter_actions.py:1030-1034  (_motor2_set_cycles)
-  [7b4466372835176e]   STRU  _motor2_set_cycle_volume  L=5 N=3 saved=10 sim=1.00
-      oqlos/core/_interpreter_actions.py:1009-1013  (_motor2_set_cycle_volume)
-      oqlos/core/_interpreter_actions.py:1016-1020  (_motor2_set_volume)
-      oqlos/core/_interpreter_actions.py:1023-1027  (_motor2_set_duration)
   [72f2147f8d49b415]   STRU  parse_SET  L=5 N=3 saved=10 sim=1.00
       oqlos/core/oql_parser.py:247-251  (parse_SET)
       oqlos/core/oql_parser.py:349-353  (parse_MIN)
@@ -1880,7 +2003,7 @@ DUPLICATES[70] (ranked by impact):
   [F0027]   FUZZ  artificial_lung_command  L=11 N=2 saved=11 sim=0.86
       oqlos/api/hardware.py:2222-2232  (artificial_lung_command)
       oqlos/api/hardware.py:2242-2252  (rtc_command)
-  [F0013]   FUZZ  _try_set  L=5 N=3 saved=10 sim=0.88
+  [F0014]   FUZZ  _try_set  L=5 N=3 saved=10 sim=0.88
       oqlos/core/_cql_tokenizer.py:179-183  (_try_set)
       oqlos/core/_cql_tokenizer.py:282-286  (_try_val)
       oqlos/core/_cql_tokenizer.py:362-366  (_try_goto)
@@ -1892,6 +2015,14 @@ DUPLICATES[70] (ranked by impact):
       scripts/oql_v2_to_v4_migrate_db.py:377-381  (_mig_goto)
       scripts/oql_v2_to_v4_migrate_db.py:391-395  (_mig_else_info)
       scripts/oql_v2_to_v4_migrate_db.py:398-402  (_mig_set_name)
+  [e49c97d9aa0aab1d]   STRU  hardware_hui_actions_v3  L=4 N=3 saved=8 sim=1.00
+      oqlos/api/hardware_v3.py:313-316  (hardware_hui_actions_v3)
+      oqlos/api/hardware_v3.py:381-384  (hardware_modbus_wizard_plan_v3)
+      oqlos/api/hardware_v3.py:388-391  (hardware_stack_snapshot_v3)
+  [c0d6ed8efd1b340e]   STRU  hardware_modbus_autoconfigure_v3  L=4 N=3 saved=8 sim=1.00
+      oqlos/api/hardware_v3.py:353-356  (hardware_modbus_autoconfigure_v3)
+      oqlos/api/hardware_v3.py:360-363  (hardware_diagnosis_v3)
+      oqlos/api/hardware_v3.py:367-370  (hardware_diagnosis_repair_v3)
   [d355cbab0dee9921]   STRU  float_from_env  L=8 N=2 saved=8 sim=1.00
       oqlos/hardware/client/config.py:12-19  (float_from_env)
       oqlos/hardware/client/config.py:22-29  (int_from_env)
@@ -1901,9 +2032,6 @@ DUPLICATES[70] (ranked by impact):
   [F0024]   FUZZ  _make_args_parser  L=8 N=2 saved=8 sim=0.91
       oqlos/core/_cql_tokenizer.py:97-104  (_make_args_parser)
       oqlos/core/_cql_tokenizer.py:116-123  (_make_method_parser)
-  [46f8a3999370b808]   STRU  editor_page  L=7 N=2 saved=7 sim=1.00
-      oqlos/api/main.py:210-216  (editor_page)
-      oqlos/api/main.py:219-225  (panel_page)
   [09e0dc6f84cb5cfc]   STRU  not_connected_health  L=7 N=2 saved=7 sim=1.00
       oqlos/hardware/plugins/_shared.py:39-45  (not_connected_health)
       oqlos/hardware/plugins/_shared.py:48-54  (health_check_exception)
@@ -1942,8 +2070,8 @@ DUPLICATES[70] (ranked by impact):
       oqlos/core/interpreter.py:104-106  (_firmware_url)
       oqlos/core/interpreter.py:331-333  (_get_firmware)
   [F0022]   FUZZ  _parse_motor2_steps  L=6 N=2 saved=6 sim=0.86
-      oqlos/core/_interpreter_actions.py:890-895  (_parse_motor2_steps)
-      oqlos/core/_interpreter_actions.py:774-781  (_parse_motor2_speed_steps)
+      oqlos/core/_action_motor2.py:160-165  (_parse_motor2_steps)
+      oqlos/core/_action_motor2.py:44-51  (_parse_motor2_speed_steps)
   [ced4a13b5d82a294]   EXAC  _read_text_file  L=5 N=2 saved=5 sim=1.00
       oqlos/api/hardware.py:104-108  (_read_text_file)
       oqlos/hardware/plugins/piadc.py:46-50  (_read_text_file)
@@ -1959,6 +2087,9 @@ DUPLICATES[70] (ranked by impact):
   [6ce3ede44946ab4e]   STRU  get_execution  L=5 N=2 saved=5 sim=1.00
       oqlos/api/execution.py:199-203  (get_execution)
       oqlos/api/peripherals.py:18-22  (get_peripheral)
+  [b022b8a8c97925d7]   STRU  _default_path  L=5 N=2 saved=5 sim=1.00
+      oqlos/api/hardware_events.py:18-22  (_default_path)
+      oqlos/api/hardware_mapping_store.py:23-27  (_default_path)
   [604ad2c312cebf88]   STRU  _try_var  L=5 N=2 saved=5 sim=1.00
       oqlos/core/_cql_tokenizer.py:322-326  (_try_var)
       oqlos/core/_cql_tokenizer.py:352-356  (_try_api)
@@ -1968,7 +2099,7 @@ DUPLICATES[70] (ranked by impact):
   [60cc1d39480c5789]   STRU  _match_blob  L=5 N=2 saved=5 sim=1.00
       oqlos/hardware/scanner_probe.py:57-61  (_match_blob)
       oqlos/hardware/scanner_probe.py:88-92  (_usb_product_blob)
-  [F0012]   FUZZ  parser  L=5 N=2 saved=5 sim=0.91
+  [F0013]   FUZZ  parser  L=5 N=2 saved=5 sim=0.91
       oqlos/core/_cql_tokenizer.py:99-103  (parser)
       oqlos/core/_cql_tokenizer.py:118-122  (parser)
   [F0019]   FUZZ  _read_address  L=5 N=2 saved=5 sim=0.90
@@ -1977,12 +2108,12 @@ DUPLICATES[70] (ranked by impact):
   [F0017]   FUZZ  _handle_scenario_attrs  L=5 N=2 saved=5 sim=0.86
       oqlos/core/cql_parser.py:187-191  (_handle_scenario_attrs)
       oqlos/core/cql_parser.py:209-213  (_handle_goal_attrs)
-  [F0014]   FUZZ  _try_repeat_start  L=5 N=2 saved=5 sim=0.86
+  [F0015]   FUZZ  _try_repeat_start  L=5 N=2 saved=5 sim=0.86
       oqlos/core/_cql_tokenizer.py:310-314  (_try_repeat_start)
       oqlos/core/_cql_tokenizer.py:316-320  (_try_repeat_stop)
-  [F0015]   FUZZ  _motor2_set_mode  L=5 N=2 saved=5 sim=0.85
-      oqlos/core/_interpreter_actions.py:981-985  (_motor2_set_mode)
-      oqlos/core/_interpreter_actions.py:988-992  (_motor2_set_limit_mode)
+  [F0012]   FUZZ  _motor2_set_mode  L=5 N=2 saved=5 sim=0.85
+      oqlos/core/_action_motor2.py:251-255  (_motor2_set_mode)
+      oqlos/core/_action_motor2.py:258-262  (_motor2_set_limit_mode)
   [a7ee155dcd39e476]   EXAC  _health_map  L=4 N=2 saved=4 sim=1.00
       oqlos/hardware/client/autorepair.py:16-19  (_health_map)
       oqlos/hardware/diagnosis.py:69-72  (_health_map)
@@ -1992,6 +2123,9 @@ DUPLICATES[70] (ranked by impact):
   [e46400023b9f2fe9]   STRU  stop_lung  L=4 N=2 saved=4 sim=1.00
       oqlos/api/hardware.py:2202-2205  (stop_lung)
       oqlos/api/hardware.py:2209-2212  (disable_lung)
+  [5f6dcd7d7287755c]   STRU  hardware_hui_hold_start_v3  L=4 N=2 saved=4 sim=1.00
+      oqlos/api/hardware_v3.py:327-330  (hardware_hui_hold_start_v3)
+      oqlos/api/hardware_v3.py:334-337  (hardware_hui_hold_stop_v3)
   [8fd712f8bc1fd43b]   STRU  _mig_calc  L=4 N=2 saved=4 sim=1.00
       scripts/oql_v2_to_v4_migrate_db.py:343-346  (_mig_calc)
       scripts/oql_v2_to_v4_migrate_db.py:349-352  (_mig_val)
@@ -2004,12 +2138,15 @@ DUPLICATES[70] (ranked by impact):
   [5d5dbdb19a59c8f4]   STRU  hui_shutdown  L=3 N=2 saved=3 sim=1.00
       oqlos/api/hardware.py:1791-1793  (hui_shutdown)
       oqlos/api/hardware.py:1821-1823  (hui_al_stop)
+  [06871bb23e86f8b6]   STRU  hardware_events_websocket_alias  L=3 N=2 saved=3 sim=1.00
+      oqlos/api/main.py:314-316  (hardware_events_websocket_alias)
+      oqlos/api/main.py:349-351  (oql_websocket_alias)
   [7e9c7774bc69259a]   STRU  _func_sum  L=3 N=2 saved=3 sim=1.00
-      oqlos/core/_interpreter_actions.py:367-369  (_func_sum)
-      oqlos/core/_interpreter_actions.py:408-410  (_func_add)
+      oqlos/core/_interpreter_actions.py:357-359  (_func_sum)
+      oqlos/core/_interpreter_actions.py:398-400  (_func_add)
   [ed2293c21fed4e2d]   STRU  _func_min  L=3 N=2 saved=3 sim=1.00
-      oqlos/core/_interpreter_actions.py:372-374  (_func_min)
-      oqlos/core/_interpreter_actions.py:377-379  (_func_max)
+      oqlos/core/_interpreter_actions.py:362-364  (_func_min)
+      oqlos/core/_interpreter_actions.py:367-369  (_func_max)
   [e8b4eed866709149]   STRU  _lower_min  L=3 N=2 saved=3 sim=1.00
       oqlos/core/_oql_adapter.py:200-202  (_lower_min)
       oqlos/core/_oql_adapter.py:205-207  (_lower_max)
@@ -2026,7 +2163,7 @@ DUPLICATES[70] (ranked by impact):
       oqlos/tools/hardware_diagnose/modbus_probe.py:31-33  (_env_int)
       oqlos/tools/hardware_diagnose/modbus_probe.py:61-63  (_env_float)
   [F0001]   FUZZ  _oql_quote  L=3 N=2 saved=3 sim=0.94
-      oqlos/core/_interpreter_actions.py:101-103  (_oql_quote)
+      oqlos/core/_interpreter_actions.py:91-93  (_oql_quote)
       oqlos/tools/xml_import/generators.py:55-58  (_quote_oql)
   [F0003]   FUZZ  _firmware  L=3 N=2 saved=3 sim=0.91
       oqlos/core/interpreter.py:99-101  (_firmware)
@@ -2047,7 +2184,7 @@ DUPLICATES[70] (ranked by impact):
       oqlos/hardware/plugins/registry.py:70-72  (get_plugin_class)
       oqlos/hardware/plugins/registry.py:120-122  (get_instance)
 
-REFACTOR[70] (ranked by priority):
+REFACTOR[75] (ranked by priority):
   [1] ○ extract_function   → oqlos/tools/hardware_diagnose/utils/_probe_modbus.py
       WHY: 2 occurrences of 19-line block across 1 files — saves 19 lines
       FILES: oqlos/tools/hardware_diagnose/doctor.py
@@ -2069,197 +2206,212 @@ REFACTOR[70] (ranked by priority):
   [7] ○ extract_function   → oqlos/hardware/utils/probe_waveshare_modbus.py
       WHY: 2 occurrences of 16-line block across 1 files — saves 16 lines
       FILES: oqlos/hardware/discovery.py
-  [8] ○ extract_function   → oqlos/api/utils/_probe_modbus_rtu.py
+  [8] ○ extract_function   → oqlos/api/utils/editor_page.py
+      WHY: 3 occurrences of 7-line block across 1 files — saves 14 lines
+      FILES: oqlos/api/main.py
+  [9] ○ extract_function   → oqlos/api/utils/_probe_modbus_rtu.py
       WHY: 2 occurrences of 12-line block across 1 files — saves 12 lines
       FILES: oqlos/api/hardware.py
-  [9] ○ extract_class      → oqlos/core/utils/_append_nested_action.py
+  [10] ○ extract_class      → oqlos/core/utils/_append_nested_action.py
       WHY: 2 occurrences of 12-line block across 1 files — saves 12 lines
       FILES: oqlos/core/cql_parser.py
-  [10] ○ extract_function   → oqlos/core/utils/_exec_set_peripheral.py
+  [11] ○ extract_function   → oqlos/core/utils/_exec_set_peripheral.py
       WHY: 2 occurrences of 11-line block across 2 files — saves 11 lines
       FILES: oqlos/core/_firmware_executor.py, oqlos/core/interpreter.py
-  [11] ○ extract_function   → oqlos/hardware/utils/_http_sidecar_listening.py
+  [12] ○ extract_function   → oqlos/hardware/utils/_http_sidecar_listening.py
       WHY: 2 occurrences of 11-line block across 1 files — saves 11 lines
       FILES: oqlos/hardware/sidecar_control.py
-  [12] ○ extract_function   → oqlos/core/utils/_try_task.py
-      WHY: 3 occurrences of 5-line block across 1 files — saves 10 lines
-      FILES: oqlos/core/_cql_tokenizer.py
   [13] ○ extract_function   → oqlos/core/utils/_motor2_set_limit.py
       WHY: 3 occurrences of 5-line block across 1 files — saves 10 lines
-      FILES: oqlos/core/_interpreter_actions.py
+      FILES: oqlos/core/_action_motor2.py
   [14] ○ extract_function   → oqlos/core/utils/_motor2_set_cycle_volume.py
       WHY: 3 occurrences of 5-line block across 1 files — saves 10 lines
-      FILES: oqlos/core/_interpreter_actions.py
-  [15] ○ extract_function   → oqlos/core/utils/parse_SET.py
+      FILES: oqlos/core/_action_motor2.py
+  [15] ○ extract_function   → oqlos/core/utils/_try_task.py
+      WHY: 3 occurrences of 5-line block across 1 files — saves 10 lines
+      FILES: oqlos/core/_cql_tokenizer.py
+  [16] ○ extract_function   → oqlos/core/utils/parse_SET.py
       WHY: 3 occurrences of 5-line block across 1 files — saves 10 lines
       FILES: oqlos/core/oql_parser.py
-  [16] ○ extract_function   → oqlos/dsl/utils/_merge_object_function_map.py
+  [17] ○ extract_function   → oqlos/dsl/utils/_merge_object_function_map.py
       WHY: 2 occurrences of 10-line block across 1 files — saves 10 lines
       FILES: oqlos/dsl/schema.py
-  [17] ○ extract_function   → oqlos/api/utils/artificial_lung_command.py
+  [18] ○ extract_function   → oqlos/api/utils/artificial_lung_command.py
       WHY: 2 occurrences of 11-line block across 1 files — saves 11 lines
       FILES: oqlos/api/hardware.py
-  [18] ○ extract_function   → oqlos/core/utils/_try_set.py
+  [19] ○ extract_function   → oqlos/core/utils/_try_set.py
       WHY: 3 occurrences of 5-line block across 1 files — saves 10 lines
       FILES: oqlos/core/_cql_tokenizer.py
-  [19] ○ extract_function   → oqlos/hardware/utils/read_channel.py
+  [20] ○ extract_function   → oqlos/hardware/utils/read_channel.py
       WHY: 3 occurrences of 5-line block across 1 files — saves 10 lines
       FILES: oqlos/hardware/gateway.py
-  [20] ○ extract_function   → scripts/utils/_mig_goto.py
+  [21] ○ extract_function   → scripts/utils/_mig_goto.py
       WHY: 3 occurrences of 5-line block across 1 files — saves 10 lines
       FILES: scripts/oql_v2_to_v4_migrate_db.py
-  [21] ○ extract_function   → oqlos/hardware/client/utils/float_from_env.py
+  [22] ○ extract_function   → oqlos/api/utils/hardware_hui_actions_v3.py
+      WHY: 3 occurrences of 4-line block across 1 files — saves 8 lines
+      FILES: oqlos/api/hardware_v3.py
+  [23] ○ extract_function   → oqlos/api/utils/hardware_modbus_autoconfigure_v3.py
+      WHY: 3 occurrences of 4-line block across 1 files — saves 8 lines
+      FILES: oqlos/api/hardware_v3.py
+  [24] ○ extract_function   → oqlos/hardware/client/utils/float_from_env.py
       WHY: 2 occurrences of 8-line block across 1 files — saves 8 lines
       FILES: oqlos/hardware/client/config.py
-  [22] ○ extract_function   → scripts/utils/_mig_minmax_eq.py
+  [25] ○ extract_function   → scripts/utils/_mig_minmax_eq.py
       WHY: 2 occurrences of 8-line block across 1 files — saves 8 lines
       FILES: scripts/oql_v2_to_v4_migrate_db.py
-  [23] ○ extract_function   → oqlos/core/utils/_make_args_parser.py
+  [26] ○ extract_function   → oqlos/core/utils/_make_args_parser.py
       WHY: 2 occurrences of 8-line block across 1 files — saves 8 lines
       FILES: oqlos/core/_cql_tokenizer.py
-  [24] ○ extract_function   → oqlos/api/utils/editor_page.py
-      WHY: 2 occurrences of 7-line block across 1 files — saves 7 lines
-      FILES: oqlos/api/main.py
-  [25] ○ extract_function   → oqlos/hardware/plugins/utils/not_connected_health.py
+  [27] ○ extract_function   → oqlos/hardware/plugins/utils/not_connected_health.py
       WHY: 2 occurrences of 7-line block across 1 files — saves 7 lines
       FILES: oqlos/hardware/plugins/_shared.py
-  [26] ○ extract_function   → scripts/utils/_migrate_wait_line.py
+  [28] ○ extract_function   → scripts/utils/_migrate_wait_line.py
       WHY: 2 occurrences of 7-line block across 1 files — saves 7 lines
       FILES: scripts/migrate_to_v4.py
-  [27] ○ extract_function   → oqlos/core/utils/_try_arrow_action.py
+  [29] ○ extract_function   → oqlos/core/utils/_try_arrow_action.py
       WHY: 2 occurrences of 8-line block across 1 files — saves 8 lines
       FILES: oqlos/core/_cql_tokenizer.py
-  [28] ○ extract_function   → oqlos/hardware/utils/modbus_plugins_need_repair.py
+  [30] ○ extract_function   → oqlos/hardware/utils/modbus_plugins_need_repair.py
       WHY: 2 occurrences of 6-line block across 2 files — saves 6 lines
       FILES: oqlos/hardware/client/autorepair.py, oqlos/hardware/diagnosis.py
-  [29] ○ extract_function   → oqlos/core/utils/parse_GET.py
+  [31] ○ extract_function   → oqlos/core/utils/parse_GET.py
       WHY: 3 occurrences of 3-line block across 1 files — saves 6 lines
       FILES: oqlos/core/oql_parser.py
-  [30] ○ extract_function   → oqlos/core/utils/parse_LOG.py
+  [32] ○ extract_function   → oqlos/core/utils/parse_LOG.py
       WHY: 3 occurrences of 3-line block across 1 files — saves 6 lines
       FILES: oqlos/core/oql_parser.py
-  [31] ○ extract_function   → oqlos/tools/hardware_diagnose/utils/_modbus_config.py
+  [33] ○ extract_function   → oqlos/tools/hardware_diagnose/utils/_modbus_config.py
       WHY: 2 occurrences of 6-line block across 1 files — saves 6 lines
       FILES: oqlos/tools/hardware_diagnose/doctor.py
-  [32] ○ extract_class      → oqlos/hardware/plugins/utils/_handle_stop_http.py
+  [34] ○ extract_class      → oqlos/hardware/plugins/utils/_handle_stop_http.py
       WHY: 2 occurrences of 6-line block across 1 files — saves 6 lines
       FILES: oqlos/hardware/plugins/lung.py
-  [33] ○ extract_class      → oqlos/core/utils/_execute_firmware_action.py
+  [35] ○ extract_class      → oqlos/core/utils/_execute_firmware_action.py
       WHY: 3 occurrences of 3-line block across 1 files — saves 6 lines
       FILES: oqlos/core/interpreter.py
-  [34] ○ extract_function   → oqlos/api/utils/hui_hold_start.py
+  [36] ○ extract_function   → oqlos/api/utils/hui_hold_start.py
       WHY: 2 occurrences of 6-line block across 1 files — saves 6 lines
       FILES: oqlos/api/hardware.py
-  [35] ○ extract_class      → oqlos/core/utils/_firmware.py
+  [37] ○ extract_class      → oqlos/core/utils/_firmware.py
       WHY: 3 occurrences of 3-line block across 1 files — saves 6 lines
       FILES: oqlos/core/interpreter.py
-  [36] ○ extract_function   → oqlos/core/utils/_parse_motor2_steps.py
+  [38] ○ extract_function   → oqlos/core/utils/_parse_motor2_steps.py
       WHY: 2 occurrences of 6-line block across 1 files — saves 6 lines
-      FILES: oqlos/core/_interpreter_actions.py
-  [37] ○ extract_function   → oqlos/utils/_read_text_file.py
+      FILES: oqlos/core/_action_motor2.py
+  [39] ○ extract_function   → oqlos/utils/_read_text_file.py
       WHY: 2 occurrences of 5-line block across 2 files — saves 5 lines
       FILES: oqlos/api/hardware.py, oqlos/hardware/plugins/piadc.py
-  [38] ○ extract_function   → oqlos/hardware/utils/status.py
+  [40] ○ extract_function   → oqlos/hardware/utils/status.py
       WHY: 2 occurrences of 5-line block across 1 files — saves 5 lines
       FILES: oqlos/hardware/gateway.py
-  [39] ○ extract_function   → oqlos/hardware/plugins/utils/_rtu_timeout.py
+  [41] ○ extract_function   → oqlos/hardware/plugins/utils/_rtu_timeout.py
       WHY: 2 occurrences of 5-line block across 2 files — saves 5 lines
       FILES: oqlos/hardware/plugins/modbus.py, oqlos/hardware/plugins/modbus_adc.py
-  [40] ○ extract_function   → oqlos/hardware/plugins/utils/_device_id.py
+  [42] ○ extract_function   → oqlos/hardware/plugins/utils/_device_id.py
       WHY: 2 occurrences of 5-line block across 2 files — saves 5 lines
       FILES: oqlos/hardware/plugins/modbus.py, oqlos/hardware/plugins/modbus_adc.py
-  [41] ○ extract_function   → oqlos/api/utils/get_execution.py
+  [43] ○ extract_function   → oqlos/api/utils/get_execution.py
       WHY: 2 occurrences of 5-line block across 2 files — saves 5 lines
       FILES: oqlos/api/execution.py, oqlos/api/peripherals.py
-  [42] ○ extract_function   → oqlos/core/utils/_try_var.py
+  [44] ○ extract_function   → oqlos/api/utils/_default_path.py
+      WHY: 2 occurrences of 5-line block across 2 files — saves 5 lines
+      FILES: oqlos/api/hardware_events.py, oqlos/api/hardware_mapping_store.py
+  [45] ○ extract_function   → oqlos/core/utils/_try_var.py
       WHY: 2 occurrences of 5-line block across 1 files — saves 5 lines
       FILES: oqlos/core/_cql_tokenizer.py
-  [43] ○ extract_function   → oqlos/hardware/plugins/utils/disconnect.py
+  [46] ○ extract_function   → oqlos/hardware/plugins/utils/disconnect.py
       WHY: 2 occurrences of 5-line block across 2 files — saves 5 lines
       FILES: oqlos/hardware/plugins/lung.py, oqlos/hardware/plugins/piadc.py
-  [44] ○ extract_function   → oqlos/hardware/utils/_match_blob.py
+  [47] ○ extract_function   → oqlos/hardware/utils/_match_blob.py
       WHY: 2 occurrences of 5-line block across 1 files — saves 5 lines
       FILES: oqlos/hardware/scanner_probe.py
-  [45] ○ extract_function   → oqlos/core/utils/parser.py
+  [48] ○ extract_function   → oqlos/core/utils/parser.py
       WHY: 2 occurrences of 5-line block across 1 files — saves 5 lines
       FILES: oqlos/core/_cql_tokenizer.py
-  [46] ○ extract_class      → oqlos/hardware/plugins/utils/_read_address.py
+  [49] ○ extract_class      → oqlos/hardware/plugins/utils/_read_address.py
       WHY: 2 occurrences of 5-line block across 1 files — saves 5 lines
       FILES: oqlos/hardware/plugins/modbus_adc.py
-  [47] ○ extract_class      → oqlos/core/utils/_handle_scenario_attrs.py
+  [50] ○ extract_class      → oqlos/core/utils/_handle_scenario_attrs.py
       WHY: 2 occurrences of 5-line block across 1 files — saves 5 lines
       FILES: oqlos/core/cql_parser.py
-  [48] ○ extract_function   → oqlos/core/utils/_try_repeat_start.py
+  [51] ○ extract_function   → oqlos/core/utils/_try_repeat_start.py
       WHY: 2 occurrences of 5-line block across 1 files — saves 5 lines
       FILES: oqlos/core/_cql_tokenizer.py
-  [49] ○ extract_function   → oqlos/core/utils/_motor2_set_mode.py
+  [52] ○ extract_function   → oqlos/core/utils/_motor2_set_mode.py
       WHY: 2 occurrences of 5-line block across 1 files — saves 5 lines
-      FILES: oqlos/core/_interpreter_actions.py
-  [50] ○ extract_function   → oqlos/hardware/utils/_health_map.py
+      FILES: oqlos/core/_action_motor2.py
+  [53] ○ extract_function   → oqlos/hardware/utils/_health_map.py
       WHY: 2 occurrences of 4-line block across 2 files — saves 4 lines
       FILES: oqlos/hardware/client/autorepair.py, oqlos/hardware/diagnosis.py
-  [51] ○ extract_function   → oqlos/hardware/transport/utils/to_json.py
+  [54] ○ extract_function   → oqlos/hardware/transport/utils/to_json.py
       WHY: 2 occurrences of 4-line block across 1 files — saves 4 lines
       FILES: oqlos/hardware/transport/mqtt_oql_bridge.py
-  [52] ○ extract_function   → oqlos/api/utils/stop_lung.py
+  [55] ○ extract_function   → oqlos/api/utils/stop_lung.py
       WHY: 2 occurrences of 4-line block across 1 files — saves 4 lines
       FILES: oqlos/api/hardware.py
-  [53] ○ extract_function   → scripts/utils/_mig_calc.py
+  [56] ○ extract_function   → oqlos/api/utils/hardware_hui_hold_start_v3.py
+      WHY: 2 occurrences of 4-line block across 1 files — saves 4 lines
+      FILES: oqlos/api/hardware_v3.py
+  [57] ○ extract_function   → scripts/utils/_mig_calc.py
       WHY: 2 occurrences of 4-line block across 1 files — saves 4 lines
       FILES: scripts/oql_v2_to_v4_migrate_db.py
-  [54] ○ extract_function   → oqlos/hardware/plugins/utils/__init__.py
+  [58] ○ extract_function   → oqlos/hardware/plugins/utils/__init__.py
       WHY: 2 occurrences of 4-line block across 2 files — saves 4 lines
       FILES: oqlos/hardware/plugins/modbus.py, oqlos/hardware/plugins/modbus_adc.py
-  [55] ○ extract_function   → oqlos/hardware/plugins/utils/__init__.py
+  [59] ○ extract_function   → oqlos/hardware/plugins/utils/__init__.py
       WHY: 2 occurrences of 4-line block across 2 files — saves 4 lines
       FILES: oqlos/hardware/plugins/lung.py, oqlos/hardware/plugins/piadc.py
-  [56] ○ extract_function   → oqlos/api/utils/hui_shutdown.py
+  [60] ○ extract_function   → oqlos/api/utils/hui_shutdown.py
       WHY: 2 occurrences of 3-line block across 1 files — saves 3 lines
       FILES: oqlos/api/hardware.py
-  [57] ○ extract_function   → oqlos/core/utils/_func_sum.py
+  [61] ○ extract_function   → oqlos/api/utils/hardware_events_websocket_alias.py
+      WHY: 2 occurrences of 3-line block across 1 files — saves 3 lines
+      FILES: oqlos/api/main.py
+  [62] ○ extract_function   → oqlos/core/utils/_func_sum.py
       WHY: 2 occurrences of 3-line block across 1 files — saves 3 lines
       FILES: oqlos/core/_interpreter_actions.py
-  [58] ○ extract_function   → oqlos/core/utils/_func_min.py
+  [63] ○ extract_function   → oqlos/core/utils/_func_min.py
       WHY: 2 occurrences of 3-line block across 1 files — saves 3 lines
       FILES: oqlos/core/_interpreter_actions.py
-  [59] ○ extract_function   → oqlos/core/utils/_lower_min.py
+  [64] ○ extract_function   → oqlos/core/utils/_lower_min.py
       WHY: 2 occurrences of 3-line block across 1 files — saves 3 lines
       FILES: oqlos/core/_oql_adapter.py
-  [60] ○ extract_function   → oqlos/core/utils/_resolve_compare.py
+  [65] ○ extract_function   → oqlos/core/utils/_resolve_compare.py
       WHY: 2 occurrences of 3-line block across 2 files — saves 3 lines
       FILES: oqlos/core/executor.py, oqlos/core/safe_eval.py
-  [61] ○ extract_function   → oqlos/core/utils/parse_CALL.py
+  [66] ○ extract_function   → oqlos/core/utils/parse_CALL.py
       WHY: 2 occurrences of 3-line block across 1 files — saves 3 lines
       FILES: oqlos/core/oql_parser.py
-  [62] ○ extract_function   → oqlos/tools/hardware_diagnose/utils/check_firmware_health.py
+  [67] ○ extract_function   → oqlos/tools/hardware_diagnose/utils/check_firmware_health.py
       WHY: 2 occurrences of 3-line block across 1 files — saves 3 lines
       FILES: oqlos/tools/hardware_diagnose/health.py
-  [63] ○ extract_function   → oqlos/tools/hardware_diagnose/utils/_env_int.py
+  [68] ○ extract_function   → oqlos/tools/hardware_diagnose/utils/_env_int.py
       WHY: 2 occurrences of 3-line block across 1 files — saves 3 lines
       FILES: oqlos/tools/hardware_diagnose/modbus_probe.py
-  [64] ○ extract_function   → oqlos/utils/_oql_quote.py
+  [69] ○ extract_function   → oqlos/utils/_oql_quote.py
       WHY: 2 occurrences of 3-line block across 2 files — saves 3 lines
       FILES: oqlos/core/_interpreter_actions.py, oqlos/tools/xml_import/generators.py
-  [65] ○ extract_class      → oqlos/core/utils/_firmware.py
+  [70] ○ extract_class      → oqlos/core/utils/_firmware.py
       WHY: 2 occurrences of 3-line block across 1 files — saves 3 lines
       FILES: oqlos/core/interpreter.py
-  [66] ○ extract_class      → oqlos/core/utils/_normalize_valve_value.py
+  [71] ○ extract_class      → oqlos/core/utils/_normalize_valve_value.py
       WHY: 2 occurrences of 3-line block across 1 files — saves 3 lines
       FILES: oqlos/core/interpreter.py
-  [67] ○ extract_function   → oqlos/hardware/utils/discover.py
+  [72] ○ extract_function   → oqlos/hardware/utils/discover.py
       WHY: 2 occurrences of 3-line block across 2 files — saves 3 lines
       FILES: oqlos/hardware/drivers/mqtt.py, oqlos/hardware/protocol.py
-  [68] ○ extract_class      → oqlos/hardware/plugins/utils/_handle_stop_usb.py
+  [73] ○ extract_class      → oqlos/hardware/plugins/utils/_handle_stop_usb.py
       WHY: 2 occurrences of 3-line block across 1 files — saves 3 lines
       FILES: oqlos/hardware/plugins/lung.py
-  [69] ○ extract_class      → oqlos/hardware/plugins/utils/connect.py
+  [74] ○ extract_class      → oqlos/hardware/plugins/utils/connect.py
       WHY: 2 occurrences of 3-line block across 1 files — saves 3 lines
       FILES: oqlos/hardware/plugins/base.py
-  [70] ○ extract_class      → oqlos/hardware/plugins/utils/get_plugin_class.py
+  [75] ○ extract_class      → oqlos/hardware/plugins/utils/get_plugin_class.py
       WHY: 2 occurrences of 3-line block across 1 files — saves 3 lines
       FILES: oqlos/hardware/plugins/registry.py
 
-QUICK_WINS[36] (low risk, high savings — do first):
+QUICK_WINS[38] (low risk, high savings — do first):
   [2] extract_class      saved=21L  → oqlos/hardware/plugins/utils/_handle_stop_cli.py
       FILES: motor.py
   [3] extract_class      saved=20L  → oqlos/core/utils/info.py
@@ -2274,14 +2426,14 @@ QUICK_WINS[36] (low risk, high savings — do first):
       FILES: motor.py
   [7] extract_function   saved=16L  → oqlos/hardware/utils/probe_waveshare_modbus.py
       FILES: discovery.py
-  [8] extract_function   saved=12L  → oqlos/api/utils/_probe_modbus_rtu.py
+  [8] extract_function   saved=14L  → oqlos/api/utils/editor_page.py
+      FILES: main.py
+  [9] extract_function   saved=12L  → oqlos/api/utils/_probe_modbus_rtu.py
       FILES: hardware.py
-  [9] extract_class      saved=12L  → oqlos/core/utils/_append_nested_action.py
+  [10] extract_class      saved=12L  → oqlos/core/utils/_append_nested_action.py
       FILES: cql_parser.py
-  [10] extract_function   saved=11L  → oqlos/core/utils/_exec_set_peripheral.py
-      FILES: _firmware_executor.py, interpreter.py
 
-EFFORT_ESTIMATE (total ≈ 16.9h):
+EFFORT_ESTIMATE (total ≈ 18.1h):
   medium _probe_modbus                       saved=19L  ~38min
   medium _handle_stop_cli                    saved=21L  ~42min
   medium info                                saved=20L  ~40min
@@ -2289,46 +2441,74 @@ EFFORT_ESTIMATE (total ≈ 16.9h):
   medium stop_lung                           saved=18L  ~36min
   medium _handle_stop_http                   saved=18L  ~36min
   medium probe_waveshare_modbus              saved=16L  ~32min
+  easy   editor_page                         saved=14L  ~28min
   easy   _probe_modbus_rtu                   saved=12L  ~24min
   easy   _append_nested_action               saved=12L  ~24min
-  easy   _exec_set_peripheral                saved=11L  ~22min
-  ... +60 more (~686min)
+  ... +65 more (~750min)
 
 METRICS-TARGET:
-  dup_groups:  70 → 0
-  saved_lines: 508 lines recoverable
+  dup_groups:  75 → 0
+  saved_lines: 543 lines recoverable
 ```
 
 ### Evolution / Churn (`project/evolution.toon.yaml`)
 
 ```toon markpact:analysis path=project/evolution.toon.yaml
-# code2llm/evolution | 1327 func | 116f | 2026-06-30
-# generated in 0.00s
+# code2llm/evolution | 1950 func | 152f | 2026-06-30
+# generated in 0.01s
 
-NEXT[3] (ranked by impact):
+NEXT[10] (ranked by impact):
   [1] !! SPLIT           oqlos/api/hardware.py
       WHY: 2252L, 0 classes, max CC=14
       EFFORT: ~4h  IMPACT: 31528
 
-  [2] !! SPLIT           oqlos/core/_interpreter_actions.py
-      WHY: 1255L, 0 classes, max CC=14
-      EFFORT: ~4h  IMPACT: 17570
+  [2] !! SPLIT           frontend/src/i18n/dictionaries.js
+      WHY: 1981L, 0 classes, max CC=5
+      EFFORT: ~4h  IMPACT: 9905
 
-  [3] !! SPLIT           docs/README.md
-      WHY: 1089L, 0 classes, max CC=0
-      EFFORT: ~4h  IMPACT: 0
+  [3] !! SPLIT-FUNC      runCurrentStep  CC=96  fan=34
+      WHY: CC=96 exceeds 15
+      EFFORT: ~1h  IMPACT: 3264
+
+  [4] !! SPLIT           frontend/src/pages/mapEditorDefaultMap.js
+      WHY: 1763L, 0 classes, max CC=1
+      EFFORT: ~4h  IMPACT: 1763
+
+  [5] !! SPLIT-FUNC      AppConfigContext  CC=44  fan=31
+      WHY: CC=44 exceeds 15
+      EFFORT: ~1h  IMPACT: 1364
+
+  [6] !! SPLIT-FUNC      AppConfigProvider  CC=44  fan=31
+      WHY: CC=44 exceeds 15
+      EFFORT: ~1h  IMPACT: 1364
+
+  [7] !! SPLIT-FUNC      RAIL_HOVER_OPEN_MS  CC=33  fan=21
+      WHY: CC=33 exceeds 15
+      EFFORT: ~1h  IMPACT: 693
+
+  [8] !! SPLIT-FUNC      RAIL_HOVER_CLOSE_MS  CC=33  fan=21
+      WHY: CC=33 exceeds 15
+      EFFORT: ~1h  IMPACT: 693
+
+  [9] !! SPLIT-FUNC      useSelectionCollapsePanel  CC=33  fan=21
+      WHY: CC=33 exceeds 15
+      EFFORT: ~1h  IMPACT: 693
+
+  [10] !! SPLIT-FUNC      extractDiagnosticFailure  CC=69  fan=10
+      WHY: CC=69 exceeds 15
+      EFFORT: ~1h  IMPACT: 690
 
 
 RISKS[3]:
   ⚠ Splitting oqlos/api/hardware.py may break 89 import paths
-  ⚠ Splitting oqlos/core/_interpreter_actions.py may break 85 import paths
-  ⚠ Splitting docs/README.md may break 0 import paths
+  ⚠ Splitting frontend/src/i18n/dictionaries.js may break 4 import paths
+  ⚠ Splitting frontend/src/pages/mapEditorDefaultMap.js may break 3 import paths
 
 METRICS-TARGET:
   CC̄:          4.2 → ≤2.9
-  max-CC:      14 → ≤7
-  god-modules: 17 → 0
-  high-CC(≥15): 0 → ≤0
+  max-CC:      96 → ≤20
+  god-modules: 24 → 0
+  high-CC(≥15): 26 → ≤13
   hub-types:   0 → ≤0
 
 PATTERNS (language parser shared logic):
@@ -2356,7 +2536,7 @@ PATTERNS (language parser shared logic):
     - Standardized FunctionInfo/ClassInfo models
 
 HISTORY:
-  prev CC̄=4.1 → now CC̄=4.2
+  prev CC̄=4.2 → now CC̄=4.2
 ```
 
 ### Validation (`project/validation.toon.yaml`)

@@ -2,7 +2,7 @@
 
 app {
   name: oqlos;
-  version: 0.1.27;
+  version: 0.1.28;
 }
 
 dependencies {
@@ -95,6 +95,82 @@ integration[name="modbus"] {
   type: hardware;
 }
 
+workflow[name="test"] {
+  trigger: manual;
+  step-1: run cmd=$(PYTHON) -m pytest -q;
+}
+
+workflow[name="test-hw"] {
+  trigger: manual;
+  step-1: run cmd=scripts/test-hardware.sh $(PI);
+}
+
+workflow[name="smoke"] {
+  trigger: manual;
+  step-1: run cmd=awk '/```bash markpact:ref assert-hw-node-healthy/{f=1;next} f&&/^```/{f=0} f' \;
+  step-2: run cmd=redeploy/$(NODE)/migration.md > /tmp/oqlos-smoke.sh;
+  step-3: run cmd=scp -q /tmp/oqlos-smoke.sh $(PI):/tmp/oqlos-smoke.sh;
+  step-4: run cmd=ssh $(PI) 'export XDG_RUNTIME_DIR=/run/user/$$(id -u); bash /tmp/oqlos-smoke.sh';
+}
+
+workflow[name="checksums"] {
+  trigger: manual;
+  step-1: run cmd=scripts/gen-checksums.sh;
+}
+
+workflow[name="verify-rpi"] {
+  trigger: manual;
+  step-1: run cmd=scripts/verify-rpi-checksum.sh $(PI);
+}
+
+workflow[name="sync-rpi"] {
+  trigger: manual;
+  step-1: run cmd=rsync -rz --itemize-changes \;
+  step-2: run cmd=--exclude='__pycache__/' --exclude='*.pyc' --exclude='*.pyo' \;
+  step-3: run cmd=--exclude='.pytest_cache/' --exclude='*.log' \;
+  step-4: run cmd=oqlos/ $(PI):/home/pi/oqlos/oqlos/oqlos/;
+  step-5: run cmd=$(MAKE) verify-rpi PI=$(PI);
+}
+
+workflow[name="restart"] {
+  trigger: manual;
+  step-1: run cmd=ssh $(PI) 'export XDG_RUNTIME_DIR=/run/user/$$(id -u); \;
+  step-2: run cmd=systemctl --user restart oqlos-hardware-api; \;
+  step-3: run cmd=for i in $$(seq 1 20); do \;
+  step-4: run cmd=curl -sf --max-time 4 http://127.0.0.1:8202/health && { echo "  <- /health OK"; exit 0; }; \;
+  step-5: run cmd=sleep 1; \;
+  step-6: run cmd=done; \;
+  step-7: run cmd=echo "FAIL: agent nie podniosl /health w 20s" >&2; exit 1';
+}
+
+workflow[name="deploy"] {
+  trigger: manual;
+  step-1: run cmd=redeploy run redeploy/$(NODE)/migration.md;
+}
+
+workflow[name="redeploy"] {
+  trigger: manual;
+  step-1: run cmd=echo "Wdrożenie węzła sprzętowego:";
+  step-2: run cmd=echo "  make 122                 # boardnet (192.168.188.122)";
+  step-3: run cmd=echo "  make pi-hw               # pi-hw    (192.168.188.110)";
+  step-4: run cmd=echo "  make deploy NODE=122     # dowolny węzeł z redeploy/<NODE>/migration.md";
+}
+
+workflow[name="pi-hw"] {
+  trigger: manual;
+  step-1: run cmd=$(MAKE) deploy NODE=pi-hw PI=pi@192.168.188.110;
+}
+
+workflow[name="serve"] {
+  trigger: manual;
+  step-1: run cmd=$(PYTHON) -m uvicorn oqlos.api.main:app --host 0.0.0.0 --port $(PORT);
+}
+
+workflow[name="panel-url"] {
+  trigger: manual;
+  step-1: run cmd=echo "http://localhost:$(PORT)/panel";
+}
+
 workflow[name="install"] {
   trigger: manual;
   step-1: run cmd=pip install -e .[dev];
@@ -128,11 +204,6 @@ workflow[name="quality:fix"] {
 workflow[name="quality:report"] {
   trigger: manual;
   step-1: run cmd=pyqual report;
-}
-
-workflow[name="test"] {
-  trigger: manual;
-  step-1: run cmd=pytest -q;
 }
 
 workflow[name="lint"] {

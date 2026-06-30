@@ -1,8 +1,8 @@
 flowchart TD
-%% generated in 0.06s
+%% generated in 0.04s
     examples__hardware["examples.hardware<br/>1 funcs"]
     frontend__src["frontend.src<br/>517 funcs"]
-    oqlos__api["oqlos.api<br/>185 funcs"]
+    oqlos__api["oqlos.api<br/>262 funcs"]
     oqlos__config["oqlos.config<br/>1 funcs"]
     oqlos__core["oqlos.core<br/>401 funcs"]
     oqlos__dsl["oqlos.dsl<br/>6 funcs"]
@@ -24,12 +24,12 @@ flowchart TD
     oqlos__hardware ==>|71| frontend__src
     scripts__migrate_to_v4 ==>|37| examples__hardware
     setup_hardware_and_run_oql ==>|27| examples__hardware
+    oqlos__api ==>|21| oqlos__hardware
     scripts__fix_brackets_to_v4 ==>|19| examples__hardware
     oqlos__core ==>|18| frontend__src
-    oqlos__api ==>|15| frontend__src
-    oqlos__api ==>|14| oqlos__hardware
+    oqlos__api ==>|18| frontend__src
     oqlos__tools ==>|10| oqlos__core
-    oqlos__api ==>|8| oqlos__shared
+    oqlos__api ==>|9| oqlos__shared
     oqlos__shared ==>|7| examples__hardware
     oqlos__tools ==>|6| oqlos__hardware
     oqlos__hardware ==>|6| oqlos__core

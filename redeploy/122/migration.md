@@ -1000,11 +1000,11 @@ fi
 name: "oqlos boardnet deploy"
 description: "OqlOS hardware node + mosquitto na pi@boardnet.local — systemd --user, OQL-over-MQTT agent"
 source:
-  strategy: podman_quadlet
+  strategy: systemd
   host: pi@boardnet.local
   remote_dir: ~/oqlos
 target:
-  strategy: podman_quadlet
+  strategy: systemd
   host: pi@boardnet.local
   remote_dir: ~/oqlos
   verify_url: http://192.168.188.122:1883

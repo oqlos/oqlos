@@ -5,12 +5,12 @@
 
 - **Project**: /home/tom/github/oqlos/oqlos
 - **Primary Language**: python
-- **Languages**: python: 144, javascript: 35, md: 16, yaml: 13, shell: 9
+- **Languages**: python: 148, javascript: 35, md: 16, yaml: 13, shell: 9
 - **Analysis Mode**: static
-- **Total Functions**: 1988
-- **Total Classes**: 112
-- **Modules**: 235
-- **Entry Points**: 1201
+- **Total Functions**: 2065
+- **Total Classes**: 123
+- **Modules**: 239
+- **Entry Points**: 1253
 
 ## Architecture by Module
 
@@ -46,6 +46,11 @@
 ### frontend.src.pages.HardwareDemo
 - **Functions**: 46
 - **File**: `HardwareDemo.jsx`
+
+### oqlos.api.hardware_v3
+- **Functions**: 44
+- **Classes**: 9
+- **File**: `hardware_v3.py`
 
 ### oqlos.core.oql_parser
 - **Functions**: 43
@@ -98,10 +103,6 @@
 - **Functions**: 28
 - **Classes**: 1
 - **File**: `_oql_adapter.py`
-
-### oqlos.core._cql_tokenizer
-- **Functions**: 27
-- **File**: `_cql_tokenizer.py`
 
 ## Key Entry Points
 
@@ -382,6 +383,10 @@ Manages:
 - **Methods**: 11
 - **Key Methods**: oqlos.shared.event_store.EventStore.__init__, oqlos.shared.event_store.EventStore.append, oqlos.shared.event_store.EventStore.get_all, oqlos.shared.event_store.EventStore.get_recent, oqlos.shared.event_store.EventStore.get_by_correlation, oqlos.shared.event_store.EventStore.clear, oqlos.shared.event_store.EventStore.to_json, oqlos.shared.event_store.EventStore.from_json, oqlos.shared.event_store.EventStore.count, oqlos.shared.event_store.EventStore._save
 
+### oqlos.api.hardware_mapping_store.MappingStore
+- **Methods**: 11
+- **Key Methods**: oqlos.api.hardware_mapping_store.MappingStore.__init__, oqlos.api.hardware_mapping_store.MappingStore.file_path, oqlos.api.hardware_mapping_store.MappingStore.storage_backend, oqlos.api.hardware_mapping_store.MappingStore._load_from_disk, oqlos.api.hardware_mapping_store.MappingStore.save, oqlos.api.hardware_mapping_store.MappingStore.get, oqlos.api.hardware_mapping_store.MappingStore.replace, oqlos.api.hardware_mapping_store.MappingStore.reset, oqlos.api.hardware_mapping_store.MappingStore.parse_text, oqlos.api.hardware_mapping_store.MappingStore.import_text
+
 ### oqlos.core.base.InterpreterOutput
 > Collects interpreter output lines for display or testing, and optionally broadcasts events.
 - **Methods**: 10
@@ -421,13 +426,6 @@ Subclasses override :meth:`_
 - **Methods**: 9
 - **Key Methods**: oqlos.hardware.transport.mqtt_oql_bridge.OqlMqttAgent.__init__, oqlos.hardware.transport.mqtt_oql_bridge.OqlMqttAgent._subscriptions, oqlos.hardware.transport.mqtt_oql_bridge.OqlMqttAgent._last_will, oqlos.hardware.transport.mqtt_oql_bridge.OqlMqttAgent.start, oqlos.hardware.transport.mqtt_oql_bridge.OqlMqttAgent.stop, oqlos.hardware.transport.mqtt_oql_bridge.OqlMqttAgent._on_payload, oqlos.hardware.transport.mqtt_oql_bridge.OqlMqttAgent._handle_request, oqlos.hardware.transport.mqtt_oql_bridge.OqlMqttAgent._run_manage, oqlos.hardware.transport.mqtt_oql_bridge.OqlMqttAgent._run_oql
 - **Inherits**: _PahoAsyncClient
-
-### oqlos.hardware.drivers.mqtt.MqttDriver
-> MQTT driver for the Hardware Abstraction Layer.
-Mapped to ProtocolType.MQTT.
-- **Methods**: 9
-- **Key Methods**: oqlos.hardware.drivers.mqtt.MqttDriver.__init__, oqlos.hardware.drivers.mqtt.MqttDriver.connect, oqlos.hardware.drivers.mqtt.MqttDriver._on_connect, oqlos.hardware.drivers.mqtt.MqttDriver._on_message, oqlos.hardware.drivers.mqtt.MqttDriver.read, oqlos.hardware.drivers.mqtt.MqttDriver.write, oqlos.hardware.drivers.mqtt.MqttDriver.discover, oqlos.hardware.drivers.mqtt.MqttDriver.health_check, oqlos.hardware.drivers.mqtt.MqttDriver.disconnect
-- **Inherits**: HardwareProtocol
 
 ## Data Transformation Functions
 

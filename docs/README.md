@@ -49,8 +49,8 @@ Detailed guide: [Hardware Diagnostics](HARDWARE_DIAGNOSTICS.md).
 
 <!-- code2docs:start --># oqlos
 
-![version](https://img.shields.io/badge/version-0.1.0-blue) ![python](https://img.shields.io/badge/python-%3E%3D3.10-blue) ![coverage](https://img.shields.io/badge/coverage-unknown-lightgrey) ![functions](https://img.shields.io/badge/functions-1988-green)
-> **1988** functions | **112** classes | **242** files | CC̄ = 4.2
+![version](https://img.shields.io/badge/version-0.1.0-blue) ![python](https://img.shields.io/badge/python-%3E%3D3.10-blue) ![coverage](https://img.shields.io/badge/coverage-unknown-lightgrey) ![functions](https://img.shields.io/badge/functions-2065-green)
+> **2065** functions | **123** classes | **246** files | CC̄ = 4.2
 
 > Auto-generated project documentation from source code analysis.
 
@@ -325,8 +325,11 @@ oqlos/
         ├── logger
         ├── version
         ├── state
+        ├── hardware_mapping_contract
         ├── plugins
         ├── scenarios
+        ├── hardware_mapping_store
+        ├── hardware_v3
         ├── execution
         ├── peripherals
     ├── api/
@@ -334,6 +337,7 @@ oqlos/
         ├── logs
         ├── editor
         ├── main
+        ├── hardware_events
         ├── oql_mqtt
             ├── execution_ctrl
         ├── OQL-CHEATSHEET
@@ -456,6 +460,17 @@ oqlos/
 - **`ConnectionManager`** — Tracks connected WebSocket clients and broadcasts messages.
 - **`EventServer`** — WebSocket event broker with persistence.
 - **`EventStore`** — Append-only event store with optional JSON file persistence.
+- **`MappingContractError`** — —
+- **`MappingStore`** — —
+- **`DiagnosticCommandRequest`** — —
+- **`MappingReplaceRequest`** — —
+- **`MappingImportRequest`** — —
+- **`MappingExportRequest`** — —
+- **`MappingResetRequest`** — —
+- **`RuntimeFuncResolveRequest`** — —
+- **`CqrsCommandRequest`** — —
+- **`CqrsEventsClearRequest`** — —
+- **`ScannerIngestRequest`** — —
 - **`FileInfo`** — —
 - **`FileContent`** — —
 - **`ExecutionRequest`** — —
@@ -1253,6 +1268,7 @@ oqlos/
 - `fetch_variables(source)` — Fetch variables (Peripheral State Table) from backend DB; tolerate dev HTML by returning [].
 - `fetch_protocol_steps(scenario, source)` — Fetch protocol steps for preview.
 - `post_commands(env, background_tasks)` — Command bus endpoint used by frontend.
+- `validate_mapping_contract(mapping)` — —
 - `ensure_plugins_initialized()` — Register and discover plugins once per process.
 - `list_plugins()` — List all registered hardware plugins.
 - `get_plugin_status()` — Get overall status of all plugins.
@@ -1265,6 +1281,47 @@ oqlos/
 - `get_scenario(scenario_id)` — Get specific scenario
 - `fetch_scenarios(source)` — Fetch scenarios from backend DB or external JSON and normalize shape.
 - `register_dsl(payload)` — Register one or many scenarios defined as DSL strings.
+- `empty_mapping()` — —
+- `normalize_mapping(value)` — —
+- `normalize_peripheral_id(value)` — —
+- `hardware_health_v3()` — —
+- `hardware_identify_v3(scan)` — —
+- `hardware_proxy_info_v3()` — —
+- `hardware_peripheral_status_v3(peripheral_id)` — —
+- `hardware_diagnostic_command_v3(req)` — —
+- `hardware_hui_actions_v3()` — —
+- `hardware_hui_shutdown_v3(payload)` — —
+- `hardware_hui_hold_start_v3(key, payload)` — —
+- `hardware_hui_hold_stop_v3(key, payload)` — —
+- `hardware_hui_al_command_v3(command, payload)` — —
+- `hardware_modbus_autoconfigure_v3()` — —
+- `hardware_diagnosis_v3()` — —
+- `hardware_diagnosis_repair_v3()` — —
+- `hardware_modbus_waveshare_diagnose_v3(exclusive)` — —
+- `hardware_modbus_wizard_plan_v3()` — —
+- `hardware_stack_snapshot_v3()` — —
+- `hardware_runtime_status_v3(serial_port)` — —
+- `hardware_runtime_stop_v3(payload)` — —
+- `hardware_runtime_start_v3(payload)` — —
+- `hardware_runtime_make_v3(payload)` — —
+- `hardware_modbus_wizard_probe_isolated_v3(payload)` — —
+- `hardware_modbus_wizard_program_isolated_v3(payload)` — —
+- `hardware_runtime_python_v3(payload)` — —
+- `hardware_runtime_python_resolve_func_v3(req)` — —
+- `hardware_mapping_get_v3()` — —
+- `hardware_mapping_schema_v3()` — —
+- `hardware_mapping_put_v3(req)` — —
+- `hardware_mapping_import_v3(req)` — —
+- `hardware_mapping_export_v3(req)` — —
+- `hardware_mapping_reset_v3(req)` — —
+- `hardware_oql_mapped_exec_v3(payload)` — —
+- `hardware_cqrs_command_v3(req)` — —
+- `hardware_cqrs_events_v3(limit)` — —
+- `hardware_cqrs_events_clear_v3(req)` — —
+- `hardware_scanner_status_v3()` — —
+- `hardware_scanner_last_v3()` — —
+- `hardware_scanner_ingest_v3(payload)` — —
+- `hardware_events_ws(websocket)` — —
 - `start_execution(request)` — Start scenario execution
 - `execute_step(payload)` — Execute a single DSL step within the current (or new) execution.
 - `get_execution(execution_id)` — Get execution status
@@ -1316,12 +1373,23 @@ oqlos/
 - `index_page()` — Serve the firmware UI (index.html) at root
 - `editor_page()` — Serve the scenario editor UI
 - `panel_page()` — Serve the test panel UI (predefined command groups, custom + ready-made scenarios).
+- `hardware_status_page()` — Serve the direct hardware status page without the React iframe wrapper.
+- `hardware_demo_alias(request)` — —
+- `hardware_restart_alias(request)` — —
+- `map_editor_alias(request)` — —
 - `hardware_ui_spa(full_path)` — Serve the moved hardware UI SPA, falling back to index.html for client routes.
 - `health_check()` — Health check endpoint for tests and frontend compatibility probes.
 - `status()` — —
+- `hardware_events_websocket_alias(websocket)` — Hardware command event stream used by the moved MAP editor.
 - `websocket_endpoint(websocket)` — —
 - `oql_websocket_alias(websocket)` — Convenience alias for the OQL channel (also at /api/v1/oql/ws).
 - `run()` — Entry point for ``oqlos-server`` console script.
+- `publish_hardware_command_event(command, result)` — —
+- `list_hardware_command_events(limit)` — —
+- `clear_hardware_command_events()` — —
+- `get_hardware_command_event_store_path()` — —
+- `subscribe_hardware_command_events()` — —
+- `unsubscribe_hardware_command_events(subscriber_id)` — —
 - `set_oql_controller(controller)` — Install (or clear) the process-global controller used by the routes.
 - `get_oql_controller()` — —
 - `execute_oql(req)` — —
@@ -1443,8 +1511,12 @@ oqlos/
 📄 `oqlos.api.editor` (6 functions, 3 classes)
 📄 `oqlos.api.execution` (16 functions)
 📄 `oqlos.api.hardware` (89 functions)
+📄 `oqlos.api.hardware_events` (10 functions)
+📄 `oqlos.api.hardware_mapping_contract` (4 functions, 1 classes)
+📄 `oqlos.api.hardware_mapping_store` (13 functions, 1 classes)
+📄 `oqlos.api.hardware_v3` (44 functions, 9 classes)
 📄 `oqlos.api.logs` (3 functions)
-📄 `oqlos.api.main` (14 functions)
+📄 `oqlos.api.main` (20 functions)
 📄 `oqlos.api.oql_mqtt` (6 functions, 3 classes)
 📄 `oqlos.api.peripherals` (4 functions)
 📄 `oqlos.api.plugins` (12 functions)

@@ -1,5 +1,5 @@
 flowchart TD
-%% generated in 0.06s
+%% generated in 0.04s
 
     %% Entry points (blue)
     classDef entry fill:#4dabf7,stroke:#1971c2,color:#fff
@@ -20,11 +20,13 @@ flowchart TD
         frontend__src__hooks__useUrlConfig__theme["theme"]
         frontend__src__hooks__useUrlConfig__lang["lang"]
         frontend__src__hooks__useUrlConfig__resolved["resolved"]
-        ...["+1261 more"]
+        ...["+1310 more"]
     end
 
     subgraph Exporters
         frontend__src__pages__HardwareRestart__exportText["exportText"]
+        oqlos__api__hardware_mapping_store__MappingStore__export_text["export_text"]
+        oqlos__api__hardware_v3__hardware_mapping_export_v3["hardware_mapping_export_v3"]
     end
 
     class setup_hardware_and_run_oql__main,frontend__src__main__LocalizedApp,frontend__src__hooks__useWsStatus__useWsStatus,frontend__src__hooks__useWsStatus__client,frontend__src__hooks__useWsStatus__onOpen,frontend__src__hooks__useWsStatus__onClose,frontend__src__hooks__useUrlConfig__DEFAULTS,frontend__src__hooks__useUrlConfig__value,frontend__src__hooks__useUrlConfig__userId,frontend__src__hooks__useUrlConfig__role entry

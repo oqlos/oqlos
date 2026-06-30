@@ -139,6 +139,64 @@ OQLOS_HARDWARE_MODE=mock oqlos-server --port 8200
 `oqlos-server` supports `--host` and `--port` flags.  Environment-based
 defaults are still respected when flags are omitted.
 
+### Hardware node (Raspberry Pi) — deploy, test, run
+
+The physical rig runs on a dedicated Raspberry Pi (`pi@boardnet.local`,
+192.168.188.122). The Pi owns all devices and runs the **OQL-over-MQTT agent**;
+a controller (your dev host or pi109) talks to it **only over MQTT**. What is
+deployed and running on the node:
+
+| Usługa (systemd `--user`) | Port | Rola |
+|---|---|---|
+| `mosquitto` | `:1883` | broker MQTT (auth, `allow_anonymous false`) |
+| `oqlos-hardware-api` | `:8202` (loopback) | agent OqlOS, `HARDWARE_MODE=real`, plugin `motor-tic249` |
+| `hw-tic249` | `:8205` | sidecar Pololu Tic T249 (płuco) |
+
+The runtime code lives at `~/oqlos/oqlos/oqlos` (deployed package, **no git** —
+synced from this repo). Devices seen by the node: **Pololu Tic T249** (`1ffb:00c9`)
+and **CH340 Modbus adapter** (`1a86:7523`).
+
+Everything is driven through the **Makefile** (`make help` for the full list):
+
+```bash
+make help          # lista celów (PI/NODE/PORT konfigurowalne)
+
+# Test i weryfikacja zdalnego węzła sprzętowego:
+make test-hw       # łączność + sha256 integralności + smoke-test osprzętu na Pi
+make smoke         # sam smoke-test (assert-hw-node-healthy) na Pi
+make verify-rpi    # czy wdrożony pakiet oqlos/ == lokalny (sha256)
+
+# Wdrożenie / utrzymanie:
+make checksums     # manifest sha256 pakietu (oqlos/_CHECKSUMS.sha256)
+make sync-rpi      # rsync pakietu na Pi + weryfikacja sha256 (bez restartu)
+make restart       # restart agenta oqlos-hardware-api na Pi + health
+make 122           # pełny redeploy węzła boardnet (redeploy run migration.md)
+make pi-hw         # pełny redeploy węzła pi-hw (192.168.188.110)
+
+# Lokalnie:
+make serve         # serwer OqlOS na :8202 (panel pod /panel)
+make test          # testy jednostkowe (pytest)
+```
+
+Override hosta/węzła: `make test-hw PI=pi@inny.local`, `make deploy NODE=122`.
+
+**Co realnie działa (zweryfikowane `make test-hw`):** agent + broker + sidecar
+aktywne, `/health mode=real`, plugin `motor-tic249` compatible, round-tripy
+OQL-over-MQTT (`ping`, `health`, `usb-list`, `pi-diagnostics`, `hui-actions`,
+`lung-disable`), a silnik Tic249 po `lung-disable` pozostaje `energized=false`
+(bezpiecznie). Test jest **read-only + de-energize** — nie rusza pompą ani
+zaworami.
+
+**Integralność (suma kontrolna).** `rsync` porównuje rozmiar+mtime, więc nie
+wykrywa cichej korupcji treści. `make verify-rpi` (i krok `assert_oqlos_checksum`
+w migracji) liczy **sha256** każdego pliku pakietu i porównuje strony — `make
+test-hw` przerwie z błędem, gdy wdrożony kod rozjedzie się ze źródłem.
+
+> **Pochodzenie kodu sprzętowego.** UI panelu (`frontend/`, podzbiór sprzętowy)
+> i klient (`oqlos/hardware/client/`) zostały **skopiowane** z
+> `maskservice/c2004/connect-scenario` (upstream). Źródło **nie zostało
+> wyczyszczone** — te fragmenty nadal tam są, więc pilnuj rozjazdu między repo.
+
 ### Run a Scenario (OQL v3 — flat syntax)
 
 ```python

@@ -1,4 +1,4 @@
-# code2llm/evolution | 1873 func | 148f | 2026-06-30
+# code2llm/evolution | 1950 func | 152f | 2026-06-30
 # generated in 0.01s
 
 NEXT[10] (ranked by impact):
@@ -51,8 +51,8 @@ RISKS[3]:
 METRICS-TARGET:
   CC̄:          4.2 → ≤2.9
   max-CC:      96 → ≤20
-  god-modules: 23 → 0
-  high-CC(≥15): 25 → ≤12
+  god-modules: 24 → 0
+  high-CC(≥15): 26 → ≤13
   hub-types:   0 → ≤0
 
 PATTERNS (language parser shared logic):

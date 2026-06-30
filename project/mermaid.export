@@ -1,5 +1,5 @@
 flowchart TD
-%% generated in 0.02s
+%% generated in 0.01s
     subgraph examples__hardware
         examples__hardware__doctor_workflow__print["print"]
     end
@@ -90,6 +90,10 @@ flowchart TD
         oqlos__api__state___handle_start("_handle_start CC=13")
         oqlos__api__state___make_state_handler["_make_state_handler"]
         oqlos__api__state__post_commands["post_commands"]
+        oqlos__api__hardware_mapping_contract__MappingContractError____init__["__init__"]
+        oqlos__api__hardware_mapping_contract___is_int["_is_int"]
+        oqlos__api__hardware_mapping_contract___validate_motor2{{_validate_motor2 CC=19}}
+        oqlos__api__hardware_mapping_contract__validate_mapping_contract["validate_mapping_contract"]
         oqlos__api__plugins__ensure_plugins_initialized["ensure_plugins_initialized"]
         oqlos__api__plugins___plugin_health_http_status["_plugin_health_http_status"]
         oqlos__api__plugins___plugin_health_body["_plugin_health_body"]
@@ -118,22 +122,18 @@ flowchart TD
         oqlos__api__scenarios___merge_goals_into_scenario["_merge_goals_into_scenario"]
         oqlos__api__scenarios___register_single_dsl_scenario["_register_single_dsl_scenario"]
         oqlos__api__scenarios__register_dsl["register_dsl"]
-        oqlos__api__execution___resolve_step_label("_resolve_step_label CC=11")
-        oqlos__api__execution___flatten_steps_for_scenario["_flatten_steps_for_scenario"]
-        oqlos__api__execution___build_step_labels["_build_step_labels"]
-        oqlos__api__execution___resolve_current_index("_resolve_current_index CC=10")
-        oqlos__api__execution___current_projection["_current_projection"]
-        oqlos__api__execution__start_execution["start_execution"]
-        oqlos__api__execution__execute_step("execute_step CC=9")
-        oqlos__api__execution___register_dsl_scenario["_register_dsl_scenario"]
-        oqlos__api__execution___make_exec_route["_make_exec_route"]
-        oqlos__api__execution__get_execution["get_execution"]
-        oqlos__api__execution__get_execution_projection["get_execution_projection"]
-        oqlos__api__execution__get_execution_status["get_execution_status"]
-        oqlos__api__execution__get_execution_logs["get_execution_logs"]
-        oqlos__api__execution___make_legacy_route["_make_legacy_route"]
-        oqlos__api__execution__execution_stream["execution_stream"]
-        oqlos__api__execution__execution_logs_stream["execution_logs_stream"]
+        oqlos__api__hardware_mapping_store___default_path["_default_path"]
+        oqlos__api__hardware_mapping_store__empty_mapping["empty_mapping"]
+        oqlos__api__hardware_mapping_store___normalize_motor2_runtime_config["_normalize_motor2_runtime_config"]
+        oqlos__api__hardware_mapping_store__normalize_mapping["normalize_mapping"]
+        oqlos__api__hardware_mapping_store__MappingStore____init__["__init__"]
+        oqlos__api__hardware_mapping_store__MappingStore___load_from_disk["_load_from_disk"]
+        oqlos__api__hardware_mapping_store__MappingStore__save["save"]
+        oqlos__api__hardware_mapping_store__MappingStore__get["get"]
+        oqlos__api__hardware_mapping_store__MappingStore__replace["replace"]
+        oqlos__api__hardware_mapping_store__MappingStore__reset["reset"]
+        oqlos__api__hardware_mapping_store__MappingStore__parse_text("parse_text CC=8")
+        oqlos__api__hardware_mapping_store__MappingStore__import_text["import_text"]
     end
     subgraph oqlos__config
         oqlos__config__get_settings["get_settings"]
@@ -1144,5 +1144,5 @@ flowchart TD
 
     classDef highCC fill:#ff6b6b,stroke:#c92a2a,color:#fff
     classDef medCC fill:#ffd43b,stroke:#f08c00,color:#000
-    class frontend__src__hooks__useUrlConfig__mergeParentContext,frontend__src__hooks__useUrlConfig__useUrlConfig,frontend__src__pages__MapEditor__readIntegrationMeta,frontend__src__pages__MapEditor__setMetaField,frontend__src__pages__MapEditor__editObjectActionArg,frontend__src__pages__MapEditor__renderObjectActionEditor,frontend__src__pages__HardwareRestart__loadPlan,frontend__src__pages__HardwareRestart__runCurrentStep,frontend__src__pages__HardwareRestart__runWithRetry,frontend__src__pages__HardwareRestart__attempt,frontend__src__pages__HardwareDemo__cancelled,frontend__src__utils__hardwareEventStream__normalizeHardwareEvent,frontend__src__utils__useSelectionCollapsePanel__RAIL_HOVER_OPEN_MS,frontend__src__utils__useSelectionCollapsePanel__RAIL_HOVER_CLOSE_MS,frontend__src__utils__useSelectionCollapsePanel__useSelectionCollapsePanel,frontend__src__utils__mapEditorFuncHardwareSummary__summarizeFuncToHardware,frontend__src__utils__mapEditorFuncHardwareSummary__objName,frontend__src__utils__mapEditorFuncHardwareSummary__actName,frontend__src__utils__hardware_wizard_steps__selectWizardProbeCandidate,frontend__src__context__AppConfigProvider__AppConfigContext,frontend__src__context__AppConfigProvider__AppConfigProvider,frontend__src__context__AppConfigProvider__handleEncoderCommand,frontend__src__api__hardwareApi__extractDiagnosticFailure,frontend__src__api__hardwareApi__request,oqlos__hardware__transport__manage_ops___run_diagnostic_command highCC
+    class frontend__src__hooks__useUrlConfig__mergeParentContext,frontend__src__hooks__useUrlConfig__useUrlConfig,frontend__src__pages__MapEditor__readIntegrationMeta,frontend__src__pages__MapEditor__setMetaField,frontend__src__pages__MapEditor__editObjectActionArg,frontend__src__pages__MapEditor__renderObjectActionEditor,frontend__src__pages__HardwareRestart__loadPlan,frontend__src__pages__HardwareRestart__runCurrentStep,frontend__src__pages__HardwareRestart__runWithRetry,frontend__src__pages__HardwareRestart__attempt,frontend__src__pages__HardwareDemo__cancelled,frontend__src__utils__hardwareEventStream__normalizeHardwareEvent,frontend__src__utils__useSelectionCollapsePanel__RAIL_HOVER_OPEN_MS,frontend__src__utils__useSelectionCollapsePanel__RAIL_HOVER_CLOSE_MS,frontend__src__utils__useSelectionCollapsePanel__useSelectionCollapsePanel,frontend__src__utils__mapEditorFuncHardwareSummary__summarizeFuncToHardware,frontend__src__utils__mapEditorFuncHardwareSummary__objName,frontend__src__utils__mapEditorFuncHardwareSummary__actName,frontend__src__utils__hardware_wizard_steps__selectWizardProbeCandidate,frontend__src__context__AppConfigProvider__AppConfigContext,frontend__src__context__AppConfigProvider__AppConfigProvider,frontend__src__context__AppConfigProvider__handleEncoderCommand,frontend__src__api__hardwareApi__extractDiagnosticFailure,frontend__src__api__hardwareApi__request,oqlos__hardware__transport__manage_ops___run_diagnostic_command,oqlos__api__hardware_mapping_contract___validate_motor2 highCC
     class setup_hardware_and_run_oql__detect_serial_devices,setup_hardware_and_run_oql__suggest_modbus_port,setup_hardware_and_run_oql__run_oql_scenario,frontend__src__hooks__useUrlConfig__resolveUserFromContextPayload,frontend__src__hooks__useUrlConfig__resolveViewportWidthPx,frontend__src__hooks__useUrlConfig__parseAppearanceParams,frontend__src__hooks__useUrlConfig__parseNavigationParams,frontend__src__hooks__useUrlConfig__onPop,frontend__src__hooks__useUrlConfig__onMessage,frontend__src__hooks__useUrlConfig__envelope,frontend__src__pages__MapEditor__ensureRequiredDefaultMappings,frontend__src__pages__MapEditor__isMapEmpty,frontend__src__pages__MapEditor__ensureParamConversion,frontend__src__pages__MapEditor__editParamConversionField,frontend__src__pages__MapEditor__editParamConversionAlgorithm,frontend__src__pages__MapEditor__editObjectActionBodyField,frontend__src__pages__MapEditor__editMotorRuntimeConfig,frontend__src__pages__MapEditor__reloadCurrent,frontend__src__pages__MapEditor__clearServerHardwareEvents,frontend__src__pages__MapEditor__applyAutoCollapse,frontend__src__pages__MapEditor__integrationMeta,frontend__src__pages__MapEditor__updateIntegrationMeta,frontend__src__pages__HardwareRestart__wizardStepSerialPort,frontend__src__pages__HardwareRestart__buildWizardProbePayload,frontend__src__pages__HardwareRestart__serialPort,frontend__src__pages__HardwareRestart__startOqlosAndRefreshPlan,frontend__src__pages__HardwareRestart__currentDeviceId,frontend__src__pages__HardwareDemo__sendDeviceNote,frontend__src__pages__HardwareDemo__playMelody,frontend__src__i18n__I18nProvider__I18nProvider medCC
