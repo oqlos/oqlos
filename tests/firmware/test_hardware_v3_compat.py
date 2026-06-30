@@ -95,3 +95,11 @@ def test_hardware_ui_aliases_and_status_page_are_served():
     editor = client.get("/map-editor", follow_redirects=False)
     assert editor.status_code in {302, 307}
     assert editor.headers["location"] == "/ui/map-editor"
+
+    scenario_files = client.get("/scenario-files?scenario=demo.oql", follow_redirects=False)
+    assert scenario_files.status_code in {302, 307}
+    assert scenario_files.headers["location"] == "/editor?scenario=demo.oql"
+
+    func_editor = client.get("/func-editor", follow_redirects=False)
+    assert func_editor.status_code in {302, 307}
+    assert func_editor.headers["location"] == "/editor"

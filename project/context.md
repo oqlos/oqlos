@@ -5,17 +5,17 @@
 
 - **Project**: /home/tom/github/oqlos/oqlos
 - **Primary Language**: python
-- **Languages**: python: 161, javascript: 47, md: 19, yaml: 13, shell: 9
+- **Languages**: python: 161, javascript: 61, md: 19, yaml: 13, shell: 9
 - **Analysis Mode**: static
-- **Total Functions**: 2128
+- **Total Functions**: 2143
 - **Total Classes**: 123
-- **Modules**: 267
-- **Entry Points**: 1288
+- **Modules**: 281
+- **Entry Points**: 1309
 
 ## Architecture by Module
 
 ### frontend.src.pages.MapEditor
-- **Functions**: 151
+- **Functions**: 97
 - **File**: `MapEditor.jsx`
 
 ### oqlos.api.hardware
@@ -26,10 +26,6 @@
 - **Functions**: 50
 - **File**: `HardwareRestart.jsx`
 
-### frontend.src.utils.url-embed-config
-- **Functions**: 49
-- **File**: `url-embed-config.js`
-
 ### oqlos.core._interpreter_actions
 - **Functions**: 49
 - **File**: `_interpreter_actions.py`
@@ -38,6 +34,10 @@
 - **Functions**: 48
 - **Classes**: 1
 - **File**: `interpreter.py`
+
+### frontend.src.utils.url-embed-config
+- **Functions**: 48
+- **File**: `url-embed-config.js`
 
 ### frontend.src.pages.HardwareDemo
 - **Functions**: 46
@@ -168,15 +168,6 @@ valve commands to POST /api/v1/hardware/valve/{id} so t
 ### scripts.scenarios_export.main
 - **Calls**: argparse.ArgumentParser, parser.add_argument, parser.add_mutually_exclusive_group, group.add_argument, group.add_argument, group.add_argument, parser.add_argument, parser.add_argument
 
-### frontend.src.utils.useSelectionCollapsePanel.RAIL_HOVER_OPEN_MS
-- **Calls**: frontend.src.utils.useSelectionCollapsePanel.useState, frontend.src.utils.useSelectionCollapsePanel.readStoredCollapsed, frontend.src.utils.useSelectionCollapsePanel.useRef, frontend.src.utils.useSelectionCollapsePanel.useCallback, frontend.src.utils.useSelectionCollapsePanel.clearTimeout, frontend.src.utils.useSelectionCollapsePanel.cancelAutoCollapse, frontend.src.utils.useSelectionCollapsePanel.setHoverPreview, frontend.src.utils.useSelectionCollapsePanel.setTimeout
-
-### frontend.src.utils.useSelectionCollapsePanel.RAIL_HOVER_CLOSE_MS
-- **Calls**: frontend.src.utils.useSelectionCollapsePanel.useState, frontend.src.utils.useSelectionCollapsePanel.readStoredCollapsed, frontend.src.utils.useSelectionCollapsePanel.useRef, frontend.src.utils.useSelectionCollapsePanel.useCallback, frontend.src.utils.useSelectionCollapsePanel.clearTimeout, frontend.src.utils.useSelectionCollapsePanel.cancelAutoCollapse, frontend.src.utils.useSelectionCollapsePanel.setHoverPreview, frontend.src.utils.useSelectionCollapsePanel.setTimeout
-
-### frontend.src.utils.useSelectionCollapsePanel.useSelectionCollapsePanel
-- **Calls**: frontend.src.utils.useSelectionCollapsePanel.useState, frontend.src.utils.useSelectionCollapsePanel.readStoredCollapsed, frontend.src.utils.useSelectionCollapsePanel.useRef, frontend.src.utils.useSelectionCollapsePanel.useCallback, frontend.src.utils.useSelectionCollapsePanel.clearTimeout, frontend.src.utils.useSelectionCollapsePanel.cancelAutoCollapse, frontend.src.utils.useSelectionCollapsePanel.setHoverPreview, frontend.src.utils.useSelectionCollapsePanel.setTimeout
-
 ### oqlos.tools.hardware_diagnose.__main__.main
 - **Calls**: argparse.ArgumentParser, parser.add_argument, parser.add_argument, parser.add_argument, parser.add_argument, parser.add_argument, parser.add_argument, parser.add_argument
 
@@ -217,6 +208,9 @@ Expected payload::
 ### oqlos.api.hardware._modbus_wizard_probe_isolated
 - **Calls**: oqlos.api.hardware._collect_wizard_serial_candidates, diagnose_shared_bus, report.to_dict, all_scans.append, frontend.src.utils.hardware-wizard-steps.list, bool, int, str
 
+### frontend.src.utils.useSelectionCollapsePanel.useSelectionCollapsePanel
+- **Calls**: frontend.src.utils.useSelectionCollapsePanel.useState, frontend.src.utils.useSelectionCollapsePanel.readStoredCollapsed, frontend.src.utils.useSelectionCollapsePanel.useRef, frontend.src.utils.useSelectionCollapsePanel.useCallback, frontend.src.utils.useSelectionCollapsePanel.clearTimeout, frontend.src.utils.useSelectionCollapsePanel.useRailHoverPreview, frontend.src.utils.useSelectionCollapsePanel.cancelAutoCollapse, frontend.src.utils.useSelectionCollapsePanel.setHoverPreview
+
 ### oqlos.core._interpreter_actions.exec_action_shell
 > Execute shell/export helpers in dry-run mode.
 - **Calls**: oqlos.core._interpreter_actions._drop_command_token, None.upper, oqlos.core._interpreter_actions._record_failure, interp.sensor_values.get, interp.vars.set, interp.out.step, interp.vars.set, interp.out.step
@@ -224,6 +218,12 @@ Expected payload::
 ### oqlos.tools.xml_import.generators.generate_cql
 > Generate CQL (Connex Query Language) text from parsed report.
 - **Calls**: frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, sorted, op.lp.split
+
+### oqlos.hardware.transport.mqtt_oql_bridge.OqlRequest.from_json
+- **Calls**: json.loads, cls, str, str, str, str, str, bool
+
+### setup_hardware_and_run_oql.main
+- **Calls**: argparse.ArgumentParser, parser.add_argument, parser.add_argument, parser.add_argument, parser.add_argument, parser.add_argument, parser.add_argument, parser.add_argument
 
 ## Process Flows
 
@@ -452,27 +452,6 @@ Key functions that process and transform data:
 ### frontend.src.hooks.useParentEncoderNavigation.useParentEncoderNavigation
 - **Output to**: frontend.src.hooks.useParentEncoderNavigation.useEffect, frontend.src.hooks.useParentEncoderNavigation.createEncoderController, frontend.src.hooks.useParentEncoderNavigation.parseParentEncoderEnvelope, frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand, frontend.src.hooks.useParentEncoderNavigation.isParentEncoderActive
 
-### frontend.src.pages.MapEditor.parsed
-- **Output to**: frontend.src.pages.MapEditor.isPlainObject, frontend.src.pages.MapEditor.Error, frontend.src.pages.MapEditor.t
-
-### frontend.src.pages.MapEditor.parsedJson
-- **Output to**: frontend.src.pages.MapEditor.isPlainObject, frontend.src.pages.MapEditor.Error, frontend.src.pages.MapEditor.t
-
-### frontend.src.utils.url-embed-config.parseAppearanceParams
-- **Output to**: frontend.src.utils.url-embed-config.get, frontend.src.utils.url-embed-config.trim, frontend.src.utils.url-embed-config.includes, frontend.src.utils.url-embed-config.resolveViewportWidthPx
-
-### frontend.src.utils.url-embed-config.parseIdentityParams
-- **Output to**: frontend.src.utils.url-embed-config.get, frontend.src.utils.url-embed-config.normalizeConnectRole, frontend.src.utils.url-embed-config.resolveUserIdFromSearchParams, frontend.src.utils.url-embed-config.includes, frontend.src.utils.url-embed-config.trim
-
-### frontend.src.utils.url-embed-config.parseNavigationParams
-- **Output to**: frontend.src.utils.url-embed-config.get, frontend.src.utils.url-embed-config.trim, frontend.src.utils.url-embed-config.isValidShellHuiKey
-
-### frontend.src.utils.url-embed-config.parseUrlEmbedConfig
-- **Output to**: frontend.src.utils.url-embed-config.URLSearchParams, frontend.src.utils.url-embed-config.parseAppearanceParams, frontend.src.utils.url-embed-config.parseIdentityParams, frontend.src.utils.url-embed-config.parseNavigationParams
-
-### frontend.src.utils.rbac.policy.parseConnectRole
-- **Output to**: frontend.src.utils.rbac.policy.String, frontend.src.utils.rbac.policy.trim, frontend.src.utils.rbac.policy.toLowerCase
-
 ### frontend.src.api.hardware-api-errors.tryParseJson
 - **Output to**: frontend.src.api.hardware-api-errors.parse
 
@@ -520,6 +499,28 @@ Key functions that process and transform data:
 ### oqlos.core._interpreter_actions.parse_wait_secs
 > Parse a WAIT value to seconds. Default unit is ms.
 - **Output to**: None.strip, re.search, float, low.replace, match.group
+
+### oqlos.core.oql_parser.parse_duration
+> Parse ``3s``, ``500ms``, ``3000`` (bare number defaults to ``ms``).
+- **Output to**: DUR_RE.match, ValueError, oqlos.core.oql_parser.to_num, match.group, match.group
+
+### oqlos.core.oql_parser.parse_SET
+- **Output to**: oqlos.core.oql_parser._require, oqlos.core.oql_parser._split_set_value_unit, OqlCmd
+
+### oqlos.core.oql_parser.parse_GET
+- **Output to**: oqlos.core.oql_parser._require, OqlCmd
+
+### oqlos.core.oql_parser.parse_WAIT
+- **Output to**: oqlos.core.oql_parser._require, oqlos.core.oql_parser.parse_duration, oqlos.core.oql_parser.duration_to_ms, OqlCmd
+
+### oqlos.core.oql_parser.parse_IF_DELTA
+- **Output to**: oqlos.core.oql_parser._require, None.replace, DELTA_RE.match, oqlos.core.oql_parser.to_num, abs
+
+### oqlos.core.oql_parser.parse_SAVE
+- **Output to**: oqlos.core.oql_parser._require, OqlCmd
+
+### oqlos.core.oql_parser.parse_CHECK
+- **Output to**: CHECK_RE.match, OqlCmd, rest.strip, ValueError, oqlos.core.oql_parser.to_num
 
 ## Behavioral Patterns
 
@@ -628,9 +629,6 @@ Functions exposed as public API (no underscore prefix):
 - `oqlos.api.hardware.read_modbus_adc_raw` - 23 calls
 - `scripts.scenarios_export.main` - 23 calls
 - `oqlos.tools.cql_cli.commands.handle_list_command` - 22 calls
-- `frontend.src.utils.useSelectionCollapsePanel.RAIL_HOVER_OPEN_MS` - 21 calls
-- `frontend.src.utils.useSelectionCollapsePanel.RAIL_HOVER_CLOSE_MS` - 21 calls
-- `frontend.src.utils.useSelectionCollapsePanel.useSelectionCollapsePanel` - 21 calls
 - `oqlos.core.oql_parser.parse_oql` - 21 calls
 - `oqlos.core.parser.parse_dsl_to_goal_with_issues` - 21 calls
 - `oqlos.tools.hardware_diagnose.doctor.format_doctor` - 21 calls
@@ -642,6 +640,9 @@ Functions exposed as public API (no underscore prefix):
 - `scripts.scenarios_export.export_one_bash` - 21 calls
 - `oqlos.tools.hardware_diagnose.health.cmd_diagnose` - 20 calls
 - `oqlos.hardware.client.autorepair.analyze_repair_needs` - 20 calls
+- `oqlos.shared.logs_query.LogsQueryService.query_logs` - 20 calls
+- `oqlos.api.execution.execute_step` - 20 calls
+- `oqlos.api.hardware.hardware_identify` - 20 calls
 
 ## System Interactions
 

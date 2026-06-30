@@ -5,7 +5,8 @@ a dedicated Raspberry Pi 3 (`pi@boardnet.local`, `192.168.188.122`). This Pi own
 physical devices (Modbus IO/ADC, Pololu Tic T249, DFRobot DRI0050, RTC HAT) and runs the
 OQL-over-MQTT **agent/controller** pair for local and remote OQL requests. It also exposes
 the OqlOS hardware UI/API on LAN at `:8202`, so a human can open
-`http://boardnet.local:8202/hardware-status`, `/hardware-demo`, and `/map-editor` directly.
+`http://boardnet.local:8202/hardware-status`, `/hardware-demo`, `/map-editor`,
+`/scenario-files`, and `/func-editor` directly.
 
 Aktualny stan BoardNet/DisplayNet i ostatniej diagnostyki hardware:
 `redeploy/122/CURRENT_STATE.md`.
@@ -671,6 +672,19 @@ _wait_get() {
   return 1
 }
 
+_wait_listen() {
+  local pattern="$1"
+  local attempts="${2:-45}"
+  local i
+  for i in $(seq 1 "$attempts"); do
+    if ss -tlnp 2>/dev/null | grep -q "$pattern"; then
+      return 0
+    fi
+    sleep 1
+  done
+  return 1
+}
+
 _curl_post() {
   local url="$1"
   local out="$2"
@@ -706,14 +720,14 @@ else
   _fail "OqlOS HTTP :8202 nie odpowiada"
 fi
 
-if ss -tlnp 2>/dev/null | grep -q '0\.0\.0\.0:8202'; then
+if _wait_listen '0\.0\.0\.0:8202' 45; then
   _pass "OqlOS HTTP/UI :8202 slucha na 0.0.0.0 (LAN)"
 else
   _fail "OqlOS HTTP/UI :8202 nie slucha na 0.0.0.0"
 fi
 
-for page in hardware-status hardware-demo map-editor; do
-  if _curl_get "http://127.0.0.1:8202/${page}" "$TMPDIR/oqlos-${page}.html" 8; then
+for page in hardware-status hardware-demo map-editor scenario-files func-editor; do
+  if _wait_get "http://127.0.0.1:8202/${page}" "$TMPDIR/oqlos-${page}.html" 30 8; then
     _pass "OqlOS UI /${page} OK"
   else
     _fail "OqlOS UI /${page} nie odpowiada"

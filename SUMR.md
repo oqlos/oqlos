@@ -632,7 +632,7 @@ class Settings:  # Application settings loaded from environment variables and .
 
 ## Call Graph
 
-*426 nodes · 500 edges · 43 modules · CC̄=4.0*
+*426 nodes · 500 edges · 52 modules · CC̄=3.9*
 
 ### Hubs (by degree)
 
@@ -643,15 +643,15 @@ class Settings:  # Application settings loaded from environment variables and .
 | `list` *(in frontend.src.utils.hardware-wizard-steps)* | 2 | 40 | 0 | **40** |
 | `oql_doc_to_cql` *(in oqlos.core._oql_adapter)* | 12 ⚠ | 2 | 30 | **32** |
 | `normalize_motor2_runtime_config` *(in oqlos.core.motor2_runtime)* | 12 ⚠ | 1 | 29 | **30** |
+| `format_detection` *(in oqlos.tools.hardware_diagnose.doctor)* | 10 ⚠ | 3 | 25 | **28** |
 | `_safe_resolve` *(in oqlos.core.executor)* | 14 ⚠ | 7 | 21 | **28** |
 | `run_oql_scenario` *(in setup_hardware_and_run_oql)* | 8 | 1 | 24 | **25** |
-| `applyMapMutation` *(in frontend.src.pages.MapEditor)* | 2 | 16 | 8 | **24** |
 
 ```toon markpact:analysis path=project/calls.toon.yaml
 # code2llm call graph | /home/tom/github/oqlos/oqlos
-# generated in 0.23s
-# nodes: 426 | edges: 500 | modules: 43
-# CC̄=4.0
+# generated in 0.28s
+# nodes: 426 | edges: 500 | modules: 52
+# CC̄=3.9
 
 HUBS[20]:
   examples.hardware.doctor-workflow.print
@@ -664,36 +664,36 @@ HUBS[20]:
     CC=12  in:2  out:30  total:32
   oqlos.core.motor2_runtime.normalize_motor2_runtime_config
     CC=12  in:1  out:29  total:30
+  oqlos.tools.hardware_diagnose.doctor.format_detection
+    CC=10  in:3  out:25  total:28
   oqlos.core.executor._safe_resolve
     CC=14  in:7  out:21  total:28
   setup_hardware_and_run_oql.run_oql_scenario
     CC=8  in:1  out:24  total:25
-  frontend.src.pages.MapEditor.applyMapMutation
-    CC=2  in:16  out:8  total:24
   oqlos.core.oql_parser.parse_oql
     CC=14  in:3  out:21  total:24
   oqlos.core.parser.parse_dsl_to_goal_with_issues
     CC=13  in:3  out:21  total:24
+  oqlos.core._action_motor2._motor2_build_plan
+    CC=12  in:1  out:22  total:23
+  oqlos.tools.hardware_diagnose.doctor._analyze_modbus_adc_config
+    CC=12  in:1  out:22  total:23
+  oqlos.tools.hardware_diagnose.doctor.format_doctor
+    CC=6  in:2  out:21  total:23
   oqlos.core._line_parsers._parse_if_condition
     CC=9  in:1  out:22  total:23
   oqlos.core._action_motor2._try_exec_motor2_set
     CC=13  in:1  out:22  total:23
-  oqlos.core._action_motor2._motor2_build_plan
-    CC=12  in:1  out:22  total:23
   oqlos.core._line_parsers._parse_set_line
     CC=12  in:1  out:21  total:22
-  frontend.src.utils.useSelectionCollapsePanel.useSelectionCollapsePanel
-    CC=33  in:0  out:21  total:21
-  frontend.src.utils.useSelectionCollapsePanel.RAIL_HOVER_OPEN_MS
-    CC=33  in:0  out:21  total:21
-  frontend.src.utils.useSelectionCollapsePanel.RAIL_HOVER_CLOSE_MS
-    CC=33  in:0  out:21  total:21
-  oqlos.core._func_resolver._collect_function_definitions
-    CC=13  in:1  out:19  total:20
-  frontend.src.api.wsClient.WsCqrsClient.super
-    CC=1  in:18  out:1  total:19
-  oqlos.core.oql_parser.tokenize
-    CC=13  in:5  out:14  total:19
+  oqlos.tools.hardware_diagnose.health.cmd_diagnose
+    CC=6  in:2  out:20  total:22
+  oqlos.core.base.VariableStore.set
+    CC=4  in:19  out:2  total:21
+  oqlos.core._cql_tree_builder._parse_goal_line
+    CC=12  in:1  out:20  total:21
+  oqlos.tools.hardware_diagnose.doctor._analyze_modbus_config
+    CC=11  in:1  out:20  total:21
 
 MODULES:
   examples.hardware.doctor-workflow  [1 funcs]
@@ -752,9 +752,6 @@ MODULES:
     onMessage  CC=3  out:2
     onWheel  CC=6  out:5
     parentEncoderActive  CC=15  out:7
-  frontend.src.hooks.useUrlConfig  [2 funcs]
-    notifyParentChildReady  CC=4  out:5
-    useUrlConfig  CC=8  out:15
   frontend.src.i18n.I18nProvider  [5 funcs]
     I18nProvider  CC=13  out:8
     dict  CC=8  out:3
@@ -783,17 +780,8 @@ MODULES:
     loadPlan  CC=18  out:11
     log  CC=1  out:3
     message  CC=1  out:1
-  frontend.src.pages.MapEditor  [49 funcs]
-    addAction  CC=2  out:6
-    addFunc  CC=2  out:6
-    addObject  CC=2  out:6
-    addParam  CC=2  out:4
-    applyMapMutation  CC=2  out:8
-    clearServerHardwareEvents  CC=8  out:9
-    cloneDefaultMap  CC=1  out:2
-    cloneValue  CC=1  out:2
-    createInitialEditorState  CC=1  out:3
-    defaultMotor2  CC=3  out:2
+  frontend.src.pages.MapEditor  [1 funcs]
+    next  CC=1  out:1
   frontend.src.utils.collapse-toggle-bridge  [2 funcs]
     isInIframe  CC=4  out:0
     postToParent  CC=4  out:8
@@ -805,9 +793,10 @@ MODULES:
   frontend.src.utils.hardware-api-retry  [2 funcs]
     attempt  CC=14  out:9
     sleep  CC=1  out:2
-  frontend.src.utils.hardware-restart-wizard-steps  [3 funcs]
+  frontend.src.utils.hardware-restart-wizard-steps  [4 funcs]
     buildWizardProbePayload  CC=10  out:7
     executeConfigureStep  CC=48  out:15
+    probe  CC=1  out:2
     wizardStepSerialPort  CC=14  out:0
   frontend.src.utils.hardware-wizard-steps  [1 funcs]
     list  CC=2  out:0
@@ -828,39 +817,6 @@ MODULES:
     resolveObjectActionHardwareHint  CC=6  out:2
     summarizeFuncToHardware  CC=17  out:6
     uniqueHints  CC=5  out:5
-  frontend.src.utils.rbac.policy  [13 funcs]
-    canConnectRoleAccessPath  CC=2  out:3
-    canHostRoleAccessPath  CC=2  out:3
-    isAdminConnectRole  CC=1  out:1
-    isOperatorConnectRole  CC=4  out:1
-    isReadOnlyConnectRole  CC=2  out:1
-    matched  CC=5  out:1
-    matchesPattern  CC=3  out:3
-    normalizeConnectRole  CC=2  out:1
-    normalizeHostRole  CC=2  out:1
-    normalizePath  CC=6  out:4
-  frontend.src.utils.url-embed-config  [21 funcs]
-    applyParentContextPayload  CC=5  out:5
-    applyUrlEmbedPatch  CC=7  out:7
-    base  CC=3  out:3
-    fromUser  CC=4  out:3
-    href  CC=4  out:3
-    mergeParentContext  CC=7  out:4
-    mergeParentSearchIntoChildUrl  CC=6  out:10
-    nextHref  CC=1  out:1
-    parentSearch  CC=4  out:3
-    parseAppearanceParams  CC=9  out:4
-  frontend.src.utils.useSelectionCollapsePanel  [16 funcs]
-    RAIL_HOVER_CLOSE_MS  CC=33  out:21
-    RAIL_HOVER_OPEN_MS  CC=33  out:21
-    cancelAutoCollapse  CC=2  out:2
-    cancelPanelClose  CC=2  out:2
-    cancelRailOpen  CC=2  out:2
-    expand  CC=1  out:5
-    onMessage  CC=8  out:3
-    panelEnter  CC=1  out:2
-    panelLeave  CC=4  out:5
-    previewCollapse  CC=1  out:2
   oqlos.config  [1 funcs]
     get_settings  CC=1  out:0
   oqlos.core._action_motor2  [30 funcs]
@@ -888,9 +844,14 @@ MODULES:
     _try_save  CC=5  out:7
     _try_set  CC=2  out:6
     _try_val  CC=2  out:4
-  oqlos.core._cql_tree_builder  [2 funcs]
+  oqlos.core._cql_tree_builder  [7 funcs]
+    _ensure_goal_for_step  CC=4  out:3
+    _ensure_step_for_actions  CC=3  out:2
     _parse_action_line  CC=4  out:3
+    _parse_goal_line  CC=12  out:20
     _parse_metadata_kv  CC=6  out:5
+    _parse_scenario_line  CC=3  out:6
+    _parse_step_line  CC=3  out:5
   oqlos.core._dsl_helpers  [12 funcs]
     _looks_like_lung_object  CC=1  out:2
     _looks_like_pump_object  CC=1  out:2
@@ -939,14 +900,26 @@ MODULES:
     _lower_set  CC=1  out:3
     _parse_macro_line  CC=8  out:10
     _resolve_include  CC=6  out:8
-  oqlos.core.base  [5 funcs]
+  oqlos.core._sensor_evaluator  [2 funcs]
+    __init__  CC=3  out:2
+    collect_sensor_constraints  CC=10  out:5
+  oqlos.core._value_normalizers  [1 funcs]
+    coerce_float  CC=5  out:9
+  oqlos.core.base  [6 funcs]
     send_event  CC=4  out:7
     emit  CC=5  out:3
     output_yaml  CC=4  out:2
     __init__  CC=2  out:1
     all  CC=3  out:3
-  oqlos.core.cql_parser  [3 funcs]
+    set  CC=4  out:2
+  oqlos.core.cql_parser  [9 funcs]
+    _handle_goal  CC=3  out:5
+    _handle_scenario  CC=2  out:3
+    _handle_step  CC=2  out:4
+    _try_hierarchy  CC=7  out:6
     _try_top_level  CC=2  out:1
+    _collect_all_goals  CC=2  out:2
+    _validate_intervals  CC=6  out:1
     parse_cql  CC=2  out:6
     validate_cql  CC=5  out:5
   oqlos.core.executor  [6 funcs]
@@ -1003,6 +976,68 @@ MODULES:
     _eval_node  CC=2  out:5
     _eval_unary_op  CC=3  out:5
     safe_eval  CC=3  out:4
+  oqlos.hardware.config_paths  [1 funcs]
+    resolve_oqlos_config_path  CC=6  out:13
+  oqlos.hardware.health_status  [1 funcs]
+    health_status_is_ok  CC=11  out:9
+  oqlos.tools.hardware_diagnose.__main__  [9 funcs]
+    _handle_report_action  CC=3  out:4
+    _print_benchmark  CC=3  out:11
+    _print_calibrate  CC=6  out:9
+    _print_detect  CC=2  out:4
+    _print_diagnose  CC=3  out:9
+    _print_doctor  CC=2  out:4
+    _print_health  CC=2  out:5
+    _print_list  CC=3  out:8
+    _print_modbus_probe  CC=2  out:5
+  oqlos.tools.hardware_diagnose.benchmark  [1 funcs]
+    run_benchmark  CC=6  out:15
+  oqlos.tools.hardware_diagnose.calibration  [1 funcs]
+    run_calibration_test  CC=2  out:8
+  oqlos.tools.hardware_diagnose.discovery  [2 funcs]
+    list_i2c_buses  CC=1  out:2
+    list_usb_serial_devices  CC=7  out:9
+  oqlos.tools.hardware_diagnose.doctor  [41 funcs]
+    _adapter_health_status  CC=3  out:1
+    _add_issue  CC=2  out:1
+    _analyze_firmware_access  CC=7  out:11
+    _analyze_modbus_adc_config  CC=12  out:22
+    _analyze_modbus_config  CC=11  out:20
+    _analyze_serial_port_owners  CC=13  out:19
+    _canonical_device_path  CC=2  out:3
+    _check_firmware_adapters  CC=7  out:9
+    _check_firmware_health_error  CC=3  out:2
+    _check_firmware_mode  CC=3  out:4
+  oqlos.tools.hardware_diagnose.health  [7 funcs]
+    _format_health_value  CC=8  out:9
+    _is_health_ok  CC=5  out:6
+    _request_firmware_json  CC=8  out:9
+    check_firmware_health  CC=1  out:1
+    check_firmware_identify  CC=1  out:1
+    cmd_diagnose  CC=6  out:20
+    cmd_health  CC=5  out:10
+  oqlos.tools.hardware_diagnose.modbus_probe  [7 funcs]
+    _arg_int_list  CC=3  out:2
+    _arg_str_list  CC=2  out:1
+    _env_count_list  CC=2  out:2
+    _env_int_list  CC=5  out:5
+    _env_str_list  CC=3  out:2
+    _split_values  CC=5  out:5
+    run_modbus_probe_from_args  CC=1  out:2
+  oqlos.tools.hardware_diagnose.report  [2 funcs]
+    format_peripheral_table  CC=12  out:3
+    save_diagnostic_report  CC=3  out:13
+  oqlos.tools.plugin_cli  [12 funcs]
+    _default_config_path  CC=1  out:2
+    _load_config_file  CC=4  out:16
+    cmd_capabilities  CC=2  out:6
+    cmd_connect  CC=4  out:6
+    cmd_disconnect  CC=2  out:4
+    cmd_execute  CC=3  out:7
+    cmd_health  CC=3  out:8
+    cmd_list  CC=3  out:9
+    cmd_peripherals  CC=8  out:16
+    cmd_reload  CC=4  out:10
   setup_hardware_and_run_oql  [6 funcs]
     detect_serial_devices  CC=12  out:7
     generate_env_content  CC=2  out:1
@@ -1018,7 +1053,6 @@ EDGES:
   setup_hardware_and_run_oql.load_env_file → examples.hardware.doctor-workflow.print
   setup_hardware_and_run_oql.run_oql_scenario → examples.hardware.doctor-workflow.print
   setup_hardware_and_run_oql.main → setup_hardware_and_run_oql.run_oql_scenario
-  frontend.src.hooks.useUrlConfig.useUrlConfig → frontend.src.hooks.useUrlConfig.notifyParentChildReady
   frontend.src.hooks.useParentEncoderNavigation.createEncoderController → frontend.src.hooks.useParentEncoderNavigation.removeHighlights
   frontend.src.hooks.useParentEncoderNavigation.createEncoderController → frontend.src.hooks.useParentEncoderNavigation.getInteractiveItems
   frontend.src.hooks.useParentEncoderNavigation.createEncoderController → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
@@ -1037,31 +1071,32 @@ EDGES:
   frontend.src.hooks.useParentEncoderNavigation.onMessage → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
   frontend.src.hooks.useParentEncoderNavigation.onWheel → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
   frontend.src.hooks.useParentEncoderNavigation.raw → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
-  frontend.src.pages.MapEditor.fillMissingFields → frontend.src.pages.MapEditor.isPlainObject
-  frontend.src.pages.MapEditor.fillMissingFields → frontend.src.pages.MapEditor.cloneValue
-  frontend.src.pages.MapEditor.ensureRequiredDefaultMappings → frontend.src.pages.MapEditor.ensureMapShape
-  frontend.src.pages.MapEditor.ensureRequiredDefaultMappings → frontend.src.pages.MapEditor.fillMissingFields
-  frontend.src.pages.MapEditor.ensureRequiredDefaultMappings → frontend.src.pages.MapEditor.isPlainObject
-  frontend.src.pages.MapEditor.defaultMotor2 → frontend.src.pages.MapEditor.fillMissingFields
-  frontend.src.pages.MapEditor.defaultMotor2 → frontend.src.pages.MapEditor.isPlainObject
-  frontend.src.pages.MapEditor.defaultParam → frontend.src.pages.MapEditor.fillMissingFields
-  frontend.src.pages.MapEditor.defaultParam → frontend.src.pages.MapEditor.isPlainObject
-  frontend.src.pages.MapEditor.readIntegrationMeta → frontend.src.pages.MapEditor.firstBindingFromObjectMapping
-  frontend.src.pages.MapEditor.ensureMapShape → frontend.src.pages.MapEditor.isPlainObject
-  frontend.src.pages.MapEditor.src → frontend.src.pages.MapEditor.isPlainObject
-  frontend.src.pages.MapEditor.toPrettyJson → frontend.src.pages.MapEditor.ensureMapShape
-  frontend.src.pages.MapEditor.createInitialEditorState → frontend.src.pages.MapEditor.ensureRequiredDefaultMappings
-  frontend.src.pages.MapEditor.createInitialEditorState → frontend.src.pages.MapEditor.cloneDefaultMap
-  frontend.src.pages.MapEditor.createInitialEditorState → frontend.src.pages.MapEditor.toPrettyJson
-  frontend.src.pages.MapEditor.onJsonChange → frontend.src.pages.MapEditor.isPlainObject
-  frontend.src.pages.MapEditor.onJsonChange → frontend.src.pages.MapEditor.ensureMapShape
-  frontend.src.pages.MapEditor.parsed → frontend.src.pages.MapEditor.isPlainObject
-  frontend.src.pages.MapEditor.applyMapMutation → frontend.src.pages.MapEditor.ensureMapShape
-  frontend.src.pages.MapEditor.applyMapMutation → frontend.src.pages.MapEditor.toPrettyJson
-  frontend.src.pages.MapEditor.addObject → frontend.src.pages.MapEditor.applyMapMutation
-  frontend.src.pages.MapEditor.name → frontend.src.pages.MapEditor.applyMapMutation
-  frontend.src.pages.MapEditor.addParam → frontend.src.pages.MapEditor.applyMapMutation
-  frontend.src.pages.MapEditor.editParamConversionField → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.HardwareRestart.loadPlan → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
+  frontend.src.pages.HardwareRestart.serialPort → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
+  frontend.src.pages.HardwareRestart.serialPort → frontend.src.pages.HardwareRestart.loadPlan
+  frontend.src.pages.HardwareRestart.startOqlosAndRefreshPlan → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
+  frontend.src.pages.HardwareRestart.startOqlosAndRefreshPlan → frontend.src.pages.HardwareRestart.loadPlan
+  frontend.src.pages.HardwareRestart.port → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
+  frontend.src.pages.HardwareRestart.port → frontend.src.pages.HardwareRestart.loadPlan
+  frontend.src.pages.HardwareRestart.steps → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
+  frontend.src.pages.HardwareRestart.currentStep → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
+  frontend.src.pages.HardwareRestart.isSeparateAdapters → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
+  frontend.src.pages.HardwareRestart.isConfigureStep → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
+  frontend.src.pages.HardwareRestart.requiresStepConfirm → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
+  frontend.src.pages.HardwareRestart.confirmLabelKey → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
+  frontend.src.pages.HardwareRestart.confirmErrorKey → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
+  frontend.src.pages.HardwareRestart.canRunCurrentStep → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
+  frontend.src.pages.HardwareRestart.releaseRs485Port → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
+  frontend.src.pages.HardwareRestart.runCurrentStep → frontend.src.pages.HardwareRestart.timestamp
+  frontend.src.pages.HardwareRestart.runCurrentStep → frontend.src.pages.HardwareRestart.log
+  frontend.src.pages.HardwareRestart.log → frontend.src.pages.HardwareRestart.timestamp
+  frontend.src.pages.HardwareRestart.message → frontend.src.pages.HardwareRestart.log
+  frontend.src.pages.HardwareRestart.optionalStep → frontend.src.pages.HardwareRestart.log
+  frontend.src.pages.HardwareRestart.advanceOk → frontend.src.pages.HardwareRestart.log
+  frontend.src.pages.HardwareRestart.optionalSkip → frontend.src.pages.HardwareRestart.log
+  frontend.src.pages.HardwareRestart.skipPumpOffStep → frontend.src.pages.HardwareRestart.timestamp
+  frontend.src.pages.HardwareRestart.skipOptionalStep → frontend.src.pages.HardwareRestart.timestamp
+  frontend.src.pages.HardwareDemo.ensureAudioCtx → frontend.src.pages.HardwareDemo.appendLog
 ```
 
 ## Test Contracts
@@ -1114,9 +1149,9 @@ EDGES:
 
 ```toon markpact:analysis path=project/calls.toon.yaml
 # code2llm call graph | /home/tom/github/oqlos/oqlos
-# generated in 0.23s
-# nodes: 426 | edges: 500 | modules: 43
-# CC̄=4.0
+# generated in 0.28s
+# nodes: 426 | edges: 500 | modules: 52
+# CC̄=3.9
 
 HUBS[20]:
   examples.hardware.doctor-workflow.print
@@ -1129,36 +1164,36 @@ HUBS[20]:
     CC=12  in:2  out:30  total:32
   oqlos.core.motor2_runtime.normalize_motor2_runtime_config
     CC=12  in:1  out:29  total:30
+  oqlos.tools.hardware_diagnose.doctor.format_detection
+    CC=10  in:3  out:25  total:28
   oqlos.core.executor._safe_resolve
     CC=14  in:7  out:21  total:28
   setup_hardware_and_run_oql.run_oql_scenario
     CC=8  in:1  out:24  total:25
-  frontend.src.pages.MapEditor.applyMapMutation
-    CC=2  in:16  out:8  total:24
   oqlos.core.oql_parser.parse_oql
     CC=14  in:3  out:21  total:24
   oqlos.core.parser.parse_dsl_to_goal_with_issues
     CC=13  in:3  out:21  total:24
+  oqlos.core._action_motor2._motor2_build_plan
+    CC=12  in:1  out:22  total:23
+  oqlos.tools.hardware_diagnose.doctor._analyze_modbus_adc_config
+    CC=12  in:1  out:22  total:23
+  oqlos.tools.hardware_diagnose.doctor.format_doctor
+    CC=6  in:2  out:21  total:23
   oqlos.core._line_parsers._parse_if_condition
     CC=9  in:1  out:22  total:23
   oqlos.core._action_motor2._try_exec_motor2_set
     CC=13  in:1  out:22  total:23
-  oqlos.core._action_motor2._motor2_build_plan
-    CC=12  in:1  out:22  total:23
   oqlos.core._line_parsers._parse_set_line
     CC=12  in:1  out:21  total:22
-  frontend.src.utils.useSelectionCollapsePanel.useSelectionCollapsePanel
-    CC=33  in:0  out:21  total:21
-  frontend.src.utils.useSelectionCollapsePanel.RAIL_HOVER_OPEN_MS
-    CC=33  in:0  out:21  total:21
-  frontend.src.utils.useSelectionCollapsePanel.RAIL_HOVER_CLOSE_MS
-    CC=33  in:0  out:21  total:21
-  oqlos.core._func_resolver._collect_function_definitions
-    CC=13  in:1  out:19  total:20
-  frontend.src.api.wsClient.WsCqrsClient.super
-    CC=1  in:18  out:1  total:19
-  oqlos.core.oql_parser.tokenize
-    CC=13  in:5  out:14  total:19
+  oqlos.tools.hardware_diagnose.health.cmd_diagnose
+    CC=6  in:2  out:20  total:22
+  oqlos.core.base.VariableStore.set
+    CC=4  in:19  out:2  total:21
+  oqlos.core._cql_tree_builder._parse_goal_line
+    CC=12  in:1  out:20  total:21
+  oqlos.tools.hardware_diagnose.doctor._analyze_modbus_config
+    CC=11  in:1  out:20  total:21
 
 MODULES:
   examples.hardware.doctor-workflow  [1 funcs]
@@ -1217,9 +1252,6 @@ MODULES:
     onMessage  CC=3  out:2
     onWheel  CC=6  out:5
     parentEncoderActive  CC=15  out:7
-  frontend.src.hooks.useUrlConfig  [2 funcs]
-    notifyParentChildReady  CC=4  out:5
-    useUrlConfig  CC=8  out:15
   frontend.src.i18n.I18nProvider  [5 funcs]
     I18nProvider  CC=13  out:8
     dict  CC=8  out:3
@@ -1248,17 +1280,8 @@ MODULES:
     loadPlan  CC=18  out:11
     log  CC=1  out:3
     message  CC=1  out:1
-  frontend.src.pages.MapEditor  [49 funcs]
-    addAction  CC=2  out:6
-    addFunc  CC=2  out:6
-    addObject  CC=2  out:6
-    addParam  CC=2  out:4
-    applyMapMutation  CC=2  out:8
-    clearServerHardwareEvents  CC=8  out:9
-    cloneDefaultMap  CC=1  out:2
-    cloneValue  CC=1  out:2
-    createInitialEditorState  CC=1  out:3
-    defaultMotor2  CC=3  out:2
+  frontend.src.pages.MapEditor  [1 funcs]
+    next  CC=1  out:1
   frontend.src.utils.collapse-toggle-bridge  [2 funcs]
     isInIframe  CC=4  out:0
     postToParent  CC=4  out:8
@@ -1270,9 +1293,10 @@ MODULES:
   frontend.src.utils.hardware-api-retry  [2 funcs]
     attempt  CC=14  out:9
     sleep  CC=1  out:2
-  frontend.src.utils.hardware-restart-wizard-steps  [3 funcs]
+  frontend.src.utils.hardware-restart-wizard-steps  [4 funcs]
     buildWizardProbePayload  CC=10  out:7
     executeConfigureStep  CC=48  out:15
+    probe  CC=1  out:2
     wizardStepSerialPort  CC=14  out:0
   frontend.src.utils.hardware-wizard-steps  [1 funcs]
     list  CC=2  out:0
@@ -1293,39 +1317,6 @@ MODULES:
     resolveObjectActionHardwareHint  CC=6  out:2
     summarizeFuncToHardware  CC=17  out:6
     uniqueHints  CC=5  out:5
-  frontend.src.utils.rbac.policy  [13 funcs]
-    canConnectRoleAccessPath  CC=2  out:3
-    canHostRoleAccessPath  CC=2  out:3
-    isAdminConnectRole  CC=1  out:1
-    isOperatorConnectRole  CC=4  out:1
-    isReadOnlyConnectRole  CC=2  out:1
-    matched  CC=5  out:1
-    matchesPattern  CC=3  out:3
-    normalizeConnectRole  CC=2  out:1
-    normalizeHostRole  CC=2  out:1
-    normalizePath  CC=6  out:4
-  frontend.src.utils.url-embed-config  [21 funcs]
-    applyParentContextPayload  CC=5  out:5
-    applyUrlEmbedPatch  CC=7  out:7
-    base  CC=3  out:3
-    fromUser  CC=4  out:3
-    href  CC=4  out:3
-    mergeParentContext  CC=7  out:4
-    mergeParentSearchIntoChildUrl  CC=6  out:10
-    nextHref  CC=1  out:1
-    parentSearch  CC=4  out:3
-    parseAppearanceParams  CC=9  out:4
-  frontend.src.utils.useSelectionCollapsePanel  [16 funcs]
-    RAIL_HOVER_CLOSE_MS  CC=33  out:21
-    RAIL_HOVER_OPEN_MS  CC=33  out:21
-    cancelAutoCollapse  CC=2  out:2
-    cancelPanelClose  CC=2  out:2
-    cancelRailOpen  CC=2  out:2
-    expand  CC=1  out:5
-    onMessage  CC=8  out:3
-    panelEnter  CC=1  out:2
-    panelLeave  CC=4  out:5
-    previewCollapse  CC=1  out:2
   oqlos.config  [1 funcs]
     get_settings  CC=1  out:0
   oqlos.core._action_motor2  [30 funcs]
@@ -1353,9 +1344,14 @@ MODULES:
     _try_save  CC=5  out:7
     _try_set  CC=2  out:6
     _try_val  CC=2  out:4
-  oqlos.core._cql_tree_builder  [2 funcs]
+  oqlos.core._cql_tree_builder  [7 funcs]
+    _ensure_goal_for_step  CC=4  out:3
+    _ensure_step_for_actions  CC=3  out:2
     _parse_action_line  CC=4  out:3
+    _parse_goal_line  CC=12  out:20
     _parse_metadata_kv  CC=6  out:5
+    _parse_scenario_line  CC=3  out:6
+    _parse_step_line  CC=3  out:5
   oqlos.core._dsl_helpers  [12 funcs]
     _looks_like_lung_object  CC=1  out:2
     _looks_like_pump_object  CC=1  out:2
@@ -1404,14 +1400,26 @@ MODULES:
     _lower_set  CC=1  out:3
     _parse_macro_line  CC=8  out:10
     _resolve_include  CC=6  out:8
-  oqlos.core.base  [5 funcs]
+  oqlos.core._sensor_evaluator  [2 funcs]
+    __init__  CC=3  out:2
+    collect_sensor_constraints  CC=10  out:5
+  oqlos.core._value_normalizers  [1 funcs]
+    coerce_float  CC=5  out:9
+  oqlos.core.base  [6 funcs]
     send_event  CC=4  out:7
     emit  CC=5  out:3
     output_yaml  CC=4  out:2
     __init__  CC=2  out:1
     all  CC=3  out:3
-  oqlos.core.cql_parser  [3 funcs]
+    set  CC=4  out:2
+  oqlos.core.cql_parser  [9 funcs]
+    _handle_goal  CC=3  out:5
+    _handle_scenario  CC=2  out:3
+    _handle_step  CC=2  out:4
+    _try_hierarchy  CC=7  out:6
     _try_top_level  CC=2  out:1
+    _collect_all_goals  CC=2  out:2
+    _validate_intervals  CC=6  out:1
     parse_cql  CC=2  out:6
     validate_cql  CC=5  out:5
   oqlos.core.executor  [6 funcs]
@@ -1468,6 +1476,68 @@ MODULES:
     _eval_node  CC=2  out:5
     _eval_unary_op  CC=3  out:5
     safe_eval  CC=3  out:4
+  oqlos.hardware.config_paths  [1 funcs]
+    resolve_oqlos_config_path  CC=6  out:13
+  oqlos.hardware.health_status  [1 funcs]
+    health_status_is_ok  CC=11  out:9
+  oqlos.tools.hardware_diagnose.__main__  [9 funcs]
+    _handle_report_action  CC=3  out:4
+    _print_benchmark  CC=3  out:11
+    _print_calibrate  CC=6  out:9
+    _print_detect  CC=2  out:4
+    _print_diagnose  CC=3  out:9
+    _print_doctor  CC=2  out:4
+    _print_health  CC=2  out:5
+    _print_list  CC=3  out:8
+    _print_modbus_probe  CC=2  out:5
+  oqlos.tools.hardware_diagnose.benchmark  [1 funcs]
+    run_benchmark  CC=6  out:15
+  oqlos.tools.hardware_diagnose.calibration  [1 funcs]
+    run_calibration_test  CC=2  out:8
+  oqlos.tools.hardware_diagnose.discovery  [2 funcs]
+    list_i2c_buses  CC=1  out:2
+    list_usb_serial_devices  CC=7  out:9
+  oqlos.tools.hardware_diagnose.doctor  [41 funcs]
+    _adapter_health_status  CC=3  out:1
+    _add_issue  CC=2  out:1
+    _analyze_firmware_access  CC=7  out:11
+    _analyze_modbus_adc_config  CC=12  out:22
+    _analyze_modbus_config  CC=11  out:20
+    _analyze_serial_port_owners  CC=13  out:19
+    _canonical_device_path  CC=2  out:3
+    _check_firmware_adapters  CC=7  out:9
+    _check_firmware_health_error  CC=3  out:2
+    _check_firmware_mode  CC=3  out:4
+  oqlos.tools.hardware_diagnose.health  [7 funcs]
+    _format_health_value  CC=8  out:9
+    _is_health_ok  CC=5  out:6
+    _request_firmware_json  CC=8  out:9
+    check_firmware_health  CC=1  out:1
+    check_firmware_identify  CC=1  out:1
+    cmd_diagnose  CC=6  out:20
+    cmd_health  CC=5  out:10
+  oqlos.tools.hardware_diagnose.modbus_probe  [7 funcs]
+    _arg_int_list  CC=3  out:2
+    _arg_str_list  CC=2  out:1
+    _env_count_list  CC=2  out:2
+    _env_int_list  CC=5  out:5
+    _env_str_list  CC=3  out:2
+    _split_values  CC=5  out:5
+    run_modbus_probe_from_args  CC=1  out:2
+  oqlos.tools.hardware_diagnose.report  [2 funcs]
+    format_peripheral_table  CC=12  out:3
+    save_diagnostic_report  CC=3  out:13
+  oqlos.tools.plugin_cli  [12 funcs]
+    _default_config_path  CC=1  out:2
+    _load_config_file  CC=4  out:16
+    cmd_capabilities  CC=2  out:6
+    cmd_connect  CC=4  out:6
+    cmd_disconnect  CC=2  out:4
+    cmd_execute  CC=3  out:7
+    cmd_health  CC=3  out:8
+    cmd_list  CC=3  out:9
+    cmd_peripherals  CC=8  out:16
+    cmd_reload  CC=4  out:10
   setup_hardware_and_run_oql  [6 funcs]
     detect_serial_devices  CC=12  out:7
     generate_env_content  CC=2  out:1
@@ -1483,7 +1553,6 @@ EDGES:
   setup_hardware_and_run_oql.load_env_file → examples.hardware.doctor-workflow.print
   setup_hardware_and_run_oql.run_oql_scenario → examples.hardware.doctor-workflow.print
   setup_hardware_and_run_oql.main → setup_hardware_and_run_oql.run_oql_scenario
-  frontend.src.hooks.useUrlConfig.useUrlConfig → frontend.src.hooks.useUrlConfig.notifyParentChildReady
   frontend.src.hooks.useParentEncoderNavigation.createEncoderController → frontend.src.hooks.useParentEncoderNavigation.removeHighlights
   frontend.src.hooks.useParentEncoderNavigation.createEncoderController → frontend.src.hooks.useParentEncoderNavigation.getInteractiveItems
   frontend.src.hooks.useParentEncoderNavigation.createEncoderController → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
@@ -1502,66 +1571,67 @@ EDGES:
   frontend.src.hooks.useParentEncoderNavigation.onMessage → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
   frontend.src.hooks.useParentEncoderNavigation.onWheel → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
   frontend.src.hooks.useParentEncoderNavigation.raw → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
-  frontend.src.pages.MapEditor.fillMissingFields → frontend.src.pages.MapEditor.isPlainObject
-  frontend.src.pages.MapEditor.fillMissingFields → frontend.src.pages.MapEditor.cloneValue
-  frontend.src.pages.MapEditor.ensureRequiredDefaultMappings → frontend.src.pages.MapEditor.ensureMapShape
-  frontend.src.pages.MapEditor.ensureRequiredDefaultMappings → frontend.src.pages.MapEditor.fillMissingFields
-  frontend.src.pages.MapEditor.ensureRequiredDefaultMappings → frontend.src.pages.MapEditor.isPlainObject
-  frontend.src.pages.MapEditor.defaultMotor2 → frontend.src.pages.MapEditor.fillMissingFields
-  frontend.src.pages.MapEditor.defaultMotor2 → frontend.src.pages.MapEditor.isPlainObject
-  frontend.src.pages.MapEditor.defaultParam → frontend.src.pages.MapEditor.fillMissingFields
-  frontend.src.pages.MapEditor.defaultParam → frontend.src.pages.MapEditor.isPlainObject
-  frontend.src.pages.MapEditor.readIntegrationMeta → frontend.src.pages.MapEditor.firstBindingFromObjectMapping
-  frontend.src.pages.MapEditor.ensureMapShape → frontend.src.pages.MapEditor.isPlainObject
-  frontend.src.pages.MapEditor.src → frontend.src.pages.MapEditor.isPlainObject
-  frontend.src.pages.MapEditor.toPrettyJson → frontend.src.pages.MapEditor.ensureMapShape
-  frontend.src.pages.MapEditor.createInitialEditorState → frontend.src.pages.MapEditor.ensureRequiredDefaultMappings
-  frontend.src.pages.MapEditor.createInitialEditorState → frontend.src.pages.MapEditor.cloneDefaultMap
-  frontend.src.pages.MapEditor.createInitialEditorState → frontend.src.pages.MapEditor.toPrettyJson
-  frontend.src.pages.MapEditor.onJsonChange → frontend.src.pages.MapEditor.isPlainObject
-  frontend.src.pages.MapEditor.onJsonChange → frontend.src.pages.MapEditor.ensureMapShape
-  frontend.src.pages.MapEditor.parsed → frontend.src.pages.MapEditor.isPlainObject
-  frontend.src.pages.MapEditor.applyMapMutation → frontend.src.pages.MapEditor.ensureMapShape
-  frontend.src.pages.MapEditor.applyMapMutation → frontend.src.pages.MapEditor.toPrettyJson
-  frontend.src.pages.MapEditor.addObject → frontend.src.pages.MapEditor.applyMapMutation
-  frontend.src.pages.MapEditor.name → frontend.src.pages.MapEditor.applyMapMutation
-  frontend.src.pages.MapEditor.addParam → frontend.src.pages.MapEditor.applyMapMutation
-  frontend.src.pages.MapEditor.editParamConversionField → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.HardwareRestart.loadPlan → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
+  frontend.src.pages.HardwareRestart.serialPort → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
+  frontend.src.pages.HardwareRestart.serialPort → frontend.src.pages.HardwareRestart.loadPlan
+  frontend.src.pages.HardwareRestart.startOqlosAndRefreshPlan → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
+  frontend.src.pages.HardwareRestart.startOqlosAndRefreshPlan → frontend.src.pages.HardwareRestart.loadPlan
+  frontend.src.pages.HardwareRestart.port → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
+  frontend.src.pages.HardwareRestart.port → frontend.src.pages.HardwareRestart.loadPlan
+  frontend.src.pages.HardwareRestart.steps → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
+  frontend.src.pages.HardwareRestart.currentStep → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
+  frontend.src.pages.HardwareRestart.isSeparateAdapters → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
+  frontend.src.pages.HardwareRestart.isConfigureStep → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
+  frontend.src.pages.HardwareRestart.requiresStepConfirm → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
+  frontend.src.pages.HardwareRestart.confirmLabelKey → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
+  frontend.src.pages.HardwareRestart.confirmErrorKey → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
+  frontend.src.pages.HardwareRestart.canRunCurrentStep → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
+  frontend.src.pages.HardwareRestart.releaseRs485Port → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
+  frontend.src.pages.HardwareRestart.runCurrentStep → frontend.src.pages.HardwareRestart.timestamp
+  frontend.src.pages.HardwareRestart.runCurrentStep → frontend.src.pages.HardwareRestart.log
+  frontend.src.pages.HardwareRestart.log → frontend.src.pages.HardwareRestart.timestamp
+  frontend.src.pages.HardwareRestart.message → frontend.src.pages.HardwareRestart.log
+  frontend.src.pages.HardwareRestart.optionalStep → frontend.src.pages.HardwareRestart.log
+  frontend.src.pages.HardwareRestart.advanceOk → frontend.src.pages.HardwareRestart.log
+  frontend.src.pages.HardwareRestart.optionalSkip → frontend.src.pages.HardwareRestart.log
+  frontend.src.pages.HardwareRestart.skipPumpOffStep → frontend.src.pages.HardwareRestart.timestamp
+  frontend.src.pages.HardwareRestart.skipOptionalStep → frontend.src.pages.HardwareRestart.timestamp
+  frontend.src.pages.HardwareDemo.ensureAudioCtx → frontend.src.pages.HardwareDemo.appendLog
 ```
 
 ### Code Analysis (`project/analysis.toon.yaml`)
 
 ```toon markpact:analysis path=project/analysis.toon.yaml
-# code2llm | 267f 55434L | python:161,javascript:47,md:19,yaml:13,shell:9,json:6,yml:4,typescript:3,conf:2,toml:1 | 2026-06-30
-# generated in 0.13s
-# CC̅=4.0 | critical:23/2128 | dups:0 | cycles:0
+# code2llm | 281f 55621L | python:161,javascript:61,md:19,yaml:13,shell:9,json:6,yml:4,typescript:3,conf:2,toml:1 | 2026-06-30
+# generated in 0.19s
+# CC̅=3.9 | critical:21/2143 | dups:0 | cycles:0
 
 HEALTH[20]:
   🟡 CC    createEncoderController CC=21 (limit:15)
   🟡 CC    parentEncoderActive CC=15 (limit:15)
   🟡 CC    handleEncoderCommand CC=15 (limit:15)
-  🟡 CC    readIntegrationMeta CC=15 (limit:15)
-  🟡 CC    setMetaField CC=24 (limit:15)
-  🟡 CC    editObjectActionArg CC=24 (limit:15)
-  🟡 CC    renderObjectActionEditor CC=21 (limit:15)
   🟡 CC    loadPlan CC=18 (limit:15)
   🟡 CC    runCurrentStep CC=20 (limit:15)
   🟡 CC    cancelled CC=16 (limit:15)
   🟡 CC    normalizeHardwareEvent CC=21 (limit:15)
-  🟡 CC    RAIL_HOVER_OPEN_MS CC=33 (limit:15)
-  🟡 CC    RAIL_HOVER_CLOSE_MS CC=33 (limit:15)
-  🟡 CC    useSelectionCollapsePanel CC=33 (limit:15)
   🟡 CC    executeConfigureStep CC=48 (limit:15)
   🟡 CC    summarizeFuncToHardware CC=17 (limit:15)
   🟡 CC    selectWizardProbeCandidate CC=22 (limit:15)
   🟡 CC    API_BASE CC=17 (limit:15)
   🟡 CC    request CC=17 (limit:15)
   🟡 CC    failureFromOkFalsePayload CC=19 (limit:15)
+  🟡 CC    failureFromNestedOk CC=17 (limit:15)
+  🟡 CC    _run_diagnostic_command CC=19 (limit:15)
+  🟡 CC    _validate_motor2 CC=19 (limit:15)
+  🟡 CC    MapEditorObjectActionPanel CC=19 (limit:15)
+  🟡 CC    editObjectActionArg CC=24 (limit:15)
+  🟡 CC    readIntegrationMeta CC=15 (limit:15)
+  🟡 CC    setMetaField CC=15 (limit:15)
 
 REFACTOR[1]:
   1. split 20 high-CC methods  (CC>15)
 
-PIPELINES[1071]:
+PIPELINES[1085]:
   [1] Src [main]: main → run_oql_scenario → print
       PURITY: 100% pure
   [2] Src [LocalizedApp]: LocalizedApp
@@ -1574,93 +1644,93 @@ PIPELINES[1071]:
       PURITY: 100% pure
   [6] Src [onClose]: onClose
       PURITY: 100% pure
-  [7] Src [useUrlConfig]: useUrlConfig → notifyParentChildReady
+  [7] Src [parentEncoderActive]: parentEncoderActive → removeHighlights
       PURITY: 100% pure
-  [8] Src [onPop]: onPop
+  [8] Src [items]: items → removeHighlights
       PURITY: 100% pure
-  [9] Src [onMessage]: onMessage
+  [9] Src [target]: target
       PURITY: 100% pure
-  [10] Src [envelope]: envelope
+  [10] Src [onKeyDown]: onKeyDown → handleEncoderCommand → removeHighlights
       PURITY: 100% pure
-  [11] Src [patch]: patch
+  [11] Src [useParentEncoderNavigation]: useParentEncoderNavigation → createEncoderController → removeHighlights
       PURITY: 100% pure
-  [12] Src [parentEncoderActive]: parentEncoderActive → removeHighlights
+  [12] Src [controller]: controller → parseParentEncoderEnvelope
       PURITY: 100% pure
-  [13] Src [items]: items → removeHighlights
+  [13] Src [onMessage]: onMessage → parseParentEncoderEnvelope
       PURITY: 100% pure
-  [14] Src [target]: target
+  [14] Src [onWheel]: onWheel → handleEncoderCommand → removeHighlights
       PURITY: 100% pure
-  [15] Src [onKeyDown]: onKeyDown → handleEncoderCommand → removeHighlights
+  [15] Src [raw]: raw → handleEncoderCommand → removeHighlights
       PURITY: 100% pure
-  [16] Src [useParentEncoderNavigation]: useParentEncoderNavigation → createEncoderController → removeHighlights
+  [16] Src [collapseEnabled]: collapseEnabled
       PURITY: 100% pure
-  [17] Src [controller]: controller → parseParentEncoderEnvelope
+  [17] Src [inPreview]: inPreview
       PURITY: 100% pure
-  [18] Src [onMessage]: onMessage → parseParentEncoderEnvelope
+  [18] Src [filtered]: filtered
       PURITY: 100% pure
-  [19] Src [onWheel]: onWheel → handleEncoderCommand → removeHighlights
+  [19] Src [handleSelect]: handleSelect
       PURITY: 100% pure
-  [20] Src [raw]: raw → handleEncoderCommand → removeHighlights
+  [20] Src [txtDownload]: txtDownload
       PURITY: 100% pure
-  [21] Src [syncParentUrl]: syncParentUrl
+  [21] Src [blob]: blob
       PURITY: 100% pure
-  [22] Src [location]: location
+  [22] Src [logPanelRef]: logPanelRef
       PURITY: 100% pure
-  [23] Src [collapseEnabled]: collapseEnabled
+  [23] Src [status]: status
       PURITY: 100% pure
-  [24] Src [inPreview]: inPreview
+  [24] Src [stack]: stack
       PURITY: 100% pure
-  [25] Src [filtered]: filtered
+  [25] Src [data]: data
       PURITY: 100% pure
-  [26] Src [handleSelect]: handleSelect
+  [26] Src [serialPort]: serialPort → refreshRuntimeStatus
       PURITY: 100% pure
-  [27] Src [LIVE_EVENTS_LIMIT]: LIVE_EVENTS_LIMIT
+  [27] Src [startOqlosAndRefreshPlan]: startOqlosAndRefreshPlan → refreshRuntimeStatus
       PURITY: 100% pure
-  [28] Src [TIC249_TARGET_VELOCITY_SCALE]: TIC249_TARGET_VELOCITY_SCALE
+  [28] Src [port]: port → refreshRuntimeStatus
       PURITY: 100% pure
-  [29] Src [GROUP_FOR_TAB]: GROUP_FOR_TAB
+  [29] Src [start]: start
       PURITY: 100% pure
-  [30] Src [SECTION_DESC_KEY]: SECTION_DESC_KEY
+  [30] Src [steps]: steps → refreshRuntimeStatus
       PURITY: 100% pure
-  [31] Src [EMPTY_KEY]: EMPTY_KEY
+  [31] Src [currentStep]: currentStep → refreshRuntimeStatus
       PURITY: 100% pure
-  [32] Src [META_FIELDS]: META_FIELDS
+  [32] Src [isSeparateAdapters]: isSeparateAdapters → refreshRuntimeStatus
       PURITY: 100% pure
-  [33] Src [PARAM_CONVERSION_ALGORITHMS]: PARAM_CONVERSION_ALGORITHMS
+  [33] Src [isConfigureStep]: isConfigureStep → refreshRuntimeStatus
       PURITY: 100% pure
-  [34] Src [value]: value
+  [34] Src [requiresStepConfirm]: requiresStepConfirm → refreshRuntimeStatus
       PURITY: 100% pure
-  [35] Src [shaped]: shaped
+  [35] Src [confirmLabelKey]: confirmLabelKey → refreshRuntimeStatus
       PURITY: 100% pure
-  [36] Src [defaultMotor2]: defaultMotor2 → fillMissingFields → isPlainObject
+  [36] Src [confirmErrorKey]: confirmErrorKey → refreshRuntimeStatus
       PURITY: 100% pure
-  [37] Src [defaultParam]: defaultParam → fillMissingFields → isPlainObject
+  [37] Src [canRunCurrentStep]: canRunCurrentStep → refreshRuntimeStatus
       PURITY: 100% pure
-  [38] Src [readIntegrationMeta]: readIntegrationMeta → firstBindingFromObjectMapping
+  [38] Src [releaseRs485Port]: releaseRs485Port → refreshRuntimeStatus
       PURITY: 100% pure
-  [39] Src [src]: src → isPlainObject
+  [39] Src [stop]: stop
       PURITY: 100% pure
-  [40] Src [createInitialEditorState]: createInitialEditorState → ensureRequiredDefaultMappings → ensureMapShape → isPlainObject
+  [40] Src [runCurrentStep]: runCurrentStep → timestamp
       PURITY: 100% pure
-  [41] Src [seeded]: seeded
+  [41] Src [payload]: payload
       PURITY: 100% pure
-  [42] Src [wsOnline]: wsOnline
+  [42] Src [runRetry]: runRetry
       PURITY: 100% pure
-  [43] Src [initial]: initial
+  [43] Src [message]: message → log → timestamp
       PURITY: 100% pure
-  [44] Src [tab]: tab
+  [44] Src [optionalStep]: optionalStep → log → timestamp
       PURITY: 100% pure
-  [45] Src [canClearServerEvents]: canClearServerEvents
+  [45] Src [advanceOk]: advanceOk → log → timestamp
       PURITY: 100% pure
-  [46] Src [canClearPersistentEvents]: canClearPersistentEvents
+  [46] Src [optionalSkip]: optionalSkip → log → timestamp
       PURITY: 100% pure
-  [47] Src [isDirty]: isDirty
+  [47] Src [skipPumpOffStep]: skipPumpOffStep → timestamp
       PURITY: 100% pure
-  [48] Src [setTabAndUrl]: setTabAndUrl
+  [48] Src [skipOptionalStep]: skipOptionalStep → timestamp
       PURITY: 100% pure
-  [49] Src [url]: url
+  [49] Src [logText]: logText
       PURITY: 100% pure
-  [50] Src [onJsonChange]: onJsonChange → isPlainObject
+  [50] Src [exportText]: exportText
       PURITY: 100% pure
 
 LAYERS:
@@ -1703,9 +1773,9 @@ LAYERS:
   │ _cql_tokenizer             406L  0C   27m  CC=5      ←0
   │ modbus_adc                 398L  1C   17m  CC=12     ←0
   │ executor                   383L  1C   21m  CC=14     ←0
+  │ main                       383L  0C   24m  CC=8      ←0
   │ base                       370L  9C   21m  CC=5      ←3
   │ state                      370L  0C   16m  CC=13     ←0
-  │ main                       370L  0C   22m  CC=8      ←0
   │ lung                       361L  1C   20m  CC=14     ←0
   │ execution                  359L  0C   16m  CC=11     ←0
   │ plugin_cli                 343L  0C   14m  CC=8      ←3
@@ -1839,59 +1909,6 @@ LAYERS:
   │ __init__                     3L  0C    0m  CC=0.0    ←0
   │ __init__                     0L  0C    0m  CC=0.0    ←0
   │
-  frontend/                       CC̄=3.9    ←in:0  →out:0
-  │ !! dictionaries.js           1981L  0C    4m  CC=5      ←0
-  │ !! mapEditorDefaultMap.js    1763L  0C    3m  CC=1      ←0
-  │ !! MapEditor.jsx             1490L  0C  109m  CC=24     ←6
-  │ !! hardware-status-presets-translations.js   795L  0C    0m  CC=0.0    ←0
-  │ !! HardwareDemo.jsx           585L  0C   41m  CC=16     ←0
-  │ !! HardwareRestart.jsx        501L  0C   49m  CC=20     ←2
-  │ SidebarList.jsx            316L  0C    4m  CC=6      ←0
-  │ hardware-status-panel-translations.js   309L  0C    0m  CC=0.0    ←0
-  │ !! hardwareApi.js             256L  0C   21m  CC=17     ←0
-  │ !! useSelectionCollapsePanel.js   191L  0C   22m  CC=33     ←0
-  │ url-embed-config.js        191L  0C   43m  CC=12     ←0
-  │ hardware-demo-extra-translations.js   183L  0C    0m  CC=0.0    ←0
-  │ !! useParentEncoderNavigation.js   156L  0C   19m  CC=21     ←6
-  │ wsClient.js                138L  1C   30m  CC=13     ←10
-  │ rbac.policy.js             118L  0C   20m  CC=6      ←0
-  │ !! hardware-wizard-steps.js   111L  0C   16m  CC=22     ←22
-  │ !! hardware-restart-wizard-steps.js   109L  0C   24m  CC=48     ←1
-  │ !! hardware-diagnostic-failure.js   102L  0C   16m  CC=19     ←0
-  │ url-embed-config.test.js    92L  0C    6m  CC=2      ←0
-  │ hardware-api-log.js         87L  0C    7m  CC=11     ←0
-  │ useUrlConfig.js             85L  0C    6m  CC=8      ←0
-  │ SharedNav.jsx               83L  0C    6m  CC=5      ←0
-  │ hardware-status-log-translations.js    81L  0C    0m  CC=0.0    ←0
-  │ !! mapEditorFuncHardwareSummary.js    80L  0C   16m  CC=17     ←0
-  │ I18nProvider.jsx            65L  0C   10m  CC=13     ←23
-  │ hardware-api-errors.js      63L  0C   10m  CC=13     ←0
-  │ hardware-diagnostic-failure.test.js    58L  0C    0m  CC=0.0    ←0
-  │ mapEditorFuncHardwareSummary.test.js    54L  0C    1m  CC=1      ←0
-  │ !! hardwareEventStream.js      47L  0C   21m  CC=21     ←1
-  │ collapse-toggle-bridge.js    46L  0C    6m  CC=4      ←0
-  │ hardware-api-retry.test.js    45L  0C    3m  CC=2      ←0
-  │ designRem.js                43L  0C    2m  CC=1      ←0
-  │ AppConfigProvider.jsx       42L  0C    5m  CC=2      ←0
-  │ parentUrlBridge.js          39L  0C    3m  CC=10     ←0
-  │ paths.ts                    39L  0C    4m  CC=2      ←0
-  │ hardware-api-retry.js       38L  0C    8m  CC=14     ←1
-  │ hui-shell-key.js            38L  0C    5m  CC=5      ←0
-  │ vite.config.ts              36L  0C    0m  CC=0.0    ←0
-  │ hardware-tic249-status.js    35L  0C    6m  CC=12     ←0
-  │ hardware-activity-log.js    34L  0C    4m  CC=2      ←0
-  │ index.ts                    31L  0C    2m  CC=1      ←0
-  │ main.jsx                    30L  0C    1m  CC=1      ←0
-  │ HardwareStatus.jsx          28L  0C    1m  CC=5      ←0
-  │ useWsStatus.js              26L  0C    4m  CC=3      ←0
-  │ app-config-document.js      26L  0C    4m  CC=6      ←0
-  │ HardwareActivityLog.jsx     24L  0C    0m  CC=0.0    ←0
-  │ package.json                22L  0C    0m  CC=0.0    ←0
-  │ App.jsx                     21L  0C    0m  CC=0.0    ←0
-  │ hardware-restart-docs.js    11L  0C    2m  CC=2      ←0
-  │ hardware-wizard-plan.js     10L  0C    2m  CC=5      ←0
-  │ hardware-time.js             4L  0C    1m  CC=1      ←0
-  │
   scripts/                        CC̄=3.8    ←in:0  →out:72  !! split
   │ !! oql_v2_to_v4_migrate_db    662L  1C   43m  CC=14     ←1
   │ hardware-check.sh          340L  0C   11m  CC=0.0    ←0
@@ -1906,6 +1923,73 @@ LAYERS:
   │ verify-rpi-checksum.sh      75L  0C    1m  CC=0.0    ←0
   │ provision-rpi-sudo.sh       67L  0C    0m  CC=0.0    ←0
   │ gen-checksums.sh            24L  0C    0m  CC=0.0    ←0
+  │
+  frontend/                       CC̄=3.7    ←in:0  →out:0
+  │ !! dictionaries.js           1981L  0C    4m  CC=5      ←0
+  │ !! mapEditorDefaultMap.js    1763L  0C    3m  CC=1      ←0
+  │ !! MapEditor.jsx             1016L  0C   64m  CC=24     ←6
+  │ !! hardware-status-presets-translations.js   795L  0C    0m  CC=0.0    ←0
+  │ !! HardwareDemo.jsx           585L  0C   41m  CC=16     ←0
+  │ !! HardwareRestart.jsx        501L  0C   49m  CC=20     ←2
+  │ SidebarList.jsx            316L  0C    4m  CC=6      ←0
+  │ hardware-status-panel-translations.js   309L  0C    0m  CC=0.0    ←0
+  │ !! hardwareApi.js             256L  0C   21m  CC=17     ←0
+  │ url-embed-config.js        193L  0C   43m  CC=12     ←0
+  │ hardware-demo-extra-translations.js   183L  0C    0m  CC=0.0    ←0
+  │ !! useParentEncoderNavigation.js   156L  0C   19m  CC=21     ←6
+  │ !! useSelectionCollapsePanel.js   139L  0C   11m  CC=21     ←0
+  │ wsClient.js                138L  1C   30m  CC=13     ←10
+  │ rbac.policy.js             118L  0C   20m  CC=6      ←0
+  │ !! hardware-wizard-steps.js   111L  0C   16m  CC=22     ←22
+  │ !! hardware-restart-wizard-steps.js   109L  0C   24m  CC=48     ←1
+  │ mapEditorModel.js          104L  0C   16m  CC=11     ←0
+  │ !! hardware-diagnostic-failure.js   102L  0C   16m  CC=19     ←0
+  │ !! mapEditorIntegrationMeta.js    99L  0C    7m  CC=15     ←0
+  │ url-embed-config.test.js    92L  0C    6m  CC=2      ←0
+  │ hardware-api-log.js         87L  0C    7m  CC=11     ←0
+  │ useUrlConfig.js             85L  0C    6m  CC=8      ←0
+  │ useRailHoverPreview.js      84L  0C   13m  CC=9      ←0
+  │ hardware-status-log-translations.js    81L  0C    0m  CC=0.0    ←0
+  │ !! mapEditorFuncHardwareSummary.js    80L  0C   16m  CC=17     ←0
+  │ !! MapEditorObjectActionPanel.jsx    75L  0C    3m  CC=19     ←0
+  │ SharedNav.jsx               67L  0C    4m  CC=2      ←0
+  │ I18nProvider.jsx            65L  0C   10m  CC=13     ←23
+  │ hardware-api-errors.js      63L  0C   10m  CC=13     ←0
+  │ useMapEditorHardwareEvents.js    61L  0C    6m  CC=14     ←0
+  │ hardware-diagnostic-failure.test.js    58L  0C    0m  CC=0.0    ←0
+  │ mapEditorFuncHardwareSummary.test.js    54L  0C    1m  CC=1      ←0
+  │ !! hardwareEventStream.js      47L  0C   21m  CC=21     ←1
+  │ collapse-toggle-bridge.js    46L  0C    6m  CC=4      ←0
+  │ hardware-api-retry.test.js    45L  0C    3m  CC=2      ←0
+  │ designRem.js                43L  0C    2m  CC=1      ←0
+  │ mapEditorIntegrationMeta.test.js    43L  0C    1m  CC=1      ←0
+  │ AppConfigProvider.jsx       42L  0C    5m  CC=2      ←0
+  │ MapEditorMotorRuntimePanel.jsx    41L  0C    2m  CC=3      ←0
+  │ mapEditorConstants.js       41L  0C    7m  CC=1      ←0
+  │ parentUrlBridge.js          39L  0C    3m  CC=10     ←0
+  │ paths.ts                    39L  0C    4m  CC=2      ←0
+  │ MapEditorParamConversionPanel.jsx    39L  0C    2m  CC=4      ←0
+  │ hardware-api-retry.js       38L  0C    8m  CC=14     ←1
+  │ hui-shell-key.js            38L  0C    5m  CC=5      ←0
+  │ vite.config.ts              36L  0C    0m  CC=0.0    ←0
+  │ hardware-tic249-status.js    35L  0C    6m  CC=12     ←0
+  │ hardware-activity-log.js    34L  0C    4m  CC=2      ←0
+  │ App.jsx                     34L  0C    2m  CC=3      ←0
+  │ MapEditorIntegrationMetaPanel.jsx    32L  0C    1m  CC=3      ←0
+  │ mapEditorModel.test.js      32L  0C    1m  CC=1      ←0
+  │ index.ts                    31L  0C    2m  CC=1      ←0
+  │ main.jsx                    30L  0C    1m  CC=1      ←0
+  │ useMapEditorSidebarAutoCollapse.js    29L  0C    8m  CC=9      ←0
+  │ HardwareStatus.jsx          28L  0C    1m  CC=5      ←0
+  │ useWsStatus.js              26L  0C    4m  CC=3      ←0
+  │ app-config-document.js      26L  0C    4m  CC=6      ←0
+  │ HardwareActivityLog.jsx     24L  0C    0m  CC=0.0    ←0
+  │ package.json                22L  0C    0m  CC=0.0    ←0
+  │ mapEditorTic249.test.js     13L  0C    0m  CC=0.0    ←0
+  │ hardware-restart-docs.js    11L  0C    2m  CC=2      ←0
+  │ hardware-wizard-plan.js     10L  0C    2m  CC=5      ←0
+  │ mapEditorTic249.js           7L  0C    2m  CC=3      ←0
+  │ hardware-time.js             4L  0C    1m  CC=1      ←0
   │
   examples/                       CC̄=0.0    ←in:0  →out:0
   │ plugin-config.yaml         128L  0C    0m  CC=0.0    ←0
@@ -1923,7 +2007,7 @@ LAYERS:
   │ oql_v4_llm_validator.schema.json    93L  0C    0m  CC=0.0    ←0
   │ oql_v2_llm_validator.schema.json    89L  0C    0m  CC=0.0    ←0
   │ cql-spec.md                 78L  0C    0m  CC=0.0    ←0
-  │ refactor-plan.md            73L  0C    0m  CC=0.0    ←0
+  │ refactor-plan.md            74L  0C    0m  CC=0.0    ←0
   │
   redeploy/                       CC̄=0.0    ←in:0  →out:0
   │ !! migration.md              1207L  0C    0m  CC=0.0    ←0
@@ -1970,20 +2054,20 @@ COUPLING:
              oqlos.reporters                                                                                   2                                                                                                                                                                                                                                                          ──                            
                  oqlos.utils                                                                                                                                                                      ←2                                                                                                                                                                                                  ──
   CYCLES: none
-  HUB: examples.hardware/ (fan-in=225)
-  HUB: oqlos.shared/ (fan-in=6)
-  HUB: oqlos.core/ (fan-in=25)
-  HUB: oqlos.tools/ (fan-in=6)
   HUB: oqlos/ (fan-in=8)
   HUB: frontend.src/ (fan-in=210)
+  HUB: oqlos.shared/ (fan-in=6)
   HUB: oqlos.hardware/ (fan-in=25)
+  HUB: oqlos.core/ (fan-in=25)
+  HUB: oqlos.tools/ (fan-in=6)
+  HUB: examples.hardware/ (fan-in=225)
+  SMELL: setup_hardware_and_run_oql/ fan-out=27 → split needed
   SMELL: oqlos.shared/ fan-out=13 → split needed
+  SMELL: oqlos.hardware/ fan-out=85 → split needed
   SMELL: oqlos.core/ fan-out=23 → split needed
   SMELL: oqlos.tools/ fan-out=231 → split needed
-  SMELL: setup_hardware_and_run_oql/ fan-out=27 → split needed
   SMELL: oqlos.api/ fan-out=52 → split needed
   SMELL: scripts/ fan-out=72 → split needed
-  SMELL: oqlos.hardware/ fan-out=85 → split needed
 
 EXTERNAL:
   validation: run `vallm batch .` → validation.toon
@@ -1993,15 +2077,15 @@ EXTERNAL:
 ### Duplication (`project/duplication.toon.yaml`)
 
 ```toon markpact:analysis path=project/duplication.toon.yaml
-# redup/duplication | 48 groups | 167f 31756L | 2026-06-30
+# redup/duplication | 48 groups | 167f 31769L | 2026-06-30
 
 SUMMARY:
   files_scanned: 167
-  total_lines:   31756
+  total_lines:   31769
   dup_groups:    48
   dup_fragments: 105
   saved_lines:   293
-  scan_ms:       124766
+  scan_ms:       128638
 
 HOTSPOTS[7] (files with most duplication):
   oqlos/core/_cql_tokenizer.py  dup=92L  groups=7  frags=16  (0.3%)
@@ -2356,7 +2440,7 @@ METRICS-TARGET:
 ### Evolution / Churn (`project/evolution.toon.yaml`)
 
 ```toon markpact:analysis path=project/evolution.toon.yaml
-# code2llm/evolution | 2013 func | 177f | 2026-06-30
+# code2llm/evolution | 2028 func | 191f | 2026-06-30
 # generated in 0.01s
 
 NEXT[10] (ranked by impact):
@@ -2372,33 +2456,33 @@ NEXT[10] (ranked by impact):
       WHY: CC=48 exceeds 15
       EFFORT: ~1h  IMPACT: 720
 
-  [4] !! SPLIT-FUNC      RAIL_HOVER_OPEN_MS  CC=33  fan=21
-      WHY: CC=33 exceeds 15
-      EFFORT: ~1h  IMPACT: 693
+  [4] !  SPLIT-FUNC      useSelectionCollapsePanel  CC=21  fan=20
+      WHY: CC=21 exceeds 15
+      EFFORT: ~1h  IMPACT: 420
 
-  [5] !! SPLIT-FUNC      RAIL_HOVER_CLOSE_MS  CC=33  fan=21
-      WHY: CC=33 exceeds 15
-      EFFORT: ~1h  IMPACT: 693
-
-  [6] !! SPLIT-FUNC      useSelectionCollapsePanel  CC=33  fan=21
-      WHY: CC=33 exceeds 15
-      EFFORT: ~1h  IMPACT: 693
-
-  [7] !  SPLIT-FUNC      runCurrentStep  CC=20  fan=18
+  [5] !  SPLIT-FUNC      runCurrentStep  CC=20  fan=18
       WHY: CC=20 exceeds 15
       EFFORT: ~1h  IMPACT: 360
 
-  [8] !  SPLIT-FUNC      API_BASE  CC=17  fan=13
+  [6] !  SPLIT-FUNC      API_BASE  CC=17  fan=13
       WHY: CC=17 exceeds 15
       EFFORT: ~1h  IMPACT: 221
 
-  [9] !  SPLIT-FUNC      request  CC=17  fan=13
+  [7] !  SPLIT-FUNC      request  CC=17  fan=13
       WHY: CC=17 exceeds 15
       EFFORT: ~1h  IMPACT: 221
 
-  [10] !  SPLIT-FUNC      editObjectActionArg  CC=24  fan=9
+  [8] !  SPLIT-FUNC      editObjectActionArg  CC=24  fan=9
       WHY: CC=24 exceeds 15
       EFFORT: ~1h  IMPACT: 216
+
+  [9] !  SPLIT-FUNC      createEncoderController  CC=21  fan=10
+      WHY: CC=21 exceeds 15
+      EFFORT: ~1h  IMPACT: 210
+
+  [10] !  SPLIT-FUNC      _run_diagnostic_command  CC=19  fan=11
+      WHY: CC=19 exceeds 15
+      EFFORT: ~1h  IMPACT: 209
 
 
 RISKS[3]:
@@ -2407,10 +2491,10 @@ RISKS[3]:
   ⚠ Splitting docs/README.md may break 0 import paths
 
 METRICS-TARGET:
-  CC̄:          4.0 → ≤2.8
+  CC̄:          3.9 → ≤2.7
   max-CC:      48 → ≤20
   god-modules: 22 → 0
-  high-CC(≥15): 23 → ≤11
+  high-CC(≥15): 21 → ≤10
   hub-types:   0 → ≤0
 
 PATTERNS (language parser shared logic):
@@ -2438,7 +2522,7 @@ PATTERNS (language parser shared logic):
     - Standardized FunctionInfo/ClassInfo models
 
 HISTORY:
-  prev CC̄=4.0 → now CC̄=4.0
+  prev CC̄=4.0 → now CC̄=3.9
 ```
 
 ### Validation (`project/validation.toon.yaml`)

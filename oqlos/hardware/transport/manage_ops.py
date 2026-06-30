@@ -57,13 +57,14 @@ def _resolve(verb: str) -> Callable[[dict[str, Any]], Awaitable[Any]]:
 
     # Import lazily — oqlos.api.hardware pulls in the FastAPI router.
     from oqlos.api import hardware as hw
+    from oqlos.api import hardware_modbus_routes as modbus_hw
 
     nullary_map: dict[str, Callable[[], Awaitable[Any]]] = {
         "health": hw.hardware_health,
         "diagnose": hw.hardware_diagnose,
         "stack-snapshot": hw.hardware_stack_snapshot,
-        "waveshare-diagnose": hw.hardware_modbus_waveshare_diagnose,
-        "wizard-plan": hw.hardware_modbus_wizard_plan,
+        "waveshare-diagnose": modbus_hw.hardware_modbus_waveshare_diagnose,
+        "wizard-plan": modbus_hw.hardware_modbus_wizard_plan,
         "hui-actions": hw.hui_actions,
         "hui-shutdown": hw.hui_shutdown,
         "hui-al-start": hw.hui_al_start,
@@ -83,14 +84,14 @@ def _resolve(verb: str) -> Callable[[dict[str, Any]], Awaitable[Any]]:
         "identify": lambda a: hw.hardware_identify(scan=a.get("scan", "never")),
         "diagnosis": lambda a: hw.hardware_diagnosis_route(scan=a.get("scan", "never")),
         "recover": lambda a: hw.hardware_recover_route(scope=a.get("scope", "safe")),
-        "wizard-probe": lambda a: hw.hardware_modbus_wizard_probe_isolated(
+        "wizard-probe": lambda a: modbus_hw.hardware_modbus_wizard_probe_isolated(
             serial_port=a.get("serial_port", ""),
             baudrates=a.get("baudrates"),
             parities=a.get("parities"),
             device_ids=a.get("device_ids"),
             module_role=a.get("module_role", ""),
         ),
-        "wizard-program": lambda a: hw.hardware_modbus_wizard_program_isolated(
+        "wizard-program": lambda a: modbus_hw.hardware_modbus_wizard_program_isolated(
             serial_port=a.get("serial_port", ""),
             current_device_id=int(a.get("current_device_id", 1)),
             new_device_id=int(a.get("new_device_id", 1)),

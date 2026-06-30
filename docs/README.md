@@ -11,6 +11,19 @@
 
 ## Hardware Operator Entry Points
 
+Current UI ownership after the c2004 split:
+
+- OqlOS serves hardware/file tooling directly: `/hardware-status`,
+  `/hardware-restart`, `/hardware-demo`, `/map-editor`, `/scenario-files`,
+  `/func-editor`.
+- On boardnet/RPi3 the public firmware/controller origin is
+  `http://192.168.188.122:8202`.
+- c2004 connect-scenario keeps only DB-backed scenario building at
+  `http://localhost:8096/scenarios`; its old hardware/editor paths redirect to
+  OqlOS via `OQLOS_PUBLIC_URL`.
+- `/scenario-files` and `/func-editor` currently route to the OqlOS static
+  editor entry `/editor`, backed by `/api/v1/editor/*`.
+
 Before running scenarios in `execute` mode, use the hardware doctor:
 
 ```bash
@@ -49,8 +62,8 @@ Detailed guide: [Hardware Diagnostics](HARDWARE_DIAGNOSTICS.md).
 
 <!-- code2docs:start --># oqlos
 
-![version](https://img.shields.io/badge/version-0.1.0-blue) ![python](https://img.shields.io/badge/python-%3E%3D3.10-blue) ![coverage](https://img.shields.io/badge/coverage-unknown-lightgrey) ![functions](https://img.shields.io/badge/functions-2128-green)
-> **2128** functions | **123** classes | **274** files | CC̄ = 4.0
+![version](https://img.shields.io/badge/version-0.1.0-blue) ![python](https://img.shields.io/badge/python-%3E%3D3.10-blue) ![coverage](https://img.shields.io/badge/coverage-unknown-lightgrey) ![functions](https://img.shields.io/badge/functions-2151-green)
+> **2151** functions | **123** classes | **289** files | CC̄ = 4.0
 
 > Auto-generated project documentation from source code analysis.
 
@@ -146,12 +159,20 @@ oqlos/
         ├── App
         ├── main
             ├── useWsStatus
+            ├── useMapEditorSidebarAutoCollapse
+            ├── useMapEditorHardwareEvents
             ├── useUrlConfig
             ├── useParentEncoderNavigation
+            ├── useRailHoverPreview
             ├── HardwareActivityLog
             ├── SharedNav
             ├── SidebarList
+            ├── MapEditorParamConversionPanel
+            ├── MapEditorIntegrationMetaPanel
+            ├── MapEditorMotorRuntimePanel
+            ├── mapEditorConstants
             ├── mapEditorDefaultMap
+            ├── MapEditorObjectActionPanel
             ├── MapEditor
             ├── HardwareStatus
             ├── HardwareRestart
@@ -164,8 +185,11 @@ oqlos/
             ├── hardware-status-presets-translations
             ├── hardwareEventStream
             ├── hardware-time
+            ├── mapEditorIntegrationMeta
             ├── useSelectionCollapsePanel
             ├── url-embed-config
+            ├── mapEditorModel
+                ├── test
             ├── hardware-restart-wizard-steps
             ├── hardware-api-retry
                 ├── policy
@@ -175,9 +199,12 @@ oqlos/
                 ├── test
             ├── mapEditorFuncHardwareSummary
                 ├── test
+                ├── test
             ├── hardware-activity-log
                 ├── test
             ├── hardware-wizard-steps
+            ├── mapEditorTic249
+                ├── test
             ├── hardware-wizard-plan
             ├── designRem
             ├── collapse-toggle-bridge
@@ -391,6 +418,7 @@ oqlos/
             ├── toon
             ├── toon
     ├── manifest
+            ├── mapEditorMapShape
 ```
 
 ## API Overview
@@ -523,11 +551,27 @@ oqlos/
 - `load_env_file(env_path)` — Load .env file into environment variables.
 - `run_oql_scenario(scenario_path, mode, firmware_url)` — Run OQL scenario with loaded configuration.
 - `main()` — —
+- `RootRedirect()` — —
+- `target()` — —
 - `LocalizedApp()` — —
 - `useWsStatus()` — —
 - `client()` — —
 - `onOpen()` — —
 - `onClose()` — —
+- `useMapEditorSidebarAutoCollapse()` — —
+- `applyAutoCollapse()` — —
+- `root()` — —
+- `font()` — —
+- `viewportWidth()` — —
+- `denseFont()` — —
+- `minWidth()` — —
+- `observer()` — —
+- `useMapEditorHardwareEvents()` — —
+- `wsUrl()` — —
+- `closed()` — —
+- `socket()` — —
+- `message()` — —
+- `normalized()` — —
 - `notifyParentChildReady()` — —
 - `useUrlConfig()` — —
 - `onPop()` — —
@@ -553,8 +597,19 @@ oqlos/
 - `detail()` — —
 - `onWheel()` — —
 - `raw()` — —
-- `syncParentUrl()` — —
-- `parentSearch()` — —
+- `RAIL_HOVER_OPEN_MS()` — —
+- `RAIL_HOVER_CLOSE_MS()` — —
+- `useRailHoverPreview()` — —
+- `railOpenTimerRef()` — —
+- `panelCloseTimerRef()` — —
+- `cancelRailOpen()` — —
+- `cancelPanelClose()` — —
+- `previewCollapse()` — —
+- `previewExpand()` — —
+- `railEnter()` — —
+- `railLeave()` — —
+- `panelEnter()` — —
+- `panelLeave()` — —
 - `location()` — —
 - `currentPath()` — —
 - `visibleNavItems()` — —
@@ -563,9 +618,11 @@ oqlos/
 - `inPreview()` — —
 - `filtered()` — —
 - `handleSelect()` — —
-- `HW_DIAGNOSTIC()` — —
-- `HW_RUNTIME_PYTHON()` — —
-- `DEFAULT_MAP()` — —
+- `MapEditorParamConversionPanel()` — —
+- `view()` — —
+- `MapEditorIntegrationMetaPanel()` — —
+- `MapEditorMotorRuntimePanel()` — —
+- `cfg()` — —
 - `LIVE_EVENTS_LIMIT()` — —
 - `TIC249_TARGET_VELOCITY_SCALE()` — —
 - `GROUP_FOR_TAB()` — —
@@ -573,28 +630,12 @@ oqlos/
 - `EMPTY_KEY()` — —
 - `META_FIELDS()` — —
 - `PARAM_CONVERSION_ALGORITHMS()` — —
-- `cloneDefaultMap()` — —
-- `cloneValue()` — —
-- `tic249RawTargetVelocity()` — —
-- `value()` — —
-- `isPlainObject()` — —
-- `fillMissingFields()` — —
-- `ensureRequiredDefaultMappings()` — —
-- `shaped()` — —
-- `defaultMotor2()` — —
-- `defaultParam()` — —
-- `isMapEmpty()` — —
-- `firstBindingFromObjectMapping()` — —
-- `readIntegrationMeta()` — —
-- `setMetaField()` — —
-- `nextValue()` — —
-- `ensureMapShape()` — —
-- `src()` — —
-- `ensureParamConversion()` — —
-- `toPrettyJson()` — —
-- `createInitialEditorState()` — —
-- `seeded()` — —
-- `pretty()` — —
+- `HW_DIAGNOSTIC()` — —
+- `HW_RUNTIME_PYTHON()` — —
+- `DEFAULT_MAP()` — —
+- `MapEditorObjectActionPanel()` — —
+- `args()` — —
+- `body()` — —
 - `wsOnline()` — —
 - `initial()` — —
 - `tab()` — —
@@ -607,12 +648,14 @@ oqlos/
 - `parsed()` — —
 - `applyMapMutation()` — —
 - `next()` — —
+- `pretty()` — —
 - `addObject()` — —
 - `name()` — —
 - `periId()` — —
 - `addParam()` — —
 - `editParamConversionField()` — —
 - `current()` — —
+- `value()` — —
 - `target()` — —
 - `editParamConversionAlgorithm()` — —
 - `normalized()` — —
@@ -629,37 +672,26 @@ oqlos/
 - `steps()` — —
 - `editObjectActionBodyField()` — —
 - `editMotorRuntimeConfig()` — —
-- `renderMotorRuntimeRow()` — —
-- `cfg()` — —
 - `saveMap()` — —
 - `parsedJson()` — —
 - `mappingPayload()` — —
 - `response()` — —
 - `savedMap()` — —
 - `restoreDefaultMap()` — —
+- `seeded()` — —
 - `restored()` — —
 - `reloadCurrent()` — —
 - `payload()` — —
 - `shouldSeedBackend()` — —
+- `shaped()` — —
 - `loadRecentHardwareEvents()` — —
 - `clearServerHardwareEvents()` — —
 - `cancelled()` — —
-- `wsUrl()` — —
-- `closed()` — —
-- `socket()` — —
-- `message()` — —
 - `mappingGroup()` — —
 - `entryKeys()` — —
 - `navContext()` — —
 - `filteredEntryKeys()` — —
 - `q()` — —
-- `applyAutoCollapse()` — —
-- `root()` — —
-- `font()` — —
-- `viewportWidth()` — —
-- `denseFont()` — —
-- `minWidth()` — —
-- `observer()` — —
 - `handleSelectEntry()` — —
 - `integrationMeta()` — —
 - `updateIntegrationMeta()` — —
@@ -667,13 +699,6 @@ oqlos/
 - `resolveSelectedFuncMapping()` — —
 - `result()` — —
 - `filteredHardwareEvents()` — —
-- `renderIntegrationMetaEditor()` — —
-- `renderObjectActionEditor()` — —
-- `args()` — —
-- `body()` — —
-- `renderMotorRuntimeConfigEditor()` — —
-- `renderParamConversionEditor()` — —
-- `view()` — —
 - `runAddForTab()` — —
 - `search()` — —
 - `timestamp()` — —
@@ -802,24 +827,20 @@ oqlos/
 - `peripheralQuery()` — —
 - `commandQuery()` — —
 - `hardwareNowText()` — —
-- `RAIL_HOVER_OPEN_MS()` — —
-- `RAIL_HOVER_CLOSE_MS()` — —
+- `firstBindingFromObjectMapping()` — —
+- `readIntegrationMeta()` — —
+- `setApiServiceField()` — —
+- `setApiEndpointField()` — —
+- `setHardwareAddressField()` — —
+- `setMetaField()` — —
+- `nextValue()` — —
 - `useSelectionCollapsePanel()` — —
 - `timerRef()` — —
-- `railOpenTimerRef()` — —
-- `panelCloseTimerRef()` — —
-- `collapsed()` — —
+- `stowed()` — —
 - `cancelAutoCollapse()` — —
-- `cancelRailOpen()` — —
-- `cancelPanelClose()` — —
+- `collapsed()` — —
 - `scheduleCollapse()` — —
 - `expand()` — —
-- `previewExpand()` — —
-- `previewCollapse()` — —
-- `railEnter()` — —
-- `railLeave()` — —
-- `panelEnter()` — —
-- `panelLeave()` — —
 - `toggleCollapsed()` — —
 - `onMessage()` — —
 - `envelope()` — —
@@ -853,7 +874,6 @@ oqlos/
 - `roleCandidate()` — —
 - `IFRAME_ONLY_SEARCH_PARAMS()` — —
 - `mergeParentSearchIntoChildUrl()` — —
-- `url()` — —
 - `raw()` — —
 - `incoming()` — —
 - `kept()` — —
@@ -866,7 +886,24 @@ oqlos/
 - `parentSearch()` — —
 - `nextHref()` — —
 - `applyUrlEmbedPatch()` — —
+- `url()` — —
 - `param()` — —
+- `cloneDefaultMap()` — —
+- `cloneValue()` — —
+- `isPlainObject()` — —
+- `fillMissingFields()` — —
+- `ensureMapShape()` — —
+- `src()` — —
+- `ensureRequiredDefaultMappings()` — —
+- `shaped()` — —
+- `defaultMotor2()` — —
+- `defaultParam()` — —
+- `isMapEmpty()` — —
+- `ensureParamConversion()` — —
+- `toPrettyJson()` — —
+- `createInitialEditorState()` — —
+- `seeded()` — —
+- `pretty()` — —
 - `wizardStepSerialPort()` — —
 - `buildWizardProbePayload()` — —
 - `targetBaud()` — —
@@ -949,6 +986,7 @@ oqlos/
 - `fromObject()` — —
 - `fromAction()` — —
 - `summary()` — —
+- `meta()` — —
 - `createHardwareActivityLogEntry()` — —
 - `prependHardwareActivityLogEntry()` — —
 - `usePageOpenedLog()` — —
@@ -975,6 +1013,9 @@ oqlos/
 - `needsProgramming()` — —
 - `isOptionalWizardStep()` — —
 - `action()` — —
+- `tic249RawTargetVelocity()` — —
+- `value()` — —
+- `shaped()` — —
 - `isOqlosUnreachableError()` — —
 - `normalized()` — —
 - `rem()` — —
@@ -1456,6 +1497,8 @@ oqlos/
 - `hardware_demo_alias(request)` — —
 - `hardware_restart_alias(request)` — —
 - `map_editor_alias(request)` — —
+- `scenario_files_alias(request)` — —
+- `func_editor_alias(request)` — —
 - `hardware_ui_spa(full_path)` — Serve the moved hardware UI SPA, falling back to index.html for client routes.
 - `health_check()` — Health check endpoint for tests and frontend compatibility probes.
 - `status()` — —
@@ -1535,6 +1578,14 @@ oqlos/
 - `export_one_bash(base, sid, out_path)` — —
 - `import_scenarios(base, dir_path, validate)` — —
 - `main(argv)` — —
+- `cloneValue()` — —
+- `isPlainObject()` — —
+- `fillMissingFields()` — —
+- `ensureMapShape()` — —
+- `src()` — —
+- `isMapEmpty()` — —
+- `ensureParamConversion()` — —
+- `toPrettyJson()` — —
 
 
 ## Project Structure
@@ -1563,7 +1614,7 @@ oqlos/
 📄 `examples.hardware.doctor-workflow` (3 functions)
 📄 `examples.plugin-config`
 📄 `frontend.package`
-📄 `frontend.src.App`
+📄 `frontend.src.App` (2 functions)
 📄 `frontend.src.api.hardware-api-errors` (10 functions)
 📄 `frontend.src.api.hardware-api-log` (9 functions)
 📄 `frontend.src.api.hardware-diagnostic-failure` (18 functions)
@@ -1572,11 +1623,14 @@ oqlos/
 📄 `frontend.src.api.hardwareApi` (24 functions)
 📄 `frontend.src.api.wsClient` (32 functions, 1 classes)
 📄 `frontend.src.components.HardwareActivityLog`
-📄 `frontend.src.components.SharedNav` (6 functions)
+📄 `frontend.src.components.SharedNav` (4 functions)
 📄 `frontend.src.components.SidebarList` (4 functions)
 📄 `frontend.src.context.AppConfigProvider` (5 functions)
 📄 `frontend.src.context.app-config-document` (4 functions)
+📄 `frontend.src.hooks.useMapEditorHardwareEvents` (6 functions)
+📄 `frontend.src.hooks.useMapEditorSidebarAutoCollapse` (9 functions)
 📄 `frontend.src.hooks.useParentEncoderNavigation` (19 functions)
+📄 `frontend.src.hooks.useRailHoverPreview` (13 functions)
 📄 `frontend.src.hooks.useUrlConfig` (6 functions)
 📄 `frontend.src.hooks.useWsStatus` (4 functions)
 📄 `frontend.src.i18n.I18nProvider` (10 functions)
@@ -1589,7 +1643,12 @@ oqlos/
 📄 `frontend.src.pages.HardwareDemo` (46 functions)
 📄 `frontend.src.pages.HardwareRestart` (50 functions)
 📄 `frontend.src.pages.HardwareStatus` (1 functions)
-📄 `frontend.src.pages.MapEditor` (151 functions)
+📄 `frontend.src.pages.MapEditor` (97 functions)
+📄 `frontend.src.pages.MapEditorIntegrationMetaPanel` (1 functions)
+📄 `frontend.src.pages.MapEditorMotorRuntimePanel` (2 functions)
+📄 `frontend.src.pages.MapEditorObjectActionPanel` (3 functions)
+📄 `frontend.src.pages.MapEditorParamConversionPanel` (2 functions)
+📄 `frontend.src.pages.mapEditorConstants` (7 functions)
 📄 `frontend.src.pages.mapEditorDefaultMap` (3 functions)
 📄 `frontend.src.utils.collapse-toggle-bridge` (6 functions)
 📄 `frontend.src.utils.designRem` (2 functions)
@@ -1605,11 +1664,18 @@ oqlos/
 📄 `frontend.src.utils.hui-shell-key` (5 functions)
 📄 `frontend.src.utils.mapEditorFuncHardwareSummary` (16 functions)
 📄 `frontend.src.utils.mapEditorFuncHardwareSummary.test` (1 functions)
+📄 `frontend.src.utils.mapEditorIntegrationMeta` (7 functions)
+📄 `frontend.src.utils.mapEditorIntegrationMeta.test` (2 functions)
+📄 `frontend.src.utils.mapEditorMapShape` (8 functions)
+📄 `frontend.src.utils.mapEditorModel` (16 functions)
+📄 `frontend.src.utils.mapEditorModel.test` (1 functions)
+📄 `frontend.src.utils.mapEditorTic249` (2 functions)
+📄 `frontend.src.utils.mapEditorTic249.test`
 📄 `frontend.src.utils.parentUrlBridge` (3 functions)
 📄 `frontend.src.utils.rbac.policy` (22 functions)
-📄 `frontend.src.utils.url-embed-config` (49 functions)
+📄 `frontend.src.utils.url-embed-config` (48 functions)
 📄 `frontend.src.utils.url-embed-config.test` (8 functions)
-📄 `frontend.src.utils.useSelectionCollapsePanel` (22 functions)
+📄 `frontend.src.utils.useSelectionCollapsePanel` (11 functions)
 📦 `frontend.vendor.hardware-client` (2 functions)
 📄 `frontend.vendor.hardware-client.paths` (4 functions)
 📄 `frontend.vite.config`
@@ -1631,7 +1697,7 @@ oqlos/
 📄 `oqlos.api.hardware_mapping_store` (13 functions, 1 classes)
 📄 `oqlos.api.hardware_v3` (3 functions)
 📄 `oqlos.api.logs` (3 functions)
-📄 `oqlos.api.main` (22 functions)
+📄 `oqlos.api.main` (24 functions)
 📄 `oqlos.api.oql_mqtt` (6 functions, 3 classes)
 📄 `oqlos.api.peripherals` (4 functions)
 📄 `oqlos.api.plugins` (12 functions)

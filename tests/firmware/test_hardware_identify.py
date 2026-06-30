@@ -5,6 +5,12 @@ from __future__ import annotations
 import asyncio
 
 from oqlos.api import hardware as hw
+from oqlos.api import hardware_runtime as hw_runtime
+
+
+def _patch_gateway(monkeypatch, gateway):
+    monkeypatch.setattr(hw, "_gw", lambda: gateway)
+    monkeypatch.setattr(hw_runtime, "get_hardware_gateway", lambda: gateway)
 
 
 class _FakeGateway:
@@ -82,7 +88,7 @@ def test_platform_reports_modbus_adc_as_analog_input(monkeypatch):
 
 
 def test_hardware_identify_includes_diagnostics(monkeypatch):
-    monkeypatch.setattr(hw, "_gateway", _FakeGateway())
+    _patch_gateway(monkeypatch, _FakeGateway())
     monkeypatch.setattr(
         hw,
         "_probe_all_hardware",
@@ -119,7 +125,7 @@ def test_hardware_identify_includes_diagnostics(monkeypatch):
 
 
 def test_hardware_identify_default_skips_live_probe(monkeypatch):
-    monkeypatch.setattr(hw, "_gateway", _FakeGateway())
+    _patch_gateway(monkeypatch, _FakeGateway())
 
     def _unexpected_live_probe(*_args):
         raise AssertionError("default identify must not run a live hardware scan")
@@ -134,7 +140,7 @@ def test_hardware_identify_default_skips_live_probe(monkeypatch):
 
 
 def test_read_sensors_batch_reports_unavailable_modbus_without_503(monkeypatch):
-    monkeypatch.setattr(hw, "_gateway", _UnavailableAdcGateway())
+    _patch_gateway(monkeypatch, _UnavailableAdcGateway())
 
     result = asyncio.run(hw.read_sensors_batch(sensor_ids="ai01,ai02,ai03"))
 
@@ -146,8 +152,8 @@ def test_read_sensors_batch_reports_unavailable_modbus_without_503(monkeypatch):
 
 def test_hardware_temperature_returns_compatible_payload(monkeypatch):
     monkeypatch.setattr(
-        hw,
-        "_read_cpu_temperature",
+        hw_runtime,
+        "read_cpu_temperature",
         lambda: {"cpu_temp_celsius": None, "source": None, "available": False},
     )
 
@@ -159,7 +165,7 @@ def test_hardware_temperature_returns_compatible_payload(monkeypatch):
 
 
 def test_hardware_diagnose_keeps_sensor_errors_in_payload(monkeypatch):
-    monkeypatch.setattr(hw, "_gateway", _UnavailableAdcGateway())
+    _patch_gateway(monkeypatch, _UnavailableAdcGateway())
 
     result = asyncio.run(hw.hardware_diagnose())
 
@@ -169,7 +175,7 @@ def test_hardware_diagnose_keeps_sensor_errors_in_payload(monkeypatch):
 
 
 def test_modbus_adc_raw_reports_unavailable_health_without_404(monkeypatch):
-    monkeypatch.setattr(hw, "_gateway", _UnavailableAdcGateway())
+    _patch_gateway(monkeypatch, _UnavailableAdcGateway())
 
     result = asyncio.run(hw.read_modbus_adc_raw())
 
@@ -194,7 +200,7 @@ class _ModbusTimeoutGateway:
 
 
 def test_hardware_identify_reports_modbus_timeout_as_adapter_only(monkeypatch):
-    monkeypatch.setattr(hw, "_gateway", _ModbusTimeoutGateway())
+    _patch_gateway(monkeypatch, _ModbusTimeoutGateway())
 
     def _unexpected_live_probe(*_args):
         raise AssertionError("modbus timeout should use plugin health, not a second serial probe")

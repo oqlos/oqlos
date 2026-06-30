@@ -1944,13 +1944,13 @@ pip install -e .[dev]
 ### `project/map.toon.yaml`
 
 ```toon markpact:analysis path=project/map.toon.yaml
-# oqlos | 274f 50308L | python:222,javascript:37,shell:9,typescript:3,css:2,less:1 | 2026-06-30
-# stats: 1329 func | 196 cls | 274 mod | CC̄=4.3 | critical:117 | cycles:0
+# oqlos | 287f 50866L | python:225,javascript:47,shell:9,typescript:3,css:2,less:1 | 2026-06-30
+# stats: 1335 func | 197 cls | 287 mod | CC̄=4.3 | critical:118 | cycles:0
 # alerts[5]: CC _validate_motor2=19; CC _run_diagnostic_command=19; CC _resolve_func_steps=14; CC _probe_i2c_ads1115=14; CC exec_action_loop_block=14
 # hotspots[5]: _resolve fan=23; build_diagnosis_report fan=19; _build_waveshare_diagnose_report fan=18; hardware_identify fan=18; _handle_start fan=18
 # evolution: baseline
 # Keys: M=modules, D=details, i=imports, e=exports, c=classes, f=functions, m=methods
-M[274]:
+M[287]:
   app.doql.css,165
   app.doql.less,316
   examples/curl-quickstart.sh,75
@@ -1963,6 +1963,8 @@ M[274]:
   frontend/src/api/hardwareApi.js,257
   frontend/src/api/wsClient.js,139
   frontend/src/context/app-config-document.js,27
+  frontend/src/hooks/useMapEditorHardwareEvents.js,62
+  frontend/src/hooks/useMapEditorSidebarAutoCollapse.js,30
   frontend/src/hooks/useParentEncoderNavigation.js,157
   frontend/src/hooks/useRailHoverPreview.js,85
   frontend/src/hooks/useUrlConfig.js,86
@@ -1972,6 +1974,7 @@ M[274]:
   frontend/src/i18n/hardware-status-log-translations.js,82
   frontend/src/i18n/hardware-status-panel-translations.js,310
   frontend/src/i18n/hardware-status-presets-translations.js,796
+  frontend/src/pages/mapEditorConstants.js,42
   frontend/src/pages/mapEditorDefaultMap.js,1764
   frontend/src/styles/global.css,2076
   frontend/src/utils/collapse-toggle-bridge.js,47
@@ -1988,6 +1991,13 @@ M[274]:
   frontend/src/utils/hui-shell-key.js,39
   frontend/src/utils/mapEditorFuncHardwareSummary.js,81
   frontend/src/utils/mapEditorFuncHardwareSummary.test.js,55
+  frontend/src/utils/mapEditorIntegrationMeta.js,100
+  frontend/src/utils/mapEditorIntegrationMeta.test.js,44
+  frontend/src/utils/mapEditorMapShape.js,59
+  frontend/src/utils/mapEditorModel.js,62
+  frontend/src/utils/mapEditorModel.test.js,33
+  frontend/src/utils/mapEditorTic249.js,8
+  frontend/src/utils/mapEditorTic249.test.js,14
   frontend/src/utils/parentUrlBridge.js,40
   frontend/src/utils/rbac.policy.js,119
   frontend/src/utils/url-embed-config.js,194
@@ -2004,13 +2014,15 @@ M[274]:
   oqlos/api/_hw3_system.py,134
   oqlos/api/editor.py,142
   oqlos/api/execution.py,360
-  oqlos/api/hardware.py,2267
+  oqlos/api/hardware.py,2221
   oqlos/api/hardware_events.py,136
+  oqlos/api/hardware_gateway.py,23
+  oqlos/api/hardware_hui.py,62
   oqlos/api/hardware_mapping_contract.py,90
   oqlos/api/hardware_mapping_store.py,153
   oqlos/api/hardware_v3.py,61
   oqlos/api/logs.py,46
-  oqlos/api/main.py,371
+  oqlos/api/main.py,384
   oqlos/api/oql_mqtt.py,152
   oqlos/api/peripherals.py,71
   oqlos/api/plugins.py,182
@@ -2180,10 +2192,11 @@ M[274]:
   tests/firmware/test_hardware_doctor.py,287
   tests/firmware/test_hardware_health.py,44
   tests/firmware/test_hardware_health_http.py,59
+  tests/firmware/test_hardware_hui_routes.py,44
   tests/firmware/test_hardware_identify.py,210
   tests/firmware/test_hardware_modbus_wizard.py,326
   tests/firmware/test_hardware_stack_snapshot.py,46
-  tests/firmware/test_hardware_v3_compat.py,98
+  tests/firmware/test_hardware_v3_compat.py,106
   tests/firmware/test_hui_actions.py,93
   tests/firmware/test_hui_scenario.py,12
   tests/firmware/test_lung_integration.py,282
@@ -2318,7 +2331,7 @@ D:
     execution_stream(scenario)
     execution_logs_stream(scenario)
   oqlos/api/hardware.py:
-    e: _read_text_file,_board_model,_is_raspberry_pi_host,_os_release,_in_container,_selected_hardware_platform,_selected_piadc_platform,_classify_platform_type,_detect_runtime_platform,_local_ads1115_probe_allowed,_scan_usb_devices,_probe_tic249,_probe_dri0050,_probe_i2c_ads1115,_probe_waveshare_rtu,_probe_configured_waveshare_rtu,_probe_all_hardware,_collect_hardware_diagnostics,_is_plugin_compatible,_needs_live_scan,_unhealthy_plugin_ids,_modbus_health_is_no_response,_probe_selected_hardware,_modbus_preflight_report,_modbus_repair_guidance,_parse_csv_ints,_modbus_io_device_ids,_modbus_topology_mode,_apply_modbus_topology,_modbus_runtime_serial_ports,_diagnose_shared_bus_matrix,_merge_unique_text_list,_merge_waveshare_scan_dicts,_read_output_control_modes,_modbus_plugins_healthy,_modbus_health_serial_stale,_build_waveshare_serial_stale_report,_build_waveshare_from_plugin_health,_probe_waveshare_separate,_probe_waveshare_shared_bus,_read_waveshare_io_slave_config,_read_waveshare_adc_slave_config,_resolve_waveshare_ports,_split_hits_by_role,_build_waveshare_diagnose_report,_modbus_wizard_target_ids,_modbus_wizard_plan,_collect_wizard_serial_candidates,_modbus_wizard_probe_isolated,_wizard_check_already_configured,_wizard_apply_uart_write,_wizard_verify_config,_wizard_build_result,_modbus_wizard_program_isolated,set_hardware_gateway,_gw,_hardware_health_overall_ok,hardware_health,_determine_scan_set,_map_adapter_identify_status,hardware_identify,set_valve,set_pump,hui_actions,hui_shutdown,_raise_if_hui_failed,_start_hui_action,hui_hold_start,hui_hold_stop,hui_al_start,hui_al_stop,read_sensor,_read_cpu_temperature,hardware_temperature,read_sensors_batch,hardware_diagnose,hardware_modbus_waveshare_diagnose,hardware_stack_snapshot,hardware_diagnosis_route,hardware_recover_route,hardware_modbus_wizard_plan,hardware_modbus_wizard_probe_isolated,hardware_modbus_wizard_program_isolated,read_modbus_adc_raw,set_lung,_lung_state_response,stop_lung,disable_lung,artificial_lung_status,artificial_lung_command,_command_payload,rtc_status,rtc_command
+    e: _read_text_file,_board_model,_is_raspberry_pi_host,_os_release,_in_container,_selected_hardware_platform,_selected_piadc_platform,_classify_platform_type,_detect_runtime_platform,_local_ads1115_probe_allowed,_scan_usb_devices,_probe_tic249,_probe_dri0050,_probe_i2c_ads1115,_probe_waveshare_rtu,_probe_configured_waveshare_rtu,_probe_all_hardware,_collect_hardware_diagnostics,_is_plugin_compatible,_needs_live_scan,_unhealthy_plugin_ids,_modbus_health_is_no_response,_probe_selected_hardware,_modbus_preflight_report,_modbus_repair_guidance,_parse_csv_ints,_modbus_io_device_ids,_modbus_topology_mode,_apply_modbus_topology,_modbus_runtime_serial_ports,_diagnose_shared_bus_matrix,_merge_unique_text_list,_merge_waveshare_scan_dicts,_read_output_control_modes,_modbus_plugins_healthy,_modbus_health_serial_stale,_build_waveshare_serial_stale_report,_build_waveshare_from_plugin_health,_probe_waveshare_separate,_probe_waveshare_shared_bus,_read_waveshare_io_slave_config,_read_waveshare_adc_slave_config,_resolve_waveshare_ports,_split_hits_by_role,_build_waveshare_diagnose_report,_modbus_wizard_target_ids,_modbus_wizard_plan,_collect_wizard_serial_candidates,_modbus_wizard_probe_isolated,_wizard_check_already_configured,_wizard_apply_uart_write,_wizard_verify_config,_wizard_build_result,_modbus_wizard_program_isolated,_hardware_health_overall_ok,hardware_health,_determine_scan_set,_map_adapter_identify_status,hardware_identify,set_valve,set_pump,read_sensor,_read_cpu_temperature,hardware_temperature,read_sensors_batch,hardware_diagnose,hardware_modbus_waveshare_diagnose,hardware_stack_snapshot,hardware_diagnosis_route,hardware_recover_route,hardware_modbus_wizard_plan,hardware_modbus_wizard_probe_isolated,hardware_modbus_wizard_program_isolated,read_modbus_adc_raw,set_lung,_lung_state_response,stop_lung,disable_lung,artificial_lung_status,artificial_lung_command,_command_payload,rtc_status,rtc_command
     _read_text_file(path)
     _board_model()
     _is_raspberry_pi_host()
@@ -2373,8 +2386,6 @@ D:
     _wizard_verify_config(read_device_config;verify_settings;new_device_id;new_baudrate;line_parity)
     _wizard_build_result(writes;verify;verified;new_device_id;new_baudrate;line_parity;serial_port;verify_error)
     _modbus_wizard_program_isolated()
-    set_hardware_gateway(gw)
-    _gw()
     _hardware_health_overall_ok(payload)
     hardware_health()
     _determine_scan_set(scan_mode;health)
@@ -2382,14 +2393,6 @@ D:
     hardware_identify(scan)
     set_valve(valve_id;value)
     set_pump(power_pct)
-    hui_actions()
-    hui_shutdown()
-    _raise_if_hui_failed(payload)
-    _start_hui_action(action)
-    hui_hold_start(key)
-    hui_hold_stop(key)
-    hui_al_start()
-    hui_al_stop()
     read_sensor(sensor_id)
     _read_cpu_temperature()
     hardware_temperature()
@@ -2424,6 +2427,21 @@ D:
     get_hardware_command_event_store_path()
     subscribe_hardware_command_events()
     unsubscribe_hardware_command_events(subscriber_id)
+  oqlos/api/hardware_gateway.py:
+    e: set_hardware_gateway,get_hardware_gateway,try_get_hardware_gateway
+    set_hardware_gateway(gw)
+    get_hardware_gateway()
+    try_get_hardware_gateway()
+  oqlos/api/hardware_hui.py:
+    e: raise_if_hui_failed,start_hui_action,hui_actions,hui_shutdown,hui_hold_start,hui_hold_stop,hui_al_start,hui_al_stop
+    raise_if_hui_failed(payload)
+    start_hui_action(action)
+    hui_actions()
+    hui_shutdown()
+    hui_hold_start(key)
+    hui_hold_stop(key)
+    hui_al_start()
+    hui_al_stop()
   oqlos/api/hardware_mapping_contract.py:
     e: _is_int,_validate_motor2,validate_mapping_contract,MappingContractError
     MappingContractError: __init__(1)
@@ -2448,7 +2466,7 @@ D:
     get_logs(level;function;module;q;environment;limit;offset)
     get_log_stats()
   oqlos/api/main.py:
-    e: _app_lifespan,_initialize_runtime_dependencies,_start_oql_transport,_stop_oql_transport,index_page,_serve_static_html,editor_page,panel_page,_with_query,hardware_status_page,hardware_demo_alias,hardware_restart_alias,map_editor_alias,hardware_ui_spa,health_check,status,_forward_websocket,hardware_events_websocket_alias,websocket_endpoint,oql_websocket_alias,_parse_server_args,run
+    e: _app_lifespan,_initialize_runtime_dependencies,_start_oql_transport,_stop_oql_transport,index_page,_serve_static_html,editor_page,panel_page,_with_query,hardware_status_page,hardware_demo_alias,hardware_restart_alias,map_editor_alias,scenario_files_alias,func_editor_alias,hardware_ui_spa,health_check,status,_forward_websocket,hardware_events_websocket_alias,websocket_endpoint,oql_websocket_alias,_parse_server_args,run
     _app_lifespan(_)
     _initialize_runtime_dependencies()
     _start_oql_transport()
@@ -2462,6 +2480,8 @@ D:
     hardware_demo_alias(request)
     hardware_restart_alias(request)
     map_editor_alias(request)
+    scenario_files_alias(request)
+    func_editor_alias(request)
     hardware_ui_spa(full_path)
     health_check()
     status()
@@ -3804,6 +3824,12 @@ D:
     test_hardware_health_overall_ok_ignores_init_summary()
     test_hardware_health_overall_ok_false_when_any_plugin_errors()
     test_hardware_health_endpoint_returns_200_when_degraded(monkeypatch)
+  tests/firmware/test_hardware_hui_routes.py:
+    e: test_hardware_router_includes_hui_paths,test_raise_if_hui_failed_raises_on_error_payload,test_hui_hold_start_uses_gateway,_FakeGateway
+    _FakeGateway: hold(1)
+    test_hardware_router_includes_hui_paths()
+    test_raise_if_hui_failed_raises_on_error_payload()
+    test_hui_hold_start_uses_gateway(monkeypatch)
   tests/firmware/test_hardware_identify.py:
     e: test_collect_hardware_diagnostics_exposes_ports,test_platform_reports_modbus_adc_as_analog_input,test_hardware_identify_includes_diagnostics,test_hardware_identify_default_skips_live_probe,test_read_sensors_batch_reports_unavailable_modbus_without_503,test_hardware_temperature_returns_compatible_payload,test_hardware_diagnose_keeps_sensor_errors_in_payload,test_modbus_adc_raw_reports_unavailable_health_without_404,test_hardware_identify_reports_modbus_timeout_as_adapter_only,_FakeGateway,_UnavailableAdcGateway,_ModbusTimeoutGateway
     _FakeGateway: health(0)
@@ -4196,6 +4222,8 @@ project_file('frontend/src/api/hardware-tic249-status.js', 36, 'javascript').
 project_file('frontend/src/api/hardwareApi.js', 257, 'javascript').
 project_file('frontend/src/api/wsClient.js', 139, 'javascript').
 project_file('frontend/src/context/app-config-document.js', 27, 'javascript').
+project_file('frontend/src/hooks/useMapEditorHardwareEvents.js', 62, 'javascript').
+project_file('frontend/src/hooks/useMapEditorSidebarAutoCollapse.js', 30, 'javascript').
 project_file('frontend/src/hooks/useParentEncoderNavigation.js', 157, 'javascript').
 project_file('frontend/src/hooks/useRailHoverPreview.js', 85, 'javascript').
 project_file('frontend/src/hooks/useUrlConfig.js', 86, 'javascript').
@@ -4205,6 +4233,7 @@ project_file('frontend/src/i18n/hardware-demo-extra-translations.js', 184, 'java
 project_file('frontend/src/i18n/hardware-status-log-translations.js', 82, 'javascript').
 project_file('frontend/src/i18n/hardware-status-panel-translations.js', 310, 'javascript').
 project_file('frontend/src/i18n/hardware-status-presets-translations.js', 796, 'javascript').
+project_file('frontend/src/pages/mapEditorConstants.js', 42, 'javascript').
 project_file('frontend/src/pages/mapEditorDefaultMap.js', 1764, 'javascript').
 project_file('frontend/src/styles/global.css', 2076, 'css').
 project_file('frontend/src/utils/collapse-toggle-bridge.js', 47, 'javascript').
@@ -4221,6 +4250,13 @@ project_file('frontend/src/utils/hardwareEventStream.js', 48, 'javascript').
 project_file('frontend/src/utils/hui-shell-key.js', 39, 'javascript').
 project_file('frontend/src/utils/mapEditorFuncHardwareSummary.js', 81, 'javascript').
 project_file('frontend/src/utils/mapEditorFuncHardwareSummary.test.js', 55, 'javascript').
+project_file('frontend/src/utils/mapEditorIntegrationMeta.js', 100, 'javascript').
+project_file('frontend/src/utils/mapEditorIntegrationMeta.test.js', 44, 'javascript').
+project_file('frontend/src/utils/mapEditorMapShape.js', 59, 'javascript').
+project_file('frontend/src/utils/mapEditorModel.js', 62, 'javascript').
+project_file('frontend/src/utils/mapEditorModel.test.js', 33, 'javascript').
+project_file('frontend/src/utils/mapEditorTic249.js', 8, 'javascript').
+project_file('frontend/src/utils/mapEditorTic249.test.js', 14, 'javascript').
 project_file('frontend/src/utils/parentUrlBridge.js', 40, 'javascript').
 project_file('frontend/src/utils/rbac.policy.js', 119, 'javascript').
 project_file('frontend/src/utils/url-embed-config.js', 194, 'javascript').
@@ -4237,13 +4273,15 @@ project_file('oqlos/api/_hw3_peripheral.py', 134, 'python').
 project_file('oqlos/api/_hw3_system.py', 134, 'python').
 project_file('oqlos/api/editor.py', 142, 'python').
 project_file('oqlos/api/execution.py', 360, 'python').
-project_file('oqlos/api/hardware.py', 2267, 'python').
+project_file('oqlos/api/hardware.py', 2221, 'python').
 project_file('oqlos/api/hardware_events.py', 136, 'python').
+project_file('oqlos/api/hardware_gateway.py', 23, 'python').
+project_file('oqlos/api/hardware_hui.py', 62, 'python').
 project_file('oqlos/api/hardware_mapping_contract.py', 90, 'python').
 project_file('oqlos/api/hardware_mapping_store.py', 153, 'python').
 project_file('oqlos/api/hardware_v3.py', 61, 'python').
 project_file('oqlos/api/logs.py', 46, 'python').
-project_file('oqlos/api/main.py', 371, 'python').
+project_file('oqlos/api/main.py', 384, 'python').
 project_file('oqlos/api/oql_mqtt.py', 152, 'python').
 project_file('oqlos/api/peripherals.py', 71, 'python').
 project_file('oqlos/api/plugins.py', 182, 'python').
@@ -4413,10 +4451,11 @@ project_file('tests/firmware/test_hardware_discovery.py', 32, 'python').
 project_file('tests/firmware/test_hardware_doctor.py', 287, 'python').
 project_file('tests/firmware/test_hardware_health.py', 44, 'python').
 project_file('tests/firmware/test_hardware_health_http.py', 59, 'python').
+project_file('tests/firmware/test_hardware_hui_routes.py', 44, 'python').
 project_file('tests/firmware/test_hardware_identify.py', 210, 'python').
 project_file('tests/firmware/test_hardware_modbus_wizard.py', 326, 'python').
 project_file('tests/firmware/test_hardware_stack_snapshot.py', 46, 'python').
-project_file('tests/firmware/test_hardware_v3_compat.py', 98, 'python').
+project_file('tests/firmware/test_hardware_v3_compat.py', 106, 'python').
 project_file('tests/firmware/test_hui_actions.py', 93, 'python').
 project_file('tests/firmware/test_hui_scenario.py', 12, 'python').
 project_file('tests/firmware/test_lung_integration.py', 282, 'python').
@@ -4548,7 +4587,7 @@ python_function('oqlos/api/hardware.py', '_needs_live_scan', 1, 3, 2).
 python_function('oqlos/api/hardware.py', '_unhealthy_plugin_ids', 1, 3, 2).
 python_function('oqlos/api/hardware.py', '_modbus_health_is_no_response', 1, 5, 2).
 python_function('oqlos/api/hardware.py', '_probe_selected_hardware', 1, 2, 3).
-python_function('oqlos/api/hardware.py', '_modbus_preflight_report', 0, 5, 4).
+python_function('oqlos/api/hardware.py', '_modbus_preflight_report', 0, 5, 5).
 python_function('oqlos/api/hardware.py', '_modbus_repair_guidance', 1, 3, 1).
 python_function('oqlos/api/hardware.py', '_parse_csv_ints', 2, 8, 6).
 python_function('oqlos/api/hardware.py', '_modbus_io_device_ids', 0, 2, 2).
@@ -4579,8 +4618,6 @@ python_function('oqlos/api/hardware.py', '_wizard_apply_uart_write', 9, 10, 7).
 python_function('oqlos/api/hardware.py', '_wizard_verify_config', 5, 7, 6).
 python_function('oqlos/api/hardware.py', '_wizard_build_result', 8, 5, 1).
 python_function('oqlos/api/hardware.py', '_modbus_wizard_program_isolated', 0, 6, 14).
-python_function('oqlos/api/hardware.py', 'set_hardware_gateway', 1, 1, 0).
-python_function('oqlos/api/hardware.py', '_gw', 0, 2, 1).
 python_function('oqlos/api/hardware.py', '_hardware_health_overall_ok', 1, 6, 3).
 python_function('oqlos/api/hardware.py', 'hardware_health', 0, 4, 6).
 python_function('oqlos/api/hardware.py', '_determine_scan_set', 2, 11, 7).
@@ -4588,14 +4625,6 @@ python_function('oqlos/api/hardware.py', '_map_adapter_identify_status', 3, 10, 
 python_function('oqlos/api/hardware.py', 'hardware_identify', 1, 8, 18).
 python_function('oqlos/api/hardware.py', 'set_valve', 2, 1, 3).
 python_function('oqlos/api/hardware.py', 'set_pump', 1, 1, 3).
-python_function('oqlos/api/hardware.py', 'hui_actions', 0, 1, 2).
-python_function('oqlos/api/hardware.py', 'hui_shutdown', 0, 1, 3).
-python_function('oqlos/api/hardware.py', '_raise_if_hui_failed', 1, 2, 2).
-python_function('oqlos/api/hardware.py', '_start_hui_action', 1, 1, 3).
-python_function('oqlos/api/hardware.py', 'hui_hold_start', 1, 1, 2).
-python_function('oqlos/api/hardware.py', 'hui_hold_stop', 1, 1, 3).
-python_function('oqlos/api/hardware.py', 'hui_al_start', 0, 1, 2).
-python_function('oqlos/api/hardware.py', 'hui_al_stop', 0, 1, 3).
 python_function('oqlos/api/hardware.py', 'read_sensor', 1, 4, 6).
 python_function('oqlos/api/hardware.py', '_read_cpu_temperature', 0, 8, 12).
 python_function('oqlos/api/hardware.py', 'hardware_temperature', 0, 2, 3).
@@ -4628,6 +4657,17 @@ python_function('oqlos/api/hardware_events.py', 'clear_hardware_command_events',
 python_function('oqlos/api/hardware_events.py', 'get_hardware_command_event_store_path', 0, 1, 1).
 python_function('oqlos/api/hardware_events.py', 'subscribe_hardware_command_events', 0, 1, 4).
 python_function('oqlos/api/hardware_events.py', 'unsubscribe_hardware_command_events', 1, 1, 1).
+python_function('oqlos/api/hardware_gateway.py', 'set_hardware_gateway', 1, 1, 0).
+python_function('oqlos/api/hardware_gateway.py', 'get_hardware_gateway', 0, 2, 1).
+python_function('oqlos/api/hardware_gateway.py', 'try_get_hardware_gateway', 0, 1, 0).
+python_function('oqlos/api/hardware_hui.py', 'raise_if_hui_failed', 1, 2, 2).
+python_function('oqlos/api/hardware_hui.py', 'start_hui_action', 1, 1, 3).
+python_function('oqlos/api/hardware_hui.py', 'hui_actions', 0, 1, 2).
+python_function('oqlos/api/hardware_hui.py', 'hui_shutdown', 0, 1, 3).
+python_function('oqlos/api/hardware_hui.py', 'hui_hold_start', 1, 1, 2).
+python_function('oqlos/api/hardware_hui.py', 'hui_hold_stop', 1, 1, 3).
+python_function('oqlos/api/hardware_hui.py', 'hui_al_start', 0, 1, 2).
+python_function('oqlos/api/hardware_hui.py', 'hui_al_stop', 0, 1, 3).
 python_function('oqlos/api/hardware_mapping_contract.py', '_is_int', 1, 2, 1).
 python_function('oqlos/api/hardware_mapping_contract.py', '_validate_motor2', 2, 19, 7).
 python_function('oqlos/api/hardware_mapping_contract.py', 'validate_mapping_contract', 1, 6, 5).
@@ -4654,6 +4694,8 @@ python_function('oqlos/api/main.py', 'hardware_status_page', 0, 1, 2).
 python_function('oqlos/api/main.py', 'hardware_demo_alias', 1, 1, 3).
 python_function('oqlos/api/main.py', 'hardware_restart_alias', 1, 1, 3).
 python_function('oqlos/api/main.py', 'map_editor_alias', 1, 1, 3).
+python_function('oqlos/api/main.py', 'scenario_files_alias', 1, 1, 3).
+python_function('oqlos/api/main.py', 'func_editor_alias', 1, 1, 3).
 python_function('oqlos/api/main.py', 'hardware_ui_spa', 1, 5, 7).
 python_function('oqlos/api/main.py', 'health_check', 0, 1, 1).
 python_function('oqlos/api/main.py', 'status', 0, 1, 1).
@@ -5579,6 +5621,9 @@ python_function('tests/firmware/test_hardware_health_http.py', 'test_hardware_he
 python_function('tests/firmware/test_hardware_health_http.py', 'test_hardware_health_overall_ok_ignores_init_summary', 0, 2, 1).
 python_function('tests/firmware/test_hardware_health_http.py', 'test_hardware_health_overall_ok_false_when_any_plugin_errors', 0, 2, 1).
 python_function('tests/firmware/test_hardware_health_http.py', 'test_hardware_health_endpoint_returns_200_when_degraded', 1, 5, 6).
+python_function('tests/firmware/test_hardware_hui_routes.py', 'test_hardware_router_includes_hui_paths', 0, 4, 0).
+python_function('tests/firmware/test_hardware_hui_routes.py', 'test_raise_if_hui_failed_raises_on_error_payload', 0, 2, 2).
+python_function('tests/firmware/test_hardware_hui_routes.py', 'test_hui_hold_start_uses_gateway', 1, 3, 5).
 python_function('tests/firmware/test_hardware_identify.py', 'test_collect_hardware_diagnostics_exposes_ports', 1, 5, 2).
 python_function('tests/firmware/test_hardware_identify.py', 'test_platform_reports_modbus_adc_as_analog_input', 1, 5, 2).
 python_function('tests/firmware/test_hardware_identify.py', 'test_hardware_identify_includes_diagnostics', 1, 12, 8).
@@ -5602,7 +5647,7 @@ python_function('tests/firmware/test_hardware_v3_compat.py', '_client', 0, 1, 3)
 python_function('tests/firmware/test_hardware_v3_compat.py', 'test_hardware_v3_mapping_round_trip', 2, 9, 7).
 python_function('tests/firmware/test_hardware_v3_compat.py', 'test_hardware_v3_mapping_rejects_invalid_contract', 2, 3, 4).
 python_function('tests/firmware/test_hardware_v3_compat.py', 'test_hardware_v3_cqrs_events_record_diagnostic_failure', 1, 7, 6).
-python_function('tests/firmware/test_hardware_v3_compat.py', 'test_hardware_ui_aliases_and_status_page_are_served', 0, 8, 2).
+python_function('tests/firmware/test_hardware_v3_compat.py', 'test_hardware_ui_aliases_and_status_page_are_served', 0, 12, 2).
 python_function('tests/firmware/test_hui_actions.py', 'run', 1, 1, 1).
 python_function('tests/firmware/test_hui_actions.py', 'test_hui_hold_profile_runs_inside_oqlos', 1, 3, 4).
 python_function('tests/firmware/test_hui_actions.py', 'test_hui_artificial_lung_uses_tic249_plugin_recipe', 0, 11, 4).
@@ -6417,6 +6462,8 @@ python_method('TestDslParserRuntime', 'test_accepts_pompa_with_suffix_as_real_pu
 python_method('TestDslParserRuntime', 'test_accepts_set_pompa_alias', 0, 6, 2).
 python_class('tests/firmware/test_hardware_health_http.py', '_FakeGateway').
 python_method('_FakeGateway', 'health', 0, 1, 0).
+python_class('tests/firmware/test_hardware_hui_routes.py', '_FakeGateway').
+python_method('_FakeGateway', 'hold', 1, 1, 0).
 python_class('tests/firmware/test_hardware_identify.py', '_FakeGateway').
 python_method('_FakeGateway', 'health', 0, 1, 0).
 python_class('tests/firmware/test_hardware_identify.py', '_UnavailableAdcGateway').
@@ -6903,7 +6950,7 @@ class Settings:  # Application settings loaded from environment variables and .
 
 ## Call Graph
 
-*426 nodes · 500 edges · 43 modules · CC̄=4.0*
+*426 nodes · 500 edges · 52 modules · CC̄=3.9*
 
 ### Hubs (by degree)
 
@@ -6914,15 +6961,15 @@ class Settings:  # Application settings loaded from environment variables and .
 | `list` *(in frontend.src.utils.hardware-wizard-steps)* | 2 | 40 | 0 | **40** |
 | `oql_doc_to_cql` *(in oqlos.core._oql_adapter)* | 12 ⚠ | 2 | 30 | **32** |
 | `normalize_motor2_runtime_config` *(in oqlos.core.motor2_runtime)* | 12 ⚠ | 1 | 29 | **30** |
+| `format_detection` *(in oqlos.tools.hardware_diagnose.doctor)* | 10 ⚠ | 3 | 25 | **28** |
 | `_safe_resolve` *(in oqlos.core.executor)* | 14 ⚠ | 7 | 21 | **28** |
 | `run_oql_scenario` *(in setup_hardware_and_run_oql)* | 8 | 1 | 24 | **25** |
-| `applyMapMutation` *(in frontend.src.pages.MapEditor)* | 2 | 16 | 8 | **24** |
 
 ```toon markpact:analysis path=project/calls.toon.yaml
 # code2llm call graph | /home/tom/github/oqlos/oqlos
-# generated in 0.23s
-# nodes: 426 | edges: 500 | modules: 43
-# CC̄=4.0
+# generated in 0.28s
+# nodes: 426 | edges: 500 | modules: 52
+# CC̄=3.9
 
 HUBS[20]:
   examples.hardware.doctor-workflow.print
@@ -6935,36 +6982,36 @@ HUBS[20]:
     CC=12  in:2  out:30  total:32
   oqlos.core.motor2_runtime.normalize_motor2_runtime_config
     CC=12  in:1  out:29  total:30
+  oqlos.tools.hardware_diagnose.doctor.format_detection
+    CC=10  in:3  out:25  total:28
   oqlos.core.executor._safe_resolve
     CC=14  in:7  out:21  total:28
   setup_hardware_and_run_oql.run_oql_scenario
     CC=8  in:1  out:24  total:25
-  frontend.src.pages.MapEditor.applyMapMutation
-    CC=2  in:16  out:8  total:24
   oqlos.core.oql_parser.parse_oql
     CC=14  in:3  out:21  total:24
   oqlos.core.parser.parse_dsl_to_goal_with_issues
     CC=13  in:3  out:21  total:24
+  oqlos.core._action_motor2._motor2_build_plan
+    CC=12  in:1  out:22  total:23
+  oqlos.tools.hardware_diagnose.doctor._analyze_modbus_adc_config
+    CC=12  in:1  out:22  total:23
+  oqlos.tools.hardware_diagnose.doctor.format_doctor
+    CC=6  in:2  out:21  total:23
   oqlos.core._line_parsers._parse_if_condition
     CC=9  in:1  out:22  total:23
   oqlos.core._action_motor2._try_exec_motor2_set
     CC=13  in:1  out:22  total:23
-  oqlos.core._action_motor2._motor2_build_plan
-    CC=12  in:1  out:22  total:23
   oqlos.core._line_parsers._parse_set_line
     CC=12  in:1  out:21  total:22
-  frontend.src.utils.useSelectionCollapsePanel.useSelectionCollapsePanel
-    CC=33  in:0  out:21  total:21
-  frontend.src.utils.useSelectionCollapsePanel.RAIL_HOVER_OPEN_MS
-    CC=33  in:0  out:21  total:21
-  frontend.src.utils.useSelectionCollapsePanel.RAIL_HOVER_CLOSE_MS
-    CC=33  in:0  out:21  total:21
-  oqlos.core._func_resolver._collect_function_definitions
-    CC=13  in:1  out:19  total:20
-  frontend.src.api.wsClient.WsCqrsClient.super
-    CC=1  in:18  out:1  total:19
-  oqlos.core.oql_parser.tokenize
-    CC=13  in:5  out:14  total:19
+  oqlos.tools.hardware_diagnose.health.cmd_diagnose
+    CC=6  in:2  out:20  total:22
+  oqlos.core.base.VariableStore.set
+    CC=4  in:19  out:2  total:21
+  oqlos.core._cql_tree_builder._parse_goal_line
+    CC=12  in:1  out:20  total:21
+  oqlos.tools.hardware_diagnose.doctor._analyze_modbus_config
+    CC=11  in:1  out:20  total:21
 
 MODULES:
   examples.hardware.doctor-workflow  [1 funcs]
@@ -7023,9 +7070,6 @@ MODULES:
     onMessage  CC=3  out:2
     onWheel  CC=6  out:5
     parentEncoderActive  CC=15  out:7
-  frontend.src.hooks.useUrlConfig  [2 funcs]
-    notifyParentChildReady  CC=4  out:5
-    useUrlConfig  CC=8  out:15
   frontend.src.i18n.I18nProvider  [5 funcs]
     I18nProvider  CC=13  out:8
     dict  CC=8  out:3
@@ -7054,17 +7098,8 @@ MODULES:
     loadPlan  CC=18  out:11
     log  CC=1  out:3
     message  CC=1  out:1
-  frontend.src.pages.MapEditor  [49 funcs]
-    addAction  CC=2  out:6
-    addFunc  CC=2  out:6
-    addObject  CC=2  out:6
-    addParam  CC=2  out:4
-    applyMapMutation  CC=2  out:8
-    clearServerHardwareEvents  CC=8  out:9
-    cloneDefaultMap  CC=1  out:2
-    cloneValue  CC=1  out:2
-    createInitialEditorState  CC=1  out:3
-    defaultMotor2  CC=3  out:2
+  frontend.src.pages.MapEditor  [1 funcs]
+    next  CC=1  out:1
   frontend.src.utils.collapse-toggle-bridge  [2 funcs]
     isInIframe  CC=4  out:0
     postToParent  CC=4  out:8
@@ -7076,9 +7111,10 @@ MODULES:
   frontend.src.utils.hardware-api-retry  [2 funcs]
     attempt  CC=14  out:9
     sleep  CC=1  out:2
-  frontend.src.utils.hardware-restart-wizard-steps  [3 funcs]
+  frontend.src.utils.hardware-restart-wizard-steps  [4 funcs]
     buildWizardProbePayload  CC=10  out:7
     executeConfigureStep  CC=48  out:15
+    probe  CC=1  out:2
     wizardStepSerialPort  CC=14  out:0
   frontend.src.utils.hardware-wizard-steps  [1 funcs]
     list  CC=2  out:0
@@ -7099,39 +7135,6 @@ MODULES:
     resolveObjectActionHardwareHint  CC=6  out:2
     summarizeFuncToHardware  CC=17  out:6
     uniqueHints  CC=5  out:5
-  frontend.src.utils.rbac.policy  [13 funcs]
-    canConnectRoleAccessPath  CC=2  out:3
-    canHostRoleAccessPath  CC=2  out:3
-    isAdminConnectRole  CC=1  out:1
-    isOperatorConnectRole  CC=4  out:1
-    isReadOnlyConnectRole  CC=2  out:1
-    matched  CC=5  out:1
-    matchesPattern  CC=3  out:3
-    normalizeConnectRole  CC=2  out:1
-    normalizeHostRole  CC=2  out:1
-    normalizePath  CC=6  out:4
-  frontend.src.utils.url-embed-config  [21 funcs]
-    applyParentContextPayload  CC=5  out:5
-    applyUrlEmbedPatch  CC=7  out:7
-    base  CC=3  out:3
-    fromUser  CC=4  out:3
-    href  CC=4  out:3
-    mergeParentContext  CC=7  out:4
-    mergeParentSearchIntoChildUrl  CC=6  out:10
-    nextHref  CC=1  out:1
-    parentSearch  CC=4  out:3
-    parseAppearanceParams  CC=9  out:4
-  frontend.src.utils.useSelectionCollapsePanel  [16 funcs]
-    RAIL_HOVER_CLOSE_MS  CC=33  out:21
-    RAIL_HOVER_OPEN_MS  CC=33  out:21
-    cancelAutoCollapse  CC=2  out:2
-    cancelPanelClose  CC=2  out:2
-    cancelRailOpen  CC=2  out:2
-    expand  CC=1  out:5
-    onMessage  CC=8  out:3
-    panelEnter  CC=1  out:2
-    panelLeave  CC=4  out:5
-    previewCollapse  CC=1  out:2
   oqlos.config  [1 funcs]
     get_settings  CC=1  out:0
   oqlos.core._action_motor2  [30 funcs]
@@ -7159,9 +7162,14 @@ MODULES:
     _try_save  CC=5  out:7
     _try_set  CC=2  out:6
     _try_val  CC=2  out:4
-  oqlos.core._cql_tree_builder  [2 funcs]
+  oqlos.core._cql_tree_builder  [7 funcs]
+    _ensure_goal_for_step  CC=4  out:3
+    _ensure_step_for_actions  CC=3  out:2
     _parse_action_line  CC=4  out:3
+    _parse_goal_line  CC=12  out:20
     _parse_metadata_kv  CC=6  out:5
+    _parse_scenario_line  CC=3  out:6
+    _parse_step_line  CC=3  out:5
   oqlos.core._dsl_helpers  [12 funcs]
     _looks_like_lung_object  CC=1  out:2
     _looks_like_pump_object  CC=1  out:2
@@ -7210,14 +7218,26 @@ MODULES:
     _lower_set  CC=1  out:3
     _parse_macro_line  CC=8  out:10
     _resolve_include  CC=6  out:8
-  oqlos.core.base  [5 funcs]
+  oqlos.core._sensor_evaluator  [2 funcs]
+    __init__  CC=3  out:2
+    collect_sensor_constraints  CC=10  out:5
+  oqlos.core._value_normalizers  [1 funcs]
+    coerce_float  CC=5  out:9
+  oqlos.core.base  [6 funcs]
     send_event  CC=4  out:7
     emit  CC=5  out:3
     output_yaml  CC=4  out:2
     __init__  CC=2  out:1
     all  CC=3  out:3
-  oqlos.core.cql_parser  [3 funcs]
+    set  CC=4  out:2
+  oqlos.core.cql_parser  [9 funcs]
+    _handle_goal  CC=3  out:5
+    _handle_scenario  CC=2  out:3
+    _handle_step  CC=2  out:4
+    _try_hierarchy  CC=7  out:6
     _try_top_level  CC=2  out:1
+    _collect_all_goals  CC=2  out:2
+    _validate_intervals  CC=6  out:1
     parse_cql  CC=2  out:6
     validate_cql  CC=5  out:5
   oqlos.core.executor  [6 funcs]
@@ -7274,6 +7294,68 @@ MODULES:
     _eval_node  CC=2  out:5
     _eval_unary_op  CC=3  out:5
     safe_eval  CC=3  out:4
+  oqlos.hardware.config_paths  [1 funcs]
+    resolve_oqlos_config_path  CC=6  out:13
+  oqlos.hardware.health_status  [1 funcs]
+    health_status_is_ok  CC=11  out:9
+  oqlos.tools.hardware_diagnose.__main__  [9 funcs]
+    _handle_report_action  CC=3  out:4
+    _print_benchmark  CC=3  out:11
+    _print_calibrate  CC=6  out:9
+    _print_detect  CC=2  out:4
+    _print_diagnose  CC=3  out:9
+    _print_doctor  CC=2  out:4
+    _print_health  CC=2  out:5
+    _print_list  CC=3  out:8
+    _print_modbus_probe  CC=2  out:5
+  oqlos.tools.hardware_diagnose.benchmark  [1 funcs]
+    run_benchmark  CC=6  out:15
+  oqlos.tools.hardware_diagnose.calibration  [1 funcs]
+    run_calibration_test  CC=2  out:8
+  oqlos.tools.hardware_diagnose.discovery  [2 funcs]
+    list_i2c_buses  CC=1  out:2
+    list_usb_serial_devices  CC=7  out:9
+  oqlos.tools.hardware_diagnose.doctor  [41 funcs]
+    _adapter_health_status  CC=3  out:1
+    _add_issue  CC=2  out:1
+    _analyze_firmware_access  CC=7  out:11
+    _analyze_modbus_adc_config  CC=12  out:22
+    _analyze_modbus_config  CC=11  out:20
+    _analyze_serial_port_owners  CC=13  out:19
+    _canonical_device_path  CC=2  out:3
+    _check_firmware_adapters  CC=7  out:9
+    _check_firmware_health_error  CC=3  out:2
+    _check_firmware_mode  CC=3  out:4
+  oqlos.tools.hardware_diagnose.health  [7 funcs]
+    _format_health_value  CC=8  out:9
+    _is_health_ok  CC=5  out:6
+    _request_firmware_json  CC=8  out:9
+    check_firmware_health  CC=1  out:1
+    check_firmware_identify  CC=1  out:1
+    cmd_diagnose  CC=6  out:20
+    cmd_health  CC=5  out:10
+  oqlos.tools.hardware_diagnose.modbus_probe  [7 funcs]
+    _arg_int_list  CC=3  out:2
+    _arg_str_list  CC=2  out:1
+    _env_count_list  CC=2  out:2
+    _env_int_list  CC=5  out:5
+    _env_str_list  CC=3  out:2
+    _split_values  CC=5  out:5
+    run_modbus_probe_from_args  CC=1  out:2
+  oqlos.tools.hardware_diagnose.report  [2 funcs]
+    format_peripheral_table  CC=12  out:3
+    save_diagnostic_report  CC=3  out:13
+  oqlos.tools.plugin_cli  [12 funcs]
+    _default_config_path  CC=1  out:2
+    _load_config_file  CC=4  out:16
+    cmd_capabilities  CC=2  out:6
+    cmd_connect  CC=4  out:6
+    cmd_disconnect  CC=2  out:4
+    cmd_execute  CC=3  out:7
+    cmd_health  CC=3  out:8
+    cmd_list  CC=3  out:9
+    cmd_peripherals  CC=8  out:16
+    cmd_reload  CC=4  out:10
   setup_hardware_and_run_oql  [6 funcs]
     detect_serial_devices  CC=12  out:7
     generate_env_content  CC=2  out:1
@@ -7289,7 +7371,6 @@ EDGES:
   setup_hardware_and_run_oql.load_env_file → examples.hardware.doctor-workflow.print
   setup_hardware_and_run_oql.run_oql_scenario → examples.hardware.doctor-workflow.print
   setup_hardware_and_run_oql.main → setup_hardware_and_run_oql.run_oql_scenario
-  frontend.src.hooks.useUrlConfig.useUrlConfig → frontend.src.hooks.useUrlConfig.notifyParentChildReady
   frontend.src.hooks.useParentEncoderNavigation.createEncoderController → frontend.src.hooks.useParentEncoderNavigation.removeHighlights
   frontend.src.hooks.useParentEncoderNavigation.createEncoderController → frontend.src.hooks.useParentEncoderNavigation.getInteractiveItems
   frontend.src.hooks.useParentEncoderNavigation.createEncoderController → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
@@ -7308,31 +7389,32 @@ EDGES:
   frontend.src.hooks.useParentEncoderNavigation.onMessage → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
   frontend.src.hooks.useParentEncoderNavigation.onWheel → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
   frontend.src.hooks.useParentEncoderNavigation.raw → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
-  frontend.src.pages.MapEditor.fillMissingFields → frontend.src.pages.MapEditor.isPlainObject
-  frontend.src.pages.MapEditor.fillMissingFields → frontend.src.pages.MapEditor.cloneValue
-  frontend.src.pages.MapEditor.ensureRequiredDefaultMappings → frontend.src.pages.MapEditor.ensureMapShape
-  frontend.src.pages.MapEditor.ensureRequiredDefaultMappings → frontend.src.pages.MapEditor.fillMissingFields
-  frontend.src.pages.MapEditor.ensureRequiredDefaultMappings → frontend.src.pages.MapEditor.isPlainObject
-  frontend.src.pages.MapEditor.defaultMotor2 → frontend.src.pages.MapEditor.fillMissingFields
-  frontend.src.pages.MapEditor.defaultMotor2 → frontend.src.pages.MapEditor.isPlainObject
-  frontend.src.pages.MapEditor.defaultParam → frontend.src.pages.MapEditor.fillMissingFields
-  frontend.src.pages.MapEditor.defaultParam → frontend.src.pages.MapEditor.isPlainObject
-  frontend.src.pages.MapEditor.readIntegrationMeta → frontend.src.pages.MapEditor.firstBindingFromObjectMapping
-  frontend.src.pages.MapEditor.ensureMapShape → frontend.src.pages.MapEditor.isPlainObject
-  frontend.src.pages.MapEditor.src → frontend.src.pages.MapEditor.isPlainObject
-  frontend.src.pages.MapEditor.toPrettyJson → frontend.src.pages.MapEditor.ensureMapShape
-  frontend.src.pages.MapEditor.createInitialEditorState → frontend.src.pages.MapEditor.ensureRequiredDefaultMappings
-  frontend.src.pages.MapEditor.createInitialEditorState → frontend.src.pages.MapEditor.cloneDefaultMap
-  frontend.src.pages.MapEditor.createInitialEditorState → frontend.src.pages.MapEditor.toPrettyJson
-  frontend.src.pages.MapEditor.onJsonChange → frontend.src.pages.MapEditor.isPlainObject
-  frontend.src.pages.MapEditor.onJsonChange → frontend.src.pages.MapEditor.ensureMapShape
-  frontend.src.pages.MapEditor.parsed → frontend.src.pages.MapEditor.isPlainObject
-  frontend.src.pages.MapEditor.applyMapMutation → frontend.src.pages.MapEditor.ensureMapShape
-  frontend.src.pages.MapEditor.applyMapMutation → frontend.src.pages.MapEditor.toPrettyJson
-  frontend.src.pages.MapEditor.addObject → frontend.src.pages.MapEditor.applyMapMutation
-  frontend.src.pages.MapEditor.name → frontend.src.pages.MapEditor.applyMapMutation
-  frontend.src.pages.MapEditor.addParam → frontend.src.pages.MapEditor.applyMapMutation
-  frontend.src.pages.MapEditor.editParamConversionField → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.HardwareRestart.loadPlan → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
+  frontend.src.pages.HardwareRestart.serialPort → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
+  frontend.src.pages.HardwareRestart.serialPort → frontend.src.pages.HardwareRestart.loadPlan
+  frontend.src.pages.HardwareRestart.startOqlosAndRefreshPlan → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
+  frontend.src.pages.HardwareRestart.startOqlosAndRefreshPlan → frontend.src.pages.HardwareRestart.loadPlan
+  frontend.src.pages.HardwareRestart.port → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
+  frontend.src.pages.HardwareRestart.port → frontend.src.pages.HardwareRestart.loadPlan
+  frontend.src.pages.HardwareRestart.steps → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
+  frontend.src.pages.HardwareRestart.currentStep → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
+  frontend.src.pages.HardwareRestart.isSeparateAdapters → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
+  frontend.src.pages.HardwareRestart.isConfigureStep → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
+  frontend.src.pages.HardwareRestart.requiresStepConfirm → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
+  frontend.src.pages.HardwareRestart.confirmLabelKey → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
+  frontend.src.pages.HardwareRestart.confirmErrorKey → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
+  frontend.src.pages.HardwareRestart.canRunCurrentStep → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
+  frontend.src.pages.HardwareRestart.releaseRs485Port → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
+  frontend.src.pages.HardwareRestart.runCurrentStep → frontend.src.pages.HardwareRestart.timestamp
+  frontend.src.pages.HardwareRestart.runCurrentStep → frontend.src.pages.HardwareRestart.log
+  frontend.src.pages.HardwareRestart.log → frontend.src.pages.HardwareRestart.timestamp
+  frontend.src.pages.HardwareRestart.message → frontend.src.pages.HardwareRestart.log
+  frontend.src.pages.HardwareRestart.optionalStep → frontend.src.pages.HardwareRestart.log
+  frontend.src.pages.HardwareRestart.advanceOk → frontend.src.pages.HardwareRestart.log
+  frontend.src.pages.HardwareRestart.optionalSkip → frontend.src.pages.HardwareRestart.log
+  frontend.src.pages.HardwareRestart.skipPumpOffStep → frontend.src.pages.HardwareRestart.timestamp
+  frontend.src.pages.HardwareRestart.skipOptionalStep → frontend.src.pages.HardwareRestart.timestamp
+  frontend.src.pages.HardwareDemo.ensureAudioCtx → frontend.src.pages.HardwareDemo.appendLog
 ```
 
 ## API Stubs

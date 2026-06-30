@@ -65,13 +65,14 @@ async def hardware_diagnosis_repair_v3() -> dict[str, Any]:
 
 @sub_router.get("/modbus/waveshare-diagnose")
 async def hardware_modbus_waveshare_diagnose_v3(exclusive: bool = False) -> dict[str, Any]:
-    from oqlos.api import hardware as hw
-    return await hw.hardware_modbus_waveshare_diagnose()
+    from oqlos.api import hardware_modbus_routes as modbus_hw
+    return await modbus_hw.hardware_modbus_waveshare_diagnose()
 
 
 @sub_router.get("/modbus/wizard/plan")
 async def hardware_modbus_wizard_plan_v3() -> dict[str, Any]:
-    return await _hardware_v1_call("hardware_modbus_wizard_plan")
+    from oqlos.api import hardware_modbus_routes as modbus_hw
+    return await modbus_hw.hardware_modbus_wizard_plan()
 
 
 @sub_router.get("/stack/snapshot")

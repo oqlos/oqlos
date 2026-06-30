@@ -14,6 +14,8 @@ project_file('frontend/src/api/hardware-tic249-status.js', 36, 'javascript').
 project_file('frontend/src/api/hardwareApi.js', 257, 'javascript').
 project_file('frontend/src/api/wsClient.js', 139, 'javascript').
 project_file('frontend/src/context/app-config-document.js', 27, 'javascript').
+project_file('frontend/src/hooks/useMapEditorHardwareEvents.js', 62, 'javascript').
+project_file('frontend/src/hooks/useMapEditorSidebarAutoCollapse.js', 30, 'javascript').
 project_file('frontend/src/hooks/useParentEncoderNavigation.js', 157, 'javascript').
 project_file('frontend/src/hooks/useRailHoverPreview.js', 85, 'javascript').
 project_file('frontend/src/hooks/useUrlConfig.js', 86, 'javascript').
@@ -23,6 +25,7 @@ project_file('frontend/src/i18n/hardware-demo-extra-translations.js', 184, 'java
 project_file('frontend/src/i18n/hardware-status-log-translations.js', 82, 'javascript').
 project_file('frontend/src/i18n/hardware-status-panel-translations.js', 310, 'javascript').
 project_file('frontend/src/i18n/hardware-status-presets-translations.js', 796, 'javascript').
+project_file('frontend/src/pages/mapEditorConstants.js', 42, 'javascript').
 project_file('frontend/src/pages/mapEditorDefaultMap.js', 1764, 'javascript').
 project_file('frontend/src/styles/global.css', 2076, 'css').
 project_file('frontend/src/utils/collapse-toggle-bridge.js', 47, 'javascript').
@@ -39,6 +42,13 @@ project_file('frontend/src/utils/hardwareEventStream.js', 48, 'javascript').
 project_file('frontend/src/utils/hui-shell-key.js', 39, 'javascript').
 project_file('frontend/src/utils/mapEditorFuncHardwareSummary.js', 81, 'javascript').
 project_file('frontend/src/utils/mapEditorFuncHardwareSummary.test.js', 55, 'javascript').
+project_file('frontend/src/utils/mapEditorIntegrationMeta.js', 100, 'javascript').
+project_file('frontend/src/utils/mapEditorIntegrationMeta.test.js', 44, 'javascript').
+project_file('frontend/src/utils/mapEditorMapShape.js', 59, 'javascript').
+project_file('frontend/src/utils/mapEditorModel.js', 62, 'javascript').
+project_file('frontend/src/utils/mapEditorModel.test.js', 33, 'javascript').
+project_file('frontend/src/utils/mapEditorTic249.js', 8, 'javascript').
+project_file('frontend/src/utils/mapEditorTic249.test.js', 14, 'javascript').
 project_file('frontend/src/utils/parentUrlBridge.js', 40, 'javascript').
 project_file('frontend/src/utils/rbac.policy.js', 119, 'javascript').
 project_file('frontend/src/utils/url-embed-config.js', 194, 'javascript').
@@ -55,13 +65,15 @@ project_file('oqlos/api/_hw3_peripheral.py', 134, 'python').
 project_file('oqlos/api/_hw3_system.py', 134, 'python').
 project_file('oqlos/api/editor.py', 142, 'python').
 project_file('oqlos/api/execution.py', 360, 'python').
-project_file('oqlos/api/hardware.py', 2267, 'python').
+project_file('oqlos/api/hardware.py', 2221, 'python').
 project_file('oqlos/api/hardware_events.py', 136, 'python').
+project_file('oqlos/api/hardware_gateway.py', 23, 'python').
+project_file('oqlos/api/hardware_hui.py', 62, 'python').
 project_file('oqlos/api/hardware_mapping_contract.py', 90, 'python').
 project_file('oqlos/api/hardware_mapping_store.py', 153, 'python').
 project_file('oqlos/api/hardware_v3.py', 61, 'python').
 project_file('oqlos/api/logs.py', 46, 'python').
-project_file('oqlos/api/main.py', 371, 'python').
+project_file('oqlos/api/main.py', 384, 'python').
 project_file('oqlos/api/oql_mqtt.py', 152, 'python').
 project_file('oqlos/api/peripherals.py', 71, 'python').
 project_file('oqlos/api/plugins.py', 182, 'python').
@@ -231,10 +243,11 @@ project_file('tests/firmware/test_hardware_discovery.py', 32, 'python').
 project_file('tests/firmware/test_hardware_doctor.py', 287, 'python').
 project_file('tests/firmware/test_hardware_health.py', 44, 'python').
 project_file('tests/firmware/test_hardware_health_http.py', 59, 'python').
+project_file('tests/firmware/test_hardware_hui_routes.py', 44, 'python').
 project_file('tests/firmware/test_hardware_identify.py', 210, 'python').
 project_file('tests/firmware/test_hardware_modbus_wizard.py', 326, 'python').
 project_file('tests/firmware/test_hardware_stack_snapshot.py', 46, 'python').
-project_file('tests/firmware/test_hardware_v3_compat.py', 98, 'python').
+project_file('tests/firmware/test_hardware_v3_compat.py', 106, 'python').
 project_file('tests/firmware/test_hui_actions.py', 93, 'python').
 project_file('tests/firmware/test_hui_scenario.py', 12, 'python').
 project_file('tests/firmware/test_lung_integration.py', 282, 'python').
@@ -366,7 +379,7 @@ python_function('oqlos/api/hardware.py', '_needs_live_scan', 1, 3, 2).
 python_function('oqlos/api/hardware.py', '_unhealthy_plugin_ids', 1, 3, 2).
 python_function('oqlos/api/hardware.py', '_modbus_health_is_no_response', 1, 5, 2).
 python_function('oqlos/api/hardware.py', '_probe_selected_hardware', 1, 2, 3).
-python_function('oqlos/api/hardware.py', '_modbus_preflight_report', 0, 5, 4).
+python_function('oqlos/api/hardware.py', '_modbus_preflight_report', 0, 5, 5).
 python_function('oqlos/api/hardware.py', '_modbus_repair_guidance', 1, 3, 1).
 python_function('oqlos/api/hardware.py', '_parse_csv_ints', 2, 8, 6).
 python_function('oqlos/api/hardware.py', '_modbus_io_device_ids', 0, 2, 2).
@@ -397,8 +410,6 @@ python_function('oqlos/api/hardware.py', '_wizard_apply_uart_write', 9, 10, 7).
 python_function('oqlos/api/hardware.py', '_wizard_verify_config', 5, 7, 6).
 python_function('oqlos/api/hardware.py', '_wizard_build_result', 8, 5, 1).
 python_function('oqlos/api/hardware.py', '_modbus_wizard_program_isolated', 0, 6, 14).
-python_function('oqlos/api/hardware.py', 'set_hardware_gateway', 1, 1, 0).
-python_function('oqlos/api/hardware.py', '_gw', 0, 2, 1).
 python_function('oqlos/api/hardware.py', '_hardware_health_overall_ok', 1, 6, 3).
 python_function('oqlos/api/hardware.py', 'hardware_health', 0, 4, 6).
 python_function('oqlos/api/hardware.py', '_determine_scan_set', 2, 11, 7).
@@ -406,14 +417,6 @@ python_function('oqlos/api/hardware.py', '_map_adapter_identify_status', 3, 10, 
 python_function('oqlos/api/hardware.py', 'hardware_identify', 1, 8, 18).
 python_function('oqlos/api/hardware.py', 'set_valve', 2, 1, 3).
 python_function('oqlos/api/hardware.py', 'set_pump', 1, 1, 3).
-python_function('oqlos/api/hardware.py', 'hui_actions', 0, 1, 2).
-python_function('oqlos/api/hardware.py', 'hui_shutdown', 0, 1, 3).
-python_function('oqlos/api/hardware.py', '_raise_if_hui_failed', 1, 2, 2).
-python_function('oqlos/api/hardware.py', '_start_hui_action', 1, 1, 3).
-python_function('oqlos/api/hardware.py', 'hui_hold_start', 1, 1, 2).
-python_function('oqlos/api/hardware.py', 'hui_hold_stop', 1, 1, 3).
-python_function('oqlos/api/hardware.py', 'hui_al_start', 0, 1, 2).
-python_function('oqlos/api/hardware.py', 'hui_al_stop', 0, 1, 3).
 python_function('oqlos/api/hardware.py', 'read_sensor', 1, 4, 6).
 python_function('oqlos/api/hardware.py', '_read_cpu_temperature', 0, 8, 12).
 python_function('oqlos/api/hardware.py', 'hardware_temperature', 0, 2, 3).
@@ -446,6 +449,17 @@ python_function('oqlos/api/hardware_events.py', 'clear_hardware_command_events',
 python_function('oqlos/api/hardware_events.py', 'get_hardware_command_event_store_path', 0, 1, 1).
 python_function('oqlos/api/hardware_events.py', 'subscribe_hardware_command_events', 0, 1, 4).
 python_function('oqlos/api/hardware_events.py', 'unsubscribe_hardware_command_events', 1, 1, 1).
+python_function('oqlos/api/hardware_gateway.py', 'set_hardware_gateway', 1, 1, 0).
+python_function('oqlos/api/hardware_gateway.py', 'get_hardware_gateway', 0, 2, 1).
+python_function('oqlos/api/hardware_gateway.py', 'try_get_hardware_gateway', 0, 1, 0).
+python_function('oqlos/api/hardware_hui.py', 'raise_if_hui_failed', 1, 2, 2).
+python_function('oqlos/api/hardware_hui.py', 'start_hui_action', 1, 1, 3).
+python_function('oqlos/api/hardware_hui.py', 'hui_actions', 0, 1, 2).
+python_function('oqlos/api/hardware_hui.py', 'hui_shutdown', 0, 1, 3).
+python_function('oqlos/api/hardware_hui.py', 'hui_hold_start', 1, 1, 2).
+python_function('oqlos/api/hardware_hui.py', 'hui_hold_stop', 1, 1, 3).
+python_function('oqlos/api/hardware_hui.py', 'hui_al_start', 0, 1, 2).
+python_function('oqlos/api/hardware_hui.py', 'hui_al_stop', 0, 1, 3).
 python_function('oqlos/api/hardware_mapping_contract.py', '_is_int', 1, 2, 1).
 python_function('oqlos/api/hardware_mapping_contract.py', '_validate_motor2', 2, 19, 7).
 python_function('oqlos/api/hardware_mapping_contract.py', 'validate_mapping_contract', 1, 6, 5).
@@ -472,6 +486,8 @@ python_function('oqlos/api/main.py', 'hardware_status_page', 0, 1, 2).
 python_function('oqlos/api/main.py', 'hardware_demo_alias', 1, 1, 3).
 python_function('oqlos/api/main.py', 'hardware_restart_alias', 1, 1, 3).
 python_function('oqlos/api/main.py', 'map_editor_alias', 1, 1, 3).
+python_function('oqlos/api/main.py', 'scenario_files_alias', 1, 1, 3).
+python_function('oqlos/api/main.py', 'func_editor_alias', 1, 1, 3).
 python_function('oqlos/api/main.py', 'hardware_ui_spa', 1, 5, 7).
 python_function('oqlos/api/main.py', 'health_check', 0, 1, 1).
 python_function('oqlos/api/main.py', 'status', 0, 1, 1).
@@ -1397,6 +1413,9 @@ python_function('tests/firmware/test_hardware_health_http.py', 'test_hardware_he
 python_function('tests/firmware/test_hardware_health_http.py', 'test_hardware_health_overall_ok_ignores_init_summary', 0, 2, 1).
 python_function('tests/firmware/test_hardware_health_http.py', 'test_hardware_health_overall_ok_false_when_any_plugin_errors', 0, 2, 1).
 python_function('tests/firmware/test_hardware_health_http.py', 'test_hardware_health_endpoint_returns_200_when_degraded', 1, 5, 6).
+python_function('tests/firmware/test_hardware_hui_routes.py', 'test_hardware_router_includes_hui_paths', 0, 4, 0).
+python_function('tests/firmware/test_hardware_hui_routes.py', 'test_raise_if_hui_failed_raises_on_error_payload', 0, 2, 2).
+python_function('tests/firmware/test_hardware_hui_routes.py', 'test_hui_hold_start_uses_gateway', 1, 3, 5).
 python_function('tests/firmware/test_hardware_identify.py', 'test_collect_hardware_diagnostics_exposes_ports', 1, 5, 2).
 python_function('tests/firmware/test_hardware_identify.py', 'test_platform_reports_modbus_adc_as_analog_input', 1, 5, 2).
 python_function('tests/firmware/test_hardware_identify.py', 'test_hardware_identify_includes_diagnostics', 1, 12, 8).
@@ -1420,7 +1439,7 @@ python_function('tests/firmware/test_hardware_v3_compat.py', '_client', 0, 1, 3)
 python_function('tests/firmware/test_hardware_v3_compat.py', 'test_hardware_v3_mapping_round_trip', 2, 9, 7).
 python_function('tests/firmware/test_hardware_v3_compat.py', 'test_hardware_v3_mapping_rejects_invalid_contract', 2, 3, 4).
 python_function('tests/firmware/test_hardware_v3_compat.py', 'test_hardware_v3_cqrs_events_record_diagnostic_failure', 1, 7, 6).
-python_function('tests/firmware/test_hardware_v3_compat.py', 'test_hardware_ui_aliases_and_status_page_are_served', 0, 8, 2).
+python_function('tests/firmware/test_hardware_v3_compat.py', 'test_hardware_ui_aliases_and_status_page_are_served', 0, 12, 2).
 python_function('tests/firmware/test_hui_actions.py', 'run', 1, 1, 1).
 python_function('tests/firmware/test_hui_actions.py', 'test_hui_hold_profile_runs_inside_oqlos', 1, 3, 4).
 python_function('tests/firmware/test_hui_actions.py', 'test_hui_artificial_lung_uses_tic249_plugin_recipe', 0, 11, 4).
@@ -2235,6 +2254,8 @@ python_method('TestDslParserRuntime', 'test_accepts_pompa_with_suffix_as_real_pu
 python_method('TestDslParserRuntime', 'test_accepts_set_pompa_alias', 0, 6, 2).
 python_class('tests/firmware/test_hardware_health_http.py', '_FakeGateway').
 python_method('_FakeGateway', 'health', 0, 1, 0).
+python_class('tests/firmware/test_hardware_hui_routes.py', '_FakeGateway').
+python_method('_FakeGateway', 'hold', 1, 1, 0).
 python_class('tests/firmware/test_hardware_identify.py', '_FakeGateway').
 python_method('_FakeGateway', 'health', 0, 1, 0).
 python_class('tests/firmware/test_hardware_identify.py', '_UnavailableAdcGateway').

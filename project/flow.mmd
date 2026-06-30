@@ -1,5 +1,5 @@
 flowchart TD
-%% generated in 0.03s
+%% generated in 0.04s
 
     %% Entry points (blue)
     classDef entry fill:#4dabf7,stroke:#1971c2,color:#fff
@@ -11,16 +11,16 @@ flowchart TD
         frontend__src__hooks__useWsStatus__client["client"]
         frontend__src__hooks__useWsStatus__onOpen["onOpen"]
         frontend__src__hooks__useWsStatus__onClose["onClose"]
-        frontend__src__hooks__useUrlConfig__useUrlConfig["useUrlConfig"]
-        frontend__src__hooks__useUrlConfig__onPop["onPop"]
-        frontend__src__hooks__useUrlConfig__onMessage["onMessage"]
-        frontend__src__hooks__useUrlConfig__envelope["envelope"]
-        frontend__src__hooks__useUrlConfig__patch["patch"]
         frontend__src__hooks__useParentEncoderNavigation__style["style"]
         frontend__src__hooks__useParentEncoderNavigation__createEncoderController{{createEncoderController CC=21}}
         frontend__src__hooks__useParentEncoderNavigation__parentEncoderActive["parentEncoderActive"]
         frontend__src__hooks__useParentEncoderNavigation__handleEncoderCommand{{handleEncoderCommand CC=15}}
-        ...["+1347 more"]
+        frontend__src__hooks__useParentEncoderNavigation__items["items"]
+        frontend__src__hooks__useParentEncoderNavigation__delta["delta"]
+        frontend__src__hooks__useParentEncoderNavigation__target["target"]
+        frontend__src__hooks__useParentEncoderNavigation__onKeyDown["onKeyDown"]
+        frontend__src__hooks__useParentEncoderNavigation__useParentEncoderNavigation["useParentEncoderNavigation"]
+        ...["+1366 more"]
     end
 
     subgraph Exporters
@@ -29,4 +29,4 @@ flowchart TD
         oqlos__api___hw3_mapping__hardware_mapping_export_v3["hardware_mapping_export_v3"]
     end
 
-    class setup_hardware_and_run_oql__main,frontend__src__main__LocalizedApp,frontend__src__hooks__useWsStatus__useWsStatus,frontend__src__hooks__useWsStatus__client,frontend__src__hooks__useWsStatus__onOpen,frontend__src__hooks__useWsStatus__onClose,frontend__src__hooks__useUrlConfig__useUrlConfig,frontend__src__hooks__useUrlConfig__onPop,frontend__src__hooks__useUrlConfig__onMessage,frontend__src__hooks__useUrlConfig__envelope entry
+    class setup_hardware_and_run_oql__main,frontend__src__main__LocalizedApp,frontend__src__hooks__useWsStatus__useWsStatus,frontend__src__hooks__useWsStatus__client,frontend__src__hooks__useWsStatus__onOpen,frontend__src__hooks__useWsStatus__onClose,frontend__src__hooks__useParentEncoderNavigation__style,frontend__src__hooks__useParentEncoderNavigation__parentEncoderActive,frontend__src__hooks__useParentEncoderNavigation__items,frontend__src__hooks__useParentEncoderNavigation__delta entry

@@ -1,10 +1,10 @@
-# oqlos | 274f 50308L | python:222,javascript:37,shell:9,typescript:3,css:2,less:1 | 2026-06-30
-# stats: 1329 func | 196 cls | 274 mod | CC̄=4.3 | critical:117 | cycles:0
+# oqlos | 287f 50866L | python:225,javascript:47,shell:9,typescript:3,css:2,less:1 | 2026-06-30
+# stats: 1335 func | 197 cls | 287 mod | CC̄=4.3 | critical:118 | cycles:0
 # alerts[5]: CC _validate_motor2=19; CC _run_diagnostic_command=19; CC _resolve_func_steps=14; CC _probe_i2c_ads1115=14; CC exec_action_loop_block=14
 # hotspots[5]: _resolve fan=23; build_diagnosis_report fan=19; _build_waveshare_diagnose_report fan=18; hardware_identify fan=18; _handle_start fan=18
 # evolution: baseline
 # Keys: M=modules, D=details, i=imports, e=exports, c=classes, f=functions, m=methods
-M[274]:
+M[287]:
   app.doql.css,165
   app.doql.less,316
   examples/curl-quickstart.sh,75
@@ -17,6 +17,8 @@ M[274]:
   frontend/src/api/hardwareApi.js,257
   frontend/src/api/wsClient.js,139
   frontend/src/context/app-config-document.js,27
+  frontend/src/hooks/useMapEditorHardwareEvents.js,62
+  frontend/src/hooks/useMapEditorSidebarAutoCollapse.js,30
   frontend/src/hooks/useParentEncoderNavigation.js,157
   frontend/src/hooks/useRailHoverPreview.js,85
   frontend/src/hooks/useUrlConfig.js,86
@@ -26,6 +28,7 @@ M[274]:
   frontend/src/i18n/hardware-status-log-translations.js,82
   frontend/src/i18n/hardware-status-panel-translations.js,310
   frontend/src/i18n/hardware-status-presets-translations.js,796
+  frontend/src/pages/mapEditorConstants.js,42
   frontend/src/pages/mapEditorDefaultMap.js,1764
   frontend/src/styles/global.css,2076
   frontend/src/utils/collapse-toggle-bridge.js,47
@@ -42,6 +45,13 @@ M[274]:
   frontend/src/utils/hui-shell-key.js,39
   frontend/src/utils/mapEditorFuncHardwareSummary.js,81
   frontend/src/utils/mapEditorFuncHardwareSummary.test.js,55
+  frontend/src/utils/mapEditorIntegrationMeta.js,100
+  frontend/src/utils/mapEditorIntegrationMeta.test.js,44
+  frontend/src/utils/mapEditorMapShape.js,59
+  frontend/src/utils/mapEditorModel.js,62
+  frontend/src/utils/mapEditorModel.test.js,33
+  frontend/src/utils/mapEditorTic249.js,8
+  frontend/src/utils/mapEditorTic249.test.js,14
   frontend/src/utils/parentUrlBridge.js,40
   frontend/src/utils/rbac.policy.js,119
   frontend/src/utils/url-embed-config.js,194
@@ -58,13 +68,15 @@ M[274]:
   oqlos/api/_hw3_system.py,134
   oqlos/api/editor.py,142
   oqlos/api/execution.py,360
-  oqlos/api/hardware.py,2267
+  oqlos/api/hardware.py,2221
   oqlos/api/hardware_events.py,136
+  oqlos/api/hardware_gateway.py,23
+  oqlos/api/hardware_hui.py,62
   oqlos/api/hardware_mapping_contract.py,90
   oqlos/api/hardware_mapping_store.py,153
   oqlos/api/hardware_v3.py,61
   oqlos/api/logs.py,46
-  oqlos/api/main.py,371
+  oqlos/api/main.py,384
   oqlos/api/oql_mqtt.py,152
   oqlos/api/peripherals.py,71
   oqlos/api/plugins.py,182
@@ -234,10 +246,11 @@ M[274]:
   tests/firmware/test_hardware_doctor.py,287
   tests/firmware/test_hardware_health.py,44
   tests/firmware/test_hardware_health_http.py,59
+  tests/firmware/test_hardware_hui_routes.py,44
   tests/firmware/test_hardware_identify.py,210
   tests/firmware/test_hardware_modbus_wizard.py,326
   tests/firmware/test_hardware_stack_snapshot.py,46
-  tests/firmware/test_hardware_v3_compat.py,98
+  tests/firmware/test_hardware_v3_compat.py,106
   tests/firmware/test_hui_actions.py,93
   tests/firmware/test_hui_scenario.py,12
   tests/firmware/test_lung_integration.py,282
@@ -372,7 +385,7 @@ D:
     execution_stream(scenario)
     execution_logs_stream(scenario)
   oqlos/api/hardware.py:
-    e: _read_text_file,_board_model,_is_raspberry_pi_host,_os_release,_in_container,_selected_hardware_platform,_selected_piadc_platform,_classify_platform_type,_detect_runtime_platform,_local_ads1115_probe_allowed,_scan_usb_devices,_probe_tic249,_probe_dri0050,_probe_i2c_ads1115,_probe_waveshare_rtu,_probe_configured_waveshare_rtu,_probe_all_hardware,_collect_hardware_diagnostics,_is_plugin_compatible,_needs_live_scan,_unhealthy_plugin_ids,_modbus_health_is_no_response,_probe_selected_hardware,_modbus_preflight_report,_modbus_repair_guidance,_parse_csv_ints,_modbus_io_device_ids,_modbus_topology_mode,_apply_modbus_topology,_modbus_runtime_serial_ports,_diagnose_shared_bus_matrix,_merge_unique_text_list,_merge_waveshare_scan_dicts,_read_output_control_modes,_modbus_plugins_healthy,_modbus_health_serial_stale,_build_waveshare_serial_stale_report,_build_waveshare_from_plugin_health,_probe_waveshare_separate,_probe_waveshare_shared_bus,_read_waveshare_io_slave_config,_read_waveshare_adc_slave_config,_resolve_waveshare_ports,_split_hits_by_role,_build_waveshare_diagnose_report,_modbus_wizard_target_ids,_modbus_wizard_plan,_collect_wizard_serial_candidates,_modbus_wizard_probe_isolated,_wizard_check_already_configured,_wizard_apply_uart_write,_wizard_verify_config,_wizard_build_result,_modbus_wizard_program_isolated,set_hardware_gateway,_gw,_hardware_health_overall_ok,hardware_health,_determine_scan_set,_map_adapter_identify_status,hardware_identify,set_valve,set_pump,hui_actions,hui_shutdown,_raise_if_hui_failed,_start_hui_action,hui_hold_start,hui_hold_stop,hui_al_start,hui_al_stop,read_sensor,_read_cpu_temperature,hardware_temperature,read_sensors_batch,hardware_diagnose,hardware_modbus_waveshare_diagnose,hardware_stack_snapshot,hardware_diagnosis_route,hardware_recover_route,hardware_modbus_wizard_plan,hardware_modbus_wizard_probe_isolated,hardware_modbus_wizard_program_isolated,read_modbus_adc_raw,set_lung,_lung_state_response,stop_lung,disable_lung,artificial_lung_status,artificial_lung_command,_command_payload,rtc_status,rtc_command
+    e: _read_text_file,_board_model,_is_raspberry_pi_host,_os_release,_in_container,_selected_hardware_platform,_selected_piadc_platform,_classify_platform_type,_detect_runtime_platform,_local_ads1115_probe_allowed,_scan_usb_devices,_probe_tic249,_probe_dri0050,_probe_i2c_ads1115,_probe_waveshare_rtu,_probe_configured_waveshare_rtu,_probe_all_hardware,_collect_hardware_diagnostics,_is_plugin_compatible,_needs_live_scan,_unhealthy_plugin_ids,_modbus_health_is_no_response,_probe_selected_hardware,_modbus_preflight_report,_modbus_repair_guidance,_parse_csv_ints,_modbus_io_device_ids,_modbus_topology_mode,_apply_modbus_topology,_modbus_runtime_serial_ports,_diagnose_shared_bus_matrix,_merge_unique_text_list,_merge_waveshare_scan_dicts,_read_output_control_modes,_modbus_plugins_healthy,_modbus_health_serial_stale,_build_waveshare_serial_stale_report,_build_waveshare_from_plugin_health,_probe_waveshare_separate,_probe_waveshare_shared_bus,_read_waveshare_io_slave_config,_read_waveshare_adc_slave_config,_resolve_waveshare_ports,_split_hits_by_role,_build_waveshare_diagnose_report,_modbus_wizard_target_ids,_modbus_wizard_plan,_collect_wizard_serial_candidates,_modbus_wizard_probe_isolated,_wizard_check_already_configured,_wizard_apply_uart_write,_wizard_verify_config,_wizard_build_result,_modbus_wizard_program_isolated,_hardware_health_overall_ok,hardware_health,_determine_scan_set,_map_adapter_identify_status,hardware_identify,set_valve,set_pump,read_sensor,_read_cpu_temperature,hardware_temperature,read_sensors_batch,hardware_diagnose,hardware_modbus_waveshare_diagnose,hardware_stack_snapshot,hardware_diagnosis_route,hardware_recover_route,hardware_modbus_wizard_plan,hardware_modbus_wizard_probe_isolated,hardware_modbus_wizard_program_isolated,read_modbus_adc_raw,set_lung,_lung_state_response,stop_lung,disable_lung,artificial_lung_status,artificial_lung_command,_command_payload,rtc_status,rtc_command
     _read_text_file(path)
     _board_model()
     _is_raspberry_pi_host()
@@ -427,8 +440,6 @@ D:
     _wizard_verify_config(read_device_config;verify_settings;new_device_id;new_baudrate;line_parity)
     _wizard_build_result(writes;verify;verified;new_device_id;new_baudrate;line_parity;serial_port;verify_error)
     _modbus_wizard_program_isolated()
-    set_hardware_gateway(gw)
-    _gw()
     _hardware_health_overall_ok(payload)
     hardware_health()
     _determine_scan_set(scan_mode;health)
@@ -436,14 +447,6 @@ D:
     hardware_identify(scan)
     set_valve(valve_id;value)
     set_pump(power_pct)
-    hui_actions()
-    hui_shutdown()
-    _raise_if_hui_failed(payload)
-    _start_hui_action(action)
-    hui_hold_start(key)
-    hui_hold_stop(key)
-    hui_al_start()
-    hui_al_stop()
     read_sensor(sensor_id)
     _read_cpu_temperature()
     hardware_temperature()
@@ -478,6 +481,21 @@ D:
     get_hardware_command_event_store_path()
     subscribe_hardware_command_events()
     unsubscribe_hardware_command_events(subscriber_id)
+  oqlos/api/hardware_gateway.py:
+    e: set_hardware_gateway,get_hardware_gateway,try_get_hardware_gateway
+    set_hardware_gateway(gw)
+    get_hardware_gateway()
+    try_get_hardware_gateway()
+  oqlos/api/hardware_hui.py:
+    e: raise_if_hui_failed,start_hui_action,hui_actions,hui_shutdown,hui_hold_start,hui_hold_stop,hui_al_start,hui_al_stop
+    raise_if_hui_failed(payload)
+    start_hui_action(action)
+    hui_actions()
+    hui_shutdown()
+    hui_hold_start(key)
+    hui_hold_stop(key)
+    hui_al_start()
+    hui_al_stop()
   oqlos/api/hardware_mapping_contract.py:
     e: _is_int,_validate_motor2,validate_mapping_contract,MappingContractError
     MappingContractError: __init__(1)
@@ -502,7 +520,7 @@ D:
     get_logs(level;function;module;q;environment;limit;offset)
     get_log_stats()
   oqlos/api/main.py:
-    e: _app_lifespan,_initialize_runtime_dependencies,_start_oql_transport,_stop_oql_transport,index_page,_serve_static_html,editor_page,panel_page,_with_query,hardware_status_page,hardware_demo_alias,hardware_restart_alias,map_editor_alias,hardware_ui_spa,health_check,status,_forward_websocket,hardware_events_websocket_alias,websocket_endpoint,oql_websocket_alias,_parse_server_args,run
+    e: _app_lifespan,_initialize_runtime_dependencies,_start_oql_transport,_stop_oql_transport,index_page,_serve_static_html,editor_page,panel_page,_with_query,hardware_status_page,hardware_demo_alias,hardware_restart_alias,map_editor_alias,scenario_files_alias,func_editor_alias,hardware_ui_spa,health_check,status,_forward_websocket,hardware_events_websocket_alias,websocket_endpoint,oql_websocket_alias,_parse_server_args,run
     _app_lifespan(_)
     _initialize_runtime_dependencies()
     _start_oql_transport()
@@ -516,6 +534,8 @@ D:
     hardware_demo_alias(request)
     hardware_restart_alias(request)
     map_editor_alias(request)
+    scenario_files_alias(request)
+    func_editor_alias(request)
     hardware_ui_spa(full_path)
     health_check()
     status()
@@ -1858,6 +1878,12 @@ D:
     test_hardware_health_overall_ok_ignores_init_summary()
     test_hardware_health_overall_ok_false_when_any_plugin_errors()
     test_hardware_health_endpoint_returns_200_when_degraded(monkeypatch)
+  tests/firmware/test_hardware_hui_routes.py:
+    e: test_hardware_router_includes_hui_paths,test_raise_if_hui_failed_raises_on_error_payload,test_hui_hold_start_uses_gateway,_FakeGateway
+    _FakeGateway: hold(1)
+    test_hardware_router_includes_hui_paths()
+    test_raise_if_hui_failed_raises_on_error_payload()
+    test_hui_hold_start_uses_gateway(monkeypatch)
   tests/firmware/test_hardware_identify.py:
     e: test_collect_hardware_diagnostics_exposes_ports,test_platform_reports_modbus_adc_as_analog_input,test_hardware_identify_includes_diagnostics,test_hardware_identify_default_skips_live_probe,test_read_sensors_batch_reports_unavailable_modbus_without_503,test_hardware_temperature_returns_compatible_payload,test_hardware_diagnose_keeps_sensor_errors_in_payload,test_modbus_adc_raw_reports_unavailable_health_without_404,test_hardware_identify_reports_modbus_timeout_as_adapter_only,_FakeGateway,_UnavailableAdcGateway,_ModbusTimeoutGateway
     _FakeGateway: health(0)

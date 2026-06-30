@@ -31,7 +31,7 @@
 | `_executeConfigureStep` CC=48 | `HardwareRestart.jsx` | → `hardware-restart-wizard-steps.js` |
 | `runApiWithRetry` CC=16 | `HardwareRestart.jsx` | → `hardware-api-retry.js` + testy |
 
-## Faza 3 — Frontend map-editor / config (częściowo)
+## Faza 3 — Frontend map-editor / config (zrobione)
 
 | Ticket / alert | Plik | Akcja |
 |----------------|------|--------|
@@ -39,14 +39,18 @@
 | `AppConfigProvider` CC=44 | `AppConfigProvider.jsx` | → `app-config-document.js`, `useParentEncoderNavigation.js` |
 | `useUrlConfig` CC=18, fan=27 | `useUrlConfig.js` | → `url-embed-config.js` + testy |
 | `useSelectionCollapsePanel` CC=33 | `useSelectionCollapsePanel.js` | → `useRailHoverPreview.js` |
-| `MapEditor.jsx` CC=24, 1490L | god module | podkomponenty (następny) |
-| `MapEditor.jsx` CC=24, 1490L | god module | podkomponenty edytora + i18n |
+| `MapEditor.jsx` CC=24, 1490L | god module | → `mapEditorModel.js`, `mapEditorIntegrationMeta.js`, panele + hooki |
+| — | `mapEditorModel.test.js`, `mapEditorIntegrationMeta.test.js`, `mapEditorTic249.test.js` | `npm run test:unit` |
 
-## Faza 4 — Backend Python (duże moduły)
+## Faza 4 — Backend Python (w toku)
 
 | Moduł | CC | Akcja |
 |-------|-----|--------|
-| `oqlos/api/hardware.py` | 14, 2266L | route groups → `api/hardware_hui.py`, `hardware_runtime.py`, … |
+| `oqlos/api/hardware_modbus_topology.py` | — | porty RS485, device IDs |
+| `oqlos/api/hardware_modbus_waveshare.py` | — | scan matrix + diagnose report |
+| `oqlos/api/hardware_modbus_wizard.py` | — | wizard program/probe/plan |
+| `oqlos/api/hardware_modbus_routes.py` | — | HTTP `/modbus/*` |
+| `oqlos/api/hardware.py` | 14, ~900L | health/identify, diagnosis/recover, RTC |
 | `diagnosis.py` `build_diagnosis_report` | fan=22 | per-device builders |
 | `identify_enrich.py` | god function | per-adapter enrichers |
 | `doctor.py` | 971L | etapy diagnostyki |

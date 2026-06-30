@@ -5,6 +5,31 @@ from __future__ import annotations
 import time
 
 from oqlos.api import hardware as hw
+from oqlos.api import hardware_modbus_topology as topology
+from oqlos.api import hardware_modbus_waveshare as waveshare
+from oqlos.api import hardware_modbus_wizard as wizard
+
+
+def _patch_modbus_ports(monkeypatch, ports: dict):
+    monkeypatch.setattr(topology, "_modbus_runtime_serial_ports", lambda: ports)
+    monkeypatch.setattr(hw, "_modbus_runtime_serial_ports", lambda: ports)
+
+
+def _patch_modbus_io_ids(monkeypatch, ids: list[int]):
+    monkeypatch.setattr(topology, "_modbus_io_device_ids", lambda: ids)
+    monkeypatch.setattr(hw, "_modbus_io_device_ids", lambda: ids)
+
+
+def _patch_modbus_settings(monkeypatch, settings_obj):
+    monkeypatch.setattr(topology, "_settings", settings_obj)
+    monkeypatch.setattr(waveshare, "_settings", settings_obj)
+    monkeypatch.setattr(wizard, "_settings", settings_obj)
+    monkeypatch.setattr(hw, "_settings", settings_obj)
+
+
+def _patch_diagnose_matrix(monkeypatch, fake_matrix):
+    monkeypatch.setattr(waveshare, "_diagnose_shared_bus_matrix", fake_matrix)
+    monkeypatch.setattr(hw, "_diagnose_shared_bus_matrix", fake_matrix)
 
 
 def test_modbus_wizard_program_writes_uart_before_address_change(monkeypatch):
@@ -101,21 +126,21 @@ def test_build_waveshare_diagnose_uses_target_baud_fast_path(monkeypatch):
         calls.append(kwargs)
         return _Report(ok=len(calls) == 1)
 
-    monkeypatch.setattr(hw, "_modbus_runtime_serial_ports", lambda: {
+    _patch_modbus_ports(monkeypatch, {
         "io_serial_port": "/dev/ttyTEST",
         "adc_serial_port": "/dev/ttyTEST",
         "topology": "shared-bus",
     })
-    monkeypatch.setattr(hw, "_diagnose_shared_bus_matrix", _fake_matrix)
-    monkeypatch.setattr(hw, "_modbus_io_device_ids", lambda: [1])
-    monkeypatch.setattr(
-        hw,
-        "_settings",
+    _patch_diagnose_matrix(monkeypatch, _fake_matrix)
+    _patch_modbus_io_ids(monkeypatch, [1])
+    _patch_modbus_settings(
+        monkeypatch,
         type(
             "S",
             (),
             {
                 "modbus_serial_port": "/dev/ttyTEST",
+                "modbus_adc_serial_port": "/dev/ttyTEST",
                 "modbus_baud": 9600,
                 "modbus_parity": "N",
                 "modbus_device_id": 1,
@@ -163,24 +188,24 @@ def test_build_waveshare_diagnose_scans_separate_adapters(monkeypatch):
         role = (required_roles or ["modbus-io"])[0]
         return _Report(True, role, serial_port)
 
-    monkeypatch.setattr(hw, "_modbus_runtime_serial_ports", lambda: {
+    _patch_modbus_ports(monkeypatch, {
         "io_serial_port": "/dev/ttyIO",
         "adc_serial_port": "/dev/ttyADC",
         "topology": "separate-adapters",
     })
-    monkeypatch.setattr(hw, "_diagnose_shared_bus_matrix", _fake_matrix)
+    _patch_diagnose_matrix(monkeypatch, _fake_matrix)
     from pimodbus import provisioning as pim_prov
 
     class _Cfg:
         def to_dict(self):
             return {"device_id": 1, "baudrate": 9600, "parity": "N"}
 
-    monkeypatch.setattr(hw, "_modbus_io_device_ids", lambda: [1])
+    _patch_modbus_io_ids(monkeypatch, [1])
     monkeypatch.setattr(pim_prov, "read_device_config", lambda *_a, **_k: _Cfg())
+    monkeypatch.setattr(waveshare, "_read_output_control_modes", lambda *_a, **_k: {"ok": True})
     monkeypatch.setattr(hw, "_read_output_control_modes", lambda *_a, **_k: {"ok": True})
-    monkeypatch.setattr(
-        hw,
-        "_settings",
+    _patch_modbus_settings(
+        monkeypatch,
         type(
             "S",
             (),
@@ -212,16 +237,15 @@ def test_build_waveshare_skips_matrix_when_plugins_healthy(monkeypatch):
         calls.append(serial_port)
         raise AssertionError("matrix scan should be skipped")
 
-    monkeypatch.setattr(hw, "_diagnose_shared_bus_matrix", _fake_matrix)
-    monkeypatch.setattr(hw, "_modbus_runtime_serial_ports", lambda: {
+    _patch_diagnose_matrix(monkeypatch, _fake_matrix)
+    _patch_modbus_ports(monkeypatch, {
         "io_serial_port": "/dev/ttyIO",
         "adc_serial_port": "/dev/ttyADC",
         "topology": "separate-adapters",
     })
-    monkeypatch.setattr(hw, "_modbus_io_device_ids", lambda: [2])
-    monkeypatch.setattr(
-        hw,
-        "_settings",
+    _patch_modbus_io_ids(monkeypatch, [2])
+    _patch_modbus_settings(
+        monkeypatch,
         type(
             "S",
             (),
@@ -252,21 +276,21 @@ def test_build_waveshare_serial_stale_skips_matrix(monkeypatch):
     def _fake_matrix(**_kwargs):
         raise AssertionError("matrix scan should be skipped for stale serial")
 
-    monkeypatch.setattr(hw, "_diagnose_shared_bus_matrix", _fake_matrix)
-    monkeypatch.setattr(hw, "_modbus_runtime_serial_ports", lambda: {
+    _patch_diagnose_matrix(monkeypatch, _fake_matrix)
+    _patch_modbus_ports(monkeypatch, {
         "io_serial_port": "/dev/ttyIO",
         "adc_serial_port": "/dev/ttyADC",
         "topology": "separate-adapters",
     })
-    monkeypatch.setattr(hw, "_modbus_io_device_ids", lambda: [2])
-    monkeypatch.setattr(
-        hw,
-        "_settings",
+    _patch_modbus_io_ids(monkeypatch, [2])
+    _patch_modbus_settings(
+        monkeypatch,
         type(
             "S",
             (),
             {
                 "modbus_serial_port": "/dev/ttyIO",
+                "modbus_adc_serial_port": "/dev/ttyADC",
                 "modbus_baud": 9600,
                 "modbus_parity": "N",
                 "modbus_device_id": 2,
@@ -304,16 +328,22 @@ def test_modbus_runtime_ports_shared_bus_forced(monkeypatch):
 
 
 def test_modbus_wizard_plan_exposes_per_adapter_ports(monkeypatch):
-    monkeypatch.setattr(hw, "_modbus_runtime_serial_ports", lambda: {
+    _patch_modbus_ports(monkeypatch, {
         "io_serial_port": "/dev/ttyIO",
         "adc_serial_port": "/dev/ttyADC",
         "topology": "separate-adapters",
     })
-    monkeypatch.setattr(hw, "_modbus_io_device_ids", lambda: [1, 2])
-    monkeypatch.setattr(
-        hw,
-        "_settings",
-        type("S", (), {"modbus_baud": 9600, "modbus_parity": "N", "modbus_adc_device_id": 2})(),
+    _patch_modbus_io_ids(monkeypatch, [1, 2])
+    _patch_modbus_settings(
+        monkeypatch,
+        type("S", (), {
+            "modbus_baud": 9600,
+            "modbus_parity": "N",
+            "modbus_device_id": 1,
+            "modbus_adc_device_id": 2,
+            "modbus_serial_port": "/dev/ttyIO",
+            "modbus_adc_serial_port": "/dev/ttyADC",
+        })(),
     )
     plan = hw._modbus_wizard_plan()
     assert plan["topology"] == "separate-adapters"
