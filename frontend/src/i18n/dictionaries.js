@@ -1427,6 +1427,77 @@ const mapEditorByLang = {
   },
 };
 
+const scenarioFilesByLang = {
+  pl: {
+    navTitle: "Pliki scenariuszy",
+    pageTitle: "Edytor plików OQL",
+    subtitle: "Lista plików .oql z katalogu scenariuszy — edycja, zapis i uruchomienie przez API editora.",
+    sidebarTitle: "Scenariusze",
+    save: "Zapisz",
+    execute: "Uruchom",
+    noFileSelected: "Nie wybrano pliku",
+    editorPlaceholder: "Wybierz plik z listy po lewej…",
+    executionTitle: "Uruchomienie",
+    speedLabel: "Prędkość",
+    logEmpty: "Brak wpisów w logu wykonania",
+    statusReady: "Gotowy",
+    statusLoaded: "Załadowano {count} plików",
+    statusLoadError: "Błąd listy plików: {error}",
+    statusLoading: "Wczytywanie pliku…",
+    statusLoadedFile: "Wczytano: {name}",
+    statusFileError: "Błąd wczytywania: {error}",
+    statusSaving: "Zapisywanie…",
+    statusSaved: "Zapisano: {name}",
+    statusSaveError: "Błąd zapisu: {error}",
+    statusExecuting: "Uruchamianie scenariusza…",
+    statusExecutionStarted: "Wykonanie: {id}",
+    statusExecuteError: "Błąd wykonania: {error}",
+    logSaved: "Zapisano plik: {name}",
+    logSaveFailed: "Zapis nieudany: {error}",
+    logStarting: "Start: {name} (prędkość {speed}×)",
+    logExecutionId: "execution_id: {id}",
+    logScenarioName: "Scenariusz: {name}",
+    logExecuteFailed: "Wykonanie nieudane: {error}",
+  },
+  en: {
+    navTitle: "Scenario files",
+    pageTitle: "OQL file editor",
+    subtitle: ".oql files from the scenarios directory — edit, save, and run via the editor API.",
+    sidebarTitle: "Scenarios",
+    save: "Save",
+    execute: "Run",
+    noFileSelected: "No file selected",
+    editorPlaceholder: "Select a file from the list on the left…",
+    executionTitle: "Execution",
+    speedLabel: "Speed",
+    logEmpty: "No execution log entries yet",
+    statusReady: "Ready",
+    statusLoaded: "Loaded {count} files",
+    statusLoadError: "File list error: {error}",
+    statusLoading: "Loading file…",
+    statusLoadedFile: "Loaded: {name}",
+    statusFileError: "Load error: {error}",
+    statusSaving: "Saving…",
+    statusSaved: "Saved: {name}",
+    statusSaveError: "Save error: {error}",
+    statusExecuting: "Starting scenario…",
+    statusExecutionStarted: "Execution: {id}",
+    statusExecuteError: "Execution error: {error}",
+    logSaved: "File saved: {name}",
+    logSaveFailed: "Save failed: {error}",
+    logStarting: "Starting: {name} (speed {speed}×)",
+    logExecutionId: "execution_id: {id}",
+    logScenarioName: "Scenario: {name}",
+    logExecuteFailed: "Execution failed: {error}",
+  },
+};
+
+for (const lang of ["de", "ru", "ua", "cs"]) {
+  if (!scenarioFilesByLang[lang]) {
+    scenarioFilesByLang[lang] = { ...scenarioFilesByLang.en };
+  }
+}
+
 const editorChromeByLang = {
   pl: {
     save: "Zapisz",
@@ -1946,6 +2017,7 @@ export function buildDictionaries() {
       editors: editorsByLang[lang],
       library: libraryFull[lang],
       mapEditor: mapEditorByLang[lang],
+      scenarioFiles: scenarioFilesByLang[lang],
       funcEditor: funcEditorByLang[lang],
       sidebar: sidebarByLang[lang],
       report: reportByLang[lang],

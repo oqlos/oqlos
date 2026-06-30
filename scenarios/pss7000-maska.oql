@@ -1,119 +1,114 @@
 VERSION: 4
+SCENARIO: PSS 7000 — Test przez maskę
+
 GOAL:
-  SET NAME 'Test wizualny aparatu'
-  LOG 'VAL \'wynik\' \'OK/NOK\'
-  SAVE 'wynik'
+  SET NAME 'Test wizualny'
+  LOG 'Inspekcja wizualna aparatu'
+  SAVE wynik-wizualny
+
 GOAL:
   SET NAME 'Podłącz złącza SC'
+  LOG 'Akcja manualna: podłącz złącza SC'
+
 GOAL:
   SET NAME 'Otwórz zawór butli'
-  SET 'zawór butli 300 bar' '1'
+  SET 'zawór-butli-300bar' '1'
+
 GOAL:
   SET NAME 'Załóż maskę'
+  LOG 'Akcja manualna: załóż maskę'
+
 GOAL:
   SET NAME 'Podłącz automat oddechowy'
+  LOG 'Akcja manualna: podłącz automat oddechowy'
+
 GOAL:
-  SET NAME 'Test statyczny średniego ciśnienia'
-  SET 'PUMP' 'off'
-  SET 'timeout' '3 s'
-  SET 'timer' '0 s'
-  IF 'timer' 'timeout' .. 999999
-  IF 'ciśnienie' 'SC' '6.0 bar' .. SC' '8.0 bar'
-    CORRECT 'ciśnienie w zakresie SC' '6.0 bar' .. SC' '8.0 bar'
-    ERROR 'ciśnienie poza zakresem SC' '6.0 bar' .. SC' '8.0 bar'
-  LOG 'VAL \'ciśnienie SC\' \'bar\'
-  SAVE 'ciśnienie SC'
+  SET NAME 'Test statyczny SC'
+  SET 'pump-main' '0'
+  SET WAIT '3 s'
+  SAVE ciśnienie-sc
+  IF 'AI02' '6.0 .. 8.0 bar'
+  CORRECT 'Ciśnienie SC w normie (6-8 bar)'
+  ERROR 'Błąd: ciśnienie SC poza zakresem 6-8 bar'
+
 GOAL:
-  SET NAME 'Zmiana średniego ciśnienia'
-  SET 'PUMP' 'off'
-  SET 'czas pomiaru' '60 s'
-  SET 'timer' '0 s'
-  WAIT 60s
-  IF 'delta' 'ciśnienia SC' '-0.3 bar' .. ciśnienia SC' '0.6 bar'
-    CORRECT 'delta w zakresie ciśnienia SC' '-0.3 bar' .. ciśnienia SC' '0.6 bar'
-    ERROR 'delta poza zakresem ciśnienia SC' '-0.3 bar' .. ciśnienia SC' '0.6 bar'
-  LOG 'VAL \'delta ciśnienia SC\' \'bar\'
-  SAVE 'delta ciśnienia SC'
+  SET NAME 'Zmiana SC'
+  SET 'pump-main' '0'
+  SET WAIT '60 s'
+  SAVE delta-ciśnienia-sc
+  IF 'AI02' '-0.3 .. 0.6 bar'
+  CORRECT 'Delta ciśnienia SC w normie'
+  ERROR 'Błąd: przekroczona delta ciśnienia SC (dopuszczalna -0.3 do 0.6 bar)'
+
 GOAL:
-  SET NAME 'Ciśnienie otwarcia automatu oddechowego'
-  SET 'PUMP' '5l'
-  SET 'zawór BO06' '1'
-  SET 'timeout' '8 s'
-  SET 'timer' '0 s'
-  IF 'timer' 'timeout' .. 999999
-  IF 'ciśnienie' 'NC' '-29.0 mbar' .. NC' '-5.0 mbar'
-    CORRECT 'ciśnienie w zakresie NC' '-29.0 mbar' .. NC' '-5.0 mbar'
-    ERROR 'ciśnienie poza zakresem NC' '-29.0 mbar' .. NC' '-5.0 mbar'
-  LOG 'VAL \'ciśnienie NC\' \'mbar\'
-  SAVE 'ciśnienie NC min'
+  SET NAME 'Ciśnienie otwarcia automatu'
+  SET 'pump-main' '5.0 l/min'
+  SET 'valve-bo06' '1'
+  SET WAIT '8 s'
+  SAVE ciśnienie-nc-min
+  IF 'AI01' '-29.0 .. -5.0 mbar'
+  CORRECT 'Ciśnienie otwarcia automatu w normie'
+  ERROR 'Błąd: ciśnienie otwarcia automatu poza zakresem -29 do -5 mbar'
+
 GOAL:
   SET NAME 'Test nadciśnienia statycznego'
-  SET 'PUMP' 'off'
-  SET 'timeout' '10 s'
-  SET 'timer' '0 s'
-  IF 'timer' 'timeout' .. 999999
-  IF 'nadciśnienie' '2.0 mbar' .. '3.9 mbar'
-    CORRECT 'nadciśnienie' w zakresie '2.0 mbar' .. '3.9 mbar'
-    ERROR 'nadciśnienie' poza zakresem '2.0 mbar' .. '3.9 mbar'
-  LOG 'VAL \'nadciśnienie\' \'mbar\'
-  SAVE 'nadciśnienie'
+  SET 'pump-main' '0'
+  SET WAIT '10 s'
+  SAVE nadciśnienie
+  IF 'nadcisnienie' '2.0 .. 3.9 mbar'
+  CORRECT 'Nadciśnienie statyczne w normie (2.0-3.9 mbar)'
+  ERROR 'Błąd: nadciśnienie poza zakresem 2.0-3.9 mbar'
+
 GOAL:
   SET NAME 'Zamknij zawór butli'
-  SET 'zawór butli 300 bar' '0'
+  SET 'zawór-butli-300bar' '0'
+
 GOAL:
-  SET NAME 'Test szczelności układu WC'
-  SET 'PUMP' 'off'
-  SET 'czas obserwacji' '5 s'
-  SET 'timer' '0 s'
-  WAIT 5s
+  SET NAME 'Test szczelności WC'
+  SET 'pump-main' '0'
+  SET WAIT '5 s'
 GOAL:
-  SET NAME 'Kontrola spadku ciśnienia'
-  SET 'czas pomiaru' '60 s'
-  SET 'timer' '0 s'
-  WAIT 60s
-  SAVE 'czas pomiaru'
+  SET NAME 'Kontrola spadku WC'
+  SET WAIT '60 s'
+  SAVE czas-pomiaru
+
 GOAL:
   SET NAME 'Test sygnału akustycznego'
-  SET 'PUMP' '5l'
-  SET 'zawór BO06' '1'
-  IF 'ciśnienie' 'NC' '0.0 mbar' .. ∞'
-    CORRECT 'ciśnienie w zakresie NC' '0.0 mbar' .. ∞'
-    ERROR 'ciśnienie poza zakresem NC' '0.0 mbar' .. ∞'
-  LOG 'VAL \'ciśnienie NC\' \'mbar\'
-  SAVE 'wynik sygnału'
+  SET 'pump-main' '5.0 l/min'
+  SET 'valve-bo06' '1'
+  SET WAIT '2 s'
+  SAVE wynik-sygnału
+  IF 'AI01' '0.0 .. 1.0 mbar'
+  CORRECT 'Sygnał akustyczny OK'
+  ERROR 'Błąd: sygnał akustyczny poza zakresem'
+
 GOAL:
   SET NAME 'Wyłącz automat oddechowy'
-  SET 'automat oddechowy' 'off'
+  SET 'automat-oddechowy' '0'
+
 GOAL:
   SET NAME 'Wytworzenie podciśnienia'
-  SET 'PUMP' '5l'
-  SET 'zawór BO06' '1'
-  SET 'timeout' '20 s'
-  SET 'timer' '0 s'
-  IF 'timer' 'timeout' .. 999999
-  IF 'ciśnienie' 'NC' '-10.0 mbar' .. NC' '10.0 mbar'
-    CORRECT 'ciśnienie w zakresie NC' '-10.0 mbar' .. NC' '10.0 mbar'
-    ERROR 'ciśnienie poza zakresem NC' '-10.0 mbar' .. NC' '10.0 mbar'
-  LOG 'VAL \'ciśnienie NC\' \'mbar\'
+  SET 'pump-main' '5.0 l/min'
+  SET 'valve-bo06' '1'
+  SET WAIT '20 s'
+  IF 'AI01' '-10.0 .. 10.0 mbar'
+  CORRECT 'Podciśnienie w normie (-10 do 10 mbar)'
+  ERROR 'Błąd: podciśnienie poza zakresem -10 do 10 mbar'
+
 GOAL:
-  SET NAME 'Test szczelności automatu - pomiar początkowy'
-  SET 'PUMP' 'off'
-  SET 'zawór BO04' '1'
-  SET 'timeout' '15 s'
-  SET 'timer' '0 s'
-  IF 'timer' 'timeout' .. 999999
-  IF 'ciśnienie' '-∞ .. NC początkowe' '-7.5 mbar'
-    CORRECT 'ciśnienie w zakresie -∞ .. NC początkowe' '-7.5 mbar'
-    ERROR 'ciśnienie poza zakresem -∞ .. NC początkowe' '-7.5 mbar'
-  LOG 'VAL \'ciśnienie NC\' \'mbar\'
+  SET NAME 'Szczelność automatu start'
+  SET 'pump-main' '0'
+  SET 'valve-bo04' '1'
+  SET WAIT '15 s'
+  SAVE ciśnienie-nc-początkowe
+  IF 'AI01' '-12.0 .. -7.5 mbar'
+  CORRECT 'Szczelność automatu start OK'
+  ERROR 'Błąd: szczelność automatu start poza zakresem'
+
 GOAL:
-  SET NAME 'Test szczelności automatu - pomiar końcowy'
-  SET 'czas stabilizacji' '60 s'
-  SET 'timer' '0 s'
-  WAIT 60s
-  IF 'ciśnienie' '-∞ .. NC końcowe' '-6.5 mbar'
-    CORRECT 'ciśnienie w zakresie -∞ .. NC końcowe' '-6.5 mbar'
-    ERROR 'ciśnienie poza zakresem -∞ .. NC końcowe' '-6.5 mbar'
-  LOG 'VAL \'ciśnienie NC\' \'mbar\'
-  IF 'ciśnienie_NC' '-6.5 mbar' .. 999999
-  SAVE 'ciśnienie NC'
+  SET NAME 'Szczelność automatu koniec'
+  SET WAIT '60 s'
+  SAVE ciśnienie-nc-końcowe
+  IF 'AI01' '-10.0 .. -6.5 mbar'
+  CORRECT 'Szczelność automatu koniec OK'
+  ERROR 'Błąd: szczelność automatu koniec poza zakresem'

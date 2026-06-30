@@ -1,35 +1,56 @@
 VERSION: 4
+SCENARIO: Dräger FPS 7000 — Pełny test maski (sekwencyjny)
+DESCRIPTION: Płaska wersja — każdy etap osobnym GOAL; brak IF/ENDIF.
+
 GOAL:
-  SET NAME 'Pełny test maski'
-  SET 'Pump' 'off'
-  SET 'Operator' 'confirm'
-  SAVE 'operator.result'
-  SET 'BO02' 'on'
-  SET 'Pump' 'set'
-  IF 'Timer' ≤ '7.0'
-  SET 'BO06' 'on'
-  SET 'Pump' 'set'
-  IF 'AI01' ≥ '-11.0'
-  IF 'Timer' ≤ '10.0'
-  SET 'Pump' 'off'
-  IF 'Timer' ≤ '10.0'
-  SET 'BO04' 'on'
-  SET 'Pump' 'off'
-  IF 'AI01' ≤ '-10.1'
-  IF 'Timer' ≤ '20.0'
-  SET 'Pump' 'off'
-  IF 'AI01' ≤ '-9.0'
-  SAVE 'AI01.value'
-  IF 'Timer' ≤ '60.0'
-  SET 'BO05' 'on'
-  SET 'Pump' 'set'
-  IF 'Timer' ≤ '5.0'
-  SET 'BO05' 'on'
-  SET 'Pump' 'set'
-  IF 'AI01' > '4.2 mbar'
-    CORRECT 'AI01' w zakresie '4.2 mbar' .. ∞'
-    ERROR 'AI01' poza zakresem '4.2 mbar' .. ∞'
-  SAVE 'AI01.value'
-  SET 'BO03' 'on'
-  SET 'Pump' 'set'
-  IF 'Timer' ≤ '7.0'
+  SET NAME 'Faza 0: Potwierdzenie operatora'
+  LOG 'Akcja manualna: potwierdź gotowość'
+  SET 'pump-main' '0'
+  SAVE wynik-operatora
+
+GOAL:
+  SET NAME 'Faza 1: Podciśnienie'
+  SET 'valve-sc' '1'
+  SET 'pump-main' '5 l/min'
+  SET WAIT '7 s'
+  SET 'valve-nc' '1'
+  SET 'pump-main' '5 l/min'
+  SET WAIT '10 s'
+  IF 'AI01' '-15.0 .. -11.0 mbar'
+  CORRECT 'Podciśnienie w normie'
+  ERROR 'Błąd: podciśnienie poza zakresem'
+
+GOAL:
+  SET NAME 'Faza 2: Stabilizacja'
+  SET 'pump-main' '0 l/min'
+  SET WAIT '10 s'
+  SET 'valve-nc' '0'
+  IF 'AI01' '-15.0 .. -10.1 mbar'
+  CORRECT 'Stabilizacja w normie'
+  ERROR 'Błąd: stabilizacja poza zakresem'
+
+GOAL:
+  SET NAME 'Faza 3: Szczelność maski'
+  SET 'pump-main' '0 l/min'
+  SET WAIT '20 s'
+  SAVE szczelność-maska
+  IF 'AI01' '-12.0 .. -9.0 mbar'
+  CORRECT 'Szczelność maski OK'
+  ERROR 'Błąd: nieszczelność maski'
+
+GOAL:
+  SET NAME 'Faza 4: Zawór wydechowy'
+  SET 'valve-sc' '1'
+  SET 'pump-main' '10 l/min'
+  SET WAIT '5 s'
+  IF 'AI01' '4.2 .. 6.0 mbar'
+  CORRECT 'Ciśnienie zaworu wydechowego OK (4.2-6.0 mbar)'
+  ERROR 'Błąd: ciśnienie zaworu wydechowego poza zakresem'
+  SAVE ciśnienie-wydechu
+
+GOAL:
+  SET NAME 'Faza 5: Wyjście'
+  SET 'valve-nc' '1'
+  SET 'pump-main' '5 l/min'
+  SET WAIT '7 s'
+  SET 'pump-main' '0'

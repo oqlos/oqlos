@@ -23,16 +23,16 @@ router = APIRouter(prefix="/api/v1/editor", tags=["editor"])
 
 
 def _default_scenarios_dir() -> pathlib.Path:
-    """Locate the ``scenarios/`` directory shipped with the package.
+    """Locate the repository ``scenarios/`` directory.
 
     Honours the ``OQLOS_SCENARIOS_DIR`` env var so deployments can point
-    at an external library, and falls back to ``oqlos/scenarios`` next to
-    this package — the same directory used by ``oqlos.core._oql_adapter``.
+    at an external library, and falls back to ``<repo>/scenarios`` (one
+    level above the ``oqlos`` Python package).
     """
     override = os.environ.get("OQLOS_SCENARIOS_DIR")
     if override:
         return pathlib.Path(override)
-    return pathlib.Path(__file__).resolve().parent.parent / "scenarios"
+    return pathlib.Path(__file__).resolve().parents[2] / "scenarios"
 
 
 SCENARIOS_DIR = _default_scenarios_dir()

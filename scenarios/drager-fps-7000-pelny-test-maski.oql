@@ -1,52 +1,57 @@
 VERSION: 4
+SCENARIO: Dräger FPS 7000 — Pełny test maski
+
 GOAL:
-  SET NAME 'TEST WIZUALNY'
-  SET 'PUMP' 'off'
-  SET 'Test wizualny' '1'
-  SAVE 'Test wizualny'
-  SET 'zawór 2' '1'
-  SET 'PUMP' '5 l'
-  WAIT 7.0s
-  SET 'zawór 6' '1'
-  SET 'PUMP' '5 l'
-  IF 'AI01' '-11.0 mbar' .. ∞'
-    CORRECT 'AI01' w zakresie '-11.0 mbar' .. ∞'
-    ERROR 'AI01' poza zakresem '-11.0 mbar' .. ∞'
-  LOG 'VAL \'AI01\' \'mbar\'
-  IF 'AI01' -999999 .. '-11.0 mbar' ELSE ERROR 'Wytworzenie  podciśnienia mbar'
-  WAIT 10.0s
-  SET 'PUMP' 'off'
-  WAIT 10.0s
-  SET 'zawór 4' '1'
-  SET 'PUMP' 'off'
-  IF 'AI01' '-∞ .. '-10.1 mbar'
-    CORRECT 'AI01' w zakresie -∞ .. '-10.1 mbar'
-    ERROR 'AI01' poza zakresem -∞ .. '-10.1 mbar'
-  LOG 'VAL \'AI01\' \'mbar\'
-  IF 'AI01' '-10.1 mbar' ELSE ERROR 'Ustawienie parametru Auto s' .. 999999
-  WAIT 20.0s
+  SET NAME 'Test wizualny'
+  LOG 'Inspekcja wizualna aparatu'
+  SET 'pump-main' '0'
+  SAVE test-wizualny
+
 GOAL:
-  SET NAME 'TEST SZCZELNOŚCI MASKI NADCIŚNIENIOWEJ'
-  SET 'PUMP' 'off'
-  IF 'AI01' '-∞ .. '-9.0 mbar'
-    CORRECT 'AI01' w zakresie -∞ .. '-9.0 mbar'
-    ERROR 'AI01' poza zakresem -∞ .. '-9.0 mbar'
-  LOG 'VAL \'AI01\' \'mbar\'
-  IF 'AI01' '-9.0 mbar' ELSE ERROR 'Test szczelności maski' .. 999999
-  SAVE 'AI01'
-  WAIT 60.0s
-  SET 'zawór 5' '1'
-  SET 'PUMP' '10 l'
-  WAIT 5.0s
-  SET 'zawór 5' '1'
-  SET 'PUMP' '10 l'
-  IF 'AI01' '4.2 mbar' .. '6.0 mbar'
-    CORRECT 'AI01' w zakresie '4.2 mbar' .. '6.0 mbar'
-    ERROR 'AI01' poza zakresem '4.2 mbar' .. '6.0 mbar'
-  LOG 'VAL \'AI01\' \'mbar\'
-  IF 'AI01' -999999 .. '4.2 mbar' ELSE ERROR 'Ciśnienie otwarcia zaworu wydechowego'
-  SAVE 'AI01'
-  WAIT 1.0s
-  SET 'zawór 3' '1'
-  SET 'PUMP' '5 l'
-  WAIT 7.0s
+  SET NAME 'Wytworzenie podciśnienia'
+  SET 'valve-sc' '1'
+  SET 'pump-main' '5 l/min'
+  SET WAIT '7 s'
+  SET 'valve-nc' '1'
+  SET 'pump-main' '5 l/min'
+  SET WAIT '5 s'
+  IF 'AI01' '-15.0 .. -11.0 mbar'
+  CORRECT 'Podciśnienie w normie'
+  ERROR 'Błąd: podciśnienie poza zakresem'
+  SAVE podciśnienie
+
+GOAL:
+  SET NAME 'Ustawienie auto'
+  SET 'pump-main' '0'
+  SET WAIT '20 s'
+  SET 'valve-nc' '0'
+  IF 'AI01' '-15.0 .. -10.1 mbar'
+  CORRECT 'Ustawienie auto OK'
+  ERROR 'Błąd: ustawienie auto poza zakresem'
+  SAVE auto-start
+
+GOAL:
+  SET NAME 'Szczelność nadciśnieniowa'
+  SET 'pump-main' '0'
+  SET WAIT '60 s'
+  IF 'AI01' '-12.0 .. -9.0 mbar'
+  CORRECT 'Szczelność nadciśnieniowa OK'
+  ERROR 'Błąd: szczelność nadciśnieniowa poza zakresem'
+  SAVE szczelność-maska
+
+GOAL:
+  SET NAME 'Ciśnienie otwarcia zaworu wydechowego'
+  SET 'valve-sc' '1'
+  SET 'pump-main' '10 l/min'
+  SET WAIT '5 s'
+  IF 'AI01' '4.2 .. 6.0 mbar'
+  CORRECT 'Ciśnienie otwarcia zaworu wydechowego OK (4.2-6.0 mbar)'
+  ERROR 'Błąd: ciśnienie otwarcia zaworu wydechowego poza zakresem'
+  SAVE ciśnienie-otwarcia-wyd
+
+GOAL:
+  SET NAME 'Wyjście'
+  SET 'valve-nc' '1'
+  SET 'pump-main' '5 l/min'
+  SET WAIT '7 s'
+  SET 'pump-main' '0'

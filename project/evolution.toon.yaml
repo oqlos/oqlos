@@ -1,7 +1,7 @@
-# code2llm/evolution | 2078 func | 227f | 2026-06-30
+# code2llm/evolution | 2096 func | 230f | 2026-06-30
 # generated in 0.01s
 
-NEXT[9] (ranked by impact):
+NEXT[5] (ranked by impact):
   [1] !! SPLIT           frontend/src/i18n/dictionaries.js
       WHY: 1981L, 0 classes, max CC=5
       EFFORT: ~4h  IMPACT: 9905
@@ -10,32 +10,16 @@ NEXT[9] (ranked by impact):
       WHY: 1763L, 0 classes, max CC=1
       EFFORT: ~4h  IMPACT: 1763
 
-  [3] !  SPLIT-FUNC      useSelectionCollapsePanel  CC=21  fan=20
-      WHY: CC=21 exceeds 15
-      EFFORT: ~1h  IMPACT: 420
-
-  [4] !! SPLIT-FUNC      executeConfigureStep  CC=28  fan=13
+  [3] !! SPLIT-FUNC      executeConfigureStep  CC=28  fan=13
       WHY: CC=28 exceeds 15
       EFFORT: ~1h  IMPACT: 364
 
-  [5] !  SPLIT-FUNC      runCurrentStep  CC=20  fan=18
-      WHY: CC=20 exceeds 15
-      EFFORT: ~1h  IMPACT: 360
+  [4] !  SPLIT-FUNC      runCurrentStep  CC=15  fan=18
+      WHY: CC=15 exceeds 15
+      EFFORT: ~1h  IMPACT: 270
 
-  [6] !  SPLIT-FUNC      API_BASE  CC=17  fan=13
-      WHY: CC=17 exceeds 15
-      EFFORT: ~1h  IMPACT: 221
-
-  [7] !  SPLIT-FUNC      request  CC=17  fan=13
-      WHY: CC=17 exceeds 15
-      EFFORT: ~1h  IMPACT: 221
-
-  [8] !  SPLIT-FUNC      loadPlan  CC=18  fan=11
-      WHY: CC=18 exceeds 15
-      EFFORT: ~1h  IMPACT: 198
-
-  [9] !! SPLIT           docs/README.md
-      WHY: 2076L, 0 classes, max CC=0
+  [5] !! SPLIT           docs/README.md
+      WHY: 2119L, 0 classes, max CC=0
       EFFORT: ~4h  IMPACT: 0
 
 
@@ -45,10 +29,10 @@ RISKS[3]:
   ⚠ Splitting frontend/src/pages/mapEditorDefaultMap.js may break 3 import paths
 
 METRICS-TARGET:
-  CC̄:          3.9 → ≤2.7
+  CC̄:          3.8 → ≤2.7
   max-CC:      28 → ≤14
-  god-modules: 21 → 0
-  high-CC(≥15): 13 → ≤6
+  god-modules: 20 → 0
+  high-CC(≥15): 6 → ≤3
   hub-types:   0 → ≤0
 
 PATTERNS (language parser shared logic):
@@ -76,4 +60,4 @@ PATTERNS (language parser shared logic):
     - Standardized FunctionInfo/ClassInfo models
 
 HISTORY:
-  prev CC̄=3.9 → now CC̄=3.9
+  prev CC̄=3.9 → now CC̄=3.8

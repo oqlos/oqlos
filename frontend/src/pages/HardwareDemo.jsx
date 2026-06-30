@@ -6,6 +6,7 @@ import SidebarList from "../components/SidebarList";
 import HardwareActivityLog from "../components/HardwareActivityLog";
 import { rem } from "../utils/designRem.js";
 import { createHardwareActivityLogEntry, prependHardwareActivityLogEntry, usePageOpenedLog } from "../utils/hardware-activity-log.js";
+import { probeDemoDevices } from "../utils/hardware-demo-identify.js";
 
 // ── Notes (C major) ──────────────────────────────────────────────────────────
 // freq:  Hz — used by Web Audio oscillator (audible feedback on speakers)
@@ -190,60 +191,30 @@ export default function HardwareDemo() {
 
   // Probe both devices on mount, suggest fallback if pump is unavailable
   useEffect(() => {
-    let cancelled = false;
+    const controller = new AbortController();
     (async () => {
       try {
-        const res = await HardwareApi.identify();
-        if (cancelled) return;
-        const adapters = res?.adapters || [];
-        const next = {};
-        for (const id of Object.keys(DEVICES)) {
-          const a = adapters.find((x) => x.id === id);
-          next[id] = a?.status || "unknown";
-        }
-        setDeviceStatus(next);
-
-        let pumpOk = next["motor-dri0050"] === "ok";
-        const stepperOk = next["motor-tic249"] === "ok";
-        // Real command probe: identify says ok but pump_set may still fail (false positive)
-        if (pumpOk) {
-          try {
-            await HardwareApi.runDiagnosticCommand({
-              peripheral_id: "motor-dri0050",
-              command: "pump_off",
-              args: {},
-            });
-          } catch (err) {
-            pumpOk = false;
-            next["motor-dri0050"] = "probe-failed";
-            appendLog("warn", t("hardwareDemo.log.pumpProbeFailed"), formatHardwareApiError(err));
-          }
-        }
-        setDeviceStatus({ ...next });
-        appendLog(
-          pumpOk ? "ok" : "warn",
-          t("hardwareDemo.log.pumpStatusLine", {
-            pump: next["motor-dri0050"],
-            stepper: next["motor-tic249"],
-          }),
-          pumpOk
-            ? t("hardwareDemo.log.pumpConnectedDetail")
-            : stepperOk
-            ? t("hardwareDemo.log.pumpFallbackDetail")
-            : t("hardwareDemo.log.neitherDeviceDetail"),
-        );
-        if (!pumpOk && stepperOk) {
-          setDeviceId("motor-tic249");
+        const result = await probeDemoDevices({
+          identify: () => HardwareApi.identify(),
+          runDiagnosticCommand: (body) => HardwareApi.runDiagnosticCommand(body),
+          deviceIds: Object.keys(DEVICES),
+          formatError: formatHardwareApiError,
+          appendLog,
+          t,
+          signal: controller.signal,
+        });
+        if (!result) return;
+        setDeviceStatus(result.deviceStatus);
+        if (result.fallbackDeviceId) {
+          setDeviceId(result.fallbackDeviceId);
         }
       } catch (err) {
-        if (cancelled) return;
+        if (controller.signal.aborted) return;
         setDeviceStatus({ "motor-dri0050": "error", "motor-tic249": "error" });
         appendLog("error", t("hardwareDemo.log.identifyFailed"), formatHardwareApiError(err));
       }
     })();
-    return () => {
-      cancelled = true;
-    };
+    return () => controller.abort();
   }, [appendLog, t]);
 
   // ── Send a single hardware command for current device (throttled) ────────

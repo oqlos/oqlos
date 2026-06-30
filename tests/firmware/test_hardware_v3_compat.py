@@ -83,11 +83,13 @@ def test_hardware_ui_aliases_and_status_page_are_served():
     from oqlos.api.main import app
 
     client = TestClient(app)
-    status = client.get("/hardware-status")
-    assert status.status_code == 200
-    assert "OqlOS Hardware Status" in status.text
-    assert "/api/v3/hardware/health" in status.text
-    assert "/navigation" in status.text
+    status = client.get("/hardware-status", follow_redirects=False)
+    assert status.status_code in {302, 307}
+    assert status.headers["location"] == "/ui/hardware-status"
+
+    ui_status = client.get("/ui/hardware-status")
+    assert ui_status.status_code == 200
+    assert "text/html" in ui_status.headers["content-type"]
 
     demo = client.get("/hardware-demo?lang=pl", follow_redirects=False)
     assert demo.status_code in {302, 307}
@@ -103,11 +105,15 @@ def test_hardware_ui_aliases_and_status_page_are_served():
 
     scenario_files = client.get("/scenario-files?scenario=demo.oql", follow_redirects=False)
     assert scenario_files.status_code in {302, 307}
-    assert scenario_files.headers["location"] == "/editor?scenario=demo.oql"
+    assert scenario_files.headers["location"] == "/ui/scenario-files?scenario=demo.oql"
 
     func_editor = client.get("/func-editor", follow_redirects=False)
     assert func_editor.status_code in {302, 307}
-    assert func_editor.headers["location"] == "/editor"
+    assert func_editor.headers["location"] == "/ui/scenario-files"
+
+    editor = client.get("/editor?scenario=demo.oql", follow_redirects=False)
+    assert editor.status_code in {302, 307}
+    assert editor.headers["location"] == "/ui/scenario-files?scenario=demo.oql"
 
     navigation = client.get("/navigation")
     assert navigation.status_code == 200

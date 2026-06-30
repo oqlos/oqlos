@@ -16,7 +16,7 @@ project_file('frontend/src/api/wsClient.js', 139, 'javascript').
 project_file('frontend/src/context/app-config-document.js', 27, 'javascript').
 project_file('frontend/src/hooks/useMapEditorHardwareEvents.js', 62, 'javascript').
 project_file('frontend/src/hooks/useMapEditorSidebarAutoCollapse.js', 30, 'javascript').
-project_file('frontend/src/hooks/useParentEncoderNavigation.js', 152, 'javascript').
+project_file('frontend/src/hooks/useParentEncoderNavigation.js', 40, 'javascript').
 project_file('frontend/src/hooks/useRailHoverPreview.js', 85, 'javascript').
 project_file('frontend/src/hooks/useUrlConfig.js', 86, 'javascript').
 project_file('frontend/src/hooks/useWsStatus.js', 27, 'javascript').
@@ -30,15 +30,27 @@ project_file('frontend/src/pages/mapEditorDefaultMap.js', 1764, 'javascript').
 project_file('frontend/src/styles/global.css', 2123, 'css').
 project_file('frontend/src/utils/collapse-toggle-bridge.js', 47, 'javascript').
 project_file('frontend/src/utils/designRem.js', 44, 'javascript').
+project_file('frontend/src/utils/encoder-navigation.js', 143, 'javascript').
+project_file('frontend/src/utils/encoder-navigation.test.js', 21, 'javascript').
 project_file('frontend/src/utils/hardware-activity-log.js', 35, 'javascript').
 project_file('frontend/src/utils/hardware-api-retry.js', 39, 'javascript').
 project_file('frontend/src/utils/hardware-api-retry.test.js', 46, 'javascript').
+project_file('frontend/src/utils/hardware-demo-identify.js', 59, 'javascript').
+project_file('frontend/src/utils/hardware-demo-identify.test.js', 28, 'javascript').
+project_file('frontend/src/utils/hardware-restart-configure.js', 69, 'javascript').
+project_file('frontend/src/utils/hardware-restart-configure.test.js', 31, 'javascript').
 project_file('frontend/src/utils/hardware-restart-docs.js', 12, 'javascript').
+project_file('frontend/src/utils/hardware-restart-probe-select.js', 20, 'javascript').
+project_file('frontend/src/utils/hardware-restart-step-errors.js', 16, 'javascript').
+project_file('frontend/src/utils/hardware-restart-step-outcome.js', 7, 'javascript').
+project_file('frontend/src/utils/hardware-restart-step-runner.js', 24, 'javascript').
+project_file('frontend/src/utils/hardware-restart-step-runner.test.js', 18, 'javascript').
 project_file('frontend/src/utils/hardware-restart-wizard-helpers.js', 42, 'javascript').
-project_file('frontend/src/utils/hardware-restart-wizard-steps.js', 93, 'javascript').
+project_file('frontend/src/utils/hardware-restart-wizard-steps.js', 47, 'javascript').
 project_file('frontend/src/utils/hardware-restart-wizard-steps.test.js', 32, 'javascript').
 project_file('frontend/src/utils/hardware-time.js', 5, 'javascript').
-project_file('frontend/src/utils/hardware-wizard-plan.js', 11, 'javascript').
+project_file('frontend/src/utils/hardware-wizard-plan.js', 23, 'javascript').
+project_file('frontend/src/utils/hardware-wizard-plan.test.js', 17, 'javascript').
 project_file('frontend/src/utils/hardware-wizard-steps.js', 102, 'javascript').
 project_file('frontend/src/utils/hardware-wizard-steps.test.js', 30, 'javascript').
 project_file('frontend/src/utils/hardwareEventStream.js', 53, 'javascript').
@@ -46,7 +58,7 @@ project_file('frontend/src/utils/hardwareEventStream.test.js', 37, 'javascript')
 project_file('frontend/src/utils/hui-shell-key.js', 39, 'javascript').
 project_file('frontend/src/utils/mapEditorFuncHardwareSummary.js', 84, 'javascript').
 project_file('frontend/src/utils/mapEditorFuncHardwareSummary.test.js', 55, 'javascript').
-project_file('frontend/src/utils/mapEditorIntegrationMeta.js', 100, 'javascript').
+project_file('frontend/src/utils/mapEditorIntegrationMeta.js', 81, 'javascript').
 project_file('frontend/src/utils/mapEditorIntegrationMeta.test.js', 44, 'javascript').
 project_file('frontend/src/utils/mapEditorMapShape.js', 59, 'javascript').
 project_file('frontend/src/utils/mapEditorModel.js', 62, 'javascript').
@@ -79,7 +91,8 @@ project_file('oqlos/api/hardware_gateway.py', 23, 'python').
 project_file('oqlos/api/hardware_hui.py', 62, 'python').
 project_file('oqlos/api/hardware_identify.py', 171, 'python').
 project_file('oqlos/api/hardware_lung.py', 86, 'python').
-project_file('oqlos/api/hardware_mapping_contract.py', 90, 'python').
+project_file('oqlos/api/hardware_mapping_contract.py', 64, 'python').
+project_file('oqlos/api/hardware_mapping_motor2.py', 49, 'python').
 project_file('oqlos/api/hardware_mapping_store.py', 153, 'python').
 project_file('oqlos/api/hardware_modbus_routes.py', 81, 'python').
 project_file('oqlos/api/hardware_modbus_topology.py', 93, 'python').
@@ -132,7 +145,7 @@ project_file('oqlos/hardware/__init__.py', 18, 'python').
 project_file('oqlos/hardware/artificial_lung.py', 163, 'python').
 project_file('oqlos/hardware/client/__init__.py', 101, 'python').
 project_file('oqlos/hardware/client/adc.py', 65, 'python').
-project_file('oqlos/hardware/client/autorepair.py', 133, 'python').
+project_file('oqlos/hardware/client/autorepair.py', 134, 'python').
 project_file('oqlos/hardware/client/config.py', 87, 'python').
 project_file('oqlos/hardware/client/constants.py', 70, 'python').
 project_file('oqlos/hardware/client/errors.py', 27, 'python').
@@ -287,6 +300,7 @@ project_file('tests/firmware/test_hardware_hui_routes.py', 44, 'python').
 project_file('tests/firmware/test_hardware_identify.py', 236, 'python').
 project_file('tests/firmware/test_hardware_identify_routes.py', 10, 'python').
 project_file('tests/firmware/test_hardware_lung_routes.py', 24, 'python').
+project_file('tests/firmware/test_hardware_mapping_motor2.py', 30, 'python').
 project_file('tests/firmware/test_hardware_modbus_routes.py', 12, 'python').
 project_file('tests/firmware/test_hardware_modbus_wizard.py', 353, 'python').
 project_file('tests/firmware/test_hardware_probe_devices.py', 27, 'python').
@@ -311,7 +325,7 @@ project_file('tests/firmware/test_oql_manage_ops.py', 187, 'python').
 project_file('tests/firmware/test_oql_mqtt_bridge.py', 255, 'python').
 project_file('tests/firmware/test_oql_route_http.py', 119, 'python').
 project_file('tests/firmware/test_oqlos_logging.py', 21, 'python').
-project_file('tests/firmware/test_panel_ui.py', 218, 'python').
+project_file('tests/firmware/test_panel_ui.py', 227, 'python').
 project_file('tests/firmware/test_parser_cycle.py', 53, 'python').
 project_file('tests/firmware/test_plugin_gateway_env.py', 243, 'python').
 project_file('tests/firmware/test_plugin_gateway_init.py', 67, 'python').
@@ -443,9 +457,13 @@ python_function('oqlos/api/hardware_lung.py', 'stop_lung', 0, 1, 3).
 python_function('oqlos/api/hardware_lung.py', 'disable_lung', 0, 1, 3).
 python_function('oqlos/api/hardware_lung.py', 'artificial_lung_status', 0, 1, 3).
 python_function('oqlos/api/hardware_lung.py', 'artificial_lung_command', 1, 1, 5).
-python_function('oqlos/api/hardware_mapping_contract.py', '_is_int', 1, 2, 1).
-python_function('oqlos/api/hardware_mapping_contract.py', '_validate_motor2', 2, 19, 7).
+python_function('oqlos/api/hardware_mapping_contract.py', '_validate_motor2', 2, 1, 1).
 python_function('oqlos/api/hardware_mapping_contract.py', 'validate_mapping_contract', 1, 6, 5).
+python_function('oqlos/api/hardware_mapping_motor2.py', '_is_int', 1, 2, 1).
+python_function('oqlos/api/hardware_mapping_motor2.py', '_append_peripheral_id_issue', 2, 4, 4).
+python_function('oqlos/api/hardware_mapping_motor2.py', '_append_stroke_steps_issue', 2, 4, 3).
+python_function('oqlos/api/hardware_mapping_motor2.py', '_append_speed_issues', 2, 10, 3).
+python_function('oqlos/api/hardware_mapping_motor2.py', 'validate_motor2_config', 2, 4, 7).
 python_function('oqlos/api/hardware_mapping_store.py', '_default_path', 0, 3, 4).
 python_function('oqlos/api/hardware_mapping_store.py', 'empty_mapping', 0, 1, 0).
 python_function('oqlos/api/hardware_mapping_store.py', '_normalize_motor2_runtime_config', 1, 7, 4).
@@ -1512,6 +1530,9 @@ python_function('tests/firmware/test_hardware_identify.py', 'test_hardware_ident
 python_function('tests/firmware/test_hardware_identify_routes.py', 'test_hardware_router_includes_health_and_identify', 0, 4, 0).
 python_function('tests/firmware/test_hardware_lung_routes.py', 'test_hardware_router_includes_actuator_and_lung_paths', 0, 6, 0).
 python_function('tests/firmware/test_hardware_lung_routes.py', 'test_command_payload_requires_command_name', 0, 2, 2).
+python_function('tests/firmware/test_hardware_mapping_motor2.py', 'test_validate_motor2_config_accepts_minimal_object', 0, 2, 1).
+python_function('tests/firmware/test_hardware_mapping_motor2.py', 'test_validate_motor2_config_rejects_default_speed_above_max', 0, 2, 2).
+python_function('tests/firmware/test_hardware_mapping_motor2.py', 'test_validate_mapping_contract_wraps_motor2_errors', 0, 2, 3).
 python_function('tests/firmware/test_hardware_modbus_routes.py', 'test_hardware_router_includes_modbus_paths', 0, 6, 0).
 python_function('tests/firmware/test_hardware_modbus_wizard.py', '_patch_modbus_ports', 2, 1, 1).
 python_function('tests/firmware/test_hardware_modbus_wizard.py', '_patch_modbus_io_ids', 2, 1, 1).
@@ -1604,6 +1625,7 @@ python_function('tests/firmware/test_panel_ui.py', 'panel_source', 0, 1, 2).
 python_function('tests/firmware/test_panel_ui.py', '_panel_manage_verbs', 1, 1, 2).
 python_function('tests/firmware/test_panel_ui.py', '_panel_endpoints', 1, 1, 2).
 python_function('tests/firmware/test_panel_ui.py', 'test_panel_route_serves_html', 0, 7, 2).
+python_function('tests/firmware/test_panel_ui.py', 'test_panel_exposes_wait_execution_state_in_payload_and_url', 1, 7, 0).
 python_function('tests/firmware/test_panel_ui.py', 'test_health_route_contains_redeploy_probe_token', 0, 4, 3).
 python_function('tests/firmware/test_panel_ui.py', 'test_panel_manage_verbs_are_supported', 1, 3, 4).
 python_function('tests/firmware/test_panel_ui.py', 'test_panel_only_calls_known_endpoints', 1, 4, 1).

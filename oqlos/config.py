@@ -211,7 +211,7 @@ class Settings(BaseSettings):
 # Load settings
 _settings = Settings()
 SERVICE_NAME = _settings.service_name
-SERVICE_VERSION = resolve_release_version(Path(__file__).resolve().parent)
+SERVICE_VERSION = resolve_release_version(Path(__file__).resolve().parents[1])
 FIRMWARE_PORT = _settings.firmware_port
 
 # Export settings for use in other modules

@@ -1,10 +1,11 @@
 VERSION: 4
 GOAL:
-  SET NAME 'Ciśnienie otwarcia zaworu wydechowego: 4.2 – 6.0 mbar'
-  SET 'Pump' 'set'
-  SET 'Valve' 'NC'
-  WAIT '1000 ms'
-  IF 'AI01' > '4.2 mbar'
-    CORRECT 'AI01' w zakresie '4.2 mbar' .. ∞'
-    ERROR 'AI01' poza zakresem '4.2 mbar' .. ∞'
-  SAVE 'AI01.min'
+  SET NAME 'ciśnienie otwarcia zaworu wydechowego'
+  # oczekiwany zakres: 4.2 – 6.0 mbar
+  SET 'pompa-1' '5.0 l/min'
+  SET 'valve-nc' '1'
+  SET WAIT '1 s'
+  IF 'AI01' '4.2 .. 6.0 mbar'
+  CORRECT 'Ciśnienie otwarcia zaworu wydechowego OK (4.2-6.0 mbar)'
+  ERROR 'Błąd: ciśnienie otwarcia poza zakresem 4.2-6.0 mbar'
+  SAVE ciśnienie-otwarcia

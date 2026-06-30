@@ -51,7 +51,7 @@ def _fmt_value(value, unit) -> str:
 
 def _scenarios_root() -> Path:
     """Default search root for ``INCLUDE`` directives."""
-    return Path(__file__).resolve().parent.parent / "scenarios"
+    return Path(__file__).resolve().parents[2] / "scenarios"
 
 
 def _resolve_include(path: str, base: Path | None) -> Path | None:

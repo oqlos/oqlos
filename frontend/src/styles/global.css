@@ -1524,8 +1524,9 @@ html[data-iframe-child="1"] #root {
 }
 
 .mapx-tab.active {
-  border-color: var(--accent-green);
-  color: var(--accent-green);
+  border-color: var(--accent-blue);
+  color: var(--accent-blue);
+  background: color-mix(in srgb, var(--accent-blue) 12%, transparent);
 }
 
 .mapx-main {
@@ -1703,9 +1704,13 @@ html[data-iframe-child="1"] #root {
 }
 
 .mapx-btn-primary {
-  color: white;
-  border-color: var(--accent-blue);
-  background: var(--accent-blue);
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--accent-green);
+  border-color: var(--accent-green);
+}
+
+.mapx-btn-primary:hover:not(:disabled) {
+  background: rgba(16, 185, 129, 0.25);
 }
 
 .mapx-btn-danger {
@@ -1764,6 +1769,32 @@ html[data-iframe-child="1"] #root {
   display: grid;
   gap: 12px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 900px) {
+  .hw-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.hw-kv-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.hw-kv-row:last-child {
+  border-bottom: 0;
+}
+
+.hw-kv-label {
+  color: var(--text-muted);
+}
+
+.hw-muted-cell {
+  color: var(--text-muted);
 }
 
 .hw-card {
@@ -2120,3 +2151,111 @@ html[data-iframe-child="1"] #root {
   outline-offset: 1px;
   background: color-mix(in srgb, var(--accent-blue) 18%, var(--bg-deep));
 }
+
+/* Scenario file editor (hardware-demo shell) */
+.scenario-files-editor-card {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 360px;
+}
+
+.scenario-files-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.scenario-files-filename {
+  margin-left: auto;
+  font-size: var(--font-rem-sm);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.scenario-files-textarea {
+  flex: 1;
+  min-height: 280px;
+  width: 100%;
+  resize: vertical;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: var(--font-rem-sm);
+  line-height: 1.5;
+  padding: 12px;
+  outline: none;
+}
+
+.scenario-files-textarea:focus {
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-blue) 20%, transparent);
+}
+
+.scenario-files-textarea:disabled {
+  opacity: 0.65;
+}
+
+.scenario-files-exec-card {
+  margin-top: 16px;
+}
+
+.scenario-files-exec-card h3 {
+  font-size: var(--font-rem-lg);
+  margin-bottom: 8px;
+}
+
+.scenario-files-exec-controls {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.scenario-files-speed {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--font-rem-sm);
+  color: var(--text-secondary);
+}
+
+.scenario-files-speed input {
+  width: 72px;
+  padding: 6px 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+}
+
+.scenario-files-log {
+  max-height: 200px;
+  overflow: auto;
+}
+
+.scenario-files-status {
+  margin-top: 12px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  font-size: var(--font-rem-sm);
+  color: var(--text-muted);
+}
+
+.scenario-files-status--ok {
+  color: var(--accent-green);
+  border-color: color-mix(in srgb, var(--accent-green) 40%, var(--border-color));
+}
+
+.scenario-files-status--error {
+  color: var(--accent-red);
+  border-color: color-mix(in srgb, var(--accent-red) 40%, var(--border-color));
+}
+

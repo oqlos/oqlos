@@ -724,13 +724,13 @@ export default function MapEditor() {
               <p className="section-desc">{t("mapEditor.subtitle")}</p>
             </div>
             <div className="mapx-header-actions">
-              <button onClick={saveMap} disabled={!isDirty || isReadOnly || saveState === "saving"} className="mapx-btn mapx-btn-primary">
+              <button onClick={saveMap} disabled={!isDirty || isReadOnly || saveState === "saving"} className="run-btn role-force">
                 {saveState === "saving" ? "…" : t("mapEditor.save")}
               </button>
-              <button type="button" onClick={restoreDefaultMap} className="mapx-btn" disabled={isReadOnly || saveState === "saving"}>
+              <button type="button" onClick={restoreDefaultMap} className="clear-btn" disabled={isReadOnly || saveState === "saving"}>
                 {t("mapEditor.restoreDefaults")}
               </button>
-              <button type="button" onClick={reloadCurrent} className="mapx-btn">{t("mapEditor.reload")}</button>
+              <button type="button" onClick={reloadCurrent} className="clear-btn">{t("mapEditor.reload")}</button>
             </div>
           </div>
           {saveError && <div className="mapx-error">{saveError}</div>}

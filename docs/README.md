@@ -67,8 +67,8 @@ Detailed guide: [Hardware Diagnostics](HARDWARE_DIAGNOSTICS.md).
 
 <!-- code2docs:start --># oqlos
 
-![version](https://img.shields.io/badge/version-0.1.0-blue) ![python](https://img.shields.io/badge/python-%3E%3D3.10-blue) ![coverage](https://img.shields.io/badge/coverage-unknown-lightgrey) ![functions](https://img.shields.io/badge/functions-2193-green)
-> **2193** functions | **123** classes | **327** files | CC̄ = 3.9
+![version](https://img.shields.io/badge/version-0.1.0-blue) ![python](https://img.shields.io/badge/python-%3E%3D3.10-blue) ![coverage](https://img.shields.io/badge/coverage-unknown-lightgrey) ![functions](https://img.shields.io/badge/functions-2211-green)
+> **2211** functions | **123** classes | **330** files | CC̄ = 3.9
 
 > Auto-generated project documentation from source code analysis.
 
@@ -188,6 +188,7 @@ oqlos/
             ├── hardware-status-panel-translations
             ├── hardware-demo-extra-translations
             ├── hardware-status-presets-translations
+                ├── test
             ├── hardwareEventStream
                 ├── test
             ├── hardware-time
@@ -200,6 +201,7 @@ oqlos/
             ├── hardware-api-retry
                 ├── policy
             ├── hardware-restart-docs
+            ├── hardware-restart-wizard-helpers
                 ├── test
             ├── hui-shell-key
             ├── parentUrlBridge
@@ -376,6 +378,7 @@ oqlos/
         ├── plugins/
             ├── plugin_http_handlers
             ├── modbus
+            ├── motor_modbus_handlers
             ├── lung
             ├── motor
             ├── _shared
@@ -747,6 +750,10 @@ oqlos/
 - `runAddForTab()` — —
 - `search()` — —
 - `timestamp()` — —
+- `hint()` — —
+- `data()` — —
+- `message()` — —
+- `commandResult()` — —
 - `txtDownload()` — —
 - `blob()` — —
 - `url()` — —
@@ -756,8 +763,6 @@ oqlos/
 - `status()` — —
 - `loadPlan()` — —
 - `stack()` — —
-- `hint()` — —
-- `data()` — —
 - `serialPort()` — —
 - `startOqlosAndRefreshPlan()` — —
 - `port()` — —
@@ -777,11 +782,7 @@ oqlos/
 - `payload()` — —
 - `ok()` — —
 - `runRetry()` — —
-- `message()` — —
-- `diagnosticPayload()` — —
-- `optionalStep()` — —
-- `advanceOk()` — —
-- `optionalSkip()` — —
+- `stepErr()` — —
 - `skipPumpOffStep()` — —
 - `skipOptionalStep()` — —
 - `logText()` — —
@@ -850,6 +851,7 @@ oqlos/
 - `val()` — —
 - `useI18n()` — —
 - `ctx()` — —
+- `payload()` — —
 - `normalizeText()` — —
 - `buildHardwareEventsWsUrl()` — —
 - `envValue()` — —
@@ -876,11 +878,13 @@ oqlos/
 - `hardwareNowText()` — —
 - `firstBindingFromObjectMapping()` — —
 - `readIntegrationMeta()` — —
+- `source()` — —
 - `setApiServiceField()` — —
 - `setApiEndpointField()` — —
 - `setHardwareAddressField()` — —
 - `setMetaField()` — —
 - `nextValue()` — —
+- `envelope()` — —
 - `useSelectionCollapsePanel()` — —
 - `timerRef()` — —
 - `stowed()` — —
@@ -890,8 +894,6 @@ oqlos/
 - `expand()` — —
 - `toggleCollapsed()` — —
 - `onMessage()` — —
-- `envelope()` — —
-- `payload()` — —
 - `APP_CONFIG_DEFAULTS()` — —
 - `resolveUserIdFromSearchParams()` — —
 - `value()` — —
@@ -943,16 +945,10 @@ oqlos/
 - `createInitialEditorState()` — —
 - `seeded()` — —
 - `pretty()` — —
-- `wizardStepSerialPort()` — —
-- `buildWizardProbePayload()` — —
-- `targetBaud()` — —
-- `targetParity()` — —
-- `targetIds()` — —
 - `candidates()` — —
 - `selection()` — —
 - `candidate()` — —
 - `hint()` — —
-- `currentDeviceId()` — —
 - `executeConfigureStep()` — —
 - `target()` — —
 - `stepPort()` — —
@@ -998,6 +994,13 @@ oqlos/
 - `canHostRoleAccessPath()` — —
 - `hardwareRestartDocsUrl()` — —
 - `base()` — —
+- `wizardStepSerialPort()` — —
+- `buildWizardProbePayload()` — —
+- `targetBaud()` — —
+- `targetParity()` — —
+- `targetIds()` — —
+- `buildWizardProgramPayload()` — —
+- `currentDeviceId()` — —
 - `ok()` — —
 - `isValidShellHuiKey()` — —
 - `huiKeyForDigit()` — —
@@ -1023,6 +1026,7 @@ oqlos/
 - `seen()` — —
 - `summarizeFuncToHardware()` — —
 - `md()` — —
+- `objectActionMap()` — —
 - `actions()` — —
 - `fromObject()` — —
 - `fromAction()` — —
@@ -1106,6 +1110,7 @@ oqlos/
 - `loc()` — —
 - `proto()` — —
 - `API_BASE()` — —
+- `err()` — —
 - `request()` — —
 - `startedAt()` — —
 - `bodySummary()` — —
@@ -1114,7 +1119,6 @@ oqlos/
 - `payload()` — —
 - `detailMessage()` — —
 - `message()` — —
-- `err()` — —
 - `data()` — —
 - `summary()` — —
 - `get()` — —
@@ -1143,10 +1147,10 @@ oqlos/
 - `nested()` — —
 - `detail()` — —
 - `failureFromSuccessFalse()` — —
-- `failureFromNestedOk()` — —
-- `nestedOk()` — —
 - `fromNested()` — —
 - `fromPayload()` — —
+- `failureFromNestedOk()` — —
+- `nestedOk()` — —
 - `extractDiagnosticFailure()` — —
 - `command()` — —
 - `tryParseJson()` — —
@@ -1493,6 +1497,12 @@ oqlos/
 - `dynamic_plugin_schema_models(config)` — Build runtime Pydantic models for all plugin peripherals.
 - `http_post_command(client, base_url, path)` — POST to a plugin HTTP API and return ``{success, data|error}``.
 - `http_get_command(client, base_url, path)` — GET from a plugin HTTP API and return ``{success, data|error}``.
+- `duty_pct_to_register(power_pct)` — Map 0–100% pump power to DRI0050 duty register (0–255).
+- `connect_modbus_bus()` — Connect to the shared RTU bus; returns bus handle or None.
+- `modbus_health_check(bus)` — Read PID holding register as a Modbus RTU health probe.
+- `modbus_set_speed(bus)` — Write duty + enable registers for set_speed.
+- `modbus_stop(bus)` — Write duty=0 and enable=0.
+- `modbus_status(bus)` — Read duty, frequency, and enable holding registers.
 - `http_health_check(client, base_url, label)` — Shared HTTP health check — GET {base_url}/health.
 - `not_connected_health(label)` — —
 - `health_check_exception(exc)` — —
@@ -1754,10 +1764,10 @@ oqlos/
 📄 `frontend.src.App` (2 functions)
 📄 `frontend.src.api.hardware-api-errors` (10 functions)
 📄 `frontend.src.api.hardware-api-log` (9 functions)
-📄 `frontend.src.api.hardware-diagnostic-failure` (21 functions)
+📄 `frontend.src.api.hardware-diagnostic-failure` (22 functions)
 📄 `frontend.src.api.hardware-diagnostic-failure.test`
 📄 `frontend.src.api.hardware-tic249-status` (8 functions)
-📄 `frontend.src.api.hardwareApi` (24 functions)
+📄 `frontend.src.api.hardwareApi` (26 functions)
 📄 `frontend.src.api.wsClient` (32 functions, 1 classes)
 📄 `frontend.src.components.HardwareActivityLog`
 📄 `frontend.src.components.SharedNav` (8 functions)
@@ -1778,7 +1788,7 @@ oqlos/
 📄 `frontend.src.i18n.hardware-status-presets-translations`
 📄 `frontend.src.main` (1 functions)
 📄 `frontend.src.pages.HardwareDemo` (46 functions)
-📄 `frontend.src.pages.HardwareRestart` (50 functions)
+📄 `frontend.src.pages.HardwareRestart` (52 functions)
 📄 `frontend.src.pages.HardwareStatus` (1 functions)
 📄 `frontend.src.pages.MapEditor` (92 functions)
 📄 `frontend.src.pages.MapEditorIntegrationMetaPanel` (1 functions)
@@ -1793,7 +1803,9 @@ oqlos/
 📄 `frontend.src.utils.hardware-api-retry` (8 functions)
 📄 `frontend.src.utils.hardware-api-retry.test` (6 functions)
 📄 `frontend.src.utils.hardware-restart-docs` (2 functions)
-📄 `frontend.src.utils.hardware-restart-wizard-steps` (28 functions)
+📄 `frontend.src.utils.hardware-restart-wizard-helpers` (7 functions)
+📄 `frontend.src.utils.hardware-restart-wizard-steps` (22 functions)
+📄 `frontend.src.utils.hardware-restart-wizard-steps.test` (1 functions)
 📄 `frontend.src.utils.hardware-time` (1 functions)
 📄 `frontend.src.utils.hardware-wizard-plan` (2 functions)
 📄 `frontend.src.utils.hardware-wizard-steps` (18 functions)
@@ -1801,9 +1813,9 @@ oqlos/
 📄 `frontend.src.utils.hardwareEventStream` (22 functions)
 📄 `frontend.src.utils.hardwareEventStream.test` (1 functions)
 📄 `frontend.src.utils.hui-shell-key` (5 functions)
-📄 `frontend.src.utils.mapEditorFuncHardwareSummary` (16 functions)
+📄 `frontend.src.utils.mapEditorFuncHardwareSummary` (18 functions)
 📄 `frontend.src.utils.mapEditorFuncHardwareSummary.test` (1 functions)
-📄 `frontend.src.utils.mapEditorIntegrationMeta` (7 functions)
+📄 `frontend.src.utils.mapEditorIntegrationMeta` (11 functions)
 📄 `frontend.src.utils.mapEditorIntegrationMeta.test` (2 functions)
 📄 `frontend.src.utils.mapEditorMapShape` (8 functions)
 📄 `frontend.src.utils.mapEditorModel` (8 functions)
@@ -1945,6 +1957,7 @@ oqlos/
 📄 `oqlos.hardware.plugins.modbus_adc` (17 functions, 1 classes)
 📄 `oqlos.hardware.plugins.motor` (20 functions, 1 classes)
 📄 `oqlos.hardware.plugins.motor_http_handlers` (2 functions)
+📄 `oqlos.hardware.plugins.motor_modbus_handlers` (6 functions)
 📄 `oqlos.hardware.plugins.piadc` (12 functions, 1 classes)
 📄 `oqlos.hardware.plugins.plugin_http_handlers` (2 functions)
 📄 `oqlos.hardware.plugins.registry` (14 functions, 1 classes)

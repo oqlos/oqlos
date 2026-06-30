@@ -332,9 +332,9 @@ def _serve_static_html(relative_path: str, title: str, missing_message: str):
         missing_message=missing_message,
     )
 
-@app.get("/editor", response_class=HTMLResponse)
-async def editor_page():
-    return _serve_static_html("static/editor.html", "Scenario Editor", "editor.html not found.")
+@app.get("/editor")
+async def editor_page(request: Request):
+    return RedirectResponse(_with_query("/ui/scenario-files", request))
 
 @app.get("/panel", response_class=HTMLResponse)
 async def panel_page():
@@ -366,9 +366,9 @@ def _redirect_with_query(path: str, request: Request):
     return RedirectResponse(_with_query(path, request))
 
 
-@app.get("/hardware-status", response_class=HTMLResponse)
-async def hardware_status_page():
-    return _serve_static_html("static/hardware-status.html", "OqlOS Hardware Status", "hardware-status.html not found.")
+@app.get("/hardware-status")
+async def hardware_status_page(request: Request):
+    return RedirectResponse(_with_query("/ui/hardware-status", request))
 
 
 @app.get("/hardware-demo")
@@ -389,13 +389,13 @@ async def map_editor_alias(request: Request):
 @app.get("/scenario-files")
 @app.get("/scenario-files/{full_path:path}")
 async def scenario_files_alias(request: Request):
-    return RedirectResponse(_with_query("/editor", request))
+    return RedirectResponse(_with_query("/ui/scenario-files", request))
 
 
 @app.get("/func-editor")
 @app.get("/func-editor/{full_path:path}")
 async def func_editor_alias(request: Request):
-    return RedirectResponse(_with_query("/editor", request))
+    return RedirectResponse(_with_query("/ui/scenario-files", request))
 
 
 @app.get("/nav")

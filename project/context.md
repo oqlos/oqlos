@@ -5,12 +5,12 @@
 
 - **Project**: /home/tom/github/oqlos/oqlos
 - **Primary Language**: python
-- **Languages**: python: 194, javascript: 66, md: 20, yaml: 13, shell: 9
+- **Languages**: python: 195, javascript: 68, md: 20, yaml: 13, shell: 9
 - **Analysis Mode**: static
-- **Total Functions**: 2193
+- **Total Functions**: 2211
 - **Total Classes**: 123
-- **Modules**: 320
-- **Entry Points**: 1344
+- **Modules**: 323
+- **Entry Points**: 1348
 
 ## Architecture by Module
 
@@ -19,7 +19,7 @@
 - **File**: `MapEditor.jsx`
 
 ### frontend.src.pages.HardwareRestart
-- **Functions**: 50
+- **Functions**: 52
 - **File**: `HardwareRestart.jsx`
 
 ### oqlos.core._interpreter_actions
@@ -77,19 +77,15 @@
 - **Classes**: 7
 - **File**: `base.py`
 
-### oqlos.core._oql_adapter
-- **Functions**: 29
-- **Classes**: 1
-- **File**: `_oql_adapter.py`
-
 ### oqlos.hardware.client.proxy
 - **Functions**: 29
 - **Classes**: 1
 - **File**: `proxy.py`
 
-### frontend.src.utils.hardware-restart-wizard-steps
-- **Functions**: 28
-- **File**: `hardware-restart-wizard-steps.js`
+### oqlos.core._oql_adapter
+- **Functions**: 29
+- **Classes**: 1
+- **File**: `_oql_adapter.py`
 
 ### oqlos.core._cql_tokenizer
 - **Functions**: 27
@@ -99,6 +95,10 @@
 - **Functions**: 26
 - **Classes**: 1
 - **File**: `firmware_adapter.py`
+
+### frontend.src.api.hardwareApi
+- **Functions**: 26
+- **File**: `hardwareApi.js`
 
 ### oqlos.hardware.gateway
 - **Functions**: 25
@@ -176,10 +176,7 @@ valve commands to POST /api/v1/hardware/valve/{id} so t
 
 ### oqlos.tools.xml_import.generators.generate_dsl
 > Generate human-readable DSL text from parsed report.
-- **Calls**: frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a
-
-### oqlos.hardware.plugins.motor.MotorPlugin.__init__
-- **Calls**: None.__init__, None.rstrip, self.config.connection_params.get, self.config.connection_params.get, params.get, int, str, int
+- **Calls**: frontend.src.pages.HardwareDemo.a, frontend.src.pages.HardwareDemo.a, frontend.src.pages.HardwareDemo.a, frontend.src.pages.HardwareDemo.a, frontend.src.pages.HardwareDemo.a, frontend.src.pages.HardwareDemo.a, frontend.src.pages.HardwareDemo.a, frontend.src.pages.HardwareDemo.a
 
 ### oqlos.api.oql_mqtt.oql_ws
 > Bidirectional OQL channel: client sends OQL frames, receives results.
@@ -188,12 +185,8 @@ Inbound frame: ``{"oql": "...", "kind": "command", "mode": "execute"}``.
 Outbou
 - **Calls**: router.websocket, _controller.subscribe_events, asyncio.create_task, websocket.accept, oqlos.api.oql_mqtt._pump_events, pump_task.cancel, _controller.unsubscribe_events, websocket.send_json
 
-### frontend.src.utils.useSelectionCollapsePanel.useSelectionCollapsePanel
-- **Calls**: frontend.src.utils.useSelectionCollapsePanel.useState, frontend.src.utils.useSelectionCollapsePanel.readStoredCollapsed, frontend.src.utils.useSelectionCollapsePanel.useRef, frontend.src.utils.useSelectionCollapsePanel.useCallback, frontend.src.utils.useSelectionCollapsePanel.clearTimeout, frontend.src.utils.useSelectionCollapsePanel.useRailHoverPreview, frontend.src.utils.useSelectionCollapsePanel.cancelAutoCollapse, frontend.src.utils.useSelectionCollapsePanel.setHoverPreview
-
-### oqlos.hardware.client.autorepair.analyze_repair_needs
-> Return whether host stack restart is recommended and human-readable reasons.
-- **Calls**: oqlos.hardware.diagnosis_plugin_health.health_map, oqlos.hardware.client.autorepair._plugin_repair_reasons, reasons.extend, diagnostics.get, str, isinstance, isinstance, identify.get
+### oqlos.hardware.plugins.motor.MotorPlugin.__init__
+- **Calls**: None.__init__, None.rstrip, self.config.connection_params.get, self.config.connection_params.get, params.get, int, str, int
 
 ### oqlos.shared.logs_query.LogsQueryService.query_logs
 > Query logs with filtering, pagination. Returns dict ready for API response.
@@ -214,16 +207,23 @@ Expected payload::
 ### oqlos.api.hardware_modbus_wizard._modbus_wizard_probe_isolated
 - **Calls**: oqlos.api.hardware_modbus_wizard._collect_wizard_serial_candidates, diagnose_shared_bus, report.to_dict, all_scans.append, frontend.src.utils.hardware-wizard-steps.list, bool, int, str
 
+### oqlos.hardware.client.autorepair.analyze_repair_needs
+> Return whether host stack restart is recommended and human-readable reasons.
+- **Calls**: oqlos.hardware.diagnosis_plugin_health.health_map, oqlos.hardware.client.autorepair._plugin_repair_reasons, reasons.extend, diagnostics.get, str, isinstance, isinstance, identify.get
+
 ### oqlos.core._interpreter_actions.exec_action_shell
 > Execute shell/export helpers in dry-run mode.
 - **Calls**: oqlos.core._interpreter_actions._drop_command_token, None.upper, oqlos.core._interpreter_actions._record_failure, interp.sensor_values.get, interp.vars.set, interp.out.step, interp.vars.set, interp.out.step
 
 ### oqlos.tools.xml_import.generators.generate_cql
 > Generate CQL (Connex Query Language) text from parsed report.
-- **Calls**: frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, sorted, op.lp.split
+- **Calls**: frontend.src.pages.HardwareDemo.a, frontend.src.pages.HardwareDemo.a, frontend.src.pages.HardwareDemo.a, frontend.src.pages.HardwareDemo.a, frontend.src.pages.HardwareDemo.a, frontend.src.pages.HardwareDemo.a, sorted, op.lp.split
 
 ### oqlos.hardware.transport.mqtt_oql_bridge.OqlRequest.from_json
 - **Calls**: json.loads, cls, str, str, str, str, str, bool
+
+### setup_hardware_and_run_oql.main
+- **Calls**: argparse.ArgumentParser, parser.add_argument, parser.add_argument, parser.add_argument, parser.add_argument, parser.add_argument, parser.add_argument, parser.add_argument
 
 ## Process Flows
 
@@ -333,6 +333,15 @@ Instead of hardcoded adapters, this gateway
 - **Methods**: 23
 - **Key Methods**: oqlos.hardware.firmware_adapter.FirmwareAdapter.__init__, oqlos.hardware.firmware_adapter.FirmwareAdapter._get_client, oqlos.hardware.firmware_adapter.FirmwareAdapter.close, oqlos.hardware.firmware_adapter.FirmwareAdapter._get_lung_motor_url, oqlos.hardware.firmware_adapter.FirmwareAdapter.is_available, oqlos.hardware.firmware_adapter.FirmwareAdapter._resolve_peripheral, oqlos.hardware.firmware_adapter.FirmwareAdapter._raise_if_rejected, oqlos.hardware.firmware_adapter.FirmwareAdapter.set_peripheral, oqlos.hardware.firmware_adapter.FirmwareAdapter.pump_off, oqlos.hardware.firmware_adapter.FirmwareAdapter.pump_set
 
+### oqlos.hardware.plugins.lung.LungPlugin
+> Plugin for Pololu Tic T249 stepper motor (artificial lung).
+
+Configuration:
+    connection_type: "ht
+- **Methods**: 20
+- **Key Methods**: oqlos.hardware.plugins.lung.LungPlugin.__init__, oqlos.hardware.plugins.lung.LungPlugin.validate_config, oqlos.hardware.plugins.lung.LungPlugin.connect, oqlos.hardware.plugins.lung.LungPlugin.disconnect, oqlos.hardware.plugins.lung.LungPlugin._health_check_http, oqlos.hardware.plugins.lung.LungPlugin.health_check, oqlos.hardware.plugins.lung.LungPlugin._runtime_status, oqlos.hardware.plugins.lung.LungPlugin._runtime_block_reason, oqlos.hardware.plugins.lung.LungPlugin._handle_reciprocate_http, oqlos.hardware.plugins.lung.LungPlugin._handle_reciprocate_usb
+- **Inherits**: HardwarePlugin
+
 ### oqlos.hardware.plugins.motor.MotorPlugin
 > Plugin for DFRobot DRI0050 PWM motor driver.
 
@@ -341,15 +350,6 @@ Configuration:
     connect
 - **Methods**: 20
 - **Key Methods**: oqlos.hardware.plugins.motor.MotorPlugin.__init__, oqlos.hardware.plugins.motor.MotorPlugin.validate_config, oqlos.hardware.plugins.motor.MotorPlugin.connect, oqlos.hardware.plugins.motor.MotorPlugin.disconnect, oqlos.hardware.plugins.motor.MotorPlugin._health_check_http, oqlos.hardware.plugins.motor.MotorPlugin._health_check_modbus_rtu, oqlos.hardware.plugins.motor.MotorPlugin.health_check, oqlos.hardware.plugins.motor.MotorPlugin._base_url_is_local, oqlos.hardware.plugins.motor.MotorPlugin._validate_power_pct, oqlos.hardware.plugins.motor.MotorPlugin._handle_set_speed_http
-- **Inherits**: HardwarePlugin
-
-### oqlos.hardware.plugins.lung.LungPlugin
-> Plugin for Pololu Tic T249 stepper motor (artificial lung).
-
-Configuration:
-    connection_type: "ht
-- **Methods**: 20
-- **Key Methods**: oqlos.hardware.plugins.lung.LungPlugin.__init__, oqlos.hardware.plugins.lung.LungPlugin.validate_config, oqlos.hardware.plugins.lung.LungPlugin.connect, oqlos.hardware.plugins.lung.LungPlugin.disconnect, oqlos.hardware.plugins.lung.LungPlugin._health_check_http, oqlos.hardware.plugins.lung.LungPlugin.health_check, oqlos.hardware.plugins.lung.LungPlugin._runtime_status, oqlos.hardware.plugins.lung.LungPlugin._runtime_block_reason, oqlos.hardware.plugins.lung.LungPlugin._handle_reciprocate_http, oqlos.hardware.plugins.lung.LungPlugin._handle_reciprocate_usb
 - **Inherits**: HardwarePlugin
 
 ### oqlos.core.executor.ScenarioOrchestrator
@@ -435,6 +435,29 @@ Subclasses override :meth:`_
 
 Key functions that process and transform data:
 
+### frontend.src.hooks.useParentEncoderNavigation.parseParentEncoderEnvelope
+
+### frontend.src.hooks.useParentEncoderNavigation._focusEncoderItem
+- **Output to**: frontend.src.hooks.useParentEncoderNavigation.add, frontend.src.hooks.useParentEncoderNavigation.focus, frontend.src.hooks.useParentEncoderNavigation.scrollIntoView
+
+### frontend.src.hooks.useParentEncoderNavigation.createEncoderController
+- **Output to**: frontend.src.hooks.useParentEncoderNavigation.removeHighlights, frontend.src.hooks.useParentEncoderNavigation.getInteractiveItems, frontend.src.hooks.useParentEncoderNavigation._applyScrollToItems, frontend.src.hooks.useParentEncoderNavigation._focusEncoderItem, frontend.src.hooks.useParentEncoderNavigation.click
+
+### frontend.src.hooks.useParentEncoderNavigation.parentEncoderActive
+- **Output to**: frontend.src.hooks.useParentEncoderNavigation.removeHighlights, frontend.src.hooks.useParentEncoderNavigation.getInteractiveItems, frontend.src.hooks.useParentEncoderNavigation._applyScrollToItems, frontend.src.hooks.useParentEncoderNavigation._focusEncoderItem, frontend.src.hooks.useParentEncoderNavigation.click
+
+### frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
+- **Output to**: frontend.src.hooks.useParentEncoderNavigation.removeHighlights, frontend.src.hooks.useParentEncoderNavigation.getInteractiveItems, frontend.src.hooks.useParentEncoderNavigation._applyScrollToItems, frontend.src.hooks.useParentEncoderNavigation._focusEncoderItem, frontend.src.hooks.useParentEncoderNavigation.click
+
+### frontend.src.hooks.useParentEncoderNavigation.useParentEncoderNavigation
+- **Output to**: frontend.src.hooks.useParentEncoderNavigation.useEffect, frontend.src.hooks.useParentEncoderNavigation.createEncoderController, frontend.src.hooks.useParentEncoderNavigation.parseParentEncoderEnvelope, frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand, frontend.src.hooks.useParentEncoderNavigation.isParentEncoderActive
+
+### frontend.src.pages.MapEditor.parsed
+- **Output to**: frontend.src.pages.MapEditor.isPlainObject, frontend.src.pages.MapEditor.Error, frontend.src.pages.MapEditor.t
+
+### frontend.src.pages.MapEditor.parsedJson
+- **Output to**: frontend.src.pages.MapEditor.isPlainObject, frontend.src.pages.MapEditor.Error, frontend.src.pages.MapEditor.t
+
 ### frontend.src.utils.url-embed-config.parseAppearanceParams
 - **Output to**: frontend.src.utils.url-embed-config.get, frontend.src.utils.url-embed-config.trim, frontend.src.utils.url-embed-config.includes, frontend.src.utils.url-embed-config.resolveViewportWidthPx
 
@@ -449,6 +472,11 @@ Key functions that process and transform data:
 
 ### frontend.src.utils.rbac.policy.parseConnectRole
 - **Output to**: frontend.src.utils.rbac.policy.String, frontend.src.utils.rbac.policy.trim, frontend.src.utils.rbac.policy.toLowerCase
+
+### frontend.src.utils.mapEditorObjectActionEdits.parsePromptedFieldValue
+- **Output to**: frontend.src.utils.mapEditorObjectActionEdits.Number, frontend.src.utils.mapEditorObjectActionEdits.isFinite, frontend.src.utils.mapEditorObjectActionEdits.String, frontend.src.utils.mapEditorObjectActionEdits.trim
+
+### frontend.src.utils.mapEditorObjectActionEdits.parsed
 
 ### frontend.src.api.hardware-api-errors.tryParseJson
 - **Output to**: frontend.src.api.hardware-api-errors.parse
@@ -487,39 +515,6 @@ Key functions that process and transform data:
 > Parse a numbered step line.
 - **Output to**: RE_STEP_NUM.match, CqlStep, m.group, None.strip, m.group
 
-### oqlos.core._cql_tree_builder._parse_action_line
-> Try to match any action type and append to *actions_list*.
-- **Output to**: RE_DESC.match, parser, actions_list.append
-
-### oqlos.core._interpreter_actions._format_set_command
-- **Output to**: oqlos.core._interpreter_actions._oql_quote, oqlos.core._interpreter_actions._oql_quote
-
-### oqlos.core._interpreter_actions.parse_wait_secs
-> Parse a WAIT value to seconds. Default unit is ms.
-- **Output to**: None.strip, re.search, float, low.replace, match.group
-
-### oqlos.core.oql_parser.parse_duration
-> Parse ``3s``, ``500ms``, ``3000`` (bare number defaults to ``ms``).
-- **Output to**: DUR_RE.match, ValueError, oqlos.core.oql_parser.to_num, match.group, match.group
-
-### oqlos.core.oql_parser.parse_SET
-- **Output to**: oqlos.core.oql_parser._require, oqlos.core.oql_parser._split_set_value_unit, OqlCmd
-
-### oqlos.core.oql_parser.parse_GET
-- **Output to**: oqlos.core.oql_parser._require, OqlCmd
-
-### oqlos.core.oql_parser.parse_WAIT
-- **Output to**: oqlos.core.oql_parser._require, oqlos.core.oql_parser.parse_duration, oqlos.core.oql_parser.duration_to_ms, OqlCmd
-
-### oqlos.core.oql_parser.parse_IF_DELTA
-- **Output to**: oqlos.core.oql_parser._require, None.replace, DELTA_RE.match, oqlos.core.oql_parser.to_num, abs
-
-### oqlos.core.oql_parser.parse_SAVE
-- **Output to**: oqlos.core.oql_parser._require, OqlCmd
-
-### oqlos.core.oql_parser.parse_CHECK
-- **Output to**: CHECK_RE.match, OqlCmd, rest.strip, ValueError, oqlos.core.oql_parser.to_num
-
 ## Behavioral Patterns
 
 ### recursion__expand_repeat_block_lines
@@ -531,11 +526,6 @@ Key functions that process and transform data:
 - **Type**: recursion
 - **Confidence**: 0.90
 - **Functions**: oqlos.core.executor._safe_resolve
-
-### recursion__load_includes
-- **Type**: recursion
-- **Confidence**: 0.90
-- **Functions**: oqlos.core._oql_adapter._load_includes
 
 ### recursion__do_sleep
 - **Type**: recursion
@@ -551,6 +541,11 @@ Key functions that process and transform data:
 - **Type**: recursion
 - **Confidence**: 0.90
 - **Functions**: scripts.oql_validator_common.extract_code_from_json
+
+### recursion__load_includes
+- **Type**: recursion
+- **Confidence**: 0.90
+- **Functions**: oqlos.core._oql_adapter._load_includes
 
 ### state_machine_WsCqrsClient
 - **Type**: state_machine
@@ -587,15 +582,15 @@ Key functions that process and transform data:
 - **Confidence**: 0.70
 - **Functions**: oqlos.hardware.plugins.registry.PluginRegistry.register, oqlos.hardware.plugins.registry.PluginRegistry.unregister, oqlos.hardware.plugins.registry.PluginRegistry.get_plugin_class, oqlos.hardware.plugins.registry.PluginRegistry.list_plugins, oqlos.hardware.plugins.registry.PluginRegistry.create_instance
 
+### state_machine_PiadcPlugin
+- **Type**: state_machine
+- **Confidence**: 0.70
+- **Functions**: oqlos.hardware.plugins.piadc.PiadcPlugin.__init__, oqlos.hardware.plugins.piadc.PiadcPlugin.validate_config, oqlos.hardware.plugins.piadc.PiadcPlugin.connect, oqlos.hardware.plugins.piadc.PiadcPlugin.disconnect, oqlos.hardware.plugins.piadc.PiadcPlugin.health_check
+
 ### state_machine_ModbusPlugin
 - **Type**: state_machine
 - **Confidence**: 0.70
 - **Functions**: oqlos.hardware.plugins.modbus.ModbusPlugin.__init__, oqlos.hardware.plugins.modbus.ModbusPlugin._validate_rtu_params, oqlos.hardware.plugins.modbus.ModbusPlugin._validate_tcp_params, oqlos.hardware.plugins.modbus.ModbusPlugin.validate_config, oqlos.hardware.plugins.modbus.ModbusPlugin.connect
-
-### state_machine_MotorPlugin
-- **Type**: state_machine
-- **Confidence**: 0.70
-- **Functions**: oqlos.hardware.plugins.motor.MotorPlugin.__init__, oqlos.hardware.plugins.motor.MotorPlugin.validate_config, oqlos.hardware.plugins.motor.MotorPlugin.connect, oqlos.hardware.plugins.motor.MotorPlugin.disconnect, oqlos.hardware.plugins.motor.MotorPlugin._health_check_http
 
 ## Public API Surface
 
@@ -608,8 +603,8 @@ Functions exposed as public API (no underscore prefix):
 - `oqlos.tools.plugin_cli.main` - 36 calls
 - `oqlos.hardware.usb_diagnostics.list_usb_devices` - 33 calls
 - `oqlos.tools.cql_cli.formatting.canonicalize_oql_line` - 31 calls
-- `oqlos.core._oql_adapter.oql_doc_to_cql` - 30 calls
 - `scripts.oql_v2_to_v4_migrate_db.main` - 30 calls
+- `oqlos.core._oql_adapter.oql_doc_to_cql` - 30 calls
 - `oqlos.core.motor2_runtime.normalize_motor2_runtime_config` - 29 calls
 - `oqlos.hardware.diagnosis.build_diagnosis_report` - 28 calls
 - `oqlos.hardware.usb_diagnostics.pi_system_diagnostics` - 28 calls
@@ -618,10 +613,10 @@ Functions exposed as public API (no underscore prefix):
 - `oqlos.hardware.client.modbus_repair.rewrite_modbus_repair` - 26 calls
 - `oqlos.tools.hardware_diagnose.doctor_format.format_detection` - 25 calls
 - `oqlos.hardware.client.resolvers.extract_command_failure` - 25 calls
-- `oqlos.reporters.html_report.render_html_report` - 25 calls
-- `scripts.scenarios_export.export_all_zip` - 25 calls
 - `oqlos.hardware.client.identify_enrich_adapters.enrich_adapter_entry` - 25 calls
 - `oqlos.hardware.client.identify_enrich.enrich_identify_payload` - 25 calls
+- `oqlos.reporters.html_report.render_html_report` - 25 calls
+- `scripts.scenarios_export.export_all_zip` - 25 calls
 - `setup_hardware_and_run_oql.run_oql_scenario` - 24 calls
 - `oqlos.shared.logger.configure_oqlos_logging` - 23 calls
 - `oqlos.api.hardware_peripherals_routes.read_modbus_adc_raw` - 23 calls
@@ -637,10 +632,10 @@ Functions exposed as public API (no underscore prefix):
 - `scripts.migrate_to_v4.check_database` - 21 calls
 - `scripts.oql_v2_to_v4_migrate_db.migrate_v2_to_v4` - 21 calls
 - `scripts.scenarios_export.export_one_bash` - 21 calls
-- `frontend.src.utils.useSelectionCollapsePanel.useSelectionCollapsePanel` - 20 calls
 - `oqlos.tools.hardware_diagnose.health.cmd_diagnose` - 20 calls
 - `oqlos.tools.hardware_diagnose.doctor_modbus_analysis.analyze_modbus_config` - 20 calls
-- `oqlos.hardware.client.autorepair.analyze_repair_needs` - 20 calls
+- `oqlos.hardware.client.identify_enrich_modbus_io.expand_modbus_io_instances` - 20 calls
+- `oqlos.shared.logs_query.LogsQueryService.query_logs` - 20 calls
 
 ## System Interactions
 

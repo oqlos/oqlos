@@ -1,6 +1,16 @@
 {
   "exported_at": "2026-04-30T00:21:42.469018+00:00",
+  "canonical_root": "scenarios/",
   "source": "http://localhost:8096/api/v3/data/test_scenarios",
+  "notes": "Legacy ts-*.oql exports from connect-data live in scenarios/archive/ts-export-2026-04-30/. Runtime editor and INCLUDE resolve scenarios/ at repo root.",
+  "canonical_renames": {
+    "ts-flow.oql": "test-przeplywu.oql",
+    "ts-kalibracja-czujnikow.oql": "kalibracja-czujnikow.oql",
+    "ts-kaskadowy-cisnienie.oql": "kaskadowy-pomiar-cisnienia-z-przelaczaniem-czujnikow.oql",
+    "ts-pelny-test-cisnieniowy.oql": "pelny-test-cisnieniowy-z-przelaczaniem-zakresow.oql",
+    "ts-spadek-cisnienia.oql": "test-spadku-cisnienia-automatu.oql",
+    "ts-wytrzymalosc-mech.oql": "test-wytrzymalosci-mechanicznej.oql"
+  },
   "scenarios": [
     {
       "id": "c202-example",
@@ -27,12 +37,6 @@
       "bytes": 261
     },
     {
-      "id": "ts-c20",
-      "file": "ts-c20.oql",
-      "title": "C20 - Test podstawowy",
-      "bytes": 193
-    },
-    {
       "id": "pss7000-maska",
       "file": "pss7000-maska.oql",
       "title": "PSS7000_MASKA",
@@ -51,34 +55,16 @@
       "bytes": 2474
     },
     {
-      "id": "ts-9e3ec799",
-      "file": "ts-9e3ec799.oql",
-      "title": "DSL from examples/xml-import/c20-valve-cycle.xml",
-      "bytes": 360
-    },
-    {
-      "id": "ts-b346fa9d",
-      "file": "ts-b346fa9d.oql",
-      "title": "Test CQL Nowy Scenariusz",
-      "bytes": 159
-    },
-    {
-      "id": "ts-pelny-test-cisnieniowy",
-      "file": "ts-pelny-test-cisnieniowy.oql",
+      "id": "pelny-test-cisnieniowy",
+      "file": "pelny-test-cisnieniowy-z-przelaczaniem-zakresow.oql",
       "title": "Pełny test ciśnieniowy z przełączaniem zakresów",
       "bytes": 1559
     },
     {
-      "id": "ts-kalibracja-czujnikow",
-      "file": "ts-kalibracja-czujnikow.oql",
+      "id": "kalibracja-czujnikow",
+      "file": "kalibracja-czujnikow.oql",
       "title": "Kalibracja czujników",
       "bytes": 1585
-    },
-    {
-      "id": "ts-pressure",
-      "file": "ts-pressure.oql",
-      "title": "Test ciśnienia",
-      "bytes": 204
     },
     {
       "id": "ts-szczelnosc-maski",
@@ -87,44 +73,20 @@
       "bytes": 240
     },
     {
-      "id": "ts-d3a5ece2",
-      "file": "ts-d3a5ece2.oql",
-      "title": "SCENARIUSZ TESTOWY ALPHATEC FLASH / MSA G1",
-      "bytes": 221
-    },
-    {
       "id": "maskleaktest-ogledinywizualne",
       "file": "maskleaktest-ogledinywizualne.oql",
       "title": "Sprawdzenie stanu wizualnego maski przed testem",
       "bytes": 149
     },
     {
-      "id": "ts-e14d5ad9",
-      "file": "ts-e14d5ad9.oql",
-      "title": "SCENARIUSZ TESTOWY 3M AV 3000",
-      "bytes": 153
-    },
-    {
-      "id": "ts-67a91429",
-      "file": "ts-67a91429.oql",
-      "title": "SCENARIUSZ TESTOWY DRAGER PSS 3000",
-      "bytes": 166
-    },
-    {
-      "id": "ts-1c9693dd",
-      "file": "ts-1c9693dd.oql",
-      "title": "DSL from examples/xml-import/drager-fps7000-leak-sequence.xml",
-      "bytes": 465
-    },
-    {
-      "id": "ts-flow",
-      "file": "ts-flow.oql",
+      "id": "test-przeplywu",
+      "file": "test-przeplywu.oql",
       "title": "Test przepływu",
       "bytes": 230
     },
     {
-      "id": "ts-spadek-cisnienia",
-      "file": "ts-spadek-cisnienia.oql",
+      "id": "test-spadku-cisnienia",
+      "file": "test-spadku-cisnienia-automatu.oql",
       "title": "Test spadku ciśnienia automatu",
       "bytes": 411
     },
@@ -141,12 +103,6 @@
       "bytes": 190
     },
     {
-      "id": "ts-visual",
-      "file": "ts-visual.oql",
-      "title": "Test wizualny",
-      "bytes": 123
-    },
-    {
       "id": "dragerfps7000-pelnytestmaski",
       "file": "dragerfps7000-pelnytestmaski.oql",
       "title": "Pełny test maski",
@@ -159,24 +115,18 @@
       "bytes": 2860
     },
     {
-      "id": "ts-b72713a0",
-      "file": "ts-b72713a0.oql",
-      "title": "DSL from examples/xml-import/drager-fps7000-pressure-window.xml",
-      "bytes": 410
-    },
-    {
-      "id": "ts-kaskadowy-cisnienie",
-      "file": "ts-kaskadowy-cisnienie.oql",
+      "id": "kaskadowy-pomiar-cisnienia",
+      "file": "kaskadowy-pomiar-cisnienia-z-przelaczaniem-czujnikow.oql",
       "title": "Kaskadowy pomiar ciśnienia z przełączaniem czujników",
       "bytes": 1483
     },
     {
-      "id": "ts-wytrzymalosc-mech",
-      "file": "ts-wytrzymalosc-mech.oql",
+      "id": "test-wytrzymalosci-mechanicznej",
+      "file": "test-wytrzymalosci-mechanicznej.oql",
       "title": "Test wytrzymałości mechanicznej",
       "bytes": 1072
     }
   ],
-  "skipped": [],
-  "count": 29
+  "archived_legacy_files": "scenarios/archive/ts-export-2026-04-30/",
+  "count": 19
 }

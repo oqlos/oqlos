@@ -1,5 +1,5 @@
 flowchart TD
-%% generated in 0.15s
+%% generated in 0.05s
 
     %% Entry points (blue)
     classDef entry fill:#4dabf7,stroke:#1971c2,color:#fff
@@ -20,13 +20,13 @@ flowchart TD
         frontend__src__hooks__useMapEditorSidebarAutoCollapse__denseFont["denseFont"]
         frontend__src__hooks__useMapEditorSidebarAutoCollapse__minWidth["minWidth"]
         frontend__src__hooks__useMapEditorSidebarAutoCollapse__observer["observer"]
-        ...["+1398 more"]
+        ...["+1400 more"]
     end
 
     subgraph Exporters
-        frontend__src__pages__HardwareRestart__exportText["exportText"]
         oqlos__api__hardware_mapping_store__MappingStore__export_text["export_text"]
         oqlos__api___hw3_mapping__hardware_mapping_export_v3["hardware_mapping_export_v3"]
+        frontend__src__pages__HardwareRestart__exportText["exportText"]
     end
 
     class setup_hardware_and_run_oql__main,frontend__src__App__RootRedirect,frontend__src__App__target,frontend__src__main__LocalizedApp,frontend__src__hooks__useWsStatus__useWsStatus,frontend__src__hooks__useWsStatus__client,frontend__src__hooks__useWsStatus__onOpen,frontend__src__hooks__useWsStatus__onClose,frontend__src__hooks__useMapEditorSidebarAutoCollapse__useMapEditorSidebarAutoCollapse,frontend__src__hooks__useMapEditorSidebarAutoCollapse__root entry

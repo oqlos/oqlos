@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from oqlos.hardware.client.tic249_arg_contract import canonicalize_motor2_runtime_key
+from oqlos.api.hardware_mapping_motor2 import validate_motor2_config
 
 MAPPING_CONTRACT_VERSION = "hardware-map-v1"
 
@@ -45,34 +45,8 @@ class MappingContractError(ValueError):
         super().__init__("; ".join(issues))
 
 
-def _is_int(value: Any) -> bool:
-    return isinstance(value, int) and not isinstance(value, bool)
-
-
 def _validate_motor2(motor2_raw: Any, issues: list[str]) -> None:
-    if not isinstance(motor2_raw, dict):
-        if motor2_raw is not None:
-            issues.append("runtimeConfig.motor2 must be an object")
-        return
-
-    motor2 = {canonicalize_motor2_runtime_key(k): v for k, v in motor2_raw.items()}
-    peripheral_id = motor2.get("peripheralId")
-    if peripheral_id is not None and (not isinstance(peripheral_id, str) or not peripheral_id.strip()):
-        issues.append("runtimeConfig.motor2.peripheralId must be a non-empty string")
-
-    stroke_steps = motor2.get("strokeSteps")
-    if stroke_steps is not None and (not _is_int(stroke_steps) or stroke_steps < 1):
-        issues.append("runtimeConfig.motor2.strokeSteps must be an integer >= 1")
-
-    max_speed = motor2.get("maxStepsPerSecond")
-    if max_speed is not None and (not _is_int(max_speed) or max_speed < 1):
-        issues.append("runtimeConfig.motor2.maxStepsPerSecond must be an integer >= 1")
-
-    default_speed = motor2.get("defaultSpeedStepsPerSecond")
-    if default_speed is not None and (not _is_int(default_speed) or default_speed < 1):
-        issues.append("runtimeConfig.motor2.defaultSpeedStepsPerSecond must be an integer >= 1")
-    if _is_int(default_speed) and _is_int(max_speed) and default_speed > max_speed:
-        issues.append("runtimeConfig.motor2.defaultSpeedStepsPerSecond must be <= maxStepsPerSecond")
+    validate_motor2_config(motor2_raw, issues)
 
 
 def validate_mapping_contract(mapping: dict[str, Any]) -> None:

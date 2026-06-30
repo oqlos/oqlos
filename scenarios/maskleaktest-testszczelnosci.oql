@@ -1,15 +1,17 @@
 VERSION: 4
 GOAL:
-  SET NAME 'Wytworzenie podciśnienia -10 mbar i obserwacja przez 60 sekund'
-  SET 'Pump' 'set'
-  SET 'Valve' 'NC'
-  WAIT '2000 ms'
-  IF 'AI01' > '-11.0 mbar'
-    CORRECT 'AI01' w zakresie '-11.0 mbar' .. ∞'
-    ERROR 'AI01' poza zakresem '-11.0 mbar' .. ∞'
-  SAVE 'AI01.value'
-  SET 'Pump' 'off'
-  IF 'AI01' > '-11.0 mbar'
-    CORRECT 'AI01' w zakresie '-11.0 mbar' .. ∞'
-    ERROR 'AI01' poza zakresem '-11.0 mbar' .. ∞'
-  SAVE 'AI01.value'
+  SET NAME 'test szczelności maska'
+  # wytworzenie podciśnienia -10 mbar, obserwacja 60 s
+  SET 'pompa-1' '5.0 l/min'
+  SET 'valve-nc' '1'
+  SET WAIT '2 s'
+  IF 'AI01' '-11.0 .. -9.0 mbar'
+  CORRECT 'Podciśnienie startowe OK (-11 do -9 mbar)'
+  ERROR 'Błąd: podciśnienie startowe poza zakresem'
+  SAVE podciśnienie-start
+  SET 'pompa-1' '0 l/min'
+  SET WAIT '60 s'
+  IF 'AI01' '-11.0 .. -9.0 mbar'
+  CORRECT 'Szczelność maski OK (po 60s)'
+  ERROR 'Błąd: nieszczelność maski (spadek podciśnienia)'
+  SAVE podciśnienie-koniec

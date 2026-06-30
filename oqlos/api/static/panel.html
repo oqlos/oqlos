@@ -547,20 +547,34 @@ function filterLog(){
 
 let SCENARIOS = BUILTIN_SCENARIOS.slice();
 let SERVER_SCENARIOS = [];
+let FILE_SCENARIOS = [];
 const _MY_KEY='oqlos_panel_scenarios';
 function myScenarios(){ try{ return JSON.parse(localStorage.getItem(_MY_KEY)||'[]'); }catch(e){ return []; } }
 function setMyScenarios(arr){ try{ localStorage.setItem(_MY_KEY, JSON.stringify(arr)); }catch(e){ banner('Nie udało się zapisać (localStorage).'); } }
 function rebuildScenarios(){
   const mine=myScenarios().map(s=>({name:'[moje] '+s.name, oql:s.oql, _my:true, _name:s.name}));
-  SCENARIOS=BUILTIN_SCENARIOS.concat(mine).concat(SERVER_SCENARIOS);
+  SCENARIOS=BUILTIN_SCENARIOS.concat(mine).concat(FILE_SCENARIOS).concat(SERVER_SCENARIOS);
   renderScenarios();
 }
 function renderScenarios(){
   const sel=$('#scenarioSel'); sel.innerHTML='';
   SCENARIOS.forEach((s,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=s.name; sel.appendChild(o); });
 }
-function loadScenario(){
+async function loadScenario(){
   const i=+$('#scenarioSel').value; const s=SCENARIOS[i];
+  if(!s) return;
+  if(s._file && s._filePath && !s.oql){
+    try{
+      banner('');
+      const r=await fetch('/api/v1/editor/file/'+s._filePath);
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      const data=await r.json();
+      s.oql=(typeof data.content==='string')?data.content:'';
+    }catch(e){
+      banner('Nie udało się wczytać pliku scenariusza: '+e.message);
+      return;
+    }
+  }
   if(s && s.oql) $('#editor').value=s.oql;
 }
 function saveScenario(){
@@ -639,6 +653,18 @@ async function loadServerScenarios(){
   }catch(e){}
 }
 
+async function loadEditorFileScenarios(){
+  try{
+    const r=await fetch('/api/v1/editor/files'); if(!r.ok) return;
+    const data=await r.json(); const files=Array.isArray(data.files)?data.files:[];
+    FILE_SCENARIOS=files
+      .filter(f=>f && !f.is_directory && /\.oql$/i.test(String(f.name||'')))
+      .sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'pl',{sensitivity:'base'}))
+      .map(f=>({name:'[plik] '+f.name, oql:null, _file:true, _filePath:f.path}));
+    rebuildScenarios();
+  }catch(e){}
+}
+
 async function refreshStatus(){
   banner('');
   try{
@@ -710,6 +736,7 @@ rebuildScenarios();
 if(!$('#editor').value.trim()) $('#editor').value=DEFAULT_EDITOR_OQL;
 initPanelUrlState();
 refreshStatus();
+loadEditorFileScenarios();
 loadServerScenarios();
 </script>
 </body>

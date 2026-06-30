@@ -5,47 +5,13 @@ import { HardwareApi, formatHardwareApiError } from "../api/hardwareApi";
 import { useI18n } from "../i18n/I18nProvider";
 import { rem } from "../utils/designRem.js";
 import { isOptionalWizardStep, isSkippablePumpOffWizardStep } from "../utils/hardware-wizard-steps.js";
-import {
-  executeConfigureStep,
-  executeDiagnosticStep,
-  executeFinalDiagnoseStep,
-  executePeripheralStatusStep,
-} from "../utils/hardware-restart-wizard-steps.js";
+import { runWizardStep, resolveStepAdvance, buildStepError } from "../utils/hardware-restart-step-runner.js";
 import { hardwareRestartDocsUrl } from "../utils/hardware-restart-docs.js";
-import { isOqlosUnreachableError } from "../utils/hardware-wizard-plan.js";
+import { extractWizardPlan, isOqlosUnreachableError } from "../utils/hardware-wizard-plan.js";
 import { runApiWithRetry } from "../utils/hardware-api-retry.js";
 
 function timestamp() {
   return new Date().toISOString();
-}
-
-function _extractWizardPlan(stack) {
-  if (stack?.ok === false) {
-    const hint = stack?.hint ? ` ${stack.hint}` : "";
-    throw new Error(`${stack?.error || "OqlOS niedostepny (port 8202)"}${hint}`);
-  }
-  const data = stack?.wizard_plan_enriched || stack?.configuration_cycle?.wizard_plan || stack?.wizard_plan;
-  if (!data || typeof data !== "object") throw new Error("Brak planu kreatora w hardware stack snapshot");
-  return data;
-}
-
-function _resolveStepAdvance(ok, currentStep) {
-  if (!ok && isOptionalWizardStep(currentStep)) return { advanceOk: true, optionalSkip: true };
-  return { advanceOk: ok, optionalSkip: false };
-}
-
-function _buildStepError(err, currentStep) {
-  const message = formatHardwareApiError(err, "Krok zakonczony bledem.");
-  const commandResult = err?.commandResult ?? null;
-  return {
-    message,
-    commandResult,
-    payload: {
-      step: currentStep,
-      error: message,
-      ...(commandResult ? { diagnostic: commandResult, commandResult } : {}),
-    },
-  };
 }
 
 function txtDownload(name, text) {
@@ -92,7 +58,7 @@ export default function HardwareRestart() {
     setPlanError("");
     try {
       const stack = await HardwareApi.getHardwareStackSnapshot({ logContext: "load-stack" });
-      const data = _extractWizardPlan(stack);
+      const data = extractWizardPlan(stack);
       setPlan(data);
       setCurrentStepIndex(0);
       setStepResults({});
@@ -178,23 +144,15 @@ export default function HardwareRestart() {
     try {
       log(`START ${currentStep.step}`);
       log(currentStep.instruction || "Brak instrukcji.");
-      if (currentStep.step.startsWith("configure-")) {
-        ({ ok, payload } = await executeConfigureStep(ctx));
-      } else if (currentStep.action?.type === "diagnostic") {
-        ({ ok, payload } = await executeDiagnosticStep(ctx));
-      } else if (currentStep.action?.type === "peripheral-status") {
-        ({ ok, payload } = await executePeripheralStatusStep(ctx));
-      } else {
-        ({ ok, payload } = await executeFinalDiagnoseStep(ctx));
-      }
+      ({ ok, payload } = await runWizardStep(ctx));
     } catch (err) {
-      const stepErr = _buildStepError(err, currentStep);
+      const stepErr = buildStepError(err, currentStep);
       log(`ERROR: ${stepErr.message}`);
       if (stepErr.commandResult) log(`Diagnostic payload: ${JSON.stringify(stepErr.commandResult)}`);
       payload = stepErr.payload;
       ok = false;
     } finally {
-      const { advanceOk, optionalSkip } = _resolveStepAdvance(ok, currentStep);
+      const { advanceOk, optionalSkip } = resolveStepAdvance(ok, currentStep);
       if (optionalSkip) log(`WARN: krok opcjonalny (${currentStep.step}) — RTC/piRTC tylko na RPi; kontynuuję mimo błędu.`);
       setStepResults((prev) => ({
         ...prev,

@@ -1,30 +1,24 @@
 VERSION: 4
+# Test temperatury i wilgotności
+# Category: env
+
+SCENARIO: Pomiar warunków środowiskowych
+
+FUNC:
+  SET NAME 'Pomiar środowiskowy'
+  # $1=czujnik  $2=interwał  $3=czas  $4=min  $5=max  $6=unit
+  SET '$1' '1'
+  SAMPLE $1 START $2
+  WAIT $3
+  SAMPLE $1 STOP
+  GET $1
+  SAVE $1
+  IF '$1' '$4 .. $5 $6'
+  CORRECT 'Pomiar w normie'
+  ERROR 'Błąd: pomiar poza zakresem'
+  SET '$1' '0'
+
 GOAL:
-  SET NAME 'Pomiar warunków środowiskowych'
-  SET czujnik_temperatury 1
-  SET czujnik_wilgotności 1
-  WAIT 3s
-  SAMPLE temperatura START 500ms
-  SAMPLE wilgotność START 500ms
-  WAIT 30s
-  SAMPLE temperatura STOP
-  SAMPLE wilgotność STOP
-  LOG 'CALC temp_avg = AVG temperatura'
-  LOG 'CALC wilg_avg = AVG wilgotność'
-  LOG 'VAL temp_avg °C'
-  LOG 'VAL wilg_avg %RH'
-  IF 'temp_avg' '15 .. 35 °C'
-  CORRECT 'temp_avg w zakresie 15 .. 35 °C'
-  ERROR 'temp_avg poza zakresem 15 .. 35 °C'
-  IF 'wilg_avg' '30 .. 70 %RH'
-  CORRECT 'wilg_avg w zakresie 30 .. 70 %RH'
-  ERROR 'wilg_avg poza zakresem 30 .. 70 %RH'
-  IF 'temp_avg' '-∞ .. 15'
-    CORRECT 'temp_avg w zakresie -∞ .. 15'
-    ERROR 'temp_avg poza zakresem -∞ .. 15'
-  ERROR 'Temperatura poniżej minimum'
-  IF 'temp_avg' > '35'
-    CORRECT 'temp_avg w zakresie 35 .. ∞'
-    ERROR 'temp_avg poza zakresem 35 .. ∞'
-  ERROR 'Temperatura powyżej maksimum'
-  SAVE warunki-protokół
+  SET NAME 'pomiar temp wilgotność'
+  FUNC 'Pomiar środowiskowy' 'temperatura' '1s' '10s' '15' '25' '°C'
+  FUNC 'Pomiar środowiskowy' 'wilgotność' '1s' '10s' '30' '70' '%RH'

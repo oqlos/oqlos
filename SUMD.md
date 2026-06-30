@@ -1944,13 +1944,13 @@ pip install -e .[dev]
 ### `project/map.toon.yaml`
 
 ```toon markpact:analysis path=project/map.toon.yaml
-# oqlos | 336f 52558L | python:268,javascript:53,shell:9,typescript:3,css:2,less:1 | 2026-06-30
-# stats: 1397 func | 206 cls | 336 mod | CC̄=4.2 | critical:118 | cycles:0
-# alerts[5]: CC _validate_motor2=19; CC test_hardware_ui_aliases_and_status_page_are_served=18; CC test_navigation_index_and_short_aliases=15; CC _resolve_func_steps=14; CC _probe_i2c_ads1115=14
+# oqlos | 350f 52909L | python:270,javascript:65,shell:9,typescript:3,css:2,less:1 | 2026-06-30
+# stats: 1405 func | 206 cls | 350 mod | CC̄=4.2 | critical:118 | cycles:0
+# alerts[5]: CC test_hardware_ui_aliases_and_status_page_are_served=18; CC test_navigation_index_and_short_aliases=15; CC _resolve_func_steps=14; CC _probe_i2c_ads1115=14; CC exec_action_loop_block=14
 # hotspots[5]: _resolve fan=22; build_diagnosis_report fan=19; hardware_identify fan=18; _build_waveshare_diagnose_report fan=18; _handle_start fan=18
 # evolution: baseline
 # Keys: M=modules, D=details, i=imports, e=exports, c=classes, f=functions, m=methods
-M[336]:
+M[350]:
   app.doql.css,165
   app.doql.less,316
   examples/curl-quickstart.sh,75
@@ -1965,7 +1965,7 @@ M[336]:
   frontend/src/context/app-config-document.js,27
   frontend/src/hooks/useMapEditorHardwareEvents.js,62
   frontend/src/hooks/useMapEditorSidebarAutoCollapse.js,30
-  frontend/src/hooks/useParentEncoderNavigation.js,152
+  frontend/src/hooks/useParentEncoderNavigation.js,40
   frontend/src/hooks/useRailHoverPreview.js,85
   frontend/src/hooks/useUrlConfig.js,86
   frontend/src/hooks/useWsStatus.js,27
@@ -1979,15 +1979,27 @@ M[336]:
   frontend/src/styles/global.css,2123
   frontend/src/utils/collapse-toggle-bridge.js,47
   frontend/src/utils/designRem.js,44
+  frontend/src/utils/encoder-navigation.js,143
+  frontend/src/utils/encoder-navigation.test.js,21
   frontend/src/utils/hardware-activity-log.js,35
   frontend/src/utils/hardware-api-retry.js,39
   frontend/src/utils/hardware-api-retry.test.js,46
+  frontend/src/utils/hardware-demo-identify.js,59
+  frontend/src/utils/hardware-demo-identify.test.js,28
+  frontend/src/utils/hardware-restart-configure.js,69
+  frontend/src/utils/hardware-restart-configure.test.js,31
   frontend/src/utils/hardware-restart-docs.js,12
+  frontend/src/utils/hardware-restart-probe-select.js,20
+  frontend/src/utils/hardware-restart-step-errors.js,16
+  frontend/src/utils/hardware-restart-step-outcome.js,7
+  frontend/src/utils/hardware-restart-step-runner.js,24
+  frontend/src/utils/hardware-restart-step-runner.test.js,18
   frontend/src/utils/hardware-restart-wizard-helpers.js,42
-  frontend/src/utils/hardware-restart-wizard-steps.js,93
+  frontend/src/utils/hardware-restart-wizard-steps.js,47
   frontend/src/utils/hardware-restart-wizard-steps.test.js,32
   frontend/src/utils/hardware-time.js,5
-  frontend/src/utils/hardware-wizard-plan.js,11
+  frontend/src/utils/hardware-wizard-plan.js,23
+  frontend/src/utils/hardware-wizard-plan.test.js,17
   frontend/src/utils/hardware-wizard-steps.js,102
   frontend/src/utils/hardware-wizard-steps.test.js,30
   frontend/src/utils/hardwareEventStream.js,53
@@ -1995,7 +2007,7 @@ M[336]:
   frontend/src/utils/hui-shell-key.js,39
   frontend/src/utils/mapEditorFuncHardwareSummary.js,84
   frontend/src/utils/mapEditorFuncHardwareSummary.test.js,55
-  frontend/src/utils/mapEditorIntegrationMeta.js,100
+  frontend/src/utils/mapEditorIntegrationMeta.js,81
   frontend/src/utils/mapEditorIntegrationMeta.test.js,44
   frontend/src/utils/mapEditorMapShape.js,59
   frontend/src/utils/mapEditorModel.js,62
@@ -2028,7 +2040,8 @@ M[336]:
   oqlos/api/hardware_hui.py,62
   oqlos/api/hardware_identify.py,171
   oqlos/api/hardware_lung.py,86
-  oqlos/api/hardware_mapping_contract.py,90
+  oqlos/api/hardware_mapping_contract.py,64
+  oqlos/api/hardware_mapping_motor2.py,49
   oqlos/api/hardware_mapping_store.py,153
   oqlos/api/hardware_modbus_routes.py,81
   oqlos/api/hardware_modbus_topology.py,93
@@ -2081,7 +2094,7 @@ M[336]:
   oqlos/hardware/artificial_lung.py,163
   oqlos/hardware/client/__init__.py,101
   oqlos/hardware/client/adc.py,65
-  oqlos/hardware/client/autorepair.py,133
+  oqlos/hardware/client/autorepair.py,134
   oqlos/hardware/client/config.py,87
   oqlos/hardware/client/constants.py,70
   oqlos/hardware/client/errors.py,27
@@ -2236,6 +2249,7 @@ M[336]:
   tests/firmware/test_hardware_identify.py,236
   tests/firmware/test_hardware_identify_routes.py,10
   tests/firmware/test_hardware_lung_routes.py,24
+  tests/firmware/test_hardware_mapping_motor2.py,30
   tests/firmware/test_hardware_modbus_routes.py,12
   tests/firmware/test_hardware_modbus_wizard.py,353
   tests/firmware/test_hardware_probe_devices.py,27
@@ -2260,7 +2274,7 @@ M[336]:
   tests/firmware/test_oql_mqtt_bridge.py,255
   tests/firmware/test_oql_route_http.py,119
   tests/firmware/test_oqlos_logging.py,21
-  tests/firmware/test_panel_ui.py,218
+  tests/firmware/test_panel_ui.py,227
   tests/firmware/test_parser_cycle.py,53
   tests/firmware/test_plugin_gateway_env.py,243
   tests/firmware/test_plugin_gateway_init.py,67
@@ -2433,11 +2447,17 @@ D:
     artificial_lung_status()
     artificial_lung_command(payload)
   oqlos/api/hardware_mapping_contract.py:
-    e: _is_int,_validate_motor2,validate_mapping_contract,MappingContractError
+    e: _validate_motor2,validate_mapping_contract,MappingContractError
     MappingContractError: __init__(1)
-    _is_int(value)
     _validate_motor2(motor2_raw;issues)
     validate_mapping_contract(mapping)
+  oqlos/api/hardware_mapping_motor2.py:
+    e: _is_int,_append_peripheral_id_issue,_append_stroke_steps_issue,_append_speed_issues,validate_motor2_config
+    _is_int(value)
+    _append_peripheral_id_issue(motor2;issues)
+    _append_stroke_steps_issue(motor2;issues)
+    _append_speed_issues(motor2;issues)
+    validate_motor2_config(motor2_raw;issues)
   oqlos/api/hardware_mapping_store.py:
     e: _default_path,empty_mapping,_normalize_motor2_runtime_config,normalize_mapping,MappingStore
     MappingStore: __init__(1),file_path(0),storage_backend(0),_load_from_disk(0),save(0),get(0),replace(1),reset(0),parse_text(2),import_text(2),export_text(1)
@@ -4003,6 +4023,11 @@ D:
     e: test_hardware_router_includes_actuator_and_lung_paths,test_command_payload_requires_command_name
     test_hardware_router_includes_actuator_and_lung_paths()
     test_command_payload_requires_command_name()
+  tests/firmware/test_hardware_mapping_motor2.py:
+    e: test_validate_motor2_config_accepts_minimal_object,test_validate_motor2_config_rejects_default_speed_above_max,test_validate_mapping_contract_wraps_motor2_errors
+    test_validate_motor2_config_accepts_minimal_object()
+    test_validate_motor2_config_rejects_default_speed_above_max()
+    test_validate_mapping_contract_wraps_motor2_errors()
   tests/firmware/test_hardware_modbus_routes.py:
     e: test_hardware_router_includes_modbus_paths
     test_hardware_router_includes_modbus_paths()
@@ -4171,12 +4196,13 @@ D:
     e: test_configure_oqlos_logging_writes_to_file
     test_configure_oqlos_logging_writes_to_file(tmp_path;monkeypatch)
   tests/firmware/test_panel_ui.py:
-    e: panel_source,_panel_manage_verbs,_panel_endpoints,test_panel_route_serves_html,test_health_route_contains_redeploy_probe_token,test_panel_manage_verbs_are_supported,test_panel_only_calls_known_endpoints,client_with_controller,test_panel_single_oql_command_payload_dispatches,test_panel_flow_script_payload_dispatches,test_panel_script_without_version_executes_named_goal,test_panel_script_accepts_set_wait_alias,test_panel_manage_payload_dispatches,_FakeController
+    e: panel_source,_panel_manage_verbs,_panel_endpoints,test_panel_route_serves_html,test_panel_exposes_wait_execution_state_in_payload_and_url,test_health_route_contains_redeploy_probe_token,test_panel_manage_verbs_are_supported,test_panel_only_calls_known_endpoints,client_with_controller,test_panel_single_oql_command_payload_dispatches,test_panel_flow_script_payload_dispatches,test_panel_script_without_version_executes_named_goal,test_panel_script_accepts_set_wait_alias,test_panel_manage_payload_dispatches,_FakeController
     _FakeController: __init__(1),execute(1),manage(2)
     panel_source()
     _panel_manage_verbs(source)
     _panel_endpoints(source)
     test_panel_route_serves_html()
+    test_panel_exposes_wait_execution_state_in_payload_and_url(panel_source)
     test_health_route_contains_redeploy_probe_token()
     test_panel_manage_verbs_are_supported(panel_source)
     test_panel_only_calls_known_endpoints(panel_source)
@@ -4428,7 +4454,7 @@ project_file('frontend/src/api/wsClient.js', 139, 'javascript').
 project_file('frontend/src/context/app-config-document.js', 27, 'javascript').
 project_file('frontend/src/hooks/useMapEditorHardwareEvents.js', 62, 'javascript').
 project_file('frontend/src/hooks/useMapEditorSidebarAutoCollapse.js', 30, 'javascript').
-project_file('frontend/src/hooks/useParentEncoderNavigation.js', 152, 'javascript').
+project_file('frontend/src/hooks/useParentEncoderNavigation.js', 40, 'javascript').
 project_file('frontend/src/hooks/useRailHoverPreview.js', 85, 'javascript').
 project_file('frontend/src/hooks/useUrlConfig.js', 86, 'javascript').
 project_file('frontend/src/hooks/useWsStatus.js', 27, 'javascript').
@@ -4442,15 +4468,27 @@ project_file('frontend/src/pages/mapEditorDefaultMap.js', 1764, 'javascript').
 project_file('frontend/src/styles/global.css', 2123, 'css').
 project_file('frontend/src/utils/collapse-toggle-bridge.js', 47, 'javascript').
 project_file('frontend/src/utils/designRem.js', 44, 'javascript').
+project_file('frontend/src/utils/encoder-navigation.js', 143, 'javascript').
+project_file('frontend/src/utils/encoder-navigation.test.js', 21, 'javascript').
 project_file('frontend/src/utils/hardware-activity-log.js', 35, 'javascript').
 project_file('frontend/src/utils/hardware-api-retry.js', 39, 'javascript').
 project_file('frontend/src/utils/hardware-api-retry.test.js', 46, 'javascript').
+project_file('frontend/src/utils/hardware-demo-identify.js', 59, 'javascript').
+project_file('frontend/src/utils/hardware-demo-identify.test.js', 28, 'javascript').
+project_file('frontend/src/utils/hardware-restart-configure.js', 69, 'javascript').
+project_file('frontend/src/utils/hardware-restart-configure.test.js', 31, 'javascript').
 project_file('frontend/src/utils/hardware-restart-docs.js', 12, 'javascript').
+project_file('frontend/src/utils/hardware-restart-probe-select.js', 20, 'javascript').
+project_file('frontend/src/utils/hardware-restart-step-errors.js', 16, 'javascript').
+project_file('frontend/src/utils/hardware-restart-step-outcome.js', 7, 'javascript').
+project_file('frontend/src/utils/hardware-restart-step-runner.js', 24, 'javascript').
+project_file('frontend/src/utils/hardware-restart-step-runner.test.js', 18, 'javascript').
 project_file('frontend/src/utils/hardware-restart-wizard-helpers.js', 42, 'javascript').
-project_file('frontend/src/utils/hardware-restart-wizard-steps.js', 93, 'javascript').
+project_file('frontend/src/utils/hardware-restart-wizard-steps.js', 47, 'javascript').
 project_file('frontend/src/utils/hardware-restart-wizard-steps.test.js', 32, 'javascript').
 project_file('frontend/src/utils/hardware-time.js', 5, 'javascript').
-project_file('frontend/src/utils/hardware-wizard-plan.js', 11, 'javascript').
+project_file('frontend/src/utils/hardware-wizard-plan.js', 23, 'javascript').
+project_file('frontend/src/utils/hardware-wizard-plan.test.js', 17, 'javascript').
 project_file('frontend/src/utils/hardware-wizard-steps.js', 102, 'javascript').
 project_file('frontend/src/utils/hardware-wizard-steps.test.js', 30, 'javascript').
 project_file('frontend/src/utils/hardwareEventStream.js', 53, 'javascript').
@@ -4458,7 +4496,7 @@ project_file('frontend/src/utils/hardwareEventStream.test.js', 37, 'javascript')
 project_file('frontend/src/utils/hui-shell-key.js', 39, 'javascript').
 project_file('frontend/src/utils/mapEditorFuncHardwareSummary.js', 84, 'javascript').
 project_file('frontend/src/utils/mapEditorFuncHardwareSummary.test.js', 55, 'javascript').
-project_file('frontend/src/utils/mapEditorIntegrationMeta.js', 100, 'javascript').
+project_file('frontend/src/utils/mapEditorIntegrationMeta.js', 81, 'javascript').
 project_file('frontend/src/utils/mapEditorIntegrationMeta.test.js', 44, 'javascript').
 project_file('frontend/src/utils/mapEditorMapShape.js', 59, 'javascript').
 project_file('frontend/src/utils/mapEditorModel.js', 62, 'javascript').
@@ -4491,7 +4529,8 @@ project_file('oqlos/api/hardware_gateway.py', 23, 'python').
 project_file('oqlos/api/hardware_hui.py', 62, 'python').
 project_file('oqlos/api/hardware_identify.py', 171, 'python').
 project_file('oqlos/api/hardware_lung.py', 86, 'python').
-project_file('oqlos/api/hardware_mapping_contract.py', 90, 'python').
+project_file('oqlos/api/hardware_mapping_contract.py', 64, 'python').
+project_file('oqlos/api/hardware_mapping_motor2.py', 49, 'python').
 project_file('oqlos/api/hardware_mapping_store.py', 153, 'python').
 project_file('oqlos/api/hardware_modbus_routes.py', 81, 'python').
 project_file('oqlos/api/hardware_modbus_topology.py', 93, 'python').
@@ -4544,7 +4583,7 @@ project_file('oqlos/hardware/__init__.py', 18, 'python').
 project_file('oqlos/hardware/artificial_lung.py', 163, 'python').
 project_file('oqlos/hardware/client/__init__.py', 101, 'python').
 project_file('oqlos/hardware/client/adc.py', 65, 'python').
-project_file('oqlos/hardware/client/autorepair.py', 133, 'python').
+project_file('oqlos/hardware/client/autorepair.py', 134, 'python').
 project_file('oqlos/hardware/client/config.py', 87, 'python').
 project_file('oqlos/hardware/client/constants.py', 70, 'python').
 project_file('oqlos/hardware/client/errors.py', 27, 'python').
@@ -4699,6 +4738,7 @@ project_file('tests/firmware/test_hardware_hui_routes.py', 44, 'python').
 project_file('tests/firmware/test_hardware_identify.py', 236, 'python').
 project_file('tests/firmware/test_hardware_identify_routes.py', 10, 'python').
 project_file('tests/firmware/test_hardware_lung_routes.py', 24, 'python').
+project_file('tests/firmware/test_hardware_mapping_motor2.py', 30, 'python').
 project_file('tests/firmware/test_hardware_modbus_routes.py', 12, 'python').
 project_file('tests/firmware/test_hardware_modbus_wizard.py', 353, 'python').
 project_file('tests/firmware/test_hardware_probe_devices.py', 27, 'python').
@@ -4723,7 +4763,7 @@ project_file('tests/firmware/test_oql_manage_ops.py', 187, 'python').
 project_file('tests/firmware/test_oql_mqtt_bridge.py', 255, 'python').
 project_file('tests/firmware/test_oql_route_http.py', 119, 'python').
 project_file('tests/firmware/test_oqlos_logging.py', 21, 'python').
-project_file('tests/firmware/test_panel_ui.py', 218, 'python').
+project_file('tests/firmware/test_panel_ui.py', 227, 'python').
 project_file('tests/firmware/test_parser_cycle.py', 53, 'python').
 project_file('tests/firmware/test_plugin_gateway_env.py', 243, 'python').
 project_file('tests/firmware/test_plugin_gateway_init.py', 67, 'python').
@@ -4855,9 +4895,13 @@ python_function('oqlos/api/hardware_lung.py', 'stop_lung', 0, 1, 3).
 python_function('oqlos/api/hardware_lung.py', 'disable_lung', 0, 1, 3).
 python_function('oqlos/api/hardware_lung.py', 'artificial_lung_status', 0, 1, 3).
 python_function('oqlos/api/hardware_lung.py', 'artificial_lung_command', 1, 1, 5).
-python_function('oqlos/api/hardware_mapping_contract.py', '_is_int', 1, 2, 1).
-python_function('oqlos/api/hardware_mapping_contract.py', '_validate_motor2', 2, 19, 7).
+python_function('oqlos/api/hardware_mapping_contract.py', '_validate_motor2', 2, 1, 1).
 python_function('oqlos/api/hardware_mapping_contract.py', 'validate_mapping_contract', 1, 6, 5).
+python_function('oqlos/api/hardware_mapping_motor2.py', '_is_int', 1, 2, 1).
+python_function('oqlos/api/hardware_mapping_motor2.py', '_append_peripheral_id_issue', 2, 4, 4).
+python_function('oqlos/api/hardware_mapping_motor2.py', '_append_stroke_steps_issue', 2, 4, 3).
+python_function('oqlos/api/hardware_mapping_motor2.py', '_append_speed_issues', 2, 10, 3).
+python_function('oqlos/api/hardware_mapping_motor2.py', 'validate_motor2_config', 2, 4, 7).
 python_function('oqlos/api/hardware_mapping_store.py', '_default_path', 0, 3, 4).
 python_function('oqlos/api/hardware_mapping_store.py', 'empty_mapping', 0, 1, 0).
 python_function('oqlos/api/hardware_mapping_store.py', '_normalize_motor2_runtime_config', 1, 7, 4).
@@ -5924,6 +5968,9 @@ python_function('tests/firmware/test_hardware_identify.py', 'test_hardware_ident
 python_function('tests/firmware/test_hardware_identify_routes.py', 'test_hardware_router_includes_health_and_identify', 0, 4, 0).
 python_function('tests/firmware/test_hardware_lung_routes.py', 'test_hardware_router_includes_actuator_and_lung_paths', 0, 6, 0).
 python_function('tests/firmware/test_hardware_lung_routes.py', 'test_command_payload_requires_command_name', 0, 2, 2).
+python_function('tests/firmware/test_hardware_mapping_motor2.py', 'test_validate_motor2_config_accepts_minimal_object', 0, 2, 1).
+python_function('tests/firmware/test_hardware_mapping_motor2.py', 'test_validate_motor2_config_rejects_default_speed_above_max', 0, 2, 2).
+python_function('tests/firmware/test_hardware_mapping_motor2.py', 'test_validate_mapping_contract_wraps_motor2_errors', 0, 2, 3).
 python_function('tests/firmware/test_hardware_modbus_routes.py', 'test_hardware_router_includes_modbus_paths', 0, 6, 0).
 python_function('tests/firmware/test_hardware_modbus_wizard.py', '_patch_modbus_ports', 2, 1, 1).
 python_function('tests/firmware/test_hardware_modbus_wizard.py', '_patch_modbus_io_ids', 2, 1, 1).
@@ -6016,6 +6063,7 @@ python_function('tests/firmware/test_panel_ui.py', 'panel_source', 0, 1, 2).
 python_function('tests/firmware/test_panel_ui.py', '_panel_manage_verbs', 1, 1, 2).
 python_function('tests/firmware/test_panel_ui.py', '_panel_endpoints', 1, 1, 2).
 python_function('tests/firmware/test_panel_ui.py', 'test_panel_route_serves_html', 0, 7, 2).
+python_function('tests/firmware/test_panel_ui.py', 'test_panel_exposes_wait_execution_state_in_payload_and_url', 1, 7, 0).
 python_function('tests/firmware/test_panel_ui.py', 'test_health_route_contains_redeploy_probe_token', 0, 4, 3).
 python_function('tests/firmware/test_panel_ui.py', 'test_panel_manage_verbs_are_supported', 1, 3, 4).
 python_function('tests/firmware/test_panel_ui.py', 'test_panel_only_calls_known_endpoints', 1, 4, 1).
@@ -7297,7 +7345,7 @@ class Settings:  # Application settings loaded from environment variables and .
 
 ## Call Graph
 
-*443 nodes · 500 edges · 64 modules · CC̄=3.9*
+*434 nodes · 500 edges · 59 modules · CC̄=3.8*
 
 ### Hubs (by degree)
 
@@ -7314,9 +7362,9 @@ class Settings:  # Application settings loaded from environment variables and .
 
 ```toon markpact:analysis path=project/calls.toon.yaml
 # code2llm call graph | /home/tom/github/oqlos/oqlos
-# generated in 0.56s
-# nodes: 443 | edges: 500 | modules: 64
-# CC̄=3.9
+# generated in 0.29s
+# nodes: 434 | edges: 500 | modules: 59
+# CC̄=3.8
 
 HUBS[20]:
   examples.hardware.doctor-workflow.print
@@ -7335,30 +7383,30 @@ HUBS[20]:
     CC=8  in:1  out:24  total:25
   oqlos.core.oql_parser.parse_oql
     CC=14  in:3  out:21  total:24
+  frontend.src.pages.MapEditor.applyMapMutation
+    CC=2  in:16  out:8  total:24
   oqlos.core.parser.parse_dsl_to_goal_with_issues
     CC=13  in:3  out:21  total:24
   oqlos.tools.hardware_diagnose.doctor_format.format_doctor
     CC=6  in:2  out:21  total:23
   oqlos.core._action_motor2._motor2_build_plan
     CC=12  in:1  out:22  total:23
-  oqlos.core._action_motor2._try_exec_motor2_set
-    CC=13  in:1  out:22  total:23
   oqlos.core._line_parsers._parse_if_condition
     CC=9  in:1  out:22  total:23
   oqlos.tools.hardware_diagnose.doctor_modbus_analysis.analyze_modbus_adc_config
     CC=12  in:1  out:22  total:23
+  oqlos.core._action_motor2._try_exec_motor2_set
+    CC=13  in:1  out:22  total:23
   oqlos.tools.hardware_diagnose.health.cmd_diagnose
     CC=6  in:2  out:20  total:22
-  oqlos.core._cql_tree_builder._parse_goal_line
-    CC=12  in:1  out:20  total:21
-  oqlos.core.base.VariableStore.set
-    CC=4  in:19  out:2  total:21
   oqlos.tools.hardware_diagnose.doctor_modbus_analysis.analyze_modbus_config
     CC=11  in:1  out:20  total:21
+  oqlos.core._cql_tree_builder._parse_goal_line
+    CC=12  in:1  out:20  total:21
   oqlos.hardware.config_paths.resolve_oqlos_config_path
     CC=6  in:8  out:13  total:21
-  oqlos.tools.hardware_diagnose.doctor_modbus_analysis.analyze_serial_port_owners
-    CC=13  in:1  out:19  total:20
+  oqlos.core.base.VariableStore.set
+    CC=4  in:19  out:2  total:21
 
 MODULES:
   examples.hardware.doctor-workflow  [1 funcs]
@@ -7377,17 +7425,6 @@ MODULES:
     isIdempotentDiagnosticSuccess  CC=3  out:2
     isIdempotentTic249Deenergized  CC=12  out:2
     tic249ResultStatus  CC=8  out:2
-  frontend.src.api.hardwareApi  [10 funcs]
-    API_BASE  CC=17  out:13
-    durationMs  CC=8  out:5
-    get  CC=1  out:1
-    mode  CC=1  out:1
-    normalized  CC=1  out:1
-    post  CC=1  out:1
-    put  CC=1  out:1
-    request  CC=17  out:13
-    serialPort  CC=2  out:1
-    text  CC=2  out:0
   frontend.src.api.wsClient  [15 funcs]
     _handleMessage  CC=13  out:10
     _request  CC=3  out:12
@@ -7402,6 +7439,17 @@ MODULES:
   frontend.src.hooks.useMapEditorSidebarAutoCollapse  [2 funcs]
     applyAutoCollapse  CC=9  out:4
     useMapEditorSidebarAutoCollapse  CC=9  out:11
+  frontend.src.hooks.useParentEncoderNavigation  [17 funcs]
+    _applyScrollToItems  CC=4  out:0
+    _focusEncoderItem  CC=1  out:3
+    _tryCancelPostMessage  CC=2  out:1
+    all  CC=6  out:2
+    controller  CC=3  out:2
+    createEncoderController  CC=17  out:9
+    getInteractiveItems  CC=6  out:4
+    handleEncoderCommand  CC=11  out:6
+    items  CC=4  out:3
+    onKeyDown  CC=7  out:3
   frontend.src.hooks.useRailHoverPreview  [8 funcs]
     cancelPanelClose  CC=2  out:2
     cancelRailOpen  CC=2  out:2
@@ -7431,17 +7479,20 @@ MODULES:
     onNoteClick  CC=4  out:9
     playMelody  CC=9  out:11
     playNote  CC=5  out:7
-  frontend.src.pages.HardwareRestart  [23 funcs]
-    advanceOk  CC=3  out:2
-    canRunCurrentStep  CC=1  out:4
-    confirmErrorKey  CC=1  out:4
-    confirmLabelKey  CC=1  out:4
-    currentStep  CC=1  out:4
-    isConfigureStep  CC=1  out:4
-    isSeparateAdapters  CC=1  out:4
-    loadPlan  CC=18  out:11
-    log  CC=1  out:3
-    message  CC=1  out:1
+  frontend.src.pages.MapEditor  [21 funcs]
+    addAction  CC=2  out:6
+    addFunc  CC=2  out:6
+    addObject  CC=2  out:6
+    addParam  CC=2  out:4
+    applyMapMutation  CC=2  out:8
+    clearServerHardwareEvents  CC=8  out:9
+    deleteKey  CC=2  out:4
+    editJsonField  CC=5  out:3
+    editMotorRuntimeConfig  CC=11  out:6
+    editObjectActionArg  CC=7  out:4
+  frontend.src.pages.MapEditorObjectActionPanel  [2 funcs]
+    _MotorRelativeParams  CC=1  out:3
+    _motorArgLabel  CC=6  out:0
   frontend.src.utils.collapse-toggle-bridge  [2 funcs]
     isInIframe  CC=4  out:0
     postToParent  CC=4  out:8
@@ -7455,25 +7506,22 @@ MODULES:
     sleep  CC=1  out:2
   frontend.src.utils.hardware-restart-wizard-steps  [1 funcs]
     probe  CC=1  out:2
-  frontend.src.utils.hardware-wizard-steps  [1 funcs]
+  frontend.src.utils.hardware-wizard-steps  [4 funcs]
+    _filterCandidatesByRole  CC=6  out:3
+    _findBestCandidate  CC=6  out:3
     list  CC=2  out:0
-  frontend.src.utils.hardwareEventStream  [1 funcs]
+    selectWizardProbeCandidate  CC=11  out:9
+  frontend.src.utils.hardwareEventStream  [14 funcs]
+    buildHardwareEventsWsUrl  CC=10  out:3
+    commandName  CC=3  out:1
+    data  CC=3  out:1
     id  CC=3  out:1
-  frontend.src.utils.mapEditorFuncHardwareSummary  [6 funcs]
-    apiBindingHint  CC=12  out:0
-    objectMap  CC=3  out:2
-    resolveNamedActionHardwareHint  CC=7  out:4
-    resolveObjectActionHardwareHint  CC=6  out:2
-    summarizeFuncToHardware  CC=17  out:6
-    uniqueHints  CC=5  out:5
-  frontend.src.utils.mapEditorIntegrationMeta  [7 funcs]
-    firstBindingFromObjectMapping  CC=6  out:1
-    nextValue  CC=2  out:1
-    readIntegrationMeta  CC=15  out:1
-    setApiEndpointField  CC=2  out:0
-    setApiServiceField  CC=2  out:0
-    setHardwareAddressField  CC=8  out:0
-    setMetaField  CC=15  out:4
+    matchesHardwareEventFilters  CC=9  out:4
+    normalizeHardwareEvent  CC=8  out:5
+    normalizeText  CC=2  out:1
+    payload  CC=3  out:1
+    peripheralId  CC=3  out:1
+    resolveEventStatus  CC=6  out:0
   frontend.src.utils.mapEditorMapShape  [6 funcs]
     cloneValue  CC=1  out:2
     ensureMapShape  CC=7  out:1
@@ -7485,6 +7533,9 @@ MODULES:
     cloneDefaultMap  CC=1  out:2
     createInitialEditorState  CC=1  out:3
     ensureRequiredDefaultMappings  CC=10  out:3
+  frontend.src.utils.mapEditorObjectActionEdits  [2 funcs]
+    applyObjectActionBodyFieldMutation  CC=8  out:1
+    parsePromptedFieldValue  CC=5  out:4
   frontend.src.utils.rbac.policy  [13 funcs]
     canConnectRoleAccessPath  CC=2  out:3
     canHostRoleAccessPath  CC=2  out:3
@@ -7507,16 +7558,6 @@ MODULES:
     mergeParentSearchIntoChildUrl  CC=9  out:11
     nextHref  CC=1  out:1
     parentSearch  CC=4  out:3
-  frontend.src.utils.url-embed-config.test  [1 funcs]
-    next  CC=2  out:0
-  frontend.src.utils.useSelectionCollapsePanel  [7 funcs]
-    cancelAutoCollapse  CC=2  out:2
-    collapsed  CC=2  out:6
-    expand  CC=1  out:5
-    onMessage  CC=8  out:3
-    scheduleCollapse  CC=2  out:6
-    toggleCollapsed  CC=2  out:5
-    useSelectionCollapsePanel  CC=21  out:20
   oqlos.config  [1 funcs]
     get_settings  CC=1  out:0
   oqlos.core._action_motor2  [30 funcs]
@@ -7579,23 +7620,21 @@ MODULES:
     _drop_command_token  CC=6  out:5
     _exec_set_wait  CC=3  out:7
     _extract_action_tokens  CC=5  out:4
-  oqlos.core._line_parsers  [5 funcs]
+  oqlos.core._line_parsers  [10 funcs]
+    _extract_set_params  CC=7  out:13
+    _parse_action_line  CC=10  out:18
     _parse_if_condition  CC=9  out:22
     _parse_inline_task  CC=5  out:7
     _parse_pump_line  CC=6  out:8
     _parse_set_line  CC=10  out:15
     _parse_task_part  CC=10  out:14
-  oqlos.core._oql_adapter  [15 funcs]
-    register  CC=1  out:1
-    _cmd_to_actions  CC=2  out:3
-    _fmt_value  CC=2  out:1
-    _load_includes  CC=12  out:15
-    _lower_call  CC=6  out:10
-    _lower_max  CC=1  out:3
-    _lower_min  CC=1  out:3
-    _lower_set  CC=1  out:3
-    _parse_macro_line  CC=8  out:10
-    _resolve_include  CC=6  out:8
+    _set_lung_step  CC=4  out:3
+    _set_pump_step  CC=4  out:3
+    _set_valve_step  CC=4  out:4
+  oqlos.core._oql_adapter  [3 funcs]
+    is_flat_oql  CC=8  out:13
+    oql_doc_to_cql  CC=12  out:30
+    parse_flat_oql  CC=1  out:2
   oqlos.core._sensor_evaluator  [2 funcs]
     __init__  CC=3  out:2
     collect_sensor_constraints  CC=10  out:5
@@ -7676,15 +7715,8 @@ MODULES:
     resolve_oqlos_config_path  CC=6  out:13
   oqlos.hardware.health_status  [1 funcs]
     health_status_is_ok  CC=11  out:9
-  oqlos.tools.hardware_diagnose.__main__  [3 funcs]
-    _print_calibrate  CC=6  out:9
-    _print_health  CC=2  out:5
-    _print_list  CC=3  out:8
-  oqlos.tools.hardware_diagnose.calibration  [1 funcs]
-    run_calibration_test  CC=2  out:8
-  oqlos.tools.hardware_diagnose.discovery  [2 funcs]
+  oqlos.tools.hardware_diagnose.discovery  [1 funcs]
     list_i2c_buses  CC=1  out:2
-    list_usb_serial_devices  CC=7  out:9
   oqlos.tools.hardware_diagnose.doctor  [1 funcs]
     build_doctor_report  CC=11  out:14
   oqlos.tools.hardware_diagnose.doctor_common  [5 funcs]
@@ -7728,8 +7760,6 @@ MODULES:
     apply_safe_fixes  CC=9  out:14
     update_modbus_adc_config  CC=4  out:18
     update_modbus_config  CC=2  out:17
-  oqlos.tools.hardware_diagnose.doctor_serial  [1 funcs]
-    owners_for_configured_port  CC=4  out:3
   oqlos.tools.hardware_diagnose.health  [7 funcs]
     _format_health_value  CC=8  out:9
     _is_health_ok  CC=5  out:6
@@ -7768,6 +7798,35 @@ EDGES:
   setup_hardware_and_run_oql.main → setup_hardware_and_run_oql.run_oql_scenario
   frontend.src.hooks.useMapEditorSidebarAutoCollapse.useMapEditorSidebarAutoCollapse → frontend.src.hooks.useMapEditorSidebarAutoCollapse.applyAutoCollapse
   frontend.src.hooks.useUrlConfig.useUrlConfig → frontend.src.hooks.useUrlConfig.notifyParentChildReady
+  frontend.src.hooks.useParentEncoderNavigation.createEncoderController → frontend.src.hooks.useParentEncoderNavigation.removeHighlights
+  frontend.src.hooks.useParentEncoderNavigation.createEncoderController → frontend.src.hooks.useParentEncoderNavigation.getInteractiveItems
+  frontend.src.hooks.useParentEncoderNavigation.createEncoderController → frontend.src.hooks.useParentEncoderNavigation._applyScrollToItems
+  frontend.src.hooks.useParentEncoderNavigation.createEncoderController → frontend.src.hooks.useParentEncoderNavigation._focusEncoderItem
+  frontend.src.hooks.useParentEncoderNavigation.createEncoderController → frontend.src.hooks.useParentEncoderNavigation._tryCancelPostMessage
+  frontend.src.hooks.useParentEncoderNavigation.createEncoderController → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
+  frontend.src.hooks.useParentEncoderNavigation.parentEncoderActive → frontend.src.hooks.useParentEncoderNavigation.removeHighlights
+  frontend.src.hooks.useParentEncoderNavigation.parentEncoderActive → frontend.src.hooks.useParentEncoderNavigation.getInteractiveItems
+  frontend.src.hooks.useParentEncoderNavigation.parentEncoderActive → frontend.src.hooks.useParentEncoderNavigation._applyScrollToItems
+  frontend.src.hooks.useParentEncoderNavigation.parentEncoderActive → frontend.src.hooks.useParentEncoderNavigation._focusEncoderItem
+  frontend.src.hooks.useParentEncoderNavigation.parentEncoderActive → frontend.src.hooks.useParentEncoderNavigation._tryCancelPostMessage
+  frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand → frontend.src.hooks.useParentEncoderNavigation.removeHighlights
+  frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand → frontend.src.hooks.useParentEncoderNavigation.getInteractiveItems
+  frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand → frontend.src.hooks.useParentEncoderNavigation._applyScrollToItems
+  frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand → frontend.src.hooks.useParentEncoderNavigation._focusEncoderItem
+  frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand → frontend.src.hooks.useParentEncoderNavigation._tryCancelPostMessage
+  frontend.src.hooks.useParentEncoderNavigation.items → frontend.src.hooks.useParentEncoderNavigation.removeHighlights
+  frontend.src.hooks.useParentEncoderNavigation.items → frontend.src.hooks.useParentEncoderNavigation._applyScrollToItems
+  frontend.src.hooks.useParentEncoderNavigation.items → frontend.src.hooks.useParentEncoderNavigation._focusEncoderItem
+  frontend.src.hooks.useParentEncoderNavigation.onKeyDown → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
+  frontend.src.hooks.useParentEncoderNavigation.useParentEncoderNavigation → frontend.src.hooks.useParentEncoderNavigation.createEncoderController
+  frontend.src.hooks.useParentEncoderNavigation.useParentEncoderNavigation → frontend.src.hooks.useParentEncoderNavigation.parseParentEncoderEnvelope
+  frontend.src.hooks.useParentEncoderNavigation.useParentEncoderNavigation → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
+  frontend.src.hooks.useParentEncoderNavigation.controller → frontend.src.hooks.useParentEncoderNavigation.parseParentEncoderEnvelope
+  frontend.src.hooks.useParentEncoderNavigation.controller → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
+  frontend.src.hooks.useParentEncoderNavigation.onMessage → frontend.src.hooks.useParentEncoderNavigation.parseParentEncoderEnvelope
+  frontend.src.hooks.useParentEncoderNavigation.onMessage → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
+  frontend.src.hooks.useParentEncoderNavigation.onWheel → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
+  frontend.src.hooks.useParentEncoderNavigation.raw → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
   frontend.src.hooks.useRailHoverPreview.useRailHoverPreview → frontend.src.hooks.useRailHoverPreview.cancelPanelClose
   frontend.src.hooks.useRailHoverPreview.useRailHoverPreview → frontend.src.hooks.useRailHoverPreview.previewExpand
   frontend.src.hooks.useRailHoverPreview.useRailHoverPreview → frontend.src.hooks.useRailHoverPreview.cancelRailOpen
@@ -7776,40 +7835,11 @@ EDGES:
   frontend.src.hooks.useRailHoverPreview.railLeave → frontend.src.hooks.useRailHoverPreview.cancelRailOpen
   frontend.src.hooks.useRailHoverPreview.panelEnter → frontend.src.hooks.useRailHoverPreview.cancelPanelClose
   frontend.src.hooks.useRailHoverPreview.panelLeave → frontend.src.hooks.useRailHoverPreview.cancelRailOpen
-  frontend.src.pages.HardwareRestart.loadPlan → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
-  frontend.src.pages.HardwareRestart.serialPort → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
-  frontend.src.pages.HardwareRestart.serialPort → frontend.src.pages.HardwareRestart.loadPlan
-  frontend.src.pages.HardwareRestart.startOqlosAndRefreshPlan → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
-  frontend.src.pages.HardwareRestart.startOqlosAndRefreshPlan → frontend.src.pages.HardwareRestart.loadPlan
-  frontend.src.pages.HardwareRestart.port → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
-  frontend.src.pages.HardwareRestart.port → frontend.src.pages.HardwareRestart.loadPlan
-  frontend.src.pages.HardwareRestart.steps → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
-  frontend.src.pages.HardwareRestart.currentStep → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
-  frontend.src.pages.HardwareRestart.isSeparateAdapters → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
-  frontend.src.pages.HardwareRestart.isConfigureStep → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
-  frontend.src.pages.HardwareRestart.requiresStepConfirm → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
-  frontend.src.pages.HardwareRestart.confirmLabelKey → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
-  frontend.src.pages.HardwareRestart.confirmErrorKey → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
-  frontend.src.pages.HardwareRestart.canRunCurrentStep → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
-  frontend.src.pages.HardwareRestart.releaseRs485Port → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
-  frontend.src.pages.HardwareRestart.runCurrentStep → frontend.src.pages.HardwareRestart.timestamp
-  frontend.src.pages.HardwareRestart.runCurrentStep → frontend.src.pages.HardwareRestart.log
-  frontend.src.pages.HardwareRestart.log → frontend.src.pages.HardwareRestart.timestamp
-  frontend.src.pages.HardwareRestart.message → frontend.src.pages.HardwareRestart.log
-  frontend.src.pages.HardwareRestart.optionalStep → frontend.src.pages.HardwareRestart.log
-  frontend.src.pages.HardwareRestart.advanceOk → frontend.src.pages.HardwareRestart.log
-  frontend.src.pages.HardwareRestart.optionalSkip → frontend.src.pages.HardwareRestart.log
-  frontend.src.pages.HardwareRestart.skipPumpOffStep → frontend.src.pages.HardwareRestart.timestamp
-  frontend.src.pages.HardwareRestart.skipOptionalStep → frontend.src.pages.HardwareRestart.timestamp
-  frontend.src.pages.HardwareDemo.ensureAudioCtx → frontend.src.pages.HardwareDemo.appendLog
-  frontend.src.pages.HardwareDemo.ensureAudioCtx → frontend.src.pages.HardwareDemo.Ctx
-  frontend.src.pages.HardwareDemo.Ctx → frontend.src.pages.HardwareDemo.appendLog
-  frontend.src.pages.HardwareDemo.cancelled → frontend.src.pages.HardwareDemo.appendLog
-  frontend.src.pages.HardwareDemo.pumpOk → frontend.src.pages.HardwareDemo.appendLog
-  frontend.src.pages.HardwareDemo.stepperOk → frontend.src.pages.HardwareDemo.appendLog
-  frontend.src.pages.HardwareDemo.sendDeviceNote → frontend.src.pages.HardwareDemo.now
-  frontend.src.pages.HardwareDemo.sendDeviceNote → frontend.src.pages.HardwareDemo.appendLog
-  frontend.src.pages.HardwareDemo.fallbackDevice → frontend.src.pages.HardwareDemo.appendLog
+  frontend.src.pages.MapEditorObjectActionPanel._MotorRelativeParams → frontend.src.pages.MapEditorObjectActionPanel._motorArgLabel
+  frontend.src.pages.MapEditor.addObject → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.name → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.addParam → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.editParamConversionField → frontend.src.pages.MapEditor.applyMapMutation
 ```
 
 ## API Stubs

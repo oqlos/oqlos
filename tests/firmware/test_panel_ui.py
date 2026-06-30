@@ -105,6 +105,16 @@ def test_panel_only_calls_known_endpoints(panel_source):
     assert "/api/v1/oql/manage" in endpoints
     # The scenarios fetch endpoint must exist too (loadServerScenarios()).
     assert "/api/v1/scenarios/fetch" in panel_source
+    assert "/api/v1/editor/files" in panel_source
+
+
+def test_panel_loads_editor_file_scenarios(panel_source):
+    """Regression: panel scenario dropdown must list on-disk .oql files like /editor."""
+    assert "loadEditorFileScenarios" in panel_source
+    assert "FILE_SCENARIOS" in panel_source
+    assert "[plik]" in panel_source
+    assert "_filePath" in panel_source
+    assert "loadEditorFileScenarios();" in panel_source
 
 
 # --------------------------------------------------------------------------- #

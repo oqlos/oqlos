@@ -1,6 +1,0 @@
-VERSION: 4
-GOAL:
-  SET NAME 'oglediny wizualne'
-  LOG 'Wymagane potwierdzenie operatora (check-list wizualny)'
-  SET 'operator-confirm' '1'
-  SAVE wynik-wizualny

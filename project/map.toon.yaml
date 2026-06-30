@@ -1,10 +1,10 @@
-# oqlos | 336f 52558L | python:268,javascript:53,shell:9,typescript:3,css:2,less:1 | 2026-06-30
-# stats: 1397 func | 206 cls | 336 mod | CC̄=4.2 | critical:118 | cycles:0
-# alerts[5]: CC _validate_motor2=19; CC test_hardware_ui_aliases_and_status_page_are_served=18; CC test_navigation_index_and_short_aliases=15; CC _resolve_func_steps=14; CC _probe_i2c_ads1115=14
+# oqlos | 350f 52909L | python:270,javascript:65,shell:9,typescript:3,css:2,less:1 | 2026-06-30
+# stats: 1405 func | 206 cls | 350 mod | CC̄=4.2 | critical:118 | cycles:0
+# alerts[5]: CC test_hardware_ui_aliases_and_status_page_are_served=18; CC test_navigation_index_and_short_aliases=15; CC _resolve_func_steps=14; CC _probe_i2c_ads1115=14; CC exec_action_loop_block=14
 # hotspots[5]: _resolve fan=22; build_diagnosis_report fan=19; hardware_identify fan=18; _build_waveshare_diagnose_report fan=18; _handle_start fan=18
 # evolution: baseline
 # Keys: M=modules, D=details, i=imports, e=exports, c=classes, f=functions, m=methods
-M[336]:
+M[350]:
   app.doql.css,165
   app.doql.less,316
   examples/curl-quickstart.sh,75
@@ -19,7 +19,7 @@ M[336]:
   frontend/src/context/app-config-document.js,27
   frontend/src/hooks/useMapEditorHardwareEvents.js,62
   frontend/src/hooks/useMapEditorSidebarAutoCollapse.js,30
-  frontend/src/hooks/useParentEncoderNavigation.js,152
+  frontend/src/hooks/useParentEncoderNavigation.js,40
   frontend/src/hooks/useRailHoverPreview.js,85
   frontend/src/hooks/useUrlConfig.js,86
   frontend/src/hooks/useWsStatus.js,27
@@ -33,15 +33,27 @@ M[336]:
   frontend/src/styles/global.css,2123
   frontend/src/utils/collapse-toggle-bridge.js,47
   frontend/src/utils/designRem.js,44
+  frontend/src/utils/encoder-navigation.js,143
+  frontend/src/utils/encoder-navigation.test.js,21
   frontend/src/utils/hardware-activity-log.js,35
   frontend/src/utils/hardware-api-retry.js,39
   frontend/src/utils/hardware-api-retry.test.js,46
+  frontend/src/utils/hardware-demo-identify.js,59
+  frontend/src/utils/hardware-demo-identify.test.js,28
+  frontend/src/utils/hardware-restart-configure.js,69
+  frontend/src/utils/hardware-restart-configure.test.js,31
   frontend/src/utils/hardware-restart-docs.js,12
+  frontend/src/utils/hardware-restart-probe-select.js,20
+  frontend/src/utils/hardware-restart-step-errors.js,16
+  frontend/src/utils/hardware-restart-step-outcome.js,7
+  frontend/src/utils/hardware-restart-step-runner.js,24
+  frontend/src/utils/hardware-restart-step-runner.test.js,18
   frontend/src/utils/hardware-restart-wizard-helpers.js,42
-  frontend/src/utils/hardware-restart-wizard-steps.js,93
+  frontend/src/utils/hardware-restart-wizard-steps.js,47
   frontend/src/utils/hardware-restart-wizard-steps.test.js,32
   frontend/src/utils/hardware-time.js,5
-  frontend/src/utils/hardware-wizard-plan.js,11
+  frontend/src/utils/hardware-wizard-plan.js,23
+  frontend/src/utils/hardware-wizard-plan.test.js,17
   frontend/src/utils/hardware-wizard-steps.js,102
   frontend/src/utils/hardware-wizard-steps.test.js,30
   frontend/src/utils/hardwareEventStream.js,53
@@ -49,7 +61,7 @@ M[336]:
   frontend/src/utils/hui-shell-key.js,39
   frontend/src/utils/mapEditorFuncHardwareSummary.js,84
   frontend/src/utils/mapEditorFuncHardwareSummary.test.js,55
-  frontend/src/utils/mapEditorIntegrationMeta.js,100
+  frontend/src/utils/mapEditorIntegrationMeta.js,81
   frontend/src/utils/mapEditorIntegrationMeta.test.js,44
   frontend/src/utils/mapEditorMapShape.js,59
   frontend/src/utils/mapEditorModel.js,62
@@ -82,7 +94,8 @@ M[336]:
   oqlos/api/hardware_hui.py,62
   oqlos/api/hardware_identify.py,171
   oqlos/api/hardware_lung.py,86
-  oqlos/api/hardware_mapping_contract.py,90
+  oqlos/api/hardware_mapping_contract.py,64
+  oqlos/api/hardware_mapping_motor2.py,49
   oqlos/api/hardware_mapping_store.py,153
   oqlos/api/hardware_modbus_routes.py,81
   oqlos/api/hardware_modbus_topology.py,93
@@ -135,7 +148,7 @@ M[336]:
   oqlos/hardware/artificial_lung.py,163
   oqlos/hardware/client/__init__.py,101
   oqlos/hardware/client/adc.py,65
-  oqlos/hardware/client/autorepair.py,133
+  oqlos/hardware/client/autorepair.py,134
   oqlos/hardware/client/config.py,87
   oqlos/hardware/client/constants.py,70
   oqlos/hardware/client/errors.py,27
@@ -290,6 +303,7 @@ M[336]:
   tests/firmware/test_hardware_identify.py,236
   tests/firmware/test_hardware_identify_routes.py,10
   tests/firmware/test_hardware_lung_routes.py,24
+  tests/firmware/test_hardware_mapping_motor2.py,30
   tests/firmware/test_hardware_modbus_routes.py,12
   tests/firmware/test_hardware_modbus_wizard.py,353
   tests/firmware/test_hardware_probe_devices.py,27
@@ -314,7 +328,7 @@ M[336]:
   tests/firmware/test_oql_mqtt_bridge.py,255
   tests/firmware/test_oql_route_http.py,119
   tests/firmware/test_oqlos_logging.py,21
-  tests/firmware/test_panel_ui.py,218
+  tests/firmware/test_panel_ui.py,227
   tests/firmware/test_parser_cycle.py,53
   tests/firmware/test_plugin_gateway_env.py,243
   tests/firmware/test_plugin_gateway_init.py,67
@@ -487,11 +501,17 @@ D:
     artificial_lung_status()
     artificial_lung_command(payload)
   oqlos/api/hardware_mapping_contract.py:
-    e: _is_int,_validate_motor2,validate_mapping_contract,MappingContractError
+    e: _validate_motor2,validate_mapping_contract,MappingContractError
     MappingContractError: __init__(1)
-    _is_int(value)
     _validate_motor2(motor2_raw;issues)
     validate_mapping_contract(mapping)
+  oqlos/api/hardware_mapping_motor2.py:
+    e: _is_int,_append_peripheral_id_issue,_append_stroke_steps_issue,_append_speed_issues,validate_motor2_config
+    _is_int(value)
+    _append_peripheral_id_issue(motor2;issues)
+    _append_stroke_steps_issue(motor2;issues)
+    _append_speed_issues(motor2;issues)
+    validate_motor2_config(motor2_raw;issues)
   oqlos/api/hardware_mapping_store.py:
     e: _default_path,empty_mapping,_normalize_motor2_runtime_config,normalize_mapping,MappingStore
     MappingStore: __init__(1),file_path(0),storage_backend(0),_load_from_disk(0),save(0),get(0),replace(1),reset(0),parse_text(2),import_text(2),export_text(1)
@@ -2057,6 +2077,11 @@ D:
     e: test_hardware_router_includes_actuator_and_lung_paths,test_command_payload_requires_command_name
     test_hardware_router_includes_actuator_and_lung_paths()
     test_command_payload_requires_command_name()
+  tests/firmware/test_hardware_mapping_motor2.py:
+    e: test_validate_motor2_config_accepts_minimal_object,test_validate_motor2_config_rejects_default_speed_above_max,test_validate_mapping_contract_wraps_motor2_errors
+    test_validate_motor2_config_accepts_minimal_object()
+    test_validate_motor2_config_rejects_default_speed_above_max()
+    test_validate_mapping_contract_wraps_motor2_errors()
   tests/firmware/test_hardware_modbus_routes.py:
     e: test_hardware_router_includes_modbus_paths
     test_hardware_router_includes_modbus_paths()
@@ -2225,12 +2250,13 @@ D:
     e: test_configure_oqlos_logging_writes_to_file
     test_configure_oqlos_logging_writes_to_file(tmp_path;monkeypatch)
   tests/firmware/test_panel_ui.py:
-    e: panel_source,_panel_manage_verbs,_panel_endpoints,test_panel_route_serves_html,test_health_route_contains_redeploy_probe_token,test_panel_manage_verbs_are_supported,test_panel_only_calls_known_endpoints,client_with_controller,test_panel_single_oql_command_payload_dispatches,test_panel_flow_script_payload_dispatches,test_panel_script_without_version_executes_named_goal,test_panel_script_accepts_set_wait_alias,test_panel_manage_payload_dispatches,_FakeController
+    e: panel_source,_panel_manage_verbs,_panel_endpoints,test_panel_route_serves_html,test_panel_exposes_wait_execution_state_in_payload_and_url,test_health_route_contains_redeploy_probe_token,test_panel_manage_verbs_are_supported,test_panel_only_calls_known_endpoints,client_with_controller,test_panel_single_oql_command_payload_dispatches,test_panel_flow_script_payload_dispatches,test_panel_script_without_version_executes_named_goal,test_panel_script_accepts_set_wait_alias,test_panel_manage_payload_dispatches,_FakeController
     _FakeController: __init__(1),execute(1),manage(2)
     panel_source()
     _panel_manage_verbs(source)
     _panel_endpoints(source)
     test_panel_route_serves_html()
+    test_panel_exposes_wait_execution_state_in_payload_and_url(panel_source)
     test_health_route_contains_redeploy_probe_token()
     test_panel_manage_verbs_are_supported(panel_source)
     test_panel_only_calls_known_endpoints(panel_source)

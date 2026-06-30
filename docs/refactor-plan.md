@@ -79,17 +79,27 @@
 | `piadc.py` read_channel HTTP | `plugin_http_handlers.py` |
 | `hardware_probe_devices.py` | — | USB/I2C/Modbus RTU probe helpers |
 
-## Faza 6 — Frontend / transport cleanup (w toku)
+## Faza 6 — Frontend / transport cleanup (zrobione)
 
 | Ticket / alert | Plik | Akcja |
 |----------------|------|--------|
 | `editObjectActionArg` CC=24 | `MapEditor.jsx` | → `mapEditorObjectActionEdits.js` + testy |
-| `selectWizardProbeCandidate` CC=22 | `hardware-wizard-steps.js` | testy regresji (`hardware-wizard-steps.test.js`) |
-| `normalizeHardwareEvent` CC=21 | `hardwareEventStream.js` | testy regresji (`hardwareEventStream.test.js`) |
 | `manage_ops._run_diagnostic_command` CC=19 | `manage_ops.py` | → `manage_ops_diagnostic.py`, `manage_ops_usb.py` |
 | `motor.py` modbus handlers | `motor_modbus_handlers.py` | connect, health, set_speed, stop, status + testy |
 | `hardware-restart-wizard-steps.js` | pure helpers | → `hardware-restart-wizard-helpers.js` + testy |
-| — | `mapEditorObjectActionEdits.test.js` | `npm run test:unit` (38 testów) |
+
+## Faza 7 — analysis.toon.yaml HEALTH[6] (zrobione)
+
+| CC | Funkcja | Akcja |
+|----|---------|--------|
+| 17 | `createEncoderController` | → `encoder-navigation.js` + testy |
+| 16 | `cancelled` (HardwareDemo mount) | → `hardware-demo-identify.js` + testy |
+| 19 | `_validate_motor2` | → `hardware_mapping_motor2.py` + testy |
+| 15 | `_extractWizardPlan` | → `hardware-wizard-plan.js` `extractWizardPlan` + testy |
+| 15 | `runCurrentStep` | → `hardware-restart-step-runner.js` `runWizardStep` + testy |
+| 28 | `executeConfigureStep` | → `hardware-restart-configure.js` (probe/program) |
+
+Po regeneracji `project/analysis.toon.yaml` oczekiwane: **HEALTH critical = 0**.
 
 ## Kolejność wdrożenia
 

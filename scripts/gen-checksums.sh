@@ -15,10 +15,13 @@ OUT="$PKG/_CHECKSUMS.sha256"
 [ -d "$PKG" ] || { echo "FAIL: brak pakietu $PKG" >&2; exit 2; }
 
 cd "$PKG"
-# Ścieżki względne (./...), posortowane → deterministyczny manifest. Pomijamy cache i sam manifest.
-find . -type f \
+# Ścieżki względne (./...), posortowane → deterministyczny manifest.
+# Hashujemy TYLKO kod (.py, .html) — pomijamy scenariusze (.oql), dokumentację (.md),
+# konfiguracje (.connectgo, .yaml, .json) i cache. Dzięki temu zmiana konfiguracji
+# nie powoduje fałszywego FAIL integralności po wdrożeniu.
+find . -type f \( -name '*.py' -o -name '*.html' \) \
   ! -path '*/__pycache__/*' ! -name '*.pyc' ! -name '*.pyo' \
-  ! -path '*/.pytest_cache/*' ! -name '*.log' ! -name '_CHECKSUMS.sha256' \
+  ! -path '*/.pytest_cache/*' \
   -exec sha256sum {} \; | LC_ALL=C sort -k2 > "$OUT"
 
 echo "PASS: wygenerowano $(wc -l < "$OUT") haszy sha256 -> ${OUT}"
