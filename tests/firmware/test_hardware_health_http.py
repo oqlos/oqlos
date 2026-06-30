@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 
 from oqlos.api import hardware as hw
+from oqlos.api import hardware_identify as hw_identify
 
 
 def test_hardware_health_overall_ok_ignores_disabled_plugins():
@@ -48,7 +49,8 @@ class _FakeGateway:
 
 def test_hardware_health_endpoint_returns_200_when_degraded(monkeypatch):
     monkeypatch.setattr(hw, "_gw", lambda: _FakeGateway())
-    monkeypatch.setattr(hw, "_detect_runtime_platform", lambda: {"detected": "desktop-linux"})
+    monkeypatch.setattr(hw_identify, "get_hardware_gateway", lambda: _FakeGateway())
+    monkeypatch.setattr(hw_identify.platform, "_detect_runtime_platform", lambda: {"detected": "desktop-linux"})
 
     payload = asyncio.run(hw.hardware_health())
 

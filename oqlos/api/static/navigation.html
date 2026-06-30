@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OqlOS Navigation</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #101214;
+      --panel: #181c20;
+      --panel-2: #111417;
+      --border: #303841;
+      --text: #eef2f4;
+      --muted: #9aa7b2;
+      --accent: #2f80ed;
+      --ok: #18864b;
+      --warn: #b9770e;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font: 14px/1.45 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    a { color: inherit; }
+    .top {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(16, 18, 20, 0.94);
+      backdrop-filter: blur(10px);
+    }
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin-right: 4px;
+      min-width: 126px;
+    }
+    .brand strong { font-size: 17px; }
+    .brand span { color: var(--muted); font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .top-nav {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+      min-width: 0;
+    }
+    .top-nav a {
+      text-decoration: none;
+      border: 1px solid var(--border);
+      background: var(--panel-2);
+      border-radius: 6px;
+      padding: 5px 9px;
+      font-size: 12px;
+      font-weight: 650;
+      white-space: nowrap;
+    }
+    .top-nav a:hover { border-color: var(--accent); }
+    .top-nav a.active {
+      color: #fff;
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 22px 18px 48px;
+    }
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.6fr);
+      gap: 14px;
+      align-items: stretch;
+      margin-bottom: 14px;
+    }
+    h1, h2, h3, p { margin-top: 0; letter-spacing: 0; }
+    h1 { font-size: 26px; margin-bottom: 6px; }
+    h2 { font-size: 16px; margin-bottom: 10px; }
+    p { color: var(--muted); margin-bottom: 0; }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      min-width: 0;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+    .link-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .link-row {
+      display: grid;
+      grid-template-columns: minmax(120px, 170px) minmax(0, 1fr);
+      gap: 10px;
+      align-items: start;
+      padding: 9px 0;
+      border-bottom: 1px solid rgba(255,255,255,.07);
+    }
+    .link-row:last-child { border-bottom: 0; }
+    .link-row a {
+      color: var(--text);
+      font-weight: 700;
+      text-decoration: none;
+    }
+    .link-row a:hover { color: var(--accent); }
+    .desc { color: var(--muted); }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      font-size: 12px;
+      font-weight: 700;
+      background: var(--panel-2);
+    }
+    .badge.ok { color: #b8f7d0; border-color: var(--ok); background: rgba(24,134,75,.18); }
+    .badge.warn { color: #ffe0a7; border-color: var(--warn); background: rgba(185,119,14,.18); }
+    code, pre {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    code {
+      color: var(--text);
+      background: var(--panel-2);
+      border: 1px solid rgba(255,255,255,.07);
+      border-radius: 5px;
+      padding: 1px 5px;
+    }
+    pre {
+      margin: 10px 0 0;
+      padding: 12px;
+      background: var(--panel-2);
+      border: 1px solid rgba(255,255,255,.07);
+      border-radius: 6px;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 720px;
+    }
+    th, td {
+      text-align: left;
+      padding: 9px 8px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      vertical-align: top;
+    }
+    th { color: var(--muted); font-weight: 700; }
+    .table-wrap { overflow-x: auto; }
+    @media (max-width: 760px) {
+      .hero { grid-template-columns: 1fr; }
+      .link-row { grid-template-columns: 1fr; gap: 3px; }
+      main { padding: 16px 12px 36px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <strong>OqlOS</strong>
+      <span id="host">loading</span>
+    </div>
+    <nav class="top-nav" aria-label="OqlOS navigation">
+      <a href="/hardware-status">Status</a>
+      <a href="/hardware-restart">Restart</a>
+      <a href="/hardware-demo">Demo</a>
+      <a href="/map-editor">MAP</a>
+      <a href="/scenario-files">Scenarios</a>
+      <a href="/func-editor">Functions</a>
+      <a href="/panel">OQL</a>
+      <a class="active" href="/navigation">Navigation</a>
+      <a href="/docs">API</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <article class="card">
+        <h1>OqlOS BoardNet navigation</h1>
+        <p>
+          One entrypoint for the Raspberry Pi firmware node. Use this page on
+          <code>http://192.168.188.122:8202/navigation</code> or
+          <code>http://boardnet.local:8202/navigation</code>.
+        </p>
+      </article>
+      <article class="card">
+        <h2>Node status</h2>
+        <div class="link-list">
+          <div><span id="healthBadge" class="badge warn">checking</span></div>
+          <div class="desc" id="nodeMeta">Waiting for /api/v1/navigation and /health.</div>
+        </div>
+      </article>
+    </section>
+
+    <section class="grid">
+      <article class="card">
+        <h2>Human pages</h2>
+        <div class="link-list" id="pages">
+          <div class="desc">Loading navigation index...</div>
+        </div>
+      </article>
+
+      <article class="card">
+        <h2>Short aliases</h2>
+        <div class="link-list" id="aliases">
+          <div class="desc">Loading aliases...</div>
+        </div>
+      </article>
+    </section>
+
+    <section class="card" style="margin-bottom:14px">
+      <h2>API endpoints</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Method</th><th>Path</th><th>Description</th></tr>
+          </thead>
+          <tbody id="apiRows">
+            <tr><td colspan="3" class="desc">Loading endpoints...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="grid">
+      <article class="card">
+        <h2>Run OQL through HTTP</h2>
+        <p>Use execute mode only when the hardware is ready and the command is intentional.</p>
+        <pre>BASE=http://192.168.188.122:8202
+curl -s -X POST "$BASE/api/v1/oql/execute" \
+  -H 'Content-Type: application/json' \
+  -d '{"kind":"command","mode":"execute","oql":"SET \"pompa-1\" \"0\""}'</pre>
+      </article>
+      <article class="card">
+        <h2>Run diagnostics</h2>
+        <p>Manage verbs are the fastest way to verify firmware and hardware discovery.</p>
+        <pre>BASE=http://192.168.188.122:8202
+curl -s -X POST "$BASE/api/v1/oql/manage" \
+  -H 'Content-Type: application/json' \
+  -d '{"verb":"health","args":{"scan":"never"}}'
+
+curl -s -X POST "$BASE/api/v1/oql/manage" \
+  -H 'Content-Type: application/json' \
+  -d '{"verb":"usb-list"}'</pre>
+      </article>
+    </section>
+  </main>
+
+  <script>
+    const host = document.getElementById("host");
+    const healthBadge = document.getElementById("healthBadge");
+    const nodeMeta = document.getElementById("nodeMeta");
+    const pages = document.getElementById("pages");
+    const aliases = document.getElementById("aliases");
+    const apiRows = document.getElementById("apiRows");
+
+    host.textContent = window.location.host;
+
+    function rowLink(path, label, desc) {
+      return `<div class="link-row"><a href="${path}">${label || path}</a><span class="desc">${desc || ""}</span></div>`;
+    }
+
+    function aliasLink(item) {
+      return `<div class="link-row"><a href="${item.path}">${item.path}</a><span class="desc">Redirects to <code>${item.target}</code></span></div>`;
+    }
+
+    function apiRow(item) {
+      return `<tr><td><span class="badge">${item.method}</span></td><td><code>${item.path}</code></td><td class="desc">${item.description || ""}</td></tr>`;
+    }
+
+    async function loadNavigation() {
+      try {
+        const [navResponse, healthResponse] = await Promise.all([
+          fetch("/api/v1/navigation"),
+          fetch("/health"),
+        ]);
+        if (!navResponse.ok) throw new Error(`navigation HTTP ${navResponse.status}`);
+        const nav = await navResponse.json();
+        const health = healthResponse.ok ? await healthResponse.json() : null;
+
+        pages.innerHTML = (nav.pages || []).map((item) => rowLink(item.path, item.label, item.description)).join("");
+        aliases.innerHTML = (nav.aliases || []).map(aliasLink).join("");
+        apiRows.innerHTML = (nav.api || []).map(apiRow).join("");
+
+        healthBadge.textContent = health?.status === "ok" ? "healthy" : "navigation loaded";
+        healthBadge.className = "badge ok";
+        nodeMeta.textContent = `node=${nav.node_id || "unknown"} role=${nav.role || "off"} service=${nav.service || "oqlos"} version=${nav.version || "unknown"}`;
+      } catch (error) {
+        healthBadge.textContent = "error";
+        healthBadge.className = "badge warn";
+        nodeMeta.textContent = error?.message || String(error);
+      }
+    }
+
+    loadNavigation();
+  </script>
+</body>
+</html>

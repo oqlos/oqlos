@@ -24,12 +24,10 @@ def _patch_modbus_settings(monkeypatch, settings_obj):
     monkeypatch.setattr(topology, "_settings", settings_obj)
     monkeypatch.setattr(waveshare, "_settings", settings_obj)
     monkeypatch.setattr(wizard, "_settings", settings_obj)
-    monkeypatch.setattr(hw, "_settings", settings_obj)
 
 
 def _patch_diagnose_matrix(monkeypatch, fake_matrix):
     monkeypatch.setattr(waveshare, "_diagnose_shared_bus_matrix", fake_matrix)
-    monkeypatch.setattr(hw, "_diagnose_shared_bus_matrix", fake_matrix)
 
 
 def test_modbus_wizard_program_writes_uart_before_address_change(monkeypatch):
@@ -76,7 +74,7 @@ def test_modbus_wizard_program_writes_uart_before_address_change(monkeypatch):
     monkeypatch.setattr(pim_prov, "_read_holding_register", lambda *_a, **_k: None)
     monkeypatch.setattr(time, "sleep", lambda *_a, **_k: None)
 
-    result = hw._modbus_wizard_program_isolated(
+    result = wizard._modbus_wizard_program_isolated(
         serial_port="/dev/ttyTEST",
         current_device_id=1,
         new_device_id=2,
@@ -99,7 +97,7 @@ def test_modbus_wizard_program_skips_when_already_at_target(monkeypatch):
 
     monkeypatch.setattr(pim_prov, "read_device_config", lambda *_a, **_k: _Config())
 
-    result = hw._modbus_wizard_program_isolated(
+    result = wizard._modbus_wizard_program_isolated(
         serial_port="/dev/ttyTEST",
         current_device_id=2,
         new_device_id=2,
@@ -203,7 +201,6 @@ def test_build_waveshare_diagnose_scans_separate_adapters(monkeypatch):
     _patch_modbus_io_ids(monkeypatch, [1])
     monkeypatch.setattr(pim_prov, "read_device_config", lambda *_a, **_k: _Cfg())
     monkeypatch.setattr(waveshare, "_read_output_control_modes", lambda *_a, **_k: {"ok": True})
-    monkeypatch.setattr(hw, "_read_output_control_modes", lambda *_a, **_k: {"ok": True})
     _patch_modbus_settings(
         monkeypatch,
         type(

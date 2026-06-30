@@ -14,17 +14,17 @@ from urllib.parse import urlparse
 
 import httpx
 
-try:
-    from pimodbus.client import get_rtu_bus
-    from pimodbus.config import RtuBusSettings
-    _HAS_PIMODBUS = True
-except ImportError:  # pragma: no cover
-    get_rtu_bus = None  # type: ignore
-    RtuBusSettings = None  # type: ignore
-    _HAS_PIMODBUS = False
-
 from .base import HardwarePlugin, PluginConfig, PluginHealth, PluginStatus
 from ._shared import http_health_check, not_connected_health, health_check_exception, http_disconnect
+from .motor_http_handlers import motor_cli_command, motor_http_request
+from .motor_modbus_handlers import (
+    _HAS_PIMODBUS,
+    connect_modbus_bus,
+    modbus_health_check,
+    modbus_set_speed,
+    modbus_status,
+    modbus_stop,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -117,19 +117,17 @@ class MotorPlugin(HardwarePlugin):
                 logger.info(f"Connected to motor via CLI: {self._cli_command}")
                 return True
             else:
-                # Modbus RTU via pimodbus shared bus (singleton)
                 if not _HAS_PIMODBUS:
                     self._status = PluginStatus.ERROR
                     logger.error("pimodbus not installed; cannot use modbus-rtu motor")
                     return False
-                settings = RtuBusSettings(
+                self._bus = await connect_modbus_bus(
                     serial_port=self._mb_serial_port,
                     baudrate=self._mb_baud,
                     parity=self._mb_parity,
                     timeout=self.config.timeout,
                 )
-                self._bus = get_rtu_bus(settings)
-                if await self._bus.connect():
+                if self._bus is not None:
                     self._status = PluginStatus.CONNECTED
                     logger.info(
                         "Connected to motor via pimodbus on %s slave=%d",
@@ -137,12 +135,9 @@ class MotorPlugin(HardwarePlugin):
                         self._mb_slave,
                     )
                     return True
-                else:
-                    self._status = PluginStatus.ERROR
-                    logger.error(
-                        "pimodbus connect failed for motor on %s", self._mb_serial_port
-                    )
-                    return False
+                self._status = PluginStatus.ERROR
+                logger.error("pimodbus connect failed for motor on %s", self._mb_serial_port)
+                return False
         except Exception as exc:
             self._status = PluginStatus.ERROR
             logger.error(f"Failed to connect to motor: {exc}")
@@ -176,39 +171,10 @@ class MotorPlugin(HardwarePlugin):
 
     async def _health_check_modbus_rtu(self) -> PluginHealth:
         """Run the Modbus RTU transport health probe."""
-        if self._bus is None:
-            return PluginHealth(
-                status=PluginStatus.ERROR,
-                message="Motor modbus bus not connected",
-                compatible=False,
-            )
-        try:
-            rr = await self._bus.call(
-                "read_holding_registers",
-                address=self._mb_pid_reg,
-                count=1,
-                device_id=self._mb_slave,
-            )
-        except asyncio.TimeoutError:
-            return PluginHealth(
-                status=PluginStatus.ERROR,
-                message=f"Motor (modbus-rtu) PID read timed out (slave={self._mb_slave}, reg=0x{self._mb_pid_reg:04X})",
-                details={"slave": self._mb_slave, "register": self._mb_pid_reg},
-                compatible=False,
-            )
-        if rr is None or (hasattr(rr, "isError") and rr.isError()):
-            return PluginHealth(
-                status=PluginStatus.ERROR,
-                message=f"Motor (modbus-rtu) PID read failed: {rr}",
-                details={"slave": self._mb_slave, "register": self._mb_pid_reg},
-                compatible=False,
-            )
-        pid = getattr(rr, "registers", [None])[0]
-        return PluginHealth(
-            status=PluginStatus.CONNECTED,
-            message=f"Motor (modbus-rtu) is healthy, PID=0x{pid:04X}" if pid is not None else "Motor (modbus-rtu) connected (PID unknown)",
-            details={"slave": self._mb_slave, "pid": pid},
-            compatible=True,
+        return await modbus_health_check(
+            self._bus,
+            slave=self._mb_slave,
+            pid_reg=self._mb_pid_reg,
         )
 
     async def health_check(self) -> PluginHealth:
@@ -253,182 +219,96 @@ class MotorPlugin(HardwarePlugin):
     async def _handle_set_speed_http(self, power_pct: float, start_time: float) -> dict[str, Any]:
         """Handle set_speed command via HTTP."""
         if power_pct <= 0:
-            resp = await self._client.post(f"{self._base_url}/api/stop")
-        else:
-            resp = await self._client.post(
-                f"{self._base_url}/api/speed",
-                json={"power_pct": power_pct},
-            )
-        if resp.status_code < 300:
-            data = resp.json()
-            duration_ms = (time.monotonic() - start_time) * 1000
-            return {
-                "success": True,
-                "data": {
-                    "power_pct": power_pct,
-                    "pwm_value": data.get("pwm_value", power_pct * 10),
-                    "voltage": data.get("voltage", 0.0),
-                    "current": data.get("current", 0.0),
-                    "duration_ms": duration_ms,
-                    "timestamp": time.time(),
-                },
-            }
-        return {"success": False, "error": f"HTTP {resp.status_code}"}
+            return await self._handle_stop_http(start_time)
+        return await motor_http_request(
+            self._client,
+            self._base_url,
+            method="POST",
+            path="/api/speed",
+            start_time=start_time,
+            json_body={"power_pct": power_pct},
+            map_data=lambda data: {
+                "power_pct": power_pct,
+                "pwm_value": data.get("pwm_value", power_pct * 10),
+                "voltage": data.get("voltage", 0.0),
+                "current": data.get("current", 0.0),
+            },
+        )
 
     async def _handle_set_speed_cli(self, power_pct: float, start_time: float) -> dict[str, Any]:
         """Handle set_speed command via CLI."""
         duty_cycle = power_pct
         cmd_args = [self._cli_command, self._cli_port, "--duty", str(duty_cycle), "--enable", "1"]
-        proc = await asyncio.create_subprocess_exec(
-            *cmd_args,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
+        return await motor_cli_command(
+            cmd_args,
+            timeout=self.config.timeout,
+            start_time=start_time,
+            success_payload={"power_pct": power_pct, "pwm_value": duty_cycle},
         )
-        stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=self.config.timeout)
-        duration_ms = (time.monotonic() - start_time) * 1000
-        if proc.returncode == 0:
-            return {
-                "success": True,
-                "data": {
-                    "power_pct": power_pct,
-                    "pwm_value": duty_cycle,
-                    "duration_ms": duration_ms,
-                    "timestamp": time.time(),
-                    "stdout": stdout.decode().strip(),
-                },
-            }
-        return {"success": False, "error": stderr.decode().strip()}
 
     async def _handle_set_speed_modbus(self, power_pct: float, start_time: float) -> dict[str, Any]:
-        """Handle set_speed via Modbus RTU.
-
-        Writes Duty (0-1000 = 0-100%) and Enable=1 to DRI0050 holding registers.
-        """
-        if self._bus is None:
-            return {"success": False, "error": "Motor modbus bus not connected"}
-        duty_value = int(round(max(0.0, min(100.0, power_pct)) * 2.55))  # 0-100% → 0-255
-        try:
-            wr_duty = await self._bus.call(
-                "write_register",
-                address=self._mb_duty_reg,
-                value=duty_value,
-                device_id=self._mb_slave,
-            )
-            if hasattr(wr_duty, "isError") and wr_duty.isError():
-                return {"success": False, "error": f"write Duty failed: {wr_duty}"}
-            wr_en = await self._bus.call(
-                "write_register",
-                address=self._mb_enable_reg,
-                value=1,
-                device_id=self._mb_slave,
-            )
-            if hasattr(wr_en, "isError") and wr_en.isError():
-                return {"success": False, "error": f"write Enable failed: {wr_en}"}
-        except Exception as exc:
-            return {"success": False, "error": f"modbus exception: {exc}"}
-        duration_ms = (time.monotonic() - start_time) * 1000
-        return {
-            "success": True,
-            "data": {
-                "power_pct": power_pct,
-                "pwm_value": duty_value,
-                "duty_register": self._mb_duty_reg,
-                "slave": self._mb_slave,
-                "duration_ms": duration_ms,
-                "timestamp": time.time(),
-            },
-        }
+        """Handle set_speed via Modbus RTU."""
+        return await modbus_set_speed(
+            self._bus,
+            slave=self._mb_slave,
+            duty_reg=self._mb_duty_reg,
+            enable_reg=self._mb_enable_reg,
+            power_pct=power_pct,
+            start_time=start_time,
+        )
 
     async def _handle_stop_http(self, start_time: float) -> dict[str, Any]:
         """Handle stop command via HTTP."""
-        resp = await self._client.post(f"{self._base_url}/api/stop")
-        if resp.status_code < 300:
-            data = resp.json()
-            duration_ms = (time.monotonic() - start_time) * 1000
-            return {
-                "success": True,
-                "data": {
-                    "stopped": True,
-                    "pwm_value": data.get("pwm_value", 0),
-                    "voltage": data.get("voltage", 0.0),
-                    "current": data.get("current", 0.0),
-                    "duration_ms": duration_ms,
-                    "timestamp": time.time(),
-                },
-            }
-        return {"success": False, "error": f"HTTP {resp.status_code}"}
+        return await motor_http_request(
+            self._client,
+            self._base_url,
+            method="POST",
+            path="/api/stop",
+            start_time=start_time,
+            map_data=lambda data: {
+                "stopped": True,
+                "pwm_value": data.get("pwm_value", 0),
+                "voltage": data.get("voltage", 0.0),
+                "current": data.get("current", 0.0),
+            },
+        )
 
     async def _handle_stop_cli(self, start_time: float) -> dict[str, Any]:
         """Handle stop command via CLI."""
         cmd_args = [self._cli_command, self._cli_port, "--enable", "0"]
-        proc = await asyncio.create_subprocess_exec(
-            *cmd_args,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
+        return await motor_cli_command(
+            cmd_args,
+            timeout=self.config.timeout,
+            start_time=start_time,
+            success_payload={"stopped": True},
         )
-        stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=self.config.timeout)
-        duration_ms = (time.monotonic() - start_time) * 1000
-        if proc.returncode == 0:
-            return {
-                "success": True,
-                "data": {
-                    "stopped": True,
-                    "duration_ms": duration_ms,
-                    "timestamp": time.time(),
-                    "stdout": stdout.decode().strip(),
-                },
-            }
-        return {"success": False, "error": stderr.decode().strip()}
 
     async def _handle_stop_modbus(self, start_time: float) -> dict[str, Any]:
-        """Handle stop via Modbus RTU — Duty=0 + Enable=0."""
-        if self._bus is None:
-            return {"success": False, "error": "Motor modbus bus not connected"}
-        try:
-            await self._bus.call(
-                "write_register",
-                address=self._mb_duty_reg,
-                value=0,
-                device_id=self._mb_slave,
-            )
-            await self._bus.call(
-                "write_register",
-                address=self._mb_enable_reg,
-                value=0,
-                device_id=self._mb_slave,
-            )
-        except Exception as exc:
-            return {"success": False, "error": f"modbus exception: {exc}"}
-        duration_ms = (time.monotonic() - start_time) * 1000
-        return {
-            "success": True,
-            "data": {
-                "stopped": True,
-                "slave": self._mb_slave,
-                "duration_ms": duration_ms,
-                "timestamp": time.time(),
-            },
-        }
+        """Handle stop via Modbus RTU."""
+        return await modbus_stop(
+            self._bus,
+            slave=self._mb_slave,
+            duty_reg=self._mb_duty_reg,
+            enable_reg=self._mb_enable_reg,
+            start_time=start_time,
+        )
 
     async def _handle_status_http(self, start_time: float) -> dict[str, Any]:
         """Handle status command via HTTP."""
-        resp = await self._client.get(f"{self._base_url}/api/status")
-        if resp.status_code < 300:
-            data = resp.json()
-            duration_ms = (time.monotonic() - start_time) * 1000
-            return {
-                "success": True,
-                "data": {
-                    "pwm_value": data.get("pwm_value", 0),
-                    "voltage": data.get("voltage", 0.0),
-                    "current": data.get("current", 0.0),
-                    "power_pct": data.get("power_pct", 0),
-                    "temperature": data.get("temperature", 0.0),
-                    "duration_ms": duration_ms,
-                    "timestamp": time.time(),
-                },
-            }
-        return {"success": False, "error": f"HTTP {resp.status_code}"}
+        return await motor_http_request(
+            self._client,
+            self._base_url,
+            method="GET",
+            path="/api/status",
+            start_time=start_time,
+            map_data=lambda data: {
+                "pwm_value": data.get("pwm_value", 0),
+                "voltage": data.get("voltage", 0.0),
+                "current": data.get("current", 0.0),
+                "power_pct": data.get("power_pct", 0),
+                "temperature": data.get("temperature", 0.0),
+            },
+        )
 
     async def _handle_status_cli(self, start_time: float) -> dict[str, Any]:
         """Handle status command via CLI (returns basic info)."""
@@ -446,36 +326,12 @@ class MotorPlugin(HardwarePlugin):
 
     async def _handle_status_modbus(self, start_time: float) -> dict[str, Any]:
         """Read Duty + Enable holding registers from DRI0050."""
-        if self._bus is None:
-            return {"success": False, "error": "Motor modbus bus not connected"}
-        try:
-            rr = await self._bus.call(
-                "read_holding_registers",
-                address=self._mb_duty_reg,
-                count=3,  # Duty, Frequency, Enable (consecutive 0x07-0x09)
-                device_id=self._mb_slave,
-            )
-            if hasattr(rr, "isError") and rr.isError():
-                return {"success": False, "error": f"read failed: {rr}"}
-            regs = getattr(rr, "registers", [])
-            duty = regs[0] if len(regs) > 0 else 0
-            freq = regs[1] if len(regs) > 1 else 0
-            enable = regs[2] if len(regs) > 2 else 0
-        except Exception as exc:
-            return {"success": False, "error": f"modbus exception: {exc}"}
-        duration_ms = (time.monotonic() - start_time) * 1000
-        return {
-            "success": True,
-            "data": {
-                "duty": duty,
-                "power_pct": round(duty / 2.55, 2),
-                "frequency_hz": freq,
-                "enabled": bool(enable),
-                "slave": self._mb_slave,
-                "duration_ms": duration_ms,
-                "timestamp": time.time(),
-            },
-        }
+        return await modbus_status(
+            self._bus,
+            slave=self._mb_slave,
+            duty_reg=self._mb_duty_reg,
+            start_time=start_time,
+        )
 
     async def execute_command(self, command: str, params: dict[str, Any]) -> dict[str, Any]:
         """Execute motor command with detailed driver data.

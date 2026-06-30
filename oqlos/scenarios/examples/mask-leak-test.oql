@@ -14,13 +14,13 @@ GOAL:
   SET NAME 'Test szczelności maski -10 mbar przez 60 sekund'
   SET 'pompa-1' '2.0 l/min'
   SET 'valve-nc' '1'
-  WAIT 2000ms
+  SET WAIT '2000 ms'
   IF 'AI01' '-11.0 .. -9.0 mbar'
   CORRECT 'Podciśnienie startowe w zakresie -11.0 .. -9.0 mbar'
   ERROR 'Podciśnienie startowe poza zakresem'
   SAVE AI01.value
   SET 'pompa-1' '0 l/min'
-  WAIT 60s
+  SET WAIT '60 s'
   IF 'AI01' '-11.0 .. -9.0 mbar'
   CORRECT 'Maska szczelna po 60 sekundach'
   ERROR 'Maska nieszczelna - delta większa niż 1 mbar'
@@ -30,7 +30,7 @@ GOAL:
   SET NAME 'Ciśnienie otwarcia zaworu wydechowego'
   SET 'pompa-1' '0.5 l/min'
   SET 'valve-nc' '0'
-  WAIT 1000ms
+  SET WAIT '1000 ms'
   IF 'AI01' '4.2 .. 6.0 mbar'
   CORRECT 'Ciśnienie otwarcia zaworu w zakresie 4.2 .. 6.0 mbar'
   ERROR 'Ciśnienie otwarcia poza zakresem'
@@ -40,7 +40,7 @@ GOAL:
   SET NAME 'Nadciśnienie statyczne'
   SET 'pompa-1' '0.5 l/min'
   SET 'valve-overpressure' '1'
-  WAIT 3000ms
+  SET WAIT '3000 ms'
   IF 'AI01' '1.0 .. 3.9 mbar'
   CORRECT 'Nadciśnienie statyczne w zakresie 1.0 .. 3.9 mbar'
   ERROR 'Nadciśnienie statyczne poza zakresem'

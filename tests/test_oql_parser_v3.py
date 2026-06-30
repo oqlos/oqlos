@@ -282,6 +282,7 @@ def test_version4_set_accepts_textual_hardware_values():
           SET 'zawor 3' 'ON'
           SET 'PUMP' '5l'
           SET 'WAIT' '1s'
+          SET WAIT '1 s'
           SET 'PUMP' 'OFF'
         """
     )
@@ -293,7 +294,8 @@ def test_version4_set_accepts_textual_hardware_values():
     assert [(a.kind, a.target, a.args) for a in actions] == [
         ("set", "zawor 3", "ON"),
         ("set", "PUMP", "5l"),
-        ("set", "WAIT", "1s"),
+        ("wait", "", "1s"),
+        ("wait", "", "1 s"),
         ("set", "PUMP", "OFF"),
     ]
 

@@ -4,7 +4,7 @@ import SharedNav from "../components/SharedNav";
 import { HardwareApi, formatHardwareApiError } from "../api/hardwareApi";
 import { useI18n } from "../i18n/I18nProvider";
 import { rem } from "../utils/designRem.js";
-import { isSkippablePumpOffWizardStep } from "../utils/hardware-wizard-steps.js";
+import { isOptionalWizardStep, isSkippablePumpOffWizardStep } from "../utils/hardware-wizard-steps.js";
 import {
   executeConfigureStep,
   executeDiagnosticStep,
@@ -17,6 +17,35 @@ import { runApiWithRetry } from "../utils/hardware-api-retry.js";
 
 function timestamp() {
   return new Date().toISOString();
+}
+
+function _extractWizardPlan(stack) {
+  if (stack?.ok === false) {
+    const hint = stack?.hint ? ` ${stack.hint}` : "";
+    throw new Error(`${stack?.error || "OqlOS niedostepny (port 8202)"}${hint}`);
+  }
+  const data = stack?.wizard_plan_enriched || stack?.configuration_cycle?.wizard_plan || stack?.wizard_plan;
+  if (!data || typeof data !== "object") throw new Error("Brak planu kreatora w hardware stack snapshot");
+  return data;
+}
+
+function _resolveStepAdvance(ok, currentStep) {
+  if (!ok && isOptionalWizardStep(currentStep)) return { advanceOk: true, optionalSkip: true };
+  return { advanceOk: ok, optionalSkip: false };
+}
+
+function _buildStepError(err, currentStep) {
+  const message = formatHardwareApiError(err, "Krok zakonczony bledem.");
+  const commandResult = err?.commandResult ?? null;
+  return {
+    message,
+    commandResult,
+    payload: {
+      step: currentStep,
+      error: message,
+      ...(commandResult ? { diagnostic: commandResult, commandResult } : {}),
+    },
+  };
 }
 
 function txtDownload(name, text) {
@@ -63,14 +92,7 @@ export default function HardwareRestart() {
     setPlanError("");
     try {
       const stack = await HardwareApi.getHardwareStackSnapshot({ logContext: "load-stack" });
-      if (stack?.ok === false) {
-        const hint = stack?.hint ? ` ${stack.hint}` : "";
-        throw new Error(`${stack?.error || "OqlOS niedostepny (port 8202)"}${hint}`);
-      }
-      const data = stack?.wizard_plan_enriched || stack?.configuration_cycle?.wizard_plan || stack?.wizard_plan;
-      if (!data || typeof data !== "object") {
-        throw new Error("Brak planu kreatora w hardware stack snapshot");
-      }
+      const data = _extractWizardPlan(stack);
       setPlan(data);
       setCurrentStepIndex(0);
       setStepResults({});
@@ -166,25 +188,14 @@ export default function HardwareRestart() {
         ({ ok, payload } = await executeFinalDiagnoseStep(ctx));
       }
     } catch (err) {
-      const message = formatHardwareApiError(err, "Krok zakonczony bledem.");
-      log(`ERROR: ${message}`);
-      if (err?.commandResult) log(`Diagnostic payload: ${JSON.stringify(err.commandResult)}`);
-      const diagnosticPayload = err?.commandResult ?? null;
-      payload = {
-        step: currentStep,
-        error: message,
-        ...(diagnosticPayload ? { diagnostic: diagnosticPayload, commandResult: diagnosticPayload } : {}),
-      };
+      const stepErr = _buildStepError(err, currentStep);
+      log(`ERROR: ${stepErr.message}`);
+      if (stepErr.commandResult) log(`Diagnostic payload: ${JSON.stringify(stepErr.commandResult)}`);
+      payload = stepErr.payload;
       ok = false;
     } finally {
-      const optionalStep = isOptionalWizardStep(currentStep);
-      let advanceOk = ok;
-      let optionalSkip = false;
-      if (!ok && optionalStep) {
-        optionalSkip = true;
-        advanceOk = true;
-        log(`WARN: krok opcjonalny (${currentStep.step}) — RTC/piRTC tylko na RPi; kontynuuję mimo błędu.`);
-      }
+      const { advanceOk, optionalSkip } = _resolveStepAdvance(ok, currentStep);
+      if (optionalSkip) log(`WARN: krok opcjonalny (${currentStep.step}) — RTC/piRTC tylko na RPi; kontynuuję mimo błędu.`);
       setStepResults((prev) => ({
         ...prev,
         [currentStep.step]: {

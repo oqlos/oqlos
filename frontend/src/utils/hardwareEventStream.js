@@ -18,22 +18,27 @@ export function buildHardwareEventsWsUrl({ wsUrlEnv = "", locationLike = globalT
   return `${wsProtocol}://${host || "localhost"}/ws/events/hardware`;
 }
 
+function safeObj(value) {
+  return value && typeof value === "object" ? value : {};
+}
+
+function resolveEventStatus(result) {
+  if (!result) return "unknown";
+  if (result.ok === false || result.success === false) return "error";
+  if (result.ok === true || result.success === true) return "ok";
+  return "unknown";
+}
+
 export function normalizeHardwareEvent(rawEvent) {
-  const source = rawEvent && typeof rawEvent === "object" ? rawEvent : {};
-  const data = source.data && typeof source.data === "object" ? source.data : {};
-  const command = data.command && typeof data.command === "object" ? data.command : {};
-  const payload = command.payload && typeof command.payload === "object" ? command.payload : {};
+  const source = safeObj(rawEvent);
+  const data = safeObj(source.data);
+  const payload = safeObj(safeObj(data.command).payload);
   const result = data.result && typeof data.result === "object" ? data.result : null;
   const peripheralId = normalizeText(data.peripheral_id) || normalizeText(payload.peripheral_id);
   const commandName = normalizeText(data.command_name) || normalizeText(payload.command);
   const timestamp = normalizeText(source.timestamp) || new Date().toISOString();
   const id = normalizeText(source.id) || normalizeText(source.event_id) || `${timestamp}:${peripheralId}:${commandName}`;
-  let status = "unknown";
-  if (result) {
-    if (result.ok === false || result.success === false) status = "error";
-    else if (result.ok === true || result.success === true) status = "ok";
-  }
-  return { id, timestamp, peripheralId, commandName, status, raw: source };
+  return { id, timestamp, peripheralId, commandName, status: resolveEventStatus(result), raw: source };
 }
 
 export function matchesHardwareEventFilters(eventItem, peripheralFilter, commandFilter) {

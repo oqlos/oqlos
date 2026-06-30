@@ -39,6 +39,29 @@ function parseParentEncoderEnvelope(data) {
   return data;
 }
 
+function _applyScrollToItems(items, activeIndex, delta) {
+  if (activeIndex < 0 || activeIndex >= items.length) {
+    return delta > 0 ? 0 : items.length - 1;
+  }
+  return (activeIndex + delta + items.length) % items.length;
+}
+
+function _focusEncoderItem(target) {
+  target.classList.add("encoder-focus");
+  target.style.outline = "3px solid #2563eb";
+  target.style.outlineOffset = "2px";
+  target.focus({ preventScroll: true });
+  target.scrollIntoView({ block: "nearest", behavior: "smooth" });
+}
+
+function _tryCancelPostMessage() {
+  try {
+    window.parent.postMessage({ type: "child.encoderCommandResponse", payload: { command: "cancel" } }, "*");
+  } catch {
+    // ignore cross-origin postMessage failures
+  }
+}
+
 function createEncoderController() {
   let activeIndex = -1;
   let parentEncoderActive = false;
@@ -47,10 +70,7 @@ function createEncoderController() {
     if (cmd === "setActive") {
       parentEncoderActive = !!payload.active;
       document.body.dataset.parentEncoderActive = parentEncoderActive ? "1" : "0";
-      if (!parentEncoderActive) {
-        removeHighlights();
-        activeIndex = -1;
-      }
+      if (!parentEncoderActive) { removeHighlights(); activeIndex = -1; }
       return;
     }
 
@@ -59,59 +79,34 @@ function createEncoderController() {
 
     if (cmd === "scroll") {
       removeHighlights();
-      const delta = payload.delta ?? 1;
-      if (activeIndex < 0 || activeIndex >= items.length) {
-        activeIndex = delta > 0 ? 0 : items.length - 1;
-      } else {
-        activeIndex = (activeIndex + delta + items.length) % items.length;
-      }
+      activeIndex = _applyScrollToItems(items, activeIndex, payload.delta ?? 1);
       const target = items[activeIndex];
-      if (target) {
-        target.classList.add("encoder-focus");
-        target.style.outline = "3px solid #2563eb";
-        target.style.outlineOffset = "2px";
-        target.focus({ preventScroll: true });
-        target.scrollIntoView({ block: "nearest", behavior: "smooth" });
-      }
+      if (target) _focusEncoderItem(target);
       return;
     }
 
-    if (cmd === "click") {
-      items[activeIndex]?.click();
-      return;
-    }
+    if (cmd === "click") { items[activeIndex]?.click(); return; }
 
     if (cmd === "cancel") {
       removeHighlights();
       activeIndex = -1;
-      try {
-        window.parent.postMessage({
-          type: "child.encoderCommandResponse",
-          payload: { command: "cancel" },
-        }, "*");
-      } catch {
-        // ignore cross-origin postMessage failures
-      }
+      _tryCancelPostMessage();
     }
   };
 
   const onKeyDown = (event) => {
     if (activeIndex < 0) return;
     if (event.key === "ArrowDown") {
-      event.preventDefault();
-      event.stopPropagation();
+      event.preventDefault(); event.stopPropagation();
       handleEncoderCommand("scroll", { delta: 1 });
     } else if (event.key === "ArrowUp") {
-      event.preventDefault();
-      event.stopPropagation();
+      event.preventDefault(); event.stopPropagation();
       handleEncoderCommand("scroll", { delta: -1 });
     } else if (event.key === "Enter") {
-      event.preventDefault();
-      event.stopPropagation();
+      event.preventDefault(); event.stopPropagation();
       handleEncoderCommand("click");
     } else if (event.key === "Backspace" || event.key === "Escape") {
-      event.preventDefault();
-      event.stopPropagation();
+      event.preventDefault(); event.stopPropagation();
       handleEncoderCommand("cancel");
     }
   };

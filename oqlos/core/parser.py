@@ -16,6 +16,7 @@ from ._func_resolver import MAX_FUNC_DEPTH, _collect_function_definitions, _pars
 
 
 _REGEX_DISPATCH: list[tuple[re.Pattern[str], str]] = [
+    (re.compile(r"SET\s+(?:WAIT|DELAY|PAUSE|TIMEOUT)\s*['\[]", re.IGNORECASE), "set"),
     (re.compile(r"SET\s*['\[]", re.IGNORECASE), "set"),
     (re.compile(r"PUMP\s*['\[]", re.IGNORECASE), "pump"),
     (re.compile(r"(?:WAIT|DELAY|PAUSE|TIMEOUT)\s*['\[]", re.IGNORECASE), "wait"),

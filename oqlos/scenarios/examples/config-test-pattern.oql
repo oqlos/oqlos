@@ -11,7 +11,7 @@ CONFIG prepare-environment:
   SET 'valve-nc' '0'
   SET 'valve-sc' '1'
   SET 'valve-wc' '0'
-  WAIT 1s
+  SET WAIT '1 s'
   SAVE env-prepared
 
 # ──────────────────────────────────────────────
@@ -20,14 +20,13 @@ CONFIG prepare-environment:
 GOAL:
   SET NAME 'execute pressure test'
   SET 'valve-nc' '1'
-  WAIT 500ms
+  SET WAIT '500 ms'
   SET 'pompa-1' '5 l/min'
-  WAIT 3s
+  SET WAIT '3 s'
   GET AI02
   SAVE test-result
   SET 'pompa-1' '0'
-  WAIT 500ms
-
+  SET WAIT '500 ms'
 # ──────────────────────────────────────────────
 # 3. CLEANUP — sprzątanie i reset
 # ──────────────────────────────────────────────
@@ -37,6 +36,6 @@ CONFIG cleanup:
   SET 'valve-nc' '0'
   SET 'valve-sc' '0'
   SET 'valve-wc' '0'
-  WAIT 500ms
+  SET WAIT '500 ms'
   SAVE cleanup-done
   SAVE test-sequence-complete

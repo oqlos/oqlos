@@ -1,21 +1,19 @@
 # code2llm call graph | /home/tom/github/oqlos/oqlos
-# generated in 0.28s
-# nodes: 426 | edges: 500 | modules: 52
+# generated in 0.56s
+# nodes: 443 | edges: 500 | modules: 64
 # CC̄=3.9
 
 HUBS[20]:
   examples.hardware.doctor-workflow.print
     CC=0  in:225  out:0  total:225
   frontend.src.i18n.I18nProvider.dict
-    CC=8  in:43  out:3  total:46
+    CC=8  in:44  out:3  total:47
   frontend.src.utils.hardware-wizard-steps.list
-    CC=2  in:40  out:0  total:40
+    CC=2  in:41  out:0  total:41
   oqlos.core._oql_adapter.oql_doc_to_cql
     CC=12  in:2  out:30  total:32
   oqlos.core.motor2_runtime.normalize_motor2_runtime_config
     CC=12  in:1  out:29  total:30
-  oqlos.tools.hardware_diagnose.doctor.format_detection
-    CC=10  in:3  out:25  total:28
   oqlos.core.executor._safe_resolve
     CC=14  in:7  out:21  total:28
   setup_hardware_and_run_oql.run_oql_scenario
@@ -24,26 +22,28 @@ HUBS[20]:
     CC=14  in:3  out:21  total:24
   oqlos.core.parser.parse_dsl_to_goal_with_issues
     CC=13  in:3  out:21  total:24
+  oqlos.tools.hardware_diagnose.doctor_format.format_doctor
+    CC=6  in:2  out:21  total:23
   oqlos.core._action_motor2._motor2_build_plan
     CC=12  in:1  out:22  total:23
-  oqlos.tools.hardware_diagnose.doctor._analyze_modbus_adc_config
-    CC=12  in:1  out:22  total:23
-  oqlos.tools.hardware_diagnose.doctor.format_doctor
-    CC=6  in:2  out:21  total:23
-  oqlos.core._line_parsers._parse_if_condition
-    CC=9  in:1  out:22  total:23
   oqlos.core._action_motor2._try_exec_motor2_set
     CC=13  in:1  out:22  total:23
-  oqlos.core._line_parsers._parse_set_line
-    CC=12  in:1  out:21  total:22
+  oqlos.core._line_parsers._parse_if_condition
+    CC=9  in:1  out:22  total:23
+  oqlos.tools.hardware_diagnose.doctor_modbus_analysis.analyze_modbus_adc_config
+    CC=12  in:1  out:22  total:23
   oqlos.tools.hardware_diagnose.health.cmd_diagnose
     CC=6  in:2  out:20  total:22
-  oqlos.core.base.VariableStore.set
-    CC=4  in:19  out:2  total:21
   oqlos.core._cql_tree_builder._parse_goal_line
     CC=12  in:1  out:20  total:21
-  oqlos.tools.hardware_diagnose.doctor._analyze_modbus_config
+  oqlos.core.base.VariableStore.set
+    CC=4  in:19  out:2  total:21
+  oqlos.tools.hardware_diagnose.doctor_modbus_analysis.analyze_modbus_config
     CC=11  in:1  out:20  total:21
+  oqlos.hardware.config_paths.resolve_oqlos_config_path
+    CC=6  in:8  out:13  total:21
+  oqlos.tools.hardware_diagnose.doctor_modbus_analysis.analyze_serial_port_owners
+    CC=13  in:1  out:19  total:20
 
 MODULES:
   examples.hardware.doctor-workflow  [1 funcs]
@@ -58,13 +58,6 @@ MODULES:
     keys  CC=2  out:0
     logHardwareApiEvent  CC=6  out:4
     summarizeHardwareApiBody  CC=11  out:5
-  frontend.src.api.hardware-diagnostic-failure  [6 funcs]
-    extractDiagnosticFailure  CC=13  out:6
-    failureFromNestedOk  CC=17  out:5
-    failureFromOkFalsePayload  CC=19  out:5
-    failureFromSuccessFalse  CC=14  out:3
-    firstActionableError  CC=3  out:4
-    resultData  CC=4  out:0
   frontend.src.api.hardware-tic249-status  [3 funcs]
     isIdempotentDiagnosticSuccess  CC=3  out:2
     isIdempotentTic249Deenergized  CC=12  out:2
@@ -91,17 +84,21 @@ MODULES:
     delay  CC=2  out:2
     pending  CC=4  out:4
     query  CC=1  out:1
-  frontend.src.hooks.useParentEncoderNavigation  [14 funcs]
-    all  CC=6  out:2
-    controller  CC=3  out:2
-    createEncoderController  CC=21  out:10
-    getInteractiveItems  CC=6  out:4
-    handleEncoderCommand  CC=15  out:7
-    items  CC=7  out:4
-    onKeyDown  CC=7  out:3
-    onMessage  CC=3  out:2
-    onWheel  CC=6  out:5
-    parentEncoderActive  CC=15  out:7
+  frontend.src.hooks.useMapEditorSidebarAutoCollapse  [2 funcs]
+    applyAutoCollapse  CC=9  out:4
+    useMapEditorSidebarAutoCollapse  CC=9  out:11
+  frontend.src.hooks.useRailHoverPreview  [8 funcs]
+    cancelPanelClose  CC=2  out:2
+    cancelRailOpen  CC=2  out:2
+    panelEnter  CC=1  out:2
+    panelLeave  CC=3  out:5
+    previewExpand  CC=3  out:2
+    railEnter  CC=3  out:4
+    railLeave  CC=1  out:2
+    useRailHoverPreview  CC=9  out:10
+  frontend.src.hooks.useUrlConfig  [2 funcs]
+    notifyParentChildReady  CC=4  out:5
+    useUrlConfig  CC=8  out:15
   frontend.src.i18n.I18nProvider  [5 funcs]
     I18nProvider  CC=13  out:8
     dict  CC=8  out:3
@@ -130,8 +127,6 @@ MODULES:
     loadPlan  CC=18  out:11
     log  CC=1  out:3
     message  CC=1  out:1
-  frontend.src.pages.MapEditor  [1 funcs]
-    next  CC=1  out:1
   frontend.src.utils.collapse-toggle-bridge  [2 funcs]
     isInIframe  CC=4  out:0
     postToParent  CC=4  out:8
@@ -143,23 +138,12 @@ MODULES:
   frontend.src.utils.hardware-api-retry  [2 funcs]
     attempt  CC=14  out:9
     sleep  CC=1  out:2
-  frontend.src.utils.hardware-restart-wizard-steps  [4 funcs]
-    buildWizardProbePayload  CC=10  out:7
-    executeConfigureStep  CC=48  out:15
+  frontend.src.utils.hardware-restart-wizard-steps  [1 funcs]
     probe  CC=1  out:2
-    wizardStepSerialPort  CC=14  out:0
   frontend.src.utils.hardware-wizard-steps  [1 funcs]
     list  CC=2  out:0
-  frontend.src.utils.hardwareEventStream  [9 funcs]
-    buildHardwareEventsWsUrl  CC=10  out:3
-    commandName  CC=3  out:1
+  frontend.src.utils.hardwareEventStream  [1 funcs]
     id  CC=3  out:1
-    matchesHardwareEventFilters  CC=9  out:4
-    normalizeHardwareEvent  CC=21  out:3
-    normalizeText  CC=2  out:1
-    peripheralId  CC=3  out:1
-    result  CC=3  out:1
-    timestamp  CC=3  out:1
   frontend.src.utils.mapEditorFuncHardwareSummary  [6 funcs]
     apiBindingHint  CC=12  out:0
     objectMap  CC=3  out:2
@@ -167,6 +151,57 @@ MODULES:
     resolveObjectActionHardwareHint  CC=6  out:2
     summarizeFuncToHardware  CC=17  out:6
     uniqueHints  CC=5  out:5
+  frontend.src.utils.mapEditorIntegrationMeta  [7 funcs]
+    firstBindingFromObjectMapping  CC=6  out:1
+    nextValue  CC=2  out:1
+    readIntegrationMeta  CC=15  out:1
+    setApiEndpointField  CC=2  out:0
+    setApiServiceField  CC=2  out:0
+    setHardwareAddressField  CC=8  out:0
+    setMetaField  CC=15  out:4
+  frontend.src.utils.mapEditorMapShape  [6 funcs]
+    cloneValue  CC=1  out:2
+    ensureMapShape  CC=7  out:1
+    fillMissingFields  CC=6  out:4
+    isPlainObject  CC=3  out:2
+    src  CC=2  out:1
+    toPrettyJson  CC=1  out:2
+  frontend.src.utils.mapEditorModel  [3 funcs]
+    cloneDefaultMap  CC=1  out:2
+    createInitialEditorState  CC=1  out:3
+    ensureRequiredDefaultMappings  CC=10  out:3
+  frontend.src.utils.rbac.policy  [13 funcs]
+    canConnectRoleAccessPath  CC=2  out:3
+    canHostRoleAccessPath  CC=2  out:3
+    isAdminConnectRole  CC=1  out:1
+    isOperatorConnectRole  CC=4  out:1
+    isReadOnlyConnectRole  CC=2  out:1
+    matched  CC=5  out:1
+    matchesPattern  CC=3  out:3
+    normalizeConnectRole  CC=2  out:1
+    normalizeHostRole  CC=2  out:1
+    normalizePath  CC=6  out:4
+  frontend.src.utils.url-embed-config  [23 funcs]
+    IFRAME_ONLY_SEARCH_PARAMS  CC=9  out:11
+    applyParentContextPayload  CC=5  out:5
+    applyUrlEmbedPatch  CC=7  out:7
+    base  CC=3  out:3
+    fromUser  CC=4  out:3
+    href  CC=4  out:3
+    mergeParentContext  CC=7  out:4
+    mergeParentSearchIntoChildUrl  CC=9  out:11
+    nextHref  CC=1  out:1
+    parentSearch  CC=4  out:3
+  frontend.src.utils.url-embed-config.test  [1 funcs]
+    next  CC=2  out:0
+  frontend.src.utils.useSelectionCollapsePanel  [7 funcs]
+    cancelAutoCollapse  CC=2  out:2
+    collapsed  CC=2  out:6
+    expand  CC=1  out:5
+    onMessage  CC=8  out:3
+    scheduleCollapse  CC=2  out:6
+    toggleCollapsed  CC=2  out:5
+    useSelectionCollapsePanel  CC=21  out:20
   oqlos.config  [1 funcs]
     get_settings  CC=1  out:0
   oqlos.core._action_motor2  [30 funcs]
@@ -229,16 +264,12 @@ MODULES:
     _drop_command_token  CC=6  out:5
     _exec_set_wait  CC=3  out:7
     _extract_action_tokens  CC=5  out:4
-  oqlos.core._line_parsers  [9 funcs]
-    _parse_action_line  CC=10  out:18
+  oqlos.core._line_parsers  [5 funcs]
     _parse_if_condition  CC=9  out:22
     _parse_inline_task  CC=5  out:7
     _parse_pump_line  CC=6  out:8
-    _parse_set_line  CC=12  out:21
+    _parse_set_line  CC=10  out:15
     _parse_task_part  CC=10  out:14
-    _set_lung_step  CC=4  out:3
-    _set_pump_step  CC=4  out:3
-    _set_valve_step  CC=4  out:4
   oqlos.core._oql_adapter  [15 funcs]
     register  CC=1  out:1
     _cmd_to_actions  CC=2  out:3
@@ -330,34 +361,60 @@ MODULES:
     resolve_oqlos_config_path  CC=6  out:13
   oqlos.hardware.health_status  [1 funcs]
     health_status_is_ok  CC=11  out:9
-  oqlos.tools.hardware_diagnose.__main__  [9 funcs]
-    _handle_report_action  CC=3  out:4
-    _print_benchmark  CC=3  out:11
+  oqlos.tools.hardware_diagnose.__main__  [3 funcs]
     _print_calibrate  CC=6  out:9
-    _print_detect  CC=2  out:4
-    _print_diagnose  CC=3  out:9
-    _print_doctor  CC=2  out:4
     _print_health  CC=2  out:5
     _print_list  CC=3  out:8
-    _print_modbus_probe  CC=2  out:5
-  oqlos.tools.hardware_diagnose.benchmark  [1 funcs]
-    run_benchmark  CC=6  out:15
   oqlos.tools.hardware_diagnose.calibration  [1 funcs]
     run_calibration_test  CC=2  out:8
   oqlos.tools.hardware_diagnose.discovery  [2 funcs]
     list_i2c_buses  CC=1  out:2
     list_usb_serial_devices  CC=7  out:9
-  oqlos.tools.hardware_diagnose.doctor  [41 funcs]
-    _adapter_health_status  CC=3  out:1
-    _add_issue  CC=2  out:1
-    _analyze_firmware_access  CC=7  out:11
-    _analyze_modbus_adc_config  CC=12  out:22
-    _analyze_modbus_config  CC=11  out:20
-    _analyze_serial_port_owners  CC=13  out:19
-    _canonical_device_path  CC=2  out:3
-    _check_firmware_adapters  CC=7  out:9
-    _check_firmware_health_error  CC=3  out:2
-    _check_firmware_mode  CC=3  out:4
+  oqlos.tools.hardware_diagnose.doctor  [1 funcs]
+    build_doctor_report  CC=11  out:14
+  oqlos.tools.hardware_diagnose.doctor_common  [5 funcs]
+    add_issue  CC=2  out:1
+    collect_repairs  CC=5  out:7
+    modbus_adc_config  CC=1  out:1
+    modbus_config  CC=1  out:1
+    plugin_config  CC=3  out:4
+  oqlos.tools.hardware_diagnose.doctor_detection  [8 funcs]
+    _doctor  CC=1  out:0
+    detect_hardware  CC=4  out:13
+    firmware_hostname  CC=3  out:2
+    load_config_summary  CC=4  out:7
+    probe_modbus  CC=1  out:2
+    probe_modbus_adc  CC=1  out:2
+    run_modbus_probe  CC=5  out:9
+    usb_serial_only  CC=3  out:1
+  oqlos.tools.hardware_diagnose.doctor_firmware  [10 funcs]
+    adapter_health_status  CC=3  out:1
+    analyze_firmware_access  CC=7  out:11
+    check_firmware_adapters  CC=7  out:9
+    check_firmware_health_error  CC=3  out:2
+    check_firmware_mode  CC=3  out:4
+    check_firmware_serial_access  CC=11  out:13
+    firmware_adapter_status  CC=7  out:9
+    firmware_is_remote  CC=2  out:3
+    firmware_modbus_adc_health_ok  CC=4  out:6
+    firmware_modbus_health_ok  CC=10  out:16
+  oqlos.tools.hardware_diagnose.doctor_format  [4 funcs]
+    _format_doctor_applied_repairs  CC=4  out:5
+    _format_doctor_issues  CC=5  out:10
+    format_doctor  CC=6  out:21
+    format_modbus_status  CC=7  out:11
+  oqlos.tools.hardware_diagnose.doctor_modbus_analysis  [5 funcs]
+    analyze_modbus_adc_config  CC=12  out:22
+    analyze_modbus_config  CC=11  out:20
+    analyze_serial_port_owners  CC=13  out:19
+    expected_modbus_adc_params  CC=6  out:8
+    expected_modbus_params  CC=5  out:6
+  oqlos.tools.hardware_diagnose.doctor_repairs  [3 funcs]
+    apply_safe_fixes  CC=9  out:14
+    update_modbus_adc_config  CC=4  out:18
+    update_modbus_config  CC=2  out:17
+  oqlos.tools.hardware_diagnose.doctor_serial  [1 funcs]
+    owners_for_configured_port  CC=4  out:3
   oqlos.tools.hardware_diagnose.health  [7 funcs]
     _format_health_value  CC=8  out:9
     _is_health_ok  CC=5  out:6
@@ -366,17 +423,8 @@ MODULES:
     check_firmware_identify  CC=1  out:1
     cmd_diagnose  CC=6  out:20
     cmd_health  CC=5  out:10
-  oqlos.tools.hardware_diagnose.modbus_probe  [7 funcs]
-    _arg_int_list  CC=3  out:2
-    _arg_str_list  CC=2  out:1
-    _env_count_list  CC=2  out:2
-    _env_int_list  CC=5  out:5
-    _env_str_list  CC=3  out:2
-    _split_values  CC=5  out:5
-    run_modbus_probe_from_args  CC=1  out:2
-  oqlos.tools.hardware_diagnose.report  [2 funcs]
+  oqlos.tools.hardware_diagnose.report  [1 funcs]
     format_peripheral_table  CC=12  out:3
-    save_diagnostic_report  CC=3  out:13
   oqlos.tools.plugin_cli  [12 funcs]
     _default_config_path  CC=1  out:2
     _load_config_file  CC=4  out:16
@@ -403,24 +451,16 @@ EDGES:
   setup_hardware_and_run_oql.load_env_file → examples.hardware.doctor-workflow.print
   setup_hardware_and_run_oql.run_oql_scenario → examples.hardware.doctor-workflow.print
   setup_hardware_and_run_oql.main → setup_hardware_and_run_oql.run_oql_scenario
-  frontend.src.hooks.useParentEncoderNavigation.createEncoderController → frontend.src.hooks.useParentEncoderNavigation.removeHighlights
-  frontend.src.hooks.useParentEncoderNavigation.createEncoderController → frontend.src.hooks.useParentEncoderNavigation.getInteractiveItems
-  frontend.src.hooks.useParentEncoderNavigation.createEncoderController → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
-  frontend.src.hooks.useParentEncoderNavigation.parentEncoderActive → frontend.src.hooks.useParentEncoderNavigation.removeHighlights
-  frontend.src.hooks.useParentEncoderNavigation.parentEncoderActive → frontend.src.hooks.useParentEncoderNavigation.getInteractiveItems
-  frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand → frontend.src.hooks.useParentEncoderNavigation.removeHighlights
-  frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand → frontend.src.hooks.useParentEncoderNavigation.getInteractiveItems
-  frontend.src.hooks.useParentEncoderNavigation.items → frontend.src.hooks.useParentEncoderNavigation.removeHighlights
-  frontend.src.hooks.useParentEncoderNavigation.onKeyDown → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
-  frontend.src.hooks.useParentEncoderNavigation.useParentEncoderNavigation → frontend.src.hooks.useParentEncoderNavigation.createEncoderController
-  frontend.src.hooks.useParentEncoderNavigation.useParentEncoderNavigation → frontend.src.hooks.useParentEncoderNavigation.parseParentEncoderEnvelope
-  frontend.src.hooks.useParentEncoderNavigation.useParentEncoderNavigation → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
-  frontend.src.hooks.useParentEncoderNavigation.controller → frontend.src.hooks.useParentEncoderNavigation.parseParentEncoderEnvelope
-  frontend.src.hooks.useParentEncoderNavigation.controller → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
-  frontend.src.hooks.useParentEncoderNavigation.onMessage → frontend.src.hooks.useParentEncoderNavigation.parseParentEncoderEnvelope
-  frontend.src.hooks.useParentEncoderNavigation.onMessage → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
-  frontend.src.hooks.useParentEncoderNavigation.onWheel → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
-  frontend.src.hooks.useParentEncoderNavigation.raw → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
+  frontend.src.hooks.useMapEditorSidebarAutoCollapse.useMapEditorSidebarAutoCollapse → frontend.src.hooks.useMapEditorSidebarAutoCollapse.applyAutoCollapse
+  frontend.src.hooks.useUrlConfig.useUrlConfig → frontend.src.hooks.useUrlConfig.notifyParentChildReady
+  frontend.src.hooks.useRailHoverPreview.useRailHoverPreview → frontend.src.hooks.useRailHoverPreview.cancelPanelClose
+  frontend.src.hooks.useRailHoverPreview.useRailHoverPreview → frontend.src.hooks.useRailHoverPreview.previewExpand
+  frontend.src.hooks.useRailHoverPreview.useRailHoverPreview → frontend.src.hooks.useRailHoverPreview.cancelRailOpen
+  frontend.src.hooks.useRailHoverPreview.railEnter → frontend.src.hooks.useRailHoverPreview.cancelPanelClose
+  frontend.src.hooks.useRailHoverPreview.railEnter → frontend.src.hooks.useRailHoverPreview.previewExpand
+  frontend.src.hooks.useRailHoverPreview.railLeave → frontend.src.hooks.useRailHoverPreview.cancelRailOpen
+  frontend.src.hooks.useRailHoverPreview.panelEnter → frontend.src.hooks.useRailHoverPreview.cancelPanelClose
+  frontend.src.hooks.useRailHoverPreview.panelLeave → frontend.src.hooks.useRailHoverPreview.cancelRailOpen
   frontend.src.pages.HardwareRestart.loadPlan → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
   frontend.src.pages.HardwareRestart.serialPort → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
   frontend.src.pages.HardwareRestart.serialPort → frontend.src.pages.HardwareRestart.loadPlan
@@ -447,3 +487,11 @@ EDGES:
   frontend.src.pages.HardwareRestart.skipPumpOffStep → frontend.src.pages.HardwareRestart.timestamp
   frontend.src.pages.HardwareRestart.skipOptionalStep → frontend.src.pages.HardwareRestart.timestamp
   frontend.src.pages.HardwareDemo.ensureAudioCtx → frontend.src.pages.HardwareDemo.appendLog
+  frontend.src.pages.HardwareDemo.ensureAudioCtx → frontend.src.pages.HardwareDemo.Ctx
+  frontend.src.pages.HardwareDemo.Ctx → frontend.src.pages.HardwareDemo.appendLog
+  frontend.src.pages.HardwareDemo.cancelled → frontend.src.pages.HardwareDemo.appendLog
+  frontend.src.pages.HardwareDemo.pumpOk → frontend.src.pages.HardwareDemo.appendLog
+  frontend.src.pages.HardwareDemo.stepperOk → frontend.src.pages.HardwareDemo.appendLog
+  frontend.src.pages.HardwareDemo.sendDeviceNote → frontend.src.pages.HardwareDemo.now
+  frontend.src.pages.HardwareDemo.sendDeviceNote → frontend.src.pages.HardwareDemo.appendLog
+  frontend.src.pages.HardwareDemo.fallbackDevice → frontend.src.pages.HardwareDemo.appendLog

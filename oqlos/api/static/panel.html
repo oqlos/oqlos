@@ -23,6 +23,10 @@
   .badge.fail{background:rgba(239,68,68,.15);color:var(--fail);border-color:var(--fail)}
   .badge.warn{background:rgba(245,158,11,.15);color:var(--warn);border-color:var(--warn)}
   .badge.na{background:rgba(245,158,11,.15);color:var(--warn);border-color:var(--warn)}
+  .top-nav{display:flex;align-items:center;flex-wrap:wrap;gap:6px;min-width:0}
+  .top-nav a{color:var(--text);text-decoration:none;border:1px solid var(--border);background:var(--panel2);border-radius:7px;padding:5px 9px;font-size:12px;font-weight:650;white-space:nowrap}
+  .top-nav a:hover{border-color:var(--accent)}
+  .top-nav a.active{background:var(--accent);border-color:var(--accent);color:#fff}
   .spacer{flex:1}
   button{cursor:pointer;font:inherit;color:var(--text);background:var(--panel2);border:1px solid var(--border);border-radius:7px;padding:6px 11px}
   button:hover{border-color:var(--accent)}
@@ -58,6 +62,8 @@
   .toggle label{padding:6px 12px;cursor:pointer;font-size:12px;background:var(--panel2)}
   .toggle input{display:none}
   .toggle input:checked + label{background:var(--accent);color:#fff;font-weight:600}
+  .wait-toggle{font-size:12px;display:inline-flex;align-items:center;gap:6px;color:var(--muted)}
+  .wait-toggle input{width:auto}
   #log{display:flex;flex-direction:column;gap:8px;max-height:60vh;overflow:auto}
   .entry{border:1px solid var(--border);border-radius:8px;background:var(--panel2);padding:8px 10px}
   .entry .top{display:flex;align-items:center;gap:8px;font-size:12px}
@@ -84,6 +90,17 @@
   <h1>OqlOS · Panel testowy</h1>
   <span id="nodeBadge" class="badge warn">łączenie…</span>
   <span id="svcBadge" class="badge">—</span>
+  <nav class="top-nav" aria-label="OqlOS navigation">
+    <a href="/hardware-status">Status</a>
+    <a href="/hardware-restart">Restart</a>
+    <a href="/hardware-demo">Demo</a>
+    <a href="/map-editor">MAP</a>
+    <a href="/scenario-files">Scenarios</a>
+    <a href="/func-editor">Functions</a>
+    <a class="active" href="/panel">OQL</a>
+    <a href="/navigation">Navigation</a>
+    <a href="/docs">API</a>
+  </nav>
   <div class="spacer"></div>
   <button onclick="toggleTheme()" id="themeBtn" title="Przełącz motyw jasny/ciemny">🌓</button>
   <button onclick="refreshStatus()">⟳ Odśwież status</button>
@@ -143,7 +160,7 @@
       <h2>Edytor scenariusza (OQL)</h2>
       <div class="body">
         <div class="editor-wrap">
-          <textarea id="editor" spellcheck="false" placeholder="VERSION: 4&#10;SCENARIO: Mój test&#10;GOAL:&#10;  SET NAME 'Opis'&#10;  SET 'valve-1' 'open'&#10;  WAIT 1 s&#10;  GET 'ai01'"></textarea>
+          <textarea id="editor" spellcheck="false" placeholder="VERSION: 4&#10;SCENARIO: Mój test&#10;GOAL:&#10;  SET NAME 'Opis'&#10;  SET 'valve-1' 'open'&#10;  SET WAIT '1 s'&#10;  GET 'ai01'"></textarea>
           <div id="snippets" class="snip-palette" title="Kliknij komendę OQL — wstawi się w edytorze w miejscu kursora"></div>
         </div>
         <div class="row" style="margin-top:9px">
@@ -153,6 +170,9 @@
             <input type="radio" name="mode" id="m_dry" value="dry-run" checked><label for="m_dry">Symulacja</label>
             <input type="radio" name="mode" id="m_val" value="validate"><label for="m_val">Walidacja</label>
           </span>
+          <label class="wait-toggle" title="Gdy odznaczone, SET WAIT/WAIT zatrzyma wykonanie. Dla trybu Wykonaj domyślnie odznaczone.">
+            <input type="checkbox" id="skipWaits"> pomiń WAIT
+          </label>
           <div class="spacer"></div>
           <button class="primary" onclick="runEditor()">▶ Uruchom scenariusz</button>
           <button onclick="copyEditor(this)" title="Kopiuj zawartość edytora do schowka">📋 Kopiuj</button>
@@ -222,8 +242,8 @@ const OQL_SNIPPETS = [
     {label:"SCENARIO: …", t:"SCENARIO: Mój test\n"},
     {label:"GOAL:", t:"GOAL:\n"},
     {label:"SET NAME '…'", t:"  SET NAME 'Opis'\n"},
-    {label:"WAIT 1 s", t:"  WAIT 1 s\n"},
-    {label:"WAIT 500 ms", t:"  WAIT 500 ms\n"},
+    {label:"SET WAIT '1 s'", t:"  SET WAIT '1 s'\n"},
+    {label:"SET WAIT '500 ms'", t:"  SET WAIT '500 ms'\n"},
   ]},
   {title:"Zawory", color:"#10b981", items:[
     {label:"valve-1 open", t:"  SET 'valve-1' 'open'\n"},
@@ -250,7 +270,9 @@ const DEFAULT_EDITOR_OQL = `VERSION: 4
 SCENARIO: Mój test
 GOAL:
   SET NAME 'Opis'
-  SET 'pump' 25`;
+  SET 'pump' 25
+  SET WAIT '1 s'
+  SET 'pump' 0`;
 
 // Wstaw tekst w edytorze dokładnie w miejscu kursora (lub na końcu zaznaczenia).
 function insertAtCursor(text){
@@ -296,10 +318,10 @@ SCENARIO: Test zaworow
 GOAL:
   SET NAME 'Sekwencja otwarcia/zamkniecia'
   SET 'valve-1' 'open'
-  WAIT 1 s
+  SET WAIT '1 s'
   SET 'valve-1' 'closed'
   SET 'valve-2' 'open'
-  WAIT 1 s
+  SET WAIT '1 s'
   SET 'valve-2' 'closed'`},
   {name:"Test pompy (rampa)", oql:
 `VERSION: 4
@@ -307,14 +329,53 @@ SCENARIO: Rampa pompy
 GOAL:
   SET NAME 'Rampa mocy pompy'
   SET 'pump' 25
-  WAIT 1 s
+  SET WAIT '1 s'
   SET 'pump' 50
-  WAIT 1 s
+  SET WAIT '1 s'
   SET 'pump' 0`},
 ];
 
 const $ = s => document.querySelector(s);
 function mode(){ return document.querySelector('input[name=mode]:checked').value; }
+function skipWaitsDefault(selectedMode){ return selectedMode !== 'execute'; }
+function parseBoolParam(raw, fallback){
+  if(raw == null) return fallback;
+  const val=String(raw).trim().toLowerCase();
+  if(['1','true','yes','on'].includes(val)) return true;
+  if(['0','false','no','off'].includes(val)) return false;
+  return fallback;
+}
+function skipWaits(){
+  const el=$('#skipWaits');
+  return el ? !!el.checked : skipWaitsDefault(mode());
+}
+function syncPanelUrl(){
+  if(!window.history || !window.location) return;
+  const params=new URLSearchParams(window.location.search);
+  params.set('mode', mode());
+  params.set('skip_waits', String(skipWaits()));
+  const query=params.toString();
+  window.history.replaceState(null, '', window.location.pathname+(query?'?'+query:'')+window.location.hash);
+}
+function initPanelUrlState(){
+  const params=new URLSearchParams(window.location.search);
+  const requestedMode=String(params.get('mode')||'').toLowerCase();
+  if(['execute','dry-run','validate'].includes(requestedMode)){
+    const selected=document.querySelector(`input[name=mode][value="${requestedMode}"]`);
+    if(selected) selected.checked=true;
+  }
+  const skipEl=$('#skipWaits');
+  if(skipEl) skipEl.checked=parseBoolParam(params.get('skip_waits'), skipWaitsDefault(mode()));
+  document.querySelectorAll('input[name=mode]').forEach(input=>{
+    input.addEventListener('change', ()=>{
+      const el=$('#skipWaits');
+      if(el) el.checked=skipWaitsDefault(mode());
+      syncPanelUrl();
+    });
+  });
+  if(skipEl) skipEl.addEventListener('change', syncPanelUrl);
+  syncPanelUrl();
+}
 function banner(msg){ const b=$('#banner'); if(!msg){b.style.display='none';return;} b.textContent=msg; b.style.display='block'; }
 
 async function api(path, body){
@@ -425,8 +486,10 @@ async function runManage(verb, args, label){
 }
 async function runOql(oql, kind, label){
   const k=kind||'command', m=mode();
-  const payload={oql, kind:k, mode:m};
-  const sent='POST /api/v1/oql/execute  '+JSON.stringify({kind:k, mode:m, oql});
+  const sw=skipWaits();
+  const payload={oql, kind:k, mode:m, skip_waits:sw};
+  syncPanelUrl();
+  const sent='POST /api/v1/oql/execute  '+JSON.stringify({kind:k, mode:m, skip_waits:sw, oql});
   const {status,data}=await api('/api/v1/oql/execute', payload);
   if(status===503) banner('Transport OQL wyłączony (rola ≠ controller). Uruchom oqlos w roli controller.');
   logEntry(label||('OQL: '+oql.split('\n')[0]), data, status, sent, {ep:'/api/v1/oql/execute', body:payload, title:label||('OQL: '+oql.split('\n')[0])});
@@ -645,6 +708,7 @@ renderGroups();
 renderSnippets();
 rebuildScenarios();
 if(!$('#editor').value.trim()) $('#editor').value=DEFAULT_EDITOR_OQL;
+initPanelUrlState();
 refreshStatus();
 loadServerScenarios();
 </script>

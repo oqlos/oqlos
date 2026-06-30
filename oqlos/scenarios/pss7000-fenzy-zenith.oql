@@ -21,7 +21,7 @@ GOAL:
 GOAL:
   SET NAME 'Test statyczny SC'
   SET 'pump-main' '0'
-  WAIT 3s
+  SET WAIT '3 s'
   SAVE ciśnienie-sc
   IF 'AI02' '6.0 .. 8.0 bar'
   CORRECT 'Ciśnienie SC w normie (FENZY ZENITH)'
@@ -29,7 +29,7 @@ GOAL:
 
 GOAL:
   SET NAME 'Zmiana SC'
-  WAIT 6s
+  SET WAIT '6 s'
   SAVE delta-ciśnienia-sc
   IF 'AI01' '-1.0 .. 0.5 bar'
   CORRECT 'Delta ciśnienia w normie (FENZY ZENITH)'
@@ -42,11 +42,10 @@ GOAL:
 GOAL:
   SET NAME 'Test szczelności WC'
   SET 'pump-main' '0'
-  WAIT 5s
-
+  SET WAIT '5 s'
 GOAL:
   SET NAME 'Kontrola spadku WC'
-  WAIT 10s
+  SET WAIT '10 s'
   SAVE spadek-ciśnienia
   IF 'AI01' '0.0 .. 3.0 bar'
   CORRECT 'Spadek WC w normie'
@@ -59,7 +58,7 @@ GOAL:
 GOAL:
   SET NAME 'Test nadciśnienia statycznego'
   SET 'pump-main' '0'
-  WAIT 5s
+  SET WAIT '5 s'
   SAVE nadciśnienie
   IF 'AI01' '2.2 .. 4.1 mbar'
   CORRECT 'Nadciśnienie statyczne w normie (FENZY ZENITH)'
@@ -69,7 +68,7 @@ GOAL:
   SET NAME 'Test sygnału akustycznego'
   SET 'pump-main' '5.0 l/min'
   SET 'valve-bo06' '1'
-  WAIT 2s
+  SET WAIT '2 s'
   SAVE wynik-sygnału
   IF 'AI01' '0.0 .. 1.0 mbar'
   CORRECT 'Sygnał akustyczny OK'
@@ -79,7 +78,7 @@ GOAL:
   SET NAME 'Wytworzenie podciśnienia'
   SET 'pump-main' '5.0 l/min'
   SET 'valve-bo06' '1'
-  WAIT 20s
+  SET WAIT '20 s'
   IF 'AI01' '-12.0 .. 12.0 mbar'
   CORRECT 'Podciśnienie w normie (FENZY ZENITH)'
   ERROR 'Błąd: podciśnienie poza zakresem (FENZY ZENITH)'
@@ -88,14 +87,14 @@ GOAL:
   SET NAME 'Ustawienie auto'
   SET 'pump-main' '0'
   SET 'valve-bo04' '1'
-  WAIT 15s
+  SET WAIT '15 s'
   IF 'AI01' '-12.0 .. -6.0 mbar'
   CORRECT 'Ustawienie auto OK'
   ERROR 'Błąd: ustawienie auto poza zakresem'
 
 GOAL:
   SET NAME 'Test szczelności automatu'
-  WAIT 5s
+  SET WAIT '5 s'
   SAVE ciśnienie-nc-końcowe
   IF 'AI01' '-8.0 .. -4.0 mbar'
   CORRECT 'Szczelność automatu OK'

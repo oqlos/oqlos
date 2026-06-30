@@ -18,7 +18,7 @@ MACRO hw-pump-smoke:
   # krótki impuls pompy głównej: 2 s przy 5 l/min, potem zero.
   LOG 'hw-pump-smoke: start'
   SET pump-main 5 l/min
-  WAIT 2s
+  SET WAIT '2 s'
   SET pump-main 0
   LOG 'hw-pump-smoke: koniec'
 
@@ -31,23 +31,22 @@ MACRO hw-valves-reset:
   SET valve-nc 0
   SET valve-sc 0
   SET valve-wc 0
-  WAIT 300ms
-
+  SET WAIT '300 ms'
 MACRO hw-valves-smoke:
   # cykl otwierania/zamykania trzech zaworów z krótkimi przerwami.
   SET valve-nc 1
-  WAIT 200ms
+  SET WAIT '200 ms'
   SET valve-nc 0
   SET valve-sc 1
-  WAIT 200ms
+  SET WAIT '200 ms'
   SET valve-sc 0
   SET valve-wc 1
-  WAIT 200ms
+  SET WAIT '200 ms'
   SET valve-wc 0
 
 MACRO hw-lung-smoke:
   SET lung-main 1
-  WAIT 1s
+  SET WAIT '1 s'
   SET lung-main 0
 
 MACRO hw-sensors-baseline:

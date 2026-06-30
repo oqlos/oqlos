@@ -25,7 +25,7 @@ GOAL:
   SET NAME 'test szczelności pełny'
   SET 'pump-main' '5 l/min'
   SET 'valve-bo06' '1'
-  WAIT 20s
+  SET WAIT '20 s'
   FUNC 'Sprawdź sensor' 'AI01' '-10' '0' 'mbar' 'ciśnienie-NC-pełny'
   SET 'pump-main' '0'
   SET 'valve-bo04' '0'
@@ -38,5 +38,5 @@ GOAL:
 
 GOAL:
   SET NAME 'test nadciśnienia'
-  WAIT 10s
+  SET WAIT '10 s'
   FUNC 'Sprawdź sensor' 'nadciśnienie' '2.0' '3.9' 'mbar' 'nadciśnienie'

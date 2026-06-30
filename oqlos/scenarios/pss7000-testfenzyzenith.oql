@@ -4,14 +4,14 @@ SCENARIO: PSS 7000 + FENZY ZENITH — test szczelności automatu
 GOAL:
   SET NAME 'Faza 1: Statyczne SC'
   SET 'pump-main' '0'
-  WAIT 3s
+  SET WAIT '3 s'
   IF 'AI02' '6.0 .. 10.0 bar'
   CORRECT 'Ciśnienie SC w normie (6-10 bar)'
   ERROR 'Błąd: ciśnienie SC poza zakresem'
 
 GOAL:
   SET NAME 'Faza 2: Delta SC'
-  WAIT 3s
+  SET WAIT '3 s'
   IF 'AI02' '-1.0 .. 0.5 bar'
   CORRECT 'Delta ciśnienia SC w normie'
   ERROR 'Błąd: delta ciśnienia SC poza zakresem'
@@ -19,7 +19,7 @@ GOAL:
 GOAL:
   SET NAME 'Faza 3: Nadciśnienie'
   SET 'pump-main' '0'
-  WAIT 5s
+  SET WAIT '5 s'
   IF 'AI01' '2.2 .. 4.2 mbar'
   CORRECT 'Nadciśnienie w normie'
   ERROR 'Błąd: nadciśnienie poza zakresem'
@@ -28,7 +28,7 @@ GOAL:
   SET NAME 'Faza 4: Sygnał akustyczny'
   SET 'pump-main' '5 l/min'
   SET 'valve-nc' '1'
-  WAIT 2s
+  SET WAIT '2 s'
   IF 'AI01' '0.0 .. 1.0 mbar'
   CORRECT 'Sygnał akustyczny OK'
   ERROR 'Błąd: sygnał akustyczny poza zakresem'
@@ -38,7 +38,7 @@ GOAL:
   SET NAME 'Faza 5: Podciśnienie'
   SET 'pump-main' '5 l/min'
   SET 'valve-nc' '1'
-  WAIT 20s
+  SET WAIT '20 s'
   IF 'AI01' '-15.0 .. -12.0 mbar'
   CORRECT 'Podciśnienie w normie'
   ERROR 'Błąd: podciśnienie poza zakresem'
@@ -47,7 +47,7 @@ GOAL:
   SET NAME 'Faza 6: Szczelność'
   SET 'pump-main' '0'
   SET 'valve-nc' '0'
-  WAIT 15s
+  SET WAIT '15 s'
   IF 'AI01' '-8.0 .. -4.0 mbar'
   CORRECT 'Szczelność OK'
   ERROR 'Błąd: szczelność poza zakresem'

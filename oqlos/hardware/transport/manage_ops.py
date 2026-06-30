@@ -15,8 +15,10 @@ the MQTT agent shares — so no second gateway is constructed.
 
 from __future__ import annotations
 
-import asyncio
 from typing import Any, Awaitable, Callable
+
+from oqlos.hardware.transport.manage_ops_diagnostic import run_diagnostic_command
+from oqlos.hardware.transport.manage_ops_usb import pi_diagnostics, usb_list, usb_reset
 
 # Verbs that take no arguments map straight to a zero-arg handler.
 _NULLARY = {
@@ -112,89 +114,17 @@ def _resolve(verb: str) -> Callable[[dict[str, Any]], Awaitable[Any]]:
         "hui-hold-stop": lambda a: hw.hui_hold_stop(str(a.get("key", ""))),
         "artificial-lung-command": lambda a: hw.artificial_lung_command(a.get("payload", {})),
         "rtc-command": lambda a: hw.rtc_command(a.get("payload", {})),
-        "diagnostic-command": lambda _a: _run_diagnostic_command(_a),
-        "usb-list": _usb_list,
-        "list-usb": _usb_list,
-        "pi-diagnostics": _pi_diagnostics,
-        "usb-reset": _usb_reset,
+        "diagnostic-command": run_diagnostic_command,
+        "usb-list": usb_list,
+        "list-usb": usb_list,
+        "pi-diagnostics": pi_diagnostics,
+        "usb-reset": usb_reset,
     }
     handler = parametric_map.get(key)
     if handler is not None:
         return handler
 
     raise ValueError(f"unknown manage verb: {verb!r}")
-
-
-async def _usb_list(a: dict[str, Any]) -> dict[str, Any]:
-    """Enumerate USB devices on the node (runs in a thread; reads sysfs)."""
-    from oqlos.hardware import usb_diagnostics as u
-
-    devices = await asyncio.to_thread(u.list_usb_devices)
-    return {"ok": True, "count": len(devices), "devices": devices}
-
-
-async def _pi_diagnostics(a: dict[str, Any]) -> dict[str, Any]:
-    """Raspberry Pi system diagnostics snapshot."""
-    from oqlos.hardware import usb_diagnostics as u
-
-    return await asyncio.to_thread(u.pi_system_diagnostics)
-
-
-async def _usb_reset(a: dict[str, Any]) -> dict[str, Any]:
-    """Driver-level reset/re-enumeration of a USB device (best-effort; may need root)."""
-    from oqlos.hardware import usb_diagnostics as u
-
-    return await asyncio.to_thread(
-        u.reset_usb_device,
-        a.get("vendor_id"),
-        a.get("product_id"),
-        a.get("dev_node"),
-    )
-
-
-async def _run_diagnostic_command(a: dict[str, Any]) -> dict[str, Any]:
-    """Generic peripheral command — mirrors connect-scenario's proxy_diagnostic_command.
-
-    Routes ``{peripheral_id, command, args}`` to the plugin's execute endpoint, so a
-    CQRS hardware command from connect-scenario can flow over MQTT to the remote Pi
-    unchanged. ``peripheral_id`` is used directly as the plugin id (the caller has
-    already canonicalized it via ``normalize_peripheral_id``).
-    """
-    from oqlos.api import hardware as hw
-    from oqlos.api import plugins as pl
-
-    plugin_id = str(a.get("peripheral_id") or a.get("plugin_id") or "").strip()
-    if not plugin_id:
-        raise ValueError("diagnostic-command requires 'peripheral_id'")
-    command = str(a.get("command") or "").strip()
-    if plugin_id == "motor-tic249":
-        if command in {"motor_disable", "deenergize", "disable", "standby"}:
-            return await hw.disable_lung()
-        if command in {"stop", "lung_stop", "stop_lung", "emergency_stop"}:
-            return await hw.stop_lung()
-    params = a.get("args")
-    if not isinstance(params, dict):
-        params = a.get("params") if isinstance(a.get("params"), dict) else {}
-    if plugin_id == "modbus-io" and command in {"valve_on", "valve_off", "set_valve"}:
-        valve_id = str(params.get("valve_id") or "").strip()
-        if not valve_id:
-            raise ValueError("modbus-io diagnostic command requires 'valve_id'")
-        value = command == "valve_on" if command != "set_valve" else bool(params.get("value", False))
-        result = await hw.set_valve(valve_id, value)
-        if isinstance(result, dict) and "success" in result:
-            success = bool(result["success"])
-        elif isinstance(result, dict) and "ok" in result:
-            success = bool(result["ok"])
-        else:
-            success = bool(result)
-        return {
-            "success": success,
-            "ok": success,
-            "valve_id": valve_id,
-            "value": value,
-            "result": result,
-        }
-    return await pl.execute_plugin_command(plugin_id, {"command": command, "params": params})
 
 
 def list_manage_verbs() -> list[str]:

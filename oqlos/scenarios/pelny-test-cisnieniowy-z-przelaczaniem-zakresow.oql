@@ -14,7 +14,7 @@ GOAL:
   SET NAME 'test próżni'
   SET 'pompa-próżniowa' '1'
   SAMPLE ciśnienie START 50ms
-  WAIT 30s
+  SET WAIT '30 s'
   SAMPLE ciśnienie STOP
   SAVE p-prozni
   IF 'ciśnienie' '-1000 .. -900 mbar'
@@ -25,7 +25,7 @@ GOAL:
 GOAL:
   SET NAME 'test niskiego ciśnienia'
   SET 'pompa-ciśnieniowa' '1'
-  WAIT 10s
+  SET WAIT '10 s'
   SAVE cn
   IF 'ciśnienie-niskie' '25 .. 35 mbar'
   CORRECT 'Niskie ciśnienie w normie (25-35 mbar)'
@@ -34,7 +34,7 @@ GOAL:
 GOAL:
   SET NAME 'test wysokiego ciśnienia'
   SET 'multiplekser' '2'
-  WAIT 10s
+  SET WAIT '10 s'
   SAVE cw
   IF 'ciśnienie-wysokie' '480 .. 520 mbar'
   CORRECT 'Wysokie ciśnienie w normie (480-520 mbar)'

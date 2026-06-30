@@ -38,6 +38,29 @@
       align-items: flex-start;
       margin-bottom: 18px;
     }
+    .top-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+    }
+    .top-nav a {
+      color: var(--text);
+      text-decoration: none;
+      border: 1px solid var(--border);
+      background: var(--panel-2);
+      border-radius: 6px;
+      padding: 5px 9px;
+      font-size: 12px;
+      font-weight: 650;
+      white-space: nowrap;
+    }
+    .top-nav a:hover { border-color: var(--accent); }
+    .top-nav a.active {
+      color: #fff;
+      background: var(--accent);
+      border-color: var(--accent);
+    }
     h1, h2, h3 { margin: 0; letter-spacing: 0; }
     h1 { font-size: 24px; }
     h2 { font-size: 16px; margin-bottom: 12px; }
@@ -127,6 +150,17 @@
       <div>
         <h1>OqlOS Hardware Status</h1>
         <p>Runtime hardware connectivity and diagnostics from this Raspberry Pi / OqlOS node.</p>
+        <nav class="top-nav" aria-label="OqlOS navigation">
+          <a class="active" href="/hardware-status">Status</a>
+          <a href="/hardware-restart">Restart</a>
+          <a href="/hardware-demo">Demo</a>
+          <a href="/map-editor">MAP</a>
+          <a href="/scenario-files">Scenarios</a>
+          <a href="/func-editor">Functions</a>
+          <a href="/panel">OQL</a>
+          <a href="/navigation">Navigation</a>
+          <a href="/docs">API</a>
+        </nav>
         <div id="error" class="error"></div>
       </div>
       <button id="refresh" type="button">Refresh</button>

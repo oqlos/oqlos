@@ -10,6 +10,17 @@ import { useRailHoverPreview } from "../hooks/useRailHoverPreview.js";
 
 export { RAIL_HOVER_OPEN_MS, RAIL_HOVER_CLOSE_MS } from "../hooks/useRailHoverPreview.js";
 
+function _makeCollapseToggleHandler(toggleId, { expand, previewExpand, previewCollapse }) {
+  return (event) => {
+    const envelope = event.data;
+    if (!envelope || typeof envelope !== "object") return;
+    if ((envelope.payload || {}).id !== toggleId) return;
+    if (envelope.type === "parent.collapse-toggle.clicked") { expand(); return; }
+    if (envelope.type === "parent.collapse-toggle.hover-open") { previewExpand(); return; }
+    if (envelope.type === "parent.collapse-toggle.hover-close") { previewCollapse(); }
+  };
+}
+
 /**
  * Selection-driven panel collapse with optional parent top-bar reveal toggle.
  */
@@ -96,24 +107,7 @@ export function useSelectionCollapsePanel({
 
   useEffect(() => {
     if (!toggleId || !isInIframe()) return undefined;
-    const onMessage = (event) => {
-      const envelope = event.data;
-      if (!envelope || typeof envelope !== "object") return;
-      const payload = envelope.payload || {};
-      if (payload.id !== toggleId) return;
-
-      if (envelope.type === "parent.collapse-toggle.clicked") {
-        expand();
-        return;
-      }
-      if (envelope.type === "parent.collapse-toggle.hover-open") {
-        previewExpand();
-        return;
-      }
-      if (envelope.type === "parent.collapse-toggle.hover-close") {
-        previewCollapse();
-      }
-    };
+    const onMessage = _makeCollapseToggleHandler(toggleId, { expand, previewExpand, previewCollapse });
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
   }, [toggleId, expand, previewExpand, previewCollapse]);

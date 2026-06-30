@@ -31,11 +31,10 @@ DEVICE_TYPE: BA
 CONFIG initialization:
   SET pump-main 0
   SET valve-nc 0
-  WAIT 500ms
-
+  SET WAIT '500 ms'
 GOAL pressure-measurement:
   SET valve-nc 1
-  WAIT 2s
+  SET WAIT '2 s'
   GET AI01
   CHECK 6.0 <= AI01 <= 8.0 bar
   SAVE static-pressure
@@ -47,7 +46,7 @@ GOAL pressure-measurement:
 GOAL dynamic-flow-test:
   SAMPLE AI01 START 100ms
   SET pump-main 10.0 l/min
-  WAIT 5s
+  SET WAIT '5 s'
   SAMPLE AI01 STOP
   GET AI01
   SAVE flow-reading

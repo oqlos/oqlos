@@ -70,6 +70,9 @@ const VIEW_ROLE_BINDINGS = [
   { pattern: "/hardware-demo*", roles: ["admin", "manager", "technician", "operator", "viewer"] },
   { pattern: "/map-editor*", roles: ["admin", "manager", "technician", "operator", "viewer"] },
   { pattern: "/func-editor*", roles: ["admin", "manager", "technician", "operator", "viewer"] },
+  { pattern: "/panel*", roles: ["admin", "manager", "technician", "operator", "viewer"] },
+  { pattern: "/navigation*", roles: ["admin", "manager", "technician", "operator", "viewer"] },
+  { pattern: "/docs*", roles: ["admin", "manager", "technician", "operator", "viewer"] },
   { pattern: "/templates*", roles: ["admin", "manager", "technician", "operator", "viewer"] },
   { pattern: "/operator-parameters*", roles: ["admin", "manager", "technician", "operator", "viewer"] },
 ];

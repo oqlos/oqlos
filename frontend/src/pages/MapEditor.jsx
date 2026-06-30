@@ -8,6 +8,10 @@ import { useI18n } from "../i18n/I18nProvider";
 import { useWsStatus } from "../hooks/useWsStatus";
 import { useMapEditorHardwareEvents } from "../hooks/useMapEditorHardwareEvents.js";
 import { useMapEditorSidebarAutoCollapse } from "../hooks/useMapEditorSidebarAutoCollapse.js";
+import {
+  applyObjectActionArgMutation,
+  applyObjectActionBodyFieldMutation,
+} from "../utils/mapEditorObjectActionEdits.js";
 import { matchesHardwareEventFilters, normalizeHardwareEvent } from "../utils/hardwareEventStream.js";
 import { summarizeFuncToHardware } from "../utils/mapEditorFuncHardwareSummary.js";
 import {
@@ -279,26 +283,7 @@ export default function MapEditor() {
     const value = prompt(`${actionName}.${argName}:`, current ?? "");
     if (value === null) return;
     applyMapMutation((next) => {
-      const binding = next.objectActionMap?.[objectName]?.[actionName];
-      if (!binding || typeof binding !== "object") return;
-      if (!binding.args || typeof binding.args !== "object") binding.args = {};
-
-      if (type === "number") {
-        const parsed = Number(value);
-        if (!Number.isFinite(parsed)) return;
-        binding.args[argName] = parsed;
-      } else {
-        binding.args[argName] = value.trim();
-      }
-
-      if (binding.body?.command === "move_relative") {
-        const direction = String(binding.args.direction || actionName || "").toLowerCase();
-        const steps = Math.abs(Number(binding.args.steps ?? binding.args.offset ?? 0));
-        if (Number.isFinite(steps) && steps > 0) {
-          binding.args.steps = steps;
-          binding.args.offset = direction === "left" ? -steps : steps;
-        }
-      }
+      applyObjectActionArgMutation(next, { objectName, actionName, argName, value, type });
     });
   }, [applyMapMutation, mapData]);
 
@@ -307,10 +292,7 @@ export default function MapEditor() {
     const value = prompt(`${actionName}.body.${field}:`, current ?? "");
     if (value === null) return;
     applyMapMutation((next) => {
-      const binding = next.objectActionMap?.[objectName]?.[actionName];
-      if (!binding || typeof binding !== "object") return;
-      if (!binding.body || typeof binding.body !== "object") binding.body = {};
-      binding.body[field] = value.trim();
+      applyObjectActionBodyFieldMutation(next, { objectName, actionName, field, value });
     });
   }, [applyMapMutation, mapData]);
 

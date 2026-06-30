@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from oqlos.hardware.diagnosis_plugin_health import health_map
 from oqlos.hardware.diagnosis import (
     is_stale_hardware_entry,
     is_stale_hardware_message,
@@ -11,12 +12,7 @@ from oqlos.hardware.diagnosis import (
 )
 
 _PLUGIN_IDS = ("modbus-io", "modbus-adc", "motor-dri0050", "motor-tic249")
-
-
-def _health_map(identify: dict[str, Any]) -> dict[str, Any]:
-    diagnostics = identify.get("diagnostics") if isinstance(identify, dict) else {}
-    health = diagnostics.get("health") if isinstance(diagnostics, dict) else {}
-    return health if isinstance(health, dict) else {}
+_health_map = health_map
 
 
 def plugin_needs_repair(plugin_id: str, entry: dict[str, Any] | None) -> bool:
@@ -32,7 +28,7 @@ def plugin_needs_repair(plugin_id: str, entry: dict[str, Any] | None) -> bool:
 
 
 def modbus_plugins_need_repair(identify: dict[str, Any] | None) -> bool:
-    health = _health_map(identify or {})
+    health = health_map(identify or {})
     for key in ("modbus-io", "modbus-adc"):
         if plugin_needs_repair(key, health.get(key) if isinstance(health.get(key), dict) else {}):
             return True
@@ -66,7 +62,7 @@ def analyze_repair_needs(identify: dict[str, Any] | None) -> tuple[bool, list[st
     """Return whether host stack restart is recommended and human-readable reasons."""
     if not isinstance(identify, dict):
         return False, []
-    health = _health_map(identify)
+    health = health_map(identify)
     diagnostics = identify.get("diagnostics") if isinstance(identify.get("diagnostics"), dict) else {}
 
     reasons = _plugin_repair_reasons(health)
@@ -97,7 +93,7 @@ def modbus_exclusive_scan_recommended(identify: dict[str, Any] | None) -> bool:
 def overall_stack_healthy(identify: dict[str, Any] | None, *, require_motors: bool = True) -> bool:
     if not isinstance(identify, dict):
         return False
-    health = _health_map(identify)
+    health = health_map(identify)
     plugins = list(_PLUGIN_IDS) if require_motors else ("modbus-io", "modbus-adc")
     for plugin_id in plugins:
         entry = health.get(plugin_id)

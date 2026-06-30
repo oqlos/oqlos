@@ -1,54 +1,54 @@
-# oqlos | 2143 func | 202f | 55621L | python | 2026-06-30
+# oqlos | 2193 func | 238f | 56778L | python | 2026-06-30
 # generated in 0.00s
 
 HEALTH:
-  CC̄=3.9  critical=189 (limit:10)  dup=3  cycles=0
+  CC̄=3.9  critical=188 (limit:10)  dup=3  cycles=0
 
 ALERTS[20]:
-  !!! cc_exceeded      executeConfigureStep = 48 (limit:15)
-  !!! high_fan_out     _resolve = 24 (limit:10)
+  !!! cc_exceeded      executeConfigureStep = 28 (limit:15)
+  !!! high_fan_out     _resolve = 23 (limit:10)
   !!! high_fan_out     build_diagnosis_report = 22 (limit:10)
   !!! high_fan_out     FirmwareAdapter.set_peripheral = 21 (limit:10)
+  !!! high_fan_out     useSelectionCollapsePanel = 20 (limit:10)
   !!! high_fan_out     pi_system_diagnostics = 20 (limit:10)
   !!! high_fan_out     main = 20 (limit:10)
-  !!! high_fan_out     useSelectionCollapsePanel = 20 (limit:10)
-  !!  cc_exceeded      editObjectActionArg = 24 (limit:15)
-  !!  cc_exceeded      selectWizardProbeCandidate = 22 (limit:15)
-  !!  cc_exceeded      createEncoderController = 21 (limit:15)
+  !!  cc_exceeded      useSelectionCollapsePanel = 21 (limit:15)
+  !!  cc_exceeded      runCurrentStep = 20 (limit:15)
+  !!  high_fan_out     parse_oql = 19 (limit:10)
 
-MODULES[281] (top by size):
-  M[oqlos/api/hardware.py] 2266L C:0 F:93 CC↑14 D:2 (python)
+MODULES[320] (top by size):
+  M[docs/README.md] 2076L C:0 F:0 CC↑0 D:0 (md)
   M[frontend/src/i18n/dictionaries.js] 1981L C:0 F:4 CC↑5 D:0 (javascript)
-  M[docs/README.md] 1879L C:0 F:0 CC↑0 D:0 (md)
   M[frontend/src/pages/mapEditorDefaultMap.js] 1763L C:0 F:3 CC↑1 D:0 (javascript)
-  M[redeploy/122/migration.md] 1207L C:0 F:0 CC↑0 D:0 (md)
+  M[redeploy/122/migration.md] 1221L C:0 F:0 CC↑0 D:0 (md)
   M[openapi.yaml] 1035L C:0 F:0 CC↑0 D:0 (yaml)
   M[openapi_spec.yaml] 1035L C:0 F:0 CC↑0 D:0 (yaml)
-  M[frontend/src/pages/MapEditor.jsx] 1016L C:0 F:64 CC↑24 D:6 (javascript)
-  M[oqlos/tools/hardware_diagnose/doctor.py] 971L C:0 F:42 CC↑13 D:2 (python)
+  M[frontend/src/pages/MapEditor.jsx] 998L C:0 F:62 CC↑12 D:0 (javascript)
   M[oqlos/core/_interpreter_actions.py] 800L C:0 F:49 CC↑14 D:1 (python)
   M[frontend/src/i18n/hardware-status-presets-translations.js] 795L C:0 F:0 CC↑0 D:0 (javascript)
   M[README.md] 772L C:0 F:0 CC↑0 D:0 (md)
   M[oqlos/core/oql_parser.py] 762L C:3 F:43 CC↑14 D:2 (python)
   M[oqlos/core/interpreter.py] 690L C:1 F:48 CC↑11 D:0 (python)
   M[scripts/oql_v2_to_v4_migrate_db.py] 662L C:1 F:43 CC↑14 D:1 (python)
-  LANGS: python:161/javascript:61/md:19/yaml:13/shell:9/json:6/yml:4/typescript:3/other:2/conf:2/toml:1
+  M[redeploy/pi-hw/migration.md] 639L C:0 F:0 CC↑0 D:0 (md)
+  M[oqlos/hardware/plugin_gateway.py] 631L C:1 F:22 CC↑14 D:0 (python)
+  LANGS: python:194/javascript:66/md:20/yaml:13/shell:9/json:6/yml:4/typescript:3/other:2/conf:2/toml:1
 
 HOTSPOTS[10]:
-  ★ _resolve fan=24  // Orchestrates 24 calls
+  ★ _resolve fan=23  // Orchestrates 23 calls
   ★ build_diagnosis_report fan=22  // Build per-device diagnosis from an identify payload (same shape as GET /identify
   ★ FirmwareAdapter.set_peripheral fan=21  // Set peripheral value via firmware API.
 
 Routes pump commands to POST /api/v1/har
+  ★ useSelectionCollapsePanel fan=20  // Orchestrates 20 calls
   ★ pi_system_diagnostics fan=20  // Raspberry Pi health snapshot: model, temp, throttling, memory, uptime, ports.
-  ★ main fan=20  // Orchestrates 20 calls
 
 REFACTOR[15]:
-  [1] H/L Split executeConfigureStep (CC=48)
-  [2] H/H Split god module frontend/src/pages/MapEditor.jsx (1016L, 0 classes)
-  [3] H/H Split god module frontend/src/pages/HardwareRestart.jsx (501L, 0 classes)
-  [4] H/H Split god module frontend/src/pages/HardwareDemo.jsx (585L, 0 classes)
-  [5] H/H Split god module oqlos/api/hardware.py (2266L, 0 classes)
+  [1] H/L Split executeConfigureStep (CC=28)
+  [2] H/H Split god module frontend/src/pages/HardwareRestart.jsx (501L, 0 classes)
+  [3] H/H Split god module frontend/src/pages/HardwareDemo.jsx (585L, 0 classes)
+  [4] H/H Split god module oqlos/core/_interpreter_actions.py (800L, 0 classes)
+  [5] H/H Split god module oqlos/core/oql_parser.py (762L, 3 classes)
 
 EVOLUTION:
-  2026-06-30 CC̄=3.9 crit=189 55621L // Automated analysis
+  2026-06-30 CC̄=3.9 crit=188 56778L // Automated analysis

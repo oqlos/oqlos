@@ -7,20 +7,17 @@ CATEGORY: library
 MACRO init-pump:
   SET pump-main 0
   SET pompa-1 0
-  WAIT 500ms
-
+  SET WAIT '500 ms'
 MACRO init-valves-main:
   SET valve-nc 0
   SET valve-sc 0
   SET valve-wc 0
-  WAIT 300ms
-
+  SET WAIT '300 ms'
 MACRO init-valves-bo:
   SET valve-bo04 0
   SET valve-bo05 0
   SET valve-bo06 0
-  WAIT 300ms
-
+  SET WAIT '300 ms'
 MACRO init-valves-numbered:
   SET valve-1 0
   SET valve-2 0
@@ -30,8 +27,7 @@ MACRO init-valves-numbered:
   SET valve-6 0
   SET valve-7 0
   SET valve-8 0
-  WAIT 500ms
-
+  SET WAIT '500 ms'
 MACRO init-all:
   CALL init-pump
   CALL init-valves-main
@@ -45,4 +41,4 @@ MACRO stop-all:
   SET valve-nc 0
   SET valve-sc 0
   SET valve-wc 0
-  WAIT 200ms
+  SET WAIT '200 ms'

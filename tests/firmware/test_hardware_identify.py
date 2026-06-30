@@ -5,12 +5,32 @@ from __future__ import annotations
 import asyncio
 
 from oqlos.api import hardware as hw
+from oqlos.api import hardware_identify as hw_identify
+from oqlos.api import hardware_probe as hw_probe
 from oqlos.api import hardware_runtime as hw_runtime
+
+
+from oqlos.api import hardware_peripherals_routes as hw_peripherals
 
 
 def _patch_gateway(monkeypatch, gateway):
     monkeypatch.setattr(hw, "_gw", lambda: gateway)
     monkeypatch.setattr(hw_runtime, "get_hardware_gateway", lambda: gateway)
+    monkeypatch.setattr(hw_identify, "get_hardware_gateway", lambda: gateway)
+    monkeypatch.setattr(hw_peripherals, "get_hardware_gateway", lambda: gateway)
+
+
+def _patch_probe(monkeypatch, name, value):
+    monkeypatch.setattr(hw_probe, name, value)
+    if hasattr(hw, name):
+        monkeypatch.setattr(hw, name, value)
+
+
+def _patch_platform(monkeypatch, name, value):
+    from oqlos.api import hardware_platform as hw_platform
+    monkeypatch.setattr(hw_platform, name, value)
+    if hasattr(hw, name):
+        monkeypatch.setattr(hw, name, value)
 
 
 class _FakeGateway:
@@ -39,8 +59,8 @@ class _UnavailableAdcGateway:
 
 
 def test_collect_hardware_diagnostics_exposes_ports(monkeypatch):
-    monkeypatch.setattr(
-        hw,
+    _patch_probe(
+        monkeypatch,
         "_scan_usb_devices",
         lambda: [
             {
@@ -54,7 +74,7 @@ def test_collect_hardware_diagnostics_exposes_ports(monkeypatch):
         ],
     )
     monkeypatch.setattr(
-        hw,
+        hw_probe,
         "list_serial_ports",
         lambda: [
             {
@@ -67,7 +87,7 @@ def test_collect_hardware_diagnostics_exposes_ports(monkeypatch):
             }
         ],
     )
-    monkeypatch.setattr(hw.glob, "glob", lambda pattern: ["/dev/i2c-0"] if pattern == "/dev/i2c-*" else [])
+    monkeypatch.setattr(hw_probe.glob, "glob", lambda pattern: ["/dev/i2c-0"] if pattern == "/dev/i2c-*" else [])
 
     diagnostics = hw._collect_hardware_diagnostics()
 
@@ -89,18 +109,18 @@ def test_platform_reports_modbus_adc_as_analog_input(monkeypatch):
 
 def test_hardware_identify_includes_diagnostics(monkeypatch):
     _patch_gateway(monkeypatch, _FakeGateway())
-    monkeypatch.setattr(
-        hw,
-        "_probe_all_hardware",
-        lambda: {
+    _patch_probe(
+        monkeypatch,
+        "_probe_selected_hardware",
+        lambda _ids: {
             "motor-tic249": {"connected": False},
             "motor-dri0050": {"connected": True, "serial_port": "/dev/ttyUSB0"},
             "modbus-adc": {"connected": False},
             "modbus-io": {"connected": False},
         },
     )
-    monkeypatch.setattr(
-        hw,
+    _patch_probe(
+        monkeypatch,
         "_collect_hardware_diagnostics",
         lambda: {
             "usb_devices": [{"vendor_id": "1a86", "product_id": "7523"}],
@@ -130,8 +150,8 @@ def test_hardware_identify_default_skips_live_probe(monkeypatch):
     def _unexpected_live_probe(*_args):
         raise AssertionError("default identify must not run a live hardware scan")
 
-    monkeypatch.setattr(hw, "_probe_selected_hardware", _unexpected_live_probe)
-    monkeypatch.setattr(hw, "_collect_hardware_diagnostics", lambda: {})
+    _patch_probe(monkeypatch, "_probe_selected_hardware", _unexpected_live_probe)
+    _patch_probe(monkeypatch, "_collect_hardware_diagnostics", lambda: {})
 
     result = asyncio.run(hw.hardware_identify())
 
@@ -205,8 +225,8 @@ def test_hardware_identify_reports_modbus_timeout_as_adapter_only(monkeypatch):
     def _unexpected_live_probe(*_args):
         raise AssertionError("modbus timeout should use plugin health, not a second serial probe")
 
-    monkeypatch.setattr(hw, "_probe_all_hardware", _unexpected_live_probe)
-    monkeypatch.setattr(hw, "_collect_hardware_diagnostics", lambda: {})
+    _patch_probe(monkeypatch, "_probe_all_hardware", _unexpected_live_probe)
+    _patch_probe(monkeypatch, "_collect_hardware_diagnostics", lambda: {})
 
     result = asyncio.run(hw.hardware_identify())
     modbus = next(adapter for adapter in result["adapters"] if adapter["id"] == "modbus-io")

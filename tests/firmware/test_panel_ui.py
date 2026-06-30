@@ -64,6 +64,15 @@ def test_panel_route_serves_html():
     assert "/api/v1/oql/manage" in body
 
 
+def test_panel_exposes_wait_execution_state_in_payload_and_url(panel_source):
+    assert 'id="skipWaits"' in panel_source
+    assert "skipWaitsDefault(selectedMode){ return selectedMode !== 'execute'; }" in panel_source
+    assert "params.set('mode', mode())" in panel_source
+    assert "params.set('skip_waits', String(skipWaits()))" in panel_source
+    assert "payload={oql, kind:k, mode:m, skip_waits:sw}" in panel_source
+    assert "JSON.stringify({kind:k, mode:m, skip_waits:sw, oql})" in panel_source
+
+
 def test_health_route_contains_redeploy_probe_token():
     from oqlos.api.main import app
 
@@ -143,7 +152,7 @@ def test_panel_single_oql_command_payload_dispatches(client_with_controller):
 def test_panel_flow_script_payload_dispatches(client_with_controller):
     """The editor's "Uruchom scenariusz": runOql(text, 'script', ...)."""
     client, fake = client_with_controller
-    script = "VERSION: 4\nSCENARIO: Test\nGOAL:\n  SET 'pump' 50\n  WAIT 1 s\n  SET 'pump' 0"
+    script = "VERSION: 4\nSCENARIO: Test\nGOAL:\n  SET 'pump' 50\n  SET WAIT '1 s'\n  SET 'pump' 0"
     payload = {"oql": script, "kind": "script", "mode": "dry-run"}
     resp = client.post("/api/v1/oql/execute", json=payload)
     assert resp.status_code == 200
@@ -175,6 +184,35 @@ def test_panel_script_without_version_executes_named_goal():
     assert payloads["dry-run"]["total"] == 1
     assert payloads["dry-run"]["passed"] == 1
     assert payloads["dry-run"]["steps"][0]["name"] == "1. Opis"
+
+
+def test_panel_script_accepts_set_wait_alias():
+    script = (
+        "VERSION: 4\n"
+        "SCENARIO: Mój test\n"
+        "GOAL:\n"
+        "  SET NAME 'Opis'\n"
+        "  SET 'pump' 25\n"
+        "  SET WAIT '1 s'\n"
+        "  SET 'pump' 0\n"
+    )
+
+    result = run_source(
+        script,
+        "<mqtt>",
+        mode="dry-run",
+        quiet=True,
+        sensors={},
+        firmware_url="http://127.0.0.1:8202",
+        skip_waits=True,
+    )
+    payload = build_result_payload(result)
+
+    assert payload["ok"] is True
+    assert payload["total"] == 1
+    assert payload["passed"] == 1
+    assert payload["steps"][0]["name"] == "1. Opis"
+    assert payload["variables"]["pump"] == "0"
 
 
 def test_panel_manage_payload_dispatches(client_with_controller):

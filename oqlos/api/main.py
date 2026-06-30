@@ -57,6 +57,124 @@ except ImportError:
 
 STATIC_DIR = Path(__file__).parent
 
+NAVIGATION_PAGES = [
+    {
+        "path": "/navigation",
+        "label": "Navigation",
+        "description": "Human-readable BoardNet entrypoint with links and curl examples.",
+    },
+    {
+        "path": "/hardware-status",
+        "label": "Hardware status",
+        "description": "Runtime health, detected adapters, USB, serial and I2C diagnostics.",
+    },
+    {
+        "path": "/hardware-restart",
+        "label": "Hardware restart",
+        "description": "Guided hardware restart and detection wizard.",
+    },
+    {
+        "path": "/hardware-demo",
+        "label": "Hardware demo",
+        "description": "Manual hardware controls and firmware demo panel.",
+    },
+    {
+        "path": "/map-editor",
+        "label": "MAP editor",
+        "description": "Hardware map and function-to-hardware bindings.",
+    },
+    {
+        "path": "/scenario-files",
+        "label": "Scenario files",
+        "description": "OQL scenario editor served directly by OqlOS.",
+    },
+    {
+        "path": "/func-editor",
+        "label": "Function editor",
+        "description": "Reusable OQL function definitions.",
+    },
+    {
+        "path": "/panel",
+        "label": "OQL panel",
+        "description": "Direct OQL command, scenario and manage verb tester.",
+    },
+    {
+        "path": "/editor",
+        "label": "Legacy editor",
+        "description": "Simple built-in scenario editor.",
+    },
+    {
+        "path": "/docs",
+        "label": "API docs",
+        "description": "FastAPI Swagger documentation for all HTTP endpoints.",
+    },
+]
+
+NAVIGATION_API_ENDPOINTS = [
+    {
+        "method": "GET",
+        "path": "/health",
+        "description": "Service liveness for OqlOS firmware process.",
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/health",
+        "description": "Versioned service liveness endpoint.",
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/navigation",
+        "description": "Machine-readable page, API and alias index.",
+    },
+    {
+        "method": "POST",
+        "path": "/api/v1/oql/execute",
+        "description": "Run OQL script/command in validate, dry-run or execute mode.",
+    },
+    {
+        "method": "POST",
+        "path": "/api/v1/oql/manage",
+        "description": "Diagnostic/manage verbs such as health, identify, diagnose and usb-list.",
+    },
+    {
+        "method": "GET",
+        "path": "/api/v3/hardware/health",
+        "description": "Hardware compatibility health used by migrated UI.",
+    },
+    {
+        "method": "GET",
+        "path": "/api/v3/hardware/mapping",
+        "description": "Current firmware hardware map.",
+    },
+    {
+        "method": "PUT",
+        "path": "/api/v3/hardware/mapping",
+        "description": "Update/persist the firmware hardware map.",
+    },
+    {
+        "method": "WS",
+        "path": "/ws/events/hardware",
+        "description": "Hardware event stream.",
+    },
+    {
+        "method": "WS",
+        "path": "/ws/oql",
+        "description": "OQL transport event stream.",
+    },
+]
+
+NAVIGATION_ALIASES = [
+    {"path": "/nav", "target": "/navigation"},
+    {"path": "/status", "target": "/hardware-status"},
+    {"path": "/restart", "target": "/hardware-restart"},
+    {"path": "/demo", "target": "/hardware-demo"},
+    {"path": "/map", "target": "/map-editor"},
+    {"path": "/files", "target": "/scenario-files"},
+    {"path": "/functions", "target": "/func-editor"},
+    {"path": "/oql", "target": "/panel"},
+    {"path": "/oql-panel", "target": "/panel"},
+]
+
 @asynccontextmanager
 async def _app_lifespan(_: FastAPI):
     _initialize_runtime_dependencies()
@@ -222,6 +340,15 @@ async def editor_page():
 async def panel_page():
     return _serve_static_html("static/panel.html", "OqlOS Panel", "panel.html not found.")
 
+
+@app.get("/navigation", response_class=HTMLResponse)
+async def navigation_page():
+    return _serve_static_html(
+        "static/navigation.html",
+        "OqlOS Navigation",
+        "navigation.html not found.",
+    )
+
 # ---- Hardware/file UI moved in from c2004 connect-scenario (hardware-status,
 # hardware-demo, hardware-restart, map-editor, scenario-files, func-editor).
 # The React hardware UI is built with Vite (base=/ui/).
@@ -233,6 +360,10 @@ _UI_DIST = Path(__file__).resolve().parents[2] / "frontend" / "dist"
 def _with_query(path: str, request: Request) -> str:
     query = str(request.url.query or "")
     return f"{path}?{query}" if query else path
+
+
+def _redirect_with_query(path: str, request: Request):
+    return RedirectResponse(_with_query(path, request))
 
 
 @app.get("/hardware-status", response_class=HTMLResponse)
@@ -265,6 +396,47 @@ async def scenario_files_alias(request: Request):
 @app.get("/func-editor/{full_path:path}")
 async def func_editor_alias(request: Request):
     return RedirectResponse(_with_query("/editor", request))
+
+
+@app.get("/nav")
+async def nav_alias(request: Request):
+    return _redirect_with_query("/navigation", request)
+
+
+@app.get("/status")
+async def status_alias(request: Request):
+    return _redirect_with_query("/hardware-status", request)
+
+
+@app.get("/restart")
+async def restart_alias(request: Request):
+    return _redirect_with_query("/hardware-restart", request)
+
+
+@app.get("/demo")
+async def demo_alias(request: Request):
+    return _redirect_with_query("/hardware-demo", request)
+
+
+@app.get("/map")
+async def map_alias(request: Request):
+    return _redirect_with_query("/map-editor", request)
+
+
+@app.get("/files")
+async def files_alias(request: Request):
+    return _redirect_with_query("/scenario-files", request)
+
+
+@app.get("/functions")
+async def functions_alias(request: Request):
+    return _redirect_with_query("/func-editor", request)
+
+
+@app.get("/oql")
+@app.get("/oql-panel")
+async def oql_panel_alias(request: Request):
+    return _redirect_with_query("/panel", request)
 
 if (_UI_DIST / "assets").is_dir():
     app.mount("/ui/assets", StaticFiles(directory=_UI_DIST / "assets"), name="ui-assets")
@@ -299,6 +471,22 @@ async def health_check():
         "service": SERVICE_NAME,
         "version": SERVICE_VERSION,
         "port": FIRMWARE_PORT,
+    }
+
+
+@app.get("/api/v1/navigation")
+async def navigation_index(request: Request):
+    """Machine-readable BoardNet/OqlOS UI and API index."""
+    settings = get_settings()
+    return {
+        "service": SERVICE_NAME,
+        "version": SERVICE_VERSION,
+        "node_id": settings.oql_node_id,
+        "role": settings.oql_transport_role,
+        "base_url": str(request.base_url).rstrip("/"),
+        "pages": NAVIGATION_PAGES,
+        "api": NAVIGATION_API_ENDPOINTS,
+        "aliases": NAVIGATION_ALIASES,
     }
 
 @app.get("/api/status")

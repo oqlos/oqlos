@@ -11,7 +11,7 @@ GOAL:
   SET 'Ilość cykli płuca' '20'
   SET 'Płuco' 'Start'
   REPEAT 10:
-    WAIT 5s
+    SET WAIT '5 s'
     IF 'AI03' '-5 .. 5 V'
     REPEAT STOP
   LOG 'Zatrzymano'

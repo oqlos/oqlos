@@ -181,6 +181,8 @@ def _lower_call(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "list
 def _lower_set(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "list[CqlAction]":
     target = cmd.args["target"]
     raw_value = _fmt_value(cmd.args["value"], cmd.args.get("unit"))
+    if str(target or "").strip().lower() in {"wait", "delay", "pause", "timeout"}:
+        return [CqlAction(kind="wait", args=raw_value, raw=cmd.raw)]
     return [CqlAction(kind="set", target=target, args=raw_value, raw=cmd.raw)]
 
 

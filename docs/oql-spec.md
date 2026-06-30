@@ -149,7 +149,7 @@ Obsługiwane `"..."` i `'...'`; escape `\"` / `\\`.
 ```oql
 MACRO hw-pump-smoke:
   SET pump-main 5 l/min
-  WAIT 2s
+  SET WAIT '2 s'
   SET pump-main 0
 ```
 
@@ -213,7 +213,7 @@ CONFIG reset:
 GOAL:
   SET NAME 'Test statyczny SC'
   SET pump-main 0
-  WAIT 3s
+  SET WAIT '3 s'
   GET AI02
   SAVE ciśnienie-sc
   IF AI02 6.0 .. 8.0 bar
@@ -224,7 +224,7 @@ GOAL:
   SET NAME 'Ciśnienie otwarcia automatu'
   SET pump-main 5.0 l/min
   SET valve-bo06 1
-  WAIT 8s
+  SET WAIT '8 s'
   GET AI01
   SAVE ciśnienie-nc-min
   IF AI01 -29.0 .. -5.0 mbar

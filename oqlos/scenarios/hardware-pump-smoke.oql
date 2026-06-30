@@ -8,6 +8,6 @@ GOAL:
   SET NAME 'smoke test dri0050'
   LOG 'Start pompy'
   SET 'pompa-1' '5.0 l/min'
-  WAIT 500ms
+  SET WAIT '500 ms'
   SET 'pompa-1' '0 l/min'
   LOG 'Pompa wyłączona'

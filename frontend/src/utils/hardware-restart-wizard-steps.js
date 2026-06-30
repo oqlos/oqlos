@@ -1,36 +1,34 @@
 import { HardwareApi } from "../api/hardwareApi.js";
 import {
+  buildWizardProbePayload,
+  buildWizardProgramPayload,
+  wizardStepSerialPort,
+} from "./hardware-restart-wizard-helpers.js";
+import {
   isOptionalWizardStep,
   isPumpOffUnavailableError,
   selectWizardProbeCandidate,
 } from "./hardware-wizard-steps.js";
 
-export function wizardStepSerialPort(plan, step) {
-  return (
-    step?.serial_port
-    || step?.program_target?.serial_port
-    || (step?.program_target?.module_role === "modbus-adc" ? plan?.adc_serial_port : null)
-    || plan?.io_serial_port
-    || plan?.serial_port
-    || ""
-  );
+export { buildWizardProbePayload, wizardStepSerialPort } from "./hardware-restart-wizard-helpers.js";
+
+function _resolveProbeCandidate(probe, role, target, isSeparateAdapters, t) {
+  const candidates = Array.isArray(probe?.candidates) ? probe.candidates : [];
+  const selection = selectWizardProbeCandidate(candidates, { moduleRole: role, newDeviceId: Number(target.new_device_id) });
+  if (selection.error === "multiple_modbus_ids") {
+    throw new Error(t("hardwareRestart.multipleModbusIdsError", { ids: selection.deviceIds.join(", ") }));
+  }
+  const candidate = selection.candidate || null;
+  if (!candidate) {
+    const hint = probe?.diagnostics?.failure_reason
+      || (isSeparateAdapters ? t("hardwareRestart.probeFailSeparateAdapters") : "Sprawdz zasilanie, okablowanie A/B i izolacje magistrali.");
+    throw new Error(`${t("hardwareRestart.probeNoCandidate")} ${hint}`);
+  }
+  return candidate;
 }
 
-export function buildWizardProbePayload(plan, serialPort, moduleRole) {
-  const targetBaud = Number(plan?.target_baudrate || 9600);
-  const targetParity = String(plan?.target_parity || "N");
-  const targetIds = Array.isArray(plan?.target_ids) ? plan.target_ids.map(Number) : [1, 2];
-  const baudrates = [targetBaud, 19200].filter((v, i, a) => a.indexOf(v) === i);
-  const parities = [targetParity];
-  const device_ids = [...new Set([...targetIds, 1, 2, 3])];
-  return {
-    serial_port: serialPort,
-    baudrates,
-    parities,
-    device_ids,
-    ...(moduleRole ? { module_role: moduleRole } : {}),
-    ...(plan?.modbus_topology ? { modbus_topology: plan.modbus_topology } : {}),
-  };
+function _buildProgramPayload(stepPort, target, candidate, plan) {
+  return buildWizardProgramPayload(stepPort, target, candidate, plan);
 }
 
 export async function executeConfigureStep({
@@ -55,23 +53,8 @@ export async function executeConfigureStep({
   const probe = await runRetry("Probe", () => HardwareApi.probeModbusWizardIsolated(probePayload, apiContext), { allowRetry: false });
   log(`Probe result ok=${String(Boolean(probe?.ok))}, candidates=${(probe?.candidates || []).length}, runtime=${probe?.runtime_control || probe?.diagnostics?.runtime_control || "-"}`);
   if (probe?.diagnostics?.runtime_control_warning) log(`WARN: ${probe.diagnostics.runtime_control_warning}`);
-  const candidates = Array.isArray(probe?.candidates) ? probe.candidates : [];
-  const selection = selectWizardProbeCandidate(candidates, { moduleRole: role, newDeviceId: Number(target.new_device_id) });
-  if (selection.error === "multiple_modbus_ids") throw new Error(t("hardwareRestart.multipleModbusIdsError", { ids: selection.deviceIds.join(", ") }));
-  const selectedCandidate = selection.candidate || null;
-  if (!selectedCandidate) {
-    const hint = probe?.diagnostics?.failure_reason || (isSeparateAdapters ? t("hardwareRestart.probeFailSeparateAdapters") : "Sprawdz zasilanie, okablowanie A/B i izolacje magistrali.");
-    throw new Error(`${t("hardwareRestart.probeNoCandidate")} ${hint}`);
-  }
-  const currentDeviceId = Number(selectedCandidate.device_id || target.new_device_id || 1);
-  const programPayload = {
-    serial_port: stepPort,
-    current_device_id: currentDeviceId,
-    new_device_id: Number(target.new_device_id || currentDeviceId),
-    new_baudrate: Number(target.new_baudrate || selectedCandidate.baudrate || plan?.target_baudrate || 9600),
-    new_parity: String(target.new_parity || selectedCandidate.parity || plan?.target_parity || "N"),
-    confirm_isolated: true,
-  };
+  const candidate = _resolveProbeCandidate(probe, role, target, isSeparateAdapters, t);
+  const programPayload = _buildProgramPayload(stepPort, target, candidate, plan);
   log(`Program module role=${role} current_id=${programPayload.current_device_id} -> new_id=${programPayload.new_device_id}, uart=${programPayload.new_baudrate}/${programPayload.new_parity}`);
   const program = await runRetry("Program", () => HardwareApi.programModbusWizardIsolated(programPayload, apiContext), { allowRetry: false });
   log(`Program result ok=${String(Boolean(program?.ok))} verified=${String(Boolean(program?.verified))} runtime=${program?.runtime_control || "-"}`);

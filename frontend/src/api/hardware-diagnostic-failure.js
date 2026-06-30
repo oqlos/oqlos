@@ -19,25 +19,23 @@ function firstActionableError(candidates, genericErrors = GENERIC_DIAGNOSTIC_ERR
   return values.find((value) => !genericErrors.has(String(value))) || values[0] || "";
 }
 
+function _connectionError(data) {
+  return data?.connected === false ? (data?.error || "Tic249 motor is not connected") : "";
+}
+
+function _nestedOkMessage(result) {
+  return result?.ok && typeof result.ok === "object"
+    ? String(result.ok.message || result.ok.error || "").trim()
+    : "";
+}
+
 function failureFromOkFalsePayload(payload) {
   const result = payload?.result;
   const data = resultData(result);
-  const nested =
-    result?.error ||
-    data?.error ||
-    data?.message ||
-    (data?.connected === false ? data?.error || "Tic249 motor is not connected" : "");
-  const nestedOkMsg =
-    result?.ok && typeof result.ok === "object"
-      ? String(result.ok.message || result.ok.error || "").trim()
-      : "";
-  const detail = firstActionableError([nested, nestedOkMsg, payload?.error]);
-  if (detail) {
-    return String(detail);
-  }
-  if (result?.base_url && result?.path) {
-    return `Tic249 command failed (${result.base_url}${result.path})`;
-  }
+  const nested = result?.error || data?.error || data?.message || _connectionError(data);
+  const detail = firstActionableError([nested, _nestedOkMessage(result), payload?.error]);
+  if (detail) return String(detail);
+  if (result?.base_url && result?.path) return `Tic249 command failed (${result.base_url}${result.path})`;
   return "Diagnostic command failed";
 }
 
@@ -53,24 +51,21 @@ function failureFromSuccessFalse(payload, result) {
   return String(nested || "Diagnostic command failed");
 }
 
+function _pickNestedObjectError(nestedOk, payloadError) {
+  const fromNested = String(nestedOk.error || nestedOk.message || "").trim();
+  const fromPayload = String(payloadError || "").trim();
+  if (fromPayload && !GENERIC_DIAGNOSTIC_ERRORS.has(fromPayload)) return fromPayload;
+  return fromNested || fromPayload || "DRI0050 pump command failed (no detail from driver)";
+}
+
 function failureFromNestedOk(command, payload, result) {
   const nestedOk = result.ok;
   if (nestedOk === false) {
-    if (isIdempotentTic249Deenergized(command, result)) {
-      return "";
-    }
+    if (isIdempotentTic249Deenergized(command, result)) return "";
     return String(payload?.error || result.error || "Command failed (ok=false)");
   }
   if (nestedOk && typeof nestedOk === "object" && nestedOk.success === false) {
-    const fromNested = String(nestedOk.error || nestedOk.message || "").trim();
-    const fromPayload = String(payload?.error || "").trim();
-    if (fromPayload && !GENERIC_DIAGNOSTIC_ERRORS.has(fromPayload)) {
-      return fromPayload;
-    }
-    if (fromNested) {
-      return fromNested;
-    }
-    return fromPayload || "DRI0050 pump command failed (no detail from driver)";
+    return _pickNestedObjectError(nestedOk, payload?.error);
   }
   return "";
 }

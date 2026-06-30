@@ -42,7 +42,7 @@
 | `MapEditor.jsx` CC=24, 1490L | god module | → `mapEditorModel.js`, `mapEditorIntegrationMeta.js`, panele + hooki |
 | — | `mapEditorModel.test.js`, `mapEditorIntegrationMeta.test.js`, `mapEditorTic249.test.js` | `npm run test:unit` |
 
-## Faza 4 — Backend Python (w toku)
+## Faza 4 — Backend Python (zrobione)
 
 | Moduł | CC | Akcja |
 |-------|-----|--------|
@@ -50,18 +50,46 @@
 | `oqlos/api/hardware_modbus_waveshare.py` | — | scan matrix + diagnose report |
 | `oqlos/api/hardware_modbus_wizard.py` | — | wizard program/probe/plan |
 | `oqlos/api/hardware_modbus_routes.py` | — | HTTP `/modbus/*` |
-| `oqlos/api/hardware.py` | 14, ~900L | health/identify, diagnosis/recover, RTC |
-| `diagnosis.py` `build_diagnosis_report` | fan=22 | per-device builders |
-| `identify_enrich.py` | god function | per-adapter enrichers |
-| `doctor.py` | 971L | etapy diagnostyki |
+| `oqlos/api/hardware_registry.py` | — | statyczny rejestr adapterów |
+| `oqlos/api/hardware_platform.py` | — | detekcja platformy / RPi |
+| `oqlos/api/hardware_probe.py` | — | orchestrator (~130L) |
+| `oqlos/api/hardware_probe_devices.py` | — | USB/I2C/Modbus RTU probe helpers |
+| `oqlos/api/hardware_identify.py` | — | `/health`, `/identify` |
+| `oqlos/api/hardware_diagnosis_routes.py` | — | snapshot, `/diagnosis`, `/recover` |
+| `oqlos/api/hardware_peripherals_routes.py` | — | `/modbus-adc/raw`, `/rtc/*` |
+| `oqlos/api/hardware.py` | — | facade (~75L): router composition + legacy re-exports |
+| `oqlos/hardware/diagnosis_types.py` | — | dataclasses + `report_to_dict` |
+| `oqlos/hardware/diagnosis_plugin_health.py` | — | plugin health / stale detection |
+| `oqlos/hardware/diagnosis_device_actions.py` | — | per-device diagnosis builders |
+| `diagnosis.py` `build_diagnosis_report` | fan=22 | orchestrator (~230L) |
+| `identify_enrich.py` | orchestrator (~75L) | payload normalization + counts |
+| `identify_enrich_adapters.py` | — | per-adapter enrichers + `adapter_status_from_health` |
+| `identify_enrich_modbus_io.py` | — | multi-slave modbus-io expansion |
+| `doctor.py` | facade (~95L) | orchestrator + test monkeypatch surface |
+| `doctor_detection.py` / `doctor_modbus_analysis.py` / … | — | etapy diagnostyki |
 
-## Faza 5 — Duplikacja (`duplication.toon.yaml`)
+## Faza 5 — Duplikacja (zrobione)
 
 | Hotspot | Akcja |
 |---------|--------|
-| `motor.py` stop/set_speed handlers | wspólny `_handle_motor_cli_http` |
-| `modbus_plugins_need_repair` | jeden moduł, import w autorepair + diagnosis |
-| `gateway.py` read_channel / stop | shared helpers |
+| `motor.py` stop/set_speed handlers | `motor_http_handlers.py` — wspólny HTTP/CLI |
+| `modbus_plugins_need_repair` | jeden moduł (`diagnosis_plugin_health`), import w autorepair + diagnosis — done |
+| `gateway.py` read_channel / stop | `gateway_http.py` — `get_json` / `post_json` |
+| `lung.py` stop/status HTTP | `plugin_http_handlers.py` — `http_get_command` / `http_post_command` |
+| `piadc.py` read_channel HTTP | `plugin_http_handlers.py` |
+| `hardware_probe_devices.py` | — | USB/I2C/Modbus RTU probe helpers |
+
+## Faza 6 — Frontend / transport cleanup (w toku)
+
+| Ticket / alert | Plik | Akcja |
+|----------------|------|--------|
+| `editObjectActionArg` CC=24 | `MapEditor.jsx` | → `mapEditorObjectActionEdits.js` + testy |
+| `selectWizardProbeCandidate` CC=22 | `hardware-wizard-steps.js` | testy regresji (`hardware-wizard-steps.test.js`) |
+| `normalizeHardwareEvent` CC=21 | `hardwareEventStream.js` | testy regresji (`hardwareEventStream.test.js`) |
+| `manage_ops._run_diagnostic_command` CC=19 | `manage_ops.py` | → `manage_ops_diagnostic.py`, `manage_ops_usb.py` |
+| `motor.py` modbus handlers | `motor_modbus_handlers.py` | connect, health, set_speed, stop, status + testy |
+| `hardware-restart-wizard-steps.js` | pure helpers | → `hardware-restart-wizard-helpers.js` + testy |
+| — | `mapEditorObjectActionEdits.test.js` | `npm run test:unit` (38 testów) |
 
 ## Kolejność wdrożenia
 

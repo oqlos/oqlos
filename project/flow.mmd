@@ -1,26 +1,26 @@
 flowchart TD
-%% generated in 0.04s
+%% generated in 0.15s
 
     %% Entry points (blue)
     classDef entry fill:#4dabf7,stroke:#1971c2,color:#fff
 
     subgraph Core
         setup_hardware_and_run_oql__main["main"]
+        frontend__src__App__RootRedirect["RootRedirect"]
+        frontend__src__App__target["target"]
         frontend__src__main__LocalizedApp["LocalizedApp"]
         frontend__src__hooks__useWsStatus__useWsStatus["useWsStatus"]
         frontend__src__hooks__useWsStatus__client["client"]
         frontend__src__hooks__useWsStatus__onOpen["onOpen"]
         frontend__src__hooks__useWsStatus__onClose["onClose"]
-        frontend__src__hooks__useParentEncoderNavigation__style["style"]
-        frontend__src__hooks__useParentEncoderNavigation__createEncoderController{{createEncoderController CC=21}}
-        frontend__src__hooks__useParentEncoderNavigation__parentEncoderActive["parentEncoderActive"]
-        frontend__src__hooks__useParentEncoderNavigation__handleEncoderCommand{{handleEncoderCommand CC=15}}
-        frontend__src__hooks__useParentEncoderNavigation__items["items"]
-        frontend__src__hooks__useParentEncoderNavigation__delta["delta"]
-        frontend__src__hooks__useParentEncoderNavigation__target["target"]
-        frontend__src__hooks__useParentEncoderNavigation__onKeyDown["onKeyDown"]
-        frontend__src__hooks__useParentEncoderNavigation__useParentEncoderNavigation["useParentEncoderNavigation"]
-        ...["+1366 more"]
+        frontend__src__hooks__useMapEditorSidebarAutoCollapse__useMapEditorSidebarAutoCollapse["useMapEditorSidebarAutoCollaps"]
+        frontend__src__hooks__useMapEditorSidebarAutoCollapse__root["root"]
+        frontend__src__hooks__useMapEditorSidebarAutoCollapse__font["font"]
+        frontend__src__hooks__useMapEditorSidebarAutoCollapse__viewportWidth["viewportWidth"]
+        frontend__src__hooks__useMapEditorSidebarAutoCollapse__denseFont["denseFont"]
+        frontend__src__hooks__useMapEditorSidebarAutoCollapse__minWidth["minWidth"]
+        frontend__src__hooks__useMapEditorSidebarAutoCollapse__observer["observer"]
+        ...["+1398 more"]
     end
 
     subgraph Exporters
@@ -29,4 +29,4 @@ flowchart TD
         oqlos__api___hw3_mapping__hardware_mapping_export_v3["hardware_mapping_export_v3"]
     end
 
-    class setup_hardware_and_run_oql__main,frontend__src__main__LocalizedApp,frontend__src__hooks__useWsStatus__useWsStatus,frontend__src__hooks__useWsStatus__client,frontend__src__hooks__useWsStatus__onOpen,frontend__src__hooks__useWsStatus__onClose,frontend__src__hooks__useParentEncoderNavigation__style,frontend__src__hooks__useParentEncoderNavigation__parentEncoderActive,frontend__src__hooks__useParentEncoderNavigation__items,frontend__src__hooks__useParentEncoderNavigation__delta entry
+    class setup_hardware_and_run_oql__main,frontend__src__App__RootRedirect,frontend__src__App__target,frontend__src__main__LocalizedApp,frontend__src__hooks__useWsStatus__useWsStatus,frontend__src__hooks__useWsStatus__client,frontend__src__hooks__useWsStatus__onOpen,frontend__src__hooks__useWsStatus__onClose,frontend__src__hooks__useMapEditorSidebarAutoCollapse__useMapEditorSidebarAutoCollapse,frontend__src__hooks__useMapEditorSidebarAutoCollapse__root entry

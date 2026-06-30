@@ -8,12 +8,11 @@ SCENARIO: Podstawowy przykład CONFIG + GOAL
 CONFIG inicjalizacja:
   SET pump-main 0 l/min
   SET valve-nc 0
-  WAIT 500ms
-
+  SET WAIT '500 ms'
 GOAL:
   SET NAME 'Test operacyjny'
   SET pompa-1 5.0 l/min
-  WAIT 1s
+  SET WAIT '1 s'
   SET pompa-1 0 l/min
 ```
 
@@ -32,8 +31,7 @@ CONFIG otwarcie-zaworów:
   SET valve-nc 1
   SET valve-sc 1
   SET valve-wc 1
-  WAIT 2s
-
+  SET WAIT '2 s'
 CONFIG pomiar-bazowy:
   GET AI01
   SAVE baseline-nc
@@ -44,12 +42,12 @@ CONFIG zamknięcie-zaworów:
   SET valve-nc 0
   SET valve-sc 0
   SET valve-wc 0
-  WAIT 1s
+  SET WAIT '1 s'
   SAVE kalibracja-zakończona
 
 GOAL:
   SET NAME 'Weryfikacja NC'
-  WAIT 5s
+  SET WAIT '5 s'
   GET AI01
   SAVE ciśnienie-końcowe-nc
 ```
@@ -64,12 +62,11 @@ CONFIG prepare-environment:
   SET pump-main 0
   SET valve-nc 0
   SET valve-sc 1
-  WAIT 1s
-
+  SET WAIT '1 s'
 GOAL:
   SET NAME 'Execute pressure test'
   SET pompa-1 5 l/min
-  WAIT 3s
+  SET WAIT '3 s'
   GET AI02
   SAVE test-result
   SET pompa-1 0
@@ -77,7 +74,7 @@ GOAL:
 CONFIG cleanup:
   SET pompa-1 0
   SET valve-sc 0
-  WAIT 500ms
+  SET WAIT '500 ms'
   SAVE cleanup-done
 ```
 

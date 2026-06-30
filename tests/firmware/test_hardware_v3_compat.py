@@ -87,10 +87,15 @@ def test_hardware_ui_aliases_and_status_page_are_served():
     assert status.status_code == 200
     assert "OqlOS Hardware Status" in status.text
     assert "/api/v3/hardware/health" in status.text
+    assert "/navigation" in status.text
 
     demo = client.get("/hardware-demo?lang=pl", follow_redirects=False)
     assert demo.status_code in {302, 307}
     assert demo.headers["location"] == "/ui/hardware-demo?lang=pl"
+
+    restart = client.get("/hardware-restart", follow_redirects=False)
+    assert restart.status_code in {302, 307}
+    assert restart.headers["location"] == "/ui/hardware-restart"
 
     editor = client.get("/map-editor", follow_redirects=False)
     assert editor.status_code in {302, 307}
@@ -103,3 +108,44 @@ def test_hardware_ui_aliases_and_status_page_are_served():
     func_editor = client.get("/func-editor", follow_redirects=False)
     assert func_editor.status_code in {302, 307}
     assert func_editor.headers["location"] == "/editor"
+
+    navigation = client.get("/navigation")
+    assert navigation.status_code == 200
+    assert "OqlOS BoardNet navigation" in navigation.text
+    assert "/api/v1/oql/manage" in navigation.text
+
+
+def test_navigation_index_and_short_aliases():
+    from oqlos.api.main import app
+
+    client = TestClient(app)
+    response = client.get("/api/v1/navigation")
+    assert response.status_code == 200
+    body = response.json()
+    page_paths = {item["path"] for item in body["pages"]}
+    api_paths = {item["path"] for item in body["api"]}
+    aliases = {item["path"]: item["target"] for item in body["aliases"]}
+
+    assert "/navigation" in page_paths
+    assert "/hardware-status" in page_paths
+    assert "/panel" in page_paths
+    assert "/api/v1/oql/execute" in api_paths
+    assert "/api/v1/oql/manage" in api_paths
+    assert aliases["/status"] == "/hardware-status"
+    assert aliases["/oql"] == "/panel"
+
+    expected_redirects = {
+        "/nav": "/navigation",
+        "/status": "/hardware-status",
+        "/restart": "/hardware-restart",
+        "/demo": "/hardware-demo",
+        "/map": "/map-editor",
+        "/files": "/scenario-files",
+        "/functions": "/func-editor",
+        "/oql": "/panel",
+        "/oql-panel": "/panel",
+    }
+    for path, target in expected_redirects.items():
+        redirected = client.get(path, follow_redirects=False)
+        assert redirected.status_code in {302, 307}
+        assert redirected.headers["location"] == target

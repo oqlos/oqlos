@@ -6,6 +6,10 @@ export function firstBindingFromObjectMapping(detailCfg) {
   return null;
 }
 
+function _resolveHardwareAddress(source) {
+  return source.hardwareAddress || source.body?.peripheral_id || source.sensor || "";
+}
+
 export function readIntegrationMeta(activeTab, detailCfg) {
   const meta = {
     environment: "",
@@ -17,22 +21,22 @@ export function readIntegrationMeta(activeTab, detailCfg) {
     handlerFunction: "",
   };
   if (!detailCfg || typeof detailCfg !== "object") return meta;
-
-  const source =
-    activeTab === "objects" ? firstBindingFromObjectMapping(detailCfg) || {} : detailCfg;
-
+  const source = activeTab === "objects" ? firstBindingFromObjectMapping(detailCfg) || {} : detailCfg;
   meta.environment = source.environment || "";
   meta.usageMode = source.usageMode || "";
   meta.apiService = source.service || "";
   meta.apiEndpoint = source.endpoint || source.url || "";
-  meta.hardwareAddress =
-    source.hardwareAddress ||
-    source.body?.peripheral_id ||
-    source.sensor ||
-    "";
+  meta.hardwareAddress = _resolveHardwareAddress(source);
   meta.handlerRuntime = source.handlerRuntime || "";
   meta.handlerFunction = source.handlerFunction || "";
   return meta;
+}
+
+const _SIMPLE_FIELDS = new Set(["environment", "usageMode", "handlerRuntime", "handlerFunction"]);
+
+function _setOrDelete(target, key, value) {
+  if (value) target[key] = value;
+  else delete target[key];
 }
 
 function setApiServiceField(target, nextValue) {
@@ -69,31 +73,8 @@ function setHardwareAddressField(target, nextValue, allowSensor) {
 export function setMetaField(target, field, value, { allowSensor = false } = {}) {
   if (!target || typeof target !== "object") return;
   const nextValue = value?.trim() || "";
-
-  if (field === "apiService") {
-    setApiServiceField(target, nextValue);
-    return;
-  }
-  if (field === "environment" || field === "usageMode") {
-    if (nextValue) target[field] = nextValue;
-    else delete target[field];
-    return;
-  }
-  if (field === "apiEndpoint") {
-    setApiEndpointField(target, nextValue);
-    return;
-  }
-  if (field === "hardwareAddress") {
-    setHardwareAddressField(target, nextValue, allowSensor);
-    return;
-  }
-  if (field === "handlerRuntime") {
-    if (nextValue) target.handlerRuntime = nextValue;
-    else delete target.handlerRuntime;
-    return;
-  }
-  if (field === "handlerFunction") {
-    if (nextValue) target.handlerFunction = nextValue;
-    else delete target.handlerFunction;
-  }
+  if (_SIMPLE_FIELDS.has(field)) { _setOrDelete(target, field, nextValue); return; }
+  if (field === "apiService") { setApiServiceField(target, nextValue); return; }
+  if (field === "apiEndpoint") { setApiEndpointField(target, nextValue); return; }
+  if (field === "hardwareAddress") { setHardwareAddressField(target, nextValue, allowSensor); }
 }

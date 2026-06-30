@@ -11,7 +11,7 @@ GOAL:
   SET NAME 'Cykl pojedynczy'
   SET 'siłownik' '1'
   SET 'pozycja-docelowa' '50 mm'
-  WAIT 1s
+  SET WAIT '1 s'
   GET siła-aktualna
   SAVE siła-aktualna
   GET pozycja-aktualna
@@ -20,8 +20,7 @@ GOAL:
   CORRECT 'Siła w zakresie wytrzymałości (0-1100 N)'
   ERROR 'Błąd: siła poza zakresem wytrzymałości'
   SET 'pozycja-docelowa' '0 mm'
-  WAIT 1s
-
+  SET WAIT '1 s'
 GOAL:
   SET NAME 'Ocena wyniku'
   IF 'cykle-wykonane' '100 .. 1000 szt'

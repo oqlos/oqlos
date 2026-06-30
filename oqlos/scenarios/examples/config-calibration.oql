@@ -11,8 +11,7 @@ CONFIG otwarcie-zaworów:
   SET 'valve-nc' '1'
   SET 'valve-sc' '1'
   SET 'valve-wc' '1'
-  WAIT 2s
-
+  SET WAIT '2 s'
 # ──────────────────────────────────────────────
 # Faza 2: pomiar bazowy (zero)
 # ──────────────────────────────────────────────
@@ -23,8 +22,7 @@ CONFIG pomiar-bazowy:
   SAVE baseline-sc
   GET AI03
   SAVE baseline-wc
-  WAIT 500ms
-
+  SET WAIT '500 ms'
 # ──────────────────────────────────────────────
 # Faza 3: zamknięcie zaworów
 # ──────────────────────────────────────────────
@@ -32,7 +30,7 @@ CONFIG zamknięcie-zaworów:
   SET 'valve-nc' '0'
   SET 'valve-sc' '0'
   SET 'valve-wc' '0'
-  WAIT 1s
+  SET WAIT '1 s'
   SAVE kalibracja-zakończona
 
 # ──────────────────────────────────────────────
@@ -40,6 +38,6 @@ CONFIG zamknięcie-zaworów:
 # ──────────────────────────────────────────────
 GOAL:
   SET NAME 'weryfikacja nc'
-  WAIT 5s
+  SET WAIT '5 s'
   GET AI01
   SAVE ciśnienie-końcowe-nc

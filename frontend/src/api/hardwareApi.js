@@ -17,38 +17,44 @@ export { formatHardwareApiError } from "./hardware-api-errors.js";
 
 const API_BASE = (import.meta.env?.VITE_API_BASE || "").replace(/\/$/, "");
 
+function _withCtx(logContext) {
+  return logContext ? { context: logContext } : {};
+}
+
+function _throwHttpError(res, text, path, message, detailMessage) {
+  const err = new Error(message);
+  err.status = res.status;
+  err.path = path;
+  err.body = text;
+  err.payload = tryParseJson(text);
+  throw err;
+}
+
 async function request(path, { method = "GET", body, logContext } = {}) {
   const startedAt = performance.now();
   const bodySummary = summarizeHardwareApiBody(path, body);
   logHardwareApiEvent("request", path, {
     method,
-    ...(logContext ? { context: logContext } : {}),
+    ..._withCtx(logContext),
     ...(bodySummary !== undefined ? { body: bodySummary } : {}),
   });
 
   const init = {
     method,
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-    },
+    headers: { Accept: "application/json", "Content-Type": "application/json" },
   };
-  if (body !== undefined) {
-    init.body = JSON.stringify(body ?? {});
-  }
+  if (body !== undefined) init.body = JSON.stringify(body ?? {});
 
   let res;
   try {
-    res = await fetch(`${API_BASE}${path}`, {
-      ...init,
-    });
+    res = await fetch(`${API_BASE}${path}`, { ...init });
   } catch (err) {
     const durationMs = Math.round(performance.now() - startedAt);
     logHardwareApiEvent("error", path, {
       method,
       duration_ms: durationMs,
       error: err instanceof Error ? err.message : String(err),
-      ...(logContext ? { context: logContext } : {}),
+      ..._withCtx(logContext),
     });
     throw err;
   }
@@ -66,14 +72,9 @@ async function request(path, { method = "GET", body, logContext } = {}) {
       duration_ms: durationMs,
       error: message,
       ...(detailMessage ? { detail: detailMessage } : {}),
-      ...(logContext ? { context: logContext } : {}),
+      ..._withCtx(logContext),
     });
-    const err = new Error(message);
-    err.status = res.status;
-    err.path = path;
-    err.body = text;
-    err.payload = payload;
-    throw err;
+    _throwHttpError(res, text, path, message, detailMessage);
   }
 
   const data = await res.json();

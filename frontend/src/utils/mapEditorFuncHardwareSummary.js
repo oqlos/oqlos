@@ -2,6 +2,10 @@
  * Short label for FUNC sequence steps → resolved peripheral/command from MAP bindings.
  */
 
+function _asMap(value) {
+  return value && typeof value === "object" ? value : {};
+}
+
 function apiBindingHint(binding, fallbackLabel) {
   if (!binding || typeof binding !== "object" || binding.kind !== "api") {
     return "";
@@ -53,10 +57,9 @@ function uniqueHints(hints, limit = 5) {
 }
 
 export function summarizeFuncToHardware(cfg, mapData) {
-  const md = mapData && typeof mapData === "object" ? mapData : {};
-  const objectActionMap =
-    md.objectActionMap && typeof md.objectActionMap === "object" ? md.objectActionMap : {};
-  const actions = md.actions && typeof md.actions === "object" ? md.actions : {};
+  const md = _asMap(mapData);
+  const objectActionMap = _asMap(md.objectActionMap);
+  const actions = _asMap(md.actions);
 
   if (!cfg || typeof cfg !== "object") return "";
   if (cfg.kind !== "sequence" || !Array.isArray(cfg.steps)) {

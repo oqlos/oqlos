@@ -7,10 +7,9 @@ SCENARIO: Podstawowy przykład CONFIG + GOAL
 CONFIG inicjalizacja:
   SET 'pump-main' '0 l/min'
   SET 'valve-nc' '0'
-  WAIT 500ms
-
+  SET WAIT '500 ms'
 GOAL:
   SET NAME 'test operacyjny'
   SET 'pompa-1' '5.0 l/min'
-  WAIT 1s
+  SET WAIT '1 s'
   SET 'pompa-1' '0 l/min'

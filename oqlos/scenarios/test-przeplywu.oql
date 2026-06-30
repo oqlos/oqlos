@@ -7,7 +7,7 @@ MANUFACTURER: Dräger
 FUNC:
   SET NAME 'Pomiar przepływu'
   SET 'pump-main' '$1'
-  WAIT 2s
+  SET WAIT '2 s'
   GET przepływ
   SAVE $2
 

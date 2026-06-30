@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 
 from oqlos.api import hardware as hardware_api
+from oqlos.api import hardware_peripherals_routes as hw_peripherals
 from oqlos.hardware.rtc_probe import (
     RTC_PERIPHERAL_ID,
     build_rtc_peripheral_status,
@@ -103,7 +104,7 @@ def test_run_rtc_command_posts_to_sidecar(monkeypatch) -> None:
 
 def test_hardware_rtc_status_endpoint_uses_probe(monkeypatch) -> None:
     monkeypatch.setattr(
-        hardware_api,
+        hw_peripherals,
         "build_rtc_peripheral_status",
         lambda: {"ok": True, "peripheral_id": RTC_PERIPHERAL_ID, "command": "status"},
     )
@@ -121,7 +122,7 @@ def test_hardware_rtc_command_endpoint_uses_probe(monkeypatch) -> None:
         calls.append((command, args))
         return {"ok": True, "peripheral_id": RTC_PERIPHERAL_ID, "command": command}
 
-    monkeypatch.setattr(hardware_api, "run_rtc_command", fake_run)
+    monkeypatch.setattr(hw_peripherals, "run_rtc_command", fake_run)
 
     payload = asyncio.run(hardware_api.rtc_command({"command": "sync_to_system", "args": {"force": True}}))
 

@@ -10,7 +10,7 @@ GOAL:
   SET NAME 'pomiar zakres niski'
   SET 'pompa-1' '1'
   SAMPLE ciśnienie-niskie START 100ms
-  WAIT 5s
+  SET WAIT '5 s'
   SAMPLE ciśnienie-niskie STOP
   SAVE cn
   IF 'ciśnienie-niskie' '0 .. 50 mbar'
@@ -21,7 +21,7 @@ GOAL:
   SET NAME 'pomiar zakres wysoki'
   SET 'multiplekser' '2'
   SAMPLE ciśnienie-wysokie START 100ms
-  WAIT 5s
+  SET WAIT '5 s'
   SAMPLE ciśnienie-wysokie STOP
   SAVE cw
   IF 'ciśnienie-wysokie' '50 .. 1000 mbar'

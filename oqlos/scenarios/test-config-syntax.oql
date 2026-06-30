@@ -5,10 +5,9 @@ DEVICE_TYPE: BA
 CONFIG inicjalizacja-systemu:
   SET 'pump-main' '0'
   SET 'valve-nc' '0'
-  WAIT 500ms
-
+  SET WAIT '500 ms'
 GOAL:
   SET NAME 'normalny test'
   SET 'pompa-1' '5 l/min'
-  WAIT 1s
+  SET WAIT '1 s'
   SET 'pompa-1' '0'

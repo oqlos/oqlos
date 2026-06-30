@@ -6,6 +6,7 @@
 SET target value [unit]          # ustaw peryferium/zmienną
 GET sensor                       # odczytaj sensor (alias: READ)
 WAIT duration                    # 3s, 500ms, 3000 (= ms)
+SET WAIT 'duration'              # alias pauzy, np. SET WAIT '1 s'
 SAVE label                       # zapisz wynik do protokołu
 CHECK min <= sensor <= max unit  # range assertion
 MIN sensor value unit            # dolna granica
@@ -46,7 +47,7 @@ CATEGORY: env
 
 ```oql
 SET pompa-1 5.0 l/min
-WAIT 2s
+SET WAIT '2 s'
 SET pompa-1 0
 ```
 
@@ -54,7 +55,7 @@ SET pompa-1 0
 
 ```oql
 SET valve-nc 1      # otwórz
-WAIT 500ms
+SET WAIT '500 ms'
 SET valve-nc 0      # zamknij
 ```
 
@@ -70,7 +71,7 @@ CHECK 6.0 <= AI01 <= 8.0 bar
 
 ```oql
 SAMPLE ciśnienie START 50ms
-WAIT 10s
+SET WAIT '10 s'
 SAMPLE ciśnienie STOP
 GET ciśnienie
 SAVE dp
@@ -105,11 +106,11 @@ SET multiplekser-μV 1
 
 | Składnia | Znaczenie |
 |---|---|
-| `WAIT 500` | 500 ms (bare = ms) |
-| `WAIT 500ms` | 500 ms (jawne) |
-| `WAIT 2s` | 2 sekundy |
-| `WAIT 30s` | 30 sekund |
-| `WAIT 2m` | 2 minuty |
+| `SET WAIT '500 ms'` | 500 ms |
+| `SET WAIT '2 s'` | 2 sekundy |
+| `SET WAIT '30 s'` | 30 sekund |
+| `SET WAIT '2 m'` | 2 minuty |
+| `WAIT 2s` | nadal obsługiwany zapis kompatybilny |
 
 ## CONFIG vs GOAL
 
@@ -118,12 +119,12 @@ SET multiplekser-μV 1
 CONFIG reset:
   SET pump-main 0
   SET valve-nc 0
-  WAIT 500ms
+  SET WAIT '500 ms'
 
 # GOAL — właściwy test
 GOAL test-pressure:
   SET pompa-1 5 l/min
-  WAIT 3s
+  SET WAIT '3 s'
   GET AI02
   CHECK 6.0 <= AI02 <= 8.0 bar
 ```
@@ -135,7 +136,7 @@ INCLUDE "lib/hardware.oql"
 
 MACRO pump-ramp:
   SET pump-main $1 l/min
-  WAIT $2
+  SET WAIT '$2'
   SET pump-main 0
 
 GOAL test:
@@ -158,7 +159,7 @@ GOAL:
   SET NAME 'Podciśnienie'
   SET pompa-1 5.0 l/min
   SET valve-nc 1
-  WAIT 2s
+  SET WAIT '2 s'
   IF AI01 -11 .. -9 mbar
   CORRECT 'Podciśnienie w normie'
   ERROR 'Podciśnienie poza zakresem'
@@ -167,7 +168,7 @@ GOAL:
 GOAL:
   SET NAME 'Obserwacja 60s'
   SET pompa-1 0
-  WAIT 60s
+  SET WAIT '60 s'
   IF AI01 -11 .. -9 mbar
   CORRECT 'Podciśnienie stabilne'
   ERROR 'Podciśnienie niestabilne'

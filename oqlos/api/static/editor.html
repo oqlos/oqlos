@@ -27,11 +27,46 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
         }
         
         .header h1 {
             font-size: 1.5rem;
             color: #e94560;
+        }
+
+        .top-nav {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            justify-content: flex-end;
+        }
+
+        .top-nav a {
+            color: #eee;
+            text-decoration: none;
+            border: 1px solid #0f3460;
+            background: #0f3460;
+            border-radius: 4px;
+            padding: 0.38rem 0.65rem;
+            font-size: 0.82rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .top-nav a:hover {
+            background: #e94560;
+            border-color: #e94560;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 0.5rem;
         }
         
         .main-container {
@@ -196,7 +231,20 @@
 <body>
     <div class="header">
         <h1>🔧 OqlOS Scenario Editor</h1>
-        <button class="toolbar-btn" onclick="refreshFiles()">🔄 Refresh</button>
+        <div class="header-actions">
+            <nav class="top-nav" aria-label="OqlOS navigation">
+                <a href="/hardware-status">Status</a>
+                <a href="/hardware-restart">Restart</a>
+                <a href="/hardware-demo">Demo</a>
+                <a href="/map-editor">MAP</a>
+                <a href="/scenario-files">Scenarios</a>
+                <a href="/func-editor">Functions</a>
+                <a href="/panel">OQL</a>
+                <a href="/navigation">Navigation</a>
+                <a href="/docs">API</a>
+            </nav>
+            <button class="toolbar-btn" onclick="refreshFiles()">🔄 Refresh</button>
+        </div>
     </div>
     
     <div class="main-container">

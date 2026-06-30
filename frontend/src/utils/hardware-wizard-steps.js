@@ -52,45 +52,35 @@ export function isPumpOffUnavailableError(message) {
  * @param {{ moduleRole?: string; newDeviceId?: number }} target
  * @returns {{ candidate: object } | { error: string; deviceIds: number[] }}
  */
-export function selectWizardProbeCandidate(candidates, { moduleRole = "", newDeviceId } = {}) {
-  const role = String(moduleRole || "");
-  const pool = (Array.isArray(candidates) ? candidates : []).filter(
-    (entry) => !role || String(entry?.role || "") === role,
-  );
-  const list = pool.length ? pool : (Array.isArray(candidates) ? candidates : []);
-  if (!list.length) {
-    return { error: "no_candidate" };
-  }
+function _filterCandidatesByRole(candidates, role) {
+  const all = Array.isArray(candidates) ? candidates : [];
+  if (!role) return all;
+  const matching = all.filter((entry) => String(entry?.role || "") === role);
+  return matching.length ? matching : all;
+}
 
-  const deviceIds = [
-    ...new Set(
-      list
-        .map((entry) => Number(entry?.device_id))
-        .filter((value) => Number.isFinite(value) && value > 0),
-    ),
-  ];
-  const targetId = Number(newDeviceId);
-
-  if (deviceIds.length > 1 && Number.isFinite(targetId)) {
-    const atTarget = list.some((entry) => Number(entry?.device_id) === targetId);
-    const notAtTarget = list.some((entry) => Number(entry?.device_id) !== targetId);
-    if (atTarget && notAtTarget) {
-      return { error: "multiple_modbus_ids", deviceIds };
-    }
-  }
-
-  if (Number.isFinite(targetId)) {
-    const alreadyAtTarget = list.find((entry) => Number(entry?.device_id) === targetId);
-    if (alreadyAtTarget) {
-      return { candidate: alreadyAtTarget };
-    }
-    const needsProgramming = list.find((entry) => Number(entry?.device_id) !== targetId);
-    if (needsProgramming) {
-      return { candidate: needsProgramming };
-    }
-  }
-
+function _findBestCandidate(list, targetId) {
+  if (!Number.isFinite(targetId)) return { candidate: list[0] };
+  const atTarget = list.find((entry) => Number(entry?.device_id) === targetId);
+  if (atTarget) return { candidate: atTarget };
+  const needsProgramming = list.find((entry) => Number(entry?.device_id) !== targetId);
+  if (needsProgramming) return { candidate: needsProgramming };
   return { candidate: list[0] };
+}
+
+export function selectWizardProbeCandidate(candidates, { moduleRole = "", newDeviceId } = {}) {
+  const list = _filterCandidatesByRole(candidates, String(moduleRole || ""));
+  if (!list.length) return { error: "no_candidate" };
+
+  const targetId = Number(newDeviceId);
+  const deviceIds = [...new Set(list.map((e) => Number(e?.device_id)).filter((v) => Number.isFinite(v) && v > 0))];
+  if (deviceIds.length > 1 && Number.isFinite(targetId)) {
+    const atTarget = list.some((e) => Number(e?.device_id) === targetId);
+    const notAtTarget = list.some((e) => Number(e?.device_id) !== targetId);
+    if (atTarget && notAtTarget) return { error: "multiple_modbus_ids", deviceIds };
+  }
+
+  return _findBestCandidate(list, targetId);
 }
 
 export function isOptionalWizardStep(step) {

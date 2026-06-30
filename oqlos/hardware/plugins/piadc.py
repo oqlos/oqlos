@@ -14,6 +14,7 @@ import httpx
 
 from .base import HardwarePlugin, PluginConfig, PluginHealth, PluginStatus
 from ._shared import http_health_check, not_connected_health, health_check_exception, http_disconnect
+from .plugin_http_handlers import http_get_command
 
 logger = logging.getLogger(__name__)
 
@@ -210,11 +211,7 @@ class PiadcPlugin(HardwarePlugin):
                 if blocker:
                     return {"success": False, "error": blocker}
                 channel = params.get("channel", 0)
-                resp = await self._client.get(f"{self._base_url}/read/{channel}")
-                if resp.status_code < 300:
-                    return {"success": True, "data": resp.json()}
-                else:
-                    return {"success": False, "error": f"HTTP {resp.status_code}"}
+                return await http_get_command(self._client, self._base_url, f"/read/{channel}")
             elif command == "read_sensor":
                 blocker = await self._read_blocker()
                 if blocker:
@@ -225,12 +222,13 @@ class PiadcPlugin(HardwarePlugin):
                 channel = _resolve_sensor_channel(sensor_id)
                 if channel is None:
                     return {"success": False, "error": f"Unknown sensor_id: {sensor_id}"}
-                resp = await self._client.get(f"{self._base_url}/read/{channel}")
-                if resp.status_code < 300:
-                    data = resp.json()
+                result = await http_get_command(self._client, self._base_url, f"/read/{channel}")
+                if not result.get("success"):
+                    return result
+                data = result.get("data")
+                if isinstance(data, dict):
                     return {"success": True, "data": data.get("voltage")}
-                else:
-                    return {"success": False, "error": f"HTTP {resp.status_code}"}
+                return result
             else:
                 return {"success": False, "error": f"Unknown command: {command}"}
         except Exception as exc:

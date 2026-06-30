@@ -29,7 +29,7 @@ GOAL:
 GOAL:
   SET NAME 'weryfikacja kalibracji'
   SET 'pompa-testowa' '1'
-  WAIT 3s
+  SET WAIT '3 s'
   SAVE odczyt-1
   SAVE odczyt-2
   IF 'czujnik-1' '48 .. 52 mbar'

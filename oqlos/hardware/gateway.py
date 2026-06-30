@@ -38,6 +38,7 @@ from oqlos.hardware.discovery import (
     DEFAULT_MODBUS_SERIAL,
     probe_waveshare_modbus,
 )
+from oqlos.hardware.gateway_http import TIMEOUT as _TIMEOUT, get_json, post_json
 from oqlos.hardware.tic249_units import TIC249_DEFAULT_TARGET_VELOCITY
 
 logger = logging.getLogger(__name__)
@@ -80,8 +81,6 @@ _VALVE_COIL_MAP: dict[str, int] = {
     "valve-wc": 2,   # WC valve on DO3
 }
 
-_TIMEOUT = httpx.Timeout(5.0)
-
 
 class _PiAdcAdapter:
     """Reads pressure / analog sensors via piadc REST API (ADS1115)."""
@@ -90,10 +89,7 @@ class _PiAdcAdapter:
         self._base = base_url.rstrip("/")
 
     async def read_channel(self, channel: int) -> dict[str, Any]:
-        async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
-            resp = await client.get(f"{self._base}/read/{channel}")
-            resp.raise_for_status()
-            return resp.json()
+        return await get_json(self._base, f"/read/{channel}")
 
     async def read_sensor(self, sensor_id: str) -> float | None:
         channel = _SENSOR_CHANNEL_MAP.get(sensor_id)
@@ -114,25 +110,13 @@ class _DRI0050MotorAdapter:
         """Set motor power as 0–100 %."""
         if power_pct <= 0:
             return await self._stop()
-        async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
-            resp = await client.post(
-                f"{self._base}/api/speed",
-                json={"power_pct": power_pct},
-            )
-            resp.raise_for_status()
-            return resp.json()
+        return await post_json(self._base, "/api/speed", {"power_pct": power_pct})
 
     async def _stop(self) -> dict[str, Any]:
-        async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
-            resp = await client.post(f"{self._base}/api/stop")
-            resp.raise_for_status()
-            return resp.json()
+        return await post_json(self._base, "/api/stop")
 
     async def status(self) -> dict[str, Any]:
-        async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
-            resp = await client.get(f"{self._base}/api/status")
-            resp.raise_for_status()
-            return resp.json()
+        return await get_json(self._base, "/api/status")
 
 
 class _Tic249LungAdapter:
@@ -154,41 +138,27 @@ class _Tic249LungAdapter:
         self, steps: int = 500, speed: int = TIC249_DEFAULT_TARGET_VELOCITY, cycles: int = 5, pause: float = 0.5
     ) -> dict[str, Any]:
         """Start reciprocating (back-and-forth) lung motion."""
-        async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
-            resp = await client.post(
-                f"{self._base}/api/reciprocate",
-                json={"steps": steps, "speed": speed, "cycles": cycles, "pause": pause},
-            )
-            resp.raise_for_status()
-            return resp.json()
+        return await post_json(
+            self._base,
+            "/api/reciprocate",
+            {"steps": steps, "speed": speed, "cycles": cycles, "pause": pause},
+        )
 
     async def stop(self) -> dict[str, Any]:
-        async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
-            resp = await client.post(f"{self._base}/api/stop")
-            resp.raise_for_status()
-            return resp.json()
+        return await post_json(self._base, "/api/stop")
 
     async def move(self, position: int, speed: int | None = None) -> dict[str, Any]:
         """Move to absolute position."""
         payload: dict[str, Any] = {"position": position}
         if speed is not None:
             payload["speed"] = speed
-        async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
-            resp = await client.post(f"{self._base}/api/move", json=payload)
-            resp.raise_for_status()
-            return resp.json()
+        return await post_json(self._base, "/api/move", payload)
 
     async def energize(self, enable: bool = True) -> dict[str, Any]:
-        async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
-            resp = await client.post(f"{self._base}/api/energize", json={"enable": enable})
-            resp.raise_for_status()
-            return resp.json()
+        return await post_json(self._base, "/api/energize", {"enable": enable})
 
     async def status(self) -> dict[str, Any]:
-        async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
-            resp = await client.get(f"{self._base}/api/status")
-            resp.raise_for_status()
-            return resp.json()
+        return await get_json(self._base, "/api/status")
 
 
 class _ModbusAdapter:

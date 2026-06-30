@@ -36,6 +36,19 @@ GOAL: Demo
         assert goal.steps[0].action == 'WAIT'
         assert goal.steps[0].duration == 1500
 
+    def test_parses_bare_set_wait_step(self):
+        dsl = """SCENARIO: Wait handling
+GOAL: Demo
+  SET WAIT '1 s'
+  SET DELAY '500 ms'
+"""
+
+        goal = parse_dsl_to_goal(dsl, 'parser-bare-set-wait')
+
+        assert goal is not None
+        assert [step.action for step in goal.steps] == ['WAIT', 'WAIT']
+        assert [step.duration for step in goal.steps] == [1000, 500]
+
     def test_parses_dedicated_pump_command(self):
         dsl = """SCENARIO: Pump handling
 GOAL: Demo

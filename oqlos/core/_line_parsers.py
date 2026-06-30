@@ -113,17 +113,32 @@ def _set_lung_step(peripheral: str, value_raw: str, step_counter: int, line: str
     return Step(id=f'step-{step_counter}', action='SET_LUNG', peripheral=peripheral, value=value, label=line)
 
 
+def _extract_set_params(normalized_line: str) -> tuple[str, str] | None:
+    """Extract (param_raw, value_raw) from a normalized SET line, or None."""
+    m = (
+        re.match(r'SET\s*"([^"]*)"\s*"([^"]*)"\s*$', normalized_line, re.IGNORECASE)
+        or re.match(r"SET\s*'([^']*)'\s*'([^']*)'\s*$", normalized_line, re.IGNORECASE)
+        or re.match(r"SET\s*\[([^\]]+)\]\s*=\s*\[([^\]]+)\]\s*$", normalized_line, re.IGNORECASE)
+    )
+    if m:
+        return m.group(1).strip(), m.group(2).strip()
+    bw = re.match(
+        r"SET\s+(WAIT|DELAY|PAUSE|TIMEOUT)\s*(?:'([^']*)'|\[([^\]]+)\])\s*$",
+        normalized_line,
+        re.IGNORECASE,
+    )
+    if bw:
+        return bw.group(1).strip(), (bw.group(2) or bw.group(3) or '').strip()
+    return None
+
+
 def _parse_set_line(line: str, step_counter: int) -> Step | None:
     """Parse `SET 'zawór 2' '1'` or legacy `SET [zawór 2] = [1]`."""
     normalized_line = _normalize_quote_syntax(line)
-    match = re.match(r'SET\s*"([^"]*)"\s*"([^"]*)"\s*$', normalized_line, re.IGNORECASE) or \
-            re.match(r"SET\s*'([^']*)'\s*'([^']*)'\s*$", normalized_line, re.IGNORECASE) or \
-            re.match(r"SET\s*\[([^\]]+)\]\s*=\s*\[([^\]]+)\]\s*$", normalized_line, re.IGNORECASE)
-    if not match:
+    extracted = _extract_set_params(normalized_line)
+    if extracted is None:
         return None
-
-    param_raw = match.group(1).strip()
-    value_raw = match.group(2).strip()
+    param_raw, value_raw = extracted
     param = param_raw.lower()
 
     if param in _WAIT_ACTIONS:

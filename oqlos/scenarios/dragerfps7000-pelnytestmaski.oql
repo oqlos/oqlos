@@ -12,10 +12,10 @@ GOAL:
   SET NAME 'Faza 1: Podciśnienie'
   SET 'valve-sc' '1'
   SET 'pump-main' '5 l/min'
-  WAIT 7s
+  SET WAIT '7 s'
   SET 'valve-nc' '1'
   SET 'pump-main' '5 l/min'
-  WAIT 10s
+  SET WAIT '10 s'
   IF 'AI01' '-15.0 .. -11.0 mbar'
   CORRECT 'Podciśnienie w normie'
   ERROR 'Błąd: podciśnienie poza zakresem'
@@ -23,7 +23,7 @@ GOAL:
 GOAL:
   SET NAME 'Faza 2: Stabilizacja'
   SET 'pump-main' '0 l/min'
-  WAIT 10s
+  SET WAIT '10 s'
   SET 'valve-nc' '0'
   IF 'AI01' '-15.0 .. -10.1 mbar'
   CORRECT 'Stabilizacja w normie'
@@ -32,7 +32,7 @@ GOAL:
 GOAL:
   SET NAME 'Faza 3: Szczelność maski'
   SET 'pump-main' '0 l/min'
-  WAIT 20s
+  SET WAIT '20 s'
   SAVE szczelność-maska
   IF 'AI01' '-12.0 .. -9.0 mbar'
   CORRECT 'Szczelność maski OK'
@@ -42,7 +42,7 @@ GOAL:
   SET NAME 'Faza 4: Zawór wydechowy'
   SET 'valve-sc' '1'
   SET 'pump-main' '10 l/min'
-  WAIT 5s
+  SET WAIT '5 s'
   IF 'AI01' '4.2 .. 6.0 mbar'
   CORRECT 'Ciśnienie zaworu wydechowego OK (4.2-6.0 mbar)'
   ERROR 'Błąd: ciśnienie zaworu wydechowego poza zakresem'
@@ -52,5 +52,5 @@ GOAL:
   SET NAME 'Faza 5: Wyjście'
   SET 'valve-nc' '1'
   SET 'pump-main' '5 l/min'
-  WAIT 7s
+  SET WAIT '7 s'
   SET 'pump-main' '0'

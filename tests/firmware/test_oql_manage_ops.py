@@ -13,6 +13,22 @@ async def test_unknown_verb_raises():
         await manage_ops.run_manage_verb("nope", {})
 
 
+def test_hardware_facade_exposes_manage_ops_handlers():
+    from oqlos.api import hardware as hw
+
+    for name in [
+        "hardware_health",
+        "hardware_diagnose",
+        "hardware_stack_snapshot",
+        "hardware_diagnosis_route",
+        "hardware_recover_route",
+        "rtc_status",
+        "rtc_command",
+        "TIC249_DEFAULT_TARGET_VELOCITY",
+    ]:
+        assert hasattr(hw, name), name
+
+
 @pytest.mark.asyncio
 async def test_diagnostic_command_routes_to_plugin_execute(monkeypatch):
     calls: list[tuple[str, dict]] = []

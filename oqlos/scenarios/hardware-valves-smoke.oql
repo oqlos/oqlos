@@ -7,14 +7,14 @@ MANUFACTURER: Dräger
 FUNC:
   SET NAME 'Cykl zaworu'
   SET '$1' '1'
-  WAIT 200ms
+  SET WAIT '200 ms'
   SET '$1' '0'
 
 GOAL:
   SET NAME 'smoke test modbus valves'
   LOG 'Cykl NC -> SC -> WC'
   FUNC 'Cykl zaworu' 'valve-nc'
-  WAIT 200ms
+  SET WAIT '200 ms'
   FUNC 'Cykl zaworu' 'valve-sc'
-  WAIT 200ms
+  SET WAIT '200 ms'
   FUNC 'Cykl zaworu' 'valve-wc'

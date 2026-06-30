@@ -11,6 +11,7 @@ import httpx
 
 from .base import HardwarePlugin, PluginConfig, PluginHealth, PluginStatus
 from ._shared import not_connected_health, health_check_exception, http_disconnect
+from .plugin_http_handlers import http_get_command, http_post_command
 from oqlos.hardware.tic249_units import TIC249_DEFAULT_TARGET_VELOCITY
 
 logger = logging.getLogger(__name__)
@@ -225,13 +226,13 @@ class LungPlugin(HardwarePlugin):
                 "data": {"runtime_status": runtime},
             }
 
-        resp = await self._client.post(
-            f"{self._base_url}/api/reciprocate",
-            json=payload,
+        resp = await http_post_command(
+            self._client,
+            self._base_url,
+            "/api/reciprocate",
+            json_body=payload,
         )
-        if resp.status_code < 300:
-            return {"success": True, "data": resp.json()}
-        return {"success": False, "error": f"HTTP {resp.status_code}"}
+        return resp
 
     async def _handle_reciprocate_usb(self, params: dict[str, Any]) -> dict[str, Any]:
         """Handle reciprocate command via USB (placeholder)."""
@@ -241,10 +242,7 @@ class LungPlugin(HardwarePlugin):
 
     async def _handle_stop_http(self) -> dict[str, Any]:
         """Handle stop command via HTTP."""
-        resp = await self._client.post(f"{self._base_url}/api/stop")
-        if resp.status_code < 300:
-            return {"success": True, "data": resp.json()}
-        return {"success": False, "error": f"HTTP {resp.status_code}"}
+        return await http_post_command(self._client, self._base_url, "/api/stop")
 
     async def _handle_stop_usb(self) -> dict[str, Any]:
         """Handle stop command via USB (placeholder)."""
@@ -257,10 +255,7 @@ class LungPlugin(HardwarePlugin):
         payload = {"position": position}
         if speed is not None:
             payload["speed"] = speed
-        resp = await self._client.post(f"{self._base_url}/api/move", json=payload)
-        if resp.status_code < 300:
-            return {"success": True, "data": resp.json()}
-        return {"success": False, "error": f"HTTP {resp.status_code}"}
+        return await http_post_command(self._client, self._base_url, "/api/move", json_body=payload)
 
     async def _handle_move_usb(self, params: dict[str, Any]) -> dict[str, Any]:
         """Handle move command via USB (placeholder)."""
@@ -270,10 +265,12 @@ class LungPlugin(HardwarePlugin):
     async def _handle_energize_http(self, params: dict[str, Any]) -> dict[str, Any]:
         """Handle energize command via HTTP."""
         enable = params.get("enable", True)
-        resp = await self._client.post(f"{self._base_url}/api/energize", json={"enable": enable})
-        if resp.status_code < 300:
-            return {"success": True, "data": resp.json()}
-        return {"success": False, "error": f"HTTP {resp.status_code}"}
+        return await http_post_command(
+            self._client,
+            self._base_url,
+            "/api/energize",
+            json_body={"enable": enable},
+        )
 
     async def _handle_energize_usb(self, params: dict[str, Any]) -> dict[str, Any]:
         """Handle energize command via USB (placeholder)."""
@@ -282,10 +279,7 @@ class LungPlugin(HardwarePlugin):
 
     async def _handle_status_http(self) -> dict[str, Any]:
         """Handle status command via HTTP."""
-        resp = await self._client.get(f"{self._base_url}/api/status")
-        if resp.status_code < 300:
-            return {"success": True, "data": resp.json()}
-        return {"success": False, "error": f"HTTP {resp.status_code}"}
+        return await http_get_command(self._client, self._base_url, "/api/status")
 
     async def _handle_status_usb(self) -> dict[str, Any]:
         """Handle status command via USB (placeholder)."""

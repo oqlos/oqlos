@@ -264,12 +264,12 @@ const libraryFull = {
 };
 
 const navByLang = {
-  pl: { devices: "Urządzenia", scenarios: "Scenariusze", hardware: "Sprzęt", demo: "Demo 🎵", scenarioFiles: "Pliki scenariuszy", map: "MAP", func: "Funkcje" },
-  en: { devices: "Devices", scenarios: "Scenarios", hardware: "Hardware", demo: "Demo 🎵", scenarioFiles: "Scenario Files", map: "Map", func: "Func" },
-  de: { devices: "Geräte", scenarios: "Szenarien", hardware: "Hardware", demo: "Demo 🎵", scenarioFiles: "Szenario-Dateien", map: "MAP", func: "Func" },
-  ru: { devices: "Устройства", scenarios: "Сценарии", hardware: "Оборудование", demo: "Demo 🎵", scenarioFiles: "Файлы сценариев", map: "MAP", func: "Func" },
-  ua: { devices: "Пристрої", scenarios: "Сценарії", hardware: "Обладнання", demo: "Demo 🎵", scenarioFiles: "Файли сценаріїв", map: "MAP", func: "Func" },
-  cs: { devices: "Zařízení", scenarios: "Scénáře", hardware: "Hardware", demo: "Demo 🎵", scenarioFiles: "Soubory scénářů", map: "MAP", func: "Func" },
+  pl: { devices: "Urządzenia", scenarios: "Scenariusze", hardware: "Status", restart: "Restart", demo: "Demo", scenarioFiles: "Scenariusze", map: "MAP", func: "Funkcje", panel: "OQL", navigation: "Nawigacja", apiDocs: "API" },
+  en: { devices: "Devices", scenarios: "Scenarios", hardware: "Status", restart: "Restart", demo: "Demo", scenarioFiles: "Scenarios", map: "Map", func: "Func", panel: "OQL", navigation: "Navigation", apiDocs: "API" },
+  de: { devices: "Geräte", scenarios: "Szenarien", hardware: "Status", restart: "Restart", demo: "Demo", scenarioFiles: "Szenarien", map: "MAP", func: "Func", panel: "OQL", navigation: "Navigation", apiDocs: "API" },
+  ru: { devices: "Устройства", scenarios: "Сценарии", hardware: "Статус", restart: "Restart", demo: "Demo", scenarioFiles: "Сценарии", map: "MAP", func: "Func", panel: "OQL", navigation: "Навигация", apiDocs: "API" },
+  ua: { devices: "Пристрої", scenarios: "Сценарії", hardware: "Статус", restart: "Restart", demo: "Demo", scenarioFiles: "Сценарії", map: "MAP", func: "Func", panel: "OQL", navigation: "Навігація", apiDocs: "API" },
+  cs: { devices: "Zařízení", scenarios: "Scénáře", hardware: "Status", restart: "Restart", demo: "Demo", scenarioFiles: "Scénáře", map: "MAP", func: "Func", panel: "OQL", navigation: "Navigace", apiDocs: "API" },
 };
 
 // Shared UI vocabulary used across pages (table headers, generic buttons, status copy).

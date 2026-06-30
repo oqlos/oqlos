@@ -11,10 +11,10 @@ GOAL:
   SET NAME 'Wytworzenie podciśnienia'
   SET 'valve-sc' '1'
   SET 'pump-main' '5 l/min'
-  WAIT 7s
+  SET WAIT '7 s'
   SET 'valve-nc' '1'
   SET 'pump-main' '5 l/min'
-  WAIT 5s
+  SET WAIT '5 s'
   IF 'AI01' '-15.0 .. -11.0 mbar'
   CORRECT 'Podciśnienie w normie'
   ERROR 'Błąd: podciśnienie poza zakresem'
@@ -23,7 +23,7 @@ GOAL:
 GOAL:
   SET NAME 'Ustawienie auto'
   SET 'pump-main' '0'
-  WAIT 20s
+  SET WAIT '20 s'
   SET 'valve-nc' '0'
   IF 'AI01' '-15.0 .. -10.1 mbar'
   CORRECT 'Ustawienie auto OK'
@@ -33,7 +33,7 @@ GOAL:
 GOAL:
   SET NAME 'Szczelność nadciśnieniowa'
   SET 'pump-main' '0'
-  WAIT 60s
+  SET WAIT '60 s'
   IF 'AI01' '-12.0 .. -9.0 mbar'
   CORRECT 'Szczelność nadciśnieniowa OK'
   ERROR 'Błąd: szczelność nadciśnieniowa poza zakresem'
@@ -43,7 +43,7 @@ GOAL:
   SET NAME 'Ciśnienie otwarcia zaworu wydechowego'
   SET 'valve-sc' '1'
   SET 'pump-main' '10 l/min'
-  WAIT 5s
+  SET WAIT '5 s'
   IF 'AI01' '4.2 .. 6.0 mbar'
   CORRECT 'Ciśnienie otwarcia zaworu wydechowego OK (4.2-6.0 mbar)'
   ERROR 'Błąd: ciśnienie otwarcia zaworu wydechowego poza zakresem'
@@ -53,5 +53,5 @@ GOAL:
   SET NAME 'Wyjście'
   SET 'valve-nc' '1'
   SET 'pump-main' '5 l/min'
-  WAIT 7s
+  SET WAIT '7 s'
   SET 'pump-main' '0'

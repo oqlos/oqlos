@@ -15,16 +15,13 @@ CONFIG init-pompa:
 
 CONFIG init-zawory-nc:
   SET 'valve-nc' '0'
-  WAIT 300ms
-
+  SET WAIT '300 ms'
 CONFIG init-zawory-sc:
   SET 'valve-sc' '0'
-  WAIT 300ms
-
+  SET WAIT '300 ms'
 CONFIG init-zawory-wc:
   SET 'valve-wc' '0'
-  WAIT 300ms
-
+  SET WAIT '300 ms'
 CONFIG init-zawory-numerowane:
   CALL init-valves-numbered
 
@@ -44,7 +41,7 @@ CONFIG verify-zawory-zamkniete:
   SET 'valve-nc' '0'
   SET 'valve-sc' '0'
   SET 'valve-wc' '0'
-  WAIT 200ms
+  SET WAIT '200 ms'
   SAVE zawory-zamkniete
 
 CONFIG verify-pompa-wylaczona:
@@ -59,14 +56,13 @@ GOAL:
   SET NAME 'state ready'
   LOG 'System gotowy do pracy'
   SAVE system-ready
-  WAIT 1s
-
+  SET WAIT '1 s'
 GOAL:
   SET NAME 'tryb kalibracji'
   SET 'valve-nc' '1'
   SET 'valve-sc' '1'
   SET 'valve-wc' '1'
-  WAIT 1s
+  SET WAIT '1 s'
   SET 'valve-nc' '0'
   SET 'valve-sc' '0'
   SET 'valve-wc' '0'
@@ -75,6 +71,6 @@ GOAL:
 GOAL:
   SET NAME 'tryb testowy pompy'
   SET 'pompa-1' '5 l/min'
-  WAIT 2s
+  SET WAIT '2 s'
   SET 'pompa-1' '0'
   SAVE test-pompy-ok
