@@ -3,13 +3,20 @@ project_metadata('oqlos', '0.1.28', 'python').
 
 % ── Project Files ────────────────────────────────────────
 project_file('app.doql.css', 165, 'css').
-project_file('app.doql.less', 311, 'less').
+project_file('app.doql.less', 316, 'less').
 project_file('examples/curl-quickstart.sh', 75, 'shell').
 project_file('examples/hardware/doctor-workflow.sh', 53, 'shell').
+project_file('frontend/src/api/hardware-api-errors.js', 64, 'javascript').
 project_file('frontend/src/api/hardware-api-log.js', 88, 'javascript').
-project_file('frontend/src/api/hardwareApi.js', 435, 'javascript').
+project_file('frontend/src/api/hardware-diagnostic-failure.js', 103, 'javascript').
+project_file('frontend/src/api/hardware-diagnostic-failure.test.js', 59, 'javascript').
+project_file('frontend/src/api/hardware-tic249-status.js', 36, 'javascript').
+project_file('frontend/src/api/hardwareApi.js', 257, 'javascript').
 project_file('frontend/src/api/wsClient.js', 139, 'javascript').
-project_file('frontend/src/hooks/useUrlConfig.js', 287, 'javascript').
+project_file('frontend/src/context/app-config-document.js', 27, 'javascript').
+project_file('frontend/src/hooks/useParentEncoderNavigation.js', 157, 'javascript').
+project_file('frontend/src/hooks/useRailHoverPreview.js', 85, 'javascript').
+project_file('frontend/src/hooks/useUrlConfig.js', 86, 'javascript').
 project_file('frontend/src/hooks/useWsStatus.js', 27, 'javascript').
 project_file('frontend/src/i18n/dictionaries.js', 1982, 'javascript').
 project_file('frontend/src/i18n/hardware-demo-extra-translations.js', 184, 'javascript').
@@ -21,16 +28,22 @@ project_file('frontend/src/styles/global.css', 2076, 'css').
 project_file('frontend/src/utils/collapse-toggle-bridge.js', 47, 'javascript').
 project_file('frontend/src/utils/designRem.js', 44, 'javascript').
 project_file('frontend/src/utils/hardware-activity-log.js', 35, 'javascript').
+project_file('frontend/src/utils/hardware-api-retry.js', 39, 'javascript').
+project_file('frontend/src/utils/hardware-api-retry.test.js', 46, 'javascript').
 project_file('frontend/src/utils/hardware-restart-docs.js', 12, 'javascript').
+project_file('frontend/src/utils/hardware-restart-wizard-steps.js', 110, 'javascript').
 project_file('frontend/src/utils/hardware-time.js', 5, 'javascript').
 project_file('frontend/src/utils/hardware-wizard-plan.js', 11, 'javascript').
 project_file('frontend/src/utils/hardware-wizard-steps.js', 112, 'javascript').
 project_file('frontend/src/utils/hardwareEventStream.js', 48, 'javascript').
 project_file('frontend/src/utils/hui-shell-key.js', 39, 'javascript').
-project_file('frontend/src/utils/mapEditorFuncHardwareSummary.js', 51, 'javascript').
+project_file('frontend/src/utils/mapEditorFuncHardwareSummary.js', 81, 'javascript').
+project_file('frontend/src/utils/mapEditorFuncHardwareSummary.test.js', 55, 'javascript').
 project_file('frontend/src/utils/parentUrlBridge.js', 40, 'javascript').
 project_file('frontend/src/utils/rbac.policy.js', 119, 'javascript').
-project_file('frontend/src/utils/useSelectionCollapsePanel.js', 192, 'javascript').
+project_file('frontend/src/utils/url-embed-config.js', 194, 'javascript').
+project_file('frontend/src/utils/url-embed-config.test.js', 93, 'javascript').
+project_file('frontend/src/utils/useSelectionCollapsePanel.js', 140, 'javascript').
 project_file('frontend/vendor/hardware-client/index.ts', 32, 'typescript').
 project_file('frontend/vendor/hardware-client/paths.ts', 40, 'typescript').
 project_file('frontend/vite.config.ts', 37, 'typescript').
@@ -48,7 +61,7 @@ project_file('oqlos/api/hardware_mapping_contract.py', 90, 'python').
 project_file('oqlos/api/hardware_mapping_store.py', 153, 'python').
 project_file('oqlos/api/hardware_v3.py', 61, 'python').
 project_file('oqlos/api/logs.py', 46, 'python').
-project_file('oqlos/api/main.py', 370, 'python').
+project_file('oqlos/api/main.py', 371, 'python').
 project_file('oqlos/api/oql_mqtt.py', 152, 'python').
 project_file('oqlos/api/peripherals.py', 71, 'python').
 project_file('oqlos/api/plugins.py', 182, 'python').
@@ -98,8 +111,13 @@ project_file('oqlos/hardware/client/platform.py', 51, 'python').
 project_file('oqlos/hardware/client/proxy.py', 461, 'python').
 project_file('oqlos/hardware/client/resolvers.py', 129, 'python').
 project_file('oqlos/hardware/client/tic249_arg_contract.py', 66, 'python').
-project_file('oqlos/hardware/client/tic249_extended.py', 639, 'python').
+project_file('oqlos/hardware/client/tic249_arg_helpers.py', 12, 'python').
+project_file('oqlos/hardware/client/tic249_command_mapping.py', 50, 'python').
+project_file('oqlos/hardware/client/tic249_error_messages.py', 113, 'python').
+project_file('oqlos/hardware/client/tic249_extended.py', 216, 'python').
+project_file('oqlos/hardware/client/tic249_motion_params.py', 129, 'python').
 project_file('oqlos/hardware/client/tic249_rig_direction.py', 44, 'python').
+project_file('oqlos/hardware/client/tic249_sidecar_client.py', 184, 'python').
 project_file('oqlos/hardware/config_paths.py', 42, 'python').
 project_file('oqlos/hardware/config_schema.py', 146, 'python').
 project_file('oqlos/hardware/control_proxy.py', 69, 'python').
@@ -112,7 +130,10 @@ project_file('oqlos/hardware/drivers/spi.py', 93, 'python').
 project_file('oqlos/hardware/firmware_adapter.py', 482, 'python').
 project_file('oqlos/hardware/gateway.py', 417, 'python').
 project_file('oqlos/hardware/health_status.py', 27, 'python').
-project_file('oqlos/hardware/hui_actions.py', 252, 'python').
+project_file('oqlos/hardware/hui_actions.py', 59, 'python').
+project_file('oqlos/hardware/hui_artificial_lung.py', 84, 'python').
+project_file('oqlos/hardware/hui_hold.py', 189, 'python').
+project_file('oqlos/hardware/hui_lung_recipe.py', 43, 'python').
 project_file('oqlos/hardware/identify_enrichment.py', 19, 'python').
 project_file('oqlos/hardware/modbus_identify.py', 132, 'python').
 project_file('oqlos/hardware/peripheral_mapping.py', 139, 'python').
@@ -133,7 +154,7 @@ project_file('oqlos/hardware/rtc_probe.py', 198, 'python').
 project_file('oqlos/hardware/scanner_probe.py', 263, 'python').
 project_file('oqlos/hardware/sidecar_control.py', 223, 'python').
 project_file('oqlos/hardware/stack_snapshot.py', 89, 'python').
-project_file('oqlos/hardware/tic249_units.py', 6, 'python').
+project_file('oqlos/hardware/tic249_units.py', 40, 'python').
 project_file('oqlos/hardware/transport/__init__.py', 25, 'python').
 project_file('oqlos/hardware/transport/manage_ops.py', 223, 'python').
 project_file('oqlos/hardware/transport/mqtt_oql_bridge.py', 495, 'python').
@@ -229,7 +250,7 @@ project_file('tests/firmware/test_oql_manage_ops.py', 171, 'python').
 project_file('tests/firmware/test_oql_mqtt_bridge.py', 255, 'python').
 project_file('tests/firmware/test_oql_route_http.py', 119, 'python').
 project_file('tests/firmware/test_oqlos_logging.py', 21, 'python').
-project_file('tests/firmware/test_panel_ui.py', 178, 'python').
+project_file('tests/firmware/test_panel_ui.py', 189, 'python').
 project_file('tests/firmware/test_parser_cycle.py', 53, 'python').
 project_file('tests/firmware/test_plugin_gateway_env.py', 243, 'python').
 project_file('tests/firmware/test_plugin_gateway_init.py', 67, 'python').
@@ -240,6 +261,7 @@ project_file('tests/firmware/test_rtc_probe.py', 131, 'python').
 project_file('tests/firmware/test_runtime_command_payload.py', 16, 'python').
 project_file('tests/firmware/test_safe_eval.py', 244, 'python').
 project_file('tests/firmware/test_scanner_probe.py', 68, 'python').
+project_file('tests/firmware/test_tic249_units.py', 18, 'python').
 project_file('tests/firmware/test_tokenizer_extended.py', 194, 'python').
 project_file('tests/firmware/test_usb_diagnostics.py', 63, 'python').
 project_file('tests/test_core.py', 854, 'python').
@@ -839,38 +861,39 @@ python_function('oqlos/hardware/client/resolvers.py', '_coalesce_error_message',
 python_function('oqlos/hardware/client/resolvers.py', 'extract_command_failure', 1, 10, 3).
 python_function('oqlos/hardware/client/tic249_arg_contract.py', 'canonicalize_motor2_runtime_key', 1, 2, 5).
 python_function('oqlos/hardware/client/tic249_arg_contract.py', 'tic249_runtime_args_from_config', 1, 8, 4).
-python_function('oqlos/hardware/client/tic249_extended.py', '_arg', 4, 4, 0).
+python_function('oqlos/hardware/client/tic249_arg_helpers.py', 'tic249_arg', 4, 4, 0).
+python_function('oqlos/hardware/client/tic249_command_mapping.py', 'map_lung_or_reciprocate', 2, 8, 4).
+python_function('oqlos/hardware/client/tic249_command_mapping.py', 'map_tic249_command', 2, 13, 5).
+python_function('oqlos/hardware/client/tic249_error_messages.py', 'extract_position', 1, 5, 3).
+python_function('oqlos/hardware/client/tic249_error_messages.py', 'command_error_message', 1, 14, 4).
+python_function('oqlos/hardware/client/tic249_error_messages.py', 'generic_failure_hint', 1, 8, 4).
+python_function('oqlos/hardware/client/tic249_error_messages.py', 'command_failure', 1, 10, 4).
+python_function('oqlos/hardware/client/tic249_error_messages.py', 'plugin_unavailable_error', 1, 10, 4).
+python_function('oqlos/hardware/client/tic249_error_messages.py', 'normalize_target_state', 2, 12, 4).
 python_function('oqlos/hardware/client/tic249_extended.py', '_plugin_payload', 2, 2, 0).
 python_function('oqlos/hardware/client/tic249_extended.py', '_execute', 3, 1, 2).
-python_function('oqlos/hardware/client/tic249_extended.py', '_steps_per_second_to_raw', 2, 3, 4).
-python_function('oqlos/hardware/client/tic249_extended.py', '_normalize_motion_params', 1, 13, 6).
-python_function('oqlos/hardware/client/tic249_extended.py', '_stroke_steps', 2, 1, 2).
-python_function('oqlos/hardware/client/tic249_extended.py', '_apply_reciprocate_direction', 2, 1, 1).
-python_function('oqlos/hardware/client/tic249_extended.py', '_build_reciprocate_params', 1, 13, 9).
-python_function('oqlos/hardware/client/tic249_extended.py', '_map_lung_or_reciprocate', 2, 8, 4).
-python_function('oqlos/hardware/client/tic249_extended.py', '_command_mapping', 2, 13, 5).
-python_function('oqlos/hardware/client/tic249_extended.py', '_extract_position', 1, 5, 3).
-python_function('oqlos/hardware/client/tic249_extended.py', '_command_error_message', 1, 14, 4).
-python_function('oqlos/hardware/client/tic249_extended.py', '_generic_failure_hint', 1, 8, 4).
-python_function('oqlos/hardware/client/tic249_extended.py', '_failure', 1, 10, 4).
-python_function('oqlos/hardware/client/tic249_extended.py', '_plugin_unavailable_error', 1, 10, 4).
-python_function('oqlos/hardware/client/tic249_extended.py', '_tic249_sidecar_base_urls', 0, 5, 6).
-python_function('oqlos/hardware/client/tic249_extended.py', '_tic249_sidecar_base_url', 0, 1, 1).
-python_function('oqlos/hardware/client/tic249_extended.py', '_sidecar_reports_deenergized', 0, 7, 5).
-python_function('oqlos/hardware/client/tic249_extended.py', '_attempt_disable_deenergize', 2, 4, 4).
-python_function('oqlos/hardware/client/tic249_extended.py', '_disable_success_response', 3, 3, 1).
-python_function('oqlos/hardware/client/tic249_extended.py', '_sidecar_reciprocate_preferred', 0, 1, 3).
-python_function('oqlos/hardware/client/tic249_extended.py', '_attempt_reciprocate_via_sidecar', 1, 9, 8).
-python_function('oqlos/hardware/client/tic249_extended.py', '_direct_sidecar_deenergize', 1, 7, 7).
-python_function('oqlos/hardware/client/tic249_extended.py', '_lung_disable_fallback', 2, 4, 4).
-python_function('oqlos/hardware/client/tic249_extended.py', '_normalize_target_state', 2, 12, 4).
-python_function('oqlos/hardware/client/tic249_extended.py', '_handle_hardware_proxy_error', 5, 8, 6).
 python_function('oqlos/hardware/client/tic249_extended.py', '_handle_move_relative_command', 2, 3, 9).
 python_function('oqlos/hardware/client/tic249_extended.py', '_try_disable_fallback', 2, 4, 2).
 python_function('oqlos/hardware/client/tic249_extended.py', '_try_sidecar_reciprocate', 3, 5, 2).
+python_function('oqlos/hardware/client/tic249_extended.py', '_handle_hardware_proxy_error', 5, 8, 6).
 python_function('oqlos/hardware/client/tic249_extended.py', 'run_extended_motor_tic249_command', 3, 10, 9).
+python_function('oqlos/hardware/client/tic249_motion_params.py', 'normalize_motion_params', 1, 13, 6).
+python_function('oqlos/hardware/client/tic249_motion_params.py', 'stroke_steps', 2, 1, 2).
+python_function('oqlos/hardware/client/tic249_motion_params.py', 'apply_reciprocate_direction', 2, 1, 1).
+python_function('oqlos/hardware/client/tic249_motion_params.py', '_resolve_reciprocate_speed', 1, 5, 4).
+python_function('oqlos/hardware/client/tic249_motion_params.py', '_resolve_reciprocate_ramp', 1, 4, 2).
+python_function('oqlos/hardware/client/tic249_motion_params.py', 'build_reciprocate_params', 1, 8, 10).
 python_function('oqlos/hardware/client/tic249_rig_direction.py', 'rig_direction_to_plugin', 1, 4, 3).
 python_function('oqlos/hardware/client/tic249_rig_direction.py', 'apply_rig_direction_to_plugin_params', 2, 5, 4).
+python_function('oqlos/hardware/client/tic249_sidecar_client.py', 'tic249_sidecar_base_urls', 0, 5, 6).
+python_function('oqlos/hardware/client/tic249_sidecar_client.py', 'tic249_sidecar_base_url', 0, 1, 1).
+python_function('oqlos/hardware/client/tic249_sidecar_client.py', 'sidecar_reciprocate_preferred', 0, 1, 3).
+python_function('oqlos/hardware/client/tic249_sidecar_client.py', 'sidecar_reports_deenergized', 0, 7, 5).
+python_function('oqlos/hardware/client/tic249_sidecar_client.py', 'attempt_reciprocate_via_sidecar', 1, 9, 8).
+python_function('oqlos/hardware/client/tic249_sidecar_client.py', 'direct_sidecar_deenergize', 1, 7, 7).
+python_function('oqlos/hardware/client/tic249_sidecar_client.py', 'lung_disable_fallback', 2, 4, 4).
+python_function('oqlos/hardware/client/tic249_sidecar_client.py', 'disable_success_response', 3, 3, 1).
+python_function('oqlos/hardware/client/tic249_sidecar_client.py', 'attempt_disable_deenergize', 2, 4, 4).
 python_function('oqlos/hardware/config_paths.py', 'resolve_oqlos_config_path', 1, 6, 7).
 python_function('oqlos/hardware/config_schema.py', 'get_hardware_config', 1, 2, 4).
 python_function('oqlos/hardware/config_schema.py', 'register_hardware_config', 1, 1, 1).
@@ -910,18 +933,22 @@ python_function('oqlos/hardware/firmware_adapter.py', '_first_nonempty', 1, 3, 1
 python_function('oqlos/hardware/firmware_adapter.py', '_extract_failure_message', 1, 9, 4).
 python_function('oqlos/hardware/firmware_adapter.py', '_parse_numeric', 1, 2, 3).
 python_function('oqlos/hardware/health_status.py', 'health_status_is_ok', 1, 11, 5).
-python_function('oqlos/hardware/hui_actions.py', '_success', 1, 5, 3).
-python_function('oqlos/hardware/hui_actions.py', '_operation', 2, 1, 0).
-python_function('oqlos/hardware/hui_actions.py', '_set_valve', 3, 1, 3).
-python_function('oqlos/hardware/hui_actions.py', '_set_pump', 2, 1, 3).
-python_function('oqlos/hardware/hui_actions.py', '_set_pump_best_effort', 2, 2, 3).
-python_function('oqlos/hardware/hui_actions.py', 'shutdown_all_hui_hardware', 1, 4, 7).
 python_function('oqlos/hardware/hui_actions.py', 'list_hui_actions', 0, 2, 4).
-python_function('oqlos/hardware/hui_actions.py', 'start_hui_hold', 2, 7, 11).
-python_function('oqlos/hardware/hui_actions.py', 'stop_hui_hold', 2, 4, 6).
-python_function('oqlos/hardware/hui_actions.py', '_run_tic249_reciprocate', 1, 6, 9).
-python_function('oqlos/hardware/hui_actions.py', 'start_hui_artificial_lung', 1, 5, 6).
-python_function('oqlos/hardware/hui_actions.py', 'stop_hui_artificial_lung', 1, 2, 3).
+python_function('oqlos/hardware/hui_artificial_lung.py', '_run_tic249_reciprocate', 1, 6, 9).
+python_function('oqlos/hardware/hui_artificial_lung.py', 'start_hui_artificial_lung', 1, 5, 6).
+python_function('oqlos/hardware/hui_artificial_lung.py', 'stop_hui_artificial_lung', 1, 2, 3).
+python_function('oqlos/hardware/hui_hold.py', '_success', 1, 5, 3).
+python_function('oqlos/hardware/hui_hold.py', '_operation', 2, 1, 0).
+python_function('oqlos/hardware/hui_hold.py', '_set_valve', 3, 1, 3).
+python_function('oqlos/hardware/hui_hold.py', '_set_pump', 2, 1, 3).
+python_function('oqlos/hardware/hui_hold.py', '_set_pump_best_effort', 2, 2, 3).
+python_function('oqlos/hardware/hui_hold.py', 'shutdown_all_hui_hardware', 1, 4, 7).
+python_function('oqlos/hardware/hui_hold.py', '_hold_start_failure', 1, 1, 0).
+python_function('oqlos/hardware/hui_hold.py', '_engage_hold_valves', 2, 3, 6).
+python_function('oqlos/hardware/hui_hold.py', '_engage_hold_pump_if_needed', 2, 3, 4).
+python_function('oqlos/hardware/hui_hold.py', 'start_hui_hold', 2, 5, 11).
+python_function('oqlos/hardware/hui_hold.py', 'stop_hui_hold', 2, 4, 6).
+python_function('oqlos/hardware/hui_lung_recipe.py', 'build_hui_lung_reciprocate_args', 0, 1, 2).
 python_function('oqlos/hardware/identify_enrichment.py', 'enrich_identify_payload', 1, 2, 4).
 python_function('oqlos/hardware/modbus_identify.py', '_usb_blob', 1, 3, 4).
 python_function('oqlos/hardware/modbus_identify.py', '_is_modbus_candidate', 1, 5, 2).
@@ -984,6 +1011,8 @@ python_function('oqlos/hardware/stack_snapshot.py', '_lazy_hardware_api', 0, 1, 
 python_function('oqlos/hardware/stack_snapshot.py', '_get_modbus_preflight', 1, 5, 4).
 python_function('oqlos/hardware/stack_snapshot.py', '_build_recommended_actions', 2, 8, 5).
 python_function('oqlos/hardware/stack_snapshot.py', 'build_hardware_stack_snapshot', 1, 3, 10).
+python_function('oqlos/hardware/tic249_units.py', 'steps_per_second_to_raw', 1, 5, 3).
+python_function('oqlos/hardware/tic249_units.py', 'raw_acceleration_for_ramp', 2, 2, 1).
 python_function('oqlos/hardware/transport/manage_ops.py', 'run_manage_verb', 2, 3, 3).
 python_function('oqlos/hardware/transport/manage_ops.py', '_resolve', 1, 5, 23).
 python_function('oqlos/hardware/transport/manage_ops.py', '_usb_list', 1, 1, 2).
@@ -1449,6 +1478,7 @@ python_function('tests/firmware/test_panel_ui.py', 'panel_source', 0, 1, 2).
 python_function('tests/firmware/test_panel_ui.py', '_panel_manage_verbs', 1, 1, 2).
 python_function('tests/firmware/test_panel_ui.py', '_panel_endpoints', 1, 1, 2).
 python_function('tests/firmware/test_panel_ui.py', 'test_panel_route_serves_html', 0, 7, 2).
+python_function('tests/firmware/test_panel_ui.py', 'test_health_route_contains_redeploy_probe_token', 0, 4, 3).
 python_function('tests/firmware/test_panel_ui.py', 'test_panel_manage_verbs_are_supported', 1, 3, 4).
 python_function('tests/firmware/test_panel_ui.py', 'test_panel_only_calls_known_endpoints', 1, 4, 1).
 python_function('tests/firmware/test_panel_ui.py', 'client_with_controller', 0, 1, 6).
@@ -1492,6 +1522,8 @@ python_function('tests/firmware/test_runtime_command_payload.py', 'test_extract_
 python_function('tests/firmware/test_scanner_probe.py', 'test_scan_diagnostics_usb_ignores_crw_without_barcode_tokens', 1, 3, 2).
 python_function('tests/firmware/test_scanner_probe.py', 'test_holtek_present_from_diagnostics_usb', 1, 3, 2).
 python_function('tests/firmware/test_scanner_probe.py', 'test_enrich_scanner_adapter_adds_entry', 1, 5, 3).
+python_function('tests/firmware/test_tic249_units.py', 'test_steps_per_second_to_raw_default_cap', 0, 4, 1).
+python_function('tests/firmware/test_tic249_units.py', 'test_raw_acceleration_for_ramp', 0, 2, 1).
 python_function('tests/firmware/test_usb_diagnostics.py', 'test_list_usb_devices_structure_and_no_hang', 0, 7, 4).
 python_function('tests/firmware/test_usb_diagnostics.py', 'test_pi_system_diagnostics_has_expected_keys', 0, 5, 2).
 python_function('tests/firmware/test_usb_diagnostics.py', 'test_reset_usb_device_not_found_is_clean_failure', 0, 3, 2).
@@ -2549,6 +2581,7 @@ taskfile_task('', 'Run pyqual quality pipeline').
 taskfile_task('', 'Run pyqual with auto-fix').
 taskfile_task('', 'Generate pyqual quality report').
 taskfile_task('', 'Run pytest suite').
+taskfile_task('', 'Run frontend unit tests (node:test)').
 taskfile_task('', 'Run ruff lint check').
 taskfile_task('', 'Auto-format with ruff').
 taskfile_task('', 'Build wheel + sdist').
@@ -2653,6 +2686,8 @@ sumd_workflow_step('quality:fix', 1, 'pyqual run --fix').
 sumd_workflow('quality:report', 'manual').
 sumd_quality_workflow('quality:report', 'report').
 sumd_workflow_step('quality:report', 1, 'pyqual report').
+sumd_workflow('test:frontend', 'manual').
+sumd_workflow_step('test:frontend', 1, 'npm run test:unit').
 sumd_workflow('lint', 'manual').
 sumd_workflow_step('lint', 1, 'ruff check .').
 sumd_workflow('fmt', 'manual').

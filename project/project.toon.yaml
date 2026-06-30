@@ -1,26 +1,26 @@
-# oqlos | 2082 func | 168f | 54684L | python | 2026-06-30
+# oqlos | 2128 func | 188f | 55434L | python | 2026-06-30
 # generated in 0.00s
 
 HEALTH:
-  CC̄=4.1  critical=193 (limit:10)  dup=3  cycles=0
+  CC̄=4.0  critical=190 (limit:10)  dup=3  cycles=0
 
 ALERTS[20]:
-  !!! cc_exceeded      extractDiagnosticFailure = 69 (limit:15)
-  !!! cc_exceeded      _executeConfigureStep = 48 (limit:15)
-  !!! cc_exceeded      summarizeFuncToHardware = 47 (limit:15)
-  !!! cc_exceeded      AppConfigContext = 44 (limit:15)
-  !!! cc_exceeded      AppConfigProvider = 44 (limit:15)
+  !!! cc_exceeded      executeConfigureStep = 48 (limit:15)
   !!! cc_exceeded      RAIL_HOVER_OPEN_MS = 33 (limit:15)
   !!! cc_exceeded      RAIL_HOVER_CLOSE_MS = 33 (limit:15)
   !!! cc_exceeded      useSelectionCollapsePanel = 33 (limit:15)
-  !!! high_fan_out     AppConfigContext = 31 (limit:10)
-  !!! high_fan_out     AppConfigProvider = 31 (limit:10)
+  !!! high_fan_out     _resolve = 24 (limit:10)
+  !!! high_fan_out     build_diagnosis_report = 22 (limit:10)
+  !!! high_fan_out     RAIL_HOVER_OPEN_MS = 21 (limit:10)
+  !!! high_fan_out     RAIL_HOVER_CLOSE_MS = 21 (limit:10)
+  !!! high_fan_out     useSelectionCollapsePanel = 21 (limit:10)
+  !!! high_fan_out     FirmwareAdapter.set_peripheral = 21 (limit:10)
 
-MODULES[246] (top by size):
+MODULES[267] (top by size):
   M[oqlos/api/hardware.py] 2266L C:0 F:93 CC↑14 D:2 (python)
   M[frontend/src/i18n/dictionaries.js] 1981L C:0 F:4 CC↑5 D:0 (javascript)
+  M[docs/README.md] 1879L C:0 F:0 CC↑0 D:0 (md)
   M[frontend/src/pages/mapEditorDefaultMap.js] 1763L C:0 F:3 CC↑1 D:0 (javascript)
-  M[docs/README.md] 1760L C:0 F:0 CC↑0 D:0 (md)
   M[frontend/src/pages/MapEditor.jsx] 1490L C:0 F:109 CC↑24 D:6 (javascript)
   M[redeploy/122/migration.md] 1207L C:0 F:0 CC↑0 D:0 (md)
   M[openapi.yaml] 1035L C:0 F:0 CC↑0 D:0 (yaml)
@@ -32,21 +32,21 @@ MODULES[246] (top by size):
   M[oqlos/core/oql_parser.py] 762L C:3 F:43 CC↑14 D:2 (python)
   M[oqlos/core/interpreter.py] 690L C:1 F:48 CC↑11 D:0 (python)
   M[scripts/oql_v2_to_v4_migrate_db.py] 662L C:1 F:43 CC↑14 D:1 (python)
-  LANGS: python:153/javascript:35/md:18/yaml:13/shell:9/json:6/yml:4/typescript:3/other:2/conf:2/toml:1
+  LANGS: python:161/javascript:47/md:19/yaml:13/shell:9/json:6/yml:4/typescript:3/other:2/conf:2/toml:1
 
 HOTSPOTS[10]:
-  ★ AppConfigContext fan=31  // Orchestrates 31 calls
-  ★ AppConfigProvider fan=31  // Orchestrates 31 calls
-  ★ useUrlConfig fan=27  // Orchestrates 27 calls
   ★ _resolve fan=24  // Orchestrates 24 calls
   ★ build_diagnosis_report fan=22  // Build per-device diagnosis from an identify payload (same shape as GET /identify
+  ★ RAIL_HOVER_OPEN_MS fan=21  // Orchestrates 21 calls
+  ★ RAIL_HOVER_CLOSE_MS fan=21  // Orchestrates 21 calls
+  ★ useSelectionCollapsePanel fan=21  // Orchestrates 21 calls
 
 REFACTOR[15]:
   [1] H/L Split RAIL_HOVER_OPEN_MS (CC=33)
   [2] H/L Split RAIL_HOVER_CLOSE_MS (CC=33)
   [3] H/L Split useSelectionCollapsePanel (CC=33)
-  [4] H/L Split summarizeFuncToHardware (CC=47)
-  [5] H/L Split objName (CC=30)
+  [4] H/L Split executeConfigureStep (CC=48)
+  [5] H/H Split god module frontend/src/pages/MapEditor.jsx (1490L, 0 classes)
 
 EVOLUTION:
-  2026-06-30 CC̄=4.1 crit=193 54684L // Automated analysis
+  2026-06-30 CC̄=4.0 crit=190 55434L // Automated analysis

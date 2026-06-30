@@ -1,5 +1,5 @@
 flowchart TD
-%% generated in 0.04s
+%% generated in 0.03s
 
     %% Entry points (blue)
     classDef entry fill:#4dabf7,stroke:#1971c2,color:#fff
@@ -11,22 +11,22 @@ flowchart TD
         frontend__src__hooks__useWsStatus__client["client"]
         frontend__src__hooks__useWsStatus__onOpen["onOpen"]
         frontend__src__hooks__useWsStatus__onClose["onClose"]
-        frontend__src__hooks__useUrlConfig__DEFAULTS["DEFAULTS"]
-        frontend__src__hooks__useUrlConfig__value["value"]
-        frontend__src__hooks__useUrlConfig__userId["userId"]
-        frontend__src__hooks__useUrlConfig__role["role"]
-        frontend__src__hooks__useUrlConfig__n["n"]
-        frontend__src__hooks__useUrlConfig__font["font"]
-        frontend__src__hooks__useUrlConfig__theme["theme"]
-        frontend__src__hooks__useUrlConfig__lang["lang"]
-        frontend__src__hooks__useUrlConfig__resolved["resolved"]
-        ...["+1313 more"]
+        frontend__src__hooks__useUrlConfig__useUrlConfig["useUrlConfig"]
+        frontend__src__hooks__useUrlConfig__onPop["onPop"]
+        frontend__src__hooks__useUrlConfig__onMessage["onMessage"]
+        frontend__src__hooks__useUrlConfig__envelope["envelope"]
+        frontend__src__hooks__useUrlConfig__patch["patch"]
+        frontend__src__hooks__useParentEncoderNavigation__style["style"]
+        frontend__src__hooks__useParentEncoderNavigation__createEncoderController{{createEncoderController CC=21}}
+        frontend__src__hooks__useParentEncoderNavigation__parentEncoderActive["parentEncoderActive"]
+        frontend__src__hooks__useParentEncoderNavigation__handleEncoderCommand{{handleEncoderCommand CC=15}}
+        ...["+1347 more"]
     end
 
     subgraph Exporters
-        oqlos__api__hardware_mapping_store__MappingStore__export_text["export_text"]
         frontend__src__pages__HardwareRestart__exportText["exportText"]
+        oqlos__api__hardware_mapping_store__MappingStore__export_text["export_text"]
         oqlos__api___hw3_mapping__hardware_mapping_export_v3["hardware_mapping_export_v3"]
     end
 
-    class setup_hardware_and_run_oql__main,frontend__src__main__LocalizedApp,frontend__src__hooks__useWsStatus__useWsStatus,frontend__src__hooks__useWsStatus__client,frontend__src__hooks__useWsStatus__onOpen,frontend__src__hooks__useWsStatus__onClose,frontend__src__hooks__useUrlConfig__DEFAULTS,frontend__src__hooks__useUrlConfig__value,frontend__src__hooks__useUrlConfig__userId,frontend__src__hooks__useUrlConfig__role entry
+    class setup_hardware_and_run_oql__main,frontend__src__main__LocalizedApp,frontend__src__hooks__useWsStatus__useWsStatus,frontend__src__hooks__useWsStatus__client,frontend__src__hooks__useWsStatus__onOpen,frontend__src__hooks__useWsStatus__onClose,frontend__src__hooks__useUrlConfig__useUrlConfig,frontend__src__hooks__useUrlConfig__onPop,frontend__src__hooks__useUrlConfig__onMessage,frontend__src__hooks__useUrlConfig__envelope entry

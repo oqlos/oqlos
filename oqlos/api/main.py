@@ -222,8 +222,9 @@ async def editor_page():
 async def panel_page():
     return _serve_static_html("static/panel.html", "OqlOS Panel", "panel.html not found.")
 
-# ---- Hardware UI SPA moved in from c2004 connect-scenario (hardware-status,
-# hardware-demo, hardware-restart, map-editor). Built with Vite (base=/ui/).
+# ---- Hardware/file UI moved in from c2004 connect-scenario (hardware-status,
+# hardware-demo, hardware-restart, map-editor, scenario-files, func-editor).
+# The React hardware UI is built with Vite (base=/ui/).
 # Hardware actuation flows through the OqlOS-owned /api/v3/hardware/* compatibility
 # router, backed by the same gateway/plugin runtime as /api/v1/hardware/*.
 _UI_DIST = Path(__file__).resolve().parents[2] / "frontend" / "dist"
@@ -252,6 +253,18 @@ async def hardware_restart_alias(request: Request):
 @app.get("/map-editor")
 async def map_editor_alias(request: Request):
     return RedirectResponse(_with_query("/ui/map-editor", request))
+
+
+@app.get("/scenario-files")
+@app.get("/scenario-files/{full_path:path}")
+async def scenario_files_alias(request: Request):
+    return RedirectResponse(_with_query("/editor", request))
+
+
+@app.get("/func-editor")
+@app.get("/func-editor/{full_path:path}")
+async def func_editor_alias(request: Request):
+    return RedirectResponse(_with_query("/editor", request))
 
 if (_UI_DIST / "assets").is_dir():
     app.mount("/ui/assets", StaticFiles(directory=_UI_DIST / "assets"), name="ui-assets")

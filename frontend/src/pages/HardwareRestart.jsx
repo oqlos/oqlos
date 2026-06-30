@@ -4,14 +4,16 @@ import SharedNav from "../components/SharedNav";
 import { HardwareApi, formatHardwareApiError } from "../api/hardwareApi";
 import { useI18n } from "../i18n/I18nProvider";
 import { rem } from "../utils/designRem.js";
+import { isSkippablePumpOffWizardStep } from "../utils/hardware-wizard-steps.js";
 import {
-  isOptionalWizardStep,
-  isPumpOffUnavailableError,
-  isSkippablePumpOffWizardStep,
-  selectWizardProbeCandidate,
-} from "../utils/hardware-wizard-steps.js";
+  executeConfigureStep,
+  executeDiagnosticStep,
+  executeFinalDiagnoseStep,
+  executePeripheralStatusStep,
+} from "../utils/hardware-restart-wizard-steps.js";
 import { hardwareRestartDocsUrl } from "../utils/hardware-restart-docs.js";
 import { isOqlosUnreachableError } from "../utils/hardware-wizard-plan.js";
+import { runApiWithRetry } from "../utils/hardware-api-retry.js";
 
 function timestamp() {
   return new Date().toISOString();
@@ -25,38 +27,6 @@ function txtDownload(name, text) {
   a.download = name;
   a.click();
   URL.revokeObjectURL(url);
-}
-
-async function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-function wizardStepSerialPort(plan, step) {
-  return (
-    step?.serial_port
-    || step?.program_target?.serial_port
-    || (step?.program_target?.module_role === "modbus-adc" ? plan?.adc_serial_port : null)
-    || plan?.io_serial_port
-    || plan?.serial_port
-    || ""
-  );
-}
-
-function buildWizardProbePayload(plan, serialPort, moduleRole) {
-  const targetBaud = Number(plan?.target_baudrate || 9600);
-  const targetParity = String(plan?.target_parity || "N");
-  const targetIds = Array.isArray(plan?.target_ids) ? plan.target_ids.map(Number) : [1, 2];
-  const baudrates = [targetBaud, 19200].filter((v, i, a) => a.indexOf(v) === i);
-  const parities = [targetParity];
-  const device_ids = [...new Set([...targetIds, 1, 2, 3])];
-  return {
-    serial_port: serialPort,
-    baudrates,
-    parities,
-    device_ids,
-    ...(moduleRole ? { module_role: moduleRole } : {}),
-    ...(plan?.modbus_topology ? { modbus_topology: plan.modbus_topology } : {}),
-  };
 }
 
 export default function HardwareRestart() {
@@ -181,149 +151,24 @@ export default function HardwareRestart() {
     let payload = null;
     let ok = false;
     const apiContext = { logContext: currentStep.step };
+    const runRetry = (label, action, opts) => runApiWithRetry(label, action, { log, t, ...opts });
+    const ctx = { currentStep, plan, confirmIsolated, confirmErrorKey, isSeparateAdapters, serialPort, refreshRuntimeStatus, t, runRetry, log, apiContext };
     try {
       log(`START ${currentStep.step}`);
       log(currentStep.instruction || "Brak instrukcji.");
-      const runWithRetry = async (label, action, { allowRetry = true, retryDelaysMs = [900, 1600] } = {}) => {
-        let attempt = 0;
-        while (true) {
-          try {
-            return await action();
-          } catch (err) {
-            const message = formatHardwareApiError(err, "Blad wywolania API.");
-            const retryable =
-              allowRetry
-              && (Number(err?.status) === 502 || Number(err?.status) === 503 || Number(err?.status) === 504);
-            if (!retryable || attempt >= retryDelaysMs.length) {
-              if (!allowRetry && Number(err?.status) === 502) {
-                const gatewayErr = new Error(
-                  `${message} (${t("hardwareRestart.probeNoQuickRetry")})`,
-                );
-                gatewayErr.status = err?.status;
-                gatewayErr.body = err?.body;
-                throw gatewayErr;
-              }
-              throw err;
-            }
-            const waitMs = retryDelaysMs[attempt];
-            log(`${label}: OqlOS chwilowo niedostepny (${message}), ponawiam za ${waitMs} ms...`);
-            await sleep(waitMs);
-            attempt += 1;
-          }
-        }
-      };
-
       if (currentStep.step.startsWith("configure-")) {
-        if (!confirmIsolated) {
-          throw new Error(t(confirmErrorKey));
-        }
-
-        const target = currentStep.program_target || {};
-        const stepPort = wizardStepSerialPort(plan, currentStep);
-        const role = String(target.module_role || "");
-        const probePayload = buildWizardProbePayload(plan, stepPort, role);
-        log(`Probe isolated module on ${stepPort} (backend zwalnia port RS485 automatycznie)...`);
-        const probe = await runWithRetry(
-          "Probe",
-          () => HardwareApi.probeModbusWizardIsolated(probePayload, apiContext),
-          { allowRetry: false },
-        );
-        log(`Probe result ok=${String(Boolean(probe?.ok))}, candidates=${(probe?.candidates || []).length}, runtime=${probe?.runtime_control || probe?.diagnostics?.runtime_control || "-"}`);
-        if (probe?.diagnostics?.runtime_control_warning) {
-          log(`WARN: ${probe.diagnostics.runtime_control_warning}`);
-        }
-
-        const candidates = Array.isArray(probe?.candidates) ? probe.candidates : [];
-        const selection = selectWizardProbeCandidate(candidates, {
-          moduleRole: role,
-          newDeviceId: Number(target.new_device_id),
-        });
-        if (selection.error === "multiple_modbus_ids") {
-          throw new Error(
-            t("hardwareRestart.multipleModbusIdsError", {
-              ids: selection.deviceIds.join(", "),
-            }),
-          );
-        }
-        const selectedCandidate = selection.candidate || null;
-        if (!selectedCandidate) {
-          const hint =
-            probe?.diagnostics?.failure_reason
-            || (isSeparateAdapters
-              ? t("hardwareRestart.probeFailSeparateAdapters")
-              : "Sprawdz zasilanie, okablowanie A/B i izolacje magistrali.");
-          throw new Error(`${t("hardwareRestart.probeNoCandidate")} ${hint}`);
-        }
-        const currentDeviceId = Number(selectedCandidate.device_id || target.new_device_id || 1);
-
-        const programPayload = {
-          serial_port: stepPort,
-          current_device_id: currentDeviceId,
-          new_device_id: Number(target.new_device_id || currentDeviceId),
-          new_baudrate: Number(target.new_baudrate || selectedCandidate.baudrate || plan?.target_baudrate || 9600),
-          new_parity: String(target.new_parity || selectedCandidate.parity || plan?.target_parity || "N"),
-          confirm_isolated: true,
-        };
-        log(
-          `Program module role=${role} current_id=${programPayload.current_device_id} -> new_id=${programPayload.new_device_id}, uart=${programPayload.new_baudrate}/${programPayload.new_parity}`,
-        );
-        const program = await runWithRetry(
-          "Program",
-          () => HardwareApi.programModbusWizardIsolated(programPayload, apiContext),
-          { allowRetry: false },
-        );
-        log(`Program result ok=${String(Boolean(program?.ok))} verified=${String(Boolean(program?.verified))} runtime=${program?.runtime_control || "-"}`);
-        if (program?.writes?.skipped) {
-          log(program?.note || "INFO: modul juz ma docelowe ID/UART — pominieto zapis provisioning.");
-        }
-        payload = { step: currentStep, probe, program };
-        ok = Boolean(program?.ok) || Boolean(program?.verified);
-        await refreshRuntimeStatus(stepPort || serialPort);
+        ({ ok, payload } = await executeConfigureStep(ctx));
       } else if (currentStep.action?.type === "diagnostic") {
-        const { peripheral_id: peripheralId, command, args = {} } = currentStep.action;
-        log(`Diagnostic ${peripheralId}.${command}...`);
-        const diagnostic = await runWithRetry("Diagnostic", () =>
-          HardwareApi.runDiagnosticCommand({ peripheral_id: peripheralId, command, args }, apiContext),
-        );
-        log(`Diagnostic result ok=${String(Boolean(diagnostic?.ok))}`);
-        payload = { step: currentStep, diagnostic };
-        ok = Boolean(diagnostic?.ok);
-        if (!ok && isOptionalWizardStep(currentStep)) {
-          log(
-            `WARN: krok opcjonalny (${currentStep.step}) — RTC/piRTC tylko na RPi; kontynuuję mimo błędu.`,
-          );
-        }
-        if (!ok && peripheralId === "motor-dri0050" && isPumpOffUnavailableError(diagnostic?.error)) {
-          log(t("hardwareRestart.pumpErrorRemedy"));
-        }
+        ({ ok, payload } = await executeDiagnosticStep(ctx));
       } else if (currentStep.action?.type === "peripheral-status") {
-        const { peripheral_id: peripheralId } = currentStep.action;
-        log(`Peripheral status ${peripheralId}...`);
-        const status = await runWithRetry("Status", () => HardwareApi.peripheralStatus(peripheralId, apiContext));
-        log(`Status result ok=${String(Boolean(status?.ok))}`);
-        payload = { step: currentStep, status };
-        ok = Boolean(status?.ok);
+        ({ ok, payload } = await executePeripheralStatusStep(ctx));
       } else {
-        log("Run final waveshare diagnose with all modules connected...");
-        log(t("hardwareRestart.finalDiagnoseSlowHint"));
-        const diagnose = await runWithRetry(
-          "Diagnose",
-          () => HardwareApi.getModbusWaveshareDiagnose(apiContext),
-          { retryDelaysMs: [3000, 15000, 45000] },
-        );
-        if (diagnose?.runtime_control) {
-          log(`Diagnose runtime_control=${diagnose.runtime_control}`);
-        }
-        log(`Final diagnose ok=${String(Boolean(diagnose?.ok))}`);
-        payload = { step: currentStep, diagnose };
-        ok = Boolean(diagnose?.ok);
+        ({ ok, payload } = await executeFinalDiagnoseStep(ctx));
       }
     } catch (err) {
       const message = formatHardwareApiError(err, "Krok zakonczony bledem.");
       log(`ERROR: ${message}`);
-      if (err?.commandResult) {
-        log(`Diagnostic payload: ${JSON.stringify(err.commandResult)}`);
-      }
+      if (err?.commandResult) log(`Diagnostic payload: ${JSON.stringify(err.commandResult)}`);
       const diagnosticPayload = err?.commandResult ?? null;
       payload = {
         step: currentStep,
@@ -338,9 +183,7 @@ export default function HardwareRestart() {
       if (!ok && optionalStep) {
         optionalSkip = true;
         advanceOk = true;
-        log(
-          `WARN: krok opcjonalny (${currentStep.step}) — RTC/piRTC tylko na RPi; kontynuuję mimo błędu.`,
-        );
+        log(`WARN: krok opcjonalny (${currentStep.step}) — RTC/piRTC tylko na RPi; kontynuuję mimo błędu.`);
       }
       setStepResults((prev) => ({
         ...prev,
@@ -351,9 +194,7 @@ export default function HardwareRestart() {
           ...(optionalSkip ? { optional_skip: true, attempted_ok: ok } : {}),
         },
       }));
-      if (advanceOk && currentStepIndex < steps.length - 1) {
-        setCurrentStepIndex((prev) => prev + 1);
-      }
+      if (advanceOk && currentStepIndex < steps.length - 1) setCurrentStepIndex((prev) => prev + 1);
       setStepLog((prev) => ({ ...prev, ok: advanceOk, payload }));
       setBusy(false);
     }

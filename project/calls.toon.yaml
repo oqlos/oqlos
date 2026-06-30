@@ -1,7 +1,7 @@
 # code2llm call graph | /home/tom/github/oqlos/oqlos
 # generated in 0.23s
-# nodes: 428 | edges: 500 | modules: 43
-# CC̄=4.1
+# nodes: 426 | edges: 500 | modules: 43
+# CC̄=4.0
 
 HUBS[20]:
   examples.hardware.doctor-workflow.print
@@ -10,12 +10,12 @@ HUBS[20]:
     CC=8  in:43  out:3  total:46
   frontend.src.utils.hardware-wizard-steps.list
     CC=2  in:40  out:0  total:40
+  oqlos.core._oql_adapter.oql_doc_to_cql
+    CC=12  in:2  out:30  total:32
   oqlos.core.motor2_runtime.normalize_motor2_runtime_config
     CC=12  in:1  out:29  total:30
   oqlos.core.executor._safe_resolve
     CC=14  in:7  out:21  total:28
-  frontend.src.hooks.useUrlConfig.useUrlConfig
-    CC=18  in:0  out:27  total:27
   setup_hardware_and_run_oql.run_oql_scenario
     CC=8  in:1  out:24  total:25
   frontend.src.pages.MapEditor.applyMapMutation
@@ -24,46 +24,62 @@ HUBS[20]:
     CC=14  in:3  out:21  total:24
   oqlos.core.parser.parse_dsl_to_goal_with_issues
     CC=13  in:3  out:21  total:24
-  oqlos.core._action_motor2._motor2_build_plan
-    CC=12  in:1  out:22  total:23
   oqlos.core._line_parsers._parse_if_condition
     CC=9  in:1  out:22  total:23
-  oqlos.tools.hardware_diagnose.doctor._analyze_modbus_adc_config
-    CC=12  in:1  out:22  total:23
   oqlos.core._action_motor2._try_exec_motor2_set
     CC=13  in:1  out:22  total:23
+  oqlos.core._action_motor2._motor2_build_plan
+    CC=12  in:1  out:22  total:23
   oqlos.core._line_parsers._parse_set_line
     CC=12  in:1  out:21  total:22
+  frontend.src.utils.useSelectionCollapsePanel.useSelectionCollapsePanel
+    CC=33  in:0  out:21  total:21
   frontend.src.utils.useSelectionCollapsePanel.RAIL_HOVER_OPEN_MS
     CC=33  in:0  out:21  total:21
   frontend.src.utils.useSelectionCollapsePanel.RAIL_HOVER_CLOSE_MS
     CC=33  in:0  out:21  total:21
-  oqlos.hardware.config_paths.resolve_oqlos_config_path
-    CC=6  in:8  out:13  total:21
-  oqlos.core.base.VariableStore.set
-    CC=4  in:19  out:2  total:21
-  oqlos.core._cql_tree_builder._parse_goal_line
-    CC=12  in:1  out:20  total:21
+  oqlos.core._func_resolver._collect_function_definitions
+    CC=13  in:1  out:19  total:20
+  frontend.src.api.wsClient.WsCqrsClient.super
+    CC=1  in:18  out:1  total:19
+  oqlos.core.oql_parser.tokenize
+    CC=13  in:5  out:14  total:19
 
 MODULES:
   examples.hardware.doctor-workflow  [1 funcs]
     print  CC=0  out:0
+  frontend.src.api.hardware-api-errors  [4 funcs]
+    describeDetail  CC=13  out:6
+    extractErrorPayload  CC=4  out:1
+    formatHardwareApiError  CC=8  out:2
+    tryParseJson  CC=3  out:1
   frontend.src.api.hardware-api-log  [4 funcs]
     isHardwareWizardPath  CC=2  out:3
     keys  CC=2  out:0
     logHardwareApiEvent  CC=6  out:4
     summarizeHardwareApiBody  CC=11  out:5
-  frontend.src.api.hardwareApi  [17 funcs]
-    describeDetail  CC=13  out:6
-    durationMs  CC=8  out:5
-    extractDiagnosticFailure  CC=69  out:10
-    extractErrorPayload  CC=4  out:1
-    formatHardwareApiError  CC=8  out:2
-    get  CC=1  out:1
+  frontend.src.api.hardware-diagnostic-failure  [6 funcs]
+    extractDiagnosticFailure  CC=13  out:6
+    failureFromNestedOk  CC=17  out:5
+    failureFromOkFalsePayload  CC=19  out:5
+    failureFromSuccessFalse  CC=14  out:3
+    firstActionableError  CC=3  out:4
+    resultData  CC=4  out:0
+  frontend.src.api.hardware-tic249-status  [3 funcs]
+    isIdempotentDiagnosticSuccess  CC=3  out:2
     isIdempotentTic249Deenergized  CC=12  out:2
+    tic249ResultStatus  CC=8  out:2
+  frontend.src.api.hardwareApi  [10 funcs]
+    API_BASE  CC=17  out:13
+    durationMs  CC=8  out:5
+    get  CC=1  out:1
     mode  CC=1  out:1
-    nestedOk  CC=6  out:3
     normalized  CC=1  out:1
+    post  CC=1  out:1
+    put  CC=1  out:1
+    request  CC=17  out:13
+    serialPort  CC=2  out:1
+    text  CC=2  out:0
   frontend.src.api.wsClient  [15 funcs]
     _handleMessage  CC=13  out:10
     _request  CC=3  out:12
@@ -75,28 +91,20 @@ MODULES:
     delay  CC=2  out:2
     pending  CC=4  out:4
     query  CC=1  out:1
-  frontend.src.context.AppConfigProvider  [10 funcs]
+  frontend.src.hooks.useParentEncoderNavigation  [14 funcs]
     all  CC=6  out:2
-    getInteractiveItems  CC=6  out:6
+    controller  CC=3  out:2
+    createEncoderController  CC=21  out:10
+    getInteractiveItems  CC=6  out:4
     handleEncoderCommand  CC=15  out:7
-    items  CC=11  out:6
+    items  CC=7  out:4
     onKeyDown  CC=7  out:3
     onMessage  CC=3  out:2
-    onWheel  CC=6  out:4
-    parseParentEnvelope  CC=6  out:0
-    raw  CC=2  out:1
-    removeHighlights  CC=1  out:3
-  frontend.src.hooks.useUrlConfig  [25 funcs]
-    applyParentContextPayload  CC=5  out:5
-    base  CC=3  out:3
-    ctx  CC=5  out:8
-    envelope  CC=9  out:8
-    fromUser  CC=2  out:2
-    incomingFont  CC=2  out:2
-    incomingLang  CC=2  out:2
-    incomingTheme  CC=2  out:2
-    mergeParentContext  CC=16  out:5
-    mergeParentSearchIntoChildUrl  CC=6  out:10
+    onWheel  CC=6  out:5
+    parentEncoderActive  CC=15  out:7
+  frontend.src.hooks.useUrlConfig  [2 funcs]
+    notifyParentChildReady  CC=4  out:5
+    useUrlConfig  CC=8  out:15
   frontend.src.i18n.I18nProvider  [5 funcs]
     I18nProvider  CC=13  out:8
     dict  CC=8  out:3
@@ -114,8 +122,17 @@ MODULES:
     onNoteClick  CC=4  out:9
     playMelody  CC=9  out:11
     playNote  CC=5  out:7
-  frontend.src.pages.HardwareRestart  [1 funcs]
-    probe  CC=1  out:2
+  frontend.src.pages.HardwareRestart  [23 funcs]
+    advanceOk  CC=3  out:2
+    canRunCurrentStep  CC=1  out:4
+    confirmErrorKey  CC=1  out:4
+    confirmLabelKey  CC=1  out:4
+    currentStep  CC=1  out:4
+    isConfigureStep  CC=1  out:4
+    isSeparateAdapters  CC=1  out:4
+    loadPlan  CC=18  out:11
+    log  CC=1  out:3
+    message  CC=1  out:1
   frontend.src.pages.MapEditor  [49 funcs]
     addAction  CC=2  out:6
     addFunc  CC=2  out:6
@@ -135,6 +152,13 @@ MODULES:
     loggedRef  CC=2  out:4
     prependHardwareActivityLogEntry  CC=1  out:2
     usePageOpenedLog  CC=2  out:5
+  frontend.src.utils.hardware-api-retry  [2 funcs]
+    attempt  CC=14  out:9
+    sleep  CC=1  out:2
+  frontend.src.utils.hardware-restart-wizard-steps  [3 funcs]
+    buildWizardProbePayload  CC=10  out:7
+    executeConfigureStep  CC=48  out:15
+    wizardStepSerialPort  CC=14  out:0
   frontend.src.utils.hardware-wizard-steps  [1 funcs]
     list  CC=2  out:0
   frontend.src.utils.hardwareEventStream  [9 funcs]
@@ -147,6 +171,13 @@ MODULES:
     peripheralId  CC=3  out:1
     result  CC=3  out:1
     timestamp  CC=3  out:1
+  frontend.src.utils.mapEditorFuncHardwareSummary  [6 funcs]
+    apiBindingHint  CC=12  out:0
+    objectMap  CC=3  out:2
+    resolveNamedActionHardwareHint  CC=7  out:4
+    resolveObjectActionHardwareHint  CC=6  out:2
+    summarizeFuncToHardware  CC=17  out:6
+    uniqueHints  CC=5  out:5
   frontend.src.utils.rbac.policy  [13 funcs]
     canConnectRoleAccessPath  CC=2  out:3
     canHostRoleAccessPath  CC=2  out:3
@@ -158,6 +189,17 @@ MODULES:
     normalizeConnectRole  CC=2  out:1
     normalizeHostRole  CC=2  out:1
     normalizePath  CC=6  out:4
+  frontend.src.utils.url-embed-config  [21 funcs]
+    applyParentContextPayload  CC=5  out:5
+    applyUrlEmbedPatch  CC=7  out:7
+    base  CC=3  out:3
+    fromUser  CC=4  out:3
+    href  CC=4  out:3
+    mergeParentContext  CC=7  out:4
+    mergeParentSearchIntoChildUrl  CC=6  out:10
+    nextHref  CC=1  out:1
+    parentSearch  CC=4  out:3
+    parseAppearanceParams  CC=9  out:4
   frontend.src.utils.useSelectionCollapsePanel  [16 funcs]
     RAIL_HOVER_CLOSE_MS  CC=33  out:21
     RAIL_HOVER_OPEN_MS  CC=33  out:21
@@ -196,14 +238,9 @@ MODULES:
     _try_save  CC=5  out:7
     _try_set  CC=2  out:6
     _try_val  CC=2  out:4
-  oqlos.core._cql_tree_builder  [7 funcs]
-    _ensure_goal_for_step  CC=4  out:3
-    _ensure_step_for_actions  CC=3  out:2
+  oqlos.core._cql_tree_builder  [2 funcs]
     _parse_action_line  CC=4  out:3
-    _parse_goal_line  CC=12  out:20
     _parse_metadata_kv  CC=6  out:5
-    _parse_scenario_line  CC=3  out:6
-    _parse_step_line  CC=3  out:5
   oqlos.core._dsl_helpers  [12 funcs]
     _looks_like_lung_object  CC=1  out:2
     _looks_like_pump_object  CC=1  out:2
@@ -220,7 +257,7 @@ MODULES:
     _extract_func_name  CC=7  out:7
     _guard_recursion  CC=3  out:5
     _parse_func_call  CC=5  out:4
-  oqlos.core._interpreter_actions  [27 funcs]
+  oqlos.core._interpreter_actions  [30 funcs]
     _assert_json  CC=6  out:9
     _assert_sensor  CC=4  out:9
     _assert_status  CC=5  out:7
@@ -241,29 +278,25 @@ MODULES:
     _set_lung_step  CC=4  out:3
     _set_pump_step  CC=4  out:3
     _set_valve_step  CC=4  out:4
-  oqlos.core._oql_adapter  [2 funcs]
-    is_flat_oql  CC=8  out:13
-    parse_flat_oql  CC=1  out:2
-  oqlos.core._sensor_evaluator  [2 funcs]
-    __init__  CC=3  out:2
-    collect_sensor_constraints  CC=10  out:5
-  oqlos.core._value_normalizers  [1 funcs]
-    coerce_float  CC=5  out:9
-  oqlos.core.base  [6 funcs]
+  oqlos.core._oql_adapter  [15 funcs]
+    register  CC=1  out:1
+    _cmd_to_actions  CC=2  out:3
+    _fmt_value  CC=2  out:1
+    _load_includes  CC=12  out:15
+    _lower_call  CC=6  out:10
+    _lower_max  CC=1  out:3
+    _lower_min  CC=1  out:3
+    _lower_set  CC=1  out:3
+    _parse_macro_line  CC=8  out:10
+    _resolve_include  CC=6  out:8
+  oqlos.core.base  [5 funcs]
     send_event  CC=4  out:7
     emit  CC=5  out:3
     output_yaml  CC=4  out:2
     __init__  CC=2  out:1
     all  CC=3  out:3
-    set  CC=4  out:2
-  oqlos.core.cql_parser  [9 funcs]
-    _handle_goal  CC=3  out:5
-    _handle_scenario  CC=2  out:3
-    _handle_step  CC=2  out:4
-    _try_hierarchy  CC=7  out:6
+  oqlos.core.cql_parser  [3 funcs]
     _try_top_level  CC=2  out:1
-    _collect_all_goals  CC=2  out:2
-    _validate_intervals  CC=6  out:1
     parse_cql  CC=2  out:6
     validate_cql  CC=5  out:5
   oqlos.core.executor  [6 funcs]
@@ -273,6 +306,12 @@ MODULES:
     _resolve_name_or_attr  CC=4  out:6
     _safe_resolve  CC=14  out:21
     safe_eval_condition  CC=2  out:5
+  oqlos.core.interpreter  [5 funcs]
+    __init__  CC=1  out:5
+    _build_script_result  CC=2  out:7
+    _exec_flat_action  CC=6  out:6
+    execute  CC=4  out:9
+    parse  CC=3  out:5
   oqlos.core.motor2_runtime  [11 funcs]
     _coerce_int  CC=3  out:6
     _compute_motor2_cycles  CC=3  out:7
@@ -314,38 +353,6 @@ MODULES:
     _eval_node  CC=2  out:5
     _eval_unary_op  CC=3  out:5
     safe_eval  CC=3  out:4
-  oqlos.hardware.config_paths  [1 funcs]
-    resolve_oqlos_config_path  CC=6  out:13
-  oqlos.hardware.health_status  [1 funcs]
-    health_status_is_ok  CC=11  out:9
-  oqlos.tools.hardware_diagnose.discovery  [2 funcs]
-    list_i2c_buses  CC=1  out:2
-    list_usb_serial_devices  CC=7  out:9
-  oqlos.tools.hardware_diagnose.doctor  [31 funcs]
-    _adapter_health_status  CC=3  out:1
-    _add_issue  CC=2  out:1
-    _analyze_firmware_access  CC=7  out:11
-    _analyze_modbus_adc_config  CC=12  out:22
-    _analyze_modbus_config  CC=11  out:20
-    _analyze_serial_port_owners  CC=13  out:19
-    _canonical_device_path  CC=2  out:3
-    _check_firmware_adapters  CC=7  out:9
-    _check_firmware_health_error  CC=3  out:2
-    _check_firmware_mode  CC=3  out:4
-  oqlos.tools.hardware_diagnose.health  [2 funcs]
-    check_firmware_health  CC=1  out:1
-    check_firmware_identify  CC=1  out:1
-  oqlos.tools.plugin_cli  [12 funcs]
-    _default_config_path  CC=1  out:2
-    _load_config_file  CC=4  out:16
-    cmd_capabilities  CC=2  out:6
-    cmd_connect  CC=4  out:6
-    cmd_disconnect  CC=2  out:4
-    cmd_execute  CC=3  out:7
-    cmd_health  CC=3  out:8
-    cmd_list  CC=3  out:9
-    cmd_peripherals  CC=8  out:16
-    cmd_reload  CC=4  out:10
   setup_hardware_and_run_oql  [6 funcs]
     detect_serial_devices  CC=12  out:7
     generate_env_content  CC=2  out:1
@@ -361,42 +368,25 @@ EDGES:
   setup_hardware_and_run_oql.load_env_file → examples.hardware.doctor-workflow.print
   setup_hardware_and_run_oql.run_oql_scenario → examples.hardware.doctor-workflow.print
   setup_hardware_and_run_oql.main → setup_hardware_and_run_oql.run_oql_scenario
-  frontend.src.hooks.useUrlConfig.parseAppearanceParams → frontend.src.hooks.useUrlConfig.resolveViewportWidthPx
-  frontend.src.hooks.useUrlConfig.parseIdentityParams → frontend.src.hooks.useUrlConfig.resolveUserIdFromSearchParams
-  frontend.src.hooks.useUrlConfig.parseParams → frontend.src.hooks.useUrlConfig.parseAppearanceParams
-  frontend.src.hooks.useUrlConfig.parseParams → frontend.src.hooks.useUrlConfig.parseIdentityParams
-  frontend.src.hooks.useUrlConfig.parseParams → frontend.src.hooks.useUrlConfig.parseNavigationParams
-  frontend.src.hooks.useUrlConfig.parseUrlEmbedConfig → frontend.src.hooks.useUrlConfig.parseParams
-  frontend.src.hooks.useUrlConfig.mergeParentContext → frontend.src.hooks.useUrlConfig.resolveUserFromContextPayload
-  frontend.src.hooks.useUrlConfig.mergeParentContext → frontend.src.hooks.useUrlConfig.resolveViewportWidthPx
-  frontend.src.hooks.useUrlConfig.incomingFont → frontend.src.hooks.useUrlConfig.resolveViewportWidthPx
-  frontend.src.hooks.useUrlConfig.incomingLang → frontend.src.hooks.useUrlConfig.resolveViewportWidthPx
-  frontend.src.hooks.useUrlConfig.incomingTheme → frontend.src.hooks.useUrlConfig.resolveViewportWidthPx
-  frontend.src.hooks.useUrlConfig.fromUser → frontend.src.hooks.useUrlConfig.resolveViewportWidthPx
-  frontend.src.hooks.useUrlConfig.nextUser → frontend.src.hooks.useUrlConfig.resolveViewportWidthPx
-  frontend.src.hooks.useUrlConfig.roleCandidate → frontend.src.hooks.useUrlConfig.resolveViewportWidthPx
-  frontend.src.hooks.useUrlConfig.applyParentContextPayload → frontend.src.hooks.useUrlConfig.mergeParentSearchIntoChildUrl
-  frontend.src.hooks.useUrlConfig.applyParentContextPayload → frontend.src.hooks.useUrlConfig.parseParams
-  frontend.src.hooks.useUrlConfig.applyParentContextPayload → frontend.src.hooks.useUrlConfig.mergeParentContext
-  frontend.src.hooks.useUrlConfig.search → frontend.src.hooks.useUrlConfig.mergeParentSearchIntoChildUrl
-  frontend.src.hooks.useUrlConfig.search → frontend.src.hooks.useUrlConfig.applyParentContextPayload
-  frontend.src.hooks.useUrlConfig.base → frontend.src.hooks.useUrlConfig.mergeParentSearchIntoChildUrl
-  frontend.src.hooks.useUrlConfig.base → frontend.src.hooks.useUrlConfig.parseParams
-  frontend.src.hooks.useUrlConfig.useUrlConfig → frontend.src.hooks.useUrlConfig.parseParams
-  frontend.src.hooks.useUrlConfig.useUrlConfig → frontend.src.hooks.useUrlConfig.mergeParentSearchIntoChildUrl
-  frontend.src.hooks.useUrlConfig.onPop → frontend.src.hooks.useUrlConfig.mergeParentSearchIntoChildUrl
-  frontend.src.hooks.useUrlConfig.onPop → frontend.src.hooks.useUrlConfig.applyParentContextPayload
-  frontend.src.hooks.useUrlConfig.onPop → frontend.src.hooks.useUrlConfig.mergeParentContext
-  frontend.src.hooks.useUrlConfig.onMessage → frontend.src.hooks.useUrlConfig.mergeParentSearchIntoChildUrl
-  frontend.src.hooks.useUrlConfig.onMessage → frontend.src.hooks.useUrlConfig.applyParentContextPayload
-  frontend.src.hooks.useUrlConfig.onMessage → frontend.src.hooks.useUrlConfig.mergeParentContext
-  frontend.src.hooks.useUrlConfig.envelope → frontend.src.hooks.useUrlConfig.mergeParentSearchIntoChildUrl
-  frontend.src.hooks.useUrlConfig.envelope → frontend.src.hooks.useUrlConfig.applyParentContextPayload
-  frontend.src.hooks.useUrlConfig.envelope → frontend.src.hooks.useUrlConfig.mergeParentContext
-  frontend.src.hooks.useUrlConfig.ctx → frontend.src.hooks.useUrlConfig.mergeParentSearchIntoChildUrl
-  frontend.src.hooks.useUrlConfig.ctx → frontend.src.hooks.useUrlConfig.applyParentContextPayload
-  frontend.src.hooks.useUrlConfig.ctx → frontend.src.hooks.useUrlConfig.mergeParentContext
-  frontend.src.hooks.useUrlConfig.patch → frontend.src.hooks.useUrlConfig.parseParams
+  frontend.src.hooks.useUrlConfig.useUrlConfig → frontend.src.hooks.useUrlConfig.notifyParentChildReady
+  frontend.src.hooks.useParentEncoderNavigation.createEncoderController → frontend.src.hooks.useParentEncoderNavigation.removeHighlights
+  frontend.src.hooks.useParentEncoderNavigation.createEncoderController → frontend.src.hooks.useParentEncoderNavigation.getInteractiveItems
+  frontend.src.hooks.useParentEncoderNavigation.createEncoderController → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
+  frontend.src.hooks.useParentEncoderNavigation.parentEncoderActive → frontend.src.hooks.useParentEncoderNavigation.removeHighlights
+  frontend.src.hooks.useParentEncoderNavigation.parentEncoderActive → frontend.src.hooks.useParentEncoderNavigation.getInteractiveItems
+  frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand → frontend.src.hooks.useParentEncoderNavigation.removeHighlights
+  frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand → frontend.src.hooks.useParentEncoderNavigation.getInteractiveItems
+  frontend.src.hooks.useParentEncoderNavigation.items → frontend.src.hooks.useParentEncoderNavigation.removeHighlights
+  frontend.src.hooks.useParentEncoderNavigation.onKeyDown → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
+  frontend.src.hooks.useParentEncoderNavigation.useParentEncoderNavigation → frontend.src.hooks.useParentEncoderNavigation.createEncoderController
+  frontend.src.hooks.useParentEncoderNavigation.useParentEncoderNavigation → frontend.src.hooks.useParentEncoderNavigation.parseParentEncoderEnvelope
+  frontend.src.hooks.useParentEncoderNavigation.useParentEncoderNavigation → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
+  frontend.src.hooks.useParentEncoderNavigation.controller → frontend.src.hooks.useParentEncoderNavigation.parseParentEncoderEnvelope
+  frontend.src.hooks.useParentEncoderNavigation.controller → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
+  frontend.src.hooks.useParentEncoderNavigation.onMessage → frontend.src.hooks.useParentEncoderNavigation.parseParentEncoderEnvelope
+  frontend.src.hooks.useParentEncoderNavigation.onMessage → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
+  frontend.src.hooks.useParentEncoderNavigation.onWheel → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
+  frontend.src.hooks.useParentEncoderNavigation.raw → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
   frontend.src.pages.MapEditor.fillMissingFields → frontend.src.pages.MapEditor.isPlainObject
   frontend.src.pages.MapEditor.fillMissingFields → frontend.src.pages.MapEditor.cloneValue
   frontend.src.pages.MapEditor.ensureRequiredDefaultMappings → frontend.src.pages.MapEditor.ensureMapShape
@@ -405,3 +395,20 @@ EDGES:
   frontend.src.pages.MapEditor.defaultMotor2 → frontend.src.pages.MapEditor.fillMissingFields
   frontend.src.pages.MapEditor.defaultMotor2 → frontend.src.pages.MapEditor.isPlainObject
   frontend.src.pages.MapEditor.defaultParam → frontend.src.pages.MapEditor.fillMissingFields
+  frontend.src.pages.MapEditor.defaultParam → frontend.src.pages.MapEditor.isPlainObject
+  frontend.src.pages.MapEditor.readIntegrationMeta → frontend.src.pages.MapEditor.firstBindingFromObjectMapping
+  frontend.src.pages.MapEditor.ensureMapShape → frontend.src.pages.MapEditor.isPlainObject
+  frontend.src.pages.MapEditor.src → frontend.src.pages.MapEditor.isPlainObject
+  frontend.src.pages.MapEditor.toPrettyJson → frontend.src.pages.MapEditor.ensureMapShape
+  frontend.src.pages.MapEditor.createInitialEditorState → frontend.src.pages.MapEditor.ensureRequiredDefaultMappings
+  frontend.src.pages.MapEditor.createInitialEditorState → frontend.src.pages.MapEditor.cloneDefaultMap
+  frontend.src.pages.MapEditor.createInitialEditorState → frontend.src.pages.MapEditor.toPrettyJson
+  frontend.src.pages.MapEditor.onJsonChange → frontend.src.pages.MapEditor.isPlainObject
+  frontend.src.pages.MapEditor.onJsonChange → frontend.src.pages.MapEditor.ensureMapShape
+  frontend.src.pages.MapEditor.parsed → frontend.src.pages.MapEditor.isPlainObject
+  frontend.src.pages.MapEditor.applyMapMutation → frontend.src.pages.MapEditor.ensureMapShape
+  frontend.src.pages.MapEditor.applyMapMutation → frontend.src.pages.MapEditor.toPrettyJson
+  frontend.src.pages.MapEditor.addObject → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.name → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.addParam → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.editParamConversionField → frontend.src.pages.MapEditor.applyMapMutation

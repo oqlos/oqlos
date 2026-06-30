@@ -57,6 +57,12 @@ tasks:
     cmds:
       - pytest -q
 
+  test:frontend:
+    desc: Run frontend unit tests (node:test)
+    dir: frontend
+    cmds:
+      - npm run test:unit
+
   lint:
     desc: Run ruff lint check
     cmds:

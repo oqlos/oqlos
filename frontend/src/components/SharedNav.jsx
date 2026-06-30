@@ -4,27 +4,12 @@ import { useAppConfig } from "../context/AppConfigProvider";
 import { useI18n } from "../i18n/I18nProvider";
 
 const navItems = [
-  { path: "/scenarios", labelKey: "nav.scenarios" },
   { path: "/hardware-status", labelKey: "nav.hardware" },
   { path: "/hardware-demo", labelKey: "nav.demo" },
   { path: "/scenario-files", labelKey: "nav.scenarioFiles" },
   { path: "/map-editor", labelKey: "nav.map" },
   { path: "/func-editor", labelKey: "nav.func" },
 ];
-
-function syncParentUrl(internalPath) {
-  try {
-    if (globalThis.frameElement) {
-      const parentPath = "/connect-scenario-" + internalPath.replace(/^\//, "");
-      const parentSearch = globalThis.parent.location.search;
-      globalThis.parent.history.pushState(null, "", parentPath + parentSearch);
-    }
-  } catch (error) {
-    if (globalThis.console?.debug) {
-      globalThis.console.debug("SharedNav: parent URL sync skipped", error);
-    }
-  }
-}
 
 export default function SharedNav({
   navContext = null,
@@ -48,7 +33,6 @@ export default function SharedNav({
           <Link
             key={item.path}
             to={item.path}
-            onClick={() => syncParentUrl(item.path)}
             className={`nav-link nav-route-link ${currentPath === item.path || currentPath.startsWith(item.path + "/") ? "active" : ""}`}
           >
             {t(item.labelKey)}

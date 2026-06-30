@@ -6,16 +6,12 @@ import {
   readStoredCollapsed,
   persistStoredCollapsed,
 } from "./collapse-toggle-bridge.js";
+import { useRailHoverPreview } from "../hooks/useRailHoverPreview.js";
 
-/** Hover-intent before the thin rail flips into preview mode. */
-export const RAIL_HOVER_OPEN_MS = 150;
-/** Grace period after the cursor leaves the expanded preview panel. */
-export const RAIL_HOVER_CLOSE_MS = 600;
+export { RAIL_HOVER_OPEN_MS, RAIL_HOVER_CLOSE_MS } from "../hooks/useRailHoverPreview.js";
 
 /**
  * Selection-driven panel collapse with optional parent top-bar reveal toggle.
- * `userCollapsed` is the persisted stowed state; `collapsed` is what we render
- * (false briefly during hover-preview while the top-bar button stays visible).
  */
 export function useSelectionCollapsePanel({
   toggleId,
@@ -26,12 +22,8 @@ export function useSelectionCollapsePanel({
 }) {
   const [userCollapsed, setUserCollapsed] = useState(() => readStoredCollapsed(storageKey));
   const [autoCollapsed, setAutoCollapsed] = useState(false);
-  const [hoverPreview, setHoverPreview] = useState(false);
   const timerRef = useRef(null);
-  const railOpenTimerRef = useRef(null);
-  const panelCloseTimerRef = useRef(null);
-
-  const collapsed = (userCollapsed || autoCollapsed) && !hoverPreview;
+  const stowed = userCollapsed || autoCollapsed;
 
   const cancelAutoCollapse = useCallback(() => {
     if (timerRef.current) {
@@ -40,19 +32,18 @@ export function useSelectionCollapsePanel({
     }
   }, []);
 
-  const cancelRailOpen = useCallback(() => {
-    if (railOpenTimerRef.current) {
-      clearTimeout(railOpenTimerRef.current);
-      railOpenTimerRef.current = null;
-    }
-  }, []);
+  const {
+    hoverPreview,
+    setHoverPreview,
+    previewCollapse,
+    previewExpand,
+    railEnter,
+    railLeave,
+    panelEnter,
+    panelLeave,
+  } = useRailHoverPreview({ stowed, onBeforeOpen: cancelAutoCollapse });
 
-  const cancelPanelClose = useCallback(() => {
-    if (panelCloseTimerRef.current) {
-      clearTimeout(panelCloseTimerRef.current);
-      panelCloseTimerRef.current = null;
-    }
-  }, []);
+  const collapsed = stowed && !hoverPreview;
 
   const scheduleCollapse = useCallback(() => {
     cancelAutoCollapse();
@@ -63,53 +54,14 @@ export function useSelectionCollapsePanel({
       setUserCollapsed(true);
       persistStoredCollapsed(storageKey, true);
     }, COLLAPSE_DELAY_MS);
-  }, [userCollapsed, cancelAutoCollapse, storageKey]);
+  }, [userCollapsed, cancelAutoCollapse, storageKey, setHoverPreview]);
 
   const expand = useCallback(() => {
     cancelAutoCollapse();
     setHoverPreview(false);
     setUserCollapsed(false);
     persistStoredCollapsed(storageKey, false);
-  }, [cancelAutoCollapse, storageKey]);
-
-  const previewExpand = useCallback(() => {
-    if (!userCollapsed && !autoCollapsed) return;
-    cancelAutoCollapse();
-    setHoverPreview(true);
-  }, [userCollapsed, autoCollapsed, cancelAutoCollapse]);
-
-  const previewCollapse = useCallback(() => {
-    setHoverPreview(false);
-  }, []);
-
-  const railEnter = useCallback(() => {
-    if (!userCollapsed && !autoCollapsed) return;
-    cancelPanelClose();
-    if (railOpenTimerRef.current) return;
-    railOpenTimerRef.current = setTimeout(() => {
-      railOpenTimerRef.current = null;
-      cancelAutoCollapse();
-      setHoverPreview(true);
-    }, RAIL_HOVER_OPEN_MS);
-  }, [userCollapsed, autoCollapsed, cancelAutoCollapse, cancelPanelClose]);
-
-  const railLeave = useCallback(() => {
-    cancelRailOpen();
-  }, [cancelRailOpen]);
-
-  const panelEnter = useCallback(() => {
-    cancelPanelClose();
-  }, [cancelPanelClose]);
-
-  const panelLeave = useCallback(() => {
-    cancelRailOpen();
-    if (!userCollapsed && !autoCollapsed) return;
-    if (panelCloseTimerRef.current) clearTimeout(panelCloseTimerRef.current);
-    panelCloseTimerRef.current = setTimeout(() => {
-      panelCloseTimerRef.current = null;
-      setHoverPreview(false);
-    }, RAIL_HOVER_CLOSE_MS);
-  }, [userCollapsed, autoCollapsed, cancelRailOpen]);
+  }, [cancelAutoCollapse, storageKey, setHoverPreview]);
 
   const toggleCollapsed = useCallback(() => {
     if (autoCollapsed) {
@@ -123,17 +75,13 @@ export function useSelectionCollapsePanel({
       persistStoredCollapsed(storageKey, next);
       return next;
     });
-  }, [autoCollapsed, cancelAutoCollapse, storageKey]);
+  }, [autoCollapsed, cancelAutoCollapse, storageKey, setHoverPreview]);
 
   useEffect(() => cancelAutoCollapse, [cancelAutoCollapse]);
-  useEffect(() => cancelRailOpen, [cancelRailOpen]);
-  useEffect(() => cancelPanelClose, [cancelPanelClose]);
 
-  // Keep the top-bar button registered while `userCollapsed` — including
-  // during hover-preview when the panel is temporarily visible.
   useEffect(() => {
     if (!toggleId || !isInIframe()) return undefined;
-    if (userCollapsed || autoCollapsed) {
+    if (stowed) {
       postToParent("child.collapse-toggle.register", {
         id: toggleId,
         label,
@@ -144,7 +92,7 @@ export function useSelectionCollapsePanel({
     }
     postToParent("child.collapse-toggle.unregister", { id: toggleId });
     return undefined;
-  }, [userCollapsed, autoCollapsed, toggleId, label, icon, badge]);
+  }, [stowed, toggleId, label, icon, badge]);
 
   useEffect(() => {
     if (!toggleId || !isInIframe()) return undefined;

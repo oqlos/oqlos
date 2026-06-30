@@ -6,255 +6,38 @@ import { HardwareApi, formatHardwareApiError } from "../api/hardwareApi";
 import { useAppConfig } from "../context/AppConfigProvider";
 import { useI18n } from "../i18n/I18nProvider";
 import { useWsStatus } from "../hooks/useWsStatus";
-import {
-  buildHardwareEventsWsUrl,
-  matchesHardwareEventFilters,
-  normalizeHardwareEvent,
-} from "../utils/hardwareEventStream.js";
+import { useMapEditorHardwareEvents } from "../hooks/useMapEditorHardwareEvents.js";
+import { useMapEditorSidebarAutoCollapse } from "../hooks/useMapEditorSidebarAutoCollapse.js";
+import { matchesHardwareEventFilters, normalizeHardwareEvent } from "../utils/hardwareEventStream.js";
 import { summarizeFuncToHardware } from "../utils/mapEditorFuncHardwareSummary.js";
-import DEFAULT_MAP from "./mapEditorDefaultMap";
-
-const TABS = ["funcs", "objects", "params", "actions", "json"];
-const LIVE_EVENTS_LIMIT = 120;
-const TIC249_TARGET_VELOCITY_SCALE = 10000;
-
-const GROUP_FOR_TAB = Object.freeze({
-  objects: "objectActionMap",
-  params: "paramSensorMap",
-  actions: "actions",
-  funcs: "funcImplementations",
-});
-
-const SECTION_DESC_KEY = Object.freeze({
-  objects: "objectsDesc",
-  params: "paramsDesc",
-  actions: "actionsDesc",
-  funcs: "funcsDesc",
-});
-
-const EMPTY_KEY = Object.freeze({
-  objects: "emptyObjects",
-  params: "emptyParams",
-  actions: "emptyActions",
-  funcs: "emptyFuncs",
-});
-
-const META_FIELDS = Object.freeze([
-  "environment",
-  "usageMode",
-  "apiService",
-  "apiEndpoint",
-  "hardwareAddress",
-  "handlerRuntime",
-  "handlerFunction",
-]);
-
-const PARAM_CONVERSION_ALGORITHMS = Object.freeze([
-  "identity",
-  "linear",
-  "lookup",
-  "custom",
-]);
-
-function cloneDefaultMap() {
-  return JSON.parse(JSON.stringify(DEFAULT_MAP));
-}
-
-function cloneValue(value) {
-  return JSON.parse(JSON.stringify(value));
-}
-
-function tic249RawTargetVelocity(stepsPerSecond) {
-  const value = Number(stepsPerSecond);
-  if (!Number.isFinite(value) || value <= 0) return "—";
-  return Math.round(value * TIC249_TARGET_VELOCITY_SCALE).toLocaleString("en-US");
-}
-
-function isPlainObject(value) {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
-function fillMissingFields(target, defaults) {
-  if (!isPlainObject(target) || !isPlainObject(defaults)) return target;
-  Object.entries(defaults).forEach(([key, value]) => {
-    if (!(key in target)) {
-      target[key] = cloneValue(value);
-      return;
-    }
-    if (isPlainObject(target[key]) && isPlainObject(value)) {
-      fillMissingFields(target[key], value);
-    }
-  });
-  return target;
-}
-
-function ensureRequiredDefaultMappings(mapData) {
-  const shaped = ensureMapShape(mapData);
-  shaped.runtimeConfig = fillMissingFields(
-    isPlainObject(shaped.runtimeConfig) ? shaped.runtimeConfig : {},
-    DEFAULT_MAP.runtimeConfig || {}
-  );
-  const defaultMotor2 = DEFAULT_MAP.objectActionMap?.motor2;
-  if (defaultMotor2) {
-    shaped.objectActionMap.motor2 = fillMissingFields(
-      isPlainObject(shaped.objectActionMap.motor2) ? shaped.objectActionMap.motor2 : {},
-      defaultMotor2
-    );
-  }
-  for (const key of [
-    "V1", "V2", "V3", "V4", "V5", "V6", "V7", "V8",
-    "VI1", "VI2", "VI3", "VI4", "VI5", "VI6", "VI7", "VI8",
-    "PI1",
-  ]) {
-    const defaultParam = DEFAULT_MAP.paramSensorMap?.[key];
-    if (defaultParam) {
-      shaped.paramSensorMap[key] = fillMissingFields(
-        isPlainObject(shaped.paramSensorMap[key]) ? shaped.paramSensorMap[key] : {},
-        defaultParam
-      );
-    }
-  }
-  return shaped;
-}
-
-function isMapEmpty(mapData) {
-  return (
-    Object.keys(mapData.objectActionMap || {}).length === 0 &&
-    Object.keys(mapData.paramSensorMap || {}).length === 0 &&
-    Object.keys(mapData.actions || {}).length === 0 &&
-    Object.keys(mapData.funcImplementations || {}).length === 0 &&
-    Object.keys(mapData.runtimeConfig || {}).length === 0
-  );
-}
-
-function firstBindingFromObjectMapping(detailCfg) {
-  if (!detailCfg || typeof detailCfg !== "object") return null;
-  for (const value of Object.values(detailCfg)) {
-    if (value && typeof value === "object") return value;
-  }
-  return null;
-}
-
-function readIntegrationMeta(activeTab, detailCfg) {
-  const meta = {
-    environment: "",
-    usageMode: "",
-    apiService: "",
-    apiEndpoint: "",
-    hardwareAddress: "",
-    handlerRuntime: "",
-    handlerFunction: "",
-  };
-  if (!detailCfg || typeof detailCfg !== "object") return meta;
-
-  const source =
-    activeTab === "objects" ? firstBindingFromObjectMapping(detailCfg) || {} : detailCfg;
-
-  meta.environment = source.environment || "";
-  meta.usageMode = source.usageMode || "";
-  meta.apiService = source.service || "";
-  meta.apiEndpoint = source.endpoint || source.url || "";
-  meta.hardwareAddress =
-    source.hardwareAddress ||
-    source.body?.peripheral_id ||
-    source.sensor ||
-    "";
-  meta.handlerRuntime = source.handlerRuntime || "";
-  meta.handlerFunction = source.handlerFunction || "";
-  return meta;
-}
-
-function setMetaField(target, field, value, { allowSensor = false } = {}) {
-  if (!target || typeof target !== "object") return;
-  const nextValue = value?.trim() || "";
-
-  if (field === "apiService") {
-    if (nextValue) target.service = nextValue;
-    else delete target.service;
-    return;
-  }
-
-  if (field === "environment" || field === "usageMode") {
-    if (nextValue) target[field] = nextValue;
-    else delete target[field];
-    return;
-  }
-
-  if (field === "apiEndpoint") {
-    if (nextValue) {
-      target.endpoint = nextValue;
-      target.url = nextValue;
-    } else {
-      delete target.endpoint;
-      delete target.url;
-    }
-    return;
-  }
-
-  if (field === "hardwareAddress") {
-    if (nextValue) {
-      target.hardwareAddress = nextValue;
-      if (allowSensor) target.sensor = nextValue;
-      if (target.body && typeof target.body === "object") {
-        target.body.peripheral_id = nextValue;
-      }
-    } else {
-      delete target.hardwareAddress;
-      if (allowSensor) delete target.sensor;
-      if (target.body && typeof target.body === "object") {
-        delete target.body.peripheral_id;
-      }
-    }
-    return;
-  }
-
-  if (field === "handlerRuntime") {
-    if (nextValue) target.handlerRuntime = nextValue;
-    else delete target.handlerRuntime;
-    return;
-  }
-
-  if (field === "handlerFunction") {
-    if (nextValue) target.handlerFunction = nextValue;
-    else delete target.handlerFunction;
-  }
-}
-
-function ensureMapShape(input) {
-  const src = isPlainObject(input) ? input : {};
-  return {
-    runtimeConfig: isPlainObject(src.runtimeConfig) ? src.runtimeConfig : {},
-    objectActionMap: isPlainObject(src.objectActionMap) ? src.objectActionMap : {},
-    paramSensorMap: isPlainObject(src.paramSensorMap) ? src.paramSensorMap : {},
-    actions: isPlainObject(src.actions) ? src.actions : {},
-    funcImplementations: isPlainObject(src.funcImplementations) ? src.funcImplementations : {},
-  };
-}
-
-function ensureParamConversion(target) {
-  if (!target || typeof target !== "object") return;
-  if (!target.conversionAlgorithm) target.conversionAlgorithm = "identity";
-  if (target.conversionScale === undefined) target.conversionScale = 1;
-  if (target.conversionOffset === undefined) target.conversionOffset = 0;
-  if (!target.conversionExpression) target.conversionExpression = "x";
-  if (!target.conversionInputUnit) target.conversionInputUnit = target.inputMode === "current" ? "mA" : "V";
-  if (!target.conversionOutputUnit) target.conversionOutputUnit = target.unit || target.conversionInputUnit;
-}
-
-function toPrettyJson(mapData) {
-  return JSON.stringify(ensureMapShape(mapData), null, 2);
-}
-
-function createInitialEditorState() {
-  const seeded = ensureRequiredDefaultMappings(cloneDefaultMap());
-  const pretty = toPrettyJson(seeded);
-  return {
-    mapData: seeded,
-    jsonText: pretty,
-    originalJson: pretty,
-    jsonError: "",
-  };
-}
+import {
+  cloneDefaultMap,
+  createInitialEditorState,
+  ensureMapShape,
+  ensureParamConversion,
+  ensureRequiredDefaultMappings,
+  isMapEmpty,
+  isPlainObject,
+  toPrettyJson,
+} from "../utils/mapEditorModel.js";
+import {
+  firstBindingFromObjectMapping,
+  readIntegrationMeta,
+  setMetaField,
+} from "../utils/mapEditorIntegrationMeta.js";
+import {
+  EMPTY_KEY,
+  GROUP_FOR_TAB,
+  LIVE_EVENTS_LIMIT,
+  MAP_EDITOR_TABS,
+  META_FIELDS,
+  PARAM_CONVERSION_ALGORITHMS,
+  SECTION_DESC_KEY,
+} from "./mapEditorConstants.js";
+import { MapEditorIntegrationMetaPanel } from "./MapEditorIntegrationMetaPanel.jsx";
+import { MapEditorMotorRuntimePanel } from "./MapEditorMotorRuntimePanel.jsx";
+import { MapEditorObjectActionPanel } from "./MapEditorObjectActionPanel.jsx";
+import { MapEditorParamConversionPanel } from "./MapEditorParamConversionPanel.jsx";
 
 export default function MapEditor() {
   const { isReadOnly, isAdmin, isOperator } = useAppConfig();
@@ -265,7 +48,7 @@ export default function MapEditor() {
 
   const [activeTab, setActiveTab] = useState(() => {
     const tab = new URLSearchParams(globalThis.location.search).get("tab");
-    return TABS.includes(tab) ? tab : "funcs";
+    return MAP_EDITOR_TABS.includes(tab) ? tab : "funcs";
   });
 
   const [mapData, setMapData] = useState(() => initial.mapData);
@@ -282,11 +65,10 @@ export default function MapEditor() {
 
   const [selectedEntryKey, setSelectedEntryKey] = useState(null);
   const [definitionFilter, setDefinitionFilter] = useState("");
-  const [hardwareEvents, setHardwareEvents] = useState([]);
+  const { hardwareEvents, setHardwareEvents, eventsWsState, eventsWsError, setEventsWsError } =
+    useMapEditorHardwareEvents(t);
   const [eventsPeripheralFilter, setEventsPeripheralFilter] = useState("");
   const [eventsCommandFilter, setEventsCommandFilter] = useState("");
-  const [eventsWsState, setEventsWsState] = useState("idle");
-  const [eventsWsError, setEventsWsError] = useState("");
   const [eventsClearState, setEventsClearState] = useState("idle");
   const [eventsStorePath, setEventsStorePath] = useState("");
   const canClearServerEvents = isOperator;
@@ -551,25 +333,6 @@ export default function MapEditor() {
     });
   }, [applyMapMutation, mapData]);
 
-  const renderMotorRuntimeRow = useCallback((labelKey, field, suffix = "", type = "number") => {
-    const cfg = mapData.runtimeConfig?.motor2 || {};
-    const value = cfg[field];
-    return (
-      <div className="mapx-meta-row">
-        <span className="mapx-meta-label">{t(labelKey)}</span>
-        <span className="mapx-meta-value">{value ?? "—"}{suffix}</span>
-        <button
-          type="button"
-          className="mapx-btn"
-          onClick={() => editMotorRuntimeConfig(field, type)}
-          disabled={isReadOnly}
-        >
-          {t("mapEditor.editMeta")}
-        </button>
-      </div>
-    );
-  }, [editMotorRuntimeConfig, isReadOnly, mapData.runtimeConfig, t]);
-
   const saveMap = useCallback(async () => {
     if (isReadOnly || jsonError) return;
     setSaveState("saving");
@@ -700,53 +463,6 @@ export default function MapEditor() {
     };
   }, []);
 
-  useEffect(() => {
-    const wsUrl = buildHardwareEventsWsUrl({ wsUrlEnv: import.meta.env.VITE_WS_URL });
-    let closed = false;
-    let socket = null;
-    try {
-      setEventsWsState("connecting");
-      socket = new WebSocket(wsUrl);
-    } catch {
-      setEventsWsState("error");
-      setEventsWsError(t("mapEditor.liveEventsWsError"));
-      return undefined;
-    }
-
-    socket.onopen = () => {
-      if (closed) return;
-      setEventsWsState("live");
-      setEventsWsError("");
-    };
-    socket.onmessage = (event) => {
-      if (closed) return;
-      try {
-        const message = JSON.parse(event.data);
-        if (message?.message_type !== "event" || !message?.data) return;
-        const normalized = normalizeHardwareEvent(message.data);
-        setHardwareEvents((prev) => [...prev, normalized].slice(-LIVE_EVENTS_LIMIT));
-      } catch {
-        // ignore non-json or heartbeat messages
-      }
-    };
-    socket.onerror = () => {
-      if (closed) return;
-      setEventsWsState("error");
-      setEventsWsError(t("mapEditor.liveEventsWsError"));
-    };
-    socket.onclose = () => {
-      if (closed) return;
-      setEventsWsState("closed");
-    };
-
-    return () => {
-      closed = true;
-      if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) {
-        socket.close();
-      }
-    };
-  }, [t]);
-
   const mappingGroup = activeTab !== "json" ? GROUP_FOR_TAB[activeTab] : null;
 
   const entryKeys = useMemo(() => {
@@ -797,30 +513,7 @@ export default function MapEditor() {
     badge: filteredEntryKeys.length,
   });
 
-  useEffect(() => {
-    const applyAutoCollapse = () => {
-      const root = document.documentElement;
-      const font = String(root?.dataset?.font || "").trim().toLowerCase();
-      const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 1280;
-      const denseFont = font === "large" || font === "xlarge";
-      if (!denseFont) {
-        setSidebarAutoCollapsed(false);
-        return;
-      }
-      const minWidth = font === "xlarge" ? 1700 : 1500;
-      setSidebarAutoCollapsed(viewportWidth < minWidth);
-    };
-
-    applyAutoCollapse();
-    window.addEventListener("resize", applyAutoCollapse);
-    const root = document.documentElement;
-    const observer = new MutationObserver(applyAutoCollapse);
-    observer.observe(root, { attributes: true, attributeFilter: ["data-font"] });
-    return () => {
-      window.removeEventListener("resize", applyAutoCollapse);
-      observer.disconnect();
-    };
-  }, [setSidebarAutoCollapsed]);
+  useMapEditorSidebarAutoCollapse(setSidebarAutoCollapsed);
 
   useEffect(() => {
     if (definitionFilter) cancelSidebarCollapse();
@@ -915,219 +608,6 @@ export default function MapEditor() {
       .slice(0, 30);
   }, [hardwareEvents, eventsPeripheralFilter, eventsCommandFilter]);
 
-  const renderIntegrationMetaEditor = useCallback(() => {
-    if (!detailCfg) return null;
-    return (
-      <div className="mapx-meta-box">
-        <div className="mapx-meta-title">{t("mapEditor.integrationMeta")}</div>
-        <div className="mapx-meta-grid">
-          {META_FIELDS.map((field) => (
-            <div key={field} className="mapx-meta-row">
-              <span className="mapx-meta-label">{t(`mapEditor.meta.${field}`)}</span>
-              <span className="mapx-meta-value">{integrationMeta[field] || "—"}</span>
-              <button
-                type="button"
-                className="mapx-btn"
-                onClick={() => updateIntegrationMeta(field)}
-                disabled={isReadOnly}
-              >
-                {t("mapEditor.editMeta")}
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }, [detailCfg, integrationMeta, updateIntegrationMeta, isReadOnly, t]);
-
-  const renderObjectActionEditor = useCallback((objectName, objectCfg) => {
-    if (!objectCfg || typeof objectCfg !== "object") return null;
-    return (
-      <div className="mapx-meta-box">
-        <div className="mapx-meta-title">Akcje i parametry</div>
-        <div className="mapx-action-list">
-          {Object.entries(objectCfg).map(([actionName, binding]) => {
-            const args = binding?.args && typeof binding.args === "object" ? binding.args : {};
-            const body = binding?.body && typeof binding.body === "object" ? binding.body : {};
-            const isRelativeMotorMove =
-              body.peripheral_id === "motor-tic249" && body.command === "move_relative";
-
-            return (
-              <div key={actionName} className="mapx-action-row">
-                <div className="mapx-action-main">
-                  <strong>{actionName}</strong>
-                  <span>{body.peripheral_id || "—"} / {body.command || "—"}</span>
-                </div>
-                {isRelativeMotorMove ? (
-                  <div className="mapx-action-params">
-                    <button
-                      type="button"
-                      className="mapx-param-pill"
-                      onClick={() => editObjectActionArg(objectName, actionName, "steps", "number")}
-                      disabled={isReadOnly}
-                    >
-                      steps: {args.steps ?? "—"}
-                    </button>
-                    <button
-                      type="button"
-                      className="mapx-param-pill"
-                      onClick={() => editObjectActionArg(objectName, actionName, "direction")}
-                      disabled={isReadOnly}
-                    >
-                      direction: {args.direction ?? "—"}
-                    </button>
-                    <button
-                      type="button"
-                      className="mapx-param-pill"
-                      onClick={() => editObjectActionArg(objectName, actionName, "offset", "number")}
-                      disabled={isReadOnly}
-                    >
-                      offset: {args.offset ?? "—"}
-                    </button>
-                    <button
-                      type="button"
-                      className="mapx-param-pill"
-                      onClick={() => editObjectActionArg(objectName, actionName, "speed", "number")}
-                      disabled={isReadOnly}
-                    >
-                      speed: {args.speed ?? "—"}
-                    </button>
-                    <button
-                      type="button"
-                      className="mapx-param-pill"
-                      onClick={() => editObjectActionArg(objectName, actionName, "max_steps_per_second", "number")}
-                      disabled={isReadOnly}
-                    >
-                      limit: {args.max_steps_per_second ?? "—"} steps/s
-                    </button>
-                    <button
-                      type="button"
-                      className="mapx-param-pill"
-                      onClick={() => editObjectActionArg(objectName, actionName, "acceleration", "number")}
-                      disabled={isReadOnly}
-                    >
-                      accel: {args.acceleration ?? "—"}%/s
-                    </button>
-                  </div>
-                ) : (
-                  <div className="mapx-action-params">
-                    <button
-                      type="button"
-                      className="mapx-param-pill"
-                      onClick={() => editObjectActionBodyField(objectName, actionName, "peripheral_id")}
-                      disabled={isReadOnly}
-                    >
-                      peripheral: {body.peripheral_id || "—"}
-                    </button>
-                    <button
-                      type="button"
-                      className="mapx-param-pill"
-                      onClick={() => editObjectActionBodyField(objectName, actionName, "command")}
-                      disabled={isReadOnly}
-                    >
-                      command: {body.command || "—"}
-                    </button>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
-  }, [editObjectActionArg, editObjectActionBodyField, isReadOnly]);
-
-  const renderMotorRuntimeConfigEditor = useCallback(() => {
-    if (activeTab !== "objects" || selectedEntryKey !== "motor2") return null;
-    const cfg = mapData.runtimeConfig?.motor2 || {};
-    return (
-      <div className="mapx-meta-box">
-        <div className="mapx-meta-title">{t("mapEditor.motorRuntimeTitle")}</div>
-        <div className="mapx-meta-grid">
-          {renderMotorRuntimeRow("mapEditor.motorStrokeSteps", "strokeSteps", " steps")}
-          {renderMotorRuntimeRow("mapEditor.motorCycleVolume", "cycleVolumeLiters", " l")}
-          {renderMotorRuntimeRow("mapEditor.motorMaxSpeed", "maxStepsPerSecond", " steps/s")}
-          {renderMotorRuntimeRow("mapEditor.motorDefaultSpeed", "defaultSpeedStepsPerSecond", " steps/s")}
-          {renderMotorRuntimeRow("mapEditor.motorAcceleration", "accelerationPercentPerSecond", " %/s")}
-          {renderMotorRuntimeRow("mapEditor.motorSpeedUnit", "speedUnit", "", "text")}
-          {renderMotorRuntimeRow("mapEditor.motorLimitMode", "limitMode", "", "text")}
-          {renderMotorRuntimeRow("mapEditor.motorStartDirection", "startDirection", "", "text")}
-          <div className="mapx-meta-row">
-            <span className="mapx-meta-label">{t("mapEditor.motorRawTargetVelocity")}</span>
-            <span className="mapx-meta-value">{tic249RawTargetVelocity(cfg.defaultSpeedStepsPerSecond)}</span>
-          </div>
-        </div>
-      </div>
-    );
-  }, [activeTab, selectedEntryKey, mapData.runtimeConfig, renderMotorRuntimeRow, t]);
-
-  const renderParamConversionEditor = useCallback(() => {
-    if (activeTab !== "params" || !selectedEntryKey) return null;
-    const target = mapData.paramSensorMap?.[selectedEntryKey];
-    if (!target || typeof target !== "object") return null;
-
-    const view = structuredClone(target);
-    ensureParamConversion(view);
-
-    return (
-      <div className="mapx-meta-box">
-        <div className="mapx-meta-title">Przeliczanie wartosci (mapowanie)</div>
-        <div className="mapx-meta-grid">
-          <div className="mapx-meta-row">
-            <span className="mapx-meta-label">Algorytm</span>
-            <span className="mapx-meta-value">{view.conversionAlgorithm}</span>
-            <button type="button" className="mapx-btn" onClick={editParamConversionAlgorithm} disabled={isReadOnly}>
-              {t("mapEditor.editMeta")}
-            </button>
-          </div>
-          <div className="mapx-meta-row">
-            <span className="mapx-meta-label">Skala</span>
-            <span className="mapx-meta-value">{view.conversionScale}</span>
-            <button type="button" className="mapx-btn" onClick={() => editParamConversionField("conversionScale", "number")} disabled={isReadOnly}>
-              {t("mapEditor.editMeta")}
-            </button>
-          </div>
-          <div className="mapx-meta-row">
-            <span className="mapx-meta-label">Offset</span>
-            <span className="mapx-meta-value">{view.conversionOffset}</span>
-            <button type="button" className="mapx-btn" onClick={() => editParamConversionField("conversionOffset", "number")} disabled={isReadOnly}>
-              {t("mapEditor.editMeta")}
-            </button>
-          </div>
-          <div className="mapx-meta-row">
-            <span className="mapx-meta-label">Wzor (x = napiecie)</span>
-            <span className="mapx-meta-value">{view.conversionExpression || "x"}</span>
-            <button type="button" className="mapx-btn" onClick={() => editParamConversionField("conversionExpression")} disabled={isReadOnly}>
-              {t("mapEditor.editMeta")}
-            </button>
-          </div>
-          <div className="mapx-meta-row">
-            <span className="mapx-meta-label">Jednostka wejscia</span>
-            <span className="mapx-meta-value">{view.conversionInputUnit}</span>
-            <button type="button" className="mapx-btn" onClick={() => editParamConversionField("conversionInputUnit")} disabled={isReadOnly}>
-              {t("mapEditor.editMeta")}
-            </button>
-          </div>
-          <div className="mapx-meta-row">
-            <span className="mapx-meta-label">Jednostka wyjscia</span>
-            <span className="mapx-meta-value">{view.conversionOutputUnit}</span>
-            <button type="button" className="mapx-btn" onClick={() => editParamConversionField("conversionOutputUnit")} disabled={isReadOnly}>
-              {t("mapEditor.editMeta")}
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }, [
-    activeTab,
-    selectedEntryKey,
-    mapData.paramSensorMap,
-    editParamConversionAlgorithm,
-    editParamConversionField,
-    isReadOnly,
-    t,
-  ]);
-
   const runAddForTab = useCallback(() => {
     if (activeTab === "objects") addObject();
     else if (activeTab === "params") addParam();
@@ -1187,7 +667,7 @@ export default function MapEditor() {
           <span style={{ flex: 1 }}>{t("mapEditor.title")}</span>
         </div>
         <nav className="mapx-def-tabs mapx-tabs mapx-tabs--toolbar" aria-label={t("mapEditor.title")}>
-          {TABS.map((tab) => (
+          {MAP_EDITOR_TABS.map((tab) => (
             <button
               key={tab}
               type="button"
@@ -1327,10 +807,32 @@ export default function MapEditor() {
                         <button type="button" className="mapx-btn" onClick={() => deleteKey("objectActionMap", selectedEntryKey)} disabled={isReadOnly}>🗑</button>
                       </span>
                     </div>
-                    {renderObjectActionEditor(selectedEntryKey, detailCfg)}
-                    {renderMotorRuntimeConfigEditor()}
+                    <MapEditorObjectActionPanel
+                      objectCfg={detailCfg}
+                      isReadOnly={isReadOnly}
+                      onEditArg={(actionName, argName, type) =>
+                        editObjectActionArg(selectedEntryKey, actionName, argName, type)
+                      }
+                      onEditBodyField={(actionName, field) =>
+                        editObjectActionBodyField(selectedEntryKey, actionName, field)
+                      }
+                    />
+                    {selectedEntryKey === "motor2" && (
+                      <MapEditorMotorRuntimePanel
+                        motorConfig={mapData.runtimeConfig?.motor2}
+                        isReadOnly={isReadOnly}
+                        onEditField={editMotorRuntimeConfig}
+                        t={t}
+                      />
+                    )}
                     <pre>{JSON.stringify(detailCfg, null, 2)}</pre>
-                    {renderIntegrationMetaEditor()}
+                    <MapEditorIntegrationMetaPanel
+                      detailCfg={detailCfg}
+                      integrationMeta={integrationMeta}
+                      onEditField={updateIntegrationMeta}
+                      isReadOnly={isReadOnly}
+                      t={t}
+                    />
                   </div>
                 ) : activeTab === "params" ? (
                   <div className="mapx-card">
@@ -1343,8 +845,20 @@ export default function MapEditor() {
                       </span>
                     </div>
                     <pre>{JSON.stringify(detailCfg, null, 2)}</pre>
-                    {renderParamConversionEditor()}
-                    {renderIntegrationMetaEditor()}
+                    <MapEditorParamConversionPanel
+                      target={mapData.paramSensorMap?.[selectedEntryKey]}
+                      isReadOnly={isReadOnly}
+                      t={t}
+                      onEditAlgorithm={editParamConversionAlgorithm}
+                      onEditField={editParamConversionField}
+                    />
+                    <MapEditorIntegrationMetaPanel
+                      detailCfg={detailCfg}
+                      integrationMeta={integrationMeta}
+                      onEditField={updateIntegrationMeta}
+                      isReadOnly={isReadOnly}
+                      t={t}
+                    />
                   </div>
                 ) : activeTab === "actions" ? (
                   <div className="mapx-card">
@@ -1357,7 +871,13 @@ export default function MapEditor() {
                       </span>
                     </div>
                     <pre>{JSON.stringify(detailCfg, null, 2)}</pre>
-                    {renderIntegrationMetaEditor()}
+                    <MapEditorIntegrationMetaPanel
+                      detailCfg={detailCfg}
+                      integrationMeta={integrationMeta}
+                      onEditField={updateIntegrationMeta}
+                      isReadOnly={isReadOnly}
+                      t={t}
+                    />
                   </div>
                 ) : (
                   <div className="mapx-card">
@@ -1369,7 +889,13 @@ export default function MapEditor() {
                       </span>
                     </div>
                     <pre>{JSON.stringify(detailCfg, null, 2)}</pre>
-                    {renderIntegrationMetaEditor()}
+                    <MapEditorIntegrationMetaPanel
+                      detailCfg={detailCfg}
+                      integrationMeta={integrationMeta}
+                      onEditField={updateIntegrationMeta}
+                      isReadOnly={isReadOnly}
+                      t={t}
+                    />
                     <div className="mapx-meta-box">
                       <div className="mapx-meta-title">{t("mapEditor.resolverTitle")}</div>
                       <div className="mapx-meta-row">

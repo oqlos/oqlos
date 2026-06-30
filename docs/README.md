@@ -49,8 +49,8 @@ Detailed guide: [Hardware Diagnostics](HARDWARE_DIAGNOSTICS.md).
 
 <!-- code2docs:start --># oqlos
 
-![version](https://img.shields.io/badge/version-0.1.0-blue) ![python](https://img.shields.io/badge/python-%3E%3D3.10-blue) ![coverage](https://img.shields.io/badge/coverage-unknown-lightgrey) ![functions](https://img.shields.io/badge/functions-2075-green)
-> **2075** functions | **123** classes | **249** files | CC̄ = 4.2
+![version](https://img.shields.io/badge/version-0.1.0-blue) ![python](https://img.shields.io/badge/python-%3E%3D3.10-blue) ![coverage](https://img.shields.io/badge/coverage-unknown-lightgrey) ![functions](https://img.shields.io/badge/functions-2128-green)
+> **2128** functions | **123** classes | **274** files | CC̄ = 4.0
 
 > Auto-generated project documentation from source code analysis.
 
@@ -147,6 +147,7 @@ oqlos/
         ├── main
             ├── useWsStatus
             ├── useUrlConfig
+            ├── useParentEncoderNavigation
             ├── HardwareActivityLog
             ├── SharedNav
             ├── SidebarList
@@ -164,20 +165,31 @@ oqlos/
             ├── hardwareEventStream
             ├── hardware-time
             ├── useSelectionCollapsePanel
+            ├── url-embed-config
+            ├── hardware-restart-wizard-steps
+            ├── hardware-api-retry
                 ├── policy
             ├── hardware-restart-docs
             ├── hui-shell-key
             ├── parentUrlBridge
+                ├── test
             ├── mapEditorFuncHardwareSummary
+                ├── test
             ├── hardware-activity-log
+                ├── test
             ├── hardware-wizard-steps
             ├── hardware-wizard-plan
             ├── designRem
             ├── collapse-toggle-bridge
+            ├── app-config-document
             ├── AppConfigProvider
+                ├── test
+            ├── hardware-tic249-status
             ├── wsClient
             ├── hardwareApi
             ├── hardware-api-log
+            ├── hardware-diagnostic-failure
+            ├── hardware-api-errors
         ├── hardware-client/
             ├── paths
     ├── cql-spec
@@ -190,6 +202,7 @@ oqlos/
     ├── OQL_V4_MIGRATION_MANUAL
     ├── HARDWARE_CONTROL_OQL_MQTT
     ├── README
+    ├── refactor-plan
         ├── mosquitto
         ├── oqlos-hw
         ├── migration
@@ -257,6 +270,7 @@ oqlos/
         ├── peripheral
         ├── config_paths
         ├── diagnosis
+        ├── hui_hold
         ├── protocol
         ├── config_schema
         ├── rtc_probe
@@ -270,11 +284,13 @@ oqlos/
         ├── peripheral_mapping
         ├── stack_snapshot
         ├── tic249_units
+        ├── hui_lung_recipe
         ├── modbus_identify
         ├── plugin_gateway
         ├── discovery
         ├── firmware_adapter
         ├── identify_enrichment
+        ├── hui_artificial_lung
         ├── artificial_lung
         ├── usb_diagnostics
         ├── health_status
@@ -285,16 +301,21 @@ oqlos/
             ├── proxy
             ├── tic249_extended
             ├── errors
+            ├── tic249_command_mapping
             ├── autorepair
             ├── http_helpers
         ├── client/
             ├── resolvers
             ├── adc
+            ├── tic249_arg_helpers
             ├── modbus_repair
             ├── platform
             ├── tic249_rig_direction
             ├── tic249_arg_contract
             ├── identify_enrich
+            ├── tic249_sidecar_client
+            ├── tic249_motion_params
+            ├── tic249_error_messages
             ├── constants
             ├── base
             ├── registry
@@ -326,13 +347,16 @@ oqlos/
         ├── version_endpoint
         ├── event_store
         ├── logger
+        ├── _hw3_models
         ├── version
         ├── state
+        ├── _hw3_peripheral
         ├── hardware_mapping_contract
         ├── plugins
         ├── scenarios
         ├── hardware_mapping_store
         ├── hardware_v3
+        ├── _hw3_mapping
         ├── execution
         ├── peripherals
     ├── api/
@@ -340,6 +364,7 @@ oqlos/
         ├── logs
         ├── editor
         ├── main
+        ├── _hw3_system
         ├── hardware_events
         ├── oql_mqtt
             ├── execution_ctrl
@@ -463,8 +488,6 @@ oqlos/
 - **`ConnectionManager`** — Tracks connected WebSocket clients and broadcasts messages.
 - **`EventServer`** — WebSocket event broker with persistence.
 - **`EventStore`** — Append-only event store with optional JSON file persistence.
-- **`MappingContractError`** — —
-- **`MappingStore`** — —
 - **`DiagnosticCommandRequest`** — —
 - **`MappingReplaceRequest`** — —
 - **`MappingImportRequest`** — —
@@ -474,6 +497,8 @@ oqlos/
 - **`CqrsCommandRequest`** — —
 - **`CqrsEventsClearRequest`** — —
 - **`ScannerIngestRequest`** — —
+- **`MappingContractError`** — —
+- **`MappingStore`** — —
 - **`FileInfo`** — —
 - **`FileContent`** — —
 - **`ExecutionRequest`** — —
@@ -503,55 +528,31 @@ oqlos/
 - `client()` — —
 - `onOpen()` — —
 - `onClose()` — —
-- `DEFAULTS()` — —
-- `resolveUserIdFromSearchParams()` — —
-- `value()` — —
-- `resolveUserFromContextPayload()` — —
-- `userId()` — —
-- `role()` — —
-- `resolveViewportWidthPx()` — —
-- `n()` — —
-- `parseAppearanceParams()` — —
-- `font()` — —
-- `theme()` — —
-- `lang()` — —
-- `resolved()` — —
-- `parseIdentityParams()` — —
-- `parseNavigationParams()` — —
-- `scenario()` — —
-- `scenarioByFilename()` — —
-- `device()` — —
-- `deviceName()` — —
-- `test()` — —
-- `key()` — —
-- `parseParams()` — —
-- `params()` — —
-- `parseUrlEmbedConfig()` — —
-- `mergeParentContext()` — —
-- `incomingFont()` — —
-- `incomingLang()` — —
-- `incomingTheme()` — —
-- `fromUser()` — —
-- `nextUser()` — —
-- `roleCandidate()` — —
-- `IFRAME_ONLY_SEARCH_PARAMS()` — —
-- `mergeParentSearchIntoChildUrl()` — —
-- `url()` — —
-- `raw()` — —
-- `incoming()` — —
-- `kept()` — —
-- `applyParentContextPayload()` — —
-- `search()` — —
-- `base()` — —
-- `href()` — —
+- `notifyParentChildReady()` — —
 - `useUrlConfig()` — —
 - `onPop()` — —
 - `onMessage()` — —
 - `envelope()` — —
-- `ctx()` — —
-- `nextHref()` — —
 - `patch()` — —
-- `param()` — —
+- `getInteractiveItems()` — —
+- `all()` — —
+- `style()` — —
+- `removeHighlights()` — —
+- `parseParentEncoderEnvelope()` — —
+- `createEncoderController()` — —
+- `parentEncoderActive()` — —
+- `handleEncoderCommand()` — —
+- `items()` — —
+- `delta()` — —
+- `target()` — —
+- `onKeyDown()` — —
+- `useParentEncoderNavigation()` — —
+- `controller()` — —
+- `onMessage()` — —
+- `envelope()` — —
+- `detail()` — —
+- `onWheel()` — —
+- `raw()` — —
 - `syncParentUrl()` — —
 - `parentSearch()` — —
 - `location()` — —
@@ -680,12 +681,6 @@ oqlos/
 - `blob()` — —
 - `url()` — —
 - `a()` — —
-- `sleep()` — —
-- `wizardStepSerialPort()` — —
-- `buildWizardProbePayload()` — —
-- `targetBaud()` — —
-- `targetParity()` — —
-- `targetIds()` — —
 - `logPanelRef()` — —
 - `refreshRuntimeStatus()` — —
 - `status()` — —
@@ -711,23 +706,8 @@ oqlos/
 - `log()` — —
 - `payload()` — —
 - `ok()` — —
-- `runWithRetry()` — —
-- `attempt()` — —
+- `runRetry()` — —
 - `message()` — —
-- `gatewayErr()` — —
-- `waitMs()` — —
-- `target()` — —
-- `stepPort()` — —
-- `role()` — —
-- `probePayload()` — —
-- `probe()` — —
-- `candidates()` — —
-- `selection()` — —
-- `selectedCandidate()` — —
-- `currentDeviceId()` — —
-- `program()` — —
-- `diagnostic()` — —
-- `diagnose()` — —
 - `diagnosticPayload()` — —
 - `optionalStep()` — —
 - `advanceOk()` — —
@@ -844,6 +824,81 @@ oqlos/
 - `onMessage()` — —
 - `envelope()` — —
 - `payload()` — —
+- `APP_CONFIG_DEFAULTS()` — —
+- `resolveUserIdFromSearchParams()` — —
+- `value()` — —
+- `resolveUserFromContextPayload()` — —
+- `userId()` — —
+- `role()` — —
+- `resolveViewportWidthPx()` — —
+- `n()` — —
+- `parseAppearanceParams()` — —
+- `font()` — —
+- `theme()` — —
+- `lang()` — —
+- `resolved()` — —
+- `parseIdentityParams()` — —
+- `parseNavigationParams()` — —
+- `scenario()` — —
+- `scenarioByFilename()` — —
+- `device()` — —
+- `deviceName()` — —
+- `test()` — —
+- `key()` — —
+- `parseUrlEmbedConfig()` — —
+- `params()` — —
+- `pickSupportedString()` — —
+- `mergeParentContext()` — —
+- `fromUser()` — —
+- `roleCandidate()` — —
+- `IFRAME_ONLY_SEARCH_PARAMS()` — —
+- `mergeParentSearchIntoChildUrl()` — —
+- `url()` — —
+- `raw()` — —
+- `incoming()` — —
+- `kept()` — —
+- `applyParentContextPayload()` — —
+- `search()` — —
+- `base()` — —
+- `href()` — —
+- `resolveParentContextUpdate()` — —
+- `pathname()` — —
+- `parentSearch()` — —
+- `nextHref()` — —
+- `applyUrlEmbedPatch()` — —
+- `param()` — —
+- `wizardStepSerialPort()` — —
+- `buildWizardProbePayload()` — —
+- `targetBaud()` — —
+- `targetParity()` — —
+- `targetIds()` — —
+- `executeConfigureStep()` — —
+- `target()` — —
+- `stepPort()` — —
+- `role()` — —
+- `probePayload()` — —
+- `probe()` — —
+- `candidates()` — —
+- `selection()` — —
+- `selectedCandidate()` — —
+- `hint()` — —
+- `currentDeviceId()` — —
+- `program()` — —
+- `executeDiagnosticStep()` — —
+- `diagnostic()` — —
+- `ok()` — —
+- `executePeripheralStatusStep()` — —
+- `status()` — —
+- `executeFinalDiagnoseStep()` — —
+- `diagnose()` — —
+- `sleep()` — —
+- `RETRYABLE_HTTP_STATUSES()` — —
+- `runApiWithRetry()` — —
+- `attempt()` — —
+- `message()` — —
+- `retryable()` — —
+- `gatewayErr()` — —
+- `waitMs()` — —
 - `parseConnectRole()` — —
 - `key()` — —
 - `normalizeConnectRole()` — —
@@ -874,20 +929,36 @@ oqlos/
 - `bridgeSearchToParent()` — —
 - `text()` — —
 - `search()` — —
+- `result()` — —
+- `calls()` — —
+- `err()` — —
+- `apiBindingHint()` — —
+- `cmd()` — —
+- `peri()` — —
+- `resolveObjectActionHardwareHint()` — —
+- `objectMap()` — —
+- `hint()` — —
+- `resolveNamedActionHardwareHint()` — —
+- `binding()` — —
+- `apiHint()` — —
+- `uniqueHints()` — —
+- `seen()` — —
 - `summarizeFuncToHardware()` — —
 - `md()` — —
 - `actions()` — —
-- `objName()` — —
-- `actName()` — —
-- `om()` — —
-- `b()` — —
-- `cmd()` — —
-- `peri()` — —
-- `seen()` — —
+- `fromObject()` — —
+- `fromAction()` — —
+- `summary()` — —
 - `createHardwareActivityLogEntry()` — —
 - `prependHardwareActivityLogEntry()` — —
 - `usePageOpenedLog()` — —
 - `loggedRef()` — —
+- `cfg()` — —
+- `px()` — —
+- `prev()` — —
+- `next()` — —
+- `merged()` — —
+- `update()` — —
 - `wizardStepKind()` — —
 - `stepId()` — —
 - `isSkippablePumpOffWizardStep()` — —
@@ -915,29 +986,20 @@ oqlos/
 - `readStoredCollapsed()` — —
 - `persistStoredCollapsed()` — —
 - `FONT_USER_SCALE()` — —
-- `AppConfigContext()` — —
-- `AppConfigProvider()` — —
+- `applyDocumentAppConfig()` — —
 - `root()` — —
 - `scale()` — —
-- `parentEncoderActive()` — —
-- `getInteractiveItems()` — —
-- `all()` — —
-- `style()` — —
-- `removeHighlights()` — —
-- `handleEncoderCommand()` — —
-- `items()` — —
-- `delta()` — —
-- `target()` — —
-- `parseParentEnvelope()` — —
-- `onMessage()` — —
-- `envelope()` — —
-- `detail()` — —
-- `onWheel()` — —
-- `raw()` — —
-- `onKeyDown()` — —
+- `AppConfigContext()` — —
+- `AppConfigProvider()` — —
 - `value()` — —
 - `useAppConfig()` — —
 - `ctx()` — —
+- `TIC249_DEENERGIZE_COMMANDS()` — —
+- `tic249ResultStatus()` — —
+- `data()` — —
+- `isIdempotentTic249Deenergized()` — —
+- `status()` — —
+- `isIdempotentDiagnosticSuccess()` — —
 - `RECONNECT_DELAY_MS()` — —
 - `RECONNECT_MAX_ATTEMPTS()` — —
 - `REQUEST_TIMEOUT_MS()` — —
@@ -946,35 +1008,16 @@ oqlos/
 - `loc()` — —
 - `proto()` — —
 - `API_BASE()` — —
-- `tryParseJson()` — —
-- `describeDetail()` — —
-- `message()` — —
-- `issues()` — —
-- `lastError()` — —
-- `extractErrorPayload()` — —
-- `TIC249_DEENERGIZE_COMMANDS()` — —
-- `tic249ResultStatus()` — —
-- `data()` — —
-- `isIdempotentTic249Deenergized()` — —
-- `status()` — —
-- `formatHardwareApiError()` — —
-- `payload()` — —
-- `detail()` — —
-- `detailMessage()` — —
-- `extractDiagnosticFailure()` — —
-- `command()` — —
-- `result()` — —
-- `genericErrors()` — —
-- `nested()` — —
-- `nestedOk()` — —
-- `fromNested()` — —
-- `fromPayload()` — —
 - `request()` — —
 - `startedAt()` — —
 - `bodySummary()` — —
 - `durationMs()` — —
 - `text()` — —
+- `payload()` — —
+- `detailMessage()` — —
+- `message()` — —
 - `err()` — —
+- `data()` — —
 - `summary()` — —
 - `get()` — —
 - `post()` — —
@@ -992,6 +1035,32 @@ oqlos/
 - `summarizeHardwareApiResponse()` — —
 - `logHardwareApiEvent()` — —
 - `isFailure()` — —
+- `GENERIC_DIAGNOSTIC_ERRORS()` — —
+- `resultData()` — —
+- `firstActionableError()` — —
+- `values()` — —
+- `failureFromOkFalsePayload()` — —
+- `result()` — —
+- `data()` — —
+- `detail()` — —
+- `failureFromSuccessFalse()` — —
+- `nested()` — —
+- `failureFromNestedOk()` — —
+- `nestedOk()` — —
+- `fromNested()` — —
+- `fromPayload()` — —
+- `extractDiagnosticFailure()` — —
+- `command()` — —
+- `tryParseJson()` — —
+- `describeDetail()` — —
+- `message()` — —
+- `issues()` — —
+- `lastError()` — —
+- `extractErrorPayload()` — —
+- `formatHardwareApiError()` — —
+- `payload()` — —
+- `detail()` — —
+- `detailMessage()` — —
 - `oqlosArtificialLungCommandPath()` — —
 - `oqlosArtificialLungStatusPath()` — —
 - `connectPeripheralStatusPath()` — —
@@ -1154,6 +1223,9 @@ oqlos/
 - `report_to_dict(report)` — —
 - `build_diagnosis_report(identify)` — Build per-device diagnosis from an identify payload (same shape as GET /identify).
 - `execute_safe_recover(gateway, report)` — Reconnect failed plugins inside OqlOS; return host_actions for sidecars.
+- `shutdown_all_hui_hardware(gateway)` — —
+- `start_hui_hold(gateway, key)` — —
+- `stop_hui_hold(gateway, key)` — —
 - `get_hardware_config(device_id)` — Return the PluginConfig for *device_id* (loaded from unified YAML).
 - `register_hardware_config(config)` — No-op shim — configs live in the unified YAML now.
 - `load_config_from_yaml(config_path)` — Load plugin configs from the **unified** YAML format.
@@ -1164,12 +1236,7 @@ oqlos/
 - `run_rtc_command(command, args)` — Execute a diagnostic command against the RTC sidecar.
 - `build_rtc_adapter_entry()` — —
 - `enrich_rtc_adapter(payload)` — —
-- `shutdown_all_hui_hardware(gateway)` — —
 - `list_hui_actions()` — —
-- `start_hui_hold(gateway, key)` — —
-- `stop_hui_hold(gateway, key)` — —
-- `start_hui_artificial_lung(gateway)` — —
-- `stop_hui_artificial_lung(gateway)` — —
 - `resolve_dri0050_serial(configured)` — Pick pump USB-serial: env, stable by-id, then ttyUSB not used by Modbus.
 - `ensure_dri0050_sidecar()` — Start or restart dri0050-motor-api via systemd-run (same as make hardware-up).
 - `resolve_scanner_presence(diagnostics)` — —
@@ -1180,11 +1247,16 @@ oqlos/
 - `get_all_mappings()` — Get all peripheral-to-plugin mappings.
 - `generate_dynamic_valve_mappings(max_valve_count)` — Generate dynamic valve mappings for numbered valves.
 - `build_hardware_stack_snapshot(health)` — Collect platform, plugin health, Modbus preflight, stale-serial state, and wizard plan.
+- `steps_per_second_to_raw(value)` — Convert human steps/s into Tic249 target-velocity raw units.
+- `raw_acceleration_for_ramp(raw_speed, ramp_seconds)` — Derive Tic raw acceleration so speed ramps in ``ramp_seconds``.
+- `build_hui_lung_reciprocate_args()` — Canonical HUI AL reciprocate payload for motor-tic249 / sidecar.
 - `collect_modbus_serial_candidates(diagnostics)` — —
 - `enrich_platform_modbus_ports(payload)` — —
 - `enrich_modbus_serial_hints(payload)` — —
 - `enrich_modbus_identify(payload)` — —
 - `enrich_identify_payload(payload)` — Apply platform-specific enrichment after core plugin identify.
+- `start_hui_artificial_lung(gateway)` — —
+- `stop_hui_artificial_lung(gateway)` — —
 - `get_peripheral_status(gateway)` — —
 - `execute_command(command, args, gateway)` — —
 - `list_usb_devices()` — Enumerate connected USB devices (sysfs; no root needed).
@@ -1200,6 +1272,8 @@ oqlos/
 - `run_extended_motor_tic249_command(hardware_proxy, command, args)` — —
 - `is_oqlos_unavailable(exc)` — —
 - `oqlos_error_detail(exc)` — —
+- `map_lung_or_reciprocate(command, args)` — —
+- `map_tic249_command(command, args)` — —
 - `plugin_needs_repair(plugin_id, entry)` — —
 - `modbus_plugins_need_repair(identify)` — —
 - `analyze_repair_needs(identify)` — Return whether host stack restart is recommended and human-readable reasons.
@@ -1220,6 +1294,7 @@ oqlos/
 - `adc_sensor_alias(raw_sensor_id)` — —
 - `normalize_adc_read_result(result, requested_sensor_id)` — —
 - `normalize_adc_read_all_result(result)` — —
+- `tic249_arg(args, snake, camel, default)` — —
 - `rewrite_modbus_repair(payload)` — Replace upstream docker-gateway commands with the configured host workflow.
 - `is_raspberry_pi()` — Return True when running on a Raspberry Pi.
 - `is_docker()` — Return True when running inside a Docker container.
@@ -1233,12 +1308,31 @@ oqlos/
 - `count_detected_adapters(adapters)` — —
 - `enrich_identify_payload(payload)` — —
 - `enrich_hardware_identify(payload)` — Apply OqlOS identify enrichment and host repair command normalization.
+- `tic249_sidecar_base_urls()` — Candidate Tic sidecar bases (host, container, and explicit env).
+- `tic249_sidecar_base_url()` — —
+- `sidecar_reciprocate_preferred()` — Prefer hw-tic249 /api/reciprocate (real limit switches) over OqlOS plugin mock.
+- `sidecar_reports_deenergized()` — —
+- `attempt_reciprocate_via_sidecar(params)` — POST /api/reciprocate on Tic249 sidecar (rpi-motor-tic249 web_panel).
+- `direct_sidecar_deenergize(command)` — De-energize via Tic sidecar when OqlOS plugin registry has no active instance.
+- `lung_disable_fallback(hardware_proxy, command)` — Retry de-energize through the lung/disable route when plugin execute fails.
+- `disable_success_response(command, fallback_result, fallback_name)` — —
+- `attempt_disable_deenergize(hardware_proxy, command)` — Sidecar and lung/disable paths do not require an OqlOS plugin registry instance.
+- `normalize_motion_params(args)` — —
+- `stroke_steps(args, default)` — —
+- `apply_reciprocate_direction(params, args)` — —
+- `build_reciprocate_params(args)` — Build plugin ``reciprocate`` params; preserve limit_mode for physical end switches.
+- `extract_position(payload)` — —
+- `command_error_message(result)` — Collect the best available error string from plugin or sidecar payloads.
+- `generic_failure_hint(result)` — —
+- `command_failure(result)` — —
+- `plugin_unavailable_error(exc)` — —
+- `normalize_target_state(command, result)` — —
 - `get_pluggy_manager()` — Return the global pluggy PluginManager for third-party drivers.
 - `dynamic_peripheral_model(peripheral)` — Generate a runtime Pydantic model from a ``PeripheralConfig``.
 - `dynamic_plugin_schema_models(config)` — Build runtime Pydantic models for all plugin peripherals.
 - `http_health_check(client, base_url, label)` — Shared HTTP health check — GET {base_url}/health.
-- `not_connected_health(label)` — Return error health when plugin has no active client.
-- `health_check_exception(exc)` — Return error health for unexpected exceptions.
+- `not_connected_health(label)` — —
+- `health_check_exception(exc)` — —
 - `http_disconnect(client, label)` — Close an httpx client (if open) and log disconnect.
 - `serial_error_is_stale(exc)` — —
 - `reopen_rtu_after_stale(plugin, exc)` — Close and reopen the RTU bus after USB tty re-enumeration (EIO).
@@ -1263,6 +1357,7 @@ oqlos/
 - `create_version_router()` — Create a FastAPI router that exposes a single `/version` endpoint.
 - `configure_oqlos_logging()` — Configure root logging for oqlos-server.
 - `get_logger(name)` — —
+- `normalize_peripheral_id(value)` — —
 - `get_state()` — Get current system state
 - `stream_values(param, min, max, period)` — SSE endpoint for live value streaming.
 - `get_current_value(param)` — Get current value for a parameter (single request, not streaming).
@@ -1271,6 +1366,11 @@ oqlos/
 - `fetch_variables(source)` — Fetch variables (Peripheral State Table) from backend DB; tolerate dev HTML by returning [].
 - `fetch_protocol_steps(scenario, source)` — Fetch protocol steps for preview.
 - `post_commands(env, background_tasks)` — Command bus endpoint used by frontend.
+- `hardware_peripheral_status_v3(peripheral_id)` — —
+- `hardware_diagnostic_command_v3(req)` — —
+- `hardware_scanner_status_v3()` — —
+- `hardware_scanner_last_v3()` — —
+- `hardware_scanner_ingest_v3(payload)` — —
 - `validate_mapping_contract(mapping)` — —
 - `ensure_plugins_initialized()` — Register and discover plugins once per process.
 - `list_plugins()` — List all registered hardware plugins.
@@ -1286,30 +1386,9 @@ oqlos/
 - `register_dsl(payload)` — Register one or many scenarios defined as DSL strings.
 - `empty_mapping()` — —
 - `normalize_mapping(value)` — —
-- `normalize_peripheral_id(value)` — —
 - `hardware_health_v3()` — —
 - `hardware_identify_v3(scan)` — —
 - `hardware_proxy_info_v3()` — —
-- `hardware_peripheral_status_v3(peripheral_id)` — —
-- `hardware_diagnostic_command_v3(req)` — —
-- `hardware_hui_actions_v3()` — —
-- `hardware_hui_shutdown_v3(payload)` — —
-- `hardware_hui_hold_start_v3(key, payload)` — —
-- `hardware_hui_hold_stop_v3(key, payload)` — —
-- `hardware_hui_al_command_v3(command, payload)` — —
-- `hardware_modbus_autoconfigure_v3()` — —
-- `hardware_diagnosis_v3()` — —
-- `hardware_diagnosis_repair_v3()` — —
-- `hardware_modbus_waveshare_diagnose_v3(exclusive)` — —
-- `hardware_modbus_wizard_plan_v3()` — —
-- `hardware_stack_snapshot_v3()` — —
-- `hardware_runtime_status_v3(serial_port)` — —
-- `hardware_runtime_stop_v3(payload)` — —
-- `hardware_runtime_start_v3(payload)` — —
-- `hardware_runtime_make_v3(payload)` — —
-- `hardware_modbus_wizard_probe_isolated_v3(payload)` — —
-- `hardware_modbus_wizard_program_isolated_v3(payload)` — —
-- `hardware_runtime_python_v3(payload)` — —
 - `hardware_runtime_python_resolve_func_v3(req)` — —
 - `hardware_mapping_get_v3()` — —
 - `hardware_mapping_schema_v3()` — —
@@ -1321,9 +1400,6 @@ oqlos/
 - `hardware_cqrs_command_v3(req)` — —
 - `hardware_cqrs_events_v3(limit)` — —
 - `hardware_cqrs_events_clear_v3(req)` — —
-- `hardware_scanner_status_v3()` — —
-- `hardware_scanner_last_v3()` — —
-- `hardware_scanner_ingest_v3(payload)` — —
 - `hardware_events_ws(websocket)` — —
 - `start_execution(request)` — Start scenario execution
 - `execute_step(payload)` — Execute a single DSL step within the current (or new) execution.
@@ -1373,20 +1449,38 @@ oqlos/
 - `read_file_endpoint(file_path)` — Read a file's content.
 - `write_file_endpoint(file_path, file_content)` — Write content to a file (creates parent directories as needed).
 - `execute_scenario(request)` — Execute a scenario file using oqlos runtime.
-- `index_page()` — Serve the firmware UI (index.html) at root
-- `editor_page()` — Serve the scenario editor UI
-- `panel_page()` — Serve the test panel UI (predefined command groups, custom + ready-made scenarios).
-- `hardware_status_page()` — Serve the direct hardware status page without the React iframe wrapper.
+- `index_page()` — —
+- `editor_page()` — —
+- `panel_page()` — —
+- `hardware_status_page()` — —
 - `hardware_demo_alias(request)` — —
 - `hardware_restart_alias(request)` — —
 - `map_editor_alias(request)` — —
 - `hardware_ui_spa(full_path)` — Serve the moved hardware UI SPA, falling back to index.html for client routes.
 - `health_check()` — Health check endpoint for tests and frontend compatibility probes.
 - `status()` — —
-- `hardware_events_websocket_alias(websocket)` — Hardware command event stream used by the moved MAP editor.
+- `hardware_events_websocket_alias(websocket)` — —
 - `websocket_endpoint(websocket)` — —
-- `oql_websocket_alias(websocket)` — Convenience alias for the OQL channel (also at /api/v1/oql/ws).
+- `oql_websocket_alias(websocket)` — —
 - `run()` — Entry point for ``oqlos-server`` console script.
+- `hardware_hui_actions_v3()` — —
+- `hardware_hui_shutdown_v3(payload)` — —
+- `hardware_hui_hold_start_v3(key, payload)` — —
+- `hardware_hui_hold_stop_v3(key, payload)` — —
+- `hardware_hui_al_command_v3(command, payload)` — —
+- `hardware_modbus_autoconfigure_v3()` — —
+- `hardware_diagnosis_v3()` — —
+- `hardware_diagnosis_repair_v3()` — —
+- `hardware_modbus_waveshare_diagnose_v3(exclusive)` — —
+- `hardware_modbus_wizard_plan_v3()` — —
+- `hardware_stack_snapshot_v3()` — —
+- `hardware_runtime_status_v3(serial_port)` — —
+- `hardware_runtime_stop_v3(payload)` — —
+- `hardware_runtime_start_v3(payload)` — —
+- `hardware_runtime_make_v3(payload)` — —
+- `hardware_modbus_wizard_probe_isolated_v3(payload)` — —
+- `hardware_modbus_wizard_program_isolated_v3(payload)` — —
+- `hardware_runtime_python_v3(payload)` — —
 - `publish_hardware_command_event(command, result)` — —
 - `list_hardware_command_events(limit)` — —
 - `clear_hardware_command_events()` — —
@@ -1464,19 +1558,26 @@ oqlos/
 📄 `docs.oql-spec`
 📄 `docs.oql_v2_llm_validator.schema`
 📄 `docs.oql_v4_llm_validator.schema`
+📄 `docs.refactor-plan`
 📄 `examples.curl-quickstart`
 📄 `examples.hardware.doctor-workflow` (3 functions)
 📄 `examples.plugin-config`
 📄 `frontend.package`
 📄 `frontend.src.App`
+📄 `frontend.src.api.hardware-api-errors` (10 functions)
 📄 `frontend.src.api.hardware-api-log` (9 functions)
-📄 `frontend.src.api.hardwareApi` (55 functions)
+📄 `frontend.src.api.hardware-diagnostic-failure` (18 functions)
+📄 `frontend.src.api.hardware-diagnostic-failure.test`
+📄 `frontend.src.api.hardware-tic249-status` (8 functions)
+📄 `frontend.src.api.hardwareApi` (24 functions)
 📄 `frontend.src.api.wsClient` (32 functions, 1 classes)
 📄 `frontend.src.components.HardwareActivityLog`
 📄 `frontend.src.components.SharedNav` (6 functions)
 📄 `frontend.src.components.SidebarList` (4 functions)
-📄 `frontend.src.context.AppConfigProvider` (25 functions)
-📄 `frontend.src.hooks.useUrlConfig` (54 functions)
+📄 `frontend.src.context.AppConfigProvider` (5 functions)
+📄 `frontend.src.context.app-config-document` (4 functions)
+📄 `frontend.src.hooks.useParentEncoderNavigation` (19 functions)
+📄 `frontend.src.hooks.useUrlConfig` (6 functions)
 📄 `frontend.src.hooks.useWsStatus` (4 functions)
 📄 `frontend.src.i18n.I18nProvider` (10 functions)
 📄 `frontend.src.i18n.dictionaries` (4 functions)
@@ -1486,22 +1587,28 @@ oqlos/
 📄 `frontend.src.i18n.hardware-status-presets-translations`
 📄 `frontend.src.main` (1 functions)
 📄 `frontend.src.pages.HardwareDemo` (46 functions)
-📄 `frontend.src.pages.HardwareRestart` (73 functions)
+📄 `frontend.src.pages.HardwareRestart` (50 functions)
 📄 `frontend.src.pages.HardwareStatus` (1 functions)
 📄 `frontend.src.pages.MapEditor` (151 functions)
 📄 `frontend.src.pages.mapEditorDefaultMap` (3 functions)
 📄 `frontend.src.utils.collapse-toggle-bridge` (6 functions)
 📄 `frontend.src.utils.designRem` (2 functions)
 📄 `frontend.src.utils.hardware-activity-log` (4 functions)
+📄 `frontend.src.utils.hardware-api-retry` (8 functions)
+📄 `frontend.src.utils.hardware-api-retry.test` (6 functions)
 📄 `frontend.src.utils.hardware-restart-docs` (2 functions)
+📄 `frontend.src.utils.hardware-restart-wizard-steps` (24 functions)
 📄 `frontend.src.utils.hardware-time` (1 functions)
 📄 `frontend.src.utils.hardware-wizard-plan` (2 functions)
 📄 `frontend.src.utils.hardware-wizard-steps` (16 functions)
 📄 `frontend.src.utils.hardwareEventStream` (21 functions)
 📄 `frontend.src.utils.hui-shell-key` (5 functions)
-📄 `frontend.src.utils.mapEditorFuncHardwareSummary` (13 functions)
+📄 `frontend.src.utils.mapEditorFuncHardwareSummary` (16 functions)
+📄 `frontend.src.utils.mapEditorFuncHardwareSummary.test` (1 functions)
 📄 `frontend.src.utils.parentUrlBridge` (3 functions)
 📄 `frontend.src.utils.rbac.policy` (22 functions)
+📄 `frontend.src.utils.url-embed-config` (49 functions)
+📄 `frontend.src.utils.url-embed-config.test` (8 functions)
 📄 `frontend.src.utils.useSelectionCollapsePanel` (22 functions)
 📦 `frontend.vendor.hardware-client` (2 functions)
 📄 `frontend.vendor.hardware-client.paths` (4 functions)
@@ -1512,15 +1619,19 @@ oqlos/
 📄 `openapi_spec`
 📦 `oqlos`
 📦 `oqlos.api`
+📄 `oqlos.api._hw3_mapping` (12 functions)
+📄 `oqlos.api._hw3_models` (7 functions, 9 classes)
+📄 `oqlos.api._hw3_peripheral` (5 functions)
+📄 `oqlos.api._hw3_system` (19 functions)
 📄 `oqlos.api.editor` (6 functions, 3 classes)
 📄 `oqlos.api.execution` (16 functions)
 📄 `oqlos.api.hardware` (93 functions)
 📄 `oqlos.api.hardware_events` (10 functions)
 📄 `oqlos.api.hardware_mapping_contract` (4 functions, 1 classes)
 📄 `oqlos.api.hardware_mapping_store` (13 functions, 1 classes)
-📄 `oqlos.api.hardware_v3` (46 functions, 9 classes)
+📄 `oqlos.api.hardware_v3` (3 functions)
 📄 `oqlos.api.logs` (3 functions)
-📄 `oqlos.api.main` (20 functions)
+📄 `oqlos.api.main` (22 functions)
 📄 `oqlos.api.oql_mqtt` (6 functions, 3 classes)
 📄 `oqlos.api.peripherals` (4 functions)
 📄 `oqlos.api.plugins` (12 functions)
@@ -1530,22 +1641,22 @@ oqlos/
 📄 `oqlos.api.version`
 📄 `oqlos.config` (1 functions, 1 classes)
 📦 `oqlos.core`
-📄 `oqlos.core._action_motor2` (34 functions)
+📄 `oqlos.core._action_motor2` (30 functions)
 📄 `oqlos.core._compare` (2 functions)
 📄 `oqlos.core._cql_tokenizer` (27 functions)
 📄 `oqlos.core._cql_tree_builder` (9 functions)
 📄 `oqlos.core._dsl_helpers` (12 functions)
 📄 `oqlos.core._firmware_executor` (9 functions, 1 classes)
 📄 `oqlos.core._func_resolver` (4 functions)
-📄 `oqlos.core._interpreter_actions` (51 functions)
+📄 `oqlos.core._interpreter_actions` (49 functions)
 📄 `oqlos.core._line_parsers` (9 functions)
-📄 `oqlos.core._oql_adapter` (28 functions, 1 classes)
+📄 `oqlos.core._oql_adapter` (29 functions, 1 classes)
 📄 `oqlos.core._sensor_evaluator` (6 functions, 1 classes)
 📄 `oqlos.core._value_normalizers` (7 functions, 1 classes)
-📄 `oqlos.core.base` (28 functions, 7 classes)
+📄 `oqlos.core.base` (29 functions, 7 classes)
 📄 `oqlos.core.cql_parser` (30 functions, 1 classes)
 📄 `oqlos.core.executor` (21 functions, 1 classes)
-📄 `oqlos.core.interpreter` (47 functions, 1 classes)
+📄 `oqlos.core.interpreter` (48 functions, 1 classes)
 📄 `oqlos.core.motor2_runtime` (12 functions, 2 classes)
 📄 `oqlos.core.oql_parser` (43 functions, 3 classes)
 📄 `oqlos.core.oql_versioning` (4 functions, 1 classes)
@@ -1559,7 +1670,7 @@ oqlos/
 📦 `oqlos.hardware.client`
 📄 `oqlos.hardware.client.adc` (3 functions)
 📄 `oqlos.hardware.client.autorepair` (9 functions)
-📄 `oqlos.hardware.client.config` (5 functions, 1 classes)
+📄 `oqlos.hardware.client.config` (6 functions, 1 classes)
 📄 `oqlos.hardware.client.constants`
 📄 `oqlos.hardware.client.errors` (3 functions, 1 classes)
 📄 `oqlos.hardware.client.http_helpers` (2 functions)
@@ -1569,8 +1680,13 @@ oqlos/
 📄 `oqlos.hardware.client.proxy` (29 functions, 1 classes)
 📄 `oqlos.hardware.client.resolvers` (10 functions)
 📄 `oqlos.hardware.client.tic249_arg_contract` (2 functions)
-📄 `oqlos.hardware.client.tic249_extended` (30 functions)
+📄 `oqlos.hardware.client.tic249_arg_helpers` (1 functions)
+📄 `oqlos.hardware.client.tic249_command_mapping` (2 functions)
+📄 `oqlos.hardware.client.tic249_error_messages` (6 functions)
+📄 `oqlos.hardware.client.tic249_extended` (7 functions)
+📄 `oqlos.hardware.client.tic249_motion_params` (6 functions)
 📄 `oqlos.hardware.client.tic249_rig_direction` (2 functions)
+📄 `oqlos.hardware.client.tic249_sidecar_client` (9 functions)
 📄 `oqlos.hardware.config_paths` (1 functions)
 📄 `oqlos.hardware.config_schema` (4 functions, 1 classes)
 📄 `oqlos.hardware.control_proxy` (1 functions, 1 classes)
@@ -1583,14 +1699,17 @@ oqlos/
 📄 `oqlos.hardware.firmware_adapter` (26 functions, 1 classes)
 📄 `oqlos.hardware.gateway` (25 functions, 5 classes)
 📄 `oqlos.hardware.health_status` (1 functions)
-📄 `oqlos.hardware.hui_actions` (12 functions)
+📄 `oqlos.hardware.hui_actions` (1 functions)
+📄 `oqlos.hardware.hui_artificial_lung` (3 functions)
+📄 `oqlos.hardware.hui_hold` (11 functions)
+📄 `oqlos.hardware.hui_lung_recipe` (1 functions)
 📄 `oqlos.hardware.identify_enrichment` (1 functions)
 📄 `oqlos.hardware.modbus_identify` (8 functions)
 📄 `oqlos.hardware.peripheral_mapping` (4 functions)
 📄 `oqlos.hardware.plugin_gateway` (22 functions, 1 classes)
 📦 `oqlos.hardware.plugins`
 📄 `oqlos.hardware.plugins._rtu_serial` (2 functions)
-📄 `oqlos.hardware.plugins._shared` (4 functions)
+📄 `oqlos.hardware.plugins._shared` (5 functions)
 📄 `oqlos.hardware.plugins.base` (21 functions, 9 classes)
 📄 `oqlos.hardware.plugins.lung` (20 functions, 1 classes)
 📄 `oqlos.hardware.plugins.modbus` (16 functions, 1 classes)
@@ -1602,9 +1721,9 @@ oqlos/
 📄 `oqlos.hardware.registry` (3 functions, 1 classes)
 📄 `oqlos.hardware.rtc_probe` (7 functions)
 📄 `oqlos.hardware.scanner_probe` (13 functions)
-📄 `oqlos.hardware.sidecar_control` (8 functions)
+📄 `oqlos.hardware.sidecar_control` (9 functions)
 📄 `oqlos.hardware.stack_snapshot` (4 functions)
-📄 `oqlos.hardware.tic249_units`
+📄 `oqlos.hardware.tic249_units` (2 functions)
 📦 `oqlos.hardware.transport`
 📄 `oqlos.hardware.transport.manage_ops` (7 functions)
 📄 `oqlos.hardware.transport.mqtt_oql_bridge` (34 functions, 6 classes)

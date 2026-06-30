@@ -1,4 +1,4 @@
-# code2llm/evolution | 1967 func | 157f | 2026-06-30
+# code2llm/evolution | 2013 func | 177f | 2026-06-30
 # generated in 0.01s
 
 NEXT[10] (ranked by impact):
@@ -10,49 +10,49 @@ NEXT[10] (ranked by impact):
       WHY: 1981L, 0 classes, max CC=5
       EFFORT: ~4h  IMPACT: 9905
 
-  [3] !! SPLIT           frontend/src/pages/mapEditorDefaultMap.js
-      WHY: 1763L, 0 classes, max CC=1
-      EFFORT: ~4h  IMPACT: 1763
-
-  [4] !! SPLIT-FUNC      AppConfigContext  CC=44  fan=31
-      WHY: CC=44 exceeds 15
-      EFFORT: ~1h  IMPACT: 1364
-
-  [5] !! SPLIT-FUNC      AppConfigProvider  CC=44  fan=31
-      WHY: CC=44 exceeds 15
-      EFFORT: ~1h  IMPACT: 1364
-
-  [6] !! SPLIT-FUNC      _executeConfigureStep  CC=48  fan=15
+  [3] !! SPLIT-FUNC      executeConfigureStep  CC=48  fan=15
       WHY: CC=48 exceeds 15
       EFFORT: ~1h  IMPACT: 720
 
-  [7] !! SPLIT-FUNC      RAIL_HOVER_OPEN_MS  CC=33  fan=21
+  [4] !! SPLIT-FUNC      RAIL_HOVER_OPEN_MS  CC=33  fan=21
       WHY: CC=33 exceeds 15
       EFFORT: ~1h  IMPACT: 693
 
-  [8] !! SPLIT-FUNC      RAIL_HOVER_CLOSE_MS  CC=33  fan=21
+  [5] !! SPLIT-FUNC      RAIL_HOVER_CLOSE_MS  CC=33  fan=21
       WHY: CC=33 exceeds 15
       EFFORT: ~1h  IMPACT: 693
 
-  [9] !! SPLIT-FUNC      useSelectionCollapsePanel  CC=33  fan=21
+  [6] !! SPLIT-FUNC      useSelectionCollapsePanel  CC=33  fan=21
       WHY: CC=33 exceeds 15
       EFFORT: ~1h  IMPACT: 693
 
-  [10] !! SPLIT-FUNC      extractDiagnosticFailure  CC=69  fan=10
-      WHY: CC=69 exceeds 15
-      EFFORT: ~1h  IMPACT: 690
+  [7] !  SPLIT-FUNC      runCurrentStep  CC=20  fan=18
+      WHY: CC=20 exceeds 15
+      EFFORT: ~1h  IMPACT: 360
+
+  [8] !  SPLIT-FUNC      API_BASE  CC=17  fan=13
+      WHY: CC=17 exceeds 15
+      EFFORT: ~1h  IMPACT: 221
+
+  [9] !  SPLIT-FUNC      request  CC=17  fan=13
+      WHY: CC=17 exceeds 15
+      EFFORT: ~1h  IMPACT: 221
+
+  [10] !  SPLIT-FUNC      editObjectActionArg  CC=24  fan=9
+      WHY: CC=24 exceeds 15
+      EFFORT: ~1h  IMPACT: 216
 
 
 RISKS[3]:
   ⚠ Splitting oqlos/api/hardware.py may break 93 import paths
   ⚠ Splitting frontend/src/i18n/dictionaries.js may break 4 import paths
-  ⚠ Splitting frontend/src/pages/mapEditorDefaultMap.js may break 3 import paths
+  ⚠ Splitting docs/README.md may break 0 import paths
 
 METRICS-TARGET:
-  CC̄:          4.1 → ≤2.9
-  max-CC:      69 → ≤20
-  god-modules: 23 → 0
-  high-CC(≥15): 27 → ≤13
+  CC̄:          4.0 → ≤2.8
+  max-CC:      48 → ≤20
+  god-modules: 22 → 0
+  high-CC(≥15): 23 → ≤11
   hub-types:   0 → ≤0
 
 PATTERNS (language parser shared logic):
@@ -80,4 +80,4 @@ PATTERNS (language parser shared logic):
     - Standardized FunctionInfo/ClassInfo models
 
 HISTORY:
-  prev CC̄=4.1 → now CC̄=4.1
+  prev CC̄=4.0 → now CC̄=4.0

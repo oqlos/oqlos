@@ -1,18 +1,25 @@
-# oqlos | 252f 49384L | python:213,javascript:24,shell:9,typescript:3,css:2,less:1 | 2026-06-30
-# stats: 1319 func | 196 cls | 252 mod | CC̄=4.3 | critical:118 | cycles:0
+# oqlos | 274f 50308L | python:222,javascript:37,shell:9,typescript:3,css:2,less:1 | 2026-06-30
+# stats: 1329 func | 196 cls | 274 mod | CC̄=4.3 | critical:117 | cycles:0
 # alerts[5]: CC _validate_motor2=19; CC _run_diagnostic_command=19; CC _resolve_func_steps=14; CC _probe_i2c_ads1115=14; CC exec_action_loop_block=14
 # hotspots[5]: _resolve fan=23; build_diagnosis_report fan=19; _build_waveshare_diagnose_report fan=18; hardware_identify fan=18; _handle_start fan=18
 # evolution: baseline
 # Keys: M=modules, D=details, i=imports, e=exports, c=classes, f=functions, m=methods
-M[252]:
+M[274]:
   app.doql.css,165
-  app.doql.less,311
+  app.doql.less,316
   examples/curl-quickstart.sh,75
   examples/hardware/doctor-workflow.sh,53
+  frontend/src/api/hardware-api-errors.js,64
   frontend/src/api/hardware-api-log.js,88
-  frontend/src/api/hardwareApi.js,435
+  frontend/src/api/hardware-diagnostic-failure.js,103
+  frontend/src/api/hardware-diagnostic-failure.test.js,59
+  frontend/src/api/hardware-tic249-status.js,36
+  frontend/src/api/hardwareApi.js,257
   frontend/src/api/wsClient.js,139
-  frontend/src/hooks/useUrlConfig.js,287
+  frontend/src/context/app-config-document.js,27
+  frontend/src/hooks/useParentEncoderNavigation.js,157
+  frontend/src/hooks/useRailHoverPreview.js,85
+  frontend/src/hooks/useUrlConfig.js,86
   frontend/src/hooks/useWsStatus.js,27
   frontend/src/i18n/dictionaries.js,1982
   frontend/src/i18n/hardware-demo-extra-translations.js,184
@@ -24,16 +31,22 @@ M[252]:
   frontend/src/utils/collapse-toggle-bridge.js,47
   frontend/src/utils/designRem.js,44
   frontend/src/utils/hardware-activity-log.js,35
+  frontend/src/utils/hardware-api-retry.js,39
+  frontend/src/utils/hardware-api-retry.test.js,46
   frontend/src/utils/hardware-restart-docs.js,12
+  frontend/src/utils/hardware-restart-wizard-steps.js,110
   frontend/src/utils/hardware-time.js,5
   frontend/src/utils/hardware-wizard-plan.js,11
   frontend/src/utils/hardware-wizard-steps.js,112
   frontend/src/utils/hardwareEventStream.js,48
   frontend/src/utils/hui-shell-key.js,39
-  frontend/src/utils/mapEditorFuncHardwareSummary.js,51
+  frontend/src/utils/mapEditorFuncHardwareSummary.js,81
+  frontend/src/utils/mapEditorFuncHardwareSummary.test.js,55
   frontend/src/utils/parentUrlBridge.js,40
   frontend/src/utils/rbac.policy.js,119
-  frontend/src/utils/useSelectionCollapsePanel.js,192
+  frontend/src/utils/url-embed-config.js,194
+  frontend/src/utils/url-embed-config.test.js,93
+  frontend/src/utils/useSelectionCollapsePanel.js,140
   frontend/vendor/hardware-client/index.ts,32
   frontend/vendor/hardware-client/paths.ts,40
   frontend/vite.config.ts,37
@@ -51,7 +64,7 @@ M[252]:
   oqlos/api/hardware_mapping_store.py,153
   oqlos/api/hardware_v3.py,61
   oqlos/api/logs.py,46
-  oqlos/api/main.py,370
+  oqlos/api/main.py,371
   oqlos/api/oql_mqtt.py,152
   oqlos/api/peripherals.py,71
   oqlos/api/plugins.py,182
@@ -101,8 +114,13 @@ M[252]:
   oqlos/hardware/client/proxy.py,461
   oqlos/hardware/client/resolvers.py,129
   oqlos/hardware/client/tic249_arg_contract.py,66
-  oqlos/hardware/client/tic249_extended.py,639
+  oqlos/hardware/client/tic249_arg_helpers.py,12
+  oqlos/hardware/client/tic249_command_mapping.py,50
+  oqlos/hardware/client/tic249_error_messages.py,113
+  oqlos/hardware/client/tic249_extended.py,216
+  oqlos/hardware/client/tic249_motion_params.py,129
   oqlos/hardware/client/tic249_rig_direction.py,44
+  oqlos/hardware/client/tic249_sidecar_client.py,184
   oqlos/hardware/config_paths.py,42
   oqlos/hardware/config_schema.py,146
   oqlos/hardware/control_proxy.py,69
@@ -115,7 +133,10 @@ M[252]:
   oqlos/hardware/firmware_adapter.py,482
   oqlos/hardware/gateway.py,417
   oqlos/hardware/health_status.py,27
-  oqlos/hardware/hui_actions.py,252
+  oqlos/hardware/hui_actions.py,59
+  oqlos/hardware/hui_artificial_lung.py,84
+  oqlos/hardware/hui_hold.py,189
+  oqlos/hardware/hui_lung_recipe.py,43
   oqlos/hardware/identify_enrichment.py,19
   oqlos/hardware/modbus_identify.py,132
   oqlos/hardware/peripheral_mapping.py,139
@@ -136,7 +157,7 @@ M[252]:
   oqlos/hardware/scanner_probe.py,263
   oqlos/hardware/sidecar_control.py,223
   oqlos/hardware/stack_snapshot.py,89
-  oqlos/hardware/tic249_units.py,6
+  oqlos/hardware/tic249_units.py,40
   oqlos/hardware/transport/__init__.py,25
   oqlos/hardware/transport/manage_ops.py,223
   oqlos/hardware/transport/mqtt_oql_bridge.py,495
@@ -232,7 +253,7 @@ M[252]:
   tests/firmware/test_oql_mqtt_bridge.py,255
   tests/firmware/test_oql_route_http.py,119
   tests/firmware/test_oqlos_logging.py,21
-  tests/firmware/test_panel_ui.py,178
+  tests/firmware/test_panel_ui.py,189
   tests/firmware/test_parser_cycle.py,53
   tests/firmware/test_plugin_gateway_env.py,243
   tests/firmware/test_plugin_gateway_init.py,67
@@ -243,6 +264,7 @@ M[252]:
   tests/firmware/test_runtime_command_payload.py,16
   tests/firmware/test_safe_eval.py,244
   tests/firmware/test_scanner_probe.py,68
+  tests/firmware/test_tic249_units.py,18
   tests/firmware/test_tokenizer_extended.py,194
   tests/firmware/test_usb_diagnostics.py,63
   tests/test_core.py,854
@@ -1008,42 +1030,53 @@ D:
     e: canonicalize_motor2_runtime_key,tic249_runtime_args_from_config
     canonicalize_motor2_runtime_key(key)
     tic249_runtime_args_from_config(runtime_config)
+  oqlos/hardware/client/tic249_arg_helpers.py:
+    e: tic249_arg
+    tic249_arg(args;snake;camel;default)
+  oqlos/hardware/client/tic249_command_mapping.py:
+    e: map_lung_or_reciprocate,map_tic249_command
+    map_lung_or_reciprocate(command;args)
+    map_tic249_command(command;args)
+  oqlos/hardware/client/tic249_error_messages.py:
+    e: extract_position,command_error_message,generic_failure_hint,command_failure,plugin_unavailable_error,normalize_target_state
+    extract_position(payload)
+    command_error_message(result)
+    generic_failure_hint(result)
+    command_failure(result)
+    plugin_unavailable_error(exc)
+    normalize_target_state(command;result)
   oqlos/hardware/client/tic249_extended.py:
-    e: _arg,_plugin_payload,_execute,_steps_per_second_to_raw,_normalize_motion_params,_stroke_steps,_apply_reciprocate_direction,_build_reciprocate_params,_map_lung_or_reciprocate,_command_mapping,_extract_position,_command_error_message,_generic_failure_hint,_failure,_plugin_unavailable_error,_tic249_sidecar_base_urls,_tic249_sidecar_base_url,_sidecar_reports_deenergized,_attempt_disable_deenergize,_disable_success_response,_sidecar_reciprocate_preferred,_attempt_reciprocate_via_sidecar,_direct_sidecar_deenergize,_lung_disable_fallback,_normalize_target_state,_handle_hardware_proxy_error,_handle_move_relative_command,_try_disable_fallback,_try_sidecar_reciprocate,run_extended_motor_tic249_command
-    _arg(args;snake;camel;default)
+    e: _plugin_payload,_execute,_handle_move_relative_command,_try_disable_fallback,_try_sidecar_reciprocate,_handle_hardware_proxy_error,run_extended_motor_tic249_command
     _plugin_payload(command;params)
     _execute(proxy;command;params)
-    _steps_per_second_to_raw(value;args)
-    _normalize_motion_params(args)
-    _stroke_steps(args;default)
-    _apply_reciprocate_direction(params;args)
-    _build_reciprocate_params(args)
-    _map_lung_or_reciprocate(command;args)
-    _command_mapping(command;args)
-    _extract_position(payload)
-    _command_error_message(result)
-    _generic_failure_hint(result)
-    _failure(result)
-    _plugin_unavailable_error(exc)
-    _tic249_sidecar_base_urls()
-    _tic249_sidecar_base_url()
-    _sidecar_reports_deenergized()
-    _attempt_disable_deenergize(hardware_proxy;command)
-    _disable_success_response(command;fallback_result;fallback_name)
-    _sidecar_reciprocate_preferred()
-    _attempt_reciprocate_via_sidecar(params)
-    _direct_sidecar_deenergize(command)
-    _lung_disable_fallback(hardware_proxy;command)
-    _normalize_target_state(command;result)
-    _handle_hardware_proxy_error(hardware_proxy;command;plugin_command;params;exc)
     _handle_move_relative_command(hardware_proxy;command_args)
     _try_disable_fallback(hardware_proxy;command)
     _try_sidecar_reciprocate(command;plugin_command;params)
+    _handle_hardware_proxy_error(hardware_proxy;command;plugin_command;params;exc)
     run_extended_motor_tic249_command(hardware_proxy;command;args)
+  oqlos/hardware/client/tic249_motion_params.py:
+    e: normalize_motion_params,stroke_steps,apply_reciprocate_direction,_resolve_reciprocate_speed,_resolve_reciprocate_ramp,build_reciprocate_params
+    normalize_motion_params(args)
+    stroke_steps(args;default)
+    apply_reciprocate_direction(params;args)
+    _resolve_reciprocate_speed(args)
+    _resolve_reciprocate_ramp(args)
+    build_reciprocate_params(args)
   oqlos/hardware/client/tic249_rig_direction.py:
     e: rig_direction_to_plugin,apply_rig_direction_to_plugin_params
     rig_direction_to_plugin(direction)
     apply_rig_direction_to_plugin_params(params;args)
+  oqlos/hardware/client/tic249_sidecar_client.py:
+    e: tic249_sidecar_base_urls,tic249_sidecar_base_url,sidecar_reciprocate_preferred,sidecar_reports_deenergized,attempt_reciprocate_via_sidecar,direct_sidecar_deenergize,lung_disable_fallback,disable_success_response,attempt_disable_deenergize
+    tic249_sidecar_base_urls()
+    tic249_sidecar_base_url()
+    sidecar_reciprocate_preferred()
+    sidecar_reports_deenergized()
+    attempt_reciprocate_via_sidecar(params)
+    direct_sidecar_deenergize(command)
+    lung_disable_fallback(hardware_proxy;command)
+    disable_success_response(command;fallback_result;fallback_name)
+    attempt_disable_deenergize(hardware_proxy;command)
   oqlos/hardware/config_paths.py:
     e: resolve_oqlos_config_path
     resolve_oqlos_config_path(config_path)
@@ -1121,19 +1154,29 @@ D:
     e: health_status_is_ok
     health_status_is_ok(raw_status)
   oqlos/hardware/hui_actions.py:
-    e: _success,_operation,_set_valve,_set_pump,_set_pump_best_effort,shutdown_all_hui_hardware,list_hui_actions,start_hui_hold,stop_hui_hold,_run_tic249_reciprocate,start_hui_artificial_lung,stop_hui_artificial_lung
+    e: list_hui_actions
+    list_hui_actions()
+  oqlos/hardware/hui_artificial_lung.py:
+    e: _run_tic249_reciprocate,start_hui_artificial_lung,stop_hui_artificial_lung
+    _run_tic249_reciprocate(gateway)
+    start_hui_artificial_lung(gateway)
+    stop_hui_artificial_lung(gateway)
+  oqlos/hardware/hui_hold.py:
+    e: _success,_operation,_set_valve,_set_pump,_set_pump_best_effort,shutdown_all_hui_hardware,_hold_start_failure,_engage_hold_valves,_engage_hold_pump_if_needed,start_hui_hold,stop_hui_hold
     _success(value)
     _operation(name;ok)
     _set_valve(gateway;valve_id;value)
     _set_pump(gateway;power_pct)
     _set_pump_best_effort(gateway;power_pct)
     shutdown_all_hui_hardware(gateway)
-    list_hui_actions()
+    _hold_start_failure(hold_key)
+    _engage_hold_valves(gateway;valve_ids)
+    _engage_hold_pump_if_needed(gateway;pump_pct)
     start_hui_hold(gateway;key)
     stop_hui_hold(gateway;key)
-    _run_tic249_reciprocate(gateway)
-    start_hui_artificial_lung(gateway)
-    stop_hui_artificial_lung(gateway)
+  oqlos/hardware/hui_lung_recipe.py:
+    e: build_hui_lung_reciprocate_args
+    build_hui_lung_reciprocate_args()
   oqlos/hardware/identify_enrichment.py:
     e: enrich_identify_payload
     enrich_identify_payload(payload)
@@ -1255,6 +1298,9 @@ D:
     _build_recommended_actions(stale;health_payload)
     build_hardware_stack_snapshot(health)
   oqlos/hardware/tic249_units.py:
+    e: steps_per_second_to_raw,raw_acceleration_for_ramp
+    steps_per_second_to_raw(value)
+    raw_acceleration_for_ramp(raw_speed;ramp_seconds)
   oqlos/hardware/transport/__init__.py:
   oqlos/hardware/transport/manage_ops.py:
     e: run_manage_verb,_resolve,_usb_list,_pi_diagnostics,_usb_reset,_run_diagnostic_command,list_manage_verbs
@@ -1957,12 +2003,13 @@ D:
     e: test_configure_oqlos_logging_writes_to_file
     test_configure_oqlos_logging_writes_to_file(tmp_path;monkeypatch)
   tests/firmware/test_panel_ui.py:
-    e: panel_source,_panel_manage_verbs,_panel_endpoints,test_panel_route_serves_html,test_panel_manage_verbs_are_supported,test_panel_only_calls_known_endpoints,client_with_controller,test_panel_single_oql_command_payload_dispatches,test_panel_flow_script_payload_dispatches,test_panel_script_without_version_executes_named_goal,test_panel_manage_payload_dispatches,_FakeController
+    e: panel_source,_panel_manage_verbs,_panel_endpoints,test_panel_route_serves_html,test_health_route_contains_redeploy_probe_token,test_panel_manage_verbs_are_supported,test_panel_only_calls_known_endpoints,client_with_controller,test_panel_single_oql_command_payload_dispatches,test_panel_flow_script_payload_dispatches,test_panel_script_without_version_executes_named_goal,test_panel_manage_payload_dispatches,_FakeController
     _FakeController: __init__(1),execute(1),manage(2)
     panel_source()
     _panel_manage_verbs(source)
     _panel_endpoints(source)
     test_panel_route_serves_html()
+    test_health_route_contains_redeploy_probe_token()
     test_panel_manage_verbs_are_supported(panel_source)
     test_panel_only_calls_known_endpoints(panel_source)
     client_with_controller()
@@ -2047,6 +2094,10 @@ D:
     test_scan_diagnostics_usb_ignores_crw_without_barcode_tokens(monkeypatch)
     test_holtek_present_from_diagnostics_usb(monkeypatch)
     test_enrich_scanner_adapter_adds_entry(monkeypatch)
+  tests/firmware/test_tic249_units.py:
+    e: test_steps_per_second_to_raw_default_cap,test_raw_acceleration_for_ramp
+    test_steps_per_second_to_raw_default_cap()
+    test_raw_acceleration_for_ramp()
   tests/firmware/test_tokenizer_extended.py:
     e: TestValSingleQuote,TestMinMaxSingleQuote,TestIfElseSingleQuote,TestIfStandalone,TestElseStandalone,TestSample,TestGoto,TestFunc,TestSaveSingleQuote,TestWaitQuoted
     TestValSingleQuote: test_val_single_quote(0),test_val_double_quote(0),test_val_bracket(0)

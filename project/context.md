@@ -5,12 +5,12 @@
 
 - **Project**: /home/tom/github/oqlos/oqlos
 - **Primary Language**: python
-- **Languages**: python: 153, javascript: 35, md: 18, yaml: 13, shell: 9
+- **Languages**: python: 161, javascript: 47, md: 19, yaml: 13, shell: 9
 - **Analysis Mode**: static
-- **Total Functions**: 2082
+- **Total Functions**: 2128
 - **Total Classes**: 123
-- **Modules**: 246
-- **Entry Points**: 1254
+- **Modules**: 267
+- **Entry Points**: 1288
 
 ## Architecture by Module
 
@@ -23,16 +23,12 @@
 - **File**: `hardware.py`
 
 ### frontend.src.pages.HardwareRestart
-- **Functions**: 80
+- **Functions**: 50
 - **File**: `HardwareRestart.jsx`
 
-### frontend.src.api.hardwareApi
-- **Functions**: 55
-- **File**: `hardwareApi.js`
-
-### frontend.src.hooks.useUrlConfig
-- **Functions**: 54
-- **File**: `useUrlConfig.js`
+### frontend.src.utils.url-embed-config
+- **Functions**: 49
+- **File**: `url-embed-config.js`
 
 ### oqlos.core._interpreter_actions
 - **Functions**: 49
@@ -80,28 +76,34 @@
 - **Classes**: 1
 - **File**: `cql_parser.py`
 
-### oqlos.hardware.client.tic249_extended
-- **Functions**: 30
-- **File**: `tic249_extended.py`
-
 ### oqlos.core.base
 - **Functions**: 29
 - **Classes**: 7
 - **File**: `base.py`
-
-### oqlos.hardware.client.proxy
-- **Functions**: 29
-- **Classes**: 1
-- **File**: `proxy.py`
 
 ### oqlos.core._oql_adapter
 - **Functions**: 29
 - **Classes**: 1
 - **File**: `_oql_adapter.py`
 
+### oqlos.hardware.client.proxy
+- **Functions**: 29
+- **Classes**: 1
+- **File**: `proxy.py`
+
 ### oqlos.core._cql_tokenizer
 - **Functions**: 27
 - **File**: `_cql_tokenizer.py`
+
+### oqlos.hardware.diagnosis
+- **Functions**: 26
+- **Classes**: 3
+- **File**: `diagnosis.py`
+
+### oqlos.hardware.firmware_adapter
+- **Functions**: 26
+- **Classes**: 1
+- **File**: `firmware_adapter.py`
 
 ## Key Entry Points
 
@@ -127,21 +129,12 @@ valve commands to POST /api/v1/hardware/valve/{id} so t
 ### oqlos.tools.plugin_cli.main
 - **Calls**: argparse.ArgumentParser, parser.add_subparsers, subparsers.add_parser, subparsers.add_parser, subparsers.add_parser, caps_parser.add_argument, subparsers.add_parser, validate_parser.add_argument
 
-### frontend.src.context.AppConfigProvider.AppConfigContext
-- **Calls**: frontend.src.context.AppConfigProvider.useUrlConfig, frontend.src.context.AppConfigProvider.useEffect, frontend.src.context.AppConfigProvider.setAttribute, frontend.src.context.AppConfigProvider.setProperty, frontend.src.context.AppConfigProvider.not, frontend.src.context.AppConfigProvider.join, frontend.src.context.AppConfigProvider.from, frontend.src.context.AppConfigProvider.querySelectorAll
-
-### frontend.src.context.AppConfigProvider.AppConfigProvider
-- **Calls**: frontend.src.context.AppConfigProvider.useUrlConfig, frontend.src.context.AppConfigProvider.useEffect, frontend.src.context.AppConfigProvider.setAttribute, frontend.src.context.AppConfigProvider.setProperty, frontend.src.context.AppConfigProvider.not, frontend.src.context.AppConfigProvider.join, frontend.src.context.AppConfigProvider.from, frontend.src.context.AppConfigProvider.querySelectorAll
-
 ### scripts.oql_v2_to_v4_migrate_db.main
 - **Calls**: argparse.ArgumentParser, parser.add_argument, parser.add_argument, parser.add_argument, parser.add_argument, parser.add_argument, parser.add_argument, parser.add_argument
 
 ### oqlos.hardware.usb_diagnostics.pi_system_diagnostics
 > Raspberry Pi health snapshot: model, temp, throttling, memory, uptime, ports.
 - **Calls**: oqlos.hardware.usb_diagnostics._read, _vcgencmd, _vcgencmd, None.splitlines, oqlos.hardware.usb_diagnostics._read, oqlos.hardware.usb_diagnostics._read, sorted, sorted
-
-### frontend.src.hooks.useUrlConfig.useUrlConfig
-- **Calls**: frontend.src.hooks.useUrlConfig.useState, frontend.src.hooks.useUrlConfig.parseParams, frontend.src.hooks.useUrlConfig.useEffect, frontend.src.hooks.useUrlConfig.setConfig, frontend.src.hooks.useUrlConfig.addEventListener, frontend.src.hooks.useUrlConfig.trim, frontend.src.hooks.useUrlConfig.mergeParentSearchIntoChildUrl, frontend.src.hooks.useUrlConfig.replaceState
 
 ### oqlos.hardware.rtc_probe.build_rtc_peripheral_status
 > Return the runtime status payload for the RTC sidecar.
@@ -189,7 +182,7 @@ valve commands to POST /api/v1/hardware/valve/{id} so t
 
 ### oqlos.tools.xml_import.generators.generate_dsl
 > Generate human-readable DSL text from parsed report.
-- **Calls**: frontend.src.pages.HardwareDemo.a, frontend.src.pages.HardwareDemo.a, frontend.src.pages.HardwareDemo.a, frontend.src.pages.HardwareDemo.a, frontend.src.pages.HardwareDemo.a, frontend.src.pages.HardwareDemo.a, frontend.src.pages.HardwareDemo.a, frontend.src.pages.HardwareDemo.a
+- **Calls**: frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a
 
 ### oqlos.hardware.plugins.motor.MotorPlugin.__init__
 - **Calls**: None.__init__, None.rstrip, self.config.connection_params.get, self.config.connection_params.get, params.get, int, str, int
@@ -221,6 +214,17 @@ Expected payload::
 ### oqlos.api.hardware._build_waveshare_diagnose_report
 - **Calls**: oqlos.api.hardware._modbus_io_device_ids, int, sorted, oqlos.api.hardware._modbus_runtime_serial_ports, oqlos.api.hardware._resolve_waveshare_ports, int, str, int
 
+### oqlos.api.hardware._modbus_wizard_probe_isolated
+- **Calls**: oqlos.api.hardware._collect_wizard_serial_candidates, diagnose_shared_bus, report.to_dict, all_scans.append, frontend.src.utils.hardware-wizard-steps.list, bool, int, str
+
+### oqlos.core._interpreter_actions.exec_action_shell
+> Execute shell/export helpers in dry-run mode.
+- **Calls**: oqlos.core._interpreter_actions._drop_command_token, None.upper, oqlos.core._interpreter_actions._record_failure, interp.sensor_values.get, interp.vars.set, interp.out.step, interp.vars.set, interp.out.step
+
+### oqlos.tools.xml_import.generators.generate_cql
+> Generate CQL (Connex Query Language) text from parsed report.
+- **Calls**: frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, sorted, op.lp.split
+
 ## Process Flows
 
 Key execution flows identified:
@@ -248,31 +252,14 @@ set_peripheral [oqlos.hardware.firmware_adapter.FirmwareAdapter]
 main [scripts.migrate_to_v4]
 ```
 
-### Flow 4: AppConfigContext
-```
-AppConfigContext [frontend.src.context.AppConfigProvider]
-```
-
-### Flow 5: AppConfigProvider
-```
-AppConfigProvider [frontend.src.context.AppConfigProvider]
-```
-
-### Flow 6: pi_system_diagnostics
+### Flow 4: pi_system_diagnostics
 ```
 pi_system_diagnostics [oqlos.hardware.usb_diagnostics]
   └─> _read
   └─> _read
 ```
 
-### Flow 7: useUrlConfig
-```
-useUrlConfig [frontend.src.hooks.useUrlConfig]
-  └─> parseParams
-      └─> parseAppearanceParams
-```
-
-### Flow 8: build_rtc_peripheral_status
+### Flow 5: build_rtc_peripheral_status
 ```
 build_rtc_peripheral_status [oqlos.hardware.rtc_probe]
   └─> _pirtc_request_sync
@@ -281,18 +268,37 @@ build_rtc_peripheral_status [oqlos.hardware.rtc_probe]
       └─> get_pirtc_base_url
 ```
 
-### Flow 9: _handle_start
+### Flow 6: _handle_start
 ```
 _handle_start [oqlos.api.state]
   └─> _extract_scenario_id
   └─> _extract_inline_dsl
 ```
 
-### Flow 10: _modbus_wizard_program_isolated
+### Flow 7: _modbus_wizard_program_isolated
 ```
 _modbus_wizard_program_isolated [oqlos.api.hardware]
   └─> _wizard_check_already_configured
   └─> _wizard_verify_config
+```
+
+### Flow 8: render_html_report
+```
+render_html_report [oqlos.reporters.html_report]
+```
+
+### Flow 9: _probe_i2c_ads1115
+```
+_probe_i2c_ads1115 [oqlos.api.hardware]
+  └─> _local_ads1115_probe_allowed
+      └─> _selected_piadc_platform
+          └─> _selected_hardware_platform
+      └─> _is_raspberry_pi_host
+```
+
+### Flow 10: _initialize_plugins
+```
+_initialize_plugins [oqlos.hardware.plugin_gateway.PluginHardwareGateway]
 ```
 
 ## Key Classes
@@ -432,20 +438,19 @@ Subclasses override :meth:`_
 
 Key functions that process and transform data:
 
-### frontend.src.hooks.useUrlConfig.parseAppearanceParams
-- **Output to**: frontend.src.hooks.useUrlConfig.get, frontend.src.hooks.useUrlConfig.trim, frontend.src.hooks.useUrlConfig.includes, frontend.src.hooks.useUrlConfig.resolveViewportWidthPx
+### frontend.src.hooks.useParentEncoderNavigation.parseParentEncoderEnvelope
 
-### frontend.src.hooks.useUrlConfig.parseIdentityParams
-- **Output to**: frontend.src.hooks.useUrlConfig.get, frontend.src.hooks.useUrlConfig.normalizeConnectRole, frontend.src.hooks.useUrlConfig.resolveUserIdFromSearchParams, frontend.src.hooks.useUrlConfig.includes, frontend.src.hooks.useUrlConfig.trim
+### frontend.src.hooks.useParentEncoderNavigation.createEncoderController
+- **Output to**: frontend.src.hooks.useParentEncoderNavigation.removeHighlights, frontend.src.hooks.useParentEncoderNavigation.getInteractiveItems, frontend.src.hooks.useParentEncoderNavigation.add, frontend.src.hooks.useParentEncoderNavigation.focus, frontend.src.hooks.useParentEncoderNavigation.scrollIntoView
 
-### frontend.src.hooks.useUrlConfig.parseNavigationParams
-- **Output to**: frontend.src.hooks.useUrlConfig.get, frontend.src.hooks.useUrlConfig.trim, frontend.src.hooks.useUrlConfig.context, frontend.src.hooks.useUrlConfig.name, frontend.src.hooks.useUrlConfig.isValidShellHuiKey
+### frontend.src.hooks.useParentEncoderNavigation.parentEncoderActive
+- **Output to**: frontend.src.hooks.useParentEncoderNavigation.removeHighlights, frontend.src.hooks.useParentEncoderNavigation.getInteractiveItems, frontend.src.hooks.useParentEncoderNavigation.add, frontend.src.hooks.useParentEncoderNavigation.focus, frontend.src.hooks.useParentEncoderNavigation.scrollIntoView
 
-### frontend.src.hooks.useUrlConfig.parseParams
-- **Output to**: frontend.src.hooks.useUrlConfig.URLSearchParams, frontend.src.hooks.useUrlConfig.parseAppearanceParams, frontend.src.hooks.useUrlConfig.parseIdentityParams, frontend.src.hooks.useUrlConfig.parseNavigationParams
+### frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
+- **Output to**: frontend.src.hooks.useParentEncoderNavigation.removeHighlights, frontend.src.hooks.useParentEncoderNavigation.getInteractiveItems, frontend.src.hooks.useParentEncoderNavigation.add, frontend.src.hooks.useParentEncoderNavigation.focus, frontend.src.hooks.useParentEncoderNavigation.scrollIntoView
 
-### frontend.src.hooks.useUrlConfig.parseUrlEmbedConfig
-- **Output to**: frontend.src.hooks.useUrlConfig.parseParams
+### frontend.src.hooks.useParentEncoderNavigation.useParentEncoderNavigation
+- **Output to**: frontend.src.hooks.useParentEncoderNavigation.useEffect, frontend.src.hooks.useParentEncoderNavigation.createEncoderController, frontend.src.hooks.useParentEncoderNavigation.parseParentEncoderEnvelope, frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand, frontend.src.hooks.useParentEncoderNavigation.isParentEncoderActive
 
 ### frontend.src.pages.MapEditor.parsed
 - **Output to**: frontend.src.pages.MapEditor.isPlainObject, frontend.src.pages.MapEditor.Error, frontend.src.pages.MapEditor.t
@@ -453,22 +458,26 @@ Key functions that process and transform data:
 ### frontend.src.pages.MapEditor.parsedJson
 - **Output to**: frontend.src.pages.MapEditor.isPlainObject, frontend.src.pages.MapEditor.Error, frontend.src.pages.MapEditor.t
 
+### frontend.src.utils.url-embed-config.parseAppearanceParams
+- **Output to**: frontend.src.utils.url-embed-config.get, frontend.src.utils.url-embed-config.trim, frontend.src.utils.url-embed-config.includes, frontend.src.utils.url-embed-config.resolveViewportWidthPx
+
+### frontend.src.utils.url-embed-config.parseIdentityParams
+- **Output to**: frontend.src.utils.url-embed-config.get, frontend.src.utils.url-embed-config.normalizeConnectRole, frontend.src.utils.url-embed-config.resolveUserIdFromSearchParams, frontend.src.utils.url-embed-config.includes, frontend.src.utils.url-embed-config.trim
+
+### frontend.src.utils.url-embed-config.parseNavigationParams
+- **Output to**: frontend.src.utils.url-embed-config.get, frontend.src.utils.url-embed-config.trim, frontend.src.utils.url-embed-config.isValidShellHuiKey
+
+### frontend.src.utils.url-embed-config.parseUrlEmbedConfig
+- **Output to**: frontend.src.utils.url-embed-config.URLSearchParams, frontend.src.utils.url-embed-config.parseAppearanceParams, frontend.src.utils.url-embed-config.parseIdentityParams, frontend.src.utils.url-embed-config.parseNavigationParams
+
 ### frontend.src.utils.rbac.policy.parseConnectRole
 - **Output to**: frontend.src.utils.rbac.policy.String, frontend.src.utils.rbac.policy.trim, frontend.src.utils.rbac.policy.toLowerCase
 
-### frontend.src.context.AppConfigProvider.parentEncoderActive
-- **Output to**: frontend.src.context.AppConfigProvider.not, frontend.src.context.AppConfigProvider.join, frontend.src.context.AppConfigProvider.from, frontend.src.context.AppConfigProvider.querySelectorAll, frontend.src.context.AppConfigProvider.filter
+### frontend.src.api.hardware-api-errors.tryParseJson
+- **Output to**: frontend.src.api.hardware-api-errors.parse
 
-### frontend.src.context.AppConfigProvider.handleEncoderCommand
-- **Output to**: frontend.src.context.AppConfigProvider.removeHighlights, frontend.src.context.AppConfigProvider.getInteractiveItems, frontend.src.context.AppConfigProvider.add, frontend.src.context.AppConfigProvider.focus, frontend.src.context.AppConfigProvider.scrollIntoView
-
-### frontend.src.context.AppConfigProvider.parseParentEnvelope
-
-### frontend.src.api.hardwareApi.tryParseJson
-- **Output to**: frontend.src.api.hardwareApi.parse
-
-### frontend.src.api.hardwareApi.formatHardwareApiError
-- **Output to**: frontend.src.api.hardwareApi.extractErrorPayload, frontend.src.api.hardwareApi.describeDetail
+### frontend.src.api.hardware-api-errors.formatHardwareApiError
+- **Output to**: frontend.src.api.hardware-api-errors.extractErrorPayload, frontend.src.api.hardware-api-errors.describeDetail
 
 ### oqlos.core.base.BaseInterpreter.parse
 > Parse source into an AST / structure.
@@ -512,10 +521,6 @@ Key functions that process and transform data:
 > Parse a WAIT value to seconds. Default unit is ms.
 - **Output to**: None.strip, re.search, float, low.replace, match.group
 
-### oqlos.core.oql_parser.parse_duration
-> Parse ``3s``, ``500ms``, ``3000`` (bare number defaults to ``ms``).
-- **Output to**: DUR_RE.match, ValueError, oqlos.core.oql_parser.to_num, match.group, match.group
-
 ## Behavioral Patterns
 
 ### recursion__expand_repeat_block_lines
@@ -528,16 +533,6 @@ Key functions that process and transform data:
 - **Confidence**: 0.90
 - **Functions**: oqlos.core.executor._safe_resolve
 
-### recursion__command_error_message
-- **Type**: recursion
-- **Confidence**: 0.90
-- **Functions**: oqlos.hardware.client.tic249_extended._command_error_message
-
-### recursion_extract_code_from_json
-- **Type**: recursion
-- **Confidence**: 0.90
-- **Functions**: scripts.oql_validator_common.extract_code_from_json
-
 ### recursion__load_includes
 - **Type**: recursion
 - **Confidence**: 0.90
@@ -547,6 +542,16 @@ Key functions that process and transform data:
 - **Type**: recursion
 - **Confidence**: 0.90
 - **Functions**: oqlos.core.interpreter.CqlInterpreter._do_sleep
+
+### recursion_command_error_message
+- **Type**: recursion
+- **Confidence**: 0.90
+- **Functions**: oqlos.hardware.client.tic249_error_messages.command_error_message
+
+### recursion_extract_code_from_json
+- **Type**: recursion
+- **Confidence**: 0.90
+- **Functions**: scripts.oql_validator_common.extract_code_from_json
 
 ### state_machine_WsCqrsClient
 - **Type**: state_machine
@@ -603,15 +608,12 @@ Functions exposed as public API (no underscore prefix):
 - `scripts.fix_brackets_to_v4.main` - 42 calls
 - `oqlos.tools.plugin_cli.main` - 36 calls
 - `oqlos.hardware.usb_diagnostics.list_usb_devices` - 33 calls
-- `frontend.src.context.AppConfigProvider.AppConfigContext` - 31 calls
-- `frontend.src.context.AppConfigProvider.AppConfigProvider` - 31 calls
 - `oqlos.tools.cql_cli.formatting.canonicalize_oql_line` - 31 calls
-- `scripts.oql_v2_to_v4_migrate_db.main` - 30 calls
 - `oqlos.core._oql_adapter.oql_doc_to_cql` - 30 calls
+- `scripts.oql_v2_to_v4_migrate_db.main` - 30 calls
 - `oqlos.core.motor2_runtime.normalize_motor2_runtime_config` - 29 calls
 - `oqlos.hardware.diagnosis.build_diagnosis_report` - 28 calls
 - `oqlos.hardware.usb_diagnostics.pi_system_diagnostics` - 28 calls
-- `frontend.src.hooks.useUrlConfig.useUrlConfig` - 27 calls
 - `oqlos.tools.hardware_diagnose.modbus_probe.probe_options_from_args` - 27 calls
 - `oqlos.hardware.rtc_probe.build_rtc_peripheral_status` - 27 calls
 - `oqlos.hardware.client.modbus_repair.rewrite_modbus_repair` - 26 calls
@@ -637,6 +639,9 @@ Functions exposed as public API (no underscore prefix):
 - `oqlos.api.oql_mqtt.oql_ws` - 21 calls
 - `scripts.migrate_to_v4.check_database` - 21 calls
 - `scripts.oql_v2_to_v4_migrate_db.migrate_v2_to_v4` - 21 calls
+- `scripts.scenarios_export.export_one_bash` - 21 calls
+- `oqlos.tools.hardware_diagnose.health.cmd_diagnose` - 20 calls
+- `oqlos.hardware.client.autorepair.analyze_repair_needs` - 20 calls
 
 ## System Interactions
 
@@ -657,23 +662,23 @@ graph TD
     main --> Path
     main --> add_subparsers
     main --> add_parser
-    AppConfigContext --> useUrlConfig
-    AppConfigContext --> useEffect
-    AppConfigContext --> setAttribute
-    AppConfigContext --> setProperty
-    AppConfigContext --> not
-    AppConfigProvider --> useUrlConfig
-    AppConfigProvider --> useEffect
-    AppConfigProvider --> setAttribute
-    AppConfigProvider --> setProperty
-    AppConfigProvider --> not
     pi_system_diagnostic --> _read
     pi_system_diagnostic --> _vcgencmd
     pi_system_diagnostic --> splitlines
-    useUrlConfig --> useState
-    useUrlConfig --> parseParams
-    useUrlConfig --> useEffect
-    useUrlConfig --> setConfig
+    build_rtc_peripheral --> _pirtc_request_sync
+    build_rtc_peripheral --> is_rtc_hardware_enab
+    build_rtc_peripheral --> isinstance
+    _handle_start --> _extract_scenario_id
+    _handle_start --> _extract_inline_dsl
+    _handle_start --> ExecutionRequest
+    _handle_start --> debug
+    _handle_start --> _maybe_register_dsl_
+    _modbus_wizard_progr --> upper
+    _modbus_wizard_progr --> RtuBusSettings
+    _modbus_wizard_progr --> _wizard_check_alread
+    _modbus_wizard_progr --> _wizard_verify_confi
+    _modbus_wizard_progr --> _wizard_build_result
+    render_html_report --> loads
 ```
 
 ## Reverse Engineering Guidelines

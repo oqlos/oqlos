@@ -250,6 +250,11 @@ workflow[name="quality:report"] {
   step-1: run cmd=pyqual report;
 }
 
+workflow[name="test:frontend"] {
+  trigger: manual;
+  step-1: run cmd=npm run test:unit;
+}
+
 workflow[name="lint"] {
   trigger: manual;
   step-1: run cmd=ruff check .;
@@ -1660,6 +1665,12 @@ tasks:
     cmds:
       - pytest -q
 
+  test:frontend:
+    desc: Run frontend unit tests (node:test)
+    dir: frontend
+    cmds:
+      - npm run test:unit
+
   lint:
     desc: Run ruff lint check
     cmds:
@@ -1933,21 +1944,28 @@ pip install -e .[dev]
 ### `project/map.toon.yaml`
 
 ```toon markpact:analysis path=project/map.toon.yaml
-# oqlos | 248f 49215L | python:209,javascript:24,shell:9,typescript:3,css:2,less:1 | 2026-06-30
-# stats: 1316 func | 196 cls | 248 mod | CC̄=4.3 | critical:118 | cycles:0
-# alerts[5]: CC _validate_motor2=19; CC _run_diagnostic_command=19; CC _probe_i2c_ads1115=14; CC _resolve_func_steps=14; CC exec_action_loop_block=14
+# oqlos | 274f 50308L | python:222,javascript:37,shell:9,typescript:3,css:2,less:1 | 2026-06-30
+# stats: 1329 func | 196 cls | 274 mod | CC̄=4.3 | critical:117 | cycles:0
+# alerts[5]: CC _validate_motor2=19; CC _run_diagnostic_command=19; CC _resolve_func_steps=14; CC _probe_i2c_ads1115=14; CC exec_action_loop_block=14
 # hotspots[5]: _resolve fan=23; build_diagnosis_report fan=19; _build_waveshare_diagnose_report fan=18; hardware_identify fan=18; _handle_start fan=18
 # evolution: baseline
 # Keys: M=modules, D=details, i=imports, e=exports, c=classes, f=functions, m=methods
-M[248]:
+M[274]:
   app.doql.css,165
-  app.doql.less,311
+  app.doql.less,316
   examples/curl-quickstart.sh,75
   examples/hardware/doctor-workflow.sh,53
+  frontend/src/api/hardware-api-errors.js,64
   frontend/src/api/hardware-api-log.js,88
-  frontend/src/api/hardwareApi.js,435
+  frontend/src/api/hardware-diagnostic-failure.js,103
+  frontend/src/api/hardware-diagnostic-failure.test.js,59
+  frontend/src/api/hardware-tic249-status.js,36
+  frontend/src/api/hardwareApi.js,257
   frontend/src/api/wsClient.js,139
-  frontend/src/hooks/useUrlConfig.js,287
+  frontend/src/context/app-config-document.js,27
+  frontend/src/hooks/useParentEncoderNavigation.js,157
+  frontend/src/hooks/useRailHoverPreview.js,85
+  frontend/src/hooks/useUrlConfig.js,86
   frontend/src/hooks/useWsStatus.js,27
   frontend/src/i18n/dictionaries.js,1982
   frontend/src/i18n/hardware-demo-extra-translations.js,184
@@ -1959,30 +1977,40 @@ M[248]:
   frontend/src/utils/collapse-toggle-bridge.js,47
   frontend/src/utils/designRem.js,44
   frontend/src/utils/hardware-activity-log.js,35
+  frontend/src/utils/hardware-api-retry.js,39
+  frontend/src/utils/hardware-api-retry.test.js,46
   frontend/src/utils/hardware-restart-docs.js,12
+  frontend/src/utils/hardware-restart-wizard-steps.js,110
   frontend/src/utils/hardware-time.js,5
   frontend/src/utils/hardware-wizard-plan.js,11
   frontend/src/utils/hardware-wizard-steps.js,112
   frontend/src/utils/hardwareEventStream.js,48
   frontend/src/utils/hui-shell-key.js,39
-  frontend/src/utils/mapEditorFuncHardwareSummary.js,51
+  frontend/src/utils/mapEditorFuncHardwareSummary.js,81
+  frontend/src/utils/mapEditorFuncHardwareSummary.test.js,55
   frontend/src/utils/parentUrlBridge.js,40
   frontend/src/utils/rbac.policy.js,119
-  frontend/src/utils/useSelectionCollapsePanel.js,192
+  frontend/src/utils/url-embed-config.js,194
+  frontend/src/utils/url-embed-config.test.js,93
+  frontend/src/utils/useSelectionCollapsePanel.js,140
   frontend/vendor/hardware-client/index.ts,32
   frontend/vendor/hardware-client/paths.ts,40
   frontend/vite.config.ts,37
   oqlos/__init__.py,4
   oqlos/api/__init__.py,18
+  oqlos/api/_hw3_mapping.py,158
+  oqlos/api/_hw3_models.py,195
+  oqlos/api/_hw3_peripheral.py,134
+  oqlos/api/_hw3_system.py,134
   oqlos/api/editor.py,142
   oqlos/api/execution.py,360
   oqlos/api/hardware.py,2267
   oqlos/api/hardware_events.py,136
   oqlos/api/hardware_mapping_contract.py,90
   oqlos/api/hardware_mapping_store.py,153
-  oqlos/api/hardware_v3.py,611
+  oqlos/api/hardware_v3.py,61
   oqlos/api/logs.py,46
-  oqlos/api/main.py,380
+  oqlos/api/main.py,371
   oqlos/api/oql_mqtt.py,152
   oqlos/api/peripherals.py,71
   oqlos/api/plugins.py,182
@@ -1993,22 +2021,22 @@ M[248]:
   oqlos/api/version.py,25
   oqlos/config.py,221
   oqlos/core/__init__.py,1
-  oqlos/core/_action_motor2.py,471
+  oqlos/core/_action_motor2.py,482
   oqlos/core/_compare.py,41
   oqlos/core/_cql_tokenizer.py,407
   oqlos/core/_cql_tree_builder.py,168
   oqlos/core/_dsl_helpers.py,133
   oqlos/core/_firmware_executor.py,211
   oqlos/core/_func_resolver.py,97
-  oqlos/core/_interpreter_actions.py,804
+  oqlos/core/_interpreter_actions.py,801
   oqlos/core/_line_parsers.py,247
-  oqlos/core/_oql_adapter.py,467
+  oqlos/core/_oql_adapter.py,487
   oqlos/core/_sensor_evaluator.py,146
   oqlos/core/_value_normalizers.py,127
-  oqlos/core/base.py,321
-  oqlos/core/cql_parser.py,478
+  oqlos/core/base.py,312
+  oqlos/core/cql_parser.py,468
   oqlos/core/executor.py,384
-  oqlos/core/interpreter.py,677
+  oqlos/core/interpreter.py,691
   oqlos/core/motor2_runtime.py,210
   oqlos/core/oql_parser.py,763
   oqlos/core/oql_versioning.py,73
@@ -2022,7 +2050,7 @@ M[248]:
   oqlos/hardware/client/__init__.py,101
   oqlos/hardware/client/adc.py,65
   oqlos/hardware/client/autorepair.py,138
-  oqlos/hardware/client/config.py,89
+  oqlos/hardware/client/config.py,87
   oqlos/hardware/client/constants.py,70
   oqlos/hardware/client/errors.py,27
   oqlos/hardware/client/http_helpers.py,27
@@ -2032,13 +2060,18 @@ M[248]:
   oqlos/hardware/client/proxy.py,461
   oqlos/hardware/client/resolvers.py,129
   oqlos/hardware/client/tic249_arg_contract.py,66
-  oqlos/hardware/client/tic249_extended.py,639
+  oqlos/hardware/client/tic249_arg_helpers.py,12
+  oqlos/hardware/client/tic249_command_mapping.py,50
+  oqlos/hardware/client/tic249_error_messages.py,113
+  oqlos/hardware/client/tic249_extended.py,216
+  oqlos/hardware/client/tic249_motion_params.py,129
   oqlos/hardware/client/tic249_rig_direction.py,44
+  oqlos/hardware/client/tic249_sidecar_client.py,184
   oqlos/hardware/config_paths.py,42
   oqlos/hardware/config_schema.py,146
   oqlos/hardware/control_proxy.py,69
   oqlos/hardware/diagnosis.py,563
-  oqlos/hardware/discovery.py,104
+  oqlos/hardware/discovery.py,164
   oqlos/hardware/drivers/__init__.py,6
   oqlos/hardware/drivers/gpio.py,90
   oqlos/hardware/drivers/mqtt.py,120
@@ -2046,14 +2079,17 @@ M[248]:
   oqlos/hardware/firmware_adapter.py,482
   oqlos/hardware/gateway.py,417
   oqlos/hardware/health_status.py,27
-  oqlos/hardware/hui_actions.py,252
+  oqlos/hardware/hui_actions.py,59
+  oqlos/hardware/hui_artificial_lung.py,84
+  oqlos/hardware/hui_hold.py,189
+  oqlos/hardware/hui_lung_recipe.py,43
   oqlos/hardware/identify_enrichment.py,19
   oqlos/hardware/modbus_identify.py,132
   oqlos/hardware/peripheral_mapping.py,139
-  oqlos/hardware/plugin_gateway.py,629
+  oqlos/hardware/plugin_gateway.py,632
   oqlos/hardware/plugins/__init__.py,50
   oqlos/hardware/plugins/_rtu_serial.py,34
-  oqlos/hardware/plugins/_shared.py,62
+  oqlos/hardware/plugins/_shared.py,60
   oqlos/hardware/plugins/base.py,371
   oqlos/hardware/plugins/lung.py,362
   oqlos/hardware/plugins/modbus.py,336
@@ -2065,9 +2101,9 @@ M[248]:
   oqlos/hardware/registry.py,50
   oqlos/hardware/rtc_probe.py,198
   oqlos/hardware/scanner_probe.py,263
-  oqlos/hardware/sidecar_control.py,227
+  oqlos/hardware/sidecar_control.py,223
   oqlos/hardware/stack_snapshot.py,89
-  oqlos/hardware/tic249_units.py,6
+  oqlos/hardware/tic249_units.py,40
   oqlos/hardware/transport/__init__.py,25
   oqlos/hardware/transport/manage_ops.py,223
   oqlos/hardware/transport/mqtt_oql_bridge.py,495
@@ -2147,7 +2183,7 @@ M[248]:
   tests/firmware/test_hardware_identify.py,210
   tests/firmware/test_hardware_modbus_wizard.py,326
   tests/firmware/test_hardware_stack_snapshot.py,46
-  tests/firmware/test_hardware_v3_compat.py,97
+  tests/firmware/test_hardware_v3_compat.py,98
   tests/firmware/test_hui_actions.py,93
   tests/firmware/test_hui_scenario.py,12
   tests/firmware/test_lung_integration.py,282
@@ -2163,7 +2199,7 @@ M[248]:
   tests/firmware/test_oql_mqtt_bridge.py,255
   tests/firmware/test_oql_route_http.py,119
   tests/firmware/test_oqlos_logging.py,21
-  tests/firmware/test_panel_ui.py,150
+  tests/firmware/test_panel_ui.py,189
   tests/firmware/test_parser_cycle.py,53
   tests/firmware/test_plugin_gateway_env.py,243
   tests/firmware/test_plugin_gateway_init.py,67
@@ -2174,6 +2210,7 @@ M[248]:
   tests/firmware/test_runtime_command_payload.py,16
   tests/firmware/test_safe_eval.py,244
   tests/firmware/test_scanner_probe.py,68
+  tests/firmware/test_tic249_units.py,18
   tests/firmware/test_tokenizer_extended.py,194
   tests/firmware/test_usb_diagnostics.py,63
   tests/test_core.py,854
@@ -2182,7 +2219,7 @@ M[248]:
   tests/test_cql_scenarios.py,88
   tests/test_dsl_schema.py,20
   tests/test_oql_dry_run_regressions.py,62
-  tests/test_oql_parser_v3.py,491
+  tests/test_oql_parser_v3.py,492
   tests/test_oql_scenarios.py,74
   tests/test_reporting.py,46
   tests/test_xml_import_generators.py,29
@@ -2191,6 +2228,66 @@ M[248]:
 D:
   oqlos/__init__.py:
   oqlos/api/__init__.py:
+  oqlos/api/_hw3_mapping.py:
+    e: hardware_runtime_python_resolve_func_v3,hardware_mapping_get_v3,hardware_mapping_schema_v3,hardware_mapping_put_v3,hardware_mapping_import_v3,hardware_mapping_export_v3,hardware_mapping_reset_v3,hardware_oql_mapped_exec_v3,hardware_cqrs_command_v3,hardware_cqrs_events_v3,hardware_cqrs_events_clear_v3,hardware_events_ws
+    hardware_runtime_python_resolve_func_v3(req)
+    hardware_mapping_get_v3()
+    hardware_mapping_schema_v3()
+    hardware_mapping_put_v3(req)
+    hardware_mapping_import_v3(req)
+    hardware_mapping_export_v3(req)
+    hardware_mapping_reset_v3(req)
+    hardware_oql_mapped_exec_v3(payload)
+    hardware_cqrs_command_v3(req)
+    hardware_cqrs_events_v3(limit)
+    hardware_cqrs_events_clear_v3(req)
+    hardware_events_ws(websocket)
+  oqlos/api/_hw3_models.py:
+    e: normalize_peripheral_id,_ok_from_result,_runtime_control_skipped,_find_adapter,_run_diagnostic,_resolve_func_steps,_hardware_v1_call,DiagnosticCommandRequest,MappingReplaceRequest,MappingImportRequest,MappingExportRequest,MappingResetRequest,RuntimeFuncResolveRequest,CqrsCommandRequest,CqrsEventsClearRequest,ScannerIngestRequest
+    DiagnosticCommandRequest:
+    MappingReplaceRequest:
+    MappingImportRequest:
+    MappingExportRequest:
+    MappingResetRequest:
+    RuntimeFuncResolveRequest:
+    CqrsCommandRequest:
+    CqrsEventsClearRequest:
+    ScannerIngestRequest:
+    normalize_peripheral_id(value)
+    _ok_from_result(result)
+    _runtime_control_skipped(action)
+    _find_adapter(identify_payload;peripheral_id)
+    _run_diagnostic(peripheral_id;command;args)
+    _resolve_func_steps(hardware_map;func_name;environment;usage_mode)
+    _hardware_v1_call(name)
+  oqlos/api/_hw3_peripheral.py:
+    e: hardware_peripheral_status_v3,hardware_diagnostic_command_v3,hardware_scanner_status_v3,hardware_scanner_last_v3,hardware_scanner_ingest_v3
+    hardware_peripheral_status_v3(peripheral_id)
+    hardware_diagnostic_command_v3(req)
+    hardware_scanner_status_v3()
+    hardware_scanner_last_v3()
+    hardware_scanner_ingest_v3(payload)
+  oqlos/api/_hw3_system.py:
+    e: hardware_hui_actions_v3,hardware_hui_shutdown_v3,_hardware_hui_hold_v3,hardware_hui_hold_start_v3,hardware_hui_hold_stop_v3,hardware_hui_al_command_v3,hardware_modbus_autoconfigure_v3,hardware_diagnosis_v3,hardware_diagnosis_repair_v3,hardware_modbus_waveshare_diagnose_v3,hardware_modbus_wizard_plan_v3,hardware_stack_snapshot_v3,hardware_runtime_status_v3,hardware_runtime_stop_v3,hardware_runtime_start_v3,hardware_runtime_make_v3,hardware_modbus_wizard_probe_isolated_v3,hardware_modbus_wizard_program_isolated_v3,hardware_runtime_python_v3
+    hardware_hui_actions_v3()
+    hardware_hui_shutdown_v3(payload)
+    _hardware_hui_hold_v3(key;action)
+    hardware_hui_hold_start_v3(key;payload)
+    hardware_hui_hold_stop_v3(key;payload)
+    hardware_hui_al_command_v3(command;payload)
+    hardware_modbus_autoconfigure_v3()
+    hardware_diagnosis_v3()
+    hardware_diagnosis_repair_v3()
+    hardware_modbus_waveshare_diagnose_v3(exclusive)
+    hardware_modbus_wizard_plan_v3()
+    hardware_stack_snapshot_v3()
+    hardware_runtime_status_v3(serial_port)
+    hardware_runtime_stop_v3(payload)
+    hardware_runtime_start_v3(payload)
+    hardware_runtime_make_v3(payload)
+    hardware_modbus_wizard_probe_isolated_v3(payload)
+    hardware_modbus_wizard_program_isolated_v3(payload)
+    hardware_runtime_python_v3(payload)
   oqlos/api/editor.py:
     e: _default_scenarios_dir,_safe_path,list_files,read_file_endpoint,write_file_endpoint,execute_scenario,FileInfo,FileContent,ExecutionRequest
     FileInfo:
@@ -2341,73 +2438,23 @@ D:
     _normalize_motor2_runtime_config(runtime_config)
     normalize_mapping(value)
   oqlos/api/hardware_v3.py:
-    e: normalize_peripheral_id,_ok_from_result,_runtime_control_skipped,_find_adapter,_run_diagnostic,_resolve_func_steps,hardware_health_v3,hardware_identify_v3,hardware_proxy_info_v3,hardware_peripheral_status_v3,hardware_diagnostic_command_v3,hardware_hui_actions_v3,hardware_hui_shutdown_v3,_hardware_hui_hold_v3,hardware_hui_hold_start_v3,hardware_hui_hold_stop_v3,hardware_hui_al_command_v3,hardware_modbus_autoconfigure_v3,hardware_diagnosis_v3,hardware_diagnosis_repair_v3,hardware_modbus_waveshare_diagnose_v3,hardware_modbus_wizard_plan_v3,hardware_stack_snapshot_v3,hardware_runtime_status_v3,hardware_runtime_stop_v3,hardware_runtime_start_v3,hardware_runtime_make_v3,hardware_modbus_wizard_probe_isolated_v3,hardware_modbus_wizard_program_isolated_v3,hardware_runtime_python_v3,hardware_runtime_python_resolve_func_v3,hardware_mapping_get_v3,hardware_mapping_schema_v3,hardware_mapping_put_v3,hardware_mapping_import_v3,hardware_mapping_export_v3,hardware_mapping_reset_v3,hardware_oql_mapped_exec_v3,hardware_cqrs_command_v3,hardware_cqrs_events_v3,hardware_cqrs_events_clear_v3,hardware_scanner_status_v3,hardware_scanner_last_v3,hardware_scanner_ingest_v3,hardware_events_ws,DiagnosticCommandRequest,MappingReplaceRequest,MappingImportRequest,MappingExportRequest,MappingResetRequest,RuntimeFuncResolveRequest,CqrsCommandRequest,CqrsEventsClearRequest,ScannerIngestRequest
-    DiagnosticCommandRequest:
-    MappingReplaceRequest:
-    MappingImportRequest:
-    MappingExportRequest:
-    MappingResetRequest:
-    RuntimeFuncResolveRequest:
-    CqrsCommandRequest:
-    CqrsEventsClearRequest:
-    ScannerIngestRequest:
-    normalize_peripheral_id(value)
-    _ok_from_result(result)
-    _runtime_control_skipped(action)
-    _find_adapter(identify_payload;peripheral_id)
-    _run_diagnostic(peripheral_id;command;args)
-    _resolve_func_steps(hardware_map;func_name;environment;usage_mode)
+    e: hardware_health_v3,hardware_identify_v3,hardware_proxy_info_v3
     hardware_health_v3()
     hardware_identify_v3(scan)
     hardware_proxy_info_v3()
-    hardware_peripheral_status_v3(peripheral_id)
-    hardware_diagnostic_command_v3(req)
-    hardware_hui_actions_v3()
-    hardware_hui_shutdown_v3(payload)
-    _hardware_hui_hold_v3(key;action)
-    hardware_hui_hold_start_v3(key;payload)
-    hardware_hui_hold_stop_v3(key;payload)
-    hardware_hui_al_command_v3(command;payload)
-    hardware_modbus_autoconfigure_v3()
-    hardware_diagnosis_v3()
-    hardware_diagnosis_repair_v3()
-    hardware_modbus_waveshare_diagnose_v3(exclusive)
-    hardware_modbus_wizard_plan_v3()
-    hardware_stack_snapshot_v3()
-    hardware_runtime_status_v3(serial_port)
-    hardware_runtime_stop_v3(payload)
-    hardware_runtime_start_v3(payload)
-    hardware_runtime_make_v3(payload)
-    hardware_modbus_wizard_probe_isolated_v3(payload)
-    hardware_modbus_wizard_program_isolated_v3(payload)
-    hardware_runtime_python_v3(payload)
-    hardware_runtime_python_resolve_func_v3(req)
-    hardware_mapping_get_v3()
-    hardware_mapping_schema_v3()
-    hardware_mapping_put_v3(req)
-    hardware_mapping_import_v3(req)
-    hardware_mapping_export_v3(req)
-    hardware_mapping_reset_v3(req)
-    hardware_oql_mapped_exec_v3(payload)
-    hardware_cqrs_command_v3(req)
-    hardware_cqrs_events_v3(limit)
-    hardware_cqrs_events_clear_v3(req)
-    hardware_scanner_status_v3()
-    hardware_scanner_last_v3()
-    hardware_scanner_ingest_v3(payload)
-    hardware_events_ws(websocket)
   oqlos/api/logs.py:
     e: _get_service,get_logs,get_log_stats
     _get_service()
     get_logs(level;function;module;q;environment;limit;offset)
     get_log_stats()
   oqlos/api/main.py:
-    e: _app_lifespan,_initialize_runtime_dependencies,_start_oql_transport,_stop_oql_transport,index_page,editor_page,panel_page,_with_query,hardware_status_page,hardware_demo_alias,hardware_restart_alias,map_editor_alias,hardware_ui_spa,health_check,status,hardware_events_websocket_alias,websocket_endpoint,oql_websocket_alias,_parse_server_args,run
+    e: _app_lifespan,_initialize_runtime_dependencies,_start_oql_transport,_stop_oql_transport,index_page,_serve_static_html,editor_page,panel_page,_with_query,hardware_status_page,hardware_demo_alias,hardware_restart_alias,map_editor_alias,hardware_ui_spa,health_check,status,_forward_websocket,hardware_events_websocket_alias,websocket_endpoint,oql_websocket_alias,_parse_server_args,run
     _app_lifespan(_)
     _initialize_runtime_dependencies()
     _start_oql_transport()
     _stop_oql_transport()
     index_page()
+    _serve_static_html(relative_path;title;missing_message)
     editor_page()
     panel_page()
     _with_query(path;request)
@@ -2418,6 +2465,7 @@ D:
     hardware_ui_spa(full_path)
     health_check()
     status()
+    _forward_websocket(websocket;handler)
     hardware_events_websocket_alias(websocket)
     websocket_endpoint(websocket)
     oql_websocket_alias(websocket)
@@ -2503,10 +2551,11 @@ D:
     get_settings()
   oqlos/core/__init__.py:
   oqlos/core/_action_motor2.py:
-    e: _normalize_motor2_target,_parse_motor2_direction,_parse_motor2_speed_steps,_parse_motor2_float,_parse_motor2_duration_seconds,_parse_motor2_volume_liters,_parse_motor2_acceleration,_normalize_motor2_value,_parse_prefixed_motor2_setting,_parse_motor2_reciprocating_setting,_parse_motor2_steps,_motor2_speed_raw,_motor2_max_steps_per_second,_motor2_effective_steps_per_second,_motor2_speed_for_duration,_motor2_acceleration_raw,_post_motor2_move_relative,_post_motor2_reciprocate,_post_motor2_stop,_motor2_reciprocating_state,_motor2_set_mode,_motor2_set_limit_mode,_motor2_set_limit,_motor2_set_stroke,_motor2_set_cycle_volume,_motor2_set_volume,_motor2_set_duration,_motor2_set_cycles,_motor2_do_stop,_motor2_build_plan,_motor2_step_label,_motor2_do_start,_handle_motor2_reciprocating_setting,_try_exec_motor2_set
+    e: _normalize_motor2_target,_parse_motor2_direction,_parse_motor2_speed_steps,_parse_motor2_positive_int,_parse_motor2_float,_parse_motor2_duration_seconds,_parse_motor2_volume_liters,_parse_motor2_acceleration,_normalize_motor2_value,_parse_prefixed_motor2_setting,_parse_motor2_reciprocating_setting,_parse_motor2_steps,_motor2_speed_raw,_motor2_max_steps_per_second,_motor2_effective_steps_per_second,_motor2_speed_for_duration,_motor2_acceleration_raw,_post_motor2_move_relative,_post_motor2_reciprocate,_post_motor2_stop,_call_motor2_transport,_motor2_reciprocating_state,_motor2_set_state_value,_motor2_state_handler,_motor2_do_stop,_motor2_build_plan,_motor2_step_label,_motor2_do_start,_handle_motor2_reciprocating_setting,_try_exec_motor2_set
     _normalize_motor2_target(target_lower)
     _parse_motor2_direction(value)
     _parse_motor2_speed_steps(value)
+    _parse_motor2_positive_int(value)
     _parse_motor2_float(value)
     _parse_motor2_duration_seconds(value)
     _parse_motor2_volume_liters(value)
@@ -2523,15 +2572,10 @@ D:
     _post_motor2_move_relative(direction;steps;speed_raw;acceleration_raw)
     _post_motor2_reciprocate(direction;steps;speed_raw;acceleration_raw;cycles;pause;limit_mode)
     _post_motor2_stop()
+    _call_motor2_transport(name;fallback)
     _motor2_reciprocating_state(interp)
-    _motor2_set_mode(interp;setting;state)
-    _motor2_set_limit_mode(interp;setting;state)
-    _motor2_set_limit(interp;setting;state)
-    _motor2_set_stroke(interp;setting;state)
-    _motor2_set_cycle_volume(interp;setting;state)
-    _motor2_set_volume(interp;setting;state)
-    _motor2_set_duration(interp;setting;state)
-    _motor2_set_cycles(interp;setting;state)
+    _motor2_set_state_value(interp;state;key;value;label)
+    _motor2_state_handler(key;value_fn;label_fn)
     _motor2_do_stop(interp;setting;state)
     _motor2_build_plan(interp;setting;state)
     _motor2_step_label(plan;mode)
@@ -2606,7 +2650,7 @@ D:
     _guard_recursion(func_name;call_stack)
     _parse_func_call(line;step_counter;steps;func_defs;indent;call_stack;parse_line_fn)
   oqlos/core/_interpreter_actions.py:
-    e: _extract_action_tokens,_drop_command_token,_coerce_expected_value,_compare_values,_oql_quote,_format_set_command,_get_nested_value,_record_failure,_mark_success,_normalize_bool,_lookup_peripheral_state,_mock_api_response,exec_action_task,exec_action_save,parse_wait_secs,exec_action_wait,_do_sleep,exec_action_min_max,exec_action_val,exec_action_log,exec_action_error,exec_action_else,exec_action_sample,_resolve_numeric_token,_func_avg,_func_sum,_func_min,_func_max,_func_sub,_func_div,_func_mul,_func_add,exec_action_func,exec_action_goto,exec_action_api,exec_action_expect,_assert_status,_assert_json,_assert_sensor,_assert_valve,exec_action_assert,exec_action_shell,exec_action_var_set,exec_action_condition,exec_action_if_fail_block,exec_action_if_block,exec_action_loop_block,exec_action_endloop,exec_action_set,_exec_set_wait,exec_action_action
+    e: _extract_action_tokens,_drop_command_token,_coerce_expected_value,_compare_values,_oql_quote,_format_set_command,_get_nested_value,_record_failure,_mark_success,_normalize_bool,_lookup_peripheral_state,_mock_api_response,exec_action_task,exec_action_save,parse_wait_secs,exec_action_wait,_do_sleep,exec_action_min_max,exec_action_val,exec_action_log,exec_action_error,exec_action_else,exec_action_sample,_resolve_numeric_token,_func_avg,_func_sum,_func_reduce_or_zero,_func_sub,_func_div,_func_mul,exec_action_func,exec_action_goto,exec_action_api,exec_action_expect,_assert_status,_assert_json,_assert_sensor,_assert_valve,exec_action_assert,exec_action_shell,exec_action_var_set,exec_action_condition,exec_action_if_fail_block,exec_action_if_block,exec_action_loop_block,exec_action_endloop,exec_action_set,_exec_set_wait,exec_action_action
     _extract_action_tokens(text)
     _drop_command_token(act)
     _coerce_expected_value(value)
@@ -2633,12 +2677,10 @@ D:
     _resolve_numeric_token(interp;token)
     _func_avg(values)
     _func_sum(values)
-    _func_min(values)
-    _func_max(values)
+    _func_reduce_or_zero(values;reducer)
     _func_sub(values)
     _func_div(values;interp;target)
     _func_mul(values)
-    _func_add(values)
     exec_action_func(interp;act)
     exec_action_goto(interp;act)
     exec_action_api(interp;act)
@@ -2670,7 +2712,7 @@ D:
     _parse_action_line(line;step_counter;steps)
     _parse_if_condition(line;step_counter;steps)
   oqlos/core/_oql_adapter.py:
-    e: _fmt_value,_scenarios_root,_resolve_include,_substitute_args,_load_includes,_lower_include,_lower_call,_lower_set,_lower_get,_lower_wait,_lower_save,_lower_min,_lower_max,_lower_check,_lower_if_delta,_lower_sample,_lower_log,_lower_error_cmd,_lower_repeat,_cmd_to_actions,_parse_macro_line,is_flat_oql,oql_doc_to_cql,_split_device_field,parse_flat_oql,_MacroRegistry
+    e: _fmt_value,_scenarios_root,_resolve_include,_substitute_args,_load_includes,_lower_include,_lower_call,_lower_set,_lower_get,_lower_wait,_lower_save,_lower_min,_lower_max,_lower_check,_lower_if_delta,_lower_sample,_lower_log,_lower_error_cmd,_lower_repeat,_cmd_to_actions,_parse_macro_line,_has_anonymous_named_goal,is_flat_oql,oql_doc_to_cql,_split_device_field,parse_flat_oql,_MacroRegistry
     _MacroRegistry: __init__(0),register(1),get(1)  # Collect ``MACRO`` definitions (raw body lines) from the root
     _fmt_value(value;unit)
     _scenarios_root()
@@ -2693,6 +2735,7 @@ D:
     _lower_repeat(cmd;macros;visiting)
     _cmd_to_actions(cmd;macros;visiting)
     _parse_macro_line(raw_line;ln;args)
+    _has_anonymous_named_goal(source)
     is_flat_oql(source)
     oql_doc_to_cql(doc)
     _split_device_field(device;index)
@@ -2709,12 +2752,12 @@ D:
     StepResult:
     ScriptResult: passed(0),failed(0),summary(0)
     VariableStore: __init__(2),set(3),get(2),has(1),all(1),clear(0),interpolate(1)  # Hierarchical key-value store with interpolation support.
-    InterpreterOutput: __init__(3),emit(2),_broadcast_event(2),info(1),ok(1),fail(1),warn(1),error(1),step(2),output_yaml(0)  # Collects interpreter output lines for display or testing, an
+    InterpreterOutput: __init__(3),emit(2),_broadcast_event(2),_emit_status(1),info(1),ok(1),fail(1),warn(1),error(1),step(2),output_yaml(0)  # Collects interpreter output lines for display or testing, an
     BaseInterpreter: __init__(4),parse(2),execute(1),run(2),run_file(1),strip_comments(1)  # Abstract base for language interpreters.
     EventBridge: __init__(1),connect(0),disconnect(0),send_event(2),connected(0)  # Optional WebSocket bridge to DSL Event Server (port 8104).
   oqlos/core/cql_parser.py:
     e: parse_cql,_collect_all_goals,_validate_intervals,validate_cql,_ParseState
-    _ParseState: __init__(2),parse(0),_peek_next_significant_indent(0),_flush_pending_inline_if(0),_attach_pending_inline_if(2),_get_line_info(0),_process_line(0),_try_skip_block(2),_try_intervals_block(3),_try_top_level(3),_handle_scenario(1),_handle_scenario_attrs(1),_handle_goal(3),_handle_goal_attrs(1),_handle_step(1),_init_block_stack(0),_add_action_to_parent(1),_append_nested_action(1),_append_loop_action(1),_pop_block_with_warning(2),_handle_block_control(1),_handle_else_block(0),_try_handle_structure_levels(3),_handle_inline_if_logic(2),_handle_action_dispatch(2),_try_hierarchy(3)  # Encapsulates the parsing state to simplify the main loop.
+    _ParseState: __init__(2),parse(0),_peek_next_significant_indent(0),_flush_pending_inline_if(0),_attach_pending_inline_if(2),_get_line_info(0),_process_line(0),_try_skip_block(2),_try_intervals_block(3),_try_top_level(3),_handle_scenario(1),_handle_scenario_attrs(1),_handle_goal(3),_handle_goal_attrs(1),_handle_current_attrs(4),_handle_step(1),_init_block_stack(0),_add_action_to_parent(1),_append_parent_stack_action(1),_pop_block_with_warning(2),_handle_block_control(1),_handle_else_block(0),_try_handle_structure_levels(3),_handle_inline_if_logic(2),_handle_action_dispatch(2),_try_hierarchy(3)  # Encapsulates the parsing state to simplify the main loop.
     parse_cql(source;filename)
     _collect_all_goals(doc)
     _validate_intervals(doc)
@@ -2728,7 +2771,7 @@ D:
     safe_eval_condition(expr;context)
   oqlos/core/interpreter.py:
     e: CqlInterpreter
-    CqlInterpreter: __init__(11),sensor_values(0),sensor_values(1),_firmware(0),_firmware(1),_firmware_url(0),_firmware_url(1),_coerce_float(1),_resolve_peripheral_id(1),_get_pump_flow_full_scale_lpm(0),_normalize_pump_power(1),_normalize_valve_value(1),_normalize_lung_value(1),parse(2),_print_header(2),_collect_warnings(2),_run_validation_mode(3),_collect_all_goals(1),_execute_single_goal(2),_execute_all_goals(1),_build_script_result(2),execute(1),_execute_step(2),_execute_action(1),_exec_flat_action(1),_do_sleep(2),_normalize_peripheral_value(2),_coerce_generic_peripheral_value(1),_exec_set_peripheral(2),_get_firmware(0),_execute_firmware_action(2),_execute_plugin_action(2),_execute_legacy_firmware_action(2),_refresh_sensors_from_firmware(0),_auto_mock_sensor(3),_compare_sensor(3),_resolve_sensor_value(1),_resolve_delta_sensor_value(1),_resolve_windowed_delta_sensor_value(2),_extract_window_seconds(1),_resolve_condition_rhs(3),_evaluate_resolved_condition(0),_eval_condition_clause(2),_evaluate_inline_condition_expression(1),_tokenize_condition_expression(1),_aggregate_condition_results(2),_apply_connector(3),_finalize_condition_result(4),_evaluate_range_condition(2),_evaluate_condition(1)  # CQL interpreter with three modes:
+    CqlInterpreter: __init__(11),sensor_values(0),sensor_values(1),_firmware(0),_firmware(1),_firmware_url(0),_firmware_url(1),_coerce_float(1),_resolve_peripheral_id(1),_get_pump_flow_full_scale_lpm(0),_normalize_pump_power(1),_normalize_valve_value(1),_normalize_lung_value(1),parse(2),_print_header(2),_collect_warnings(2),_planned_step_results(1),_run_validation_mode(4),_collect_all_goals(1),_execute_single_goal(2),_execute_all_goals(1),_build_script_result(2),execute(1),_execute_step(2),_execute_action(1),_exec_flat_action(1),_do_sleep(2),_normalize_peripheral_value(2),_coerce_generic_peripheral_value(1),_exec_set_peripheral(2),_get_firmware(0),_execute_firmware_action(2),_execute_plugin_action(2),_execute_legacy_firmware_action(2),_refresh_sensors_from_firmware(0),_auto_mock_sensor(3),_compare_sensor(3),_resolve_sensor_value(1),_resolve_delta_sensor_value(1),_resolve_windowed_delta_sensor_value(2),_extract_window_seconds(1),_resolve_condition_rhs(3),_evaluate_resolved_condition(0),_eval_condition_clause(2),_evaluate_inline_condition_expression(1),_tokenize_condition_expression(1),_aggregate_condition_results(2),_apply_connector(3),_finalize_condition_result(4),_evaluate_range_condition(2),_evaluate_condition(1)  # CQL interpreter with three modes:
   oqlos/core/motor2_runtime.py:
     e: _coerce_int,_coerce_float,_pick,motor2_max_steps_per_second,normalize_motor2_runtime_config,motor2_speed_for_duration,motor2_acceleration_raw,motor2_speed_raw,_normalize_motor2_direction,_compute_motor2_cycles,_compute_motor2_speed,build_motor2_reciprocating_plan,Motor2RuntimeConfig,Motor2ReciprocatingPlan
     Motor2RuntimeConfig:
@@ -2863,10 +2906,11 @@ D:
     overall_stack_healthy(identify)
     build_summary()
   oqlos/hardware/client/config.py:
-    e: float_from_env,int_from_env,candidate_oqlos_bases,OqlosHardwareProxyConfig
+    e: float_from_env,int_from_env,_value_from_env,candidate_oqlos_bases,OqlosHardwareProxyConfig
     OqlosHardwareProxyConfig: __post_init__(0),from_env(2)
     float_from_env(env;key;default)
     int_from_env(env;key;default)
+    _value_from_env(env;key;default;caster)
     candidate_oqlos_bases(api_base)
   oqlos/hardware/client/constants.py:
   oqlos/hardware/client/errors.py:
@@ -2932,42 +2976,53 @@ D:
     e: canonicalize_motor2_runtime_key,tic249_runtime_args_from_config
     canonicalize_motor2_runtime_key(key)
     tic249_runtime_args_from_config(runtime_config)
+  oqlos/hardware/client/tic249_arg_helpers.py:
+    e: tic249_arg
+    tic249_arg(args;snake;camel;default)
+  oqlos/hardware/client/tic249_command_mapping.py:
+    e: map_lung_or_reciprocate,map_tic249_command
+    map_lung_or_reciprocate(command;args)
+    map_tic249_command(command;args)
+  oqlos/hardware/client/tic249_error_messages.py:
+    e: extract_position,command_error_message,generic_failure_hint,command_failure,plugin_unavailable_error,normalize_target_state
+    extract_position(payload)
+    command_error_message(result)
+    generic_failure_hint(result)
+    command_failure(result)
+    plugin_unavailable_error(exc)
+    normalize_target_state(command;result)
   oqlos/hardware/client/tic249_extended.py:
-    e: _arg,_plugin_payload,_execute,_steps_per_second_to_raw,_normalize_motion_params,_stroke_steps,_apply_reciprocate_direction,_build_reciprocate_params,_map_lung_or_reciprocate,_command_mapping,_extract_position,_command_error_message,_generic_failure_hint,_failure,_plugin_unavailable_error,_tic249_sidecar_base_urls,_tic249_sidecar_base_url,_sidecar_reports_deenergized,_attempt_disable_deenergize,_disable_success_response,_sidecar_reciprocate_preferred,_attempt_reciprocate_via_sidecar,_direct_sidecar_deenergize,_lung_disable_fallback,_normalize_target_state,_handle_hardware_proxy_error,_handle_move_relative_command,_try_disable_fallback,_try_sidecar_reciprocate,run_extended_motor_tic249_command
-    _arg(args;snake;camel;default)
+    e: _plugin_payload,_execute,_handle_move_relative_command,_try_disable_fallback,_try_sidecar_reciprocate,_handle_hardware_proxy_error,run_extended_motor_tic249_command
     _plugin_payload(command;params)
     _execute(proxy;command;params)
-    _steps_per_second_to_raw(value;args)
-    _normalize_motion_params(args)
-    _stroke_steps(args;default)
-    _apply_reciprocate_direction(params;args)
-    _build_reciprocate_params(args)
-    _map_lung_or_reciprocate(command;args)
-    _command_mapping(command;args)
-    _extract_position(payload)
-    _command_error_message(result)
-    _generic_failure_hint(result)
-    _failure(result)
-    _plugin_unavailable_error(exc)
-    _tic249_sidecar_base_urls()
-    _tic249_sidecar_base_url()
-    _sidecar_reports_deenergized()
-    _attempt_disable_deenergize(hardware_proxy;command)
-    _disable_success_response(command;fallback_result;fallback_name)
-    _sidecar_reciprocate_preferred()
-    _attempt_reciprocate_via_sidecar(params)
-    _direct_sidecar_deenergize(command)
-    _lung_disable_fallback(hardware_proxy;command)
-    _normalize_target_state(command;result)
-    _handle_hardware_proxy_error(hardware_proxy;command;plugin_command;params;exc)
     _handle_move_relative_command(hardware_proxy;command_args)
     _try_disable_fallback(hardware_proxy;command)
     _try_sidecar_reciprocate(command;plugin_command;params)
+    _handle_hardware_proxy_error(hardware_proxy;command;plugin_command;params;exc)
     run_extended_motor_tic249_command(hardware_proxy;command;args)
+  oqlos/hardware/client/tic249_motion_params.py:
+    e: normalize_motion_params,stroke_steps,apply_reciprocate_direction,_resolve_reciprocate_speed,_resolve_reciprocate_ramp,build_reciprocate_params
+    normalize_motion_params(args)
+    stroke_steps(args;default)
+    apply_reciprocate_direction(params;args)
+    _resolve_reciprocate_speed(args)
+    _resolve_reciprocate_ramp(args)
+    build_reciprocate_params(args)
   oqlos/hardware/client/tic249_rig_direction.py:
     e: rig_direction_to_plugin,apply_rig_direction_to_plugin_params
     rig_direction_to_plugin(direction)
     apply_rig_direction_to_plugin_params(params;args)
+  oqlos/hardware/client/tic249_sidecar_client.py:
+    e: tic249_sidecar_base_urls,tic249_sidecar_base_url,sidecar_reciprocate_preferred,sidecar_reports_deenergized,attempt_reciprocate_via_sidecar,direct_sidecar_deenergize,lung_disable_fallback,disable_success_response,attempt_disable_deenergize
+    tic249_sidecar_base_urls()
+    tic249_sidecar_base_url()
+    sidecar_reciprocate_preferred()
+    sidecar_reports_deenergized()
+    attempt_reciprocate_via_sidecar(params)
+    direct_sidecar_deenergize(command)
+    lung_disable_fallback(hardware_proxy;command)
+    disable_success_response(command;fallback_result;fallback_name)
+    attempt_disable_deenergize(hardware_proxy;command)
   oqlos/hardware/config_paths.py:
     e: resolve_oqlos_config_path
     resolve_oqlos_config_path(config_path)
@@ -3013,10 +3068,11 @@ D:
     _repair_dri0050_if_needed(targets;health_before;repairs)
     execute_safe_recover(gateway;report)
   oqlos/hardware/discovery.py:
-    e: _ensure_local_pimodbus_on_path,probe_waveshare_modbus,probe_waveshare_modbus_adc
+    e: _ensure_local_pimodbus_on_path,_probe_waveshare,_probe_waveshare_role,_build_waveshare_probe
     _ensure_local_pimodbus_on_path()
-    probe_waveshare_modbus(preferred_port;preferred_baud;preferred_parity;preferred_device_id;timeout)
-    probe_waveshare_modbus_adc(preferred_port;preferred_baud;preferred_parity;preferred_device_id;timeout)
+    _probe_waveshare(probe_fn)
+    _probe_waveshare_role(role;preferred_port;preferred_baud;preferred_parity;preferred_device_id;timeout)
+    _build_waveshare_probe(role;doc)
   oqlos/hardware/drivers/__init__.py:
   oqlos/hardware/drivers/gpio.py:
     e: GpioDriver
@@ -3044,19 +3100,29 @@ D:
     e: health_status_is_ok
     health_status_is_ok(raw_status)
   oqlos/hardware/hui_actions.py:
-    e: _success,_operation,_set_valve,_set_pump,_set_pump_best_effort,shutdown_all_hui_hardware,list_hui_actions,start_hui_hold,stop_hui_hold,_run_tic249_reciprocate,start_hui_artificial_lung,stop_hui_artificial_lung
+    e: list_hui_actions
+    list_hui_actions()
+  oqlos/hardware/hui_artificial_lung.py:
+    e: _run_tic249_reciprocate,start_hui_artificial_lung,stop_hui_artificial_lung
+    _run_tic249_reciprocate(gateway)
+    start_hui_artificial_lung(gateway)
+    stop_hui_artificial_lung(gateway)
+  oqlos/hardware/hui_hold.py:
+    e: _success,_operation,_set_valve,_set_pump,_set_pump_best_effort,shutdown_all_hui_hardware,_hold_start_failure,_engage_hold_valves,_engage_hold_pump_if_needed,start_hui_hold,stop_hui_hold
     _success(value)
     _operation(name;ok)
     _set_valve(gateway;valve_id;value)
     _set_pump(gateway;power_pct)
     _set_pump_best_effort(gateway;power_pct)
     shutdown_all_hui_hardware(gateway)
-    list_hui_actions()
+    _hold_start_failure(hold_key)
+    _engage_hold_valves(gateway;valve_ids)
+    _engage_hold_pump_if_needed(gateway;pump_pct)
     start_hui_hold(gateway;key)
     stop_hui_hold(gateway;key)
-    _run_tic249_reciprocate(gateway)
-    start_hui_artificial_lung(gateway)
-    stop_hui_artificial_lung(gateway)
+  oqlos/hardware/hui_lung_recipe.py:
+    e: build_hui_lung_reciprocate_args
+    build_hui_lung_reciprocate_args()
   oqlos/hardware/identify_enrichment.py:
     e: enrich_identify_payload
     enrich_identify_payload(payload)
@@ -3085,10 +3151,11 @@ D:
     serial_error_is_stale(exc)
     reopen_rtu_after_stale(plugin;exc)
   oqlos/hardware/plugins/_shared.py:
-    e: http_health_check,not_connected_health,health_check_exception,http_disconnect
+    e: http_health_check,not_connected_health,health_check_exception,_error_health,http_disconnect
     http_health_check(client;base_url;label)
     not_connected_health(label)
     health_check_exception(exc)
+    _error_health(message)
     http_disconnect(client;label)
   oqlos/hardware/plugins/base.py:
     e: get_pluggy_manager,dynamic_peripheral_model,dynamic_plugin_schema_models,PluginStatus,HardwareDriverSpec,ScaleConfig,ConversionConfig,PeripheralConfig,PluginConfig,OqlosConfigDocument,PluginHealth,HardwarePlugin
@@ -3160,10 +3227,11 @@ D:
     build_scanner_adapter_entry(diagnostics)
     enrich_scanner_adapter(payload)
   oqlos/hardware/sidecar_control.py:
-    e: _modbus_serial_candidates,resolve_dri0050_serial,_dri0050_paths,_http_sidecar_listening,_http_sidecar_healthy,_run_cmd,_free_api_port,ensure_dri0050_sidecar
+    e: _modbus_serial_candidates,resolve_dri0050_serial,_dri0050_paths,_http_sidecar_probe,_http_sidecar_listening,_http_sidecar_healthy,_run_cmd,_free_api_port,ensure_dri0050_sidecar
     _modbus_serial_candidates()
     resolve_dri0050_serial(configured)
     _dri0050_paths()
+    _http_sidecar_probe()
     _http_sidecar_listening()
     _http_sidecar_healthy()
     _run_cmd()
@@ -3176,6 +3244,9 @@ D:
     _build_recommended_actions(stale;health_payload)
     build_hardware_stack_snapshot(health)
   oqlos/hardware/tic249_units.py:
+    e: steps_per_second_to_raw,raw_acceleration_for_ramp
+    steps_per_second_to_raw(value)
+    raw_acceleration_for_ramp(raw_speed;ramp_seconds)
   oqlos/hardware/transport/__init__.py:
   oqlos/hardware/transport/manage_ops.py:
     e: run_manage_verb,_resolve,_usb_list,_pi_diagnostics,_usb_reset,_run_diagnostic_command,list_manage_verbs
@@ -3878,17 +3949,19 @@ D:
     e: test_configure_oqlos_logging_writes_to_file
     test_configure_oqlos_logging_writes_to_file(tmp_path;monkeypatch)
   tests/firmware/test_panel_ui.py:
-    e: panel_source,_panel_manage_verbs,_panel_endpoints,test_panel_route_serves_html,test_panel_manage_verbs_are_supported,test_panel_only_calls_known_endpoints,client_with_controller,test_panel_single_oql_command_payload_dispatches,test_panel_flow_script_payload_dispatches,test_panel_manage_payload_dispatches,_FakeController
+    e: panel_source,_panel_manage_verbs,_panel_endpoints,test_panel_route_serves_html,test_health_route_contains_redeploy_probe_token,test_panel_manage_verbs_are_supported,test_panel_only_calls_known_endpoints,client_with_controller,test_panel_single_oql_command_payload_dispatches,test_panel_flow_script_payload_dispatches,test_panel_script_without_version_executes_named_goal,test_panel_manage_payload_dispatches,_FakeController
     _FakeController: __init__(1),execute(1),manage(2)
     panel_source()
     _panel_manage_verbs(source)
     _panel_endpoints(source)
     test_panel_route_serves_html()
+    test_health_route_contains_redeploy_probe_token()
     test_panel_manage_verbs_are_supported(panel_source)
     test_panel_only_calls_known_endpoints(panel_source)
     client_with_controller()
     test_panel_single_oql_command_payload_dispatches(client_with_controller)
     test_panel_flow_script_payload_dispatches(client_with_controller)
+    test_panel_script_without_version_executes_named_goal()
     test_panel_manage_payload_dispatches(client_with_controller)
   tests/firmware/test_parser_cycle.py:
     e: TestParserCycleDetection
@@ -3967,6 +4040,10 @@ D:
     test_scan_diagnostics_usb_ignores_crw_without_barcode_tokens(monkeypatch)
     test_holtek_present_from_diagnostics_usb(monkeypatch)
     test_enrich_scanner_adapter_adds_entry(monkeypatch)
+  tests/firmware/test_tic249_units.py:
+    e: test_steps_per_second_to_raw_default_cap,test_raw_acceleration_for_ramp
+    test_steps_per_second_to_raw_default_cap()
+    test_raw_acceleration_for_ramp()
   tests/firmware/test_tokenizer_extended.py:
     e: TestValSingleQuote,TestMinMaxSingleQuote,TestIfElseSingleQuote,TestIfStandalone,TestElseStandalone,TestSample,TestGoto,TestFunc,TestSaveSingleQuote,TestWaitQuoted
     TestValSingleQuote: test_val_single_quote(0),test_val_double_quote(0),test_val_bracket(0)
@@ -4108,13 +4185,20 @@ project_metadata('oqlos', '0.1.28', 'python').
 
 % ── Project Files ────────────────────────────────────────
 project_file('app.doql.css', 165, 'css').
-project_file('app.doql.less', 311, 'less').
+project_file('app.doql.less', 316, 'less').
 project_file('examples/curl-quickstart.sh', 75, 'shell').
 project_file('examples/hardware/doctor-workflow.sh', 53, 'shell').
+project_file('frontend/src/api/hardware-api-errors.js', 64, 'javascript').
 project_file('frontend/src/api/hardware-api-log.js', 88, 'javascript').
-project_file('frontend/src/api/hardwareApi.js', 435, 'javascript').
+project_file('frontend/src/api/hardware-diagnostic-failure.js', 103, 'javascript').
+project_file('frontend/src/api/hardware-diagnostic-failure.test.js', 59, 'javascript').
+project_file('frontend/src/api/hardware-tic249-status.js', 36, 'javascript').
+project_file('frontend/src/api/hardwareApi.js', 257, 'javascript').
 project_file('frontend/src/api/wsClient.js', 139, 'javascript').
-project_file('frontend/src/hooks/useUrlConfig.js', 287, 'javascript').
+project_file('frontend/src/context/app-config-document.js', 27, 'javascript').
+project_file('frontend/src/hooks/useParentEncoderNavigation.js', 157, 'javascript').
+project_file('frontend/src/hooks/useRailHoverPreview.js', 85, 'javascript').
+project_file('frontend/src/hooks/useUrlConfig.js', 86, 'javascript').
 project_file('frontend/src/hooks/useWsStatus.js', 27, 'javascript').
 project_file('frontend/src/i18n/dictionaries.js', 1982, 'javascript').
 project_file('frontend/src/i18n/hardware-demo-extra-translations.js', 184, 'javascript').
@@ -4126,30 +4210,40 @@ project_file('frontend/src/styles/global.css', 2076, 'css').
 project_file('frontend/src/utils/collapse-toggle-bridge.js', 47, 'javascript').
 project_file('frontend/src/utils/designRem.js', 44, 'javascript').
 project_file('frontend/src/utils/hardware-activity-log.js', 35, 'javascript').
+project_file('frontend/src/utils/hardware-api-retry.js', 39, 'javascript').
+project_file('frontend/src/utils/hardware-api-retry.test.js', 46, 'javascript').
 project_file('frontend/src/utils/hardware-restart-docs.js', 12, 'javascript').
+project_file('frontend/src/utils/hardware-restart-wizard-steps.js', 110, 'javascript').
 project_file('frontend/src/utils/hardware-time.js', 5, 'javascript').
 project_file('frontend/src/utils/hardware-wizard-plan.js', 11, 'javascript').
 project_file('frontend/src/utils/hardware-wizard-steps.js', 112, 'javascript').
 project_file('frontend/src/utils/hardwareEventStream.js', 48, 'javascript').
 project_file('frontend/src/utils/hui-shell-key.js', 39, 'javascript').
-project_file('frontend/src/utils/mapEditorFuncHardwareSummary.js', 51, 'javascript').
+project_file('frontend/src/utils/mapEditorFuncHardwareSummary.js', 81, 'javascript').
+project_file('frontend/src/utils/mapEditorFuncHardwareSummary.test.js', 55, 'javascript').
 project_file('frontend/src/utils/parentUrlBridge.js', 40, 'javascript').
 project_file('frontend/src/utils/rbac.policy.js', 119, 'javascript').
-project_file('frontend/src/utils/useSelectionCollapsePanel.js', 192, 'javascript').
+project_file('frontend/src/utils/url-embed-config.js', 194, 'javascript').
+project_file('frontend/src/utils/url-embed-config.test.js', 93, 'javascript').
+project_file('frontend/src/utils/useSelectionCollapsePanel.js', 140, 'javascript').
 project_file('frontend/vendor/hardware-client/index.ts', 32, 'typescript').
 project_file('frontend/vendor/hardware-client/paths.ts', 40, 'typescript').
 project_file('frontend/vite.config.ts', 37, 'typescript').
 project_file('oqlos/__init__.py', 4, 'python').
 project_file('oqlos/api/__init__.py', 18, 'python').
+project_file('oqlos/api/_hw3_mapping.py', 158, 'python').
+project_file('oqlos/api/_hw3_models.py', 195, 'python').
+project_file('oqlos/api/_hw3_peripheral.py', 134, 'python').
+project_file('oqlos/api/_hw3_system.py', 134, 'python').
 project_file('oqlos/api/editor.py', 142, 'python').
 project_file('oqlos/api/execution.py', 360, 'python').
 project_file('oqlos/api/hardware.py', 2267, 'python').
 project_file('oqlos/api/hardware_events.py', 136, 'python').
 project_file('oqlos/api/hardware_mapping_contract.py', 90, 'python').
 project_file('oqlos/api/hardware_mapping_store.py', 153, 'python').
-project_file('oqlos/api/hardware_v3.py', 611, 'python').
+project_file('oqlos/api/hardware_v3.py', 61, 'python').
 project_file('oqlos/api/logs.py', 46, 'python').
-project_file('oqlos/api/main.py', 380, 'python').
+project_file('oqlos/api/main.py', 371, 'python').
 project_file('oqlos/api/oql_mqtt.py', 152, 'python').
 project_file('oqlos/api/peripherals.py', 71, 'python').
 project_file('oqlos/api/plugins.py', 182, 'python').
@@ -4160,22 +4254,22 @@ project_file('oqlos/api/utils/execution_ctrl.py', 63, 'python').
 project_file('oqlos/api/version.py', 25, 'python').
 project_file('oqlos/config.py', 221, 'python').
 project_file('oqlos/core/__init__.py', 1, 'python').
-project_file('oqlos/core/_action_motor2.py', 471, 'python').
+project_file('oqlos/core/_action_motor2.py', 482, 'python').
 project_file('oqlos/core/_compare.py', 41, 'python').
 project_file('oqlos/core/_cql_tokenizer.py', 407, 'python').
 project_file('oqlos/core/_cql_tree_builder.py', 168, 'python').
 project_file('oqlos/core/_dsl_helpers.py', 133, 'python').
 project_file('oqlos/core/_firmware_executor.py', 211, 'python').
 project_file('oqlos/core/_func_resolver.py', 97, 'python').
-project_file('oqlos/core/_interpreter_actions.py', 804, 'python').
+project_file('oqlos/core/_interpreter_actions.py', 801, 'python').
 project_file('oqlos/core/_line_parsers.py', 247, 'python').
-project_file('oqlos/core/_oql_adapter.py', 467, 'python').
+project_file('oqlos/core/_oql_adapter.py', 487, 'python').
 project_file('oqlos/core/_sensor_evaluator.py', 146, 'python').
 project_file('oqlos/core/_value_normalizers.py', 127, 'python').
-project_file('oqlos/core/base.py', 321, 'python').
-project_file('oqlos/core/cql_parser.py', 478, 'python').
+project_file('oqlos/core/base.py', 312, 'python').
+project_file('oqlos/core/cql_parser.py', 468, 'python').
 project_file('oqlos/core/executor.py', 384, 'python').
-project_file('oqlos/core/interpreter.py', 677, 'python').
+project_file('oqlos/core/interpreter.py', 691, 'python').
 project_file('oqlos/core/motor2_runtime.py', 210, 'python').
 project_file('oqlos/core/oql_parser.py', 763, 'python').
 project_file('oqlos/core/oql_versioning.py', 73, 'python').
@@ -4189,7 +4283,7 @@ project_file('oqlos/hardware/artificial_lung.py', 163, 'python').
 project_file('oqlos/hardware/client/__init__.py', 101, 'python').
 project_file('oqlos/hardware/client/adc.py', 65, 'python').
 project_file('oqlos/hardware/client/autorepair.py', 138, 'python').
-project_file('oqlos/hardware/client/config.py', 89, 'python').
+project_file('oqlos/hardware/client/config.py', 87, 'python').
 project_file('oqlos/hardware/client/constants.py', 70, 'python').
 project_file('oqlos/hardware/client/errors.py', 27, 'python').
 project_file('oqlos/hardware/client/http_helpers.py', 27, 'python').
@@ -4199,13 +4293,18 @@ project_file('oqlos/hardware/client/platform.py', 51, 'python').
 project_file('oqlos/hardware/client/proxy.py', 461, 'python').
 project_file('oqlos/hardware/client/resolvers.py', 129, 'python').
 project_file('oqlos/hardware/client/tic249_arg_contract.py', 66, 'python').
-project_file('oqlos/hardware/client/tic249_extended.py', 639, 'python').
+project_file('oqlos/hardware/client/tic249_arg_helpers.py', 12, 'python').
+project_file('oqlos/hardware/client/tic249_command_mapping.py', 50, 'python').
+project_file('oqlos/hardware/client/tic249_error_messages.py', 113, 'python').
+project_file('oqlos/hardware/client/tic249_extended.py', 216, 'python').
+project_file('oqlos/hardware/client/tic249_motion_params.py', 129, 'python').
 project_file('oqlos/hardware/client/tic249_rig_direction.py', 44, 'python').
+project_file('oqlos/hardware/client/tic249_sidecar_client.py', 184, 'python').
 project_file('oqlos/hardware/config_paths.py', 42, 'python').
 project_file('oqlos/hardware/config_schema.py', 146, 'python').
 project_file('oqlos/hardware/control_proxy.py', 69, 'python').
 project_file('oqlos/hardware/diagnosis.py', 563, 'python').
-project_file('oqlos/hardware/discovery.py', 104, 'python').
+project_file('oqlos/hardware/discovery.py', 164, 'python').
 project_file('oqlos/hardware/drivers/__init__.py', 6, 'python').
 project_file('oqlos/hardware/drivers/gpio.py', 90, 'python').
 project_file('oqlos/hardware/drivers/mqtt.py', 120, 'python').
@@ -4213,14 +4312,17 @@ project_file('oqlos/hardware/drivers/spi.py', 93, 'python').
 project_file('oqlos/hardware/firmware_adapter.py', 482, 'python').
 project_file('oqlos/hardware/gateway.py', 417, 'python').
 project_file('oqlos/hardware/health_status.py', 27, 'python').
-project_file('oqlos/hardware/hui_actions.py', 252, 'python').
+project_file('oqlos/hardware/hui_actions.py', 59, 'python').
+project_file('oqlos/hardware/hui_artificial_lung.py', 84, 'python').
+project_file('oqlos/hardware/hui_hold.py', 189, 'python').
+project_file('oqlos/hardware/hui_lung_recipe.py', 43, 'python').
 project_file('oqlos/hardware/identify_enrichment.py', 19, 'python').
 project_file('oqlos/hardware/modbus_identify.py', 132, 'python').
 project_file('oqlos/hardware/peripheral_mapping.py', 139, 'python').
-project_file('oqlos/hardware/plugin_gateway.py', 629, 'python').
+project_file('oqlos/hardware/plugin_gateway.py', 632, 'python').
 project_file('oqlos/hardware/plugins/__init__.py', 50, 'python').
 project_file('oqlos/hardware/plugins/_rtu_serial.py', 34, 'python').
-project_file('oqlos/hardware/plugins/_shared.py', 62, 'python').
+project_file('oqlos/hardware/plugins/_shared.py', 60, 'python').
 project_file('oqlos/hardware/plugins/base.py', 371, 'python').
 project_file('oqlos/hardware/plugins/lung.py', 362, 'python').
 project_file('oqlos/hardware/plugins/modbus.py', 336, 'python').
@@ -4232,9 +4334,9 @@ project_file('oqlos/hardware/protocol.py', 61, 'python').
 project_file('oqlos/hardware/registry.py', 50, 'python').
 project_file('oqlos/hardware/rtc_probe.py', 198, 'python').
 project_file('oqlos/hardware/scanner_probe.py', 263, 'python').
-project_file('oqlos/hardware/sidecar_control.py', 227, 'python').
+project_file('oqlos/hardware/sidecar_control.py', 223, 'python').
 project_file('oqlos/hardware/stack_snapshot.py', 89, 'python').
-project_file('oqlos/hardware/tic249_units.py', 6, 'python').
+project_file('oqlos/hardware/tic249_units.py', 40, 'python').
 project_file('oqlos/hardware/transport/__init__.py', 25, 'python').
 project_file('oqlos/hardware/transport/manage_ops.py', 223, 'python').
 project_file('oqlos/hardware/transport/mqtt_oql_bridge.py', 495, 'python').
@@ -4314,7 +4416,7 @@ project_file('tests/firmware/test_hardware_health_http.py', 59, 'python').
 project_file('tests/firmware/test_hardware_identify.py', 210, 'python').
 project_file('tests/firmware/test_hardware_modbus_wizard.py', 326, 'python').
 project_file('tests/firmware/test_hardware_stack_snapshot.py', 46, 'python').
-project_file('tests/firmware/test_hardware_v3_compat.py', 97, 'python').
+project_file('tests/firmware/test_hardware_v3_compat.py', 98, 'python').
 project_file('tests/firmware/test_hui_actions.py', 93, 'python').
 project_file('tests/firmware/test_hui_scenario.py', 12, 'python').
 project_file('tests/firmware/test_lung_integration.py', 282, 'python').
@@ -4330,7 +4432,7 @@ project_file('tests/firmware/test_oql_manage_ops.py', 171, 'python').
 project_file('tests/firmware/test_oql_mqtt_bridge.py', 255, 'python').
 project_file('tests/firmware/test_oql_route_http.py', 119, 'python').
 project_file('tests/firmware/test_oqlos_logging.py', 21, 'python').
-project_file('tests/firmware/test_panel_ui.py', 150, 'python').
+project_file('tests/firmware/test_panel_ui.py', 189, 'python').
 project_file('tests/firmware/test_parser_cycle.py', 53, 'python').
 project_file('tests/firmware/test_plugin_gateway_env.py', 243, 'python').
 project_file('tests/firmware/test_plugin_gateway_init.py', 67, 'python').
@@ -4341,6 +4443,7 @@ project_file('tests/firmware/test_rtc_probe.py', 131, 'python').
 project_file('tests/firmware/test_runtime_command_payload.py', 16, 'python').
 project_file('tests/firmware/test_safe_eval.py', 244, 'python').
 project_file('tests/firmware/test_scanner_probe.py', 68, 'python').
+project_file('tests/firmware/test_tic249_units.py', 18, 'python').
 project_file('tests/firmware/test_tokenizer_extended.py', 194, 'python').
 project_file('tests/firmware/test_usb_diagnostics.py', 63, 'python').
 project_file('tests/test_core.py', 854, 'python').
@@ -4349,7 +4452,7 @@ project_file('tests/test_cql_inline_regressions.py', 74, 'python').
 project_file('tests/test_cql_scenarios.py', 88, 'python').
 project_file('tests/test_dsl_schema.py', 20, 'python').
 project_file('tests/test_oql_dry_run_regressions.py', 62, 'python').
-project_file('tests/test_oql_parser_v3.py', 491, 'python').
+project_file('tests/test_oql_parser_v3.py', 492, 'python').
 project_file('tests/test_oql_scenarios.py', 74, 'python').
 project_file('tests/test_reporting.py', 46, 'python').
 project_file('tests/test_xml_import_generators.py', 29, 'python').
@@ -4357,6 +4460,49 @@ project_file('tests/verify_block_if.py', 61, 'python').
 project_file('tests/verify_loops.py', 34, 'python').
 
 % ── Python Functions ─────────────────────────────────────
+python_function('oqlos/api/_hw3_mapping.py', 'hardware_runtime_python_resolve_func_v3', 1, 3, 4).
+python_function('oqlos/api/_hw3_mapping.py', 'hardware_mapping_get_v3', 0, 1, 1).
+python_function('oqlos/api/_hw3_mapping.py', 'hardware_mapping_schema_v3', 0, 1, 1).
+python_function('oqlos/api/_hw3_mapping.py', 'hardware_mapping_put_v3', 1, 2, 3).
+python_function('oqlos/api/_hw3_mapping.py', 'hardware_mapping_import_v3', 1, 3, 4).
+python_function('oqlos/api/_hw3_mapping.py', 'hardware_mapping_export_v3', 1, 2, 4).
+python_function('oqlos/api/_hw3_mapping.py', 'hardware_mapping_reset_v3', 1, 1, 2).
+python_function('oqlos/api/_hw3_mapping.py', 'hardware_oql_mapped_exec_v3', 1, 3, 6).
+python_function('oqlos/api/_hw3_mapping.py', 'hardware_cqrs_command_v3', 1, 10, 8).
+python_function('oqlos/api/_hw3_mapping.py', 'hardware_cqrs_events_v3', 1, 1, 5).
+python_function('oqlos/api/_hw3_mapping.py', 'hardware_cqrs_events_clear_v3', 1, 1, 3).
+python_function('oqlos/api/_hw3_mapping.py', 'hardware_events_ws', 1, 4, 6).
+python_function('oqlos/api/_hw3_models.py', 'normalize_peripheral_id', 1, 2, 5).
+python_function('oqlos/api/_hw3_models.py', '_ok_from_result', 1, 5, 3).
+python_function('oqlos/api/_hw3_models.py', '_runtime_control_skipped', 1, 1, 0).
+python_function('oqlos/api/_hw3_models.py', '_find_adapter', 2, 5, 2).
+python_function('oqlos/api/_hw3_models.py', '_run_diagnostic', 3, 6, 8).
+python_function('oqlos/api/_hw3_models.py', '_resolve_func_steps', 4, 14, 3).
+python_function('oqlos/api/_hw3_models.py', '_hardware_v1_call', 1, 1, 1).
+python_function('oqlos/api/_hw3_peripheral.py', 'hardware_peripheral_status_v3', 1, 11, 9).
+python_function('oqlos/api/_hw3_peripheral.py', 'hardware_diagnostic_command_v3', 1, 3, 5).
+python_function('oqlos/api/_hw3_peripheral.py', 'hardware_scanner_status_v3', 0, 5, 5).
+python_function('oqlos/api/_hw3_peripheral.py', 'hardware_scanner_last_v3', 0, 1, 1).
+python_function('oqlos/api/_hw3_peripheral.py', 'hardware_scanner_ingest_v3', 1, 2, 3).
+python_function('oqlos/api/_hw3_system.py', 'hardware_hui_actions_v3', 0, 1, 2).
+python_function('oqlos/api/_hw3_system.py', 'hardware_hui_shutdown_v3', 1, 1, 3).
+python_function('oqlos/api/_hw3_system.py', '_hardware_hui_hold_v3', 2, 2, 1).
+python_function('oqlos/api/_hw3_system.py', 'hardware_hui_hold_start_v3', 2, 1, 3).
+python_function('oqlos/api/_hw3_system.py', 'hardware_hui_hold_stop_v3', 2, 1, 3).
+python_function('oqlos/api/_hw3_system.py', 'hardware_hui_al_command_v3', 2, 3, 7).
+python_function('oqlos/api/_hw3_system.py', 'hardware_modbus_autoconfigure_v3', 0, 1, 2).
+python_function('oqlos/api/_hw3_system.py', 'hardware_diagnosis_v3', 0, 1, 2).
+python_function('oqlos/api/_hw3_system.py', 'hardware_diagnosis_repair_v3', 0, 1, 2).
+python_function('oqlos/api/_hw3_system.py', 'hardware_modbus_waveshare_diagnose_v3', 1, 1, 2).
+python_function('oqlos/api/_hw3_system.py', 'hardware_modbus_wizard_plan_v3', 0, 1, 2).
+python_function('oqlos/api/_hw3_system.py', 'hardware_stack_snapshot_v3', 0, 1, 2).
+python_function('oqlos/api/_hw3_system.py', 'hardware_runtime_status_v3', 1, 1, 2).
+python_function('oqlos/api/_hw3_system.py', 'hardware_runtime_stop_v3', 1, 2, 5).
+python_function('oqlos/api/_hw3_system.py', 'hardware_runtime_start_v3', 1, 2, 5).
+python_function('oqlos/api/_hw3_system.py', 'hardware_runtime_make_v3', 1, 2, 5).
+python_function('oqlos/api/_hw3_system.py', 'hardware_modbus_wizard_probe_isolated_v3', 1, 6, 6).
+python_function('oqlos/api/_hw3_system.py', 'hardware_modbus_wizard_program_isolated_v3', 1, 6, 7).
+python_function('oqlos/api/_hw3_system.py', 'hardware_runtime_python_v3', 1, 1, 2).
 python_function('oqlos/api/editor.py', '_default_scenarios_dir', 0, 2, 3).
 python_function('oqlos/api/editor.py', '_safe_path', 1, 2, 3).
 python_function('oqlos/api/editor.py', 'list_files', 0, 3, 7).
@@ -4489,51 +4635,9 @@ python_function('oqlos/api/hardware_mapping_store.py', '_default_path', 0, 3, 4)
 python_function('oqlos/api/hardware_mapping_store.py', 'empty_mapping', 0, 1, 0).
 python_function('oqlos/api/hardware_mapping_store.py', '_normalize_motor2_runtime_config', 1, 7, 4).
 python_function('oqlos/api/hardware_mapping_store.py', 'normalize_mapping', 1, 7, 4).
-python_function('oqlos/api/hardware_v3.py', 'normalize_peripheral_id', 1, 2, 5).
-python_function('oqlos/api/hardware_v3.py', '_ok_from_result', 1, 5, 3).
-python_function('oqlos/api/hardware_v3.py', '_runtime_control_skipped', 1, 1, 0).
-python_function('oqlos/api/hardware_v3.py', '_find_adapter', 2, 5, 2).
-python_function('oqlos/api/hardware_v3.py', '_run_diagnostic', 3, 6, 8).
-python_function('oqlos/api/hardware_v3.py', '_resolve_func_steps', 4, 14, 3).
 python_function('oqlos/api/hardware_v3.py', 'hardware_health_v3', 0, 2, 4).
 python_function('oqlos/api/hardware_v3.py', 'hardware_identify_v3', 1, 2, 2).
 python_function('oqlos/api/hardware_v3.py', 'hardware_proxy_info_v3', 0, 1, 1).
-python_function('oqlos/api/hardware_v3.py', 'hardware_peripheral_status_v3', 1, 11, 9).
-python_function('oqlos/api/hardware_v3.py', 'hardware_diagnostic_command_v3', 1, 3, 5).
-python_function('oqlos/api/hardware_v3.py', 'hardware_hui_actions_v3', 0, 1, 2).
-python_function('oqlos/api/hardware_v3.py', 'hardware_hui_shutdown_v3', 1, 1, 3).
-python_function('oqlos/api/hardware_v3.py', '_hardware_hui_hold_v3', 2, 2, 2).
-python_function('oqlos/api/hardware_v3.py', 'hardware_hui_hold_start_v3', 2, 1, 3).
-python_function('oqlos/api/hardware_v3.py', 'hardware_hui_hold_stop_v3', 2, 1, 3).
-python_function('oqlos/api/hardware_v3.py', 'hardware_hui_al_command_v3', 2, 3, 7).
-python_function('oqlos/api/hardware_v3.py', 'hardware_modbus_autoconfigure_v3', 0, 1, 2).
-python_function('oqlos/api/hardware_v3.py', 'hardware_diagnosis_v3', 0, 1, 2).
-python_function('oqlos/api/hardware_v3.py', 'hardware_diagnosis_repair_v3', 0, 1, 2).
-python_function('oqlos/api/hardware_v3.py', 'hardware_modbus_waveshare_diagnose_v3', 1, 1, 2).
-python_function('oqlos/api/hardware_v3.py', 'hardware_modbus_wizard_plan_v3', 0, 1, 2).
-python_function('oqlos/api/hardware_v3.py', 'hardware_stack_snapshot_v3', 0, 1, 2).
-python_function('oqlos/api/hardware_v3.py', 'hardware_runtime_status_v3', 1, 1, 2).
-python_function('oqlos/api/hardware_v3.py', 'hardware_runtime_stop_v3', 1, 2, 5).
-python_function('oqlos/api/hardware_v3.py', 'hardware_runtime_start_v3', 1, 2, 5).
-python_function('oqlos/api/hardware_v3.py', 'hardware_runtime_make_v3', 1, 2, 5).
-python_function('oqlos/api/hardware_v3.py', 'hardware_modbus_wizard_probe_isolated_v3', 1, 6, 6).
-python_function('oqlos/api/hardware_v3.py', 'hardware_modbus_wizard_program_isolated_v3', 1, 6, 7).
-python_function('oqlos/api/hardware_v3.py', 'hardware_runtime_python_v3', 1, 1, 2).
-python_function('oqlos/api/hardware_v3.py', 'hardware_runtime_python_resolve_func_v3', 1, 3, 4).
-python_function('oqlos/api/hardware_v3.py', 'hardware_mapping_get_v3', 0, 1, 1).
-python_function('oqlos/api/hardware_v3.py', 'hardware_mapping_schema_v3', 0, 1, 1).
-python_function('oqlos/api/hardware_v3.py', 'hardware_mapping_put_v3', 1, 2, 3).
-python_function('oqlos/api/hardware_v3.py', 'hardware_mapping_import_v3', 1, 3, 4).
-python_function('oqlos/api/hardware_v3.py', 'hardware_mapping_export_v3', 1, 2, 4).
-python_function('oqlos/api/hardware_v3.py', 'hardware_mapping_reset_v3', 1, 1, 2).
-python_function('oqlos/api/hardware_v3.py', 'hardware_oql_mapped_exec_v3', 1, 3, 6).
-python_function('oqlos/api/hardware_v3.py', 'hardware_cqrs_command_v3', 1, 10, 8).
-python_function('oqlos/api/hardware_v3.py', 'hardware_cqrs_events_v3', 1, 1, 5).
-python_function('oqlos/api/hardware_v3.py', 'hardware_cqrs_events_clear_v3', 1, 1, 3).
-python_function('oqlos/api/hardware_v3.py', 'hardware_scanner_status_v3', 0, 5, 5).
-python_function('oqlos/api/hardware_v3.py', 'hardware_scanner_last_v3', 0, 1, 1).
-python_function('oqlos/api/hardware_v3.py', 'hardware_scanner_ingest_v3', 1, 2, 3).
-python_function('oqlos/api/hardware_v3.py', 'hardware_events_ws', 1, 4, 6).
 python_function('oqlos/api/logs.py', '_get_service', 0, 1, 3).
 python_function('oqlos/api/logs.py', 'get_logs', 7, 1, 4).
 python_function('oqlos/api/logs.py', 'get_log_stats', 0, 1, 3).
@@ -4542,6 +4646,7 @@ python_function('oqlos/api/main.py', '_initialize_runtime_dependencies', 0, 4, 9
 python_function('oqlos/api/main.py', '_start_oql_transport', 0, 8, 10).
 python_function('oqlos/api/main.py', '_stop_oql_transport', 0, 3, 2).
 python_function('oqlos/api/main.py', 'index_page', 0, 1, 2).
+python_function('oqlos/api/main.py', '_serve_static_html', 3, 1, 1).
 python_function('oqlos/api/main.py', 'editor_page', 0, 1, 2).
 python_function('oqlos/api/main.py', 'panel_page', 0, 1, 2).
 python_function('oqlos/api/main.py', '_with_query', 2, 3, 1).
@@ -4552,6 +4657,7 @@ python_function('oqlos/api/main.py', 'map_editor_alias', 1, 1, 3).
 python_function('oqlos/api/main.py', 'hardware_ui_spa', 1, 5, 7).
 python_function('oqlos/api/main.py', 'health_check', 0, 1, 1).
 python_function('oqlos/api/main.py', 'status', 0, 1, 1).
+python_function('oqlos/api/main.py', '_forward_websocket', 2, 1, 1).
 python_function('oqlos/api/main.py', 'hardware_events_websocket_alias', 1, 1, 2).
 python_function('oqlos/api/main.py', 'websocket_endpoint', 1, 7, 9).
 python_function('oqlos/api/main.py', 'oql_websocket_alias', 1, 1, 2).
@@ -4617,7 +4723,8 @@ python_function('oqlos/api/utils/execution_ctrl.py', '_make_exec_handler', 3, 1,
 python_function('oqlos/config.py', 'get_settings', 0, 1, 0).
 python_function('oqlos/core/_action_motor2.py', '_normalize_motor2_target', 1, 1, 2).
 python_function('oqlos/core/_action_motor2.py', '_parse_motor2_direction', 1, 6, 4).
-python_function('oqlos/core/_action_motor2.py', '_parse_motor2_speed_steps', 1, 5, 9).
+python_function('oqlos/core/_action_motor2.py', '_parse_motor2_speed_steps', 1, 4, 4).
+python_function('oqlos/core/_action_motor2.py', '_parse_motor2_positive_int', 1, 3, 9).
 python_function('oqlos/core/_action_motor2.py', '_parse_motor2_float', 1, 4, 6).
 python_function('oqlos/core/_action_motor2.py', '_parse_motor2_duration_seconds', 1, 8, 5).
 python_function('oqlos/core/_action_motor2.py', '_parse_motor2_volume_liters', 1, 6, 5).
@@ -4625,7 +4732,7 @@ python_function('oqlos/core/_action_motor2.py', '_parse_motor2_acceleration', 1,
 python_function('oqlos/core/_action_motor2.py', '_normalize_motor2_value', 1, 2, 4).
 python_function('oqlos/core/_action_motor2.py', '_parse_prefixed_motor2_setting', 1, 13, 5).
 python_function('oqlos/core/_action_motor2.py', '_parse_motor2_reciprocating_setting', 1, 6, 5).
-python_function('oqlos/core/_action_motor2.py', '_parse_motor2_steps', 1, 3, 9).
+python_function('oqlos/core/_action_motor2.py', '_parse_motor2_steps', 1, 1, 1).
 python_function('oqlos/core/_action_motor2.py', '_motor2_speed_raw', 1, 1, 2).
 python_function('oqlos/core/_action_motor2.py', '_motor2_max_steps_per_second', 0, 1, 1).
 python_function('oqlos/core/_action_motor2.py', '_motor2_effective_steps_per_second', 1, 1, 4).
@@ -4634,15 +4741,10 @@ python_function('oqlos/core/_action_motor2.py', '_motor2_acceleration_raw', 2, 1
 python_function('oqlos/core/_action_motor2.py', '_post_motor2_move_relative', 4, 6, 11).
 python_function('oqlos/core/_action_motor2.py', '_post_motor2_reciprocate', 7, 7, 10).
 python_function('oqlos/core/_action_motor2.py', '_post_motor2_stop', 0, 4, 10).
+python_function('oqlos/core/_action_motor2.py', '_call_motor2_transport', 2, 4, 4).
 python_function('oqlos/core/_action_motor2.py', '_motor2_reciprocating_state', 1, 2, 3).
-python_function('oqlos/core/_action_motor2.py', '_motor2_set_mode', 3, 1, 1).
-python_function('oqlos/core/_action_motor2.py', '_motor2_set_limit_mode', 3, 1, 2).
-python_function('oqlos/core/_action_motor2.py', '_motor2_set_limit', 3, 1, 2).
-python_function('oqlos/core/_action_motor2.py', '_motor2_set_stroke', 3, 1, 2).
-python_function('oqlos/core/_action_motor2.py', '_motor2_set_cycle_volume', 3, 1, 2).
-python_function('oqlos/core/_action_motor2.py', '_motor2_set_volume', 3, 1, 2).
-python_function('oqlos/core/_action_motor2.py', '_motor2_set_duration', 3, 1, 2).
-python_function('oqlos/core/_action_motor2.py', '_motor2_set_cycles', 3, 1, 2).
+python_function('oqlos/core/_action_motor2.py', '_motor2_set_state_value', 5, 1, 1).
+python_function('oqlos/core/_action_motor2.py', '_motor2_state_handler', 3, 1, 3).
 python_function('oqlos/core/_action_motor2.py', '_motor2_do_stop', 3, 4, 3).
 python_function('oqlos/core/_action_motor2.py', '_motor2_build_plan', 3, 12, 6).
 python_function('oqlos/core/_action_motor2.py', '_motor2_step_label', 2, 4, 1).
@@ -4729,12 +4831,10 @@ python_function('oqlos/core/_interpreter_actions.py', 'exec_action_sample', 2, 7
 python_function('oqlos/core/_interpreter_actions.py', '_resolve_numeric_token', 2, 6, 6).
 python_function('oqlos/core/_interpreter_actions.py', '_func_avg', 1, 2, 2).
 python_function('oqlos/core/_interpreter_actions.py', '_func_sum', 1, 1, 1).
-python_function('oqlos/core/_interpreter_actions.py', '_func_min', 1, 2, 1).
-python_function('oqlos/core/_interpreter_actions.py', '_func_max', 1, 2, 1).
+python_function('oqlos/core/_interpreter_actions.py', '_func_reduce_or_zero', 2, 2, 1).
 python_function('oqlos/core/_interpreter_actions.py', '_func_sub', 1, 2, 1).
 python_function('oqlos/core/_interpreter_actions.py', '_func_div', 3, 4, 1).
 python_function('oqlos/core/_interpreter_actions.py', '_func_mul', 1, 2, 0).
-python_function('oqlos/core/_interpreter_actions.py', '_func_add', 1, 1, 1).
 python_function('oqlos/core/_interpreter_actions.py', 'exec_action_func', 2, 9, 11).
 python_function('oqlos/core/_interpreter_actions.py', 'exec_action_goto', 2, 1, 2).
 python_function('oqlos/core/_interpreter_actions.py', 'exec_action_api', 2, 3, 6).
@@ -4784,7 +4884,8 @@ python_function('oqlos/core/_oql_adapter.py', '_lower_error_cmd', 3, 1, 2).
 python_function('oqlos/core/_oql_adapter.py', '_lower_repeat', 3, 3, 2).
 python_function('oqlos/core/_oql_adapter.py', '_cmd_to_actions', 3, 2, 3).
 python_function('oqlos/core/_oql_adapter.py', '_parse_macro_line', 3, 8, 10).
-python_function('oqlos/core/_oql_adapter.py', 'is_flat_oql', 1, 7, 3).
+python_function('oqlos/core/_oql_adapter.py', '_has_anonymous_named_goal', 1, 8, 5).
+python_function('oqlos/core/_oql_adapter.py', 'is_flat_oql', 1, 8, 4).
 python_function('oqlos/core/_oql_adapter.py', 'oql_doc_to_cql', 1, 12, 16).
 python_function('oqlos/core/_oql_adapter.py', '_split_device_field', 2, 4, 3).
 python_function('oqlos/core/_oql_adapter.py', 'parse_flat_oql', 2, 1, 2).
@@ -4893,8 +4994,9 @@ python_function('oqlos/hardware/client/autorepair.py', 'analyze_repair_needs', 1
 python_function('oqlos/hardware/client/autorepair.py', 'modbus_exclusive_scan_recommended', 1, 5, 3).
 python_function('oqlos/hardware/client/autorepair.py', 'overall_stack_healthy', 1, 11, 8).
 python_function('oqlos/hardware/client/autorepair.py', 'build_summary', 0, 12, 5).
-python_function('oqlos/hardware/client/config.py', 'float_from_env', 3, 3, 2).
-python_function('oqlos/hardware/client/config.py', 'int_from_env', 3, 3, 2).
+python_function('oqlos/hardware/client/config.py', 'float_from_env', 3, 1, 1).
+python_function('oqlos/hardware/client/config.py', 'int_from_env', 3, 1, 1).
+python_function('oqlos/hardware/client/config.py', '_value_from_env', 4, 3, 2).
 python_function('oqlos/hardware/client/config.py', 'candidate_oqlos_bases', 1, 6, 3).
 python_function('oqlos/hardware/client/errors.py', 'is_oqlos_unavailable', 1, 1, 0).
 python_function('oqlos/hardware/client/errors.py', 'oqlos_error_detail', 1, 6, 3).
@@ -4941,38 +5043,39 @@ python_function('oqlos/hardware/client/resolvers.py', '_coalesce_error_message',
 python_function('oqlos/hardware/client/resolvers.py', 'extract_command_failure', 1, 10, 3).
 python_function('oqlos/hardware/client/tic249_arg_contract.py', 'canonicalize_motor2_runtime_key', 1, 2, 5).
 python_function('oqlos/hardware/client/tic249_arg_contract.py', 'tic249_runtime_args_from_config', 1, 8, 4).
-python_function('oqlos/hardware/client/tic249_extended.py', '_arg', 4, 4, 0).
+python_function('oqlos/hardware/client/tic249_arg_helpers.py', 'tic249_arg', 4, 4, 0).
+python_function('oqlos/hardware/client/tic249_command_mapping.py', 'map_lung_or_reciprocate', 2, 8, 4).
+python_function('oqlos/hardware/client/tic249_command_mapping.py', 'map_tic249_command', 2, 13, 5).
+python_function('oqlos/hardware/client/tic249_error_messages.py', 'extract_position', 1, 5, 3).
+python_function('oqlos/hardware/client/tic249_error_messages.py', 'command_error_message', 1, 14, 4).
+python_function('oqlos/hardware/client/tic249_error_messages.py', 'generic_failure_hint', 1, 8, 4).
+python_function('oqlos/hardware/client/tic249_error_messages.py', 'command_failure', 1, 10, 4).
+python_function('oqlos/hardware/client/tic249_error_messages.py', 'plugin_unavailable_error', 1, 10, 4).
+python_function('oqlos/hardware/client/tic249_error_messages.py', 'normalize_target_state', 2, 12, 4).
 python_function('oqlos/hardware/client/tic249_extended.py', '_plugin_payload', 2, 2, 0).
 python_function('oqlos/hardware/client/tic249_extended.py', '_execute', 3, 1, 2).
-python_function('oqlos/hardware/client/tic249_extended.py', '_steps_per_second_to_raw', 2, 3, 4).
-python_function('oqlos/hardware/client/tic249_extended.py', '_normalize_motion_params', 1, 13, 6).
-python_function('oqlos/hardware/client/tic249_extended.py', '_stroke_steps', 2, 1, 2).
-python_function('oqlos/hardware/client/tic249_extended.py', '_apply_reciprocate_direction', 2, 1, 1).
-python_function('oqlos/hardware/client/tic249_extended.py', '_build_reciprocate_params', 1, 13, 9).
-python_function('oqlos/hardware/client/tic249_extended.py', '_map_lung_or_reciprocate', 2, 8, 4).
-python_function('oqlos/hardware/client/tic249_extended.py', '_command_mapping', 2, 13, 5).
-python_function('oqlos/hardware/client/tic249_extended.py', '_extract_position', 1, 5, 3).
-python_function('oqlos/hardware/client/tic249_extended.py', '_command_error_message', 1, 14, 4).
-python_function('oqlos/hardware/client/tic249_extended.py', '_generic_failure_hint', 1, 8, 4).
-python_function('oqlos/hardware/client/tic249_extended.py', '_failure', 1, 10, 4).
-python_function('oqlos/hardware/client/tic249_extended.py', '_plugin_unavailable_error', 1, 10, 4).
-python_function('oqlos/hardware/client/tic249_extended.py', '_tic249_sidecar_base_urls', 0, 5, 6).
-python_function('oqlos/hardware/client/tic249_extended.py', '_tic249_sidecar_base_url', 0, 1, 1).
-python_function('oqlos/hardware/client/tic249_extended.py', '_sidecar_reports_deenergized', 0, 7, 5).
-python_function('oqlos/hardware/client/tic249_extended.py', '_attempt_disable_deenergize', 2, 4, 4).
-python_function('oqlos/hardware/client/tic249_extended.py', '_disable_success_response', 3, 3, 1).
-python_function('oqlos/hardware/client/tic249_extended.py', '_sidecar_reciprocate_preferred', 0, 1, 3).
-python_function('oqlos/hardware/client/tic249_extended.py', '_attempt_reciprocate_via_sidecar', 1, 9, 8).
-python_function('oqlos/hardware/client/tic249_extended.py', '_direct_sidecar_deenergize', 1, 7, 7).
-python_function('oqlos/hardware/client/tic249_extended.py', '_lung_disable_fallback', 2, 4, 4).
-python_function('oqlos/hardware/client/tic249_extended.py', '_normalize_target_state', 2, 12, 4).
-python_function('oqlos/hardware/client/tic249_extended.py', '_handle_hardware_proxy_error', 5, 8, 6).
 python_function('oqlos/hardware/client/tic249_extended.py', '_handle_move_relative_command', 2, 3, 9).
 python_function('oqlos/hardware/client/tic249_extended.py', '_try_disable_fallback', 2, 4, 2).
 python_function('oqlos/hardware/client/tic249_extended.py', '_try_sidecar_reciprocate', 3, 5, 2).
+python_function('oqlos/hardware/client/tic249_extended.py', '_handle_hardware_proxy_error', 5, 8, 6).
 python_function('oqlos/hardware/client/tic249_extended.py', 'run_extended_motor_tic249_command', 3, 10, 9).
+python_function('oqlos/hardware/client/tic249_motion_params.py', 'normalize_motion_params', 1, 13, 6).
+python_function('oqlos/hardware/client/tic249_motion_params.py', 'stroke_steps', 2, 1, 2).
+python_function('oqlos/hardware/client/tic249_motion_params.py', 'apply_reciprocate_direction', 2, 1, 1).
+python_function('oqlos/hardware/client/tic249_motion_params.py', '_resolve_reciprocate_speed', 1, 5, 4).
+python_function('oqlos/hardware/client/tic249_motion_params.py', '_resolve_reciprocate_ramp', 1, 4, 2).
+python_function('oqlos/hardware/client/tic249_motion_params.py', 'build_reciprocate_params', 1, 8, 10).
 python_function('oqlos/hardware/client/tic249_rig_direction.py', 'rig_direction_to_plugin', 1, 4, 3).
 python_function('oqlos/hardware/client/tic249_rig_direction.py', 'apply_rig_direction_to_plugin_params', 2, 5, 4).
+python_function('oqlos/hardware/client/tic249_sidecar_client.py', 'tic249_sidecar_base_urls', 0, 5, 6).
+python_function('oqlos/hardware/client/tic249_sidecar_client.py', 'tic249_sidecar_base_url', 0, 1, 1).
+python_function('oqlos/hardware/client/tic249_sidecar_client.py', 'sidecar_reciprocate_preferred', 0, 1, 3).
+python_function('oqlos/hardware/client/tic249_sidecar_client.py', 'sidecar_reports_deenergized', 0, 7, 5).
+python_function('oqlos/hardware/client/tic249_sidecar_client.py', 'attempt_reciprocate_via_sidecar', 1, 9, 8).
+python_function('oqlos/hardware/client/tic249_sidecar_client.py', 'direct_sidecar_deenergize', 1, 7, 7).
+python_function('oqlos/hardware/client/tic249_sidecar_client.py', 'lung_disable_fallback', 2, 4, 4).
+python_function('oqlos/hardware/client/tic249_sidecar_client.py', 'disable_success_response', 3, 3, 1).
+python_function('oqlos/hardware/client/tic249_sidecar_client.py', 'attempt_disable_deenergize', 2, 4, 4).
 python_function('oqlos/hardware/config_paths.py', 'resolve_oqlos_config_path', 1, 6, 7).
 python_function('oqlos/hardware/config_schema.py', 'get_hardware_config', 1, 2, 4).
 python_function('oqlos/hardware/config_schema.py', 'register_hardware_config', 1, 1, 1).
@@ -5005,24 +5108,29 @@ python_function('oqlos/hardware/diagnosis.py', '_recover_targets', 2, 6, 6).
 python_function('oqlos/hardware/diagnosis.py', '_repair_dri0050_if_needed', 3, 8, 6).
 python_function('oqlos/hardware/diagnosis.py', 'execute_safe_recover', 2, 10, 14).
 python_function('oqlos/hardware/discovery.py', '_ensure_local_pimodbus_on_path', 0, 5, 5).
-python_function('oqlos/hardware/discovery.py', 'probe_waveshare_modbus', 5, 5, 2).
-python_function('oqlos/hardware/discovery.py', 'probe_waveshare_modbus_adc', 5, 5, 2).
+python_function('oqlos/hardware/discovery.py', '_probe_waveshare', 1, 5, 2).
+python_function('oqlos/hardware/discovery.py', '_probe_waveshare_role', 6, 3, 1).
+python_function('oqlos/hardware/discovery.py', '_build_waveshare_probe', 2, 1, 1).
 python_function('oqlos/hardware/firmware_adapter.py', '_first_nonempty', 1, 3, 1).
 python_function('oqlos/hardware/firmware_adapter.py', '_extract_failure_message', 1, 9, 4).
 python_function('oqlos/hardware/firmware_adapter.py', '_parse_numeric', 1, 2, 3).
 python_function('oqlos/hardware/health_status.py', 'health_status_is_ok', 1, 11, 5).
-python_function('oqlos/hardware/hui_actions.py', '_success', 1, 5, 3).
-python_function('oqlos/hardware/hui_actions.py', '_operation', 2, 1, 0).
-python_function('oqlos/hardware/hui_actions.py', '_set_valve', 3, 1, 3).
-python_function('oqlos/hardware/hui_actions.py', '_set_pump', 2, 1, 3).
-python_function('oqlos/hardware/hui_actions.py', '_set_pump_best_effort', 2, 2, 3).
-python_function('oqlos/hardware/hui_actions.py', 'shutdown_all_hui_hardware', 1, 4, 7).
 python_function('oqlos/hardware/hui_actions.py', 'list_hui_actions', 0, 2, 4).
-python_function('oqlos/hardware/hui_actions.py', 'start_hui_hold', 2, 7, 11).
-python_function('oqlos/hardware/hui_actions.py', 'stop_hui_hold', 2, 4, 6).
-python_function('oqlos/hardware/hui_actions.py', '_run_tic249_reciprocate', 1, 6, 9).
-python_function('oqlos/hardware/hui_actions.py', 'start_hui_artificial_lung', 1, 5, 6).
-python_function('oqlos/hardware/hui_actions.py', 'stop_hui_artificial_lung', 1, 2, 3).
+python_function('oqlos/hardware/hui_artificial_lung.py', '_run_tic249_reciprocate', 1, 6, 9).
+python_function('oqlos/hardware/hui_artificial_lung.py', 'start_hui_artificial_lung', 1, 5, 6).
+python_function('oqlos/hardware/hui_artificial_lung.py', 'stop_hui_artificial_lung', 1, 2, 3).
+python_function('oqlos/hardware/hui_hold.py', '_success', 1, 5, 3).
+python_function('oqlos/hardware/hui_hold.py', '_operation', 2, 1, 0).
+python_function('oqlos/hardware/hui_hold.py', '_set_valve', 3, 1, 3).
+python_function('oqlos/hardware/hui_hold.py', '_set_pump', 2, 1, 3).
+python_function('oqlos/hardware/hui_hold.py', '_set_pump_best_effort', 2, 2, 3).
+python_function('oqlos/hardware/hui_hold.py', 'shutdown_all_hui_hardware', 1, 4, 7).
+python_function('oqlos/hardware/hui_hold.py', '_hold_start_failure', 1, 1, 0).
+python_function('oqlos/hardware/hui_hold.py', '_engage_hold_valves', 2, 3, 6).
+python_function('oqlos/hardware/hui_hold.py', '_engage_hold_pump_if_needed', 2, 3, 4).
+python_function('oqlos/hardware/hui_hold.py', 'start_hui_hold', 2, 5, 11).
+python_function('oqlos/hardware/hui_hold.py', 'stop_hui_hold', 2, 4, 6).
+python_function('oqlos/hardware/hui_lung_recipe.py', 'build_hui_lung_reciprocate_args', 0, 1, 2).
 python_function('oqlos/hardware/identify_enrichment.py', 'enrich_identify_payload', 1, 2, 4).
 python_function('oqlos/hardware/modbus_identify.py', '_usb_blob', 1, 3, 4).
 python_function('oqlos/hardware/modbus_identify.py', '_is_modbus_candidate', 1, 5, 2).
@@ -5041,6 +5149,7 @@ python_function('oqlos/hardware/plugins/_rtu_serial.py', 'reopen_rtu_after_stale
 python_function('oqlos/hardware/plugins/_shared.py', 'http_health_check', 3, 2, 3).
 python_function('oqlos/hardware/plugins/_shared.py', 'not_connected_health', 1, 1, 1).
 python_function('oqlos/hardware/plugins/_shared.py', 'health_check_exception', 1, 1, 1).
+python_function('oqlos/hardware/plugins/_shared.py', '_error_health', 1, 1, 1).
 python_function('oqlos/hardware/plugins/_shared.py', 'http_disconnect', 2, 2, 2).
 python_function('oqlos/hardware/plugins/base.py', 'get_pluggy_manager', 0, 1, 0).
 python_function('oqlos/hardware/plugins/base.py', 'dynamic_peripheral_model', 1, 5, 6).
@@ -5074,8 +5183,9 @@ python_function('oqlos/hardware/scanner_probe.py', 'enrich_scanner_adapter', 1, 
 python_function('oqlos/hardware/sidecar_control.py', '_modbus_serial_candidates', 0, 4, 5).
 python_function('oqlos/hardware/sidecar_control.py', 'resolve_dri0050_serial', 1, 13, 7).
 python_function('oqlos/hardware/sidecar_control.py', '_dri0050_paths', 0, 9, 6).
-python_function('oqlos/hardware/sidecar_control.py', '_http_sidecar_listening', 0, 3, 4).
-python_function('oqlos/hardware/sidecar_control.py', '_http_sidecar_healthy', 0, 4, 4).
+python_function('oqlos/hardware/sidecar_control.py', '_http_sidecar_probe', 0, 5, 4).
+python_function('oqlos/hardware/sidecar_control.py', '_http_sidecar_listening', 0, 1, 1).
+python_function('oqlos/hardware/sidecar_control.py', '_http_sidecar_healthy', 0, 1, 1).
 python_function('oqlos/hardware/sidecar_control.py', '_run_cmd', 0, 3, 5).
 python_function('oqlos/hardware/sidecar_control.py', '_free_api_port', 1, 7, 6).
 python_function('oqlos/hardware/sidecar_control.py', 'ensure_dri0050_sidecar', 0, 13, 10).
@@ -5083,6 +5193,8 @@ python_function('oqlos/hardware/stack_snapshot.py', '_lazy_hardware_api', 0, 1, 
 python_function('oqlos/hardware/stack_snapshot.py', '_get_modbus_preflight', 1, 5, 4).
 python_function('oqlos/hardware/stack_snapshot.py', '_build_recommended_actions', 2, 8, 5).
 python_function('oqlos/hardware/stack_snapshot.py', 'build_hardware_stack_snapshot', 1, 3, 10).
+python_function('oqlos/hardware/tic249_units.py', 'steps_per_second_to_raw', 1, 5, 3).
+python_function('oqlos/hardware/tic249_units.py', 'raw_acceleration_for_ramp', 2, 2, 1).
 python_function('oqlos/hardware/transport/manage_ops.py', 'run_manage_verb', 2, 3, 3).
 python_function('oqlos/hardware/transport/manage_ops.py', '_resolve', 1, 5, 23).
 python_function('oqlos/hardware/transport/manage_ops.py', '_usb_list', 1, 1, 2).
@@ -5548,11 +5660,13 @@ python_function('tests/firmware/test_panel_ui.py', 'panel_source', 0, 1, 2).
 python_function('tests/firmware/test_panel_ui.py', '_panel_manage_verbs', 1, 1, 2).
 python_function('tests/firmware/test_panel_ui.py', '_panel_endpoints', 1, 1, 2).
 python_function('tests/firmware/test_panel_ui.py', 'test_panel_route_serves_html', 0, 7, 2).
+python_function('tests/firmware/test_panel_ui.py', 'test_health_route_contains_redeploy_probe_token', 0, 4, 3).
 python_function('tests/firmware/test_panel_ui.py', 'test_panel_manage_verbs_are_supported', 1, 3, 4).
 python_function('tests/firmware/test_panel_ui.py', 'test_panel_only_calls_known_endpoints', 1, 4, 1).
 python_function('tests/firmware/test_panel_ui.py', 'client_with_controller', 0, 1, 6).
 python_function('tests/firmware/test_panel_ui.py', 'test_panel_single_oql_command_payload_dispatches', 1, 4, 2).
 python_function('tests/firmware/test_panel_ui.py', 'test_panel_flow_script_payload_dispatches', 1, 4, 1).
+python_function('tests/firmware/test_panel_ui.py', 'test_panel_script_without_version_executes_named_goal', 0, 9, 2).
 python_function('tests/firmware/test_panel_ui.py', 'test_panel_manage_payload_dispatches', 1, 4, 1).
 python_function('tests/firmware/test_plugin_gateway_env.py', 'test_plugin_gateway_env_overrides_service_urls', 1, 4, 4).
 python_function('tests/firmware/test_plugin_gateway_env.py', 'test_plugin_gateway_env_overrides_modbus_params', 1, 2, 4).
@@ -5590,6 +5704,8 @@ python_function('tests/firmware/test_runtime_command_payload.py', 'test_extract_
 python_function('tests/firmware/test_scanner_probe.py', 'test_scan_diagnostics_usb_ignores_crw_without_barcode_tokens', 1, 3, 2).
 python_function('tests/firmware/test_scanner_probe.py', 'test_holtek_present_from_diagnostics_usb', 1, 3, 2).
 python_function('tests/firmware/test_scanner_probe.py', 'test_enrich_scanner_adapter_adds_entry', 1, 5, 3).
+python_function('tests/firmware/test_tic249_units.py', 'test_steps_per_second_to_raw_default_cap', 0, 4, 1).
+python_function('tests/firmware/test_tic249_units.py', 'test_raw_acceleration_for_ramp', 0, 2, 1).
 python_function('tests/firmware/test_usb_diagnostics.py', 'test_list_usb_devices_structure_and_no_hang', 0, 7, 4).
 python_function('tests/firmware/test_usb_diagnostics.py', 'test_pi_system_diagnostics_has_expected_keys', 0, 5, 2).
 python_function('tests/firmware/test_usb_diagnostics.py', 'test_reset_usb_device_not_found_is_clean_failure', 0, 3, 2).
@@ -5649,7 +5765,7 @@ python_function('tests/test_oql_parser_v3.py', 'test_parse_v4_rejects_inline_goa
 python_function('tests/test_oql_parser_v3.py', 'test_parse_v4_goal_name_from_set_name', 0, 3, 2).
 python_function('tests/test_oql_parser_v3.py', 'test_parse_rejects_unsupported_oql_version', 0, 2, 2).
 python_function('tests/test_oql_parser_v3.py', 'test_base_commands_list_matches_dispatcher', 0, 2, 1).
-python_function('tests/test_oql_parser_v3.py', 'test_is_flat_oql_detects_new_syntax', 0, 4, 1).
+python_function('tests/test_oql_parser_v3.py', 'test_is_flat_oql_detects_new_syntax', 0, 5, 1).
 python_function('tests/test_oql_parser_v3.py', 'test_is_flat_oql_rejects_legacy', 0, 2, 1).
 python_function('tests/test_oql_parser_v3.py', 'test_adapter_produces_cql_goals', 0, 4, 2).
 python_function('tests/test_oql_parser_v3.py', 'test_adapter_config_prefix', 0, 4, 3).
@@ -5675,6 +5791,15 @@ python_function('tests/verify_block_if.py', 'test_block_if', 0, 10, 10).
 python_function('tests/verify_loops.py', 'test_loops', 0, 3, 8).
 
 % ── Python Classes ───────────────────────────────────────
+python_class('oqlos/api/_hw3_models.py', 'DiagnosticCommandRequest').
+python_class('oqlos/api/_hw3_models.py', 'MappingReplaceRequest').
+python_class('oqlos/api/_hw3_models.py', 'MappingImportRequest').
+python_class('oqlos/api/_hw3_models.py', 'MappingExportRequest').
+python_class('oqlos/api/_hw3_models.py', 'MappingResetRequest').
+python_class('oqlos/api/_hw3_models.py', 'RuntimeFuncResolveRequest').
+python_class('oqlos/api/_hw3_models.py', 'CqrsCommandRequest').
+python_class('oqlos/api/_hw3_models.py', 'CqrsEventsClearRequest').
+python_class('oqlos/api/_hw3_models.py', 'ScannerIngestRequest').
 python_class('oqlos/api/editor.py', 'FileInfo').
 python_class('oqlos/api/editor.py', 'FileContent').
 python_class('oqlos/api/editor.py', 'ExecutionRequest').
@@ -5692,15 +5817,6 @@ python_method('MappingStore', 'reset', 0, 2, 3).
 python_method('MappingStore', 'parse_text', 2, 8, 8).
 python_method('MappingStore', 'import_text', 2, 1, 2).
 python_method('MappingStore', 'export_text', 1, 5, 6).
-python_class('oqlos/api/hardware_v3.py', 'DiagnosticCommandRequest').
-python_class('oqlos/api/hardware_v3.py', 'MappingReplaceRequest').
-python_class('oqlos/api/hardware_v3.py', 'MappingImportRequest').
-python_class('oqlos/api/hardware_v3.py', 'MappingExportRequest').
-python_class('oqlos/api/hardware_v3.py', 'MappingResetRequest').
-python_class('oqlos/api/hardware_v3.py', 'RuntimeFuncResolveRequest').
-python_class('oqlos/api/hardware_v3.py', 'CqrsCommandRequest').
-python_class('oqlos/api/hardware_v3.py', 'CqrsEventsClearRequest').
-python_class('oqlos/api/hardware_v3.py', 'ScannerIngestRequest').
 python_class('oqlos/api/oql_mqtt.py', 'OqlExecuteRequest').
 python_class('oqlos/api/oql_mqtt.py', 'OqlManageRequest').
 python_class('oqlos/api/oql_mqtt.py', 'OqlExecuteResponse').
@@ -5752,11 +5868,12 @@ python_class('oqlos/core/base.py', 'InterpreterOutput').
 python_method('InterpreterOutput', '__init__', 3, 1, 0).
 python_method('InterpreterOutput', 'emit', 2, 5, 3).
 python_method('InterpreterOutput', '_broadcast_event', 2, 6, 5).
-python_method('InterpreterOutput', 'info', 1, 2, 3).
-python_method('InterpreterOutput', 'ok', 1, 2, 3).
-python_method('InterpreterOutput', 'fail', 1, 2, 3).
-python_method('InterpreterOutput', 'warn', 1, 2, 3).
-python_method('InterpreterOutput', 'error', 1, 2, 3).
+python_method('InterpreterOutput', '_emit_status', 1, 2, 3).
+python_method('InterpreterOutput', 'info', 1, 1, 1).
+python_method('InterpreterOutput', 'ok', 1, 1, 1).
+python_method('InterpreterOutput', 'fail', 1, 1, 1).
+python_method('InterpreterOutput', 'warn', 1, 1, 1).
+python_method('InterpreterOutput', 'error', 1, 1, 1).
 python_method('InterpreterOutput', 'step', 2, 2, 3).
 python_method('InterpreterOutput', 'output_yaml', 0, 4, 2).
 python_class('oqlos/core/base.py', 'BaseInterpreter').
@@ -5784,16 +5901,16 @@ python_method('_ParseState', '_try_skip_block', 2, 5, 2).
 python_method('_ParseState', '_try_intervals_block', 3, 6, 5).
 python_method('_ParseState', '_try_top_level', 3, 2, 1).
 python_method('_ParseState', '_handle_scenario', 1, 2, 3).
-python_method('_ParseState', '_handle_scenario_attrs', 1, 3, 1).
+python_method('_ParseState', '_handle_scenario_attrs', 1, 1, 1).
 python_method('_ParseState', '_handle_goal', 3, 3, 4).
-python_method('_ParseState', '_handle_goal_attrs', 1, 3, 1).
+python_method('_ParseState', '_handle_goal_attrs', 1, 1, 1).
+python_method('_ParseState', '_handle_current_attrs', 4, 3, 1).
 python_method('_ParseState', '_handle_step', 1, 2, 4).
 python_method('_ParseState', '_init_block_stack', 0, 1, 0).
 python_method('_ParseState', '_add_action_to_parent', 1, 7, 1).
-python_method('_ParseState', '_append_nested_action', 1, 4, 2).
-python_method('_ParseState', '_append_loop_action', 1, 4, 2).
+python_method('_ParseState', '_append_parent_stack_action', 1, 4, 2).
 python_method('_ParseState', '_pop_block_with_warning', 2, 4, 2).
-python_method('_ParseState', '_handle_block_control', 1, 7, 5).
+python_method('_ParseState', '_handle_block_control', 1, 7, 4).
 python_method('_ParseState', '_handle_else_block', 0, 3, 2).
 python_method('_ParseState', '_try_handle_structure_levels', 3, 6, 5).
 python_method('_ParseState', '_handle_inline_if_logic', 2, 5, 2).
@@ -5834,7 +5951,8 @@ python_method('CqlInterpreter', '_normalize_lung_value', 1, 1, 1).
 python_method('CqlInterpreter', 'parse', 2, 3, 5).
 python_method('CqlInterpreter', '_print_header', 2, 3, 2).
 python_method('CqlInterpreter', '_collect_warnings', 2, 3, 2).
-python_method('CqlInterpreter', '_run_validation_mode', 3, 1, 4).
+python_method('CqlInterpreter', '_planned_step_results', 1, 3, 2).
+python_method('CqlInterpreter', '_run_validation_mode', 4, 1, 5).
 python_method('CqlInterpreter', '_collect_all_goals', 1, 4, 1).
 python_method('CqlInterpreter', '_execute_single_goal', 2, 4, 4).
 python_method('CqlInterpreter', '_execute_all_goals', 1, 2, 1).
@@ -6035,7 +6153,7 @@ python_method('PluginHardwareGateway', '_execute_lung_bool_command', 2, 4, 5).
 python_method('PluginHardwareGateway', 'stop_lung', 0, 1, 1).
 python_method('PluginHardwareGateway', 'disable_lung', 0, 1, 1).
 python_method('PluginHardwareGateway', 'reload_configs', 1, 5, 9).
-python_method('PluginHardwareGateway', 'health', 0, 11, 6).
+python_method('PluginHardwareGateway', 'health', 0, 12, 7).
 python_class('oqlos/hardware/plugins/base.py', 'PluginStatus').
 python_class('oqlos/hardware/plugins/base.py', 'HardwareDriverSpec').
 python_method('HardwareDriverSpec', 'set_peripheral', 3, 1, 0).
@@ -6645,6 +6763,7 @@ taskfile_task('', 'Run pyqual quality pipeline').
 taskfile_task('', 'Run pyqual with auto-fix').
 taskfile_task('', 'Generate pyqual quality report').
 taskfile_task('', 'Run pytest suite').
+taskfile_task('', 'Run frontend unit tests (node:test)').
 taskfile_task('', 'Run ruff lint check').
 taskfile_task('', 'Auto-format with ruff').
 taskfile_task('', 'Build wheel + sdist').
@@ -6749,6 +6868,8 @@ sumd_workflow_step('quality:fix', 1, 'pyqual run --fix').
 sumd_workflow('quality:report', 'manual').
 sumd_quality_workflow('quality:report', 'report').
 sumd_workflow_step('quality:report', 1, 'pyqual report').
+sumd_workflow('test:frontend', 'manual').
+sumd_workflow_step('test:frontend', 1, 'npm run test:unit').
 sumd_workflow('lint', 'manual').
 sumd_workflow_step('lint', 1, 'ruff check .').
 sumd_workflow('fmt', 'manual').
@@ -6782,7 +6903,7 @@ class Settings:  # Application settings loaded from environment variables and .
 
 ## Call Graph
 
-*427 nodes · 500 edges · 37 modules · CC̄=4.1*
+*426 nodes · 500 edges · 43 modules · CC̄=4.0*
 
 ### Hubs (by degree)
 
@@ -6791,17 +6912,17 @@ class Settings:  # Application settings loaded from environment variables and .
 | `print` *(in examples.hardware.doctor-workflow)* | 0 | 225 | 0 | **225** |
 | `dict` *(in frontend.src.i18n.I18nProvider)* | 8 | 43 | 3 | **46** |
 | `list` *(in frontend.src.utils.hardware-wizard-steps)* | 2 | 40 | 0 | **40** |
-| `runCurrentStep` *(in frontend.src.pages.HardwareRestart)* | 96 ⚠ | 0 | 34 | **34** |
 | `oql_doc_to_cql` *(in oqlos.core._oql_adapter)* | 12 ⚠ | 2 | 30 | **32** |
 | `normalize_motor2_runtime_config` *(in oqlos.core.motor2_runtime)* | 12 ⚠ | 1 | 29 | **30** |
 | `_safe_resolve` *(in oqlos.core.executor)* | 14 ⚠ | 7 | 21 | **28** |
-| `useUrlConfig` *(in frontend.src.hooks.useUrlConfig)* | 18 ⚠ | 0 | 27 | **27** |
+| `run_oql_scenario` *(in setup_hardware_and_run_oql)* | 8 | 1 | 24 | **25** |
+| `applyMapMutation` *(in frontend.src.pages.MapEditor)* | 2 | 16 | 8 | **24** |
 
 ```toon markpact:analysis path=project/calls.toon.yaml
 # code2llm call graph | /home/tom/github/oqlos/oqlos
-# generated in 0.36s
-# nodes: 427 | edges: 500 | modules: 37
-# CC̄=4.1
+# generated in 0.23s
+# nodes: 426 | edges: 500 | modules: 43
+# CC̄=4.0
 
 HUBS[20]:
   examples.hardware.doctor-workflow.print
@@ -6810,60 +6931,76 @@ HUBS[20]:
     CC=8  in:43  out:3  total:46
   frontend.src.utils.hardware-wizard-steps.list
     CC=2  in:40  out:0  total:40
-  frontend.src.pages.HardwareRestart.runCurrentStep
-    CC=96  in:0  out:34  total:34
   oqlos.core._oql_adapter.oql_doc_to_cql
     CC=12  in:2  out:30  total:32
   oqlos.core.motor2_runtime.normalize_motor2_runtime_config
     CC=12  in:1  out:29  total:30
   oqlos.core.executor._safe_resolve
     CC=14  in:7  out:21  total:28
-  frontend.src.hooks.useUrlConfig.useUrlConfig
-    CC=18  in:0  out:27  total:27
   setup_hardware_and_run_oql.run_oql_scenario
     CC=8  in:1  out:24  total:25
   frontend.src.pages.MapEditor.applyMapMutation
     CC=2  in:16  out:8  total:24
-  frontend.src.pages.HardwareRestart.log
-    CC=1  in:21  out:3  total:24
   oqlos.core.oql_parser.parse_oql
     CC=14  in:3  out:21  total:24
   oqlos.core.parser.parse_dsl_to_goal_with_issues
     CC=13  in:3  out:21  total:24
-  oqlos.core._action_motor2._try_exec_motor2_set
-    CC=13  in:1  out:22  total:23
   oqlos.core._line_parsers._parse_if_condition
     CC=9  in:1  out:22  total:23
+  oqlos.core._action_motor2._try_exec_motor2_set
+    CC=13  in:1  out:22  total:23
   oqlos.core._action_motor2._motor2_build_plan
     CC=12  in:1  out:22  total:23
   oqlos.core._line_parsers._parse_set_line
     CC=12  in:1  out:21  total:22
-  frontend.src.utils.useSelectionCollapsePanel.RAIL_HOVER_CLOSE_MS
-    CC=33  in:0  out:21  total:21
   frontend.src.utils.useSelectionCollapsePanel.useSelectionCollapsePanel
     CC=33  in:0  out:21  total:21
-  oqlos.core._cql_tree_builder._parse_goal_line
-    CC=12  in:1  out:20  total:21
+  frontend.src.utils.useSelectionCollapsePanel.RAIL_HOVER_OPEN_MS
+    CC=33  in:0  out:21  total:21
+  frontend.src.utils.useSelectionCollapsePanel.RAIL_HOVER_CLOSE_MS
+    CC=33  in:0  out:21  total:21
+  oqlos.core._func_resolver._collect_function_definitions
+    CC=13  in:1  out:19  total:20
+  frontend.src.api.wsClient.WsCqrsClient.super
+    CC=1  in:18  out:1  total:19
+  oqlos.core.oql_parser.tokenize
+    CC=13  in:5  out:14  total:19
 
 MODULES:
   examples.hardware.doctor-workflow  [1 funcs]
     print  CC=0  out:0
+  frontend.src.api.hardware-api-errors  [4 funcs]
+    describeDetail  CC=13  out:6
+    extractErrorPayload  CC=4  out:1
+    formatHardwareApiError  CC=8  out:2
+    tryParseJson  CC=3  out:1
   frontend.src.api.hardware-api-log  [4 funcs]
     isHardwareWizardPath  CC=2  out:3
     keys  CC=2  out:0
     logHardwareApiEvent  CC=6  out:4
     summarizeHardwareApiBody  CC=11  out:5
-  frontend.src.api.hardwareApi  [17 funcs]
-    describeDetail  CC=13  out:6
-    durationMs  CC=8  out:5
-    extractDiagnosticFailure  CC=69  out:10
-    extractErrorPayload  CC=4  out:1
-    formatHardwareApiError  CC=8  out:2
-    get  CC=1  out:1
+  frontend.src.api.hardware-diagnostic-failure  [6 funcs]
+    extractDiagnosticFailure  CC=13  out:6
+    failureFromNestedOk  CC=17  out:5
+    failureFromOkFalsePayload  CC=19  out:5
+    failureFromSuccessFalse  CC=14  out:3
+    firstActionableError  CC=3  out:4
+    resultData  CC=4  out:0
+  frontend.src.api.hardware-tic249-status  [3 funcs]
+    isIdempotentDiagnosticSuccess  CC=3  out:2
     isIdempotentTic249Deenergized  CC=12  out:2
+    tic249ResultStatus  CC=8  out:2
+  frontend.src.api.hardwareApi  [10 funcs]
+    API_BASE  CC=17  out:13
+    durationMs  CC=8  out:5
+    get  CC=1  out:1
     mode  CC=1  out:1
-    nestedOk  CC=6  out:3
     normalized  CC=1  out:1
+    post  CC=1  out:1
+    put  CC=1  out:1
+    request  CC=17  out:13
+    serialPort  CC=2  out:1
+    text  CC=2  out:0
   frontend.src.api.wsClient  [15 funcs]
     _handleMessage  CC=13  out:10
     _request  CC=3  out:12
@@ -6875,28 +7012,20 @@ MODULES:
     delay  CC=2  out:2
     pending  CC=4  out:4
     query  CC=1  out:1
-  frontend.src.context.AppConfigProvider  [10 funcs]
+  frontend.src.hooks.useParentEncoderNavigation  [14 funcs]
     all  CC=6  out:2
-    getInteractiveItems  CC=6  out:6
+    controller  CC=3  out:2
+    createEncoderController  CC=21  out:10
+    getInteractiveItems  CC=6  out:4
     handleEncoderCommand  CC=15  out:7
-    items  CC=11  out:6
+    items  CC=7  out:4
     onKeyDown  CC=7  out:3
     onMessage  CC=3  out:2
-    onWheel  CC=6  out:4
-    parseParentEnvelope  CC=6  out:0
-    raw  CC=2  out:1
-    removeHighlights  CC=1  out:3
-  frontend.src.hooks.useUrlConfig  [25 funcs]
-    applyParentContextPayload  CC=5  out:5
-    base  CC=3  out:3
-    ctx  CC=5  out:8
-    envelope  CC=9  out:8
-    fromUser  CC=2  out:2
-    incomingFont  CC=2  out:2
-    incomingLang  CC=2  out:2
-    incomingTheme  CC=2  out:2
-    mergeParentContext  CC=16  out:5
-    mergeParentSearchIntoChildUrl  CC=6  out:10
+    onWheel  CC=6  out:5
+    parentEncoderActive  CC=15  out:7
+  frontend.src.hooks.useUrlConfig  [2 funcs]
+    notifyParentChildReady  CC=4  out:5
+    useUrlConfig  CC=8  out:15
   frontend.src.i18n.I18nProvider  [5 funcs]
     I18nProvider  CC=13  out:8
     dict  CC=8  out:3
@@ -6914,9 +7043,8 @@ MODULES:
     onNoteClick  CC=4  out:9
     playMelody  CC=9  out:11
     playNote  CC=5  out:7
-  frontend.src.pages.HardwareRestart  [31 funcs]
+  frontend.src.pages.HardwareRestart  [23 funcs]
     advanceOk  CC=3  out:2
-    attempt  CC=16  out:8
     canRunCurrentStep  CC=1  out:4
     confirmErrorKey  CC=1  out:4
     confirmLabelKey  CC=1  out:4
@@ -6925,6 +7053,7 @@ MODULES:
     isSeparateAdapters  CC=1  out:4
     loadPlan  CC=18  out:11
     log  CC=1  out:3
+    message  CC=1  out:1
   frontend.src.pages.MapEditor  [49 funcs]
     addAction  CC=2  out:6
     addFunc  CC=2  out:6
@@ -6944,6 +7073,13 @@ MODULES:
     loggedRef  CC=2  out:4
     prependHardwareActivityLogEntry  CC=1  out:2
     usePageOpenedLog  CC=2  out:5
+  frontend.src.utils.hardware-api-retry  [2 funcs]
+    attempt  CC=14  out:9
+    sleep  CC=1  out:2
+  frontend.src.utils.hardware-restart-wizard-steps  [3 funcs]
+    buildWizardProbePayload  CC=10  out:7
+    executeConfigureStep  CC=48  out:15
+    wizardStepSerialPort  CC=14  out:0
   frontend.src.utils.hardware-wizard-steps  [1 funcs]
     list  CC=2  out:0
   frontend.src.utils.hardwareEventStream  [9 funcs]
@@ -6956,6 +7092,13 @@ MODULES:
     peripheralId  CC=3  out:1
     result  CC=3  out:1
     timestamp  CC=3  out:1
+  frontend.src.utils.mapEditorFuncHardwareSummary  [6 funcs]
+    apiBindingHint  CC=12  out:0
+    objectMap  CC=3  out:2
+    resolveNamedActionHardwareHint  CC=7  out:4
+    resolveObjectActionHardwareHint  CC=6  out:2
+    summarizeFuncToHardware  CC=17  out:6
+    uniqueHints  CC=5  out:5
   frontend.src.utils.rbac.policy  [13 funcs]
     canConnectRoleAccessPath  CC=2  out:3
     canHostRoleAccessPath  CC=2  out:3
@@ -6967,6 +7110,17 @@ MODULES:
     normalizeConnectRole  CC=2  out:1
     normalizeHostRole  CC=2  out:1
     normalizePath  CC=6  out:4
+  frontend.src.utils.url-embed-config  [21 funcs]
+    applyParentContextPayload  CC=5  out:5
+    applyUrlEmbedPatch  CC=7  out:7
+    base  CC=3  out:3
+    fromUser  CC=4  out:3
+    href  CC=4  out:3
+    mergeParentContext  CC=7  out:4
+    mergeParentSearchIntoChildUrl  CC=6  out:10
+    nextHref  CC=1  out:1
+    parentSearch  CC=4  out:3
+    parseAppearanceParams  CC=9  out:4
   frontend.src.utils.useSelectionCollapsePanel  [16 funcs]
     RAIL_HOVER_CLOSE_MS  CC=33  out:21
     RAIL_HOVER_OPEN_MS  CC=33  out:21
@@ -6980,7 +7134,8 @@ MODULES:
     previewCollapse  CC=1  out:2
   oqlos.config  [1 funcs]
     get_settings  CC=1  out:0
-  oqlos.core._action_motor2  [26 funcs]
+  oqlos.core._action_motor2  [30 funcs]
+    _call_motor2_transport  CC=4  out:4
     _handle_motor2_reciprocating_setting  CC=2  out:4
     _motor2_acceleration_raw  CC=1  out:2
     _motor2_build_plan  CC=12  out:22
@@ -6989,8 +7144,7 @@ MODULES:
     _motor2_effective_steps_per_second  CC=1  out:4
     _motor2_max_steps_per_second  CC=1  out:1
     _motor2_reciprocating_state  CC=2  out:3
-    _motor2_speed_for_duration  CC=1  out:1
-    _motor2_speed_raw  CC=1  out:2
+    _motor2_set_state_value  CC=1  out:1
   oqlos.core._compare  [2 funcs]
     resolve_compare  CC=2  out:5
     resolve_compare_chain  CC=3  out:4
@@ -7005,16 +7159,9 @@ MODULES:
     _try_save  CC=5  out:7
     _try_set  CC=2  out:6
     _try_val  CC=2  out:4
-  oqlos.core._cql_tree_builder  [9 funcs]
-    _ensure_goal_for_step  CC=4  out:3
-    _ensure_step_for_actions  CC=3  out:2
+  oqlos.core._cql_tree_builder  [2 funcs]
     _parse_action_line  CC=4  out:3
-    _parse_goal_attrs  CC=4  out:7
-    _parse_goal_line  CC=12  out:20
     _parse_metadata_kv  CC=6  out:5
-    _parse_scenario_attrs  CC=4  out:6
-    _parse_scenario_line  CC=3  out:6
-    _parse_step_line  CC=3  out:5
   oqlos.core._dsl_helpers  [12 funcs]
     _looks_like_lung_object  CC=1  out:2
     _looks_like_pump_object  CC=1  out:2
@@ -7063,25 +7210,16 @@ MODULES:
     _lower_set  CC=1  out:3
     _parse_macro_line  CC=8  out:10
     _resolve_include  CC=6  out:8
-  oqlos.core._value_normalizers  [1 funcs]
-    coerce_float  CC=5  out:9
   oqlos.core.base  [5 funcs]
     send_event  CC=4  out:7
     emit  CC=5  out:3
     output_yaml  CC=4  out:2
     __init__  CC=2  out:1
     all  CC=3  out:3
-  oqlos.core.cql_parser  [11 funcs]
-    _handle_goal  CC=3  out:5
-    _handle_goal_attrs  CC=3  out:1
-    _handle_scenario  CC=2  out:3
-    _handle_scenario_attrs  CC=3  out:1
-    _handle_step  CC=2  out:4
-    _try_hierarchy  CC=7  out:6
+  oqlos.core.cql_parser  [3 funcs]
     _try_top_level  CC=2  out:1
-    _collect_all_goals  CC=2  out:2
-    _validate_intervals  CC=6  out:1
     parse_cql  CC=2  out:6
+    validate_cql  CC=5  out:5
   oqlos.core.executor  [6 funcs]
     _execute_validate_step  CC=7  out:7
     validate_goal  CC=5  out:3
@@ -7151,42 +7289,25 @@ EDGES:
   setup_hardware_and_run_oql.load_env_file → examples.hardware.doctor-workflow.print
   setup_hardware_and_run_oql.run_oql_scenario → examples.hardware.doctor-workflow.print
   setup_hardware_and_run_oql.main → setup_hardware_and_run_oql.run_oql_scenario
-  frontend.src.hooks.useUrlConfig.parseAppearanceParams → frontend.src.hooks.useUrlConfig.resolveViewportWidthPx
-  frontend.src.hooks.useUrlConfig.parseIdentityParams → frontend.src.hooks.useUrlConfig.resolveUserIdFromSearchParams
-  frontend.src.hooks.useUrlConfig.parseParams → frontend.src.hooks.useUrlConfig.parseAppearanceParams
-  frontend.src.hooks.useUrlConfig.parseParams → frontend.src.hooks.useUrlConfig.parseIdentityParams
-  frontend.src.hooks.useUrlConfig.parseParams → frontend.src.hooks.useUrlConfig.parseNavigationParams
-  frontend.src.hooks.useUrlConfig.parseUrlEmbedConfig → frontend.src.hooks.useUrlConfig.parseParams
-  frontend.src.hooks.useUrlConfig.mergeParentContext → frontend.src.hooks.useUrlConfig.resolveUserFromContextPayload
-  frontend.src.hooks.useUrlConfig.mergeParentContext → frontend.src.hooks.useUrlConfig.resolveViewportWidthPx
-  frontend.src.hooks.useUrlConfig.incomingFont → frontend.src.hooks.useUrlConfig.resolveViewportWidthPx
-  frontend.src.hooks.useUrlConfig.incomingLang → frontend.src.hooks.useUrlConfig.resolveViewportWidthPx
-  frontend.src.hooks.useUrlConfig.incomingTheme → frontend.src.hooks.useUrlConfig.resolveViewportWidthPx
-  frontend.src.hooks.useUrlConfig.fromUser → frontend.src.hooks.useUrlConfig.resolveViewportWidthPx
-  frontend.src.hooks.useUrlConfig.nextUser → frontend.src.hooks.useUrlConfig.resolveViewportWidthPx
-  frontend.src.hooks.useUrlConfig.roleCandidate → frontend.src.hooks.useUrlConfig.resolveViewportWidthPx
-  frontend.src.hooks.useUrlConfig.applyParentContextPayload → frontend.src.hooks.useUrlConfig.mergeParentSearchIntoChildUrl
-  frontend.src.hooks.useUrlConfig.applyParentContextPayload → frontend.src.hooks.useUrlConfig.parseParams
-  frontend.src.hooks.useUrlConfig.applyParentContextPayload → frontend.src.hooks.useUrlConfig.mergeParentContext
-  frontend.src.hooks.useUrlConfig.search → frontend.src.hooks.useUrlConfig.mergeParentSearchIntoChildUrl
-  frontend.src.hooks.useUrlConfig.search → frontend.src.hooks.useUrlConfig.applyParentContextPayload
-  frontend.src.hooks.useUrlConfig.base → frontend.src.hooks.useUrlConfig.mergeParentSearchIntoChildUrl
-  frontend.src.hooks.useUrlConfig.base → frontend.src.hooks.useUrlConfig.parseParams
-  frontend.src.hooks.useUrlConfig.useUrlConfig → frontend.src.hooks.useUrlConfig.parseParams
-  frontend.src.hooks.useUrlConfig.useUrlConfig → frontend.src.hooks.useUrlConfig.mergeParentSearchIntoChildUrl
-  frontend.src.hooks.useUrlConfig.onPop → frontend.src.hooks.useUrlConfig.mergeParentSearchIntoChildUrl
-  frontend.src.hooks.useUrlConfig.onPop → frontend.src.hooks.useUrlConfig.applyParentContextPayload
-  frontend.src.hooks.useUrlConfig.onPop → frontend.src.hooks.useUrlConfig.mergeParentContext
-  frontend.src.hooks.useUrlConfig.onMessage → frontend.src.hooks.useUrlConfig.mergeParentSearchIntoChildUrl
-  frontend.src.hooks.useUrlConfig.onMessage → frontend.src.hooks.useUrlConfig.applyParentContextPayload
-  frontend.src.hooks.useUrlConfig.onMessage → frontend.src.hooks.useUrlConfig.mergeParentContext
-  frontend.src.hooks.useUrlConfig.envelope → frontend.src.hooks.useUrlConfig.mergeParentSearchIntoChildUrl
-  frontend.src.hooks.useUrlConfig.envelope → frontend.src.hooks.useUrlConfig.applyParentContextPayload
-  frontend.src.hooks.useUrlConfig.envelope → frontend.src.hooks.useUrlConfig.mergeParentContext
-  frontend.src.hooks.useUrlConfig.ctx → frontend.src.hooks.useUrlConfig.mergeParentSearchIntoChildUrl
-  frontend.src.hooks.useUrlConfig.ctx → frontend.src.hooks.useUrlConfig.applyParentContextPayload
-  frontend.src.hooks.useUrlConfig.ctx → frontend.src.hooks.useUrlConfig.mergeParentContext
-  frontend.src.hooks.useUrlConfig.patch → frontend.src.hooks.useUrlConfig.parseParams
+  frontend.src.hooks.useUrlConfig.useUrlConfig → frontend.src.hooks.useUrlConfig.notifyParentChildReady
+  frontend.src.hooks.useParentEncoderNavigation.createEncoderController → frontend.src.hooks.useParentEncoderNavigation.removeHighlights
+  frontend.src.hooks.useParentEncoderNavigation.createEncoderController → frontend.src.hooks.useParentEncoderNavigation.getInteractiveItems
+  frontend.src.hooks.useParentEncoderNavigation.createEncoderController → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
+  frontend.src.hooks.useParentEncoderNavigation.parentEncoderActive → frontend.src.hooks.useParentEncoderNavigation.removeHighlights
+  frontend.src.hooks.useParentEncoderNavigation.parentEncoderActive → frontend.src.hooks.useParentEncoderNavigation.getInteractiveItems
+  frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand → frontend.src.hooks.useParentEncoderNavigation.removeHighlights
+  frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand → frontend.src.hooks.useParentEncoderNavigation.getInteractiveItems
+  frontend.src.hooks.useParentEncoderNavigation.items → frontend.src.hooks.useParentEncoderNavigation.removeHighlights
+  frontend.src.hooks.useParentEncoderNavigation.onKeyDown → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
+  frontend.src.hooks.useParentEncoderNavigation.useParentEncoderNavigation → frontend.src.hooks.useParentEncoderNavigation.createEncoderController
+  frontend.src.hooks.useParentEncoderNavigation.useParentEncoderNavigation → frontend.src.hooks.useParentEncoderNavigation.parseParentEncoderEnvelope
+  frontend.src.hooks.useParentEncoderNavigation.useParentEncoderNavigation → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
+  frontend.src.hooks.useParentEncoderNavigation.controller → frontend.src.hooks.useParentEncoderNavigation.parseParentEncoderEnvelope
+  frontend.src.hooks.useParentEncoderNavigation.controller → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
+  frontend.src.hooks.useParentEncoderNavigation.onMessage → frontend.src.hooks.useParentEncoderNavigation.parseParentEncoderEnvelope
+  frontend.src.hooks.useParentEncoderNavigation.onMessage → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
+  frontend.src.hooks.useParentEncoderNavigation.onWheel → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
+  frontend.src.hooks.useParentEncoderNavigation.raw → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
   frontend.src.pages.MapEditor.fillMissingFields → frontend.src.pages.MapEditor.isPlainObject
   frontend.src.pages.MapEditor.fillMissingFields → frontend.src.pages.MapEditor.cloneValue
   frontend.src.pages.MapEditor.ensureRequiredDefaultMappings → frontend.src.pages.MapEditor.ensureMapShape
@@ -7195,6 +7316,23 @@ EDGES:
   frontend.src.pages.MapEditor.defaultMotor2 → frontend.src.pages.MapEditor.fillMissingFields
   frontend.src.pages.MapEditor.defaultMotor2 → frontend.src.pages.MapEditor.isPlainObject
   frontend.src.pages.MapEditor.defaultParam → frontend.src.pages.MapEditor.fillMissingFields
+  frontend.src.pages.MapEditor.defaultParam → frontend.src.pages.MapEditor.isPlainObject
+  frontend.src.pages.MapEditor.readIntegrationMeta → frontend.src.pages.MapEditor.firstBindingFromObjectMapping
+  frontend.src.pages.MapEditor.ensureMapShape → frontend.src.pages.MapEditor.isPlainObject
+  frontend.src.pages.MapEditor.src → frontend.src.pages.MapEditor.isPlainObject
+  frontend.src.pages.MapEditor.toPrettyJson → frontend.src.pages.MapEditor.ensureMapShape
+  frontend.src.pages.MapEditor.createInitialEditorState → frontend.src.pages.MapEditor.ensureRequiredDefaultMappings
+  frontend.src.pages.MapEditor.createInitialEditorState → frontend.src.pages.MapEditor.cloneDefaultMap
+  frontend.src.pages.MapEditor.createInitialEditorState → frontend.src.pages.MapEditor.toPrettyJson
+  frontend.src.pages.MapEditor.onJsonChange → frontend.src.pages.MapEditor.isPlainObject
+  frontend.src.pages.MapEditor.onJsonChange → frontend.src.pages.MapEditor.ensureMapShape
+  frontend.src.pages.MapEditor.parsed → frontend.src.pages.MapEditor.isPlainObject
+  frontend.src.pages.MapEditor.applyMapMutation → frontend.src.pages.MapEditor.ensureMapShape
+  frontend.src.pages.MapEditor.applyMapMutation → frontend.src.pages.MapEditor.toPrettyJson
+  frontend.src.pages.MapEditor.addObject → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.name → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.addParam → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.editParamConversionField → frontend.src.pages.MapEditor.applyMapMutation
 ```
 
 ## API Stubs

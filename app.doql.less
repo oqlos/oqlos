@@ -206,6 +206,11 @@ workflow[name="quality:report"] {
   step-1: run cmd=pyqual report;
 }
 
+workflow[name="test:frontend"] {
+  trigger: manual;
+  step-1: run cmd=npm run test:unit;
+}
+
 workflow[name="lint"] {
   trigger: manual;
   step-1: run cmd=ruff check .;

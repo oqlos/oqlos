@@ -1,33 +1,33 @@
-# code2llm | 246f 54684L | python:153,javascript:35,md:18,yaml:13,shell:9,json:6,yml:4,typescript:3,conf:2,toml:1 | 2026-06-30
+# code2llm | 267f 55434L | python:161,javascript:47,md:19,yaml:13,shell:9,json:6,yml:4,typescript:3,conf:2,toml:1 | 2026-06-30
 # generated in 0.13s
-# CC̅=4.1 | critical:27/2082 | dups:0 | cycles:0
+# CC̅=4.0 | critical:23/2128 | dups:0 | cycles:0
 
 HEALTH[20]:
-  🟡 CC    mergeParentContext CC=16 (limit:15)
-  🟡 CC    useUrlConfig CC=18 (limit:15)
+  🟡 CC    createEncoderController CC=21 (limit:15)
+  🟡 CC    parentEncoderActive CC=15 (limit:15)
+  🟡 CC    handleEncoderCommand CC=15 (limit:15)
   🟡 CC    readIntegrationMeta CC=15 (limit:15)
   🟡 CC    setMetaField CC=24 (limit:15)
   🟡 CC    editObjectActionArg CC=24 (limit:15)
   🟡 CC    renderObjectActionEditor CC=21 (limit:15)
+  🟡 CC    loadPlan CC=18 (limit:15)
+  🟡 CC    runCurrentStep CC=20 (limit:15)
   🟡 CC    cancelled CC=16 (limit:15)
   🟡 CC    normalizeHardwareEvent CC=21 (limit:15)
   🟡 CC    RAIL_HOVER_OPEN_MS CC=33 (limit:15)
   🟡 CC    RAIL_HOVER_CLOSE_MS CC=33 (limit:15)
   🟡 CC    useSelectionCollapsePanel CC=33 (limit:15)
-  🟡 CC    summarizeFuncToHardware CC=47 (limit:15)
-  🟡 CC    objName CC=30 (limit:15)
-  🟡 CC    actName CC=30 (limit:15)
+  🟡 CC    executeConfigureStep CC=48 (limit:15)
+  🟡 CC    summarizeFuncToHardware CC=17 (limit:15)
   🟡 CC    selectWizardProbeCandidate CC=22 (limit:15)
-  🟡 CC    AppConfigContext CC=44 (limit:15)
-  🟡 CC    AppConfigProvider CC=44 (limit:15)
-  🟡 CC    handleEncoderCommand CC=15 (limit:15)
-  🟡 CC    extractDiagnosticFailure CC=69 (limit:15)
+  🟡 CC    API_BASE CC=17 (limit:15)
   🟡 CC    request CC=17 (limit:15)
+  🟡 CC    failureFromOkFalsePayload CC=19 (limit:15)
 
 REFACTOR[1]:
   1. split 20 high-CC methods  (CC>15)
 
-PIPELINES[1053]:
+PIPELINES[1071]:
   [1] Src [main]: main → run_oql_scenario → print
       PURITY: 100% pure
   [2] Src [LocalizedApp]: LocalizedApp
@@ -40,93 +40,93 @@ PIPELINES[1053]:
       PURITY: 100% pure
   [6] Src [onClose]: onClose
       PURITY: 100% pure
-  [7] Src [DEFAULTS]: DEFAULTS
+  [7] Src [useUrlConfig]: useUrlConfig → notifyParentChildReady
       PURITY: 100% pure
-  [8] Src [n]: n
+  [8] Src [onPop]: onPop
       PURITY: 100% pure
-  [9] Src [parseUrlEmbedConfig]: parseUrlEmbedConfig → parseParams → parseAppearanceParams → resolveViewportWidthPx
+  [9] Src [onMessage]: onMessage
       PURITY: 100% pure
-  [10] Src [incomingFont]: incomingFont → resolveViewportWidthPx
+  [10] Src [envelope]: envelope
       PURITY: 100% pure
-  [11] Src [incomingLang]: incomingLang → resolveViewportWidthPx
+  [11] Src [patch]: patch
       PURITY: 100% pure
-  [12] Src [incomingTheme]: incomingTheme → resolveViewportWidthPx
+  [12] Src [parentEncoderActive]: parentEncoderActive → removeHighlights
       PURITY: 100% pure
-  [13] Src [fromUser]: fromUser → resolveViewportWidthPx
+  [13] Src [items]: items → removeHighlights
       PURITY: 100% pure
-  [14] Src [nextUser]: nextUser → resolveViewportWidthPx
+  [14] Src [target]: target
       PURITY: 100% pure
-  [15] Src [roleCandidate]: roleCandidate → resolveViewportWidthPx
+  [15] Src [onKeyDown]: onKeyDown → handleEncoderCommand → removeHighlights
       PURITY: 100% pure
-  [16] Src [IFRAME_ONLY_SEARCH_PARAMS]: IFRAME_ONLY_SEARCH_PARAMS
+  [16] Src [useParentEncoderNavigation]: useParentEncoderNavigation → createEncoderController → removeHighlights
       PURITY: 100% pure
-  [17] Src [url]: url
+  [17] Src [controller]: controller → parseParentEncoderEnvelope
       PURITY: 100% pure
-  [18] Src [raw]: raw
+  [18] Src [onMessage]: onMessage → parseParentEncoderEnvelope
       PURITY: 100% pure
-  [19] Src [incoming]: incoming
+  [19] Src [onWheel]: onWheel → handleEncoderCommand → removeHighlights
       PURITY: 100% pure
-  [20] Src [search]: search → mergeParentSearchIntoChildUrl
+  [20] Src [raw]: raw → handleEncoderCommand → removeHighlights
       PURITY: 100% pure
-  [21] Src [base]: base → mergeParentSearchIntoChildUrl
+  [21] Src [syncParentUrl]: syncParentUrl
       PURITY: 100% pure
-  [22] Src [useUrlConfig]: useUrlConfig → parseParams → parseAppearanceParams → resolveViewportWidthPx
+  [22] Src [location]: location
       PURITY: 100% pure
-  [23] Src [onPop]: onPop → mergeParentSearchIntoChildUrl
+  [23] Src [collapseEnabled]: collapseEnabled
       PURITY: 100% pure
-  [24] Src [onMessage]: onMessage → mergeParentSearchIntoChildUrl
+  [24] Src [inPreview]: inPreview
       PURITY: 100% pure
-  [25] Src [envelope]: envelope → mergeParentSearchIntoChildUrl
+  [25] Src [filtered]: filtered
       PURITY: 100% pure
-  [26] Src [ctx]: ctx → mergeParentSearchIntoChildUrl
+  [26] Src [handleSelect]: handleSelect
       PURITY: 100% pure
-  [27] Src [patch]: patch → parseParams → parseAppearanceParams → resolveViewportWidthPx
+  [27] Src [LIVE_EVENTS_LIMIT]: LIVE_EVENTS_LIMIT
       PURITY: 100% pure
-  [28] Src [param]: param
+  [28] Src [TIC249_TARGET_VELOCITY_SCALE]: TIC249_TARGET_VELOCITY_SCALE
       PURITY: 100% pure
-  [29] Src [syncParentUrl]: syncParentUrl
+  [29] Src [GROUP_FOR_TAB]: GROUP_FOR_TAB
       PURITY: 100% pure
-  [30] Src [location]: location
+  [30] Src [SECTION_DESC_KEY]: SECTION_DESC_KEY
       PURITY: 100% pure
-  [31] Src [collapseEnabled]: collapseEnabled
+  [31] Src [EMPTY_KEY]: EMPTY_KEY
       PURITY: 100% pure
-  [32] Src [inPreview]: inPreview
+  [32] Src [META_FIELDS]: META_FIELDS
       PURITY: 100% pure
-  [33] Src [filtered]: filtered
+  [33] Src [PARAM_CONVERSION_ALGORITHMS]: PARAM_CONVERSION_ALGORITHMS
       PURITY: 100% pure
-  [34] Src [handleSelect]: handleSelect
+  [34] Src [value]: value
       PURITY: 100% pure
-  [35] Src [LIVE_EVENTS_LIMIT]: LIVE_EVENTS_LIMIT
+  [35] Src [shaped]: shaped
       PURITY: 100% pure
-  [36] Src [TIC249_TARGET_VELOCITY_SCALE]: TIC249_TARGET_VELOCITY_SCALE
+  [36] Src [defaultMotor2]: defaultMotor2 → fillMissingFields → isPlainObject
       PURITY: 100% pure
-  [37] Src [GROUP_FOR_TAB]: GROUP_FOR_TAB
+  [37] Src [defaultParam]: defaultParam → fillMissingFields → isPlainObject
       PURITY: 100% pure
-  [38] Src [SECTION_DESC_KEY]: SECTION_DESC_KEY
+  [38] Src [readIntegrationMeta]: readIntegrationMeta → firstBindingFromObjectMapping
       PURITY: 100% pure
-  [39] Src [EMPTY_KEY]: EMPTY_KEY
+  [39] Src [src]: src → isPlainObject
       PURITY: 100% pure
-  [40] Src [META_FIELDS]: META_FIELDS
+  [40] Src [createInitialEditorState]: createInitialEditorState → ensureRequiredDefaultMappings → ensureMapShape → isPlainObject
       PURITY: 100% pure
-  [41] Src [PARAM_CONVERSION_ALGORITHMS]: PARAM_CONVERSION_ALGORITHMS
+  [41] Src [seeded]: seeded
       PURITY: 100% pure
-  [42] Src [value]: value
+  [42] Src [wsOnline]: wsOnline
       PURITY: 100% pure
-  [43] Src [shaped]: shaped
+  [43] Src [initial]: initial
       PURITY: 100% pure
-  [44] Src [defaultMotor2]: defaultMotor2 → fillMissingFields → isPlainObject
+  [44] Src [tab]: tab
       PURITY: 100% pure
-  [45] Src [defaultParam]: defaultParam → fillMissingFields → isPlainObject
+  [45] Src [canClearServerEvents]: canClearServerEvents
       PURITY: 100% pure
-  [46] Src [readIntegrationMeta]: readIntegrationMeta → firstBindingFromObjectMapping
+  [46] Src [canClearPersistentEvents]: canClearPersistentEvents
       PURITY: 100% pure
-  [47] Src [src]: src → isPlainObject
+  [47] Src [isDirty]: isDirty
       PURITY: 100% pure
-  [48] Src [createInitialEditorState]: createInitialEditorState → ensureRequiredDefaultMappings → ensureMapShape → isPlainObject
+  [48] Src [setTabAndUrl]: setTabAndUrl
       PURITY: 100% pure
-  [49] Src [seeded]: seeded
+  [49] Src [url]: url
       PURITY: 100% pure
-  [50] Src [wsOnline]: wsOnline
+  [50] Src [onJsonChange]: onJsonChange → isPlainObject
       PURITY: 100% pure
 
 LAYERS:
@@ -138,7 +138,7 @@ LAYERS:
   │ CHANGELOG.md               496L  0C    0m  CC=0.0    ←0
   │ hw_diagnostic_20260415_133138.json   340L  0C    0m  CC=0.0    ←0
   │ setup_hardware_and_run_oql   333L  0C    7m  CC=12     ←0
-  │ Taskfile.yml               160L  0C    0m  CC=0.0    ←0
+  │ Taskfile.yml               166L  0C    0m  CC=0.0    ←0
   │ sumd.json                  150L  0C    0m  CC=0.0    ←0
   │ Makefile                    86L  0C    0m  CC=0.0    ←0
   │ pyproject.toml              81L  0C    0m  CC=0.0    ←0
@@ -148,54 +148,12 @@ LAYERS:
   │ project.sh                  43L  0C    0m  CC=0.0    ←0
   │ TODO.md                     36L  0C    0m  CC=0.0    ←0
   │
-  frontend/                       CC̄=4.3    ←in:0  →out:0
-  │ !! dictionaries.js           1981L  0C    4m  CC=5      ←0
-  │ !! mapEditorDefaultMap.js    1763L  0C    3m  CC=1      ←0
-  │ !! MapEditor.jsx             1490L  0C  109m  CC=24     ←6
-  │ !! hardware-status-presets-translations.js   795L  0C    0m  CC=0.0    ←0
-  │ !! HardwareRestart.jsx        621L  0C   75m  CC=48     ←3
-  │ !! HardwareDemo.jsx           585L  0C   41m  CC=16     ←1
-  │ !! hardwareApi.js             434L  0C   40m  CC=69     ←0
-  │ SidebarList.jsx            316L  0C    4m  CC=6      ←0
-  │ hardware-status-panel-translations.js   309L  0C    0m  CC=0.0    ←0
-  │ !! useUrlConfig.js            286L  0C   49m  CC=18     ←0
-  │ !! AppConfigProvider.jsx      206L  0C   24m  CC=44     ←6
-  │ !! useSelectionCollapsePanel.js   191L  0C   22m  CC=33     ←0
-  │ hardware-demo-extra-translations.js   183L  0C    0m  CC=0.0    ←0
-  │ wsClient.js                138L  1C   30m  CC=13     ←10
-  │ rbac.policy.js             118L  0C   20m  CC=6      ←0
-  │ !! hardware-wizard-steps.js   111L  0C   16m  CC=22     ←22
-  │ hardware-api-log.js         87L  0C    7m  CC=11     ←0
-  │ SharedNav.jsx               83L  0C    6m  CC=5      ←0
-  │ hardware-status-log-translations.js    81L  0C    0m  CC=0.0    ←0
-  │ I18nProvider.jsx            65L  0C   10m  CC=13     ←21
-  │ !! mapEditorFuncHardwareSummary.js    50L  0C   10m  CC=47     ←0
-  │ !! hardwareEventStream.js      47L  0C   21m  CC=21     ←1
-  │ collapse-toggle-bridge.js    46L  0C    6m  CC=4      ←0
-  │ designRem.js                43L  0C    2m  CC=1      ←0
-  │ parentUrlBridge.js          39L  0C    3m  CC=10     ←0
-  │ paths.ts                    39L  0C    4m  CC=2      ←0
-  │ hui-shell-key.js            38L  0C    5m  CC=5      ←0
-  │ vite.config.ts              36L  0C    0m  CC=0.0    ←0
-  │ hardware-activity-log.js    34L  0C    4m  CC=2      ←0
-  │ index.ts                    31L  0C    2m  CC=1      ←0
-  │ main.jsx                    30L  0C    1m  CC=1      ←0
-  │ HardwareStatus.jsx          28L  0C    1m  CC=5      ←0
-  │ useWsStatus.js              26L  0C    4m  CC=3      ←0
-  │ HardwareActivityLog.jsx     24L  0C    0m  CC=0.0    ←0
-  │ package.json                21L  0C    0m  CC=0.0    ←0
-  │ App.jsx                     21L  0C    0m  CC=0.0    ←0
-  │ hardware-restart-docs.js    11L  0C    2m  CC=2      ←0
-  │ hardware-wizard-plan.js     10L  0C    2m  CC=5      ←0
-  │ hardware-time.js             4L  0C    1m  CC=1      ←0
-  │
   oqlos/                          CC̄=4.0    ←in:8  →out:0
   │ !! hardware                  2266L  0C   93m  CC=14     ←2
   │ !! doctor                     971L  0C   42m  CC=13     ←2
   │ !! _interpreter_actions       800L  0C   49m  CC=14     ←1
   │ !! oql_parser                 762L  3C   43m  CC=14     ←2
   │ !! interpreter                690L  1C   48m  CC=11     ←0
-  │ !! tic249_extended            638L  0C   30m  CC=14     ←0
   │ !! plugin_gateway             631L  1C   22m  CC=14     ←0
   │ !! diagnosis                  562L  3C   26m  CC=13     ←1
   │ !! motor                      549L  1C   20m  CC=14     ←0
@@ -213,7 +171,7 @@ LAYERS:
   │ executor                   383L  1C   21m  CC=14     ←0
   │ base                       370L  9C   21m  CC=5      ←3
   │ state                      370L  0C   16m  CC=13     ←0
-  │ main                       369L  0C   22m  CC=8      ←0
+  │ main                       370L  0C   22m  CC=8      ←0
   │ lung                       361L  1C   20m  CC=14     ←0
   │ execution                  359L  0C   16m  CC=11     ←0
   │ plugin_cli                 343L  0C   14m  CC=8      ←3
@@ -226,12 +184,12 @@ LAYERS:
   │ piadc                      272L  1C   12m  CC=11     ←0
   │ html_report                266L  0C    5m  CC=10     ←0
   │ scanner_probe              262L  0C   13m  CC=14     ←1
-  │ hui_actions                251L  0C   12m  CC=7      ←1
   │ scenarios                  251L  0C   16m  CC=11     ←0
   │ _line_parsers              246L  0C    9m  CC=12     ←1
-  │ !! manage_ops                 222L  0C    7m  CC=19     ←3
   │ sidecar_control            222L  0C    9m  CC=13     ←1
+  │ !! manage_ops                 222L  0C    7m  CC=19     ←3
   │ config                     220L  1C    1m  CC=1      ←5
+  │ tic249_extended            215L  0C    7m  CC=10     ←0
   │ _firmware_executor         210L  1C    9m  CC=11     ←0
   │ OQL-CHEATSHEET.md          210L  0C    0m  CC=0.0    ←0
   │ motor2_runtime             209L  2C   12m  CC=12     ←1
@@ -239,9 +197,11 @@ LAYERS:
   │ rtc_probe                  197L  0C    7m  CC=11     ←1
   │ _hw3_models                194L  9C    7m  CC=14     ←3
   │ commands                   192L  0C    6m  CC=8      ←2
+  │ hui_hold                   188L  0C   11m  CC=5      ←2
   │ usb_diagnostics            185L  0C    5m  CC=13     ←0
   │ __main__                   184L  0C   11m  CC=6      ←0
   │ parser                     183L  0C    5m  CC=13     ←2
+  │ tic249_sidecar_client      183L  0C    9m  CC=9      ←1
   │ plugins                    181L  0C   12m  CC=3      ←2
   │ parser                     175L  0C    6m  CC=9      ←0
   │ event_server               171L  2C   11m  CC=7      ←0
@@ -269,11 +229,13 @@ LAYERS:
   │ _dsl_helpers               132L  0C   12m  CC=11     ←4
   │ modbus_identify            131L  0C    8m  CC=10     ←1
   │ resolvers                  128L  0C   10m  CC=10     ←1
+  │ tic249_motion_params       128L  0C    6m  CC=13     ←2
   │ _value_normalizers         126L  1C    7m  CC=10     ←0
   │ release_version            125L  0C    7m  CC=11     ←1
   │ state                      124L  1C    3m  CC=4      ←0
   │ mqtt                       119L  1C    9m  CC=3      ←0
   │ health                     117L  0C    7m  CC=8      ←7
+  │ tic249_error_messages      112L  0C    6m  CC=14     ←2
   │ file_ops                   108L  1C    5m  CC=4      ←1
   │ _utils                     101L  0C    6m  CC=12     ←1
   │ __init__                   100L  0C    0m  CC=0.0    ←0
@@ -287,9 +249,10 @@ LAYERS:
   │ !! hardware_mapping_contract    89L  1C    4m  CC=19     ←1
   │ stack_snapshot              88L  0C    4m  CC=8      ←1
   │ dsl_models                  87L  8C    0m  CC=0.0    ←0
-  │ junit                       86L  1C    3m  CC=8      ←0
   │ config                      86L  1C    6m  CC=6      ←1
+  │ junit                       86L  1C    3m  CC=8      ←0
   │ config_factory              84L  0C    1m  CC=1      ←0
+  │ hui_artificial_lung         83L  0C    3m  CC=6      ←1
   │ event_store                 77L  1C   10m  CC=3      ←0
   │ __init__                    73L  0C    1m  CC=1      ←0
   │ sample_data                 73L  0C    1m  CC=1      ←1
@@ -307,15 +270,19 @@ LAYERS:
   │ protocol                    60L  2C    6m  CC=1      ←0
   │ hardware_v3                 60L  0C    3m  CC=2      ←0
   │ _shared                     59L  0C    5m  CC=2      ←3
+  │ hui_actions                 58L  0C    1m  CC=2      ←1
   │ benchmark                   55L  0C    1m  CC=6      ←2
   │ platform                    50L  0C    3m  CC=6      ←0
   │ registry                    49L  1C    3m  CC=2      ←0
+  │ tic249_command_mapping      49L  0C    2m  CC=13     ←1
   │ __init__                    49L  0C    0m  CC=0.0    ←0
   │ hui_scenario                46L  0C    1m  CC=2      ←1
   │ logs                        45L  0C    3m  CC=1      ←0
   │ tic249_rig_direction        43L  0C    2m  CC=5      ←1
+  │ hui_lung_recipe             42L  0C    1m  CC=1      ←0
   │ config_paths                41L  0C    1m  CC=6      ←4
   │ _compare                    40L  0C    2m  CC=3      ←2
+  │ tic249_units                39L  0C    2m  CC=5      ←2
   │ scenario                    35L  4C    0m  CC=0.0    ←0
   │ _endpoint_helpers           34L  0C    2m  CC=2      ←1
   │ _rtu_serial                 33L  0C    2m  CC=4      ←2
@@ -331,12 +298,65 @@ LAYERS:
   │ __init__                    17L  0C    0m  CC=0.0    ←0
   │ __init__                    17L  0C    0m  CC=0.0    ←0
   │ __init__                    17L  0C    0m  CC=0.0    ←0
+  │ tic249_arg_helpers          11L  0C    1m  CC=4      ←2
   │ __init__                     6L  0C    0m  CC=0.0    ←0
-  │ tic249_units                 5L  0C    0m  CC=0.0    ←0
   │ __init__                     5L  0C    0m  CC=0.0    ←0
   │ __init__                     3L  0C    0m  CC=0.0    ←0
   │ __init__                     3L  0C    0m  CC=0.0    ←0
   │ __init__                     0L  0C    0m  CC=0.0    ←0
+  │
+  frontend/                       CC̄=3.9    ←in:0  →out:0
+  │ !! dictionaries.js           1981L  0C    4m  CC=5      ←0
+  │ !! mapEditorDefaultMap.js    1763L  0C    3m  CC=1      ←0
+  │ !! MapEditor.jsx             1490L  0C  109m  CC=24     ←6
+  │ !! hardware-status-presets-translations.js   795L  0C    0m  CC=0.0    ←0
+  │ !! HardwareDemo.jsx           585L  0C   41m  CC=16     ←0
+  │ !! HardwareRestart.jsx        501L  0C   49m  CC=20     ←2
+  │ SidebarList.jsx            316L  0C    4m  CC=6      ←0
+  │ hardware-status-panel-translations.js   309L  0C    0m  CC=0.0    ←0
+  │ !! hardwareApi.js             256L  0C   21m  CC=17     ←0
+  │ !! useSelectionCollapsePanel.js   191L  0C   22m  CC=33     ←0
+  │ url-embed-config.js        191L  0C   43m  CC=12     ←0
+  │ hardware-demo-extra-translations.js   183L  0C    0m  CC=0.0    ←0
+  │ !! useParentEncoderNavigation.js   156L  0C   19m  CC=21     ←6
+  │ wsClient.js                138L  1C   30m  CC=13     ←10
+  │ rbac.policy.js             118L  0C   20m  CC=6      ←0
+  │ !! hardware-wizard-steps.js   111L  0C   16m  CC=22     ←22
+  │ !! hardware-restart-wizard-steps.js   109L  0C   24m  CC=48     ←1
+  │ !! hardware-diagnostic-failure.js   102L  0C   16m  CC=19     ←0
+  │ url-embed-config.test.js    92L  0C    6m  CC=2      ←0
+  │ hardware-api-log.js         87L  0C    7m  CC=11     ←0
+  │ useUrlConfig.js             85L  0C    6m  CC=8      ←0
+  │ SharedNav.jsx               83L  0C    6m  CC=5      ←0
+  │ hardware-status-log-translations.js    81L  0C    0m  CC=0.0    ←0
+  │ !! mapEditorFuncHardwareSummary.js    80L  0C   16m  CC=17     ←0
+  │ I18nProvider.jsx            65L  0C   10m  CC=13     ←23
+  │ hardware-api-errors.js      63L  0C   10m  CC=13     ←0
+  │ hardware-diagnostic-failure.test.js    58L  0C    0m  CC=0.0    ←0
+  │ mapEditorFuncHardwareSummary.test.js    54L  0C    1m  CC=1      ←0
+  │ !! hardwareEventStream.js      47L  0C   21m  CC=21     ←1
+  │ collapse-toggle-bridge.js    46L  0C    6m  CC=4      ←0
+  │ hardware-api-retry.test.js    45L  0C    3m  CC=2      ←0
+  │ designRem.js                43L  0C    2m  CC=1      ←0
+  │ AppConfigProvider.jsx       42L  0C    5m  CC=2      ←0
+  │ parentUrlBridge.js          39L  0C    3m  CC=10     ←0
+  │ paths.ts                    39L  0C    4m  CC=2      ←0
+  │ hardware-api-retry.js       38L  0C    8m  CC=14     ←1
+  │ hui-shell-key.js            38L  0C    5m  CC=5      ←0
+  │ vite.config.ts              36L  0C    0m  CC=0.0    ←0
+  │ hardware-tic249-status.js    35L  0C    6m  CC=12     ←0
+  │ hardware-activity-log.js    34L  0C    4m  CC=2      ←0
+  │ index.ts                    31L  0C    2m  CC=1      ←0
+  │ main.jsx                    30L  0C    1m  CC=1      ←0
+  │ HardwareStatus.jsx          28L  0C    1m  CC=5      ←0
+  │ useWsStatus.js              26L  0C    4m  CC=3      ←0
+  │ app-config-document.js      26L  0C    4m  CC=6      ←0
+  │ HardwareActivityLog.jsx     24L  0C    0m  CC=0.0    ←0
+  │ package.json                22L  0C    0m  CC=0.0    ←0
+  │ App.jsx                     21L  0C    0m  CC=0.0    ←0
+  │ hardware-restart-docs.js    11L  0C    2m  CC=2      ←0
+  │ hardware-wizard-plan.js     10L  0C    2m  CC=5      ←0
+  │ hardware-time.js             4L  0C    1m  CC=1      ←0
   │
   scripts/                        CC̄=3.8    ←in:0  →out:72  !! split
   │ !! oql_v2_to_v4_migrate_db    662L  1C   43m  CC=14     ←1
@@ -359,7 +379,7 @@ LAYERS:
   │ doctor-workflow.sh          52L  0C    1m  CC=0.0    ←17
   │
   docs/                           CC̄=0.0    ←in:0  →out:0
-  │ !! README.md                 1760L  0C    0m  CC=0.0    ←0
+  │ !! README.md                 1879L  0C    0m  CC=0.0    ←0
   │ !! cql-examples.md            588L  0C    0m  CC=0.0    ←0
   │ HARDWARE_DIAGNOSTICS.md    428L  0C    0m  CC=0.0    ←0
   │ HARDWARE_CONTROL_OQL_MQTT.md   319L  0C    0m  CC=0.0    ←0
@@ -369,6 +389,7 @@ LAYERS:
   │ oql_v4_llm_validator.schema.json    93L  0C    0m  CC=0.0    ←0
   │ oql_v2_llm_validator.schema.json    89L  0C    0m  CC=0.0    ←0
   │ cql-spec.md                 78L  0C    0m  CC=0.0    ←0
+  │ refactor-plan.md            73L  0C    0m  CC=0.0    ←0
   │
   redeploy/                       CC̄=0.0    ←in:0  →out:0
   │ !! migration.md              1207L  0C    0m  CC=0.0    ←0
@@ -416,19 +437,19 @@ COUPLING:
                  oqlos.utils                                                                                                                                                                      ←2                                                                                                                                                                                                  ──
   CYCLES: none
   HUB: examples.hardware/ (fan-in=225)
-  HUB: oqlos.core/ (fan-in=25)
-  HUB: oqlos.hardware/ (fan-in=25)
-  HUB: oqlos/ (fan-in=8)
   HUB: oqlos.shared/ (fan-in=6)
+  HUB: oqlos.core/ (fan-in=25)
   HUB: oqlos.tools/ (fan-in=6)
+  HUB: oqlos/ (fan-in=8)
   HUB: frontend.src/ (fan-in=210)
-  SMELL: scripts/ fan-out=72 → split needed
-  SMELL: setup_hardware_and_run_oql/ fan-out=27 → split needed
-  SMELL: oqlos.core/ fan-out=23 → split needed
-  SMELL: oqlos.hardware/ fan-out=85 → split needed
-  SMELL: oqlos.api/ fan-out=52 → split needed
+  HUB: oqlos.hardware/ (fan-in=25)
   SMELL: oqlos.shared/ fan-out=13 → split needed
+  SMELL: oqlos.core/ fan-out=23 → split needed
   SMELL: oqlos.tools/ fan-out=231 → split needed
+  SMELL: setup_hardware_and_run_oql/ fan-out=27 → split needed
+  SMELL: oqlos.api/ fan-out=52 → split needed
+  SMELL: scripts/ fan-out=72 → split needed
+  SMELL: oqlos.hardware/ fan-out=85 → split needed
 
 EXTERNAL:
   validation: run `vallm batch .` → validation.toon
