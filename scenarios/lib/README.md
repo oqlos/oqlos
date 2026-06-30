@@ -30,7 +30,7 @@ GOAL smoke:
 ```oql
 MACRO set-pump-lpm:
   SET pump-main $1 l/min
-  WAIT $2
+  SET WAIT '$2'
 
 GOAL ramp:
   CALL set-pump-lpm 3 500ms

@@ -212,7 +212,7 @@ DEVICE_TYPE: BA
 GOAL:
   SET NAME 'Check'
   SET 'pompa-1' '5.0 l/min'
-  WAIT 500ms
+  SET WAIT '500 ms'
   GET AI01
   IF AI01 0.5 .. 0.8 V
   CORRECT 'Voltage OK'
@@ -242,14 +242,14 @@ lung** stepper (Pololu Tic T249, sidecar `:8205`).
 GOAL: Motor control
   # Pump (DRI0050) — quote the value when it carries a unit:
   SET 'pompa-1' '5.0 l/min'      # run pump at 5 l/min
-  WAIT 2s
+  SET WAIT '2 s'
   SET 'pompa-1' '0'              # stop pump
 
   # Artificial lung (Tic T249) — reciprocating stepper:
   SET 'Pojemność płuca' '2.5l'   # stroke volume
   SET 'Ilość cykli płuca' '20'   # cycle count
   SET 'Płuco' 'Start'            # energize + reciprocate
-  WAIT 5s
+  SET WAIT '5 s'
   SET 'Płuco' 'Stop'             # halt + de-energize
 ```
 
@@ -396,7 +396,7 @@ CONFIG reset:
 GOAL:
   SET NAME 'Visual inspection'
   SET valve-nc 1
-  WAIT 2s
+  SET WAIT '2 s'
   GET AI01
   IF AI01 0.60 .. 0.67 V
   CORRECT 'NC voltage in range'
@@ -429,7 +429,7 @@ INCLUDE "lib/peripherals.oql"
 CONFIG safety-initialization:
   CALL init-pump
   CALL init-valves-main
-  WAIT 500ms
+  SET WAIT '500 ms'
 
 CONFIG pump-calibration:
   # 10 l/min corresponds to 100% PWM by default
@@ -438,7 +438,7 @@ CONFIG pump-calibration:
 GOAL:
   SET NAME 'Voltage test'
   SET valve-nc 1
-  WAIT 1s
+  SET WAIT '1 s'
   GET AI01
   SAVE voltage-test
 ```
@@ -453,7 +453,7 @@ INCLUDE "lib/hardware.oql"
 
 MACRO pump-ramp:
   SET pump-main $1 l/min
-  WAIT $2
+  SET WAIT '$2'
   SET pump-main 0
 
 GOAL:

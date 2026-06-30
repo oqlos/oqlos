@@ -90,9 +90,9 @@ def _emit_cql_param(p, a: callable, *, indent: str = "  ") -> None:
         return
     if p.sensor == "timer":
         if p.max_val is not None:
-            a(f"{indent}WAIT [{p.max_val} s]")
+            a(f"{indent}SET WAIT '{p.max_val} s'")
         elif p.min_val is not None:
-            a(f"{indent}WAIT [{p.min_val} s]")
+            a(f"{indent}SET WAIT '{p.min_val} s'")
         return
     _emit_cql_sensor_param(p, a, indent=indent)
 

@@ -5,8 +5,8 @@
 ```oql
 SET target value [unit]          # ustaw peryferium/zmienną
 GET sensor                       # odczytaj sensor (alias: READ)
-WAIT duration                    # 3s, 500ms, 3000 (= ms)
-SET WAIT 'duration'              # alias pauzy, np. SET WAIT '1 s'
+SET WAIT 'duration'              # pauza, np. SET WAIT '1 s'
+WAIT duration                    # legacy alias, np. 3s, 500ms
 SAVE label                       # zapisz wynik do protokołu
 CHECK min <= sensor <= max unit  # range assertion
 MIN sensor value unit            # dolna granica

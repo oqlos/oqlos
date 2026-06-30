@@ -57,7 +57,7 @@ GOAL: TEST WIZUALNY
   TASK: [Wyłącz] [Pump]
   TASK: [Potwierdź] [Test wizualny]
   SAVE [Test wizualny]
-  SET [wait] = [7.0 s]
+  SET WAIT '7.0 s'
   MIN [AI01] = [-11.0 mbar]
   VAL [AI01] [mbar]
   IF [AI01] [<] [-11.0 mbar] ELSE ERROR "Wytworzenie podciśnienia"
@@ -66,7 +66,7 @@ GOAL: TEST SZCZELNOŚCI
   TASK: [Wyłącz] [Pump]
   MAX [AI01] = [-9.0 mbar]
   SAVE [AI01]
-  SET [wait] = [60.0 s]
+  SET WAIT '60.0 s'
 """
 
 CQL_CONNECTGO = """\
@@ -133,8 +133,7 @@ class TestCqlParser:
         kinds = [a.kind for a in step.actions]
         assert "task" in kinds
         assert "save" in kinds
-        assert "set" in kinds
-        assert any(a.kind == "set" and a.target == "wait" for a in step.actions)
+        assert "wait" in kinds
         assert "min" in kinds
         assert "val" in kinds
         assert "if_else" in kinds
@@ -200,7 +199,7 @@ class TestCqlParser:
         assert c.on_fail == "ERROR"
 
     def test_connectgo_example_file(self):
-        path = Path(__file__).resolve().parents[1] / "oqlos" / "scenarios" / "examples" / "pss7000.connectgo"
+        path = Path(__file__).resolve().parents[1] / "scenarios" / "examples" / "pss7000.connectgo"
         doc = parse_cql(path.read_text(encoding="utf-8"), str(path))
         issues = validate_cql(doc)
 
@@ -271,7 +270,7 @@ class TestCqlInterpreter:
         assert "AI01" in result.variables
 
     def test_connectgo_oql_example_file_dry_runs(self):
-        path = Path(__file__).resolve().parents[1] / "oqlos" / "scenarios" / "examples" / "mask-leak-test.oql"
+        path = Path(__file__).resolve().parents[1] / "scenarios" / "examples" / "mask-leak-test.oql"
         interp = CqlInterpreter(mode="dry-run", quiet=True)
         result = interp.run_file(str(path))
 
@@ -353,7 +352,7 @@ GOAL:
   SET NAME 'Hardware smoke'
   SET 'zawor 3' 'ON'
   SET 'PUMP' '5l'
-  SET 'WAIT' '1s'
+  SET WAIT '1 s'
   SET 'zawor 1' 'OFF'
   SET 'PUMP' 'OFF'
 """

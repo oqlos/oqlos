@@ -6,8 +6,8 @@ GOAL:
   SET NAME [Verify ITER shadowing]
     # Double loop
 REPEAT 2:
-  WAIT 100 ms
+  SET WAIT '100 ms'
 REPEAT 3:
-  WAIT 50 ms
+  SET WAIT '50 ms'
 REPEAT STOP
 REPEAT STOP

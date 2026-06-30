@@ -144,7 +144,7 @@ run_smoke_test() {
 GOAL: Pump smoke test
   LOG "Starting pump test..."
   SET "pompa 1" "3"
-  WAIT "500ms"
+  SET WAIT '500 ms'
   GET_SENSOR "sc-sensor"
   ASSERT_SENSOR "sc-sensor" ">" "0" "mbar"
   SET "pompa 1" "0"
@@ -156,10 +156,10 @@ OQL
 GOAL: Valves smoke test
   LOG "Testing valves..."
   SET "zawor NC" "ON"
-  WAIT "200ms"
+  SET WAIT '200 ms'
   SET "zawor NC" "OFF"
   SET "zawor SC" "ON"
-  WAIT "200ms"
+  SET WAIT '200 ms'
   SET "zawor SC" "OFF"
   LOG "Valve test complete"
 OQL

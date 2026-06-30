@@ -9,7 +9,9 @@
     "ts-kaskadowy-cisnienie.oql": "kaskadowy-pomiar-cisnienia-z-przelaczaniem-czujnikow.oql",
     "ts-pelny-test-cisnieniowy.oql": "pelny-test-cisnieniowy-z-przelaczaniem-zakresow.oql",
     "ts-spadek-cisnienia.oql": "test-spadku-cisnienia-automatu.oql",
-    "ts-wytrzymalosc-mech.oql": "test-wytrzymalosci-mechanicznej.oql"
+    "ts-wytrzymalosc-mech.oql": "test-wytrzymalosci-mechanicznej.oql",
+    "ts-szczelnosc-maski.oql": "test-szczelnosci-maski.oql",
+    "ts-temp-wilgotnosc.oql": "test-temperatury-i-wilgotnosci.oql"
   },
   "scenarios": [
     {
@@ -67,8 +69,8 @@
       "bytes": 1585
     },
     {
-      "id": "ts-szczelnosc-maski",
-      "file": "ts-szczelnosc-maski.oql",
+      "id": "test-szczelnosci-maski",
+      "file": "test-szczelnosci-maski.oql",
       "title": "Test szczelności maski",
       "bytes": 240
     },
@@ -91,8 +93,8 @@
       "bytes": 411
     },
     {
-      "id": "ts-temp-wilgotnosc",
-      "file": "ts-temp-wilgotnosc.oql",
+      "id": "test-temperatury-i-wilgotnosci",
+      "file": "test-temperatury-i-wilgotnosci.oql",
       "title": "Test temperatury i wilgotności",
       "bytes": 736
     },

@@ -44,7 +44,7 @@ class OqlExecuteRequest(BaseModel):
     node_id: str | None = None  # reserved for multi-node routing
     sensors: dict[str, float] | None = None
     args: dict[str, Any] | None = None  # parameters when kind == "manage"
-    skip_waits: bool = True
+    skip_waits: bool = False
     timeout_ms: int | None = Field(default=None, ge=1)
 
 
@@ -127,7 +127,7 @@ async def oql_ws(websocket: WebSocket) -> None:
                 kind=msg.get("kind", "command"),
                 mode=msg.get("mode", "execute"),
                 sensors=msg.get("sensors"),
-                skip_waits=bool(msg.get("skip_waits", True)),
+                skip_waits=bool(msg.get("skip_waits", False)),
                 source="ws",
             )
             await websocket.send_json(

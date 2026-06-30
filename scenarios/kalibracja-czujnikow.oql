@@ -5,7 +5,7 @@ FUNC:
   SET NAME 'Próbkuj czujnik'
   # $1=czujnik  $2=interwał  $3=czas  $4=label
   SAMPLE $1 START $2
-  WAIT $3
+  SET WAIT '$3'
   SAMPLE $1 STOP
   GET $1
   SAVE $4

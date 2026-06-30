@@ -28,6 +28,19 @@ def test_request_json_roundtrip():
     assert json.loads(req.to_json())["v"] == 1
 
 
+def test_request_defaults_do_not_skip_waits():
+    req = OqlRequest(
+        correlation_id="c1",
+        oql="SET WAIT '1 s'",
+    )
+    back = OqlRequest.from_json(
+        json.dumps({"correlation_id": "c1", "oql": "SET WAIT '1 s'"})
+    )
+
+    assert req.skip_waits is False
+    assert back.skip_waits is False
+
+
 def test_response_json_roundtrip():
     resp = OqlResponse("c1", ok=True, result={"ok": True, "passed": 1}, error=None, node_id="pi-hw")
     back = OqlResponse.from_json(resp.to_json())

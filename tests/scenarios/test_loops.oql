@@ -15,5 +15,5 @@ REPEAT STOP
     # Dry-run condition simulation
     LOOP WHILE 'AI01' < '0.0 mbar'
   SET Valve 1 (open)
-  WAIT 1.0 s
+  SET WAIT '1.0 s'
 REPEAT STOP

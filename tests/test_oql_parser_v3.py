@@ -74,7 +74,7 @@ def test_parse_minimal_goal():
         """
         GOAL ping:
           SET pump-main 0
-          WAIT 500ms
+          SET WAIT '500 ms'
         """
     )
     doc = parse_oql(src)
@@ -180,7 +180,7 @@ def test_parse_v4_goal_requires_set_name():
         f"""
         VERSION: {OQL_VERSION_CURRENT}
         GOAL:
-          WAIT 500ms
+          SET WAIT '500 ms'
         """
     )
     doc = parse_oql(src)
@@ -192,7 +192,7 @@ def test_parse_v4_rejects_inline_goal_name():
         f"""
         VERSION: {OQL_VERSION_CURRENT}
         GOAL test:
-          WAIT 500ms
+          SET WAIT '500 ms'
         """
     )
     doc = parse_oql(src)
@@ -205,7 +205,7 @@ def test_parse_v4_goal_name_from_set_name():
         VERSION: {OQL_VERSION_CURRENT}
         GOAL:
           SET NAME 'Test ciśnienia'
-          WAIT 500ms
+          SET WAIT '500 ms'
         """
     )
     doc = parse_oql(src)
@@ -246,7 +246,7 @@ def test_adapter_produces_cql_goals():
         SCENARIO: Ad
         GOAL a:
           SET pump-main 0
-          WAIT 500ms
+          SET WAIT '500 ms'
         GOAL b:
           CHECK 6 <= AI02 <= 8 bar
         """
@@ -281,7 +281,6 @@ def test_version4_set_accepts_textual_hardware_values():
           SET NAME 'Hardware smoke'
           SET 'zawor 3' 'ON'
           SET 'PUMP' '5l'
-          SET 'WAIT' '1s'
           SET WAIT '1 s'
           SET 'PUMP' 'OFF'
         """
@@ -294,7 +293,6 @@ def test_version4_set_accepts_textual_hardware_values():
     assert [(a.kind, a.target, a.args) for a in actions] == [
         ("set", "zawor 3", "ON"),
         ("set", "PUMP", "5l"),
-        ("wait", "", "1s"),
         ("wait", "", "1 s"),
         ("set", "PUMP", "OFF"),
     ]
@@ -310,10 +308,10 @@ def test_version4_repeat_count_expands_indented_block():
             SET 'motor 2' 'direction left'
             SET 'motor 2' 'acceleration 100%/s'
             SET 'motor 2' '500000 steps/s'
-            WAIT 3s
+            SET WAIT '3 s'
             SET 'motor 2' 'direction right'
             SET 'motor 2' '500000 steps/s'
-            WAIT 3s
+            SET WAIT '3 s'
         """
     )
 
@@ -325,17 +323,17 @@ def test_version4_repeat_count_expands_indented_block():
         ("set", "motor 2", "direction left"),
         ("set", "motor 2", "acceleration 100%/s"),
         ("set", "motor 2", "500000 steps/s"),
-        ("wait", "", "3s"),
+        ("wait", "", "3 s"),
         ("set", "motor 2", "direction right"),
         ("set", "motor 2", "500000 steps/s"),
-        ("wait", "", "3s"),
+        ("wait", "", "3 s"),
         ("set", "motor 2", "direction left"),
         ("set", "motor 2", "acceleration 100%/s"),
         ("set", "motor 2", "500000 steps/s"),
-        ("wait", "", "3s"),
+        ("wait", "", "3 s"),
         ("set", "motor 2", "direction right"),
         ("set", "motor 2", "500000 steps/s"),
-        ("wait", "", "3s"),
+        ("wait", "", "3 s"),
     ]
 
 
@@ -347,7 +345,7 @@ def test_macro_call_expansion():
         """
         MACRO pulse:
           SET pump-main $1 l/min
-          WAIT $2
+          SET WAIT '$2'
           SET pump-main 0
 
         GOAL ramp:

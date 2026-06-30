@@ -6,6 +6,6 @@ GOAL:
   SET NAME [Verify ITER increments]
     # Print ITER
 REPEAT 3:
-  WAIT 100 ms
+  SET WAIT '100 ms'
         # ITER is automatically injected by loop handler
 REPEAT STOP

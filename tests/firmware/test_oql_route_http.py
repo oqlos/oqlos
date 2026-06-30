@@ -56,6 +56,23 @@ def test_execute_dispatches_to_controller(client):
         # timeout_ms is converted to seconds for the controller.
         assert fake.calls[0]["timeout"] == pytest.approx(3.0)
         assert fake.calls[0]["oql"] == "SET 'VALVE-NC' 'open'"
+        assert fake.calls[0]["skip_waits"] is False
+    finally:
+        set_oql_controller(None)
+
+
+def test_execute_accepts_explicit_skip_waits(client):
+    fake = _FakeController(
+        OqlResponse("c1", ok=True, result={"ok": True}, error=None, node_id="pi-hw")
+    )
+    set_oql_controller(fake)
+    try:
+        resp = client.post(
+            "/api/v1/oql/execute",
+            json={"oql": "SET WAIT '1 s'", "skip_waits": True},
+        )
+        assert resp.status_code == 200
+        assert fake.calls[0]["skip_waits"] is True
     finally:
         set_oql_controller(None)
 

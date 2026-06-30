@@ -146,9 +146,14 @@ def to_num(raw: str) -> float | int:
     return int(value) if value == int(value) else value
 
 
+def _compact_duration(token: str) -> str:
+    return re.sub(r"\s+", "", str(token or "").strip())
+
+
 def parse_duration(token: str) -> tuple[float | int, str]:
     """Parse ``3s``, ``500ms``, ``3000`` (bare number defaults to ``ms``)."""
-    match = DUR_RE.match(token)
+    compact = _compact_duration(token)
+    match = DUR_RE.match(compact)
     if not match:
         raise ValueError(f"Nieprawidłowy czas: {token!r}")
     return to_num(match.group(1)), match.group(2) or "ms"
@@ -247,6 +252,8 @@ def _split_set_value_unit(tokens: list[str]) -> tuple[float | int | str, Optiona
 def parse_SET(tokens: list[str], ln: int, raw: str) -> OqlCmd:
     _require(tokens, 2, "SET", ln, "target value [unit]")
     target = tokens[0]
+    if str(target or "").strip().upper() in {"WAIT", "DELAY", "PAUSE", "TIMEOUT"}:
+        return parse_WAIT(tokens[1:], ln, raw)
     value, unit = _split_set_value_unit(tokens[1:])
     return OqlCmd("SET", {"target": target, "value": value, "unit": unit}, ln, raw)
 
@@ -258,11 +265,12 @@ def parse_GET(tokens: list[str], ln: int, raw: str) -> OqlCmd:
 
 def parse_WAIT(tokens: list[str], ln: int, raw: str) -> OqlCmd:
     _require(tokens, 1, "WAIT", ln, "duration")
-    value, unit = parse_duration(tokens[0])
-    ms = duration_to_ms(tokens[0])
+    raw_token = " ".join(str(token) for token in tokens).strip()
+    value, unit = parse_duration(raw_token)
+    ms = duration_to_ms(raw_token)
     return OqlCmd(
         "WAIT",
-        {"ms": ms, "value": value, "unit": unit, "raw": tokens[0]},
+        {"ms": ms, "value": value, "unit": unit, "raw": raw_token},
         ln,
         raw,
     )
@@ -742,12 +750,12 @@ DEVICE: BA / PSS 7000 / Dräger
 CONFIG reset:
   SET pompa-1 0
   SET zawór-sc 0
-  WAIT 500ms
+  SET WAIT '500 ms'
 
 GOAL:
   SET NAME [test-ciśnienia]
   SET pompa-1 5.0 l/min
-  WAIT 3s
+  SET WAIT '3 s'
   GET AI02
   CHECK 6.0 <= AI02 <= 8.0 bar
   SAVE ciśnienie-sc
@@ -755,7 +763,7 @@ GOAL:
 GOAL:
   SET NAME [test z spacjami]
   SET [pompa głównego obiegu] 5.0 l/min
-  WAIT 1s
+  SET WAIT '1 s'
 """
     target = sys.argv[1] if len(sys.argv) > 1 else None
     source = open(target, encoding="utf-8").read() if target else SAMPLE

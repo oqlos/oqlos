@@ -102,7 +102,7 @@ class OqlRequest:
     mode: str = "execute"
     sensors: dict[str, float] | None = None
     args: dict[str, Any] | None = None
-    skip_waits: bool = True
+    skip_waits: bool = False
     timeout_ms: int = 15000
     source: str = ""
 
@@ -122,7 +122,7 @@ class OqlRequest:
             mode=str(data.get("mode", "execute")),
             sensors=data.get("sensors") or None,
             args=data.get("args") or None,
-            skip_waits=bool(data.get("skip_waits", True)),
+            skip_waits=bool(data.get("skip_waits", False)),
             timeout_ms=int(data.get("timeout_ms", 15000)),
             source=str(data.get("source", "")),
         )
@@ -307,7 +307,7 @@ class OqlMqttController(_PahoAsyncClient):
         mode: str = "execute",
         sensors: dict[str, float] | None = None,
         args: dict[str, Any] | None = None,
-        skip_waits: bool = True,
+        skip_waits: bool = False,
         timeout: float | None = None,
         source: str = "controller",
     ) -> OqlResponse:

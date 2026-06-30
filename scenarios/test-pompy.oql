@@ -7,7 +7,7 @@ MANUFACTURER: Dräger
 FUNC:
   SET NAME 'Pompuj'
   SET 'pompa-1' '$1'
-  WAIT $2
+  SET WAIT '$2'
 
 GOAL:
   SET NAME 'test przepływu'

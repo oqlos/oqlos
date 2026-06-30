@@ -26,7 +26,7 @@ GOAL: Demo
     def test_parses_wait_step_from_builder_serialization(self):
         dsl = """SCENARIO: Wait handling
 GOAL: Demo
-  SET 'wait' '1.5 s'
+  SET WAIT '1.5 s'
 """
 
         goal = parse_dsl_to_goal(dsl, 'parser-wait')
@@ -98,7 +98,7 @@ GOAL: Demo
         dsl = """SCENARIO: Function expansion
 FUNC: helper
   TASK: [Otwórz] [zawór 14]
-  SET 'wait' '1 s'
+  SET WAIT '1 s'
 GOAL: Demo
   FUNC 'helper'
   TASK: [Zamknij] [zawór 13]
@@ -119,7 +119,7 @@ GOAL: Demo
 GOAL: Demo
   SET 'zawor 1' 'ON'
   SET 'POMPX' '1l'
-  SET 'WAIT' '1s'
+  SET WAIT '1 s'
 """
 
         goal, invalid_lines = parse_dsl_to_goal_with_issues(dsl, 'parser-invalid-pompx')

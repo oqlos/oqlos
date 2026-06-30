@@ -29,7 +29,10 @@ RE_TASK_BRACKET = re.compile(r'^\s*TASK\s*:\s*(.+)$', re.IGNORECASE)
 RE_SAVE = re.compile(r"^\s*SAVE\s+['\"](.+?)['\"](?:\s+['\"](.+?)['\"])?\s*$", re.IGNORECASE)
 RE_SAVE_BRACKET = re.compile(r"^\s*SAVE\s+\[([^\]]+)\](?:\s+\[([^\]]+)\])?\s*$", re.IGNORECASE)
 RE_SAVE_CHECK = re.compile(r"^\s*✓SAVE\s+(.+?)\s*$", re.IGNORECASE)
-RE_WAIT = re.compile(r"^\s*WAIT\s+['\"]?([\d.]+)\s*(?:ms|s)?['\"]?\s*$", re.IGNORECASE)
+RE_WAIT = re.compile(
+    r"^\s*(?:WAIT|SET\s+WAIT)\s+['\"]?(.+?)['\"]?\s*$",
+    re.IGNORECASE,
+)
 RE_SET = re.compile(r"^\s*SET\s+['\"](.+?)['\"]\s+['\"](.+?)['\"]\s*$", re.IGNORECASE)
 RE_SET_BRACKET = re.compile(r"^\s*SET\s*\[([^\]]+)\]\s*=\s*\[([^\]]+)\]\s*$", re.IGNORECASE)
 RE_MIN_MAX = re.compile(r"^\s*(MIN|MAX)\s+['\"](.+?)['\"]\s+['\"](.+?)['\"]\s*$", re.IGNORECASE)

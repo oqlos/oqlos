@@ -98,7 +98,7 @@ PY
 GOAL: Ciśnienie otwarcia zaworu wydechowego: 4.2 – 6.0 mbar
   SET 'Pump' 'set'
   SET 'Valve' 'NC'
-  WAIT '1000 ms'
+  SET WAIT '1000 ms'
   MIN 'AI01' '4.2 mbar'
   SAVE 'AI01.min'
 ```
@@ -111,7 +111,7 @@ GOAL:
   SET NAME 'Ciśnienie otwarcia zaworu wydechowego: 4.2 – 6.0 mbar'
   SET 'Pump' 'set'
   SET 'Valve' 'NC'
-  WAIT 1000ms
+  SET WAIT '1000 ms'
   MIN 'AI01' '4.2 mbar'
   SAVE 'AI01.min'
 ```
@@ -150,10 +150,10 @@ LLM powinien produkować:
 GOAL: Pomiar warunków środowiskowych
   TASK: [Włącz] [czujnik temperatury]
   TASK: [Włącz] [czujnik wilgotności]
-  WAIT [3 s]
+  SET WAIT '3 s'
   SAMPLE [temperatura] [START] [500 ms]
   SAMPLE [wilgotność] [START] [500 ms]
-  WAIT [30 s]
+  SET WAIT '30 s'
   SAMPLE [temperatura] [STOP]
   SAMPLE [wilgotność] [STOP]
   CALC [temp_avg] = [AVG] [temperatura]

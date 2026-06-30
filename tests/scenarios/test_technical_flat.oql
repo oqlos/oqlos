@@ -31,7 +31,7 @@ GOAL:
   SET 'PUMP' '0 l/min'
   SET 'czas obserwacji' '5 s'
   SET 'timer' '0 s'
-  WAIT 1.0 s
+  SET WAIT '1.0 s'
 
 GOAL:
   SET NAME 'Test nadciśnienia statycznego'
