@@ -1,5 +1,5 @@
 # code2llm call graph | /home/tom/github/oqlos/oqlos
-# generated in 0.23s
+# generated in 0.22s
 # nodes: 427 | edges: 500 | modules: 37
 # CC̄=4.1
 
@@ -30,20 +30,20 @@ HUBS[20]:
     CC=2  in:16  out:8  total:24
   frontend.src.pages.HardwareRestart.log
     CC=1  in:21  out:3  total:24
+  oqlos.core._line_parsers._parse_if_condition
+    CC=9  in:1  out:22  total:23
   oqlos.core._action_motor2._motor2_build_plan
     CC=12  in:1  out:22  total:23
   oqlos.core._action_motor2._try_exec_motor2_set
     CC=13  in:1  out:22  total:23
-  oqlos.core._line_parsers._parse_if_condition
-    CC=9  in:1  out:22  total:23
   oqlos.core._line_parsers._parse_set_line
     CC=12  in:1  out:21  total:22
-  frontend.src.utils.useSelectionCollapsePanel.RAIL_HOVER_CLOSE_MS
-    CC=33  in:0  out:21  total:21
-  frontend.src.utils.useSelectionCollapsePanel.RAIL_HOVER_OPEN_MS
-    CC=33  in:0  out:21  total:21
   oqlos.core._cql_tree_builder._parse_goal_line
     CC=12  in:1  out:20  total:21
+  frontend.src.utils.useSelectionCollapsePanel.RAIL_HOVER_OPEN_MS
+    CC=33  in:0  out:21  total:21
+  frontend.src.utils.useSelectionCollapsePanel.useSelectionCollapsePanel
+    CC=33  in:0  out:21  total:21
 
 MODULES:
   examples.hardware.doctor-workflow  [1 funcs]

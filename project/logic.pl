@@ -107,7 +107,7 @@ project_file('oqlos/hardware/drivers/mqtt.py', 120, 'python').
 project_file('oqlos/hardware/drivers/spi.py', 93, 'python').
 project_file('oqlos/hardware/firmware_adapter.py', 482, 'python').
 project_file('oqlos/hardware/gateway.py', 417, 'python').
-project_file('oqlos/hardware/hui_actions.py', 248, 'python').
+project_file('oqlos/hardware/hui_actions.py', 252, 'python').
 project_file('oqlos/hardware/identify_enrichment.py', 19, 'python').
 project_file('oqlos/hardware/modbus_identify.py', 132, 'python').
 project_file('oqlos/hardware/peripheral_mapping.py', 139, 'python').
@@ -154,10 +154,10 @@ project_file('oqlos/shared/logs_query.py', 146, 'python').
 project_file('oqlos/shared/release_version.py', 126, 'python').
 project_file('oqlos/shared/version_endpoint.py', 67, 'python').
 project_file('oqlos/tools/__init__.py', 1, 'python').
-project_file('oqlos/tools/cql_cli/__init__.py', 61, 'python').
-project_file('oqlos/tools/cql_cli/commands.py', 187, 'python').
+project_file('oqlos/tools/cql_cli/__init__.py', 67, 'python').
+project_file('oqlos/tools/cql_cli/commands.py', 193, 'python').
 project_file('oqlos/tools/cql_cli/formatting.py', 64, 'python').
-project_file('oqlos/tools/cql_cli/main.py', 413, 'python').
+project_file('oqlos/tools/cql_cli/main.py', 416, 'python').
 project_file('oqlos/tools/cql_cli/preflight.py', 330, 'python').
 project_file('oqlos/tools/cql_cli/utils.py', 151, 'python').
 project_file('oqlos/tools/hardware_diagnose/__init__.py', 74, 'python').
@@ -209,7 +209,7 @@ project_file('tests/firmware/test_hardware_identify.py', 195, 'python').
 project_file('tests/firmware/test_hardware_modbus_wizard.py', 326, 'python').
 project_file('tests/firmware/test_hardware_stack_snapshot.py', 46, 'python').
 project_file('tests/firmware/test_hardware_v3_compat.py', 97, 'python').
-project_file('tests/firmware/test_hui_actions.py', 91, 'python').
+project_file('tests/firmware/test_hui_actions.py', 93, 'python').
 project_file('tests/firmware/test_hui_scenario.py', 12, 'python').
 project_file('tests/firmware/test_lung_integration.py', 282, 'python').
 project_file('tests/firmware/test_lung_plugin_reciprocate.py', 76, 'python').
@@ -238,7 +238,7 @@ project_file('tests/firmware/test_scanner_probe.py', 68, 'python').
 project_file('tests/firmware/test_tokenizer_extended.py', 194, 'python').
 project_file('tests/firmware/test_usb_diagnostics.py', 63, 'python').
 project_file('tests/test_core.py', 854, 'python').
-project_file('tests/test_cql_cli.py', 406, 'python').
+project_file('tests/test_cql_cli.py', 417, 'python').
 project_file('tests/test_cql_inline_regressions.py', 74, 'python').
 project_file('tests/test_cql_scenarios.py', 88, 'python').
 project_file('tests/test_dsl_schema.py', 20, 'python').
@@ -1019,19 +1019,20 @@ python_function('oqlos/shared/version_endpoint.py', 'build_version_payload', 2, 
 python_function('oqlos/shared/version_endpoint.py', 'create_version_router', 0, 2, 4).
 python_function('oqlos/tools/cql_cli/__init__.py', '_sync_compat_symbols', 0, 1, 0).
 python_function('oqlos/tools/cql_cli/__init__.py', 'main', 0, 1, 2).
+python_function('oqlos/tools/cql_cli/commands.py', 'default_firmware_url', 0, 3, 2).
 python_function('oqlos/tools/cql_cli/commands.py', 'run_source', 2, 2, 3).
 python_function('oqlos/tools/cql_cli/commands.py', 'run_single_command', 1, 1, 2).
-python_function('oqlos/tools/cql_cli/commands.py', 'handle_list_command', 1, 7, 7).
+python_function('oqlos/tools/cql_cli/commands.py', 'handle_list_command', 1, 7, 8).
 python_function('oqlos/tools/cql_cli/commands.py', 'execute_command_with_cleanup', 4, 8, 6).
 python_function('oqlos/tools/cql_cli/commands.py', '_run_continuous_mode', 2, 4, 13).
 python_function('oqlos/tools/cql_cli/formatting.py', '_quote_oql', 1, 2, 3).
 python_function('oqlos/tools/cql_cli/formatting.py', 'canonicalize_oql_text', 1, 3, 4).
 python_function('oqlos/tools/cql_cli/formatting.py', 'canonicalize_oql_line', 1, 14, 6).
-python_function('oqlos/tools/cql_cli/main.py', 'create_file_parser', 0, 1, 2).
+python_function('oqlos/tools/cql_cli/main.py', 'create_file_parser', 0, 1, 3).
 python_function('oqlos/tools/cql_cli/main.py', 'create_run_parser', 0, 1, 1).
-python_function('oqlos/tools/cql_cli/main.py', 'create_hardware_parser', 1, 2, 2).
+python_function('oqlos/tools/cql_cli/main.py', 'create_hardware_parser', 1, 2, 3).
 python_function('oqlos/tools/cql_cli/main.py', 'create_format_parser', 0, 1, 2).
-python_function('oqlos/tools/cql_cli/main.py', 'create_cmd_parser', 0, 1, 2).
+python_function('oqlos/tools/cql_cli/main.py', 'create_cmd_parser', 0, 1, 3).
 python_function('oqlos/tools/cql_cli/main.py', 'run_file_mode', 1, 6, 14).
 python_function('oqlos/tools/cql_cli/main.py', '_create_interpreter', 2, 1, 1).
 python_function('oqlos/tools/cql_cli/main.py', '_run_interpreter_target', 2, 2, 4).
@@ -1379,7 +1380,7 @@ python_function('tests/firmware/test_hardware_v3_compat.py', 'test_hardware_v3_c
 python_function('tests/firmware/test_hardware_v3_compat.py', 'test_hardware_ui_aliases_and_status_page_are_served', 0, 8, 2).
 python_function('tests/firmware/test_hui_actions.py', 'run', 1, 1, 1).
 python_function('tests/firmware/test_hui_actions.py', 'test_hui_hold_profile_runs_inside_oqlos', 1, 3, 4).
-python_function('tests/firmware/test_hui_actions.py', 'test_hui_artificial_lung_uses_tic249_plugin_recipe', 0, 9, 4).
+python_function('tests/firmware/test_hui_actions.py', 'test_hui_artificial_lung_uses_tic249_plugin_recipe', 0, 11, 4).
 python_function('tests/firmware/test_hui_actions.py', 'test_hui_shutdown_turns_off_pump_and_all_known_valves', 0, 7, 4).
 python_function('tests/firmware/test_hui_scenario.py', 'test_register_hui_test_scenario_adds_ts_c20_once', 0, 3, 2).
 python_function('tests/firmware/test_lung_plugin_reciprocate.py', '_plugin_with_client', 1, 1, 2).
@@ -1482,6 +1483,7 @@ python_function('tests/firmware/test_usb_diagnostics.py', 'test_manage_pi_diagno
 python_function('tests/firmware/test_usb_diagnostics.py', 'test_manage_usb_reset_without_id_fails_cleanly', 0, 2, 1).
 python_function('tests/firmware/test_usb_diagnostics.py', 'test_usb_verbs_listed', 0, 2, 2).
 python_function('tests/test_cql_cli.py', 'test_cmd_executes_single_command', 1, 8, 7).
+python_function('tests/test_cql_cli.py', 'test_cmd_parser_uses_oqlos_api_url_env_by_default', 1, 2, 4).
 python_function('tests/test_cql_cli.py', 'test_cmd_execute_aborts_when_hardware_is_unavailable', 2, 3, 6).
 python_function('tests/test_cql_cli.py', 'test_file_mode_still_executes_scenario', 2, 3, 7).
 python_function('tests/test_cql_cli.py', 'test_run_subcommand_executes_scenario_file', 2, 3, 7).

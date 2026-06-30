@@ -1,12 +1,12 @@
-# redup/duplication | 75 groups | 154f 31360L | 2026-06-30
+# redup/duplication | 75 groups | 154f 31375L | 2026-06-30
 
 SUMMARY:
   files_scanned: 154
-  total_lines:   31360
+  total_lines:   31375
   dup_groups:    75
   dup_fragments: 167
   saved_lines:   543
-  scan_ms:       109176
+  scan_ms:       126381
 
 HOTSPOTS[7] (files with most duplication):
   oqlos/core/_cql_tokenizer.py  dup=92L  groups=7  frags=16  (0.3%)

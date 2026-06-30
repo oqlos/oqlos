@@ -1,4 +1,4 @@
-# oqlos | 2065 func | 163f | 54159L | python | 2026-06-30
+# oqlos | 2066 func | 163f | 54216L | python | 2026-06-30
 # generated in 0.00s
 
 HEALTH:
@@ -22,7 +22,7 @@ MODULES[239] (top by size):
   M[frontend/src/pages/mapEditorDefaultMap.js] 1763L C:0 F:3 CC↑1 D:0 (javascript)
   M[docs/README.md] 1754L C:0 F:0 CC↑0 D:0 (md)
   M[frontend/src/pages/MapEditor.jsx] 1490L C:0 F:109 CC↑24 D:6 (javascript)
-  M[redeploy/122/migration.md] 1112L C:0 F:0 CC↑0 D:0 (md)
+  M[redeploy/122/migration.md] 1154L C:0 F:0 CC↑0 D:0 (md)
   M[openapi.yaml] 1035L C:0 F:0 CC↑0 D:0 (yaml)
   M[openapi_spec.yaml] 1035L C:0 F:0 CC↑0 D:0 (yaml)
   M[oqlos/tools/hardware_diagnose/doctor.py] 1003L C:0 F:41 CC↑13 D:2 (python)
@@ -49,4 +49,4 @@ REFACTOR[15]:
   [5] H/L Split summarizeFuncToHardware (CC=47)
 
 EVOLUTION:
-  2026-06-30 CC̄=4.1 crit=192 54159L // Automated analysis
+  2026-06-30 CC̄=4.1 crit=192 54216L // Automated analysis

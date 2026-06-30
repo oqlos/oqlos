@@ -1,6 +1,6 @@
-# code2llm | 239f 54159L | python:148,javascript:35,md:16,yaml:13,shell:9,json:6,yml:4,typescript:3,conf:2,toml:1 | 2026-06-30
+# code2llm | 239f 54216L | python:148,javascript:35,md:16,yaml:13,shell:9,json:6,yml:4,typescript:3,conf:2,toml:1 | 2026-06-30
 # generated in 0.12s
-# CC̅=4.1 | critical:26/2065 | dups:0 | cycles:0
+# CC̅=4.1 | critical:26/2066 | dups:0 | cycles:0
 
 HEALTH[20]:
   🔴 GOD   oqlos/api/hardware_v3.py = 606L, 9 classes, 44m, max CC=14
@@ -209,7 +209,7 @@ LAYERS:
   │ proxy                      460L  1C   29m  CC=13     ←0
   │ generators                 452L  0C   20m  CC=14     ←0
   │ gateway                    416L  5C   25m  CC=7      ←0
-  │ main                       412L  1C   18m  CC=9      ←2
+  │ main                       415L  1C   18m  CC=9      ←2
   │ _cql_tokenizer             406L  0C   27m  CC=5      ←0
   │ modbus_adc                 398L  1C   17m  CC=12     ←0
   │ executor                   383L  1C   21m  CC=14     ←0
@@ -239,7 +239,7 @@ LAYERS:
   │ motor2_runtime             209L  2C   12m  CC=12     ←1
   │ modbus_probe               205L  0C   16m  CC=5      ←1
   │ rtc_probe                  197L  0C    7m  CC=11     ←1
-  │ commands                   186L  0C    5m  CC=8      ←2
+  │ commands                   192L  0C    6m  CC=8      ←2
   │ usb_diagnostics            185L  0C    5m  CC=13     ←0
   │ __main__                   184L  0C   11m  CC=6      ←0
   │ parser                     183L  0C    5m  CC=13     ←2
@@ -296,13 +296,13 @@ LAYERS:
   │ constants                   69L  0C    0m  CC=0.0    ←0
   │ control_proxy               68L  1C    1m  CC=1      ←0
   │ version_endpoint            66L  0C    2m  CC=3      ←0
+  │ __init__                    66L  0C    2m  CC=1      ←0
   │ tic249_arg_contract         65L  0C    2m  CC=8      ←2
   │ adc                         64L  0C    3m  CC=10     ←2
   │ report                      63L  0C    2m  CC=12     ←3
   │ formatting                  63L  0C    3m  CC=14     ←2
   │ execution_ctrl              62L  0C    3m  CC=1      ←0
   │ _shared                     61L  0C    4m  CC=2      ←3
-  │ __init__                    60L  0C    2m  CC=1      ←0
   │ protocol                    60L  2C    6m  CC=1      ←0
   │ benchmark                   55L  0C    1m  CC=6      ←2
   │ platform                    50L  0C    3m  CC=6      ←0
@@ -366,7 +366,7 @@ LAYERS:
   │ cql-spec.md                 78L  0C    0m  CC=0.0    ←0
   │
   redeploy/                       CC̄=0.0    ←in:0  →out:0
-  │ !! migration.md              1112L  0C    0m  CC=0.0    ←0
+  │ !! migration.md              1154L  0C    0m  CC=0.0    ←0
   │ !! migration.md               639L  0C    0m  CC=0.0    ←0
   │ RUNBOOK.md                  87L  0C    0m  CC=0.0    ←0
   │ RUNBOOK.md                  87L  0C    0m  CC=0.0    ←0
@@ -409,20 +409,20 @@ COUPLING:
              oqlos.reporters                                                                                   2                                                                                                                                                                                                                                                          ──                            
                  oqlos.utils                                                                                                                                                                      ←2                                                                                                                                                                                                  ──
   CYCLES: none
-  HUB: oqlos/ (fan-in=8)
   HUB: frontend.src/ (fan-in=206)
   HUB: examples.hardware/ (fan-in=225)
-  HUB: oqlos.tools/ (fan-in=6)
-  HUB: oqlos.shared/ (fan-in=9)
   HUB: oqlos.hardware/ (fan-in=28)
   HUB: oqlos.core/ (fan-in=25)
-  SMELL: oqlos.api/ fan-out=57 → split needed
-  SMELL: oqlos.tools/ fan-out=229 → split needed
+  HUB: oqlos.shared/ (fan-in=9)
+  HUB: oqlos/ (fan-in=8)
+  HUB: oqlos.tools/ (fan-in=6)
   SMELL: scripts/ fan-out=72 → split needed
-  SMELL: oqlos.shared/ fan-out=13 → split needed
+  SMELL: oqlos.api/ fan-out=57 → split needed
   SMELL: oqlos.hardware/ fan-out=84 → split needed
   SMELL: setup_hardware_and_run_oql/ fan-out=27 → split needed
   SMELL: oqlos.core/ fan-out=23 → split needed
+  SMELL: oqlos.shared/ fan-out=13 → split needed
+  SMELL: oqlos.tools/ fan-out=229 → split needed
 
 EXTERNAL:
   validation: run `vallm batch .` → validation.toon

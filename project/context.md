@@ -7,7 +7,7 @@
 - **Primary Language**: python
 - **Languages**: python: 148, javascript: 35, md: 16, yaml: 13, shell: 9
 - **Analysis Mode**: static
-- **Total Functions**: 2065
+- **Total Functions**: 2066
 - **Total Classes**: 123
 - **Modules**: 239
 - **Entry Points**: 1253
@@ -625,6 +625,7 @@ Functions exposed as public API (no underscore prefix):
 - `oqlos.shared.logger.configure_oqlos_logging` - 23 calls
 - `oqlos.api.hardware.read_modbus_adc_raw` - 23 calls
 - `scripts.scenarios_export.main` - 23 calls
+- `oqlos.tools.cql_cli.commands.handle_list_command` - 22 calls
 - `frontend.src.utils.useSelectionCollapsePanel.RAIL_HOVER_OPEN_MS` - 21 calls
 - `frontend.src.utils.useSelectionCollapsePanel.RAIL_HOVER_CLOSE_MS` - 21 calls
 - `frontend.src.utils.useSelectionCollapsePanel.useSelectionCollapsePanel` - 21 calls
@@ -633,7 +634,6 @@ Functions exposed as public API (no underscore prefix):
 - `oqlos.tools.hardware_diagnose.doctor.format_doctor` - 21 calls
 - `oqlos.tools.hardware_diagnose.__main__.main` - 21 calls
 - `oqlos.tools.xml_import.generators.generate_dsl` - 21 calls
-- `oqlos.tools.cql_cli.commands.handle_list_command` - 21 calls
 - `oqlos.api.oql_mqtt.oql_ws` - 21 calls
 - `scripts.migrate_to_v4.check_database` - 21 calls
 
