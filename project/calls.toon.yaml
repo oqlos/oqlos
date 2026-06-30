@@ -1,49 +1,49 @@
 # code2llm call graph | /home/tom/github/oqlos/oqlos
-# generated in 0.24s
-# nodes: 401 | edges: 500 | modules: 47
+# generated in 0.20s
+# nodes: 406 | edges: 500 | modules: 44
 # CC̄=4.1
 
 HUBS[20]:
   examples.hardware.doctor-workflow.print
-    CC=0  in:226  out:0  total:226
+    CC=0  in:225  out:0  total:225
   oqlos.tools.cql_cli.formatting.canonicalize_oql_line
     CC=14  in:1  out:31  total:32
   oqlos.core._oql_adapter.oql_doc_to_cql
     CC=12  in:2  out:30  total:32
   oqlos.core.motor2_runtime.normalize_motor2_runtime_config
     CC=12  in:1  out:29  total:30
-  oqlos.core.executor._safe_resolve
-    CC=14  in:7  out:21  total:28
-  oqlos.tools.hardware_diagnose.modbus_probe.probe_options_from_args
-    CC=2  in:1  out:27  total:28
+  oqlos.hardware.diagnosis.build_diagnosis_report
+    CC=13  in:2  out:28  total:30
   oqlos.tools.hardware_diagnose.doctor.format_detection
     CC=10  in:3  out:25  total:28
-  oqlos.hardware.rtc_probe.build_rtc_peripheral_status
-    CC=11  in:0  out:27  total:27
+  oqlos.tools.hardware_diagnose.modbus_probe.probe_options_from_args
+    CC=2  in:1  out:27  total:28
+  oqlos.core.executor._safe_resolve
+    CC=14  in:7  out:21  total:28
   setup_hardware_and_run_oql.run_oql_scenario
     CC=8  in:1  out:24  total:25
-  oqlos.core.oql_parser.parse_oql
-    CC=14  in:3  out:21  total:24
   oqlos.core.parser.parse_dsl_to_goal_with_issues
     CC=13  in:3  out:21  total:24
+  oqlos.core.oql_parser.parse_oql
+    CC=14  in:3  out:21  total:24
   oqlos.core._line_parsers._parse_if_condition
     CC=9  in:1  out:22  total:23
+  oqlos.core._interpreter_actions._motor2_build_plan
+    CC=12  in:1  out:22  total:23
   oqlos.core._interpreter_actions._try_exec_motor2_set
     CC=13  in:1  out:22  total:23
-  oqlos.core._interpreter_actions._motor2_build_plan
+  oqlos.tools.hardware_diagnose.doctor._analyze_modbus_adc_config
     CC=12  in:1  out:22  total:23
   oqlos.tools.hardware_diagnose.doctor.format_doctor
     CC=6  in:2  out:21  total:23
-  oqlos.tools.hardware_diagnose.doctor._analyze_modbus_adc_config
-    CC=12  in:1  out:22  total:23
-  oqlos.tools.cql_cli.commands.handle_list_command
-    CC=7  in:1  out:21  total:22
+  oqlos.tools.hardware_diagnose.shell._dispatch_command
+    CC=6  in:1  out:21  total:22
   oqlos.tools.xml_import.parser._parse_operation_params
     CC=9  in:1  out:21  total:22
   oqlos.tools.hardware_diagnose.health.cmd_diagnose
     CC=6  in:2  out:20  total:22
-  oqlos.tools.hardware_diagnose.shell._dispatch_command
-    CC=6  in:1  out:21  total:22
+  oqlos.core._line_parsers._parse_set_line
+    CC=12  in:1  out:21  total:22
 
 MODULES:
   examples.hardware.doctor-workflow  [1 funcs]
@@ -195,31 +195,22 @@ MODULES:
     safe_eval  CC=3  out:4
   oqlos.hardware.config_paths  [1 funcs]
     resolve_oqlos_config_path  CC=6  out:13
-  oqlos.hardware.config_schema  [2 funcs]
-    build_dynamic_schema_models  CC=2  out:4
-    get_hardware_config  CC=2  out:4
+  oqlos.hardware.diagnosis  [21 funcs]
+    _action_dict  CC=1  out:0
+    _adapter_index  CC=5  out:5
+    _add_modbus_device_actions  CC=5  out:5
+    _build_report_global_actions  CC=4  out:6
+    _build_stack_snapshot  CC=2  out:1
+    _diagnose_barcode_scanner  CC=9  out:9
+    _diagnose_plugin_devices  CC=11  out:14
+    _health_map  CC=4  out:5
+    _host_actions_from_report  CC=7  out:13
+    _infer_status  CC=7  out:5
   oqlos.hardware.discovery  [2 funcs]
     probe_waveshare_modbus  CC=5  out:2
     probe_waveshare_modbus_adc  CC=5  out:2
-  oqlos.hardware.gateway  [1 funcs]
-    __init__  CC=6  out:13
-  oqlos.hardware.hui_actions  [6 funcs]
-    _operation  CC=1  out:0
-    _set_pump  CC=1  out:3
-    _set_pump_best_effort  CC=2  out:3
-    _set_valve  CC=1  out:3
-    _success  CC=5  out:7
-    shutdown_all_hui_hardware  CC=4  out:8
-  oqlos.hardware.plugins.base  [1 funcs]
-    dynamic_plugin_schema_models  CC=2  out:7
-  oqlos.hardware.rtc_probe  [7 funcs]
-    _pirtc_request_sync  CC=8  out:10
-    build_rtc_adapter_entry  CC=8  out:13
-    build_rtc_peripheral_status  CC=11  out:27
-    enrich_rtc_adapter  CC=8  out:11
-    get_pirtc_base_url  CC=1  out:2
-    is_rtc_hardware_enabled  CC=3  out:3
-    run_rtc_command  CC=4  out:4
+  oqlos.hardware.stack_snapshot  [1 funcs]
+    build_hardware_stack_snapshot  CC=3  out:11
   oqlos.tools.cql_cli  [2 funcs]
     _sync_compat_symbols  CC=1  out:0
     main  CC=1  out:2

@@ -1,42 +1,30 @@
-# code2llm/evolution | 1344 func | 116f | 2026-06-30
-# generated in 0.01s
+# code2llm/evolution | 1327 func | 116f | 2026-06-30
+# generated in 0.00s
 
-NEXT[6] (ranked by impact):
+NEXT[3] (ranked by impact):
   [1] !! SPLIT           oqlos/api/hardware.py
-      WHY: 2240L, 0 classes, max CC=15
-      EFFORT: ~4h  IMPACT: 33600
+      WHY: 2252L, 0 classes, max CC=14
+      EFFORT: ~4h  IMPACT: 31528
 
   [2] !! SPLIT           oqlos/core/_interpreter_actions.py
       WHY: 1255L, 0 classes, max CC=14
       EFFORT: ~4h  IMPACT: 17570
 
-  [3] !  SPLIT-FUNC      enrich_adapter_entry  CC=18  fan=16
-      WHY: CC=18 exceeds 15
-      EFFORT: ~1h  IMPACT: 288
-
-  [4] !  SPLIT-FUNC      _build_waveshare_diagnose_report  CC=15  fan=17
-      WHY: CC=15 exceeds 15
-      EFFORT: ~1h  IMPACT: 255
-
-  [5] !  SPLIT-FUNC      run_extended_motor_tic249_command  CC=17  fan=11
-      WHY: CC=17 exceeds 15
-      EFFORT: ~1h  IMPACT: 187
-
-  [6] !! SPLIT           docs/README.md
+  [3] !! SPLIT           docs/README.md
       WHY: 1089L, 0 classes, max CC=0
       EFFORT: ~4h  IMPACT: 0
 
 
 RISKS[3]:
-  ⚠ Splitting oqlos/api/hardware.py may break 87 import paths
+  ⚠ Splitting oqlos/api/hardware.py may break 89 import paths
   ⚠ Splitting oqlos/core/_interpreter_actions.py may break 85 import paths
   ⚠ Splitting docs/README.md may break 0 import paths
 
 METRICS-TARGET:
   CC̄:          4.2 → ≤2.9
-  max-CC:      18 → ≤9
+  max-CC:      14 → ≤7
   god-modules: 17 → 0
-  high-CC(≥15): 3 → ≤1
+  high-CC(≥15): 0 → ≤0
   hub-types:   0 → ≤0
 
 PATTERNS (language parser shared logic):
@@ -64,4 +52,4 @@ PATTERNS (language parser shared logic):
     - Standardized FunctionInfo/ClassInfo models
 
 HISTORY:
-  prev CC̄=4.2 → now CC̄=4.2
+  prev CC̄=4.1 → now CC̄=4.2

@@ -1,23 +1,23 @@
-# oqlos | 1456 func | 126f | 41015L | python | 2026-06-30
+# oqlos | 1463 func | 126f | 41066L | python | 2026-06-30
 # generated in 0.00s
 
 HEALTH:
-  CC̄=4.1  critical=136 (limit:10)  dup=3  cycles=0
+  CC̄=4.1  critical=135 (limit:10)  dup=3  cycles=0
 
 ALERTS[20]:
-  !!! high_fan_out     _resolve = 22 (limit:10)
   !!! high_fan_out     build_diagnosis_report = 22 (limit:10)
-  !!! high_fan_out     main = 22 (limit:10)
+  !!! high_fan_out     _resolve = 22 (limit:10)
   !!! high_fan_out     FirmwareAdapter.set_peripheral = 21 (limit:10)
   !!! high_fan_out     pi_system_diagnostics = 20 (limit:10)
-  !!  cc_exceeded      main = 20 (limit:15)
+  !!! high_fan_out     main = 20 (limit:10)
   !!  high_fan_out     parse_oql = 19 (limit:10)
   !!  high_fan_out     oql_doc_to_cql = 19 (limit:10)
   !!  high_fan_out     _detect_runtime_platform = 19 (limit:10)
   !!  high_fan_out     hardware_identify = 19 (limit:10)
+  !!  high_fan_out     main = 18 (limit:10)
 
 MODULES[190] (top by size):
-  M[oqlos/api/hardware.py] 2240L C:0 F:87 CC↑15 D:2 (python)
+  M[oqlos/api/hardware.py] 2252L C:0 F:89 CC↑14 D:2 (python)
   M[oqlos/core/_interpreter_actions.py] 1255L C:0 F:85 CC↑14 D:1 (python)
   M[docs/README.md] 1089L C:0 F:0 CC↑0 D:0 (md)
   M[openapi.yaml] 1035L C:0 F:0 CC↑0 D:0 (yaml)
@@ -26,29 +26,29 @@ MODULES[190] (top by size):
   M[oqlos/core/oql_parser.py] 762L C:3 F:43 CC↑14 D:2 (python)
   M[README.md] 711L C:0 F:0 CC↑0 D:0 (md)
   M[oqlos/core/interpreter.py] 676L C:1 F:47 CC↑11 D:0 (python)
-  M[scripts/oql_v2_to_v4_migrate_db.py] 652L C:1 F:41 CC↑20 D:1 (python)
+  M[scripts/oql_v2_to_v4_migrate_db.py] 662L C:1 F:43 CC↑14 D:1 (python)
   M[redeploy/122/migration.md] 644L C:0 F:0 CC↑0 D:0 (md)
   M[redeploy/pi-hw/migration.md] 639L C:0 F:0 CC↑0 D:0 (md)
+  M[oqlos/hardware/client/tic249_extended.py] 627L C:0 F:30 CC↑14 D:0 (python)
   M[oqlos/hardware/plugin_gateway.py] 612L C:1 F:21 CC↑14 D:0 (python)
-  M[oqlos/hardware/client/tic249_extended.py] 605L C:0 F:28 CC↑17 D:0 (python)
   M[docs/cql-examples.md] 588L C:0 F:0 CC↑0 D:0 (md)
   LANGS: python:143/md:16/yaml:13/json:5/shell:5/yml:4/conf:2/other:1/toml:1
 
 HOTSPOTS[10]:
-  ★ _resolve fan=22  // Orchestrates 22 calls
   ★ build_diagnosis_report fan=22  // Build per-device diagnosis from an identify payload (same shape as GET /identify
-  ★ main fan=22  // Orchestrates 22 calls
+  ★ _resolve fan=22  // Orchestrates 22 calls
   ★ FirmwareAdapter.set_peripheral fan=21  // Set peripheral value via firmware API.
 
 Routes pump commands to POST /api/v1/har
   ★ pi_system_diagnostics fan=20  // Raspberry Pi health snapshot: model, temp, throttling, memory, uptime, ports.
+  ★ main fan=20  // Orchestrates 20 calls
 
 REFACTOR[15]:
-  [1] H/H Split god module scripts/oql_v2_to_v4_migrate_db.py (652L, 1 classes)
-  [2] H/H Split god module oqlos/hardware/client/tic249_extended.py (605L, 0 classes)
-  [3] H/H Split god module oqlos/api/hardware.py (2240L, 0 classes)
-  [4] H/H Split god module oqlos/core/_interpreter_actions.py (1255L, 0 classes)
-  [5] H/H Split god module oqlos/core/oql_parser.py (762L, 3 classes)
+  [1] H/H Split god module oqlos/api/hardware.py (2252L, 0 classes)
+  [2] H/H Split god module oqlos/core/_interpreter_actions.py (1255L, 0 classes)
+  [3] H/H Split god module oqlos/core/oql_parser.py (762L, 3 classes)
+  [4] H/H Split god module oqlos/hardware/client/tic249_extended.py (627L, 0 classes)
+  [5] H/H Split god module oqlos/hardware/plugin_gateway.py (612L, 1 classes)
 
 EVOLUTION:
-  2026-06-30 CC̄=4.1 crit=136 41015L // Automated analysis
+  2026-06-30 CC̄=4.1 crit=135 41066L // Automated analysis

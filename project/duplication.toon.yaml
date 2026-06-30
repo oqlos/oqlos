@@ -1,12 +1,12 @@
-# redup/duplication | 67 groups | 149f 29992L | 2026-06-30
+# redup/duplication | 70 groups | 149f 30202L | 2026-06-30
 
 SUMMARY:
   files_scanned: 149
-  total_lines:   29992
-  dup_groups:    67
-  dup_fragments: 147
-  saved_lines:   486
-  scan_ms:       90316
+  total_lines:   30202
+  dup_groups:    70
+  dup_fragments: 154
+  saved_lines:   508
+  scan_ms:       110578
 
 HOTSPOTS[7] (files with most duplication):
   oqlos/core/_cql_tokenizer.py  dup=92L  groups=7  frags=16  (0.3%)
@@ -17,41 +17,41 @@ HOTSPOTS[7] (files with most duplication):
   oqlos/core/interpreter.py  dup=41L  groups=5  frags=11  (0.1%)
   oqlos/core/oql_parser.py  dup=39L  groups=4  frags=11  (0.1%)
 
-DUPLICATES[67] (ranked by impact):
+DUPLICATES[70] (ranked by impact):
   [7d4abed6d875568b]   STRU  _probe_modbus  L=19 N=2 saved=19 sim=1.00
       oqlos/tools/hardware_diagnose/doctor.py:73-91  (_probe_modbus)
       oqlos/tools/hardware_diagnose/doctor.py:94-112  (_probe_modbus_adc)
-  [F0033]   FUZZ  _handle_stop_cli  L=21 N=2 saved=21 sim=0.88
-      oqlos/hardware/plugins/motor.py:355-375  (_handle_stop_cli)
-      oqlos/hardware/plugins/motor.py:272-294  (_handle_set_speed_cli)
+  [F0035]   FUZZ  _handle_stop_cli  L=21 N=2 saved=21 sim=0.88
+      oqlos/hardware/plugins/motor.py:361-381  (_handle_stop_cli)
+      oqlos/hardware/plugins/motor.py:278-300  (_handle_set_speed_cli)
   [F0016]   FUZZ  info  L=5 N=5 saved=20 sim=0.91
       oqlos/core/base.py:156-160  (info)
       oqlos/core/base.py:162-166  (ok)
       oqlos/core/base.py:168-172  (fail)
       oqlos/core/base.py:174-178  (warn)
       oqlos/core/base.py:180-184  (error)
-  [F0032]   FUZZ  _health_status_is_ok  L=18 N=2 saved=18 sim=1.00
+  [F0034]   FUZZ  _health_status_is_ok  L=18 N=2 saved=18 sim=1.00
       oqlos/tools/hardware_diagnose/doctor.py:638-655  (_health_status_is_ok)
       oqlos/tools/cql_cli/preflight.py:187-205  (_health_status_is_ok)
-  [F0030]   FUZZ  stop_lung  L=18 N=2 saved=18 sim=0.94
+  [F0032]   FUZZ  stop_lung  L=18 N=2 saved=18 sim=0.94
       oqlos/hardware/plugin_gateway.py:505-522  (stop_lung)
       oqlos/hardware/plugin_gateway.py:524-541  (disable_lung)
-  [F0031]   FUZZ  _handle_stop_http  L=18 N=2 saved=18 sim=0.89
-      oqlos/hardware/plugins/motor.py:336-353  (_handle_stop_http)
-      oqlos/hardware/plugins/motor.py:407-425  (_handle_status_http)
-  [F0029]   FUZZ  probe_waveshare_modbus  L=16 N=2 saved=16 sim=0.90
-      oqlos/hardware/discovery.py:50-65  (probe_waveshare_modbus)
-      oqlos/hardware/discovery.py:68-85  (probe_waveshare_modbus_adc)
+  [F0033]   FUZZ  _handle_stop_http  L=18 N=2 saved=18 sim=0.89
+      oqlos/hardware/plugins/motor.py:342-359  (_handle_stop_http)
+      oqlos/hardware/plugins/motor.py:413-431  (_handle_status_http)
+  [F0031]   FUZZ  probe_waveshare_modbus  L=16 N=2 saved=16 sim=0.90
+      oqlos/hardware/discovery.py:68-83  (probe_waveshare_modbus)
+      oqlos/hardware/discovery.py:86-103  (probe_waveshare_modbus_adc)
   [c475266f1ca335a8]   STRU  _probe_modbus_rtu  L=12 N=2 saved=12 sim=1.00
       oqlos/api/hardware.py:382-393  (_probe_modbus_rtu)
       oqlos/api/hardware.py:396-407  (_probe_modbus_adc_rtu)
-  [F0028]   FUZZ  _append_nested_action  L=12 N=2 saved=12 sim=0.99
+  [F0030]   FUZZ  _append_nested_action  L=12 N=2 saved=12 sim=0.99
       oqlos/core/cql_parser.py:247-258  (_append_nested_action)
       oqlos/core/cql_parser.py:260-271  (_append_loop_action)
-  [F0026]   FUZZ  _exec_set_peripheral  L=11 N=2 saved=11 sim=0.94
+  [F0028]   FUZZ  _exec_set_peripheral  L=11 N=2 saved=11 sim=0.94
       oqlos/core/interpreter.py:319-329  (_exec_set_peripheral)
       oqlos/core/_firmware_executor.py:197-210  (exec_set_peripheral)
-  [F0027]   FUZZ  _http_sidecar_listening  L=11 N=2 saved=11 sim=0.92
+  [F0029]   FUZZ  _http_sidecar_listening  L=11 N=2 saved=11 sim=0.92
       oqlos/hardware/sidecar_control.py:98-108  (_http_sidecar_listening)
       oqlos/hardware/sidecar_control.py:111-121  (_http_sidecar_healthy)
   [072bf17442930dfb]   STRU  _try_task  L=5 N=3 saved=10 sim=1.00
@@ -73,9 +73,9 @@ DUPLICATES[67] (ranked by impact):
   [d884e769a616fa58]   STRU  _merge_object_function_map  L=10 N=2 saved=10 sim=1.00
       oqlos/dsl/schema.py:99-108  (_merge_object_function_map)
       oqlos/dsl/schema.py:111-120  (_merge_param_unit_map)
-  [F0025]   FUZZ  artificial_lung_command  L=11 N=2 saved=11 sim=0.86
-      oqlos/api/hardware.py:2135-2145  (artificial_lung_command)
-      oqlos/api/hardware.py:2155-2165  (rtc_command)
+  [F0027]   FUZZ  artificial_lung_command  L=11 N=2 saved=11 sim=0.86
+      oqlos/api/hardware.py:2210-2220  (artificial_lung_command)
+      oqlos/api/hardware.py:2230-2240  (rtc_command)
   [F0013]   FUZZ  _try_set  L=5 N=3 saved=10 sim=0.88
       oqlos/core/_cql_tokenizer.py:179-183  (_try_set)
       oqlos/core/_cql_tokenizer.py:282-286  (_try_val)
@@ -84,10 +84,17 @@ DUPLICATES[67] (ranked by impact):
       oqlos/hardware/gateway.py:92-96  (read_channel)
       oqlos/hardware/gateway.py:125-129  (_stop)
       oqlos/hardware/gateway.py:165-169  (stop)
+  [F0020]   FUZZ  _mig_goto  L=5 N=3 saved=10 sim=0.85
+      scripts/oql_v2_to_v4_migrate_db.py:377-381  (_mig_goto)
+      scripts/oql_v2_to_v4_migrate_db.py:391-395  (_mig_else_info)
+      scripts/oql_v2_to_v4_migrate_db.py:398-402  (_mig_set_name)
   [d355cbab0dee9921]   STRU  float_from_env  L=8 N=2 saved=8 sim=1.00
       oqlos/hardware/client/config.py:12-19  (float_from_env)
       oqlos/hardware/client/config.py:22-29  (int_from_env)
-  [F0023]   FUZZ  _make_args_parser  L=8 N=2 saved=8 sim=0.91
+  [F0026]   FUZZ  _mig_minmax_eq  L=8 N=2 saved=8 sim=0.92
+      scripts/oql_v2_to_v4_migrate_db.py:313-320  (_mig_minmax_eq)
+      scripts/oql_v2_to_v4_migrate_db.py:323-330  (_mig_minmax_simple)
+  [F0024]   FUZZ  _make_args_parser  L=8 N=2 saved=8 sim=0.91
       oqlos/core/_cql_tokenizer.py:97-104  (_make_args_parser)
       oqlos/core/_cql_tokenizer.py:116-123  (_make_method_parser)
   [46f8a3999370b808]   STRU  editor_page  L=7 N=2 saved=7 sim=1.00
@@ -99,7 +106,7 @@ DUPLICATES[67] (ranked by impact):
   [9467529f149d5e22]   STRU  _migrate_wait_line  L=7 N=2 saved=7 sim=1.00
       scripts/migrate_to_v4.py:115-121  (_migrate_wait_line)
       scripts/migrate_to_v4.py:139-145  (_migrate_save_line)
-  [F0024]   FUZZ  _try_arrow_action  L=8 N=2 saved=8 sim=0.86
+  [F0025]   FUZZ  _try_arrow_action  L=8 N=2 saved=8 sim=0.86
       oqlos/core/_cql_tokenizer.py:154-161  (_try_arrow_action)
       oqlos/core/_cql_tokenizer.py:331-338  (_try_func)
   [b81931e6691429a5]   EXAC  modbus_plugins_need_repair  L=6 N=2 saved=6 sim=1.00
@@ -116,21 +123,21 @@ DUPLICATES[67] (ranked by impact):
   [25c8d2950ffc3336]   STRU  _modbus_config  L=6 N=2 saved=6 sim=1.00
       oqlos/tools/hardware_diagnose/doctor.py:257-262  (_modbus_config)
       oqlos/tools/hardware_diagnose/doctor.py:265-270  (_modbus_adc_config)
-  [F0022]   FUZZ  _handle_stop_http  L=6 N=2 saved=6 sim=0.97
+  [F0023]   FUZZ  _handle_stop_http  L=6 N=2 saved=6 sim=0.97
       oqlos/hardware/plugins/lung.py:234-239  (_handle_stop_http)
       oqlos/hardware/plugins/lung.py:275-280  (_handle_status_http)
   [F0005]   FUZZ  _execute_firmware_action  L=3 N=3 saved=6 sim=0.93
       oqlos/core/interpreter.py:335-337  (_execute_firmware_action)
       oqlos/core/interpreter.py:339-341  (_execute_plugin_action)
       oqlos/core/interpreter.py:343-345  (_execute_legacy_firmware_action)
-  [F0020]   FUZZ  hui_hold_start  L=6 N=2 saved=6 sim=0.91
-      oqlos/api/hardware.py:1710-1715  (hui_hold_start)
-      oqlos/api/hardware.py:1725-1730  (hui_al_start)
+  [F0021]   FUZZ  hui_hold_start  L=6 N=2 saved=6 sim=0.91
+      oqlos/api/hardware.py:1785-1790  (hui_hold_start)
+      oqlos/api/hardware.py:1800-1805  (hui_al_start)
   [F0002]   FUZZ  _firmware  L=3 N=3 saved=6 sim=0.89
       oqlos/core/interpreter.py:94-96  (_firmware)
       oqlos/core/interpreter.py:104-106  (_firmware_url)
       oqlos/core/interpreter.py:331-333  (_get_firmware)
-  [F0021]   FUZZ  _parse_motor2_steps  L=6 N=2 saved=6 sim=0.86
+  [F0022]   FUZZ  _parse_motor2_steps  L=6 N=2 saved=6 sim=0.86
       oqlos/core/_interpreter_actions.py:890-895  (_parse_motor2_steps)
       oqlos/core/_interpreter_actions.py:774-781  (_parse_motor2_speed_steps)
   [ced4a13b5d82a294]   EXAC  _read_text_file  L=5 N=2 saved=5 sim=1.00
@@ -179,8 +186,11 @@ DUPLICATES[67] (ranked by impact):
       oqlos/hardware/transport/mqtt_oql_bridge.py:109-112  (to_json)
       oqlos/hardware/transport/mqtt_oql_bridge.py:141-144  (to_json)
   [e46400023b9f2fe9]   STRU  stop_lung  L=4 N=2 saved=4 sim=1.00
-      oqlos/api/hardware.py:2115-2118  (stop_lung)
-      oqlos/api/hardware.py:2122-2125  (disable_lung)
+      oqlos/api/hardware.py:2190-2193  (stop_lung)
+      oqlos/api/hardware.py:2197-2200  (disable_lung)
+  [8fd712f8bc1fd43b]   STRU  _mig_calc  L=4 N=2 saved=4 sim=1.00
+      scripts/oql_v2_to_v4_migrate_db.py:343-346  (_mig_calc)
+      scripts/oql_v2_to_v4_migrate_db.py:349-352  (_mig_val)
   [F0010]   FUZZ  __init__  L=4 N=2 saved=4 sim=0.91
       oqlos/hardware/plugins/modbus_adc.py:119-122  (__init__)
       oqlos/hardware/plugins/modbus.py:38-42  (__init__)
@@ -188,8 +198,8 @@ DUPLICATES[67] (ranked by impact):
       oqlos/hardware/plugins/piadc.py:103-106  (__init__)
       oqlos/hardware/plugins/lung.py:36-40  (__init__)
   [5d5dbdb19a59c8f4]   STRU  hui_shutdown  L=3 N=2 saved=3 sim=1.00
-      oqlos/api/hardware.py:1704-1706  (hui_shutdown)
-      oqlos/api/hardware.py:1734-1736  (hui_al_stop)
+      oqlos/api/hardware.py:1779-1781  (hui_shutdown)
+      oqlos/api/hardware.py:1809-1811  (hui_al_stop)
   [7e9c7774bc69259a]   STRU  _func_sum  L=3 N=2 saved=3 sim=1.00
       oqlos/core/_interpreter_actions.py:367-369  (_func_sum)
       oqlos/core/_interpreter_actions.py:408-410  (_func_add)
@@ -233,7 +243,7 @@ DUPLICATES[67] (ranked by impact):
       oqlos/hardware/plugins/registry.py:70-72  (get_plugin_class)
       oqlos/hardware/plugins/registry.py:120-122  (get_instance)
 
-REFACTOR[67] (ranked by priority):
+REFACTOR[70] (ranked by priority):
   [1] ○ extract_function   → oqlos/tools/hardware_diagnose/utils/_probe_modbus.py
       WHY: 2 occurrences of 19-line block across 1 files — saves 19 lines
       FILES: oqlos/tools/hardware_diagnose/doctor.py
@@ -291,152 +301,161 @@ REFACTOR[67] (ranked by priority):
   [19] ○ extract_function   → oqlos/hardware/utils/read_channel.py
       WHY: 3 occurrences of 5-line block across 1 files — saves 10 lines
       FILES: oqlos/hardware/gateway.py
-  [20] ○ extract_function   → oqlos/hardware/client/utils/float_from_env.py
+  [20] ○ extract_function   → scripts/utils/_mig_goto.py
+      WHY: 3 occurrences of 5-line block across 1 files — saves 10 lines
+      FILES: scripts/oql_v2_to_v4_migrate_db.py
+  [21] ○ extract_function   → oqlos/hardware/client/utils/float_from_env.py
       WHY: 2 occurrences of 8-line block across 1 files — saves 8 lines
       FILES: oqlos/hardware/client/config.py
-  [21] ○ extract_function   → oqlos/core/utils/_make_args_parser.py
+  [22] ○ extract_function   → scripts/utils/_mig_minmax_eq.py
+      WHY: 2 occurrences of 8-line block across 1 files — saves 8 lines
+      FILES: scripts/oql_v2_to_v4_migrate_db.py
+  [23] ○ extract_function   → oqlos/core/utils/_make_args_parser.py
       WHY: 2 occurrences of 8-line block across 1 files — saves 8 lines
       FILES: oqlos/core/_cql_tokenizer.py
-  [22] ○ extract_function   → oqlos/api/utils/editor_page.py
+  [24] ○ extract_function   → oqlos/api/utils/editor_page.py
       WHY: 2 occurrences of 7-line block across 1 files — saves 7 lines
       FILES: oqlos/api/main.py
-  [23] ○ extract_function   → oqlos/hardware/plugins/utils/not_connected_health.py
+  [25] ○ extract_function   → oqlos/hardware/plugins/utils/not_connected_health.py
       WHY: 2 occurrences of 7-line block across 1 files — saves 7 lines
       FILES: oqlos/hardware/plugins/_shared.py
-  [24] ○ extract_function   → scripts/utils/_migrate_wait_line.py
+  [26] ○ extract_function   → scripts/utils/_migrate_wait_line.py
       WHY: 2 occurrences of 7-line block across 1 files — saves 7 lines
       FILES: scripts/migrate_to_v4.py
-  [25] ○ extract_function   → oqlos/core/utils/_try_arrow_action.py
+  [27] ○ extract_function   → oqlos/core/utils/_try_arrow_action.py
       WHY: 2 occurrences of 8-line block across 1 files — saves 8 lines
       FILES: oqlos/core/_cql_tokenizer.py
-  [26] ○ extract_function   → oqlos/hardware/utils/modbus_plugins_need_repair.py
+  [28] ○ extract_function   → oqlos/hardware/utils/modbus_plugins_need_repair.py
       WHY: 2 occurrences of 6-line block across 2 files — saves 6 lines
       FILES: oqlos/hardware/client/autorepair.py, oqlos/hardware/diagnosis.py
-  [27] ○ extract_function   → oqlos/core/utils/parse_GET.py
+  [29] ○ extract_function   → oqlos/core/utils/parse_GET.py
       WHY: 3 occurrences of 3-line block across 1 files — saves 6 lines
       FILES: oqlos/core/oql_parser.py
-  [28] ○ extract_function   → oqlos/core/utils/parse_LOG.py
+  [30] ○ extract_function   → oqlos/core/utils/parse_LOG.py
       WHY: 3 occurrences of 3-line block across 1 files — saves 6 lines
       FILES: oqlos/core/oql_parser.py
-  [29] ○ extract_function   → oqlos/tools/hardware_diagnose/utils/_modbus_config.py
+  [31] ○ extract_function   → oqlos/tools/hardware_diagnose/utils/_modbus_config.py
       WHY: 2 occurrences of 6-line block across 1 files — saves 6 lines
       FILES: oqlos/tools/hardware_diagnose/doctor.py
-  [30] ○ extract_class      → oqlos/hardware/plugins/utils/_handle_stop_http.py
+  [32] ○ extract_class      → oqlos/hardware/plugins/utils/_handle_stop_http.py
       WHY: 2 occurrences of 6-line block across 1 files — saves 6 lines
       FILES: oqlos/hardware/plugins/lung.py
-  [31] ○ extract_class      → oqlos/core/utils/_execute_firmware_action.py
+  [33] ○ extract_class      → oqlos/core/utils/_execute_firmware_action.py
       WHY: 3 occurrences of 3-line block across 1 files — saves 6 lines
       FILES: oqlos/core/interpreter.py
-  [32] ○ extract_function   → oqlos/api/utils/hui_hold_start.py
+  [34] ○ extract_function   → oqlos/api/utils/hui_hold_start.py
       WHY: 2 occurrences of 6-line block across 1 files — saves 6 lines
       FILES: oqlos/api/hardware.py
-  [33] ○ extract_class      → oqlos/core/utils/_firmware.py
+  [35] ○ extract_class      → oqlos/core/utils/_firmware.py
       WHY: 3 occurrences of 3-line block across 1 files — saves 6 lines
       FILES: oqlos/core/interpreter.py
-  [34] ○ extract_function   → oqlos/core/utils/_parse_motor2_steps.py
+  [36] ○ extract_function   → oqlos/core/utils/_parse_motor2_steps.py
       WHY: 2 occurrences of 6-line block across 1 files — saves 6 lines
       FILES: oqlos/core/_interpreter_actions.py
-  [35] ○ extract_function   → oqlos/utils/_read_text_file.py
+  [37] ○ extract_function   → oqlos/utils/_read_text_file.py
       WHY: 2 occurrences of 5-line block across 2 files — saves 5 lines
       FILES: oqlos/api/hardware.py, oqlos/hardware/plugins/piadc.py
-  [36] ○ extract_function   → oqlos/hardware/utils/status.py
+  [38] ○ extract_function   → oqlos/hardware/utils/status.py
       WHY: 2 occurrences of 5-line block across 1 files — saves 5 lines
       FILES: oqlos/hardware/gateway.py
-  [37] ○ extract_function   → oqlos/hardware/plugins/utils/_rtu_timeout.py
+  [39] ○ extract_function   → oqlos/hardware/plugins/utils/_rtu_timeout.py
       WHY: 2 occurrences of 5-line block across 2 files — saves 5 lines
       FILES: oqlos/hardware/plugins/modbus.py, oqlos/hardware/plugins/modbus_adc.py
-  [38] ○ extract_function   → oqlos/hardware/plugins/utils/_device_id.py
+  [40] ○ extract_function   → oqlos/hardware/plugins/utils/_device_id.py
       WHY: 2 occurrences of 5-line block across 2 files — saves 5 lines
       FILES: oqlos/hardware/plugins/modbus.py, oqlos/hardware/plugins/modbus_adc.py
-  [39] ○ extract_function   → oqlos/api/utils/get_execution.py
+  [41] ○ extract_function   → oqlos/api/utils/get_execution.py
       WHY: 2 occurrences of 5-line block across 2 files — saves 5 lines
       FILES: oqlos/api/execution.py, oqlos/api/peripherals.py
-  [40] ○ extract_function   → oqlos/core/utils/_try_var.py
+  [42] ○ extract_function   → oqlos/core/utils/_try_var.py
       WHY: 2 occurrences of 5-line block across 1 files — saves 5 lines
       FILES: oqlos/core/_cql_tokenizer.py
-  [41] ○ extract_function   → oqlos/hardware/plugins/utils/disconnect.py
+  [43] ○ extract_function   → oqlos/hardware/plugins/utils/disconnect.py
       WHY: 2 occurrences of 5-line block across 2 files — saves 5 lines
       FILES: oqlos/hardware/plugins/lung.py, oqlos/hardware/plugins/piadc.py
-  [42] ○ extract_function   → oqlos/hardware/utils/_match_blob.py
+  [44] ○ extract_function   → oqlos/hardware/utils/_match_blob.py
       WHY: 2 occurrences of 5-line block across 1 files — saves 5 lines
       FILES: oqlos/hardware/scanner_probe.py
-  [43] ○ extract_function   → oqlos/core/utils/parser.py
+  [45] ○ extract_function   → oqlos/core/utils/parser.py
       WHY: 2 occurrences of 5-line block across 1 files — saves 5 lines
       FILES: oqlos/core/_cql_tokenizer.py
-  [44] ○ extract_class      → oqlos/hardware/plugins/utils/_read_address.py
+  [46] ○ extract_class      → oqlos/hardware/plugins/utils/_read_address.py
       WHY: 2 occurrences of 5-line block across 1 files — saves 5 lines
       FILES: oqlos/hardware/plugins/modbus_adc.py
-  [45] ○ extract_class      → oqlos/core/utils/_handle_scenario_attrs.py
+  [47] ○ extract_class      → oqlos/core/utils/_handle_scenario_attrs.py
       WHY: 2 occurrences of 5-line block across 1 files — saves 5 lines
       FILES: oqlos/core/cql_parser.py
-  [46] ○ extract_function   → oqlos/core/utils/_try_repeat_start.py
+  [48] ○ extract_function   → oqlos/core/utils/_try_repeat_start.py
       WHY: 2 occurrences of 5-line block across 1 files — saves 5 lines
       FILES: oqlos/core/_cql_tokenizer.py
-  [47] ○ extract_function   → oqlos/core/utils/_motor2_set_mode.py
+  [49] ○ extract_function   → oqlos/core/utils/_motor2_set_mode.py
       WHY: 2 occurrences of 5-line block across 1 files — saves 5 lines
       FILES: oqlos/core/_interpreter_actions.py
-  [48] ○ extract_function   → oqlos/hardware/utils/_health_map.py
+  [50] ○ extract_function   → oqlos/hardware/utils/_health_map.py
       WHY: 2 occurrences of 4-line block across 2 files — saves 4 lines
       FILES: oqlos/hardware/client/autorepair.py, oqlos/hardware/diagnosis.py
-  [49] ○ extract_function   → oqlos/hardware/transport/utils/to_json.py
+  [51] ○ extract_function   → oqlos/hardware/transport/utils/to_json.py
       WHY: 2 occurrences of 4-line block across 1 files — saves 4 lines
       FILES: oqlos/hardware/transport/mqtt_oql_bridge.py
-  [50] ○ extract_function   → oqlos/api/utils/stop_lung.py
+  [52] ○ extract_function   → oqlos/api/utils/stop_lung.py
       WHY: 2 occurrences of 4-line block across 1 files — saves 4 lines
       FILES: oqlos/api/hardware.py
-  [51] ○ extract_function   → oqlos/hardware/plugins/utils/__init__.py
+  [53] ○ extract_function   → scripts/utils/_mig_calc.py
+      WHY: 2 occurrences of 4-line block across 1 files — saves 4 lines
+      FILES: scripts/oql_v2_to_v4_migrate_db.py
+  [54] ○ extract_function   → oqlos/hardware/plugins/utils/__init__.py
       WHY: 2 occurrences of 4-line block across 2 files — saves 4 lines
       FILES: oqlos/hardware/plugins/modbus.py, oqlos/hardware/plugins/modbus_adc.py
-  [52] ○ extract_function   → oqlos/hardware/plugins/utils/__init__.py
+  [55] ○ extract_function   → oqlos/hardware/plugins/utils/__init__.py
       WHY: 2 occurrences of 4-line block across 2 files — saves 4 lines
       FILES: oqlos/hardware/plugins/lung.py, oqlos/hardware/plugins/piadc.py
-  [53] ○ extract_function   → oqlos/api/utils/hui_shutdown.py
+  [56] ○ extract_function   → oqlos/api/utils/hui_shutdown.py
       WHY: 2 occurrences of 3-line block across 1 files — saves 3 lines
       FILES: oqlos/api/hardware.py
-  [54] ○ extract_function   → oqlos/core/utils/_func_sum.py
+  [57] ○ extract_function   → oqlos/core/utils/_func_sum.py
       WHY: 2 occurrences of 3-line block across 1 files — saves 3 lines
       FILES: oqlos/core/_interpreter_actions.py
-  [55] ○ extract_function   → oqlos/core/utils/_func_min.py
+  [58] ○ extract_function   → oqlos/core/utils/_func_min.py
       WHY: 2 occurrences of 3-line block across 1 files — saves 3 lines
       FILES: oqlos/core/_interpreter_actions.py
-  [56] ○ extract_function   → oqlos/core/utils/_lower_min.py
+  [59] ○ extract_function   → oqlos/core/utils/_lower_min.py
       WHY: 2 occurrences of 3-line block across 1 files — saves 3 lines
       FILES: oqlos/core/_oql_adapter.py
-  [57] ○ extract_function   → oqlos/core/utils/_resolve_compare.py
+  [60] ○ extract_function   → oqlos/core/utils/_resolve_compare.py
       WHY: 2 occurrences of 3-line block across 2 files — saves 3 lines
       FILES: oqlos/core/executor.py, oqlos/core/safe_eval.py
-  [58] ○ extract_function   → oqlos/core/utils/parse_CALL.py
+  [61] ○ extract_function   → oqlos/core/utils/parse_CALL.py
       WHY: 2 occurrences of 3-line block across 1 files — saves 3 lines
       FILES: oqlos/core/oql_parser.py
-  [59] ○ extract_function   → oqlos/tools/hardware_diagnose/utils/check_firmware_health.py
+  [62] ○ extract_function   → oqlos/tools/hardware_diagnose/utils/check_firmware_health.py
       WHY: 2 occurrences of 3-line block across 1 files — saves 3 lines
       FILES: oqlos/tools/hardware_diagnose/health.py
-  [60] ○ extract_function   → oqlos/tools/hardware_diagnose/utils/_env_int.py
+  [63] ○ extract_function   → oqlos/tools/hardware_diagnose/utils/_env_int.py
       WHY: 2 occurrences of 3-line block across 1 files — saves 3 lines
       FILES: oqlos/tools/hardware_diagnose/modbus_probe.py
-  [61] ○ extract_function   → oqlos/utils/_oql_quote.py
+  [64] ○ extract_function   → oqlos/utils/_oql_quote.py
       WHY: 2 occurrences of 3-line block across 2 files — saves 3 lines
       FILES: oqlos/core/_interpreter_actions.py, oqlos/tools/xml_import/generators.py
-  [62] ○ extract_class      → oqlos/core/utils/_firmware.py
+  [65] ○ extract_class      → oqlos/core/utils/_firmware.py
       WHY: 2 occurrences of 3-line block across 1 files — saves 3 lines
       FILES: oqlos/core/interpreter.py
-  [63] ○ extract_class      → oqlos/core/utils/_normalize_valve_value.py
+  [66] ○ extract_class      → oqlos/core/utils/_normalize_valve_value.py
       WHY: 2 occurrences of 3-line block across 1 files — saves 3 lines
       FILES: oqlos/core/interpreter.py
-  [64] ○ extract_function   → oqlos/hardware/utils/discover.py
+  [67] ○ extract_function   → oqlos/hardware/utils/discover.py
       WHY: 2 occurrences of 3-line block across 2 files — saves 3 lines
       FILES: oqlos/hardware/drivers/mqtt.py, oqlos/hardware/protocol.py
-  [65] ○ extract_class      → oqlos/hardware/plugins/utils/_handle_stop_usb.py
+  [68] ○ extract_class      → oqlos/hardware/plugins/utils/_handle_stop_usb.py
       WHY: 2 occurrences of 3-line block across 1 files — saves 3 lines
       FILES: oqlos/hardware/plugins/lung.py
-  [66] ○ extract_class      → oqlos/hardware/plugins/utils/connect.py
+  [69] ○ extract_class      → oqlos/hardware/plugins/utils/connect.py
       WHY: 2 occurrences of 3-line block across 1 files — saves 3 lines
       FILES: oqlos/hardware/plugins/base.py
-  [67] ○ extract_class      → oqlos/hardware/plugins/utils/get_plugin_class.py
+  [70] ○ extract_class      → oqlos/hardware/plugins/utils/get_plugin_class.py
       WHY: 2 occurrences of 3-line block across 1 files — saves 3 lines
       FILES: oqlos/hardware/plugins/registry.py
 
-QUICK_WINS[34] (low risk, high savings — do first):
+QUICK_WINS[36] (low risk, high savings — do first):
   [2] extract_class      saved=21L  → oqlos/hardware/plugins/utils/_handle_stop_cli.py
       FILES: motor.py
   [3] extract_class      saved=20L  → oqlos/core/utils/info.py
@@ -458,7 +477,7 @@ QUICK_WINS[34] (low risk, high savings — do first):
   [10] extract_function   saved=11L  → oqlos/core/utils/_exec_set_peripheral.py
       FILES: _firmware_executor.py, interpreter.py
 
-EFFORT_ESTIMATE (total ≈ 16.2h):
+EFFORT_ESTIMATE (total ≈ 16.9h):
   medium _probe_modbus                       saved=19L  ~38min
   medium _handle_stop_cli                    saved=21L  ~42min
   medium info                                saved=20L  ~40min
@@ -469,8 +488,8 @@ EFFORT_ESTIMATE (total ≈ 16.2h):
   easy   _probe_modbus_rtu                   saved=12L  ~24min
   easy   _append_nested_action               saved=12L  ~24min
   easy   _exec_set_peripheral                saved=11L  ~22min
-  ... +57 more (~642min)
+  ... +60 more (~686min)
 
 METRICS-TARGET:
-  dup_groups:  67 → 0
-  saved_lines: 486 lines recoverable
+  dup_groups:  70 → 0
+  saved_lines: 508 lines recoverable

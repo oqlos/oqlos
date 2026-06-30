@@ -1,15 +1,11 @@
-# oqlos | 190f 41015L | json:5,python:143,yaml:13,toml:1,yml:4,md:16,shell:5,conf:2 | 2026-06-30
-# generated in 0.04s
-# stats: 1456 func | 0 cls | 190 mod | CC̄=4.1 | critical:4 | cycles:0
-# alerts[5]: fan-out _resolve=22; fan-out build_diagnosis_report=22; fan-out main=22; fan-out FirmwareAdapter.set_peripheral=21; fan-out pi_system_diagnostics=20
-# hotspots[5]: _resolve fan=22; build_diagnosis_report fan=22; main fan=22; FirmwareAdapter.set_peripheral fan=21; pi_system_diagnostics fan=20
-# evolution: CC̄ 4.2→4.1 (improved -0.1)
+# oqlos | 191f 41133L | json:5,python:143,yaml:13,toml:1,yml:4,md:16,shell:6,conf:2 | 2026-06-30
+# generated in 0.02s
+# stats: 1441 func | 0 cls | 191 mod | CC̄=4.2 | critical:0 | cycles:0
+# alerts[5]: fan-out _resolve=22; fan-out build_diagnosis_report=22; fan-out FirmwareAdapter.set_peripheral=21; fan-out main=20; fan-out pi_system_diagnostics=20
+# hotspots[5]: build_diagnosis_report fan=22; _resolve fan=22; FirmwareAdapter.set_peripheral fan=21; pi_system_diagnostics fan=20; main fan=20
+# evolution: CC̄ 4.1→4.2 (regressed +0.1)
 # Keys: M=modules, D=details, i=imports, e=exports, c=classes, f=functions, m=methods
-M[190]:
-  CHANGELOG.md,496
-  README.md,711
-  TODO.md,36
-  Taskfile.yml,160
+M[191]:
   Taskfile.testql.yml,48
   docker/Dockerfile,11
   docker/docker-compose.dev.yml,29
@@ -26,15 +22,10 @@ M[190]:
   examples/curl-quickstart.sh,74
   examples/hardware/doctor-workflow.sh,52
   examples/plugin-config.yaml,128
-  goal.yaml,511
-  hw_diagnostic_20260415_133138.json,340
-  openapi.yaml,1035
-  openapi_spec.yaml,1035
-  oqlos/__init__.py,3
   oqlos/api/__init__.py,17
   oqlos/api/editor.py,141
   oqlos/api/execution.py,359
-  oqlos/api/hardware.py,2240
+  oqlos/api/hardware.py,2252
   oqlos/api/logs.py,45
   oqlos/api/main.py,310
   oqlos/api/oql_mqtt.py,151
@@ -78,13 +69,13 @@ M[190]:
   oqlos/hardware/client/constants.py,69
   oqlos/hardware/client/errors.py,26
   oqlos/hardware/client/http_helpers.py,26
-  oqlos/hardware/client/identify_enrich.py,326
+  oqlos/hardware/client/identify_enrich.py,333
   oqlos/hardware/client/modbus_repair.py,164
   oqlos/hardware/client/platform.py,50
   oqlos/hardware/client/proxy.py,460
   oqlos/hardware/client/resolvers.py,128
   oqlos/hardware/client/tic249_arg_contract.py,65
-  oqlos/hardware/client/tic249_extended.py,605
+  oqlos/hardware/client/tic249_extended.py,627
   oqlos/hardware/client/tic249_rig_direction.py,43
   oqlos/hardware/config_paths.py,41
   oqlos/hardware/config_schema.py,145
@@ -167,9 +158,6 @@ M[190]:
   oqlos/utils/__init__.py,3
   oqlos/utils/hui_scenario.py,46
   oqlos/utils/sample_data.py,73
-  project.sh,43
-  pyproject.toml,81
-  pyqual.yaml,49
   redeploy/122/RUNBOOK.md,87
   redeploy/122/migration.md,644
   redeploy/122/mosquitto.conf,19
@@ -178,18 +166,31 @@ M[190]:
   redeploy/pi-hw/migration.md,639
   redeploy/pi-hw/mosquitto.conf,19
   redeploy/pi-hw/oqlos-hw.yaml,66
+  CHANGELOG.md,496
+  README.md,711
+  TODO.md,36
+  Taskfile.yml,160
+  goal.yaml,511
+  hw_diagnostic_20260415_133138.json,340
+  openapi.yaml,1035
+  openapi_spec.yaml,1035
+  oqlos/__init__.py,3
+  project.sh,43
+  pyproject.toml,81
+  pyqual.yaml,49
+  setup_hardware_and_run_oql.py,333
+  sumd.json,150
   scenarios/manifest.json,182
   scripts/fix_brackets_to_v4.py,95
   scripts/hardware-check.sh,340
   scripts/migrate_to_v4.py,340
   scripts/oql-stack.sh,104
-  scripts/oql_v2_to_v4_migrate_db.py,652
+  scripts/oql_v2_to_v4_migrate_db.py,662
   scripts/oql_v2_validator.py,224
   scripts/oql_v4_validator.py,281
   scripts/oql_validator_common.py,129
+  scripts/provision-rpi-sudo.sh,67
   scripts/scenarios_export.py,296
-  setup_hardware_and_run_oql.py,333
-  sumd.json,150
   testql-contracts.testql.toon.yaml,49
   testql-scenarios/cross-project-integration.testql.toon.yaml,11
   testql-scenarios/generated-api-integration.testql.toon.yaml,18
@@ -197,188 +198,6 @@ M[190]:
   testql-scenarios/generated-from-pytests.testql.toon.yaml,15
   testql-scenarios/generated-from-scenarios.testql.toon.yaml,18
 D:
-  scripts/oql_v2_to_v4_migrate_db.py:
-    e: MigrationResult,_fetch_json,_send_json,_extract_rows,_normalize_bracket_tokens,_to_v4_token,_bracket_tokens,_join_value_unit,_quote,_format_set,_strip_outer_quotes,_extract_num_unit,_merge_minmax_to_if,_merge_paired_if,_rewrite_single_sided_if,_rewrite_legacy_if,_mig_goal,_mig_task,_mig_wait,_mig_sample,_mig_minmax_eq,_mig_minmax_simple,_mig_delta,_mig_calc,_mig_val,_mig_if_comparison,_mig_else_error,_mig_goto,_mig_save,_mig_else_info,_mig_set_name,_mig_set_eq,_mig_set_noeq,_mig_pump,migrate_v2_to_v4,_validate_runtime,_pick_code,_build_write_payload,_build_write_url,_process_row,_apply_row_update,main
-    MigrationResult:
-    _fetch_json(url;timeout)
-    _send_json(url;method;payload;timeout)
-    _extract_rows(payload)
-    _normalize_bracket_tokens(text)
-    _to_v4_token(text)
-    _bracket_tokens(text)
-    _join_value_unit(value)
-    _quote(value)
-    _format_set(target;value)
-    _strip_outer_quotes(value)
-    _extract_num_unit(value)
-    _merge_minmax_to_if(lines)
-    _merge_paired_if(indent;sensor;lo;hi;lo2;hi2)
-    _rewrite_single_sided_if(indent;sensor;lo;hi)
-    _rewrite_legacy_if(lines)
-    _mig_goal(stripped;normalized)
-    _mig_task(stripped;normalized)
-    _mig_wait(stripped;normalized)
-    _mig_sample(stripped;normalized)
-    _mig_minmax_eq(stripped;normalized)
-    _mig_minmax_simple(stripped;normalized)
-    _mig_delta(stripped;normalized)
-    _mig_calc(stripped;normalized)
-    _mig_val(stripped;normalized)
-    _mig_if_comparison(stripped;normalized)
-    _mig_else_error(stripped;normalized)
-    _mig_goto(stripped;normalized)
-    _mig_save(stripped;normalized)
-    _mig_else_info(stripped;normalized)
-    _mig_set_name(stripped;normalized)
-    _mig_set_eq(stripped;normalized)
-    _mig_set_noeq(stripped;normalized)
-    _mig_pump(stripped;normalized)
-    migrate_v2_to_v4(text)
-    _validate_runtime(text;filename)
-    _pick_code(row)
-    _build_write_payload(row;migrated_code)
-    _build_write_url(template;scenario_id)
-    _process_row(row;scenario_dir;prefer_local)
-    _apply_row_update(row;migrated_code;write_url_template;method)
-    main()
-  oqlos/hardware/client/identify_enrich.py:
-    e: _platform_serial_ports,_health_message,_enrich_disabled,_enrich_motor_tic249,_enrich_motor_dri0050,_enrich_modbus_adapter,enrich_adapter_entry,_adapter_status_modbus,_adapter_status_tic249,adapter_status_from_health,_parse_csv_ints,_ids_from_preflight,_modbus_io_instance_ids,_expand_modbus_io_instances,count_detected_adapters,enrich_identify_payload,enrich_hardware_identify
-    _platform_serial_ports(platform)
-    _health_message(health;probe)
-    _enrich_disabled(adapter;message)
-    _enrich_motor_tic249(adapter;probe;status;lowered;adapter_visible)
-    _enrich_motor_dri0050(adapter;probe;status;lowered)
-    _enrich_modbus_adapter(adapter;probe;status;lowered;adapter_visible)
-    enrich_adapter_entry(adapter)
-    _adapter_status_modbus(hw_id;status;lowered;probe)
-    _adapter_status_tic249(hw_id;status;lowered;probe)
-    adapter_status_from_health(hw_id;health_entry)
-    _parse_csv_ints(raw)
-    _ids_from_preflight(payload)
-    _modbus_io_instance_ids(payload)
-    _expand_modbus_io_instances(adapters;payload)
-    count_detected_adapters(adapters)
-    enrich_identify_payload(payload)
-    enrich_hardware_identify(payload)
-  oqlos/hardware/client/tic249_extended.py:
-    e: _arg,_plugin_payload,_execute,_steps_per_second_to_raw,_normalize_motion_params,_stroke_steps,_apply_reciprocate_direction,_build_reciprocate_params,_map_lung_or_reciprocate,_command_mapping,_extract_position,_command_error_message,_generic_failure_hint,_failure,_plugin_unavailable_error,_tic249_sidecar_base_urls,_tic249_sidecar_base_url,_sidecar_reports_deenergized,_attempt_disable_deenergize,_disable_success_response,_sidecar_reciprocate_preferred,_attempt_reciprocate_via_sidecar,_direct_sidecar_deenergize,_lung_disable_fallback,_normalize_target_state,_handle_hardware_proxy_error,_handle_move_relative_command,run_extended_motor_tic249_command
-    _arg(args;snake;camel;default)
-    _plugin_payload(command;params)
-    _execute(proxy;command;params)
-    _steps_per_second_to_raw(value;args)
-    _normalize_motion_params(args)
-    _stroke_steps(args;default)
-    _apply_reciprocate_direction(params;args)
-    _build_reciprocate_params(args)
-    _map_lung_or_reciprocate(command;args)
-    _command_mapping(command;args)
-    _extract_position(payload)
-    _command_error_message(result)
-    _generic_failure_hint(result)
-    _failure(result)
-    _plugin_unavailable_error(exc)
-    _tic249_sidecar_base_urls()
-    _tic249_sidecar_base_url()
-    _sidecar_reports_deenergized()
-    _attempt_disable_deenergize(hardware_proxy;command)
-    _disable_success_response(command;fallback_result;fallback_name)
-    _sidecar_reciprocate_preferred()
-    _attempt_reciprocate_via_sidecar(params)
-    _direct_sidecar_deenergize(command)
-    _lung_disable_fallback(hardware_proxy;command)
-    _normalize_target_state(command;result)
-    _handle_hardware_proxy_error(hardware_proxy;command;plugin_command;params;exc)
-    _handle_move_relative_command(hardware_proxy;command_args)
-    run_extended_motor_tic249_command(hardware_proxy;command;args)
-  oqlos/api/hardware.py:
-    e: _read_text_file,_board_model,_is_raspberry_pi_host,_os_release,_in_container,_selected_hardware_platform,_selected_piadc_platform,_classify_platform_type,_detect_runtime_platform,_local_ads1115_probe_allowed,_scan_usb_devices,_probe_tic249,_probe_dri0050,_probe_i2c_ads1115,_probe_modbus_rtu,_probe_modbus_adc_rtu,_probe_all_hardware,_collect_hardware_diagnostics,_is_plugin_compatible,_needs_live_scan,_unhealthy_plugin_ids,_modbus_health_is_no_response,_probe_selected_hardware,_modbus_preflight_report,_modbus_repair_guidance,_parse_csv_ints,_modbus_io_device_ids,_modbus_topology_mode,_apply_modbus_topology,_modbus_runtime_serial_ports,_diagnose_shared_bus_matrix,_merge_unique_text_list,_merge_waveshare_scan_dicts,_read_output_control_modes,_modbus_plugins_healthy,_modbus_health_serial_stale,_build_waveshare_serial_stale_report,_build_waveshare_from_plugin_health,_probe_waveshare_separate,_probe_waveshare_shared_bus,_read_waveshare_io_slave_config,_read_waveshare_adc_slave_config,_build_waveshare_diagnose_report,_modbus_wizard_target_ids,_modbus_wizard_plan,_collect_wizard_serial_candidates,_modbus_wizard_probe_isolated,_wizard_check_already_configured,_wizard_apply_uart_write,_wizard_verify_config,_wizard_build_result,_modbus_wizard_program_isolated,set_hardware_gateway,_gw,_hardware_health_overall_ok,hardware_health,_determine_scan_set,_map_adapter_identify_status,hardware_identify,set_valve,set_pump,hui_actions,hui_shutdown,hui_hold_start,hui_hold_stop,hui_al_start,hui_al_stop,read_sensor,_read_cpu_temperature,hardware_temperature,read_sensors_batch,hardware_diagnose,hardware_modbus_waveshare_diagnose,hardware_stack_snapshot,hardware_diagnosis_route,hardware_recover_route,hardware_modbus_wizard_plan,hardware_modbus_wizard_probe_isolated,hardware_modbus_wizard_program_isolated,read_modbus_adc_raw,set_lung,stop_lung,disable_lung,artificial_lung_status,artificial_lung_command,rtc_status,rtc_command
-    _read_text_file(path)
-    _board_model()
-    _is_raspberry_pi_host()
-    _os_release()
-    _in_container()
-    _selected_hardware_platform()
-    _selected_piadc_platform()
-    _classify_platform_type(system;is_rpi;in_container;is_wsl)
-    _detect_runtime_platform()
-    _local_ads1115_probe_allowed()
-    _scan_usb_devices()
-    _probe_tic249(usb_devices)
-    _probe_dri0050(usb_devices)
-    _probe_i2c_ads1115()
-    _probe_modbus_rtu()
-    _probe_modbus_adc_rtu()
-    _probe_all_hardware(ids)
-    _collect_hardware_diagnostics()
-    _is_plugin_compatible(health_entry)
-    _needs_live_scan(health)
-    _unhealthy_plugin_ids(health)
-    _modbus_health_is_no_response(health_entry)
-    _probe_selected_hardware(ids)
-    _modbus_preflight_report()
-    _modbus_repair_guidance(health)
-    _parse_csv_ints(raw;default)
-    _modbus_io_device_ids()
-    _modbus_topology_mode()
-    _apply_modbus_topology(mode;bus_port;io_port;adc_port)
-    _modbus_runtime_serial_ports()
-    _diagnose_shared_bus_matrix()
-    _merge_unique_text_list(existing;new_items)
-    _merge_waveshare_scan_dicts()
-    _read_output_control_modes(serial_port;baudrate;parity;device_id;timeout)
-    _modbus_plugins_healthy(health)
-    _modbus_health_serial_stale(health)
-    _build_waveshare_serial_stale_report(health)
-    _build_waveshare_from_plugin_health(health)
-    _probe_waveshare_separate(io_port;adc_port;target_baud;target_parity;io_device_id;io_ids;adc_id)
-    _probe_waveshare_shared_bus(io_port;target_baud;target_parity;io_device_id;adc_id;target_ids)
-    _read_waveshare_io_slave_config(io_id;io_hits;io_port;target_baud;target_parity)
-    _read_waveshare_adc_slave_config(adc_id;adc_hits;adc_port;target_baud;target_parity)
-    _build_waveshare_diagnose_report(health)
-    _modbus_wizard_target_ids()
-    _modbus_wizard_plan()
-    _collect_wizard_serial_candidates(serial_port)
-    _modbus_wizard_probe_isolated(serial_port;baudrates;parities;device_ids;required_roles)
-    _wizard_check_already_configured(existing;new_device_id;new_baudrate;line_parity)
-    _wizard_apply_uart_write(bus_settings;cur_id;new_id;uart_target;new_baudrate;line_parity;write_uart_config;write_device_address;_uart_register_value)
-    _wizard_verify_config(read_device_config;verify_settings;new_device_id;new_baudrate;line_parity)
-    _wizard_build_result(writes;verify;verified;new_device_id;new_baudrate;line_parity;serial_port;verify_error)
-    _modbus_wizard_program_isolated()
-    set_hardware_gateway(gw)
-    _gw()
-    _hardware_health_overall_ok(payload)
-    hardware_health()
-    _determine_scan_set(scan_mode;health)
-    _map_adapter_identify_status(hw;health;probes)
-    hardware_identify(scan)
-    set_valve(valve_id;value)
-    set_pump(power_pct)
-    hui_actions()
-    hui_shutdown()
-    hui_hold_start(key)
-    hui_hold_stop(key)
-    hui_al_start()
-    hui_al_stop()
-    read_sensor(sensor_id)
-    _read_cpu_temperature()
-    hardware_temperature()
-    read_sensors_batch(sensor_ids)
-    hardware_diagnose()
-    hardware_modbus_waveshare_diagnose()
-    hardware_stack_snapshot()
-    hardware_diagnosis_route(scan)
-    hardware_recover_route(scope)
-    hardware_modbus_wizard_plan()
-    hardware_modbus_wizard_probe_isolated(serial_port;baudrates;parities;device_ids;module_role)
-    hardware_modbus_wizard_program_isolated(serial_port;current_device_id;new_device_id;new_baudrate;new_parity;confirm_isolated)
-    read_modbus_adc_raw()
-    set_lung(steps;speed;cycles;pause)
-    stop_lung()
-    disable_lung()
-    artificial_lung_status()
-    artificial_lung_command(payload)
-    rtc_status()
-    rtc_command(payload)
   oqlos/core/_interpreter_actions.py:
     e: _extract_action_tokens,_drop_command_token,_coerce_expected_value,_compare_values,_oql_quote,_format_set_command,_get_nested_value,_record_failure,_mark_success,_normalize_bool,_lookup_peripheral_state,_mock_api_response,exec_action_task,exec_action_save,parse_wait_secs,exec_action_wait,_do_sleep,exec_action_min_max,exec_action_val,exec_action_log,exec_action_error,exec_action_else,exec_action_sample,_resolve_numeric_token,_func_avg,_func_sum,_func_min,_func_max,_func_sub,_func_div,_func_mul,_func_add,exec_action_func,exec_action_goto,exec_action_api,exec_action_expect,_assert_status,_assert_json,_assert_sensor,_assert_valve,exec_action_assert,exec_action_shell,exec_action_var_set,exec_action_condition,exec_action_if_fail_block,exec_action_if_block,exec_action_loop_block,exec_action_endloop,exec_action_set,_normalize_motor2_target,_parse_motor2_direction,_parse_motor2_speed_steps,_parse_motor2_float,_parse_motor2_duration_seconds,_parse_motor2_volume_liters,_parse_motor2_acceleration,_normalize_motor2_value,_parse_prefixed_motor2_setting,_parse_motor2_reciprocating_setting,_parse_motor2_steps,_motor2_speed_raw,_motor2_max_steps_per_second,_motor2_effective_steps_per_second,_motor2_speed_for_duration,_motor2_acceleration_raw,_post_motor2_move_relative,_post_motor2_reciprocate,_post_motor2_stop,_motor2_reciprocating_state,_motor2_set_mode,_motor2_set_limit_mode,_motor2_set_limit,_motor2_set_stroke,_motor2_set_cycle_volume,_motor2_set_volume,_motor2_set_duration,_motor2_set_cycles,_motor2_do_stop,_motor2_build_plan,_motor2_step_label,_motor2_do_start,_handle_motor2_reciprocating_setting,_try_exec_motor2_set,_exec_set_wait,exec_action_action
     _extract_action_tokens(text)
@@ -565,19 +384,188 @@ MACRO bl...
     PluginHardwareGateway: __init__(2),_load_hardware_schema(1),_parse_plugin_configs(1),_apply_env_overrides(0),_apply_plugin_enable_env_overrides(0),_apply_shared_modbus_bus_env_overrides(0),_apply_modbus_env_overrides(2),modbus_preflight_report(0),_log_modbus_preflight(0),ensure_initialized(0),_get_or_connect_plugin(1),_initialize_plugins(0),set_valve(2),set_pump(1),read_sensor(1),set_lung_result(4),set_lung(4),stop_lung(0),disable_lung(0),reload_configs(1),health(0)  # Simplified hardware gateway using plugin architecture.
 
 Inst...
+  oqlos/hardware/client/tic249_extended.py:
+    e: _arg,_plugin_payload,_execute,_steps_per_second_to_raw,_normalize_motion_params,_stroke_steps,_apply_reciprocate_direction,_build_reciprocate_params,_map_lung_or_reciprocate,_command_mapping,_extract_position,_command_error_message,_generic_failure_hint,_failure,_plugin_unavailable_error,_tic249_sidecar_base_urls,_tic249_sidecar_base_url,_sidecar_reports_deenergized,_attempt_disable_deenergize,_disable_success_response,_sidecar_reciprocate_preferred,_attempt_reciprocate_via_sidecar,_direct_sidecar_deenergize,_lung_disable_fallback,_normalize_target_state,_handle_hardware_proxy_error,_handle_move_relative_command,_try_disable_fallback,_try_sidecar_reciprocate,run_extended_motor_tic249_command
+    _arg(args;snake;camel;default)
+    _plugin_payload(command;params)
+    _execute(proxy;command;params)
+    _steps_per_second_to_raw(value;args)
+    _normalize_motion_params(args)
+    _stroke_steps(args;default)
+    _apply_reciprocate_direction(params;args)
+    _build_reciprocate_params(args)
+    _map_lung_or_reciprocate(command;args)
+    _command_mapping(command;args)
+    _extract_position(payload)
+    _command_error_message(result)
+    _generic_failure_hint(result)
+    _failure(result)
+    _plugin_unavailable_error(exc)
+    _tic249_sidecar_base_urls()
+    _tic249_sidecar_base_url()
+    _sidecar_reports_deenergized()
+    _attempt_disable_deenergize(hardware_proxy;command)
+    _disable_success_response(command;fallback_result;fallback_name)
+    _sidecar_reciprocate_preferred()
+    _attempt_reciprocate_via_sidecar(params)
+    _direct_sidecar_deenergize(command)
+    _lung_disable_fallback(hardware_proxy;command)
+    _normalize_target_state(command;result)
+    _handle_hardware_proxy_error(hardware_proxy;command;plugin_command;params;exc)
+    _handle_move_relative_command(hardware_proxy;command_args)
+    _try_disable_fallback(hardware_proxy;command)
+    _try_sidecar_reciprocate(command;plugin_command;params)
+    run_extended_motor_tic249_command(hardware_proxy;command;args)
   oqlos/hardware/plugins/lung.py:
     e: LungPlugin
     LungPlugin(HardwarePlugin): __init__(1),validate_config(0),connect(0),disconnect(0),_health_check_http(0),health_check(0),_runtime_status(0),_runtime_block_reason(0),_handle_reciprocate_http(1),_handle_reciprocate_usb(1),_handle_stop_http(0),_handle_stop_usb(0),_handle_move_http(1),_handle_move_usb(1),_handle_energize_http(1),_handle_energize_usb(1),_handle_status_http(0),_handle_status_usb(0),execute_command(2),get_capabilities(0)  # Plugin for Pololu Tic T249 stepper motor (artificial lung).
 ...
-  scripts/fix_brackets_to_v4.py:
-    e: needs_migration,main
-    needs_migration(text)
-    main()
   oqlos/hardware/plugins/motor.py:
     e: MotorPlugin
     MotorPlugin(HardwarePlugin): __init__(1),validate_config(0),connect(0),disconnect(0),_health_check_http(0),_health_check_modbus_rtu(0),health_check(0),_base_url_is_local(0),_validate_power_pct(1),_handle_set_speed_http(2),_handle_set_speed_cli(2),_handle_set_speed_modbus(2),_handle_stop_http(1),_handle_stop_cli(1),_handle_stop_modbus(1),_handle_status_http(1),_handle_status_cli(1),_handle_status_modbus(1),execute_command(2),get_capabilities(0)  # Plugin for DFRobot DRI0050 PWM motor driver.
 
 Configuration:...
+  oqlos/api/hardware.py:
+    e: _read_text_file,_board_model,_is_raspberry_pi_host,_os_release,_in_container,_selected_hardware_platform,_selected_piadc_platform,_classify_platform_type,_detect_runtime_platform,_local_ads1115_probe_allowed,_scan_usb_devices,_probe_tic249,_probe_dri0050,_probe_i2c_ads1115,_probe_modbus_rtu,_probe_modbus_adc_rtu,_probe_all_hardware,_collect_hardware_diagnostics,_is_plugin_compatible,_needs_live_scan,_unhealthy_plugin_ids,_modbus_health_is_no_response,_probe_selected_hardware,_modbus_preflight_report,_modbus_repair_guidance,_parse_csv_ints,_modbus_io_device_ids,_modbus_topology_mode,_apply_modbus_topology,_modbus_runtime_serial_ports,_diagnose_shared_bus_matrix,_merge_unique_text_list,_merge_waveshare_scan_dicts,_read_output_control_modes,_modbus_plugins_healthy,_modbus_health_serial_stale,_build_waveshare_serial_stale_report,_build_waveshare_from_plugin_health,_probe_waveshare_separate,_probe_waveshare_shared_bus,_read_waveshare_io_slave_config,_read_waveshare_adc_slave_config,_resolve_waveshare_ports,_split_hits_by_role,_build_waveshare_diagnose_report,_modbus_wizard_target_ids,_modbus_wizard_plan,_collect_wizard_serial_candidates,_modbus_wizard_probe_isolated,_wizard_check_already_configured,_wizard_apply_uart_write,_wizard_verify_config,_wizard_build_result,_modbus_wizard_program_isolated,set_hardware_gateway,_gw,_hardware_health_overall_ok,hardware_health,_determine_scan_set,_map_adapter_identify_status,hardware_identify,set_valve,set_pump,hui_actions,hui_shutdown,hui_hold_start,hui_hold_stop,hui_al_start,hui_al_stop,read_sensor,_read_cpu_temperature,hardware_temperature,read_sensors_batch,hardware_diagnose,hardware_modbus_waveshare_diagnose,hardware_stack_snapshot,hardware_diagnosis_route,hardware_recover_route,hardware_modbus_wizard_plan,hardware_modbus_wizard_probe_isolated,hardware_modbus_wizard_program_isolated,read_modbus_adc_raw,set_lung,stop_lung,disable_lung,artificial_lung_status,artificial_lung_command,rtc_status,rtc_command
+    _read_text_file(path)
+    _board_model()
+    _is_raspberry_pi_host()
+    _os_release()
+    _in_container()
+    _selected_hardware_platform()
+    _selected_piadc_platform()
+    _classify_platform_type(system;is_rpi;in_container;is_wsl)
+    _detect_runtime_platform()
+    _local_ads1115_probe_allowed()
+    _scan_usb_devices()
+    _probe_tic249(usb_devices)
+    _probe_dri0050(usb_devices)
+    _probe_i2c_ads1115()
+    _probe_modbus_rtu()
+    _probe_modbus_adc_rtu()
+    _probe_all_hardware(ids)
+    _collect_hardware_diagnostics()
+    _is_plugin_compatible(health_entry)
+    _needs_live_scan(health)
+    _unhealthy_plugin_ids(health)
+    _modbus_health_is_no_response(health_entry)
+    _probe_selected_hardware(ids)
+    _modbus_preflight_report()
+    _modbus_repair_guidance(health)
+    _parse_csv_ints(raw;default)
+    _modbus_io_device_ids()
+    _modbus_topology_mode()
+    _apply_modbus_topology(mode;bus_port;io_port;adc_port)
+    _modbus_runtime_serial_ports()
+    _diagnose_shared_bus_matrix()
+    _merge_unique_text_list(existing;new_items)
+    _merge_waveshare_scan_dicts()
+    _read_output_control_modes(serial_port;baudrate;parity;device_id;timeout)
+    _modbus_plugins_healthy(health)
+    _modbus_health_serial_stale(health)
+    _build_waveshare_serial_stale_report(health)
+    _build_waveshare_from_plugin_health(health)
+    _probe_waveshare_separate(io_port;adc_port;target_baud;target_parity;io_device_id;io_ids;adc_id)
+    _probe_waveshare_shared_bus(io_port;target_baud;target_parity;io_device_id;adc_id;target_ids)
+    _read_waveshare_io_slave_config(io_id;io_hits;io_port;target_baud;target_parity)
+    _read_waveshare_adc_slave_config(adc_id;adc_hits;adc_port;target_baud;target_parity)
+    _resolve_waveshare_ports(ports)
+    _split_hits_by_role(hits)
+    _build_waveshare_diagnose_report(health)
+    _modbus_wizard_target_ids()
+    _modbus_wizard_plan()
+    _collect_wizard_serial_candidates(serial_port)
+    _modbus_wizard_probe_isolated(serial_port;baudrates;parities;device_ids;required_roles)
+    _wizard_check_already_configured(existing;new_device_id;new_baudrate;line_parity)
+    _wizard_apply_uart_write(bus_settings;cur_id;new_id;uart_target;new_baudrate;line_parity;write_uart_config;write_device_address;_uart_register_value)
+    _wizard_verify_config(read_device_config;verify_settings;new_device_id;new_baudrate;line_parity)
+    _wizard_build_result(writes;verify;verified;new_device_id;new_baudrate;line_parity;serial_port;verify_error)
+    _modbus_wizard_program_isolated()
+    set_hardware_gateway(gw)
+    _gw()
+    _hardware_health_overall_ok(payload)
+    hardware_health()
+    _determine_scan_set(scan_mode;health)
+    _map_adapter_identify_status(hw;health;probes)
+    hardware_identify(scan)
+    set_valve(valve_id;value)
+    set_pump(power_pct)
+    hui_actions()
+    hui_shutdown()
+    hui_hold_start(key)
+    hui_hold_stop(key)
+    hui_al_start()
+    hui_al_stop()
+    read_sensor(sensor_id)
+    _read_cpu_temperature()
+    hardware_temperature()
+    read_sensors_batch(sensor_ids)
+    hardware_diagnose()
+    hardware_modbus_waveshare_diagnose()
+    hardware_stack_snapshot()
+    hardware_diagnosis_route(scan)
+    hardware_recover_route(scope)
+    hardware_modbus_wizard_plan()
+    hardware_modbus_wizard_probe_isolated(serial_port;baudrates;parities;device_ids;module_role)
+    hardware_modbus_wizard_program_isolated(serial_port;current_device_id;new_device_id;new_baudrate;new_parity;confirm_isolated)
+    read_modbus_adc_raw()
+    set_lung(steps;speed;cycles;pause)
+    stop_lung()
+    disable_lung()
+    artificial_lung_status()
+    artificial_lung_command(payload)
+    rtc_status()
+    rtc_command(payload)
+  scripts/fix_brackets_to_v4.py:
+    e: needs_migration,main
+    needs_migration(text)
+    main()
+  scripts/oql_v2_to_v4_migrate_db.py:
+    e: MigrationResult,_fetch_json,_send_json,_extract_rows,_normalize_bracket_tokens,_to_v4_token,_bracket_tokens,_join_value_unit,_quote,_format_set,_strip_outer_quotes,_extract_num_unit,_merge_minmax_to_if,_merge_paired_if,_rewrite_single_sided_if,_rewrite_legacy_if,_mig_goal,_mig_task,_mig_wait,_mig_sample,_mig_minmax_eq,_mig_minmax_simple,_mig_delta,_mig_calc,_mig_val,_mig_if_comparison,_mig_else_error,_mig_goto,_mig_save,_mig_else_info,_mig_set_name,_mig_set_eq,_mig_set_noeq,_mig_pump,migrate_v2_to_v4,_validate_runtime,_pick_code,_build_write_payload,_build_write_url,_process_row,_apply_row_update,_filter_rows,_build_migration_report,main
+    MigrationResult:
+    _fetch_json(url;timeout)
+    _send_json(url;method;payload;timeout)
+    _extract_rows(payload)
+    _normalize_bracket_tokens(text)
+    _to_v4_token(text)
+    _bracket_tokens(text)
+    _join_value_unit(value)
+    _quote(value)
+    _format_set(target;value)
+    _strip_outer_quotes(value)
+    _extract_num_unit(value)
+    _merge_minmax_to_if(lines)
+    _merge_paired_if(indent;sensor;lo;hi;lo2;hi2)
+    _rewrite_single_sided_if(indent;sensor;lo;hi)
+    _rewrite_legacy_if(lines)
+    _mig_goal(stripped;normalized)
+    _mig_task(stripped;normalized)
+    _mig_wait(stripped;normalized)
+    _mig_sample(stripped;normalized)
+    _mig_minmax_eq(stripped;normalized)
+    _mig_minmax_simple(stripped;normalized)
+    _mig_delta(stripped;normalized)
+    _mig_calc(stripped;normalized)
+    _mig_val(stripped;normalized)
+    _mig_if_comparison(stripped;normalized)
+    _mig_else_error(stripped;normalized)
+    _mig_goto(stripped;normalized)
+    _mig_save(stripped;normalized)
+    _mig_else_info(stripped;normalized)
+    _mig_set_name(stripped;normalized)
+    _mig_set_eq(stripped;normalized)
+    _mig_set_noeq(stripped;normalized)
+    _mig_pump(stripped;normalized)
+    migrate_v2_to_v4(text)
+    _validate_runtime(text;filename)
+    _pick_code(row)
+    _build_write_payload(row;migrated_code)
+    _build_write_url(template;scenario_id)
+    _process_row(row;scenario_dir;prefer_local)
+    _apply_row_update(row;migrated_code;write_url_template;method)
+    _filter_rows(rows;scenario_id)
+    _build_migration_report(rows;results;args;updates_preview;updated_remote)
+    main()
   oqlos/core/parser.py:
     e: _dispatch_simple_parser,_try_action_or_condition,_parse_runtime_line,parse_dsl_to_goal_with_issues,parse_dsl_to_goal
     _dispatch_simple_parser(kind;line;step_counter;steps)
@@ -648,54 +636,6 @@ Configuration:...
     _emit_yaml_preflight(firmware_url;health;identify;required_adapter;adapter_status)
     _emit_text_preflight(firmware_url;health;identify;required_adapter;adapter_status)
     preflight_hardware(command;firmware_url)
-  oqlos/hardware/sidecar_control.py:
-    e: _modbus_serial_candidates,resolve_dri0050_serial,_dri0050_paths,_http_sidecar_listening,_http_sidecar_healthy,_run_cmd,_free_api_port,ensure_dri0050_sidecar
-    _modbus_serial_candidates()
-    resolve_dri0050_serial(configured)
-    _dri0050_paths()
-    _http_sidecar_listening()
-    _http_sidecar_healthy()
-    _run_cmd()
-    _free_api_port(port)
-    ensure_dri0050_sidecar()
-  oqlos/hardware/usb_diagnostics.py:
-    e: _read,_find_tty,list_usb_devices,pi_system_diagnostics,reset_usb_device
-    _read(path)
-    _find_tty(dev_dir)
-    list_usb_devices()
-    pi_system_diagnostics()
-    reset_usb_device(vendor_id;product_id;dev_node)
-  oqlos/hardware/client/proxy.py:
-    e: OqlosHardwareProxy,_is_unsuccessful_result
-    OqlosHardwareProxy: __init__(1),candidate_bases(0),proxy_info(0),close(0),_get_client(0),_proxy_oqlos(1),_proxy_oqlos_request(2),_degraded_oqlos_payload(1),health(0),identify(0),peripheral_status(1),diagnostic_command(3),_motor_api_bases(0),_fetch_dri0050_motor_health_hint(0),_is_useless_motor_health_hint(0),_should_enrich_motor_dri0050_failure(0),_motor_dri0050_remediation(1),_enrich_motor_dri0050_failure(1),_load_peripheral_status(1),_load_modbus_io_status(1),_load_adc_status(0),_load_simple_hardware_status(1),_load_plugin_status(2),_execute_diagnostic_command(5),_unavailable_health_payload(2),_unavailable_identify_payload(1),_unavailable_peripheral_payload(3),_unavailable_command_payload(6)
-    _is_unsuccessful_result(result)
-  oqlos/hardware/client/modbus_repair.py:
-    e: _env,_is_separate_adapters,_adapter_ports,_augment_no_response_from_health,_build_diagnose_cmd,_build_safety_hints,rewrite_modbus_repair
-    _env(name;default)
-    _is_separate_adapters(payload)
-    _adapter_ports(payload)
-    _augment_no_response_from_health(no_response;health)
-    _build_diagnose_cmd(target;io_port;adc_port)
-    _build_safety_hints(no_response;health;existing_safety)
-    rewrite_modbus_repair(payload)
-  oqlos/api/state.py:
-    e: _compose_named_state,_compose_sim_state_list,get_state,_generate_sinusoidal_values,stream_values,get_current_value,get_sim_state,get_variables_alias,fetch_variables,fetch_protocol_steps,_maybe_register_dsl_from_content,_extract_scenario_id,_extract_inline_dsl,_handle_start,_make_state_handler,post_commands
-    _compose_named_state()
-    _compose_sim_state_list(named_state)
-    get_state()
-    _generate_sinusoidal_values(param;min_val;max_val;period;interval)
-    stream_values(param;min;max;period;interval;demo)
-    get_current_value(param)
-    get_sim_state()
-    get_variables_alias()
-    fetch_variables(source)
-    fetch_protocol_steps(scenario;source)
-    _maybe_register_dsl_from_content(data;scenario_id)
-    _extract_scenario_id(data)
-    _extract_inline_dsl(data)
-    _handle_start(env)
-    _make_state_handler(ctrl_fn)
-    post_commands(env;background_tasks)
   oqlos/hardware/diagnosis.py:
     e: DiagnosisAction,DeviceDiagnosis,DiagnosisReport,_health_map,is_stale_hardware_message,is_stale_hardware_entry,plugin_is_healthy,plugin_needs_repair,_report_device_status,modbus_plugins_need_repair,_adapter_index,_message_lower,_infer_status,_action_dict,report_to_dict,_add_modbus_device_actions,_add_tic249_device_actions,_add_dri0050_device_actions,_diagnose_plugin_devices,_build_report_global_actions,_resolve_host_recover,_diagnose_barcode_scanner,_build_stack_snapshot,build_diagnosis_report,_should_include_host_action,_host_actions_from_report,_recover_targets,_repair_dri0050_if_needed,execute_safe_recover
     DiagnosisAction:
@@ -727,6 +667,74 @@ Configuration:...
     _recover_targets(report;health)
     _repair_dri0050_if_needed(targets;health_before;repairs)
     execute_safe_recover(gateway;report)
+  oqlos/hardware/sidecar_control.py:
+    e: _modbus_serial_candidates,resolve_dri0050_serial,_dri0050_paths,_http_sidecar_listening,_http_sidecar_healthy,_run_cmd,_free_api_port,ensure_dri0050_sidecar
+    _modbus_serial_candidates()
+    resolve_dri0050_serial(configured)
+    _dri0050_paths()
+    _http_sidecar_listening()
+    _http_sidecar_healthy()
+    _run_cmd()
+    _free_api_port(port)
+    ensure_dri0050_sidecar()
+  oqlos/hardware/usb_diagnostics.py:
+    e: _read,_find_tty,list_usb_devices,pi_system_diagnostics,reset_usb_device
+    _read(path)
+    _find_tty(dev_dir)
+    list_usb_devices()
+    pi_system_diagnostics()
+    reset_usb_device(vendor_id;product_id;dev_node)
+  oqlos/hardware/client/proxy.py:
+    e: OqlosHardwareProxy,_is_unsuccessful_result
+    OqlosHardwareProxy: __init__(1),candidate_bases(0),proxy_info(0),close(0),_get_client(0),_proxy_oqlos(1),_proxy_oqlos_request(2),_degraded_oqlos_payload(1),health(0),identify(0),peripheral_status(1),diagnostic_command(3),_motor_api_bases(0),_fetch_dri0050_motor_health_hint(0),_is_useless_motor_health_hint(0),_should_enrich_motor_dri0050_failure(0),_motor_dri0050_remediation(1),_enrich_motor_dri0050_failure(1),_load_peripheral_status(1),_load_modbus_io_status(1),_load_adc_status(0),_load_simple_hardware_status(1),_load_plugin_status(2),_execute_diagnostic_command(5),_unavailable_health_payload(2),_unavailable_identify_payload(1),_unavailable_peripheral_payload(3),_unavailable_command_payload(6)
+    _is_unsuccessful_result(result)
+  oqlos/hardware/client/modbus_repair.py:
+    e: _env,_is_separate_adapters,_adapter_ports,_augment_no_response_from_health,_build_diagnose_cmd,_build_safety_hints,rewrite_modbus_repair
+    _env(name;default)
+    _is_separate_adapters(payload)
+    _adapter_ports(payload)
+    _augment_no_response_from_health(no_response;health)
+    _build_diagnose_cmd(target;io_port;adc_port)
+    _build_safety_hints(no_response;health;existing_safety)
+    rewrite_modbus_repair(payload)
+  oqlos/hardware/client/identify_enrich.py:
+    e: _platform_serial_ports,_health_message,_enrich_disabled,_enrich_motor_tic249,_enrich_motor_dri0050,_enrich_modbus_adapter,_enrich_by_device_id,enrich_adapter_entry,_adapter_status_modbus,_adapter_status_tic249,adapter_status_from_health,_parse_csv_ints,_ids_from_preflight,_modbus_io_instance_ids,_expand_modbus_io_instances,count_detected_adapters,enrich_identify_payload,enrich_hardware_identify
+    _platform_serial_ports(platform)
+    _health_message(health;probe)
+    _enrich_disabled(adapter;message)
+    _enrich_motor_tic249(adapter;probe;status;lowered;adapter_visible)
+    _enrich_motor_dri0050(adapter;probe;status;lowered)
+    _enrich_modbus_adapter(adapter;probe;status;lowered;adapter_visible)
+    _enrich_by_device_id(hw_id;adapter;probe;status;lowered;adapter_visible)
+    enrich_adapter_entry(adapter)
+    _adapter_status_modbus(hw_id;status;lowered;probe)
+    _adapter_status_tic249(hw_id;status;lowered;probe)
+    adapter_status_from_health(hw_id;health_entry)
+    _parse_csv_ints(raw)
+    _ids_from_preflight(payload)
+    _modbus_io_instance_ids(payload)
+    _expand_modbus_io_instances(adapters;payload)
+    count_detected_adapters(adapters)
+    enrich_identify_payload(payload)
+    enrich_hardware_identify(payload)
+  oqlos/api/state.py:
+    e: _compose_named_state,_compose_sim_state_list,get_state,_generate_sinusoidal_values,stream_values,get_current_value,get_sim_state,get_variables_alias,fetch_variables,fetch_protocol_steps,_maybe_register_dsl_from_content,_extract_scenario_id,_extract_inline_dsl,_handle_start,_make_state_handler,post_commands
+    _compose_named_state()
+    _compose_sim_state_list(named_state)
+    get_state()
+    _generate_sinusoidal_values(param;min_val;max_val;period;interval)
+    stream_values(param;min;max;period;interval;demo)
+    get_current_value(param)
+    get_sim_state()
+    get_variables_alias()
+    fetch_variables(source)
+    fetch_protocol_steps(scenario;source)
+    _maybe_register_dsl_from_content(data;scenario_id)
+    _extract_scenario_id(data)
+    _extract_inline_dsl(data)
+    _handle_start(env)
+    _make_state_handler(ctrl_fn)
+    post_commands(env;background_tasks)
   setup_hardware_and_run_oql.py:
     e: detect_serial_devices,suggest_modbus_port,generate_env_content,setup_env_file,load_env_file,run_oql_scenario,main
     detect_serial_devices()
@@ -1174,18 +1182,18 @@ Follo...
     StepResult:
     ScriptResult: summary(0)
     VariableStore: __init__(2),set(3),get(2),has(1),all(1),clear(0),interpolate(1)  # Hierarchical key-value store with interpolation support...
-    InterpreterOutput: __init__(3),emit(2),_broadcast_event(2),info(1),ok(1),fail(1),warn(1),error(1),step(2),output_yaml(0)  # Collects interpreter output lines for display or testing, an...
-    BaseInterpreter(ABC): __init__(4),parse(2),execute(1),run(2),run_file(1),strip_comments(0)  # Abstract base for language interpreters...
-    EventBridge: __init__(1),connect(0),disconnect(0),send_event(2)  # Optional WebSocket bridge to DSL Event Server (port 8104).
+    InterpreterOutput: emit(2),_broadcast_event(2),info(1),ok(1),fail(1),warn(1),error(1),step(2),output_yaml(0)  # Collects interpreter output lines for display or testing, an...
+    BaseInterpreter(ABC): parse(2),execute(1),run(2),run_file(1),strip_comments(0)  # Abstract base for language interpreters...
+    EventBridge: connect(0),disconnect(0),send_event(2)  # Optional WebSocket bridge to DSL Event Server (port 8104).
 
 ...
   oqlos/hardware/gateway.py:
     e: _PiAdcAdapter,_DRI0050MotorAdapter,_Tic249LungAdapter,_ModbusAdapter,HardwareGateway
     _PiAdcAdapter: __init__(1),read_channel(1),read_sensor(1)  # Reads pressure / analog sensors via piadc REST API (ADS1115)...
-    _DRI0050MotorAdapter: __init__(1),set_speed(1),_stop(0),status(0)  # Controls the pump motor via rpi-motor-DRI0050 REST API (DFRo...
-    _Tic249LungAdapter: __init__(1),reciprocate(4),stop(0),move(2),energize(1),status(0)  # Controls the artificial lung stepper motor via rpi-motor-tic...
-    _ModbusAdapter: __init__(5),set_coil(2),_set_coil_rtu(3),_set_coil_tcp(2),set_valve(2)  # Controls valves via Modbus RTU over RS485 (Waveshare Modbus ...
-    HardwareGateway: __init__(1),set_valve(2),set_pump(1),read_sensor(1),set_lung(4),stop_lung(0),health(0)  # Single entry-point for all physical hardware I/O.
+    _DRI0050MotorAdapter: set_speed(1),_stop(0),status(0)  # Controls the pump motor via rpi-motor-DRI0050 REST API (DFRo...
+    _Tic249LungAdapter: reciprocate(4),stop(0),move(2),energize(1)  # Controls the artificial lung stepper motor via rpi-motor-tic...
+    _ModbusAdapter: set_coil(2),_set_coil_rtu(3),_set_coil_tcp(2),set_valve(2)  # Controls valves via Modbus RTU over RS485 (Waveshare Modbus ...
+    HardwareGateway: set_pump(1),set_lung(4),stop_lung(0),health(0)  # Single entry-point for all physical hardware I/O.
 
 In *mock*...
   oqlos/hardware/hui_actions.py:
@@ -1205,7 +1213,7 @@ In *mock*...
   oqlos/shared/event_server.py:
     e: ConnectionManager,EventServer,main
     ConnectionManager: __init__(0),connect(2),disconnect(1),broadcast(2),get_stats(0)  # Tracks connected WebSocket clients and broadcasts messages...
-    EventServer: __init__(3),handle_client(1),_handle_message(2),_normalize_event(0),start(0)  # WebSocket event broker with persistence...
+    EventServer: handle_client(1),_handle_message(2),_normalize_event(0),start(0)  # WebSocket event broker with persistence...
     main()
   oqlos/dsl/schema.py:
     e: DslDialect,DslItem,DslFunctionBinding,DslParamUnitBinding,DslSchema,_normalize_name_list,_build_inferred_object_function_map,_build_inferred_param_unit_map,_merge_object_function_map,_merge_param_unit_map,get_default_dsl_schema
@@ -1357,16 +1365,21 @@ Supports basic I/O operation...
     _calibrate_pump(client;url;log)
     _calibrate_valves(client;url;log)
     _calibrate_sensors(client;url;log)
+  oqlos/hardware/discovery.py:
+    e: _ensure_local_pimodbus_on_path,probe_waveshare_modbus,probe_waveshare_modbus_adc
+    _ensure_local_pimodbus_on_path()
+    probe_waveshare_modbus(preferred_port;preferred_baud;preferred_parity;preferred_device_id;timeout)
+    probe_waveshare_modbus_adc(preferred_port;preferred_baud;preferred_parity;preferred_device_id;timeout)
   oqlos/hardware/transport/mqtt_oql_bridge.py:
     e: Topics,OqlRequest,OqlResponse,_PahoAsyncClient,OqlMqttController,OqlMqttAgent,build_topics,_make_client
     Topics: response_for(1)  # Resolved topic strings for one node...
     OqlRequest: to_json(0),from_json(1)  # A request to execute on a remote node.
 
 For ``kind`` in {"co...
-    OqlResponse: to_json(0),from_json(1)  # The result of executing OQL on a remote node...
+    OqlResponse:  # The result of executing OQL on a remote node...
     _PahoAsyncClient: __init__(0),start(0),stop(0),_subscriptions(0),_last_will(0),_on_payload(2),_handle_connect(0),_handle_message(3),_publish(2)  # Wraps a paho client and bridges its network thread to an asy...
-    OqlMqttController(_PahoAsyncClient): __init__(0),_subscriptions(0),_on_payload(2),_resolve_response(1),_fan_out_event(1),execute(1),manage(2),subscribe_events(1),unsubscribe_events(1)  # Publishes OQL and awaits a correlated response...
-    OqlMqttAgent(_PahoAsyncClient): __init__(0),_subscriptions(0),_last_will(0),start(0),stop(0),_on_payload(2),_handle_request(1),_run_manage(1),_run_oql(1)  # Subscribes to OQL requests, executes them locally, and repli...
+    OqlMqttController(_PahoAsyncClient): _resolve_response(1),_fan_out_event(1),execute(1),manage(2),subscribe_events(1),unsubscribe_events(1)  # Publishes OQL and awaits a correlated response...
+    OqlMqttAgent(_PahoAsyncClient): _handle_request(1),_run_manage(1),_run_oql(1)  # Subscribes to OQL requests, executes them locally, and repli...
     build_topics(prefix;node_id)
     _make_client(client_id)
   oqlos/hardware/client/tic249_rig_direction.py:
@@ -1412,11 +1425,6 @@ Each plugi...
     read_file_endpoint(file_path)
     write_file_endpoint(file_path;file_content)
     execute_scenario(request)
-  oqlos/hardware/discovery.py:
-    e: _ensure_local_pimodbus_on_path,probe_waveshare_modbus,probe_waveshare_modbus_adc
-    _ensure_local_pimodbus_on_path()
-    probe_waveshare_modbus(preferred_port;preferred_baud;preferred_parity;preferred_device_id;timeout)
-    probe_waveshare_modbus_adc(preferred_port;preferred_baud;preferred_parity;preferred_device_id;timeout)
   oqlos/core/state.py:
     e: StateManager
     StateManager: __init__(0),initialize_peripherals(0),broadcast_event(1)
@@ -1567,6 +1575,7 @@ A driver must implemen...
   Taskfile.yml:
   openapi.yaml:
   project.sh:
+  README.md:
   docs/cql-spec.md:
   docs/oql_v2_llm_validator.schema.json:
   docs/cql-examples.md:
@@ -1591,6 +1600,8 @@ A driver must implemen...
     print()
     print()
     print()
+  docker/docker-compose.prod.yml:
+  docker/docker-compose.dev.yml:
   docker/Dockerfile:
   oqlos/core/__init__.py:
   oqlos/tools/xml_import/__init__.py:
@@ -1668,6 +1679,4 @@ A driver must implemen...
   testql-scenarios/cross-project-integration.testql.toon.yaml:
   testql-scenarios/generated-api-smoke.testql.toon.yaml:
   scenarios/manifest.json:
-  README.md:
-  docker/docker-compose.prod.yml:
-  docker/docker-compose.dev.yml:
+  scripts/provision-rpi-sudo.sh:
