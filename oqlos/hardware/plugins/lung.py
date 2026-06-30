@@ -87,6 +87,54 @@ class LungPlugin(HardwarePlugin):
         self._client = None
         self._status = PluginStatus.CONFIGURED
 
+    async def _health_check_http(self) -> PluginHealth:
+        """Try each endpoint in order, return health on first 2xx response."""
+        checked: set[str] = set()
+        for endpoint in (self._health_endpoint, "/health", "/api/settings"):
+            if endpoint in checked:
+                continue
+            checked.add(endpoint)
+
+            resp = await self._client.get(f"{self._base_url}{endpoint}")
+            if resp.status_code < 300:
+                details: dict[str, Any] = {"endpoint": endpoint}
+                try:
+                    data = resp.json()
+                    details["data"] = data
+                    version = data.get("version", "unknown") if isinstance(data, dict) else "unknown"
+                except Exception:
+                    version = "unknown"
+
+                runtime = await self._runtime_status()
+                if runtime is not None:
+                    details["runtime_status"] = runtime
+                    if (
+                        runtime.get("connected") is False
+                        or runtime.get("success") is False
+                        or runtime.get("error")
+                    ):
+                        return PluginHealth(
+                            status=PluginStatus.ERROR,
+                            message=runtime.get("error") or "Lung motor service is not initialized",
+                            details=details,
+                            compatible=False,
+                            version=version,
+                        )
+
+                return PluginHealth(
+                    status=PluginStatus.CONNECTED,
+                    message="Lung motor is healthy",
+                    details=details,
+                    compatible=True,
+                    version=version,
+                )
+
+        return PluginHealth(
+            status=PluginStatus.ERROR,
+            message="Health check failed on /health and /api/settings",
+            compatible=False,
+        )
+
     async def health_check(self) -> PluginHealth:
         """Check lung motor health and compatibility."""
         if self.config.connection_type == "http" and not self._client:
@@ -94,54 +142,12 @@ class LungPlugin(HardwarePlugin):
 
         try:
             if self.config.connection_type == "http":
-                checked: set[str] = set()
-                for endpoint in (self._health_endpoint, "/health", "/api/settings"):
-                    if endpoint in checked:
-                        continue
-                    checked.add(endpoint)
-
-                    resp = await self._client.get(f"{self._base_url}{endpoint}")
-                    if resp.status_code < 300:
-                        details: dict[str, Any] = {"endpoint": endpoint}
-                        try:
-                            data = resp.json()
-                            details["data"] = data
-                            version = data.get("version", "unknown") if isinstance(data, dict) else "unknown"
-                        except Exception:
-                            version = "unknown"
-
-                        runtime = await self._runtime_status()
-                        if runtime is not None:
-                            details["runtime_status"] = runtime
-                            if runtime.get("connected") is False or runtime.get("success") is False or runtime.get("error"):
-                                return PluginHealth(
-                                    status=PluginStatus.ERROR,
-                                    message=runtime.get("error") or "Lung motor service is not initialized",
-                                    details=details,
-                                    compatible=False,
-                                    version=version,
-                                )
-
-                        return PluginHealth(
-                            status=PluginStatus.CONNECTED,
-                            message="Lung motor is healthy",
-                            details=details,
-                            compatible=True,
-                            version=version,
-                        )
-
-                return PluginHealth(
-                    status=PluginStatus.ERROR,
-                    message="Health check failed on /health and /api/settings",
-                    compatible=False,
-                )
-            else:
-                # USB health check would be implemented here
-                return PluginHealth(
-                    status=PluginStatus.CONNECTED,
-                    message="Lung motor (USB) is healthy",
-                    compatible=True,
-                )
+                return await self._health_check_http()
+            return PluginHealth(
+                status=PluginStatus.CONNECTED,
+                message="Lung motor (USB) is healthy",
+                compatible=True,
+            )
         except Exception as exc:
             return health_check_exception(exc)
 

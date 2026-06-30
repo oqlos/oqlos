@@ -158,67 +158,73 @@ class MotorPlugin(HardwarePlugin):
             self._bus = None
         self._status = PluginStatus.CONFIGURED
 
+    async def _health_check_http(self) -> PluginHealth:
+        """Run the HTTP transport health probe."""
+        health = await http_health_check(self._client, self._base_url, "Motor")
+        details = health.details if isinstance(health.details, dict) else {}
+        port = details.get("port")
+        if isinstance(port, str) and port.startswith("/dev/") and self._base_url_is_local():
+            if not os.path.exists(port):
+                return PluginHealth(
+                    status=PluginStatus.ERROR,
+                    message=f"Motor service reports missing serial port: {port}",
+                    details=details,
+                    compatible=False,
+                    version=health.version,
+                )
+        return health
+
+    async def _health_check_modbus_rtu(self) -> PluginHealth:
+        """Run the Modbus RTU transport health probe."""
+        if self._bus is None:
+            return PluginHealth(
+                status=PluginStatus.ERROR,
+                message="Motor modbus bus not connected",
+                compatible=False,
+            )
+        try:
+            rr = await self._bus.call(
+                "read_holding_registers",
+                address=self._mb_pid_reg,
+                count=1,
+                device_id=self._mb_slave,
+            )
+        except asyncio.TimeoutError:
+            return PluginHealth(
+                status=PluginStatus.ERROR,
+                message=f"Motor (modbus-rtu) PID read timed out (slave={self._mb_slave}, reg=0x{self._mb_pid_reg:04X})",
+                details={"slave": self._mb_slave, "register": self._mb_pid_reg},
+                compatible=False,
+            )
+        if rr is None or (hasattr(rr, "isError") and rr.isError()):
+            return PluginHealth(
+                status=PluginStatus.ERROR,
+                message=f"Motor (modbus-rtu) PID read failed: {rr}",
+                details={"slave": self._mb_slave, "register": self._mb_pid_reg},
+                compatible=False,
+            )
+        pid = getattr(rr, "registers", [None])[0]
+        return PluginHealth(
+            status=PluginStatus.CONNECTED,
+            message=f"Motor (modbus-rtu) is healthy, PID=0x{pid:04X}" if pid is not None else "Motor (modbus-rtu) connected (PID unknown)",
+            details={"slave": self._mb_slave, "pid": pid},
+            compatible=True,
+        )
+
     async def health_check(self) -> PluginHealth:
         """Check motor health and compatibility."""
         if self.config.connection_type == "http" and not self._client:
             return not_connected_health("motor")
-
         try:
             if self.config.connection_type == "http":
-                health = await http_health_check(self._client, self._base_url, "Motor")
-                details = health.details if isinstance(health.details, dict) else {}
-                port = details.get("port")
-                if isinstance(port, str) and port.startswith("/dev/") and self._base_url_is_local():
-                    if not os.path.exists(port):
-                        return PluginHealth(
-                            status=PluginStatus.ERROR,
-                            message=f"Motor service reports missing serial port: {port}",
-                            details=details,
-                            compatible=False,
-                            version=health.version,
-                        )
-                return health
-            elif self.config.connection_type == "modbus-rtu":
-                if self._bus is None:
-                    return PluginHealth(
-                        status=PluginStatus.ERROR,
-                        message="Motor modbus bus not connected",
-                        compatible=False,
-                    )
-                try:
-                    rr = await self._bus.call(
-                        "read_holding_registers",
-                        address=self._mb_pid_reg,
-                        count=1,
-                        device_id=self._mb_slave,
-                    )
-                except asyncio.TimeoutError:
-                    return PluginHealth(
-                        status=PluginStatus.ERROR,
-                        message=f"Motor (modbus-rtu) PID read timed out (slave={self._mb_slave}, reg=0x{self._mb_pid_reg:04X})",
-                        details={"slave": self._mb_slave, "register": self._mb_pid_reg},
-                        compatible=False,
-                    )
-                if rr is None or (hasattr(rr, "isError") and rr.isError()):
-                    return PluginHealth(
-                        status=PluginStatus.ERROR,
-                        message=f"Motor (modbus-rtu) PID read failed: {rr}",
-                        details={"slave": self._mb_slave, "register": self._mb_pid_reg},
-                        compatible=False,
-                    )
-                pid = getattr(rr, "registers", [None])[0]
-                return PluginHealth(
-                    status=PluginStatus.CONNECTED,
-                    message=f"Motor (modbus-rtu) is healthy, PID=0x{pid:04X}" if pid is not None else "Motor (modbus-rtu) connected (PID unknown)",
-                    details={"slave": self._mb_slave, "pid": pid},
-                    compatible=True,
-                )
-            else:
-                return PluginHealth(
-                    status=PluginStatus.CONNECTED,
-                    message="Motor is healthy (no health probe for this transport)",
-                    compatible=True,
-                )
+                return await self._health_check_http()
+            if self.config.connection_type == "modbus-rtu":
+                return await self._health_check_modbus_rtu()
+            return PluginHealth(
+                status=PluginStatus.CONNECTED,
+                message="Motor is healthy (no health probe for this transport)",
+                compatible=True,
+            )
         except Exception as exc:
             return health_check_exception(exc)
 

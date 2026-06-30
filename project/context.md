@@ -1,26 +1,26 @@
 # System Architecture Analysis
-<!-- generated in 0.00s -->
+<!-- generated in 0.01s -->
 
 ## Overview
 
 - **Project**: /home/tom/github/oqlos/oqlos
 - **Primary Language**: python
-- **Languages**: python: 127, md: 16, yaml: 13, json: 5, yml: 4
+- **Languages**: python: 143, md: 16, yaml: 13, json: 5, shell: 5
 - **Analysis Mode**: static
-- **Total Functions**: 1255
-- **Total Classes**: 108
-- **Modules**: 173
-- **Entry Points**: 687
+- **Total Functions**: 1456
+- **Total Classes**: 111
+- **Modules**: 190
+- **Entry Points**: 773
 
 ## Architecture by Module
 
-### oqlos.core._interpreter_actions
-- **Functions**: 83
-- **File**: `_interpreter_actions.py`
-
 ### oqlos.api.hardware
-- **Functions**: 73
+- **Functions**: 87
 - **File**: `hardware.py`
+
+### oqlos.core._interpreter_actions
+- **Functions**: 85
+- **File**: `_interpreter_actions.py`
 
 ### oqlos.core.interpreter
 - **Functions**: 47
@@ -36,6 +36,11 @@
 - **Functions**: 41
 - **File**: `doctor.py`
 
+### scripts.oql_v2_to_v4_migrate_db
+- **Functions**: 41
+- **Classes**: 1
+- **File**: `oql_v2_to_v4_migrate_db.py`
+
 ### oqlos.hardware.transport.mqtt_oql_bridge
 - **Functions**: 34
 - **Classes**: 6
@@ -45,6 +50,11 @@
 - **Functions**: 30
 - **Classes**: 1
 - **File**: `cql_parser.py`
+
+### oqlos.hardware.client.proxy
+- **Functions**: 29
+- **Classes**: 1
+- **File**: `proxy.py`
 
 ### oqlos.core.base
 - **Functions**: 28
@@ -56,19 +66,28 @@
 - **Classes**: 1
 - **File**: `_oql_adapter.py`
 
+### oqlos.hardware.client.tic249_extended
+- **Functions**: 28
+- **File**: `tic249_extended.py`
+
 ### oqlos.core._cql_tokenizer
 - **Functions**: 27
 - **File**: `_cql_tokenizer.py`
+
+### oqlos.hardware.firmware_adapter
+- **Functions**: 26
+- **Classes**: 1
+- **File**: `firmware_adapter.py`
+
+### oqlos.hardware.diagnosis
+- **Functions**: 26
+- **Classes**: 3
+- **File**: `diagnosis.py`
 
 ### oqlos.hardware.gateway
 - **Functions**: 25
 - **Classes**: 5
 - **File**: `gateway.py`
-
-### oqlos.hardware.firmware_adapter
-- **Functions**: 25
-- **Classes**: 1
-- **File**: `firmware_adapter.py`
 
 ### oqlos.core.executor
 - **Functions**: 21
@@ -85,29 +104,9 @@
 - **Classes**: 9
 - **File**: `base.py`
 
-### oqlos.hardware.diagnosis
-- **Functions**: 21
-- **Classes**: 3
-- **File**: `diagnosis.py`
-
 ### oqlos.tools.xml_import.generators
 - **Functions**: 20
 - **File**: `generators.py`
-
-### oqlos.hardware.plugins.lung
-- **Functions**: 20
-- **Classes**: 1
-- **File**: `lung.py`
-
-### scripts.oql_v2_to_v4_migrate_db
-- **Functions**: 19
-- **Classes**: 1
-- **File**: `oql_v2_to_v4_migrate_db.py`
-
-### oqlos.tools.cql_cli.main
-- **Functions**: 18
-- **Classes**: 1
-- **File**: `main.py`
 
 ## Key Entry Points
 
@@ -117,12 +116,6 @@ Main execution flows into the system:
 > Return the canonical cross-project schema used by editor clients.
 - **Calls**: oqlos.dsl.schema._build_inferred_object_function_map, oqlos.dsl.schema._build_inferred_param_unit_map, DslSchema, DslDialect, DslDialect, DslItem, DslItem, DslItem
 
-### scripts.migrate_to_v4.main
-- **Calls**: argparse.ArgumentParser, parser.add_argument, parser.add_argument, parser.add_argument, parser.parse_args, None.resolve, examples.hardware.doctor-workflow.print, scripts.migrate_to_v4.find_oql_files
-
-### oqlos.api.hardware._modbus_wizard_program_isolated
-- **Calls**: None.upper, RtuBusSettings, int, int, None.upper, bool, None.to_dict, uart_register_value
-
 ### oqlos.hardware.firmware_adapter.FirmwareAdapter.set_peripheral
 > Set peripheral value via firmware API.
 
@@ -130,23 +123,17 @@ Routes pump commands to POST /api/v1/hardware/pump and
 valve commands to POST /api/v1/hardware/valve/{id} so t
 - **Calls**: self._resolve_peripheral, pid.startswith, pid.startswith, pid.startswith, None.put, r.raise_for_status, r.json, self._raise_if_rejected
 
-### oqlos.api.hardware._build_waveshare_diagnose_report
-- **Calls**: oqlos.api.hardware._modbus_io_device_ids, int, sorted, oqlos.api.hardware._modbus_runtime_serial_ports, int, str, int, oqlos.api.hardware._modbus_plugins_healthy
-
-### scripts.oql_v2_to_v4_migrate_db.main
-- **Calls**: argparse.ArgumentParser, parser.add_argument, parser.add_argument, parser.add_argument, parser.add_argument, parser.add_argument, parser.add_argument, parser.add_argument
+### scripts.migrate_to_v4.main
+- **Calls**: argparse.ArgumentParser, parser.add_argument, parser.add_argument, parser.add_argument, parser.parse_args, None.resolve, examples.hardware.doctor-workflow.print, scripts.migrate_to_v4.find_oql_files
 
 ### scripts.fix_brackets_to_v4.main
 - **Calls**: argparse.ArgumentParser, parser.add_argument, parser.add_argument, parser.parse_args, Path, list, examples.hardware.doctor-workflow.print, examples.hardware.doctor-workflow.print
 
-### oqlos.hardware.artificial_lung.execute_command
-- **Calls**: None.lower, oqlos.hardware.artificial_lung._command_response, oqlos.hardware.artificial_lung._clamp_lpm, oqlos.hardware.artificial_lung._command_response, oqlos.hardware.artificial_lung._command_response, oqlos.hardware.artificial_lung._command_response, oqlos.hardware.artificial_lung._command_response, max
+### scripts.oql_v2_to_v4_migrate_db.main
+- **Calls**: argparse.ArgumentParser, parser.add_argument, parser.add_argument, parser.add_argument, parser.add_argument, parser.add_argument, parser.add_argument, parser.add_argument
 
 ### oqlos.tools.plugin_cli.main
 - **Calls**: argparse.ArgumentParser, parser.add_subparsers, subparsers.add_parser, subparsers.add_parser, subparsers.add_parser, caps_parser.add_argument, subparsers.add_parser, validate_parser.add_argument
-
-### oqlos.core._interpreter_actions._motor2_do_start
-- **Calls**: str, interp.vars.get, oqlos.core.motor2_runtime.normalize_motor2_runtime_config, oqlos.core.motor2_runtime.build_motor2_reciprocating_plan, float, interp.out.step, setting.get, interp.vars.get
 
 ### oqlos.hardware.usb_diagnostics.pi_system_diagnostics
 > Raspberry Pi health snapshot: model, temp, throttling, memory, uptime, ports.
@@ -158,6 +145,9 @@ valve commands to POST /api/v1/hardware/valve/{id} so t
 
 ### oqlos.api.state._handle_start
 - **Calls**: oqlos.api.state._extract_scenario_id, oqlos.api.state._extract_inline_dsl, ExecutionRequest, logger.debug, oqlos.api.state._maybe_register_dsl_from_content, asyncio.create_task, logger.debug, HTTPException
+
+### oqlos.api.hardware._modbus_wizard_program_isolated
+- **Calls**: None.upper, RtuBusSettings, oqlos.api.hardware._wizard_check_already_configured, oqlos.api.hardware._wizard_verify_config, oqlos.api.hardware._wizard_build_result, None.to_dict, uart_register_value, int
 
 ### oqlos.reporters.html_report.render_html_report
 > Render a self-contained HTML report from an ``oqlos-report-v1`` JSON string.
@@ -188,15 +178,22 @@ valve commands to POST /api/v1/hardware/valve/{id} so t
 > Generate human-readable DSL text from parsed report.
 - **Calls**: a, a, a, a, a, a, a, a
 
-### oqlos.hardware.plugins.motor.MotorPlugin.__init__
-- **Calls**: None.__init__, None.rstrip, self.config.connection_params.get, self.config.connection_params.get, params.get, int, str, int
-
 ### oqlos.api.oql_mqtt.oql_ws
 > Bidirectional OQL channel: client sends OQL frames, receives results.
 
 Inbound frame: ``{"oql": "...", "kind": "command", "mode": "execute"}``.
 Outbou
 - **Calls**: router.websocket, _controller.subscribe_events, asyncio.create_task, websocket.accept, oqlos.api.oql_mqtt._pump_events, pump_task.cancel, _controller.unsubscribe_events, websocket.send_json
+
+### oqlos.hardware.plugins.motor.MotorPlugin.__init__
+- **Calls**: None.__init__, None.rstrip, self.config.connection_params.get, self.config.connection_params.get, params.get, int, str, int
+
+### oqlos.api.hardware._build_waveshare_diagnose_report
+- **Calls**: oqlos.api.hardware._modbus_io_device_ids, int, sorted, oqlos.api.hardware._modbus_runtime_serial_ports, int, str, int, oqlos.api.hardware._modbus_plugins_healthy
+
+### oqlos.hardware.client.autorepair.analyze_repair_needs
+> Return whether host stack restart is recommended and human-readable reasons.
+- **Calls**: oqlos.hardware.client.autorepair._health_map, oqlos.hardware.client.autorepair._plugin_repair_reasons, reasons.extend, diagnostics.get, str, isinstance, isinstance, identify.get
 
 ### oqlos.shared.logs_query.LogsQueryService.query_logs
 > Query logs with filtering, pagination. Returns dict ready for API response.
@@ -225,9 +222,12 @@ Expected payload::
 ### oqlos.hardware.transport.mqtt_oql_bridge.OqlRequest.from_json
 - **Calls**: json.loads, cls, str, str, str, str, str, bool
 
-### oqlos.hardware.plugins.motor.MotorPlugin.health_check
-> Check motor health and compatibility.
-- **Calls**: oqlos.hardware.plugins._shared.not_connected_health, details.get, oqlos.hardware.plugins._shared.health_check_exception, oqlos.hardware.plugins._shared.http_health_check, isinstance, isinstance, port.startswith, self._base_url_is_local
+### setup_hardware_and_run_oql.main
+- **Calls**: argparse.ArgumentParser, parser.add_argument, parser.add_argument, parser.add_argument, parser.add_argument, parser.add_argument, parser.add_argument, parser.add_argument
+
+### oqlos.core._line_parsers._parse_action_line
+> Parse a single action line starting with → or AND.
+- **Calls**: oqlos.core._dsl_helpers._normalize_quote_syntax, re.match, None.strip, None.strip, oqlos.core._dsl_helpers._map_peripheral, oqlos.core._dsl_helpers._map_action_value, None.strip, steps.append
 
 ## Process Flows
 
@@ -246,58 +246,24 @@ get_default_dsl_schema [oqlos.dsl.schema]
       └─> _normalize_name_list
 ```
 
-### Flow 2: main
-```
-main [scripts.migrate_to_v4]
-```
-
-### Flow 3: _modbus_wizard_program_isolated
-```
-_modbus_wizard_program_isolated [oqlos.api.hardware]
-```
-
-### Flow 4: set_peripheral
+### Flow 2: set_peripheral
 ```
 set_peripheral [oqlos.hardware.firmware_adapter.FirmwareAdapter]
 ```
 
-### Flow 5: _build_waveshare_diagnose_report
+### Flow 3: main
 ```
-_build_waveshare_diagnose_report [oqlos.api.hardware]
-  └─> _modbus_io_device_ids
-      └─> _parse_csv_ints
-  └─> _modbus_runtime_serial_ports
-      └─> _modbus_topology_mode
-      └─> _apply_modbus_topology
+main [scripts.migrate_to_v4]
 ```
 
-### Flow 6: execute_command
-```
-execute_command [oqlos.hardware.artificial_lung]
-  └─> _command_response
-  └─> _clamp_lpm
-```
-
-### Flow 7: _motor2_do_start
-```
-_motor2_do_start [oqlos.core._interpreter_actions]
-  └─ →> normalize_motor2_runtime_config
-      └─> _coerce_int
-      └─> _coerce_int
-  └─ →> build_motor2_reciprocating_plan
-      └─> _compute_motor2_cycles
-      └─> _compute_motor2_speed
-          └─> motor2_speed_for_duration
-```
-
-### Flow 8: pi_system_diagnostics
+### Flow 4: pi_system_diagnostics
 ```
 pi_system_diagnostics [oqlos.hardware.usb_diagnostics]
   └─> _read
   └─> _read
 ```
 
-### Flow 9: build_rtc_peripheral_status
+### Flow 5: build_rtc_peripheral_status
 ```
 build_rtc_peripheral_status [oqlos.hardware.rtc_probe]
   └─> _pirtc_request_sync
@@ -306,11 +272,37 @@ build_rtc_peripheral_status [oqlos.hardware.rtc_probe]
       └─> get_pirtc_base_url
 ```
 
-### Flow 10: _handle_start
+### Flow 6: _handle_start
 ```
 _handle_start [oqlos.api.state]
   └─> _extract_scenario_id
   └─> _extract_inline_dsl
+```
+
+### Flow 7: _modbus_wizard_program_isolated
+```
+_modbus_wizard_program_isolated [oqlos.api.hardware]
+  └─> _wizard_check_already_configured
+  └─> _wizard_verify_config
+```
+
+### Flow 8: render_html_report
+```
+render_html_report [oqlos.reporters.html_report]
+```
+
+### Flow 9: _probe_i2c_ads1115
+```
+_probe_i2c_ads1115 [oqlos.api.hardware]
+  └─> _local_ads1115_probe_allowed
+      └─> _selected_piadc_platform
+          └─> _selected_hardware_platform
+      └─> _is_raspberry_pi_host
+```
+
+### Flow 10: _initialize_plugins
+```
+_initialize_plugins [oqlos.hardware.plugin_gateway.PluginHardwareGateway]
 ```
 
 ## Key Classes
@@ -322,6 +314,10 @@ _handle_start [oqlos.api.state]
 - **Methods**: 50
 - **Key Methods**: oqlos.core.interpreter.CqlInterpreter.__init__, oqlos.core.interpreter.CqlInterpreter.sensor_values, oqlos.core.interpreter.CqlInterpreter.sensor_values, oqlos.core.interpreter.CqlInterpreter._firmware, oqlos.core.interpreter.CqlInterpreter._firmware, oqlos.core.interpreter.CqlInterpreter._firmware_url, oqlos.core.interpreter.CqlInterpreter._firmware_url, oqlos.core.interpreter.CqlInterpreter._coerce_float, oqlos.core.interpreter.CqlInterpreter._resolve_peripheral_id, oqlos.core.interpreter.CqlInterpreter._get_pump_flow_full_scale_lpm
 - **Inherits**: BaseInterpreter
+
+### oqlos.hardware.client.proxy.OqlosHardwareProxy
+- **Methods**: 28
+- **Key Methods**: oqlos.hardware.client.proxy.OqlosHardwareProxy.__init__, oqlos.hardware.client.proxy.OqlosHardwareProxy.candidate_bases, oqlos.hardware.client.proxy.OqlosHardwareProxy.proxy_info, oqlos.hardware.client.proxy.OqlosHardwareProxy.close, oqlos.hardware.client.proxy.OqlosHardwareProxy._get_client, oqlos.hardware.client.proxy.OqlosHardwareProxy._proxy_oqlos, oqlos.hardware.client.proxy.OqlosHardwareProxy._proxy_oqlos_request, oqlos.hardware.client.proxy.OqlosHardwareProxy._degraded_oqlos_payload, oqlos.hardware.client.proxy.OqlosHardwareProxy.health, oqlos.hardware.client.proxy.OqlosHardwareProxy.identify
 
 ### oqlos.core.cql_parser._ParseState
 > Encapsulates the parsing state to simplify the main loop.
@@ -355,8 +351,8 @@ Configuration:
 Configuration:
     connection_type: "http"
     connect
-- **Methods**: 18
-- **Key Methods**: oqlos.hardware.plugins.motor.MotorPlugin.__init__, oqlos.hardware.plugins.motor.MotorPlugin.validate_config, oqlos.hardware.plugins.motor.MotorPlugin.connect, oqlos.hardware.plugins.motor.MotorPlugin.disconnect, oqlos.hardware.plugins.motor.MotorPlugin.health_check, oqlos.hardware.plugins.motor.MotorPlugin._base_url_is_local, oqlos.hardware.plugins.motor.MotorPlugin._validate_power_pct, oqlos.hardware.plugins.motor.MotorPlugin._handle_set_speed_http, oqlos.hardware.plugins.motor.MotorPlugin._handle_set_speed_cli, oqlos.hardware.plugins.motor.MotorPlugin._handle_set_speed_modbus
+- **Methods**: 20
+- **Key Methods**: oqlos.hardware.plugins.motor.MotorPlugin.__init__, oqlos.hardware.plugins.motor.MotorPlugin.validate_config, oqlos.hardware.plugins.motor.MotorPlugin.connect, oqlos.hardware.plugins.motor.MotorPlugin.disconnect, oqlos.hardware.plugins.motor.MotorPlugin._health_check_http, oqlos.hardware.plugins.motor.MotorPlugin._health_check_modbus_rtu, oqlos.hardware.plugins.motor.MotorPlugin.health_check, oqlos.hardware.plugins.motor.MotorPlugin._base_url_is_local, oqlos.hardware.plugins.motor.MotorPlugin._validate_power_pct, oqlos.hardware.plugins.motor.MotorPlugin._handle_set_speed_http
 - **Inherits**: HardwarePlugin
 
 ### oqlos.core.executor.ScenarioOrchestrator
@@ -448,16 +444,6 @@ In *mock* mode every call is a no-op that logs th
 - **Methods**: 8
 - **Key Methods**: oqlos.hardware.gateway.HardwareGateway.__init__, oqlos.hardware.gateway.HardwareGateway.is_real, oqlos.hardware.gateway.HardwareGateway.set_valve, oqlos.hardware.gateway.HardwareGateway.set_pump, oqlos.hardware.gateway.HardwareGateway.read_sensor, oqlos.hardware.gateway.HardwareGateway.set_lung, oqlos.hardware.gateway.HardwareGateway.stop_lung, oqlos.hardware.gateway.HardwareGateway.health
 
-### oqlos.hardware.plugins.piadc.PiadcPlugin
-> Plugin for piADC (ADS1115) 16-bit ADC sensor.
-
-Configuration:
-    connection_type: "http"
-    connec
-- **Methods**: 8
-- **Key Methods**: oqlos.hardware.plugins.piadc.PiadcPlugin.__init__, oqlos.hardware.plugins.piadc.PiadcPlugin.validate_config, oqlos.hardware.plugins.piadc.PiadcPlugin.connect, oqlos.hardware.plugins.piadc.PiadcPlugin.disconnect, oqlos.hardware.plugins.piadc.PiadcPlugin.health_check, oqlos.hardware.plugins.piadc.PiadcPlugin._read_blocker, oqlos.hardware.plugins.piadc.PiadcPlugin.execute_command, oqlos.hardware.plugins.piadc.PiadcPlugin.get_capabilities
-- **Inherits**: HardwarePlugin
-
 ## Data Transformation Functions
 
 Key functions that process and transform data:
@@ -532,31 +518,28 @@ Key functions that process and transform data:
 ### oqlos.core._interpreter_actions._parse_motor2_steps
 - **Output to**: None.lower, re.search, max, int, None.strip
 
-### oqlos.core.parser._dispatch_simple_parser
-> Dispatch to the appropriate simple-line parser.
-- **Output to**: oqlos.core._line_parsers._parse_task_part, oqlos.core._line_parsers._parse_set_line, oqlos.core._line_parsers._parse_pump_line
+### oqlos.core.oql_parser.parse_duration
+> Parse ``3s``, ``500ms``, ``3000`` (bare number defaults to ``ms``).
+- **Output to**: DUR_RE.match, ValueError, oqlos.core.oql_parser.to_num, match.group, match.group
 
-### oqlos.core.parser._parse_runtime_line
-> Parse one runtime-relevant DSL line into executable firmware steps.
-- **Output to**: oqlos.core._dsl_helpers._normalize_quote_syntax, re.match, re.match, oqlos.core._func_resolver._parse_func_call, oqlos.core.parser._try_action_or_condition
+### oqlos.core.oql_parser.parse_SET
+- **Output to**: oqlos.core.oql_parser._require, oqlos.core.oql_parser._split_set_value_unit, OqlCmd
 
-### oqlos.core.parser.parse_dsl_to_goal_with_issues
-> Parse DSL and return a runtime goal plus invalid runtime lines.
-- **Output to**: oqlos.core._func_resolver._collect_function_definitions, enumerate, Goal, isinstance, None.rstrip
+### oqlos.core.oql_parser.parse_GET
+- **Output to**: oqlos.core.oql_parser._require, OqlCmd
 
-### oqlos.core.parser.parse_dsl_to_goal
-> Parse DSL string to a runtime Goal with Steps.
+### oqlos.core.oql_parser.parse_WAIT
+- **Output to**: oqlos.core.oql_parser._require, oqlos.core.oql_parser.parse_duration, oqlos.core.oql_parser.duration_to_ms, OqlCmd
 
-DSL supported forms:
-  - GOAL: <name>
-  - → <Action>
-- **Output to**: oqlos.core.parser.parse_dsl_to_goal_with_issues
-
-### oqlos.core._func_resolver._parse_func_call
-> Expand an in-goal FUNC call into its defined runtime steps.
-- **Output to**: oqlos.core._func_resolver._extract_func_name, oqlos.core._func_resolver._guard_recursion, func_defs.get, parse_line_fn
+### oqlos.core.oql_parser.parse_IF_DELTA
+- **Output to**: oqlos.core.oql_parser._require, None.replace, DELTA_RE.match, oqlos.core.oql_parser.to_num, abs
 
 ## Behavioral Patterns
+
+### recursion__expand_repeat_block_lines
+- **Type**: recursion
+- **Confidence**: 0.90
+- **Functions**: oqlos.core.oql_parser._expand_repeat_block_lines
 
 ### recursion__safe_resolve
 - **Type**: recursion
@@ -578,10 +561,10 @@ DSL supported forms:
 - **Confidence**: 0.90
 - **Functions**: scripts.oql_validator_common.extract_code_from_json
 
-### recursion__expand_repeat_block_lines
+### recursion__command_error_message
 - **Type**: recursion
 - **Confidence**: 0.90
-- **Functions**: oqlos.core.oql_parser._expand_repeat_block_lines
+- **Functions**: oqlos.hardware.client.tic249_extended._command_error_message
 
 ### state_machine_StateManager
 - **Type**: state_machine
@@ -628,40 +611,36 @@ DSL supported forms:
 - **Confidence**: 0.70
 - **Functions**: oqlos.hardware.plugins.lung.LungPlugin.__init__, oqlos.hardware.plugins.lung.LungPlugin.validate_config, oqlos.hardware.plugins.lung.LungPlugin.connect, oqlos.hardware.plugins.lung.LungPlugin.disconnect, oqlos.hardware.plugins.lung.LungPlugin._health_check_http
 
-### state_machine_MotorPlugin
-- **Type**: state_machine
-- **Confidence**: 0.70
-- **Functions**: oqlos.hardware.plugins.motor.MotorPlugin.__init__, oqlos.hardware.plugins.motor.MotorPlugin.validate_config, oqlos.hardware.plugins.motor.MotorPlugin.connect, oqlos.hardware.plugins.motor.MotorPlugin.disconnect, oqlos.hardware.plugins.motor.MotorPlugin.health_check
-
 ## Public API Surface
 
 Functions exposed as public API (no underscore prefix):
 
-- `scripts.oql_v2_to_v4_migrate_db.migrate_v2_to_v4` - 171 calls
 - `oqlos.dsl.schema.get_default_dsl_schema` - 75 calls
-- `scripts.migrate_to_v4.main` - 70 calls
 - `oqlos.hardware.firmware_adapter.FirmwareAdapter.set_peripheral` - 60 calls
-- `scripts.migrate_to_v4.migrate_content` - 53 calls
-- `scripts.oql_v2_to_v4_migrate_db.main` - 46 calls
+- `scripts.migrate_to_v4.main` - 46 calls
 - `scripts.fix_brackets_to_v4.main` - 42 calls
-- `oqlos.hardware.diagnosis.build_diagnosis_report` - 42 calls
-- `oqlos.api.hardware.hardware_identify` - 41 calls
-- `oqlos.hardware.artificial_lung.execute_command` - 39 calls
+- `scripts.oql_v2_to_v4_migrate_db.main` - 37 calls
 - `oqlos.tools.plugin_cli.main` - 36 calls
 - `oqlos.hardware.usb_diagnostics.list_usb_devices` - 33 calls
 - `oqlos.tools.cql_cli.formatting.canonicalize_oql_line` - 31 calls
 - `oqlos.core._oql_adapter.oql_doc_to_cql` - 30 calls
 - `oqlos.core.motor2_runtime.normalize_motor2_runtime_config` - 29 calls
 - `oqlos.hardware.usb_diagnostics.pi_system_diagnostics` - 28 calls
+- `oqlos.hardware.diagnosis.build_diagnosis_report` - 28 calls
 - `oqlos.tools.hardware_diagnose.modbus_probe.probe_options_from_args` - 27 calls
 - `oqlos.hardware.rtc_probe.build_rtc_peripheral_status` - 27 calls
+- `oqlos.hardware.client.identify_enrich.enrich_adapter_entry` - 27 calls
+- `oqlos.hardware.client.modbus_repair.rewrite_modbus_repair` - 26 calls
 - `oqlos.tools.hardware_diagnose.doctor.format_detection` - 25 calls
+- `oqlos.hardware.client.resolvers.extract_command_failure` - 25 calls
 - `oqlos.reporters.html_report.render_html_report` - 25 calls
 - `scripts.scenarios_export.export_all_zip` - 25 calls
+- `oqlos.hardware.client.identify_enrich.enrich_identify_payload` - 25 calls
 - `setup_hardware_and_run_oql.run_oql_scenario` - 24 calls
 - `oqlos.shared.logger.configure_oqlos_logging` - 23 calls
 - `scripts.scenarios_export.main` - 23 calls
 - `oqlos.api.hardware.read_modbus_adc_raw` - 23 calls
+- `oqlos.core.oql_parser.parse_oql` - 21 calls
 - `oqlos.core.parser.parse_dsl_to_goal_with_issues` - 21 calls
 - `oqlos.tools.hardware_diagnose.doctor.format_doctor` - 21 calls
 - `oqlos.tools.hardware_diagnose.__main__.main` - 21 calls
@@ -670,13 +649,12 @@ Functions exposed as public API (no underscore prefix):
 - `oqlos.api.oql_mqtt.oql_ws` - 21 calls
 - `scripts.migrate_to_v4.check_database` - 21 calls
 - `scripts.scenarios_export.export_one_bash` - 21 calls
-- `oqlos.core.oql_parser.parse_oql` - 21 calls
+- `scripts.oql_v2_to_v4_migrate_db.migrate_v2_to_v4` - 21 calls
 - `oqlos.tools.hardware_diagnose.health.cmd_diagnose` - 20 calls
+- `oqlos.hardware.client.autorepair.analyze_repair_needs` - 20 calls
 - `oqlos.shared.logs_query.LogsQueryService.query_logs` - 20 calls
 - `oqlos.api.execution.execute_step` - 20 calls
-- `oqlos.core._interpreter_actions.exec_action_shell` - 19 calls
-- `oqlos.tools.xml_import.generators.generate_cql` - 19 calls
-- `oqlos.hardware.transport.mqtt_oql_bridge.OqlRequest.from_json` - 19 calls
+- `oqlos.api.hardware.hardware_identify` - 20 calls
 
 ## System Interactions
 
@@ -688,32 +666,32 @@ graph TD
     get_default_dsl_sche --> _build_inferred_para
     get_default_dsl_sche --> DslSchema
     get_default_dsl_sche --> DslDialect
-    main --> ArgumentParser
-    main --> add_argument
-    main --> parse_args
-    _modbus_wizard_progr --> upper
-    _modbus_wizard_progr --> RtuBusSettings
-    _modbus_wizard_progr --> int
     set_peripheral --> _resolve_peripheral
     set_peripheral --> startswith
     set_peripheral --> put
-    _build_waveshare_dia --> _modbus_io_device_id
-    _build_waveshare_dia --> int
-    _build_waveshare_dia --> sorted
-    _build_waveshare_dia --> _modbus_runtime_seri
+    main --> ArgumentParser
+    main --> add_argument
+    main --> parse_args
     main --> Path
-    execute_command --> lower
-    execute_command --> _command_response
-    execute_command --> _clamp_lpm
     main --> add_subparsers
     main --> add_parser
-    _motor2_do_start --> str
-    _motor2_do_start --> get
-    _motor2_do_start --> normalize_motor2_run
-    _motor2_do_start --> build_motor2_recipro
-    _motor2_do_start --> float
     pi_system_diagnostic --> _read
     pi_system_diagnostic --> _vcgencmd
+    pi_system_diagnostic --> splitlines
+    build_rtc_peripheral --> _pirtc_request_sync
+    build_rtc_peripheral --> is_rtc_hardware_enab
+    build_rtc_peripheral --> isinstance
+    _handle_start --> _extract_scenario_id
+    _handle_start --> _extract_inline_dsl
+    _handle_start --> ExecutionRequest
+    _handle_start --> debug
+    _handle_start --> _maybe_register_dsl_
+    _modbus_wizard_progr --> upper
+    _modbus_wizard_progr --> RtuBusSettings
+    _modbus_wizard_progr --> _wizard_check_alread
+    _modbus_wizard_progr --> _wizard_verify_confi
+    _modbus_wizard_progr --> _wizard_build_result
+    render_html_report --> loads
 ```
 
 ## Reverse Engineering Guidelines

@@ -1,30 +1,51 @@
 project: /home/tom/github/oqlos/oqlos
 generated_from: code2llm call graph analysis
 stats:
-  total_nodes: 414
+  total_nodes: 401
   total_edges: 500
-  modules_count: 56
+  modules_count: 47
 nodes:
-  oqlos.hardware.modbus_identify._is_modbus_candidate:
-    name: _is_modbus_candidate
-    module: oqlos.hardware.modbus_identify
-    line: 39
-    cyclomatic_complexity: 5
-    calls_out: 3
-    calls_in: 1
-  oqlos.core._interpreter_actions._motor2_do_stop:
-    name: _motor2_do_stop
-    module: oqlos.core._interpreter_actions
-    line: 1037
-    cyclomatic_complexity: 4
-    calls_out: 3
+  oqlos.core.cql_parser._ParseState._handle_scenario_attrs:
+    name: _handle_scenario_attrs
+    module: oqlos.core.cql_parser
+    line: 187
+    cyclomatic_complexity: 3
+    calls_out: 1
     calls_in: 0
-  oqlos.tools.cql_cli.preflight._is_firmware_running:
-    name: _is_firmware_running
+  oqlos.core.executor.safe_eval_condition:
+    name: safe_eval_condition
+    module: oqlos.core.executor
+    line: 51
+    cyclomatic_complexity: 2
+    calls_out: 5
+    calls_in: 2
+  oqlos.tools.cql_cli.preflight.preflight_hardware:
+    name: preflight_hardware
     module: oqlos.tools.cql_cli.preflight
-    line: 40
+    line: 289
     cyclomatic_complexity: 5
-    calls_out: 3
+    calls_out: 6
+    calls_in: 1
+  oqlos.tools.hardware_diagnose.doctor._expected_modbus_adc_params:
+    name: _expected_modbus_adc_params
+    module: oqlos.tools.hardware_diagnose.doctor
+    line: 288
+    cyclomatic_complexity: 6
+    calls_out: 8
+    calls_in: 2
+  oqlos.tools.hardware_diagnose.__main__._handle_report_action:
+    name: _handle_report_action
+    module: oqlos.tools.hardware_diagnose.__main__
+    line: 153
+    cyclomatic_complexity: 3
+    calls_out: 4
+    calls_in: 0
+  oqlos.core._oql_adapter._resolve_include:
+    name: _resolve_include
+    module: oqlos.core._oql_adapter
+    line: 57
+    cyclomatic_complexity: 6
+    calls_out: 8
     calls_in: 1
   oqlos.core.parser.parse_dsl_to_goal:
     name: parse_dsl_to_goal
@@ -33,160 +54,6 @@ nodes:
     cyclomatic_complexity: 1
     calls_out: 1
     calls_in: 0
-  oqlos.core._interpreter_actions._parse_motor2_steps:
-    name: _parse_motor2_steps
-    module: oqlos.core._interpreter_actions
-    line: 890
-    cyclomatic_complexity: 3
-    calls_out: 9
-    calls_in: 2
-  examples.hardware.doctor-workflow.print:
-    name: print
-    module: examples.hardware.doctor-workflow
-    line: 41
-    cyclomatic_complexity: 0
-    calls_out: 0
-    calls_in: 226
-  setup_hardware_and_run_oql.generate_env_content:
-    name: generate_env_content
-    module: setup_hardware_and_run_oql
-    line: 101
-    cyclomatic_complexity: 2
-    calls_out: 1
-    calls_in: 1
-  oqlos.tools.hardware_diagnose.report.format_peripheral_table:
-    name: format_peripheral_table
-    module: oqlos.tools.hardware_diagnose.report
-    line: 14
-    cyclomatic_complexity: 12
-    calls_out: 3
-    calls_in: 3
-  oqlos.core.safe_eval._eval_node:
-    name: _eval_node
-    module: oqlos.core.safe_eval
-    line: 133
-    cyclomatic_complexity: 2
-    calls_out: 5
-    calls_in: 10
-  oqlos.tools.cql_cli.preflight.preflight_hardware:
-    name: preflight_hardware
-    module: oqlos.tools.cql_cli.preflight
-    line: 289
-    cyclomatic_complexity: 5
-    calls_out: 6
-    calls_in: 1
-  oqlos.tools.cql_cli.utils.build_single_command_scenario:
-    name: build_single_command_scenario
-    module: oqlos.tools.cql_cli.utils
-    line: 68
-    cyclomatic_complexity: 2
-    calls_out: 3
-    calls_in: 2
-  oqlos.core._interpreter_actions._parse_motor2_speed_steps:
-    name: _parse_motor2_speed_steps
-    module: oqlos.core._interpreter_actions
-    line: 774
-    cyclomatic_complexity: 5
-    calls_out: 9
-    calls_in: 2
-  oqlos.tools.hardware_diagnose.modbus_probe._env_int_list:
-    name: _env_int_list
-    module: oqlos.tools.hardware_diagnose.modbus_probe
-    line: 36
-    cyclomatic_complexity: 5
-    calls_out: 5
-    calls_in: 7
-  oqlos.core._cql_tokenizer._try_if_block:
-    name: _try_if_block
-    module: oqlos.core._cql_tokenizer
-    line: 223
-    cyclomatic_complexity: 4
-    calls_out: 11
-    calls_in: 1
-  oqlos.tools.hardware_diagnose.doctor._usb_serial_only:
-    name: _usb_serial_only
-    module: oqlos.tools.hardware_diagnose.doctor
-    line: 42
-    cyclomatic_complexity: 3
-    calls_out: 1
-    calls_in: 1
-  oqlos.tools.cql_cli.main._print_cli_error:
-    name: _print_cli_error
-    module: oqlos.tools.cql_cli.main
-    line: 268
-    cyclomatic_complexity: 2
-    calls_out: 3
-    calls_in: 1
-  oqlos.core._oql_adapter._lower_max:
-    name: _lower_max
-    module: oqlos.core._oql_adapter
-    line: 205
-    cyclomatic_complexity: 1
-    calls_out: 3
-    calls_in: 0
-  oqlos.core._interpreter_actions._mock_api_response:
-    name: _mock_api_response
-    module: oqlos.core._interpreter_actions
-    line: 172
-    cyclomatic_complexity: 6
-    calls_out: 5
-    calls_in: 1
-  oqlos.hardware.rtc_probe.get_pirtc_base_url:
-    name: get_pirtc_base_url
-    module: oqlos.hardware.rtc_probe
-    line: 27
-    cyclomatic_complexity: 1
-    calls_out: 2
-    calls_in: 2
-  oqlos.hardware.modbus_identify.enrich_modbus_identify:
-    name: enrich_modbus_identify
-    module: oqlos.hardware.modbus_identify
-    line: 129
-    cyclomatic_complexity: 1
-    calls_out: 2
-    calls_in: 1
-  oqlos.tools.cql_cli.commands._run_continuous_mode:
-    name: _run_continuous_mode
-    module: oqlos.tools.cql_cli.commands
-    line: 144
-    cyclomatic_complexity: 4
-    calls_out: 20
-    calls_in: 1
-  oqlos.core._interpreter_actions._post_motor2_stop:
-    name: _post_motor2_stop
-    module: oqlos.core._interpreter_actions
-    line: 963
-    cyclomatic_complexity: 4
-    calls_out: 11
-    calls_in: 1
-  oqlos.core._oql_adapter._substitute_args:
-    name: _substitute_args
-    module: oqlos.core._oql_adapter
-    line: 73
-    cyclomatic_complexity: 3
-    calls_out: 2
-    calls_in: 1
-  oqlos.tools.xml_import.parser.parse_xml:
-    name: parse_xml
-    module: oqlos.tools.xml_import.parser
-    line: 14
-    cyclomatic_complexity: 6
-    calls_out: 16
-    calls_in: 0
-  oqlos.core._dsl_helpers._map_action_value:
-    name: _map_action_value
-    module: oqlos.core._dsl_helpers
-    line: 115
-    cyclomatic_complexity: 7
-    calls_out: 8
-    calls_in: 2
-  oqlos.tools.hardware_diagnose.doctor._health_status_is_ok:
-    name: _health_status_is_ok
-    module: oqlos.tools.hardware_diagnose.doctor
-    line: 638
-    cyclomatic_complexity: 11
-    calls_out: 9
-    calls_in: 2
   oqlos.tools.hardware_diagnose.health.cmd_health:
     name: cmd_health
     module: oqlos.tools.hardware_diagnose.health
@@ -194,27 +61,55 @@ nodes:
     cyclomatic_complexity: 5
     calls_out: 10
     calls_in: 1
-  oqlos.tools.hardware_diagnose.modbus_probe._arg_int_list:
-    name: _arg_int_list
-    module: oqlos.tools.hardware_diagnose.modbus_probe
-    line: 79
+  oqlos.core.safe_eval._eval_compare:
+    name: _eval_compare
+    module: oqlos.core.safe_eval
+    line: 90
+    cyclomatic_complexity: 1
+    calls_out: 2
+    calls_in: 0
+  oqlos.core._oql_adapter._substitute_args:
+    name: _substitute_args
+    module: oqlos.core._oql_adapter
+    line: 73
     cyclomatic_complexity: 3
     calls_out: 2
-    calls_in: 4
-  oqlos.tools.cql_cli.commands.handle_list_command:
-    name: handle_list_command
-    module: oqlos.tools.cql_cli.commands
-    line: 89
-    cyclomatic_complexity: 7
-    calls_out: 21
     calls_in: 1
-  oqlos.core._interpreter_actions._lookup_peripheral_state:
-    name: _lookup_peripheral_state
-    module: oqlos.core._interpreter_actions
-    line: 157
+  oqlos.core._value_normalizers.ValueNormalizer.coerce_float:
+    name: coerce_float
+    module: oqlos.core._value_normalizers
+    line: 28
     cyclomatic_complexity: 5
-    calls_out: 5
+    calls_out: 9
+    calls_in: 0
+  oqlos.core._line_parsers._parse_if_condition:
+    name: _parse_if_condition
+    module: oqlos.core._line_parsers
+    line: 213
+    cyclomatic_complexity: 9
+    calls_out: 22
     calls_in: 1
+  oqlos.core.interpreter.CqlInterpreter.execute:
+    name: execute
+    module: oqlos.core.interpreter
+    line: 214
+    cyclomatic_complexity: 4
+    calls_out: 9
+    calls_in: 0
+  oqlos.core.safe_eval._eval_node:
+    name: _eval_node
+    module: oqlos.core.safe_eval
+    line: 133
+    cyclomatic_complexity: 2
+    calls_out: 5
+    calls_in: 10
+  oqlos.core.oql_parser.parse_MAX:
+    name: parse_MAX
+    module: oqlos.core.oql_parser
+    line: 356
+    cyclomatic_complexity: 1
+    calls_out: 3
+    calls_in: 0
   oqlos.core._interpreter_actions._assert_status:
     name: _assert_status
     module: oqlos.core._interpreter_actions
@@ -222,102 +117,39 @@ nodes:
     cyclomatic_complexity: 5
     calls_out: 7
     calls_in: 0
-  oqlos.tools.plugin_cli.cmd_capabilities:
-    name: cmd_capabilities
-    module: oqlos.tools.plugin_cli
-    line: 116
-    cyclomatic_complexity: 2
-    calls_out: 6
-    calls_in: 0
-  oqlos.tools.cql_cli.formatting.canonicalize_oql_text:
-    name: canonicalize_oql_text
-    module: oqlos.tools.cql_cli.formatting
-    line: 20
-    cyclomatic_complexity: 3
-    calls_out: 4
-    calls_in: 2
-  oqlos.tools.xml_import.generators._emit_cql_param:
-    name: _emit_cql_param
+  oqlos.tools.xml_import.generators._emit_cql_sensor_param:
+    name: _emit_cql_sensor_param
     module: oqlos.tools.xml_import.generators
-    line: 82
-    cyclomatic_complexity: 7
-    calls_out: 5
-    calls_in: 2
-  oqlos.core._interpreter_actions._handle_motor2_reciprocating_setting:
-    name: _handle_motor2_reciprocating_setting
-    module: oqlos.core._interpreter_actions
-    line: 1123
-    cyclomatic_complexity: 2
+    line: 100
+    cyclomatic_complexity: 13
+    calls_out: 11
+    calls_in: 1
+  oqlos.core._compare.resolve_compare_chain:
+    name: resolve_compare_chain
+    module: oqlos.core._compare
+    line: 29
+    cyclomatic_complexity: 3
     calls_out: 4
-    calls_in: 1
-  oqlos.tools.hardware_diagnose.__main__._print_diagnose:
-    name: _print_diagnose
-    module: oqlos.tools.hardware_diagnose.__main__
-    line: 166
-    cyclomatic_complexity: 3
-    calls_out: 9
-    calls_in: 1
-  oqlos.core._interpreter_actions._mark_success:
-    name: _mark_success
-    module: oqlos.core._interpreter_actions
-    line: 140
-    cyclomatic_complexity: 1
-    calls_out: 1
-    calls_in: 3
-  oqlos.core.cql_parser.parse_cql:
-    name: parse_cql
-    module: oqlos.core.cql_parser
-    line: 424
-    cyclomatic_complexity: 2
-    calls_out: 6
     calls_in: 2
-  oqlos.tools.cql_cli.main.create_cmd_parser:
-    name: create_cmd_parser
-    module: oqlos.tools.cql_cli.main
-    line: 115
-    cyclomatic_complexity: 1
-    calls_out: 13
-    calls_in: 1
-  oqlos.hardware.usb_diagnostics._find_tty:
-    name: _find_tty
-    module: oqlos.hardware.usb_diagnostics
-    line: 34
+  oqlos.core._cql_tokenizer._try_save:
+    name: _try_save
+    module: oqlos.core._cql_tokenizer
+    line: 169
     cyclomatic_complexity: 5
-    calls_out: 16
-    calls_in: 1
-  oqlos.tools.hardware_diagnose.modbus_probe.add_modbus_probe_arguments:
-    name: add_modbus_probe_arguments
-    module: oqlos.tools.hardware_diagnose.modbus_probe
-    line: 95
-    cyclomatic_complexity: 1
-    calls_out: 8
-    calls_in: 2
-  oqlos.core.motor2_runtime.motor2_max_steps_per_second:
-    name: motor2_max_steps_per_second
-    module: oqlos.core.motor2_runtime
-    line: 71
-    cyclomatic_complexity: 2
-    calls_out: 3
-    calls_in: 2
-  oqlos.tools.hardware_diagnose.modbus_probe.run_modbus_probe_from_args:
-    name: run_modbus_probe_from_args
-    module: oqlos.tools.hardware_diagnose.modbus_probe
-    line: 151
-    cyclomatic_complexity: 1
-    calls_out: 2
-    calls_in: 2
-  oqlos.core.cql_parser._ParseState._handle_goal:
-    name: _handle_goal
-    module: oqlos.core.cql_parser
-    line: 193
-    cyclomatic_complexity: 3
-    calls_out: 5
+    calls_out: 7
     calls_in: 0
-  oqlos.tools.hardware_diagnose.doctor._check_firmware_mode:
-    name: _check_firmware_mode
-    module: oqlos.tools.hardware_diagnose.doctor
-    line: 492
-    cyclomatic_complexity: 3
+  oqlos.core.oql_parser._handle_set_name:
+    name: _handle_set_name
+    module: oqlos.core.oql_parser
+    line: 555
+    cyclomatic_complexity: 5
+    calls_out: 8
+    calls_in: 1
+  oqlos.core._line_parsers._set_valve_step:
+    name: _set_valve_step
+    module: oqlos.core._line_parsers
+    line: 79
+    cyclomatic_complexity: 4
     calls_out: 4
     calls_in: 1
   oqlos.tools.xml_import.parser._populate_report_fields:
@@ -327,418 +159,19 @@ nodes:
     cyclomatic_complexity: 1
     calls_out: 16
     calls_in: 1
-  oqlos.core._interpreter_actions._record_failure:
-    name: _record_failure
-    module: oqlos.core._interpreter_actions
-    line: 131
-    cyclomatic_complexity: 1
-    calls_out: 3
-    calls_in: 8
-  oqlos.core._func_resolver._extract_func_name:
-    name: _extract_func_name
-    module: oqlos.core._func_resolver
-    line: 51
-    cyclomatic_complexity: 7
-    calls_out: 7
+  oqlos.tools.cql_cli.preflight._emit_yaml_preflight:
+    name: _emit_yaml_preflight
+    module: oqlos.tools.cql_cli.preflight
+    line: 233
+    cyclomatic_complexity: 6
+    calls_out: 8
     calls_in: 1
-  oqlos.tools.hardware_diagnose.shell._cmd_calibrate:
-    name: _cmd_calibrate
-    module: oqlos.tools.hardware_diagnose.shell
-    line: 46
-    cyclomatic_complexity: 4
-    calls_out: 5
-    calls_in: 1
-  oqlos.hardware.firmware_adapter.FirmwareAdapter.__init__:
-    name: __init__
-    module: oqlos.hardware.firmware_adapter
-    line: 131
-    cyclomatic_complexity: 1
-    calls_out: 3
-    calls_in: 0
-  oqlos.core._cql_tokenizer._try_save:
-    name: _try_save
-    module: oqlos.core._cql_tokenizer
-    line: 169
-    cyclomatic_complexity: 5
-    calls_out: 7
-    calls_in: 0
-  oqlos.core._cql_tree_builder._parse_step_line:
-    name: _parse_step_line
-    module: oqlos.core._cql_tree_builder
-    line: 119
-    cyclomatic_complexity: 3
-    calls_out: 5
-    calls_in: 1
-  oqlos.core._interpreter_actions._drop_command_token:
-    name: _drop_command_token
-    module: oqlos.core._interpreter_actions
+  oqlos.tools.hardware_diagnose.__main__._print_health:
+    name: _print_health
+    module: oqlos.tools.hardware_diagnose.__main__
     line: 43
-    cyclomatic_complexity: 6
+    cyclomatic_complexity: 2
     calls_out: 5
-    calls_in: 3
-  oqlos.core.executor._resolve_compare:
-    name: _resolve_compare
-    module: oqlos.core.executor
-    line: 11
-    cyclomatic_complexity: 1
-    calls_out: 2
-    calls_in: 1
-  oqlos.tools.xml_import._utils.is_compressor_output:
-    name: is_compressor_output
-    module: oqlos.tools.xml_import._utils
-    line: 34
-    cyclomatic_complexity: 5
-    calls_out: 2
-    calls_in: 2
-  oqlos.tools.hardware_diagnose.modbus_probe.main:
-    name: main
-    module: oqlos.tools.hardware_diagnose.modbus_probe
-    line: 194
-    cyclomatic_complexity: 2
-    calls_out: 7
-    calls_in: 0
-  oqlos.core.executor.ScenarioOrchestrator._execute_validate_step:
-    name: _execute_validate_step
-    module: oqlos.core.executor
-    line: 294
-    cyclomatic_complexity: 7
-    calls_out: 7
-    calls_in: 0
-  oqlos.tools.plugin_cli.cmd_connect:
-    name: cmd_connect
-    module: oqlos.tools.plugin_cli
-    line: 156
-    cyclomatic_complexity: 4
-    calls_out: 6
-    calls_in: 0
-  oqlos.tools.cql_cli.utils._resolve_sensor_target:
-    name: _resolve_sensor_target
-    module: oqlos.tools.cql_cli.utils
-    line: 110
-    cyclomatic_complexity: 3
-    calls_out: 0
-    calls_in: 1
-  oqlos.hardware.stack_snapshot._lazy_hardware_api:
-    name: _lazy_hardware_api
-    module: oqlos.hardware.stack_snapshot
-    line: 8
-    cyclomatic_complexity: 1
-    calls_out: 0
-    calls_in: 1
-  oqlos.hardware.rtc_probe.enrich_rtc_adapter:
-    name: enrich_rtc_adapter
-    module: oqlos.hardware.rtc_probe
-    line: 183
-    cyclomatic_complexity: 8
-    calls_out: 11
-    calls_in: 1
-  oqlos.core._dsl_helpers._looks_like_pump_object:
-    name: _looks_like_pump_object
-    module: oqlos.core._dsl_helpers
-    line: 30
-    cyclomatic_complexity: 1
-    calls_out: 2
-    calls_in: 2
-  oqlos.core.motor2_runtime.motor2_speed_raw:
-    name: motor2_speed_raw
-    module: oqlos.core.motor2_runtime
-    line: 125
-    cyclomatic_complexity: 1
-    calls_out: 5
-    calls_in: 2
-  oqlos.hardware.config_schema.build_dynamic_schema_models:
-    name: build_dynamic_schema_models
-    module: oqlos.hardware.config_schema
-    line: 133
-    cyclomatic_complexity: 2
-    calls_out: 4
-    calls_in: 0
-  oqlos.tools.cql_cli.preflight._start_firmware_service:
-    name: _start_firmware_service
-    module: oqlos.tools.cql_cli.preflight
-    line: 54
-    cyclomatic_complexity: 13
-    calls_out: 11
-    calls_in: 1
-  oqlos.hardware.scanner_probe.resolve_scanner_presence:
-    name: resolve_scanner_presence
-    module: oqlos.hardware.scanner_probe
-    line: 204
-    cyclomatic_complexity: 1
-    calls_out: 11
-    calls_in: 1
-  oqlos.hardware.firmware_adapter.FirmwareAdapter._raise_if_rejected:
-    name: _raise_if_rejected
-    module: oqlos.hardware.firmware_adapter
-    line: 177
-    cyclomatic_complexity: 3
-    calls_out: 3
-    calls_in: 0
-  oqlos.core._line_parsers._set_pump_step:
-    name: _set_pump_step
-    module: oqlos.core._line_parsers
-    line: 92
-    cyclomatic_complexity: 4
-    calls_out: 3
-    calls_in: 2
-  oqlos.tools.cql_cli.utils.normalize_target_name:
-    name: normalize_target_name
-    module: oqlos.tools.cql_cli.utils
-    line: 63
-    cyclomatic_complexity: 1
-    calls_out: 4
-    calls_in: 1
-  oqlos.tools.hardware_diagnose.modbus_probe._env_float:
-    name: _env_float
-    module: oqlos.tools.hardware_diagnose.modbus_probe
-    line: 61
-    cyclomatic_complexity: 2
-    calls_out: 2
-    calls_in: 2
-  oqlos.tools.hardware_diagnose.health.cmd_diagnose:
-    name: cmd_diagnose
-    module: oqlos.tools.hardware_diagnose.health
-    line: 84
-    cyclomatic_complexity: 6
-    calls_out: 20
-    calls_in: 2
-  oqlos.core.executor.ScenarioOrchestrator.validate_goal:
-    name: validate_goal
-    module: oqlos.core.executor
-    line: 352
-    cyclomatic_complexity: 5
-    calls_out: 3
-    calls_in: 0
-  oqlos.tools.hardware_diagnose.doctor._expected_modbus_adc_params:
-    name: _expected_modbus_adc_params
-    module: oqlos.tools.hardware_diagnose.doctor
-    line: 288
-    cyclomatic_complexity: 6
-    calls_out: 8
-    calls_in: 2
-  oqlos.tools.cql_cli.main.create_format_parser:
-    name: create_format_parser
-    module: oqlos.tools.cql_cli.main
-    line: 104
-    cyclomatic_complexity: 1
-    calls_out: 3
-    calls_in: 1
-  oqlos.tools.plugin_cli.cmd_execute:
-    name: cmd_execute
-    module: oqlos.tools.plugin_cli
-    line: 202
-    cyclomatic_complexity: 3
-    calls_out: 7
-    calls_in: 0
-  oqlos.hardware.sidecar_control._modbus_serial_candidates:
-    name: _modbus_serial_candidates
-    module: oqlos.hardware.sidecar_control
-    line: 19
-    cyclomatic_complexity: 4
-    calls_out: 6
-    calls_in: 1
-  oqlos.tools.plugin_cli._load_config_file:
-    name: _load_config_file
-    module: oqlos.tools.plugin_cli
-    line: 42
-    cyclomatic_complexity: 4
-    calls_out: 16
-    calls_in: 1
-  oqlos.core._cql_tokenizer._try_val:
-    name: _try_val
-    module: oqlos.core._cql_tokenizer
-    line: 282
-    cyclomatic_complexity: 2
-    calls_out: 4
-    calls_in: 0
-  oqlos.core._dsl_helpers._map_wait_action:
-    name: _map_wait_action
-    module: oqlos.core._dsl_helpers
-    line: 93
-    cyclomatic_complexity: 4
-    calls_out: 7
-    calls_in: 1
-  oqlos.tools.hardware_diagnose.doctor._expected_modbus_params:
-    name: _expected_modbus_params
-    module: oqlos.tools.hardware_diagnose.doctor
-    line: 273
-    cyclomatic_complexity: 5
-    calls_out: 6
-    calls_in: 2
-  setup_hardware_and_run_oql.setup_env_file:
-    name: setup_env_file
-    module: setup_hardware_and_run_oql
-    line: 154
-    cyclomatic_complexity: 7
-    calls_out: 16
-    calls_in: 1
-  oqlos.core._func_resolver._parse_func_call:
-    name: _parse_func_call
-    module: oqlos.core._func_resolver
-    line: 74
-    cyclomatic_complexity: 5
-    calls_out: 4
-    calls_in: 1
-  oqlos.tools.hardware_diagnose.doctor._canonical_device_path:
-    name: _canonical_device_path
-    module: oqlos.tools.hardware_diagnose.doctor
-    line: 141
-    cyclomatic_complexity: 2
-    calls_out: 3
-    calls_in: 2
-  oqlos.tools.cql_cli.utils.parse_sensor_overrides:
-    name: parse_sensor_overrides
-    module: oqlos.tools.cql_cli.utils
-    line: 33
-    cyclomatic_complexity: 3
-    calls_out: 4
-    calls_in: 2
-  oqlos.tools.cql_cli._sync_compat_symbols:
-    name: _sync_compat_symbols
-    module: oqlos.tools.cql_cli
-    line: 24
-    cyclomatic_complexity: 1
-    calls_out: 0
-    calls_in: 1
-  oqlos.core._interpreter_actions.exec_action_val:
-    name: exec_action_val
-    module: oqlos.core._interpreter_actions
-    line: 276
-    cyclomatic_complexity: 3
-    calls_out: 4
-    calls_in: 1
-  oqlos.core.parser._parse_runtime_line:
-    name: _parse_runtime_line
-    module: oqlos.core.parser
-    line: 61
-    cyclomatic_complexity: 9
-    calls_out: 15
-    calls_in: 1
-  oqlos.core._func_resolver._guard_recursion:
-    name: _guard_recursion
-    module: oqlos.core._func_resolver
-    line: 66
-    cyclomatic_complexity: 3
-    calls_out: 5
-    calls_in: 1
-  oqlos.core._interpreter_actions._post_motor2_move_relative:
-    name: _post_motor2_move_relative
-    module: oqlos.core._interpreter_actions
-    line: 918
-    cyclomatic_complexity: 6
-    calls_out: 13
-    calls_in: 1
-  oqlos.tools.cql_cli.formatting.canonicalize_oql_line:
-    name: canonicalize_oql_line
-    module: oqlos.tools.cql_cli.formatting
-    line: 25
-    cyclomatic_complexity: 14
-    calls_out: 31
-    calls_in: 1
-  oqlos.hardware.identify_enrichment.enrich_identify_payload:
-    name: enrich_identify_payload
-    module: oqlos.hardware.identify_enrichment
-    line: 12
-    cyclomatic_complexity: 2
-    calls_out: 4
-    calls_in: 1
-  oqlos.core._line_parsers._parse_if_condition:
-    name: _parse_if_condition
-    module: oqlos.core._line_parsers
-    line: 213
-    cyclomatic_complexity: 9
-    calls_out: 22
-    calls_in: 1
-  oqlos.core._interpreter_actions._normalize_bool:
-    name: _normalize_bool
-    module: oqlos.core._interpreter_actions
-    line: 145
-    cyclomatic_complexity: 5
-    calls_out: 4
-    calls_in: 2
-  oqlos.core.motor2_runtime.motor2_acceleration_raw:
-    name: motor2_acceleration_raw
-    module: oqlos.core.motor2_runtime
-    line: 117
-    cyclomatic_complexity: 2
-    calls_out: 8
-    calls_in: 2
-  oqlos.tools.xml_import.generators._format_range:
-    name: _format_range
-    module: oqlos.tools.xml_import.generators
-    line: 30
-    cyclomatic_complexity: 9
-    calls_out: 0
-    calls_in: 2
-  oqlos.tools.xml_import.generators.generate_dsl:
-    name: generate_dsl
-    module: oqlos.tools.xml_import.generators
-    line: 245
-    cyclomatic_complexity: 6
-    calls_out: 21
-    calls_in: 0
-  oqlos.tools.cql_cli.utils._extract_first_action:
-    name: _extract_first_action
-    module: oqlos.tools.cql_cli.utils
-    line: 84
-    cyclomatic_complexity: 5
-    calls_out: 2
-    calls_in: 1
-  oqlos.tools.hardware_diagnose.doctor._format_doctor_applied_repairs:
-    name: _format_doctor_applied_repairs
-    module: oqlos.tools.hardware_diagnose.doctor
-    line: 960
-    cyclomatic_complexity: 4
-    calls_out: 5
-    calls_in: 1
-  oqlos.tools.cql_cli.preflight.ensure_firmware_running:
-    name: ensure_firmware_running
-    module: oqlos.tools.cql_cli.preflight
-    line: 30
-    cyclomatic_complexity: 2
-    calls_out: 2
-    calls_in: 1
-  oqlos.tools.xml_import.generators._build_steps_from_op:
-    name: _build_steps_from_op
-    module: oqlos.tools.xml_import.generators
-    line: 167
-    cyclomatic_complexity: 10
-    calls_out: 14
-    calls_in: 1
-  oqlos.tools.hardware_diagnose.doctor._collect_repairs:
-    name: _collect_repairs
-    module: oqlos.tools.hardware_diagnose.doctor
-    line: 703
-    cyclomatic_complexity: 5
-    calls_out: 7
-    calls_in: 1
-  oqlos.tools.hardware_diagnose.doctor._analyze_serial_port_owners:
-    name: _analyze_serial_port_owners
-    module: oqlos.tools.hardware_diagnose.doctor
-    line: 658
-    cyclomatic_complexity: 13
-    calls_out: 19
-    calls_in: 1
-  oqlos.tools.cql_cli.main._run_hardware_flags:
-    name: _run_hardware_flags
-    module: oqlos.tools.cql_cli.main
-    line: 275
-    cyclomatic_complexity: 9
-    calls_out: 14
-    calls_in: 2
-  oqlos.core._interpreter_actions._normalize_motor2_target:
-    name: _normalize_motor2_target
-    module: oqlos.core._interpreter_actions
-    line: 760
-    cyclomatic_complexity: 1
-    calls_out: 2
-    calls_in: 1
-  oqlos.core._interpreter_actions.exec_action_assert:
-    name: exec_action_assert
-    module: oqlos.core._interpreter_actions
-    line: 570
-    cyclomatic_complexity: 3
-    calls_out: 7
     calls_in: 0
   oqlos.core._interpreter_actions._motor2_speed_raw:
     name: _motor2_speed_raw
@@ -747,40 +180,89 @@ nodes:
     cyclomatic_complexity: 1
     calls_out: 2
     calls_in: 1
-  oqlos.tools.cql_cli.utils.resolve_required_adapter:
-    name: resolve_required_adapter
-    module: oqlos.tools.cql_cli.utils
-    line: 115
+  oqlos.tools.xml_import.generators._emit_dsl_sensors:
+    name: _emit_dsl_sensors
+    module: oqlos.tools.xml_import.generators
+    line: 319
     cyclomatic_complexity: 8
-    calls_out: 3
+    calls_out: 7
     calls_in: 1
-  oqlos.core.interpreter.CqlInterpreter._build_script_result:
-    name: _build_script_result
-    module: oqlos.core.interpreter
-    line: 201
+  oqlos.core._interpreter_actions._coerce_expected_value:
+    name: _coerce_expected_value
+    module: oqlos.core._interpreter_actions
+    line: 52
+    cyclomatic_complexity: 7
+    calls_out: 8
+    calls_in: 4
+  oqlos.tools.xml_import.generators._emit_set:
+    name: _emit_set
+    module: oqlos.tools.xml_import.generators
+    line: 61
+    cyclomatic_complexity: 1
+    calls_out: 3
+    calls_in: 6
+  oqlos.tools.cql_cli.commands.handle_list_command:
+    name: handle_list_command
+    module: oqlos.tools.cql_cli.commands
+    line: 89
+    cyclomatic_complexity: 7
+    calls_out: 21
+    calls_in: 1
+  oqlos.hardware.discovery.probe_waveshare_modbus_adc:
+    name: probe_waveshare_modbus_adc
+    module: oqlos.hardware.discovery
+    line: 86
+    cyclomatic_complexity: 5
+    calls_out: 2
+    calls_in: 2
+  oqlos.tools.hardware_diagnose.modbus_probe._env_int_list:
+    name: _env_int_list
+    module: oqlos.tools.hardware_diagnose.modbus_probe
+    line: 36
+    cyclomatic_complexity: 5
+    calls_out: 5
+    calls_in: 7
+  oqlos.core.oql_parser._handle_top_level_line:
+    name: _handle_top_level_line
+    module: oqlos.core.oql_parser
+    line: 495
+    cyclomatic_complexity: 6
+    calls_out: 16
+    calls_in: 1
+  oqlos.tools.xml_import.generators._mode_action:
+    name: _mode_action
+    module: oqlos.tools.xml_import.generators
+    line: 43
+    cyclomatic_complexity: 3
+    calls_out: 2
+    calls_in: 2
+  oqlos.core._interpreter_actions._try_exec_motor2_set:
+    name: _try_exec_motor2_set
+    module: oqlos.core._interpreter_actions
+    line: 1147
+    cyclomatic_complexity: 13
+    calls_out: 22
+    calls_in: 1
+  oqlos.core.safe_eval._eval_bin_op:
+    name: _eval_bin_op
+    module: oqlos.core.safe_eval
+    line: 80
     cyclomatic_complexity: 2
     calls_out: 7
     calls_in: 0
-  oqlos.tools.hardware_diagnose.health.check_firmware_health:
-    name: check_firmware_health
-    module: oqlos.tools.hardware_diagnose.health
-    line: 30
+  oqlos.core._interpreter_actions._normalize_motor2_value:
+    name: _normalize_motor2_value
+    module: oqlos.core._interpreter_actions
+    line: 826
+    cyclomatic_complexity: 2
+    calls_out: 4
+    calls_in: 1
+  oqlos.tools.cql_cli.main._create_interpreter:
+    name: _create_interpreter
+    module: oqlos.tools.cql_cli.main
+    line: 188
     cyclomatic_complexity: 1
     calls_out: 1
-    calls_in: 6
-  oqlos.tools.hardware_diagnose.modbus_probe._env_int:
-    name: _env_int
-    module: oqlos.tools.hardware_diagnose.modbus_probe
-    line: 31
-    cyclomatic_complexity: 2
-    calls_out: 2
-    calls_in: 6
-  oqlos.core.cql_parser._collect_all_goals:
-    name: _collect_all_goals
-    module: oqlos.core.cql_parser
-    line: 443
-    cyclomatic_complexity: 2
-    calls_out: 2
     calls_in: 1
   oqlos.tools.hardware_diagnose.discovery.list_i2c_buses:
     name: list_i2c_buses
@@ -789,83 +271,34 @@ nodes:
     cyclomatic_complexity: 1
     calls_out: 2
     calls_in: 6
-  oqlos.core._interpreter_actions.exec_action_expect:
-    name: exec_action_expect
+  oqlos.core._interpreter_actions._parse_motor2_acceleration:
+    name: _parse_motor2_acceleration
     module: oqlos.core._interpreter_actions
-    line: 477
-    cyclomatic_complexity: 3
-    calls_out: 4
-    calls_in: 0
-  oqlos.core.motor2_runtime._compute_motor2_cycles:
-    name: _compute_motor2_cycles
-    module: oqlos.core.motor2_runtime
-    line: 142
-    cyclomatic_complexity: 3
-    calls_out: 7
-    calls_in: 1
-  oqlos.tools.hardware_diagnose.calibration._calibrate_valves:
-    name: _calibrate_valves
-    module: oqlos.tools.hardware_diagnose.calibration
-    line: 59
-    cyclomatic_complexity: 4
-    calls_out: 6
-    calls_in: 1
-  oqlos.hardware.rtc_probe._pirtc_request_sync:
-    name: _pirtc_request_sync
-    module: oqlos.hardware.rtc_probe
-    line: 45
-    cyclomatic_complexity: 8
-    calls_out: 10
-    calls_in: 5
-  oqlos.tools.plugin_cli.cmd_status:
-    name: cmd_status
-    module: oqlos.tools.plugin_cli
-    line: 106
-    cyclomatic_complexity: 2
-    calls_out: 5
-    calls_in: 0
-  oqlos.tools.hardware_diagnose.modbus_probe.probe_options_from_args:
-    name: probe_options_from_args
-    module: oqlos.tools.hardware_diagnose.modbus_probe
-    line: 115
-    cyclomatic_complexity: 2
-    calls_out: 27
-    calls_in: 1
-  oqlos.core.safe_eval._eval_bool_op:
-    name: _eval_bool_op
-    module: oqlos.core.safe_eval
-    line: 95
-    cyclomatic_complexity: 4
-    calls_out: 7
-    calls_in: 0
-  oqlos.core.cql_parser._ParseState._handle_scenario:
-    name: _handle_scenario
-    module: oqlos.core.cql_parser
-    line: 175
-    cyclomatic_complexity: 2
-    calls_out: 3
-    calls_in: 0
-  oqlos.tools.hardware_diagnose.shell.interactive_shell:
-    name: interactive_shell
-    module: oqlos.tools.hardware_diagnose.shell
-    line: 114
+    line: 816
     cyclomatic_complexity: 6
-    calls_out: 8
+    calls_out: 9
     calls_in: 1
-  oqlos.tools.xml_import._utils.normalize_output_name:
-    name: normalize_output_name
-    module: oqlos.tools.xml_import._utils
-    line: 40
+  oqlos.tools.hardware_diagnose.doctor._analyze_modbus_config:
+    name: _analyze_modbus_config
+    module: oqlos.tools.hardware_diagnose.doctor
+    line: 398
     cyclomatic_complexity: 11
-    calls_out: 12
+    calls_out: 20
     calls_in: 1
-  oqlos.config.get_settings:
-    name: get_settings
-    module: oqlos.config
-    line: 218
+  oqlos.core._interpreter_actions._lookup_peripheral_state:
+    name: _lookup_peripheral_state
+    module: oqlos.core._interpreter_actions
+    line: 157
+    cyclomatic_complexity: 5
+    calls_out: 5
+    calls_in: 1
+  oqlos.tools.hardware_diagnose.modbus_probe.run_modbus_probe:
+    name: run_modbus_probe
+    module: oqlos.tools.hardware_diagnose.modbus_probe
+    line: 170
     cyclomatic_complexity: 1
-    calls_out: 0
-    calls_in: 8
+    calls_out: 1
+    calls_in: 2
   oqlos.core.interpreter.CqlInterpreter._exec_flat_action:
     name: _exec_flat_action
     module: oqlos.core.interpreter
@@ -873,104 +306,69 @@ nodes:
     cyclomatic_complexity: 6
     calls_out: 6
     calls_in: 0
-  oqlos.tools.hardware_diagnose.shell._cmd_benchmark:
-    name: _cmd_benchmark
-    module: oqlos.tools.hardware_diagnose.shell
-    line: 57
+  oqlos.core.executor._resolve_name_or_attr:
+    name: _resolve_name_or_attr
+    module: oqlos.core.executor
+    line: 16
     cyclomatic_complexity: 4
-    calls_out: 8
+    calls_out: 6
     calls_in: 1
-  oqlos.core._line_parsers._parse_task_part:
-    name: _parse_task_part
-    module: oqlos.core._line_parsers
-    line: 20
-    cyclomatic_complexity: 10
-    calls_out: 14
+  oqlos.tools.hardware_diagnose.modbus_probe.add_modbus_probe_arguments:
+    name: add_modbus_probe_arguments
+    module: oqlos.tools.hardware_diagnose.modbus_probe
+    line: 95
+    cyclomatic_complexity: 1
+    calls_out: 8
     calls_in: 2
-  oqlos.hardware.scanner_probe._merge_matches:
-    name: _merge_matches
-    module: oqlos.hardware.scanner_probe
-    line: 124
+  setup_hardware_and_run_oql.detect_serial_devices:
+    name: detect_serial_devices
+    module: setup_hardware_and_run_oql
+    line: 32
+    cyclomatic_complexity: 12
+    calls_out: 7
+    calls_in: 1
+  oqlos.core._interpreter_actions._drop_command_token:
+    name: _drop_command_token
+    module: oqlos.core._interpreter_actions
+    line: 43
     cyclomatic_complexity: 6
     calls_out: 5
-    calls_in: 1
-  oqlos.core._line_parsers._parse_inline_task:
-    name: _parse_inline_task
-    module: oqlos.core._line_parsers
-    line: 155
-    cyclomatic_complexity: 5
-    calls_out: 7
-    calls_in: 1
-  oqlos.tools.xml_import.parser._parse_intervals:
-    name: _parse_intervals
-    module: oqlos.tools.xml_import.parser
-    line: 64
-    cyclomatic_complexity: 4
-    calls_out: 7
-    calls_in: 1
-  oqlos.hardware.artificial_lung.execute_command:
-    name: execute_command
-    module: oqlos.hardware.artificial_lung
-    line: 63
-    cyclomatic_complexity: 20
-    calls_out: 39
-    calls_in: 0
-  oqlos.hardware.firmware_adapter.FirmwareAdapter._handle_lung_action:
-    name: _handle_lung_action
-    module: oqlos.hardware.firmware_adapter
-    line: 387
-    cyclomatic_complexity: 3
-    calls_out: 5
-    calls_in: 0
-  oqlos.core._interpreter_actions._format_set_command:
-    name: _format_set_command
-    module: oqlos.core._interpreter_actions
-    line: 106
-    cyclomatic_complexity: 1
-    calls_out: 2
-    calls_in: 4
-  oqlos.core._interpreter_actions._extract_action_tokens:
-    name: _extract_action_tokens
-    module: oqlos.core._interpreter_actions
-    line: 35
-    cyclomatic_complexity: 5
-    calls_out: 4
-    calls_in: 1
-  oqlos.core._oql_adapter._scenarios_root:
-    name: _scenarios_root
-    module: oqlos.core._oql_adapter
-    line: 52
-    cyclomatic_complexity: 1
-    calls_out: 2
-    calls_in: 1
-  oqlos.tools.hardware_diagnose.doctor._analyze_firmware_access:
-    name: _analyze_firmware_access
-    module: oqlos.tools.hardware_diagnose.doctor
-    line: 603
-    cyclomatic_complexity: 7
-    calls_out: 11
-    calls_in: 1
-  oqlos.tools.hardware_diagnose.doctor._firmware_adapter_status:
-    name: _firmware_adapter_status
-    module: oqlos.tools.hardware_diagnose.doctor
-    line: 933
-    cyclomatic_complexity: 7
+    calls_in: 3
+  oqlos.tools.cql_cli.main._extract_scenario_source:
+    name: _extract_scenario_source
+    module: oqlos.tools.cql_cli.main
+    line: 241
+    cyclomatic_complexity: 9
     calls_out: 9
     calls_in: 1
-  oqlos.tools.hardware_diagnose.doctor._modbus_adc_config:
-    name: _modbus_adc_config
-    module: oqlos.tools.hardware_diagnose.doctor
-    line: 265
-    cyclomatic_complexity: 3
-    calls_out: 4
+  oqlos.tools.cql_cli.preflight._is_firmware_running:
+    name: _is_firmware_running
+    module: oqlos.tools.cql_cli.preflight
+    line: 40
+    cyclomatic_complexity: 5
+    calls_out: 3
     calls_in: 1
-  oqlos.hardware.scanner_probe._match_blob:
-    name: _match_blob
-    module: oqlos.hardware.scanner_probe
-    line: 57
-    cyclomatic_complexity: 3
-    calls_out: 4
-    calls_in: 2
+  oqlos.core._interpreter_actions.exec_action_shell:
+    name: exec_action_shell
+    module: oqlos.core._interpreter_actions
+    line: 584
+    cyclomatic_complexity: 13
+    calls_out: 19
+    calls_in: 0
+  oqlos.tools.hardware_diagnose.report.format_peripheral_table:
+    name: format_peripheral_table
+    module: oqlos.tools.hardware_diagnose.report
+    line: 14
+    cyclomatic_complexity: 12
+    calls_out: 3
+    calls_in: 3
+  oqlos.core.parser._parse_runtime_line:
+    name: _parse_runtime_line
+    module: oqlos.core.parser
+    line: 61
+    cyclomatic_complexity: 9
+    calls_out: 15
+    calls_in: 1
   oqlos.core._interpreter_actions._resolve_numeric_token:
     name: _resolve_numeric_token
     module: oqlos.core._interpreter_actions
@@ -978,165 +376,102 @@ nodes:
     cyclomatic_complexity: 6
     calls_out: 9
     calls_in: 1
-  oqlos.hardware.sidecar_control._dri0050_paths:
-    name: _dri0050_paths
-    module: oqlos.hardware.sidecar_control
-    line: 77
-    cyclomatic_complexity: 9
-    calls_out: 16
-    calls_in: 1
-  oqlos.core.motor2_runtime._normalize_motor2_direction:
-    name: _normalize_motor2_direction
-    module: oqlos.core.motor2_runtime
-    line: 130
-    cyclomatic_complexity: 4
-    calls_out: 2
-    calls_in: 1
-  oqlos.tools.hardware_diagnose.doctor._analyze_modbus_adc_config:
-    name: _analyze_modbus_adc_config
+  oqlos.tools.hardware_diagnose.doctor._firmware_modbus_adc_health_ok:
+    name: _firmware_modbus_adc_health_ok
     module: oqlos.tools.hardware_diagnose.doctor
-    line: 303
-    cyclomatic_complexity: 12
-    calls_out: 22
-    calls_in: 1
-  oqlos.tools.plugin_cli.cmd_health:
-    name: cmd_health
-    module: oqlos.tools.plugin_cli
-    line: 182
-    cyclomatic_complexity: 3
-    calls_out: 8
-    calls_in: 3
-  oqlos.core.safe_eval._eval_if_exp:
-    name: _eval_if_exp
-    module: oqlos.core.safe_eval
-    line: 113
-    cyclomatic_complexity: 2
-    calls_out: 3
-    calls_in: 0
-  oqlos.core._interpreter_actions.exec_action_api:
-    name: exec_action_api
-    module: oqlos.core._interpreter_actions
-    line: 463
-    cyclomatic_complexity: 3
-    calls_out: 9
-    calls_in: 0
-  oqlos.core._interpreter_actions._motor2_acceleration_raw:
-    name: _motor2_acceleration_raw
-    module: oqlos.core._interpreter_actions
-    line: 914
-    cyclomatic_complexity: 1
-    calls_out: 2
-    calls_in: 1
-  oqlos.hardware.rtc_probe.build_rtc_peripheral_status:
-    name: build_rtc_peripheral_status
-    module: oqlos.hardware.rtc_probe
-    line: 69
-    cyclomatic_complexity: 11
-    calls_out: 27
-    calls_in: 0
-  oqlos.tools.xml_import.generators._append_sensor_assertion:
-    name: _append_sensor_assertion
-    module: oqlos.tools.xml_import.generators
-    line: 204
-    cyclomatic_complexity: 6
-    calls_out: 3
-    calls_in: 1
-  oqlos.core._cql_tree_builder._ensure_step_for_actions:
-    name: _ensure_step_for_actions
-    module: oqlos.core._cql_tree_builder
-    line: 158
-    cyclomatic_complexity: 3
-    calls_out: 2
-    calls_in: 1
-  oqlos.tools.hardware_diagnose.shell._cmd_list:
-    name: _cmd_list
-    module: oqlos.tools.hardware_diagnose.shell
-    line: 29
-    cyclomatic_complexity: 5
-    calls_out: 11
-    calls_in: 0
-  oqlos.tools.cql_cli.preflight._health_status_is_ok:
-    name: _health_status_is_ok
-    module: oqlos.tools.cql_cli.preflight
-    line: 187
-    cyclomatic_complexity: 11
-    calls_out: 9
-    calls_in: 1
-  oqlos.hardware.stack_snapshot.build_hardware_stack_snapshot:
-    name: build_hardware_stack_snapshot
-    module: oqlos.hardware.stack_snapshot
-    line: 57
-    cyclomatic_complexity: 3
-    calls_out: 11
-    calls_in: 1
-  oqlos.tools.hardware_diagnose.__main__._print_list:
-    name: _print_list
-    module: oqlos.tools.hardware_diagnose.__main__
-    line: 34
-    cyclomatic_complexity: 3
-    calls_out: 8
-    calls_in: 1
-  oqlos.core._interpreter_actions.exec_action_save:
-    name: exec_action_save
-    module: oqlos.core._interpreter_actions
-    line: 209
+    line: 389
     cyclomatic_complexity: 4
     calls_out: 6
     calls_in: 1
-  oqlos.core._cql_tokenizer._try_min_max:
-    name: _try_min_max
-    module: oqlos.core._cql_tokenizer
-    line: 273
-    cyclomatic_complexity: 2
-    calls_out: 7
-    calls_in: 0
-  oqlos.tools.xml_import.parser._parse_operation_params:
-    name: _parse_operation_params
-    module: oqlos.tools.xml_import.parser
-    line: 145
-    cyclomatic_complexity: 9
-    calls_out: 21
+  oqlos.core._interpreter_actions._motor2_effective_steps_per_second:
+    name: _motor2_effective_steps_per_second
+    module: oqlos.core._interpreter_actions
+    line: 906
+    cyclomatic_complexity: 1
+    calls_out: 4
     calls_in: 1
-  oqlos.core._oql_adapter._parse_macro_line:
-    name: _parse_macro_line
-    module: oqlos.core._oql_adapter
-    line: 326
-    cyclomatic_complexity: 8
-    calls_out: 10
+  oqlos.tools.hardware_diagnose.doctor._check_firmware_adapters:
+    name: _check_firmware_adapters
+    module: oqlos.tools.hardware_diagnose.doctor
+    line: 573
+    cyclomatic_complexity: 7
+    calls_out: 9
     calls_in: 1
-  oqlos.hardware.sidecar_control._run_cmd:
-    name: _run_cmd
-    module: oqlos.hardware.sidecar_control
-    line: 124
-    cyclomatic_complexity: 3
-    calls_out: 6
-    calls_in: 6
-  oqlos.hardware.plugin_gateway.PluginHardwareGateway.reload_configs:
-    name: reload_configs
-    module: oqlos.hardware.plugin_gateway
-    line: 543
-    cyclomatic_complexity: 5
-    calls_out: 11
-    calls_in: 0
-  oqlos.core.base.VariableStore.all:
-    name: all
-    module: oqlos.core.base
-    line: 87
-    cyclomatic_complexity: 3
-    calls_out: 3
-    calls_in: 6
-  oqlos.tools.cql_cli.main._looks_like_html:
-    name: _looks_like_html
-    module: oqlos.tools.cql_cli.main
-    line: 260
+  oqlos.core._func_resolver._guard_recursion:
+    name: _guard_recursion
+    module: oqlos.core._func_resolver
+    line: 66
     cyclomatic_complexity: 3
     calls_out: 5
+    calls_in: 1
+  oqlos.core.oql_parser.duration_to_ms:
+    name: duration_to_ms
+    module: oqlos.core.oql_parser
+    line: 157
+    cyclomatic_complexity: 1
+    calls_out: 2
     calls_in: 3
-  oqlos.tools.plugin_cli.cmd_disconnect:
-    name: cmd_disconnect
-    module: oqlos.tools.plugin_cli
-    line: 172
+  oqlos.core._oql_adapter._cmd_to_actions:
+    name: _cmd_to_actions
+    module: oqlos.core._oql_adapter
+    line: 316
     cyclomatic_complexity: 2
+    calls_out: 3
+    calls_in: 3
+  oqlos.tools.xml_import.parser._parse_intervals:
+    name: _parse_intervals
+    module: oqlos.tools.xml_import.parser
+    line: 64
+    cyclomatic_complexity: 4
+    calls_out: 7
+    calls_in: 1
+  oqlos.core.cql_parser._collect_all_goals:
+    name: _collect_all_goals
+    module: oqlos.core.cql_parser
+    line: 443
+    cyclomatic_complexity: 2
+    calls_out: 2
+    calls_in: 1
+  oqlos.hardware.config_paths.resolve_oqlos_config_path:
+    name: resolve_oqlos_config_path
+    module: oqlos.hardware.config_paths
+    line: 9
+    cyclomatic_complexity: 6
+    calls_out: 13
+    calls_in: 8
+  oqlos.core._cql_tokenizer._try_if_block:
+    name: _try_if_block
+    module: oqlos.core._cql_tokenizer
+    line: 223
+    cyclomatic_complexity: 4
+    calls_out: 11
+    calls_in: 1
+  oqlos.core._interpreter_actions._motor2_do_stop:
+    name: _motor2_do_stop
+    module: oqlos.core._interpreter_actions
+    line: 1037
+    cyclomatic_complexity: 4
+    calls_out: 3
+    calls_in: 0
+  oqlos.core._cql_tree_builder._parse_metadata_kv:
+    name: _parse_metadata_kv
+    module: oqlos.core._cql_tree_builder
+    line: 28
+    cyclomatic_complexity: 6
+    calls_out: 5
+    calls_in: 1
+  oqlos.core._interpreter_actions._normalize_bool:
+    name: _normalize_bool
+    module: oqlos.core._interpreter_actions
+    line: 145
+    cyclomatic_complexity: 5
+    calls_out: 4
+    calls_in: 2
+  oqlos.core._interpreter_actions.exec_action_expect:
+    name: exec_action_expect
+    module: oqlos.core._interpreter_actions
+    line: 477
+    cyclomatic_complexity: 3
     calls_out: 4
     calls_in: 0
   oqlos.tools.cql_cli.commands.run_source:
@@ -1146,761 +481,12 @@ nodes:
     cyclomatic_complexity: 2
     calls_out: 3
     calls_in: 2
-  oqlos.tools.hardware_diagnose.report.save_diagnostic_report:
-    name: save_diagnostic_report
-    module: oqlos.tools.hardware_diagnose.report
-    line: 37
-    cyclomatic_complexity: 3
-    calls_out: 13
-    calls_in: 2
-  oqlos.tools.hardware_diagnose.health._format_health_value:
-    name: _format_health_value
-    module: oqlos.tools.hardware_diagnose.health
-    line: 51
-    cyclomatic_complexity: 8
-    calls_out: 9
-    calls_in: 1
-  oqlos.tools.hardware_diagnose.doctor.apply_safe_fixes:
-    name: apply_safe_fixes
-    module: oqlos.tools.hardware_diagnose.doctor
-    line: 765
-    cyclomatic_complexity: 9
-    calls_out: 14
-    calls_in: 1
-  oqlos.tools.hardware_diagnose.modbus_probe._arg_str_list:
-    name: _arg_str_list
-    module: oqlos.tools.hardware_diagnose.modbus_probe
-    line: 75
-    cyclomatic_complexity: 2
-    calls_out: 1
-    calls_in: 3
-  oqlos.core._interpreter_actions._motor2_reciprocating_state:
-    name: _motor2_reciprocating_state
+  oqlos.core._interpreter_actions._mock_api_response:
+    name: _mock_api_response
     module: oqlos.core._interpreter_actions
-    line: 973
-    cyclomatic_complexity: 2
-    calls_out: 3
-    calls_in: 1
-  oqlos.core._interpreter_actions._coerce_expected_value:
-    name: _coerce_expected_value
-    module: oqlos.core._interpreter_actions
-    line: 52
-    cyclomatic_complexity: 7
-    calls_out: 8
-    calls_in: 4
-  oqlos.tools.hardware_diagnose.doctor._firmware_modbus_adc_health_ok:
-    name: _firmware_modbus_adc_health_ok
-    module: oqlos.tools.hardware_diagnose.doctor
-    line: 389
-    cyclomatic_complexity: 4
-    calls_out: 6
-    calls_in: 1
-  oqlos.tools.hardware_diagnose.benchmark.run_benchmark:
-    name: run_benchmark
-    module: oqlos.tools.hardware_diagnose.benchmark
-    line: 9
-    cyclomatic_complexity: 6
-    calls_out: 15
-    calls_in: 2
-  oqlos.tools.hardware_diagnose.health.check_firmware_identify:
-    name: check_firmware_identify
-    module: oqlos.tools.hardware_diagnose.health
-    line: 35
-    cyclomatic_complexity: 1
-    calls_out: 1
-    calls_in: 10
-  oqlos.hardware.sidecar_control._http_sidecar_healthy:
-    name: _http_sidecar_healthy
-    module: oqlos.hardware.sidecar_control
-    line: 111
-    cyclomatic_complexity: 4
-    calls_out: 4
-    calls_in: 2
-  oqlos.hardware.stack_snapshot._build_recommended_actions:
-    name: _build_recommended_actions
-    module: oqlos.hardware.stack_snapshot
-    line: 33
-    cyclomatic_complexity: 8
-    calls_out: 8
-    calls_in: 1
-  oqlos.tools.hardware_diagnose.doctor._check_firmware_adapters:
-    name: _check_firmware_adapters
-    module: oqlos.tools.hardware_diagnose.doctor
-    line: 573
-    cyclomatic_complexity: 7
-    calls_out: 9
-    calls_in: 1
-  oqlos.hardware.sidecar_control._free_api_port:
-    name: _free_api_port
-    module: oqlos.hardware.sidecar_control
-    line: 138
-    cyclomatic_complexity: 7
-    calls_out: 10
-    calls_in: 1
-  oqlos.tools.hardware_diagnose.doctor._owners_for_configured_port:
-    name: _owners_for_configured_port
-    module: oqlos.tools.hardware_diagnose.doctor
-    line: 148
-    cyclomatic_complexity: 4
-    calls_out: 3
-    calls_in: 1
-  oqlos.core._interpreter_actions.exec_action_min_max:
-    name: exec_action_min_max
-    module: oqlos.core._interpreter_actions
-    line: 263
-    cyclomatic_complexity: 3
-    calls_out: 5
-    calls_in: 1
-  setup_hardware_and_run_oql.detect_serial_devices:
-    name: detect_serial_devices
-    module: setup_hardware_and_run_oql
-    line: 32
-    cyclomatic_complexity: 12
-    calls_out: 7
-    calls_in: 1
-  oqlos.tools.cql_cli.preflight._emit_text_preflight:
-    name: _emit_text_preflight
-    module: oqlos.tools.cql_cli.preflight
-    line: 264
-    cyclomatic_complexity: 7
-    calls_out: 16
-    calls_in: 1
-  oqlos.tools.hardware_diagnose.health._request_firmware_json:
-    name: _request_firmware_json
-    module: oqlos.tools.hardware_diagnose.health
-    line: 10
-    cyclomatic_complexity: 8
-    calls_out: 9
-    calls_in: 2
-  oqlos.tools.cql_cli.preflight.check_required_adapter_health:
-    name: check_required_adapter_health
-    module: oqlos.tools.cql_cli.preflight
-    line: 160
-    cyclomatic_complexity: 5
-    calls_out: 4
-    calls_in: 1
-  oqlos.tools.xml_import._utils.is_pump_output:
-    name: is_pump_output
-    module: oqlos.tools.xml_import._utils
-    line: 28
-    cyclomatic_complexity: 4
-    calls_out: 2
-    calls_in: 2
-  oqlos.tools.plugin_cli.cmd_peripherals:
-    name: cmd_peripherals
-    module: oqlos.tools.plugin_cli
-    line: 228
-    cyclomatic_complexity: 8
-    calls_out: 16
-    calls_in: 0
-  oqlos.tools.cql_cli.main._run_interpreter_target:
-    name: _run_interpreter_target
-    module: oqlos.tools.cql_cli.main
-    line: 199
-    cyclomatic_complexity: 2
-    calls_out: 4
-    calls_in: 1
-  oqlos.core._line_parsers._parse_pump_line:
-    name: _parse_pump_line
-    module: oqlos.core._line_parsers
-    line: 53
-    cyclomatic_complexity: 6
-    calls_out: 8
-    calls_in: 1
-  oqlos.tools.hardware_diagnose.doctor._firmware_hostname:
-    name: _firmware_hostname
-    module: oqlos.tools.hardware_diagnose.doctor
-    line: 232
-    cyclomatic_complexity: 3
-    calls_out: 2
-    calls_in: 1
-  oqlos.tools.hardware_diagnose.doctor._extract_pids:
-    name: _extract_pids
-    module: oqlos.tools.hardware_diagnose.doctor
-    line: 162
-    cyclomatic_complexity: 4
-    calls_out: 4
-    calls_in: 1
-  oqlos.tools.cql_cli.preflight.check_firmware_state:
-    name: check_firmware_state
-    module: oqlos.tools.cql_cli.preflight
-    line: 91
-    cyclomatic_complexity: 8
-    calls_out: 14
-    calls_in: 1
-  oqlos.core._oql_adapter._lower_call:
-    name: _lower_call
-    module: oqlos.core._oql_adapter
-    line: 157
-    cyclomatic_complexity: 6
-    calls_out: 10
-    calls_in: 0
-  oqlos.core.safe_eval._eval_bin_op:
-    name: _eval_bin_op
-    module: oqlos.core.safe_eval
-    line: 80
-    cyclomatic_complexity: 2
-    calls_out: 7
-    calls_in: 0
-  oqlos.hardware.plugin_gateway.PluginHardwareGateway.modbus_preflight_report:
-    name: modbus_preflight_report
-    module: oqlos.hardware.plugin_gateway
-    line: 236
-    cyclomatic_complexity: 4
-    calls_out: 4
-    calls_in: 0
-  oqlos.tools.cql_cli.commands.execute_command_with_cleanup:
-    name: execute_command_with_cleanup
-    module: oqlos.tools.cql_cli.commands
-    line: 122
-    cyclomatic_complexity: 8
-    calls_out: 7
-    calls_in: 1
-  oqlos.hardware.rtc_probe.run_rtc_command:
-    name: run_rtc_command
-    module: oqlos.hardware.rtc_probe
-    line: 117
-    cyclomatic_complexity: 4
-    calls_out: 4
-    calls_in: 0
-  oqlos.tools.cql_cli.preflight.check_required_adapter:
-    name: check_required_adapter
-    module: oqlos.tools.cql_cli.preflight
-    line: 128
-    cyclomatic_complexity: 8
-    calls_out: 5
-    calls_in: 1
-  oqlos.hardware.scanner_probe._match_priority:
-    name: _match_priority
-    module: oqlos.hardware.scanner_probe
-    line: 108
-    cyclomatic_complexity: 8
-    calls_out: 4
-    calls_in: 1
-  oqlos.hardware.artificial_lung._clamp_lpm:
-    name: _clamp_lpm
-    module: oqlos.hardware.artificial_lung
-    line: 16
-    cyclomatic_complexity: 2
-    calls_out: 3
-    calls_in: 1
-  oqlos.hardware.rtc_probe.build_rtc_adapter_entry:
-    name: build_rtc_adapter_entry
-    module: oqlos.hardware.rtc_probe
-    line: 147
-    cyclomatic_complexity: 8
-    calls_out: 13
-    calls_in: 1
-  oqlos.core._interpreter_actions._get_nested_value:
-    name: _get_nested_value
-    module: oqlos.core._interpreter_actions
-    line: 110
-    cyclomatic_complexity: 9
-    calls_out: 7
-    calls_in: 1
-  oqlos.tools.hardware_diagnose.doctor.format_doctor:
-    name: format_doctor
-    module: oqlos.tools.hardware_diagnose.doctor
-    line: 989
-    cyclomatic_complexity: 6
-    calls_out: 21
-    calls_in: 2
-  oqlos.tools.cql_cli.main.create_file_parser:
-    name: create_file_parser
-    module: oqlos.tools.cql_cli.main
-    line: 33
-    cyclomatic_complexity: 1
-    calls_out: 16
-    calls_in: 4
-  oqlos.core._interpreter_actions._assert_json:
-    name: _assert_json
-    module: oqlos.core._interpreter_actions
-    line: 498
-    cyclomatic_complexity: 6
-    calls_out: 9
-    calls_in: 0
-  oqlos.core.executor._safe_resolve:
-    name: _safe_resolve
-    module: oqlos.core.executor
-    line: 29
-    cyclomatic_complexity: 14
-    calls_out: 21
-    calls_in: 7
-  oqlos.tools.cql_cli.preflight.emit_preflight_success:
-    name: emit_preflight_success
-    module: oqlos.tools.cql_cli.preflight
-    line: 216
-    cyclomatic_complexity: 3
-    calls_out: 2
-    calls_in: 1
-  oqlos.core.oql_versioning.first_meaningful_line:
-    name: first_meaningful_line
-    module: oqlos.core.oql_versioning
-    line: 35
-    cyclomatic_complexity: 4
-    calls_out: 4
-    calls_in: 2
-  oqlos.hardware.config_paths.resolve_oqlos_config_path:
-    name: resolve_oqlos_config_path
-    module: oqlos.hardware.config_paths
-    line: 9
-    cyclomatic_complexity: 6
-    calls_out: 13
-    calls_in: 8
-  oqlos.core._line_parsers._parse_action_line:
-    name: _parse_action_line
-    module: oqlos.core._line_parsers
-    line: 177
-    cyclomatic_complexity: 10
-    calls_out: 18
-    calls_in: 0
-  oqlos.tools.hardware_diagnose.__main__._print_doctor:
-    name: _print_doctor
-    module: oqlos.tools.hardware_diagnose.__main__
-    line: 89
-    cyclomatic_complexity: 2
-    calls_out: 4
-    calls_in: 1
-  oqlos.core._dsl_helpers._normalize_quote_syntax:
-    name: _normalize_quote_syntax
-    module: oqlos.core._dsl_helpers
-    line: 21
-    cyclomatic_complexity: 2
-    calls_out: 3
-    calls_in: 7
-  oqlos.core._func_resolver._collect_function_definitions:
-    name: _collect_function_definitions
-    module: oqlos.core._func_resolver
-    line: 14
-    cyclomatic_complexity: 13
-    calls_out: 19
-    calls_in: 1
-  oqlos.hardware.gateway._ModbusAdapter.__init__:
-    name: __init__
-    module: oqlos.hardware.gateway
-    line: 202
-    cyclomatic_complexity: 6
-    calls_out: 13
-    calls_in: 0
-  oqlos.tools.xml_import.generators._quote_oql:
-    name: _quote_oql
-    module: oqlos.tools.xml_import.generators
-    line: 55
-    cyclomatic_complexity: 2
-    calls_out: 4
-    calls_in: 2
-  oqlos.core._interpreter_actions._parse_motor2_reciprocating_setting:
-    name: _parse_motor2_reciprocating_setting
-    module: oqlos.core._interpreter_actions
-    line: 874
+    line: 172
     cyclomatic_complexity: 6
     calls_out: 5
-    calls_in: 1
-  oqlos.tools.hardware_diagnose.doctor.build_doctor_report:
-    name: build_doctor_report
-    module: oqlos.tools.hardware_diagnose.doctor
-    line: 718
-    cyclomatic_complexity: 11
-    calls_out: 14
-    calls_in: 2
-  oqlos.tools.xml_import.generators._emit_dsl_sensors:
-    name: _emit_dsl_sensors
-    module: oqlos.tools.xml_import.generators
-    line: 319
-    cyclomatic_complexity: 8
-    calls_out: 7
-    calls_in: 1
-  oqlos.core._compare.resolve_compare:
-    name: resolve_compare
-    module: oqlos.core._compare
-    line: 21
-    cyclomatic_complexity: 2
-    calls_out: 5
-    calls_in: 1
-  oqlos.core.cql_parser._ParseState._try_hierarchy:
-    name: _try_hierarchy
-    module: oqlos.core.cql_parser
-    line: 385
-    cyclomatic_complexity: 7
-    calls_out: 6
-    calls_in: 0
-  oqlos.core._interpreter_actions._motor2_max_steps_per_second:
-    name: _motor2_max_steps_per_second
-    module: oqlos.core._interpreter_actions
-    line: 902
-    cyclomatic_complexity: 1
-    calls_out: 1
-    calls_in: 3
-  oqlos.core.safe_eval._eval_compare:
-    name: _eval_compare
-    module: oqlos.core.safe_eval
-    line: 90
-    cyclomatic_complexity: 1
-    calls_out: 2
-    calls_in: 0
-  oqlos.hardware.discovery.probe_waveshare_modbus:
-    name: probe_waveshare_modbus
-    module: oqlos.hardware.discovery
-    line: 50
-    cyclomatic_complexity: 5
-    calls_out: 2
-    calls_in: 3
-  oqlos.tools.hardware_diagnose.doctor._probe_modbus:
-    name: _probe_modbus
-    module: oqlos.tools.hardware_diagnose.doctor
-    line: 73
-    cyclomatic_complexity: 5
-    calls_out: 9
-    calls_in: 1
-  oqlos.hardware.scanner_probe.build_scanner_adapter_entry:
-    name: build_scanner_adapter_entry
-    module: oqlos.hardware.scanner_probe
-    line: 220
-    cyclomatic_complexity: 12
-    calls_out: 12
-    calls_in: 1
-  oqlos.core._interpreter_actions.exec_action_shell:
-    name: exec_action_shell
-    module: oqlos.core._interpreter_actions
-    line: 584
-    cyclomatic_complexity: 13
-    calls_out: 19
-    calls_in: 0
-  oqlos.tools.hardware_diagnose.doctor._update_modbus_config:
-    name: _update_modbus_config
-    module: oqlos.tools.hardware_diagnose.doctor
-    line: 792
-    cyclomatic_complexity: 2
-    calls_out: 17
-    calls_in: 1
-  oqlos.hardware.plugin_gateway.PluginHardwareGateway._load_hardware_schema:
-    name: _load_hardware_schema
-    module: oqlos.hardware.plugin_gateway
-    line: 71
-    cyclomatic_complexity: 3
-    calls_out: 8
-    calls_in: 0
-  oqlos.tools.cql_cli.main.create_run_parser:
-    name: create_run_parser
-    module: oqlos.tools.cql_cli.main
-    line: 78
-    cyclomatic_complexity: 1
-    calls_out: 1
-    calls_in: 1
-  oqlos.tools.cql_cli.utils.build_result_payload:
-    name: build_result_payload
-    module: oqlos.tools.cql_cli.utils
-    line: 44
-    cyclomatic_complexity: 2
-    calls_out: 2
-    calls_in: 4
-  oqlos.tools.hardware_diagnose.modbus_probe.run_modbus_probe:
-    name: run_modbus_probe
-    module: oqlos.tools.hardware_diagnose.modbus_probe
-    line: 170
-    cyclomatic_complexity: 1
-    calls_out: 1
-    calls_in: 2
-  oqlos.tools.hardware_diagnose.modbus_probe._arg_count_list:
-    name: _arg_count_list
-    module: oqlos.tools.hardware_diagnose.modbus_probe
-    line: 83
-    cyclomatic_complexity: 3
-    calls_out: 2
-    calls_in: 1
-  oqlos.tools.cql_cli.main.run_cmd_mode:
-    name: run_cmd_mode
-    module: oqlos.tools.cql_cli.main
-    line: 326
-    cyclomatic_complexity: 4
-    calls_out: 7
-    calls_in: 1
-  oqlos.hardware.sidecar_control.resolve_dri0050_serial:
-    name: resolve_dri0050_serial
-    module: oqlos.hardware.sidecar_control
-    line: 43
-    cyclomatic_complexity: 13
-    calls_out: 16
-    calls_in: 1
-  oqlos.tools.hardware_diagnose.__main__._print_modbus_probe:
-    name: _print_modbus_probe
-    module: oqlos.tools.hardware_diagnose.__main__
-    line: 94
-    cyclomatic_complexity: 2
-    calls_out: 5
-    calls_in: 1
-  oqlos.tools.hardware_diagnose.doctor._firmware_modbus_health_ok:
-    name: _firmware_modbus_health_ok
-    module: oqlos.tools.hardware_diagnose.doctor
-    line: 906
-    cyclomatic_complexity: 10
-    calls_out: 16
-    calls_in: 2
-  oqlos.tools.cql_cli.preflight._emit_yaml_preflight:
-    name: _emit_yaml_preflight
-    module: oqlos.tools.cql_cli.preflight
-    line: 233
-    cyclomatic_complexity: 6
-    calls_out: 8
-    calls_in: 1
-  oqlos.core._oql_adapter.is_flat_oql:
-    name: is_flat_oql
-    module: oqlos.core._oql_adapter
-    line: 358
-    cyclomatic_complexity: 7
-    calls_out: 12
-    calls_in: 2
-  oqlos.tools.hardware_diagnose.__main__._dispatch_action:
-    name: _dispatch_action
-    module: oqlos.tools.hardware_diagnose.__main__
-    line: 139
-    cyclomatic_complexity: 15
-    calls_out: 15
-    calls_in: 1
-  oqlos.core.oql_parser.parse_oql:
-    name: parse_oql
-    module: oqlos.core.oql_parser
-    line: 646
-    cyclomatic_complexity: 14
-    calls_out: 21
-    calls_in: 3
-  oqlos.core.parser._try_action_or_condition:
-    name: _try_action_or_condition
-    module: oqlos.core.parser
-    line: 36
-    cyclomatic_complexity: 5
-    calls_out: 6
-    calls_in: 1
-  oqlos.core._dsl_helpers._map_peripheral:
-    name: _map_peripheral
-    module: oqlos.core._dsl_helpers
-    line: 42
-    cyclomatic_complexity: 11
-    calls_out: 14
-    calls_in: 3
-  oqlos.tools.hardware_diagnose.calibration.run_calibration_test:
-    name: run_calibration_test
-    module: oqlos.tools.hardware_diagnose.calibration
-    line: 8
-    cyclomatic_complexity: 2
-    calls_out: 8
-    calls_in: 3
-  oqlos.core._compare.resolve_compare_chain:
-    name: resolve_compare_chain
-    module: oqlos.core._compare
-    line: 29
-    cyclomatic_complexity: 3
-    calls_out: 4
-    calls_in: 2
-  oqlos.core.oql_versioning.extract_declared_version:
-    name: extract_declared_version
-    module: oqlos.core.oql_versioning
-    line: 45
-    cyclomatic_complexity: 3
-    calls_out: 4
-    calls_in: 1
-  oqlos.core._cql_tokenizer._try_goto:
-    name: _try_goto
-    module: oqlos.core._cql_tokenizer
-    line: 362
-    cyclomatic_complexity: 2
-    calls_out: 4
-    calls_in: 0
-  oqlos.tools.cql_cli.main.run_format_mode:
-    name: run_format_mode
-    module: oqlos.tools.cql_cli.main
-    line: 357
-    cyclomatic_complexity: 2
-    calls_out: 7
-    calls_in: 1
-  oqlos.core._line_parsers._parse_set_line:
-    name: _parse_set_line
-    module: oqlos.core._line_parsers
-    line: 116
-    cyclomatic_complexity: 12
-    calls_out: 21
-    calls_in: 1
-  oqlos.tools.cql_cli.main._create_interpreter:
-    name: _create_interpreter
-    module: oqlos.tools.cql_cli.main
-    line: 188
-    cyclomatic_complexity: 1
-    calls_out: 1
-    calls_in: 1
-  oqlos.tools.hardware_diagnose.discovery.detect_chips_on_i2c:
-    name: detect_chips_on_i2c
-    module: oqlos.tools.hardware_diagnose.discovery
-    line: 82
-    cyclomatic_complexity: 8
-    calls_out: 10
-    calls_in: 2
-  oqlos.tools.hardware_diagnose.shell._dispatch_command:
-    name: _dispatch_command
-    module: oqlos.tools.hardware_diagnose.shell
-    line: 74
-    cyclomatic_complexity: 6
-    calls_out: 21
-    calls_in: 1
-  oqlos.tools.hardware_diagnose.doctor._update_modbus_adc_config:
-    name: _update_modbus_adc_config
-    module: oqlos.tools.hardware_diagnose.doctor
-    line: 828
-    cyclomatic_complexity: 4
-    calls_out: 18
-    calls_in: 1
-  oqlos.hardware.modbus_identify._infer_modbus_serial_port:
-    name: _infer_modbus_serial_port
-    module: oqlos.hardware.modbus_identify
-    line: 74
-    cyclomatic_complexity: 10
-    calls_out: 9
-    calls_in: 1
-  oqlos.api.plugins.validate_plugin_configs:
-    name: validate_plugin_configs
-    module: oqlos.api.plugins
-    line: 162
-    cyclomatic_complexity: 3
-    calls_out: 11
-    calls_in: 1
-  oqlos.tools.hardware_diagnose.doctor.detect_hardware:
-    name: detect_hardware
-    module: oqlos.tools.hardware_diagnose.doctor
-    line: 191
-    cyclomatic_complexity: 4
-    calls_out: 12
-    calls_in: 3
-  oqlos.tools.hardware_diagnose.doctor._check_firmware_serial_access:
-    name: _check_firmware_serial_access
-    module: oqlos.tools.hardware_diagnose.doctor
-    line: 516
-    cyclomatic_complexity: 11
-    calls_out: 13
-    calls_in: 1
-  oqlos.hardware.scanner_probe.enrich_scanner_adapter:
-    name: enrich_scanner_adapter
-    module: oqlos.hardware.scanner_probe
-    line: 247
-    cyclomatic_complexity: 9
-    calls_out: 14
-    calls_in: 1
-  oqlos.core._interpreter_actions._try_exec_motor2_set:
-    name: _try_exec_motor2_set
-    module: oqlos.core._interpreter_actions
-    line: 1137
-    cyclomatic_complexity: 13
-    calls_out: 22
-    calls_in: 1
-  oqlos.core._interpreter_actions.exec_action_wait:
-    name: exec_action_wait
-    module: oqlos.core._interpreter_actions
-    line: 235
-    cyclomatic_complexity: 3
-    calls_out: 4
-    calls_in: 1
-  oqlos.core._oql_adapter._fmt_value:
-    name: _fmt_value
-    module: oqlos.core._oql_adapter
-    line: 46
-    cyclomatic_complexity: 2
-    calls_out: 1
-    calls_in: 3
-  oqlos.core._oql_adapter._resolve_include:
-    name: _resolve_include
-    module: oqlos.core._oql_adapter
-    line: 57
-    cyclomatic_complexity: 6
-    calls_out: 8
-    calls_in: 1
-  oqlos.core._cql_tree_builder._ensure_goal_for_step:
-    name: _ensure_goal_for_step
-    module: oqlos.core._cql_tree_builder
-    line: 145
-    cyclomatic_complexity: 4
-    calls_out: 3
-    calls_in: 1
-  oqlos.tools.hardware_diagnose.doctor._adapter_health_status:
-    name: _adapter_health_status
-    module: oqlos.tools.hardware_diagnose.doctor
-    line: 630
-    cyclomatic_complexity: 3
-    calls_out: 1
-    calls_in: 2
-  oqlos.tools.hardware_diagnose.doctor.format_detection:
-    name: format_detection
-    module: oqlos.tools.hardware_diagnose.doctor
-    line: 885
-    cyclomatic_complexity: 10
-    calls_out: 25
-    calls_in: 3
-  oqlos.core._cql_tokenizer._match_first:
-    name: _match_first
-    module: oqlos.core._cql_tokenizer
-    line: 126
-    cyclomatic_complexity: 3
-    calls_out: 1
-    calls_in: 7
-  oqlos.core._interpreter_actions._assert_valve:
-    name: _assert_valve
-    module: oqlos.core._interpreter_actions
-    line: 541
-    cyclomatic_complexity: 5
-    calls_out: 8
-    calls_in: 0
-  oqlos.tools.cql_cli.utils.output_yaml:
-    name: output_yaml
-    module: oqlos.tools.cql_cli.utils
-    line: 27
-    cyclomatic_complexity: 2
-    calls_out: 2
-    calls_in: 0
-  oqlos.core._cql_tree_builder._parse_goal_line:
-    name: _parse_goal_line
-    module: oqlos.core._cql_tree_builder
-    line: 71
-    cyclomatic_complexity: 12
-    calls_out: 20
-    calls_in: 1
-  oqlos.tools.cql_cli.main._extract_scenario_source:
-    name: _extract_scenario_source
-    module: oqlos.tools.cql_cli.main
-    line: 241
-    cyclomatic_complexity: 9
-    calls_out: 9
-    calls_in: 1
-  oqlos.tools.hardware_diagnose.modbus_probe.run_modbus_probe_from_env:
-    name: run_modbus_probe_from_env
-    module: oqlos.tools.hardware_diagnose.modbus_probe
-    line: 156
-    cyclomatic_complexity: 1
-    calls_out: 13
-    calls_in: 0
-  oqlos.tools.hardware_diagnose.doctor._modbus_config:
-    name: _modbus_config
-    module: oqlos.tools.hardware_diagnose.doctor
-    line: 257
-    cyclomatic_complexity: 3
-    calls_out: 4
-    calls_in: 2
-  oqlos.core.oql_parser.tokenize:
-    name: tokenize
-    module: oqlos.core.oql_parser
-    line: 173
-    cyclomatic_complexity: 13
-    calls_out: 14
-    calls_in: 5
-  oqlos.core.motor2_runtime.motor2_speed_for_duration:
-    name: motor2_speed_for_duration
-    module: oqlos.core.motor2_runtime
-    line: 112
-    cyclomatic_complexity: 1
-    calls_out: 9
-    calls_in: 2
-  oqlos.hardware.modbus_identify.enrich_modbus_serial_hints:
-    name: enrich_modbus_serial_hints
-    module: oqlos.hardware.modbus_identify
-    line: 107
-    cyclomatic_complexity: 10
-    calls_out: 12
     calls_in: 1
   oqlos.core._interpreter_actions.parse_wait_secs:
     name: parse_wait_secs
@@ -1909,6 +495,510 @@ nodes:
     cyclomatic_complexity: 4
     calls_out: 6
     calls_in: 2
+  oqlos.hardware.rtc_probe._pirtc_request_sync:
+    name: _pirtc_request_sync
+    module: oqlos.hardware.rtc_probe
+    line: 45
+    cyclomatic_complexity: 8
+    calls_out: 10
+    calls_in: 5
+  oqlos.core.oql_parser._split_value_unit:
+    name: _split_value_unit
+    module: oqlos.core.oql_parser
+    line: 234
+    cyclomatic_complexity: 2
+    calls_out: 2
+    calls_in: 3
+  oqlos.core.base.InterpreterOutput.output_yaml:
+    name: output_yaml
+    module: oqlos.core.base
+    line: 192
+    cyclomatic_complexity: 4
+    calls_out: 2
+    calls_in: 4
+  oqlos.core._interpreter_actions._record_failure:
+    name: _record_failure
+    module: oqlos.core._interpreter_actions
+    line: 131
+    cyclomatic_complexity: 1
+    calls_out: 3
+    calls_in: 8
+  oqlos.core._dsl_helpers._normalize_quote_syntax:
+    name: _normalize_quote_syntax
+    module: oqlos.core._dsl_helpers
+    line: 21
+    cyclomatic_complexity: 2
+    calls_out: 3
+    calls_in: 7
+  oqlos.tools.plugin_cli.cmd_list:
+    name: cmd_list
+    module: oqlos.tools.plugin_cli
+    line: 94
+    cyclomatic_complexity: 3
+    calls_out: 9
+    calls_in: 0
+  oqlos.tools.hardware_diagnose.modbus_probe._split_values:
+    name: _split_values
+    module: oqlos.tools.hardware_diagnose.modbus_probe
+    line: 66
+    cyclomatic_complexity: 5
+    calls_out: 5
+    calls_in: 3
+  oqlos.tools.hardware_diagnose.modbus_probe._arg_int_list:
+    name: _arg_int_list
+    module: oqlos.tools.hardware_diagnose.modbus_probe
+    line: 79
+    cyclomatic_complexity: 3
+    calls_out: 2
+    calls_in: 4
+  oqlos.core._interpreter_actions._post_motor2_move_relative:
+    name: _post_motor2_move_relative
+    module: oqlos.core._interpreter_actions
+    line: 918
+    cyclomatic_complexity: 6
+    calls_out: 13
+    calls_in: 1
+  oqlos.tools.cql_cli.utils.parse_sensor_overrides:
+    name: parse_sensor_overrides
+    module: oqlos.tools.cql_cli.utils
+    line: 33
+    cyclomatic_complexity: 3
+    calls_out: 4
+    calls_in: 2
+  oqlos.tools.cql_cli.commands.run_single_command:
+    name: run_single_command
+    module: oqlos.tools.cql_cli.commands
+    line: 61
+    cyclomatic_complexity: 1
+    calls_out: 2
+    calls_in: 2
+  oqlos.tools.hardware_diagnose.doctor._describe_pid:
+    name: _describe_pid
+    module: oqlos.tools.hardware_diagnose.doctor
+    line: 170
+    cyclomatic_complexity: 4
+    calls_out: 4
+    calls_in: 1
+  oqlos.core._func_resolver._extract_func_name:
+    name: _extract_func_name
+    module: oqlos.core._func_resolver
+    line: 51
+    cyclomatic_complexity: 7
+    calls_out: 7
+    calls_in: 1
+  oqlos.core._oql_adapter.is_flat_oql:
+    name: is_flat_oql
+    module: oqlos.core._oql_adapter
+    line: 358
+    cyclomatic_complexity: 7
+    calls_out: 12
+    calls_in: 2
+  oqlos.tools.hardware_diagnose.doctor._canonical_device_path:
+    name: _canonical_device_path
+    module: oqlos.tools.hardware_diagnose.doctor
+    line: 141
+    cyclomatic_complexity: 2
+    calls_out: 3
+    calls_in: 2
+  oqlos.tools.hardware_diagnose.__main__._print_list:
+    name: _print_list
+    module: oqlos.tools.hardware_diagnose.__main__
+    line: 34
+    cyclomatic_complexity: 3
+    calls_out: 8
+    calls_in: 0
+  oqlos.core.motor2_runtime._normalize_motor2_direction:
+    name: _normalize_motor2_direction
+    module: oqlos.core.motor2_runtime
+    line: 130
+    cyclomatic_complexity: 4
+    calls_out: 2
+    calls_in: 1
+  oqlos.core._func_resolver._parse_func_call:
+    name: _parse_func_call
+    module: oqlos.core._func_resolver
+    line: 74
+    cyclomatic_complexity: 5
+    calls_out: 4
+    calls_in: 1
+  oqlos.tools.hardware_diagnose.doctor._update_modbus_config:
+    name: _update_modbus_config
+    module: oqlos.tools.hardware_diagnose.doctor
+    line: 792
+    cyclomatic_complexity: 2
+    calls_out: 17
+    calls_in: 1
+  oqlos.core.motor2_runtime.build_motor2_reciprocating_plan:
+    name: build_motor2_reciprocating_plan
+    module: oqlos.core.motor2_runtime
+    line: 170
+    cyclomatic_complexity: 7
+    calls_out: 8
+    calls_in: 1
+  oqlos.tools.hardware_diagnose.calibration._calibrate_pump:
+    name: _calibrate_pump
+    module: oqlos.tools.hardware_diagnose.calibration
+    line: 43
+    cyclomatic_complexity: 3
+    calls_out: 8
+    calls_in: 1
+  oqlos.tools.xml_import.parser._parse_operation_params:
+    name: _parse_operation_params
+    module: oqlos.tools.xml_import.parser
+    line: 145
+    cyclomatic_complexity: 9
+    calls_out: 21
+    calls_in: 1
+  oqlos.tools.hardware_diagnose.discovery.list_usb_serial_devices:
+    name: list_usb_serial_devices
+    module: oqlos.tools.hardware_diagnose.discovery
+    line: 49
+    cyclomatic_complexity: 7
+    calls_out: 9
+    calls_in: 6
+  oqlos.tools.cql_cli.main.run_file_mode:
+    name: run_file_mode
+    module: oqlos.tools.cql_cli.main
+    line: 158
+    cyclomatic_complexity: 6
+    calls_out: 14
+    calls_in: 2
+  oqlos.core.oql_parser._handle_block_header:
+    name: _handle_block_header
+    module: oqlos.core.oql_parser
+    line: 519
+    cyclomatic_complexity: 8
+    calls_out: 12
+    calls_in: 1
+  oqlos.core.oql_parser.parse_CALL:
+    name: parse_CALL
+    module: oqlos.core.oql_parser
+    line: 397
+    cyclomatic_complexity: 1
+    calls_out: 2
+    calls_in: 0
+  oqlos.tools.cql_cli.utils.resolve_required_adapter:
+    name: resolve_required_adapter
+    module: oqlos.tools.cql_cli.utils
+    line: 115
+    cyclomatic_complexity: 8
+    calls_out: 3
+    calls_in: 1
+  oqlos.tools.cql_cli.main._looks_like_html:
+    name: _looks_like_html
+    module: oqlos.tools.cql_cli.main
+    line: 260
+    cyclomatic_complexity: 3
+    calls_out: 5
+    calls_in: 3
+  oqlos.core._cql_tokenizer._try_set:
+    name: _try_set
+    module: oqlos.core._cql_tokenizer
+    line: 179
+    cyclomatic_complexity: 2
+    calls_out: 6
+    calls_in: 0
+  oqlos.core.base.VariableStore.all:
+    name: all
+    module: oqlos.core.base
+    line: 87
+    cyclomatic_complexity: 3
+    calls_out: 3
+    calls_in: 7
+  oqlos.core.oql_parser.parse_oql:
+    name: parse_oql
+    module: oqlos.core.oql_parser
+    line: 646
+    cyclomatic_complexity: 14
+    calls_out: 21
+    calls_in: 3
+  oqlos.core._interpreter_actions._motor2_build_plan:
+    name: _motor2_build_plan
+    module: oqlos.core._interpreter_actions
+    line: 1051
+    cyclomatic_complexity: 12
+    calls_out: 22
+    calls_in: 1
+  oqlos.core._cql_tree_builder._parse_goal_line:
+    name: _parse_goal_line
+    module: oqlos.core._cql_tree_builder
+    line: 71
+    cyclomatic_complexity: 12
+    calls_out: 20
+    calls_in: 1
+  oqlos.core._interpreter_actions._assert_sensor:
+    name: _assert_sensor
+    module: oqlos.core._interpreter_actions
+    line: 517
+    cyclomatic_complexity: 4
+    calls_out: 9
+    calls_in: 0
+  oqlos.tools.cql_cli.main.run_hardware_mode:
+    name: run_hardware_mode
+    module: oqlos.tools.cql_cli.main
+    line: 309
+    cyclomatic_complexity: 1
+    calls_out: 5
+    calls_in: 1
+  oqlos.core._interpreter_actions._motor2_speed_for_duration:
+    name: _motor2_speed_for_duration
+    module: oqlos.core._interpreter_actions
+    line: 910
+    cyclomatic_complexity: 1
+    calls_out: 1
+    calls_in: 0
+  oqlos.core._oql_adapter._lower_max:
+    name: _lower_max
+    module: oqlos.core._oql_adapter
+    line: 205
+    cyclomatic_complexity: 1
+    calls_out: 3
+    calls_in: 0
+  oqlos.core._dsl_helpers._map_lung_action:
+    name: _map_lung_action
+    module: oqlos.core._dsl_helpers
+    line: 106
+    cyclomatic_complexity: 5
+    calls_out: 1
+    calls_in: 1
+  oqlos.core._cql_tokenizer._try_if_else:
+    name: _try_if_else
+    module: oqlos.core._cql_tokenizer
+    line: 208
+    cyclomatic_complexity: 3
+    calls_out: 8
+    calls_in: 0
+  oqlos.tools.plugin_cli.cmd_peripherals:
+    name: cmd_peripherals
+    module: oqlos.tools.plugin_cli
+    line: 228
+    cyclomatic_complexity: 8
+    calls_out: 16
+    calls_in: 0
+  oqlos.core.cql_parser._ParseState._handle_goal_attrs:
+    name: _handle_goal_attrs
+    module: oqlos.core.cql_parser
+    line: 209
+    cyclomatic_complexity: 3
+    calls_out: 1
+    calls_in: 0
+  oqlos.core.oql_versioning.resolve_oql_version:
+    name: resolve_oql_version
+    module: oqlos.core.oql_versioning
+    line: 57
+    cyclomatic_complexity: 2
+    calls_out: 3
+    calls_in: 1
+  oqlos.tools.hardware_diagnose.doctor._analyze_serial_port_owners:
+    name: _analyze_serial_port_owners
+    module: oqlos.tools.hardware_diagnose.doctor
+    line: 658
+    cyclomatic_complexity: 13
+    calls_out: 19
+    calls_in: 1
+  oqlos.tools.hardware_diagnose.calibration.run_calibration_test:
+    name: run_calibration_test
+    module: oqlos.tools.hardware_diagnose.calibration
+    line: 8
+    cyclomatic_complexity: 2
+    calls_out: 8
+    calls_in: 3
+  oqlos.tools.hardware_diagnose.calibration._calibrate_valves:
+    name: _calibrate_valves
+    module: oqlos.tools.hardware_diagnose.calibration
+    line: 59
+    cyclomatic_complexity: 4
+    calls_out: 6
+    calls_in: 1
+  oqlos.core._dsl_helpers._looks_like_valve_object:
+    name: _looks_like_valve_object
+    module: oqlos.core._dsl_helpers
+    line: 26
+    cyclomatic_complexity: 2
+    calls_out: 3
+    calls_in: 2
+  oqlos.core.safe_eval._eval_if_exp:
+    name: _eval_if_exp
+    module: oqlos.core.safe_eval
+    line: 113
+    cyclomatic_complexity: 2
+    calls_out: 3
+    calls_in: 0
+  oqlos.tools.xml_import.generators._build_validation_criteria:
+    name: _build_validation_criteria
+    module: oqlos.tools.xml_import.generators
+    line: 223
+    cyclomatic_complexity: 14
+    calls_out: 3
+    calls_in: 1
+  oqlos.core.motor2_runtime._compute_motor2_cycles:
+    name: _compute_motor2_cycles
+    module: oqlos.core.motor2_runtime
+    line: 142
+    cyclomatic_complexity: 3
+    calls_out: 7
+    calls_in: 1
+  oqlos.tools.hardware_diagnose.doctor._owners_for_configured_port:
+    name: _owners_for_configured_port
+    module: oqlos.tools.hardware_diagnose.doctor
+    line: 148
+    cyclomatic_complexity: 4
+    calls_out: 3
+    calls_in: 1
+  oqlos.core._interpreter_actions._post_motor2_reciprocate:
+    name: _post_motor2_reciprocate
+    module: oqlos.core._interpreter_actions
+    line: 932
+    cyclomatic_complexity: 7
+    calls_out: 11
+    calls_in: 1
+  oqlos.core._interpreter_actions._parse_motor2_volume_liters:
+    name: _parse_motor2_volume_liters
+    module: oqlos.core._interpreter_actions
+    line: 808
+    cyclomatic_complexity: 6
+    calls_out: 5
+    calls_in: 2
+  oqlos.tools.cql_cli.utils._extract_first_action:
+    name: _extract_first_action
+    module: oqlos.tools.cql_cli.utils
+    line: 84
+    cyclomatic_complexity: 5
+    calls_out: 2
+    calls_in: 1
+  oqlos.tools.hardware_diagnose.doctor._probe_modbus:
+    name: _probe_modbus
+    module: oqlos.tools.hardware_diagnose.doctor
+    line: 73
+    cyclomatic_complexity: 5
+    calls_out: 9
+    calls_in: 1
+  oqlos.core._oql_adapter._lower_call:
+    name: _lower_call
+    module: oqlos.core._oql_adapter
+    line: 157
+    cyclomatic_complexity: 6
+    calls_out: 10
+    calls_in: 0
+  oqlos.core._interpreter_actions.exec_action_set:
+    name: exec_action_set
+    module: oqlos.core._interpreter_actions
+    line: 736
+    cyclomatic_complexity: 9
+    calls_out: 11
+    calls_in: 1
+  oqlos.tools.cql_cli.main:
+    name: main
+    module: oqlos.tools.cql_cli
+    line: 38
+    cyclomatic_complexity: 1
+    calls_out: 2
+    calls_in: 0
+  oqlos.core._interpreter_actions._get_nested_value:
+    name: _get_nested_value
+    module: oqlos.core._interpreter_actions
+    line: 110
+    cyclomatic_complexity: 9
+    calls_out: 7
+    calls_in: 1
+  oqlos.tools.plugin_cli.cmd_status:
+    name: cmd_status
+    module: oqlos.tools.plugin_cli
+    line: 106
+    cyclomatic_complexity: 2
+    calls_out: 5
+    calls_in: 0
+  oqlos.core._dsl_helpers._map_pump_action:
+    name: _map_pump_action
+    module: oqlos.core._dsl_helpers
+    line: 86
+    cyclomatic_complexity: 5
+    calls_out: 1
+    calls_in: 1
+  oqlos.core.oql_parser.tokenize:
+    name: tokenize
+    module: oqlos.core.oql_parser
+    line: 173
+    cyclomatic_complexity: 13
+    calls_out: 14
+    calls_in: 5
+  oqlos.tools.cql_cli.main._run_interpreter_target:
+    name: _run_interpreter_target
+    module: oqlos.tools.cql_cli.main
+    line: 199
+    cyclomatic_complexity: 2
+    calls_out: 4
+    calls_in: 1
+  oqlos.tools.hardware_diagnose.shell.interactive_shell:
+    name: interactive_shell
+    module: oqlos.tools.hardware_diagnose.shell
+    line: 114
+    cyclomatic_complexity: 6
+    calls_out: 8
+    calls_in: 1
+  oqlos.core._cql_tree_builder._parse_action_line:
+    name: _parse_action_line
+    module: oqlos.core._cql_tree_builder
+    line: 129
+    cyclomatic_complexity: 4
+    calls_out: 3
+    calls_in: 2
+  oqlos.core._interpreter_actions._parse_motor2_steps:
+    name: _parse_motor2_steps
+    module: oqlos.core._interpreter_actions
+    line: 890
+    cyclomatic_complexity: 3
+    calls_out: 9
+    calls_in: 2
+  oqlos.tools.hardware_diagnose.health._format_health_value:
+    name: _format_health_value
+    module: oqlos.tools.hardware_diagnose.health
+    line: 51
+    cyclomatic_complexity: 8
+    calls_out: 9
+    calls_in: 1
+  oqlos.tools.hardware_diagnose.health.cmd_diagnose:
+    name: cmd_diagnose
+    module: oqlos.tools.hardware_diagnose.health
+    line: 84
+    cyclomatic_complexity: 6
+    calls_out: 20
+    calls_in: 2
+  examples.hardware.doctor-workflow.print:
+    name: print
+    module: examples.hardware.doctor-workflow
+    line: 41
+    cyclomatic_complexity: 0
+    calls_out: 0
+    calls_in: 226
+  oqlos.core.motor2_runtime.motor2_speed_raw:
+    name: motor2_speed_raw
+    module: oqlos.core.motor2_runtime
+    line: 125
+    cyclomatic_complexity: 1
+    calls_out: 5
+    calls_in: 2
+  oqlos.core._dsl_helpers._map_action_value:
+    name: _map_action_value
+    module: oqlos.core._dsl_helpers
+    line: 115
+    cyclomatic_complexity: 7
+    calls_out: 8
+    calls_in: 2
+  oqlos.hardware.rtc_probe.get_pirtc_base_url:
+    name: get_pirtc_base_url
+    module: oqlos.hardware.rtc_probe
+    line: 27
+    cyclomatic_complexity: 1
+    calls_out: 2
+    calls_in: 2
+  oqlos.tools.cql_cli.formatting.canonicalize_oql_line:
+    name: canonicalize_oql_line
+    module: oqlos.tools.cql_cli.formatting
+    line: 25
+    cyclomatic_complexity: 14
+    calls_out: 31
+    calls_in: 1
   oqlos.core._dsl_helpers._map_valve_action:
     name: _map_valve_action
     module: oqlos.core._dsl_helpers
@@ -1923,69 +1013,83 @@ nodes:
     cyclomatic_complexity: 7
     calls_out: 19
     calls_in: 1
-  oqlos.hardware.scanner_probe._is_likely_scanner_input:
-    name: _is_likely_scanner_input
-    module: oqlos.hardware.scanner_probe
-    line: 75
-    cyclomatic_complexity: 10
-    calls_out: 4
-    calls_in: 1
-  oqlos.core._interpreter_actions._exec_set_wait:
-    name: _exec_set_wait
-    module: oqlos.core._interpreter_actions
-    line: 1193
-    cyclomatic_complexity: 3
-    calls_out: 7
-    calls_in: 1
-  oqlos.core._interpreter_actions._motor2_effective_steps_per_second:
-    name: _motor2_effective_steps_per_second
-    module: oqlos.core._interpreter_actions
-    line: 906
-    cyclomatic_complexity: 1
-    calls_out: 4
-    calls_in: 1
-  oqlos.core.base.VariableStore.set:
-    name: set
-    module: oqlos.core.base
-    line: 68
-    cyclomatic_complexity: 4
+  oqlos.tools.hardware_diagnose.discovery._run_shell_command:
+    name: _run_shell_command
+    module: oqlos.tools.hardware_diagnose.discovery
+    line: 17
+    cyclomatic_complexity: 2
     calls_out: 2
-    calls_in: 18
-  oqlos.core._interpreter_actions._do_sleep:
-    name: _do_sleep
-    module: oqlos.core._interpreter_actions
-    line: 248
+    calls_in: 1
+  oqlos.tools.xml_import._utils.normalize_output_name:
+    name: normalize_output_name
+    module: oqlos.tools.xml_import._utils
+    line: 40
+    cyclomatic_complexity: 11
+    calls_out: 12
+    calls_in: 1
+  oqlos.core._cql_tree_builder._ensure_step_for_actions:
+    name: _ensure_step_for_actions
+    module: oqlos.core._cql_tree_builder
+    line: 158
     cyclomatic_complexity: 3
-    calls_out: 10
+    calls_out: 2
+    calls_in: 1
+  oqlos.core._interpreter_actions._motor2_acceleration_raw:
+    name: _motor2_acceleration_raw
+    module: oqlos.core._interpreter_actions
+    line: 914
+    cyclomatic_complexity: 1
+    calls_out: 2
+    calls_in: 1
+  oqlos.hardware.hui_actions._set_valve:
+    name: _set_valve
+    module: oqlos.hardware.hui_actions
+    line: 71
+    cyclomatic_complexity: 1
+    calls_out: 3
+    calls_in: 5
+  oqlos.core._dsl_helpers._looks_like_pump_object:
+    name: _looks_like_pump_object
+    module: oqlos.core._dsl_helpers
+    line: 30
+    cyclomatic_complexity: 1
+    calls_out: 2
     calls_in: 2
-  oqlos.tools.plugin_cli.cmd_reload:
-    name: cmd_reload
-    module: oqlos.tools.plugin_cli
-    line: 214
+  oqlos.core.oql_parser._line_indent:
+    name: _line_indent
+    module: oqlos.core.oql_parser
+    line: 452
+    cyclomatic_complexity: 2
+    calls_out: 5
+    calls_in: 2
+  oqlos.core._interpreter_actions._motor2_do_start:
+    name: _motor2_do_start
+    module: oqlos.core._interpreter_actions
+    line: 1092
     cyclomatic_complexity: 4
     calls_out: 10
     calls_in: 0
-  oqlos.tools.xml_import.generators._emit_dsl_param:
-    name: _emit_dsl_param
-    module: oqlos.tools.xml_import.generators
-    line: 133
-    cyclomatic_complexity: 10
-    calls_out: 13
-    calls_in: 1
-  oqlos.core._interpreter_actions.exec_action_func:
-    name: exec_action_func
-    module: oqlos.core._interpreter_actions
-    line: 426
-    cyclomatic_complexity: 9
-    calls_out: 15
+  oqlos.core.executor.ScenarioOrchestrator.validate_goal:
+    name: validate_goal
+    module: oqlos.core.executor
+    line: 352
+    cyclomatic_complexity: 5
+    calls_out: 3
     calls_in: 0
-  oqlos.core._cql_tokenizer._try_if_else:
-    name: _try_if_else
-    module: oqlos.core._cql_tokenizer
-    line: 208
-    cyclomatic_complexity: 3
-    calls_out: 8
+  oqlos.core.oql_parser.parse_FUNC_CALL:
+    name: parse_FUNC_CALL
+    module: oqlos.core.oql_parser
+    line: 407
+    cyclomatic_complexity: 1
+    calls_out: 2
     calls_in: 0
+  oqlos.tools.plugin_cli._default_config_path:
+    name: _default_config_path
+    module: oqlos.tools.plugin_cli
+    line: 38
+    cyclomatic_complexity: 1
+    calls_out: 2
+    calls_in: 2
   oqlos.tools.cql_cli.utils._resolve_peripheral_adapter:
     name: _resolve_peripheral_adapter
     module: oqlos.tools.cql_cli.utils
@@ -1993,160 +1097,13 @@ nodes:
     cyclomatic_complexity: 4
     calls_out: 4
     calls_in: 1
-  oqlos.tools.hardware_diagnose.__main__._print_calibrate:
-    name: _print_calibrate
-    module: oqlos.tools.hardware_diagnose.__main__
-    line: 50
-    cyclomatic_complexity: 6
-    calls_out: 9
-    calls_in: 1
-  oqlos.tools.hardware_diagnose.__main__._print_benchmark:
-    name: _print_benchmark
-    module: oqlos.tools.hardware_diagnose.__main__
-    line: 67
-    cyclomatic_complexity: 3
-    calls_out: 11
-    calls_in: 1
-  oqlos.tools.cql_cli.main.create_hardware_parser:
-    name: create_hardware_parser
-    module: oqlos.tools.cql_cli.main
-    line: 87
-    cyclomatic_complexity: 2
-    calls_out: 5
-    calls_in: 1
-  oqlos.tools.hardware_diagnose.discovery.list_usb_serial_devices:
-    name: list_usb_serial_devices
-    module: oqlos.tools.hardware_diagnose.discovery
-    line: 49
-    cyclomatic_complexity: 7
-    calls_out: 9
-    calls_in: 6
-  oqlos.tools.xml_import.generators._generate_cql_for_goal:
-    name: _generate_cql_for_goal
-    module: oqlos.tools.xml_import.generators
-    line: 386
-    cyclomatic_complexity: 4
-    calls_out: 3
-    calls_in: 1
-  oqlos.tools.hardware_diagnose.doctor._format_modbus_status:
-    name: _format_modbus_status
-    module: oqlos.tools.hardware_diagnose.doctor
-    line: 869
-    cyclomatic_complexity: 7
-    calls_out: 11
-    calls_in: 1
-  oqlos.core._interpreter_actions._post_motor2_reciprocate:
-    name: _post_motor2_reciprocate
-    module: oqlos.core._interpreter_actions
-    line: 932
-    cyclomatic_complexity: 7
-    calls_out: 11
-    calls_in: 1
-  oqlos.core.base.InterpreterOutput.emit:
-    name: emit
-    module: oqlos.core.base
-    line: 121
-    cyclomatic_complexity: 5
-    calls_out: 3
-    calls_in: 0
-  oqlos.core._oql_adapter._lower_min:
-    name: _lower_min
-    module: oqlos.core._oql_adapter
-    line: 200
-    cyclomatic_complexity: 1
-    calls_out: 3
-    calls_in: 0
-  oqlos.tools.hardware_diagnose.doctor._format_doctor_issues:
-    name: _format_doctor_issues
-    module: oqlos.tools.hardware_diagnose.doctor
-    line: 946
-    cyclomatic_complexity: 5
-    calls_out: 10
-    calls_in: 1
-  oqlos.hardware.firmware_adapter._extract_failure_message:
-    name: _extract_failure_message
-    module: oqlos.hardware.firmware_adapter
-    line: 107
-    cyclomatic_complexity: 17
-    calls_out: 19
-    calls_in: 1
-  oqlos.core.cql_parser._ParseState._handle_scenario_attrs:
-    name: _handle_scenario_attrs
-    module: oqlos.core.cql_parser
-    line: 187
-    cyclomatic_complexity: 3
-    calls_out: 1
-    calls_in: 0
-  oqlos.tools.cql_cli.preflight._emit_preflight_error:
-    name: _emit_preflight_error
-    module: oqlos.tools.cql_cli.preflight
-    line: 208
-    cyclomatic_complexity: 2
-    calls_out: 2
-    calls_in: 6
-  oqlos.core._dsl_helpers._looks_like_lung_object:
-    name: _looks_like_lung_object
-    module: oqlos.core._dsl_helpers
-    line: 34
-    cyclomatic_complexity: 1
-    calls_out: 2
-    calls_in: 2
-  oqlos.core._cql_tokenizer._try_if_standalone:
-    name: _try_if_standalone
-    module: oqlos.core._cql_tokenizer
-    line: 249
-    cyclomatic_complexity: 2
-    calls_out: 1
-    calls_in: 0
-  oqlos.core._oql_adapter.parse_flat_oql:
-    name: parse_flat_oql
-    module: oqlos.core._oql_adapter
-    line: 464
-    cyclomatic_complexity: 1
-    calls_out: 2
-    calls_in: 1
-  oqlos.hardware.sidecar_control.ensure_dri0050_sidecar:
-    name: ensure_dri0050_sidecar
-    module: oqlos.hardware.sidecar_control
-    line: 152
-    cyclomatic_complexity: 13
-    calls_out: 15
-    calls_in: 1
-  oqlos.hardware.rtc_probe.is_rtc_hardware_enabled:
-    name: is_rtc_hardware_enabled
-    module: oqlos.hardware.rtc_probe
-    line: 19
-    cyclomatic_complexity: 3
-    calls_out: 3
-    calls_in: 3
-  oqlos.tools.xml_import.generators._emit_cql_output:
-    name: _emit_cql_output
-    module: oqlos.tools.xml_import.generators
-    line: 65
-    cyclomatic_complexity: 5
-    calls_out: 15
-    calls_in: 2
-  oqlos.core._interpreter_actions._parse_motor2_float:
-    name: _parse_motor2_float
-    module: oqlos.core._interpreter_actions
-    line: 784
-    cyclomatic_complexity: 4
-    calls_out: 6
-    calls_in: 2
-  oqlos.tools.hardware_diagnose.modbus_probe._serials_from_env:
-    name: _serials_from_env
+  oqlos.tools.hardware_diagnose.modbus_probe.main:
+    name: main
     module: oqlos.tools.hardware_diagnose.modbus_probe
-    line: 87
-    cyclomatic_complexity: 3
-    calls_out: 4
-    calls_in: 2
-  oqlos.hardware.scanner_probe._is_likely_scanner_usb_blob:
-    name: _is_likely_scanner_usb_blob
-    module: oqlos.hardware.scanner_probe
-    line: 64
-    cyclomatic_complexity: 7
-    calls_out: 4
-    calls_in: 2
+    line: 194
+    cyclomatic_complexity: 2
+    calls_out: 7
+    calls_in: 0
   oqlos.tools.xml_import.parser._parse_operation:
     name: _parse_operation
     module: oqlos.tools.xml_import.parser
@@ -2154,124 +1111,145 @@ nodes:
     cyclomatic_complexity: 6
     calls_out: 18
     calls_in: 1
-  oqlos.hardware.discovery.probe_waveshare_modbus_adc:
-    name: probe_waveshare_modbus_adc
-    module: oqlos.hardware.discovery
-    line: 68
-    cyclomatic_complexity: 5
-    calls_out: 2
-    calls_in: 2
-  oqlos.tools.hardware_diagnose.modbus_probe._env_count_list:
-    name: _env_count_list
-    module: oqlos.tools.hardware_diagnose.modbus_probe
-    line: 48
-    cyclomatic_complexity: 2
-    calls_out: 2
-    calls_in: 2
-  oqlos.core._interpreter_actions._motor2_speed_for_duration:
-    name: _motor2_speed_for_duration
-    module: oqlos.core._interpreter_actions
-    line: 910
-    cyclomatic_complexity: 1
-    calls_out: 1
-    calls_in: 0
-  oqlos.tools.cql_cli.main.run_hardware_mode:
-    name: run_hardware_mode
-    module: oqlos.tools.cql_cli.main
-    line: 309
-    cyclomatic_complexity: 1
-    calls_out: 5
-    calls_in: 1
-  oqlos.core._interpreter_actions._oql_quote:
-    name: _oql_quote
-    module: oqlos.core._interpreter_actions
-    line: 101
-    cyclomatic_complexity: 2
-    calls_out: 3
-    calls_in: 2
-  oqlos.tools.plugin_cli.cmd_list:
-    name: cmd_list
+  oqlos.tools.plugin_cli.cmd_capabilities:
+    name: cmd_capabilities
     module: oqlos.tools.plugin_cli
-    line: 94
-    cyclomatic_complexity: 3
-    calls_out: 9
+    line: 116
+    cyclomatic_complexity: 2
+    calls_out: 6
     calls_in: 0
-  oqlos.tools.hardware_diagnose.doctor._load_config_summary:
-    name: _load_config_summary
-    module: oqlos.tools.hardware_diagnose.doctor
-    line: 49
-    cyclomatic_complexity: 4
+  oqlos.core.executor.ScenarioOrchestrator._execute_validate_step:
+    name: _execute_validate_step
+    module: oqlos.core.executor
+    line: 294
+    cyclomatic_complexity: 7
     calls_out: 7
+    calls_in: 0
+  oqlos.core.oql_parser._expand_repeat_block_lines:
+    name: _expand_repeat_block_lines
+    module: oqlos.core.oql_parser
+    line: 457
+    cyclomatic_complexity: 8
+    calls_out: 16
+    calls_in: 2
+  oqlos.tools.hardware_diagnose.doctor._update_modbus_adc_config:
+    name: _update_modbus_adc_config
+    module: oqlos.tools.hardware_diagnose.doctor
+    line: 828
+    cyclomatic_complexity: 4
+    calls_out: 18
     calls_in: 1
-  oqlos.hardware.stack_snapshot._get_modbus_preflight:
-    name: _get_modbus_preflight
-    module: oqlos.hardware.stack_snapshot
-    line: 14
+  oqlos.core._cql_tokenizer._try_val:
+    name: _try_val
+    module: oqlos.core._cql_tokenizer
+    line: 282
+    cyclomatic_complexity: 2
+    calls_out: 4
+    calls_in: 0
+  oqlos.tools.hardware_diagnose.health._is_health_ok:
+    name: _is_health_ok
+    module: oqlos.tools.hardware_diagnose.health
+    line: 40
     cyclomatic_complexity: 5
-    calls_out: 4
-    calls_in: 1
-  oqlos.hardware.modbus_identify._usb_blob:
-    name: _usb_blob
-    module: oqlos.hardware.modbus_identify
-    line: 32
-    cyclomatic_complexity: 3
-    calls_out: 4
-    calls_in: 1
-  oqlos.hardware.config_schema.get_hardware_config:
-    name: get_hardware_config
-    module: oqlos.hardware.config_schema
-    line: 83
-    cyclomatic_complexity: 2
-    calls_out: 4
-    calls_in: 0
-  oqlos.hardware.artificial_lung._command_response:
-    name: _command_response
-    module: oqlos.hardware.artificial_lung
-    line: 24
-    cyclomatic_complexity: 2
-    calls_out: 1
-    calls_in: 7
-  oqlos.core.cql_parser._ParseState._try_top_level:
-    name: _try_top_level
-    module: oqlos.core.cql_parser
-    line: 166
-    cyclomatic_complexity: 2
-    calls_out: 1
-    calls_in: 0
-  oqlos.hardware.modbus_identify.enrich_platform_modbus_ports:
-    name: enrich_platform_modbus_ports
-    module: oqlos.hardware.modbus_identify
-    line: 89
-    cyclomatic_complexity: 10
-    calls_out: 13
-    calls_in: 1
-  oqlos.core._interpreter_actions._motor2_do_start:
-    name: _motor2_do_start
-    module: oqlos.core._interpreter_actions
-    line: 1051
-    cyclomatic_complexity: 18
-    calls_out: 31
-    calls_in: 0
-  oqlos.hardware.modbus_identify.collect_modbus_serial_candidates:
-    name: collect_modbus_serial_candidates
-    module: oqlos.hardware.modbus_identify
-    line: 61
-    cyclomatic_complexity: 6
     calls_out: 6
     calls_in: 1
-  oqlos.core.executor.safe_eval_condition:
-    name: safe_eval_condition
-    module: oqlos.core.executor
-    line: 51
+  oqlos.tools.cql_cli.preflight.check_required_adapter:
+    name: check_required_adapter
+    module: oqlos.tools.cql_cli.preflight
+    line: 128
+    cyclomatic_complexity: 8
+    calls_out: 5
+    calls_in: 1
+  oqlos.tools.hardware_diagnose.doctor._check_firmware_health_error:
+    name: _check_firmware_health_error
+    module: oqlos.tools.hardware_diagnose.doctor
+    line: 471
+    cyclomatic_complexity: 3
+    calls_out: 2
+    calls_in: 1
+  setup_hardware_and_run_oql.generate_env_content:
+    name: generate_env_content
+    module: setup_hardware_and_run_oql
+    line: 101
+    cyclomatic_complexity: 2
+    calls_out: 1
+    calls_in: 1
+  oqlos.tools.hardware_diagnose.doctor._format_doctor_issues:
+    name: _format_doctor_issues
+    module: oqlos.tools.hardware_diagnose.doctor
+    line: 946
+    cyclomatic_complexity: 5
+    calls_out: 10
+    calls_in: 1
+  oqlos.tools.hardware_diagnose.__main__._print_benchmark:
+    name: _print_benchmark
+    module: oqlos.tools.hardware_diagnose.__main__
+    line: 67
+    cyclomatic_complexity: 3
+    calls_out: 11
+    calls_in: 0
+  oqlos.tools.hardware_diagnose.doctor.format_doctor:
+    name: format_doctor
+    module: oqlos.tools.hardware_diagnose.doctor
+    line: 989
+    cyclomatic_complexity: 6
+    calls_out: 21
+    calls_in: 2
+  oqlos.tools.hardware_diagnose.__main__._print_doctor:
+    name: _print_doctor
+    module: oqlos.tools.hardware_diagnose.__main__
+    line: 89
+    cyclomatic_complexity: 2
+    calls_out: 4
+    calls_in: 0
+  oqlos.tools.hardware_diagnose.doctor._analyze_firmware_access:
+    name: _analyze_firmware_access
+    module: oqlos.tools.hardware_diagnose.doctor
+    line: 603
+    cyclomatic_complexity: 7
+    calls_out: 11
+    calls_in: 1
+  oqlos.core.interpreter.CqlInterpreter.parse:
+    name: parse
+    module: oqlos.core.interpreter
+    line: 137
+    cyclomatic_complexity: 3
+    calls_out: 5
+    calls_in: 0
+  oqlos.tools.plugin_cli.cmd_execute:
+    name: cmd_execute
+    module: oqlos.tools.plugin_cli
+    line: 202
+    cyclomatic_complexity: 3
+    calls_out: 7
+    calls_in: 0
+  oqlos.tools.hardware_diagnose.__main__._print_modbus_probe:
+    name: _print_modbus_probe
+    module: oqlos.tools.hardware_diagnose.__main__
+    line: 94
     cyclomatic_complexity: 2
     calls_out: 5
-    calls_in: 2
-  oqlos.tools.hardware_diagnose.calibration._calibrate_sensors:
-    name: _calibrate_sensors
-    module: oqlos.tools.hardware_diagnose.calibration
-    line: 79
-    cyclomatic_complexity: 5
-    calls_out: 8
+    calls_in: 0
+  oqlos.core._interpreter_actions.exec_action_func:
+    name: exec_action_func
+    module: oqlos.core._interpreter_actions
+    line: 426
+    cyclomatic_complexity: 9
+    calls_out: 15
+    calls_in: 0
+  oqlos.core.executor._safe_resolve:
+    name: _safe_resolve
+    module: oqlos.core.executor
+    line: 29
+    cyclomatic_complexity: 14
+    calls_out: 21
+    calls_in: 7
+  oqlos.tools.hardware_diagnose.doctor._format_doctor_applied_repairs:
+    name: _format_doctor_applied_repairs
+    module: oqlos.tools.hardware_diagnose.doctor
+    line: 960
+    cyclomatic_complexity: 4
+    calls_out: 5
     calls_in: 1
   oqlos.core._dsl_helpers._parse_numeric_value:
     name: _parse_numeric_value
@@ -2280,20 +1258,6 @@ nodes:
     cyclomatic_complexity: 4
     calls_out: 7
     calls_in: 8
-  oqlos.hardware.modbus_identify._device_to_candidate:
-    name: _device_to_candidate
-    module: oqlos.hardware.modbus_identify
-    line: 49
-    cyclomatic_complexity: 8
-    calls_out: 10
-    calls_in: 1
-  oqlos.core._dsl_helpers._map_lung_action:
-    name: _map_lung_action
-    module: oqlos.core._dsl_helpers
-    line: 106
-    cyclomatic_complexity: 5
-    calls_out: 1
-    calls_in: 1
   oqlos.tools.hardware_diagnose.modbus_probe._env_str_list:
     name: _env_str_list
     module: oqlos.tools.hardware_diagnose.modbus_probe
@@ -2301,66 +1265,199 @@ nodes:
     cyclomatic_complexity: 3
     calls_out: 2
     calls_in: 4
-  oqlos.tools.hardware_diagnose.health._is_health_ok:
-    name: _is_health_ok
-    module: oqlos.tools.hardware_diagnose.health
-    line: 40
-    cyclomatic_complexity: 5
-    calls_out: 6
+  oqlos.tools.hardware_diagnose.shell._dispatch_command:
+    name: _dispatch_command
+    module: oqlos.tools.hardware_diagnose.shell
+    line: 74
+    cyclomatic_complexity: 6
+    calls_out: 21
     calls_in: 1
-  oqlos.tools.cql_cli.commands.run_single_command:
-    name: run_single_command
-    module: oqlos.tools.cql_cli.commands
-    line: 61
+  oqlos.core.oql_parser._require:
+    name: _require
+    module: oqlos.core.oql_parser
+    line: 229
+    cyclomatic_complexity: 2
+    calls_out: 2
+    calls_in: 11
+  oqlos.core._oql_adapter._parse_macro_line:
+    name: _parse_macro_line
+    module: oqlos.core._oql_adapter
+    line: 326
+    cyclomatic_complexity: 8
+    calls_out: 10
+    calls_in: 1
+  oqlos.tools.hardware_diagnose.doctor._probe_modbus_adc:
+    name: _probe_modbus_adc
+    module: oqlos.tools.hardware_diagnose.doctor
+    line: 94
+    cyclomatic_complexity: 5
+    calls_out: 9
+    calls_in: 1
+  oqlos.tools.hardware_diagnose.shell._cmd_calibrate:
+    name: _cmd_calibrate
+    module: oqlos.tools.hardware_diagnose.shell
+    line: 46
+    cyclomatic_complexity: 4
+    calls_out: 5
+    calls_in: 1
+  oqlos.tools.cql_cli.main._run_hardware_flags:
+    name: _run_hardware_flags
+    module: oqlos.tools.cql_cli.main
+    line: 275
+    cyclomatic_complexity: 9
+    calls_out: 14
+    calls_in: 2
+  oqlos.tools.hardware_diagnose.__main__._print_diagnose:
+    name: _print_diagnose
+    module: oqlos.tools.hardware_diagnose.__main__
+    line: 170
+    cyclomatic_complexity: 3
+    calls_out: 9
+    calls_in: 0
+  oqlos.core._interpreter_actions.exec_action_val:
+    name: exec_action_val
+    module: oqlos.core._interpreter_actions
+    line: 276
+    cyclomatic_complexity: 3
+    calls_out: 4
+    calls_in: 1
+  oqlos.tools.hardware_diagnose.__main__._print_calibrate:
+    name: _print_calibrate
+    module: oqlos.tools.hardware_diagnose.__main__
+    line: 50
+    cyclomatic_complexity: 6
+    calls_out: 9
+    calls_in: 0
+  oqlos.hardware.gateway._ModbusAdapter.__init__:
+    name: __init__
+    module: oqlos.hardware.gateway
+    line: 202
+    cyclomatic_complexity: 6
+    calls_out: 13
+    calls_in: 0
+  oqlos.core.interpreter.CqlInterpreter._build_script_result:
+    name: _build_script_result
+    module: oqlos.core.interpreter
+    line: 201
+    cyclomatic_complexity: 2
+    calls_out: 7
+    calls_in: 0
+  oqlos.core._interpreter_actions._motor2_max_steps_per_second:
+    name: _motor2_max_steps_per_second
+    module: oqlos.core._interpreter_actions
+    line: 902
     cyclomatic_complexity: 1
+    calls_out: 1
+    calls_in: 3
+  oqlos.tools.hardware_diagnose.modbus_probe._env_count_list:
+    name: _env_count_list
+    module: oqlos.tools.hardware_diagnose.modbus_probe
+    line: 48
+    cyclomatic_complexity: 2
     calls_out: 2
     calls_in: 2
-  setup_hardware_and_run_oql.main:
-    name: main
-    module: setup_hardware_and_run_oql
-    line: 261
+  oqlos.core._interpreter_actions._parse_prefixed_motor2_setting:
+    name: _parse_prefixed_motor2_setting
+    module: oqlos.core._interpreter_actions
+    line: 845
+    cyclomatic_complexity: 13
+    calls_out: 12
+    calls_in: 1
+  oqlos.tools.hardware_diagnose.doctor._firmware_adapter_status:
+    name: _firmware_adapter_status
+    module: oqlos.tools.hardware_diagnose.doctor
+    line: 933
+    cyclomatic_complexity: 7
+    calls_out: 9
+    calls_in: 1
+  oqlos.tools.hardware_diagnose.modbus_probe._arg_count_list:
+    name: _arg_count_list
+    module: oqlos.tools.hardware_diagnose.modbus_probe
+    line: 83
     cyclomatic_complexity: 3
-    calls_out: 18
-    calls_in: 0
-  oqlos.core._dsl_helpers._looks_like_valve_object:
-    name: _looks_like_valve_object
-    module: oqlos.core._dsl_helpers
-    line: 26
+    calls_out: 2
+    calls_in: 1
+  oqlos.tools.hardware_diagnose.doctor._firmware_is_remote:
+    name: _firmware_is_remote
+    module: oqlos.tools.hardware_diagnose.doctor
+    line: 928
     cyclomatic_complexity: 2
     calls_out: 3
-    calls_in: 2
-  oqlos.core.oql_parser.parse_CHECK:
-    name: parse_CHECK
-    module: oqlos.core.oql_parser
-    line: 311
-    cyclomatic_complexity: 2
-    calls_out: 10
-    calls_in: 2
-  oqlos.core._interpreter_actions._parse_motor2_duration_seconds:
-    name: _parse_motor2_duration_seconds
+    calls_in: 4
+  oqlos.core._line_parsers._parse_set_line:
+    name: _parse_set_line
+    module: oqlos.core._line_parsers
+    line: 116
+    cyclomatic_complexity: 12
+    calls_out: 21
+    calls_in: 1
+  oqlos.core.executor._resolve_compare:
+    name: _resolve_compare
+    module: oqlos.core.executor
+    line: 11
+    cyclomatic_complexity: 1
+    calls_out: 2
+    calls_in: 1
+  oqlos.core._interpreter_actions._post_motor2_stop:
+    name: _post_motor2_stop
     module: oqlos.core._interpreter_actions
-    line: 794
-    cyclomatic_complexity: 8
+    line: 963
+    cyclomatic_complexity: 4
+    calls_out: 11
+    calls_in: 1
+  oqlos.core._line_parsers._set_pump_step:
+    name: _set_pump_step
+    module: oqlos.core._line_parsers
+    line: 92
+    cyclomatic_complexity: 4
+    calls_out: 3
+    calls_in: 2
+  oqlos.core.cql_parser._ParseState._handle_scenario:
+    name: _handle_scenario
+    module: oqlos.core.cql_parser
+    line: 175
+    cyclomatic_complexity: 2
+    calls_out: 3
+    calls_in: 0
+  oqlos.tools.hardware_diagnose.doctor._load_config_summary:
+    name: _load_config_summary
+    module: oqlos.tools.hardware_diagnose.doctor
+    line: 49
+    cyclomatic_complexity: 4
     calls_out: 7
     calls_in: 1
-  oqlos.core._cql_tree_builder._parse_action_line:
-    name: _parse_action_line
-    module: oqlos.core._cql_tree_builder
-    line: 129
-    cyclomatic_complexity: 4
-    calls_out: 3
-    calls_in: 2
-  oqlos.core._line_parsers._set_lung_step:
-    name: _set_lung_step
-    module: oqlos.core._line_parsers
-    line: 105
-    cyclomatic_complexity: 4
-    calls_out: 3
+  oqlos.tools.hardware_diagnose.modbus_probe.probe_options_from_args:
+    name: probe_options_from_args
+    module: oqlos.tools.hardware_diagnose.modbus_probe
+    line: 115
+    cyclomatic_complexity: 2
+    calls_out: 27
     calls_in: 1
-  oqlos.tools.cql_cli.main._dispatch_to_mode:
-    name: _dispatch_to_mode
+  oqlos.core.motor2_runtime.motor2_speed_for_duration:
+    name: motor2_speed_for_duration
+    module: oqlos.core.motor2_runtime
+    line: 112
+    cyclomatic_complexity: 1
+    calls_out: 9
+    calls_in: 2
+  oqlos.tools.cql_cli.main.create_file_parser:
+    name: create_file_parser
     module: oqlos.tools.cql_cli.main
-    line: 369
+    line: 33
+    cyclomatic_complexity: 1
+    calls_out: 16
+    calls_in: 4
+  oqlos.tools.cql_cli.preflight.check_required_adapter_health:
+    name: check_required_adapter_health
+    module: oqlos.tools.cql_cli.preflight
+    line: 160
+    cyclomatic_complexity: 5
+    calls_out: 4
+    calls_in: 1
+  oqlos.hardware.rtc_probe.build_rtc_adapter_entry:
+    name: build_rtc_adapter_entry
+    module: oqlos.hardware.rtc_probe
+    line: 147
     cyclomatic_complexity: 8
     calls_out: 13
     calls_in: 1
@@ -2371,19 +1468,33 @@ nodes:
     cyclomatic_complexity: 1
     calls_out: 1
     calls_in: 0
-  oqlos.core.safe_eval.safe_eval:
-    name: safe_eval
-    module: oqlos.core.safe_eval
-    line: 32
+  oqlos.tools.hardware_diagnose.doctor._check_firmware_mode:
+    name: _check_firmware_mode
+    module: oqlos.tools.hardware_diagnose.doctor
+    line: 492
     cyclomatic_complexity: 3
     calls_out: 4
+    calls_in: 1
+  oqlos.core._interpreter_actions._parse_motor2_speed_steps:
+    name: _parse_motor2_speed_steps
+    module: oqlos.core._interpreter_actions
+    line: 774
+    cyclomatic_complexity: 5
+    calls_out: 9
+    calls_in: 2
+  oqlos.core._interpreter_actions.exec_action_assert:
+    name: exec_action_assert
+    module: oqlos.core._interpreter_actions
+    line: 570
+    cyclomatic_complexity: 3
+    calls_out: 7
     calls_in: 0
-  oqlos.tools.xml_import.generators._emit_set:
-    name: _emit_set
-    module: oqlos.tools.xml_import.generators
-    line: 61
-    cyclomatic_complexity: 1
-    calls_out: 3
+  oqlos.tools.cql_cli.preflight._emit_preflight_error:
+    name: _emit_preflight_error
+    module: oqlos.tools.cql_cli.preflight
+    line: 208
+    cyclomatic_complexity: 2
+    calls_out: 2
     calls_in: 6
   oqlos.core._oql_adapter._lower_set:
     name: _lower_set
@@ -2392,230 +1503,188 @@ nodes:
     cyclomatic_complexity: 1
     calls_out: 3
     calls_in: 0
-  oqlos.core._oql_adapter._cmd_to_actions:
-    name: _cmd_to_actions
-    module: oqlos.core._oql_adapter
-    line: 316
-    cyclomatic_complexity: 2
-    calls_out: 3
-    calls_in: 3
-  oqlos.core.motor2_runtime._pick:
-    name: _pick
-    module: oqlos.core.motor2_runtime
-    line: 64
-    cyclomatic_complexity: 4
-    calls_out: 0
-    calls_in: 10
-  oqlos.core._oql_adapter.oql_doc_to_cql:
-    name: oql_doc_to_cql
-    module: oqlos.core._oql_adapter
-    line: 390
-    cyclomatic_complexity: 12
-    calls_out: 30
-    calls_in: 2
-  oqlos.core._cql_tree_builder._parse_scenario_line:
-    name: _parse_scenario_line
-    module: oqlos.core._cql_tree_builder
-    line: 45
-    cyclomatic_complexity: 3
-    calls_out: 6
-    calls_in: 1
-  oqlos.tools.hardware_diagnose.doctor._describe_pid:
-    name: _describe_pid
-    module: oqlos.tools.hardware_diagnose.doctor
-    line: 170
-    cyclomatic_complexity: 4
-    calls_out: 4
-    calls_in: 1
-  oqlos.core.executor._resolve_name_or_attr:
-    name: _resolve_name_or_attr
-    module: oqlos.core.executor
-    line: 16
-    cyclomatic_complexity: 4
-    calls_out: 6
-    calls_in: 1
-  oqlos.tools.hardware_diagnose.doctor._probe_modbus_adc:
-    name: _probe_modbus_adc
-    module: oqlos.tools.hardware_diagnose.doctor
-    line: 94
-    cyclomatic_complexity: 5
+  oqlos.tools.cql_cli.preflight._health_status_is_ok:
+    name: _health_status_is_ok
+    module: oqlos.tools.cql_cli.preflight
+    line: 187
+    cyclomatic_complexity: 11
     calls_out: 9
     calls_in: 1
-  oqlos.core._value_normalizers.ValueNormalizer.coerce_float:
-    name: coerce_float
-    module: oqlos.core._value_normalizers
-    line: 28
-    cyclomatic_complexity: 5
-    calls_out: 9
-    calls_in: 0
-  oqlos.hardware.plugin_gateway.PluginHardwareGateway.__init__:
-    name: __init__
-    module: oqlos.hardware.plugin_gateway
-    line: 53
-    cyclomatic_complexity: 3
-    calls_out: 6
-    calls_in: 0
-  oqlos.core._interpreter_actions._assert_sensor:
-    name: _assert_sensor
+  oqlos.core._interpreter_actions._assert_valve:
+    name: _assert_valve
     module: oqlos.core._interpreter_actions
-    line: 517
-    cyclomatic_complexity: 4
-    calls_out: 9
-    calls_in: 0
-  oqlos.hardware.firmware_adapter._parse_numeric:
-    name: _parse_numeric
-    module: oqlos.hardware.firmware_adapter
-    line: 470
-    cyclomatic_complexity: 2
-    calls_out: 3
-    calls_in: 5
-  oqlos.core.cql_parser._validate_intervals:
-    name: _validate_intervals
-    module: oqlos.core.cql_parser
-    line: 451
-    cyclomatic_complexity: 6
-    calls_out: 1
-    calls_in: 1
-  oqlos.core.safe_eval._eval_unary_op:
-    name: _eval_unary_op
-    module: oqlos.core.safe_eval
-    line: 70
-    cyclomatic_complexity: 3
-    calls_out: 5
-    calls_in: 0
-  oqlos.core._interpreter_actions.exec_action_set:
-    name: exec_action_set
-    module: oqlos.core._interpreter_actions
-    line: 736
-    cyclomatic_complexity: 9
-    calls_out: 11
-    calls_in: 1
-  oqlos.tools.cql_cli.main.run_file_mode:
-    name: run_file_mode
-    module: oqlos.tools.cql_cli.main
-    line: 158
-    cyclomatic_complexity: 6
-    calls_out: 14
-    calls_in: 2
-  oqlos.core.interpreter.CqlInterpreter.execute:
-    name: execute
-    module: oqlos.core.interpreter
-    line: 214
-    cyclomatic_complexity: 4
-    calls_out: 9
-    calls_in: 0
-  oqlos.core.parser.parse_dsl_to_goal_with_issues:
-    name: parse_dsl_to_goal_with_issues
-    module: oqlos.core.parser
-    line: 113
-    cyclomatic_complexity: 13
-    calls_out: 21
-    calls_in: 3
-  oqlos.core.safe_eval._eval_call:
-    name: _eval_call
-    module: oqlos.core.safe_eval
-    line: 105
-    cyclomatic_complexity: 4
-    calls_out: 4
-    calls_in: 0
-  oqlos.tools.hardware_diagnose.modbus_probe._split_values:
-    name: _split_values
-    module: oqlos.tools.hardware_diagnose.modbus_probe
-    line: 66
-    cyclomatic_complexity: 5
-    calls_out: 5
-    calls_in: 3
-  oqlos.tools.plugin_cli.cmd_validate:
-    name: cmd_validate
-    module: oqlos.tools.plugin_cli
-    line: 127
-    cyclomatic_complexity: 8
-    calls_out: 12
-    calls_in: 0
-  oqlos.hardware.scanner_probe._scan_lsusb_matches:
-    name: _scan_lsusb_matches
-    module: oqlos.hardware.scanner_probe
-    line: 138
+    line: 541
     cyclomatic_complexity: 5
     calls_out: 8
+    calls_in: 0
+  oqlos.tools.cql_cli.formatting.canonicalize_oql_text:
+    name: canonicalize_oql_text
+    module: oqlos.tools.cql_cli.formatting
+    line: 20
+    cyclomatic_complexity: 3
+    calls_out: 4
     calls_in: 2
-  oqlos.tools.cql_cli.main._fetch_scenario_source:
-    name: _fetch_scenario_source
-    module: oqlos.tools.cql_cli.main
-    line: 207
-    cyclomatic_complexity: 7
+  oqlos.tools.hardware_diagnose.doctor._check_firmware_serial_access:
+    name: _check_firmware_serial_access
+    module: oqlos.tools.hardware_diagnose.doctor
+    line: 516
+    cyclomatic_complexity: 11
     calls_out: 13
     calls_in: 1
-  oqlos.core._cql_tree_builder._parse_scenario_attrs:
-    name: _parse_scenario_attrs
-    module: oqlos.core._cql_tree_builder
-    line: 58
+  oqlos.core._interpreter_actions._motor2_reciprocating_state:
+    name: _motor2_reciprocating_state
+    module: oqlos.core._interpreter_actions
+    line: 973
+    cyclomatic_complexity: 2
+    calls_out: 3
+    calls_in: 1
+  oqlos.tools.hardware_diagnose.doctor._analyze_modbus_adc_config:
+    name: _analyze_modbus_adc_config
+    module: oqlos.tools.hardware_diagnose.doctor
+    line: 303
+    cyclomatic_complexity: 12
+    calls_out: 22
+    calls_in: 1
+  oqlos.tools.hardware_diagnose.modbus_probe.run_modbus_probe_from_env:
+    name: run_modbus_probe_from_env
+    module: oqlos.tools.hardware_diagnose.modbus_probe
+    line: 156
+    cyclomatic_complexity: 1
+    calls_out: 13
+    calls_in: 0
+  oqlos.core._line_parsers._parse_action_line:
+    name: _parse_action_line
+    module: oqlos.core._line_parsers
+    line: 177
+    cyclomatic_complexity: 10
+    calls_out: 18
+    calls_in: 0
+  oqlos.hardware.discovery.probe_waveshare_modbus:
+    name: probe_waveshare_modbus
+    module: oqlos.hardware.discovery
+    line: 68
+    cyclomatic_complexity: 5
+    calls_out: 2
+    calls_in: 3
+  oqlos.tools.xml_import.parser.parse_xml:
+    name: parse_xml
+    module: oqlos.tools.xml_import.parser
+    line: 14
+    cyclomatic_complexity: 6
+    calls_out: 16
+    calls_in: 0
+  oqlos.core._oql_adapter._fmt_value:
+    name: _fmt_value
+    module: oqlos.core._oql_adapter
+    line: 46
+    cyclomatic_complexity: 2
+    calls_out: 1
+    calls_in: 3
+  oqlos.core._interpreter_actions.exec_action_save:
+    name: exec_action_save
+    module: oqlos.core._interpreter_actions
+    line: 209
     cyclomatic_complexity: 4
     calls_out: 6
     calls_in: 1
-  oqlos.hardware.scanner_probe._canonical_match_key:
-    name: _canonical_match_key
-    module: oqlos.hardware.scanner_probe
-    line: 95
-    cyclomatic_complexity: 8
-    calls_out: 10
-    calls_in: 1
-  oqlos.tools.cql_cli.utils.validate_directory:
-    name: validate_directory
-    module: oqlos.tools.cql_cli.utils
-    line: 133
+  oqlos.core.oql_parser._parse_and_append_command:
+    name: _parse_and_append_command
+    module: oqlos.core.oql_parser
+    line: 588
     cyclomatic_complexity: 5
-    calls_out: 15
+    calls_out: 9
     calls_in: 1
-  oqlos.tools.hardware_diagnose.__main__._print_health:
-    name: _print_health
-    module: oqlos.tools.hardware_diagnose.__main__
-    line: 43
-    cyclomatic_complexity: 2
-    calls_out: 5
+  oqlos.tools.hardware_diagnose.doctor._usb_serial_only:
+    name: _usb_serial_only
+    module: oqlos.tools.hardware_diagnose.doctor
+    line: 42
+    cyclomatic_complexity: 3
+    calls_out: 1
     calls_in: 1
-  oqlos.tools.hardware_diagnose.discovery._run_shell_command:
-    name: _run_shell_command
-    module: oqlos.tools.hardware_diagnose.discovery
-    line: 17
-    cyclomatic_complexity: 2
-    calls_out: 2
-    calls_in: 1
-  oqlos.tools.xml_import.generators._build_validation_criteria:
-    name: _build_validation_criteria
+  oqlos.tools.xml_import.generators._append_sensor_assertion:
+    name: _append_sensor_assertion
     module: oqlos.tools.xml_import.generators
-    line: 223
-    cyclomatic_complexity: 14
+    line: 204
+    cyclomatic_complexity: 6
     calls_out: 3
     calls_in: 1
-  oqlos.core.interpreter.CqlInterpreter.parse:
-    name: parse
-    module: oqlos.core.interpreter
-    line: 137
-    cyclomatic_complexity: 3
-    calls_out: 5
-    calls_in: 0
-  oqlos.core._cql_tokenizer._try_set:
-    name: _try_set
-    module: oqlos.core._cql_tokenizer
-    line: 179
+  oqlos.tools.cql_cli.main.create_cmd_parser:
+    name: create_cmd_parser
+    module: oqlos.tools.cql_cli.main
+    line: 115
+    cyclomatic_complexity: 1
+    calls_out: 13
+    calls_in: 1
+  oqlos.core._interpreter_actions._oql_quote:
+    name: _oql_quote
+    module: oqlos.core._interpreter_actions
+    line: 101
     cyclomatic_complexity: 2
-    calls_out: 6
-    calls_in: 0
-  oqlos.tools.hardware_diagnose.doctor._add_issue:
-    name: _add_issue
-    module: oqlos.tools.hardware_diagnose.doctor
-    line: 239
-    cyclomatic_complexity: 2
-    calls_out: 1
-    calls_in: 18
-  oqlos.tools.xml_import.generators._mode_action:
-    name: _mode_action
-    module: oqlos.tools.xml_import.generators
-    line: 43
-    cyclomatic_complexity: 3
-    calls_out: 2
+    calls_out: 3
     calls_in: 2
+  oqlos.tools.cql_cli.preflight._emit_text_preflight:
+    name: _emit_text_preflight
+    module: oqlos.tools.cql_cli.preflight
+    line: 264
+    cyclomatic_complexity: 7
+    calls_out: 16
+    calls_in: 1
+  oqlos.core._interpreter_actions._mark_success:
+    name: _mark_success
+    module: oqlos.core._interpreter_actions
+    line: 140
+    cyclomatic_complexity: 1
+    calls_out: 1
+    calls_in: 3
+  oqlos.tools.cql_cli.utils.output_yaml:
+    name: output_yaml
+    module: oqlos.tools.cql_cli.utils
+    line: 27
+    cyclomatic_complexity: 2
+    calls_out: 2
+    calls_in: 0
+  oqlos.core.motor2_runtime.motor2_acceleration_raw:
+    name: motor2_acceleration_raw
+    module: oqlos.core.motor2_runtime
+    line: 117
+    cyclomatic_complexity: 2
+    calls_out: 8
+    calls_in: 2
+  oqlos.core._oql_adapter._load_includes:
+    name: _load_includes
+    module: oqlos.core._oql_adapter
+    line: 102
+    cyclomatic_complexity: 12
+    calls_out: 15
+    calls_in: 2
+  oqlos.tools.cql_cli.main.create_hardware_parser:
+    name: create_hardware_parser
+    module: oqlos.tools.cql_cli.main
+    line: 87
+    cyclomatic_complexity: 2
+    calls_out: 5
+    calls_in: 1
+  oqlos.core._line_parsers._parse_pump_line:
+    name: _parse_pump_line
+    module: oqlos.core._line_parsers
+    line: 53
+    cyclomatic_complexity: 6
+    calls_out: 8
+    calls_in: 1
+  oqlos.tools.hardware_diagnose.doctor.detect_hardware:
+    name: detect_hardware
+    module: oqlos.tools.hardware_diagnose.doctor
+    line: 191
+    cyclomatic_complexity: 4
+    calls_out: 12
+    calls_in: 3
+  oqlos.tools.plugin_cli._load_config_file:
+    name: _load_config_file
+    module: oqlos.tools.plugin_cli
+    line: 42
+    cyclomatic_complexity: 4
+    calls_out: 16
+    calls_in: 1
   setup_hardware_and_run_oql.run_oql_scenario:
     name: run_oql_scenario
     module: setup_hardware_and_run_oql
@@ -2623,19 +1692,740 @@ nodes:
     cyclomatic_complexity: 8
     calls_out: 24
     calls_in: 1
-  oqlos.core._cql_tree_builder._parse_metadata_kv:
-    name: _parse_metadata_kv
+  oqlos.core._oql_adapter.parse_flat_oql:
+    name: parse_flat_oql
+    module: oqlos.core._oql_adapter
+    line: 464
+    cyclomatic_complexity: 1
+    calls_out: 2
+    calls_in: 1
+  oqlos.tools.hardware_diagnose.modbus_probe._env_float:
+    name: _env_float
+    module: oqlos.tools.hardware_diagnose.modbus_probe
+    line: 61
+    cyclomatic_complexity: 2
+    calls_out: 2
+    calls_in: 2
+  oqlos.core.motor2_runtime._pick:
+    name: _pick
+    module: oqlos.core.motor2_runtime
+    line: 64
+    cyclomatic_complexity: 4
+    calls_out: 0
+    calls_in: 10
+  oqlos.core._cql_tree_builder._parse_goal_attrs:
+    name: _parse_goal_attrs
     module: oqlos.core._cql_tree_builder
+    line: 102
+    cyclomatic_complexity: 4
+    calls_out: 7
+    calls_in: 1
+  oqlos.hardware.hui_actions.shutdown_all_hui_hardware:
+    name: shutdown_all_hui_hardware
+    module: oqlos.hardware.hui_actions
+    line: 88
+    cyclomatic_complexity: 4
+    calls_out: 8
+    calls_in: 5
+  oqlos.core.base.InterpreterOutput.emit:
+    name: emit
+    module: oqlos.core.base
+    line: 121
+    cyclomatic_complexity: 5
+    calls_out: 3
+    calls_in: 0
+  oqlos.hardware.hui_actions._operation:
+    name: _operation
+    module: oqlos.hardware.hui_actions
+    line: 67
+    cyclomatic_complexity: 1
+    calls_out: 0
+    calls_in: 4
+  oqlos.tools.plugin_cli.cmd_reload:
+    name: cmd_reload
+    module: oqlos.tools.plugin_cli
+    line: 214
+    cyclomatic_complexity: 4
+    calls_out: 10
+    calls_in: 0
+  oqlos.core._interpreter_actions._parse_motor2_float:
+    name: _parse_motor2_float
+    module: oqlos.core._interpreter_actions
+    line: 784
+    cyclomatic_complexity: 4
+    calls_out: 6
+    calls_in: 2
+  oqlos.core.oql_parser.parse_CHECK:
+    name: parse_CHECK
+    module: oqlos.core.oql_parser
+    line: 311
+    cyclomatic_complexity: 2
+    calls_out: 10
+    calls_in: 2
+  oqlos.tools.plugin_cli.cmd_disconnect:
+    name: cmd_disconnect
+    module: oqlos.tools.plugin_cli
+    line: 172
+    cyclomatic_complexity: 2
+    calls_out: 4
+    calls_in: 0
+  oqlos.tools.cql_cli._sync_compat_symbols:
+    name: _sync_compat_symbols
+    module: oqlos.tools.cql_cli
+    line: 24
+    cyclomatic_complexity: 1
+    calls_out: 0
+    calls_in: 1
+  oqlos.core._interpreter_actions._normalize_motor2_target:
+    name: _normalize_motor2_target
+    module: oqlos.core._interpreter_actions
+    line: 760
+    cyclomatic_complexity: 1
+    calls_out: 2
+    calls_in: 1
+  oqlos.core.cql_parser._ParseState._handle_goal:
+    name: _handle_goal
+    module: oqlos.core.cql_parser
+    line: 193
+    cyclomatic_complexity: 3
+    calls_out: 5
+    calls_in: 0
+  oqlos.core.oql_parser.parse_SAVE:
+    name: parse_SAVE
+    module: oqlos.core.oql_parser
+    line: 306
+    cyclomatic_complexity: 1
+    calls_out: 2
+    calls_in: 0
+  oqlos.tools.hardware_diagnose.health._request_firmware_json:
+    name: _request_firmware_json
+    module: oqlos.tools.hardware_diagnose.health
+    line: 10
+    cyclomatic_complexity: 8
+    calls_out: 9
+    calls_in: 2
+  oqlos.tools.cql_cli.utils.normalize_target_name:
+    name: normalize_target_name
+    module: oqlos.tools.cql_cli.utils
+    line: 63
+    cyclomatic_complexity: 1
+    calls_out: 4
+    calls_in: 1
+  oqlos.tools.cql_cli.utils._resolve_sensor_target:
+    name: _resolve_sensor_target
+    module: oqlos.tools.cql_cli.utils
+    line: 110
+    cyclomatic_complexity: 3
+    calls_out: 0
+    calls_in: 1
+  oqlos.tools.xml_import.generators.generate_goals_json:
+    name: generate_goals_json
+    module: oqlos.tools.xml_import.generators
+    line: 400
+    cyclomatic_complexity: 13
+    calls_out: 17
+    calls_in: 0
+  setup_hardware_and_run_oql.main:
+    name: main
+    module: setup_hardware_and_run_oql
+    line: 261
+    cyclomatic_complexity: 3
+    calls_out: 18
+    calls_in: 0
+  oqlos.tools.cql_cli.utils.validate_directory:
+    name: validate_directory
+    module: oqlos.tools.cql_cli.utils
+    line: 133
+    cyclomatic_complexity: 5
+    calls_out: 15
+    calls_in: 1
+  oqlos.tools.hardware_diagnose.modbus_probe.run_modbus_probe_from_args:
+    name: run_modbus_probe_from_args
+    module: oqlos.tools.hardware_diagnose.modbus_probe
+    line: 151
+    cyclomatic_complexity: 1
+    calls_out: 2
+    calls_in: 2
+  oqlos.core._oql_adapter._scenarios_root:
+    name: _scenarios_root
+    module: oqlos.core._oql_adapter
+    line: 52
+    cyclomatic_complexity: 1
+    calls_out: 2
+    calls_in: 1
+  oqlos.tools.hardware_diagnose.doctor.format_detection:
+    name: format_detection
+    module: oqlos.tools.hardware_diagnose.doctor
+    line: 885
+    cyclomatic_complexity: 10
+    calls_out: 25
+    calls_in: 3
+  oqlos.tools.hardware_diagnose.doctor.apply_safe_fixes:
+    name: apply_safe_fixes
+    module: oqlos.tools.hardware_diagnose.doctor
+    line: 765
+    cyclomatic_complexity: 9
+    calls_out: 14
+    calls_in: 1
+  oqlos.hardware.rtc_probe.enrich_rtc_adapter:
+    name: enrich_rtc_adapter
+    module: oqlos.hardware.rtc_probe
+    line: 183
+    cyclomatic_complexity: 8
+    calls_out: 11
+    calls_in: 1
+  oqlos.tools.hardware_diagnose.benchmark.run_benchmark:
+    name: run_benchmark
+    module: oqlos.tools.hardware_diagnose.benchmark
+    line: 9
+    cyclomatic_complexity: 6
+    calls_out: 15
+    calls_in: 2
+  oqlos.tools.hardware_diagnose.doctor._health_status_is_ok:
+    name: _health_status_is_ok
+    module: oqlos.tools.hardware_diagnose.doctor
+    line: 638
+    cyclomatic_complexity: 11
+    calls_out: 9
+    calls_in: 2
+  oqlos.core.cql_parser._ParseState._try_hierarchy:
+    name: _try_hierarchy
+    module: oqlos.core.cql_parser
+    line: 385
+    cyclomatic_complexity: 7
+    calls_out: 6
+    calls_in: 0
+  oqlos.core._cql_tree_builder._parse_step_line:
+    name: _parse_step_line
+    module: oqlos.core._cql_tree_builder
+    line: 119
+    cyclomatic_complexity: 3
+    calls_out: 5
+    calls_in: 1
+  oqlos.hardware.hui_actions._success:
+    name: _success
+    module: oqlos.hardware.hui_actions
+    line: 56
+    cyclomatic_complexity: 5
+    calls_out: 7
+    calls_in: 3
+  oqlos.core.oql_parser.parse_SET:
+    name: parse_SET
+    module: oqlos.core.oql_parser
+    line: 247
+    cyclomatic_complexity: 1
+    calls_out: 3
+    calls_in: 0
+  oqlos.tools.hardware_diagnose.doctor._extract_pids:
+    name: _extract_pids
+    module: oqlos.tools.hardware_diagnose.doctor
+    line: 162
+    cyclomatic_complexity: 4
+    calls_out: 4
+    calls_in: 1
+  oqlos.tools.hardware_diagnose.doctor._format_modbus_status:
+    name: _format_modbus_status
+    module: oqlos.tools.hardware_diagnose.doctor
+    line: 869
+    cyclomatic_complexity: 7
+    calls_out: 11
+    calls_in: 1
+  oqlos.tools.cql_cli.utils.build_result_payload:
+    name: build_result_payload
+    module: oqlos.tools.cql_cli.utils
+    line: 44
+    cyclomatic_complexity: 2
+    calls_out: 2
+    calls_in: 4
+  oqlos.core.motor2_runtime.motor2_max_steps_per_second:
+    name: motor2_max_steps_per_second
+    module: oqlos.core.motor2_runtime
+    line: 71
+    cyclomatic_complexity: 2
+    calls_out: 3
+    calls_in: 2
+  oqlos.tools.cql_cli.preflight.emit_preflight_success:
+    name: emit_preflight_success
+    module: oqlos.tools.cql_cli.preflight
+    line: 216
+    cyclomatic_complexity: 3
+    calls_out: 2
+    calls_in: 1
+  oqlos.tools.hardware_diagnose.doctor._expected_modbus_params:
+    name: _expected_modbus_params
+    module: oqlos.tools.hardware_diagnose.doctor
+    line: 273
+    cyclomatic_complexity: 5
+    calls_out: 6
+    calls_in: 2
+  oqlos.tools.xml_import.generators._quote_oql:
+    name: _quote_oql
+    module: oqlos.tools.xml_import.generators
+    line: 55
+    cyclomatic_complexity: 2
+    calls_out: 4
+    calls_in: 2
+  oqlos.core._interpreter_actions._compare_values:
+    name: _compare_values
+    module: oqlos.core._interpreter_actions
+    line: 71
+    cyclomatic_complexity: 10
+    calls_out: 8
+    calls_in: 1
+  oqlos.core.oql_parser.parse_MIN:
+    name: parse_MIN
+    module: oqlos.core.oql_parser
+    line: 349
+    cyclomatic_complexity: 1
+    calls_out: 3
+    calls_in: 0
+  oqlos.core._func_resolver._collect_function_definitions:
+    name: _collect_function_definitions
+    module: oqlos.core._func_resolver
+    line: 14
+    cyclomatic_complexity: 13
+    calls_out: 19
+    calls_in: 1
+  oqlos.core._interpreter_actions.exec_action_api:
+    name: exec_action_api
+    module: oqlos.core._interpreter_actions
+    line: 463
+    cyclomatic_complexity: 3
+    calls_out: 9
+    calls_in: 0
+  oqlos.tools.hardware_diagnose.modbus_probe._serials_from_env:
+    name: _serials_from_env
+    module: oqlos.tools.hardware_diagnose.modbus_probe
+    line: 87
+    cyclomatic_complexity: 3
+    calls_out: 4
+    calls_in: 2
+  oqlos.tools.cql_cli.main.create_run_parser:
+    name: create_run_parser
+    module: oqlos.tools.cql_cli.main
+    line: 78
+    cyclomatic_complexity: 1
+    calls_out: 1
+    calls_in: 1
+  oqlos.core.oql_parser.parse_IF:
+    name: parse_IF
+    module: oqlos.core.oql_parser
+    line: 330
+    cyclomatic_complexity: 2
+    calls_out: 10
+    calls_in: 1
+  oqlos.core.cql_parser._ParseState._try_top_level:
+    name: _try_top_level
+    module: oqlos.core.cql_parser
+    line: 166
+    cyclomatic_complexity: 2
+    calls_out: 1
+    calls_in: 0
+  oqlos.core.motor2_runtime._coerce_int:
+    name: _coerce_int
+    module: oqlos.core.motor2_runtime
+    line: 45
+    cyclomatic_complexity: 3
+    calls_out: 6
+    calls_in: 5
+  oqlos.hardware.config_schema.get_hardware_config:
+    name: get_hardware_config
+    module: oqlos.hardware.config_schema
+    line: 83
+    cyclomatic_complexity: 2
+    calls_out: 4
+    calls_in: 0
+  oqlos.core.safe_eval._eval_unary_op:
+    name: _eval_unary_op
+    module: oqlos.core.safe_eval
+    line: 70
+    cyclomatic_complexity: 3
+    calls_out: 5
+    calls_in: 0
+  oqlos.core._line_parsers._parse_task_part:
+    name: _parse_task_part
+    module: oqlos.core._line_parsers
+    line: 20
+    cyclomatic_complexity: 10
+    calls_out: 14
+    calls_in: 2
+  oqlos.core._interpreter_actions._format_set_command:
+    name: _format_set_command
+    module: oqlos.core._interpreter_actions
+    line: 106
+    cyclomatic_complexity: 1
+    calls_out: 2
+    calls_in: 4
+  oqlos.tools.xml_import._utils.is_pump_output:
+    name: is_pump_output
+    module: oqlos.tools.xml_import._utils
     line: 28
+    cyclomatic_complexity: 4
+    calls_out: 2
+    calls_in: 2
+  oqlos.tools.cql_cli.utils.build_single_command_scenario:
+    name: build_single_command_scenario
+    module: oqlos.tools.cql_cli.utils
+    line: 68
+    cyclomatic_complexity: 2
+    calls_out: 3
+    calls_in: 2
+  oqlos.tools.hardware_diagnose.doctor._firmware_hostname:
+    name: _firmware_hostname
+    module: oqlos.tools.hardware_diagnose.doctor
+    line: 232
+    cyclomatic_complexity: 3
+    calls_out: 2
+    calls_in: 1
+  oqlos.core._interpreter_actions._parse_motor2_reciprocating_setting:
+    name: _parse_motor2_reciprocating_setting
+    module: oqlos.core._interpreter_actions
+    line: 874
     cyclomatic_complexity: 6
     calls_out: 5
     calls_in: 1
-  oqlos.core.motor2_runtime.normalize_motor2_runtime_config:
-    name: normalize_motor2_runtime_config
-    module: oqlos.core.motor2_runtime
+  oqlos.core._oql_adapter._lower_min:
+    name: _lower_min
+    module: oqlos.core._oql_adapter
+    line: 200
+    cyclomatic_complexity: 1
+    calls_out: 3
+    calls_in: 0
+  oqlos.core._cql_tokenizer._try_goto:
+    name: _try_goto
+    module: oqlos.core._cql_tokenizer
+    line: 362
+    cyclomatic_complexity: 2
+    calls_out: 4
+    calls_in: 0
+  oqlos.core._interpreter_actions._exec_set_wait:
+    name: _exec_set_wait
+    module: oqlos.core._interpreter_actions
+    line: 1203
+    cyclomatic_complexity: 3
+    calls_out: 7
+    calls_in: 1
+  oqlos.core.safe_eval.safe_eval:
+    name: safe_eval
+    module: oqlos.core.safe_eval
+    line: 32
+    cyclomatic_complexity: 3
+    calls_out: 4
+    calls_in: 0
+  oqlos.core.cql_parser._validate_intervals:
+    name: _validate_intervals
+    module: oqlos.core.cql_parser
+    line: 451
+    cyclomatic_complexity: 6
+    calls_out: 1
+    calls_in: 1
+  oqlos.tools.cql_cli.preflight._start_firmware_service:
+    name: _start_firmware_service
+    module: oqlos.tools.cql_cli.preflight
+    line: 54
+    cyclomatic_complexity: 13
+    calls_out: 11
+    calls_in: 1
+  oqlos.core._line_parsers._set_lung_step:
+    name: _set_lung_step
+    module: oqlos.core._line_parsers
+    line: 105
+    cyclomatic_complexity: 4
+    calls_out: 3
+    calls_in: 1
+  oqlos.hardware.hui_actions._set_pump:
+    name: _set_pump
+    module: oqlos.hardware.hui_actions
     line: 76
+    cyclomatic_complexity: 1
+    calls_out: 3
+    calls_in: 2
+  oqlos.tools.xml_import.generators._generate_cql_for_goal:
+    name: _generate_cql_for_goal
+    module: oqlos.tools.xml_import.generators
+    line: 386
+    cyclomatic_complexity: 4
+    calls_out: 3
+    calls_in: 1
+  oqlos.tools.cql_cli.main._fetch_scenario_source:
+    name: _fetch_scenario_source
+    module: oqlos.tools.cql_cli.main
+    line: 207
+    cyclomatic_complexity: 7
+    calls_out: 13
+    calls_in: 1
+  oqlos.core.oql_parser.parse_INCLUDE:
+    name: parse_INCLUDE
+    module: oqlos.core.oql_parser
+    line: 402
+    cyclomatic_complexity: 1
+    calls_out: 2
+    calls_in: 1
+  oqlos.core._dsl_helpers._looks_like_lung_object:
+    name: _looks_like_lung_object
+    module: oqlos.core._dsl_helpers
+    line: 34
+    cyclomatic_complexity: 1
+    calls_out: 2
+    calls_in: 2
+  oqlos.core.base.VariableStore.set:
+    name: set
+    module: oqlos.core.base
+    line: 68
+    cyclomatic_complexity: 4
+    calls_out: 2
+    calls_in: 19
+  oqlos.core.safe_eval._eval_bool_op:
+    name: _eval_bool_op
+    module: oqlos.core.safe_eval
+    line: 95
+    cyclomatic_complexity: 4
+    calls_out: 7
+    calls_in: 0
+  oqlos.core.oql_versioning.first_meaningful_line:
+    name: first_meaningful_line
+    module: oqlos.core.oql_versioning
+    line: 35
+    cyclomatic_complexity: 4
+    calls_out: 4
+    calls_in: 2
+  oqlos.core.oql_versioning.extract_declared_version:
+    name: extract_declared_version
+    module: oqlos.core.oql_versioning
+    line: 45
+    cyclomatic_complexity: 3
+    calls_out: 4
+    calls_in: 1
+  oqlos.tools.cql_cli.main.run_cmd_mode:
+    name: run_cmd_mode
+    module: oqlos.tools.cql_cli.main
+    line: 326
+    cyclomatic_complexity: 4
+    calls_out: 7
+    calls_in: 1
+  oqlos.tools.cql_cli.preflight.check_firmware_state:
+    name: check_firmware_state
+    module: oqlos.tools.cql_cli.preflight
+    line: 91
+    cyclomatic_complexity: 8
+    calls_out: 14
+    calls_in: 1
+  oqlos.tools.hardware_diagnose.health.check_firmware_identify:
+    name: check_firmware_identify
+    module: oqlos.tools.hardware_diagnose.health
+    line: 35
+    cyclomatic_complexity: 1
+    calls_out: 1
+    calls_in: 9
+  oqlos.core._cql_tree_builder._ensure_goal_for_step:
+    name: _ensure_goal_for_step
+    module: oqlos.core._cql_tree_builder
+    line: 145
+    cyclomatic_complexity: 4
+    calls_out: 3
+    calls_in: 1
+  oqlos.tools.plugin_cli.cmd_connect:
+    name: cmd_connect
+    module: oqlos.tools.plugin_cli
+    line: 156
+    cyclomatic_complexity: 4
+    calls_out: 6
+    calls_in: 0
+  oqlos.tools.cql_cli.main.run_format_mode:
+    name: run_format_mode
+    module: oqlos.tools.cql_cli.main
+    line: 357
+    cyclomatic_complexity: 2
+    calls_out: 7
+    calls_in: 1
+  oqlos.core.oql_parser.parse_GET:
+    name: parse_GET
+    module: oqlos.core.oql_parser
+    line: 254
+    cyclomatic_complexity: 1
+    calls_out: 2
+    calls_in: 0
+  oqlos.core._line_parsers._parse_inline_task:
+    name: _parse_inline_task
+    module: oqlos.core._line_parsers
+    line: 155
+    cyclomatic_complexity: 5
+    calls_out: 7
+    calls_in: 1
+  oqlos.core._interpreter_actions._motor2_step_label:
+    name: _motor2_step_label
+    module: oqlos.core._interpreter_actions
+    line: 1076
+    cyclomatic_complexity: 4
+    calls_out: 1
+    calls_in: 1
+  oqlos.core._interpreter_actions._parse_motor2_duration_seconds:
+    name: _parse_motor2_duration_seconds
+    module: oqlos.core._interpreter_actions
+    line: 794
+    cyclomatic_complexity: 8
+    calls_out: 7
+    calls_in: 1
+  oqlos.core._interpreter_actions._do_sleep:
+    name: _do_sleep
+    module: oqlos.core._interpreter_actions
+    line: 248
+    cyclomatic_complexity: 3
+    calls_out: 10
+    calls_in: 2
+  oqlos.core.oql_parser.to_num:
+    name: to_num
+    module: oqlos.core.oql_parser
+    line: 143
+    cyclomatic_complexity: 2
+    calls_out: 5
+    calls_in: 7
+  oqlos.core.parser._try_action_or_condition:
+    name: _try_action_or_condition
+    module: oqlos.core.parser
+    line: 36
+    cyclomatic_complexity: 5
+    calls_out: 6
+    calls_in: 1
+  oqlos.hardware.hui_actions._set_pump_best_effort:
+    name: _set_pump_best_effort
+    module: oqlos.hardware.hui_actions
+    line: 81
+    cyclomatic_complexity: 2
+    calls_out: 3
+    calls_in: 1
+  oqlos.tools.hardware_diagnose.doctor.build_doctor_report:
+    name: build_doctor_report
+    module: oqlos.tools.hardware_diagnose.doctor
+    line: 718
+    cyclomatic_complexity: 11
+    calls_out: 14
+    calls_in: 2
+  oqlos.tools.xml_import.generators._format_range:
+    name: _format_range
+    module: oqlos.tools.xml_import.generators
+    line: 30
+    cyclomatic_complexity: 9
+    calls_out: 0
+    calls_in: 2
+  oqlos.core._interpreter_actions._handle_motor2_reciprocating_setting:
+    name: _handle_motor2_reciprocating_setting
+    module: oqlos.core._interpreter_actions
+    line: 1133
+    cyclomatic_complexity: 2
+    calls_out: 4
+    calls_in: 1
+  oqlos.tools.hardware_diagnose.shell._cmd_list:
+    name: _cmd_list
+    module: oqlos.tools.hardware_diagnose.shell
+    line: 29
+    cyclomatic_complexity: 5
+    calls_out: 11
+    calls_in: 0
+  oqlos.tools.hardware_diagnose.doctor._collect_repairs:
+    name: _collect_repairs
+    module: oqlos.tools.hardware_diagnose.doctor
+    line: 703
+    cyclomatic_complexity: 5
+    calls_out: 7
+    calls_in: 1
+  oqlos.tools.hardware_diagnose.doctor._modbus_adc_config:
+    name: _modbus_adc_config
+    module: oqlos.tools.hardware_diagnose.doctor
+    line: 265
+    cyclomatic_complexity: 3
+    calls_out: 4
+    calls_in: 1
+  oqlos.tools.cql_cli.commands.execute_command_with_cleanup:
+    name: execute_command_with_cleanup
+    module: oqlos.tools.cql_cli.commands
+    line: 122
+    cyclomatic_complexity: 8
+    calls_out: 7
+    calls_in: 1
+  oqlos.tools.cql_cli.commands._run_continuous_mode:
+    name: _run_continuous_mode
+    module: oqlos.tools.cql_cli.commands
+    line: 144
+    cyclomatic_complexity: 4
+    calls_out: 20
+    calls_in: 1
+  oqlos.core._dsl_helpers._map_peripheral:
+    name: _map_peripheral
+    module: oqlos.core._dsl_helpers
+    line: 42
+    cyclomatic_complexity: 11
+    calls_out: 14
+    calls_in: 3
+  setup_hardware_and_run_oql.load_env_file:
+    name: load_env_file
+    module: setup_hardware_and_run_oql
+    line: 193
+    cyclomatic_complexity: 6
+    calls_out: 11
+    calls_in: 2
+  oqlos.core.cql_parser._ParseState._handle_step:
+    name: _handle_step
+    module: oqlos.core.cql_parser
+    line: 215
+    cyclomatic_complexity: 2
+    calls_out: 4
+    calls_in: 0
+  oqlos.hardware.config_schema.build_dynamic_schema_models:
+    name: build_dynamic_schema_models
+    module: oqlos.hardware.config_schema
+    line: 133
+    cyclomatic_complexity: 2
+    calls_out: 4
+    calls_in: 0
+  oqlos.core._interpreter_actions.exec_action_wait:
+    name: exec_action_wait
+    module: oqlos.core._interpreter_actions
+    line: 235
+    cyclomatic_complexity: 3
+    calls_out: 4
+    calls_in: 1
+  oqlos.tools.hardware_diagnose.discovery.detect_chips_on_i2c:
+    name: detect_chips_on_i2c
+    module: oqlos.tools.hardware_diagnose.discovery
+    line: 82
+    cyclomatic_complexity: 8
+    calls_out: 10
+    calls_in: 2
+  oqlos.tools.xml_import.generators._emit_dsl_param:
+    name: _emit_dsl_param
+    module: oqlos.tools.xml_import.generators
+    line: 133
+    cyclomatic_complexity: 10
+    calls_out: 13
+    calls_in: 1
+  oqlos.hardware.rtc_probe.run_rtc_command:
+    name: run_rtc_command
+    module: oqlos.hardware.rtc_probe
+    line: 117
+    cyclomatic_complexity: 4
+    calls_out: 4
+    calls_in: 0
+  oqlos.core.oql_parser._split_set_value_unit:
+    name: _split_set_value_unit
+    module: oqlos.core.oql_parser
+    line: 240
+    cyclomatic_complexity: 2
+    calls_out: 2
+    calls_in: 1
+  oqlos.core._oql_adapter.oql_doc_to_cql:
+    name: oql_doc_to_cql
+    module: oqlos.core._oql_adapter
+    line: 390
     cyclomatic_complexity: 12
-    calls_out: 29
+    calls_out: 30
+    calls_in: 2
+  oqlos.core.oql_parser._handle_modifier_cmd:
+    name: _handle_modifier_cmd
+    module: oqlos.core.oql_parser
+    line: 567
+    cyclomatic_complexity: 5
+    calls_out: 3
     calls_in: 1
   oqlos.core._dsl_helpers._looks_like_sensor_object:
     name: _looks_like_sensor_object
@@ -2644,187 +2434,54 @@ nodes:
     cyclomatic_complexity: 1
     calls_out: 2
     calls_in: 2
-  oqlos.tools.hardware_diagnose.doctor._firmware_is_remote:
-    name: _firmware_is_remote
-    module: oqlos.tools.hardware_diagnose.doctor
-    line: 928
+  oqlos.tools.cql_cli.main._print_cli_error:
+    name: _print_cli_error
+    module: oqlos.tools.cql_cli.main
+    line: 268
     cyclomatic_complexity: 2
     calls_out: 3
-    calls_in: 4
-  oqlos.core._interpreter_actions._parse_motor2_direction:
-    name: _parse_motor2_direction
-    module: oqlos.core._interpreter_actions
-    line: 765
-    cyclomatic_complexity: 6
-    calls_out: 4
-    calls_in: 2
-  oqlos.tools.hardware_diagnose.calibration._calibrate_pump:
-    name: _calibrate_pump
-    module: oqlos.tools.hardware_diagnose.calibration
-    line: 43
-    cyclomatic_complexity: 3
-    calls_out: 8
     calls_in: 1
-  oqlos.core._cql_tokenizer._parse_condition_value:
-    name: _parse_condition_value
-    module: oqlos.core._cql_tokenizer
-    line: 135
-    cyclomatic_complexity: 4
-    calls_out: 4
-    calls_in: 2
-  oqlos.tools.xml_import.generators.generate_goals_json:
-    name: generate_goals_json
+  oqlos.tools.xml_import.generators._emit_cql_param:
+    name: _emit_cql_param
     module: oqlos.tools.xml_import.generators
-    line: 400
-    cyclomatic_complexity: 13
-    calls_out: 17
-    calls_in: 0
-  oqlos.hardware.scanner_probe._scan_input_matches:
-    name: _scan_input_matches
-    module: oqlos.hardware.scanner_probe
-    line: 153
-    cyclomatic_complexity: 8
-    calls_out: 15
-    calls_in: 2
-  oqlos.core.oql_versioning.resolve_oql_version:
-    name: resolve_oql_version
-    module: oqlos.core.oql_versioning
-    line: 57
-    cyclomatic_complexity: 2
-    calls_out: 3
-    calls_in: 1
-  oqlos.tools.hardware_diagnose.doctor._serial_port_owners:
-    name: _serial_port_owners
-    module: oqlos.tools.hardware_diagnose.doctor
-    line: 115
-    cyclomatic_complexity: 6
-    calls_out: 4
-    calls_in: 1
-  oqlos.core._interpreter_actions._parse_motor2_volume_liters:
-    name: _parse_motor2_volume_liters
-    module: oqlos.core._interpreter_actions
-    line: 808
-    cyclomatic_complexity: 6
-    calls_out: 5
-    calls_in: 2
-  oqlos.hardware.firmware_adapter.FirmwareAdapter._get_lung_motor_url:
-    name: _get_lung_motor_url
-    module: oqlos.hardware.firmware_adapter
-    line: 150
-    cyclomatic_complexity: 3
-    calls_out: 5
-    calls_in: 0
-  oqlos.core.motor2_runtime._compute_motor2_speed:
-    name: _compute_motor2_speed
-    module: oqlos.core.motor2_runtime
-    line: 154
-    cyclomatic_complexity: 4
-    calls_out: 6
-    calls_in: 1
-  oqlos.tools.xml_import.generators._emit_cql_sensor_param:
-    name: _emit_cql_sensor_param
-    module: oqlos.tools.xml_import.generators
-    line: 100
-    cyclomatic_complexity: 13
-    calls_out: 11
-    calls_in: 1
-  oqlos.core._interpreter_actions._parse_motor2_acceleration:
-    name: _parse_motor2_acceleration
-    module: oqlos.core._interpreter_actions
-    line: 816
-    cyclomatic_complexity: 6
-    calls_out: 9
-    calls_in: 1
-  oqlos.core._interpreter_actions._normalize_motor2_value:
-    name: _normalize_motor2_value
-    module: oqlos.core._interpreter_actions
-    line: 826
-    cyclomatic_complexity: 2
-    calls_out: 4
-    calls_in: 1
-  oqlos.core._oql_adapter._load_includes:
-    name: _load_includes
-    module: oqlos.core._oql_adapter
-    line: 102
-    cyclomatic_complexity: 12
-    calls_out: 15
-    calls_in: 2
-  oqlos.core.parser._dispatch_simple_parser:
-    name: _dispatch_simple_parser
-    module: oqlos.core.parser
-    line: 25
-    cyclomatic_complexity: 3
-    calls_out: 3
-    calls_in: 1
-  oqlos.core.motor2_runtime.build_motor2_reciprocating_plan:
-    name: build_motor2_reciprocating_plan
-    module: oqlos.core.motor2_runtime
-    line: 170
+    line: 82
     cyclomatic_complexity: 7
-    calls_out: 8
-    calls_in: 1
-  oqlos.tools.plugin_cli._default_config_path:
-    name: _default_config_path
-    module: oqlos.tools.plugin_cli
-    line: 38
-    cyclomatic_complexity: 1
-    calls_out: 2
+    calls_out: 5
     calls_in: 2
-  oqlos.core.motor2_runtime._coerce_int:
-    name: _coerce_int
-    module: oqlos.core.motor2_runtime
-    line: 45
-    cyclomatic_complexity: 3
-    calls_out: 6
-    calls_in: 5
-  oqlos.hardware.plugins.base.dynamic_plugin_schema_models:
-    name: dynamic_plugin_schema_models
-    module: oqlos.hardware.plugins.base
-    line: 251
-    cyclomatic_complexity: 2
-    calls_out: 7
+  oqlos.core.oql_parser._check_unnamed_goals:
+    name: _check_unnamed_goals
+    module: oqlos.core.oql_parser
+    line: 635
+    cyclomatic_complexity: 5
+    calls_out: 1
     calls_in: 1
-  oqlos.tools.hardware_diagnose.doctor._check_firmware_health_error:
-    name: _check_firmware_health_error
-    module: oqlos.tools.hardware_diagnose.doctor
-    line: 471
-    cyclomatic_complexity: 3
-    calls_out: 2
-    calls_in: 1
-  oqlos.core.cql_parser._ParseState._handle_step:
-    name: _handle_step
-    module: oqlos.core.cql_parser
-    line: 215
-    cyclomatic_complexity: 2
+  oqlos.core.safe_eval._eval_call:
+    name: _eval_call
+    module: oqlos.core.safe_eval
+    line: 105
+    cyclomatic_complexity: 4
     calls_out: 4
     calls_in: 0
-  oqlos.hardware.scanner_probe._usb_product_blob:
-    name: _usb_product_blob
-    module: oqlos.hardware.scanner_probe
-    line: 88
-    cyclomatic_complexity: 3
-    calls_out: 4
-    calls_in: 1
-  oqlos.hardware.firmware_adapter.FirmwareAdapter._handle_pump_action:
-    name: _handle_pump_action
-    module: oqlos.hardware.firmware_adapter
-    line: 406
-    cyclomatic_complexity: 3
-    calls_out: 4
-    calls_in: 0
-  oqlos.core._interpreter_actions._compare_values:
-    name: _compare_values
+  oqlos.core._interpreter_actions.exec_action_min_max:
+    name: exec_action_min_max
     module: oqlos.core._interpreter_actions
-    line: 71
-    cyclomatic_complexity: 10
+    line: 263
+    cyclomatic_complexity: 3
+    calls_out: 5
+    calls_in: 1
+  oqlos.tools.hardware_diagnose.shell._cmd_benchmark:
+    name: _cmd_benchmark
+    module: oqlos.tools.hardware_diagnose.shell
+    line: 57
+    cyclomatic_complexity: 4
     calls_out: 8
     calls_in: 1
-  oqlos.tools.hardware_diagnose.doctor._analyze_modbus_config:
-    name: _analyze_modbus_config
-    module: oqlos.tools.hardware_diagnose.doctor
-    line: 398
-    cyclomatic_complexity: 11
-    calls_out: 20
+  oqlos.tools.cql_cli.main.create_format_parser:
+    name: create_format_parser
+    module: oqlos.tools.cql_cli.main
+    line: 104
+    cyclomatic_complexity: 1
+    calls_out: 3
     calls_in: 1
   oqlos.core.cql_parser.validate_cql:
     name: validate_cql
@@ -2833,76 +2490,328 @@ nodes:
     cyclomatic_complexity: 5
     calls_out: 5
     calls_in: 1
-  oqlos.core._cql_tree_builder._parse_goal_attrs:
-    name: _parse_goal_attrs
-    module: oqlos.core._cql_tree_builder
-    line: 102
+  oqlos.core.oql_parser.parse_WAIT:
+    name: parse_WAIT
+    module: oqlos.core.oql_parser
+    line: 259
+    cyclomatic_complexity: 1
+    calls_out: 4
+    calls_in: 0
+  oqlos.core._interpreter_actions._extract_action_tokens:
+    name: _extract_action_tokens
+    module: oqlos.core._interpreter_actions
+    line: 35
+    cyclomatic_complexity: 5
+    calls_out: 4
+    calls_in: 1
+  oqlos.tools.cql_cli.preflight.ensure_firmware_running:
+    name: ensure_firmware_running
+    module: oqlos.tools.cql_cli.preflight
+    line: 30
+    cyclomatic_complexity: 2
+    calls_out: 2
+    calls_in: 1
+  oqlos.core._dsl_helpers._map_wait_action:
+    name: _map_wait_action
+    module: oqlos.core._dsl_helpers
+    line: 93
     cyclomatic_complexity: 4
     calls_out: 7
     calls_in: 1
+  oqlos.core.oql_parser._validate_oql_version:
+    name: _validate_oql_version
+    module: oqlos.core.oql_parser
+    line: 610
+    cyclomatic_complexity: 8
+    calls_out: 6
+    calls_in: 1
+  oqlos.core.motor2_runtime.normalize_motor2_runtime_config:
+    name: normalize_motor2_runtime_config
+    module: oqlos.core.motor2_runtime
+    line: 76
+    cyclomatic_complexity: 12
+    calls_out: 29
+    calls_in: 1
+  oqlos.tools.cql_cli.main._dispatch_to_mode:
+    name: _dispatch_to_mode
+    module: oqlos.tools.cql_cli.main
+    line: 369
+    cyclomatic_complexity: 8
+    calls_out: 13
+    calls_in: 1
+  oqlos.hardware.plugins.base.dynamic_plugin_schema_models:
+    name: dynamic_plugin_schema_models
+    module: oqlos.hardware.plugins.base
+    line: 251
+    cyclomatic_complexity: 2
+    calls_out: 7
+    calls_in: 1
+  oqlos.core._compare.resolve_compare:
+    name: resolve_compare
+    module: oqlos.core._compare
+    line: 21
+    cyclomatic_complexity: 2
+    calls_out: 5
+    calls_in: 1
+  oqlos.tools.hardware_diagnose.report.save_diagnostic_report:
+    name: save_diagnostic_report
+    module: oqlos.tools.hardware_diagnose.report
+    line: 37
+    cyclomatic_complexity: 3
+    calls_out: 13
+    calls_in: 2
+  oqlos.core._cql_tokenizer._try_if_standalone:
+    name: _try_if_standalone
+    module: oqlos.core._cql_tokenizer
+    line: 249
+    cyclomatic_complexity: 2
+    calls_out: 1
+    calls_in: 0
+  oqlos.tools.xml_import._utils.is_compressor_output:
+    name: is_compressor_output
+    module: oqlos.tools.xml_import._utils
+    line: 34
+    cyclomatic_complexity: 5
+    calls_out: 2
+    calls_in: 2
+  oqlos.config.get_settings:
+    name: get_settings
+    module: oqlos.config
+    line: 218
+    cyclomatic_complexity: 1
+    calls_out: 0
+    calls_in: 8
+  oqlos.core._cql_tree_builder._parse_scenario_attrs:
+    name: _parse_scenario_attrs
+    module: oqlos.core._cql_tree_builder
+    line: 58
+    cyclomatic_complexity: 4
+    calls_out: 6
+    calls_in: 1
+  oqlos.core._cql_tree_builder._parse_scenario_line:
+    name: _parse_scenario_line
+    module: oqlos.core._cql_tree_builder
+    line: 45
+    cyclomatic_complexity: 3
+    calls_out: 6
+    calls_in: 1
+  oqlos.tools.hardware_diagnose.doctor._serial_port_owners:
+    name: _serial_port_owners
+    module: oqlos.tools.hardware_diagnose.doctor
+    line: 115
+    cyclomatic_complexity: 6
+    calls_out: 4
+    calls_in: 1
+  setup_hardware_and_run_oql.setup_env_file:
+    name: setup_env_file
+    module: setup_hardware_and_run_oql
+    line: 154
+    cyclomatic_complexity: 7
+    calls_out: 16
+    calls_in: 1
+  oqlos.core.oql_parser.parse_duration:
+    name: parse_duration
+    module: oqlos.core.oql_parser
+    line: 149
+    cyclomatic_complexity: 3
+    calls_out: 5
+    calls_in: 2
+  oqlos.tools.plugin_cli.cmd_health:
+    name: cmd_health
+    module: oqlos.tools.plugin_cli
+    line: 182
+    cyclomatic_complexity: 3
+    calls_out: 8
+    calls_in: 3
+  oqlos.tools.hardware_diagnose.modbus_probe._env_int:
+    name: _env_int
+    module: oqlos.tools.hardware_diagnose.modbus_probe
+    line: 31
+    cyclomatic_complexity: 2
+    calls_out: 2
+    calls_in: 6
+  oqlos.tools.hardware_diagnose.doctor._add_issue:
+    name: _add_issue
+    module: oqlos.tools.hardware_diagnose.doctor
+    line: 239
+    cyclomatic_complexity: 2
+    calls_out: 1
+    calls_in: 18
+  oqlos.tools.hardware_diagnose.doctor._adapter_health_status:
+    name: _adapter_health_status
+    module: oqlos.tools.hardware_diagnose.doctor
+    line: 630
+    cyclomatic_complexity: 3
+    calls_out: 1
+    calls_in: 2
+  oqlos.tools.hardware_diagnose.doctor._firmware_modbus_health_ok:
+    name: _firmware_modbus_health_ok
+    module: oqlos.tools.hardware_diagnose.doctor
+    line: 906
+    cyclomatic_complexity: 10
+    calls_out: 16
+    calls_in: 2
   oqlos.tools.hardware_diagnose.__main__._print_detect:
     name: _print_detect
     module: oqlos.tools.hardware_diagnose.__main__
     line: 84
     cyclomatic_complexity: 2
     calls_out: 4
-    calls_in: 1
-  oqlos.core._dsl_helpers._map_pump_action:
-    name: _map_pump_action
-    module: oqlos.core._dsl_helpers
-    line: 86
-    cyclomatic_complexity: 5
-    calls_out: 1
-    calls_in: 1
-  oqlos.tools.cql_cli.main:
-    name: main
-    module: oqlos.tools.cql_cli
-    line: 38
-    cyclomatic_complexity: 1
-    calls_out: 2
     calls_in: 0
-  oqlos.core._line_parsers._set_valve_step:
-    name: _set_valve_step
-    module: oqlos.core._line_parsers
-    line: 79
-    cyclomatic_complexity: 4
+  oqlos.tools.hardware_diagnose.doctor._modbus_config:
+    name: _modbus_config
+    module: oqlos.tools.hardware_diagnose.doctor
+    line: 257
+    cyclomatic_complexity: 3
     calls_out: 4
-    calls_in: 1
-  oqlos.core.cql_parser._ParseState._handle_goal_attrs:
-    name: _handle_goal_attrs
-    module: oqlos.core.cql_parser
-    line: 209
+    calls_in: 2
+  oqlos.core._cql_tokenizer._match_first:
+    name: _match_first
+    module: oqlos.core._cql_tokenizer
+    line: 126
     cyclomatic_complexity: 3
     calls_out: 1
-    calls_in: 0
-  oqlos.core._interpreter_actions._parse_prefixed_motor2_setting:
-    name: _parse_prefixed_motor2_setting
-    module: oqlos.core._interpreter_actions
-    line: 845
-    cyclomatic_complexity: 13
-    calls_out: 12
-    calls_in: 1
-  oqlos.hardware.scanner_probe._scan_diagnostics_usb_matches:
-    name: _scan_diagnostics_usb_matches
-    module: oqlos.hardware.scanner_probe
-    line: 176
-    cyclomatic_complexity: 14
-    calls_out: 17
-    calls_in: 2
-  setup_hardware_and_run_oql.load_env_file:
-    name: load_env_file
-    module: setup_hardware_and_run_oql
-    line: 193
+    calls_in: 7
+  oqlos.tools.xml_import.generators.generate_dsl:
+    name: generate_dsl
+    module: oqlos.tools.xml_import.generators
+    line: 245
     cyclomatic_complexity: 6
-    calls_out: 11
+    calls_out: 21
+    calls_in: 0
+  oqlos.core._interpreter_actions._parse_motor2_direction:
+    name: _parse_motor2_direction
+    module: oqlos.core._interpreter_actions
+    line: 765
+    cyclomatic_complexity: 6
+    calls_out: 4
     calls_in: 2
-  oqlos.core.base.InterpreterOutput.output_yaml:
-    name: output_yaml
-    module: oqlos.core.base
-    line: 192
+  oqlos.core.parser._dispatch_simple_parser:
+    name: _dispatch_simple_parser
+    module: oqlos.core.parser
+    line: 25
+    cyclomatic_complexity: 3
+    calls_out: 3
+    calls_in: 1
+  oqlos.hardware.rtc_probe.is_rtc_hardware_enabled:
+    name: is_rtc_hardware_enabled
+    module: oqlos.hardware.rtc_probe
+    line: 19
+    cyclomatic_complexity: 3
+    calls_out: 3
+    calls_in: 3
+  oqlos.core.oql_parser.parse_IF_DELTA:
+    name: parse_IF_DELTA
+    module: oqlos.core.oql_parser
+    line: 271
+    cyclomatic_complexity: 6
+    calls_out: 16
+    calls_in: 0
+  oqlos.hardware.rtc_probe.build_rtc_peripheral_status:
+    name: build_rtc_peripheral_status
+    module: oqlos.hardware.rtc_probe
+    line: 69
+    cyclomatic_complexity: 11
+    calls_out: 27
+    calls_in: 0
+  oqlos.core.oql_parser.parse_SAMPLE:
+    name: parse_SAMPLE
+    module: oqlos.core.oql_parser
+    line: 363
+    cyclomatic_complexity: 3
+    calls_out: 6
+    calls_in: 0
+  oqlos.core.motor2_runtime._compute_motor2_speed:
+    name: _compute_motor2_speed
+    module: oqlos.core.motor2_runtime
+    line: 154
     cyclomatic_complexity: 4
+    calls_out: 6
+    calls_in: 1
+  oqlos.tools.hardware_diagnose.calibration._calibrate_sensors:
+    name: _calibrate_sensors
+    module: oqlos.tools.hardware_diagnose.calibration
+    line: 79
+    cyclomatic_complexity: 5
+    calls_out: 8
+    calls_in: 1
+  oqlos.tools.xml_import.generators._emit_cql_output:
+    name: _emit_cql_output
+    module: oqlos.tools.xml_import.generators
+    line: 65
+    cyclomatic_complexity: 5
+    calls_out: 15
+    calls_in: 2
+  oqlos.tools.hardware_diagnose.health.check_firmware_health:
+    name: check_firmware_health
+    module: oqlos.tools.hardware_diagnose.health
+    line: 30
+    cyclomatic_complexity: 1
+    calls_out: 1
+    calls_in: 6
+  oqlos.core.parser.parse_dsl_to_goal_with_issues:
+    name: parse_dsl_to_goal_with_issues
+    module: oqlos.core.parser
+    line: 113
+    cyclomatic_complexity: 13
+    calls_out: 21
+    calls_in: 3
+  oqlos.tools.xml_import.generators._build_steps_from_op:
+    name: _build_steps_from_op
+    module: oqlos.tools.xml_import.generators
+    line: 167
+    cyclomatic_complexity: 10
+    calls_out: 14
+    calls_in: 1
+  oqlos.core._interpreter_actions._assert_json:
+    name: _assert_json
+    module: oqlos.core._interpreter_actions
+    line: 498
+    cyclomatic_complexity: 6
+    calls_out: 9
+    calls_in: 0
+  oqlos.core._cql_tokenizer._parse_condition_value:
+    name: _parse_condition_value
+    module: oqlos.core._cql_tokenizer
+    line: 135
+    cyclomatic_complexity: 4
+    calls_out: 4
+    calls_in: 2
+  oqlos.tools.hardware_diagnose.modbus_probe._arg_str_list:
+    name: _arg_str_list
+    module: oqlos.tools.hardware_diagnose.modbus_probe
+    line: 75
+    cyclomatic_complexity: 2
+    calls_out: 1
+    calls_in: 3
+  oqlos.tools.plugin_cli.cmd_validate:
+    name: cmd_validate
+    module: oqlos.tools.plugin_cli
+    line: 127
+    cyclomatic_complexity: 8
+    calls_out: 12
+    calls_in: 0
+  oqlos.core.oql_parser._expand_repeat_blocks:
+    name: _expand_repeat_blocks
+    module: oqlos.core.oql_parser
+    line: 491
+    cyclomatic_complexity: 2
     calls_out: 2
-    calls_in: 4
+    calls_in: 1
+  oqlos.core._cql_tokenizer._try_min_max:
+    name: _try_min_max
+    module: oqlos.core._cql_tokenizer
+    line: 273
+    cyclomatic_complexity: 2
+    calls_out: 7
+    calls_in: 0
+  oqlos.core.cql_parser.parse_cql:
+    name: parse_cql
+    module: oqlos.core.cql_parser
+    line: 424
+    cyclomatic_complexity: 2
+    calls_out: 6
+    calls_in: 2
 edges:
 - caller: setup_hardware_and_run_oql.setup_env_file
   callee: setup_hardware_and_run_oql.generate_env_content
@@ -3108,11 +3017,26 @@ edges:
 - caller: oqlos.core._interpreter_actions._motor2_do_stop
   callee: oqlos.core._interpreter_actions._post_motor2_stop
   call_type: resolved
-- caller: oqlos.core._interpreter_actions._motor2_do_start
+- caller: oqlos.core._interpreter_actions._motor2_build_plan
   callee: oqlos.core.motor2_runtime.normalize_motor2_runtime_config
   call_type: resolved
-- caller: oqlos.core._interpreter_actions._motor2_do_start
+- caller: oqlos.core._interpreter_actions._motor2_build_plan
   callee: oqlos.core.motor2_runtime.build_motor2_reciprocating_plan
+  call_type: resolved
+- caller: oqlos.core._interpreter_actions._motor2_do_start
+  callee: oqlos.core._interpreter_actions._motor2_build_plan
+  call_type: resolved
+- caller: oqlos.core._interpreter_actions._motor2_do_start
+  callee: oqlos.core._interpreter_actions._motor2_step_label
+  call_type: resolved
+- caller: oqlos.core._interpreter_actions._motor2_do_start
+  callee: oqlos.core._interpreter_actions._post_motor2_reciprocate
+  call_type: resolved
+- caller: oqlos.core._interpreter_actions._motor2_do_start
+  callee: oqlos.core.motor2_runtime.motor2_speed_raw
+  call_type: resolved
+- caller: oqlos.core._interpreter_actions._motor2_do_start
+  callee: oqlos.core.motor2_runtime.motor2_acceleration_raw
   call_type: resolved
 - caller: oqlos.core._interpreter_actions._handle_motor2_reciprocating_setting
   callee: oqlos.core._interpreter_actions._motor2_reciprocating_state
@@ -3146,6 +3070,120 @@ edges:
   call_type: resolved
 - caller: oqlos.core._interpreter_actions._exec_set_wait
   callee: oqlos.core._interpreter_actions._format_set_command
+  call_type: resolved
+- caller: oqlos.core.oql_parser.parse_duration
+  callee: oqlos.core.oql_parser.to_num
+  call_type: resolved
+- caller: oqlos.core.oql_parser.duration_to_ms
+  callee: oqlos.core.oql_parser.parse_duration
+  call_type: resolved
+- caller: oqlos.core.oql_parser._split_value_unit
+  callee: oqlos.core.oql_parser.to_num
+  call_type: resolved
+- caller: oqlos.core.oql_parser._split_set_value_unit
+  callee: oqlos.core.oql_parser._split_value_unit
+  call_type: resolved
+- caller: oqlos.core.oql_parser.parse_SET
+  callee: oqlos.core.oql_parser._require
+  call_type: resolved
+- caller: oqlos.core.oql_parser.parse_SET
+  callee: oqlos.core.oql_parser._split_set_value_unit
+  call_type: resolved
+- caller: oqlos.core.oql_parser.parse_GET
+  callee: oqlos.core.oql_parser._require
+  call_type: resolved
+- caller: oqlos.core.oql_parser.parse_WAIT
+  callee: oqlos.core.oql_parser._require
+  call_type: resolved
+- caller: oqlos.core.oql_parser.parse_WAIT
+  callee: oqlos.core.oql_parser.parse_duration
+  call_type: resolved
+- caller: oqlos.core.oql_parser.parse_WAIT
+  callee: oqlos.core.oql_parser.duration_to_ms
+  call_type: resolved
+- caller: oqlos.core.oql_parser.parse_IF_DELTA
+  callee: oqlos.core.oql_parser._require
+  call_type: resolved
+- caller: oqlos.core.oql_parser.parse_IF_DELTA
+  callee: oqlos.core.oql_parser.to_num
+  call_type: resolved
+- caller: oqlos.core.oql_parser.parse_IF_DELTA
+  callee: oqlos.core.oql_parser.duration_to_ms
+  call_type: resolved
+- caller: oqlos.core.oql_parser.parse_SAVE
+  callee: oqlos.core.oql_parser._require
+  call_type: resolved
+- caller: oqlos.core.oql_parser.parse_CHECK
+  callee: oqlos.core.oql_parser.to_num
+  call_type: resolved
+- caller: oqlos.core.oql_parser.parse_IF
+  callee: oqlos.core.oql_parser.to_num
+  call_type: resolved
+- caller: oqlos.core.oql_parser.parse_MIN
+  callee: oqlos.core.oql_parser._require
+  call_type: resolved
+- caller: oqlos.core.oql_parser.parse_MIN
+  callee: oqlos.core.oql_parser._split_value_unit
+  call_type: resolved
+- caller: oqlos.core.oql_parser.parse_MAX
+  callee: oqlos.core.oql_parser._require
+  call_type: resolved
+- caller: oqlos.core.oql_parser.parse_MAX
+  callee: oqlos.core.oql_parser._split_value_unit
+  call_type: resolved
+- caller: oqlos.core.oql_parser.parse_SAMPLE
+  callee: oqlos.core.oql_parser._require
+  call_type: resolved
+- caller: oqlos.core.oql_parser.parse_SAMPLE
+  callee: oqlos.core.oql_parser.duration_to_ms
+  call_type: resolved
+- caller: oqlos.core.oql_parser.parse_CALL
+  callee: oqlos.core.oql_parser._require
+  call_type: resolved
+- caller: oqlos.core.oql_parser.parse_INCLUDE
+  callee: oqlos.core.oql_parser._require
+  call_type: resolved
+- caller: oqlos.core.oql_parser.parse_FUNC_CALL
+  callee: oqlos.core.oql_parser._require
+  call_type: resolved
+- caller: oqlos.core.oql_parser._expand_repeat_block_lines
+  callee: oqlos.core.oql_parser._line_indent
+  call_type: resolved
+- caller: oqlos.core.oql_parser._expand_repeat_blocks
+  callee: oqlos.core.oql_parser._expand_repeat_block_lines
+  call_type: resolved
+- caller: oqlos.core.oql_parser._handle_top_level_line
+  callee: oqlos.core.oql_parser.tokenize
+  call_type: resolved
+- caller: oqlos.core.oql_parser._handle_set_name
+  callee: oqlos.core.oql_parser.tokenize
+  call_type: resolved
+- caller: oqlos.core.oql_parser._handle_modifier_cmd
+  callee: oqlos.core.oql_parser.tokenize
+  call_type: resolved
+- caller: oqlos.core.oql_parser._parse_and_append_command
+  callee: oqlos.core.oql_parser.parse_CHECK
+  call_type: resolved
+- caller: oqlos.core.oql_parser._parse_and_append_command
+  callee: oqlos.core.oql_parser.parse_IF
+  call_type: resolved
+- caller: oqlos.core.oql_parser._parse_and_append_command
+  callee: oqlos.core.oql_parser.tokenize
+  call_type: resolved
+- caller: oqlos.core.oql_parser.parse_oql
+  callee: oqlos.core.oql_versioning.resolve_oql_version
+  call_type: resolved
+- caller: oqlos.core.oql_parser.parse_oql
+  callee: oqlos.core.oql_parser._validate_oql_version
+  call_type: resolved
+- caller: oqlos.core.oql_parser.parse_oql
+  callee: oqlos.core.oql_parser._check_unnamed_goals
+  call_type: resolved
+- caller: oqlos.core.oql_parser.parse_oql
+  callee: oqlos.core.oql_parser._expand_repeat_blocks
+  call_type: resolved
+- caller: oqlos.core.oql_parser.parse_oql
+  callee: oqlos.core.oql_parser._handle_block_header
   call_type: resolved
 - caller: oqlos.core.motor2_runtime.motor2_max_steps_per_second
   callee: oqlos.core.motor2_runtime._coerce_int
@@ -3774,29 +3812,11 @@ edges:
 - caller: oqlos.tools.hardware_diagnose.__main__._print_modbus_probe
   callee: examples.hardware.doctor-workflow.print
   call_type: resolved
-- caller: oqlos.tools.hardware_diagnose.__main__._dispatch_action
-  callee: oqlos.tools.hardware_diagnose.__main__._print_detect
+- caller: oqlos.tools.hardware_diagnose.__main__._handle_report_action
+  callee: oqlos.tools.hardware_diagnose.report.save_diagnostic_report
   call_type: resolved
-- caller: oqlos.tools.hardware_diagnose.__main__._dispatch_action
-  callee: oqlos.tools.hardware_diagnose.__main__._print_doctor
-  call_type: resolved
-- caller: oqlos.tools.hardware_diagnose.__main__._dispatch_action
-  callee: oqlos.tools.hardware_diagnose.__main__._print_list
-  call_type: resolved
-- caller: oqlos.tools.hardware_diagnose.__main__._dispatch_action
-  callee: oqlos.tools.hardware_diagnose.__main__._print_health
-  call_type: resolved
-- caller: oqlos.tools.hardware_diagnose.__main__._dispatch_action
-  callee: oqlos.tools.hardware_diagnose.__main__._print_modbus_probe
-  call_type: resolved
-- caller: oqlos.tools.hardware_diagnose.__main__._dispatch_action
-  callee: oqlos.tools.hardware_diagnose.health.check_firmware_identify
-  call_type: resolved
-- caller: oqlos.tools.hardware_diagnose.__main__._dispatch_action
+- caller: oqlos.tools.hardware_diagnose.__main__._handle_report_action
   callee: examples.hardware.doctor-workflow.print
-  call_type: resolved
-- caller: oqlos.tools.hardware_diagnose.__main__._dispatch_action
-  callee: oqlos.tools.hardware_diagnose.__main__._print_calibrate
   call_type: resolved
 - caller: oqlos.tools.hardware_diagnose.__main__._print_diagnose
   callee: examples.hardware.doctor-workflow.print
@@ -4263,152 +4283,39 @@ edges:
 - caller: oqlos.hardware.gateway._ModbusAdapter.__init__
   callee: oqlos.hardware.discovery.probe_waveshare_modbus
   call_type: resolved
-- caller: oqlos.hardware.sidecar_control._modbus_serial_candidates
-  callee: oqlos.core.base.VariableStore.set
+- caller: oqlos.hardware.hui_actions._set_valve
+  callee: oqlos.hardware.hui_actions._operation
   call_type: resolved
-- caller: oqlos.hardware.sidecar_control.resolve_dri0050_serial
-  callee: oqlos.hardware.sidecar_control._modbus_serial_candidates
+- caller: oqlos.hardware.hui_actions._set_valve
+  callee: oqlos.hardware.hui_actions._success
   call_type: resolved
-- caller: oqlos.hardware.sidecar_control._dri0050_paths
-  callee: oqlos.hardware.sidecar_control.resolve_dri0050_serial
+- caller: oqlos.hardware.hui_actions._set_pump
+  callee: oqlos.hardware.hui_actions._operation
   call_type: resolved
-- caller: oqlos.hardware.sidecar_control._free_api_port
-  callee: oqlos.hardware.sidecar_control._run_cmd
+- caller: oqlos.hardware.hui_actions._set_pump
+  callee: oqlos.hardware.hui_actions._success
   call_type: resolved
-- caller: oqlos.hardware.sidecar_control.ensure_dri0050_sidecar
-  callee: oqlos.hardware.sidecar_control._dri0050_paths
+- caller: oqlos.hardware.hui_actions._set_pump_best_effort
+  callee: oqlos.hardware.hui_actions._set_pump
   call_type: resolved
-- caller: oqlos.hardware.sidecar_control.ensure_dri0050_sidecar
-  callee: oqlos.hardware.sidecar_control._free_api_port
+- caller: oqlos.hardware.hui_actions._set_pump_best_effort
+  callee: oqlos.hardware.hui_actions._operation
   call_type: resolved
-- caller: oqlos.hardware.sidecar_control.ensure_dri0050_sidecar
-  callee: oqlos.hardware.sidecar_control._run_cmd
+- caller: oqlos.hardware.hui_actions.shutdown_all_hui_hardware
+  callee: oqlos.core.base.VariableStore.all
   call_type: resolved
-- caller: oqlos.hardware.sidecar_control.ensure_dri0050_sidecar
-  callee: oqlos.hardware.sidecar_control._http_sidecar_healthy
+- caller: oqlos.hardware.hui_actions.shutdown_all_hui_hardware
+  callee: oqlos.hardware.hui_actions._set_pump_best_effort
   call_type: resolved
-- caller: oqlos.hardware.scanner_probe._canonical_match_key
-  callee: oqlos.hardware.scanner_probe._match_blob
+- caller: oqlos.hardware.hui_actions.shutdown_all_hui_hardware
+  callee: oqlos.hardware.hui_actions._set_valve
   call_type: resolved
-- caller: oqlos.hardware.scanner_probe._match_priority
-  callee: oqlos.hardware.scanner_probe._match_blob
-  call_type: resolved
-- caller: oqlos.hardware.scanner_probe._merge_matches
-  callee: oqlos.hardware.scanner_probe._canonical_match_key
-  call_type: resolved
-- caller: oqlos.hardware.scanner_probe._merge_matches
-  callee: oqlos.hardware.scanner_probe._match_priority
-  call_type: resolved
-- caller: oqlos.hardware.scanner_probe._scan_lsusb_matches
-  callee: oqlos.hardware.scanner_probe._is_likely_scanner_usb_blob
-  call_type: resolved
-- caller: oqlos.hardware.scanner_probe._scan_input_matches
-  callee: oqlos.hardware.scanner_probe._is_likely_scanner_input
-  call_type: resolved
-- caller: oqlos.hardware.scanner_probe._scan_diagnostics_usb_matches
-  callee: oqlos.hardware.scanner_probe._usb_product_blob
-  call_type: resolved
-- caller: oqlos.hardware.scanner_probe._scan_diagnostics_usb_matches
-  callee: oqlos.hardware.scanner_probe._is_likely_scanner_usb_blob
-  call_type: resolved
-- caller: oqlos.hardware.scanner_probe.resolve_scanner_presence
-  callee: oqlos.hardware.scanner_probe._merge_matches
-  call_type: resolved
-- caller: oqlos.hardware.scanner_probe.resolve_scanner_presence
-  callee: oqlos.hardware.scanner_probe._scan_lsusb_matches
-  call_type: resolved
-- caller: oqlos.hardware.scanner_probe.resolve_scanner_presence
-  callee: oqlos.hardware.scanner_probe._scan_diagnostics_usb_matches
-  call_type: resolved
-- caller: oqlos.hardware.scanner_probe.resolve_scanner_presence
-  callee: oqlos.hardware.scanner_probe._scan_input_matches
-  call_type: resolved
-- caller: oqlos.hardware.scanner_probe.build_scanner_adapter_entry
-  callee: oqlos.hardware.scanner_probe.resolve_scanner_presence
-  call_type: resolved
-- caller: oqlos.hardware.scanner_probe.enrich_scanner_adapter
-  callee: oqlos.hardware.scanner_probe.build_scanner_adapter_entry
-  call_type: resolved
-- caller: oqlos.hardware.stack_snapshot.build_hardware_stack_snapshot
-  callee: oqlos.hardware.stack_snapshot._lazy_hardware_api
-  call_type: resolved
-- caller: oqlos.hardware.stack_snapshot.build_hardware_stack_snapshot
-  callee: oqlos.hardware.stack_snapshot._get_modbus_preflight
-  call_type: resolved
-- caller: oqlos.hardware.stack_snapshot.build_hardware_stack_snapshot
-  callee: oqlos.hardware.stack_snapshot._build_recommended_actions
-  call_type: resolved
-- caller: oqlos.hardware.modbus_identify._is_modbus_candidate
-  callee: oqlos.hardware.modbus_identify._usb_blob
-  call_type: resolved
-- caller: oqlos.hardware.modbus_identify.collect_modbus_serial_candidates
-  callee: oqlos.hardware.modbus_identify._device_to_candidate
-  call_type: resolved
-- caller: oqlos.hardware.modbus_identify.collect_modbus_serial_candidates
-  callee: oqlos.hardware.modbus_identify._is_modbus_candidate
-  call_type: resolved
-- caller: oqlos.hardware.modbus_identify.enrich_platform_modbus_ports
-  callee: oqlos.hardware.modbus_identify._infer_modbus_serial_port
-  call_type: resolved
-- caller: oqlos.hardware.modbus_identify.enrich_modbus_serial_hints
-  callee: oqlos.hardware.modbus_identify.collect_modbus_serial_candidates
-  call_type: resolved
-- caller: oqlos.hardware.modbus_identify.enrich_modbus_identify
-  callee: oqlos.hardware.modbus_identify.enrich_platform_modbus_ports
-  call_type: resolved
-- caller: oqlos.hardware.modbus_identify.enrich_modbus_identify
-  callee: oqlos.hardware.modbus_identify.enrich_modbus_serial_hints
-  call_type: resolved
-- caller: oqlos.hardware.plugin_gateway.PluginHardwareGateway.__init__
-  callee: oqlos.config.get_settings
-  call_type: resolved
-- caller: oqlos.hardware.plugin_gateway.PluginHardwareGateway._load_hardware_schema
-  callee: oqlos.hardware.config_paths.resolve_oqlos_config_path
-  call_type: resolved
-- caller: oqlos.hardware.plugin_gateway.PluginHardwareGateway.modbus_preflight_report
-  callee: oqlos.api.plugins.validate_plugin_configs
-  call_type: resolved
-- caller: oqlos.hardware.plugin_gateway.PluginHardwareGateway.reload_configs
-  callee: oqlos.hardware.config_paths.resolve_oqlos_config_path
-  call_type: resolved
-- caller: oqlos.hardware.firmware_adapter.FirmwareAdapter.__init__
-  callee: oqlos.config.get_settings
-  call_type: resolved
-- caller: oqlos.hardware.firmware_adapter.FirmwareAdapter._get_lung_motor_url
-  callee: oqlos.config.get_settings
-  call_type: resolved
-- caller: oqlos.hardware.firmware_adapter.FirmwareAdapter._raise_if_rejected
-  callee: oqlos.hardware.firmware_adapter._extract_failure_message
-  call_type: resolved
-- caller: oqlos.hardware.firmware_adapter.FirmwareAdapter._handle_lung_action
-  callee: oqlos.hardware.firmware_adapter._parse_numeric
-  call_type: resolved
-- caller: oqlos.hardware.firmware_adapter.FirmwareAdapter._handle_pump_action
-  callee: oqlos.hardware.firmware_adapter._parse_numeric
-  call_type: resolved
-- caller: oqlos.hardware.identify_enrichment.enrich_identify_payload
-  callee: oqlos.hardware.modbus_identify.enrich_modbus_identify
-  call_type: resolved
-- caller: oqlos.hardware.identify_enrichment.enrich_identify_payload
-  callee: oqlos.hardware.scanner_probe.enrich_scanner_adapter
-  call_type: resolved
-- caller: oqlos.hardware.identify_enrichment.enrich_identify_payload
-  callee: oqlos.hardware.rtc_probe.enrich_rtc_adapter
-  call_type: resolved
-- caller: oqlos.hardware.artificial_lung.execute_command
-  callee: oqlos.hardware.artificial_lung._command_response
-  call_type: resolved
-- caller: oqlos.hardware.artificial_lung.execute_command
-  callee: oqlos.hardware.artificial_lung._clamp_lpm
-  call_type: resolved
-- caller: oqlos.hardware.usb_diagnostics._find_tty
-  callee: oqlos.core.base.VariableStore.set
+- caller: oqlos.hardware.hui_actions.shutdown_all_hui_hardware
+  callee: oqlos.hardware.hui_actions._operation
   call_type: resolved
 modules:
   examples.hardware.doctor-workflow:
   - examples.hardware.doctor-workflow.print
-  oqlos.api.plugins:
-  - oqlos.api.plugins.validate_plugin_configs
   oqlos.config:
   - oqlos.config.get_settings
   oqlos.core._compare:
@@ -4471,6 +4378,7 @@ modules:
   - oqlos.core._interpreter_actions._mark_success
   - oqlos.core._interpreter_actions._mock_api_response
   - oqlos.core._interpreter_actions._motor2_acceleration_raw
+  - oqlos.core._interpreter_actions._motor2_build_plan
   - oqlos.core._interpreter_actions._motor2_do_start
   - oqlos.core._interpreter_actions._motor2_do_stop
   - oqlos.core._interpreter_actions._motor2_effective_steps_per_second
@@ -4478,6 +4386,7 @@ modules:
   - oqlos.core._interpreter_actions._motor2_reciprocating_state
   - oqlos.core._interpreter_actions._motor2_speed_for_duration
   - oqlos.core._interpreter_actions._motor2_speed_raw
+  - oqlos.core._interpreter_actions._motor2_step_label
   - oqlos.core._interpreter_actions._normalize_bool
   - oqlos.core._interpreter_actions._normalize_motor2_target
   - oqlos.core._interpreter_actions._normalize_motor2_value
@@ -4577,8 +4486,36 @@ modules:
   - oqlos.core.motor2_runtime.motor2_speed_raw
   - oqlos.core.motor2_runtime.normalize_motor2_runtime_config
   oqlos.core.oql_parser:
+  - oqlos.core.oql_parser._check_unnamed_goals
+  - oqlos.core.oql_parser._expand_repeat_block_lines
+  - oqlos.core.oql_parser._expand_repeat_blocks
+  - oqlos.core.oql_parser._handle_block_header
+  - oqlos.core.oql_parser._handle_modifier_cmd
+  - oqlos.core.oql_parser._handle_set_name
+  - oqlos.core.oql_parser._handle_top_level_line
+  - oqlos.core.oql_parser._line_indent
+  - oqlos.core.oql_parser._parse_and_append_command
+  - oqlos.core.oql_parser._require
+  - oqlos.core.oql_parser._split_set_value_unit
+  - oqlos.core.oql_parser._split_value_unit
+  - oqlos.core.oql_parser._validate_oql_version
+  - oqlos.core.oql_parser.duration_to_ms
+  - oqlos.core.oql_parser.parse_CALL
   - oqlos.core.oql_parser.parse_CHECK
+  - oqlos.core.oql_parser.parse_FUNC_CALL
+  - oqlos.core.oql_parser.parse_GET
+  - oqlos.core.oql_parser.parse_IF
+  - oqlos.core.oql_parser.parse_IF_DELTA
+  - oqlos.core.oql_parser.parse_INCLUDE
+  - oqlos.core.oql_parser.parse_MAX
+  - oqlos.core.oql_parser.parse_MIN
+  - oqlos.core.oql_parser.parse_SAMPLE
+  - oqlos.core.oql_parser.parse_SAVE
+  - oqlos.core.oql_parser.parse_SET
+  - oqlos.core.oql_parser.parse_WAIT
+  - oqlos.core.oql_parser.parse_duration
   - oqlos.core.oql_parser.parse_oql
+  - oqlos.core.oql_parser.to_num
   - oqlos.core.oql_parser.tokenize
   oqlos.core.oql_versioning:
   - oqlos.core.oql_versioning.extract_declared_version
@@ -4599,10 +4536,6 @@ modules:
   - oqlos.core.safe_eval._eval_node
   - oqlos.core.safe_eval._eval_unary_op
   - oqlos.core.safe_eval.safe_eval
-  oqlos.hardware.artificial_lung:
-  - oqlos.hardware.artificial_lung._clamp_lpm
-  - oqlos.hardware.artificial_lung._command_response
-  - oqlos.hardware.artificial_lung.execute_command
   oqlos.hardware.config_paths:
   - oqlos.hardware.config_paths.resolve_oqlos_config_path
   oqlos.hardware.config_schema:
@@ -4611,32 +4544,15 @@ modules:
   oqlos.hardware.discovery:
   - oqlos.hardware.discovery.probe_waveshare_modbus
   - oqlos.hardware.discovery.probe_waveshare_modbus_adc
-  oqlos.hardware.firmware_adapter:
-  - oqlos.hardware.firmware_adapter.FirmwareAdapter.__init__
-  - oqlos.hardware.firmware_adapter.FirmwareAdapter._get_lung_motor_url
-  - oqlos.hardware.firmware_adapter.FirmwareAdapter._handle_lung_action
-  - oqlos.hardware.firmware_adapter.FirmwareAdapter._handle_pump_action
-  - oqlos.hardware.firmware_adapter.FirmwareAdapter._raise_if_rejected
-  - oqlos.hardware.firmware_adapter._extract_failure_message
-  - oqlos.hardware.firmware_adapter._parse_numeric
   oqlos.hardware.gateway:
   - oqlos.hardware.gateway._ModbusAdapter.__init__
-  oqlos.hardware.identify_enrichment:
-  - oqlos.hardware.identify_enrichment.enrich_identify_payload
-  oqlos.hardware.modbus_identify:
-  - oqlos.hardware.modbus_identify._device_to_candidate
-  - oqlos.hardware.modbus_identify._infer_modbus_serial_port
-  - oqlos.hardware.modbus_identify._is_modbus_candidate
-  - oqlos.hardware.modbus_identify._usb_blob
-  - oqlos.hardware.modbus_identify.collect_modbus_serial_candidates
-  - oqlos.hardware.modbus_identify.enrich_modbus_identify
-  - oqlos.hardware.modbus_identify.enrich_modbus_serial_hints
-  - oqlos.hardware.modbus_identify.enrich_platform_modbus_ports
-  oqlos.hardware.plugin_gateway:
-  - oqlos.hardware.plugin_gateway.PluginHardwareGateway.__init__
-  - oqlos.hardware.plugin_gateway.PluginHardwareGateway._load_hardware_schema
-  - oqlos.hardware.plugin_gateway.PluginHardwareGateway.modbus_preflight_report
-  - oqlos.hardware.plugin_gateway.PluginHardwareGateway.reload_configs
+  oqlos.hardware.hui_actions:
+  - oqlos.hardware.hui_actions._operation
+  - oqlos.hardware.hui_actions._set_pump
+  - oqlos.hardware.hui_actions._set_pump_best_effort
+  - oqlos.hardware.hui_actions._set_valve
+  - oqlos.hardware.hui_actions._success
+  - oqlos.hardware.hui_actions.shutdown_all_hui_hardware
   oqlos.hardware.plugins.base:
   - oqlos.hardware.plugins.base.dynamic_plugin_schema_models
   oqlos.hardware.rtc_probe:
@@ -4647,35 +4563,6 @@ modules:
   - oqlos.hardware.rtc_probe.get_pirtc_base_url
   - oqlos.hardware.rtc_probe.is_rtc_hardware_enabled
   - oqlos.hardware.rtc_probe.run_rtc_command
-  oqlos.hardware.scanner_probe:
-  - oqlos.hardware.scanner_probe._canonical_match_key
-  - oqlos.hardware.scanner_probe._is_likely_scanner_input
-  - oqlos.hardware.scanner_probe._is_likely_scanner_usb_blob
-  - oqlos.hardware.scanner_probe._match_blob
-  - oqlos.hardware.scanner_probe._match_priority
-  - oqlos.hardware.scanner_probe._merge_matches
-  - oqlos.hardware.scanner_probe._scan_diagnostics_usb_matches
-  - oqlos.hardware.scanner_probe._scan_input_matches
-  - oqlos.hardware.scanner_probe._scan_lsusb_matches
-  - oqlos.hardware.scanner_probe._usb_product_blob
-  - oqlos.hardware.scanner_probe.build_scanner_adapter_entry
-  - oqlos.hardware.scanner_probe.enrich_scanner_adapter
-  - oqlos.hardware.scanner_probe.resolve_scanner_presence
-  oqlos.hardware.sidecar_control:
-  - oqlos.hardware.sidecar_control._dri0050_paths
-  - oqlos.hardware.sidecar_control._free_api_port
-  - oqlos.hardware.sidecar_control._http_sidecar_healthy
-  - oqlos.hardware.sidecar_control._modbus_serial_candidates
-  - oqlos.hardware.sidecar_control._run_cmd
-  - oqlos.hardware.sidecar_control.ensure_dri0050_sidecar
-  - oqlos.hardware.sidecar_control.resolve_dri0050_serial
-  oqlos.hardware.stack_snapshot:
-  - oqlos.hardware.stack_snapshot._build_recommended_actions
-  - oqlos.hardware.stack_snapshot._get_modbus_preflight
-  - oqlos.hardware.stack_snapshot._lazy_hardware_api
-  - oqlos.hardware.stack_snapshot.build_hardware_stack_snapshot
-  oqlos.hardware.usb_diagnostics:
-  - oqlos.hardware.usb_diagnostics._find_tty
   oqlos.tools.cql_cli:
   - oqlos.tools.cql_cli._sync_compat_symbols
   - oqlos.tools.cql_cli.main
@@ -4732,7 +4619,7 @@ modules:
   - oqlos.tools.cql_cli.utils.resolve_required_adapter
   - oqlos.tools.cql_cli.utils.validate_directory
   oqlos.tools.hardware_diagnose.__main__:
-  - oqlos.tools.hardware_diagnose.__main__._dispatch_action
+  - oqlos.tools.hardware_diagnose.__main__._handle_report_action
   - oqlos.tools.hardware_diagnose.__main__._print_benchmark
   - oqlos.tools.hardware_diagnose.__main__._print_calibrate
   - oqlos.tools.hardware_diagnose.__main__._print_detect
@@ -4912,6 +4799,12 @@ entry_points:
 - oqlos.api.hardware.hardware_recover_route
 - oqlos.api.hardware.hardware_stack_snapshot
 - oqlos.api.hardware.hardware_temperature
+- oqlos.api.hardware.hui_actions
+- oqlos.api.hardware.hui_al_start
+- oqlos.api.hardware.hui_al_stop
+- oqlos.api.hardware.hui_hold_start
+- oqlos.api.hardware.hui_hold_stop
+- oqlos.api.hardware.hui_shutdown
 - oqlos.api.hardware.read_modbus_adc_raw
 - oqlos.api.hardware.read_sensor
 - oqlos.api.hardware.read_sensors_batch
@@ -5215,13 +5108,64 @@ entry_points:
 - oqlos.core.state.StateManager.broadcast_event
 - oqlos.core.state.StateManager.initialize_peripherals
 - oqlos.dsl.schema.get_default_dsl_schema
+- oqlos.hardware.artificial_lung._lung_cmd_emergency_stop
+- oqlos.hardware.artificial_lung._lung_cmd_lung_cycle
+- oqlos.hardware.artificial_lung._lung_cmd_lung_start
+- oqlos.hardware.artificial_lung._lung_cmd_lung_status
+- oqlos.hardware.artificial_lung._lung_cmd_lung_stop
+- oqlos.hardware.artificial_lung._lung_cmd_set_lpm
 - oqlos.hardware.artificial_lung.execute_command
+- oqlos.hardware.client.autorepair.analyze_repair_needs
+- oqlos.hardware.client.autorepair.build_summary
+- oqlos.hardware.client.autorepair.modbus_exclusive_scan_recommended
+- oqlos.hardware.client.autorepair.overall_stack_healthy
+- oqlos.hardware.client.config.OqlosHardwareProxyConfig.__post_init__
+- oqlos.hardware.client.config.OqlosHardwareProxyConfig.from_env
+- oqlos.hardware.client.errors.HardwareProxyError.__init__
+- oqlos.hardware.client.identify_enrich.adapter_status_from_health
+- oqlos.hardware.client.identify_enrich.enrich_hardware_identify
+- oqlos.hardware.client.platform.get_default_oqlos_api_base
+- oqlos.hardware.client.proxy.OqlosHardwareProxy.__init__
+- oqlos.hardware.client.proxy.OqlosHardwareProxy._degraded_oqlos_payload
+- oqlos.hardware.client.proxy.OqlosHardwareProxy._enrich_motor_dri0050_failure
+- oqlos.hardware.client.proxy.OqlosHardwareProxy._execute_diagnostic_command
+- oqlos.hardware.client.proxy.OqlosHardwareProxy._fetch_dri0050_motor_health_hint
+- oqlos.hardware.client.proxy.OqlosHardwareProxy._get_client
+- oqlos.hardware.client.proxy.OqlosHardwareProxy._is_useless_motor_health_hint
+- oqlos.hardware.client.proxy.OqlosHardwareProxy._load_adc_status
+- oqlos.hardware.client.proxy.OqlosHardwareProxy._load_modbus_io_status
+- oqlos.hardware.client.proxy.OqlosHardwareProxy._load_peripheral_status
+- oqlos.hardware.client.proxy.OqlosHardwareProxy._load_plugin_status
+- oqlos.hardware.client.proxy.OqlosHardwareProxy._load_simple_hardware_status
+- oqlos.hardware.client.proxy.OqlosHardwareProxy._motor_api_bases
+- oqlos.hardware.client.proxy.OqlosHardwareProxy._motor_dri0050_remediation
+- oqlos.hardware.client.proxy.OqlosHardwareProxy._proxy_oqlos
+- oqlos.hardware.client.proxy.OqlosHardwareProxy._proxy_oqlos_request
+- oqlos.hardware.client.proxy.OqlosHardwareProxy._should_enrich_motor_dri0050_failure
+- oqlos.hardware.client.proxy.OqlosHardwareProxy._unavailable_command_payload
+- oqlos.hardware.client.proxy.OqlosHardwareProxy._unavailable_health_payload
+- oqlos.hardware.client.proxy.OqlosHardwareProxy._unavailable_identify_payload
+- oqlos.hardware.client.proxy.OqlosHardwareProxy._unavailable_peripheral_payload
+- oqlos.hardware.client.proxy.OqlosHardwareProxy.candidate_bases
+- oqlos.hardware.client.proxy.OqlosHardwareProxy.close
+- oqlos.hardware.client.proxy.OqlosHardwareProxy.diagnostic_command
+- oqlos.hardware.client.proxy.OqlosHardwareProxy.health
+- oqlos.hardware.client.proxy.OqlosHardwareProxy.identify
+- oqlos.hardware.client.proxy.OqlosHardwareProxy.peripheral_status
+- oqlos.hardware.client.proxy.OqlosHardwareProxy.proxy_info
+- oqlos.hardware.client.resolvers.resolve_lung_target
+- oqlos.hardware.client.resolvers.resolve_modbus_adc_target
+- oqlos.hardware.client.resolvers.resolve_modbus_target
+- oqlos.hardware.client.resolvers.resolve_pump_target
+- oqlos.hardware.client.resolvers.resolve_rtc_target
+- oqlos.hardware.client.tic249_arg_contract.tic249_runtime_args_from_config
+- oqlos.hardware.client.tic249_extended.run_extended_motor_tic249_command
 - oqlos.hardware.config_schema.build_dynamic_schema_models
 - oqlos.hardware.config_schema.get_hardware_config
 - oqlos.hardware.config_schema.load_config_from_yaml
 - oqlos.hardware.config_schema.register_hardware_config
 - oqlos.hardware.control_proxy.OqlosHardwareProxy.__init__
-- oqlos.hardware.control_proxy._ensure_local_hardware_client_on_path
+- oqlos.hardware.diagnosis.is_stale_hardware_entry
 - oqlos.hardware.discovery._ensure_local_pimodbus_on_path
 - oqlos.hardware.drivers.gpio.GpioDriver.__init__
 - oqlos.hardware.drivers.gpio.GpioDriver.connect
@@ -5398,6 +5342,8 @@ entry_points:
 - oqlos.hardware.plugins.motor.MotorPlugin._handle_stop_cli
 - oqlos.hardware.plugins.motor.MotorPlugin._handle_stop_http
 - oqlos.hardware.plugins.motor.MotorPlugin._handle_stop_modbus
+- oqlos.hardware.plugins.motor.MotorPlugin._health_check_http
+- oqlos.hardware.plugins.motor.MotorPlugin._health_check_modbus_rtu
 - oqlos.hardware.plugins.motor.MotorPlugin._validate_power_pct
 - oqlos.hardware.plugins.motor.MotorPlugin.connect
 - oqlos.hardware.plugins.motor.MotorPlugin.disconnect
@@ -5515,6 +5461,15 @@ entry_points:
 - oqlos.tools.cql_cli.main
 - oqlos.tools.cql_cli.main.main
 - oqlos.tools.cql_cli.utils.output_yaml
+- oqlos.tools.hardware_diagnose.__main__._handle_report_action
+- oqlos.tools.hardware_diagnose.__main__._print_benchmark
+- oqlos.tools.hardware_diagnose.__main__._print_calibrate
+- oqlos.tools.hardware_diagnose.__main__._print_detect
+- oqlos.tools.hardware_diagnose.__main__._print_diagnose
+- oqlos.tools.hardware_diagnose.__main__._print_doctor
+- oqlos.tools.hardware_diagnose.__main__._print_health
+- oqlos.tools.hardware_diagnose.__main__._print_list
+- oqlos.tools.hardware_diagnose.__main__._print_modbus_probe
 - oqlos.tools.hardware_diagnose.__main__.main
 - oqlos.tools.hardware_diagnose.discovery.UsbDevice.to_dict
 - oqlos.tools.hardware_diagnose.main
@@ -5557,6 +5512,24 @@ entry_points:
 - scripts.oql-stack.up_agent
 - scripts.oql-stack.up_broker
 - scripts.oql-stack.up_controller
+- scripts.oql_v2_to_v4_migrate_db._mig_calc
+- scripts.oql_v2_to_v4_migrate_db._mig_delta
+- scripts.oql_v2_to_v4_migrate_db._mig_else_error
+- scripts.oql_v2_to_v4_migrate_db._mig_else_info
+- scripts.oql_v2_to_v4_migrate_db._mig_goal
+- scripts.oql_v2_to_v4_migrate_db._mig_goto
+- scripts.oql_v2_to_v4_migrate_db._mig_if_comparison
+- scripts.oql_v2_to_v4_migrate_db._mig_minmax_eq
+- scripts.oql_v2_to_v4_migrate_db._mig_minmax_simple
+- scripts.oql_v2_to_v4_migrate_db._mig_pump
+- scripts.oql_v2_to_v4_migrate_db._mig_sample
+- scripts.oql_v2_to_v4_migrate_db._mig_save
+- scripts.oql_v2_to_v4_migrate_db._mig_set_eq
+- scripts.oql_v2_to_v4_migrate_db._mig_set_name
+- scripts.oql_v2_to_v4_migrate_db._mig_set_noeq
+- scripts.oql_v2_to_v4_migrate_db._mig_task
+- scripts.oql_v2_to_v4_migrate_db._mig_val
+- scripts.oql_v2_to_v4_migrate_db._mig_wait
 - scripts.oql_v2_to_v4_migrate_db.main
 - scripts.oql_v2_validator.main
 - scripts.oql_v2_validator.validate_oql_v2_legacy

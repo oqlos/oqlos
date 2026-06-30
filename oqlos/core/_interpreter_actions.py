@@ -827,38 +827,60 @@ def _normalize_motor2_value(value: str) -> str:
     return re.sub(r"[\s_-]+", " ", str(value or "").strip().lower())
 
 
-def _parse_motor2_reciprocating_setting(value: str) -> dict[str, Any] | None:
-    normalized = _normalize_motor2_value(value)
-    if normalized in {"reciprocating motion", "reciprocating", "posuwisto zwrotny", "ruch posuwisto zwrotny"}:
-        return {"action": "mode"}
-    if normalized in {"reverse on limit", "reverse at limit", "limit reverse", "krańcówka zmienia kierunek", "krancowka zmienia kierunek"}:
-        return {"action": "limit_mode", "limit_mode": "reverse_on_limit"}
-    if normalized in {"stop", "halt", "lung stop", "reciprocate stop", "reciprocating stop"}:
-        return {"action": "stop"}
-    if normalized.startswith("stroke ") or normalized.startswith("skok "):
+_MOTOR2_EXACT_MODES: dict = {
+    "reciprocating motion": {"action": "mode"},
+    "reciprocating": {"action": "mode"},
+    "posuwisto zwrotny": {"action": "mode"},
+    "ruch posuwisto zwrotny": {"action": "mode"},
+    "reverse on limit": {"action": "limit_mode", "limit_mode": "reverse_on_limit"},
+    "reverse at limit": {"action": "limit_mode", "limit_mode": "reverse_on_limit"},
+    "limit reverse": {"action": "limit_mode", "limit_mode": "reverse_on_limit"},
+    "krańcówka zmienia kierunek": {"action": "limit_mode", "limit_mode": "reverse_on_limit"},
+    "krancowka zmienia kierunek": {"action": "limit_mode", "limit_mode": "reverse_on_limit"},
+}
+
+_MOTOR2_STOP_MODES = {"stop", "halt", "lung stop", "reciprocate stop", "reciprocating stop"}
+
+
+def _parse_prefixed_motor2_setting(normalized: str) -> "dict[str, Any] | None":
+    """Parse prefix-based motor2 settings (stroke, volume, duration, etc.)."""
+    if normalized.startswith(("stroke ", "skok ")):
         steps = _parse_motor2_steps(normalized)
         if steps is not None:
             return {"action": "stroke", "steps": steps}
-    if normalized.startswith("cycle volume ") or normalized.startswith("objetosc cyklu ") or normalized.startswith("objętość cyklu "):
+    if normalized.startswith(("cycle volume ", "objetosc cyklu ", "objętość cyklu ")):
         volume = _parse_motor2_volume_liters(normalized)
         if volume is not None:
             return {"action": "cycle_volume", "liters": volume}
-    if normalized.startswith("volume ") or normalized.startswith("objetosc ") or normalized.startswith("objętość "):
+    if normalized.startswith(("volume ", "objetosc ", "objętość ")):
         volume = _parse_motor2_volume_liters(normalized)
         if volume is not None:
             return {"action": "volume", "liters": volume}
-    if normalized.startswith("duration ") or normalized.startswith("time ") or normalized.startswith("czas "):
+    if normalized.startswith(("duration ", "time ", "czas ")):
         duration_seconds = _parse_motor2_duration_seconds(normalized)
         if duration_seconds is not None:
             return {"action": "duration", "seconds": duration_seconds}
-    if normalized.startswith("cycles ") or normalized.startswith("cykle "):
+    if normalized.startswith(("cycles ", "cykle ")):
         cycles = _parse_motor2_steps(normalized)
         if cycles is not None:
             return {"action": "cycles", "cycles": cycles}
-    if normalized.startswith("limit ") or normalized.startswith("speed limit "):
+    if normalized.startswith(("limit ", "speed limit ")):
         speed = _parse_motor2_speed_steps(normalized)
         if speed is not None:
             return {"action": "limit", "speed": speed}
+    return None
+
+
+def _parse_motor2_reciprocating_setting(value: str) -> "dict[str, Any] | None":
+    normalized = _normalize_motor2_value(value)
+    exact = _MOTOR2_EXACT_MODES.get(normalized)
+    if exact is not None:
+        return dict(exact)
+    if normalized in _MOTOR2_STOP_MODES:
+        return {"action": "stop"}
+    prefixed = _parse_prefixed_motor2_setting(normalized)
+    if prefixed is not None:
+        return prefixed
     if "start" in normalized:
         direction = _parse_motor2_direction(normalized) or "left"
         return {"action": "start", "direction": direction}
@@ -956,109 +978,169 @@ def _motor2_reciprocating_state(interp: "CqlInterpreter") -> dict[str, Any]:
     return state
 
 
+def _motor2_set_mode(interp: "CqlInterpreter", setting: "dict[str, Any]", state: "dict[str, Any]") -> "StepStatus":
+    from oqlos.core.base import StepStatus
+    state["enabled"] = True
+    interp.out.step("    ⚙️", "SET 'motor 2' 'reciprocating motion'")
+    return StepStatus.PASSED
+
+
+def _motor2_set_limit_mode(interp: "CqlInterpreter", setting: "dict[str, Any]", state: "dict[str, Any]") -> "StepStatus":
+    from oqlos.core.base import StepStatus
+    state["limit_mode"] = setting.get("limit_mode")
+    interp.out.step("    ⚙️", "SET 'motor 2' 'reverse on limit'")
+    return StepStatus.PASSED
+
+
+def _motor2_set_limit(interp: "CqlInterpreter", setting: "dict[str, Any]", state: "dict[str, Any]") -> "StepStatus":
+    from oqlos.core.base import StepStatus
+    state["speed"] = int(setting["speed"])
+    interp.out.step("    ⚙️", f"SET 'motor 2' 'limit {state['speed']} steps/s'")
+    return StepStatus.PASSED
+
+
+def _motor2_set_stroke(interp: "CqlInterpreter", setting: "dict[str, Any]", state: "dict[str, Any]") -> "StepStatus":
+    from oqlos.core.base import StepStatus
+    state["steps"] = int(setting["steps"])
+    interp.out.step("    ⚙️", f"SET 'motor 2' 'stroke {state['steps']} steps'")
+    return StepStatus.PASSED
+
+
+def _motor2_set_cycle_volume(interp: "CqlInterpreter", setting: "dict[str, Any]", state: "dict[str, Any]") -> "StepStatus":
+    from oqlos.core.base import StepStatus
+    state["cycle_volume_liters"] = float(setting["liters"])
+    interp.out.step("    ⚙️", f"SET 'motor 2' 'cycle volume {state['cycle_volume_liters']:g} l'")
+    return StepStatus.PASSED
+
+
+def _motor2_set_volume(interp: "CqlInterpreter", setting: "dict[str, Any]", state: "dict[str, Any]") -> "StepStatus":
+    from oqlos.core.base import StepStatus
+    state["volume_liters"] = float(setting["liters"])
+    interp.out.step("    ⚙️", f"SET 'motor 2' 'volume {state['volume_liters']:g} l'")
+    return StepStatus.PASSED
+
+
+def _motor2_set_duration(interp: "CqlInterpreter", setting: "dict[str, Any]", state: "dict[str, Any]") -> "StepStatus":
+    from oqlos.core.base import StepStatus
+    state["duration_seconds"] = float(setting["seconds"])
+    interp.out.step("    ⚙️", f"SET 'motor 2' 'duration {state['duration_seconds']:g}s'")
+    return StepStatus.PASSED
+
+
+def _motor2_set_cycles(interp: "CqlInterpreter", setting: "dict[str, Any]", state: "dict[str, Any]") -> "StepStatus":
+    from oqlos.core.base import StepStatus
+    state["cycles"] = int(setting["cycles"])
+    interp.out.step("    ⚙️", f"SET 'motor 2' 'cycles {state['cycles']}'")
+    return StepStatus.PASSED
+
+
+def _motor2_do_stop(interp: "CqlInterpreter", setting: "dict[str, Any]", state: "dict[str, Any]") -> "StepStatus":
+    from oqlos.core.base import StepStatus
+    if interp.mode == "execute":
+        try:
+            _post_motor2_stop()
+        except Exception as exc:
+            interp.out.error(f"MOTOR2 STOP failed: {exc}")
+            return StepStatus.ERROR
+    state["enabled"] = False
+    suffix = " ✓" if interp.mode == "execute" else " (simulated)"
+    interp.out.step("    →", f"MOTOR2 STOP{suffix}")
+    return StepStatus.PASSED
+
+
+def _motor2_build_plan(
+    interp: "CqlInterpreter", setting: "dict[str, Any]", state: "dict[str, Any]"
+) -> "Motor2ReciprocatingPlan":
+    """Build the reciprocating motion plan from interpreter state and setting."""
+    direction = str(setting.get("direction") or interp.vars.get("__motor2_direction") or "right")
+    acceleration_percent = interp.vars.get("__motor2_acceleration_percent")
+    try:
+        acceleration_percent = int(acceleration_percent) if acceleration_percent is not None else None
+    except (TypeError, ValueError):
+        acceleration_percent = None
+    cfg = normalize_motor2_runtime_config()
+    return build_motor2_reciprocating_plan(
+        cfg,
+        direction=direction,
+        steps=int(state["steps"]) if state.get("steps") is not None else None,
+        speed=int(state["speed"]) if state.get("speed") is not None else None,
+        cycles=int(state["cycles"]) if state.get("cycles") is not None else None,
+        volume_liters=float(state["volume_liters"]) if state.get("volume_liters") is not None else None,
+        duration_seconds=float(state["duration_seconds"]) if state.get("duration_seconds") is not None else None,
+        cycle_volume_liters=float(state["cycle_volume_liters"]) if state.get("cycle_volume_liters") is not None else None,
+        acceleration_percent=acceleration_percent,
+        limit_mode=str(state.get("limit_mode")) if state.get("limit_mode") else None,
+    )
+
+
+def _motor2_step_label(plan: "Motor2ReciprocatingPlan", mode: str) -> str:
+    """Format the step output label for a motor2 start action."""
+    speed_label = (
+        f"{plan.effective_steps_per_second}/s clamped"
+        if plan.speed_was_clamped
+        else f"{plan.effective_steps_per_second}/s"
+    )
+    acc_label = (
+        f" acc {plan.acceleration_percent_per_second}%/s"
+        if plan.acceleration_percent_per_second is not None
+        else ""
+    )
+    suffix = " ✓" if mode == "execute" else " (simulated)"
+    return f"MOTOR2 RECIPROCATING {plan.direction.upper()} {plan.steps} @ {speed_label}{acc_label}{suffix}"
+
+
+def _motor2_do_start(interp: "CqlInterpreter", setting: "dict[str, Any]", state: "dict[str, Any]") -> "StepStatus":
+    from oqlos.core.base import StepStatus
+
+    plan = _motor2_build_plan(interp, setting, state)
+    pause = float(state.get("pause") or 0.0)
+    if interp.mode == "execute":
+        try:
+            _post_motor2_reciprocate(
+                plan.direction,
+                plan.steps,
+                motor2_speed_raw(plan.effective_steps_per_second, plan.max_steps_per_second),
+                motor2_acceleration_raw(
+                    plan.effective_steps_per_second,
+                    plan.acceleration_percent_per_second,
+                    plan.max_steps_per_second,
+                ),
+                plan.cycles,
+                pause,
+                plan.limit_mode,
+            )
+        except Exception as exc:
+            interp.out.error(f"MOTOR2 RECIPROCATING {plan.direction.upper()} failed: {exc}")
+            return StepStatus.ERROR
+    interp.out.step("    →", _motor2_step_label(plan, interp.mode))
+    return StepStatus.PASSED
+
+
+_MOTOR2_RECIPROCATING_HANDLERS: dict = {
+    "mode": _motor2_set_mode,
+    "limit_mode": _motor2_set_limit_mode,
+    "limit": _motor2_set_limit,
+    "stroke": _motor2_set_stroke,
+    "cycle_volume": _motor2_set_cycle_volume,
+    "volume": _motor2_set_volume,
+    "duration": _motor2_set_duration,
+    "cycles": _motor2_set_cycles,
+    "stop": _motor2_do_stop,
+    "start": _motor2_do_start,
+}
+
+
 def _handle_motor2_reciprocating_setting(
     interp: "CqlInterpreter",
-    setting: dict[str, Any],
+    setting: "dict[str, Any]",
 ) -> "StepStatus":
     from oqlos.core.base import StepStatus
 
     action = setting.get("action")
     state = _motor2_reciprocating_state(interp)
-    if action == "mode":
-        state["enabled"] = True
-        interp.out.step("    ⚙️", "SET 'motor 2' 'reciprocating motion'")
-        return StepStatus.PASSED
-    if action == "limit_mode":
-        state["limit_mode"] = setting.get("limit_mode")
-        interp.out.step("    ⚙️", "SET 'motor 2' 'reverse on limit'")
-        return StepStatus.PASSED
-    if action == "limit":
-        state["speed"] = int(setting["speed"])
-        interp.out.step("    ⚙️", f"SET 'motor 2' 'limit {state['speed']} steps/s'")
-        return StepStatus.PASSED
-    if action == "stroke":
-        state["steps"] = int(setting["steps"])
-        interp.out.step("    ⚙️", f"SET 'motor 2' 'stroke {state['steps']} steps'")
-        return StepStatus.PASSED
-    if action == "cycle_volume":
-        state["cycle_volume_liters"] = float(setting["liters"])
-        interp.out.step("    ⚙️", f"SET 'motor 2' 'cycle volume {state['cycle_volume_liters']:g} l'")
-        return StepStatus.PASSED
-    if action == "volume":
-        state["volume_liters"] = float(setting["liters"])
-        interp.out.step("    ⚙️", f"SET 'motor 2' 'volume {state['volume_liters']:g} l'")
-        return StepStatus.PASSED
-    if action == "duration":
-        state["duration_seconds"] = float(setting["seconds"])
-        interp.out.step("    ⚙️", f"SET 'motor 2' 'duration {state['duration_seconds']:g}s'")
-        return StepStatus.PASSED
-    if action == "cycles":
-        state["cycles"] = int(setting["cycles"])
-        interp.out.step("    ⚙️", f"SET 'motor 2' 'cycles {state['cycles']}'")
-        return StepStatus.PASSED
-    if action == "stop":
-        if interp.mode == "execute":
-            try:
-                _post_motor2_stop()
-            except Exception as exc:
-                interp.out.error(f"MOTOR2 STOP failed: {exc}")
-                return StepStatus.ERROR
-        state["enabled"] = False
-        suffix = " ✓" if interp.mode == "execute" else " (simulated)"
-        interp.out.step("    →", f"MOTOR2 STOP{suffix}")
-        return StepStatus.PASSED
-    if action == "start":
-        direction = str(setting.get("direction") or interp.vars.get("__motor2_direction") or "right")
-        acceleration_percent = interp.vars.get("__motor2_acceleration_percent")
-        try:
-            acceleration_percent = int(acceleration_percent) if acceleration_percent is not None else None
-        except (TypeError, ValueError):
-            acceleration_percent = None
-        cfg = normalize_motor2_runtime_config()
-        plan = build_motor2_reciprocating_plan(
-            cfg,
-            direction=direction,
-            steps=int(state["steps"]) if state.get("steps") is not None else None,
-            speed=int(state["speed"]) if state.get("speed") is not None else None,
-            cycles=int(state["cycles"]) if state.get("cycles") is not None else None,
-            volume_liters=float(state["volume_liters"]) if state.get("volume_liters") is not None else None,
-            duration_seconds=float(state["duration_seconds"]) if state.get("duration_seconds") is not None else None,
-            cycle_volume_liters=float(state["cycle_volume_liters"]) if state.get("cycle_volume_liters") is not None else None,
-            acceleration_percent=acceleration_percent,
-            limit_mode=str(state.get("limit_mode")) if state.get("limit_mode") else None,
-        )
-        pause = float(state.get("pause") or 0.0)
-        if interp.mode == "execute":
-            try:
-                _post_motor2_reciprocate(
-                    plan.direction,
-                    plan.steps,
-                    motor2_speed_raw(plan.effective_steps_per_second, plan.max_steps_per_second),
-                    motor2_acceleration_raw(
-                        plan.effective_steps_per_second,
-                        plan.acceleration_percent_per_second,
-                        plan.max_steps_per_second,
-                    ),
-                    plan.cycles,
-                    pause,
-                    plan.limit_mode,
-                )
-            except Exception as exc:
-                interp.out.error(f"MOTOR2 RECIPROCATING {plan.direction.upper()} failed: {exc}")
-                return StepStatus.ERROR
-        speed_label = (
-            f"{plan.effective_steps_per_second}/s clamped"
-            if plan.speed_was_clamped
-            else f"{plan.effective_steps_per_second}/s"
-        )
-        acc_label = (
-            f" acc {plan.acceleration_percent_per_second}%/s"
-            if plan.acceleration_percent_per_second is not None
-            else ""
-        )
-        suffix = " ✓" if interp.mode == "execute" else " (simulated)"
-        interp.out.step("    →", f"MOTOR2 RECIPROCATING {plan.direction.upper()} {plan.steps} @ {speed_label}{acc_label}{suffix}")
-        return StepStatus.PASSED
+    handler = _MOTOR2_RECIPROCATING_HANDLERS.get(action)
+    if handler is not None:
+        return handler(interp, setting, state)
     return StepStatus.PASSED
 
 

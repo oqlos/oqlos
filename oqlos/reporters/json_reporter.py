@@ -45,6 +45,50 @@ def _step_to_dict(step: "StepResult") -> dict:
     return d
 
 
+def _group_steps_into_goals(steps: list) -> "list[dict]":
+    """Group StepResult list into goal dicts, splitting on GOAL: header steps."""
+    goals: list[dict] = []
+    current_goal: dict | None = None
+    for step in steps:
+        if step.name.upper().startswith("GOAL:") or step.name.upper().startswith("GOAL "):
+            goal_name = step.name.split(":", 1)[-1].strip() if ":" in step.name else step.name[5:].strip()
+            current_goal = {"name": goal_name, "steps": [], "thresholds": []}
+            goals.append(current_goal)
+            continue
+        if current_goal is None:
+            current_goal = {"name": "Default", "steps": [], "thresholds": []}
+            goals.append(current_goal)
+        current_goal["steps"].append(_step_to_dict(step))
+    return goals
+
+
+def _collect_thresholds(goals: "list[dict]") -> None:
+    """Populate threshold lists for each goal in-place."""
+    for goal in goals:
+        params: dict[str, dict] = {}
+        for s in goal["steps"]:
+            param = s.get("parameter") or s.get("sensor")
+            if not param:
+                continue
+            if param not in params:
+                params[param] = {"parameter": param}
+            for key in ("min", "max", "unit"):
+                if key in s:
+                    params[param][key] = s[key]
+        goal["thresholds"] = list(params.values())
+
+
+def _extract_metadata(variables: dict) -> "tuple[dict, dict]":
+    """Extract metadata fields from variables dict. Returns (metadata, remaining_vars)."""
+    vars_copy = dict(variables) if variables else {}
+    metadata = {
+        "device_type": vars_copy.pop("DEVICE_TYPE", ""),
+        "device_model": vars_copy.pop("DEVICE_MODEL", ""),
+        "manufacturer": vars_copy.pop("MANUFACTURER", ""),
+    }
+    return metadata, vars_copy
+
+
 def report_json(result: "ScriptResult", *, pretty: bool = True) -> str:
     """Format a ScriptResult as the canonical ``data.json`` for report rendering.
 
@@ -69,45 +113,9 @@ def report_json(result: "ScriptResult", *, pretty: bool = True) -> str:
           "warnings": []
         }
     """
-    # Group steps into goals (steps whose name starts with "GOAL:" act as delimiters)
-    goals: list[dict] = []
-    current_goal: dict | None = None
-
-    for step in result.steps:
-        if step.name.upper().startswith("GOAL:") or step.name.upper().startswith("GOAL "):
-            goal_name = step.name.split(":", 1)[-1].strip() if ":" in step.name else step.name[5:].strip()
-            current_goal = {"name": goal_name, "steps": [], "thresholds": []}
-            goals.append(current_goal)
-            continue
-        if current_goal is None:
-            current_goal = {"name": "Default", "steps": [], "thresholds": []}
-            goals.append(current_goal)
-        current_goal["steps"].append(_step_to_dict(step))
-
-    # Collect thresholds per goal from step details
-    for goal in goals:
-        params: dict[str, dict] = {}
-        for s in goal["steps"]:
-            param = s.get("parameter") or s.get("sensor")
-            if not param:
-                continue
-            if param not in params:
-                params[param] = {"parameter": param}
-            if "min" in s:
-                params[param]["min"] = s["min"]
-            if "max" in s:
-                params[param]["max"] = s["max"]
-            if "unit" in s:
-                params[param]["unit"] = s["unit"]
-        goal["thresholds"] = list(params.values())
-
-    # Extract metadata from variables (set by the OQL interpreter from header fields)
-    variables = dict(result.variables) if result.variables else {}
-    metadata = {
-        "device_type": variables.pop("DEVICE_TYPE", ""),
-        "device_model": variables.pop("DEVICE_MODEL", ""),
-        "manufacturer": variables.pop("MANUFACTURER", ""),
-    }
+    goals = _group_steps_into_goals(result.steps)
+    _collect_thresholds(goals)
+    metadata, variables = _extract_metadata(result.variables)
 
     payload = {
         "$schema": "oqlos-report-v1",

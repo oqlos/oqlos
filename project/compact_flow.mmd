@@ -1,19 +1,19 @@
 flowchart TD
-%% generated in 0.02s
+%% generated in 0.03s
     examples__hardware["examples.hardware<br/>1 funcs"]
-    oqlos__api["oqlos.api<br/>168 funcs"]
+    oqlos__api["oqlos.api<br/>182 funcs"]
     oqlos__config["oqlos.config<br/>1 funcs"]
-    oqlos__core["oqlos.core<br/>399 funcs"]
+    oqlos__core["oqlos.core<br/>401 funcs"]
     oqlos__dsl["oqlos.dsl<br/>6 funcs"]
-    oqlos__hardware["oqlos.hardware<br/>353 funcs"]
+    oqlos__hardware["oqlos.hardware<br/>498 funcs"]
     oqlos__shared["oqlos.shared<br/>45 funcs"]
-    oqlos__tools["oqlos.tools<br/>188 funcs"]
+    oqlos__tools["oqlos.tools<br/>189 funcs"]
     oqlos__utils["oqlos.utils<br/>2 funcs"]
     scripts__fix_brackets_to_v4["scripts.fix_brackets_to_v4<br/>2 funcs"]
-    scripts__migrate_to_v4["scripts.migrate_to_v4<br/>7 funcs"]
-    scripts__oql_v2_to_v4_migrate_db["scripts.oql_v2_to_v4_migrate_db<br/>19 funcs"]
-    scripts__oql_v2_validator["scripts.oql_v2_validator<br/>4 funcs"]
-    scripts__oql_v4_validator["scripts.oql_v4_validator<br/>5 funcs"]
+    scripts__migrate_to_v4["scripts.migrate_to_v4<br/>19 funcs"]
+    scripts__oql_v2_to_v4_migrate_db["scripts.oql_v2_to_v4_migrate_db<br/>41 funcs"]
+    scripts__oql_v2_validator["scripts.oql_v2_validator<br/>6 funcs"]
+    scripts__oql_v4_validator["scripts.oql_v4_validator<br/>8 funcs"]
     scripts__oql_validator_common["scripts.oql_validator_common<br/>6 funcs"]
     scripts__scenarios_export["scripts.scenarios_export<br/>13 funcs"]
     setup_hardware_and_run_oql["setup_hardware_and_run_oql<br/>7 funcs"]
@@ -21,13 +21,13 @@ flowchart TD
     scripts__migrate_to_v4 ==>|37| examples__hardware
     setup_hardware_and_run_oql ==>|27| examples__hardware
     scripts__fix_brackets_to_v4 ==>|19| examples__hardware
+    oqlos__api ==>|14| oqlos__hardware
     oqlos__tools ==>|10| oqlos__core
+    oqlos__hardware ==>|8| oqlos__core
     oqlos__api ==>|8| oqlos__core
     oqlos__api ==>|8| oqlos__shared
-    oqlos__api ==>|8| oqlos__hardware
     oqlos__shared ==>|7| examples__hardware
     oqlos__tools ==>|6| oqlos__hardware
-    oqlos__hardware ==>|6| oqlos__core
     scripts__oql_v2_to_v4_migrate_db ==>|4| examples__hardware
     oqlos__core -->|3| oqlos__config
     oqlos__hardware -->|3| oqlos__config

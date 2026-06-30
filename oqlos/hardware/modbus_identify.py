@@ -36,32 +36,39 @@ def _usb_blob(device: dict[str, Any]) -> str:
     ).lower()
 
 
+def _is_modbus_candidate(device: "dict[str, Any]") -> bool:
+    """Return True if a USB device looks like a Modbus serial adapter."""
+    blob = _usb_blob(device)
+    if not blob:
+        return False
+    if any(token in blob for token in _MODBUS_SERIAL_EXCLUDE):
+        return False
+    return any(token in blob for token in _MODBUS_SERIAL_HINTS)
+
+
+def _device_to_candidate(device: "dict[str, Any]") -> "dict[str, str]":
+    """Convert a USB device dict to a Modbus candidate entry."""
+    vendor = str(device.get("vendor_id") or "")
+    product_id = str(device.get("product_id") or "")
+    return {
+        "id": f"{vendor}:{product_id}" if vendor and product_id else "",
+        "manufacturer": str(device.get("manufacturer") or ""),
+        "product": str(device.get("product") or ""),
+        "path": str(device.get("path") or ""),
+    }
+
+
 def collect_modbus_serial_candidates(diagnostics: dict[str, Any] | None) -> list[dict[str, str]]:
     if not isinstance(diagnostics, dict):
         return []
     raw_devices = diagnostics.get("usb_devices")
     if not isinstance(raw_devices, list):
         return []
-    candidates: list[dict[str, str]] = []
-    for device in raw_devices:
-        if not isinstance(device, dict):
-            continue
-        blob = _usb_blob(device)
-        if not blob or any(token in blob for token in _MODBUS_SERIAL_EXCLUDE):
-            continue
-        if not any(token in blob for token in _MODBUS_SERIAL_HINTS):
-            continue
-        vendor = str(device.get("vendor_id") or "")
-        product_id = str(device.get("product_id") or "")
-        candidates.append(
-            {
-                "id": f"{vendor}:{product_id}" if vendor and product_id else "",
-                "manufacturer": str(device.get("manufacturer") or ""),
-                "product": str(device.get("product") or ""),
-                "path": str(device.get("path") or ""),
-            }
-        )
-    return candidates
+    return [
+        _device_to_candidate(device)
+        for device in raw_devices
+        if isinstance(device, dict) and _is_modbus_candidate(device)
+    ]
 
 
 def _infer_modbus_serial_port(platform: dict[str, Any]) -> str:

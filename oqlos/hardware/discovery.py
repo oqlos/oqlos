@@ -33,7 +33,25 @@ def _ensure_local_pimodbus_on_path() -> None:
 
 _ensure_local_pimodbus_on_path()
 
-from pimodbus.discovery import list_serial_ports, probe_modbus_adc, probe_modbus_io  # noqa: E402
+try:
+    from pimodbus.discovery import list_serial_ports, probe_modbus_adc, probe_modbus_io  # noqa: E402
+except ModuleNotFoundError as _exc:  # pragma: no cover - optional hardware dependency
+    # ``pimodbus`` is an external sibling library: present on hardware nodes (added to
+    # PYTHONPATH at deploy) but not bundled in API-only/Docker/mock deployments. Defer
+    # the failure to call time so importing this module — and thus the whole API — does
+    # not crash where real Modbus probing is never used.
+    _PIMODBUS_IMPORT_ERROR = _exc
+
+    def _pimodbus_unavailable(*_args: Any, **_kwargs: Any) -> Any:
+        raise RuntimeError(
+            "Modbus discovery needs the 'pimodbus' package, which is not installed. "
+            "Install it or add it to PYTHONPATH (hardware nodes do this at deploy). "
+            "Mock mode and non-Modbus features work without it."
+        ) from _PIMODBUS_IMPORT_ERROR
+
+    list_serial_ports = _pimodbus_unavailable  # type: ignore[assignment]
+    probe_modbus_adc = _pimodbus_unavailable  # type: ignore[assignment]
+    probe_modbus_io = _pimodbus_unavailable  # type: ignore[assignment]
 
 DEFAULT_MODBUS_SERIAL = os.getenv("MODBUS_SERIAL_PORT") or os.getenv("MODBUS_BUS_SERIAL_PORT") or "/dev/ttyACM1"
 DEFAULT_MODBUS_BAUD = int(os.getenv("MODBUS_BAUD") or os.getenv("MODBUS_BUS_BAUD") or "9600")

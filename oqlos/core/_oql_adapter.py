@@ -147,205 +147,180 @@ def _load_includes(
 # ── OQL command → CqlAction ──────────────────────────────────────
 
 
+# ── Individual OQL command lowerers ─────────────────────────────────
+
+
+def _lower_include(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "list[CqlAction]":
+    return []
+
+
+def _lower_call(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "list[CqlAction]":
+    macro_name = cmd.args["macro"]
+    args = list(cmd.args.get("args") or [])
+    body = macros.get(macro_name)
+    if body is None:
+        return [CqlAction(kind="error", args=f"Nieznane makro: {macro_name}", raw=cmd.raw)]
+    if macro_name in visiting:
+        return [CqlAction(kind="error", args=f"Rekurencyjne makro: {macro_name}", raw=cmd.raw)]
+    expanded: list[CqlAction] = []
+    for ln, raw_line in body:
+        inner = _parse_macro_line(raw_line, ln, args)
+        if inner is None:
+            expanded.append(
+                CqlAction(
+                    kind="error",
+                    args=f"Makro {macro_name!r}: błąd linii {ln}: {raw_line!r}",
+                    raw=raw_line,
+                )
+            )
+            continue
+        expanded.extend(_cmd_to_actions(inner, macros, visiting + (macro_name,)))
+    return expanded
+
+
+def _lower_set(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "list[CqlAction]":
+    target = cmd.args["target"]
+    raw_value = _fmt_value(cmd.args["value"], cmd.args.get("unit"))
+    return [CqlAction(kind="set", target=target, args=raw_value, raw=cmd.raw)]
+
+
+def _lower_get(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "list[CqlAction]":
+    return [CqlAction(kind="val", target=cmd.args["sensor"], args="", raw=cmd.raw)]
+
+
+def _lower_wait(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "list[CqlAction]":
+    token = cmd.args.get("raw") or f"{cmd.args.get('ms', 0)}ms"
+    return [CqlAction(kind="wait", args=token, raw=cmd.raw)]
+
+
+def _lower_save(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "list[CqlAction]":
+    return [CqlAction(kind="save", target=cmd.args["label"], raw=cmd.raw)]
+
+
+def _lower_min(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "list[CqlAction]":
+    args = _fmt_value(cmd.args["value"], cmd.args.get("unit"))
+    return [CqlAction(kind="min", target=cmd.args["sensor"], args=args, raw=cmd.raw)]
+
+
+def _lower_max(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "list[CqlAction]":
+    args = _fmt_value(cmd.args["value"], cmd.args.get("unit"))
+    return [CqlAction(kind="max", target=cmd.args["sensor"], args=args, raw=cmd.raw)]
+
+
+def _lower_check(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "list[CqlAction]":
+    default_fail = (
+        f"{cmd.args['sensor']} poza zakresem "
+        f"[{cmd.args['min']}, {cmd.args['max']}] "
+        f"{cmd.args.get('unit') or ''}".strip()
+    )
+    cond = CqlCondition(
+        sensor=cmd.args["sensor"],
+        operator="∈",
+        value_min=cmd.args["min"],
+        value_max=cmd.args["max"],
+        unit=cmd.args.get("unit") or "",
+        on_fail="ERROR",
+        fail_message=cmd.args.get("error_msg") or default_fail,
+        pass_message=cmd.args.get("correct_msg") or "",
+    )
+    return [CqlAction(kind="condition", condition=cond, raw=cmd.raw)]
+
+
+def _lower_if_delta(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "list[CqlAction]":
+    sensor = str(cmd.args.get("sensor") or "").strip()
+    delta_sensor = f"Δ{sensor}" if sensor else ""
+    operator = str(cmd.args.get("operator") or ">")
+    threshold = float(cmd.args.get("threshold") or 0.0)
+    unit = str(cmd.args.get("unit") or "").strip()
+    window_s = cmd.args.get("window_s")
+    window_label = f" w oknie {window_s}s" if window_s else ""
+    default_fail = (
+        f"delta {sensor}{window_label} {operator} {threshold} {unit}".strip()
+    )
+    cond = CqlCondition(
+        sensor=delta_sensor,
+        operator=operator,
+        value=threshold,
+        unit=unit,
+        on_fail="ERROR",
+        fail_message=cmd.args.get("error_msg") or default_fail,
+        pass_message=cmd.args.get("correct_msg") or "",
+    )
+    return [
+        CqlAction(
+            kind="condition",
+            condition=cond,
+            args=f"window_s={window_s}" if window_s else "",
+            raw=cmd.raw,
+        )
+    ]
+
+
+def _lower_sample(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "list[CqlAction]":
+    direction = cmd.args["direction"]
+    interval = cmd.args.get("interval_ms")
+    args = direction if interval is None else f"{direction} {interval}ms"
+    return [
+        CqlAction(
+            kind="sample",
+            target=cmd.args["sensor"],
+            method=direction,
+            args=args,
+            raw=cmd.raw,
+        )
+    ]
+
+
+def _lower_log(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "list[CqlAction]":
+    return [CqlAction(kind="log", args=cmd.args.get("message", ""), raw=cmd.raw)]
+
+
+def _lower_error_cmd(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "list[CqlAction]":
+    return [CqlAction(kind="error", args=cmd.args.get("message", ""), raw=cmd.raw)]
+
+
+def _lower_repeat(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "list[CqlAction]":
+    action = cmd.args.get("action")
+    if action == "start":
+        return [
+            CqlAction(
+                kind="loop_block",
+                method="times",
+                args=cmd.args.get("count", "1"),
+                raw=cmd.raw,
+            )
+        ]
+    if action == "stop":
+        return [CqlAction(kind="endloop", raw=cmd.raw)]
+    return []
+
+
+_CMD_LOWERERS: dict = {
+    "INCLUDE": _lower_include,
+    "CALL": _lower_call,
+    "SET": _lower_set,
+    "GET": _lower_get,
+    "WAIT": _lower_wait,
+    "SAVE": _lower_save,
+    "MIN": _lower_min,
+    "MAX": _lower_max,
+    "CHECK": _lower_check,
+    "IF_DELTA": _lower_if_delta,
+    "SAMPLE": _lower_sample,
+    "LOG": _lower_log,
+    "ERROR": _lower_error_cmd,
+    "REPEAT": _lower_repeat,
+}
+
+
 def _cmd_to_actions(
-    cmd: OqlCmd, macros: _MacroRegistry, visiting: tuple[str, ...] = ()
-) -> list[CqlAction]:
+    cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple[str, ...] = ()
+) -> "list[CqlAction]":
     """Lower a single OQL command to zero or more CqlActions."""
-
-    kind = cmd.cmd
-
-    if kind == "INCLUDE":
-        # already inlined by _load_includes; skip at call sites
-        return []
-
-    if kind == "CALL":
-        macro_name = cmd.args["macro"]
-        args = list(cmd.args.get("args") or [])
-        body = macros.get(macro_name)
-        if body is None:
-            return [
-                CqlAction(
-                    kind="error",
-                    args=f"Nieznane makro: {macro_name}",
-                    raw=cmd.raw,
-                )
-            ]
-        if macro_name in visiting:
-            return [
-                CqlAction(
-                    kind="error",
-                    args=f"Rekurencyjne makro: {macro_name}",
-                    raw=cmd.raw,
-                )
-            ]
-        expanded: list[CqlAction] = []
-        for ln, raw_line in body:
-            inner = _parse_macro_line(raw_line, ln, args)
-            if inner is None:
-                expanded.append(
-                    CqlAction(
-                        kind="error",
-                        args=f"Makro {macro_name!r}: błąd linii {ln}: {raw_line!r}",
-                        raw=raw_line,
-                    )
-                )
-                continue
-            expanded.extend(
-                _cmd_to_actions(inner, macros, visiting + (macro_name,))
-            )
-        return expanded
-
-    if kind == "SET":
-        target = cmd.args["target"]
-        raw_value = _fmt_value(cmd.args["value"], cmd.args.get("unit"))
-        return [
-            CqlAction(
-                kind="set",
-                target=target,
-                args=raw_value,
-                raw=cmd.raw,
-            )
-        ]
-
-    if kind == "GET":
-        sensor = cmd.args["sensor"]
-        return [
-            CqlAction(kind="val", target=sensor, args="", raw=cmd.raw)
-        ]
-
-    if kind == "WAIT":
-        token = cmd.args.get("raw") or f"{cmd.args.get('ms', 0)}ms"
-        return [
-            CqlAction(kind="wait", args=token, raw=cmd.raw)
-        ]
-
-    if kind == "SAVE":
-        return [
-            CqlAction(
-                kind="save",
-                target=cmd.args["label"],
-                raw=cmd.raw,
-            )
-        ]
-
-    if kind == "MIN":
-        args = _fmt_value(cmd.args["value"], cmd.args.get("unit"))
-        return [
-            CqlAction(
-                kind="min",
-                target=cmd.args["sensor"],
-                args=args,
-                raw=cmd.raw,
-            )
-        ]
-
-    if kind == "MAX":
-        args = _fmt_value(cmd.args["value"], cmd.args.get("unit"))
-        return [
-            CqlAction(
-                kind="max",
-                target=cmd.args["sensor"],
-                args=args,
-                raw=cmd.raw,
-            )
-        ]
-
-    if kind == "CHECK":
-        # Use custom messages if provided via CORRECT/ERROR, otherwise defaults
-        default_fail = (
-            f"{cmd.args['sensor']} poza zakresem "
-            f"[{cmd.args['min']}, {cmd.args['max']}] "
-            f"{cmd.args.get('unit') or ''}".strip()
-        )
-        cond = CqlCondition(
-            sensor=cmd.args["sensor"],
-            operator="∈",
-            value_min=cmd.args["min"],
-            value_max=cmd.args["max"],
-            unit=cmd.args.get("unit") or "",
-            on_fail="ERROR",
-            fail_message=cmd.args.get("error_msg") or default_fail,
-            pass_message=cmd.args.get("correct_msg") or "",
-        )
-        return [
-            CqlAction(
-                kind="condition",
-                condition=cond,
-                raw=cmd.raw,
-            )
-        ]
-
-    if kind == "IF_DELTA":
-        sensor = str(cmd.args.get("sensor") or "").strip()
-        delta_sensor = f"Δ{sensor}" if sensor else ""
-        operator = str(cmd.args.get("operator") or ">")
-        threshold = float(cmd.args.get("threshold") or 0.0)
-        unit = str(cmd.args.get("unit") or "").strip()
-        window_s = cmd.args.get("window_s")
-        window_label = f" w oknie {window_s}s" if window_s else ""
-        default_fail = (
-            f"delta {sensor}{window_label} {operator} {threshold} {unit}".strip()
-        )
-
-        cond = CqlCondition(
-            sensor=delta_sensor,
-            operator=operator,
-            value=threshold,
-            unit=unit,
-            on_fail="ERROR",
-            fail_message=cmd.args.get("error_msg") or default_fail,
-            pass_message=cmd.args.get("correct_msg") or "",
-        )
-        return [
-            CqlAction(
-                kind="condition",
-                condition=cond,
-                args=f"window_s={window_s}" if window_s else "",
-                raw=cmd.raw,
-            )
-        ]
-
-    if kind == "SAMPLE":
-        direction = cmd.args["direction"]
-        interval = cmd.args.get("interval_ms")
-        args = direction if interval is None else f"{direction} {interval}ms"
-        return [
-            CqlAction(
-                kind="sample",
-                target=cmd.args["sensor"],
-                method=direction,
-                args=args,
-                raw=cmd.raw,
-            )
-        ]
-
-    if kind == "LOG":
-        return [
-            CqlAction(kind="log", args=cmd.args.get("message", ""), raw=cmd.raw)
-        ]
-
-    if kind == "ERROR":
-        return [
-            CqlAction(kind="error", args=cmd.args.get("message", ""), raw=cmd.raw)
-        ]
-
-    if kind == "REPEAT":
-        action = cmd.args.get("action")
-        if action == "start":
-            return [
-                CqlAction(
-                    kind="loop_block",
-                    method="times",
-                    args=cmd.args.get("count", "1"),
-                    raw=cmd.raw,
-                )
-            ]
-        if action == "stop":
-            return [CqlAction(kind="endloop", raw=cmd.raw)]
-        return []
-
-    # Fallback — unknown but structurally valid command
-    return [CqlAction(kind="action", method=kind, raw=cmd.raw)]
+    lowerer = _CMD_LOWERERS.get(cmd.cmd)
+    if lowerer is not None:
+        return lowerer(cmd, macros, visiting)
+    return [CqlAction(kind="action", method=cmd.cmd, raw=cmd.raw)]
 
 
 def _parse_macro_line(

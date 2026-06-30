@@ -131,37 +131,53 @@ def main() -> None:
 
     if not action_given or args.shell:
         interactive_shell(url)
-    elif args.detect:
-        _print_detect(url, jout, args.config)
-    elif args.doctor or args.fix:
-        _print_doctor(url, jout, args.config, args.fix)
-    elif args.list:
-        _print_list(url, jout)
-    elif args.health:
-        _print_health(url, jout)
-    elif args.modbus_probe:
-        _print_modbus_probe(jout, args)
-    elif args.identify:
-        data = check_firmware_identify(url)
-        print(json.dumps(data) if jout else json.dumps(data, indent=2, default=str))
-    elif args.calibrate:
-        _print_calibrate(url, jout)
-    elif args.benchmark is not None:
-        _print_benchmark(url, args.benchmark, jout)
-    elif args.report:
-        target = None if args.report == "auto" else args.report
-        saved = save_diagnostic_report(target, url)
-        print(json.dumps({"report_file": saved}) if jout else f"\n📄 Report saved to:\n   {saved}")
-    elif args.diagnose:
-        if jout:
-            print(json.dumps({
-                "usb_devices":       [d.to_dict() for d in list_usb_serial_devices()],
-                "i2c_buses":         list_i2c_buses(),
-                "firmware_health":   check_firmware_health(url),
-                "firmware_identify": check_firmware_identify(url),
-            }))
-        else:
-            print(cmd_diagnose(url))
+        return
+
+    _dispatch_action(args, url, jout)
+
+
+_ACTION_DISPATCH = [
+    (lambda a: a.detect,              lambda a, u, j: _print_detect(u, j, a.config)),
+    (lambda a: a.doctor or a.fix,     lambda a, u, j: _print_doctor(u, j, a.config, a.fix)),
+    (lambda a: a.list,                lambda a, u, j: _print_list(u, j)),
+    (lambda a: a.health,              lambda a, u, j: _print_health(u, j)),
+    (lambda a: a.modbus_probe,        lambda a, u, j: _print_modbus_probe(j, a)),
+    (lambda a: a.identify,            lambda a, u, j: print(json.dumps(check_firmware_identify(u), indent=2, default=str))),
+    (lambda a: a.calibrate,           lambda a, u, j: _print_calibrate(u, j)),
+    (lambda a: a.benchmark is not None, lambda a, u, j: _print_benchmark(u, a.benchmark, j)),
+    (lambda a: a.report,              lambda a, u, j: _handle_report_action(a, u, j)),
+    (lambda a: a.diagnose,            lambda a, u, j: _print_diagnose(u, j)),
+]
+
+
+def _handle_report_action(args: "argparse.Namespace", url: str, jout: bool) -> None:
+    target = None if args.report == "auto" else args.report
+    saved = save_diagnostic_report(target, url)
+    if jout:
+        print(json.dumps({"report_file": saved}))
+    else:
+        print(f"\n📄 Report saved to:\n   {saved}")
+
+
+def _dispatch_action(args: "argparse.Namespace", url: str, jout: bool) -> None:
+    """Dispatch to the appropriate action handler based on CLI flags."""
+    for predicate, handler in _ACTION_DISPATCH:
+        if predicate(args):
+            handler(args, url, jout)
+            return
+
+
+def _print_diagnose(url: str, jout: bool) -> None:
+    """Print full diagnostic output."""
+    if jout:
+        print(json.dumps({
+            "usb_devices":       [d.to_dict() for d in list_usb_serial_devices()],
+            "i2c_buses":         list_i2c_buses(),
+            "firmware_health":   check_firmware_health(url),
+            "firmware_identify": check_firmware_identify(url),
+        }))
+    else:
+        print(cmd_diagnose(url))
 
 
 if __name__ == "__main__":

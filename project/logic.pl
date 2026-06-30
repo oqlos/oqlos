@@ -4,12 +4,13 @@ project_metadata('oqlos', '0.1.27', 'python').
 % ── Project Files ────────────────────────────────────────
 project_file('app.doql.css', 165, 'css').
 project_file('app.doql.less', 240, 'less').
+project_file('examples/curl-quickstart.sh', 75, 'shell').
 project_file('examples/hardware/doctor-workflow.sh', 53, 'shell').
 project_file('oqlos/__init__.py', 4, 'python').
 project_file('oqlos/api/__init__.py', 18, 'python').
 project_file('oqlos/api/editor.py', 142, 'python').
 project_file('oqlos/api/execution.py', 360, 'python').
-project_file('oqlos/api/hardware.py', 2096, 'python').
+project_file('oqlos/api/hardware.py', 2166, 'python').
 project_file('oqlos/api/logs.py', 46, 'python').
 project_file('oqlos/api/main.py', 311, 'python').
 project_file('oqlos/api/oql_mqtt.py', 152, 'python').
@@ -47,10 +48,25 @@ project_file('oqlos/dsl/__init__.py', 19, 'python').
 project_file('oqlos/dsl/schema.py', 296, 'python').
 project_file('oqlos/hardware/__init__.py', 18, 'python').
 project_file('oqlos/hardware/artificial_lung.py', 163, 'python').
+project_file('oqlos/hardware/client/__init__.py', 101, 'python').
+project_file('oqlos/hardware/client/adc.py', 65, 'python').
+project_file('oqlos/hardware/client/autorepair.py', 138, 'python').
+project_file('oqlos/hardware/client/config.py', 89, 'python').
+project_file('oqlos/hardware/client/constants.py', 70, 'python').
+project_file('oqlos/hardware/client/errors.py', 27, 'python').
+project_file('oqlos/hardware/client/http_helpers.py', 27, 'python').
+project_file('oqlos/hardware/client/identify_enrich.py', 261, 'python').
+project_file('oqlos/hardware/client/modbus_repair.py', 165, 'python').
+project_file('oqlos/hardware/client/platform.py', 51, 'python').
+project_file('oqlos/hardware/client/proxy.py', 461, 'python').
+project_file('oqlos/hardware/client/resolvers.py', 129, 'python').
+project_file('oqlos/hardware/client/tic249_arg_contract.py', 66, 'python').
+project_file('oqlos/hardware/client/tic249_extended.py', 598, 'python').
+project_file('oqlos/hardware/client/tic249_rig_direction.py', 44, 'python').
 project_file('oqlos/hardware/config_paths.py', 42, 'python').
 project_file('oqlos/hardware/config_schema.py', 146, 'python').
-project_file('oqlos/hardware/control_proxy.py', 98, 'python').
-project_file('oqlos/hardware/diagnosis.py', 541, 'python').
+project_file('oqlos/hardware/control_proxy.py', 69, 'python').
+project_file('oqlos/hardware/diagnosis.py', 551, 'python').
 project_file('oqlos/hardware/discovery.py', 86, 'python').
 project_file('oqlos/hardware/drivers/__init__.py', 6, 'python').
 project_file('oqlos/hardware/drivers/gpio.py', 90, 'python').
@@ -58,6 +74,7 @@ project_file('oqlos/hardware/drivers/mqtt.py', 120, 'python').
 project_file('oqlos/hardware/drivers/spi.py', 93, 'python').
 project_file('oqlos/hardware/firmware_adapter.py', 482, 'python').
 project_file('oqlos/hardware/gateway.py', 417, 'python').
+project_file('oqlos/hardware/hui_actions.py', 248, 'python').
 project_file('oqlos/hardware/identify_enrichment.py', 19, 'python').
 project_file('oqlos/hardware/modbus_identify.py', 132, 'python').
 project_file('oqlos/hardware/peripheral_mapping.py', 139, 'python').
@@ -133,11 +150,11 @@ project_file('oqlos/utils/sample_data.py', 74, 'python').
 project_file('project.sh', 43, 'shell').
 project_file('scripts/fix_brackets_to_v4.py', 96, 'python').
 project_file('scripts/hardware-check.sh', 341, 'shell').
-project_file('scripts/migrate_to_v4.py', 332, 'python').
+project_file('scripts/migrate_to_v4.py', 341, 'python').
 project_file('scripts/oql-stack.sh', 105, 'shell').
 project_file('scripts/oql_v2_to_v4_migrate_db.py', 628, 'python').
-project_file('scripts/oql_v2_validator.py', 221, 'python').
-project_file('scripts/oql_v4_validator.py', 267, 'python').
+project_file('scripts/oql_v2_validator.py', 225, 'python').
+project_file('scripts/oql_v4_validator.py', 282, 'python').
 project_file('scripts/oql_validator_common.py', 130, 'python').
 project_file('scripts/scenarios_export.py', 297, 'python').
 project_file('setup_hardware_and_run_oql.py', 334, 'python').
@@ -154,6 +171,7 @@ project_file('tests/firmware/test_hardware_health_http.py', 59, 'python').
 project_file('tests/firmware/test_hardware_identify.py', 195, 'python').
 project_file('tests/firmware/test_hardware_modbus_wizard.py', 326, 'python').
 project_file('tests/firmware/test_hardware_stack_snapshot.py', 46, 'python').
+project_file('tests/firmware/test_hui_actions.py', 91, 'python').
 project_file('tests/firmware/test_hui_scenario.py', 12, 'python').
 project_file('tests/firmware/test_lung_integration.py', 282, 'python').
 project_file('tests/firmware/test_lung_plugin_reciprocate.py', 76, 'python').
@@ -273,8 +291,14 @@ python_function('oqlos/api/hardware.py', '_map_adapter_identify_status', 3, 10, 
 python_function('oqlos/api/hardware.py', 'hardware_identify', 1, 8, 18).
 python_function('oqlos/api/hardware.py', 'set_valve', 2, 1, 3).
 python_function('oqlos/api/hardware.py', 'set_pump', 1, 1, 3).
+python_function('oqlos/api/hardware.py', 'hui_actions', 0, 1, 2).
+python_function('oqlos/api/hardware.py', 'hui_shutdown', 0, 1, 3).
+python_function('oqlos/api/hardware.py', 'hui_hold_start', 1, 2, 5).
+python_function('oqlos/api/hardware.py', 'hui_hold_stop', 1, 1, 3).
+python_function('oqlos/api/hardware.py', 'hui_al_start', 0, 2, 5).
+python_function('oqlos/api/hardware.py', 'hui_al_stop', 0, 1, 3).
 python_function('oqlos/api/hardware.py', 'read_sensor', 1, 4, 6).
-python_function('oqlos/api/hardware.py', '_read_cpu_temperature', 0, 5, 10).
+python_function('oqlos/api/hardware.py', '_read_cpu_temperature', 0, 8, 12).
 python_function('oqlos/api/hardware.py', 'hardware_temperature', 0, 2, 3).
 python_function('oqlos/api/hardware.py', 'read_sensors_batch', 1, 11, 11).
 python_function('oqlos/api/hardware.py', 'hardware_diagnose', 0, 7, 6).
@@ -633,13 +657,95 @@ python_function('oqlos/hardware/artificial_lung.py', '_lung_cmd_lung_status', 2,
 python_function('oqlos/hardware/artificial_lung.py', '_lung_cmd_lung_cycle', 2, 4, 7).
 python_function('oqlos/hardware/artificial_lung.py', '_lung_cmd_emergency_stop', 2, 3, 3).
 python_function('oqlos/hardware/artificial_lung.py', 'execute_command', 3, 4, 6).
+python_function('oqlos/hardware/client/adc.py', 'adc_sensor_alias', 1, 10, 7).
+python_function('oqlos/hardware/client/adc.py', 'normalize_adc_read_result', 2, 3, 3).
+python_function('oqlos/hardware/client/adc.py', 'normalize_adc_read_all_result', 1, 7, 5).
+python_function('oqlos/hardware/client/autorepair.py', '_health_map', 1, 4, 2).
+python_function('oqlos/hardware/client/autorepair.py', 'plugin_needs_repair', 2, 8, 6).
+python_function('oqlos/hardware/client/autorepair.py', 'modbus_plugins_need_repair', 1, 5, 4).
+python_function('oqlos/hardware/client/autorepair.py', '_plugin_repair_reasons', 1, 6, 6).
+python_function('oqlos/hardware/client/autorepair.py', '_no_response_reasons', 1, 5, 3).
+python_function('oqlos/hardware/client/autorepair.py', 'analyze_repair_needs', 1, 10, 9).
+python_function('oqlos/hardware/client/autorepair.py', 'modbus_exclusive_scan_recommended', 1, 5, 3).
+python_function('oqlos/hardware/client/autorepair.py', 'overall_stack_healthy', 1, 11, 8).
+python_function('oqlos/hardware/client/autorepair.py', 'build_summary', 0, 12, 5).
+python_function('oqlos/hardware/client/config.py', 'float_from_env', 3, 3, 2).
+python_function('oqlos/hardware/client/config.py', 'int_from_env', 3, 3, 2).
+python_function('oqlos/hardware/client/config.py', 'candidate_oqlos_bases', 1, 6, 3).
+python_function('oqlos/hardware/client/errors.py', 'is_oqlos_unavailable', 1, 1, 0).
+python_function('oqlos/hardware/client/errors.py', 'oqlos_error_detail', 1, 6, 3).
+python_function('oqlos/hardware/client/http_helpers.py', 'safe_response_payload', 1, 3, 1).
+python_function('oqlos/hardware/client/http_helpers.py', 'response_error_message', 1, 10, 3).
+python_function('oqlos/hardware/client/identify_enrich.py', '_platform_serial_ports', 1, 5, 3).
+python_function('oqlos/hardware/client/identify_enrich.py', '_health_message', 2, 4, 3).
+python_function('oqlos/hardware/client/identify_enrich.py', 'enrich_adapter_entry', 1, 33, 9).
+python_function('oqlos/hardware/client/identify_enrich.py', 'adapter_status_from_health', 2, 17, 5).
+python_function('oqlos/hardware/client/identify_enrich.py', '_parse_csv_ints', 1, 5, 5).
+python_function('oqlos/hardware/client/identify_enrich.py', '_modbus_io_instance_ids', 1, 15, 9).
+python_function('oqlos/hardware/client/identify_enrich.py', '_expand_modbus_io_instances', 2, 13, 11).
+python_function('oqlos/hardware/client/identify_enrich.py', 'count_detected_adapters', 1, 4, 3).
+python_function('oqlos/hardware/client/identify_enrich.py', 'enrich_identify_payload', 1, 12, 13).
+python_function('oqlos/hardware/client/identify_enrich.py', 'enrich_hardware_identify', 1, 1, 2).
+python_function('oqlos/hardware/client/modbus_repair.py', '_env', 2, 2, 2).
+python_function('oqlos/hardware/client/modbus_repair.py', '_is_separate_adapters', 1, 4, 2).
+python_function('oqlos/hardware/client/modbus_repair.py', '_adapter_ports', 1, 9, 3).
+python_function('oqlos/hardware/client/modbus_repair.py', '_augment_no_response_from_health', 2, 10, 6).
+python_function('oqlos/hardware/client/modbus_repair.py', '_build_diagnose_cmd', 3, 5, 2).
+python_function('oqlos/hardware/client/modbus_repair.py', '_build_safety_hints', 3, 13, 6).
+python_function('oqlos/hardware/client/modbus_repair.py', 'rewrite_modbus_repair', 1, 11, 9).
+python_function('oqlos/hardware/client/platform.py', 'is_raspberry_pi', 0, 6, 5).
+python_function('oqlos/hardware/client/platform.py', 'is_docker', 0, 4, 5).
+python_function('oqlos/hardware/client/platform.py', 'get_default_oqlos_api_base', 0, 3, 2).
+python_function('oqlos/hardware/client/proxy.py', '_is_unsuccessful_result', 1, 2, 2).
+python_function('oqlos/hardware/client/resolvers.py', 'normalize_modbus_valve_id', 1, 3, 5).
+python_function('oqlos/hardware/client/resolvers.py', 'resolve_modbus_target', 2, 3, 3).
+python_function('oqlos/hardware/client/resolvers.py', 'resolve_pump_target', 2, 3, 3).
+python_function('oqlos/hardware/client/resolvers.py', 'resolve_artificial_lung_target', 2, 1, 0).
+python_function('oqlos/hardware/client/resolvers.py', 'resolve_lung_target', 2, 4, 4).
+python_function('oqlos/hardware/client/resolvers.py', 'resolve_modbus_adc_target', 2, 4, 3).
+python_function('oqlos/hardware/client/resolvers.py', 'resolve_rtc_target', 2, 1, 0).
+python_function('oqlos/hardware/client/resolvers.py', 'resolve_diagnostic_target', 3, 3, 4).
+python_function('oqlos/hardware/client/resolvers.py', '_coalesce_error_message', 0, 4, 2).
+python_function('oqlos/hardware/client/resolvers.py', 'extract_command_failure', 1, 10, 3).
+python_function('oqlos/hardware/client/tic249_arg_contract.py', 'canonicalize_motor2_runtime_key', 1, 2, 5).
+python_function('oqlos/hardware/client/tic249_arg_contract.py', 'tic249_runtime_args_from_config', 1, 8, 4).
+python_function('oqlos/hardware/client/tic249_extended.py', '_arg', 4, 4, 0).
+python_function('oqlos/hardware/client/tic249_extended.py', '_plugin_payload', 2, 2, 0).
+python_function('oqlos/hardware/client/tic249_extended.py', '_execute', 3, 1, 2).
+python_function('oqlos/hardware/client/tic249_extended.py', '_steps_per_second_to_raw', 2, 3, 4).
+python_function('oqlos/hardware/client/tic249_extended.py', '_normalize_motion_params', 1, 13, 6).
+python_function('oqlos/hardware/client/tic249_extended.py', '_stroke_steps', 2, 1, 2).
+python_function('oqlos/hardware/client/tic249_extended.py', '_apply_reciprocate_direction', 2, 1, 1).
+python_function('oqlos/hardware/client/tic249_extended.py', '_build_reciprocate_params', 1, 10, 9).
+python_function('oqlos/hardware/client/tic249_extended.py', '_map_lung_or_reciprocate', 2, 8, 4).
+python_function('oqlos/hardware/client/tic249_extended.py', '_command_mapping', 2, 13, 5).
+python_function('oqlos/hardware/client/tic249_extended.py', '_extract_position', 1, 5, 3).
+python_function('oqlos/hardware/client/tic249_extended.py', '_command_error_message', 1, 14, 4).
+python_function('oqlos/hardware/client/tic249_extended.py', '_generic_failure_hint', 1, 8, 4).
+python_function('oqlos/hardware/client/tic249_extended.py', '_failure', 1, 10, 4).
+python_function('oqlos/hardware/client/tic249_extended.py', '_plugin_unavailable_error', 1, 10, 4).
+python_function('oqlos/hardware/client/tic249_extended.py', '_tic249_sidecar_base_urls', 0, 5, 6).
+python_function('oqlos/hardware/client/tic249_extended.py', '_tic249_sidecar_base_url', 0, 1, 1).
+python_function('oqlos/hardware/client/tic249_extended.py', '_sidecar_reports_deenergized', 0, 7, 5).
+python_function('oqlos/hardware/client/tic249_extended.py', '_attempt_disable_deenergize', 2, 4, 4).
+python_function('oqlos/hardware/client/tic249_extended.py', '_disable_success_response', 3, 3, 1).
+python_function('oqlos/hardware/client/tic249_extended.py', '_sidecar_reciprocate_preferred', 0, 1, 3).
+python_function('oqlos/hardware/client/tic249_extended.py', '_attempt_reciprocate_via_sidecar', 1, 9, 8).
+python_function('oqlos/hardware/client/tic249_extended.py', '_direct_sidecar_deenergize', 1, 7, 7).
+python_function('oqlos/hardware/client/tic249_extended.py', '_lung_disable_fallback', 2, 4, 4).
+python_function('oqlos/hardware/client/tic249_extended.py', '_normalize_target_state', 2, 12, 4).
+python_function('oqlos/hardware/client/tic249_extended.py', '_handle_hardware_proxy_error', 5, 8, 6).
+python_function('oqlos/hardware/client/tic249_extended.py', 'run_extended_motor_tic249_command', 3, 19, 18).
+python_function('oqlos/hardware/client/tic249_rig_direction.py', 'rig_direction_to_plugin', 1, 4, 3).
+python_function('oqlos/hardware/client/tic249_rig_direction.py', 'apply_rig_direction_to_plugin_params', 2, 5, 4).
 python_function('oqlos/hardware/config_paths.py', 'resolve_oqlos_config_path', 1, 6, 7).
 python_function('oqlos/hardware/config_schema.py', 'get_hardware_config', 1, 2, 4).
 python_function('oqlos/hardware/config_schema.py', 'register_hardware_config', 1, 1, 1).
 python_function('oqlos/hardware/config_schema.py', 'load_config_from_yaml', 1, 1, 2).
 python_function('oqlos/hardware/config_schema.py', 'build_dynamic_schema_models', 1, 2, 4).
-python_function('oqlos/hardware/control_proxy.py', '_ensure_local_hardware_client_on_path', 0, 8, 6).
 python_function('oqlos/hardware/diagnosis.py', '_health_map', 1, 4, 2).
+python_function('oqlos/hardware/diagnosis.py', 'is_stale_hardware_message', 1, 3, 3).
+python_function('oqlos/hardware/diagnosis.py', 'is_stale_hardware_entry', 1, 4, 3).
 python_function('oqlos/hardware/diagnosis.py', 'plugin_is_healthy', 1, 4, 4).
 python_function('oqlos/hardware/diagnosis.py', 'plugin_needs_repair', 2, 9, 6).
 python_function('oqlos/hardware/diagnosis.py', '_report_device_status', 2, 2, 2).
@@ -666,6 +772,18 @@ python_function('oqlos/hardware/discovery.py', 'probe_waveshare_modbus_adc', 5, 
 python_function('oqlos/hardware/firmware_adapter.py', '_first_nonempty', 1, 3, 1).
 python_function('oqlos/hardware/firmware_adapter.py', '_extract_failure_message', 1, 9, 4).
 python_function('oqlos/hardware/firmware_adapter.py', '_parse_numeric', 1, 2, 3).
+python_function('oqlos/hardware/hui_actions.py', '_success', 1, 5, 3).
+python_function('oqlos/hardware/hui_actions.py', '_operation', 2, 1, 0).
+python_function('oqlos/hardware/hui_actions.py', '_set_valve', 3, 1, 3).
+python_function('oqlos/hardware/hui_actions.py', '_set_pump', 2, 1, 3).
+python_function('oqlos/hardware/hui_actions.py', '_set_pump_best_effort', 2, 2, 3).
+python_function('oqlos/hardware/hui_actions.py', 'shutdown_all_hui_hardware', 1, 4, 7).
+python_function('oqlos/hardware/hui_actions.py', 'list_hui_actions', 0, 2, 4).
+python_function('oqlos/hardware/hui_actions.py', 'start_hui_hold', 2, 7, 11).
+python_function('oqlos/hardware/hui_actions.py', 'stop_hui_hold', 2, 4, 6).
+python_function('oqlos/hardware/hui_actions.py', '_run_tic249_reciprocate', 1, 6, 9).
+python_function('oqlos/hardware/hui_actions.py', 'start_hui_artificial_lung', 1, 5, 6).
+python_function('oqlos/hardware/hui_actions.py', 'stop_hui_artificial_lung', 1, 2, 3).
 python_function('oqlos/hardware/identify_enrichment.py', 'enrich_identify_payload', 1, 2, 4).
 python_function('oqlos/hardware/modbus_identify.py', '_usb_blob', 1, 3, 4).
 python_function('oqlos/hardware/modbus_identify.py', '_is_modbus_candidate', 1, 5, 2).
@@ -968,8 +1086,20 @@ python_function('scripts/migrate_to_v4.py', '_quote_oql', 1, 2, 3).
 python_function('scripts/migrate_to_v4.py', 'find_oql_files', 1, 6, 6).
 python_function('scripts/migrate_to_v4.py', 'has_version_header', 1, 4, 5).
 python_function('scripts/migrate_to_v4.py', 'extract_version', 1, 5, 6).
-python_function('scripts/migrate_to_v4.py', 'migrate_content', 2, 16, 13).
-python_function('scripts/migrate_to_v4.py', 'main', 0, 21, 17).
+python_function('scripts/migrate_to_v4.py', '_migrate_version_header', 1, 2, 1).
+python_function('scripts/migrate_to_v4.py', '_migrate_goal_line', 2, 6, 6).
+python_function('scripts/migrate_to_v4.py', '_migrate_loop_line', 2, 3, 2).
+python_function('scripts/migrate_to_v4.py', '_migrate_endloop_line', 1, 2, 1).
+python_function('scripts/migrate_to_v4.py', '_migrate_set_line', 2, 2, 3).
+python_function('scripts/migrate_to_v4.py', '_migrate_wait_line', 1, 2, 2).
+python_function('scripts/migrate_to_v4.py', '_migrate_minmax_line', 1, 3, 3).
+python_function('scripts/migrate_to_v4.py', '_migrate_save_line', 1, 2, 2).
+python_function('scripts/migrate_to_v4.py', '_migrate_single_line', 1, 6, 9).
+python_function('scripts/migrate_to_v4.py', 'migrate_content', 2, 2, 6).
+python_function('scripts/migrate_to_v4.py', '_scan_files', 1, 5, 4).
+python_function('scripts/migrate_to_v4.py', '_perform_migration', 2, 4, 7).
+python_function('scripts/migrate_to_v4.py', '_perform_dry_run', 2, 3, 5).
+python_function('scripts/migrate_to_v4.py', 'main', 0, 11, 13).
 python_function('scripts/migrate_to_v4.py', 'check_database', 0, 10, 10).
 python_function('scripts/oql_v2_to_v4_migrate_db.py', '_fetch_json', 2, 1, 5).
 python_function('scripts/oql_v2_to_v4_migrate_db.py', '_send_json', 4, 2, 8).
@@ -991,11 +1121,16 @@ python_function('scripts/oql_v2_to_v4_migrate_db.py', '_build_write_payload', 2,
 python_function('scripts/oql_v2_to_v4_migrate_db.py', '_build_write_url', 2, 3, 2).
 python_function('scripts/oql_v2_to_v4_migrate_db.py', 'main', 0, 24, 26).
 python_function('scripts/oql_v2_validator.py', '_line_number', 1, 1, 0).
-python_function('scripts/oql_v2_validator.py', '_validate_v2_structure', 1, 16, 10).
+python_function('scripts/oql_v2_validator.py', '_validate_version_header_v2', 1, 7, 6).
+python_function('scripts/oql_v2_validator.py', '_validate_line_v2', 3, 9, 4).
+python_function('scripts/oql_v2_validator.py', '_validate_v2_structure', 1, 2, 7).
 python_function('scripts/oql_v2_validator.py', 'validate_oql_v2_legacy', 2, 8, 5).
 python_function('scripts/oql_v2_validator.py', 'main', 0, 1, 1).
 python_function('scripts/oql_v4_validator.py', '_line_number', 2, 1, 0).
-python_function('scripts/oql_v4_validator.py', '_validate_structure', 1, 20, 11).
+python_function('scripts/oql_v4_validator.py', '_validate_version_header', 1, 6, 7).
+python_function('scripts/oql_v4_validator.py', '_validate_line_v4', 3, 8, 6).
+python_function('scripts/oql_v4_validator.py', '_validate_goal_set_name', 2, 7, 8).
+python_function('scripts/oql_v4_validator.py', '_validate_structure', 1, 2, 8).
 python_function('scripts/oql_v4_validator.py', '_validate_runtime', 2, 8, 6).
 python_function('scripts/oql_v4_validator.py', 'validate_oql_v4', 2, 8, 7).
 python_function('scripts/oql_v4_validator.py', 'main', 0, 1, 1).
@@ -1086,6 +1221,10 @@ python_function('tests/firmware/test_hardware_modbus_wizard.py', 'test_modbus_ru
 python_function('tests/firmware/test_hardware_modbus_wizard.py', 'test_modbus_runtime_ports_shared_bus_forced', 1, 4, 2).
 python_function('tests/firmware/test_hardware_modbus_wizard.py', 'test_modbus_wizard_plan_exposes_per_adapter_ports', 1, 10, 4).
 python_function('tests/firmware/test_hardware_stack_snapshot.py', 'test_stack_snapshot_marks_serial_stale', 1, 4, 4).
+python_function('tests/firmware/test_hui_actions.py', 'run', 1, 1, 1).
+python_function('tests/firmware/test_hui_actions.py', 'test_hui_hold_profile_runs_inside_oqlos', 1, 3, 4).
+python_function('tests/firmware/test_hui_actions.py', 'test_hui_artificial_lung_uses_tic249_plugin_recipe', 0, 9, 4).
+python_function('tests/firmware/test_hui_actions.py', 'test_hui_shutdown_turns_off_pump_and_all_known_valves', 0, 7, 4).
 python_function('tests/firmware/test_hui_scenario.py', 'test_register_hui_test_scenario_adds_ts_c20_once', 0, 3, 2).
 python_function('tests/firmware/test_lung_plugin_reciprocate.py', '_plugin_with_client', 1, 1, 2).
 python_function('tests/firmware/test_lung_plugin_reciprocate.py', 'test_ready_false_does_not_block_reciprocate_start', 0, 3, 4).
@@ -1441,6 +1580,40 @@ python_class('oqlos/dsl/schema.py', 'DslItem').
 python_class('oqlos/dsl/schema.py', 'DslFunctionBinding').
 python_class('oqlos/dsl/schema.py', 'DslParamUnitBinding').
 python_class('oqlos/dsl/schema.py', 'DslSchema').
+python_class('oqlos/hardware/client/config.py', 'OqlosHardwareProxyConfig').
+python_method('OqlosHardwareProxyConfig', '__post_init__', 0, 3, 2).
+python_method('OqlosHardwareProxyConfig', 'from_env', 2, 5, 3).
+python_class('oqlos/hardware/client/errors.py', 'HardwareProxyError').
+python_method('HardwareProxyError', '__init__', 2, 1, 3).
+python_class('oqlos/hardware/client/proxy.py', 'OqlosHardwareProxy').
+python_method('OqlosHardwareProxy', '__init__', 1, 2, 1).
+python_method('OqlosHardwareProxy', 'candidate_bases', 0, 1, 1).
+python_method('OqlosHardwareProxy', 'proxy_info', 0, 1, 1).
+python_method('OqlosHardwareProxy', 'close', 0, 3, 2).
+python_method('OqlosHardwareProxy', '_get_client', 0, 3, 4).
+python_method('OqlosHardwareProxy', '_proxy_oqlos', 1, 1, 1).
+python_method('OqlosHardwareProxy', '_proxy_oqlos_request', 2, 13, 16).
+python_method('OqlosHardwareProxy', '_degraded_oqlos_payload', 1, 5, 5).
+python_method('OqlosHardwareProxy', 'health', 0, 4, 4).
+python_method('OqlosHardwareProxy', 'identify', 0, 3, 4).
+python_method('OqlosHardwareProxy', 'peripheral_status', 1, 6, 6).
+python_method('OqlosHardwareProxy', 'diagnostic_command', 3, 9, 8).
+python_method('OqlosHardwareProxy', '_motor_api_bases', 0, 4, 2).
+python_method('OqlosHardwareProxy', '_fetch_dri0050_motor_health_hint', 0, 8, 8).
+python_method('OqlosHardwareProxy', '_is_useless_motor_health_hint', 1, 2, 3).
+python_method('OqlosHardwareProxy', '_should_enrich_motor_dri0050_failure', 1, 7, 4).
+python_method('OqlosHardwareProxy', '_motor_dri0050_remediation', 2, 4, 1).
+python_method('OqlosHardwareProxy', '_enrich_motor_dri0050_failure', 1, 8, 9).
+python_method('OqlosHardwareProxy', '_load_peripheral_status', 1, 5, 5).
+python_method('OqlosHardwareProxy', '_load_modbus_io_status', 1, 5, 6).
+python_method('OqlosHardwareProxy', '_load_adc_status', 0, 1, 3).
+python_method('OqlosHardwareProxy', '_load_simple_hardware_status', 1, 2, 3).
+python_method('OqlosHardwareProxy', '_load_plugin_status', 2, 6, 4).
+python_method('OqlosHardwareProxy', '_execute_diagnostic_command', 5, 11, 5).
+python_method('OqlosHardwareProxy', '_unavailable_health_payload', 2, 1, 2).
+python_method('OqlosHardwareProxy', '_unavailable_identify_payload', 1, 2, 2).
+python_method('OqlosHardwareProxy', '_unavailable_peripheral_payload', 3, 1, 1).
+python_method('OqlosHardwareProxy', '_unavailable_command_payload', 6, 2, 1).
 python_class('oqlos/hardware/config_schema.py', 'UnitType').
 python_class('oqlos/hardware/control_proxy.py', 'OqlosHardwareProxy').
 python_method('OqlosHardwareProxy', '__init__', 1, 1, 2).
@@ -1819,6 +1992,16 @@ python_method('_UnavailableAdcGateway', 'health', 0, 1, 0).
 python_method('_UnavailableAdcGateway', 'read_sensor', 1, 1, 1).
 python_class('tests/firmware/test_hardware_identify.py', '_ModbusTimeoutGateway').
 python_method('_ModbusTimeoutGateway', 'health', 0, 1, 0).
+python_class('tests/firmware/test_hui_actions.py', 'FakeGateway').
+python_method('FakeGateway', '__init__', 0, 1, 0).
+python_method('FakeGateway', 'set_valve', 2, 1, 1).
+python_method('FakeGateway', 'set_pump', 1, 1, 1).
+python_method('FakeGateway', 'set_lung_result', 0, 1, 1).
+python_method('FakeGateway', 'stop_lung', 0, 1, 1).
+python_method('FakeGateway', '_get_or_connect_plugin', 1, 1, 1).
+python_class('tests/firmware/test_hui_actions.py', 'FakeTic249Plugin').
+python_method('FakeTic249Plugin', '__init__', 0, 1, 0).
+python_method('FakeTic249Plugin', 'execute_command', 2, 1, 1).
 python_class('tests/firmware/test_lung_integration.py', 'TestLungDslHelpers').
 python_method('TestLungDslHelpers', 'test_looks_like_lung_object', 1, 2, 2).
 python_method('TestLungDslHelpers', 'test_not_lung_object', 0, 3, 1).

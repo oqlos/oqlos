@@ -1,38 +1,9 @@
-"""OqlOS hardware control proxy — contract from c2004-hardware-client."""
+"""OqlOS hardware control proxy."""
 
 from __future__ import annotations
 
-import os
-import pathlib
-import sys
-
-
-def _ensure_local_hardware_client_on_path() -> None:
-    """Allow source-tree development without publishing hardware_client first."""
-    try:
-        import hardware_client  # noqa: F401
-        return
-    except ModuleNotFoundError:
-        pass
-
-    explicit = os.getenv("OQLOS_HARDWARE_CLIENT_SRC")
-    if explicit and pathlib.Path(explicit).exists() and explicit not in sys.path:
-        sys.path.insert(0, explicit)
-        return
-
-    try:
-        github_root = pathlib.Path(__file__).resolve().parents[4]
-    except IndexError:
-        return
-    candidate = github_root / "maskservice" / "c2004" / "packages" / "hardware-client-py" / "src"
-    if candidate.exists() and str(candidate) not in sys.path:
-        sys.path.insert(0, str(candidate))
-
-
-_ensure_local_hardware_client_on_path()
-
-from hardware_client.config import OqlosHardwareProxyConfig, candidate_oqlos_bases, float_from_env
-from hardware_client.constants import (
+from oqlos.hardware.client.config import OqlosHardwareProxyConfig, candidate_oqlos_bases, float_from_env
+from oqlos.hardware.client.constants import (
     ARTIFICIAL_LUNG_IDS,
     DEFAULT_OQLOS_API_BASE,
     FALLBACK_ADAPTERS,
@@ -40,9 +11,9 @@ from hardware_client.constants import (
     PERIPHERAL_STATUS_COMMANDS,
     PERIPHERAL_STATUS_PLUGIN_ALIASES,
 )
-from hardware_client.errors import HardwareProxyError, is_oqlos_unavailable, oqlos_error_detail
-from hardware_client.proxy import OqlosHardwareProxy as _BaseOqlosHardwareProxy
-from hardware_client.resolvers import (
+from oqlos.hardware.client.errors import HardwareProxyError, is_oqlos_unavailable, oqlos_error_detail
+from oqlos.hardware.client.proxy import OqlosHardwareProxy as _BaseOqlosHardwareProxy
+from oqlos.hardware.client.resolvers import (
     extract_command_failure,
     normalize_modbus_valve_id,
     resolve_artificial_lung_target,

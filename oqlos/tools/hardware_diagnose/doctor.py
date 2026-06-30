@@ -468,7 +468,139 @@ def _analyze_modbus_config(detection: dict[str, Any], issues: list[Issue]) -> No
         )
 
 
-def _analyze_firmware_access(detection: dict[str, Any], issues: list[Issue]) -> None:
+def _check_firmware_health_error(
+    firmware: "dict[str, Any]", issues: "list[Issue]"
+) -> bool:
+    """Check if firmware health endpoint is unreachable. Returns True if fatal."""
+    health = firmware.get("health") or {}
+    if "error" not in health:
+        return False
+    _add_issue(
+        issues,
+        severity="error",
+        code="firmware_unreachable",
+        message=f"Firmware health endpoint is unavailable: {health['error']}",
+        repair={
+            "id": "start_firmware",
+            "safe": False,
+            "hint": "Start oqlos-server or the hardware docker compose stack.",
+        },
+    )
+    return True
+
+
+def _check_firmware_mode(health: "dict[str, Any]", issues: "list[Issue]") -> None:
+    """Warn if firmware is not in 'real' mode."""
+    mode = str(health.get("mode", "unknown")).lower()
+    if not mode or mode == "real":
+        return
+    _add_issue(
+        issues,
+        severity="warn",
+        code="firmware_not_real",
+        message=(
+            f"Firmware reports mode={mode!r}; actuator endpoints will not control real hardware."
+        ),
+        repair={
+            "id": "enable_real_mode",
+            "safe": False,
+            "hint": (
+                "Restart firmware with HARDWARE_MODE=real or "
+                "OQLOS_HARDWARE_MODE=real. This is not applied by --fix "
+                "because it changes runtime actuator behavior."
+            ),
+        },
+    )
+
+
+def _check_firmware_serial_access(
+    firmware: "dict[str, Any]",
+    host_serial: list,
+    issues: "list[Issue]",
+    identify: "dict[str, Any]",
+) -> None:
+    """Warn if host sees serial devices but firmware cannot."""
+    diagnostics = identify.get("diagnostics") if isinstance(identify, dict) else {}
+    firmware_serial: list = []
+    if isinstance(diagnostics, dict):
+        firmware_serial = diagnostics.get("serial_ports") or []
+    if not host_serial or firmware_serial:
+        return
+    serial_mounts = ", ".join(
+        str(dev.get("device")) for dev in host_serial if dev.get("device")
+    )
+    if not firmware.get("is_local", True):
+        firmware_host = firmware.get("host") or firmware.get("url") or "remote host"
+        _add_issue(
+            issues,
+            severity="warn",
+            code="remote_firmware_no_serial_access",
+            message=(
+                "The CLI host sees USB serial devices, but firmware is running on "
+                f"{firmware_host}; remote firmware cannot access local /dev/ttyACM* "
+                "or /dev/ttyUSB* devices."
+            ),
+            repair={
+                "id": "align_firmware_host",
+                "safe": False,
+                "hint": (
+                    "Attach the USB/serial hardware to the firmware host, run firmware "
+                    "on this machine, or configure firmware to call network-reachable "
+                    "hardware services instead of local /dev devices."
+                ),
+            },
+        )
+    else:
+        _add_issue(
+            issues,
+            severity="warn",
+            code="firmware_no_serial_access",
+            message=(
+                "Host sees USB serial devices, but firmware identify sees none. "
+                "The service is probably missing /dev/ttyACM* or /dev/ttyUSB* device mounts."
+            ),
+            repair={
+                "id": "mount_serial_devices",
+                "safe": False,
+                "hint": (
+                    "Mount detected serial devices into the firmware container "
+                    f"({serial_mounts}) or run firmware on the host; then restart firmware."
+                ),
+            },
+        )
+
+
+def _check_firmware_adapters(
+    identify: "dict[str, Any]", health: "dict[str, Any]", issues: "list[Issue]"
+) -> None:
+    """Check each firmware adapter's health status."""
+    adapters = identify.get("adapters") if isinstance(identify, dict) else []
+    if not isinstance(adapters, list):
+        return
+    for adapter in adapters:
+        status = adapter.get("status")
+        adapter_id = adapter.get("id", "unknown")
+        health_status = _adapter_health_status(health, adapter_id)
+        if health_status is not None:
+            if _health_status_is_ok(health_status):
+                continue
+            _add_issue(
+                issues,
+                severity="warn",
+                code=f"adapter_{adapter_id}_health_not_ok",
+                message=f"Firmware adapter {adapter_id} health is {health_status}.",
+            )
+            continue
+        if status not in (None, "ok"):
+            _add_issue(
+                issues,
+                severity="warn",
+                code=f"adapter_{adapter_id}_not_ok",
+                message=f"Firmware adapter {adapter_id} status is {status}.",
+            )
+
+
+def _analyze_firmware_access(detection: "dict[str, Any]", issues: "list[Issue]") -> None:
     firmware = detection.get("firmware")
     if not isinstance(firmware, dict):
         return
@@ -477,37 +609,10 @@ def _analyze_firmware_access(detection: dict[str, Any], issues: list[Issue]) -> 
     identify = firmware.get("identify") or {}
     host_serial = detection.get("host", {}).get("usb_serial_devices") or []
 
-    if "error" in health:
-        _add_issue(
-            issues,
-            severity="error",
-            code="firmware_unreachable",
-            message=f"Firmware health endpoint is unavailable: {health['error']}",
-            repair={
-                "id": "start_firmware",
-                "safe": False,
-                "hint": "Start oqlos-server or the hardware docker compose stack.",
-            },
-        )
+    if _check_firmware_health_error(firmware, issues):
         return
 
-    mode = str(health.get("mode", "unknown")).lower()
-    if mode and mode != "real":
-        _add_issue(
-            issues,
-            severity="warn",
-            code="firmware_not_real",
-            message=f"Firmware reports mode={mode!r}; actuator endpoints will not control real hardware.",
-            repair={
-                "id": "enable_real_mode",
-                "safe": False,
-                "hint": (
-                    "Restart firmware with HARDWARE_MODE=real or "
-                    "OQLOS_HARDWARE_MODE=real. This is not applied by --fix "
-                    "because it changes runtime actuator behavior."
-                ),
-            },
-        )
+    _check_firmware_mode(health, issues)
 
     if "error" in identify:
         _add_issue(
@@ -518,76 +623,8 @@ def _analyze_firmware_access(detection: dict[str, Any], issues: list[Issue]) -> 
         )
         return
 
-    diagnostics = identify.get("diagnostics") if isinstance(identify, dict) else {}
-    firmware_serial = []
-    if isinstance(diagnostics, dict):
-        firmware_serial = diagnostics.get("serial_ports") or []
-
-    if host_serial and not firmware_serial:
-        serial_mounts = ", ".join(str(dev.get("device")) for dev in host_serial if dev.get("device"))
-        if not firmware.get("is_local", True):
-            firmware_host = firmware.get("host") or firmware.get("url") or "remote host"
-            _add_issue(
-                issues,
-                severity="warn",
-                code="remote_firmware_no_serial_access",
-                message=(
-                    "The CLI host sees USB serial devices, but firmware is running on "
-                    f"{firmware_host}; remote firmware cannot access local /dev/ttyACM* "
-                    "or /dev/ttyUSB* devices."
-                ),
-                repair={
-                    "id": "align_firmware_host",
-                    "safe": False,
-                    "hint": (
-                        "Attach the USB/serial hardware to the firmware host, run firmware "
-                        "on this machine, or configure firmware to call network-reachable "
-                        "hardware services instead of local /dev devices."
-                    ),
-                },
-            )
-        else:
-            _add_issue(
-                issues,
-                severity="warn",
-                code="firmware_no_serial_access",
-                message=(
-                    "Host sees USB serial devices, but firmware identify sees none. "
-                    "The service is probably missing /dev/ttyACM* or /dev/ttyUSB* device mounts."
-                ),
-                repair={
-                    "id": "mount_serial_devices",
-                    "safe": False,
-                    "hint": (
-                        "Mount detected serial devices into the firmware container "
-                        f"({serial_mounts}) or run firmware on the host; then restart firmware."
-                    ),
-                },
-            )
-
-    adapters = identify.get("adapters") if isinstance(identify, dict) else []
-    if isinstance(adapters, list):
-        for adapter in adapters:
-            status = adapter.get("status")
-            adapter_id = adapter.get("id", "unknown")
-            health_status = _adapter_health_status(health, adapter_id)
-            if health_status is not None:
-                if _health_status_is_ok(health_status):
-                    continue
-                _add_issue(
-                    issues,
-                    severity="warn",
-                    code=f"adapter_{adapter_id}_health_not_ok",
-                    message=f"Firmware adapter {adapter_id} health is {health_status}.",
-                )
-                continue
-            if status not in (None, "ok"):
-                _add_issue(
-                    issues,
-                    severity="warn",
-                    code=f"adapter_{adapter_id}_not_ok",
-                    message=f"Firmware adapter {adapter_id} status is {status}.",
-                )
+    _check_firmware_serial_access(firmware, host_serial, issues, identify)
+    _check_firmware_adapters(identify, health, issues)
 
 
 def _adapter_health_status(health: dict[str, Any], adapter_id: str) -> Any | None:
@@ -829,7 +866,23 @@ def _update_modbus_adc_config(
     }
 
 
-def format_detection(detection: dict[str, Any]) -> str:
+def _format_modbus_status(detection: "dict[str, Any]") -> str:
+    """Format the Modbus probe status line."""
+    modbus = detection.get("probes", {}).get("modbus", {})
+    if _firmware_is_remote(detection):
+        status = _firmware_adapter_status(detection, "modbus-io") or "unknown"
+        return f"Modbus: remote firmware status {status}"
+    if modbus.get("modbus_device_responds"):
+        return (
+            "Modbus: OK "
+            f"{modbus.get('serial_port')} @ {modbus.get('baudrate')} 8{modbus.get('parity')}1"
+        )
+    if _firmware_modbus_health_ok(detection):
+        return "Modbus: OK via firmware (local serial port is already in use)"
+    return f"Modbus: not ready ({modbus.get('reason') or modbus.get('note') or 'no response'})"
+
+
+def format_detection(detection: "dict[str, Any]") -> str:
     """Format smart detection output for operators."""
     lines = ["", "OqlOS Smart Detect", "-" * 50]
     firmware = detection.get("firmware")
@@ -842,23 +895,9 @@ def format_detection(detection: dict[str, Any]) -> str:
     for dev in serial:
         label = dev.get("product") or dev.get("description") or "USB serial"
         lines.append(f"  - {dev.get('device')}: {label}")
-
     buses = host.get("i2c_buses") or []
     lines.append(f"I2C buses: {', '.join(buses) if buses else 'none'}")
-
-    modbus = detection.get("probes", {}).get("modbus", {})
-    if _firmware_is_remote(detection):
-        lines.append(f"Modbus: remote firmware status {_firmware_adapter_status(detection, 'modbus-io') or 'unknown'}")
-    elif modbus.get("modbus_device_responds"):
-        lines.append(
-            "Modbus: OK "
-            f"{modbus.get('serial_port')} @ {modbus.get('baudrate')} 8{modbus.get('parity')}1"
-        )
-    elif _firmware_modbus_health_ok(detection):
-        lines.append("Modbus: OK via firmware (local serial port is already in use)")
-    else:
-        lines.append(f"Modbus: not ready ({modbus.get('reason') or modbus.get('note') or 'no response'})")
-
+    lines.append(_format_modbus_status(detection))
     config = detection.get("config", {})
     lines.append(f"Config: {config.get('path') if config.get('ok') else config.get('error')}")
     return "\n".join(lines)
@@ -904,7 +943,50 @@ def _firmware_adapter_status(detection: dict[str, Any], adapter_id: str) -> str 
     return None
 
 
-def format_doctor(report: dict[str, Any]) -> str:
+def _format_doctor_issues(issues: list) -> "list[str]":
+    """Format the issues section of the doctor report."""
+    if not issues:
+        return ["[OK] No issues found."]
+    lines = ["", "Issues:"]
+    for issue in issues:
+        severity = str(issue.get("severity", "info")).upper()
+        lines.append(f"  [{severity}] {issue.get('code')}: {issue.get('message')}")
+        repair = issue.get("repair")
+        if isinstance(repair, dict) and repair.get("hint"):
+            lines.append(f"        fix: {repair['hint']}")
+    return lines
+
+
+def _format_doctor_applied_repairs(applied: list) -> "list[str]":
+    """Format the applied repairs section."""
+    if not applied:
+        return []
+    lines = ["", "Applied repairs:"]
+    for repair in applied:
+        lines.append(f"  - {repair.get('id')} -> {repair.get('path')}")
+        if repair.get("backup"):
+            lines.append(f"    backup: {repair['backup']}")
+    return lines
+
+
+def _format_doctor_unapplied(repairs: list, applied: list) -> "list[str]":
+    """Format the unapplied repairs section."""
+    unapplied = [
+        r for r in repairs
+        if not any(item.get("id") == r.get("id") for item in applied)
+    ]
+    if not unapplied:
+        return []
+    lines = ["", "Unapplied repairs:"]
+    for repair in unapplied:
+        safety = "manual/unsafe" if not repair.get("safe") else "safe"
+        lines.append(f"  - skipped {safety}: {repair.get('id')}")
+        if repair.get("hint"):
+            lines.append(f"    hint: {repair['hint']}")
+    return lines
+
+
+def format_doctor(report: "dict[str, Any]") -> str:
     """Format a doctor report for operators."""
     lines = ["", "OqlOS Doctor", "-" * 50]
     summary = report.get("summary", {})
@@ -913,43 +995,9 @@ def format_doctor(report: dict[str, Any]) -> str:
         f"{report.get('status')} "
         f"({summary.get('errors', 0)} errors, {summary.get('warnings', 0)} warnings)"
     )
-
     lines.append(format_detection(report.get("detection", {})).strip())
-    issues = report.get("issues") or []
-    if not issues:
-        lines.append("[OK] No issues found.")
-    else:
-        lines.append("")
-        lines.append("Issues:")
-        for issue in issues:
-            severity = str(issue.get("severity", "info")).upper()
-            lines.append(f"  [{severity}] {issue.get('code')}: {issue.get('message')}")
-            repair = issue.get("repair")
-            if isinstance(repair, dict) and repair.get("hint"):
-                lines.append(f"        fix: {repair['hint']}")
-
-    applied = report.get("applied_repairs") or []
-    if applied:
-        lines.append("")
-        lines.append("Applied repairs:")
-        for repair in applied:
-            lines.append(f"  - {repair.get('id')} -> {repair.get('path')}")
-            if repair.get("backup"):
-                lines.append(f"    backup: {repair['backup']}")
-
-    repairs = report.get("repairs") or []
-    if report.get("fix_requested") and repairs:
-        unapplied = [
-            repair for repair in repairs
-            if not any(item.get("id") == repair.get("id") for item in applied)
-        ]
-        if unapplied:
-            lines.append("")
-            lines.append("Unapplied repairs:")
-            for repair in unapplied:
-                safety = "manual/unsafe" if not repair.get("safe") else "safe"
-                lines.append(f"  - skipped {safety}: {repair.get('id')}")
-                if repair.get("hint"):
-                    lines.append(f"    hint: {repair['hint']}")
-
+    lines.extend(_format_doctor_issues(report.get("issues") or []))
+    lines.extend(_format_doctor_applied_repairs(report.get("applied_repairs") or []))
+    if report.get("fix_requested") and report.get("repairs"):
+        lines.extend(_format_doctor_unapplied(report["repairs"], report.get("applied_repairs") or []))
     return "\n".join(lines)

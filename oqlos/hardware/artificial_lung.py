@@ -60,92 +60,103 @@ async def get_peripheral_status(gateway: Any | None = None) -> dict[str, Any]:
     }
 
 
-async def execute_command(command: str, args: dict[str, Any] | None, gateway: Any | None = None) -> dict[str, Any]:
+async def _lung_cmd_set_lpm(params: dict, gateway: Any) -> dict:
+    lpm = _clamp_lpm(params.get("lpm", 0))
+    LUNG_STATE["lpm"] = lpm
+    LUNG_STATE["status"] = "configured"
+    return _command_response(True, "set_lpm", {"message": f"LPM set to {lpm}", "lpm": lpm})
+
+
+async def _lung_cmd_lung_start(params: dict, gateway: Any) -> dict:
+    if LUNG_STATE["lpm"] == 0:
+        LUNG_STATE["lpm"] = 10
+    LUNG_STATE["running"] = True
+    LUNG_STATE["status"] = "running"
+    if gateway is not None and getattr(gateway, "is_real", False):
+        await gateway.set_lung(
+            steps=int(params.get("steps", 500)),
+            speed=int(params.get("speed", TIC249_DEFAULT_TARGET_VELOCITY)),
+            cycles=int(params.get("cycles", 3)),
+            pause=float(params.get("pause", 0.5)),
+        )
+    return _command_response(
+        True,
+        "lung_start",
+        {"message": "Artificial lung started", "running": True, "lpm": LUNG_STATE["lpm"]},
+    )
+
+
+async def _lung_cmd_lung_stop(params: dict, gateway: Any) -> dict:
+    LUNG_STATE["running"] = False
+    LUNG_STATE["status"] = "stopped"
+    if gateway is not None and getattr(gateway, "is_real", False):
+        await gateway.stop_lung()
+    return _command_response(True, "lung_stop", {"message": "Artificial lung stopped", "running": False})
+
+
+async def _lung_cmd_lung_status(params: dict, gateway: Any) -> dict:
+    status = await get_peripheral_status(gateway)
+    return _command_response(True, "lung_status", status.get("result") or {})
+
+
+async def _lung_cmd_lung_cycle(params: dict, gateway: Any) -> dict:
+    cycles = max(1, int(params.get("cycles", 3)))
+    if LUNG_STATE["lpm"] == 0:
+        LUNG_STATE["lpm"] = 10
+    LUNG_STATE["running"] = True
+    LUNG_STATE["status"] = "cycling"
+    if gateway is not None and getattr(gateway, "is_real", False):
+        await gateway.set_lung(
+            steps=int(params.get("steps", 500)),
+            speed=int(params.get("speed", TIC249_DEFAULT_TARGET_VELOCITY)),
+            cycles=cycles,
+            pause=float(params.get("pause", 0.5)),
+        )
+    return _command_response(
+        True,
+        "lung_cycle",
+        {
+            "message": f"Lung cycling {cycles}x at {LUNG_STATE['lpm']} LPM",
+            "cycles": cycles,
+            "lpm": LUNG_STATE["lpm"],
+            "running": True,
+        },
+    )
+
+
+async def _lung_cmd_emergency_stop(params: dict, gateway: Any) -> dict:
+    LUNG_STATE["running"] = False
+    LUNG_STATE["lpm"] = 0
+    LUNG_STATE["status"] = "emergency_stopped"
+    if gateway is not None and getattr(gateway, "is_real", False):
+        await gateway.stop_lung()
+    return _command_response(
+        True,
+        "emergency_stop",
+        {
+            "message": "EMERGENCY STOP - Lung halted, LPM reset to 0",
+            "running": False,
+            "lpm": 0,
+            "status": "emergency_stopped",
+        },
+    )
+
+
+_LUNG_COMMAND_HANDLERS: dict = {
+    "set_lpm": _lung_cmd_set_lpm,
+    "lung_start": _lung_cmd_lung_start,
+    "lung_stop": _lung_cmd_lung_stop,
+    "lung_status": _lung_cmd_lung_status,
+    "lung_cycle": _lung_cmd_lung_cycle,
+    "emergency_stop": _lung_cmd_emergency_stop,
+}
+
+
+async def execute_command(
+    command: str, args: dict[str, Any] | None, gateway: Any | None = None
+) -> dict[str, Any]:
     cmd = str(command or "").strip().lower()
-    params = args or {}
-
-    if cmd == "set_lpm":
-        lpm = _clamp_lpm(params.get("lpm", 0))
-        LUNG_STATE["lpm"] = lpm
-        LUNG_STATE["status"] = "configured"
-        return _command_response(
-            True,
-            cmd,
-            {"message": f"LPM set to {lpm}", "lpm": lpm},
-        )
-
-    if cmd == "lung_start":
-        if LUNG_STATE["lpm"] == 0:
-            LUNG_STATE["lpm"] = 10
-        LUNG_STATE["running"] = True
-        LUNG_STATE["status"] = "running"
-        if gateway is not None and getattr(gateway, "is_real", False):
-            await gateway.set_lung(
-                steps=int(params.get("steps", 500)),
-                speed=int(params.get("speed", TIC249_DEFAULT_TARGET_VELOCITY)),
-                cycles=int(params.get("cycles", 3)),
-                pause=float(params.get("pause", 0.5)),
-            )
-        return _command_response(
-            True,
-            cmd,
-            {
-                "message": "Artificial lung started",
-                "running": True,
-                "lpm": LUNG_STATE["lpm"],
-            },
-        )
-
-    if cmd == "lung_stop":
-        LUNG_STATE["running"] = False
-        LUNG_STATE["status"] = "stopped"
-        if gateway is not None and getattr(gateway, "is_real", False):
-            await gateway.stop_lung()
-        return _command_response(True, cmd, {"message": "Artificial lung stopped", "running": False})
-
-    if cmd == "lung_status":
-        status = await get_peripheral_status(gateway)
-        return _command_response(True, cmd, status.get("result") or {})
-
-    if cmd == "lung_cycle":
-        cycles = max(1, int(params.get("cycles", 3)))
-        if LUNG_STATE["lpm"] == 0:
-            LUNG_STATE["lpm"] = 10
-        LUNG_STATE["running"] = True
-        LUNG_STATE["status"] = "cycling"
-        if gateway is not None and getattr(gateway, "is_real", False):
-            await gateway.set_lung(
-                steps=int(params.get("steps", 500)),
-                speed=int(params.get("speed", TIC249_DEFAULT_TARGET_VELOCITY)),
-                cycles=cycles,
-                pause=float(params.get("pause", 0.5)),
-            )
-        return _command_response(
-            True,
-            cmd,
-            {
-                "message": f"Lung cycling {cycles}x at {LUNG_STATE['lpm']} LPM",
-                "cycles": cycles,
-                "lpm": LUNG_STATE["lpm"],
-                "running": True,
-            },
-        )
-
-    if cmd == "emergency_stop":
-        LUNG_STATE["running"] = False
-        LUNG_STATE["lpm"] = 0
-        LUNG_STATE["status"] = "emergency_stopped"
-        if gateway is not None and getattr(gateway, "is_real", False):
-            await gateway.stop_lung()
-        return _command_response(
-            True,
-            cmd,
-            {
-                "message": "EMERGENCY STOP - Lung halted, LPM reset to 0",
-                "running": False,
-                "lpm": 0,
-                "status": "emergency_stopped",
-            },
-        )
-
+    handler = _LUNG_COMMAND_HANDLERS.get(cmd)
+    if handler is not None:
+        return await handler(args or {}, gateway)
     return _command_response(False, cmd, {}, error=f"Unknown artificial-lung command: {cmd}")

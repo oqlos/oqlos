@@ -492,26 +492,130 @@ def _expand_repeat_blocks(text: str) -> list[str]:
     return _expand_repeat_block_lines((text or "").splitlines())
 
 
-def parse_oql(text: str, filename: str = "<string>") -> OqlDoc:
-    """Parse OQL source into an :class:`OqlDoc`.
+def _handle_top_level_line(
+    doc: "OqlDoc", raw: str, line: str, ln: int
+) -> bool:
+    """Handle a top-level line (INCLUDE directive or metadata). Returns True if consumed."""
+    if line.upper().startswith("INCLUDE "):
+        try:
+            tokens = tokenize(line.split(None, 1)[1])
+            doc.includes.append(parse_INCLUDE(tokens, ln, line))
+        except ValueError as exc:
+            doc.errors.append(str(exc))
+        return True
 
-    The parser never raises — all problems are collected in
-    :pyattr:`OqlDoc.errors` / :pyattr:`OqlDoc.warnings` so higher layers
-    can report them uniformly.
-    """
+    meta = META_RE.match(line)
+    if meta and not BLOCK_RE.match(line):
+        key_raw = meta.group(1)
+        doc.meta[key_raw.lower()] = meta.group(2).strip().strip("'\"")
+        if key_raw not in _KNOWN_META_KEYS:
+            doc.warnings.append(
+                f"Linia {ln}: nieznane metadane {key_raw!r} — zachowane"
+            )
+        return True
+    return False
 
-    version_info = resolve_oql_version(text)
-    doc = OqlDoc(
-        filename=filename,
-        oql_version=version_info.effective,
-        declared_version=version_info.declared,
+
+def _handle_block_header(
+    doc: "OqlDoc", line: str, ln: int, version_info: object
+) -> "OqlBlock | None":
+    """Parse a block header line. Returns the new block if matched, else None."""
+    block = BLOCK_RE.match(line)
+    if not block:
+        return None
+    name = block.group(2).strip() if block.group(2) else ""
+    if name.startswith("[") and name.endswith("]"):
+        name = name[1:-1].strip()
+    block_type = block.group(1).upper()
+    if (
+        version_info.effective == OQL_VERSION_CURRENT
+        and block_type == "GOAL"
+        and name
+    ):
+        doc.errors.append(
+            f"Linia {ln}: w VERSION: 4 użyj 'GOAL:' i nazwy przez 'SET NAME ...'"
+        )
+    new_block = OqlBlock(type=block_type, name=name, line=ln)
+    doc.blocks.append(new_block)
+    return new_block
+
+
+def _handle_macro_body_line(line: str, ln: int, current: "OqlBlock") -> None:
+    """Append a deferred line to a MACRO/FUNC block body."""
+    parts_peek = line.split(None, 2)
+    if (
+        len(parts_peek) >= 3
+        and parts_peek[0].upper() == "SET"
+        and parts_peek[1].upper() == "NAME"
+    ):
+        current.name = parts_peek[2].strip("'\"")
+    current.raw_cmds.append((ln, line))
+
+
+def _handle_set_name(line: str, current: "OqlBlock") -> bool:
+    """Handle SET NAME command — updates block name. Returns True if consumed."""
+    parts = line.split(None, 1)
+    if parts[0].upper() != "SET":
+        return False
+    tokens = tokenize(parts[1] if len(parts) > 1 else "")
+    if len(tokens) >= 2 and tokens[0].upper() == "NAME":
+        current.name = " ".join(tokens[1:]).strip("'\"")
+        return True
+    return False
+
+
+def _handle_modifier_cmd(
+    doc: "OqlDoc", line: str, ln: int, cmd: str, rest: str, current: "OqlBlock"
+) -> bool:
+    """Handle CORRECT/ERROR that modify the previous condition. Returns True if consumed."""
+    if cmd not in ("CORRECT", "ERROR"):
+        return False
+    if not current.cmds:
+        return False
+    last_cmd = current.cmds[-1]
+    if last_cmd.cmd in {"CHECK", "IF_DELTA"}:
+        tokens = tokenize(rest)
+        message = " ".join(tokens)
+        key = "correct_msg" if cmd == "CORRECT" else "error_msg"
+        last_cmd.args[key] = message
+        return True
+    doc.errors.append(
+        f"Linia {ln}: {cmd} musi występować bezpośrednio po CHECK lub IF_DELTA"
     )
+    return True
 
+
+def _parse_and_append_command(
+    doc: "OqlDoc", line: str, ln: int, cmd: str, rest: str, current: "OqlBlock"
+) -> None:
+    """Parse a regular command and append it to the current block."""
+    try:
+        if cmd == "CHECK":
+            parsed = parse_CHECK(rest, ln, line)
+        elif cmd == "IF":
+            parsed = parse_IF(rest, ln, line)
+        else:
+            handler = DISPATCHERS.get(cmd)
+            if handler is None:
+                doc.errors.append(f"Linia {ln}: nieznana komenda {cmd!r}")
+                return
+            tokens = tokenize(rest)
+            parsed = handler(tokens, ln, line)
+    except ValueError as exc:
+        doc.errors.append(str(exc))
+        return
+    current.cmds.append(parsed)
+
+
+def _validate_oql_version(doc: "OqlDoc", version_info: object) -> None:
+    """Emit doc errors for unsupported or missing OQL version declarations."""
     if not version_info.declared:
         doc.meta["version"] = str(version_info.effective)
-    if version_info.declared is not None and version_info.declared not in SUPPORTED_OQL_VERSIONS:
+        return
+    if version_info.declared not in SUPPORTED_OQL_VERSIONS:
         doc.errors.append(
-            f"Nieobsługiwana wersja OQL: {version_info.declared} (obsługiwane: {', '.join(str(v) for v in SUPPORTED_OQL_VERSIONS)})"
+            f"Nieobsługiwana wersja OQL: {version_info.declared} "
+            f"(obsługiwane: {', '.join(str(v) for v in SUPPORTED_OQL_VERSIONS)})"
         )
     if (
         version_info.effective == OQL_VERSION_CURRENT
@@ -527,61 +631,50 @@ def parse_oql(text: str, filename: str = "<string>") -> OqlDoc:
             f"Linia {line_no}: pierwsza istotna linia musi mieć postać 'VERSION: 4'"
         )
 
+
+def _check_unnamed_goals(doc: "OqlDoc", version_info: object) -> None:
+    """Report GOAL blocks missing SET NAME in VERSION: 4 documents."""
+    if version_info.effective != OQL_VERSION_CURRENT:
+        return
+    for block in doc.blocks:
+        if block.type == "GOAL" and not block.name:
+            doc.errors.append(
+                f"Linia {block.line}: GOAL w VERSION: 4 wymaga 'SET NAME ...' jako pierwszej komendy"
+            )
+
+
+def parse_oql(text: str, filename: str = "<string>") -> OqlDoc:
+    """Parse OQL source into an :class:`OqlDoc`.
+
+    The parser never raises — all problems are collected in
+    :pyattr:`OqlDoc.errors` / :pyattr:`OqlDoc.warnings` so higher layers
+    can report them uniformly.
+    """
+
+    version_info = resolve_oql_version(text)
+    doc = OqlDoc(
+        filename=filename,
+        oql_version=version_info.effective,
+        declared_version=version_info.declared,
+    )
+
+    _validate_oql_version(doc, version_info)
+
     current: OqlBlock | None = None
 
     for ln, raw in enumerate(_expand_repeat_blocks(text), 1):
         line = raw.strip()
-
-        # blank / comment
         if not line or line.startswith("#"):
             continue
 
-        # top-level metadata (``KEY: value``) — only when not inside a block
-        if current is None:
-            # ``INCLUDE "path"`` is allowed at the top level (outside blocks)
-            # because it affects the whole document.
-            if line.upper().startswith("INCLUDE "):
-                try:
-                    tokens = tokenize(line.split(None, 1)[1])
-                    doc.includes.append(parse_INCLUDE(tokens, ln, line))
-                except ValueError as exc:
-                    doc.errors.append(str(exc))
-                continue
-
-            meta = META_RE.match(line)
-            if meta and not BLOCK_RE.match(line):
-                key_raw = meta.group(1)
-                if key_raw in _KNOWN_META_KEYS:
-                    doc.meta[key_raw.lower()] = meta.group(2).strip().strip("'\"")
-                    continue
-                # unknown metadata key — keep it, but warn
-                doc.meta[key_raw.lower()] = meta.group(2).strip().strip("'\"")
-                doc.warnings.append(
-                    f"Linia {ln}: nieznane metadane {key_raw!r} — zachowane"
-                )
-                continue
-
-        # block header
-        block = BLOCK_RE.match(line)
-        if block:
-            name = block.group(2).strip() if block.group(2) else ""
-            # allow ``GOAL [Nazwa ze spacjami]:`` form
-            if name.startswith("[") and name.endswith("]"):
-                name = name[1:-1].strip()
-            block_type = block.group(1).upper()
-            if version_info.effective == OQL_VERSION_CURRENT and block_type == "GOAL" and name:
-                doc.errors.append(
-                    f"Linia {ln}: w VERSION: 4 użyj 'GOAL:' i nazwy przez 'SET NAME ...'"
-                )
-            current = OqlBlock(
-                type=block_type,
-                name=name,
-                line=ln,
-            )
-            doc.blocks.append(current)
+        if current is None and _handle_top_level_line(doc, raw, line, ln):
             continue
 
-        # command line must be indented inside a block
+        new_block = _handle_block_header(doc, line, ln, version_info)
+        if new_block is not None:
+            current = new_block
+            continue
+
         if current is None:
             doc.errors.append(f"Linia {ln}: komenda poza blokiem: {line!r}")
             continue
@@ -589,72 +682,23 @@ def parse_oql(text: str, filename: str = "<string>") -> OqlDoc:
             doc.errors.append(f"Linia {ln}: komenda musi być wcięta: {line!r}")
             continue
 
-        # Inside MACRO/FUNC blocks, defer parsing — the body may contain $N
-        # placeholders that are only resolvable at expansion time.
         if current.type in ("MACRO", "FUNC"):
-            # SET NAME updates block name even in deferred blocks
-            parts_peek = line.split(None, 2)
-            if (
-                len(parts_peek) >= 3
-                and parts_peek[0].upper() == "SET"
-                and parts_peek[1].upper() == "NAME"
-            ):
-                current.name = parts_peek[2].strip("'\"")
-            current.raw_cmds.append((ln, line))
+            _handle_macro_body_line(line, ln, current)
             continue
 
         parts = line.split(None, 1)
         cmd = parts[0].upper()
         rest = parts[1] if len(parts) > 1 else ""
 
-        # SET NAME updates the current block name (metadata only)
-        if cmd == "SET" and current:
-            tokens = tokenize(rest)
-            if len(tokens) >= 2 and tokens[0].upper() == "NAME":
-                current.name = " ".join(tokens[1:]).strip("'\"")
-                continue  # Don't add as a regular command
-
-        # CORRECT and ERROR modify the previous conditional command
-        if cmd in ("CORRECT", "ERROR") and current.cmds:
-            last_cmd = current.cmds[-1]
-            if last_cmd.cmd in {"CHECK", "IF_DELTA"}:
-                tokens = tokenize(rest)
-                message = " ".join(tokens)
-                key = "correct_msg" if cmd == "CORRECT" else "error_msg"
-                last_cmd.args[key] = message
-                continue
-            else:
-                doc.errors.append(
-                    f"Linia {ln}: {cmd} musi występować bezpośrednio po CHECK lub IF_DELTA"
-                )
-                continue
-
-        try:
-            if cmd == "CHECK":
-                parsed = parse_CHECK(rest, ln, line)
-            elif cmd == "IF":
-                parsed = parse_IF(rest, ln, line)
-            else:
-                handler = DISPATCHERS.get(cmd)
-                if handler is None:
-                    doc.errors.append(
-                        f"Linia {ln}: nieznana komenda {cmd!r}"
-                    )
-                    continue
-                tokens = tokenize(rest)
-                parsed = handler(tokens, ln, line)
-        except ValueError as exc:
-            doc.errors.append(str(exc))
+        if _handle_set_name(line, current):
             continue
 
-        current.cmds.append(parsed)
+        if _handle_modifier_cmd(doc, line, ln, cmd, rest, current):
+            continue
 
-    if version_info.effective == OQL_VERSION_CURRENT:
-        for block in doc.blocks:
-            if block.type == "GOAL" and not block.name:
-                doc.errors.append(
-                    f"Linia {block.line}: GOAL w VERSION: 4 wymaga 'SET NAME ...' jako pierwszej komendy"
-                )
+        _parse_and_append_command(doc, line, ln, cmd, rest, current)
+
+    _check_unnamed_goals(doc, version_info)
 
     return doc
 

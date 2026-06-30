@@ -104,6 +104,34 @@ _SENSOR_MAP = {
 }
 
 
+def _first_nonempty(data: dict, *keys: str) -> Any:
+    """Return the first non-None, non-empty value for any of the given keys."""
+    for key in keys:
+        val = data.get(key)
+        if val:
+            return val
+    return None
+
+
+_FAILURE_STATUS_VALUES = {"error", "failed", "failure"}
+
+
+def _extract_failure_message(data: dict) -> Any:
+    """Extract a failure message from an API response dict, or None if no failure."""
+    message: Any = None
+    ok = data.get("ok")
+    if isinstance(ok, dict) and ok.get("success") is False:
+        message = _first_nonempty(ok, "error", "message", "detail")
+    elif ok is False:
+        message = _first_nonempty(data, "error", "message", "detail")
+    if data.get("success") is False:
+        message = _first_nonempty(data, "error", "message", "detail") or message
+    status = data.get("status")
+    if isinstance(status, str) and status.lower() in _FAILURE_STATUS_VALUES:
+        message = _first_nonempty(data, "error", "message", "detail") or message
+    return message
+
+
 class FirmwareAdapter:
     """HTTP bridge between CQL interpreter and firmware simulator."""
 
@@ -158,22 +186,7 @@ class FirmwareAdapter:
         if not isinstance(data, dict):
             return
 
-        message: Any = None
-        ok = data.get("ok")
-        if isinstance(ok, dict):
-            success = ok.get("success")
-            if success is False:
-                message = ok.get("error") or ok.get("message") or ok.get("detail")
-        elif ok is False:
-            message = data.get("error") or data.get("message") or data.get("detail")
-
-        if data.get("success") is False:
-            message = data.get("error") or data.get("message") or data.get("detail") or message
-
-        status = data.get("status")
-        if isinstance(status, str) and status.lower() in {"error", "failed", "failure"}:
-            message = data.get("error") or data.get("message") or data.get("detail") or message
-
+        message = _extract_failure_message(data)
         if message:
             raise RuntimeError(f"{context} rejected: {message}")
 

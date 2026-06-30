@@ -127,6 +127,46 @@ def motor2_speed_raw(steps_per_second: int, max_steps_per_second: int) -> int:
     return effective * 10_000
 
 
+def _normalize_motor2_direction(direction: str) -> str:
+    """Normalize direction aliases to canonical 'left' or 'right'."""
+    normalized = direction.strip().lower()
+    if normalized in {"reverse", "backward"}:
+        return "left"
+    if normalized in {"forward"}:
+        return "right"
+    if normalized not in {"left", "right"}:
+        return "left"
+    return normalized
+
+
+def _compute_motor2_cycles(
+    cycles: int | None,
+    volume_liters: float | None,
+    cycle_volume: float,
+) -> int:
+    """Compute planned cycle count from explicit cycles or volume/cycle-volume ratio."""
+    planned = max(1, int(cycles or 1_000_000))
+    if volume_liters is not None:
+        planned = max(1, int(math.ceil(float(volume_liters) / max(0.001, cycle_volume))))
+    return planned
+
+
+def _compute_motor2_speed(
+    steps: int,
+    cycles: int,
+    speed: int | None,
+    duration_seconds: float | None,
+    max_speed: int,
+    default_speed: int,
+) -> tuple[int, int]:
+    """Return (requested_speed, effective_speed) given overrides and config."""
+    requested = max(1, int(speed or default_speed))
+    if duration_seconds is not None:
+        duration_speed = motor2_speed_for_duration(steps, cycles, float(duration_seconds))
+        requested = min(requested, duration_speed) if speed else duration_speed
+    return requested, min(max_speed, requested)
+
+
 def build_motor2_reciprocating_plan(
     config: Motor2RuntimeConfig,
     *,
@@ -142,24 +182,14 @@ def build_motor2_reciprocating_plan(
 ) -> Motor2ReciprocatingPlan:
     planned_steps = max(1, int(steps or config.stroke_steps))
     planned_cycle_volume = float(cycle_volume_liters or config.cycle_volume_liters)
-    planned_cycles = max(1, int(cycles or 1_000_000))
-    if volume_liters is not None:
-        planned_cycles = max(1, int(math.ceil(float(volume_liters) / max(0.001, planned_cycle_volume))))
-
-    requested_speed = max(1, int(speed or config.default_speed_steps_per_second))
-    if duration_seconds is not None:
-        duration_speed = motor2_speed_for_duration(planned_steps, planned_cycles, float(duration_seconds))
-        requested_speed = min(requested_speed, duration_speed) if speed else duration_speed
-
-    effective_speed = min(config.max_steps_per_second, requested_speed)
-    planned_direction = str(direction or config.start_direction or "left").strip().lower()
-    if planned_direction in {"reverse", "backward"}:
-        planned_direction = "left"
-    if planned_direction in {"forward"}:
-        planned_direction = "right"
-    if planned_direction not in {"left", "right"}:
-        planned_direction = "left"
-
+    planned_cycles = _compute_motor2_cycles(cycles, volume_liters, planned_cycle_volume)
+    requested_speed, effective_speed = _compute_motor2_speed(
+        planned_steps, planned_cycles, speed, duration_seconds,
+        config.max_steps_per_second, config.default_speed_steps_per_second,
+    )
+    planned_direction = _normalize_motor2_direction(
+        str(direction or config.start_direction or "left")
+    )
     return Motor2ReciprocatingPlan(
         direction=planned_direction,
         steps=planned_steps,
@@ -167,9 +197,10 @@ def build_motor2_reciprocating_plan(
         requested_steps_per_second=requested_speed,
         effective_steps_per_second=effective_speed,
         max_steps_per_second=config.max_steps_per_second,
-        acceleration_percent_per_second=acceleration_percent
-        if acceleration_percent is not None
-        else config.acceleration_percent_per_second,
+        acceleration_percent_per_second=(
+            acceleration_percent if acceleration_percent is not None
+            else config.acceleration_percent_per_second
+        ),
         limit_mode=limit_mode or config.limit_mode,
         start_direction=planned_direction,
         volume_liters=volume_liters,

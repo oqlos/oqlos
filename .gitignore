@@ -3,13 +3,18 @@
 .code2llm_cache/__init___1778095458075965818_388.pkl
 .code2llm_cache/control_proxy_1778095454737928126_18888.pkl
 .code2llm_cache/project_1778095988177832301_1318.pkl
+code2llm_output
 .idea
 venv
 .venv
 .pyqual
 .pyqual-report
 .pyqual-ignore
-
+.koru
+.regres
+.planfile
+.pyqual
+.code2llm_cache
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

@@ -72,6 +72,16 @@ def _health_map(identify: dict[str, Any]) -> dict[str, Any]:
     return health if isinstance(health, dict) else {}
 
 
+def is_stale_hardware_message(message: Any) -> bool:
+    return any(marker in str(message or "").lower() for marker in _STALE_MARKERS)
+
+
+def is_stale_hardware_entry(entry: dict[str, Any] | None) -> bool:
+    if not isinstance(entry, dict):
+        return False
+    return is_stale_hardware_message(entry.get("message") or entry.get("status") or "")
+
+
 def plugin_is_healthy(entry: dict[str, Any] | None) -> bool:
     """Stable OK — do not disconnect/reconnect when true."""
     if not isinstance(entry, dict):
@@ -173,22 +183,120 @@ def report_to_dict(report: DiagnosisReport) -> dict[str, Any]:
     }
 
 
-def build_diagnosis_report(identify: dict[str, Any]) -> DiagnosisReport:
-    """Build per-device diagnosis from an identify payload (same shape as GET /identify)."""
-    platform = identify.get("platform") if isinstance(identify.get("platform"), dict) else {}
-    health = _health_map(identify)
-    adapters = _adapter_index(identify)
-    topology = str(platform.get("modbus_topology") or platform.get("modbus_topology_mode") or "").strip()
-    serial_ports = [str(p) for p in platform.get("serial_ports") or [] if isinstance(platform.get("serial_ports"), list)]
-    host_recover = (
-        os.environ.get("OQLOS_HOST_RECOVER_HOOK", "").strip()
-        or os.environ.get("OQLOS_RUNTIME_CONTROL_SCRIPT", "").strip()
-        or ("systemd" if shutil.which("systemctl") else "")
+def _add_modbus_device_actions(
+    dev: "DeviceDiagnosis",
+    plugin_id: str,
+    status: str,
+    msg: str,
+    platform: "dict[str, Any]",
+) -> None:
+    port = (
+        platform.get("modbus_io_serial_port")
+        if plugin_id == "modbus-io"
+        else platform.get("modbus_adc_serial_port")
     )
-    c2004_root = os.environ.get("C2004_ROOT", "/home/tom/github/maskservice/c2004")
+    dev.environment["serial_port"] = port
+    if status == "ok":
+        return
+    if "errno 19" in msg or "no such device" in msg:
+        dev.issues.append("Nieaktualny port USB/RS485 po re-enumeracji.")
+    dev.recommended_actions.append(
+        DiagnosisAction(
+            id=f"{plugin_id}-reconnect",
+            device_id=plugin_id,
+            label=f"Reconnect plugin {plugin_id} (OqlOS)",
+            kind="oqlos",
+            priority=15,
+            auto_executable=True,
+            scope="oqlos",
+            detail="Bezpieczne odświeżenie połączenia w procesie OqlOS.",
+        )
+    )
 
+
+def _add_tic249_device_actions(
+    dev: "DeviceDiagnosis",
+    status: str,
+    msg: str,
+    host_recover: str,
+) -> None:
+    if status == "ok":
+        return
+    if "errno 19" in msg:
+        dev.issues.append("USB Tic — martwy handle po replug.")
+    dev.recommended_actions.extend(
+        [
+            DiagnosisAction(
+                id="tic249-docker-restart",
+                device_id=dev.device_id,
+                label="Restart hw-tic249 (Docker)",
+                kind="docker",
+                priority=20,
+                command="docker restart hw-tic249",
+                auto_executable=bool(host_recover),
+                scope="host",
+            ),
+            DiagnosisAction(
+                id="tic249-oqlos-reconnect",
+                device_id=dev.device_id,
+                label="Reconnect motor-tic249 plugin (OqlOS)",
+                kind="oqlos",
+                priority=18,
+                auto_executable=True,
+                scope="oqlos",
+            ),
+        ]
+    )
+
+
+def _add_dri0050_device_actions(
+    dev: "DeviceDiagnosis",
+    status: str,
+    msg: str,
+    host_recover: str,
+) -> None:
+    if status == "ok":
+        return
+    if "connection attempts failed" in msg or "503" in msg:
+        dev.issues.append(
+            "Sidecar DRI0050 (:8203) niedostępny lub /health=503 — OqlOS uruchomi ponownie systemd-run."
+        )
+    if "errno 5" in msg or "input/output error" in msg:
+        dev.issues.append("Martwy handle USB RS485 pompy — odłącz/podłącz kabel pompy.")
+    dev.recommended_actions.extend(
+        [
+            DiagnosisAction(
+                id="dri0050-ensure-sidecar",
+                device_id=dev.device_id,
+                label="Uruchom dri0050-motor-api (OqlOS)",
+                kind="oqlos",
+                priority=5,
+                auto_executable=True,
+                scope="oqlos",
+                detail="systemd-run jak make hardware-up, bez restartu całego stacku.",
+            ),
+            DiagnosisAction(
+                id="dri0050-reconnect",
+                device_id=dev.device_id,
+                label="Reconnect motor-dri0050 plugin (OqlOS)",
+                kind="oqlos",
+                priority=18,
+                auto_executable=True,
+                scope="oqlos",
+            ),
+        ]
+    )
+
+
+def _diagnose_plugin_devices(
+    health: "dict[str, Any]",
+    adapters: "dict[str, Any]",
+    platform: "dict[str, Any]",
+    topology: str,
+    host_recover: str,
+) -> "dict[str, DeviceDiagnosis]":
+    """Build per-device diagnosis for the four monitored hardware plugins."""
     devices: dict[str, DeviceDiagnosis] = {}
-
     for plugin_id, display_name in (
         ("modbus-io", "Waveshare Modbus IO 8CH"),
         ("modbus-adc", "Waveshare Modbus ADC 8CH"),
@@ -202,103 +310,30 @@ def build_diagnosis_report(identify: dict[str, Any]) -> DiagnosisReport:
             device_id=plugin_id,
             display_name=display_name,
             status=status,
-            health_summary=str((entry or {}).get("message") or (adapter or {}).get("status") or "brak danych"),
+            health_summary=str(
+                (entry or {}).get("message") or (adapter or {}).get("status") or "brak danych"
+            ),
             environment={"topology": topology},
         )
         msg = _message_lower(entry)
         if plugin_id.startswith("modbus"):
-            port = (
-                platform.get("modbus_io_serial_port")
-                if plugin_id == "modbus-io"
-                else platform.get("modbus_adc_serial_port")
-            )
-            dev.environment["serial_port"] = port
-            if status != "ok":
-                if "errno 19" in msg or "no such device" in msg:
-                    dev.issues.append("Nieaktualny port USB/RS485 po re-enumeracji.")
-                dev.recommended_actions.append(
-                    DiagnosisAction(
-                        id=f"{plugin_id}-reconnect",
-                        device_id=plugin_id,
-                        label=f"Reconnect plugin {plugin_id} (OqlOS)",
-                        kind="oqlos",
-                        priority=15,
-                        auto_executable=True,
-                        scope="oqlos",
-                        detail="Bezpieczne odświeżenie połączenia w procesie OqlOS.",
-                    ),
-                )
-        elif plugin_id == "motor-tic249" and status != "ok":
-            if "errno 19" in msg:
-                dev.issues.append("USB Tic — martwy handle po replug.")
-            dev.recommended_actions.extend(
-                [
-                    DiagnosisAction(
-                        id="tic249-docker-restart",
-                        device_id=plugin_id,
-                        label="Restart hw-tic249 (Docker)",
-                        kind="docker",
-                        priority=20,
-                        command="docker restart hw-tic249",
-                        auto_executable=bool(host_recover),
-                        scope="host",
-                    ),
-                    DiagnosisAction(
-                        id="tic249-oqlos-reconnect",
-                        device_id=plugin_id,
-                        label="Reconnect motor-tic249 plugin (OqlOS)",
-                        kind="oqlos",
-                        priority=18,
-                        auto_executable=True,
-                        scope="oqlos",
-                    ),
-                ],
-            )
-        elif plugin_id == "motor-dri0050" and status != "ok":
-            if "connection attempts failed" in msg or "503" in msg:
-                dev.issues.append(
-                    "Sidecar DRI0050 (:8203) niedostępny lub /health=503 — OqlOS uruchomi ponownie systemd-run.",
-                )
-            if "errno 5" in msg or "input/output error" in msg:
-                dev.issues.append("Martwy handle USB RS485 pompy — odłącz/podłącz kabel pompy.")
-            dev.recommended_actions.extend(
-                [
-                    DiagnosisAction(
-                        id="dri0050-ensure-sidecar",
-                        device_id=plugin_id,
-                        label="Uruchom dri0050-motor-api (OqlOS)",
-                        kind="oqlos",
-                        priority=5,
-                        auto_executable=True,
-                        scope="oqlos",
-                        detail="systemd-run jak make hardware-up, bez restartu całego stacku.",
-                    ),
-                    DiagnosisAction(
-                        id="dri0050-reconnect",
-                        device_id=plugin_id,
-                        label="Reconnect motor-dri0050 plugin (OqlOS)",
-                        kind="oqlos",
-                        priority=18,
-                        auto_executable=True,
-                        scope="oqlos",
-                    ),
-                ],
-            )
+            _add_modbus_device_actions(dev, plugin_id, status, msg, platform)
+        elif plugin_id == "motor-tic249":
+            _add_tic249_device_actions(dev, status, msg, host_recover)
+        elif plugin_id == "motor-dri0050":
+            _add_dri0050_device_actions(dev, status, msg, host_recover)
         devices[plugin_id] = dev
+    return devices
 
-    adapter = adapters.get("barcode-scanner")
-    detail = (adapter or {}).get("detail") if isinstance((adapter or {}).get("detail"), dict) else {}
-    present = bool(detail.get("scanner_present")) or str((adapter or {}).get("status") or "") == "ok"
-    devices["barcode-scanner"] = DeviceDiagnosis(
-        device_id="barcode-scanner",
-        display_name="Skaner USB-HID",
-        status="ok" if present else "not_present",
-        health_summary="Wykryty" if present else "Brak skanera",
-    )
 
+def _build_report_global_actions(
+    modbus_bad: bool,
+    motors_bad: bool,
+    c2004_root: str,
+    host_recover: str,
+) -> "list[DiagnosisAction]":
+    """Build the global recovery actions for the full stack restart path."""
     global_actions: list[DiagnosisAction] = []
-    modbus_bad = modbus_plugins_need_repair(identify)
-    motors_bad = any(devices[d].status == "error" for d in ("motor-tic249", "motor-dri0050"))
     if modbus_bad and motors_bad:
         global_actions.append(
             DiagnosisAction(
@@ -311,7 +346,7 @@ def build_diagnosis_report(identify: dict[str, Any]) -> DiagnosisReport:
                 command=f"cd {c2004_root} && make hardware-up",
                 auto_executable=bool(host_recover),
                 scope="host",
-            ),
+            )
         )
     elif modbus_bad:
         global_actions.append(
@@ -325,16 +360,62 @@ def build_diagnosis_report(identify: dict[str, Any]) -> DiagnosisReport:
                 command=f"cd {c2004_root} && make hardware-up",
                 auto_executable=bool(host_recover),
                 scope="host",
-            ),
+            )
         )
+    return global_actions
+
+
+def _resolve_host_recover() -> str:
+    """Return the best available host recovery mechanism identifier."""
+    return (
+        os.environ.get("OQLOS_HOST_RECOVER_HOOK", "").strip()
+        or os.environ.get("OQLOS_RUNTIME_CONTROL_SCRIPT", "").strip()
+        or ("systemd" if shutil.which("systemctl") else "")
+    )
+
+
+def _diagnose_barcode_scanner(adapters: dict[str, Any]) -> DeviceDiagnosis:
+    """Build barcode scanner diagnosis entry."""
+    adapter = adapters.get("barcode-scanner")
+    detail = (adapter or {}).get("detail") if isinstance((adapter or {}).get("detail"), dict) else {}
+    present = bool(detail.get("scanner_present")) or str((adapter or {}).get("status") or "") == "ok"
+    return DeviceDiagnosis(
+        device_id="barcode-scanner",
+        display_name="Skaner USB-HID",
+        status="ok" if present else "not_present",
+        health_summary="Wykryty" if present else "Brak skanera",
+    )
+
+
+def _build_stack_snapshot(health: dict[str, Any]) -> dict[str, Any]:
+    """Call build_hardware_stack_snapshot safely, returning empty dict on error."""
+    try:
+        return build_hardware_stack_snapshot(health)
+    except Exception:
+        return {}
+
+
+def build_diagnosis_report(identify: dict[str, Any]) -> DiagnosisReport:
+    """Build per-device diagnosis from an identify payload (same shape as GET /identify)."""
+    platform = identify.get("platform") if isinstance(identify.get("platform"), dict) else {}
+    health = _health_map(identify)
+    adapters = _adapter_index(identify)
+    topology = str(platform.get("modbus_topology") or platform.get("modbus_topology_mode") or "").strip()
+    serial_ports = [str(p) for p in (platform.get("serial_ports") or []) if p]
+    host_recover = _resolve_host_recover()
+    c2004_root = os.environ.get("C2004_ROOT", "/home/tom/github/maskservice/c2004")
+
+    devices = _diagnose_plugin_devices(health, adapters, platform, topology, host_recover)
+    devices["barcode-scanner"] = _diagnose_barcode_scanner(adapters)
+
+    modbus_bad = modbus_plugins_need_repair(identify)
+    motors_bad = any(devices[d].status == "error" for d in ("motor-tic249", "motor-dri0050"))
+    global_actions = _build_report_global_actions(modbus_bad, motors_bad, c2004_root, host_recover)
 
     error_devices = [d.device_id for d in devices.values() if d.status == "error"]
-    requires_full = modbus_plugins_need_repair(identify) or modbus_bad
-    snapshot: dict[str, Any] = {}
-    try:
-        snapshot = build_hardware_stack_snapshot(health)
-    except Exception:
-        snapshot = {}
+    requires_full = modbus_bad or modbus_plugins_need_repair(identify)
+    snapshot = _build_stack_snapshot(health)
+
     return DiagnosisReport(
         environment={
             "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -348,11 +429,37 @@ def build_diagnosis_report(identify: dict[str, Any]) -> DiagnosisReport:
         devices=devices,
         global_actions=global_actions,
         ok=not error_devices,
-        message="Diagnostyka: wszystkie monitorowane urządzenia OK."
-        if not error_devices
-        else "Diagnostyka: wymaga uwagi — " + ", ".join(error_devices),
+        message=(
+            "Diagnostyka: wszystkie monitorowane urządzenia OK."
+            if not error_devices
+            else "Diagnostyka: wymaga uwagi — " + ", ".join(error_devices)
+        ),
         requires_full_stack_restart=requires_full,
     )
+
+
+def _should_include_host_action(
+    action: "DiagnosisAction",
+    seen: "set[str]",
+    saw_make: bool,
+    motor_only: bool,
+    failed: "set[str]",
+) -> "tuple[bool, bool]":
+    """Check whether to include a host-scope action. Returns (include, saw_make_now)."""
+    if action.scope != "host" or action.id in seen:
+        return False, saw_make
+    if action.kind == "make_target":
+        if saw_make:
+            return False, saw_make
+        modbus_still = any(pid.startswith("modbus") for pid in failed)
+        if motor_only and not modbus_still:
+            return False, saw_make
+        return True, True
+    if action.id.endswith("-hardware-up"):
+        return False, saw_make
+    if action.id.startswith("dri0050-restart"):
+        return False, saw_make
+    return True, saw_make
 
 
 def _host_actions_from_report(
@@ -369,21 +476,10 @@ def _host_actions_from_report(
     failed = set(still_failed or [])
     motor_only = bool(failed) and all(pid.startswith("motor") for pid in failed)
     for action in sorted(actions, key=lambda a: (a.priority, a.id)):
-        if action.scope != "host" or action.id in seen:
-            continue
-        if action.kind == "make_target":
-            if saw_make:
-                continue
-            modbus_still = any(pid.startswith("modbus") for pid in failed)
-            if motor_only and not modbus_still:
-                continue
-            saw_make = True
-        if action.id.endswith("-hardware-up"):
-            continue
-        if action.id.startswith("dri0050-restart"):
-            continue
-        seen.add(action.id)
-        host.append(_action_dict(action))
+        include, saw_make = _should_include_host_action(action, seen, saw_make, motor_only, failed)
+        if include:
+            seen.add(action.id)
+            host.append(_action_dict(action))
     return host
 
 
@@ -401,24 +497,33 @@ def _recover_targets(report: DiagnosisReport, health: dict[str, Any]) -> list[st
     return targets
 
 
+async def _repair_dri0050_if_needed(
+    targets: "list[str]",
+    health_before: "dict[str, Any]",
+    repairs: "list[dict[str, Any]]",
+) -> None:
+    """Ensure dri0050 sidecar is running if it's in the repair target list."""
+    if "motor-dri0050" not in targets:
+        return
+    from oqlos.hardware.sidecar_control import ensure_dri0050_sidecar
+    entry = health_before.get("motor-dri0050") if isinstance(health_before.get("motor-dri0050"), dict) else {}
+    msg = str(entry.get("message") or "").lower()
+    force = (
+        "connection attempts failed" in msg
+        or "http 503" in msg
+        or "503" in msg
+        or "connect returned false" in msg
+        or not entry
+    )
+    repairs.append(await ensure_dri0050_sidecar(force_restart=force))
+
+
 async def execute_safe_recover(gateway: Any, report: DiagnosisReport) -> dict[str, Any]:
     """Reconnect failed plugins inside OqlOS; return host_actions for sidecars."""
-    from oqlos.hardware.sidecar_control import ensure_dri0050_sidecar
-
     repairs: list[dict[str, Any]] = []
     health_before = await gateway.health()
     targets = _recover_targets(report, health_before)
-    if "motor-dri0050" in targets:
-        entry = health_before.get("motor-dri0050") if isinstance(health_before.get("motor-dri0050"), dict) else {}
-        msg = str(entry.get("message") or "").lower()
-        force = (
-            "connection attempts failed" in msg
-            or "http 503" in msg
-            or "503" in msg
-            or "connect returned false" in msg
-            or not entry
-        )
-        repairs.append(await ensure_dri0050_sidecar(force_restart=force))
+    await _repair_dri0050_if_needed(targets, health_before, repairs)
     if not targets and report.requires_full_stack_restart:
         return {
             "ok": False,

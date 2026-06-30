@@ -1,58 +1,42 @@
-# code2llm/evolution | 1182 func | 102f | 2026-06-30
-# generated in 0.00s
+# code2llm/evolution | 1344 func | 116f | 2026-06-30
+# generated in 0.01s
 
-NEXT[10] (ranked by impact):
+NEXT[6] (ranked by impact):
   [1] !! SPLIT           oqlos/api/hardware.py
-      WHY: 2054L, 0 classes, max CC=30
-      EFFORT: ~4h  IMPACT: 61620
+      WHY: 2240L, 0 classes, max CC=15
+      EFFORT: ~4h  IMPACT: 33600
 
   [2] !! SPLIT           oqlos/core/_interpreter_actions.py
-      WHY: 1245L, 0 classes, max CC=18
-      EFFORT: ~4h  IMPACT: 22410
+      WHY: 1255L, 0 classes, max CC=14
+      EFFORT: ~4h  IMPACT: 17570
 
-  [3] !! SPLIT-FUNC      hardware_identify  CC=29  fan=26
-      WHY: CC=29 exceeds 15
-      EFFORT: ~1h  IMPACT: 754
-
-  [4] !! SPLIT-FUNC      build_diagnosis_report  CC=25  fan=25
-      WHY: CC=25 exceeds 15
-      EFFORT: ~1h  IMPACT: 625
-
-  [5] !! SPLIT-FUNC      _build_waveshare_diagnose_report  CC=27  fan=23
-      WHY: CC=27 exceeds 15
-      EFFORT: ~1h  IMPACT: 621
-
-  [6] !! SPLIT-FUNC      _modbus_wizard_program_isolated  CC=30  fan=18
-      WHY: CC=30 exceeds 15
-      EFFORT: ~1h  IMPACT: 540
-
-  [7] !  SPLIT-FUNC      execute_command  CC=20  fan=14
-      WHY: CC=20 exceeds 15
-      EFFORT: ~1h  IMPACT: 280
-
-  [8] !  SPLIT-FUNC      _motor2_do_start  CC=18  fan=14
+  [3] !  SPLIT-FUNC      enrich_adapter_entry  CC=18  fan=16
       WHY: CC=18 exceeds 15
-      EFFORT: ~1h  IMPACT: 252
+      EFFORT: ~1h  IMPACT: 288
 
-  [9] !  SPLIT-FUNC      MotorPlugin.health_check  CC=17  fan=13
+  [4] !  SPLIT-FUNC      _build_waveshare_diagnose_report  CC=15  fan=17
+      WHY: CC=15 exceeds 15
+      EFFORT: ~1h  IMPACT: 255
+
+  [5] !  SPLIT-FUNC      run_extended_motor_tic249_command  CC=17  fan=11
       WHY: CC=17 exceeds 15
-      EFFORT: ~1h  IMPACT: 221
+      EFFORT: ~1h  IMPACT: 187
 
-  [10] !! SPLIT           openapi_spec.yaml
-      WHY: 1035L, 0 classes, max CC=0
+  [6] !! SPLIT           docs/README.md
+      WHY: 1089L, 0 classes, max CC=0
       EFFORT: ~4h  IMPACT: 0
 
 
 RISKS[3]:
-  ⚠ Splitting oqlos/api/hardware.py may break 73 import paths
-  ⚠ Splitting oqlos/core/_interpreter_actions.py may break 83 import paths
-  ⚠ Splitting openapi_spec.yaml may break 0 import paths
+  ⚠ Splitting oqlos/api/hardware.py may break 87 import paths
+  ⚠ Splitting oqlos/core/_interpreter_actions.py may break 85 import paths
+  ⚠ Splitting docs/README.md may break 0 import paths
 
 METRICS-TARGET:
-  CC̄:          4.1 → ≤2.9
-  max-CC:      30 → ≤15
-  god-modules: 16 → 0
-  high-CC(≥15): 9 → ≤4
+  CC̄:          4.2 → ≤2.9
+  max-CC:      18 → ≤9
+  god-modules: 17 → 0
+  high-CC(≥15): 3 → ≤1
   hub-types:   0 → ≤0
 
 PATTERNS (language parser shared logic):
@@ -80,4 +64,4 @@ PATTERNS (language parser shared logic):
     - Standardized FunctionInfo/ClassInfo models
 
 HISTORY:
-  prev CC̄=4.1 → now CC̄=4.1
+  prev CC̄=4.2 → now CC̄=4.2

@@ -41,35 +41,40 @@ class ModbusPlugin(HardwarePlugin):
         self._bus: Any = None
         self._mode = "unknown"
 
+    def _validate_rtu_params(self, errors: list) -> None:
+        params = self.config.connection_params
+        if not params.get("serial_port"):
+            errors.append("serial_port is required in connection_params for modbus-rtu")
+        baudrate = params.get("baudrate", 9600)
+        if not isinstance(baudrate, int) or baudrate <= 0:
+            errors.append("baudrate must be a positive integer")
+        parity = params.get("parity", "N")
+        if parity not in ["N", "E", "O"]:
+            errors.append("parity must be N, E, or O")
+        device_id = params.get("device_id", 1)
+        if not isinstance(device_id, int) or device_id <= 0:
+            errors.append("device_id must be a positive integer")
+
+    def _validate_tcp_params(self, errors: list) -> None:
+        params = self.config.connection_params
+        if not params.get("host"):
+            errors.append("host is required in connection_params for modbus-tcp")
+        port = params.get("port", 502)
+        if not isinstance(port, int) or port <= 0 or port > 65535:
+            errors.append("port must be a valid port number (1-65535)")
+        device_id = params.get("device_id", 1)
+        if not isinstance(device_id, int) or device_id <= 0:
+            errors.append("device_id must be a positive integer")
+
     def validate_config(self) -> list[str]:
         """Validate modbus-specific configuration."""
-        errors = []
+        errors: list[str] = []
         if self.config.connection_type == "modbus-rtu":
-            serial_port = self.config.connection_params.get("serial_port")
-            if not serial_port:
-                errors.append("serial_port is required in connection_params for modbus-rtu")
-            baudrate = self.config.connection_params.get("baudrate", 9600)
-            if not isinstance(baudrate, int) or baudrate <= 0:
-                errors.append("baudrate must be a positive integer")
-            parity = self.config.connection_params.get("parity", "N")
-            if parity not in ["N", "E", "O"]:
-                errors.append("parity must be N, E, or O")
-            device_id = self.config.connection_params.get("device_id", 1)
-            if not isinstance(device_id, int) or device_id <= 0:
-                errors.append("device_id must be a positive integer")
+            self._validate_rtu_params(errors)
         elif self.config.connection_type == "modbus-tcp":
-            host = self.config.connection_params.get("host")
-            if not host:
-                errors.append("host is required in connection_params for modbus-tcp")
-            port = self.config.connection_params.get("port", 502)
-            if not isinstance(port, int) or port <= 0 or port > 65535:
-                errors.append("port must be a valid port number (1-65535)")
-            device_id = self.config.connection_params.get("device_id", 1)
-            if not isinstance(device_id, int) or device_id <= 0:
-                errors.append("device_id must be a positive integer")
+            self._validate_tcp_params(errors)
         else:
             errors.append("modbus plugin supports modbus-rtu or modbus-tcp connection types")
-
         return errors
 
     async def connect(self) -> bool:
@@ -142,6 +147,51 @@ class ModbusPlugin(HardwarePlugin):
         self._status = PluginStatus.CONFIGURED
         logger.info("Disconnected from modbus")
 
+    async def _health_check_rtu(self) -> PluginHealth:
+        """RTU-specific health check."""
+        self._mode = "rtu"
+        try:
+            result = await self._rtu_call(
+                "read_coils",
+                address=0,
+                count=1,
+                device_id=self._device_id(),
+            )
+        except asyncio.TimeoutError:
+            return PluginHealth(
+                status=PluginStatus.ERROR,
+                message=f"Modbus RTU read_coils timed out after {self._rtu_timeout():.1f}s",
+                compatible=False,
+            )
+        if result and not result.isError():
+            return PluginHealth(
+                status=PluginStatus.CONNECTED,
+                message="Modbus RTU is healthy",
+                details={"mode": "rtu", "device_id": self._device_id()},
+                compatible=True,
+            )
+        return PluginHealth(
+            status=PluginStatus.ERROR,
+            message="Modbus RTU read_coils failed",
+            compatible=False,
+        )
+
+    async def _health_check_tcp(self) -> PluginHealth:
+        """TCP-specific health check."""
+        result = await self._client.read_coils(0, count=1, device_id=self._device_id())
+        if not result.isError():
+            return PluginHealth(
+                status=PluginStatus.CONNECTED,
+                message="Modbus TCP is healthy",
+                details={"mode": "tcp", "device_id": self._device_id()},
+                compatible=True,
+            )
+        return PluginHealth(
+            status=PluginStatus.ERROR,
+            message="Modbus TCP read_coils failed",
+            compatible=False,
+        )
+
     async def health_check(self) -> PluginHealth:
         """Check modbus health and compatibility."""
         if not self._client and not self._bus:
@@ -152,50 +202,12 @@ class ModbusPlugin(HardwarePlugin):
             )
 
         try:
-            # Try to read a coil to test connection
-            if self._mode == "rtu" or (self._bus is not None and self.config.connection_type == "modbus-rtu"):
-                self._mode = "rtu"
-                try:
-                    result = await self._rtu_call(
-                        "read_coils",
-                        address=0,
-                        count=1,
-                        device_id=self._device_id(),
-                    )
-                except asyncio.TimeoutError:
-                    return PluginHealth(
-                        status=PluginStatus.ERROR,
-                        message=f"Modbus RTU read_coils timed out after {self._rtu_timeout():.1f}s",
-                        compatible=False,
-                    )
-                if result and not result.isError():
-                    return PluginHealth(
-                        status=PluginStatus.CONNECTED,
-                        message="Modbus RTU is healthy",
-                        details={"mode": "rtu", "device_id": self._device_id()},
-                        compatible=True,
-                    )
-                else:
-                    return PluginHealth(
-                        status=PluginStatus.ERROR,
-                        message="Modbus RTU read_coils failed",
-                        compatible=False,
-                    )
+            if self._mode == "rtu" or (
+                self._bus is not None and self.config.connection_type == "modbus-rtu"
+            ):
+                return await self._health_check_rtu()
             elif self._mode == "tcp":
-                result = await self._client.read_coils(0, count=1, device_id=self._device_id())
-                if not result.isError():
-                    return PluginHealth(
-                        status=PluginStatus.CONNECTED,
-                        message="Modbus TCP is healthy",
-                        details={"mode": "tcp", "device_id": self._device_id()},
-                        compatible=True,
-                    )
-                else:
-                    return PluginHealth(
-                        status=PluginStatus.ERROR,
-                        message="Modbus TCP read_coils failed",
-                        compatible=False,
-                    )
+                return await self._health_check_tcp()
         except Exception as exc:
             if (
                 not getattr(self, "_rtu_reopen_health_attempt", False)
@@ -215,54 +227,57 @@ class ModbusPlugin(HardwarePlugin):
 
         return PluginHealth(status=PluginStatus.ERROR, message="Unknown mode", compatible=False)
 
+    async def _execute_set_coil(self, params: dict[str, Any]) -> dict[str, Any]:
+        """Write a single coil via RTU or TCP."""
+        coil = params.get("coil", 0)
+        value = params.get("value", False)
+        if not isinstance(coil, int) or coil < 0:
+            return {"success": False, "error": "coil must be a non-negative integer"}
+        if self._mode == "rtu" or (
+            self._bus is not None and self.config.connection_type == "modbus-rtu"
+        ):
+            self._mode = "rtu"
+            result = await self._rtu_call(
+                "write_coil",
+                address=coil,
+                value=value,
+                device_id=self._device_id(),
+            )
+            success = hasattr(result, "function_code") and not getattr(
+                result, "isError", lambda: True
+            )()
+        else:
+            result = await self._client.write_coil(coil, value, device_id=self._device_id())
+            success = not result.isError()
+        if success:
+            return {"success": True, "data": {"coil": coil, "value": value}}
+        return {"success": False, "error": str(result)}
+
+    async def _execute_set_valve(self, params: dict[str, Any]) -> dict[str, Any]:
+        """Map valve_id to coil address and delegate to set_coil."""
+        valve_id = params.get("valve_id")
+        if not valve_id:
+            return {"success": False, "error": "valve_id is required"}
+        valve_coil_map = {
+            "valve-1": 0, "valve-2": 1, "valve-3": 2, "valve-4": 3,
+            "valve-5": 4, "valve-6": 5, "valve-7": 6, "valve-8": 7,
+            "valve-nc": 0, "valve-sc": 1, "valve-wc": 2,
+        }
+        coil = valve_coil_map.get(valve_id)
+        if coil is None:
+            return {"success": False, "error": f"Unknown valve_id: {valve_id}"}
+        return await self.execute_command("set_coil", {"coil": coil, "value": params.get("value", False)})
+
     async def execute_command(self, command: str, params: dict[str, Any]) -> dict[str, Any]:
         """Execute modbus command."""
         if not self._client and not self._bus:
             return {"success": False, "error": "Not connected to modbus"}
-
         try:
             if command == "set_coil":
-                coil = params.get("coil", 0)
-                value = params.get("value", False)
-                if not isinstance(coil, int) or coil < 0:
-                    return {"success": False, "error": "coil must be a non-negative integer"}
-
-                if self._mode == "rtu" or (self._bus is not None and self.config.connection_type == "modbus-rtu"):
-                    self._mode = "rtu"
-                    result = await self._rtu_call(
-                        "write_coil",
-                        address=coil,
-                        value=value,
-                        device_id=self._device_id(),
-                    )
-                    success = hasattr(result, "function_code") and not getattr(result, "isError", lambda: True)()
-                else:
-                    result = await self._client.write_coil(coil, value, device_id=self._device_id())
-                    success = not result.isError()
-
-                if success:
-                    return {"success": True, "data": {"coil": coil, "value": value}}
-                else:
-                    return {"success": False, "error": str(result)}
+                return await self._execute_set_coil(params)
             elif command == "set_valve":
-                valve_id = params.get("valve_id")
-                value = params.get("value", False)
-                if not valve_id:
-                    return {"success": False, "error": "valve_id is required"}
-
-                # Map valve IDs to coil addresses
-                valve_coil_map = {
-                    "valve-1": 0, "valve-2": 1, "valve-3": 2, "valve-4": 3,
-                    "valve-5": 4, "valve-6": 5, "valve-7": 6, "valve-8": 7,
-                    "valve-nc": 0, "valve-sc": 1, "valve-wc": 2,
-                }
-                coil = valve_coil_map.get(valve_id)
-                if coil is None:
-                    return {"success": False, "error": f"Unknown valve_id: {valve_id}"}
-
-                return await self.execute_command("set_coil", {"coil": coil, "value": value})
-            else:
-                return {"success": False, "error": f"Unknown command: {command}"}
+                return await self._execute_set_valve(params)
+            return {"success": False, "error": f"Unknown command: {command}"}
         except Exception as exc:
             return {"success": False, "error": str(exc)}
 

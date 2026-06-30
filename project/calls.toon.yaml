@@ -1,25 +1,21 @@
 # code2llm call graph | /home/tom/github/oqlos/oqlos
-# generated in 0.20s
-# nodes: 414 | edges: 500 | modules: 56
-# CC̄=4.2
+# generated in 0.24s
+# nodes: 401 | edges: 500 | modules: 47
+# CC̄=4.1
 
 HUBS[20]:
   examples.hardware.doctor-workflow.print
     CC=0  in:226  out:0  total:226
-  oqlos.hardware.artificial_lung.execute_command
-    CC=20  in:0  out:39  total:39
   oqlos.tools.cql_cli.formatting.canonicalize_oql_line
     CC=14  in:1  out:31  total:32
   oqlos.core._oql_adapter.oql_doc_to_cql
     CC=12  in:2  out:30  total:32
-  oqlos.core._interpreter_actions._motor2_do_start
-    CC=18  in:0  out:31  total:31
   oqlos.core.motor2_runtime.normalize_motor2_runtime_config
     CC=12  in:1  out:29  total:30
-  oqlos.tools.hardware_diagnose.modbus_probe.probe_options_from_args
-    CC=2  in:1  out:27  total:28
   oqlos.core.executor._safe_resolve
     CC=14  in:7  out:21  total:28
+  oqlos.tools.hardware_diagnose.modbus_probe.probe_options_from_args
+    CC=2  in:1  out:27  total:28
   oqlos.tools.hardware_diagnose.doctor.format_detection
     CC=10  in:3  out:25  total:28
   oqlos.hardware.rtc_probe.build_rtc_peripheral_status
@@ -32,24 +28,26 @@ HUBS[20]:
     CC=13  in:3  out:21  total:24
   oqlos.core._line_parsers._parse_if_condition
     CC=9  in:1  out:22  total:23
-  oqlos.tools.hardware_diagnose.doctor._analyze_modbus_adc_config
+  oqlos.core._interpreter_actions._try_exec_motor2_set
+    CC=13  in:1  out:22  total:23
+  oqlos.core._interpreter_actions._motor2_build_plan
     CC=12  in:1  out:22  total:23
   oqlos.tools.hardware_diagnose.doctor.format_doctor
     CC=6  in:2  out:21  total:23
-  oqlos.core._interpreter_actions._try_exec_motor2_set
-    CC=13  in:1  out:22  total:23
+  oqlos.tools.hardware_diagnose.doctor._analyze_modbus_adc_config
+    CC=12  in:1  out:22  total:23
   oqlos.tools.cql_cli.commands.handle_list_command
     CC=7  in:1  out:21  total:22
-  oqlos.tools.hardware_diagnose.health.cmd_diagnose
-    CC=6  in:2  out:20  total:22
   oqlos.tools.xml_import.parser._parse_operation_params
     CC=9  in:1  out:21  total:22
+  oqlos.tools.hardware_diagnose.health.cmd_diagnose
+    CC=6  in:2  out:20  total:22
+  oqlos.tools.hardware_diagnose.shell._dispatch_command
+    CC=6  in:1  out:21  total:22
 
 MODULES:
   examples.hardware.doctor-workflow  [1 funcs]
     print  CC=0  out:0
-  oqlos.api.plugins  [1 funcs]
-    validate_plugin_configs  CC=3  out:11
   oqlos.config  [1 funcs]
     get_settings  CC=1  out:0
   oqlos.core._compare  [2 funcs]
@@ -92,7 +90,7 @@ MODULES:
     _extract_func_name  CC=7  out:7
     _guard_recursion  CC=3  out:5
     _parse_func_call  CC=5  out:4
-  oqlos.core._interpreter_actions  [54 funcs]
+  oqlos.core._interpreter_actions  [56 funcs]
     _assert_json  CC=6  out:9
     _assert_sensor  CC=4  out:9
     _assert_status  CC=5  out:7
@@ -165,10 +163,17 @@ MODULES:
     motor2_max_steps_per_second  CC=2  out:3
     motor2_speed_for_duration  CC=1  out:9
     motor2_speed_raw  CC=1  out:5
-  oqlos.core.oql_parser  [3 funcs]
-    parse_CHECK  CC=2  out:10
-    parse_oql  CC=14  out:21
-    tokenize  CC=13  out:14
+  oqlos.core.oql_parser  [31 funcs]
+    _check_unnamed_goals  CC=5  out:1
+    _expand_repeat_block_lines  CC=8  out:16
+    _expand_repeat_blocks  CC=2  out:2
+    _handle_block_header  CC=8  out:12
+    _handle_modifier_cmd  CC=5  out:3
+    _handle_set_name  CC=5  out:8
+    _handle_top_level_line  CC=6  out:16
+    _line_indent  CC=2  out:5
+    _parse_and_append_command  CC=5  out:9
+    _require  CC=2  out:2
   oqlos.core.oql_versioning  [3 funcs]
     extract_declared_version  CC=3  out:4
     first_meaningful_line  CC=4  out:4
@@ -188,10 +193,6 @@ MODULES:
     _eval_node  CC=2  out:5
     _eval_unary_op  CC=3  out:5
     safe_eval  CC=3  out:4
-  oqlos.hardware.artificial_lung  [3 funcs]
-    _clamp_lpm  CC=2  out:3
-    _command_response  CC=2  out:1
-    execute_command  CC=20  out:39
   oqlos.hardware.config_paths  [1 funcs]
     resolve_oqlos_config_path  CC=6  out:13
   oqlos.hardware.config_schema  [2 funcs]
@@ -200,32 +201,15 @@ MODULES:
   oqlos.hardware.discovery  [2 funcs]
     probe_waveshare_modbus  CC=5  out:2
     probe_waveshare_modbus_adc  CC=5  out:2
-  oqlos.hardware.firmware_adapter  [7 funcs]
-    __init__  CC=1  out:3
-    _get_lung_motor_url  CC=3  out:5
-    _handle_lung_action  CC=3  out:5
-    _handle_pump_action  CC=3  out:4
-    _raise_if_rejected  CC=3  out:3
-    _extract_failure_message  CC=17  out:19
-    _parse_numeric  CC=2  out:3
   oqlos.hardware.gateway  [1 funcs]
     __init__  CC=6  out:13
-  oqlos.hardware.identify_enrichment  [1 funcs]
-    enrich_identify_payload  CC=2  out:4
-  oqlos.hardware.modbus_identify  [8 funcs]
-    _device_to_candidate  CC=8  out:10
-    _infer_modbus_serial_port  CC=10  out:9
-    _is_modbus_candidate  CC=5  out:3
-    _usb_blob  CC=3  out:4
-    collect_modbus_serial_candidates  CC=6  out:6
-    enrich_modbus_identify  CC=1  out:2
-    enrich_modbus_serial_hints  CC=10  out:12
-    enrich_platform_modbus_ports  CC=10  out:13
-  oqlos.hardware.plugin_gateway  [4 funcs]
-    __init__  CC=3  out:6
-    _load_hardware_schema  CC=3  out:8
-    modbus_preflight_report  CC=4  out:4
-    reload_configs  CC=5  out:11
+  oqlos.hardware.hui_actions  [6 funcs]
+    _operation  CC=1  out:0
+    _set_pump  CC=1  out:3
+    _set_pump_best_effort  CC=2  out:3
+    _set_valve  CC=1  out:3
+    _success  CC=5  out:7
+    shutdown_all_hui_hardware  CC=4  out:8
   oqlos.hardware.plugins.base  [1 funcs]
     dynamic_plugin_schema_models  CC=2  out:7
   oqlos.hardware.rtc_probe  [7 funcs]
@@ -236,32 +220,6 @@ MODULES:
     get_pirtc_base_url  CC=1  out:2
     is_rtc_hardware_enabled  CC=3  out:3
     run_rtc_command  CC=4  out:4
-  oqlos.hardware.scanner_probe  [13 funcs]
-    _canonical_match_key  CC=8  out:10
-    _is_likely_scanner_input  CC=10  out:4
-    _is_likely_scanner_usb_blob  CC=7  out:4
-    _match_blob  CC=3  out:4
-    _match_priority  CC=8  out:4
-    _merge_matches  CC=6  out:5
-    _scan_diagnostics_usb_matches  CC=14  out:17
-    _scan_input_matches  CC=8  out:15
-    _scan_lsusb_matches  CC=5  out:8
-    _usb_product_blob  CC=3  out:4
-  oqlos.hardware.sidecar_control  [7 funcs]
-    _dri0050_paths  CC=9  out:16
-    _free_api_port  CC=7  out:10
-    _http_sidecar_healthy  CC=4  out:4
-    _modbus_serial_candidates  CC=4  out:6
-    _run_cmd  CC=3  out:6
-    ensure_dri0050_sidecar  CC=13  out:15
-    resolve_dri0050_serial  CC=13  out:16
-  oqlos.hardware.stack_snapshot  [4 funcs]
-    _build_recommended_actions  CC=8  out:8
-    _get_modbus_preflight  CC=5  out:4
-    _lazy_hardware_api  CC=1  out:0
-    build_hardware_stack_snapshot  CC=3  out:11
-  oqlos.hardware.usb_diagnostics  [1 funcs]
-    _find_tty  CC=5  out:16
   oqlos.tools.cql_cli  [2 funcs]
     _sync_compat_symbols  CC=1  out:0
     main  CC=1  out:2
@@ -308,7 +266,7 @@ MODULES:
     resolve_required_adapter  CC=8  out:3
     validate_directory  CC=5  out:15
   oqlos.tools.hardware_diagnose.__main__  [9 funcs]
-    _dispatch_action  CC=15  out:15
+    _handle_report_action  CC=3  out:4
     _print_benchmark  CC=3  out:11
     _print_calibrate  CC=6  out:9
     _print_detect  CC=2  out:4

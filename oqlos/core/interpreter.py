@@ -620,6 +620,30 @@ class CqlInterpreter(BaseInterpreter):
             return StepStatus.FAILED
         return StepStatus.WARNING
 
+    def _evaluate_range_condition(
+        self, cond: "CqlCondition", sensor: str
+    ) -> "StepStatus":
+        """Handle range (∈) operator: read sensor, auto-mock in dry-run, compare."""
+        if sensor == "Timer":
+            self.out.step("    ⏱️ ", f"Timer {cond.operator} {cond.value}s → OK (simulated)")
+            return StepStatus.PASSED
+
+        val = self._resolve_sensor_value(sensor)
+        if self._sensor_eval._auto_mock and self.mode == "dry-run":
+            val = self._sensor_eval.auto_mock_sensor(sensor, cond, val)
+
+        ok, desc = self._sensor_eval.compare_sensor(sensor, cond, val)
+        if ok:
+            pass_msg = f" → {cond.pass_message}" if cond.pass_message else " → PASS"
+            self.out.step("    ✅", f"{desc}{pass_msg}")
+            return StepStatus.PASSED
+
+        self.out.step("    ❌", f"{desc} → {cond.on_fail}: {cond.fail_message}")
+        if cond.on_fail == "ERROR":
+            self.errors.append(f"{sensor}: {cond.fail_message}")
+            return StepStatus.FAILED
+        return StepStatus.WARNING
+
     def _evaluate_condition(self, act: CqlAction) -> StepStatus:
         """Evaluate a condition using the sensor evaluator."""
         cond = act.condition
@@ -630,25 +654,7 @@ class CqlInterpreter(BaseInterpreter):
 
         sensor = cond.sensor
         if cond.operator == "∈" and cond.value_min is not None and cond.value_max is not None:
-            if sensor == "Timer":
-                self.out.step("    ⏱️ ", f"Timer {cond.operator} {cond.value}s → OK (simulated)")
-                return StepStatus.PASSED
-
-            val = self._resolve_sensor_value(sensor)
-            if self._sensor_eval._auto_mock and self.mode == "dry-run":
-                val = self._sensor_eval.auto_mock_sensor(sensor, cond, val)
-
-            ok, desc = self._sensor_eval.compare_sensor(sensor, cond, val)
-            if ok:
-                pass_msg = f" → {cond.pass_message}" if cond.pass_message else " → PASS"
-                self.out.step("    ✅", f"{desc}{pass_msg}")
-                return StepStatus.PASSED
-
-            self.out.step("    ❌", f"{desc} → {cond.on_fail}: {cond.fail_message}")
-            if cond.on_fail == "ERROR":
-                self.errors.append(f"{sensor}: {cond.fail_message}")
-                return StepStatus.FAILED
-            return StepStatus.WARNING
+            return self._evaluate_range_condition(cond, sensor)
 
         window_s = None
         if sensor.startswith("Δ"):

@@ -71,54 +71,45 @@ def _resolve(verb: str) -> Callable[[dict[str, Any]], Awaitable[Any]]:
         fn = nullary_map[key]
         return lambda _args: fn()
 
-    if key == "identify":
-        return lambda a: hw.hardware_identify(scan=a.get("scan", "never"))
-    if key == "diagnosis":
-        return lambda a: hw.hardware_diagnosis_route(scan=a.get("scan", "never"))
-    if key == "recover":
-        return lambda a: hw.hardware_recover_route(scope=a.get("scope", "safe"))
-    if key == "wizard-probe":
-        return lambda a: hw.hardware_modbus_wizard_probe_isolated(
+    parametric_map: dict[str, Callable[[dict[str, Any]], Awaitable[Any]]] = {
+        "identify": lambda a: hw.hardware_identify(scan=a.get("scan", "never")),
+        "diagnosis": lambda a: hw.hardware_diagnosis_route(scan=a.get("scan", "never")),
+        "recover": lambda a: hw.hardware_recover_route(scope=a.get("scope", "safe")),
+        "wizard-probe": lambda a: hw.hardware_modbus_wizard_probe_isolated(
             serial_port=a.get("serial_port", ""),
             baudrates=a.get("baudrates"),
             parities=a.get("parities"),
             device_ids=a.get("device_ids"),
             module_role=a.get("module_role", ""),
-        )
-    if key == "wizard-program":
-        return lambda a: hw.hardware_modbus_wizard_program_isolated(
+        ),
+        "wizard-program": lambda a: hw.hardware_modbus_wizard_program_isolated(
             serial_port=a.get("serial_port", ""),
             current_device_id=int(a.get("current_device_id", 1)),
             new_device_id=int(a.get("new_device_id", 1)),
             new_baudrate=int(a.get("new_baudrate", 9600)),
             new_parity=a.get("new_parity", "N"),
             confirm_isolated=bool(a.get("confirm_isolated", False)),
-        )
-    if key == "valve":
-        return lambda a: hw.set_valve(str(a["valve_id"]), bool(a.get("value", False)))
-    if key == "pump":
-        return lambda a: hw.set_pump(float(a.get("power_pct", 0.0)))
-    if key == "sensor":
-        return lambda a: hw.read_sensor(str(a["sensor_id"]))
-    if key == "lung":
-        return lambda a: hw.set_lung(
+        ),
+        "valve": lambda a: hw.set_valve(str(a["valve_id"]), bool(a.get("value", False))),
+        "pump": lambda a: hw.set_pump(float(a.get("power_pct", 0.0))),
+        "sensor": lambda a: hw.read_sensor(str(a["sensor_id"])),
+        "lung": lambda a: hw.set_lung(
             steps=int(a.get("steps", 500)),
             speed=int(a["speed"]) if a.get("speed") is not None else hw.TIC249_DEFAULT_TARGET_VELOCITY,
             cycles=int(a.get("cycles", 5)),
             pause=float(a.get("pause", 0.5)),
-        )
-    if key == "artificial-lung-command":
-        return lambda a: hw.artificial_lung_command(a.get("payload", {}))
-    if key == "rtc-command":
-        return lambda a: hw.rtc_command(a.get("payload", {}))
-    if key == "diagnostic-command":
-        return _run_diagnostic_command
-    if key in ("usb-list", "list-usb"):
-        return _usb_list
-    if key == "pi-diagnostics":
-        return _pi_diagnostics
-    if key == "usb-reset":
-        return _usb_reset
+        ),
+        "artificial-lung-command": lambda a: hw.artificial_lung_command(a.get("payload", {})),
+        "rtc-command": lambda a: hw.rtc_command(a.get("payload", {})),
+        "diagnostic-command": lambda _a: _run_diagnostic_command(_a),
+        "usb-list": _usb_list,
+        "list-usb": _usb_list,
+        "pi-diagnostics": _pi_diagnostics,
+        "usb-reset": _usb_reset,
+    }
+    handler = parametric_map.get(key)
+    if handler is not None:
+        return handler
 
     raise ValueError(f"unknown manage verb: {verb!r}")
 
