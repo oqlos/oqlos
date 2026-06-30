@@ -49,8 +49,8 @@ Detailed guide: [Hardware Diagnostics](HARDWARE_DIAGNOSTICS.md).
 
 <!-- code2docs:start --># oqlos
 
-![version](https://img.shields.io/badge/version-0.1.0-blue) ![python](https://img.shields.io/badge/python-%3E%3D3.10-blue) ![coverage](https://img.shields.io/badge/coverage-unknown-lightgrey) ![functions](https://img.shields.io/badge/functions-2066-green)
-> **2066** functions | **123** classes | **247** files | CC̄ = 4.2
+![version](https://img.shields.io/badge/version-0.1.0-blue) ![python](https://img.shields.io/badge/python-%3E%3D3.10-blue) ![coverage](https://img.shields.io/badge/coverage-unknown-lightgrey) ![functions](https://img.shields.io/badge/functions-2075-green)
+> **2075** functions | **123** classes | **249** files | CC̄ = 4.2
 
 > Auto-generated project documentation from source code analysis.
 
@@ -186,6 +186,7 @@ oqlos/
     ├── oql-spec
         ├── schema
     ├── HARDWARE_DIAGNOSTICS
+    ├── DEDUP-connect-scenario
     ├── OQL_V4_MIGRATION_MANUAL
     ├── HARDWARE_CONTROL_OQL_MQTT
     ├── README
@@ -276,6 +277,7 @@ oqlos/
         ├── identify_enrichment
         ├── artificial_lung
         ├── usb_diagnostics
+        ├── health_status
         ├── transport/
             ├── manage_ops
             ├── mqtt_oql_bridge
@@ -1182,14 +1184,13 @@ oqlos/
 - `enrich_platform_modbus_ports(payload)` — —
 - `enrich_modbus_serial_hints(payload)` — —
 - `enrich_modbus_identify(payload)` — —
-- `probe_waveshare_modbus(preferred_port, preferred_baud, preferred_parity, preferred_device_id)` — Probe serial ports and return the first working Modbus IO configuration.
-- `probe_waveshare_modbus_adc(preferred_port, preferred_baud, preferred_parity, preferred_device_id)` — Probe serial ports for the Waveshare Modbus RTU Analog Input 8CH module.
 - `enrich_identify_payload(payload)` — Apply platform-specific enrichment after core plugin identify.
 - `get_peripheral_status(gateway)` — —
 - `execute_command(command, args, gateway)` — —
 - `list_usb_devices()` — Enumerate connected USB devices (sysfs; no root needed).
 - `pi_system_diagnostics()` — Raspberry Pi health snapshot: model, temp, throttling, memory, uptime, ports.
 - `reset_usb_device(vendor_id, product_id, dev_node)` — Driver-level reset / re-enumeration of a USB device (needs root or udev rw).
+- `health_status_is_ok(raw_status)` — Normalize old gateway string health and plugin-gateway dict health.
 - `run_manage_verb(verb, args)` — Execute a management verb and return a JSON-serializable result dict.
 - `list_manage_verbs()` — Return the supported verb names (for discovery/tests).
 - `build_topics(prefix, node_id)` — —
@@ -1342,11 +1343,11 @@ oqlos/
 - `set_valve(valve_id, value)` — Directly set a valve (for manual testing).
 - `set_pump(power_pct)` — Directly set pump power % (for manual testing).
 - `hui_actions()` — Return OqlOS-owned HUI action recipes.
-- `hui_shutdown()` — Stop HUI pump/valve actions using the canonical OqlOS recipe.
-- `hui_hold_start(key)` — Start a named HUI hold action.
-- `hui_hold_stop(key)` — Stop a named HUI hold action and return hardware to a safe state.
-- `hui_al_start()` — Start the HUI artificial-lung action.
-- `hui_al_stop()` — Stop the HUI artificial-lung action.
+- `hui_shutdown()` — —
+- `hui_hold_start(key)` — —
+- `hui_hold_stop(key)` — —
+- `hui_al_start()` — —
+- `hui_al_stop()` — —
 - `read_sensor(sensor_id)` — Read a sensor value directly from hardware.
 - `hardware_temperature()` — Read CPU temperature, returning an HUI-compatible unavailable payload if absent.
 - `read_sensors_batch(sensor_ids)` — Read multiple sensors without making HUI fall back to repeated failing requests.
@@ -1360,8 +1361,8 @@ oqlos/
 - `hardware_modbus_wizard_program_isolated(serial_port, current_device_id, new_device_id, new_baudrate)` — Program one isolated module (address + UART), then verify config.
 - `read_modbus_adc_raw()` — Return raw Modbus ADC diagnostics for HUI troubleshooting.
 - `set_lung(steps, speed, cycles, pause)` — Start artificial lung reciprocating motion (tic249 stepper).
-- `stop_lung()` — Emergency stop the artificial lung motor.
-- `disable_lung()` — De-energize the artificial lung motor (release coils).
+- `stop_lung()` — —
+- `disable_lung()` — —
 - `artificial_lung_status()` — Logical lung state merged with motor connectivity hints.
 - `artificial_lung_command(payload)` — Execute artificial-lung logical commands (set_lpm, lung_*, emergency_stop).
 - `rtc_status()` — Return runtime status for the RTC sidecar.
@@ -1453,6 +1454,7 @@ oqlos/
 📄 `docker.Dockerfile`
 📄 `docker.docker-compose.dev`
 📄 `docker.docker-compose.prod`
+📄 `docs.DEDUP-connect-scenario`
 📄 `docs.HARDWARE_CONTROL_OQL_MQTT`
 📄 `docs.HARDWARE_DIAGNOSTICS`
 📄 `docs.OQL_V4_MIGRATION_MANUAL`
@@ -1512,11 +1514,11 @@ oqlos/
 📦 `oqlos.api`
 📄 `oqlos.api.editor` (6 functions, 3 classes)
 📄 `oqlos.api.execution` (16 functions)
-📄 `oqlos.api.hardware` (89 functions)
+📄 `oqlos.api.hardware` (93 functions)
 📄 `oqlos.api.hardware_events` (10 functions)
 📄 `oqlos.api.hardware_mapping_contract` (4 functions, 1 classes)
 📄 `oqlos.api.hardware_mapping_store` (13 functions, 1 classes)
-📄 `oqlos.api.hardware_v3` (44 functions, 9 classes)
+📄 `oqlos.api.hardware_v3` (46 functions, 9 classes)
 📄 `oqlos.api.logs` (3 functions)
 📄 `oqlos.api.main` (20 functions)
 📄 `oqlos.api.oql_mqtt` (6 functions, 3 classes)
@@ -1573,18 +1575,19 @@ oqlos/
 📄 `oqlos.hardware.config_schema` (4 functions, 1 classes)
 📄 `oqlos.hardware.control_proxy` (1 functions, 1 classes)
 📄 `oqlos.hardware.diagnosis` (26 functions, 3 classes)
-📄 `oqlos.hardware.discovery` (3 functions)
+📄 `oqlos.hardware.discovery` (4 functions)
 📦 `oqlos.hardware.drivers`
 📄 `oqlos.hardware.drivers.gpio` (7 functions, 1 classes)
 📄 `oqlos.hardware.drivers.mqtt` (9 functions, 1 classes)
 📄 `oqlos.hardware.drivers.spi` (7 functions, 1 classes)
 📄 `oqlos.hardware.firmware_adapter` (26 functions, 1 classes)
 📄 `oqlos.hardware.gateway` (25 functions, 5 classes)
+📄 `oqlos.hardware.health_status` (1 functions)
 📄 `oqlos.hardware.hui_actions` (12 functions)
 📄 `oqlos.hardware.identify_enrichment` (1 functions)
 📄 `oqlos.hardware.modbus_identify` (8 functions)
 📄 `oqlos.hardware.peripheral_mapping` (4 functions)
-📄 `oqlos.hardware.plugin_gateway` (21 functions, 1 classes)
+📄 `oqlos.hardware.plugin_gateway` (22 functions, 1 classes)
 📦 `oqlos.hardware.plugins`
 📄 `oqlos.hardware.plugins._rtu_serial` (2 functions)
 📄 `oqlos.hardware.plugins._shared` (4 functions)
@@ -1629,14 +1632,14 @@ oqlos/
 📄 `oqlos.tools.cql_cli.commands` (6 functions)
 📄 `oqlos.tools.cql_cli.formatting` (3 functions)
 📄 `oqlos.tools.cql_cli.main` (18 functions, 1 classes)
-📄 `oqlos.tools.cql_cli.preflight` (12 functions)
+📄 `oqlos.tools.cql_cli.preflight` (11 functions)
 📄 `oqlos.tools.cql_cli.utils` (10 functions)
 📦 `oqlos.tools.hardware_diagnose` (1 functions)
 📄 `oqlos.tools.hardware_diagnose.__main__` (11 functions)
 📄 `oqlos.tools.hardware_diagnose.benchmark` (1 functions)
 📄 `oqlos.tools.hardware_diagnose.calibration` (4 functions)
 📄 `oqlos.tools.hardware_diagnose.discovery` (5 functions, 1 classes)
-📄 `oqlos.tools.hardware_diagnose.doctor` (41 functions)
+📄 `oqlos.tools.hardware_diagnose.doctor` (42 functions)
 📄 `oqlos.tools.hardware_diagnose.health` (7 functions)
 📄 `oqlos.tools.hardware_diagnose.modbus_probe` (16 functions)
 📄 `oqlos.tools.hardware_diagnose.report` (2 functions)

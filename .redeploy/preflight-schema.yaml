@@ -1,0 +1,231 @@
+schema_version: '1.0'
+generated_at: '2026-06-30T13:44:01.603597+00:00'
+spec:
+  path: redeploy/122/migration.md
+  name: oqlos boardnet deploy
+  source_strategy: systemd
+  target_strategy: systemd
+  host: pi@boardnet.local
+plan:
+  steps_total: 19
+  risk: low
+  estimated_downtime: rolling (no downtime)
+  steps:
+  - id: sync_project_tree
+    action: rsync
+    description: Sync full project tree to remote_dir (respect .gitignore/.redeployignore)
+    has_command_ref: false
+    insert_before: null
+  - id: mkdir_hw_remote
+    action: inline_script
+    description: Utwórz katalogi na boardnet
+    has_command_ref: true
+    insert_before: null
+  - id: enable_linger_groups
+    action: inline_script
+    description: Linger + grupy urządzeń dla użytkownika pi
+    has_command_ref: true
+    insert_before: null
+  - id: sync_oqlos_core
+    action: rsync
+    description: Sync oqlos core na boardnet
+    has_command_ref: false
+    insert_before: null
+  - id: sync_oqlos_frontend_dist
+    action: rsync
+    description: Sync zbudowanego OqlOS hardware UI (frontend/dist)
+    has_command_ref: false
+    insert_before: null
+  - id: sync_pihw_config
+    action: rsync
+    description: Sync konfiguracji węzła boardnet (mosquitto.conf, oqlos-hw.yaml,
+      .env.hw)
+    has_command_ref: false
+    insert_before: null
+  - id: sync_pimodbus
+    action: rsync
+    description: Sync pimodbus (adaptery Modbus)
+    has_command_ref: false
+    insert_before: null
+  - id: sync_rpi_motor_tic249
+    action: rsync
+    description: Sync sterownika Pololu Tic T249
+    has_command_ref: false
+    insert_before: null
+  - id: sync_rpi_motor_dri0050
+    action: rsync
+    description: Sync sterownika DFRobot DRI0050
+    has_command_ref: false
+    insert_before: null
+  - id: sync_pirtc
+    action: rsync
+    description: Sync piRTC sidecar
+    has_command_ref: false
+    insert_before: null
+  - id: assert_oqlos_checksum
+    action: inline_script
+    description: Weryfikacja sumą kontrolną wdrożonego pakietu oqlos/ (sha256 vs manifest
+      źródła)
+    has_command_ref: true
+    insert_before: null
+  - id: install_mosquitto
+    action: inline_script
+    description: Zainstaluj i uruchom broker mosquitto (systemd --user)
+    has_command_ref: true
+    insert_before: null
+  - id: deploy_pololu_udev
+    action: inline_script
+    description: Reguły udev dla Pololu Tic
+    has_command_ref: true
+    insert_before: null
+  - id: deploy_hw_tic249_service
+    action: inline_script
+    description: Sidecar Pololu Tic T249 (:8205)
+    has_command_ref: true
+    insert_before: null
+  - id: deploy_dri0050_motor_service
+    action: inline_script
+    description: Sidecar DFRobot DRI0050 (:8203)
+    has_command_ref: true
+    insert_before: null
+  - id: deploy_pirtc_sidecar
+    action: inline_script
+    description: Sidecar piRTC (:8125)
+    has_command_ref: true
+    insert_before: null
+  - id: deploy_oqlos_hw_api
+    action: inline_script
+    description: OqlOS hardware API/UI + OQL-over-MQTT bridge (:8202 LAN)
+    has_command_ref: true
+    insert_before: null
+  - id: assert_hw_node_healthy
+    action: inline_script
+    description: 'Asercja: pełny smoke-test osprzętu, sidecarów, pluginów i MQTT'
+    has_command_ref: true
+    insert_before: null
+  - id: http_health_check
+    action: http_check
+    description: Verify backend health endpoint
+    has_command_ref: false
+    insert_before: null
+checks:
+  lint:
+    enabled: true
+    errors: 0
+    warnings: 0
+    issues: []
+  command_refs:
+  - step_id: mkdir_hw_remote
+    command_ref: mkdir-hw-remote
+    file: /home/tom/github/oqlos/oqlos/redeploy/122/migration.md
+    ref: mkdir-hw-remote
+    resolved: true
+    mode: markpact_ref
+  - step_id: enable_linger_groups
+    command_ref: enable-linger-groups
+    file: /home/tom/github/oqlos/oqlos/redeploy/122/migration.md
+    ref: enable-linger-groups
+    resolved: true
+    mode: markpact_ref
+  - step_id: assert_oqlos_checksum
+    command_ref: assert-oqlos-checksum
+    file: /home/tom/github/oqlos/oqlos/redeploy/122/migration.md
+    ref: assert-oqlos-checksum
+    resolved: true
+    mode: markpact_ref
+  - step_id: install_mosquitto
+    command_ref: install-mosquitto
+    file: /home/tom/github/oqlos/oqlos/redeploy/122/migration.md
+    ref: install-mosquitto
+    resolved: true
+    mode: markpact_ref
+  - step_id: deploy_pololu_udev
+    command_ref: deploy-pololu-udev
+    file: /home/tom/github/oqlos/oqlos/redeploy/122/migration.md
+    ref: deploy-pololu-udev
+    resolved: true
+    mode: markpact_ref
+  - step_id: deploy_hw_tic249_service
+    command_ref: deploy-hw-tic249-service
+    file: /home/tom/github/oqlos/oqlos/redeploy/122/migration.md
+    ref: deploy-hw-tic249-service
+    resolved: true
+    mode: markpact_ref
+  - step_id: deploy_dri0050_motor_service
+    command_ref: deploy-dri0050-motor-service
+    file: /home/tom/github/oqlos/oqlos/redeploy/122/migration.md
+    ref: deploy-dri0050-motor-service
+    resolved: true
+    mode: markpact_ref
+  - step_id: deploy_pirtc_sidecar
+    command_ref: deploy-pirtc-sidecar
+    file: /home/tom/github/oqlos/oqlos/redeploy/122/migration.md
+    ref: deploy-pirtc-sidecar
+    resolved: true
+    mode: markpact_ref
+  - step_id: deploy_oqlos_hw_api
+    command_ref: deploy-oqlos-hw-api
+    file: /home/tom/github/oqlos/oqlos/redeploy/122/migration.md
+    ref: deploy-oqlos-hw-api
+    resolved: true
+    mode: markpact_ref
+  - step_id: assert_hw_node_healthy
+    command_ref: assert-hw-node-healthy
+    file: /home/tom/github/oqlos/oqlos/redeploy/122/migration.md
+    ref: assert-hw-node-healthy
+    resolved: true
+    mode: markpact_ref
+  local_artifacts:
+  - kind: src
+    path: /home/tom/github/maskservice/pimodbus/
+    resolved: /home/tom/github/maskservice/pimodbus
+    exists: true
+    steps:
+    - sync_pimodbus
+  - kind: src
+    path: /home/tom/github/maskservice/pirtc/
+    resolved: /home/tom/github/maskservice/pirtc
+    exists: true
+    steps:
+    - sync_pirtc
+  - kind: src
+    path: /home/tom/github/maskservice/rpi-motor-DRI0050/
+    resolved: /home/tom/github/maskservice/rpi-motor-DRI0050
+    exists: true
+    steps:
+    - sync_rpi_motor_dri0050
+  - kind: src
+    path: /home/tom/github/maskservice/rpi-motor-tic249/
+    resolved: /home/tom/github/maskservice/rpi-motor-tic249
+    exists: true
+    steps:
+    - sync_rpi_motor_tic249
+  - kind: src
+    path: /home/tom/github/oqlos/oqlos/
+    resolved: /home/tom/github/oqlos/oqlos
+    exists: true
+    steps:
+    - sync_oqlos_core
+  - kind: src
+    path: /home/tom/github/oqlos/oqlos/frontend/dist/
+    resolved: /home/tom/github/oqlos/oqlos/frontend/dist
+    exists: true
+    steps:
+    - sync_oqlos_frontend_dist
+  - kind: src
+    path: /home/tom/github/oqlos/oqlos/redeploy/122/
+    resolved: /home/tom/github/oqlos/oqlos/redeploy/122
+    exists: true
+    steps:
+    - sync_pihw_config
+  remote:
+    enabled: true
+    host: pi@boardnet.local
+    reachable: true
+    checks: []
+blockers: []
+summary:
+  blockers: 0
+  local_missing: 0
+  refs_missing: 0
+  remote_failed_checks: 0

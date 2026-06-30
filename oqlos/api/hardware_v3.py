@@ -311,30 +311,34 @@ async def hardware_diagnostic_command_v3(req: DiagnosticCommandRequest) -> dict[
 
 @router.get("/hui/actions")
 async def hardware_hui_actions_v3() -> dict[str, Any]:
-    from oqlos.api import hardware as hw
-
-    return await hw.hui_actions()
+    return await _hardware_v1_call("hui_actions")
 
 
 @router.post("/hui/shutdown")
 async def hardware_hui_shutdown_v3(payload: dict[str, Any] = Body(default_factory=dict)) -> dict[str, Any]:
+    return await _hardware_v1_call("hui_shutdown")
+
+
+async def _hardware_v1_call(name: str, *args: Any, **kwargs: Any) -> dict[str, Any]:
     from oqlos.api import hardware as hw
 
-    return await hw.hui_shutdown()
+    return await getattr(hw, name)(*args, **kwargs)
+
+
+async def _hardware_hui_hold_v3(key: str, action: str) -> dict[str, Any]:
+    if action == "start":
+        return await _hardware_v1_call("hui_hold_start", key)
+    return await _hardware_v1_call("hui_hold_stop", key)
 
 
 @router.post("/hui/hold/{key}/start")
 async def hardware_hui_hold_start_v3(key: str, payload: dict[str, Any] = Body(default_factory=dict)) -> dict[str, Any]:
-    from oqlos.api import hardware as hw
-
-    return await hw.hui_hold_start(key)
+    return await _hardware_hui_hold_v3(key, "start")
 
 
 @router.post("/hui/hold/{key}/stop")
 async def hardware_hui_hold_stop_v3(key: str, payload: dict[str, Any] = Body(default_factory=dict)) -> dict[str, Any]:
-    from oqlos.api import hardware as hw
-
-    return await hw.hui_hold_stop(key)
+    return await _hardware_hui_hold_v3(key, "stop")
 
 
 @router.post("/hui/al/{command}")
@@ -351,23 +355,17 @@ async def hardware_hui_al_command_v3(command: str, payload: dict[str, Any] = Bod
 
 @router.post("/modbus/autoconfigure")
 async def hardware_modbus_autoconfigure_v3() -> dict[str, Any]:
-    from oqlos.api import hardware as hw
-
-    return await hw.hardware_recover_route(scope="safe")
+    return await _hardware_v1_call("hardware_recover_route", scope="safe")
 
 
 @router.get("/diagnosis")
 async def hardware_diagnosis_v3() -> dict[str, Any]:
-    from oqlos.api import hardware as hw
-
-    return await hw.hardware_diagnosis_route(scan="never")
+    return await _hardware_v1_call("hardware_diagnosis_route", scan="never")
 
 
 @router.post("/diagnosis/repair")
 async def hardware_diagnosis_repair_v3() -> dict[str, Any]:
-    from oqlos.api import hardware as hw
-
-    return await hw.hardware_recover_route(scope="safe")
+    return await _hardware_v1_call("hardware_recover_route", scope="safe")
 
 
 @router.get("/modbus/waveshare-diagnose")
@@ -379,16 +377,12 @@ async def hardware_modbus_waveshare_diagnose_v3(exclusive: bool = False) -> dict
 
 @router.get("/modbus/wizard/plan")
 async def hardware_modbus_wizard_plan_v3() -> dict[str, Any]:
-    from oqlos.api import hardware as hw
-
-    return await hw.hardware_modbus_wizard_plan()
+    return await _hardware_v1_call("hardware_modbus_wizard_plan")
 
 
 @router.get("/stack/snapshot")
 async def hardware_stack_snapshot_v3() -> dict[str, Any]:
-    from oqlos.api import hardware as hw
-
-    return await hw.hardware_stack_snapshot()
+    return await _hardware_v1_call("hardware_stack_snapshot")
 
 
 @router.get("/runtime/status")

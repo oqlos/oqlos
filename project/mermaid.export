@@ -1,5 +1,5 @@
 flowchart TD
-%% generated in 0.01s
+%% generated in 0.03s
     subgraph examples__hardware
         examples__hardware__doctor_workflow__print["print"]
     end
@@ -347,52 +347,52 @@ flowchart TD
         oqlos__tools__plugin_cli__cmd_reload["cmd_reload"]
         oqlos__tools__plugin_cli__cmd_peripherals("cmd_peripherals CC=8")
         oqlos__tools__plugin_cli__main["main"]
-        oqlos__tools__hardware_diagnose__doctor___usb_serial_only["_usb_serial_only"]
-        oqlos__tools__hardware_diagnose__doctor___load_config_summary["_load_config_summary"]
-        oqlos__tools__hardware_diagnose__doctor___probe_modbus["_probe_modbus"]
-        oqlos__tools__hardware_diagnose__doctor___probe_modbus_adc["_probe_modbus_adc"]
-        oqlos__tools__hardware_diagnose__doctor___serial_port_owners["_serial_port_owners"]
-        oqlos__tools__hardware_diagnose__doctor___canonical_device_path["_canonical_device_path"]
-        oqlos__tools__hardware_diagnose__doctor___owners_for_configured_port["_owners_for_configured_port"]
-        oqlos__tools__hardware_diagnose__doctor___extract_pids["_extract_pids"]
-        oqlos__tools__hardware_diagnose__doctor___describe_pid["_describe_pid"]
-        oqlos__tools__hardware_diagnose__doctor__detect_hardware["detect_hardware"]
-        oqlos__tools__hardware_diagnose__doctor___firmware_hostname["_firmware_hostname"]
-        oqlos__tools__hardware_diagnose__doctor___add_issue["_add_issue"]
-        oqlos__tools__hardware_diagnose__doctor___modbus_config["_modbus_config"]
-        oqlos__tools__hardware_diagnose__doctor___modbus_adc_config["_modbus_adc_config"]
-        oqlos__tools__hardware_diagnose__doctor___expected_modbus_params["_expected_modbus_params"]
-        oqlos__tools__hardware_diagnose__doctor___expected_modbus_adc_params["_expected_modbus_adc_params"]
-        oqlos__tools__hardware_diagnose__doctor___analyze_modbus_adc_config("_analyze_modbus_adc_config CC=12")
-        oqlos__tools__hardware_diagnose__doctor___firmware_modbus_adc_health_ok["_firmware_modbus_adc_health_ok"]
-        oqlos__tools__hardware_diagnose__doctor___analyze_modbus_config("_analyze_modbus_config CC=11")
-        oqlos__tools__hardware_diagnose__doctor___check_firmware_health_error["_check_firmware_health_error"]
-        oqlos__tools__hardware_diagnose__doctor___check_firmware_mode["_check_firmware_mode"]
-        oqlos__tools__hardware_diagnose__doctor___check_firmware_serial_access("_check_firmware_serial_access CC=11")
-        oqlos__tools__hardware_diagnose__doctor___check_firmware_adapters["_check_firmware_adapters"]
-        oqlos__tools__hardware_diagnose__doctor___analyze_firmware_access["_analyze_firmware_access"]
-        oqlos__tools__hardware_diagnose__doctor___adapter_health_status["_adapter_health_status"]
-        oqlos__tools__hardware_diagnose__doctor___health_status_is_ok("_health_status_is_ok CC=11")
-        oqlos__tools__hardware_diagnose__doctor___analyze_serial_port_owners("_analyze_serial_port_owners CC=13")
-        oqlos__tools__hardware_diagnose__doctor___collect_repairs["_collect_repairs"]
-        oqlos__tools__hardware_diagnose__doctor__build_doctor_report("build_doctor_report CC=11")
-        oqlos__tools__hardware_diagnose__doctor__apply_safe_fixes("apply_safe_fixes CC=9")
-        oqlos__tools__hardware_diagnose__doctor___update_modbus_config["_update_modbus_config"]
-        oqlos__tools__hardware_diagnose__doctor___update_modbus_adc_config["_update_modbus_adc_config"]
-        oqlos__tools__hardware_diagnose__doctor___format_modbus_status["_format_modbus_status"]
-        oqlos__tools__hardware_diagnose__doctor__format_detection("format_detection CC=10")
-        oqlos__tools__hardware_diagnose__doctor___firmware_modbus_health_ok("_firmware_modbus_health_ok CC=10")
-        oqlos__tools__hardware_diagnose__doctor___firmware_is_remote["_firmware_is_remote"]
-        oqlos__tools__hardware_diagnose__doctor___firmware_adapter_status["_firmware_adapter_status"]
-        oqlos__tools__hardware_diagnose__doctor___format_doctor_issues["_format_doctor_issues"]
-        oqlos__tools__hardware_diagnose__doctor___format_doctor_applied_repairs["_format_doctor_applied_repairs"]
-        oqlos__tools__hardware_diagnose__doctor___format_doctor_unapplied("_format_doctor_unapplied CC=8")
-        oqlos__tools__hardware_diagnose__doctor__format_doctor["format_doctor"]
         oqlos__tools__hardware_diagnose__main["main"]
         oqlos__tools__hardware_diagnose__health___request_firmware_json("_request_firmware_json CC=8")
         oqlos__tools__hardware_diagnose__health__check_firmware_health["check_firmware_health"]
         oqlos__tools__hardware_diagnose__health__check_firmware_identify["check_firmware_identify"]
         oqlos__tools__hardware_diagnose__health___is_health_ok["_is_health_ok"]
+        oqlos__tools__hardware_diagnose__health___format_health_value("_format_health_value CC=8")
+        oqlos__tools__hardware_diagnose__health__cmd_health["cmd_health"]
+        oqlos__tools__hardware_diagnose__health__cmd_diagnose["cmd_diagnose"]
+        oqlos__tools__hardware_diagnose____main_____print_list["_print_list"]
+        oqlos__tools__hardware_diagnose____main_____print_health["_print_health"]
+        oqlos__tools__hardware_diagnose____main_____print_calibrate["_print_calibrate"]
+        oqlos__tools__hardware_diagnose____main_____print_benchmark["_print_benchmark"]
+        oqlos__tools__hardware_diagnose____main_____print_detect["_print_detect"]
+        oqlos__tools__hardware_diagnose____main_____print_doctor["_print_doctor"]
+        oqlos__tools__hardware_diagnose____main_____print_modbus_probe["_print_modbus_probe"]
+        oqlos__tools__hardware_diagnose____main____main["main"]
+        oqlos__tools__hardware_diagnose____main_____handle_report_action["_handle_report_action"]
+        oqlos__tools__hardware_diagnose____main_____dispatch_action["_dispatch_action"]
+        oqlos__tools__hardware_diagnose____main_____print_diagnose["_print_diagnose"]
+        oqlos__tools__hardware_diagnose__modbus_probe___env_int["_env_int"]
+        oqlos__tools__hardware_diagnose__modbus_probe___env_int_list["_env_int_list"]
+        oqlos__tools__hardware_diagnose__modbus_probe___env_count_list["_env_count_list"]
+        oqlos__tools__hardware_diagnose__modbus_probe___env_str_list["_env_str_list"]
+        oqlos__tools__hardware_diagnose__modbus_probe___env_float["_env_float"]
+        oqlos__tools__hardware_diagnose__modbus_probe___split_values["_split_values"]
+        oqlos__tools__hardware_diagnose__modbus_probe___arg_str_list["_arg_str_list"]
+        oqlos__tools__hardware_diagnose__modbus_probe___arg_int_list["_arg_int_list"]
+        oqlos__tools__hardware_diagnose__modbus_probe___arg_count_list["_arg_count_list"]
+        oqlos__tools__hardware_diagnose__modbus_probe___serials_from_env["_serials_from_env"]
+        oqlos__tools__hardware_diagnose__modbus_probe__add_modbus_probe_arguments["add_modbus_probe_arguments"]
+        oqlos__tools__hardware_diagnose__modbus_probe__probe_options_from_args["probe_options_from_args"]
+        oqlos__tools__hardware_diagnose__modbus_probe__run_modbus_probe_from_args["run_modbus_probe_from_args"]
+        oqlos__tools__hardware_diagnose__modbus_probe__run_modbus_probe_from_env["run_modbus_probe_from_env"]
+        oqlos__tools__hardware_diagnose__modbus_probe__run_modbus_probe["run_modbus_probe"]
+        oqlos__tools__hardware_diagnose__modbus_probe__main["main"]
+        oqlos__tools__hardware_diagnose__shell___cmd_list["_cmd_list"]
+        oqlos__tools__hardware_diagnose__shell___cmd_calibrate["_cmd_calibrate"]
+        oqlos__tools__hardware_diagnose__shell___cmd_benchmark["_cmd_benchmark"]
+        oqlos__tools__hardware_diagnose__shell___dispatch_command["_dispatch_command"]
+        oqlos__tools__hardware_diagnose__shell__interactive_shell["interactive_shell"]
+        oqlos__tools__hardware_diagnose__benchmark__run_benchmark["run_benchmark"]
+        oqlos__tools__hardware_diagnose__discovery___run_shell_command["_run_shell_command"]
+        oqlos__tools__hardware_diagnose__discovery__UsbDevice__to_dict["to_dict"]
+        oqlos__tools__hardware_diagnose__discovery__list_usb_serial_devices["list_usb_serial_devices"]
+        oqlos__tools__hardware_diagnose__discovery__list_i2c_buses["list_i2c_buses"]
+        oqlos__tools__hardware_diagnose__discovery__detect_chips_on_i2c("detect_chips_on_i2c CC=8")
     end
     subgraph oqlos__utils
         oqlos__utils__sample_data__load_sample_scenarios["load_sample_scenarios"]
@@ -1092,55 +1092,55 @@ flowchart TD
     oqlos__tools__plugin_cli__cmd_reload --> frontend__src__utils__hardware_wizard_steps__list
     oqlos__tools__plugin_cli__cmd_peripherals --> oqlos__tools__plugin_cli___default_config_path
     oqlos__tools__plugin_cli__cmd_peripherals --> examples__hardware__doctor_workflow__print
-    oqlos__tools__hardware_diagnose__doctor___load_config_summary --> oqlos__hardware__config_paths__resolve_oqlos_config_path
-    oqlos__tools__hardware_diagnose__doctor___load_config_summary --> frontend__src__i18n__I18nProvider__dict
-    oqlos__tools__hardware_diagnose__doctor___probe_modbus --> oqlos__hardware__discovery__probe_waveshare_modbus
-    oqlos__tools__hardware_diagnose__doctor___probe_modbus_adc --> oqlos__hardware__discovery__probe_waveshare_modbus_adc
-    oqlos__tools__hardware_diagnose__doctor___serial_port_owners --> oqlos__tools__hardware_diagnose__doctor___extract_pids
-    oqlos__tools__hardware_diagnose__doctor___serial_port_owners --> oqlos__tools__hardware_diagnose__doctor___describe_pid
-    oqlos__tools__hardware_diagnose__doctor___owners_for_configured_port --> oqlos__tools__hardware_diagnose__doctor___canonical_device_path
-    oqlos__tools__hardware_diagnose__doctor__detect_hardware --> oqlos__tools__hardware_diagnose__discovery__list_usb_serial_devices
-    oqlos__tools__hardware_diagnose__doctor__detect_hardware --> oqlos__tools__hardware_diagnose__doctor___usb_serial_only
-    oqlos__tools__hardware_diagnose__doctor__detect_hardware --> oqlos__tools__hardware_diagnose__doctor___probe_modbus
-    oqlos__tools__hardware_diagnose__doctor__detect_hardware --> oqlos__tools__hardware_diagnose__doctor___probe_modbus_adc
-    oqlos__tools__hardware_diagnose__doctor__detect_hardware --> oqlos__tools__hardware_diagnose__doctor___load_config_summary
-    oqlos__tools__hardware_diagnose__doctor__detect_hardware --> oqlos__tools__hardware_diagnose__doctor___firmware_hostname
-    oqlos__tools__hardware_diagnose__doctor__detect_hardware --> oqlos__tools__hardware_diagnose__doctor___serial_port_owners
-    oqlos__tools__hardware_diagnose__doctor__detect_hardware --> oqlos__tools__hardware_diagnose__discovery__list_i2c_buses
-    oqlos__tools__hardware_diagnose__doctor__detect_hardware --> oqlos__tools__hardware_diagnose__health__check_firmware_health
-    oqlos__tools__hardware_diagnose__doctor__detect_hardware --> oqlos__tools__hardware_diagnose__health__check_firmware_identify
-    oqlos__tools__hardware_diagnose__doctor___analyze_modbus_adc_config --> oqlos__tools__hardware_diagnose__doctor___firmware_is_remote
-    oqlos__tools__hardware_diagnose__doctor___analyze_modbus_adc_config --> oqlos__tools__hardware_diagnose__doctor___expected_modbus_adc_params
-    oqlos__tools__hardware_diagnose__doctor___analyze_modbus_adc_config --> oqlos__tools__hardware_diagnose__doctor___modbus_adc_config
-    oqlos__tools__hardware_diagnose__doctor___analyze_modbus_adc_config --> oqlos__tools__hardware_diagnose__doctor___firmware_modbus_adc_health_ok
-    oqlos__tools__hardware_diagnose__doctor___analyze_modbus_adc_config --> oqlos__tools__hardware_diagnose__doctor___add_issue
-    oqlos__tools__hardware_diagnose__doctor___analyze_modbus_config --> oqlos__tools__hardware_diagnose__doctor___firmware_is_remote
-    oqlos__tools__hardware_diagnose__doctor___analyze_modbus_config --> oqlos__tools__hardware_diagnose__doctor___expected_modbus_params
-    oqlos__tools__hardware_diagnose__doctor___analyze_modbus_config --> oqlos__tools__hardware_diagnose__doctor___modbus_config
-    oqlos__tools__hardware_diagnose__doctor___analyze_modbus_config --> oqlos__tools__hardware_diagnose__doctor___firmware_modbus_health_ok
-    oqlos__tools__hardware_diagnose__doctor___analyze_modbus_config --> oqlos__tools__hardware_diagnose__doctor___add_issue
-    oqlos__tools__hardware_diagnose__doctor___check_firmware_health_error --> oqlos__tools__hardware_diagnose__doctor___add_issue
-    oqlos__tools__hardware_diagnose__doctor___check_firmware_mode --> oqlos__tools__hardware_diagnose__doctor___add_issue
-    oqlos__tools__hardware_diagnose__doctor___check_firmware_serial_access --> oqlos__tools__hardware_diagnose__doctor___add_issue
-    oqlos__tools__hardware_diagnose__doctor___check_firmware_adapters --> oqlos__tools__hardware_diagnose__doctor___adapter_health_status
-    oqlos__tools__hardware_diagnose__doctor___check_firmware_adapters --> oqlos__tools__hardware_diagnose__doctor___health_status_is_ok
-    oqlos__tools__hardware_diagnose__doctor___check_firmware_adapters --> oqlos__tools__hardware_diagnose__doctor___add_issue
-    oqlos__tools__hardware_diagnose__doctor___analyze_firmware_access --> oqlos__tools__hardware_diagnose__doctor___check_firmware_health_error
-    oqlos__tools__hardware_diagnose__doctor___analyze_firmware_access --> oqlos__tools__hardware_diagnose__doctor___check_firmware_mode
-    oqlos__tools__hardware_diagnose__doctor___analyze_firmware_access --> oqlos__tools__hardware_diagnose__doctor___check_firmware_serial_access
-    oqlos__tools__hardware_diagnose__doctor___analyze_firmware_access --> oqlos__tools__hardware_diagnose__doctor___check_firmware_adapters
-    oqlos__tools__hardware_diagnose__doctor___analyze_firmware_access --> oqlos__tools__hardware_diagnose__doctor___add_issue
-    oqlos__tools__hardware_diagnose__doctor___analyze_serial_port_owners --> oqlos__tools__hardware_diagnose__doctor___firmware_is_remote
-    oqlos__tools__hardware_diagnose__doctor___analyze_serial_port_owners --> oqlos__tools__hardware_diagnose__doctor___owners_for_configured_port
-    oqlos__tools__hardware_diagnose__doctor___analyze_serial_port_owners --> oqlos__tools__hardware_diagnose__doctor___add_issue
-    oqlos__tools__hardware_diagnose__doctor___analyze_serial_port_owners --> oqlos__tools__hardware_diagnose__doctor___modbus_config
-    oqlos__tools__hardware_diagnose__doctor___collect_repairs --> oqlos__core__base__VariableStore__set
-    oqlos__tools__hardware_diagnose__doctor__build_doctor_report --> oqlos__tools__hardware_diagnose__doctor__detect_hardware
-    oqlos__tools__hardware_diagnose__doctor__build_doctor_report --> oqlos__tools__hardware_diagnose__doctor___analyze_modbus_config
-    oqlos__tools__hardware_diagnose__doctor__build_doctor_report --> oqlos__tools__hardware_diagnose__doctor___analyze_modbus_adc_config
-    oqlos__tools__hardware_diagnose__doctor__build_doctor_report --> oqlos__tools__hardware_diagnose__doctor___analyze_serial_port_owners
-    oqlos__tools__hardware_diagnose__doctor__build_doctor_report --> oqlos__tools__hardware_diagnose__doctor___analyze_firmware_access
-    oqlos__tools__hardware_diagnose__doctor__build_doctor_report --> oqlos__tools__hardware_diagnose__doctor___collect_repairs
+    oqlos__tools__hardware_diagnose__health__check_firmware_health --> oqlos__tools__hardware_diagnose__health___request_firmware_json
+    oqlos__tools__hardware_diagnose__health__check_firmware_identify --> oqlos__tools__hardware_diagnose__health___request_firmware_json
+    oqlos__tools__hardware_diagnose__health__cmd_health --> oqlos__tools__hardware_diagnose__health__check_firmware_health
+    oqlos__tools__hardware_diagnose__health__cmd_health --> oqlos__tools__hardware_diagnose__health___is_health_ok
+    oqlos__tools__hardware_diagnose__health__cmd_health --> oqlos__tools__hardware_diagnose__health___format_health_value
+    oqlos__tools__hardware_diagnose__health__cmd_diagnose --> oqlos__tools__hardware_diagnose__discovery__list_i2c_buses
+    oqlos__tools__hardware_diagnose__health__cmd_diagnose --> oqlos__tools__hardware_diagnose__health__check_firmware_identify
+    oqlos__tools__hardware_diagnose__health__cmd_diagnose --> oqlos__tools__hardware_diagnose__report__format_peripheral_table
+    oqlos__tools__hardware_diagnose__health__cmd_diagnose --> oqlos__tools__hardware_diagnose__health__cmd_health
+    oqlos__tools__hardware_diagnose__health__cmd_diagnose --> oqlos__tools__hardware_diagnose__discovery__list_usb_serial_devices
+    oqlos__tools__hardware_diagnose____main_____print_list --> oqlos__tools__hardware_diagnose__discovery__list_usb_serial_devices
+    oqlos__tools__hardware_diagnose____main_____print_list --> examples__hardware__doctor_workflow__print
+    oqlos__tools__hardware_diagnose____main_____print_list --> oqlos__tools__hardware_diagnose__report__format_peripheral_table
+    oqlos__tools__hardware_diagnose____main_____print_list --> oqlos__tools__hardware_diagnose__discovery__list_i2c_buses
+    oqlos__tools__hardware_diagnose____main_____print_health --> examples__hardware__doctor_workflow__print
+    oqlos__tools__hardware_diagnose____main_____print_health --> oqlos__tools__plugin_cli__cmd_health
+    oqlos__tools__hardware_diagnose____main_____print_health --> oqlos__tools__hardware_diagnose__health__check_firmware_health
+    oqlos__tools__hardware_diagnose____main_____print_calibrate --> oqlos__tools__hardware_diagnose__calibration__run_calibration_test
+    oqlos__tools__hardware_diagnose____main_____print_calibrate --> examples__hardware__doctor_workflow__print
+    oqlos__tools__hardware_diagnose____main_____print_benchmark --> oqlos__tools__hardware_diagnose__benchmark__run_benchmark
+    oqlos__tools__hardware_diagnose____main_____print_benchmark --> examples__hardware__doctor_workflow__print
+    oqlos__tools__hardware_diagnose____main_____print_detect --> oqlos__tools__hardware_diagnose__doctor__detect_hardware
+    oqlos__tools__hardware_diagnose____main_____print_detect --> examples__hardware__doctor_workflow__print
+    oqlos__tools__hardware_diagnose____main_____print_detect --> oqlos__tools__hardware_diagnose__doctor__format_detection
+    oqlos__tools__hardware_diagnose____main_____print_doctor --> oqlos__tools__hardware_diagnose__doctor__build_doctor_report
+    oqlos__tools__hardware_diagnose____main_____print_doctor --> examples__hardware__doctor_workflow__print
+    oqlos__tools__hardware_diagnose____main_____print_doctor --> oqlos__tools__hardware_diagnose__doctor__format_doctor
+    oqlos__tools__hardware_diagnose____main_____print_modbus_probe --> oqlos__tools__hardware_diagnose__modbus_probe__run_modbus_probe_from_args
+    oqlos__tools__hardware_diagnose____main_____print_modbus_probe --> examples__hardware__doctor_workflow__print
+    oqlos__tools__hardware_diagnose____main_____handle_report_action --> oqlos__tools__hardware_diagnose__report__save_diagnostic_report
+    oqlos__tools__hardware_diagnose____main_____handle_report_action --> examples__hardware__doctor_workflow__print
+    oqlos__tools__hardware_diagnose____main_____print_diagnose --> examples__hardware__doctor_workflow__print
+    oqlos__tools__hardware_diagnose____main_____print_diagnose --> oqlos__tools__hardware_diagnose__health__cmd_diagnose
+    oqlos__tools__hardware_diagnose____main_____print_diagnose --> oqlos__tools__hardware_diagnose__discovery__list_i2c_buses
+    oqlos__tools__hardware_diagnose____main_____print_diagnose --> oqlos__tools__hardware_diagnose__health__check_firmware_health
+    oqlos__tools__hardware_diagnose____main_____print_diagnose --> oqlos__tools__hardware_diagnose__health__check_firmware_identify
+    oqlos__tools__hardware_diagnose____main_____print_diagnose --> oqlos__tools__hardware_diagnose__discovery__list_usb_serial_devices
+    oqlos__tools__hardware_diagnose__modbus_probe___env_count_list --> oqlos__tools__hardware_diagnose__modbus_probe___env_int_list
+    oqlos__tools__hardware_diagnose__modbus_probe___env_str_list --> oqlos__tools__hardware_diagnose__modbus_probe___split_values
+    oqlos__tools__hardware_diagnose__modbus_probe___arg_str_list --> oqlos__tools__hardware_diagnose__modbus_probe___split_values
+    oqlos__tools__hardware_diagnose__modbus_probe___arg_int_list --> oqlos__tools__hardware_diagnose__modbus_probe___split_values
+    oqlos__tools__hardware_diagnose__modbus_probe___arg_count_list --> oqlos__tools__hardware_diagnose__modbus_probe___arg_int_list
+    oqlos__tools__hardware_diagnose__modbus_probe__probe_options_from_args --> oqlos__tools__hardware_diagnose__modbus_probe___arg_str_list
+    oqlos__tools__hardware_diagnose__modbus_probe__probe_options_from_args --> oqlos__tools__hardware_diagnose__modbus_probe___arg_int_list
+    oqlos__tools__hardware_diagnose__modbus_probe__probe_options_from_args --> oqlos__tools__hardware_diagnose__modbus_probe___arg_count_list
+    oqlos__tools__hardware_diagnose__modbus_probe__probe_options_from_args --> oqlos__tools__hardware_diagnose__modbus_probe___serials_from_env
+    oqlos__tools__hardware_diagnose__modbus_probe__probe_options_from_args --> oqlos__tools__hardware_diagnose__modbus_probe___env_int_list
+    oqlos__tools__hardware_diagnose__modbus_probe__probe_options_from_args --> oqlos__tools__hardware_diagnose__modbus_probe___env_str_list
+    oqlos__tools__hardware_diagnose__modbus_probe__run_modbus_probe_from_args --> oqlos__tools__hardware_diagnose__modbus_probe__run_modbus_probe
 
     classDef highCC fill:#ff6b6b,stroke:#c92a2a,color:#fff
     classDef medCC fill:#ffd43b,stroke:#f08c00,color:#000

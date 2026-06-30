@@ -379,32 +379,47 @@ def _probe_i2c_ads1115() -> dict[str, Any]:
     return {"connected": False, "reason": reason, "address": hex(address), "buses": bus_numbers}
 
 
-def _probe_modbus_rtu() -> dict[str, Any]:
-    """Detect the active Waveshare Modbus RTU serial port and line settings."""
-    probe = probe_waveshare_modbus(
-        preferred_port=_settings.modbus_serial_port,
-        preferred_baud=_settings.modbus_baud,
-        preferred_parity=_settings.modbus_parity,
-        preferred_device_id=_settings.modbus_device_id,
+def _probe_waveshare_rtu(
+    probe_fn: Any,
+    *,
+    preferred_port: str,
+    preferred_baud: int,
+    preferred_parity: str,
+    preferred_device_id: int,
+    wiring_hint: str,
+) -> dict[str, Any]:
+    probe = probe_fn(
+        preferred_port=preferred_port,
+        preferred_baud=preferred_baud,
+        preferred_parity=preferred_parity,
+        preferred_device_id=preferred_device_id,
     )
     if probe.get("connected") and not probe.get("modbus_device_responds", True):
         note = probe.get("note") or "USB serial adapter detected"
-        probe["note"] = f"{note} (check power or RS485 wiring if this is unexpected)"
+        probe["note"] = f"{note} ({wiring_hint})"
     return probe
 
 
-def _probe_modbus_adc_rtu() -> dict[str, Any]:
-    """Detect the Waveshare Modbus RTU Analog Input 8CH module."""
-    probe = probe_waveshare_modbus_adc(
-        preferred_port=_settings.modbus_adc_serial_port,
-        preferred_baud=_settings.modbus_adc_baud,
-        preferred_parity=_settings.modbus_adc_parity,
-        preferred_device_id=_settings.modbus_adc_device_id,
-    )
-    if probe.get("connected") and not probe.get("modbus_device_responds", True):
-        note = probe.get("note") or "USB serial adapter detected"
-        probe["note"] = f"{note} (check power, address, baudrate, or RS485 wiring if this is unexpected)"
-    return probe
+def _probe_configured_waveshare_rtu(role: str) -> dict[str, Any]:
+    specs = {
+        "modbus-io": {
+            "probe_fn": probe_waveshare_modbus,
+            "preferred_port": _settings.modbus_serial_port,
+            "preferred_baud": _settings.modbus_baud,
+            "preferred_parity": _settings.modbus_parity,
+            "preferred_device_id": _settings.modbus_device_id,
+            "wiring_hint": "check power or RS485 wiring if this is unexpected",
+        },
+        "modbus-adc": {
+            "probe_fn": probe_waveshare_modbus_adc,
+            "preferred_port": _settings.modbus_adc_serial_port,
+            "preferred_baud": _settings.modbus_adc_baud,
+            "preferred_parity": _settings.modbus_adc_parity,
+            "preferred_device_id": _settings.modbus_adc_device_id,
+            "wiring_hint": "check power, address, baudrate, or RS485 wiring if this is unexpected",
+        },
+    }
+    return _probe_waveshare_rtu(**specs[role])
 
 
 def _probe_all_hardware(ids: set[str] | None = None) -> dict[str, Any]:
@@ -420,9 +435,9 @@ def _probe_all_hardware(ids: set[str] | None = None) -> dict[str, Any]:
     if "motor-dri0050" in selected:
         results["motor-dri0050"] = _probe_dri0050(usb_devices or [])
     if "modbus-adc" in selected:
-        results["modbus-adc"] = _probe_modbus_adc_rtu()
+        results["modbus-adc"] = _probe_configured_waveshare_rtu("modbus-adc")
     if "modbus-io" in selected:
-        results["modbus-io"] = _probe_modbus_rtu()
+        results["modbus-io"] = _probe_configured_waveshare_rtu("modbus-io")
     return results
 
 
@@ -1787,39 +1802,39 @@ async def hui_actions() -> dict[str, Any]:
     return list_hui_actions()
 
 
-@router.post("/hui/shutdown")
+@router.post("/hui/shutdown", summary="Stop HUI pump/valve actions using the canonical OqlOS recipe")
 async def hui_shutdown() -> dict[str, Any]:
-    """Stop HUI pump/valve actions using the canonical OqlOS recipe."""
     return await shutdown_all_hui_hardware(_gw())
 
 
-@router.post("/hui/hold/{key}/start")
-async def hui_hold_start(key: str) -> dict[str, Any]:
-    """Start a named HUI hold action."""
-    payload = await start_hui_hold(_gw(), key)
+def _raise_if_hui_failed(payload: dict[str, Any]) -> None:
     if not payload.get("ok"):
         raise HTTPException(status_code=400, detail=payload)
+
+
+async def _start_hui_action(action: Any, *args: Any) -> dict[str, Any]:
+    payload = await action(_gw(), *args)
+    _raise_if_hui_failed(payload)
     return payload
 
 
-@router.post("/hui/hold/{key}/stop")
+@router.post("/hui/hold/{key}/start", summary="Start a named HUI hold action")
+async def hui_hold_start(key: str) -> dict[str, Any]:
+    return await _start_hui_action(start_hui_hold, key)
+
+
+@router.post("/hui/hold/{key}/stop", summary="Stop a named HUI hold action and return hardware to a safe state")
 async def hui_hold_stop(key: str) -> dict[str, Any]:
-    """Stop a named HUI hold action and return hardware to a safe state."""
     return await stop_hui_hold(_gw(), key)
 
 
-@router.post("/hui/al/start")
+@router.post("/hui/al/start", summary="Start the HUI artificial-lung action")
 async def hui_al_start() -> dict[str, Any]:
-    """Start the HUI artificial-lung action."""
-    payload = await start_hui_artificial_lung(_gw())
-    if not payload.get("ok"):
-        raise HTTPException(status_code=400, detail=payload)
-    return payload
+    return await _start_hui_action(start_hui_artificial_lung)
 
 
-@router.post("/hui/al/stop")
+@router.post("/hui/al/stop", summary="Stop the HUI artificial-lung action")
 async def hui_al_stop() -> dict[str, Any]:
-    """Stop the HUI artificial-lung action."""
     return await stop_hui_artificial_lung(_gw())
 
 
@@ -2198,18 +2213,19 @@ async def set_lung(steps: int = 500, speed: int = TIC249_DEFAULT_TARGET_VELOCITY
     return payload
 
 
-@router.post("/lung/stop")
+async def _lung_state_response(action: Any, status: str) -> dict[str, Any]:
+    ok = await action()
+    return {"ok": ok, "status": status}
+
+
+@router.post("/lung/stop", summary="Emergency stop the artificial lung motor")
 async def stop_lung():
-    """Emergency stop the artificial lung motor."""
-    ok = await _gw().stop_lung()
-    return {"ok": ok, "status": "stopped"}
+    return await _lung_state_response(_gw().stop_lung, "stopped")
 
 
-@router.post("/lung/disable")
+@router.post("/lung/disable", summary="De-energize the artificial lung motor")
 async def disable_lung():
-    """De-energize the artificial lung motor (release coils)."""
-    ok = await _gw().disable_lung()
-    return {"ok": ok, "status": "de-energized"}
+    return await _lung_state_response(_gw().disable_lung, "de-energized")
 
 
 @router.get("/artificial-lung/status")
@@ -2221,6 +2237,11 @@ async def artificial_lung_status():
 @router.post("/artificial-lung/command")
 async def artificial_lung_command(payload: dict[str, Any] = Body(default_factory=dict)):
     """Execute artificial-lung logical commands (set_lpm, lung_*, emergency_stop)."""
+    command, args = _command_payload(payload)
+    return await execute_artificial_lung_command(command, args, _gw())
+
+
+def _command_payload(payload: dict[str, Any]) -> tuple[str, dict[str, Any]]:
     command = str(payload.get("command") or "").strip()
     if not command:
         raise HTTPException(status_code=400, detail="command is required")
@@ -2229,7 +2250,7 @@ async def artificial_lung_command(payload: dict[str, Any] = Body(default_factory
         args = {}
     if not isinstance(args, dict):
         raise HTTPException(status_code=400, detail="args must be an object")
-    return await execute_artificial_lung_command(command, args, _gw())
+    return command, args
 
 
 @router.get("/rtc/status")
@@ -2241,12 +2262,5 @@ async def rtc_status():
 @router.post("/rtc/command")
 async def rtc_command(payload: dict[str, Any] = Body(default_factory=dict)):
     """Execute a diagnostic command against the RTC sidecar."""
-    command = str(payload.get("command") or "").strip()
-    if not command:
-        raise HTTPException(status_code=400, detail="command is required")
-    args = payload.get("args")
-    if args is None:
-        args = {}
-    if not isinstance(args, dict):
-        raise HTTPException(status_code=400, detail="args must be an object")
+    command, args = _command_payload(payload)
     return await asyncio.to_thread(run_rtc_command, command, args)

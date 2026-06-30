@@ -75,10 +75,10 @@ def test_hui_artificial_lung_uses_tic249_plugin_recipe() -> None:
     assert args["direction"] == "right"
     assert args["limit_mode"] == "reverse_on_limit"
     assert args["steps"] == 1_000_000
-    assert args["speed"] == 10_000_000
+    assert args["speed"] == 100_000_000
     assert args["pause"] == 0.5
     assert args["ramp_seconds"] == 0.5
-    assert args["acceleration"] == 20_000_000
+    assert args["acceleration"] == 200_000_000
 
 
 def test_hui_shutdown_turns_off_pump_and_all_known_valves() -> None:

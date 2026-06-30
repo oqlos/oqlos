@@ -197,6 +197,8 @@ test-hw` przerwie z błędem, gdy wdrożony kod rozjedzie się ze źródłem.
 > i klient (`oqlos/hardware/client/`) zostały **skopiowane** z
 > `maskservice/c2004/connect-scenario` (upstream). Źródło **nie zostało
 > wyczyszczone** — te fragmenty nadal tam są, więc pilnuj rozjazdu między repo.
+> Plan deduplikacji (co i kiedy usunąć z connect-scenario):
+> [`docs/DEDUP-connect-scenario.md`](docs/DEDUP-connect-scenario.md).
 
 ### Run a Scenario (OQL v3 — flat syntax)
 

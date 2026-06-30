@@ -9,7 +9,7 @@ from __future__ import annotations
 import os
 import pathlib
 import sys
-from typing import Any
+from typing import Any, Callable
 
 
 def _ensure_local_pimodbus_on_path() -> None:
@@ -65,39 +65,99 @@ DEFAULT_MODBUS_ADC_READ_ADDRESS = int(os.getenv("MODBUS_ADC_READ_ADDRESS", "0"))
 DEFAULT_MODBUS_ADC_READ_COUNT = int(os.getenv("MODBUS_ADC_READ_COUNT", "8"))
 
 
-def probe_waveshare_modbus(
-    preferred_port: str | None = None,
-    preferred_baud: int | None = None,
-    preferred_parity: str | None = None,
-    preferred_device_id: int | None = None,
-    timeout: float = 0.35,
+_MODBUS_PROBE_SPECS: dict[str, dict[str, Any]] = {
+    "modbus-io": {
+        "probe_fn": probe_modbus_io,
+        "default_serial": DEFAULT_MODBUS_SERIAL,
+        "default_baud": DEFAULT_MODBUS_BAUD,
+        "default_parity": DEFAULT_MODBUS_PARITY,
+        "default_device_id": DEFAULT_MODBUS_DEVICE_ID,
+    },
+    "modbus-adc": {
+        "probe_fn": probe_modbus_adc,
+        "default_serial": DEFAULT_MODBUS_ADC_SERIAL,
+        "default_baud": DEFAULT_MODBUS_ADC_BAUD,
+        "default_parity": DEFAULT_MODBUS_ADC_PARITY,
+        "default_device_id": DEFAULT_MODBUS_ADC_DEVICE_ID,
+        "read_address": DEFAULT_MODBUS_ADC_READ_ADDRESS,
+        "read_count": DEFAULT_MODBUS_ADC_READ_COUNT,
+    },
+}
+
+
+def _probe_waveshare(
+    probe_fn: Any,
+    *,
+    preferred_port: str | None,
+    preferred_baud: int | None,
+    preferred_parity: str | None,
+    preferred_device_id: int | None,
+    default_serial: str,
+    default_baud: int,
+    default_parity: str,
+    default_device_id: int,
+    timeout: float,
+    **extra: Any,
 ) -> dict[str, Any]:
-    """Probe serial ports and return the first working Modbus IO configuration."""
-    return probe_modbus_io(
-        serial_port=preferred_port or DEFAULT_MODBUS_SERIAL,
-        baudrate=preferred_baud or DEFAULT_MODBUS_BAUD,
-        parity=preferred_parity or DEFAULT_MODBUS_PARITY,
-        device_id=preferred_device_id or DEFAULT_MODBUS_DEVICE_ID,
+    return probe_fn(
+        serial_port=preferred_port or default_serial,
+        baudrate=preferred_baud or default_baud,
+        parity=preferred_parity or default_parity,
+        device_id=preferred_device_id or default_device_id,
         timeout=timeout,
         ports=list_serial_ports(),
+        **extra,
     )
 
 
-def probe_waveshare_modbus_adc(
-    preferred_port: str | None = None,
-    preferred_baud: int | None = None,
-    preferred_parity: str | None = None,
-    preferred_device_id: int | None = None,
-    timeout: float = 0.35,
+def _probe_waveshare_role(
+    role: str,
+    preferred_port: str | None,
+    preferred_baud: int | None,
+    preferred_parity: str | None,
+    preferred_device_id: int | None,
+    timeout: float,
 ) -> dict[str, Any]:
-    """Probe serial ports for the Waveshare Modbus RTU Analog Input 8CH module."""
-    return probe_modbus_adc(
-        serial_port=preferred_port or DEFAULT_MODBUS_ADC_SERIAL,
-        baudrate=preferred_baud or DEFAULT_MODBUS_ADC_BAUD,
-        parity=preferred_parity or DEFAULT_MODBUS_ADC_PARITY,
-        device_id=preferred_device_id or DEFAULT_MODBUS_ADC_DEVICE_ID,
+    spec = _MODBUS_PROBE_SPECS[role]
+    extra = {
+        key: spec[key]
+        for key in ("read_address", "read_count")
+        if key in spec
+    }
+    return _probe_waveshare(
+        spec["probe_fn"],
+        preferred_port=preferred_port,
+        preferred_baud=preferred_baud,
+        preferred_parity=preferred_parity,
+        preferred_device_id=preferred_device_id,
+        default_serial=spec["default_serial"],
+        default_baud=spec["default_baud"],
+        default_parity=spec["default_parity"],
+        default_device_id=spec["default_device_id"],
         timeout=timeout,
-        read_address=DEFAULT_MODBUS_ADC_READ_ADDRESS,
-        read_count=DEFAULT_MODBUS_ADC_READ_COUNT,
-        ports=list_serial_ports(),
+        **extra,
     )
+
+
+def _build_waveshare_probe(role: str, doc: str) -> Callable[..., dict[str, Any]]:
+    def _probe(
+        preferred_port: str | None = None,
+        preferred_baud: int | None = None,
+        preferred_parity: str | None = None,
+        preferred_device_id: int | None = None,
+        timeout: float = 0.35,
+    ) -> dict[str, Any]:
+        return _probe_waveshare_role(role, preferred_port, preferred_baud, preferred_parity, preferred_device_id, timeout)
+
+    _probe.__doc__ = doc
+    return _probe
+
+
+probe_waveshare_modbus = _build_waveshare_probe(
+    "modbus-io",
+    "Probe serial ports and return the first working Modbus IO configuration.",
+)
+probe_waveshare_modbus_adc = _build_waveshare_probe(
+    "modbus-adc",
+    "Probe serial ports for the Waveshare Modbus RTU Analog Input 8CH module.",
+)

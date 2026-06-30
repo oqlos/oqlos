@@ -1,12 +1,12 @@
 flowchart TD
-%% generated in 0.04s
+%% generated in 0.07s
     examples__hardware["examples.hardware<br/>1 funcs"]
     frontend__src["frontend.src<br/>517 funcs"]
-    oqlos__api["oqlos.api<br/>262 funcs"]
+    oqlos__api["oqlos.api<br/>268 funcs"]
     oqlos__config["oqlos.config<br/>1 funcs"]
     oqlos__core["oqlos.core<br/>401 funcs"]
     oqlos__dsl["oqlos.dsl<br/>6 funcs"]
-    oqlos__hardware["oqlos.hardware<br/>501 funcs"]
+    oqlos__hardware["oqlos.hardware<br/>504 funcs"]
     oqlos__reporters["oqlos.reporters<br/>13 funcs"]
     oqlos__shared["oqlos.shared<br/>45 funcs"]
     oqlos__tools["oqlos.tools<br/>190 funcs"]
@@ -20,18 +20,18 @@ flowchart TD
     scripts__scenarios_export["scripts.scenarios_export<br/>13 funcs"]
     setup_hardware_and_run_oql["setup_hardware_and_run_oql<br/>7 funcs"]
     oqlos__tools ==>|125| examples__hardware
-    oqlos__tools ==>|88| frontend__src
+    oqlos__tools ==>|89| frontend__src
     oqlos__hardware ==>|72| frontend__src
     scripts__migrate_to_v4 ==>|37| examples__hardware
     setup_hardware_and_run_oql ==>|27| examples__hardware
-    oqlos__api ==>|21| oqlos__hardware
+    oqlos__api ==>|20| frontend__src
     scripts__fix_brackets_to_v4 ==>|19| examples__hardware
     oqlos__core ==>|18| frontend__src
-    oqlos__api ==>|18| frontend__src
+    oqlos__api ==>|17| oqlos__hardware
     oqlos__tools ==>|10| oqlos__core
     oqlos__api ==>|9| oqlos__shared
+    oqlos__tools ==>|7| oqlos__hardware
     oqlos__shared ==>|7| examples__hardware
-    oqlos__tools ==>|6| oqlos__hardware
     oqlos__hardware ==>|6| oqlos__core
     oqlos__api ==>|6| oqlos__core
     oqlos__shared ==>|4| frontend__src
@@ -47,7 +47,6 @@ flowchart TD
     scripts__fix_brackets_to_v4 -->|2| scripts__oql_v2_to_v4_migrate_db
     scripts__oql_v2_to_v4_migrate_db -->|2| frontend__src
     scripts__scenarios_export -->|2| examples__hardware
-    oqlos__hardware -->|1| oqlos__api
     oqlos__shared -->|1| oqlos__core
     oqlos__shared -->|1| oqlos__config
     oqlos__api -->|1| oqlos__config
@@ -61,3 +60,4 @@ flowchart TD
     scripts__oql_v2_validator -->|1| scripts__oql_validator_common
     scripts__migrate_to_v4 -->|1| oqlos__tools
     scripts__scenarios_export -->|1| scripts__oql_v4_validator
+    oqlos__hardware -->|1| oqlos__api

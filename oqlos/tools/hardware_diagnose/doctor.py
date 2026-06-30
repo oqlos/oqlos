@@ -7,13 +7,14 @@ import subprocess
 from contextlib import redirect_stderr, redirect_stdout
 from io import StringIO
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 from urllib.parse import urlparse
 
 import yaml
 
 from oqlos.hardware.config_paths import resolve_oqlos_config_path
 from oqlos.hardware.discovery import probe_waveshare_modbus, probe_waveshare_modbus_adc
+from oqlos.hardware.health_status import health_status_is_ok
 from oqlos.hardware.plugins.registry import PluginRegistry
 from oqlos.tools.hardware_diagnose.discovery import (
     UsbDevice,
@@ -70,11 +71,11 @@ def _load_config_summary(config_path: str | Path | None) -> dict[str, Any]:
     }
 
 
-def _probe_modbus(probe_timeout: float) -> dict[str, Any]:
+def _run_modbus_probe(probe: Callable[..., dict[str, Any]], probe_timeout: float) -> dict[str, Any]:
     capture = StringIO()
     try:
         with redirect_stdout(capture), redirect_stderr(capture):
-            result = probe_waveshare_modbus(timeout=probe_timeout)
+            result = probe(timeout=probe_timeout)
     except Exception as exc:
         result = {
             "connected": False,
@@ -89,27 +90,14 @@ def _probe_modbus(probe_timeout: float) -> dict[str, Any]:
     if diagnostic_output:
         result["diagnostic_output"] = diagnostic_output[-10:]
     return result
+
+
+def _probe_modbus(probe_timeout: float) -> dict[str, Any]:
+    return _run_modbus_probe(probe_waveshare_modbus, probe_timeout)
 
 
 def _probe_modbus_adc(probe_timeout: float) -> dict[str, Any]:
-    capture = StringIO()
-    try:
-        with redirect_stdout(capture), redirect_stderr(capture):
-            result = probe_waveshare_modbus_adc(timeout=probe_timeout)
-    except Exception as exc:
-        result = {
-            "connected": False,
-            "reason": str(exc),
-            "modbus_device_responds": False,
-        }
-
-    diagnostic_output = [
-        line.strip() for line in capture.getvalue().splitlines()
-        if line.strip()
-    ]
-    if diagnostic_output:
-        result["diagnostic_output"] = diagnostic_output[-10:]
-    return result
+    return _run_modbus_probe(probe_waveshare_modbus_adc, probe_timeout)
 
 
 def _serial_port_owners(devices: list[UsbDevice]) -> dict[str, list[dict[str, str]]]:
@@ -254,20 +242,20 @@ def _add_issue(
     issues.append(issue)
 
 
-def _modbus_config(config: dict[str, Any]) -> dict[str, Any] | None:
+def _plugin_config(config: dict[str, Any], plugin_id: str) -> dict[str, Any] | None:
     plugins = config.get("plugins")
     if not isinstance(plugins, dict):
         return None
-    modbus = plugins.get("modbus-io")
-    return modbus if isinstance(modbus, dict) else None
+    plugin = plugins.get(plugin_id)
+    return plugin if isinstance(plugin, dict) else None
+
+
+def _modbus_config(config: dict[str, Any]) -> dict[str, Any] | None:
+    return _plugin_config(config, "modbus-io")
 
 
 def _modbus_adc_config(config: dict[str, Any]) -> dict[str, Any] | None:
-    plugins = config.get("plugins")
-    if not isinstance(plugins, dict):
-        return None
-    adc = plugins.get("modbus-adc")
-    return adc if isinstance(adc, dict) else None
+    return _plugin_config(config, "modbus-adc")
 
 
 def _expected_modbus_params(modbus_probe: dict[str, Any]) -> dict[str, Any] | None:
@@ -582,7 +570,7 @@ def _check_firmware_adapters(
         adapter_id = adapter.get("id", "unknown")
         health_status = _adapter_health_status(health, adapter_id)
         if health_status is not None:
-            if _health_status_is_ok(health_status):
+            if health_status_is_ok(health_status):
                 continue
             _add_issue(
                 issues,
@@ -633,26 +621,6 @@ def _adapter_health_status(health: dict[str, Any], adapter_id: str) -> Any | Non
         if key in health:
             return health[key]
     return None
-
-
-def _health_status_is_ok(raw_status: Any) -> bool:
-    if isinstance(raw_status, dict):
-        status = str(raw_status.get("status", "")).lower()
-        compatible = raw_status.get("compatible")
-        return status in {"ok", "connected"} and compatible is not False
-
-    status = str(raw_status).lower()
-    if not status:
-        return False
-    if status == "ok" or status.startswith("ok "):
-        return True
-    if status in {"connected", "healthy", "ready"}:
-        return True
-    if status.startswith(("connected ", "healthy ", "ready ")):
-        return True
-    if "error" in status or "offline" in status or "no-access" in status:
-        return False
-    return False
 
 
 def _analyze_serial_port_owners(detection: dict[str, Any], issues: list[Issue]) -> None:
@@ -912,7 +880,7 @@ def _firmware_modbus_health_ok(detection: dict[str, Any]) -> bool:
         return False
     status = _adapter_health_status(health, "modbus-io")
     if isinstance(status, dict):
-        return _health_status_is_ok(status)
+        return health_status_is_ok(status)
     if isinstance(status, str) and status.lower().startswith(("ok", "connected", "healthy", "ready")):
         return True
 

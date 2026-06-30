@@ -5,12 +5,12 @@
 
 - **Project**: /home/tom/github/oqlos/oqlos
 - **Primary Language**: python
-- **Languages**: python: 148, javascript: 35, md: 17, yaml: 13, shell: 9
+- **Languages**: python: 149, javascript: 35, md: 18, yaml: 13, shell: 9
 - **Analysis Mode**: static
-- **Total Functions**: 2066
+- **Total Functions**: 2075
 - **Total Classes**: 123
-- **Modules**: 240
-- **Entry Points**: 1253
+- **Modules**: 242
+- **Entry Points**: 1255
 
 ## Architecture by Module
 
@@ -19,7 +19,7 @@
 - **File**: `MapEditor.jsx`
 
 ### oqlos.api.hardware
-- **Functions**: 89
+- **Functions**: 93
 - **File**: `hardware.py`
 
 ### frontend.src.pages.HardwareRestart
@@ -48,7 +48,7 @@
 - **File**: `HardwareDemo.jsx`
 
 ### oqlos.api.hardware_v3
-- **Functions**: 44
+- **Functions**: 46
 - **Classes**: 9
 - **File**: `hardware_v3.py`
 
@@ -63,7 +63,7 @@
 - **File**: `oql_v2_to_v4_migrate_db.py`
 
 ### oqlos.tools.hardware_diagnose.doctor
-- **Functions**: 41
+- **Functions**: 42
 - **File**: `doctor.py`
 
 ### oqlos.core._action_motor2
@@ -165,19 +165,19 @@ valve commands to POST /api/v1/hardware/valve/{id} so t
 > Probe configured I2C bus(es) for ADS1115.
 - **Calls**: os.getenv, os.getenv, os.getenv, os.getenv, oqlos.api.hardware._local_ads1115_probe_allowed, int, frontend.src.utils.hardware-wizard-steps.list, None.join
 
+### oqlos.shared.event_server.EventServer._handle_message
+- **Calls**: json.loads, self._normalize_event, self.event_store.append, None.get, examples.hardware.doctor-workflow.print, data.get, data.get, data.get
+
 ### oqlos.hardware.plugin_gateway.PluginHardwareGateway._initialize_plugins
 > Initialize all enabled plugins in parallel.
 - **Calls**: logger.warning, logger.info, logger.info, None.append, str, config.connection_params.get, logger.info, self._plugin_configs.items
 
-### oqlos.shared.event_server.EventServer._handle_message
-- **Calls**: json.loads, self._normalize_event, self.event_store.append, None.get, examples.hardware.doctor-workflow.print, data.get, data.get, data.get
-
-### scripts.scenarios_export.main
-- **Calls**: argparse.ArgumentParser, parser.add_argument, parser.add_mutually_exclusive_group, group.add_argument, group.add_argument, group.add_argument, parser.add_argument, parser.add_argument
-
 ### oqlos.api.hardware.read_modbus_adc_raw
 > Return raw Modbus ADC diagnostics for HUI troubleshooting.
 - **Calls**: router.get, health.get, isinstance, modbus_adc_health.get, plugin.execute_command, result.get, health.get, result.get
+
+### scripts.scenarios_export.main
+- **Calls**: argparse.ArgumentParser, parser.add_argument, parser.add_mutually_exclusive_group, group.add_argument, group.add_argument, group.add_argument, parser.add_argument, parser.add_argument
 
 ### frontend.src.utils.useSelectionCollapsePanel.RAIL_HOVER_OPEN_MS
 - **Calls**: frontend.src.utils.useSelectionCollapsePanel.useState, frontend.src.utils.useSelectionCollapsePanel.readStoredCollapsed, frontend.src.utils.useSelectionCollapsePanel.useRef, frontend.src.utils.useSelectionCollapsePanel.useCallback, frontend.src.utils.useSelectionCollapsePanel.clearTimeout, frontend.src.utils.useSelectionCollapsePanel.cancelAutoCollapse, frontend.src.utils.useSelectionCollapsePanel.setHoverPreview, frontend.src.utils.useSelectionCollapsePanel.setTimeout
@@ -326,7 +326,7 @@ _handle_start [oqlos.api.state]
 > Simplified hardware gateway using plugin architecture.
 
 Instead of hardcoded adapters, this gateway 
-- **Methods**: 22
+- **Methods**: 23
 - **Key Methods**: oqlos.hardware.plugin_gateway.PluginHardwareGateway.__init__, oqlos.hardware.plugin_gateway.PluginHardwareGateway._load_hardware_schema, oqlos.hardware.plugin_gateway.PluginHardwareGateway._parse_plugin_configs, oqlos.hardware.plugin_gateway.PluginHardwareGateway._apply_env_overrides, oqlos.hardware.plugin_gateway.PluginHardwareGateway._apply_plugin_enable_env_overrides, oqlos.hardware.plugin_gateway.PluginHardwareGateway._apply_shared_modbus_bus_env_overrides, oqlos.hardware.plugin_gateway.PluginHardwareGateway._apply_modbus_env_overrides, oqlos.hardware.plugin_gateway.PluginHardwareGateway.modbus_preflight_report, oqlos.hardware.plugin_gateway.PluginHardwareGateway._log_modbus_preflight, oqlos.hardware.plugin_gateway.PluginHardwareGateway.ensure_initialized
 
 ### oqlos.hardware.plugins.lung.LungPlugin
@@ -615,27 +615,27 @@ Functions exposed as public API (no underscore prefix):
 - `oqlos.tools.hardware_diagnose.modbus_probe.probe_options_from_args` - 27 calls
 - `oqlos.hardware.rtc_probe.build_rtc_peripheral_status` - 27 calls
 - `oqlos.hardware.client.modbus_repair.rewrite_modbus_repair` - 26 calls
-- `oqlos.tools.hardware_diagnose.doctor.format_detection` - 25 calls
 - `oqlos.hardware.client.resolvers.extract_command_failure` - 25 calls
 - `oqlos.hardware.client.identify_enrich.enrich_adapter_entry` - 25 calls
 - `oqlos.hardware.client.identify_enrich.enrich_identify_payload` - 25 calls
 - `oqlos.reporters.html_report.render_html_report` - 25 calls
 - `scripts.scenarios_export.export_all_zip` - 25 calls
+- `oqlos.tools.hardware_diagnose.doctor.format_detection` - 25 calls
 - `setup_hardware_and_run_oql.run_oql_scenario` - 24 calls
 - `oqlos.shared.logger.configure_oqlos_logging` - 23 calls
-- `scripts.scenarios_export.main` - 23 calls
 - `oqlos.api.hardware.read_modbus_adc_raw` - 23 calls
+- `scripts.scenarios_export.main` - 23 calls
 - `oqlos.tools.cql_cli.commands.handle_list_command` - 22 calls
 - `frontend.src.utils.useSelectionCollapsePanel.RAIL_HOVER_OPEN_MS` - 21 calls
 - `frontend.src.utils.useSelectionCollapsePanel.RAIL_HOVER_CLOSE_MS` - 21 calls
 - `frontend.src.utils.useSelectionCollapsePanel.useSelectionCollapsePanel` - 21 calls
 - `oqlos.core.oql_parser.parse_oql` - 21 calls
 - `oqlos.core.parser.parse_dsl_to_goal_with_issues` - 21 calls
-- `oqlos.tools.hardware_diagnose.doctor.format_doctor` - 21 calls
 - `oqlos.tools.hardware_diagnose.__main__.main` - 21 calls
 - `oqlos.tools.xml_import.generators.generate_dsl` - 21 calls
 - `oqlos.api.oql_mqtt.oql_ws` - 21 calls
 - `scripts.migrate_to_v4.check_database` - 21 calls
+- `scripts.oql_v2_to_v4_migrate_db.migrate_v2_to_v4` - 21 calls
 
 ## System Interactions
 

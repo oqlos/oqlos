@@ -15,6 +15,7 @@ import click
 import httpx
 
 from oqlos.tools.cql_cli.utils import output_yaml, resolve_required_adapter
+from oqlos.hardware.health_status import health_status_is_ok
 from oqlos.tools.hardware_diagnose.health import check_firmware_health, check_firmware_identify
 
 
@@ -172,7 +173,7 @@ def check_required_adapter_health(
         if key not in health:
             continue
         raw_status = health.get(key)
-        if _health_status_is_ok(raw_status):
+        if health_status_is_ok(raw_status):
             return True
         error_msg = (
             "Hardware preflight failed: "
@@ -182,27 +183,6 @@ def check_required_adapter_health(
         return False
 
     return True
-
-
-def _health_status_is_ok(raw_status) -> bool:
-    """Normalize old gateway string health and plugin-gateway dict health."""
-    if isinstance(raw_status, dict):
-        status = str(raw_status.get("status", "")).lower()
-        compatible = raw_status.get("compatible")
-        return status in {"ok", "connected"} and compatible is not False
-
-    status = str(raw_status).lower()
-    if not status:
-        return False
-    if status == "ok" or status.startswith("ok "):
-        return True
-    if status in {"connected", "healthy", "ready"}:
-        return True
-    if status.startswith(("connected ", "healthy ", "ready ")):
-        return True
-    if "error" in status or "offline" in status or "no-access" in status:
-        return False
-    return False
 
 
 def _emit_preflight_error(error_msg: str, yaml_output: bool, quiet: bool) -> None:
