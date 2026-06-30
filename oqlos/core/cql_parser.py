@@ -186,9 +186,9 @@ class _ParseState:
 
     def _handle_scenario_attrs(self, line: str) -> bool:
         """Handle scenario attribute lines."""
-        if not (self.current_scenario and not self.current_goal):
-            return False
-        return _parse_scenario_attrs(line, self.current_scenario)
+        return self._handle_current_attrs(
+            line, self.current_scenario, self.current_goal, _parse_scenario_attrs
+        )
 
     def _handle_goal(self, stripped: str, line: str, indent: int) -> bool:
         """Handle goal line parsing."""
@@ -208,9 +208,12 @@ class _ParseState:
 
     def _handle_goal_attrs(self, line: str) -> bool:
         """Handle goal attribute lines."""
-        if not (self.current_goal and not self.current_step):
+        return self._handle_current_attrs(line, self.current_goal, self.current_step, _parse_goal_attrs)
+
+    def _handle_current_attrs(self, line: str, current, nested, parser) -> bool:
+        if not (current and not nested):
             return False
-        return _parse_goal_attrs(line, self.current_goal)
+        return parser(line, current)
 
     def _handle_step(self, line: str) -> bool:
         """Handle step line parsing."""
@@ -244,21 +247,8 @@ class _ParseState:
         else:
             self.current_step.actions.append(act)
 
-    def _append_nested_action(self, act) -> None:
-        """Append action to appropriate parent in block stack."""
-        if len(self.block_stack) <= 1:
-            self.current_step.actions.append(act)
-            return
-
-        parent_act, in_else = self.block_stack[-2]
-        if parent_act.kind == "loop_block":
-            parent_act.loop_actions.append(act)
-        else:
-            target_list = parent_act.else_actions if in_else else parent_act.then_actions
-            target_list.append(act)
-
-    def _append_loop_action(self, act) -> None:
-        """Append loop action handling special loop-in-loop case."""
+    def _append_parent_stack_action(self, act) -> None:
+        """Append an action to the parent block or current step."""
         if len(self.block_stack) <= 1:
             self.current_step.actions.append(act)
             return
@@ -287,12 +277,12 @@ class _ParseState:
         # Block starters
         if act.kind in {"if_block", "if_fail_block"}:
             self.block_stack.append((act, False))
-            self._append_nested_action(act)
+            self._append_parent_stack_action(act)
             return True
 
         if act.kind == "loop_block":
             self.block_stack.append((act, False))
-            self._append_loop_action(act)
+            self._append_parent_stack_action(act)
             return True
 
         # Branch control

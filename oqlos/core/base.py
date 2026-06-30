@@ -153,35 +153,26 @@ class InterpreterOutput:
         except Exception:
             pass
 
-    def info(self, msg: str) -> None:
+    def _emit_status(self, msg: str, *, yaml_key: str, prefix: str, event_type: str) -> None:
         if self.yaml_output:
-            self.yaml_data.setdefault("info", []).append(msg)
+            self.yaml_data.setdefault(yaml_key, []).append(msg)
         else:
-            self.emit(f"ℹ️  {msg}", "info")
+            self.emit(f"{prefix}{msg}", event_type)
+
+    def info(self, msg: str) -> None:
+        self._emit_status(msg, yaml_key="info", prefix="ℹ️  ", event_type="info")
 
     def ok(self, msg: str) -> None:
-        if self.yaml_output:
-            self.yaml_data.setdefault("success", []).append(msg)
-        else:
-            self.emit(f"✅ {msg}", "success")
+        self._emit_status(msg, yaml_key="success", prefix="✅ ", event_type="success")
 
     def fail(self, msg: str) -> None:
-        if self.yaml_output:
-            self.yaml_data.setdefault("failure", []).append(msg)
-        else:
-            self.emit(f"❌ {msg}", "failure")
+        self._emit_status(msg, yaml_key="failure", prefix="❌ ", event_type="failure")
 
     def warn(self, msg: str) -> None:
-        if self.yaml_output:
-            self.yaml_data.setdefault("warning", []).append(msg)
-        else:
-            self.emit(f"⚠️  {msg}", "warning")
+        self._emit_status(msg, yaml_key="warning", prefix="⚠️  ", event_type="warning")
 
     def error(self, msg: str) -> None:
-        if self.yaml_output:
-            self.yaml_data.setdefault("error", []).append(msg)
-        else:
-            self.emit(f"❌ {msg}", "error")
+        self._emit_status(msg, yaml_key="error", prefix="❌ ", event_type="error")
 
     def step(self, icon: str, msg: str) -> None:
         if self.yaml_output:

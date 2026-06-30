@@ -7,6 +7,7 @@ Extracted from _interpreter_actions.py to reduce module size.
 from __future__ import annotations
 
 import re
+import sys
 from typing import Any, TYPE_CHECKING
 
 import httpx
@@ -45,6 +46,11 @@ def _parse_motor2_speed_steps(value: str) -> int | None:
     normalized = str(value or "").strip().lower()
     if "step" not in normalized or "/s" not in normalized:
         return None
+    return _parse_motor2_positive_int(normalized)
+
+
+def _parse_motor2_positive_int(value: str) -> int | None:
+    normalized = str(value or "").strip().lower()
     match = re.search(r"([-+]?\d+(?:\.\d+)?)", normalized)
     if not match:
         return None
@@ -158,11 +164,7 @@ def _parse_motor2_reciprocating_setting(value: str) -> "dict[str, Any] | None":
 
 
 def _parse_motor2_steps(value: str) -> int | None:
-    normalized = str(value or "").strip().lower()
-    match = re.search(r"([-+]?\d+(?:\.\d+)?)", normalized)
-    if not match:
-        return None
-    return max(1, int(abs(float(match.group(1)))))
+    return _parse_motor2_positive_int(value)
 
 
 def _motor2_speed_raw(steps_per_second: int) -> int:
@@ -240,6 +242,15 @@ def _post_motor2_stop() -> None:
             raise RuntimeError(str(data.get("error") or "motor2 stop failed"))
 
 
+def _call_motor2_transport(name: str, fallback: "Any", *args: "Any") -> "Any":
+    """Honor legacy monkeypatches on _interpreter_actions while keeping motor2 isolated."""
+    compat_module = sys.modules.get("oqlos.core._interpreter_actions")
+    transport = getattr(compat_module, name, None) if compat_module is not None else None
+    if transport is not None and transport is not fallback:
+        return transport(*args)
+    return fallback(*args)
+
+
 def _motor2_reciprocating_state(interp: "CqlInterpreter") -> dict[str, Any]:
     state = interp.vars.get("__motor2_reciprocating")
     if not isinstance(state, dict):
@@ -248,67 +259,31 @@ def _motor2_reciprocating_state(interp: "CqlInterpreter") -> dict[str, Any]:
     return state
 
 
-def _motor2_set_mode(interp: "CqlInterpreter", setting: "dict[str, Any]", state: "dict[str, Any]") -> "StepStatus":
+def _motor2_set_state_value(interp: "CqlInterpreter", state: "dict[str, Any]", key: str, value: Any, label: str) -> "StepStatus":
     from oqlos.core.base import StepStatus
-    state["enabled"] = True
-    interp.out.step("    ⚙️", "SET 'motor 2' 'reciprocating motion'")
+
+    state[key] = value
+    interp.out.step("    ⚙️", label)
     return StepStatus.PASSED
 
 
-def _motor2_set_limit_mode(interp: "CqlInterpreter", setting: "dict[str, Any]", state: "dict[str, Any]") -> "StepStatus":
-    from oqlos.core.base import StepStatus
-    state["limit_mode"] = setting.get("limit_mode")
-    interp.out.step("    ⚙️", "SET 'motor 2' 'reverse on limit'")
-    return StepStatus.PASSED
+def _motor2_state_handler(
+    key: str,
+    value_fn: "Any",
+    label_fn: "Any",
+) -> "Any":
+    def _handler(interp: "CqlInterpreter", setting: "dict[str, Any]", state: "dict[str, Any]") -> "StepStatus":
+        value = value_fn(setting)
+        return _motor2_set_state_value(interp, state, key, value, label_fn(value))
 
-
-def _motor2_set_limit(interp: "CqlInterpreter", setting: "dict[str, Any]", state: "dict[str, Any]") -> "StepStatus":
-    from oqlos.core.base import StepStatus
-    state["speed"] = int(setting["speed"])
-    interp.out.step("    ⚙️", f"SET 'motor 2' 'limit {state['speed']} steps/s'")
-    return StepStatus.PASSED
-
-
-def _motor2_set_stroke(interp: "CqlInterpreter", setting: "dict[str, Any]", state: "dict[str, Any]") -> "StepStatus":
-    from oqlos.core.base import StepStatus
-    state["steps"] = int(setting["steps"])
-    interp.out.step("    ⚙️", f"SET 'motor 2' 'stroke {state['steps']} steps'")
-    return StepStatus.PASSED
-
-
-def _motor2_set_cycle_volume(interp: "CqlInterpreter", setting: "dict[str, Any]", state: "dict[str, Any]") -> "StepStatus":
-    from oqlos.core.base import StepStatus
-    state["cycle_volume_liters"] = float(setting["liters"])
-    interp.out.step("    ⚙️", f"SET 'motor 2' 'cycle volume {state['cycle_volume_liters']:g} l'")
-    return StepStatus.PASSED
-
-
-def _motor2_set_volume(interp: "CqlInterpreter", setting: "dict[str, Any]", state: "dict[str, Any]") -> "StepStatus":
-    from oqlos.core.base import StepStatus
-    state["volume_liters"] = float(setting["liters"])
-    interp.out.step("    ⚙️", f"SET 'motor 2' 'volume {state['volume_liters']:g} l'")
-    return StepStatus.PASSED
-
-
-def _motor2_set_duration(interp: "CqlInterpreter", setting: "dict[str, Any]", state: "dict[str, Any]") -> "StepStatus":
-    from oqlos.core.base import StepStatus
-    state["duration_seconds"] = float(setting["seconds"])
-    interp.out.step("    ⚙️", f"SET 'motor 2' 'duration {state['duration_seconds']:g}s'")
-    return StepStatus.PASSED
-
-
-def _motor2_set_cycles(interp: "CqlInterpreter", setting: "dict[str, Any]", state: "dict[str, Any]") -> "StepStatus":
-    from oqlos.core.base import StepStatus
-    state["cycles"] = int(setting["cycles"])
-    interp.out.step("    ⚙️", f"SET 'motor 2' 'cycles {state['cycles']}'")
-    return StepStatus.PASSED
+    return _handler
 
 
 def _motor2_do_stop(interp: "CqlInterpreter", setting: "dict[str, Any]", state: "dict[str, Any]") -> "StepStatus":
     from oqlos.core.base import StepStatus
     if interp.mode == "execute":
         try:
-            _post_motor2_stop()
+            _call_motor2_transport("_post_motor2_stop", _post_motor2_stop)
         except Exception as exc:
             interp.out.error(f"MOTOR2 STOP failed: {exc}")
             return StepStatus.ERROR
@@ -366,7 +341,9 @@ def _motor2_do_start(interp: "CqlInterpreter", setting: "dict[str, Any]", state:
     pause = float(state.get("pause") or 0.0)
     if interp.mode == "execute":
         try:
-            _post_motor2_reciprocate(
+            _call_motor2_transport(
+                "_post_motor2_reciprocate",
+                _post_motor2_reciprocate,
                 plan.direction,
                 plan.steps,
                 motor2_speed_raw(plan.effective_steps_per_second, plan.max_steps_per_second),
@@ -387,14 +364,46 @@ def _motor2_do_start(interp: "CqlInterpreter", setting: "dict[str, Any]", state:
 
 
 _MOTOR2_RECIPROCATING_HANDLERS: dict = {
-    "mode": _motor2_set_mode,
-    "limit_mode": _motor2_set_limit_mode,
-    "limit": _motor2_set_limit,
-    "stroke": _motor2_set_stroke,
-    "cycle_volume": _motor2_set_cycle_volume,
-    "volume": _motor2_set_volume,
-    "duration": _motor2_set_duration,
-    "cycles": _motor2_set_cycles,
+    "mode": _motor2_state_handler(
+        "enabled",
+        lambda _setting: True,
+        lambda _value: "SET 'motor 2' 'reciprocating motion'",
+    ),
+    "limit_mode": _motor2_state_handler(
+        "limit_mode",
+        lambda setting: setting.get("limit_mode"),
+        lambda _value: "SET 'motor 2' 'reverse on limit'",
+    ),
+    "limit": _motor2_state_handler(
+        "speed",
+        lambda setting: int(setting["speed"]),
+        lambda value: f"SET 'motor 2' 'limit {value} steps/s'",
+    ),
+    "stroke": _motor2_state_handler(
+        "steps",
+        lambda setting: int(setting["steps"]),
+        lambda value: f"SET 'motor 2' 'stroke {value} steps'",
+    ),
+    "cycle_volume": _motor2_state_handler(
+        "cycle_volume_liters",
+        lambda setting: float(setting["liters"]),
+        lambda value: f"SET 'motor 2' 'cycle volume {value:g} l'",
+    ),
+    "volume": _motor2_state_handler(
+        "volume_liters",
+        lambda setting: float(setting["liters"]),
+        lambda value: f"SET 'motor 2' 'volume {value:g} l'",
+    ),
+    "duration": _motor2_state_handler(
+        "duration_seconds",
+        lambda setting: float(setting["seconds"]),
+        lambda value: f"SET 'motor 2' 'duration {value:g}s'",
+    ),
+    "cycles": _motor2_state_handler(
+        "cycles",
+        lambda setting: int(setting["cycles"]),
+        lambda value: f"SET 'motor 2' 'cycles {value}'",
+    ),
     "stop": _motor2_do_stop,
     "start": _motor2_do_start,
 }
@@ -449,7 +458,9 @@ def _try_exec_motor2_set(interp: "CqlInterpreter", target_lower: str, value: str
 
     if interp.mode == "execute":
         try:
-            _post_motor2_move_relative(
+            _call_motor2_transport(
+                "_post_motor2_move_relative",
+                _post_motor2_move_relative,
                 direction,
                 steps_per_second,
                 _motor2_speed_raw(steps_per_second),
