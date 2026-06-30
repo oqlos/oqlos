@@ -49,8 +49,8 @@ Detailed guide: [Hardware Diagnostics](HARDWARE_DIAGNOSTICS.md).
 
 <!-- code2docs:start --># oqlos
 
-![version](https://img.shields.io/badge/version-0.1.0-blue) ![python](https://img.shields.io/badge/python-%3E%3D3.10-blue) ![coverage](https://img.shields.io/badge/coverage-unknown-lightgrey) ![functions](https://img.shields.io/badge/functions-2065-green)
-> **2065** functions | **123** classes | **246** files | CC̄ = 4.2
+![version](https://img.shields.io/badge/version-0.1.0-blue) ![python](https://img.shields.io/badge/python-%3E%3D3.10-blue) ![coverage](https://img.shields.io/badge/coverage-unknown-lightgrey) ![functions](https://img.shields.io/badge/functions-2066-green)
+> **2066** functions | **123** classes | **247** files | CC̄ = 4.2
 
 > Auto-generated project documentation from source code analysis.
 
@@ -194,6 +194,7 @@ oqlos/
         ├── migration
         ├── RUNBOOK
         ├── mosquitto
+        ├── CURRENT_STATE
         ├── oqlos-hw
         ├── migration
         ├── RUNBOOK
@@ -1111,6 +1112,7 @@ oqlos/
 - `generate_dsl(report)` — Generate human-readable DSL text from parsed report.
 - `generate_cql(report)` — Generate CQL (Connex Query Language) text from parsed report.
 - `generate_goals_json(report)` — Generate JSON goals structure for REST API.
+- `default_firmware_url()` — Return the CLI default firmware URL, allowing deployment env overrides.
 - `run_source(source, filename)` — Execute a CQL source string with a configured interpreter.
 - `run_single_command(command)` — Execute one OQL command line by wrapping it in a minimal scenario.
 - `handle_list_command(argv)` — Handle the 'cmd list' subcommand.
@@ -1624,7 +1626,7 @@ oqlos/
 📄 `oqlos.shared.release_version` (7 functions)
 📄 `oqlos.shared.version_endpoint` (2 functions)
 📦 `oqlos.tools.cql_cli` (2 functions)
-📄 `oqlos.tools.cql_cli.commands` (5 functions)
+📄 `oqlos.tools.cql_cli.commands` (6 functions)
 📄 `oqlos.tools.cql_cli.formatting` (3 functions)
 📄 `oqlos.tools.cql_cli.main` (18 functions, 1 classes)
 📄 `oqlos.tools.cql_cli.preflight` (12 functions)
@@ -1651,6 +1653,7 @@ oqlos/
 📄 `project`
 📄 `pyproject`
 📄 `pyqual`
+📄 `redeploy.122.CURRENT_STATE`
 📄 `redeploy.122.RUNBOOK`
 📄 `redeploy.122.migration`
 📄 `redeploy.122.mosquitto`

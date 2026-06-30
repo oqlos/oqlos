@@ -357,7 +357,7 @@ przyczyny:
 - RS485 A/B zamienione lub brak wspólnej masy,
 - brak zasilania modułu Waveshare,
 - inny slave id niż `1`,
-- inny baud/parity niż `19200 8N1`,
+- inny baud/parity niż oczekiwane `9600 8N1` lub `19200 8N1`,
 - port serial jest zajęty przez inny proces.
 
 Health nie powinien blokować całego API dłużej niż timeout pluginu; sprawdź:
@@ -366,6 +366,45 @@ Health nie powinien blokować całego API dłużej niż timeout pluginu; sprawd�
 curl --max-time 10 http://localhost:8202/api/v1/hardware/health
 oqlctl doctor
 ```
+
+BoardNet (`192.168.188.122`) — aktualny przypadek po naprawie z 2026-06-30:
+
+- `mode=real`, `overall_ok=true`,
+- Tic249 i DRI0050 są zdrowe,
+- Tic249 pozostaje `energized=false` gdy nie wykonuje ruchu,
+- `modbus-io` jest zdrowy na `9600/N`, slave ID `2`,
+- `modbus-adc` jest wyłączony, bo adapter ADC nie jest obecny.
+
+Bezpieczna diagnostyka read-only na BoardNet:
+
+```bash
+ssh pi@192.168.188.122
+systemctl --user stop oqlos-hardware-api.service
+cd ~/maskservice/pimodbus
+export PYTHONPATH=/home/pi/maskservice/pimodbus
+PY=/home/pi/oqlos/venv/bin/python
+
+for port in \
+  /dev/serial/by-id/usb-1a86_USB_Single_Serial_5958006895-if00 \
+  /dev/serial/by-id/usb-1a86_USB2.0-Serial-if00-port0
+do
+  [ -e "$port" ] || continue
+  timeout 70 "$PY" -m pimodbus.provision_cli diagnose \
+    --single-port \
+    --serial-port "$port" \
+    --timeout 0.4 \
+    --baudrates 9600,19200 \
+    --parities N,E \
+    --device-ids 1,2,3,4
+done
+
+systemctl --user start oqlos-hardware-api.service
+```
+
+Nie uruchamiaj `pimodbus.provision_cli repair --yes`, dopóki skan nie znajdzie
+odpowiadającego modułu i dopóki nie jest on fizycznie odizolowany. Przy braku
+jakiejkolwiek odpowiedzi najpierw sprawdź zasilanie, A/B, GND, adres/baud modułu
+oraz czy właściwy moduł jest podłączony do właściwego adaptera RS485.
 
 ### piADC jest widoczne, ale nie ma dostępu do I2C
 Jeśli identify pokazuje `/dev/i2c-*`, ale `piadc` ma `permission denied` albo

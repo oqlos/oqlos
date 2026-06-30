@@ -5,11 +5,11 @@
 
 - **Project**: /home/tom/github/oqlos/oqlos
 - **Primary Language**: python
-- **Languages**: python: 148, javascript: 35, md: 16, yaml: 13, shell: 9
+- **Languages**: python: 148, javascript: 35, md: 17, yaml: 13, shell: 9
 - **Analysis Mode**: static
 - **Total Functions**: 2066
 - **Total Classes**: 123
-- **Modules**: 239
+- **Modules**: 240
 - **Entry Points**: 1253
 
 ## Architecture by Module
@@ -172,12 +172,12 @@ valve commands to POST /api/v1/hardware/valve/{id} so t
 ### oqlos.shared.event_server.EventServer._handle_message
 - **Calls**: json.loads, self._normalize_event, self.event_store.append, None.get, examples.hardware.doctor-workflow.print, data.get, data.get, data.get
 
+### scripts.scenarios_export.main
+- **Calls**: argparse.ArgumentParser, parser.add_argument, parser.add_mutually_exclusive_group, group.add_argument, group.add_argument, group.add_argument, parser.add_argument, parser.add_argument
+
 ### oqlos.api.hardware.read_modbus_adc_raw
 > Return raw Modbus ADC diagnostics for HUI troubleshooting.
 - **Calls**: router.get, health.get, isinstance, modbus_adc_health.get, plugin.execute_command, result.get, health.get, result.get
-
-### scripts.scenarios_export.main
-- **Calls**: argparse.ArgumentParser, parser.add_argument, parser.add_mutually_exclusive_group, group.add_argument, group.add_argument, group.add_argument, parser.add_argument, parser.add_argument
 
 ### frontend.src.utils.useSelectionCollapsePanel.RAIL_HOVER_OPEN_MS
 - **Calls**: frontend.src.utils.useSelectionCollapsePanel.useState, frontend.src.utils.useSelectionCollapsePanel.readStoredCollapsed, frontend.src.utils.useSelectionCollapsePanel.useRef, frontend.src.utils.useSelectionCollapsePanel.useCallback, frontend.src.utils.useSelectionCollapsePanel.clearTimeout, frontend.src.utils.useSelectionCollapsePanel.cancelAutoCollapse, frontend.src.utils.useSelectionCollapsePanel.setHoverPreview, frontend.src.utils.useSelectionCollapsePanel.setTimeout
@@ -623,8 +623,8 @@ Functions exposed as public API (no underscore prefix):
 - `scripts.scenarios_export.export_all_zip` - 25 calls
 - `setup_hardware_and_run_oql.run_oql_scenario` - 24 calls
 - `oqlos.shared.logger.configure_oqlos_logging` - 23 calls
-- `oqlos.api.hardware.read_modbus_adc_raw` - 23 calls
 - `scripts.scenarios_export.main` - 23 calls
+- `oqlos.api.hardware.read_modbus_adc_raw` - 23 calls
 - `oqlos.tools.cql_cli.commands.handle_list_command` - 22 calls
 - `frontend.src.utils.useSelectionCollapsePanel.RAIL_HOVER_OPEN_MS` - 21 calls
 - `frontend.src.utils.useSelectionCollapsePanel.RAIL_HOVER_CLOSE_MS` - 21 calls

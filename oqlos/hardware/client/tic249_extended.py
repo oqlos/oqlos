@@ -156,6 +156,14 @@ def _build_reciprocate_params(args: dict[str, Any], *, default_cycles: int) -> d
         if normalized.get("acceleration") is not None:
             params["acceleration"] = normalized["acceleration"]
 
+    ramp_time = _arg(args, "ramp_seconds", "rampSeconds")
+    if ramp_time is None:
+        ramp_time = _arg(args, "ramp_time_sec", "rampTimeSec")
+    if ramp_time is None:
+        ramp_time = _arg(args, "ramp_time", "rampTime")
+    if ramp_time is not None:
+        params["ramp_seconds"] = float(ramp_time)
+
     return params
 
 
@@ -411,6 +419,9 @@ async def _attempt_reciprocate_via_sidecar(params: dict[str, Any]) -> tuple[dict
             "start_direction",
             "limit_mode",
             "acceleration",
+            "ramp_seconds",
+            "ramp_time_sec",
+            "ramp_time",
         }
     }
     async with httpx.AsyncClient(timeout=httpx.Timeout(8.0)) as client:

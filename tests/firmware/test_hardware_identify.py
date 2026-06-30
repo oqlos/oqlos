@@ -103,7 +103,7 @@ def test_hardware_identify_includes_diagnostics(monkeypatch):
         },
     )
 
-    result = asyncio.run(hw.hardware_identify())
+    result = asyncio.run(hw.hardware_identify(scan="always"))
 
     assert result["mode"] == "real"
     statuses = {adapter["id"]: adapter["status"] for adapter in result["adapters"]}
@@ -116,6 +116,21 @@ def test_hardware_identify_includes_diagnostics(monkeypatch):
     assert result["diagnostics"]["serial_ports"][0]["device"] == "/dev/ttyUSB0"
     assert "platform" in result
     assert any(adapter["id"] == "motor-dri0050" for adapter in result["adapters"])
+
+
+def test_hardware_identify_default_skips_live_probe(monkeypatch):
+    monkeypatch.setattr(hw, "_gateway", _FakeGateway())
+
+    def _unexpected_live_probe(*_args):
+        raise AssertionError("default identify must not run a live hardware scan")
+
+    monkeypatch.setattr(hw, "_probe_selected_hardware", _unexpected_live_probe)
+    monkeypatch.setattr(hw, "_collect_hardware_diagnostics", lambda: {})
+
+    result = asyncio.run(hw.hardware_identify())
+
+    assert result["diagnostics"]["scan_mode"] == "never"
+    assert result["diagnostics"]["scan_performed"] is False
 
 
 def test_read_sensors_batch_reports_unavailable_modbus_without_503(monkeypatch):

@@ -1,0 +1,48 @@
+VERSION: 4
+# lib/peripherals.oql — inicjalizacja peryferii do znanego stanu.
+
+SCENARIO: lib/peripherals — makra inicjalizacyjne
+CATEGORY: library
+
+MACRO init-pump:
+  SET pump-main 0
+  SET pompa-1 0
+  WAIT 500ms
+
+MACRO init-valves-main:
+  SET valve-nc 0
+  SET valve-sc 0
+  SET valve-wc 0
+  WAIT 300ms
+
+MACRO init-valves-bo:
+  SET valve-bo04 0
+  SET valve-bo05 0
+  SET valve-bo06 0
+  WAIT 300ms
+
+MACRO init-valves-numbered:
+  SET valve-1 0
+  SET valve-2 0
+  SET valve-3 0
+  SET valve-4 0
+  SET valve-5 0
+  SET valve-6 0
+  SET valve-7 0
+  SET valve-8 0
+  WAIT 500ms
+
+MACRO init-all:
+  CALL init-pump
+  CALL init-valves-main
+  CALL init-valves-bo
+  CALL init-valves-numbered
+  LOG 'init-all: peryferia zresetowane do stanu bazowego'
+
+MACRO stop-all:
+  SET pump-main 0
+  SET pompa-1 0
+  SET valve-nc 0
+  SET valve-sc 0
+  SET valve-wc 0
+  WAIT 200ms

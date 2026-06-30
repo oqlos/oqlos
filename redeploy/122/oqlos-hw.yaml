@@ -47,7 +47,7 @@ plugins:
       serial_port: /dev/ttyACM0          # autodetected at deploy
       baudrate: 9600
       parity: N
-      device_id: 1
+      device_id: 2
     timeout: 2.0
     retry_count: 3
     peripherals:

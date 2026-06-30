@@ -586,8 +586,19 @@ class PluginHardwareGateway:
         if self.last_init_summary:
             result["init_summary"] = self.last_init_summary
 
-        health_results = await PluginRegistry.health_check_all(timeout=2.5)
+        async def _check_enabled(plugin_id: str) -> tuple[str, PluginHealth | None]:
+            health = await PluginRegistry.health_check(plugin_id, timeout=2.5)
+            return plugin_id, health
+
+        checks = [
+            _check_enabled(plugin_id)
+            for plugin_id, config in self._plugin_configs.items()
+            if config.enabled
+        ]
+        health_results = dict(await asyncio.gather(*checks)) if checks else {}
         for plugin_id, health in health_results.items():
+            if health is None:
+                continue
             result[plugin_id] = {
                 "status": health.status.value,
                 "message": health.message,

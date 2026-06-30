@@ -8,7 +8,12 @@ from oqlos.tools.hardware_diagnose.health import check_firmware_health, check_fi
 from . import commands as _commands_module
 from . import main as _main_module
 from . import preflight as _preflight_module
-from .commands import DEFAULT_FIRMWARE_URL, run_single_command as _run_single_command, run_source as _run_source
+from .commands import (
+  DEFAULT_FIRMWARE_URL,
+  default_firmware_url,
+  run_single_command as _run_single_command,
+  run_source as _run_source,
+)
 from .preflight import ensure_firmware_running as _ensure_firmware_running, preflight_hardware as _preflight_hardware
 from .utils import (
   build_result_payload as _result_payload,
@@ -44,6 +49,7 @@ __all__ = [
   "main",
   "CqlInterpreter",
   "DEFAULT_FIRMWARE_URL",
+  "default_firmware_url",
   "check_firmware_health",
   "check_firmware_identify",
   "_build_single_command_scenario",

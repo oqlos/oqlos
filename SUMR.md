@@ -628,7 +628,7 @@ class Settings:  # Application settings loaded from environment variables and .
 | Function | CC | in | out | total |
 |----------|----|----|-----|-------|
 | `print` *(in examples.hardware.doctor-workflow)* | 0 | 225 | 0 | **225** |
-| `dict` *(in frontend.src.i18n.I18nProvider)* | 8 | 42 | 3 | **45** |
+| `dict` *(in frontend.src.i18n.I18nProvider)* | 8 | 43 | 3 | **46** |
 | `list` *(in frontend.src.utils.hardware-wizard-steps)* | 2 | 40 | 0 | **40** |
 | `runCurrentStep` *(in frontend.src.pages.HardwareRestart)* | 96 ⚠ | 0 | 34 | **34** |
 | `oql_doc_to_cql` *(in oqlos.core._oql_adapter)* | 12 ⚠ | 2 | 30 | **32** |
@@ -638,7 +638,7 @@ class Settings:  # Application settings loaded from environment variables and .
 
 ```toon markpact:analysis path=project/calls.toon.yaml
 # code2llm call graph | /home/tom/github/oqlos/oqlos
-# generated in 0.22s
+# generated in 0.23s
 # nodes: 427 | edges: 500 | modules: 37
 # CC̄=4.1
 
@@ -646,7 +646,7 @@ HUBS[20]:
   examples.hardware.doctor-workflow.print
     CC=0  in:225  out:0  total:225
   frontend.src.i18n.I18nProvider.dict
-    CC=8  in:42  out:3  total:45
+    CC=8  in:43  out:3  total:46
   frontend.src.utils.hardware-wizard-steps.list
     CC=2  in:40  out:0  total:40
   frontend.src.pages.HardwareRestart.runCurrentStep
@@ -661,28 +661,28 @@ HUBS[20]:
     CC=18  in:0  out:27  total:27
   setup_hardware_and_run_oql.run_oql_scenario
     CC=8  in:1  out:24  total:25
-  frontend.src.pages.MapEditor.applyMapMutation
-    CC=2  in:16  out:8  total:24
-  frontend.src.pages.HardwareRestart.log
-    CC=1  in:21  out:3  total:24
   oqlos.core.oql_parser.parse_oql
     CC=14  in:3  out:21  total:24
   oqlos.core.parser.parse_dsl_to_goal_with_issues
     CC=13  in:3  out:21  total:24
+  frontend.src.pages.HardwareRestart.log
+    CC=1  in:21  out:3  total:24
+  frontend.src.pages.MapEditor.applyMapMutation
+    CC=2  in:16  out:8  total:24
+  oqlos.core._action_motor2._motor2_build_plan
+    CC=12  in:1  out:22  total:23
   oqlos.core._line_parsers._parse_if_condition
     CC=9  in:1  out:22  total:23
   oqlos.core._action_motor2._try_exec_motor2_set
     CC=13  in:1  out:22  total:23
-  oqlos.core._action_motor2._motor2_build_plan
-    CC=12  in:1  out:22  total:23
   oqlos.core._line_parsers._parse_set_line
     CC=12  in:1  out:21  total:22
-  frontend.src.utils.useSelectionCollapsePanel.RAIL_HOVER_CLOSE_MS
+  frontend.src.utils.useSelectionCollapsePanel.RAIL_HOVER_OPEN_MS
+    CC=33  in:0  out:21  total:21
+  frontend.src.utils.useSelectionCollapsePanel.useSelectionCollapsePanel
     CC=33  in:0  out:21  total:21
   oqlos.core._cql_tree_builder._parse_goal_line
     CC=12  in:1  out:20  total:21
-  frontend.src.utils.useSelectionCollapsePanel.RAIL_HOVER_OPEN_MS
-    CC=33  in:0  out:21  total:21
 
 MODULES:
   examples.hardware.doctor-workflow  [1 funcs]
@@ -1086,7 +1086,7 @@ EDGES:
 
 ```toon markpact:analysis path=project/calls.toon.yaml
 # code2llm call graph | /home/tom/github/oqlos/oqlos
-# generated in 0.22s
+# generated in 0.23s
 # nodes: 427 | edges: 500 | modules: 37
 # CC̄=4.1
 
@@ -1094,7 +1094,7 @@ HUBS[20]:
   examples.hardware.doctor-workflow.print
     CC=0  in:225  out:0  total:225
   frontend.src.i18n.I18nProvider.dict
-    CC=8  in:42  out:3  total:45
+    CC=8  in:43  out:3  total:46
   frontend.src.utils.hardware-wizard-steps.list
     CC=2  in:40  out:0  total:40
   frontend.src.pages.HardwareRestart.runCurrentStep
@@ -1109,28 +1109,28 @@ HUBS[20]:
     CC=18  in:0  out:27  total:27
   setup_hardware_and_run_oql.run_oql_scenario
     CC=8  in:1  out:24  total:25
-  frontend.src.pages.MapEditor.applyMapMutation
-    CC=2  in:16  out:8  total:24
-  frontend.src.pages.HardwareRestart.log
-    CC=1  in:21  out:3  total:24
   oqlos.core.oql_parser.parse_oql
     CC=14  in:3  out:21  total:24
   oqlos.core.parser.parse_dsl_to_goal_with_issues
     CC=13  in:3  out:21  total:24
+  frontend.src.pages.HardwareRestart.log
+    CC=1  in:21  out:3  total:24
+  frontend.src.pages.MapEditor.applyMapMutation
+    CC=2  in:16  out:8  total:24
+  oqlos.core._action_motor2._motor2_build_plan
+    CC=12  in:1  out:22  total:23
   oqlos.core._line_parsers._parse_if_condition
     CC=9  in:1  out:22  total:23
   oqlos.core._action_motor2._try_exec_motor2_set
     CC=13  in:1  out:22  total:23
-  oqlos.core._action_motor2._motor2_build_plan
-    CC=12  in:1  out:22  total:23
   oqlos.core._line_parsers._parse_set_line
     CC=12  in:1  out:21  total:22
-  frontend.src.utils.useSelectionCollapsePanel.RAIL_HOVER_CLOSE_MS
+  frontend.src.utils.useSelectionCollapsePanel.RAIL_HOVER_OPEN_MS
+    CC=33  in:0  out:21  total:21
+  frontend.src.utils.useSelectionCollapsePanel.useSelectionCollapsePanel
     CC=33  in:0  out:21  total:21
   oqlos.core._cql_tree_builder._parse_goal_line
     CC=12  in:1  out:20  total:21
-  frontend.src.utils.useSelectionCollapsePanel.RAIL_HOVER_OPEN_MS
-    CC=33  in:0  out:21  total:21
 
 MODULES:
   examples.hardware.doctor-workflow  [1 funcs]
@@ -1487,9 +1487,9 @@ EDGES:
 ### Code Analysis (`project/analysis.toon.yaml`)
 
 ```toon markpact:analysis path=project/analysis.toon.yaml
-# code2llm | 239f 54087L | python:148,javascript:35,md:16,yaml:13,shell:9,json:6,yml:4,typescript:3,conf:2,toml:1 | 2026-06-30
+# code2llm | 240f 54463L | python:148,javascript:35,md:17,yaml:13,shell:9,json:6,yml:4,typescript:3,conf:2,toml:1 | 2026-06-30
 # generated in 0.12s
-# CC̅=4.1 | critical:26/2065 | dups:0 | cycles:0
+# CC̅=4.1 | critical:26/2066 | dups:0 | cycles:0
 
 HEALTH[20]:
   🔴 GOD   oqlos/api/hardware_v3.py = 606L, 9 classes, 44m, max CC=14
@@ -1623,7 +1623,7 @@ LAYERS:
   ./                              CC̄=6.9    ←in:0  →out:0
   │ !! openapi_spec.yaml         1035L  0C    0m  CC=0.0    ←0
   │ !! openapi.yaml              1035L  0C    0m  CC=0.0    ←0
-  │ !! README.md                  769L  0C    0m  CC=0.0    ←0
+  │ !! README.md                  770L  0C    0m  CC=0.0    ←0
   │ !! goal.yaml                  511L  0C    0m  CC=0.0    ←0
   │ CHANGELOG.md               496L  0C    0m  CC=0.0    ←0
   │ hw_diagnostic_20260415_133138.json   340L  0C    0m  CC=0.0    ←0
@@ -1658,7 +1658,7 @@ LAYERS:
   │ hardware-api-log.js         87L  0C    7m  CC=11     ←0
   │ SharedNav.jsx               83L  0C    6m  CC=5      ←0
   │ hardware-status-log-translations.js    81L  0C    0m  CC=0.0    ←0
-  │ I18nProvider.jsx            65L  0C   10m  CC=13     ←20
+  │ I18nProvider.jsx            65L  0C   10m  CC=13     ←21
   │ !! mapEditorFuncHardwareSummary.js    50L  0C   10m  CC=47     ←0
   │ !! hardwareEventStream.js      47L  0C   21m  CC=21     ←1
   │ collapse-toggle-bridge.js    46L  0C    6m  CC=4      ←0
@@ -1685,8 +1685,8 @@ LAYERS:
   │ !! _interpreter_actions       803L  0C   51m  CC=14     ←1
   │ !! oql_parser                 762L  3C   43m  CC=14     ←2
   │ !! interpreter                676L  1C   47m  CC=11     ←0
-  │ !! tic249_extended            627L  0C   30m  CC=14     ←0
-  │ !! plugin_gateway             612L  1C   21m  CC=14     ←0
+  │ !! tic249_extended            638L  0C   30m  CC=14     ←0
+  │ !! plugin_gateway             623L  1C   21m  CC=14     ←0
   │ !! hardware_v3                606L  9C   44m  CC=14     ←0
   │ !! diagnosis                  562L  3C   26m  CC=13     ←1
   │ !! motor                      549L  1C   20m  CC=14     ←0
@@ -1698,15 +1698,15 @@ LAYERS:
   │ proxy                      460L  1C   29m  CC=13     ←0
   │ generators                 452L  0C   20m  CC=14     ←0
   │ gateway                    416L  5C   25m  CC=7      ←0
-  │ main                       412L  1C   18m  CC=9      ←2
+  │ main                       415L  1C   18m  CC=9      ←2
   │ _cql_tokenizer             406L  0C   27m  CC=5      ←0
   │ modbus_adc                 398L  1C   17m  CC=12     ←0
   │ executor                   383L  1C   21m  CC=14     ←0
   │ main                       379L  0C   20m  CC=8      ←0
   │ base                       370L  9C   21m  CC=5      ←3
   │ state                      370L  0C   16m  CC=13     ←0
+  │ lung                       361L  1C   20m  CC=14     ←0
   │ execution                  359L  0C   16m  CC=11     ←0
-  │ lung                       353L  1C   20m  CC=14     ←0
   │ plugin_cli                 343L  0C   14m  CC=8      ←3
   │ modbus                     335L  1C   16m  CC=11     ←0
   │ identify_enrich            333L  0C   18m  CC=13     ←0
@@ -1717,8 +1717,8 @@ LAYERS:
   │ piadc                      272L  1C   12m  CC=11     ←0
   │ html_report                266L  0C    5m  CC=10     ←0
   │ scanner_probe              262L  0C   13m  CC=14     ←1
+  │ hui_actions                251L  0C   12m  CC=7      ←1
   │ scenarios                  251L  0C   16m  CC=11     ←0
-  │ hui_actions                247L  0C   12m  CC=7      ←1
   │ _line_parsers              246L  0C    9m  CC=12     ←1
   │ sidecar_control            226L  0C    8m  CC=13     ←1
   │ !! manage_ops                 222L  0C    7m  CC=19     ←2
@@ -1728,7 +1728,7 @@ LAYERS:
   │ motor2_runtime             209L  2C   12m  CC=12     ←1
   │ modbus_probe               205L  0C   16m  CC=5      ←1
   │ rtc_probe                  197L  0C    7m  CC=11     ←1
-  │ commands                   186L  0C    5m  CC=8      ←2
+  │ commands                   192L  0C    6m  CC=8      ←2
   │ usb_diagnostics            185L  0C    5m  CC=13     ←0
   │ __main__                   184L  0C   11m  CC=6      ←0
   │ parser                     183L  0C    5m  CC=13     ←2
@@ -1784,6 +1784,7 @@ LAYERS:
   │ peripherals                 70L  0C    4m  CC=5      ←0
   │ constants                   69L  0C    0m  CC=0.0    ←0
   │ control_proxy               68L  1C    1m  CC=1      ←0
+  │ __init__                    66L  0C    2m  CC=1      ←0
   │ version_endpoint            66L  0C    2m  CC=3      ←0
   │ tic249_arg_contract         65L  0C    2m  CC=8      ←2
   │ adc                         64L  0C    3m  CC=10     ←2
@@ -1791,7 +1792,6 @@ LAYERS:
   │ formatting                  63L  0C    3m  CC=14     ←2
   │ execution_ctrl              62L  0C    3m  CC=1      ←0
   │ _shared                     61L  0C    4m  CC=2      ←3
-  │ __init__                    60L  0C    2m  CC=1      ←0
   │ protocol                    60L  2C    6m  CC=1      ←0
   │ benchmark                   55L  0C    1m  CC=6      ←2
   │ platform                    50L  0C    3m  CC=6      ←0
@@ -1844,10 +1844,10 @@ LAYERS:
   │ doctor-workflow.sh          52L  0C    1m  CC=0.0    ←17
   │
   docs/                           CC̄=0.0    ←in:0  →out:0
-  │ !! README.md                 1682L  0C    0m  CC=0.0    ←0
+  │ !! README.md                 1757L  0C    0m  CC=0.0    ←0
   │ !! cql-examples.md            588L  0C    0m  CC=0.0    ←0
-  │ HARDWARE_DIAGNOSTICS.md    389L  0C    0m  CC=0.0    ←0
-  │ HARDWARE_CONTROL_OQL_MQTT.md   281L  0C    0m  CC=0.0    ←0
+  │ HARDWARE_DIAGNOSTICS.md    428L  0C    0m  CC=0.0    ←0
+  │ HARDWARE_CONTROL_OQL_MQTT.md   319L  0C    0m  CC=0.0    ←0
   │ oql-spec.md                258L  0C    0m  CC=0.0    ←0
   │ OQL_V4_MIGRATION_MANUAL.md   216L  0C    0m  CC=0.0    ←0
   │ oql_v4_llm_validator.schema.json    93L  0C    0m  CC=0.0    ←0
@@ -1855,10 +1855,11 @@ LAYERS:
   │ cql-spec.md                 78L  0C    0m  CC=0.0    ←0
   │
   redeploy/                       CC̄=0.0    ←in:0  →out:0
-  │ !! migration.md              1112L  0C    0m  CC=0.0    ←0
+  │ !! migration.md              1192L  0C    0m  CC=0.0    ←0
   │ !! migration.md               639L  0C    0m  CC=0.0    ←0
+  │ RUNBOOK.md                 101L  0C    0m  CC=0.0    ←0
   │ RUNBOOK.md                  87L  0C    0m  CC=0.0    ←0
-  │ RUNBOOK.md                  87L  0C    0m  CC=0.0    ←0
+  │ CURRENT_STATE.md            80L  0C    0m  CC=0.0    ←0
   │ oqlos-hw.yaml               66L  0C    0m  CC=0.0    ←0
   │ oqlos-hw.yaml               66L  0C    0m  CC=0.0    ←0
   │ mosquitto.conf              19L  0C    0m  CC=0.0    ←0
@@ -1886,8 +1887,8 @@ COUPLING:
                                              oqlos.tools           examples.hardware                frontend.src              oqlos.hardware                     scripts                   oqlos.api                  oqlos.core  setup_hardware_and_run_oql                oqlos.shared                       oqlos                   oqlos.dsl             oqlos.reporters                 oqlos.utils
                  oqlos.tools                          ──                         125                          88                           6                          ←3                                                      10                                                                                                                                                                          hub
            examples.hardware                        ←125                          ──                                                                                 ←64                                                      ←2                         ←27                          ←7                                                                                                                  hub
-                frontend.src                         ←88                                                      ──                         ←71                          ←3                         ←18                         ←18                                                      ←4                                                      ←2                          ←2                              hub
-              oqlos.hardware                           3                                                      71                          ──                          ←1                           1                           6                                                                                   3                                                                                      hub
+                frontend.src                         ←88                                                      ──                         ←72                          ←3                         ←18                         ←18                                                      ←4                                                      ←2                          ←2                              hub
+              oqlos.hardware                           3                                                      72                          ──                          ←1                           1                           6                                                                                   3                                                                                      hub
                      scripts                           3                          64                           3                           1                          ──                                                       1                                                                                                                                                                          !! fan-out
                    oqlos.api                                                                                  18                          21                                                      ──                           6                                                       9                           1                                                                                   2  !! fan-out
                   oqlos.core                         ←10                           2                          18                          ←6                          ←1                          ←6                          ──                                                      ←1                           3                          ←1                                                          hub
@@ -1898,20 +1899,20 @@ COUPLING:
              oqlos.reporters                                                                                   2                                                                                                                                                                                                                                                          ──                            
                  oqlos.utils                                                                                                                                                                      ←2                                                                                                                                                                                                  ──
   CYCLES: none
-  HUB: oqlos/ (fan-in=8)
-  HUB: oqlos.shared/ (fan-in=9)
   HUB: examples.hardware/ (fan-in=225)
-  HUB: oqlos.tools/ (fan-in=6)
-  HUB: oqlos.hardware/ (fan-in=28)
-  HUB: frontend.src/ (fan-in=206)
+  HUB: oqlos/ (fan-in=8)
   HUB: oqlos.core/ (fan-in=25)
+  HUB: oqlos.hardware/ (fan-in=28)
+  HUB: oqlos.tools/ (fan-in=6)
+  HUB: frontend.src/ (fan-in=207)
+  HUB: oqlos.shared/ (fan-in=9)
+  SMELL: oqlos.core/ fan-out=23 → split needed
   SMELL: oqlos.api/ fan-out=57 → split needed
-  SMELL: oqlos.shared/ fan-out=13 → split needed
+  SMELL: oqlos.hardware/ fan-out=85 → split needed
+  SMELL: scripts/ fan-out=72 → split needed
   SMELL: setup_hardware_and_run_oql/ fan-out=27 → split needed
   SMELL: oqlos.tools/ fan-out=229 → split needed
-  SMELL: oqlos.hardware/ fan-out=84 → split needed
-  SMELL: scripts/ fan-out=72 → split needed
-  SMELL: oqlos.core/ fan-out=23 → split needed
+  SMELL: oqlos.shared/ fan-out=13 → split needed
 
 EXTERNAL:
   validation: run `vallm batch .` → validation.toon
@@ -1921,15 +1922,15 @@ EXTERNAL:
 ### Duplication (`project/duplication.toon.yaml`)
 
 ```toon markpact:analysis path=project/duplication.toon.yaml
-# redup/duplication | 75 groups | 154f 31360L | 2026-06-30
+# redup/duplication | 75 groups | 154f 31409L | 2026-06-30
 
 SUMMARY:
   files_scanned: 154
-  total_lines:   31360
+  total_lines:   31409
   dup_groups:    75
   dup_fragments: 167
   saved_lines:   543
-  scan_ms:       109176
+  scan_ms:       149038
 
 HOTSPOTS[7] (files with most duplication):
   oqlos/core/_cql_tokenizer.py  dup=92L  groups=7  frags=16  (0.3%)
@@ -2056,8 +2057,8 @@ DUPLICATES[75] (ranked by impact):
       oqlos/tools/hardware_diagnose/doctor.py:257-262  (_modbus_config)
       oqlos/tools/hardware_diagnose/doctor.py:265-270  (_modbus_adc_config)
   [F0023]   FUZZ  _handle_stop_http  L=6 N=2 saved=6 sim=0.97
-      oqlos/hardware/plugins/lung.py:234-239  (_handle_stop_http)
-      oqlos/hardware/plugins/lung.py:275-280  (_handle_status_http)
+      oqlos/hardware/plugins/lung.py:242-247  (_handle_stop_http)
+      oqlos/hardware/plugins/lung.py:283-288  (_handle_status_http)
   [F0005]   FUZZ  _execute_firmware_action  L=3 N=3 saved=6 sim=0.93
       oqlos/core/interpreter.py:335-337  (_execute_firmware_action)
       oqlos/core/interpreter.py:339-341  (_execute_plugin_action)
@@ -2175,8 +2176,8 @@ DUPLICATES[75] (ranked by impact):
       oqlos/hardware/drivers/mqtt.py:103-105  (discover)
       oqlos/hardware/protocol.py:48-50  (discover)
   [F0008]   FUZZ  _handle_stop_usb  L=3 N=2 saved=3 sim=0.89
-      oqlos/hardware/plugins/lung.py:241-243  (_handle_stop_usb)
-      oqlos/hardware/plugins/lung.py:282-284  (_handle_status_usb)
+      oqlos/hardware/plugins/lung.py:249-251  (_handle_stop_usb)
+      oqlos/hardware/plugins/lung.py:290-292  (_handle_status_usb)
   [F0007]   FUZZ  connect  L=3 N=2 saved=3 sim=0.88
       oqlos/hardware/plugins/base.py:292-294  (connect)
       oqlos/hardware/plugins/base.py:297-299  (disconnect)
@@ -2454,7 +2455,7 @@ METRICS-TARGET:
 ### Evolution / Churn (`project/evolution.toon.yaml`)
 
 ```toon markpact:analysis path=project/evolution.toon.yaml
-# code2llm/evolution | 1950 func | 152f | 2026-06-30
+# code2llm/evolution | 1951 func | 152f | 2026-06-30
 # generated in 0.01s
 
 NEXT[10] (ranked by impact):

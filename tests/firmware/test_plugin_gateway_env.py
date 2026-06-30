@@ -172,8 +172,8 @@ def test_plugin_gateway_allow_list_plugins_env(monkeypatch):
 
 
 def test_health_reports_configured_disabled_plugins(monkeypatch):
-    async def _empty_health_results(cls, timeout=None):
-        return {}
+    async def _empty_health_result(cls, plugin_id, timeout=None):
+        return None
 
     gateway = PluginHardwareGateway(mode="mock")
     gateway.mode = "real"
@@ -189,12 +189,52 @@ def test_health_reports_configured_disabled_plugins(monkeypatch):
 
     monkeypatch.setattr(
         PluginRegistry,
-        "health_check_all",
-        classmethod(_empty_health_results),
+        "health_check",
+        classmethod(_empty_health_result),
     )
 
     result = asyncio.run(gateway.health())
 
+    assert result["modbus-adc"] == {
+        "status": "disabled",
+        "message": "Plugin is disabled in OqlOS configuration",
+        "compatible": False,
+    }
+
+
+def test_health_does_not_poll_configured_disabled_plugins(monkeypatch):
+    calls: list[str] = []
+
+    async def _health_result(cls, plugin_id, timeout=None):
+        calls.append(plugin_id)
+        return PluginHealth(
+            status=PluginStatus.CONNECTED,
+            message=f"{plugin_id} healthy",
+            compatible=True,
+        )
+
+    gateway = PluginHardwareGateway(mode="mock")
+    gateway.mode = "real"
+    gateway._init_done = True
+    gateway._plugin_configs = {
+        "modbus-io": PluginConfig(plugin_id="modbus-io", enabled=True),
+        "modbus-adc": PluginConfig(plugin_id="modbus-adc", enabled=False),
+    }
+
+    monkeypatch.setattr(
+        PluginRegistry,
+        "health_check",
+        classmethod(_health_result),
+    )
+
+    result = asyncio.run(gateway.health())
+
+    assert calls == ["modbus-io"]
+    assert result["modbus-io"] == {
+        "status": "connected",
+        "message": "modbus-io healthy",
+        "compatible": True,
+    }
     assert result["modbus-adc"] == {
         "status": "disabled",
         "message": "Plugin is disabled in OqlOS configuration",

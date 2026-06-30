@@ -7,21 +7,27 @@ Functions for running CQL commands and scenarios.
 from __future__ import annotations
 
 import json
+import os
 import sys
 import signal
 import asyncio
 import time
-from pathlib import Path
-
-import click
 
 from oqlos.core.interpreter import CqlInterpreter
 from oqlos.tools.cql_cli.utils import build_single_command_scenario, build_result_payload, output_yaml
-from oqlos.tools.cql_cli.preflight import preflight_hardware
 from oqlos.tools.hardware_diagnose.health import check_firmware_identify
 
 
 DEFAULT_FIRMWARE_URL = "http://localhost:8202"
+
+
+def default_firmware_url() -> str:
+    """Return the CLI default firmware URL, allowing deployment env overrides."""
+    for key in ("OQLOS_API_URL", "OQLOS_FIRMWARE_URL", "FIRMWARE_URL"):
+        value = os.getenv(key)
+        if value:
+            return value.rstrip("/")
+    return DEFAULT_FIRMWARE_URL
 
 
 def run_source(
@@ -88,7 +94,7 @@ def run_single_command(
 
 def handle_list_command(argv: list[str]) -> None:
     """Handle the 'cmd list' subcommand."""
-    firmware_url = DEFAULT_FIRMWARE_URL
+    firmware_url = default_firmware_url()
     yaml_output = "--yaml" in argv
 
     # Parse optional --firmware-url flag

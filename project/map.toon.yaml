@@ -1,5 +1,5 @@
-# oqlos | 247f 49114L | python:208,javascript:24,shell:9,typescript:3,css:2,less:1 | 2026-06-30
-# stats: 1307 func | 196 cls | 247 mod | CC̄=4.3 | critical:119 | cycles:0
+# oqlos | 247f 49217L | python:208,javascript:24,shell:9,typescript:3,css:2,less:1 | 2026-06-30
+# stats: 1310 func | 196 cls | 247 mod | CC̄=4.3 | critical:119 | cycles:0
 # alerts[5]: CC _validate_motor2=19; CC _run_diagnostic_command=19; CC _probe_i2c_ads1115=14; CC _resolve_func_steps=14; CC exec_action_loop_block=14
 # hotspots[5]: _resolve fan=23; build_diagnosis_report fan=19; _build_waveshare_diagnose_report fan=18; hardware_identify fan=18; _handle_start fan=18
 # evolution: baseline
@@ -97,7 +97,7 @@ M[247]:
   oqlos/hardware/client/proxy.py,461
   oqlos/hardware/client/resolvers.py,129
   oqlos/hardware/client/tic249_arg_contract.py,66
-  oqlos/hardware/client/tic249_extended.py,628
+  oqlos/hardware/client/tic249_extended.py,639
   oqlos/hardware/client/tic249_rig_direction.py,44
   oqlos/hardware/config_paths.py,42
   oqlos/hardware/config_schema.py,146
@@ -114,12 +114,12 @@ M[247]:
   oqlos/hardware/identify_enrichment.py,19
   oqlos/hardware/modbus_identify.py,132
   oqlos/hardware/peripheral_mapping.py,139
-  oqlos/hardware/plugin_gateway.py,613
+  oqlos/hardware/plugin_gateway.py,624
   oqlos/hardware/plugins/__init__.py,50
   oqlos/hardware/plugins/_rtu_serial.py,34
   oqlos/hardware/plugins/_shared.py,62
   oqlos/hardware/plugins/base.py,371
-  oqlos/hardware/plugins/lung.py,354
+  oqlos/hardware/plugins/lung.py,362
   oqlos/hardware/plugins/modbus.py,336
   oqlos/hardware/plugins/modbus_adc.py,399
   oqlos/hardware/plugins/motor.py,550
@@ -208,14 +208,14 @@ M[247]:
   tests/firmware/test_hardware_doctor.py,287
   tests/firmware/test_hardware_health.py,44
   tests/firmware/test_hardware_health_http.py,59
-  tests/firmware/test_hardware_identify.py,195
+  tests/firmware/test_hardware_identify.py,210
   tests/firmware/test_hardware_modbus_wizard.py,326
   tests/firmware/test_hardware_stack_snapshot.py,46
   tests/firmware/test_hardware_v3_compat.py,97
   tests/firmware/test_hui_actions.py,93
   tests/firmware/test_hui_scenario.py,12
   tests/firmware/test_lung_integration.py,282
-  tests/firmware/test_lung_plugin_reciprocate.py,76
+  tests/firmware/test_lung_plugin_reciprocate.py,94
   tests/firmware/test_modbus_adc_aliases.py,9
   tests/firmware/test_modbus_discovery.py,111
   tests/firmware/test_modbus_identify.py,41
@@ -229,7 +229,7 @@ M[247]:
   tests/firmware/test_oqlos_logging.py,21
   tests/firmware/test_panel_ui.py,150
   tests/firmware/test_parser_cycle.py,53
-  tests/firmware/test_plugin_gateway_env.py,203
+  tests/firmware/test_plugin_gateway_env.py,243
   tests/firmware/test_plugin_gateway_init.py,67
   tests/firmware/test_plugin_health.py,340
   tests/firmware/test_plugins_api.py,31
@@ -1790,13 +1790,14 @@ D:
     test_hardware_health_overall_ok_false_when_any_plugin_errors()
     test_hardware_health_endpoint_returns_200_when_degraded(monkeypatch)
   tests/firmware/test_hardware_identify.py:
-    e: test_collect_hardware_diagnostics_exposes_ports,test_platform_reports_modbus_adc_as_analog_input,test_hardware_identify_includes_diagnostics,test_read_sensors_batch_reports_unavailable_modbus_without_503,test_hardware_temperature_returns_compatible_payload,test_hardware_diagnose_keeps_sensor_errors_in_payload,test_modbus_adc_raw_reports_unavailable_health_without_404,test_hardware_identify_reports_modbus_timeout_as_adapter_only,_FakeGateway,_UnavailableAdcGateway,_ModbusTimeoutGateway
+    e: test_collect_hardware_diagnostics_exposes_ports,test_platform_reports_modbus_adc_as_analog_input,test_hardware_identify_includes_diagnostics,test_hardware_identify_default_skips_live_probe,test_read_sensors_batch_reports_unavailable_modbus_without_503,test_hardware_temperature_returns_compatible_payload,test_hardware_diagnose_keeps_sensor_errors_in_payload,test_modbus_adc_raw_reports_unavailable_health_without_404,test_hardware_identify_reports_modbus_timeout_as_adapter_only,_FakeGateway,_UnavailableAdcGateway,_ModbusTimeoutGateway
     _FakeGateway: health(0)
     _UnavailableAdcGateway: health(0),read_sensor(1)
     _ModbusTimeoutGateway: health(0)
     test_collect_hardware_diagnostics_exposes_ports(monkeypatch)
     test_platform_reports_modbus_adc_as_analog_input(monkeypatch)
     test_hardware_identify_includes_diagnostics(monkeypatch)
+    test_hardware_identify_default_skips_live_probe(monkeypatch)
     test_read_sensors_batch_reports_unavailable_modbus_without_503(monkeypatch)
     test_hardware_temperature_returns_compatible_payload(monkeypatch)
     test_hardware_diagnose_keeps_sensor_errors_in_payload(monkeypatch)
@@ -1843,11 +1844,12 @@ D:
     TestHardwareGatewayLung: test_set_lung_mock(0),test_stop_lung_mock(0)
     TestCqlInterpreterLung: test_dry_run_lung_action(0)
   tests/firmware/test_lung_plugin_reciprocate.py:
-    e: _plugin_with_client,test_ready_false_does_not_block_reciprocate_start,_JsonResponse,_ReadyFalseClient
+    e: _plugin_with_client,test_ready_false_does_not_block_reciprocate_start,test_tic249_extended_reciprocate_normalizes_ramp_time_alias,_JsonResponse,_ReadyFalseClient
     _JsonResponse: __init__(2),json(0)
     _ReadyFalseClient: __init__(0),get(1),post(2)
     _plugin_with_client(client)
     test_ready_false_does_not_block_reciprocate_start()
+    test_tic249_extended_reciprocate_normalizes_ramp_time_alias()
   tests/firmware/test_modbus_adc_aliases.py:
     e: test_resolve_channel_accepts_map_editor_v_inputs
     test_resolve_channel_accepts_map_editor_v_inputs()
@@ -1948,7 +1950,7 @@ D:
     e: TestParserCycleDetection
     TestParserCycleDetection: test_direct_circular_func_raises(0),test_self_referencing_func_raises(0),test_valid_func_call_works(0),test_max_func_depth_constant(0)
   tests/firmware/test_plugin_gateway_env.py:
-    e: test_plugin_gateway_env_overrides_service_urls,test_plugin_gateway_env_overrides_modbus_params,test_plugin_gateway_env_overrides_modbus_adc_params,test_set_pump_uses_registry_instance_that_recovers_after_startup,test_plugin_gateway_disable_plugins_env,test_plugin_gateway_allow_list_plugins_env,test_health_reports_configured_disabled_plugins
+    e: test_plugin_gateway_env_overrides_service_urls,test_plugin_gateway_env_overrides_modbus_params,test_plugin_gateway_env_overrides_modbus_adc_params,test_set_pump_uses_registry_instance_that_recovers_after_startup,test_plugin_gateway_disable_plugins_env,test_plugin_gateway_allow_list_plugins_env,test_health_reports_configured_disabled_plugins,test_health_does_not_poll_configured_disabled_plugins
     test_plugin_gateway_env_overrides_service_urls(monkeypatch)
     test_plugin_gateway_env_overrides_modbus_params(monkeypatch)
     test_plugin_gateway_env_overrides_modbus_adc_params(monkeypatch)
@@ -1956,6 +1958,7 @@ D:
     test_plugin_gateway_disable_plugins_env(monkeypatch)
     test_plugin_gateway_allow_list_plugins_env(monkeypatch)
     test_health_reports_configured_disabled_plugins(monkeypatch)
+    test_health_does_not_poll_configured_disabled_plugins(monkeypatch)
   tests/firmware/test_plugin_gateway_init.py:
     e: test_health_awaits_ensure_initialized_before_checks,test_initialize_plugins_records_summary
     test_health_awaits_ensure_initialized_before_checks(monkeypatch)

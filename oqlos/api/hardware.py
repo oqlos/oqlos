@@ -1724,15 +1724,15 @@ def _map_adapter_identify_status(
 @router.get("/identify")
 async def hardware_identify(
     scan: str = Query(
-        default="auto",
+        default="never",
         description="Scan mode: auto (scan only on failure), always (force live scan), never (skip live scan)",
     )
 ):
     """Return hardware identification with conditional live scanning for low latency."""
-    scan_mode_raw = scan if isinstance(scan, str) else "auto"
-    scan_mode = (scan_mode_raw or "auto").strip().lower()
+    scan_mode_raw = scan if isinstance(scan, str) else "never"
+    scan_mode = (scan_mode_raw or "never").strip().lower()
     if scan_mode not in {"auto", "always", "never"}:
-        scan_mode = "auto"
+        scan_mode = "never"
 
     health = await _gw().health()
     scan_ids, skipped_owned_modbus_probe, scan_skip_reason = _determine_scan_set(scan_mode, health)

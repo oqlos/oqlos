@@ -17,7 +17,7 @@ from oqlos.tools.cql_cli.utils import (
     validate_directory,
 )
 from oqlos.tools.cql_cli.commands import (
-    DEFAULT_FIRMWARE_URL,
+    default_firmware_url,
     handle_list_command,
     run_single_command,
     execute_command_with_cleanup,
@@ -37,6 +37,7 @@ def create_file_parser(
     file_help: str = "CQL/OQL file to process",
 ) -> argparse.ArgumentParser:
     """Create argument parser for file-based execution."""
+    firmware_url_default = default_firmware_url()
     parser = argparse.ArgumentParser(
         prog=prog,
         description=description,
@@ -61,8 +62,8 @@ def create_file_parser(
     parser.add_argument("--fix", action="store_true", help="Apply safe doctor repairs")
     parser.add_argument("--config", help="Path to oqlos.yaml for detect/doctor")
     parser.add_argument(
-        "--firmware-url", default=DEFAULT_FIRMWARE_URL,
-        help=f"Firmware simulator URL (default: {DEFAULT_FIRMWARE_URL})",
+        "--firmware-url", default=firmware_url_default,
+        help=f"Firmware simulator URL (default: {firmware_url_default})",
     )
     parser.add_argument(
         "--skip-waits", action="store_true",
@@ -86,14 +87,15 @@ def create_run_parser() -> argparse.ArgumentParser:
 
 def create_hardware_parser(action: str) -> argparse.ArgumentParser:
     """Create parser for oqlctl hardware utility subcommands."""
+    firmware_url_default = default_firmware_url()
     parser = argparse.ArgumentParser(
         prog=f"oqlctl {action}",
         description=f"OqlOS hardware {action}",
     )
     parser.add_argument("--json", action="store_true", help="Output JSON result")
     parser.add_argument(
-        "--firmware-url", default=DEFAULT_FIRMWARE_URL,
-        help=f"Firmware simulator URL (default: {DEFAULT_FIRMWARE_URL})",
+        "--firmware-url", default=firmware_url_default,
+        help=f"Firmware simulator URL (default: {firmware_url_default})",
     )
     parser.add_argument("--config", help="Path to oqlos.yaml (default: auto-detect)")
     if action == "doctor":
@@ -114,6 +116,7 @@ def create_format_parser() -> argparse.ArgumentParser:
 
 def create_cmd_parser() -> argparse.ArgumentParser:
     """Create argument parser for single command execution."""
+    firmware_url_default = default_firmware_url()
     parser = argparse.ArgumentParser(
         prog="oqlctl cmd",
         description="Execute a single OQL command line against the firmware.",
@@ -134,8 +137,8 @@ def create_cmd_parser() -> argparse.ArgumentParser:
     parser.add_argument("--text", action="store_true", help="Output text result with emojis (default: false)")
     parser.add_argument("--json", action="store_true", help="Output JSON result")
     parser.add_argument(
-        "--firmware-url", default=DEFAULT_FIRMWARE_URL,
-        help=f"Firmware simulator URL (default: {DEFAULT_FIRMWARE_URL})",
+        "--firmware-url", default=firmware_url_default,
+        help=f"Firmware simulator URL (default: {firmware_url_default})",
     )
     parser.add_argument(
         "--skip-waits", action="store_true",

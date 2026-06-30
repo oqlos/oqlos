@@ -7,6 +7,9 @@ OQL-over-MQTT **agent/controller** pair for local and remote OQL requests. It al
 the OqlOS hardware UI/API on LAN at `:8202`, so a human can open
 `http://boardnet.local:8202/hardware-status`, `/hardware-demo`, and `/map-editor` directly.
 
+Aktualny stan BoardNet/DisplayNet i ostatniej diagnostyki hardware:
+`redeploy/122/CURRENT_STATE.md`.
+
 See `RUNBOOK.md` for the one-time bare-metal provisioning (OS, ssh keys, apt, linger) that
 must happen **before** the first `redeploy run`.
 
@@ -33,6 +36,9 @@ RUNBOOK can run them manually over ssh if the automation needs adjusting.
   redeploys, the hardware + broker stay up together. OqlOS connects to `127.0.0.1:1883`.
 - OqlOS hardware API/UI listens on `0.0.0.0:8202` for LAN access. This intentionally exposes
   hardware controls on the local network; do not publish this port outside the trusted LAN.
+- Aktualna ścieżka GUI c2004/DisplayNet używa bezpośredniego HTTP:
+  `OQLOS_API_URL=http://192.168.188.122:8202`. MQTT zostaje używany dla OQL-over-MQTT
+  i lokalnego agenta/controllera na BoardNet.
 - `PIHW_ALLOW_MISSING_HARDWARE` (default `1`) turns missing-device failures into warnings so
   the node still boots for bench testing.
 - Modbus RTU serial framing stays **local** (oqlos-server ↔ /dev/tty* on this Pi). Only OQL
@@ -46,6 +52,10 @@ RUNBOOK can run them manually over ssh if the automation needs adjusting.
   `oqlos/_CHECKSUMS.sha256` (wygenerowanego na źródle przez `scripts/gen-checksums.sh` i
   dowiezionego przez `sync_oqlos_core`). Brak manifestu = FAIL z instrukcją. Manifest jest
   artefaktem deployu — w `.gitignore`, regeneruj przed każdym `redeploy run`.
+- Stan z 2026-06-30 13:58 CEST: BoardNet działa po reboot w `mode=real`,
+  `overall_ok=true`; Tic249, DRI0050 i Modbus-IO są zdrowe. Modbus-IO
+  odpowiada na `9600/N`, slave ID `2`. `modbus-adc` jest wyłączony, bo adapter
+  ADC nie jest obecny. Szczegóły: `redeploy/122/CURRENT_STATE.md`.
 
 ## Scripts
 
@@ -387,7 +397,11 @@ fi
 set -euo pipefail
 mkdir -p /home/pi/.config/systemd/user /home/pi/maskservice/config /home/pi/maskservice/logs
 
-_has_modbus_usb() { ls /dev/ttyACM* /dev/ttyUSB* /dev/serial/by-id/usb-1a86_* 2>/dev/null | head -1 | grep -q .; }
+_has_modbus_usb() {
+  compgen -G '/dev/ttyACM*' >/dev/null \
+    || compgen -G '/dev/ttyUSB*' >/dev/null \
+    || compgen -G '/dev/serial/by-id/usb-1a86_*' >/dev/null
+}
 if ! _has_modbus_usb; then
   if [ "${PIHW_ALLOW_MISSING_HARDWARE:-1}" = "1" ]; then
     echo "WARN: brak Modbus USB — pomijam oqlos-hardware-api (PIHW_ALLOW_MISSING_HARDWARE=1)"
@@ -402,10 +416,18 @@ fi
 cd /home/pi/oqlos/oqlos
 if [ ! -x /home/pi/oqlos/venv/bin/oqlos-server ]; then
   python3 -m venv /home/pi/oqlos/venv
-  /home/pi/oqlos/venv/bin/pip install -q -e .
   echo "PASS: utworzono /home/pi/oqlos/venv"
 else
-  echo "INFO: uzywam istniejacego /home/pi/oqlos/venv"
+  echo "INFO: odswiezam istniejace /home/pi/oqlos/venv"
+fi
+/home/pi/oqlos/venv/bin/pip install -q -e .
+/home/pi/oqlos/venv/bin/python - <<'PY'
+import oqlos.api.main
+PY
+echo "PASS: oqlos editable install OK"
+if [ ! -f /home/pi/oqlos/oqlos/frontend/dist/index.html ]; then
+  echo "FAIL: brak /home/pi/oqlos/oqlos/frontend/dist/index.html — zbuduj frontend i uruchom sync_oqlos_frontend_dist" >&2
+  exit 1
 fi
 # The hardware REST contract is bundled in OqlOS as oqlos.hardware.client.
 # Only the external Modbus driver layer remains optional/editable on the Pi.
@@ -415,7 +437,20 @@ fi
 
 # Base config from the hardware-node yaml (loopback motor URLs already applied).
 cp /home/pi/maskservice/boardnet-config/oqlos-hw.yaml /home/pi/maskservice/config/oqlos-real.yaml
-cp /home/pi/maskservice/boardnet-config/.env.hw /home/pi/maskservice/config/oql-mqtt.env 2>/dev/null || true
+ENVF=/home/pi/maskservice/config/oql-mqtt.env
+if [ ! -f "$ENVF" ]; then
+  cp /home/pi/maskservice/boardnet-config/.env.hw "$ENVF"
+fi
+PW=$(grep -E '^OQLOS_OQL_MQTT_PASSWORD=' "$ENVF" 2>/dev/null | head -1 | cut -d= -f2- || true)
+if [ -z "$PW" ] || [ "$PW" = "CHANGE_ME_ON_PI" ]; then
+  echo "FAIL: ustaw prawdziwe OQLOS_OQL_MQTT_PASSWORD w $ENVF; deploy nie nadpisuje sekretow" >&2
+  exit 1
+fi
+if grep -qE '^OQLOS_OQL_TRANSPORT_ROLE=' "$ENVF"; then
+  sed -i 's/^OQLOS_OQL_TRANSPORT_ROLE=.*/OQLOS_OQL_TRANSPORT_ROLE=both/' "$ENVF"
+else
+  printf 'OQLOS_OQL_TRANSPORT_ROLE=both\n' >> "$ENVF"
+fi
 
 systemctl --user stop oqlos-hardware-api.service 2>/dev/null || true
 sleep 2
@@ -423,11 +458,42 @@ sleep 2
 # --- Autodetect Modbus serial ports (by-id differs per Pi) ---
 IO_DEV=$(ls -1 /dev/serial/by-id/usb-1a86_USB_Single_Serial_*-if00 2>/dev/null | head -1 || true)
 [ -n "${IO_DEV:-}" ] && [ -e "$IO_DEV" ] || { for _p in /dev/ttyACM*; do [ -e "$_p" ] && IO_DEV="$_p" && break; done; }
-[ -n "${IO_DEV:-}" ] && [ -e "$IO_DEV" ] || IO_DEV=/dev/ttyACM0
+IO_ENABLED=true
+if [ -z "${IO_DEV:-}" ] || [ ! -e "$IO_DEV" ]; then
+  IO_ENABLED=false
+  IO_DEV=/dev/serial/by-id/io-not-present
+fi
 ADC_DEV=$(ls -1 /dev/serial/by-id/usb-1a86_USB2.0-Serial-if00-port0 2>/dev/null | head -1 || true)
 [ -n "${ADC_DEV:-}" ] && [ -e "$ADC_DEV" ] || { for _p in /dev/ttyUSB*; do [ -e "$_p" ] && ADC_DEV="$_p" && break; done; }
 [ -n "${ADC_DEV:-}" ] && [ -e "$ADC_DEV" ] || ADC_DEV=/dev/ttyUSB0
 IO_BAUD=9600
+IO_DEVICE_ID=2
+if [ "$IO_ENABLED" = true ]; then
+  DETECTED_IO_DEVICE_ID=$(
+    timeout 20 /home/pi/oqlos/venv/bin/python - "$IO_DEV" << 'PY' 2>/dev/null || true
+from pymodbus.client import ModbusSerialClient
+import sys
+port = sys.argv[1]
+for device_id in (1, 2, 3, 4, 5, 6, 7, 8):
+    cli = ModbusSerialClient(port=port, baudrate=9600, parity="N", stopbits=1, bytesize=8, timeout=0.35)
+    try:
+        if not cli.connect():
+            continue
+        resp = cli.read_coils(address=0, count=1, device_id=device_id)
+        if resp is not None and not resp.isError():
+            print(device_id); raise SystemExit(0)
+    except Exception:
+        continue
+    finally:
+        try: cli.close()
+        except Exception: pass
+print("none")
+PY
+  )
+  case "$DETECTED_IO_DEVICE_ID" in
+    1|2|3|4|5|6|7|8) IO_DEVICE_ID="$DETECTED_IO_DEVICE_ID" ;;
+  esac
+fi
 
 ADC_ENABLED=true
 ADC_DEVICE_ID=2
@@ -458,22 +524,29 @@ case "$DETECTED_ADC_DEVICE_ID" in
 esac
 ADC_SERIAL_FOR_CONFIG="$ADC_DEV"
 [ "$ADC_ENABLED" = false ] && ADC_SERIAL_FOR_CONFIG=/dev/serial/by-id/adc-not-present
-echo "INFO: modbus-io=$IO_DEV@$IO_BAUD  modbus-adc=$ADC_SERIAL_FOR_CONFIG enabled=$ADC_ENABLED id=$ADC_DEVICE_ID"
+DRI_ENABLED=false
+if curl -sf --max-time 3 http://127.0.0.1:8203/api/status >/dev/null 2>&1; then
+  DRI_ENABLED=true
+fi
+echo "INFO: modbus-io=$IO_DEV enabled=$IO_ENABLED @$IO_BAUD id=$IO_DEVICE_ID  modbus-adc=$ADC_SERIAL_FOR_CONFIG enabled=$ADC_ENABLED id=$ADC_DEVICE_ID  motor-dri0050=$DRI_ENABLED"
 
 CFG=/home/pi/maskservice/config/oqlos-real.yaml
-python3 - "$CFG" "$IO_DEV" "$ADC_SERIAL_FOR_CONFIG" "$IO_BAUD" "$ADC_ENABLED" "$ADC_DEVICE_ID" << 'PY'
+python3 - "$CFG" "$IO_DEV" "$ADC_SERIAL_FOR_CONFIG" "$IO_BAUD" "$IO_ENABLED" "$IO_DEVICE_ID" "$ADC_ENABLED" "$ADC_DEVICE_ID" "$DRI_ENABLED" << 'PY'
 import re, sys
 from pathlib import Path
 path = Path(sys.argv[1])
-io_dev, adc_dev, io_baud, adc_enabled, adc_device_id = sys.argv[2:7]
+io_dev, adc_dev, io_baud, io_enabled, io_device_id, adc_enabled, adc_device_id, dri_enabled = sys.argv[2:10]
 text = path.read_text(encoding="utf-8")
+text = re.sub(r"(  motor-dri0050:\n(?:.*\n)*?    enabled: )(true|false)", rf"\g<1>{dri_enabled}", text, count=1)
+text = re.sub(r"(  modbus-io:\n(?:.*\n)*?    enabled: )(true|false)", rf"\g<1>{io_enabled}", text, count=1)
 text = re.sub(r"(  modbus-io:\n(?:.*\n)*?      serial_port: )[^\n]+", rf"\1{io_dev}", text, count=1)
 text = re.sub(r"(  modbus-io:\n(?:.*\n)*?      baudrate: )[0-9]+", rf"\g<1>{io_baud}", text, count=1)
+text = re.sub(r"(  modbus-io:\n(?:.*\n)*?      device_id: )[0-9]+", rf"\g<1>{io_device_id}", text, count=1)
 text = re.sub(r"(  modbus-adc:\n(?:.*\n)*?      serial_port: )[^\n]+", rf"\1{adc_dev}", text, count=1)
 text = re.sub(r"(  modbus-adc:\n(?:.*\n)*?      device_id: )[0-9]+", rf"\g<1>{adc_device_id}", text, count=1)
 text = re.sub(r"(  modbus-adc:\n(?:.*\n)*?    enabled: )(true|false)", rf"\g<1>{adc_enabled}", text, count=1)
 path.write_text(text, encoding="utf-8")
-print(f"PASS: {path} (modbus-io={io_dev}@{io_baud}, modbus-adc={adc_dev}, enabled={adc_enabled}, id={adc_device_id})")
+print(f"PASS: {path} (motor-dri0050={dri_enabled}, modbus-io={io_dev}@{io_baud} enabled={io_enabled}, id={io_device_id}, modbus-adc={adc_dev} enabled={adc_enabled}, id={adc_device_id})")
 PY
 
 # --- systemd unit: oqlos-server with the OQL-over-MQTT agent/controller enabled ---
@@ -494,7 +567,7 @@ Environment=PYTHONPATH=/home/pi/maskservice/pimodbus
 Environment=OQLOS_MODBUS_SERIAL_PORT=${IO_DEV}
 Environment=OQLOS_MODBUS_BAUD=${IO_BAUD}
 Environment=OQLOS_MODBUS_PARITY=N
-Environment=OQLOS_MODBUS_DEVICE_ID=1
+Environment=OQLOS_MODBUS_DEVICE_ID=${IO_DEVICE_ID}
 Environment=OQLOS_MODBUS_ADC_SERIAL_PORT=${ADC_SERIAL_FOR_CONFIG}
 Environment=OQLOS_MODBUS_ADC_BAUD=9600
 Environment=OQLOS_MODBUS_ADC_PARITY=N
@@ -1029,6 +1102,13 @@ extra_steps:
     src: /home/tom/github/oqlos/oqlos/
     dst: ~/oqlos/oqlos/
     excludes: [.git/, .venv/, venv/, __pycache__/, .pytest_cache/]
+
+  - id: sync_oqlos_frontend_dist
+    action: rsync
+    description: "Sync zbudowanego OqlOS hardware UI (frontend/dist)"
+    src: /home/tom/github/oqlos/oqlos/frontend/dist/
+    dst: ~/oqlos/oqlos/frontend/dist/
+    excludes: []
 
   - id: sync_pihw_config
     action: rsync

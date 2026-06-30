@@ -95,6 +95,17 @@ def test_cmd_executes_single_command(monkeypatch):
     )
 
 
+def test_cmd_parser_uses_oqlos_api_url_env_by_default(monkeypatch):
+    import importlib
+
+    main_module = importlib.import_module("oqlos.tools.cql_cli.main")
+    monkeypatch.setenv("OQLOS_API_URL", "http://192.168.188.122:8202/")
+
+    args = main_module.create_cmd_parser().parse_args(["SET pompa-1 0"])
+
+    assert args.firmware_url == "http://192.168.188.122:8202"
+
+
 def test_cmd_execute_aborts_when_hardware_is_unavailable(monkeypatch, capsys):
     def fake_health(url: str) -> dict[str, object]:
         return {"error": f"Connection refused at {url}"}

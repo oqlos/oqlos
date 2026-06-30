@@ -204,7 +204,15 @@ class LungPlugin(HardwarePlugin):
             "cycles": cycles,
             "pause": pause,
         }
-        for key in ("direction", "start_direction", "acceleration", "limit_mode"):
+        for key in (
+            "direction",
+            "start_direction",
+            "acceleration",
+            "ramp_seconds",
+            "ramp_time_sec",
+            "ramp_time",
+            "limit_mode",
+        ):
             if key in params:
                 payload[key] = params[key]
 

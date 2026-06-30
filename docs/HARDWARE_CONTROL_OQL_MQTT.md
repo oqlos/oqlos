@@ -1,13 +1,19 @@
-# Sterowanie sprzętem przez OQL-over-MQTT + Panel testowy
+# Sterowanie sprzętem przez OQL HTTP / OQL-over-MQTT + Panel testowy
 
 Dokumentacja warstwy sterowania sprzętem OqlOS na **dedykowanym węźle sprzętowym**
-(Raspberry Pi) przez komendy **OQL wysyłane po MQTT**, oraz **Panelu testowego**.
+(Raspberry Pi), komend **OQL** oraz **Panelu testowego**.
 
-- **Architektura**: aplikacja (np. connect-scenario) → *controller* OqlOS (HTTP) →
-  broker MQTT → *agent* OqlOS na Pi → realny sprzęt → odpowiedź tą samą drogą.
-- HTTP `:8202` agenta na Pi jest tylko **loopback**; jedyny transport między węzłami to MQTT.
+- **Aktualna ścieżka GUI/HUI (2026-06-30)**: aplikacja DisplayNet/pi109 →
+  `connect-scenario` proxy `/api/v3/hardware/*` → HTTP
+  `http://192.168.188.122:8202` → OqlOS na BoardNet → realny sprzęt.
+- **OQL-over-MQTT** nadal istnieje dla komend OQL i diagnostyki agenta, ale nie jest już
+  wymaganą ścieżką dla przycisków HUI ani paneli hardware c2004.
+- HTTP `:8202` na BoardNet jest dostępne w LAN dla DisplayNet/proxy; nie traktuj go
+  jako loopback-only w aktualnej architekturze.
 - Referencyjny węzeł: **boardnet = `pi@192.168.188.122`** (Raspberry Pi 3), node_id `boardnet`,
   prefiks tematów `oqlos/c2004`.
+
+Stan bieżący: `redeploy/122/CURRENT_STATE.md`.
 
 ---
 
@@ -15,18 +21,21 @@ Dokumentacja warstwy sterowania sprzętem OqlOS na **dedykowanym węźle sprzęt
 
 Zasada: **sterowniki fizyczne sprzętu są w oqlos i sidecarach, NIE w kodzie aplikacji c2004.**
 Zweryfikowane audytem — w kodzie aplikacji c2004 nie ma `pyusb`/`ticlib`/`pymodbus`/`RPi.GPIO`/
-`smbus`; c2004 rozmawia ze sprzętem wyłącznie przez oqlos (HTTP proxy `:8202` + OQL-over-MQTT).
+`smbus`; c2004 rozmawia ze sprzętem wyłącznie przez OqlOS (HTTP proxy `:8202`,
+opcjonalnie OQL-over-MQTT).
 
-API firmware na **`:8202`** ma DWA źródła zależnie od środowiska — to celowe, nie duplikat:
+API firmware na **`:8202`** ma różne źródła zależnie od środowiska — to celowe,
+nie duplikat:
 
 | Środowisko | Dostawca `:8202` | Uwaga |
 |-----------|------------------|-------|
-| **Docker** (dev/prod/vps) | usługa `c2004-firmware` (`backend/firmware/`) — symulator/mock | routowana przez Traefik (`/firmware`), używana przez frontend (`VITE_FIRMWARE_URL`) |
-| **Realny sprzęt** (pi109) | `oqlos-hardware-api` (host systemd) | `c2004-firmware` jest **zamaskowany**; oqlos przejmuje `:8202` |
-| **Dedykowany węzeł sprzętowy** (boardnet) | `oqlos` rola `agent` (`:8202` loopback) | transport do niego = **MQTT**, nie HTTP |
+| **Docker/dev bez sprzętu** | usługa `c2004-firmware` (`backend/firmware/`) albo OqlOS mock | symulator/mock, nie właściciel fizycznego hardware |
+| **Legacy lokalny hardware na pi109** | `oqlos-hardware-api` (host systemd) | rollback-only po fizycznym przełożeniu USB/HAT na RPi5 |
+| **Aktualny dedykowany węzeł sprzętowy** (boardnet) | `oqlos-hardware-api` na `0.0.0.0:8202` | transport GUI/HUI = **HTTP direct** z DisplayNet; OQL-over-MQTT opcjonalnie |
 
-Czyli: **firmware-sim = backend `:8202` dla docker/dev/prod**; **oqlos = `:8202` na realnym sprzęcie**.
-`backend/firmware/` NIE jest legacy do usunięcia — to aktywny, produkcyjny (Traefik) backend docker.
+Czyli: **firmware-sim/mock = backend dla docker/dev bez sprzętu**; **OqlOS =
+`:8202` na realnym sprzęcie**. `backend/firmware/` nie powinien przejmować
+fizycznego hardware.
 
 W c2004 pozostała tylko **diagnostyka host-coupled** (analiza `serial_ports` z oqlos, host
 `make`/`systemctl`) — nie otwiera urządzeń. Legacy bridge'y skanera/modbus/rtc zostały usunięte
@@ -35,6 +44,22 @@ W c2004 pozostała tylko **diagnostyka host-coupled** (analiza `serial_ports` z 
 ---
 
 ## 1. Architektura i role
+
+Aktualna ścieżka produkcyjna dla DisplayNet/c2004:
+
+```text
+Browser / HUI on DisplayNet :8100
+        │ HTTP /api/v3/hardware/* (same origin, auth/cookies)
+        ▼
+connect-scenario backend
+        │ HTTP OQLOS_API_URL=http://192.168.188.122:8202
+        ▼
+OqlOS hardware API on BoardNet (HARDWARE_MODE=real)
+        ▼
+realny sprzęt (Modbus IO/ADC, Pololu Tic T249, DRI0050, RTC, USB...)
+```
+
+Opcjonalna ścieżka OQL-over-MQTT:
 
 ```
 aplikacja / przeglądarka
@@ -56,7 +81,7 @@ Rola ustawiana przez `OQLOS_OQL_TRANSPORT_ROLE`:
 | Rola | Gdzie działa | Zachowanie |
 |------|--------------|------------|
 | `off` (domyślnie) | — | brak transportu MQTT (zachowuje tryb jednoprocesowy) |
-| `controller` | węzeł aplikacyjny (pi109 / dev) | publikuje OQL, czeka na odpowiedź; serwuje `/api/v1/oql/*` |
+| `controller` | węzeł aplikacyjny (dev / legacy pi109 bridge) | publikuje OQL, czeka na odpowiedź; serwuje `/api/v1/oql/*` |
 | `agent` | węzeł sprzętowy (boardnet) | subskrybuje żądania, wykonuje OQL na lokalnym sprzęcie, odpowiada |
 | `both` | dev / loopback | controller + agent na jednym brokerze (testy) |
 
@@ -70,24 +95,31 @@ Rola ustawiana przez `OQLOS_OQL_TRANSPORT_ROLE`:
 
 ---
 
-## 2. Uruchomienie (kolejność ma znaczenie)
+## 2. Uruchomienie
 
-Na czystym starcie **zawsze** w kolejności **broker → agent → controller** (agent musi
-najpierw zasubskrybować temat żądań):
+Produkcja BoardNet jest wdrażana przez `redeploy/122/migration.md` i uruchamiana
+z systemd `--user`. OqlOS słucha na LAN:
+
+```bash
+oqlos-server --host 0.0.0.0 --port 8202
+```
+
+Manualny start OQL-over-MQTT nadal wymaga kolejności **broker → agent → controller**
+(agent musi najpierw zasubskrybować temat żądań):
 
 ```bash
 # 1) Broker na węźle sprzętowym (prod: mosquitto; dev bez sudo: amqtt)
 amqtt -c ~/maskservice/config/amqtt.yaml          # dev (pip install amqtt)
 #   systemctl --user start mosquitto               # prod (redeploy/122)
 
-# 2) Agent na Pi (HTTP loopback, agent MQTT)
+# 2) Agent na Pi (HTTP LAN, agent MQTT)
 OQLOS_HARDWARE_MODE=real \
 OQLOS_OQL_TRANSPORT_ROLE=agent OQLOS_OQL_NODE_ID=boardnet \
 OQLOS_OQL_MQTT_HOST=127.0.0.1 OQLOS_OQL_MQTT_PORT=1883 \
 oqlos-server --host 0.0.0.0 --port 8202
 #   poczekaj na log: "OqlMqttAgent connected (node=boardnet)"
 
-# 3) Controller na węźle aplikacyjnym (most HTTP→MQTT)
+# 3) Opcjonalny controller na węźle aplikacyjnym (most HTTP→MQTT)
 OQLOS_OQL_TRANSPORT_ROLE=controller OQLOS_OQL_NODE_ID=boardnet \
 OQLOS_OQL_MQTT_HOST=192.168.188.122 OQLOS_OQL_MQTT_PORT=1883 \
 OQLOS_HARDWARE_MODE=mock \
@@ -122,18 +154,22 @@ Konfiguracja przez env: `OQL_PI` (domyślnie `pi@boardnet.local`), `OQL_NODE` (`
 | `OQLOS_OQL_TOPIC_PREFIX` | `oqlos/c2004` | prefiks tematów |
 | `OQLOS_OQL_TIMEOUT_MS` | `15000` | domyślny timeout odpowiedzi |
 
-connect-scenario (klient): `HARDWARE_TRANSPORT=mqtt` + `OQLOS_OQL_CONTROLLER_URL=http://127.0.0.1:8202`
-przełącza dyspatcher CQRS na ścieżkę OQL-over-MQTT (przez lokalny controller).
+connect-scenario w aktualnym trybie produkcyjnym używa HTTP direct:
+`HARDWARE_TRANSPORT=http` + `OQLOS_API_URL=http://192.168.188.122:8202`.
+
+Tryb `HARDWARE_TRANSPORT=mqtt` + `OQLOS_OQL_CONTROLLER_URL=http://127.0.0.1:8202`
+jest trybem opcjonalnym/legacy dla lokalnego controller bridge.
 
 ---
 
 ## 3. Panel testowy (dashboard)
 
-Serwowany przez instancję **controller** (lub każdą instancję OqlOS) pod **`/panel`**;
+Serwowany przez instancję OqlOS pod **`/panel`**;
 strona startowa z linkami pod **`/`**.
 
-- LAN: `http://<host-controllera>:8210/panel` (np. `http://192.168.188.212:8210/panel`)
-- Aby był dostępny z innych urządzeń, controller musi nasłuchiwać na `--host 0.0.0.0`.
+- BoardNet: `http://192.168.188.122:8202/panel`
+- Opcjonalny controller dev: `http://<host-controllera>:8210/panel`
+- Aby panel był dostępny z innych urządzeń, OqlOS musi nasłuchiwać na `--host 0.0.0.0`.
 
 Funkcje:
 - **Predefiniowane grupy komend** (klik = wykonanie; **▶ grupa** = uruchom całą grupę po kolei):
@@ -160,7 +196,8 @@ Pliki: `oqlos/api/static/panel.html`, `oqlos/api/index.html` (route `/panel`, `/
 
 ### Integracja z connect-scenario (zweryfikowana)
 `connect-scenario` działa na obu transportach:
-- **HTTP proxy** (`OQLOS_API_URL=http://<hw-pi>:8202`) — `/api/v3/hardware/*` → węzeł, `mode=real`.
+- **Aktualny HTTP proxy** (`OQLOS_API_URL=http://192.168.188.122:8202`) —
+  `/api/v3/hardware/*` → BoardNet, `mode=real`.
 - **OQL-over-MQTT** (`HARDWARE_TRANSPORT=mqtt`, `OQLOS_OQL_CONTROLLER_URL=http://127.0.0.1:8202`):
   `POST /api/v3/hardware/cqrs/command` → lokalny controller → MQTT → agent → realny sprzęt;
   odpowiedź ma `transport: "mqtt"`, zdarzenie CQRS jest zapisywane.
@@ -254,11 +291,12 @@ Implementacja: `oqlos/hardware/transport/manage_ops.py`, `oqlos/hardware/usb_dia
 - Węzeł sprzętowy (boardnet): `oqlos/redeploy/122/` — `migration.md` (markpact: mosquitto,
   agent, sidecary, autodetekcja Modbus), `oqlos-hw.yaml`, `.env.hw`, `mosquitto.conf`, `RUNBOOK.md`.
   Wymaga `sudo` na Pi (apt mosquitto, udev, systemd linger).
-- Węzeł aplikacyjny (pi109): `c2004/redeploy/pi109/migration.md` — flaga
-  `PI109_HARDWARE_REMOTE=1` (domyślnie 0 = stary tryb) odcina lokalny sprzęt, uruchamia
-  controller, kieruje backend na broker boardnet.
-- Reverse-proxy: `c2004/connect-scenario/nginx.conf.template` — `location /oql-panel`,
-  `/api/v1/oql/`, `/ws/oql` → `${OQLOS_CONTROLLER_URL}`.
+- Węzeł aplikacyjny (DisplayNet/pi109): `c2004/redeploy/pi109/migration.md` —
+  domyślnie `PI109_HARDWARE_LOCAL=0`; lokalne usługi hardware na RPi5 są wyłączone,
+  a backend/proxy kieruje HTTP bezpośrednio na `http://192.168.188.122:8202`.
+- Reverse-proxy/OQL panel: `/api/v3/hardware/*` jest główną ścieżką GUI. Stare
+  przekierowania `/oql-panel`, `/api/v1/oql/`, `/ws/oql` do `${OQLOS_CONTROLLER_URL}`
+  dotyczą trybu controller bridge/OQL-over-MQTT.
 - **Zależności na Pi**: `oqlos.hardware.client` jest częścią OqlOS; węzeł sprzętowy nie
   wymaga już pakietu `hardware_client` z c2004. Zewnętrzny pozostaje tylko sterownik
   Modbus (`pimodbus`), gdy używany jest bezpośredni dostęp do Waveshare/RTU.

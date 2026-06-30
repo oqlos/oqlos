@@ -94,7 +94,7 @@ project_file('oqlos/hardware/client/platform.py', 51, 'python').
 project_file('oqlos/hardware/client/proxy.py', 461, 'python').
 project_file('oqlos/hardware/client/resolvers.py', 129, 'python').
 project_file('oqlos/hardware/client/tic249_arg_contract.py', 66, 'python').
-project_file('oqlos/hardware/client/tic249_extended.py', 628, 'python').
+project_file('oqlos/hardware/client/tic249_extended.py', 639, 'python').
 project_file('oqlos/hardware/client/tic249_rig_direction.py', 44, 'python').
 project_file('oqlos/hardware/config_paths.py', 42, 'python').
 project_file('oqlos/hardware/config_schema.py', 146, 'python').
@@ -111,12 +111,12 @@ project_file('oqlos/hardware/hui_actions.py', 252, 'python').
 project_file('oqlos/hardware/identify_enrichment.py', 19, 'python').
 project_file('oqlos/hardware/modbus_identify.py', 132, 'python').
 project_file('oqlos/hardware/peripheral_mapping.py', 139, 'python').
-project_file('oqlos/hardware/plugin_gateway.py', 613, 'python').
+project_file('oqlos/hardware/plugin_gateway.py', 624, 'python').
 project_file('oqlos/hardware/plugins/__init__.py', 50, 'python').
 project_file('oqlos/hardware/plugins/_rtu_serial.py', 34, 'python').
 project_file('oqlos/hardware/plugins/_shared.py', 62, 'python').
 project_file('oqlos/hardware/plugins/base.py', 371, 'python').
-project_file('oqlos/hardware/plugins/lung.py', 354, 'python').
+project_file('oqlos/hardware/plugins/lung.py', 362, 'python').
 project_file('oqlos/hardware/plugins/modbus.py', 336, 'python').
 project_file('oqlos/hardware/plugins/modbus_adc.py', 399, 'python').
 project_file('oqlos/hardware/plugins/motor.py', 550, 'python').
@@ -205,14 +205,14 @@ project_file('tests/firmware/test_hardware_discovery.py', 32, 'python').
 project_file('tests/firmware/test_hardware_doctor.py', 287, 'python').
 project_file('tests/firmware/test_hardware_health.py', 44, 'python').
 project_file('tests/firmware/test_hardware_health_http.py', 59, 'python').
-project_file('tests/firmware/test_hardware_identify.py', 195, 'python').
+project_file('tests/firmware/test_hardware_identify.py', 210, 'python').
 project_file('tests/firmware/test_hardware_modbus_wizard.py', 326, 'python').
 project_file('tests/firmware/test_hardware_stack_snapshot.py', 46, 'python').
 project_file('tests/firmware/test_hardware_v3_compat.py', 97, 'python').
 project_file('tests/firmware/test_hui_actions.py', 93, 'python').
 project_file('tests/firmware/test_hui_scenario.py', 12, 'python').
 project_file('tests/firmware/test_lung_integration.py', 282, 'python').
-project_file('tests/firmware/test_lung_plugin_reciprocate.py', 76, 'python').
+project_file('tests/firmware/test_lung_plugin_reciprocate.py', 94, 'python').
 project_file('tests/firmware/test_modbus_adc_aliases.py', 9, 'python').
 project_file('tests/firmware/test_modbus_discovery.py', 111, 'python').
 project_file('tests/firmware/test_modbus_identify.py', 41, 'python').
@@ -226,7 +226,7 @@ project_file('tests/firmware/test_oql_route_http.py', 119, 'python').
 project_file('tests/firmware/test_oqlos_logging.py', 21, 'python').
 project_file('tests/firmware/test_panel_ui.py', 150, 'python').
 project_file('tests/firmware/test_parser_cycle.py', 53, 'python').
-project_file('tests/firmware/test_plugin_gateway_env.py', 203, 'python').
+project_file('tests/firmware/test_plugin_gateway_env.py', 243, 'python').
 project_file('tests/firmware/test_plugin_gateway_init.py', 67, 'python').
 project_file('tests/firmware/test_plugin_health.py', 340, 'python').
 project_file('tests/firmware/test_plugins_api.py', 31, 'python').
@@ -837,7 +837,7 @@ python_function('oqlos/hardware/client/tic249_extended.py', '_steps_per_second_t
 python_function('oqlos/hardware/client/tic249_extended.py', '_normalize_motion_params', 1, 13, 6).
 python_function('oqlos/hardware/client/tic249_extended.py', '_stroke_steps', 2, 1, 2).
 python_function('oqlos/hardware/client/tic249_extended.py', '_apply_reciprocate_direction', 2, 1, 1).
-python_function('oqlos/hardware/client/tic249_extended.py', '_build_reciprocate_params', 1, 10, 9).
+python_function('oqlos/hardware/client/tic249_extended.py', '_build_reciprocate_params', 1, 13, 9).
 python_function('oqlos/hardware/client/tic249_extended.py', '_map_lung_or_reciprocate', 2, 8, 4).
 python_function('oqlos/hardware/client/tic249_extended.py', '_command_mapping', 2, 13, 5).
 python_function('oqlos/hardware/client/tic249_extended.py', '_extract_position', 1, 5, 3).
@@ -1358,6 +1358,7 @@ python_function('tests/firmware/test_hardware_health_http.py', 'test_hardware_he
 python_function('tests/firmware/test_hardware_identify.py', 'test_collect_hardware_diagnostics_exposes_ports', 1, 5, 2).
 python_function('tests/firmware/test_hardware_identify.py', 'test_platform_reports_modbus_adc_as_analog_input', 1, 5, 2).
 python_function('tests/firmware/test_hardware_identify.py', 'test_hardware_identify_includes_diagnostics', 1, 12, 8).
+python_function('tests/firmware/test_hardware_identify.py', 'test_hardware_identify_default_skips_live_probe', 1, 3, 5).
 python_function('tests/firmware/test_hardware_identify.py', 'test_read_sensors_batch_reports_unavailable_modbus_without_503', 1, 5, 4).
 python_function('tests/firmware/test_hardware_identify.py', 'test_hardware_temperature_returns_compatible_payload', 1, 4, 3).
 python_function('tests/firmware/test_hardware_identify.py', 'test_hardware_diagnose_keeps_sensor_errors_in_payload', 1, 4, 4).
@@ -1385,6 +1386,7 @@ python_function('tests/firmware/test_hui_actions.py', 'test_hui_shutdown_turns_o
 python_function('tests/firmware/test_hui_scenario.py', 'test_register_hui_test_scenario_adds_ts_c20_once', 0, 3, 2).
 python_function('tests/firmware/test_lung_plugin_reciprocate.py', '_plugin_with_client', 1, 1, 2).
 python_function('tests/firmware/test_lung_plugin_reciprocate.py', 'test_ready_false_does_not_block_reciprocate_start', 0, 3, 4).
+python_function('tests/firmware/test_lung_plugin_reciprocate.py', 'test_tic249_extended_reciprocate_normalizes_ramp_time_alias', 0, 3, 1).
 python_function('tests/firmware/test_modbus_adc_aliases.py', 'test_resolve_channel_accepts_map_editor_v_inputs', 0, 5, 1).
 python_function('tests/firmware/test_modbus_discovery.py', '_install_fake_pymodbus', 4, 1, 4).
 python_function('tests/firmware/test_modbus_discovery.py', 'test_probe_waveshare_modbus_detects_working_port', 1, 7, 3).
@@ -1447,6 +1449,7 @@ python_function('tests/firmware/test_plugin_gateway_env.py', 'test_set_pump_uses
 python_function('tests/firmware/test_plugin_gateway_env.py', 'test_plugin_gateway_disable_plugins_env', 1, 4, 4).
 python_function('tests/firmware/test_plugin_gateway_env.py', 'test_plugin_gateway_allow_list_plugins_env', 1, 4, 4).
 python_function('tests/firmware/test_plugin_gateway_env.py', 'test_health_reports_configured_disabled_plugins', 1, 2, 6).
+python_function('tests/firmware/test_plugin_gateway_env.py', 'test_health_does_not_poll_configured_disabled_plugins', 1, 4, 8).
 python_function('tests/firmware/test_plugin_gateway_init.py', 'test_health_awaits_ensure_initialized_before_checks', 1, 2, 6).
 python_function('tests/firmware/test_plugin_gateway_init.py', 'test_initialize_plugins_records_summary', 1, 4, 7).
 python_function('tests/firmware/test_plugin_health.py', 'test_piadc_health_rejects_mock_mode', 0, 4, 5).
@@ -1919,7 +1922,7 @@ python_method('PluginHardwareGateway', 'set_lung', 4, 1, 3).
 python_method('PluginHardwareGateway', 'stop_lung', 0, 4, 5).
 python_method('PluginHardwareGateway', 'disable_lung', 0, 4, 5).
 python_method('PluginHardwareGateway', 'reload_configs', 1, 5, 9).
-python_method('PluginHardwareGateway', 'health', 0, 7, 3).
+python_method('PluginHardwareGateway', 'health', 0, 11, 6).
 python_class('oqlos/hardware/plugins/base.py', 'PluginStatus').
 python_class('oqlos/hardware/plugins/base.py', 'HardwareDriverSpec').
 python_method('HardwareDriverSpec', 'set_peripheral', 3, 1, 0).

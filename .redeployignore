@@ -2,6 +2,9 @@
 # Patterns excluded from deployment sync (rsync).
 # .gitignore is also respected automatically.
 
+# Force-include the deploy checksum manifest (listed in .gitignore but required on target)
+!oqlos/_CHECKSUMS.sha256
+
 .git/
 .venv/
 venv/

@@ -1,12 +1,12 @@
-# redup/duplication | 75 groups | 154f 31375L | 2026-06-30
+# redup/duplication | 75 groups | 154f 31409L | 2026-06-30
 
 SUMMARY:
   files_scanned: 154
-  total_lines:   31375
+  total_lines:   31409
   dup_groups:    75
   dup_fragments: 167
   saved_lines:   543
-  scan_ms:       126381
+  scan_ms:       149038
 
 HOTSPOTS[7] (files with most duplication):
   oqlos/core/_cql_tokenizer.py  dup=92L  groups=7  frags=16  (0.3%)
@@ -133,8 +133,8 @@ DUPLICATES[75] (ranked by impact):
       oqlos/tools/hardware_diagnose/doctor.py:257-262  (_modbus_config)
       oqlos/tools/hardware_diagnose/doctor.py:265-270  (_modbus_adc_config)
   [F0023]   FUZZ  _handle_stop_http  L=6 N=2 saved=6 sim=0.97
-      oqlos/hardware/plugins/lung.py:234-239  (_handle_stop_http)
-      oqlos/hardware/plugins/lung.py:275-280  (_handle_status_http)
+      oqlos/hardware/plugins/lung.py:242-247  (_handle_stop_http)
+      oqlos/hardware/plugins/lung.py:283-288  (_handle_status_http)
   [F0005]   FUZZ  _execute_firmware_action  L=3 N=3 saved=6 sim=0.93
       oqlos/core/interpreter.py:335-337  (_execute_firmware_action)
       oqlos/core/interpreter.py:339-341  (_execute_plugin_action)
@@ -252,8 +252,8 @@ DUPLICATES[75] (ranked by impact):
       oqlos/hardware/drivers/mqtt.py:103-105  (discover)
       oqlos/hardware/protocol.py:48-50  (discover)
   [F0008]   FUZZ  _handle_stop_usb  L=3 N=2 saved=3 sim=0.89
-      oqlos/hardware/plugins/lung.py:241-243  (_handle_stop_usb)
-      oqlos/hardware/plugins/lung.py:282-284  (_handle_status_usb)
+      oqlos/hardware/plugins/lung.py:249-251  (_handle_stop_usb)
+      oqlos/hardware/plugins/lung.py:290-292  (_handle_status_usb)
   [F0007]   FUZZ  connect  L=3 N=2 saved=3 sim=0.88
       oqlos/hardware/plugins/base.py:292-294  (connect)
       oqlos/hardware/plugins/base.py:297-299  (disconnect)

@@ -143,18 +143,21 @@ defaults are still respected when flags are omitted.
 
 The physical rig runs on a dedicated Raspberry Pi (`pi@boardnet.local`,
 192.168.188.122). The Pi owns all devices and runs the **OQL-over-MQTT agent**;
-a controller (your dev host or pi109) talks to it **only over MQTT**. What is
+a controller can use MQTT for OQL-over-MQTT flows. The current c2004 GUI path
+from DisplayNet/pi109 uses direct HTTP to `http://192.168.188.122:8202`. What is
 deployed and running on the node:
 
 | Usługa (systemd `--user`) | Port | Rola |
 |---|---|---|
 | `mosquitto` | `:1883` | broker MQTT (auth, `allow_anonymous false`) |
-| `oqlos-hardware-api` | `:8202` (loopback) | agent OqlOS, `HARDWARE_MODE=real`, plugin `motor-tic249` |
+| `oqlos-hardware-api` | `:8202` (LAN) | OqlOS API/UI, `HARDWARE_MODE=real`, HUI + OQL-over-MQTT agent/controller |
+| `dri0050-motor-api` | `:8203` | sidecar DFRobot DRI0050 (pompa) |
 | `hw-tic249` | `:8205` | sidecar Pololu Tic T249 (płuco) |
+| `pirtc-api` | `:8125` | sidecar piRTC / WatchDog HAT |
 
 The runtime code lives at `~/oqlos/oqlos/oqlos` (deployed package, **no git** —
-synced from this repo). Devices seen by the node: **Pololu Tic T249** (`1ffb:00c9`)
-and **CH340 Modbus adapter** (`1a86:7523`).
+synced from this repo). Current BoardNet/DisplayNet status and hardware diagnosis:
+`redeploy/122/CURRENT_STATE.md`.
 
 Everything is driven through the **Makefile** (`make help` for the full list):
 
@@ -180,12 +183,10 @@ make test          # testy jednostkowe (pytest)
 
 Override hosta/węzła: `make test-hw PI=pi@inny.local`, `make deploy NODE=122`.
 
-**Co realnie działa (zweryfikowane `make test-hw`):** agent + broker + sidecar
-aktywne, `/health mode=real`, plugin `motor-tic249` compatible, round-tripy
-OQL-over-MQTT (`ping`, `health`, `usb-list`, `pi-diagnostics`, `hui-actions`,
-`lung-disable`), a silnik Tic249 po `lung-disable` pozostaje `energized=false`
-(bezpiecznie). Test jest **read-only + de-energize** — nie rusza pompą ani
-zaworami.
+**Co realnie działa:** BoardNet odpowiada w `mode=real`, Tic249 jest
+`connected=true` i `energized=false`, DRI0050 jest healthy, Modbus-IO jest
+healthy na slave ID `2`, a broker/agent MQTT działają. `modbus-adc` jest
+wyłączony, bo adapter ADC nie jest obecny.
 
 **Integralność (suma kontrolna).** `rsync` porównuje rozmiar+mtime, więc nie
 wykrywa cichej korupcji treści. `make verify-rpi` (i krok `assert_oqlos_checksum`

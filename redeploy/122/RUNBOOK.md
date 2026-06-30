@@ -5,6 +5,9 @@ One-time bare-metal setup for the dedicated OqlOS hardware Raspberry Pi 3. Run t
 software bring-up is handled by `migration.md` (the `markpact:ref` scripts are also
 runnable standalone over ssh if you prefer manual control).
 
+Aktualny stan BoardNet/DisplayNet i ostatniej diagnostyki hardware:
+`redeploy/122/CURRENT_STATE.md`.
+
 ## 1. Operating system
 - Flash **Raspberry Pi OS Lite (64-bit)** to the SD card.
 - Hostname `boardnet`; user `pi`.
@@ -63,25 +66,36 @@ ssh pi@boardnet.local 'mosquitto_sub -u oqlos -P "<token>" -t "\$SYS/broker/upti
 # From pi109, confirm the OQL agent answers a ping over MQTT (assert-hw-node-healthy does this).
 ```
 
-## 9. Point pi109 at this node
-Provision/verify here first, then on pi109 run:
+## 9. Point DisplayNet/pi109 at this node
+Provision/verify here first, then deploy c2004 DisplayNet/pi109 with the current
+split configuration:
 ```bash
-PI109_HARDWARE_REMOTE=1 redeploy run redeploy/pi109/migration.md
+cd /home/tom/github/maskservice/c2004
+redeploy run redeploy/pi109/migration.md
 ```
-That guards out pi109's local hardware steps and repoints its backend/OQL controller at
-`192.168.188.122` (`OQLOS_API_URL` + `OQLOS_OQL_MQTT_HOST`). See the **Hardware Separation**
-section of `redeploy/pi109/migration.md`.
+That stops/skips DisplayNet local hardware services and points c2004 backend/proxy
+at `OQLOS_API_URL=http://192.168.188.122:8202`. See the **Hardware Separation**
+section of `/home/tom/github/maskservice/c2004/redeploy/pi109/migration.md`.
 
 ## Ports on boardnet
 | Service | Port | Exposure |
 |---|---|---|
 | mosquitto (MQTT broker) | 1883 | LAN (pi109 connects here) |
-| oqlos-hardware-api (HTTP/agent) | 8202 | **loopback only** |
-| hw-tic249 | 8205 | loopback only |
-| dri0050-motor-api | 8203 | loopback only |
-| pirtc-api | 8125 | loopback only |
+| oqlos-hardware-api (HTTP/UI/agent) | 8202 | LAN (c2004 DisplayNet connects here) |
+| hw-tic249 | 8205 | LAN/local lab only |
+| dri0050-motor-api | 8203 | LAN/local lab only |
+| pirtc-api | 8125 | LAN/local lab only |
+
+Do not expose these ports outside the trusted lab LAN.
+
+## Current hardware note
+
+As of 2026-06-30 13:58 CEST, BoardNet is up after reboot in `mode=real` with
+`overall_ok=true`. Tic249 and DRI0050 are healthy, Tic249 is de-energized when
+idle, and Modbus-IO is healthy on `9600/N`, slave ID `2`. `modbus-adc` is
+disabled because the ADC adapter is not present.
 
 ## Rollback to single-Pi
-If boardnet is unavailable, redeploy pi109 **without** the flag
-(`PI109_HARDWARE_REMOTE=0`, the default) and move the USB devices/HAT back to pi109. pi109's
-original hardware steps run unchanged.
+If boardnet is unavailable, set `PI109_HARDWARE_LOCAL=1` in the c2004 deployment
+and move the USB devices/HAT back to DisplayNet/pi109. That is legacy/rollback
+mode, not the current production split.
