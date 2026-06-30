@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OqlOS Hardware Status</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #101214;
+      --panel: #181c20;
+      --panel-2: #111417;
+      --border: #303841;
+      --text: #eef2f4;
+      --muted: #9aa7b2;
+      --ok: #18864b;
+      --warn: #b9770e;
+      --bad: #b42318;
+      --accent: #2f80ed;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font: 14px/1.45 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    header {
+      display: flex;
+      gap: 16px;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 18px;
+    }
+    h1, h2, h3 { margin: 0; letter-spacing: 0; }
+    h1 { font-size: 24px; }
+    h2 { font-size: 16px; margin-bottom: 12px; }
+    p { margin: 6px 0 0; color: var(--muted); }
+    button {
+      min-height: 36px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--text);
+      border-radius: 6px;
+      padding: 0 14px;
+      cursor: pointer;
+    }
+    button:hover { border-color: var(--accent); }
+    button:disabled { opacity: .6; cursor: wait; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      min-width: 0;
+    }
+    .row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .row:last-child { border-bottom: 0; }
+    .muted { color: var(--muted); }
+    .error { color: #ffb4ab; margin-top: 8px; min-height: 20px; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 22px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      color: white;
+      background: var(--bad);
+      white-space: nowrap;
+    }
+    .badge.ok { background: var(--ok); }
+    .badge.adapter-only, .badge.no-access, .badge.unknown { background: var(--warn); }
+    pre {
+      margin: 0;
+      padding: 12px;
+      background: var(--panel-2);
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: 6px;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 360px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 680px;
+    }
+    th, td {
+      text-align: left;
+      padding: 9px 8px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      vertical-align: top;
+    }
+    th { color: var(--muted); font-weight: 600; }
+    .table-wrap { overflow-x: auto; }
+    @media (max-width: 640px) {
+      main { padding: 14px; }
+      header { flex-direction: column; }
+      button { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>OqlOS Hardware Status</h1>
+        <p>Runtime hardware connectivity and diagnostics from this Raspberry Pi / OqlOS node.</p>
+        <div id="error" class="error"></div>
+      </div>
+      <button id="refresh" type="button">Refresh</button>
+    </header>
+
+    <section class="grid">
+      <article class="card">
+        <h2>Summary</h2>
+        <div class="row"><span class="muted">Mode</span><strong id="mode">-</strong></div>
+        <div class="row"><span class="muted">Detected</span><strong id="detected">-</strong></div>
+        <div class="row"><span class="muted">Total</span><strong id="total">-</strong></div>
+        <div class="row"><span class="muted">Transport</span><strong id="transport">direct-oqlos</strong></div>
+      </article>
+      <article class="card">
+        <h2>Health</h2>
+        <pre id="health">-</pre>
+      </article>
+    </section>
+
+    <section class="card" style="margin-bottom:14px">
+      <h2>Adapters</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>ID</th><th>Name</th><th>Protocol</th><th>Status</th></tr>
+          </thead>
+          <tbody id="adapters">
+            <tr><td colspan="4" class="muted">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="grid">
+      <article class="card">
+        <h2>Serial Ports</h2>
+        <pre id="serial">-</pre>
+      </article>
+      <article class="card">
+        <h2>I2C Buses</h2>
+        <pre id="i2c">-</pre>
+      </article>
+    </section>
+
+    <section class="card">
+      <h2>USB Devices</h2>
+      <pre id="usb">-</pre>
+    </section>
+  </main>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const asJson = (value) => JSON.stringify(value ?? null, null, 2);
+    const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (ch) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;"
+    })[ch]);
+
+    async function refresh() {
+      const btn = $("refresh");
+      $("error").textContent = "";
+      btn.disabled = true;
+      btn.textContent = "Refreshing...";
+      try {
+        const [healthRes, identifyRes] = await Promise.all([
+          fetch("/api/v3/hardware/health"),
+          fetch("/api/v3/hardware/identify"),
+        ]);
+        if (!healthRes.ok || !identifyRes.ok) {
+          throw new Error(`API error: health=${healthRes.status}, identify=${identifyRes.status}`);
+        }
+        const health = await healthRes.json();
+        const identify = await identifyRes.json();
+        $("mode").textContent = identify.mode || health.mode || "unknown";
+        $("detected").textContent = String(identify.detected ?? "-");
+        $("total").textContent = String(identify.total ?? "-");
+        $("transport").textContent = health.transport || "direct-oqlos";
+        $("health").textContent = asJson(health);
+
+        const adapters = Array.isArray(identify.adapters) ? identify.adapters : [];
+        $("adapters").innerHTML = adapters.length
+          ? adapters.map((a) => `
+            <tr>
+              <td>${esc(a.id)}</td>
+              <td>${esc(a.name)}</td>
+              <td>${esc(a.protocol)}</td>
+              <td><span class="badge ${esc(a.status || "unknown")}">${esc(a.status || "unknown")}</span></td>
+            </tr>`).join("")
+          : `<tr><td colspan="4" class="muted">No adapter data</td></tr>`;
+
+        const diagnostics = identify.diagnostics || {};
+        $("serial").textContent = asJson(diagnostics.serial_ports || diagnostics.modbus_preflight?.serial_ports || []);
+        $("i2c").textContent = asJson(diagnostics.i2c_buses || []);
+        $("usb").textContent = asJson(diagnostics.usb_devices || diagnostics.usb || []);
+      } catch (err) {
+        $("error").textContent = err && err.message ? err.message : "Failed to load hardware status";
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Refresh";
+      }
+    }
+
+    $("refresh").addEventListener("click", refresh);
+    refresh();
+  </script>
+</body>
+</html>

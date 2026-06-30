@@ -1,11 +1,11 @@
 # OqlOS hardware node — boardnet (192.168.188.122) deploy
 
-Deploys the OqlOS **hardware runtime** plus an **MQTT broker** onto a dedicated
-Raspberry Pi 3 (`pi@boardnet.local`). This Pi owns all physical devices (Modbus IO/ADC,
-Pololu Tic T249, DFRobot DRI0050, RTC HAT) and runs the OQL-over-MQTT **agent**: it
-subscribes to `oqlos/c2004/boardnet/oql/request`, executes the OQL/manage verb against the
-local hardware gateway, and publishes the response. The application Pi (pi109) talks to
-this node **only over MQTT** — this Pi's HTTP `:8202` stays loopback-only.
+Deploys the OqlOS **hardware runtime**, the moved hardware UI, and an **MQTT broker** onto
+a dedicated Raspberry Pi 3 (`pi@boardnet.local`, `192.168.188.122`). This Pi owns all
+physical devices (Modbus IO/ADC, Pololu Tic T249, DFRobot DRI0050, RTC HAT) and runs the
+OQL-over-MQTT **agent/controller** pair for local and remote OQL requests. It also exposes
+the OqlOS hardware UI/API on LAN at `:8202`, so a human can open
+`http://boardnet.local:8202/hardware-status`, `/hardware-demo`, and `/map-editor` directly.
 
 See `RUNBOOK.md` for the one-time bare-metal provisioning (OS, ssh keys, apt, linger) that
 must happen **before** the first `redeploy run`.
@@ -14,10 +14,14 @@ must happen **before** the first `redeploy run`.
 
 ```bash
 # From the oqlos repo root, after provisioning per RUNBOOK.md:
+scripts/gen-checksums.sh                 # manifest sha256 pakietu (krok assert_oqlos_checksum go weryfikuje)
 redeploy run redeploy/122/migration.md
 
 # Allow the node to come up even if some USB devices are missing (bench mode):
 PIHW_ALLOW_MISSING_HARDWARE=1 redeploy run redeploy/122/migration.md
+
+# Niezależna weryfikacja src↔Pi po deployu (bez pre-generowania manifestu):
+scripts/verify-rpi-checksum.sh pi@boardnet.local
 ```
 
 Each step below is also a standalone bash script (the `markpact:ref` blocks), so the
@@ -26,7 +30,9 @@ RUNBOOK can run them manually over ssh if the automation needs adjusting.
 ## Uwagi operacyjne
 
 - Broker runs **on this Pi** (mosquitto, systemd --user, :1883). If pi109 reboots or
-  redeploys, the hardware + broker stay up together. The agent connects to `127.0.0.1:1883`.
+  redeploys, the hardware + broker stay up together. OqlOS connects to `127.0.0.1:1883`.
+- OqlOS hardware API/UI listens on `0.0.0.0:8202` for LAN access. This intentionally exposes
+  hardware controls on the local network; do not publish this port outside the trusted LAN.
 - `PIHW_ALLOW_MISSING_HARDWARE` (default `1`) turns missing-device failures into warnings so
   the node still boots for bench testing.
 - Modbus RTU serial framing stays **local** (oqlos-server ↔ /dev/tty* on this Pi). Only OQL
@@ -35,6 +41,11 @@ RUNBOOK can run them manually over ssh if the automation needs adjusting.
   Modbus ports in `oqlos-real.yaml`. Never hardcode-trust the placeholders in `oqlos-hw.yaml`.
 - Secrets: create `mosquitto.passwd` and set `OQLOS_OQL_MQTT_PASSWORD` in
   `~/maskservice/config/oql-mqtt.env` on the Pi (never commit them).
+- Integralność: `rsync` porównuje rozmiar+mtime (nie wykrywa cichej korupcji treści). Krok
+  `assert_oqlos_checksum` robi `sha256sum -c` wdrożonego pakietu względem manifestu
+  `oqlos/_CHECKSUMS.sha256` (wygenerowanego na źródle przez `scripts/gen-checksums.sh` i
+  dowiezionego przez `sync_oqlos_core`). Brak manifestu = FAIL z instrukcją. Manifest jest
+  artefaktem deployu — w `.gitignore`, regeneruj przed każdym `redeploy run`.
 
 ## Scripts
 
@@ -465,10 +476,10 @@ path.write_text(text, encoding="utf-8")
 print(f"PASS: {path} (modbus-io={io_dev}@{io_baud}, modbus-adc={adc_dev}, enabled={adc_enabled}, id={adc_device_id})")
 PY
 
-# --- systemd unit: oqlos-server with the OQL-over-MQTT AGENT enabled ---
+# --- systemd unit: oqlos-server with the OQL-over-MQTT agent/controller enabled ---
 cat > /home/pi/.config/systemd/user/oqlos-hardware-api.service << EOF
 [Unit]
-Description=OqlOS hardware node + OQL-over-MQTT agent (boardnet)
+Description=OqlOS hardware node + UI + OQL-over-MQTT bridge (boardnet)
 After=network-online.target mosquitto.service pirtc-api.service dri0050-motor-api.service hw-tic249.service
 Wants=mosquitto.service
 
@@ -493,14 +504,16 @@ Environment=OQLOS_LUNG_MOTOR_URL=http://127.0.0.1:8205
 Environment=OQLOS_ENABLE_RTC=1
 Environment=PIRTC_API_URL=http://127.0.0.1:8125
 Environment=RTC_MOCK=false
-Environment=OQLOS_OQL_TRANSPORT_ROLE=agent
+Environment=OQLOS_HARDWARE_MAP_FILE=/home/pi/oqlos/hardware-map.yaml
+Environment=OQLOS_HARDWARE_EVENTS_FILE=/home/pi/oqlos/hardware-events.jsonl
+Environment=OQLOS_OQL_TRANSPORT_ROLE=both
 Environment=OQLOS_OQL_NODE_ID=boardnet
 Environment=OQLOS_OQL_TOPIC_PREFIX=oqlos/c2004
 Environment=OQLOS_OQL_MQTT_HOST=127.0.0.1
 Environment=OQLOS_OQL_MQTT_PORT=1883
 ExecStartPre=/bin/bash -lc 'if /home/pi/maskservice/scripts/wait-hw-tic249-ready.sh; then exit 0; fi; [ "${PIHW_ALLOW_MISSING_HARDWARE:-1}" = "1" ] && exit 0; exit 1'
 ExecStartPre=/home/pi/maskservice/scripts/tic249-deenergize-best-effort.sh
-ExecStart=/home/pi/oqlos/venv/bin/oqlos-server --host 127.0.0.1 --port 8202
+ExecStart=/home/pi/oqlos/venv/bin/oqlos-server --host 0.0.0.0 --port 8202
 ExecStop=/home/pi/maskservice/scripts/tic249-deenergize-best-effort.sh
 ExecStopPost=/home/pi/maskservice/scripts/tic249-deenergize-best-effort.sh
 Restart=always
@@ -525,7 +538,7 @@ if ! systemctl --user is-active oqlos-hardware-api.service >/dev/null 2>&1; then
   systemctl --user status oqlos-hardware-api.service --no-pager || true
   exit 1
 fi
-echo "PASS: oqlos-hardware-api (agent) uruchomiony (HTTP :8202 loopback, agent na :1883)"
+echo "PASS: oqlos-hardware-api uruchomiony (HTTP/UI :8202 LAN, MQTT :1883)"
 ```
 
 ```bash markpact:ref assert-hw-node-healthy
@@ -603,6 +616,35 @@ PY
   fi
 else
   _fail "OqlOS HTTP :8202 nie odpowiada"
+fi
+
+if ss -tlnp 2>/dev/null | grep -q '0\.0\.0\.0:8202'; then
+  _pass "OqlOS HTTP/UI :8202 slucha na 0.0.0.0 (LAN)"
+else
+  _fail "OqlOS HTTP/UI :8202 nie slucha na 0.0.0.0"
+fi
+
+for page in hardware-status hardware-demo map-editor; do
+  if _curl_get "http://127.0.0.1:8202/${page}" "$TMPDIR/oqlos-${page}.html" 8; then
+    _pass "OqlOS UI /${page} OK"
+  else
+    _fail "OqlOS UI /${page} nie odpowiada"
+  fi
+done
+
+if _curl_get http://127.0.0.1:8202/api/v3/hardware/mapping/schema "$TMPDIR/oqlos-map-schema.json" 8; then
+  if python3 - "$TMPDIR/oqlos-map-schema.json" <<'PY'
+import json, sys
+data = json.load(open(sys.argv[1], encoding="utf-8"))
+raise SystemExit(0 if data.get("contract") == "hardware-map-v1" else 1)
+PY
+  then
+    _pass "OqlOS /api/v3/hardware/mapping/schema OK"
+  else
+    _fail "OqlOS mapping schema nie zwrocil hardware-map-v1"
+  fi
+else
+  _fail "OqlOS /api/v3/hardware/mapping/schema nie odpowiada"
 fi
 
 if _curl_get http://127.0.0.1:8202/api/v1/hardware/health "$TMPDIR/oqlos-hardware-health.json" 12; then
@@ -847,6 +889,67 @@ PY
     _fail "brak odpowiedzi MQTT manage pi-diagnostics"
   fi
 
+  if _mqtt_rpc manage hui-actions '{}' 12 > "$TMPDIR/mqtt-hui-actions.json"; then
+    _mqtt_envelope_ok "$TMPDIR/mqtt-hui-actions.json" "MQTT manage hui-actions OK" 1
+    if ! python3 - "$TMPDIR/mqtt-hui-actions.json" <<'PY'
+import json, sys
+data = json.load(open(sys.argv[1], encoding="utf-8"))
+result = data.get("result") or {}
+hold_keys = set(result.get("hold_keys") or [])
+al_keys = set(result.get("al_keys") or [])
+required = {"head-inflate", "head-deflate", "lp-pwm-plus5", "lp-pwm-minus5"}
+missing = sorted(required - hold_keys)
+if missing or "al-stop" not in al_keys:
+    print(f"FAIL: HUI actions missing hold={missing} al-stop={'al-stop' not in al_keys}")
+    raise SystemExit(1)
+print("PASS: HUI action catalog exposes expected controls")
+PY
+    then
+      failures=$((failures + 1))
+    fi
+  else
+    _fail "brak odpowiedzi MQTT manage hui-actions"
+  fi
+
+  # Safe HUI shutdown paths only: these may return ok=false when optional valve/pump
+  # plugins are intentionally absent, but they prove that connect-scenario can drive
+  # the HUI surface through OQL-over-MQTT without a direct HTTP hop to boardnet.
+  if _mqtt_rpc manage hui-hold-stop '{"key":"head-inflate"}' 18 > "$TMPDIR/mqtt-hui-hold-stop.json"; then
+    _mqtt_envelope_ok "$TMPDIR/mqtt-hui-hold-stop.json" "MQTT manage hui-hold-stop safe path OK" 0
+  else
+    _warn_or_fail "brak odpowiedzi MQTT manage hui-hold-stop"
+  fi
+
+  if _mqtt_rpc manage hui-al-stop '{}' 18 > "$TMPDIR/mqtt-hui-al-stop.json"; then
+    _mqtt_envelope_ok "$TMPDIR/mqtt-hui-al-stop.json" "MQTT manage hui-al-stop safe path OK" 0
+    if _curl_get http://127.0.0.1:8205/api/status "$TMPDIR/tic-after-hui-al-stop.json" 6 \
+       && grep -Eq '"energized"[[:space:]]*:[[:space:]]*false' "$TMPDIR/tic-after-hui-al-stop.json"; then
+      _pass "Tic249 po MQTT hui-al-stop pozostaje energized=false"
+    else
+      _fail "Tic249 po MQTT hui-al-stop nie potwierdzil energized=false"
+    fi
+  else
+    _warn_or_fail "brak odpowiedzi MQTT manage hui-al-stop"
+  fi
+
+  if _mqtt_rpc manage diagnostic-command '{"peripheral_id":"modbus-io","command":"valve_off","args":{"valve_id":"valve-wc"}}' 18 > "$TMPDIR/mqtt-modbus-valve-off.json"; then
+    _mqtt_envelope_ok "$TMPDIR/mqtt-modbus-valve-off.json" "MQTT diagnostic-command modbus-io valve_off accepted" 0
+    if ! python3 - "$TMPDIR/mqtt-modbus-valve-off.json" <<'PY'
+import json, sys
+data = json.load(open(sys.argv[1], encoding="utf-8"))
+text = json.dumps(data)
+if "Unknown command" in text:
+    print("FAIL: modbus-io valve_off rejected as Unknown command")
+    raise SystemExit(1)
+print("PASS: modbus-io valve_off command is understood by OqlOS")
+PY
+    then
+      failures=$((failures + 1))
+    fi
+  else
+    _warn_or_fail "brak odpowiedzi MQTT diagnostic-command modbus-io valve_off"
+  fi
+
   if _mqtt_rpc manage lung-disable '{}' 12 > "$TMPDIR/mqtt-lung-disable.json"; then
     _mqtt_envelope_ok "$TMPDIR/mqtt-lung-disable.json" "MQTT manage lung-disable OK" 0
     if _curl_get http://127.0.0.1:8205/api/status "$TMPDIR/tic-after-mqtt-disable.json" 6 \
@@ -865,6 +968,32 @@ if [ "$failures" -gt 0 ]; then
   exit 1
 fi
 echo "PASS: pelny smoke-test osprzetu zakonczony (warnings=$warnings, PIHW_ALLOW_MISSING_HARDWARE=$ALLOW_MISSING)"
+```
+
+```bash markpact:ref assert-oqlos-checksum
+#!/bin/bash
+# Weryfikacja sumą kontrolną: czy wdrożony pakiet oqlos/ na Pi jest dokładnie tym,
+# co policzono na źródle. Manifest oqlos/_CHECKSUMS.sha256 generuje `scripts/gen-checksums.sh`
+# na kontrolerze PRZED deployem; krok sync_oqlos_core dowozi go razem z kodem.
+set -euo pipefail
+PKG=/home/pi/oqlos/oqlos/oqlos
+MANIFEST="$PKG/_CHECKSUMS.sha256"
+
+if [ ! -f "$MANIFEST" ]; then
+  echo "FAIL: brak $MANIFEST — uruchom 'scripts/gen-checksums.sh' na źródle przed 'redeploy run' (sync_oqlos_core go dowiezie)" >&2
+  exit 1
+fi
+
+cd "$PKG"
+# sha256sum -c sprawdza każdy plik z manifestu; dodatkowe pliki na Pi (np. stare artefakty)
+# są ignorowane, brakujące/zmienione → niezerowy kod wyjścia.
+if sha256sum -c --quiet "$MANIFEST" 2>/tmp/oqlos-checksum.err; then
+  echo "PASS: suma kontrolna pakietu oqlos/ zgodna ($(wc -l < "$MANIFEST") plików, sha256)"
+else
+  echo "FAIL: rozbieżność sumy kontrolnej pakietu oqlos/ (plik uszkodzony/niedosłany w rsync):" >&2
+  sed -n '1,20p' /tmp/oqlos-checksum.err >&2
+  exit 1
+fi
 ```
 
 ```yaml markpact:config
@@ -936,6 +1065,11 @@ extra_steps:
     dst: ~/maskservice/pirtc/
     excludes: [.git/, .venv/, venv/, __pycache__/]
 
+  - id: assert_oqlos_checksum
+    action: inline_script
+    description: "Weryfikacja sumą kontrolną wdrożonego pakietu oqlos/ (sha256 vs manifest źródła)"
+    command_ref: assert-oqlos-checksum
+
   - id: install_mosquitto
     action: inline_script
     description: "Zainstaluj i uruchom broker mosquitto (systemd --user)"
@@ -966,7 +1100,7 @@ extra_steps:
 
   - id: deploy_oqlos_hw_api
     action: inline_script
-    description: "OqlOS hardware API + agent OQL-over-MQTT (:8202 loopback)"
+    description: "OqlOS hardware API/UI + OQL-over-MQTT bridge (:8202 LAN)"
     command_ref: deploy-oqlos-hw-api
     timeout: 300
 

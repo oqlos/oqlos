@@ -9,9 +9,10 @@ import logging
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 import uvicorn
 
 # Import refactored components
@@ -31,6 +32,8 @@ from oqlos.api import plugins as plugins_router
 from oqlos.api.plugins import ensure_plugins_initialized
 from oqlos.api.utils.execution_ctrl import set_dependencies as set_shared_dependencies
 from oqlos.api.hardware import set_hardware_gateway
+from oqlos.api.hardware_v3 import router as hardware_v3_router
+from oqlos.api.hardware_v3 import hardware_events_ws as _hardware_events_ws_handler
 from oqlos.api.oql_mqtt import router as oql_router, set_oql_controller, oql_ws as _oql_ws_handler
 from oqlos.utils import load_sample_scenarios
 from oqlos.utils.hui_scenario import register_hui_test_scenario
@@ -108,6 +111,7 @@ app.include_router(state_router)
 app.include_router(logs_router)
 app.include_router(version_router)
 app.include_router(hardware_router)
+app.include_router(hardware_v3_router)
 app.include_router(editor_router)
 app.include_router(plugins_router.router)
 app.include_router(oql_router)
@@ -120,6 +124,7 @@ app.include_router(state_router, prefix="/firmware")
 app.include_router(logs_router, prefix="/firmware")
 app.include_router(version_router, prefix="/firmware")
 app.include_router(hardware_router, prefix="/firmware")
+app.include_router(hardware_v3_router, prefix="/firmware")
 app.include_router(oql_router, prefix="/firmware")
 
 def _initialize_runtime_dependencies() -> None:
@@ -224,6 +229,64 @@ async def panel_page():
         missing_message="panel.html not found.",
     )
 
+# ---- Hardware UI SPA moved in from c2004 connect-scenario (hardware-status,
+# hardware-demo, hardware-restart, map-editor). Built with Vite (base=/ui/).
+# Hardware actuation flows through the OqlOS-owned /api/v3/hardware/* compatibility
+# router, backed by the same gateway/plugin runtime as /api/v1/hardware/*.
+_UI_DIST = Path(__file__).resolve().parents[2] / "frontend" / "dist"
+
+
+def _with_query(path: str, request: Request) -> str:
+    query = str(request.url.query or "")
+    return f"{path}?{query}" if query else path
+
+
+@app.get("/hardware-status", response_class=HTMLResponse)
+async def hardware_status_page():
+    """Serve the direct hardware status page without the React iframe wrapper."""
+    return serve_html_page(
+        STATIC_DIR / "static" / "hardware-status.html",
+        missing_title="OqlOS Hardware Status",
+        missing_message="hardware-status.html not found.",
+    )
+
+
+@app.get("/hardware-demo")
+async def hardware_demo_alias(request: Request):
+    return RedirectResponse(_with_query("/ui/hardware-demo", request))
+
+
+@app.get("/hardware-restart")
+async def hardware_restart_alias(request: Request):
+    return RedirectResponse(_with_query("/ui/hardware-restart", request))
+
+
+@app.get("/map-editor")
+async def map_editor_alias(request: Request):
+    return RedirectResponse(_with_query("/ui/map-editor", request))
+
+if (_UI_DIST / "assets").is_dir():
+    app.mount("/ui/assets", StaticFiles(directory=_UI_DIST / "assets"), name="ui-assets")
+
+
+@app.get("/ui", response_class=HTMLResponse)
+@app.get("/ui/{full_path:path}", response_class=HTMLResponse)
+async def hardware_ui_spa(full_path: str = ""):
+    """Serve the moved hardware UI SPA, falling back to index.html for client routes."""
+    if full_path:
+        candidate = (_UI_DIST / full_path).resolve()
+        if candidate.is_file() and str(candidate).startswith(str(_UI_DIST)):
+            return FileResponse(candidate)
+    index = _UI_DIST / "index.html"
+    if index.is_file():
+        return FileResponse(index)
+    return HTMLResponse(
+        "<h1>OqlOS hardware UI not built</h1>"
+        "<p>Run <code>npm --prefix frontend install &amp;&amp; npm --prefix frontend run build</code>.</p>",
+        status_code=503,
+    )
+
+
 @app.get("/health")
 @app.get("/api/v1/health")
 @app.get("/firmware/api/v1/health")
@@ -246,6 +309,12 @@ async def status():
     }
 
 # ============= WebSocket Endpoint =============
+
+@app.websocket("/ws/events/hardware")
+async def hardware_events_websocket_alias(websocket: WebSocket):
+    """Hardware command event stream used by the moved MAP editor."""
+    await _hardware_events_ws_handler(websocket)
+
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):

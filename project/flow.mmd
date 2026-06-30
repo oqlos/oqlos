@@ -1,26 +1,30 @@
 flowchart TD
-%% generated in 0.03s
+%% generated in 0.06s
 
     %% Entry points (blue)
     classDef entry fill:#4dabf7,stroke:#1971c2,color:#fff
 
     subgraph Core
         setup_hardware_and_run_oql__main["main"]
-        oqlos__core__state__StateManager__initialize_peripherals["initialize_peripherals"]
-        oqlos__core__state__StateManager__broadcast_event["broadcast_event"]
-        oqlos__core__base__ScriptResult__summary["summary"]
-        oqlos__core__base__VariableStore__get["get"]
-        oqlos__core__base__VariableStore__has["has"]
-        oqlos__core__base__VariableStore__clear["clear"]
-        oqlos__core__base__VariableStore__interpolate["interpolate"]
-        oqlos__core__base__InterpreterOutput__emit["emit"]
-        oqlos__core__base__InterpreterOutput___broadcast_event["_broadcast_event"]
-        oqlos__core__base__InterpreterOutput__info["info"]
-        oqlos__core__base__InterpreterOutput__ok["ok"]
-        oqlos__core__base__InterpreterOutput__fail["fail"]
-        oqlos__core__base__InterpreterOutput__warn["warn"]
-        oqlos__core__base__InterpreterOutput__error["error"]
-        ...["+816 more"]
+        frontend__src__main__LocalizedApp["LocalizedApp"]
+        frontend__src__hooks__useWsStatus__useWsStatus["useWsStatus"]
+        frontend__src__hooks__useWsStatus__client["client"]
+        frontend__src__hooks__useWsStatus__onOpen["onOpen"]
+        frontend__src__hooks__useWsStatus__onClose["onClose"]
+        frontend__src__hooks__useUrlConfig__DEFAULTS["DEFAULTS"]
+        frontend__src__hooks__useUrlConfig__value["value"]
+        frontend__src__hooks__useUrlConfig__userId["userId"]
+        frontend__src__hooks__useUrlConfig__role["role"]
+        frontend__src__hooks__useUrlConfig__n["n"]
+        frontend__src__hooks__useUrlConfig__font["font"]
+        frontend__src__hooks__useUrlConfig__theme["theme"]
+        frontend__src__hooks__useUrlConfig__lang["lang"]
+        frontend__src__hooks__useUrlConfig__resolved["resolved"]
+        ...["+1261 more"]
     end
 
-    class setup_hardware_and_run_oql__main,oqlos__core__state__StateManager__initialize_peripherals,oqlos__core__state__StateManager__broadcast_event,oqlos__core__base__ScriptResult__summary,oqlos__core__base__VariableStore__get,oqlos__core__base__VariableStore__has,oqlos__core__base__VariableStore__clear,oqlos__core__base__VariableStore__interpolate,oqlos__core__base__InterpreterOutput__emit,oqlos__core__base__InterpreterOutput___broadcast_event entry
+    subgraph Exporters
+        frontend__src__pages__HardwareRestart__exportText["exportText"]
+    end
+
+    class setup_hardware_and_run_oql__main,frontend__src__main__LocalizedApp,frontend__src__hooks__useWsStatus__useWsStatus,frontend__src__hooks__useWsStatus__client,frontend__src__hooks__useWsStatus__onOpen,frontend__src__hooks__useWsStatus__onClose,frontend__src__hooks__useUrlConfig__DEFAULTS,frontend__src__hooks__useUrlConfig__value,frontend__src__hooks__useUrlConfig__userId,frontend__src__hooks__useUrlConfig__role entry

@@ -25,6 +25,10 @@ _NULLARY = {
     "stack-snapshot",
     "waveshare-diagnose",
     "wizard-plan",
+    "hui-actions",
+    "hui-shutdown",
+    "hui-al-start",
+    "hui-al-stop",
     "lung-stop",
     "lung-disable",
     "artificial-lung-status",
@@ -60,6 +64,10 @@ def _resolve(verb: str) -> Callable[[dict[str, Any]], Awaitable[Any]]:
         "stack-snapshot": hw.hardware_stack_snapshot,
         "waveshare-diagnose": hw.hardware_modbus_waveshare_diagnose,
         "wizard-plan": hw.hardware_modbus_wizard_plan,
+        "hui-actions": hw.hui_actions,
+        "hui-shutdown": hw.hui_shutdown,
+        "hui-al-start": hw.hui_al_start,
+        "hui-al-stop": hw.hui_al_stop,
         "lung-stop": hw.stop_lung,
         "lung-disable": hw.disable_lung,
         "artificial-lung-status": hw.artificial_lung_status,
@@ -99,6 +107,8 @@ def _resolve(verb: str) -> Callable[[dict[str, Any]], Awaitable[Any]]:
             cycles=int(a.get("cycles", 5)),
             pause=float(a.get("pause", 0.5)),
         ),
+        "hui-hold-start": lambda a: hw.hui_hold_start(str(a["key"])),
+        "hui-hold-stop": lambda a: hw.hui_hold_stop(str(a.get("key", ""))),
         "artificial-lung-command": lambda a: hw.artificial_lung_command(a.get("payload", {})),
         "rtc-command": lambda a: hw.rtc_command(a.get("payload", {})),
         "diagnostic-command": lambda _a: _run_diagnostic_command(_a),
@@ -149,15 +159,41 @@ async def _run_diagnostic_command(a: dict[str, Any]) -> dict[str, Any]:
     unchanged. ``peripheral_id`` is used directly as the plugin id (the caller has
     already canonicalized it via ``normalize_peripheral_id``).
     """
+    from oqlos.api import hardware as hw
     from oqlos.api import plugins as pl
 
     plugin_id = str(a.get("peripheral_id") or a.get("plugin_id") or "").strip()
     if not plugin_id:
         raise ValueError("diagnostic-command requires 'peripheral_id'")
+    command = str(a.get("command") or "").strip()
+    if plugin_id == "motor-tic249":
+        if command in {"motor_disable", "deenergize", "disable", "standby"}:
+            return await hw.disable_lung()
+        if command in {"stop", "lung_stop", "stop_lung", "emergency_stop"}:
+            return await hw.stop_lung()
     params = a.get("args")
     if not isinstance(params, dict):
         params = a.get("params") if isinstance(a.get("params"), dict) else {}
-    return await pl.execute_plugin_command(plugin_id, {"command": a.get("command"), "params": params})
+    if plugin_id == "modbus-io" and command in {"valve_on", "valve_off", "set_valve"}:
+        valve_id = str(params.get("valve_id") or "").strip()
+        if not valve_id:
+            raise ValueError("modbus-io diagnostic command requires 'valve_id'")
+        value = command == "valve_on" if command != "set_valve" else bool(params.get("value", False))
+        result = await hw.set_valve(valve_id, value)
+        if isinstance(result, dict) and "success" in result:
+            success = bool(result["success"])
+        elif isinstance(result, dict) and "ok" in result:
+            success = bool(result["ok"])
+        else:
+            success = bool(result)
+        return {
+            "success": success,
+            "ok": success,
+            "valve_id": valve_id,
+            "value": value,
+            "result": result,
+        }
+    return await pl.execute_plugin_command(plugin_id, {"command": command, "params": params})
 
 
 def list_manage_verbs() -> list[str]:
@@ -174,6 +210,8 @@ def list_manage_verbs() -> list[str]:
             "pump",
             "sensor",
             "lung",
+            "hui-hold-start",
+            "hui-hold-stop",
             "artificial-lung-command",
             "rtc-command",
             "diagnostic-command",

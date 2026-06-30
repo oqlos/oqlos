@@ -49,8 +49,8 @@ Detailed guide: [Hardware Diagnostics](HARDWARE_DIAGNOSTICS.md).
 
 <!-- code2docs:start --># oqlos
 
-![version](https://img.shields.io/badge/version-0.1.0-blue) ![python](https://img.shields.io/badge/python-%3E%3D3.10-blue) ![coverage](https://img.shields.io/badge/coverage-unknown-lightgrey) ![functions](https://img.shields.io/badge/functions-1463-green)
-> **1463** functions | **111** classes | **198** files | CC̄ = 4.2
+![version](https://img.shields.io/badge/version-0.1.0-blue) ![python](https://img.shields.io/badge/python-%3E%3D3.10-blue) ![coverage](https://img.shields.io/badge/coverage-unknown-lightgrey) ![functions](https://img.shields.io/badge/functions-1988-green)
+> **1988** functions | **112** classes | **242** files | CC̄ = 4.2
 
 > Auto-generated project documentation from source code analysis.
 
@@ -127,6 +127,7 @@ oqlos/
 ├── hw_diagnostic_20260415_133138
 ├── setup_hardware_and_run_oql
 ├── goal
+├── Makefile
 ├── oqlos/
 ├── pyqual
 ├── sumd
@@ -140,6 +141,45 @@ oqlos/
 ├── openapi
 ├── project
 ├── README
+        ├── config
+    ├── package
+        ├── App
+        ├── main
+            ├── useWsStatus
+            ├── useUrlConfig
+            ├── HardwareActivityLog
+            ├── SharedNav
+            ├── SidebarList
+            ├── mapEditorDefaultMap
+            ├── MapEditor
+            ├── HardwareStatus
+            ├── HardwareRestart
+            ├── HardwareDemo
+            ├── dictionaries
+            ├── hardware-status-log-translations
+            ├── I18nProvider
+            ├── hardware-status-panel-translations
+            ├── hardware-demo-extra-translations
+            ├── hardware-status-presets-translations
+            ├── hardwareEventStream
+            ├── hardware-time
+            ├── useSelectionCollapsePanel
+                ├── policy
+            ├── hardware-restart-docs
+            ├── hui-shell-key
+            ├── parentUrlBridge
+            ├── mapEditorFuncHardwareSummary
+            ├── hardware-activity-log
+            ├── hardware-wizard-steps
+            ├── hardware-wizard-plan
+            ├── designRem
+            ├── collapse-toggle-bridge
+            ├── AppConfigProvider
+            ├── wsClient
+            ├── hardwareApi
+            ├── hardware-api-log
+        ├── hardware-client/
+            ├── paths
     ├── cql-spec
         ├── schema
     ├── cql-examples
@@ -172,6 +212,7 @@ oqlos/
         ├── oql_parser
         ├── motor2_runtime
     ├── core/
+        ├── _action_motor2
         ├── oql_versioning
         ├── parser
         ├── _func_resolver
@@ -300,8 +341,10 @@ oqlos/
         ├── schema
     ├── dsl/
     ├── oql_validator_common
+    ├── gen-checksums
     ├── provision-rpi-sudo
     ├── oql_v4_validator
+    ├── verify-rpi-checksum
     ├── hardware-check
     ├── oql-stack
     ├── fix_brackets_to_v4
@@ -309,6 +352,7 @@ oqlos/
     ├── migrate_to_v4
     ├── oql_v2_to_v4_migrate_db
     ├── scenarios_export
+    ├── test-hardware
             ├── toon
             ├── toon
             ├── toon
@@ -321,6 +365,7 @@ oqlos/
 
 ### Classes
 
+- **`WsCqrsClient`** — —
 - **`Settings`** — Application settings loaded from environment variables and .env file
 - **`StateManager`** — —
 - **`StepStatus`** — —
@@ -435,6 +480,506 @@ oqlos/
 - `load_env_file(env_path)` — Load .env file into environment variables.
 - `run_oql_scenario(scenario_path, mode, firmware_url)` — Run OQL scenario with loaded configuration.
 - `main()` — —
+- `LocalizedApp()` — —
+- `useWsStatus()` — —
+- `client()` — —
+- `onOpen()` — —
+- `onClose()` — —
+- `DEFAULTS()` — —
+- `resolveUserIdFromSearchParams()` — —
+- `value()` — —
+- `resolveUserFromContextPayload()` — —
+- `userId()` — —
+- `role()` — —
+- `resolveViewportWidthPx()` — —
+- `n()` — —
+- `parseAppearanceParams()` — —
+- `font()` — —
+- `theme()` — —
+- `lang()` — —
+- `resolved()` — —
+- `parseIdentityParams()` — —
+- `parseNavigationParams()` — —
+- `scenario()` — —
+- `scenarioByFilename()` — —
+- `device()` — —
+- `deviceName()` — —
+- `test()` — —
+- `key()` — —
+- `parseParams()` — —
+- `params()` — —
+- `parseUrlEmbedConfig()` — —
+- `mergeParentContext()` — —
+- `incomingFont()` — —
+- `incomingLang()` — —
+- `incomingTheme()` — —
+- `fromUser()` — —
+- `nextUser()` — —
+- `roleCandidate()` — —
+- `IFRAME_ONLY_SEARCH_PARAMS()` — —
+- `mergeParentSearchIntoChildUrl()` — —
+- `url()` — —
+- `raw()` — —
+- `incoming()` — —
+- `kept()` — —
+- `applyParentContextPayload()` — —
+- `search()` — —
+- `base()` — —
+- `href()` — —
+- `useUrlConfig()` — —
+- `onPop()` — —
+- `onMessage()` — —
+- `envelope()` — —
+- `ctx()` — —
+- `nextHref()` — —
+- `patch()` — —
+- `param()` — —
+- `syncParentUrl()` — —
+- `parentSearch()` — —
+- `location()` — —
+- `currentPath()` — —
+- `visibleNavItems()` — —
+- `hasViewTabs()` — —
+- `collapseEnabled()` — —
+- `inPreview()` — —
+- `filtered()` — —
+- `handleSelect()` — —
+- `HW_DIAGNOSTIC()` — —
+- `HW_RUNTIME_PYTHON()` — —
+- `DEFAULT_MAP()` — —
+- `LIVE_EVENTS_LIMIT()` — —
+- `TIC249_TARGET_VELOCITY_SCALE()` — —
+- `GROUP_FOR_TAB()` — —
+- `SECTION_DESC_KEY()` — —
+- `EMPTY_KEY()` — —
+- `META_FIELDS()` — —
+- `PARAM_CONVERSION_ALGORITHMS()` — —
+- `cloneDefaultMap()` — —
+- `cloneValue()` — —
+- `tic249RawTargetVelocity()` — —
+- `value()` — —
+- `isPlainObject()` — —
+- `fillMissingFields()` — —
+- `ensureRequiredDefaultMappings()` — —
+- `shaped()` — —
+- `defaultMotor2()` — —
+- `defaultParam()` — —
+- `isMapEmpty()` — —
+- `firstBindingFromObjectMapping()` — —
+- `readIntegrationMeta()` — —
+- `setMetaField()` — —
+- `nextValue()` — —
+- `ensureMapShape()` — —
+- `src()` — —
+- `ensureParamConversion()` — —
+- `toPrettyJson()` — —
+- `createInitialEditorState()` — —
+- `seeded()` — —
+- `pretty()` — —
+- `wsOnline()` — —
+- `initial()` — —
+- `tab()` — —
+- `canClearServerEvents()` — —
+- `canClearPersistentEvents()` — —
+- `isDirty()` — —
+- `setTabAndUrl()` — —
+- `url()` — —
+- `onJsonChange()` — —
+- `parsed()` — —
+- `applyMapMutation()` — —
+- `next()` — —
+- `addObject()` — —
+- `name()` — —
+- `periId()` — —
+- `addParam()` — —
+- `editParamConversionField()` — —
+- `current()` — —
+- `target()` — —
+- `editParamConversionAlgorithm()` — —
+- `normalized()` — —
+- `addAction()` — —
+- `addFunc()` — —
+- `renameKey()` — —
+- `nextName()` — —
+- `item()` — —
+- `deleteKey()` — —
+- `editJsonField()` — —
+- `editObjectActionArg()` — —
+- `binding()` — —
+- `direction()` — —
+- `steps()` — —
+- `editObjectActionBodyField()` — —
+- `editMotorRuntimeConfig()` — —
+- `renderMotorRuntimeRow()` — —
+- `cfg()` — —
+- `saveMap()` — —
+- `parsedJson()` — —
+- `mappingPayload()` — —
+- `response()` — —
+- `savedMap()` — —
+- `restoreDefaultMap()` — —
+- `restored()` — —
+- `reloadCurrent()` — —
+- `payload()` — —
+- `shouldSeedBackend()` — —
+- `loadRecentHardwareEvents()` — —
+- `clearServerHardwareEvents()` — —
+- `cancelled()` — —
+- `wsUrl()` — —
+- `closed()` — —
+- `socket()` — —
+- `message()` — —
+- `mappingGroup()` — —
+- `entryKeys()` — —
+- `navContext()` — —
+- `filteredEntryKeys()` — —
+- `q()` — —
+- `applyAutoCollapse()` — —
+- `root()` — —
+- `font()` — —
+- `viewportWidth()` — —
+- `denseFont()` — —
+- `minWidth()` — —
+- `observer()` — —
+- `handleSelectEntry()` — —
+- `integrationMeta()` — —
+- `updateIntegrationMeta()` — —
+- `objectCfg()` — —
+- `resolveSelectedFuncMapping()` — —
+- `result()` — —
+- `filteredHardwareEvents()` — —
+- `renderIntegrationMetaEditor()` — —
+- `renderObjectActionEditor()` — —
+- `args()` — —
+- `body()` — —
+- `renderMotorRuntimeConfigEditor()` — —
+- `renderParamConversionEditor()` — —
+- `view()` — —
+- `runAddForTab()` — —
+- `search()` — —
+- `timestamp()` — —
+- `txtDownload()` — —
+- `blob()` — —
+- `url()` — —
+- `a()` — —
+- `sleep()` — —
+- `wizardStepSerialPort()` — —
+- `buildWizardProbePayload()` — —
+- `targetBaud()` — —
+- `targetParity()` — —
+- `targetIds()` — —
+- `logPanelRef()` — —
+- `refreshRuntimeStatus()` — —
+- `status()` — —
+- `loadPlan()` — —
+- `stack()` — —
+- `hint()` — —
+- `data()` — —
+- `serialPort()` — —
+- `startOqlosAndRefreshPlan()` — —
+- `port()` — —
+- `start()` — —
+- `steps()` — —
+- `currentStep()` — —
+- `isSeparateAdapters()` — —
+- `isConfigureStep()` — —
+- `requiresStepConfirm()` — —
+- `confirmLabelKey()` — —
+- `confirmErrorKey()` — —
+- `canRunCurrentStep()` — —
+- `releaseRs485Port()` — —
+- `stop()` — —
+- `runCurrentStep()` — —
+- `log()` — —
+- `payload()` — —
+- `ok()` — —
+- `runWithRetry()` — —
+- `attempt()` — —
+- `message()` — —
+- `gatewayErr()` — —
+- `waitMs()` — —
+- `target()` — —
+- `stepPort()` — —
+- `role()` — —
+- `probePayload()` — —
+- `probe()` — —
+- `candidates()` — —
+- `selection()` — —
+- `selectedCandidate()` — —
+- `currentDeviceId()` — —
+- `program()` — —
+- `diagnostic()` — —
+- `diagnose()` — —
+- `diagnosticPayload()` — —
+- `optionalStep()` — —
+- `advanceOk()` — —
+- `optionalSkip()` — —
+- `skipPumpOffStep()` — —
+- `skipOptionalStep()` — —
+- `logText()` — —
+- `exportText()` — —
+- `stepRunning()` — —
+- `copyLogsToClipboard()` — —
+- `el()` — —
+- `timer()` — —
+- `result()` — —
+- `skippedOptional()` — —
+- `done()` — —
+- `failed()` — —
+- `isCurrent()` — —
+- `playToneOnSpeakers()` — —
+- `osc()` — —
+- `gain()` — —
+- `now()` — —
+- `end()` — —
+- `deviceMeta()` — —
+- `audioCtxRef()` — —
+- `stopRequestedRef()` — —
+- `lastCmdAtRef()` — —
+- `stepperDirectionRef()` — —
+- `device()` — —
+- `deviceLabel()` — —
+- `deviceDescription()` — —
+- `melodies()` — —
+- `appendLog()` — —
+- `ensureAudioCtx()` — —
+- `Ctx()` — —
+- `cancelled()` — —
+- `res()` — —
+- `adapters()` — —
+- `a()` — —
+- `pumpOk()` — —
+- `stepperOk()` — —
+- `sendDeviceNote()` — —
+- `direction()` — —
+- `fallbackDevice()` — —
+- `fb()` — —
+- `sendDeviceStop()` — —
+- `playNote()` — —
+- `note()` — —
+- `ctx()` — —
+- `onNoteClick()` — —
+- `playMelody()` — —
+- `melody()` — —
+- `stopMelody()` — —
+- `currentBadge()` — —
+- `s()` — —
+- `sidebarItems()` — —
+- `navContext()` — —
+- `isActive()` — —
+- `isPlaying()` — —
+- `buildDictionaries()` — —
+- `dictionaries()` — —
+- `resolveKey()` — —
+- `val()` — —
+- `I18nContext()` — —
+- `getInitialLang()` — —
+- `browser()` — —
+- `I18nProvider()` — —
+- `setLang()` — —
+- `dict()` — —
+- `t()` — —
+- `val()` — —
+- `useI18n()` — —
+- `ctx()` — —
+- `normalizeText()` — —
+- `buildHardwareEventsWsUrl()` — —
+- `envValue()` — —
+- `clean()` — —
+- `location()` — —
+- `host()` — —
+- `protocol()` — —
+- `wsProtocol()` — —
+- `normalizeHardwareEvent()` — —
+- `source()` — —
+- `data()` — —
+- `command()` — —
+- `payload()` — —
+- `result()` — —
+- `peripheralId()` — —
+- `commandName()` — —
+- `timestamp()` — —
+- `id()` — —
+- `matchesHardwareEventFilters()` — —
+- `peripheralQuery()` — —
+- `commandQuery()` — —
+- `hardwareNowText()` — —
+- `RAIL_HOVER_OPEN_MS()` — —
+- `RAIL_HOVER_CLOSE_MS()` — —
+- `useSelectionCollapsePanel()` — —
+- `timerRef()` — —
+- `railOpenTimerRef()` — —
+- `panelCloseTimerRef()` — —
+- `collapsed()` — —
+- `cancelAutoCollapse()` — —
+- `cancelRailOpen()` — —
+- `cancelPanelClose()` — —
+- `scheduleCollapse()` — —
+- `expand()` — —
+- `previewExpand()` — —
+- `previewCollapse()` — —
+- `railEnter()` — —
+- `railLeave()` — —
+- `panelEnter()` — —
+- `panelLeave()` — —
+- `toggleCollapsed()` — —
+- `onMessage()` — —
+- `envelope()` — —
+- `payload()` — —
+- `parseConnectRole()` — —
+- `key()` — —
+- `normalizeConnectRole()` — —
+- `normalizeHostRole()` — —
+- `normalized()` — —
+- `isReadOnlyConnectRole()` — —
+- `role()` — —
+- `isOperatorConnectRole()` — —
+- `isAdminConnectRole()` — —
+- `normalizePath()` — —
+- `raw()` — —
+- `url()` — —
+- `matchesPattern()` — —
+- `prefix()` — —
+- `resolveAllowedRolesForPath()` — —
+- `normalizedPath()` — —
+- `matched()` — —
+- `canConnectRoleAccessPath()` — —
+- `allowed()` — —
+- `canHostRoleAccessPath()` — —
+- `hardwareRestartDocsUrl()` — —
+- `base()` — —
+- `isValidShellHuiKey()` — —
+- `huiKeyForDigit()` — —
+- `entry()` — —
+- `huiShortcutClass()` — —
+- `huiShortcutLabelClass()` — —
+- `bridgeSearchToParent()` — —
+- `text()` — —
+- `search()` — —
+- `summarizeFuncToHardware()` — —
+- `md()` — —
+- `actions()` — —
+- `objName()` — —
+- `actName()` — —
+- `om()` — —
+- `b()` — —
+- `cmd()` — —
+- `peri()` — —
+- `seen()` — —
+- `createHardwareActivityLogEntry()` — —
+- `prependHardwareActivityLogEntry()` — —
+- `usePageOpenedLog()` — —
+- `loggedRef()` — —
+- `wizardStepKind()` — —
+- `stepId()` — —
+- `isSkippablePumpOffWizardStep()` — —
+- `isPumpOffUnavailableError()` — —
+- `normalized()` — —
+- `selectWizardProbeCandidate()` — —
+- `role()` — —
+- `pool()` — —
+- `list()` — —
+- `targetId()` — —
+- `atTarget()` — —
+- `notAtTarget()` — —
+- `alreadyAtTarget()` — —
+- `needsProgramming()` — —
+- `isOptionalWizardStep()` — —
+- `action()` — —
+- `isOqlosUnreachableError()` — —
+- `normalized()` — —
+- `rem()` — —
+- `remVar()` — —
+- `COLLAPSE_DELAY_MS()` — —
+- `COLLAPSE_TOGGLE_IDS()` — —
+- `isInIframe()` — —
+- `postToParent()` — —
+- `readStoredCollapsed()` — —
+- `persistStoredCollapsed()` — —
+- `FONT_USER_SCALE()` — —
+- `AppConfigContext()` — —
+- `AppConfigProvider()` — —
+- `root()` — —
+- `scale()` — —
+- `parentEncoderActive()` — —
+- `getInteractiveItems()` — —
+- `all()` — —
+- `style()` — —
+- `removeHighlights()` — —
+- `handleEncoderCommand()` — —
+- `items()` — —
+- `delta()` — —
+- `target()` — —
+- `parseParentEnvelope()` — —
+- `onMessage()` — —
+- `envelope()` — —
+- `detail()` — —
+- `onWheel()` — —
+- `raw()` — —
+- `onKeyDown()` — —
+- `value()` — —
+- `useAppConfig()` — —
+- `ctx()` — —
+- `RECONNECT_DELAY_MS()` — —
+- `RECONNECT_MAX_ATTEMPTS()` — —
+- `REQUEST_TIMEOUT_MS()` — —
+- `defaultUrl()` — —
+- `fromEnv()` — —
+- `loc()` — —
+- `proto()` — —
+- `API_BASE()` — —
+- `tryParseJson()` — —
+- `describeDetail()` — —
+- `message()` — —
+- `issues()` — —
+- `lastError()` — —
+- `extractErrorPayload()` — —
+- `TIC249_DEENERGIZE_COMMANDS()` — —
+- `tic249ResultStatus()` — —
+- `data()` — —
+- `isIdempotentTic249Deenergized()` — —
+- `status()` — —
+- `formatHardwareApiError()` — —
+- `payload()` — —
+- `detail()` — —
+- `detailMessage()` — —
+- `extractDiagnosticFailure()` — —
+- `command()` — —
+- `result()` — —
+- `genericErrors()` — —
+- `nested()` — —
+- `nestedOk()` — —
+- `fromNested()` — —
+- `fromPayload()` — —
+- `request()` — —
+- `startedAt()` — —
+- `bodySummary()` — —
+- `durationMs()` — —
+- `text()` — —
+- `err()` — —
+- `summary()` — —
+- `get()` — —
+- `post()` — —
+- `put()` — —
+- `failure()` — —
+- `peripheralId()` — —
+- `serialPort()` — —
+- `query()` — —
+- `mode()` — —
+- `normalized()` — —
+- `isHardwareWizardPath()` — —
+- `normalized()` — —
+- `summarizeHardwareApiBody()` — —
+- `keys()` — —
+- `summarizeHardwareApiResponse()` — —
+- `logHardwareApiEvent()` — —
+- `isFailure()` — —
+- `oqlosArtificialLungCommandPath()` — —
+- `oqlosArtificialLungStatusPath()` — —
+- `connectPeripheralStatusPath()` — —
+- `connectDiagnosticCommandPath()` — —
+- `connectCqrsEventsPath()` — —
+- `q()` — —
 - `print()` — —
 - `get_settings()` — Get the application settings instance.
 - `exec_action_task(interp, act)` — Execute TASK action.
@@ -771,6 +1316,7 @@ oqlos/
 - `index_page()` — Serve the firmware UI (index.html) at root
 - `editor_page()` — Serve the scenario editor UI
 - `panel_page()` — Serve the test panel UI (predefined command groups, custom + ready-made scenarios).
+- `hardware_ui_spa(full_path)` — Serve the moved hardware UI SPA, falling back to index.html for client routes.
 - `health_check()` — Health check endpoint for tests and frontend compatibility probes.
 - `status()` — —
 - `websocket_endpoint(websocket)` — —
@@ -791,6 +1337,7 @@ oqlos/
 - `run_validator_cli(description, validate, argv)` — —
 - `validate_oql_v4(text, source)` — —
 - `main()` — —
+- `remote_manifest()` — —
 - `log_info()` — —
 - `log_warn()` — —
 - `log_error()` — —
@@ -828,6 +1375,7 @@ oqlos/
 ## Project Structure
 
 📄 `CHANGELOG`
+📄 `Makefile`
 📄 `README`
 📄 `TODO`
 📄 `Taskfile`
@@ -847,6 +1395,45 @@ oqlos/
 📄 `examples.curl-quickstart`
 📄 `examples.hardware.doctor-workflow` (3 functions)
 📄 `examples.plugin-config`
+📄 `frontend.package`
+📄 `frontend.src.App`
+📄 `frontend.src.api.hardware-api-log` (9 functions)
+📄 `frontend.src.api.hardwareApi` (55 functions)
+📄 `frontend.src.api.wsClient` (32 functions, 1 classes)
+📄 `frontend.src.components.HardwareActivityLog`
+📄 `frontend.src.components.SharedNav` (6 functions)
+📄 `frontend.src.components.SidebarList` (4 functions)
+📄 `frontend.src.context.AppConfigProvider` (25 functions)
+📄 `frontend.src.hooks.useUrlConfig` (54 functions)
+📄 `frontend.src.hooks.useWsStatus` (4 functions)
+📄 `frontend.src.i18n.I18nProvider` (10 functions)
+📄 `frontend.src.i18n.dictionaries` (4 functions)
+📄 `frontend.src.i18n.hardware-demo-extra-translations`
+📄 `frontend.src.i18n.hardware-status-log-translations`
+📄 `frontend.src.i18n.hardware-status-panel-translations`
+📄 `frontend.src.i18n.hardware-status-presets-translations`
+📄 `frontend.src.main` (1 functions)
+📄 `frontend.src.pages.HardwareDemo` (46 functions)
+📄 `frontend.src.pages.HardwareRestart` (73 functions)
+📄 `frontend.src.pages.HardwareStatus` (1 functions)
+📄 `frontend.src.pages.MapEditor` (151 functions)
+📄 `frontend.src.pages.mapEditorDefaultMap` (3 functions)
+📄 `frontend.src.utils.collapse-toggle-bridge` (6 functions)
+📄 `frontend.src.utils.designRem` (2 functions)
+📄 `frontend.src.utils.hardware-activity-log` (4 functions)
+📄 `frontend.src.utils.hardware-restart-docs` (2 functions)
+📄 `frontend.src.utils.hardware-time` (1 functions)
+📄 `frontend.src.utils.hardware-wizard-plan` (2 functions)
+📄 `frontend.src.utils.hardware-wizard-steps` (16 functions)
+📄 `frontend.src.utils.hardwareEventStream` (21 functions)
+📄 `frontend.src.utils.hui-shell-key` (5 functions)
+📄 `frontend.src.utils.mapEditorFuncHardwareSummary` (13 functions)
+📄 `frontend.src.utils.parentUrlBridge` (3 functions)
+📄 `frontend.src.utils.rbac.policy` (22 functions)
+📄 `frontend.src.utils.useSelectionCollapsePanel` (22 functions)
+📦 `frontend.vendor.hardware-client` (2 functions)
+📄 `frontend.vendor.hardware-client.paths` (4 functions)
+📄 `frontend.vite.config`
 📄 `goal`
 📄 `hw_diagnostic_20260415_133138`
 📄 `openapi`
@@ -857,7 +1444,7 @@ oqlos/
 📄 `oqlos.api.execution` (16 functions)
 📄 `oqlos.api.hardware` (89 functions)
 📄 `oqlos.api.logs` (3 functions)
-📄 `oqlos.api.main` (13 functions)
+📄 `oqlos.api.main` (14 functions)
 📄 `oqlos.api.oql_mqtt` (6 functions, 3 classes)
 📄 `oqlos.api.peripherals` (4 functions)
 📄 `oqlos.api.plugins` (12 functions)
@@ -867,13 +1454,14 @@ oqlos/
 📄 `oqlos.api.version`
 📄 `oqlos.config` (1 functions, 1 classes)
 📦 `oqlos.core`
+📄 `oqlos.core._action_motor2` (34 functions)
 📄 `oqlos.core._compare` (2 functions)
 📄 `oqlos.core._cql_tokenizer` (27 functions)
 📄 `oqlos.core._cql_tree_builder` (9 functions)
 📄 `oqlos.core._dsl_helpers` (12 functions)
 📄 `oqlos.core._firmware_executor` (9 functions, 1 classes)
 📄 `oqlos.core._func_resolver` (4 functions)
-📄 `oqlos.core._interpreter_actions` (85 functions)
+📄 `oqlos.core._interpreter_actions` (51 functions)
 📄 `oqlos.core._line_parsers` (9 functions)
 📄 `oqlos.core._oql_adapter` (28 functions, 1 classes)
 📄 `oqlos.core._sensor_evaluator` (6 functions, 1 classes)
@@ -1001,6 +1589,7 @@ oqlos/
 📄 `redeploy.pi-hw.oqlos-hw`
 📄 `scenarios.manifest`
 📄 `scripts.fix_brackets_to_v4` (2 functions)
+📄 `scripts.gen-checksums`
 📄 `scripts.hardware-check` (11 functions)
 📄 `scripts.migrate_to_v4` (19 functions)
 📄 `scripts.oql-stack` (5 functions)
@@ -1010,6 +1599,8 @@ oqlos/
 📄 `scripts.oql_validator_common` (6 functions)
 📄 `scripts.provision-rpi-sudo`
 📄 `scripts.scenarios_export` (13 functions)
+📄 `scripts.test-hardware`
+📄 `scripts.verify-rpi-checksum` (1 functions)
 📄 `setup_hardware_and_run_oql` (7 functions)
 📄 `sumd`
 📄 `testql-contracts.testql.toon`

@@ -1,7 +1,77 @@
 flowchart TD
-%% generated in 0.01s
+%% generated in 0.02s
     subgraph examples__hardware
         examples__hardware__doctor_workflow__print["print"]
+    end
+    subgraph frontend__src
+        frontend__src__main__LocalizedApp["LocalizedApp"]
+        frontend__src__hooks__useWsStatus__useWsStatus["useWsStatus"]
+        frontend__src__hooks__useWsStatus__client["client"]
+        frontend__src__hooks__useWsStatus__onOpen["onOpen"]
+        frontend__src__hooks__useWsStatus__onClose["onClose"]
+        frontend__src__hooks__useUrlConfig__DEFAULTS["DEFAULTS"]
+        frontend__src__hooks__useUrlConfig__resolveUserIdFromSearchParams["resolveUserIdFromSearchParams"]
+        frontend__src__hooks__useUrlConfig__value["value"]
+        frontend__src__hooks__useUrlConfig__resolveUserFromContextPayload("resolveUserFromContextPayload CC=8")
+        frontend__src__hooks__useUrlConfig__userId["userId"]
+        frontend__src__hooks__useUrlConfig__role["role"]
+        frontend__src__hooks__useUrlConfig__resolveViewportWidthPx("resolveViewportWidthPx CC=11")
+        frontend__src__hooks__useUrlConfig__n["n"]
+        frontend__src__hooks__useUrlConfig__parseAppearanceParams("parseAppearanceParams CC=9")
+        frontend__src__hooks__useUrlConfig__font["font"]
+        frontend__src__hooks__useUrlConfig__theme["theme"]
+        frontend__src__hooks__useUrlConfig__lang["lang"]
+        frontend__src__hooks__useUrlConfig__resolved["resolved"]
+        frontend__src__hooks__useUrlConfig__parseIdentityParams["parseIdentityParams"]
+        frontend__src__hooks__useUrlConfig__parseNavigationParams("parseNavigationParams CC=10")
+        frontend__src__hooks__useUrlConfig__scenario["scenario"]
+        frontend__src__hooks__useUrlConfig__scenarioByFilename["scenarioByFilename"]
+        frontend__src__hooks__useUrlConfig__device["device"]
+        frontend__src__hooks__useUrlConfig__deviceName["deviceName"]
+        frontend__src__hooks__useUrlConfig__test["test"]
+        frontend__src__hooks__useUrlConfig__key["key"]
+        frontend__src__hooks__useUrlConfig__parseParams["parseParams"]
+        frontend__src__hooks__useUrlConfig__params["params"]
+        frontend__src__hooks__useUrlConfig__parseUrlEmbedConfig["parseUrlEmbedConfig"]
+        frontend__src__hooks__useUrlConfig__mergeParentContext{{mergeParentContext CC=16}}
+        frontend__src__hooks__useUrlConfig__incomingFont["incomingFont"]
+        frontend__src__hooks__useUrlConfig__incomingLang["incomingLang"]
+        frontend__src__hooks__useUrlConfig__incomingTheme["incomingTheme"]
+        frontend__src__hooks__useUrlConfig__fromUser["fromUser"]
+        frontend__src__hooks__useUrlConfig__nextUser["nextUser"]
+        frontend__src__hooks__useUrlConfig__roleCandidate["roleCandidate"]
+        frontend__src__hooks__useUrlConfig__IFRAME_ONLY_SEARCH_PARAMS["IFRAME_ONLY_SEARCH_PARAMS"]
+        frontend__src__hooks__useUrlConfig__mergeParentSearchIntoChildUrl["mergeParentSearchIntoChildUrl"]
+        frontend__src__hooks__useUrlConfig__url["url"]
+        frontend__src__hooks__useUrlConfig__raw["raw"]
+        frontend__src__hooks__useUrlConfig__incoming["incoming"]
+        frontend__src__hooks__useUrlConfig__kept["kept"]
+        frontend__src__hooks__useUrlConfig__applyParentContextPayload["applyParentContextPayload"]
+        frontend__src__hooks__useUrlConfig__search["search"]
+        frontend__src__hooks__useUrlConfig__base["base"]
+        frontend__src__hooks__useUrlConfig__href["href"]
+        frontend__src__hooks__useUrlConfig__useUrlConfig{{useUrlConfig CC=18}}
+        frontend__src__hooks__useUrlConfig__onPop("onPop CC=9")
+        frontend__src__hooks__useUrlConfig__onMessage("onMessage CC=9")
+        frontend__src__hooks__useUrlConfig__envelope("envelope CC=9")
+        frontend__src__hooks__useUrlConfig__ctx["ctx"]
+        frontend__src__hooks__useUrlConfig__nextHref["nextHref"]
+        frontend__src__hooks__useUrlConfig__patch["patch"]
+        frontend__src__hooks__useUrlConfig__param["param"]
+        frontend__src__components__SharedNav__syncParentUrl["syncParentUrl"]
+        frontend__src__components__SharedNav__parentSearch["parentSearch"]
+        frontend__src__components__SharedNav__location["location"]
+        frontend__src__components__SharedNav__currentPath["currentPath"]
+        frontend__src__components__SharedNav__visibleNavItems["visibleNavItems"]
+        frontend__src__components__SharedNav__hasViewTabs["hasViewTabs"]
+    end
+    subgraph frontend__vendor
+        frontend__vendor__hardware_client__oqlosArtificialLungCommandPath["oqlosArtificialLungCommandPath"]
+        frontend__vendor__hardware_client__oqlosArtificialLungStatusPath["oqlosArtificialLungStatusPath"]
+        frontend__vendor__hardware_client__paths__connectPeripheralStatusPath["connectPeripheralStatusPath"]
+        frontend__vendor__hardware_client__paths__connectDiagnosticCommandPath["connectDiagnosticCommandPath"]
+        frontend__vendor__hardware_client__paths__connectCqrsEventsPath["connectCqrsEventsPath"]
+        frontend__vendor__hardware_client__paths__q["q"]
     end
     subgraph oqlos__api
         oqlos__api__state___compose_named_state["_compose_named_state"]
@@ -459,6 +529,9 @@ flowchart TD
         scripts__scenarios_export__import_scenarios("import_scenarios CC=8")
         scripts__scenarios_export__main["main"]
     end
+    subgraph scripts__verify_rpi_checksum
+        scripts__verify_rpi_checksum__remote_manifest["remote_manifest"]
+    end
     subgraph setup_hardware_and_run_oql
         setup_hardware_and_run_oql__detect_serial_devices("detect_serial_devices CC=12")
         setup_hardware_and_run_oql__suggest_modbus_port("suggest_modbus_port CC=10")
@@ -477,8 +550,282 @@ flowchart TD
     setup_hardware_and_run_oql__main --> setup_hardware_and_run_oql__run_oql_scenario
     setup_hardware_and_run_oql__main --> examples__hardware__doctor_workflow__print
     setup_hardware_and_run_oql__main --> setup_hardware_and_run_oql__setup_env_file
+    frontend__src__hooks__useUrlConfig__parseAppearanceParams --> frontend__src__hooks__useUrlConfig__resolveViewportWidthPx
+    frontend__src__hooks__useUrlConfig__parseIdentityParams --> frontend__src__hooks__useUrlConfig__resolveUserIdFromSearchParams
+    frontend__src__hooks__useUrlConfig__parseParams --> frontend__src__hooks__useUrlConfig__parseAppearanceParams
+    frontend__src__hooks__useUrlConfig__parseParams --> frontend__src__hooks__useUrlConfig__parseIdentityParams
+    frontend__src__hooks__useUrlConfig__parseParams --> frontend__src__hooks__useUrlConfig__parseNavigationParams
+    frontend__src__hooks__useUrlConfig__parseUrlEmbedConfig --> frontend__src__hooks__useUrlConfig__parseParams
+    frontend__src__hooks__useUrlConfig__mergeParentContext --> frontend__src__hooks__useUrlConfig__resolveUserFromContextPayload
+    frontend__src__hooks__useUrlConfig__mergeParentContext --> frontend__src__hooks__useUrlConfig__resolveViewportWidthPx
+    frontend__src__hooks__useUrlConfig__incomingFont --> frontend__src__hooks__useUrlConfig__resolveViewportWidthPx
+    frontend__src__hooks__useUrlConfig__incomingLang --> frontend__src__hooks__useUrlConfig__resolveViewportWidthPx
+    frontend__src__hooks__useUrlConfig__incomingTheme --> frontend__src__hooks__useUrlConfig__resolveViewportWidthPx
+    frontend__src__hooks__useUrlConfig__fromUser --> frontend__src__hooks__useUrlConfig__resolveViewportWidthPx
+    frontend__src__hooks__useUrlConfig__nextUser --> frontend__src__hooks__useUrlConfig__resolveViewportWidthPx
+    frontend__src__hooks__useUrlConfig__roleCandidate --> frontend__src__hooks__useUrlConfig__resolveViewportWidthPx
+    frontend__src__hooks__useUrlConfig__applyParentContextPayload --> frontend__src__hooks__useUrlConfig__mergeParentSearchIntoChildUrl
+    frontend__src__hooks__useUrlConfig__applyParentContextPayload --> frontend__src__hooks__useUrlConfig__parseParams
+    frontend__src__hooks__useUrlConfig__applyParentContextPayload --> frontend__src__hooks__useUrlConfig__mergeParentContext
+    frontend__src__hooks__useUrlConfig__search --> frontend__src__hooks__useUrlConfig__mergeParentSearchIntoChildUrl
+    frontend__src__hooks__useUrlConfig__search --> frontend__src__hooks__useUrlConfig__applyParentContextPayload
+    frontend__src__hooks__useUrlConfig__base --> frontend__src__hooks__useUrlConfig__mergeParentSearchIntoChildUrl
+    frontend__src__hooks__useUrlConfig__base --> frontend__src__hooks__useUrlConfig__parseParams
+    frontend__src__hooks__useUrlConfig__useUrlConfig --> frontend__src__hooks__useUrlConfig__parseParams
+    frontend__src__hooks__useUrlConfig__useUrlConfig --> frontend__src__hooks__useUrlConfig__mergeParentSearchIntoChildUrl
+    frontend__src__hooks__useUrlConfig__useUrlConfig --> frontend__src__hooks__useUrlConfig__applyParentContextPayload
+    frontend__src__hooks__useUrlConfig__useUrlConfig --> frontend__src__hooks__useUrlConfig__mergeParentContext
+    frontend__src__hooks__useUrlConfig__onPop --> frontend__src__hooks__useUrlConfig__mergeParentSearchIntoChildUrl
+    frontend__src__hooks__useUrlConfig__onPop --> frontend__src__hooks__useUrlConfig__applyParentContextPayload
+    frontend__src__hooks__useUrlConfig__onPop --> frontend__src__hooks__useUrlConfig__mergeParentContext
+    frontend__src__hooks__useUrlConfig__onMessage --> frontend__src__hooks__useUrlConfig__mergeParentSearchIntoChildUrl
+    frontend__src__hooks__useUrlConfig__onMessage --> frontend__src__hooks__useUrlConfig__applyParentContextPayload
+    frontend__src__hooks__useUrlConfig__onMessage --> frontend__src__hooks__useUrlConfig__mergeParentContext
+    frontend__src__hooks__useUrlConfig__envelope --> frontend__src__hooks__useUrlConfig__mergeParentSearchIntoChildUrl
+    frontend__src__hooks__useUrlConfig__envelope --> frontend__src__hooks__useUrlConfig__applyParentContextPayload
+    frontend__src__hooks__useUrlConfig__envelope --> frontend__src__hooks__useUrlConfig__mergeParentContext
+    frontend__src__hooks__useUrlConfig__ctx --> frontend__src__hooks__useUrlConfig__mergeParentSearchIntoChildUrl
+    frontend__src__hooks__useUrlConfig__ctx --> frontend__src__hooks__useUrlConfig__applyParentContextPayload
+    frontend__src__hooks__useUrlConfig__ctx --> frontend__src__hooks__useUrlConfig__mergeParentContext
+    frontend__src__hooks__useUrlConfig__patch --> frontend__src__hooks__useUrlConfig__parseParams
+    frontend__src__pages__MapEditor__fillMissingFields --> frontend__src__pages__MapEditor__isPlainObject
+    frontend__src__pages__MapEditor__fillMissingFields --> frontend__src__pages__MapEditor__cloneValue
+    frontend__src__pages__MapEditor__ensureRequiredDefaultMappings --> frontend__src__pages__MapEditor__ensureMapShape
+    frontend__src__pages__MapEditor__ensureRequiredDefaultMappings --> frontend__src__pages__MapEditor__fillMissingFields
+    frontend__src__pages__MapEditor__ensureRequiredDefaultMappings --> frontend__src__pages__MapEditor__isPlainObject
+    frontend__src__pages__MapEditor__defaultMotor2 --> frontend__src__pages__MapEditor__fillMissingFields
+    frontend__src__pages__MapEditor__defaultMotor2 --> frontend__src__pages__MapEditor__isPlainObject
+    frontend__src__pages__MapEditor__defaultParam --> frontend__src__pages__MapEditor__fillMissingFields
+    frontend__src__pages__MapEditor__defaultParam --> frontend__src__pages__MapEditor__isPlainObject
+    frontend__src__pages__MapEditor__readIntegrationMeta --> frontend__src__pages__MapEditor__firstBindingFromObjectMapping
+    frontend__src__pages__MapEditor__ensureMapShape --> frontend__src__pages__MapEditor__isPlainObject
+    frontend__src__pages__MapEditor__src --> frontend__src__pages__MapEditor__isPlainObject
+    frontend__src__pages__MapEditor__toPrettyJson --> frontend__src__pages__MapEditor__ensureMapShape
+    frontend__src__pages__MapEditor__createInitialEditorState --> frontend__src__pages__MapEditor__ensureRequiredDefaultMappings
+    frontend__src__pages__MapEditor__createInitialEditorState --> frontend__src__pages__MapEditor__cloneDefaultMap
+    frontend__src__pages__MapEditor__createInitialEditorState --> frontend__src__pages__MapEditor__toPrettyJson
+    frontend__src__pages__MapEditor__onJsonChange --> frontend__src__pages__MapEditor__isPlainObject
+    frontend__src__pages__MapEditor__onJsonChange --> frontend__src__pages__MapEditor__ensureMapShape
+    frontend__src__pages__MapEditor__parsed --> frontend__src__pages__MapEditor__isPlainObject
+    frontend__src__pages__MapEditor__applyMapMutation --> frontend__src__pages__MapEditor__ensureMapShape
+    frontend__src__pages__MapEditor__applyMapMutation --> frontend__src__pages__MapEditor__toPrettyJson
+    frontend__src__pages__MapEditor__addObject --> frontend__src__pages__MapEditor__applyMapMutation
+    frontend__src__pages__MapEditor__name --> frontend__src__pages__MapEditor__applyMapMutation
+    frontend__src__pages__MapEditor__addParam --> frontend__src__pages__MapEditor__applyMapMutation
+    frontend__src__pages__MapEditor__editParamConversionField --> frontend__src__pages__MapEditor__applyMapMutation
+    frontend__src__pages__MapEditor__editParamConversionField --> frontend__src__pages__MapEditor__ensureParamConversion
+    frontend__src__pages__MapEditor__editParamConversionAlgorithm --> frontend__src__pages__MapEditor__applyMapMutation
+    frontend__src__pages__MapEditor__editParamConversionAlgorithm --> frontend__src__pages__MapEditor__ensureParamConversion
+    frontend__src__pages__MapEditor__addAction --> frontend__src__pages__MapEditor__applyMapMutation
+    frontend__src__pages__MapEditor__addFunc --> frontend__src__pages__MapEditor__applyMapMutation
+    frontend__src__pages__MapEditor__renameKey --> frontend__src__pages__MapEditor__applyMapMutation
+    frontend__src__pages__MapEditor__nextName --> frontend__src__pages__MapEditor__applyMapMutation
+    frontend__src__pages__MapEditor__deleteKey --> frontend__src__pages__MapEditor__applyMapMutation
+    frontend__src__pages__MapEditor__editJsonField --> frontend__src__pages__MapEditor__applyMapMutation
+    frontend__src__pages__MapEditor__editObjectActionArg --> frontend__src__pages__MapEditor__applyMapMutation
+    frontend__src__pages__MapEditor__editObjectActionBodyField --> frontend__src__pages__MapEditor__applyMapMutation
+    frontend__src__pages__MapEditor__editMotorRuntimeConfig --> frontend__src__pages__MapEditor__applyMapMutation
+    frontend__src__pages__MapEditor__renderMotorRuntimeRow --> frontend__src__pages__MapEditor__editMotorRuntimeConfig
+    frontend__src__pages__MapEditor__saveMap --> frontend__src__pages__MapEditor__isPlainObject
+    frontend__src__pages__MapEditor__saveMap --> frontend__src__pages__MapEditor__ensureRequiredDefaultMappings
+    frontend__src__pages__MapEditor__saveMap --> frontend__src__pages__MapEditor__ensureMapShape
+    frontend__src__pages__MapEditor__saveMap --> frontend__src__pages__MapEditor__toPrettyJson
+    frontend__src__pages__MapEditor__parsedJson --> frontend__src__pages__MapEditor__isPlainObject
+    frontend__src__pages__MapEditor__restoreDefaultMap --> frontend__src__pages__MapEditor__ensureRequiredDefaultMappings
+    frontend__src__pages__MapEditor__restoreDefaultMap --> frontend__src__pages__MapEditor__cloneDefaultMap
+    frontend__src__pages__MapEditor__restoreDefaultMap --> frontend__src__pages__MapEditor__ensureMapShape
+    frontend__src__pages__MapEditor__restoreDefaultMap --> frontend__src__pages__MapEditor__toPrettyJson
+    frontend__src__pages__MapEditor__reloadCurrent --> frontend__src__pages__MapEditor__ensureMapShape
+    frontend__src__pages__MapEditor__reloadCurrent --> frontend__src__pages__MapEditor__isMapEmpty
+    frontend__src__pages__MapEditor__reloadCurrent --> frontend__src__pages__MapEditor__ensureRequiredDefaultMappings
+    frontend__src__pages__MapEditor__reloadCurrent --> frontend__src__pages__MapEditor__cloneDefaultMap
+    frontend__src__pages__MapEditor__reloadCurrent --> frontend__src__pages__MapEditor__toPrettyJson
+    frontend__src__pages__MapEditor__clearServerHardwareEvents --> frontend__src__pages__MapEditor__loadRecentHardwareEvents
+    frontend__src__pages__MapEditor__integrationMeta --> frontend__src__pages__MapEditor__applyMapMutation
+    frontend__src__pages__MapEditor__integrationMeta --> frontend__src__pages__MapEditor__firstBindingFromObjectMapping
+    frontend__src__pages__MapEditor__integrationMeta --> frontend__src__pages__MapEditor__setMetaField
+    frontend__src__pages__MapEditor__updateIntegrationMeta --> frontend__src__pages__MapEditor__applyMapMutation
+    frontend__src__pages__MapEditor__updateIntegrationMeta --> frontend__src__pages__MapEditor__firstBindingFromObjectMapping
+    frontend__src__pages__MapEditor__updateIntegrationMeta --> frontend__src__pages__MapEditor__setMetaField
+    frontend__src__pages__MapEditor__renderIntegrationMetaEditor --> frontend__src__pages__MapEditor__updateIntegrationMeta
+    frontend__src__pages__MapEditor__renderObjectActionEditor --> frontend__src__pages__MapEditor__editObjectActionArg
+    frontend__src__pages__MapEditor__renderObjectActionEditor --> frontend__src__pages__MapEditor__editObjectActionBodyField
+    frontend__src__pages__MapEditor__renderMotorRuntimeConfigEditor --> frontend__src__pages__MapEditor__renderMotorRuntimeRow
+    frontend__src__pages__MapEditor__renderMotorRuntimeConfigEditor --> frontend__src__pages__MapEditor__tic249RawTargetVelocity
+    frontend__src__pages__MapEditor__renderParamConversionEditor --> frontend__src__pages__MapEditor__ensureParamConversion
+    frontend__src__pages__MapEditor__renderParamConversionEditor --> frontend__src__pages__MapEditor__editParamConversionField
+    frontend__src__pages__MapEditor__runAddForTab --> frontend__src__pages__MapEditor__addObject
+    frontend__src__pages__MapEditor__runAddForTab --> frontend__src__pages__MapEditor__addParam
+    frontend__src__pages__MapEditor__runAddForTab --> frontend__src__pages__MapEditor__addAction
+    frontend__src__pages__MapEditor__runAddForTab --> frontend__src__pages__MapEditor__addFunc
+    frontend__src__pages__HardwareRestart__status --> frontend__src__pages__HardwareRestart__log
+    frontend__src__pages__HardwareRestart__loadPlan --> frontend__src__pages__HardwareRestart__refreshRuntimeStatus
+    frontend__src__pages__HardwareRestart__serialPort --> frontend__src__pages__HardwareRestart__refreshRuntimeStatus
+    frontend__src__pages__HardwareRestart__serialPort --> frontend__src__pages__HardwareRestart__loadPlan
+    frontend__src__pages__HardwareRestart__startOqlosAndRefreshPlan --> frontend__src__pages__HardwareRestart__refreshRuntimeStatus
+    frontend__src__pages__HardwareRestart__startOqlosAndRefreshPlan --> frontend__src__pages__HardwareRestart__loadPlan
+    frontend__src__pages__HardwareRestart__port --> frontend__src__pages__HardwareRestart__refreshRuntimeStatus
+    frontend__src__pages__HardwareRestart__port --> frontend__src__pages__HardwareRestart__loadPlan
+    frontend__src__pages__HardwareRestart__steps --> frontend__src__pages__HardwareRestart__refreshRuntimeStatus
+    frontend__src__pages__HardwareRestart__currentStep --> frontend__src__pages__HardwareRestart__refreshRuntimeStatus
+    frontend__src__pages__HardwareRestart__isSeparateAdapters --> frontend__src__pages__HardwareRestart__refreshRuntimeStatus
+    frontend__src__pages__HardwareRestart__isConfigureStep --> frontend__src__pages__HardwareRestart__refreshRuntimeStatus
+    frontend__src__pages__HardwareRestart__requiresStepConfirm --> frontend__src__pages__HardwareRestart__refreshRuntimeStatus
+    frontend__src__pages__HardwareRestart__confirmLabelKey --> frontend__src__pages__HardwareRestart__refreshRuntimeStatus
+    frontend__src__pages__HardwareRestart__confirmErrorKey --> frontend__src__pages__HardwareRestart__refreshRuntimeStatus
+    frontend__src__pages__HardwareRestart__canRunCurrentStep --> frontend__src__pages__HardwareRestart__refreshRuntimeStatus
+    frontend__src__pages__HardwareRestart__releaseRs485Port --> frontend__src__pages__HardwareRestart__refreshRuntimeStatus
+    frontend__src__pages__HardwareRestart__runCurrentStep --> frontend__src__pages__HardwareRestart__timestamp
+    frontend__src__pages__HardwareRestart__runCurrentStep --> frontend__src__pages__HardwareRestart__log
+    frontend__src__pages__HardwareRestart__runCurrentStep --> frontend__src__pages__HardwareRestart__sleep
+    frontend__src__pages__HardwareRestart__runCurrentStep --> frontend__src__pages__HardwareRestart__wizardStepSerialPort
+    frontend__src__pages__HardwareRestart__log --> frontend__src__pages__HardwareRestart__timestamp
+    frontend__src__pages__HardwareRestart__runWithRetry --> frontend__src__pages__HardwareRestart__log
+    frontend__src__pages__HardwareRestart__runWithRetry --> frontend__src__pages__HardwareRestart__sleep
+    frontend__src__pages__HardwareRestart__attempt --> frontend__src__pages__HardwareRestart__log
+    frontend__src__pages__HardwareRestart__attempt --> frontend__src__pages__HardwareRestart__sleep
+    frontend__src__pages__HardwareRestart__message --> frontend__src__pages__HardwareRestart__log
+    frontend__src__pages__HardwareRestart__waitMs --> frontend__src__pages__HardwareRestart__log
+    frontend__src__pages__HardwareRestart__stepPort --> frontend__src__pages__HardwareRestart__log
+    frontend__src__pages__HardwareRestart__role --> frontend__src__pages__HardwareRestart__log
+    frontend__src__pages__HardwareRestart__probePayload --> frontend__src__pages__HardwareRestart__log
+    frontend__src__pages__HardwareRestart__optionalStep --> frontend__src__pages__HardwareRestart__log
+    frontend__src__pages__HardwareRestart__advanceOk --> frontend__src__pages__HardwareRestart__log
+    frontend__src__pages__HardwareRestart__optionalSkip --> frontend__src__pages__HardwareRestart__log
+    frontend__src__pages__HardwareRestart__skipPumpOffStep --> frontend__src__pages__HardwareRestart__timestamp
+    frontend__src__pages__HardwareRestart__skipOptionalStep --> frontend__src__pages__HardwareRestart__timestamp
+    frontend__src__pages__HardwareDemo__ensureAudioCtx --> frontend__src__pages__HardwareDemo__appendLog
+    frontend__src__pages__HardwareDemo__ensureAudioCtx --> frontend__src__pages__HardwareDemo__Ctx
+    frontend__src__pages__HardwareDemo__Ctx --> frontend__src__pages__HardwareDemo__appendLog
+    frontend__src__pages__HardwareDemo__cancelled --> frontend__src__pages__HardwareDemo__appendLog
+    frontend__src__pages__HardwareDemo__pumpOk --> frontend__src__pages__HardwareDemo__appendLog
+    frontend__src__pages__HardwareDemo__stepperOk --> frontend__src__pages__HardwareDemo__appendLog
+    frontend__src__pages__HardwareDemo__sendDeviceNote --> frontend__src__pages__HardwareDemo__now
+    frontend__src__pages__HardwareDemo__sendDeviceNote --> frontend__src__pages__HardwareDemo__appendLog
+    frontend__src__pages__HardwareDemo__fallbackDevice --> frontend__src__pages__HardwareDemo__appendLog
+    frontend__src__pages__HardwareDemo__fb --> frontend__src__pages__HardwareDemo__appendLog
+    frontend__src__pages__HardwareDemo__playNote --> frontend__src__pages__HardwareDemo__ensureAudioCtx
+    frontend__src__pages__HardwareDemo__playNote --> frontend__src__pages__HardwareDemo__playToneOnSpeakers
+    frontend__src__pages__HardwareDemo__playNote --> frontend__src__pages__HardwareDemo__sendDeviceNote
+    frontend__src__pages__HardwareDemo__onNoteClick --> frontend__src__pages__HardwareDemo__ensureAudioCtx
+    frontend__src__pages__HardwareDemo__onNoteClick --> frontend__src__pages__HardwareDemo__appendLog
+    frontend__src__pages__HardwareDemo__onNoteClick --> frontend__src__pages__HardwareDemo__playNote
+    frontend__src__pages__HardwareDemo__onNoteClick --> frontend__src__pages__HardwareDemo__sendDeviceStop
+    frontend__src__pages__HardwareDemo__playMelody --> frontend__src__pages__HardwareDemo__ensureAudioCtx
+    frontend__src__pages__HardwareDemo__playMelody --> frontend__src__pages__HardwareDemo__appendLog
+    frontend__src__pages__HardwareDemo__playMelody --> frontend__src__pages__HardwareDemo__playNote
+    frontend__src__pages__HardwareDemo__playMelody --> frontend__src__pages__HardwareDemo__sendDeviceStop
+    frontend__src__i18n__I18nProvider__I18nProvider --> frontend__src__i18n__I18nProvider__getInitialLang
+    frontend__src__i18n__I18nProvider__I18nProvider --> frontend__src__i18n__I18nProvider__t
+    frontend__src__i18n__I18nProvider__dict --> frontend__src__i18n__I18nProvider__t
+    frontend__src__i18n__I18nProvider__val --> frontend__src__i18n__I18nProvider__t
+    frontend__src__utils__hardwareEventStream__buildHardwareEventsWsUrl --> frontend__src__utils__hardwareEventStream__normalizeText
+    frontend__src__utils__hardwareEventStream__normalizeHardwareEvent --> frontend__src__utils__hardwareEventStream__normalizeText
+    frontend__src__utils__hardwareEventStream__result --> frontend__src__utils__hardwareEventStream__normalizeText
+    frontend__src__utils__hardwareEventStream__peripheralId --> frontend__src__utils__hardwareEventStream__normalizeText
+    frontend__src__utils__hardwareEventStream__commandName --> frontend__src__utils__hardwareEventStream__normalizeText
+    frontend__src__utils__hardwareEventStream__timestamp --> frontend__src__utils__hardwareEventStream__normalizeText
+    frontend__src__utils__hardwareEventStream__id --> frontend__src__utils__hardwareEventStream__normalizeText
+    frontend__src__utils__hardwareEventStream__matchesHardwareEventFilters --> frontend__src__utils__hardwareEventStream__normalizeText
+    frontend__src__utils__useSelectionCollapsePanel__RAIL_HOVER_OPEN_MS --> frontend__src__utils__useSelectionCollapsePanel__cancelAutoCollapse
+    frontend__src__utils__useSelectionCollapsePanel__RAIL_HOVER_OPEN_MS --> frontend__src__utils__useSelectionCollapsePanel__cancelPanelClose
+    frontend__src__utils__useSelectionCollapsePanel__RAIL_HOVER_OPEN_MS --> frontend__src__utils__useSelectionCollapsePanel__cancelRailOpen
+    frontend__src__utils__useSelectionCollapsePanel__RAIL_HOVER_CLOSE_MS --> frontend__src__utils__useSelectionCollapsePanel__cancelAutoCollapse
+    frontend__src__utils__useSelectionCollapsePanel__RAIL_HOVER_CLOSE_MS --> frontend__src__utils__useSelectionCollapsePanel__cancelPanelClose
+    frontend__src__utils__useSelectionCollapsePanel__RAIL_HOVER_CLOSE_MS --> frontend__src__utils__useSelectionCollapsePanel__cancelRailOpen
+    frontend__src__utils__useSelectionCollapsePanel__useSelectionCollapsePanel --> frontend__src__utils__useSelectionCollapsePanel__cancelAutoCollapse
+    frontend__src__utils__useSelectionCollapsePanel__useSelectionCollapsePanel --> frontend__src__utils__useSelectionCollapsePanel__cancelPanelClose
+    frontend__src__utils__useSelectionCollapsePanel__useSelectionCollapsePanel --> frontend__src__utils__useSelectionCollapsePanel__cancelRailOpen
+    frontend__src__utils__useSelectionCollapsePanel__scheduleCollapse --> frontend__src__utils__useSelectionCollapsePanel__cancelAutoCollapse
+    frontend__src__utils__useSelectionCollapsePanel__expand --> frontend__src__utils__useSelectionCollapsePanel__cancelAutoCollapse
+    frontend__src__utils__useSelectionCollapsePanel__previewExpand --> frontend__src__utils__useSelectionCollapsePanel__cancelAutoCollapse
+    frontend__src__utils__useSelectionCollapsePanel__railEnter --> frontend__src__utils__useSelectionCollapsePanel__cancelPanelClose
+    frontend__src__utils__useSelectionCollapsePanel__railEnter --> frontend__src__utils__useSelectionCollapsePanel__cancelAutoCollapse
+    frontend__src__utils__useSelectionCollapsePanel__railLeave --> frontend__src__utils__useSelectionCollapsePanel__cancelRailOpen
+    frontend__src__utils__useSelectionCollapsePanel__panelEnter --> frontend__src__utils__useSelectionCollapsePanel__cancelPanelClose
+    frontend__src__utils__useSelectionCollapsePanel__panelLeave --> frontend__src__utils__useSelectionCollapsePanel__cancelRailOpen
+    frontend__src__utils__useSelectionCollapsePanel__toggleCollapsed --> frontend__src__utils__useSelectionCollapsePanel__cancelAutoCollapse
+    frontend__src__utils__useSelectionCollapsePanel__onMessage --> frontend__src__utils__useSelectionCollapsePanel__expand
+    frontend__src__utils__useSelectionCollapsePanel__onMessage --> frontend__src__utils__useSelectionCollapsePanel__previewExpand
+    frontend__src__utils__useSelectionCollapsePanel__onMessage --> frontend__src__utils__useSelectionCollapsePanel__previewCollapse
+    frontend__src__utils__rbac__policy__normalizeConnectRole --> frontend__src__utils__rbac__policy__parseConnectRole
+    frontend__src__utils__rbac__policy__normalizeHostRole --> frontend__src__utils__rbac__policy__normalizeConnectRole
+    frontend__src__utils__rbac__policy__isReadOnlyConnectRole --> frontend__src__utils__rbac__policy__normalizeConnectRole
+    frontend__src__utils__rbac__policy__isOperatorConnectRole --> frontend__src__utils__rbac__policy__normalizeConnectRole
+    frontend__src__utils__rbac__policy__isAdminConnectRole --> frontend__src__utils__rbac__policy__normalizeConnectRole
+    frontend__src__utils__rbac__policy__resolveAllowedRolesForPath --> frontend__src__utils__rbac__policy__normalizePath
+    frontend__src__utils__rbac__policy__resolveAllowedRolesForPath --> frontend__src__utils__rbac__policy__matchesPattern
+    frontend__src__utils__rbac__policy__normalizedPath --> frontend__src__utils__rbac__policy__matchesPattern
+    frontend__src__utils__rbac__policy__matched --> frontend__src__utils__rbac__policy__matchesPattern
+    frontend__src__utils__rbac__policy__canConnectRoleAccessPath --> frontend__src__utils__rbac__policy__resolveAllowedRolesForPath
+    frontend__src__utils__rbac__policy__canConnectRoleAccessPath --> frontend__src__utils__rbac__policy__normalizeConnectRole
+    frontend__src__utils__rbac__policy__canHostRoleAccessPath --> frontend__src__utils__rbac__policy__resolveAllowedRolesForPath
+    frontend__src__utils__rbac__policy__canHostRoleAccessPath --> frontend__src__utils__rbac__policy__normalizeHostRole
+    frontend__src__utils__hardware_activity_log__prependHardwareActivityLogEntry --> frontend__src__utils__hardware_activity_log__createHardwareActivityLogEntry
+    frontend__src__utils__hardware_activity_log__usePageOpenedLog --> frontend__src__utils__hardware_activity_log__createHardwareActivityLogEntry
+    frontend__src__utils__hardware_activity_log__loggedRef --> frontend__src__utils__hardware_activity_log__createHardwareActivityLogEntry
+    frontend__src__utils__collapse_toggle_bridge__postToParent --> frontend__src__utils__collapse_toggle_bridge__isInIframe
+    frontend__src__context__AppConfigProvider__AppConfigContext --> frontend__src__context__AppConfigProvider__removeHighlights
+    frontend__src__context__AppConfigProvider__AppConfigContext --> frontend__src__context__AppConfigProvider__getInteractiveItems
+    frontend__src__context__AppConfigProvider__AppConfigProvider --> frontend__src__context__AppConfigProvider__removeHighlights
+    frontend__src__context__AppConfigProvider__AppConfigProvider --> frontend__src__context__AppConfigProvider__getInteractiveItems
+    frontend__src__context__AppConfigProvider__handleEncoderCommand --> frontend__src__context__AppConfigProvider__removeHighlights
+    frontend__src__context__AppConfigProvider__handleEncoderCommand --> frontend__src__context__AppConfigProvider__getInteractiveItems
+    frontend__src__context__AppConfigProvider__items --> frontend__src__context__AppConfigProvider__removeHighlights
+    frontend__src__context__AppConfigProvider__onMessage --> frontend__src__context__AppConfigProvider__parseParentEnvelope
+    frontend__src__context__AppConfigProvider__onMessage --> frontend__src__context__AppConfigProvider__handleEncoderCommand
+    frontend__src__context__AppConfigProvider__onWheel --> frontend__src__context__AppConfigProvider__handleEncoderCommand
+    frontend__src__context__AppConfigProvider__raw --> frontend__src__context__AppConfigProvider__handleEncoderCommand
+    frontend__src__context__AppConfigProvider__onKeyDown --> frontend__src__context__AppConfigProvider__handleEncoderCommand
+    frontend__src__api__wsClient__WsCqrsClient__super --> frontend__src__api__wsClient__WsCqrsClient__connected
+    frontend__src__api__wsClient__WsCqrsClient__connect --> frontend__src__api__wsClient__WsCqrsClient__resolve
+    frontend__src__api__wsClient__WsCqrsClient__connect --> frontend__src__api__wsClient__WsCqrsClient__reject
+    frontend__src__api__wsClient__WsCqrsClient__connect --> frontend__src__api__wsClient__WsCqrsClient___scheduleReconnect
+    frontend__src__api__wsClient__WsCqrsClient__connect --> frontend__src__api__wsClient__WsCqrsClient___handleMessage
+    frontend__src__api__wsClient__WsCqrsClient__command --> frontend__src__api__wsClient__WsCqrsClient___request
+    frontend__src__api__wsClient__WsCqrsClient__query --> frontend__src__api__wsClient__WsCqrsClient___request
+    frontend__src__api__wsClient__WsCqrsClient___request --> frontend__src__api__wsClient__WsCqrsClient__connect
+    frontend__src__api__wsClient__WsCqrsClient___request --> frontend__src__api__wsClient__WsCqrsClient__setTimeout
+    frontend__src__api__wsClient__WsCqrsClient___request --> frontend__src__api__wsClient__WsCqrsClient__reject
+    frontend__src__api__wsClient__WsCqrsClient__timeout --> frontend__src__api__wsClient__WsCqrsClient__setTimeout
+    frontend__src__api__wsClient__WsCqrsClient__timeout --> frontend__src__api__wsClient__WsCqrsClient__reject
+    frontend__src__api__wsClient__WsCqrsClient___handleMessage --> frontend__src__api__wsClient__WsCqrsClient__clearTimeout
+    frontend__src__api__wsClient__WsCqrsClient___handleMessage --> frontend__src__api__wsClient__WsCqrsClient__resolve
+    frontend__src__api__wsClient__WsCqrsClient___handleMessage --> frontend__src__api__wsClient__WsCqrsClient__reject
+    frontend__src__api__wsClient__WsCqrsClient__pending --> frontend__src__api__wsClient__WsCqrsClient__clearTimeout
+    frontend__src__api__wsClient__WsCqrsClient__pending --> frontend__src__api__wsClient__WsCqrsClient__resolve
+    frontend__src__api__wsClient__WsCqrsClient__pending --> frontend__src__api__wsClient__WsCqrsClient__reject
+    frontend__src__api__wsClient__WsCqrsClient___scheduleReconnect --> frontend__src__api__wsClient__WsCqrsClient__setTimeout
+    frontend__src__api__wsClient__WsCqrsClient___scheduleReconnect --> frontend__src__api__wsClient__WsCqrsClient__connect
+    frontend__src__api__wsClient__WsCqrsClient__delay --> frontend__src__api__wsClient__WsCqrsClient__setTimeout
+    frontend__src__api__wsClient__WsCqrsClient__delay --> frontend__src__api__wsClient__WsCqrsClient__connect
+    frontend__src__api__wsClient__WsCqrsClient__setTimeout --> frontend__src__api__wsClient__WsCqrsClient__connect
+    frontend__src__api__hardwareApi__extractErrorPayload --> frontend__src__api__hardwareApi__tryParseJson
+    frontend__src__api__hardwareApi__isIdempotentTic249Deenergized --> frontend__src__api__hardwareApi__tic249ResultStatus
+    frontend__src__api__hardwareApi__formatHardwareApiError --> frontend__src__api__hardwareApi__extractErrorPayload
+    frontend__src__api__hardwareApi__formatHardwareApiError --> frontend__src__api__hardwareApi__describeDetail
+    frontend__src__api__hardwareApi__extractDiagnosticFailure --> frontend__src__api__hardwareApi__tic249ResultStatus
+    frontend__src__api__hardwareApi__extractDiagnosticFailure --> frontend__src__api__hardwareApi__isIdempotentTic249Deenergized
+    frontend__src__api__hardwareApi__nestedOk --> frontend__src__api__hardwareApi__isIdempotentTic249Deenergized
+    frontend__src__api__hardwareApi__request --> frontend__src__api__hardwareApi__text
+    frontend__src__api__hardwareApi__request --> frontend__src__api__hardwareApi__tryParseJson
+    frontend__src__api__hardwareApi__request --> frontend__src__api__hardwareApi__describeDetail
+    frontend__src__api__hardwareApi__durationMs --> frontend__src__api__hardwareApi__text
+    frontend__src__api__hardwareApi__durationMs --> frontend__src__api__hardwareApi__tryParseJson
+    frontend__src__api__hardwareApi__durationMs --> frontend__src__api__hardwareApi__describeDetail
+    frontend__src__api__hardwareApi__get --> frontend__src__api__hardwareApi__request
+    frontend__src__api__hardwareApi__post --> frontend__src__api__hardwareApi__request
+    frontend__src__api__hardwareApi__put --> frontend__src__api__hardwareApi__request
+    frontend__src__api__hardwareApi__serialPort --> frontend__src__api__hardwareApi__post
+    frontend__src__api__hardwareApi__mode --> frontend__src__api__hardwareApi__post
+    frontend__src__api__hardwareApi__normalized --> frontend__src__api__hardwareApi__post
+    frontend__src__api__hardware_api_log__summarizeHardwareApiBody --> frontend__src__api__hardware_api_log__keys
+    frontend__src__api__hardware_api_log__logHardwareApiEvent --> frontend__src__api__hardware_api_log__isHardwareWizardPath
+    oqlos__core__base__VariableStore____init__ --> frontend__src__i18n__I18nProvider__dict
+    oqlos__core__base__VariableStore__all --> frontend__src__i18n__I18nProvider__dict
     oqlos__core__base__InterpreterOutput__emit --> examples__hardware__doctor_workflow__print
     oqlos__core__base__InterpreterOutput__output_yaml --> examples__hardware__doctor_workflow__print
+    oqlos__core__base__EventBridge__send_event --> frontend__src__utils__hardwareEventStream__id
     oqlos__core___dsl_helpers___map_peripheral --> oqlos__core___dsl_helpers___looks_like_valve_object
     oqlos__core___dsl_helpers___map_peripheral --> oqlos__core___dsl_helpers___looks_like_pump_object
     oqlos__core___dsl_helpers___map_peripheral --> oqlos__core___dsl_helpers___looks_like_lung_object
@@ -493,9 +840,11 @@ flowchart TD
     oqlos__core___dsl_helpers___map_action_value --> oqlos__core___dsl_helpers___map_lung_action
     oqlos__core___dsl_helpers___map_action_value --> oqlos__core___dsl_helpers___looks_like_sensor_object
     oqlos__core___dsl_helpers___map_action_value --> oqlos__core___dsl_helpers___map_wait_action
+    oqlos__core___interpreter_actions___extract_action_tokens --> frontend__src__pages__MapEditor__next
     oqlos__core___interpreter_actions___drop_command_token --> oqlos__core___interpreter_actions___extract_action_tokens
     oqlos__core___interpreter_actions___compare_values --> oqlos__core___interpreter_actions___coerce_expected_value
     oqlos__core___interpreter_actions___format_set_command --> oqlos__core___interpreter_actions___oql_quote
+    oqlos__core___interpreter_actions___mock_api_response --> frontend__src__i18n__I18nProvider__dict
     oqlos__core___interpreter_actions__exec_action_wait --> oqlos__core___interpreter_actions__parse_wait_secs
     oqlos__core___interpreter_actions__exec_action_wait --> oqlos__core___interpreter_actions___do_sleep
     oqlos__core___interpreter_actions__exec_action_func --> oqlos__core___interpreter_actions___resolve_numeric_token
@@ -517,44 +866,10 @@ flowchart TD
     oqlos__core___interpreter_actions__exec_action_assert --> oqlos__core___interpreter_actions___record_failure
     oqlos__core___interpreter_actions__exec_action_shell --> oqlos__core___interpreter_actions___drop_command_token
     oqlos__core___interpreter_actions__exec_action_shell --> oqlos__core___interpreter_actions___record_failure
-    oqlos__core___interpreter_actions__exec_action_set --> oqlos__core___interpreter_actions___try_exec_motor2_set
+    oqlos__core___interpreter_actions__exec_action_shell --> frontend__src__i18n__I18nProvider__dict
+    oqlos__core___interpreter_actions__exec_action_set --> oqlos__core___action_motor2___try_exec_motor2_set
     oqlos__core___interpreter_actions__exec_action_set --> oqlos__core___interpreter_actions___exec_set_wait
     oqlos__core___interpreter_actions__exec_action_set --> oqlos__core___interpreter_actions___format_set_command
-    oqlos__core___interpreter_actions___parse_motor2_duration_seconds --> oqlos__core___interpreter_actions___parse_motor2_float
-    oqlos__core___interpreter_actions___parse_motor2_volume_liters --> oqlos__core___interpreter_actions___parse_motor2_float
-    oqlos__core___interpreter_actions___parse_prefixed_motor2_setting --> oqlos__core___interpreter_actions___parse_motor2_steps
-    oqlos__core___interpreter_actions___parse_prefixed_motor2_setting --> oqlos__core___interpreter_actions___parse_motor2_volume_liters
-    oqlos__core___interpreter_actions___parse_prefixed_motor2_setting --> oqlos__core___interpreter_actions___parse_motor2_duration_seconds
-    oqlos__core___interpreter_actions___parse_prefixed_motor2_setting --> oqlos__core___interpreter_actions___parse_motor2_speed_steps
-    oqlos__core___interpreter_actions___parse_motor2_reciprocating_setting --> oqlos__core___interpreter_actions___normalize_motor2_value
-    oqlos__core___interpreter_actions___parse_motor2_reciprocating_setting --> oqlos__core___interpreter_actions___parse_prefixed_motor2_setting
-    oqlos__core___interpreter_actions___parse_motor2_reciprocating_setting --> oqlos__core___interpreter_actions___parse_motor2_direction
-    oqlos__core___interpreter_actions___motor2_speed_raw --> oqlos__core__motor2_runtime__motor2_speed_raw
-    oqlos__core___interpreter_actions___motor2_speed_raw --> oqlos__core___interpreter_actions___motor2_max_steps_per_second
-    oqlos__core___interpreter_actions___motor2_max_steps_per_second --> oqlos__core__motor2_runtime__motor2_max_steps_per_second
-    oqlos__core___interpreter_actions___motor2_effective_steps_per_second --> oqlos__core___interpreter_actions___motor2_max_steps_per_second
-    oqlos__core___interpreter_actions___motor2_speed_for_duration --> oqlos__core__motor2_runtime__motor2_speed_for_duration
-    oqlos__core___interpreter_actions___motor2_acceleration_raw --> oqlos__core__motor2_runtime__motor2_acceleration_raw
-    oqlos__core___interpreter_actions___motor2_acceleration_raw --> oqlos__core___interpreter_actions___motor2_max_steps_per_second
-    oqlos__core___interpreter_actions___post_motor2_move_relative --> oqlos__config__get_settings
-    oqlos__core___interpreter_actions___post_motor2_reciprocate --> oqlos__config__get_settings
-    oqlos__core___interpreter_actions___post_motor2_stop --> oqlos__config__get_settings
-    oqlos__core___interpreter_actions___motor2_do_stop --> oqlos__core___interpreter_actions___post_motor2_stop
-    oqlos__core___interpreter_actions___motor2_build_plan --> oqlos__core__motor2_runtime__normalize_motor2_runtime_config
-    oqlos__core___interpreter_actions___motor2_build_plan --> oqlos__core__motor2_runtime__build_motor2_reciprocating_plan
-    oqlos__core___interpreter_actions___motor2_do_start --> oqlos__core___interpreter_actions___motor2_build_plan
-    oqlos__core___interpreter_actions___motor2_do_start --> oqlos__core___interpreter_actions___motor2_step_label
-    oqlos__core___interpreter_actions___motor2_do_start --> oqlos__core___interpreter_actions___post_motor2_reciprocate
-    oqlos__core___interpreter_actions___motor2_do_start --> oqlos__core__motor2_runtime__motor2_speed_raw
-    oqlos__core___interpreter_actions___motor2_do_start --> oqlos__core__motor2_runtime__motor2_acceleration_raw
-    oqlos__core___interpreter_actions___handle_motor2_reciprocating_setting --> oqlos__core___interpreter_actions___motor2_reciprocating_state
-    oqlos__core___interpreter_actions___try_exec_motor2_set --> oqlos__core___interpreter_actions___parse_motor2_reciprocating_setting
-    oqlos__core___interpreter_actions___try_exec_motor2_set --> oqlos__core___interpreter_actions___parse_motor2_direction
-    oqlos__core___interpreter_actions___try_exec_motor2_set --> oqlos__core___interpreter_actions___parse_motor2_acceleration
-    oqlos__core___interpreter_actions___try_exec_motor2_set --> oqlos__core___interpreter_actions___parse_motor2_speed_steps
-    oqlos__core___interpreter_actions___try_exec_motor2_set --> oqlos__core___interpreter_actions___motor2_effective_steps_per_second
-    oqlos__core___interpreter_actions___try_exec_motor2_set --> oqlos__core___interpreter_actions___normalize_motor2_target
-    oqlos__core___interpreter_actions___try_exec_motor2_set --> oqlos__core___interpreter_actions___handle_motor2_reciprocating_setting
     oqlos__core___interpreter_actions___exec_set_wait --> oqlos__core___interpreter_actions__parse_wait_secs
     oqlos__core___interpreter_actions___exec_set_wait --> oqlos__core___interpreter_actions___do_sleep
     oqlos__core___interpreter_actions___exec_set_wait --> oqlos__core___interpreter_actions___format_set_command
@@ -610,6 +925,42 @@ flowchart TD
     oqlos__core__motor2_runtime__build_motor2_reciprocating_plan --> oqlos__core__motor2_runtime___compute_motor2_cycles
     oqlos__core__motor2_runtime__build_motor2_reciprocating_plan --> oqlos__core__motor2_runtime___compute_motor2_speed
     oqlos__core__motor2_runtime__build_motor2_reciprocating_plan --> oqlos__core__motor2_runtime___normalize_motor2_direction
+    oqlos__core___action_motor2___parse_motor2_duration_seconds --> oqlos__core___action_motor2___parse_motor2_float
+    oqlos__core___action_motor2___parse_motor2_volume_liters --> oqlos__core___action_motor2___parse_motor2_float
+    oqlos__core___action_motor2___parse_prefixed_motor2_setting --> oqlos__core___action_motor2___parse_motor2_steps
+    oqlos__core___action_motor2___parse_prefixed_motor2_setting --> oqlos__core___action_motor2___parse_motor2_volume_liters
+    oqlos__core___action_motor2___parse_prefixed_motor2_setting --> oqlos__core___action_motor2___parse_motor2_duration_seconds
+    oqlos__core___action_motor2___parse_prefixed_motor2_setting --> oqlos__core___action_motor2___parse_motor2_speed_steps
+    oqlos__core___action_motor2___parse_motor2_reciprocating_setting --> oqlos__core___action_motor2___normalize_motor2_value
+    oqlos__core___action_motor2___parse_motor2_reciprocating_setting --> oqlos__core___action_motor2___parse_prefixed_motor2_setting
+    oqlos__core___action_motor2___parse_motor2_reciprocating_setting --> frontend__src__i18n__I18nProvider__dict
+    oqlos__core___action_motor2___parse_motor2_reciprocating_setting --> oqlos__core___action_motor2___parse_motor2_direction
+    oqlos__core___action_motor2___motor2_speed_raw --> oqlos__core__motor2_runtime__motor2_speed_raw
+    oqlos__core___action_motor2___motor2_speed_raw --> oqlos__core___action_motor2___motor2_max_steps_per_second
+    oqlos__core___action_motor2___motor2_max_steps_per_second --> oqlos__core__motor2_runtime__motor2_max_steps_per_second
+    oqlos__core___action_motor2___motor2_effective_steps_per_second --> oqlos__core___action_motor2___motor2_max_steps_per_second
+    oqlos__core___action_motor2___motor2_speed_for_duration --> oqlos__core__motor2_runtime__motor2_speed_for_duration
+    oqlos__core___action_motor2___motor2_acceleration_raw --> oqlos__core__motor2_runtime__motor2_acceleration_raw
+    oqlos__core___action_motor2___motor2_acceleration_raw --> oqlos__core___action_motor2___motor2_max_steps_per_second
+    oqlos__core___action_motor2___post_motor2_move_relative --> oqlos__config__get_settings
+    oqlos__core___action_motor2___post_motor2_reciprocate --> oqlos__config__get_settings
+    oqlos__core___action_motor2___post_motor2_stop --> oqlos__config__get_settings
+    oqlos__core___action_motor2___motor2_do_stop --> oqlos__core___action_motor2___post_motor2_stop
+    oqlos__core___action_motor2___motor2_build_plan --> oqlos__core__motor2_runtime__normalize_motor2_runtime_config
+    oqlos__core___action_motor2___motor2_build_plan --> oqlos__core__motor2_runtime__build_motor2_reciprocating_plan
+    oqlos__core___action_motor2___motor2_do_start --> oqlos__core___action_motor2___motor2_build_plan
+    oqlos__core___action_motor2___motor2_do_start --> oqlos__core___action_motor2___motor2_step_label
+    oqlos__core___action_motor2___motor2_do_start --> oqlos__core___action_motor2___post_motor2_reciprocate
+    oqlos__core___action_motor2___motor2_do_start --> oqlos__core__motor2_runtime__motor2_speed_raw
+    oqlos__core___action_motor2___motor2_do_start --> oqlos__core__motor2_runtime__motor2_acceleration_raw
+    oqlos__core___action_motor2___handle_motor2_reciprocating_setting --> oqlos__core___action_motor2___motor2_reciprocating_state
+    oqlos__core___action_motor2___try_exec_motor2_set --> oqlos__core___action_motor2___parse_motor2_reciprocating_setting
+    oqlos__core___action_motor2___try_exec_motor2_set --> oqlos__core___action_motor2___parse_motor2_direction
+    oqlos__core___action_motor2___try_exec_motor2_set --> oqlos__core___action_motor2___parse_motor2_acceleration
+    oqlos__core___action_motor2___try_exec_motor2_set --> oqlos__core___action_motor2___parse_motor2_speed_steps
+    oqlos__core___action_motor2___try_exec_motor2_set --> oqlos__core___action_motor2___motor2_effective_steps_per_second
+    oqlos__core___action_motor2___try_exec_motor2_set --> oqlos__core___action_motor2___normalize_motor2_target
+    oqlos__core___action_motor2___try_exec_motor2_set --> oqlos__core___action_motor2___handle_motor2_reciprocating_setting
     oqlos__core__oql_versioning__extract_declared_version --> oqlos__core__oql_versioning__first_meaningful_line
     oqlos__core__oql_versioning__resolve_oql_version --> oqlos__core__oql_versioning__first_meaningful_line
     oqlos__core__oql_versioning__resolve_oql_version --> oqlos__core__oql_versioning__extract_declared_version
@@ -634,13 +985,16 @@ flowchart TD
     oqlos__core__executor___resolve_name_or_attr --> oqlos__core__executor___safe_resolve
     oqlos__core__executor___safe_resolve --> oqlos__core__executor___resolve_name_or_attr
     oqlos__core__executor___safe_resolve --> oqlos__core__executor___resolve_compare
-    oqlos__core__executor___safe_resolve --> oqlos__core__base__VariableStore__all
+    oqlos__core__executor___safe_resolve --> frontend__src__context__AppConfigProvider__all
     oqlos__core__executor__safe_eval_condition --> oqlos__core__executor___safe_resolve
     oqlos__core__executor__ScenarioOrchestrator___execute_validate_step --> oqlos__core__executor__safe_eval_condition
     oqlos__core__executor__ScenarioOrchestrator__validate_goal --> oqlos__core__executor__safe_eval_condition
     oqlos__core___oql_adapter___resolve_include --> oqlos__core___oql_adapter___scenarios_root
+    oqlos__core___oql_adapter___MacroRegistry__register --> frontend__src__utils__hardware_wizard_steps__list
+    oqlos__core___oql_adapter___load_includes --> frontend__src__utils__hardware_wizard_steps__list
     oqlos__core___oql_adapter___load_includes --> oqlos__core___oql_adapter___resolve_include
     oqlos__core___oql_adapter___load_includes --> oqlos__core__oql_parser__parse_oql
+    oqlos__core___oql_adapter___lower_call --> frontend__src__utils__hardware_wizard_steps__list
     oqlos__core___oql_adapter___lower_call --> oqlos__core___oql_adapter___parse_macro_line
     oqlos__core___oql_adapter___lower_call --> oqlos__core___oql_adapter___cmd_to_actions
     oqlos__core___oql_adapter___lower_set --> oqlos__core___oql_adapter___fmt_value
@@ -654,11 +1008,12 @@ flowchart TD
     oqlos__core___oql_adapter__oql_doc_to_cql --> oqlos__core___oql_adapter___cmd_to_actions
     oqlos__core___oql_adapter__parse_flat_oql --> oqlos__core___oql_adapter__oql_doc_to_cql
     oqlos__core___oql_adapter__parse_flat_oql --> oqlos__core__oql_parser__parse_oql
+    oqlos__core__interpreter__CqlInterpreter____init__ --> frontend__src__api__wsClient__WsCqrsClient__super
     oqlos__core__interpreter__CqlInterpreter__parse --> oqlos__core__cql_parser__parse_cql
     oqlos__core__interpreter__CqlInterpreter__parse --> oqlos__core___oql_adapter__is_flat_oql
     oqlos__core__interpreter__CqlInterpreter__parse --> oqlos__core__oql_parser__parse_oql
     oqlos__core__interpreter__CqlInterpreter__parse --> oqlos__core___oql_adapter__oql_doc_to_cql
-    oqlos__core__interpreter__CqlInterpreter___build_script_result --> oqlos__core__base__VariableStore__all
+    oqlos__core__interpreter__CqlInterpreter___build_script_result --> frontend__src__context__AppConfigProvider__all
     oqlos__core__interpreter__CqlInterpreter__execute --> oqlos__core__cql_parser__validate_cql
     oqlos__core__interpreter__CqlInterpreter___exec_flat_action --> oqlos__core___interpreter_actions__exec_action_set
     oqlos__core__interpreter__CqlInterpreter___exec_flat_action --> oqlos__core___interpreter_actions__exec_action_val
@@ -694,13 +1049,14 @@ flowchart TD
     oqlos__core___line_parsers___parse_action_line --> oqlos__core___dsl_helpers___map_peripheral
     oqlos__core___line_parsers___parse_action_line --> oqlos__core___dsl_helpers___map_action_value
     oqlos__core___line_parsers___parse_if_condition --> oqlos__core___dsl_helpers___normalize_quote_syntax
+    oqlos__core__safe_eval__safe_eval --> frontend__src__i18n__I18nProvider__dict
     oqlos__core__safe_eval__safe_eval --> oqlos__core__safe_eval___eval_node
     oqlos__core__safe_eval___eval_unary_op --> oqlos__core__safe_eval___eval_node
     oqlos__core__safe_eval___eval_bin_op --> oqlos__core__safe_eval___eval_node
     oqlos__core__safe_eval___eval_compare --> oqlos__core___compare__resolve_compare_chain
     oqlos__core__safe_eval___eval_compare --> oqlos__core__safe_eval___eval_node
     oqlos__core__safe_eval___eval_bool_op --> oqlos__core__safe_eval___eval_node
-    oqlos__core__safe_eval___eval_bool_op --> oqlos__core__base__VariableStore__all
+    oqlos__core__safe_eval___eval_bool_op --> frontend__src__context__AppConfigProvider__all
     oqlos__core__safe_eval___eval_call --> oqlos__core__safe_eval___eval_node
     oqlos__core__safe_eval___eval_if_exp --> oqlos__core__safe_eval___eval_node
     oqlos__core___compare__resolve_compare_chain --> oqlos__core___compare__resolve_compare
@@ -715,9 +1071,12 @@ flowchart TD
     oqlos__core__cql_parser___ParseState___try_hierarchy --> oqlos__core___cql_tree_builder___parse_action_line
     oqlos__core__cql_parser__parse_cql --> oqlos__core___oql_adapter__is_flat_oql
     oqlos__core__cql_parser__parse_cql --> oqlos__core___oql_adapter__parse_flat_oql
+    oqlos__core__cql_parser___collect_all_goals --> frontend__src__utils__hardware_wizard_steps__list
     oqlos__core__cql_parser__validate_cql --> oqlos__core__cql_parser___collect_all_goals
     oqlos__core__cql_parser__validate_cql --> oqlos__core__cql_parser___validate_intervals
     oqlos__core___value_normalizers__ValueNormalizer__coerce_float --> oqlos__core___dsl_helpers___parse_numeric_value
+    oqlos__core___sensor_evaluator__SensorEvaluator____init__ --> frontend__src__i18n__I18nProvider__dict
+    oqlos__core___sensor_evaluator__SensorEvaluator__collect_sensor_constraints --> frontend__src__utils__hardware_wizard_steps__list
     oqlos__tools__plugin_cli___default_config_path --> oqlos__hardware__config_paths__resolve_oqlos_config_path
     oqlos__tools__plugin_cli__cmd_list --> examples__hardware__doctor_workflow__print
     oqlos__tools__plugin_cli__cmd_status --> examples__hardware__doctor_workflow__print
@@ -730,9 +1089,11 @@ flowchart TD
     oqlos__tools__plugin_cli__cmd_execute --> examples__hardware__doctor_workflow__print
     oqlos__tools__plugin_cli__cmd_reload --> oqlos__tools__plugin_cli___default_config_path
     oqlos__tools__plugin_cli__cmd_reload --> examples__hardware__doctor_workflow__print
+    oqlos__tools__plugin_cli__cmd_reload --> frontend__src__utils__hardware_wizard_steps__list
     oqlos__tools__plugin_cli__cmd_peripherals --> oqlos__tools__plugin_cli___default_config_path
     oqlos__tools__plugin_cli__cmd_peripherals --> examples__hardware__doctor_workflow__print
     oqlos__tools__hardware_diagnose__doctor___load_config_summary --> oqlos__hardware__config_paths__resolve_oqlos_config_path
+    oqlos__tools__hardware_diagnose__doctor___load_config_summary --> frontend__src__i18n__I18nProvider__dict
     oqlos__tools__hardware_diagnose__doctor___probe_modbus --> oqlos__hardware__discovery__probe_waveshare_modbus
     oqlos__tools__hardware_diagnose__doctor___probe_modbus_adc --> oqlos__hardware__discovery__probe_waveshare_modbus_adc
     oqlos__tools__hardware_diagnose__doctor___serial_port_owners --> oqlos__tools__hardware_diagnose__doctor___extract_pids
@@ -780,295 +1141,8 @@ flowchart TD
     oqlos__tools__hardware_diagnose__doctor__build_doctor_report --> oqlos__tools__hardware_diagnose__doctor___analyze_serial_port_owners
     oqlos__tools__hardware_diagnose__doctor__build_doctor_report --> oqlos__tools__hardware_diagnose__doctor___analyze_firmware_access
     oqlos__tools__hardware_diagnose__doctor__build_doctor_report --> oqlos__tools__hardware_diagnose__doctor___collect_repairs
-    oqlos__tools__hardware_diagnose__doctor__build_doctor_report --> oqlos__tools__hardware_diagnose__doctor__apply_safe_fixes
-    oqlos__tools__hardware_diagnose__doctor__apply_safe_fixes --> oqlos__tools__hardware_diagnose__doctor___expected_modbus_params
-    oqlos__tools__hardware_diagnose__doctor__apply_safe_fixes --> oqlos__tools__hardware_diagnose__doctor___update_modbus_config
-    oqlos__tools__hardware_diagnose__doctor__apply_safe_fixes --> oqlos__tools__hardware_diagnose__doctor___expected_modbus_adc_params
-    oqlos__tools__hardware_diagnose__doctor__apply_safe_fixes --> oqlos__tools__hardware_diagnose__doctor___update_modbus_adc_config
-    oqlos__tools__hardware_diagnose__doctor___update_modbus_config --> oqlos__hardware__config_paths__resolve_oqlos_config_path
-    oqlos__tools__hardware_diagnose__doctor___update_modbus_adc_config --> oqlos__hardware__config_paths__resolve_oqlos_config_path
-    oqlos__tools__hardware_diagnose__doctor___format_modbus_status --> oqlos__tools__hardware_diagnose__doctor___firmware_is_remote
-    oqlos__tools__hardware_diagnose__doctor___format_modbus_status --> oqlos__tools__hardware_diagnose__doctor___firmware_modbus_health_ok
-    oqlos__tools__hardware_diagnose__doctor___format_modbus_status --> oqlos__tools__hardware_diagnose__doctor___firmware_adapter_status
-    oqlos__tools__hardware_diagnose__doctor__format_detection --> oqlos__tools__hardware_diagnose__doctor___format_modbus_status
-    oqlos__tools__hardware_diagnose__doctor___firmware_modbus_health_ok --> oqlos__tools__hardware_diagnose__doctor___adapter_health_status
-    oqlos__tools__hardware_diagnose__doctor___firmware_modbus_health_ok --> oqlos__tools__hardware_diagnose__doctor___health_status_is_ok
-    oqlos__tools__hardware_diagnose__doctor__format_doctor --> oqlos__tools__hardware_diagnose__doctor___format_doctor_issues
-    oqlos__tools__hardware_diagnose__doctor__format_doctor --> oqlos__tools__hardware_diagnose__doctor___format_doctor_applied_repairs
-    oqlos__tools__hardware_diagnose__doctor__format_doctor --> oqlos__tools__hardware_diagnose__doctor___format_doctor_unapplied
-    oqlos__tools__hardware_diagnose__health__check_firmware_health --> oqlos__tools__hardware_diagnose__health___request_firmware_json
-    oqlos__tools__hardware_diagnose__health__check_firmware_identify --> oqlos__tools__hardware_diagnose__health___request_firmware_json
-    oqlos__tools__hardware_diagnose__health__cmd_health --> oqlos__tools__hardware_diagnose__health__check_firmware_health
-    oqlos__tools__hardware_diagnose__health__cmd_health --> oqlos__tools__hardware_diagnose__health___is_health_ok
-    oqlos__tools__hardware_diagnose__health__cmd_health --> oqlos__tools__hardware_diagnose__health___format_health_value
-    oqlos__tools__hardware_diagnose__health__cmd_diagnose --> oqlos__tools__hardware_diagnose__discovery__list_i2c_buses
-    oqlos__tools__hardware_diagnose__health__cmd_diagnose --> oqlos__tools__hardware_diagnose__health__check_firmware_identify
-    oqlos__tools__hardware_diagnose__health__cmd_diagnose --> oqlos__tools__hardware_diagnose__report__format_peripheral_table
-    oqlos__tools__hardware_diagnose__health__cmd_diagnose --> oqlos__tools__hardware_diagnose__health__cmd_health
-    oqlos__tools__hardware_diagnose__health__cmd_diagnose --> oqlos__tools__hardware_diagnose__discovery__list_usb_serial_devices
-    oqlos__tools__hardware_diagnose____main_____print_list --> oqlos__tools__hardware_diagnose__discovery__list_usb_serial_devices
-    oqlos__tools__hardware_diagnose____main_____print_list --> examples__hardware__doctor_workflow__print
-    oqlos__tools__hardware_diagnose____main_____print_list --> oqlos__tools__hardware_diagnose__report__format_peripheral_table
-    oqlos__tools__hardware_diagnose____main_____print_list --> oqlos__tools__hardware_diagnose__discovery__list_i2c_buses
-    oqlos__tools__hardware_diagnose____main_____print_health --> examples__hardware__doctor_workflow__print
-    oqlos__tools__hardware_diagnose____main_____print_health --> oqlos__tools__plugin_cli__cmd_health
-    oqlos__tools__hardware_diagnose____main_____print_health --> oqlos__tools__hardware_diagnose__health__check_firmware_health
-    oqlos__tools__hardware_diagnose____main_____print_calibrate --> oqlos__tools__hardware_diagnose__calibration__run_calibration_test
-    oqlos__tools__hardware_diagnose____main_____print_calibrate --> examples__hardware__doctor_workflow__print
-    oqlos__tools__hardware_diagnose____main_____print_benchmark --> oqlos__tools__hardware_diagnose__benchmark__run_benchmark
-    oqlos__tools__hardware_diagnose____main_____print_benchmark --> examples__hardware__doctor_workflow__print
-    oqlos__tools__hardware_diagnose____main_____print_detect --> oqlos__tools__hardware_diagnose__doctor__detect_hardware
-    oqlos__tools__hardware_diagnose____main_____print_detect --> examples__hardware__doctor_workflow__print
-    oqlos__tools__hardware_diagnose____main_____print_detect --> oqlos__tools__hardware_diagnose__doctor__format_detection
-    oqlos__tools__hardware_diagnose____main_____print_doctor --> oqlos__tools__hardware_diagnose__doctor__build_doctor_report
-    oqlos__tools__hardware_diagnose____main_____print_doctor --> examples__hardware__doctor_workflow__print
-    oqlos__tools__hardware_diagnose____main_____print_doctor --> oqlos__tools__hardware_diagnose__doctor__format_doctor
-    oqlos__tools__hardware_diagnose____main_____print_modbus_probe --> oqlos__tools__hardware_diagnose__modbus_probe__run_modbus_probe_from_args
-    oqlos__tools__hardware_diagnose____main_____print_modbus_probe --> examples__hardware__doctor_workflow__print
-    oqlos__tools__hardware_diagnose____main_____handle_report_action --> oqlos__tools__hardware_diagnose__report__save_diagnostic_report
-    oqlos__tools__hardware_diagnose____main_____handle_report_action --> examples__hardware__doctor_workflow__print
-    oqlos__tools__hardware_diagnose____main_____print_diagnose --> examples__hardware__doctor_workflow__print
-    oqlos__tools__hardware_diagnose____main_____print_diagnose --> oqlos__tools__hardware_diagnose__health__cmd_diagnose
-    oqlos__tools__hardware_diagnose____main_____print_diagnose --> oqlos__tools__hardware_diagnose__discovery__list_i2c_buses
-    oqlos__tools__hardware_diagnose____main_____print_diagnose --> oqlos__tools__hardware_diagnose__health__check_firmware_health
-    oqlos__tools__hardware_diagnose____main_____print_diagnose --> oqlos__tools__hardware_diagnose__health__check_firmware_identify
-    oqlos__tools__hardware_diagnose____main_____print_diagnose --> oqlos__tools__hardware_diagnose__discovery__list_usb_serial_devices
-    oqlos__tools__hardware_diagnose__modbus_probe___env_count_list --> oqlos__tools__hardware_diagnose__modbus_probe___env_int_list
-    oqlos__tools__hardware_diagnose__modbus_probe___env_str_list --> oqlos__tools__hardware_diagnose__modbus_probe___split_values
-    oqlos__tools__hardware_diagnose__modbus_probe___arg_str_list --> oqlos__tools__hardware_diagnose__modbus_probe___split_values
-    oqlos__tools__hardware_diagnose__modbus_probe___arg_int_list --> oqlos__tools__hardware_diagnose__modbus_probe___split_values
-    oqlos__tools__hardware_diagnose__modbus_probe___arg_count_list --> oqlos__tools__hardware_diagnose__modbus_probe___arg_int_list
-    oqlos__tools__hardware_diagnose__modbus_probe__probe_options_from_args --> oqlos__tools__hardware_diagnose__modbus_probe___arg_str_list
-    oqlos__tools__hardware_diagnose__modbus_probe__probe_options_from_args --> oqlos__tools__hardware_diagnose__modbus_probe___arg_int_list
-    oqlos__tools__hardware_diagnose__modbus_probe__probe_options_from_args --> oqlos__tools__hardware_diagnose__modbus_probe___arg_count_list
-    oqlos__tools__hardware_diagnose__modbus_probe__probe_options_from_args --> oqlos__tools__hardware_diagnose__modbus_probe___serials_from_env
-    oqlos__tools__hardware_diagnose__modbus_probe__probe_options_from_args --> oqlos__tools__hardware_diagnose__modbus_probe___env_int_list
-    oqlos__tools__hardware_diagnose__modbus_probe__probe_options_from_args --> oqlos__tools__hardware_diagnose__modbus_probe___env_str_list
-    oqlos__tools__hardware_diagnose__modbus_probe__run_modbus_probe_from_args --> oqlos__tools__hardware_diagnose__modbus_probe__run_modbus_probe
-    oqlos__tools__hardware_diagnose__modbus_probe__run_modbus_probe_from_args --> oqlos__tools__hardware_diagnose__modbus_probe__probe_options_from_args
-    oqlos__tools__hardware_diagnose__modbus_probe__run_modbus_probe_from_env --> oqlos__tools__hardware_diagnose__modbus_probe__run_modbus_probe
-    oqlos__tools__hardware_diagnose__modbus_probe__run_modbus_probe_from_env --> oqlos__tools__hardware_diagnose__modbus_probe___serials_from_env
-    oqlos__tools__hardware_diagnose__modbus_probe__run_modbus_probe_from_env --> oqlos__tools__hardware_diagnose__modbus_probe___env_int_list
-    oqlos__tools__hardware_diagnose__modbus_probe__run_modbus_probe_from_env --> oqlos__tools__hardware_diagnose__modbus_probe___env_str_list
-    oqlos__tools__hardware_diagnose__modbus_probe__run_modbus_probe_from_env --> oqlos__tools__hardware_diagnose__modbus_probe___env_count_list
-    oqlos__tools__hardware_diagnose__modbus_probe__run_modbus_probe_from_env --> oqlos__tools__hardware_diagnose__modbus_probe___env_float
-    oqlos__tools__hardware_diagnose__modbus_probe__run_modbus_probe_from_env --> oqlos__tools__hardware_diagnose__modbus_probe___env_int
-    oqlos__tools__hardware_diagnose__modbus_probe__main --> oqlos__tools__hardware_diagnose__modbus_probe__add_modbus_probe_arguments
-    oqlos__tools__hardware_diagnose__modbus_probe__main --> oqlos__tools__hardware_diagnose__modbus_probe__run_modbus_probe_from_args
-    oqlos__tools__hardware_diagnose__modbus_probe__main --> examples__hardware__doctor_workflow__print
-    oqlos__tools__hardware_diagnose__shell___cmd_list --> oqlos__tools__hardware_diagnose__discovery__list_usb_serial_devices
-    oqlos__tools__hardware_diagnose__shell___cmd_list --> examples__hardware__doctor_workflow__print
-    oqlos__tools__hardware_diagnose__shell___cmd_list --> oqlos__tools__hardware_diagnose__discovery__list_i2c_buses
-    oqlos__tools__hardware_diagnose__shell___cmd_list --> oqlos__tools__hardware_diagnose__report__format_peripheral_table
-    oqlos__tools__hardware_diagnose__shell___cmd_list --> oqlos__tools__hardware_diagnose__discovery__detect_chips_on_i2c
-    oqlos__tools__hardware_diagnose__shell___cmd_calibrate --> examples__hardware__doctor_workflow__print
-    oqlos__tools__hardware_diagnose__shell___cmd_calibrate --> oqlos__tools__hardware_diagnose__calibration__run_calibration_test
-    oqlos__tools__hardware_diagnose__shell___cmd_benchmark --> oqlos__tools__hardware_diagnose__benchmark__run_benchmark
-    oqlos__tools__hardware_diagnose__shell___cmd_benchmark --> examples__hardware__doctor_workflow__print
-    oqlos__tools__hardware_diagnose__shell___dispatch_command --> examples__hardware__doctor_workflow__print
-    oqlos__tools__hardware_diagnose__shell___dispatch_command --> oqlos__tools__hardware_diagnose__shell___cmd_benchmark
-    oqlos__tools__hardware_diagnose__shell___dispatch_command --> oqlos__tools__hardware_diagnose__shell___cmd_calibrate
-    oqlos__tools__hardware_diagnose__shell___dispatch_command --> oqlos__tools__plugin_cli__cmd_health
-    oqlos__tools__hardware_diagnose__shell__interactive_shell --> examples__hardware__doctor_workflow__print
-    oqlos__tools__hardware_diagnose__shell__interactive_shell --> oqlos__tools__hardware_diagnose__shell___dispatch_command
-    oqlos__tools__hardware_diagnose__benchmark__run_benchmark --> examples__hardware__doctor_workflow__print
-    oqlos__tools__hardware_diagnose__discovery__detect_chips_on_i2c --> oqlos__tools__hardware_diagnose__discovery___run_shell_command
-    oqlos__tools__hardware_diagnose__report__save_diagnostic_report --> oqlos__tools__hardware_diagnose__discovery__list_i2c_buses
-    oqlos__tools__hardware_diagnose__report__save_diagnostic_report --> oqlos__tools__hardware_diagnose__health__check_firmware_health
-    oqlos__tools__hardware_diagnose__report__save_diagnostic_report --> oqlos__tools__hardware_diagnose__health__check_firmware_identify
-    oqlos__tools__hardware_diagnose__report__save_diagnostic_report --> oqlos__tools__hardware_diagnose__calibration__run_calibration_test
-    oqlos__tools__hardware_diagnose__report__save_diagnostic_report --> oqlos__tools__hardware_diagnose__discovery__list_usb_serial_devices
-    oqlos__tools__hardware_diagnose__calibration__run_calibration_test --> oqlos__tools__hardware_diagnose__calibration___calibrate_pump
-    oqlos__tools__hardware_diagnose__calibration__run_calibration_test --> oqlos__tools__hardware_diagnose__calibration___calibrate_valves
-    oqlos__tools__hardware_diagnose__calibration__run_calibration_test --> oqlos__tools__hardware_diagnose__calibration___calibrate_sensors
-    oqlos__tools__xml_import___utils__normalize_output_name --> oqlos__tools__xml_import___utils__is_pump_output
-    oqlos__tools__xml_import___utils__normalize_output_name --> oqlos__tools__xml_import___utils__is_compressor_output
-    oqlos__tools__xml_import__parser__parse_xml --> oqlos__tools__xml_import__parser___populate_report_fields
-    oqlos__tools__xml_import__parser__parse_xml --> oqlos__tools__xml_import__parser___parse_intervals
-    oqlos__tools__xml_import__parser__parse_xml --> oqlos__core__base__VariableStore__set
-    oqlos__tools__xml_import__parser__parse_xml --> oqlos__tools__xml_import__parser___parse_test_run
-    oqlos__tools__xml_import__parser___parse_test_run --> oqlos__core__base__VariableStore__set
-    oqlos__tools__xml_import__parser___parse_test_run --> oqlos__tools__xml_import__parser___parse_operation
-    oqlos__tools__xml_import__parser___parse_operation --> oqlos__tools__xml_import__parser___parse_operation_params
-    oqlos__tools__xml_import__parser___parse_operation_params --> oqlos__core__base__VariableStore__set
-    oqlos__tools__xml_import__generators___emit_set --> oqlos__tools__xml_import__generators___quote_oql
-    oqlos__tools__xml_import__generators___emit_cql_output --> oqlos__tools__xml_import___utils__is_pump_output
-    oqlos__tools__xml_import__generators___emit_cql_output --> oqlos__tools__xml_import___utils__is_compressor_output
-    oqlos__tools__xml_import__generators___emit_cql_output --> oqlos__tools__xml_import__generators___emit_set
-    oqlos__tools__xml_import__generators___emit_cql_output --> oqlos__tools__xml_import___utils__normalize_set_value
-    oqlos__tools__xml_import__generators___emit_cql_output --> oqlos__tools__xml_import___utils__normalize_output_name
-    oqlos__tools__xml_import__generators___emit_cql_param --> oqlos__tools__xml_import__generators___emit_cql_sensor_param
-    oqlos__tools__xml_import__generators___emit_cql_param --> oqlos__tools__xml_import__generators___emit_set
-    oqlos__tools__xml_import__generators___emit_dsl_param --> oqlos__tools__xml_import__generators___format_range
-    oqlos__tools__xml_import__generators___emit_dsl_param --> oqlos__tools__xml_import__generators___mode_action
-    oqlos__tools__xml_import__generators___build_steps_from_op --> oqlos__tools__xml_import__generators___append_sensor_assertion
-    oqlos__tools__xml_import__generators__generate_dsl --> oqlos__tools__xml_import__generators___emit_dsl_sensors
-    oqlos__tools__xml_import__generators__generate_dsl --> oqlos__tools__xml_import__generators___emit_dsl_metadata
-    oqlos__tools__xml_import__generators___emit_dsl_sensors --> oqlos__core__base__VariableStore__set
-    oqlos__tools__xml_import__generators__generate_cql --> oqlos__tools__xml_import__generators___emit_cql_output
-    oqlos__tools__xml_import__generators___generate_cql_for_goal --> oqlos__tools__xml_import__generators___emit_cql_output
-    oqlos__tools__xml_import__generators___generate_cql_for_goal --> oqlos__tools__xml_import__generators___emit_cql_param
-    oqlos__tools__xml_import__generators__generate_goals_json --> oqlos__tools__xml_import__generators___build_validation_criteria
-    oqlos__tools__xml_import__generators__generate_goals_json --> oqlos__tools__xml_import__generators___generate_cql_for_goal
-    oqlos__tools__xml_import__generators__generate_goals_json --> oqlos__tools__xml_import__generators___build_steps_from_op
-    oqlos__tools__cql_cli__commands__run_single_command --> oqlos__tools__cql_cli__utils__build_single_command_scenario
-    oqlos__tools__cql_cli__commands__run_single_command --> oqlos__tools__cql_cli__commands__run_source
-    oqlos__tools__cql_cli__commands__handle_list_command --> oqlos__tools__hardware_diagnose__health__check_firmware_identify
-    oqlos__tools__cql_cli__commands__handle_list_command --> examples__hardware__doctor_workflow__print
-    oqlos__tools__cql_cli__commands__handle_list_command --> oqlos__core__base__InterpreterOutput__output_yaml
-    oqlos__tools__cql_cli__commands__execute_command_with_cleanup --> oqlos__core__base__InterpreterOutput__output_yaml
-    oqlos__tools__cql_cli__commands__execute_command_with_cleanup --> oqlos__tools__cql_cli__commands___run_continuous_mode
-    oqlos__tools__cql_cli__commands__execute_command_with_cleanup --> oqlos__tools__cql_cli__utils__build_result_payload
-    oqlos__tools__cql_cli__commands__execute_command_with_cleanup --> examples__hardware__doctor_workflow__print
-    oqlos__tools__cql_cli__commands___run_continuous_mode --> examples__hardware__doctor_workflow__print
-    oqlos__tools__cql_cli__main --> oqlos__tools__cql_cli___sync_compat_symbols
-    oqlos__tools__cql_cli__formatting__canonicalize_oql_text --> oqlos__tools__cql_cli__formatting__canonicalize_oql_line
-    oqlos__tools__cql_cli__utils__output_yaml --> examples__hardware__doctor_workflow__print
-    oqlos__tools__cql_cli__utils___extract_first_action --> oqlos__core__cql_parser__parse_cql
-    oqlos__tools__cql_cli__utils___extract_first_action --> oqlos__tools__cql_cli__utils__build_single_command_scenario
-    oqlos__tools__cql_cli__utils___resolve_peripheral_adapter --> oqlos__tools__cql_cli__utils__normalize_target_name
-    oqlos__tools__cql_cli__utils__resolve_required_adapter --> oqlos__tools__cql_cli__utils___extract_first_action
-    oqlos__tools__cql_cli__utils__resolve_required_adapter --> oqlos__tools__cql_cli__utils___resolve_peripheral_adapter
-    oqlos__tools__cql_cli__utils__resolve_required_adapter --> oqlos__tools__cql_cli__utils___resolve_sensor_target
-    oqlos__tools__cql_cli__utils__validate_directory --> examples__hardware__doctor_workflow__print
-    oqlos__tools__cql_cli__main__create_run_parser --> oqlos__tools__cql_cli__main__create_file_parser
-    oqlos__tools__cql_cli__main__run_file_mode --> oqlos__tools__cql_cli__main___run_hardware_flags
-    oqlos__tools__cql_cli__main__run_file_mode --> oqlos__tools__cql_cli__utils__parse_sensor_overrides
-    oqlos__tools__cql_cli__main__run_file_mode --> oqlos__tools__cql_cli__main___create_interpreter
-    oqlos__tools__cql_cli__main__run_file_mode --> oqlos__tools__cql_cli__utils__validate_directory
-    oqlos__tools__cql_cli__main__run_file_mode --> oqlos__tools__cql_cli__main___run_interpreter_target
-    oqlos__tools__cql_cli__main__run_file_mode --> examples__hardware__doctor_workflow__print
-    oqlos__tools__cql_cli__main__run_file_mode --> oqlos__tools__cql_cli__main___print_cli_error
-    oqlos__tools__cql_cli__main__run_file_mode --> oqlos__tools__cql_cli__main__create_file_parser
-    oqlos__tools__cql_cli__main__run_file_mode --> oqlos__tools__cql_cli__utils__build_result_payload
-    oqlos__tools__cql_cli__main___run_interpreter_target --> oqlos__tools__cql_cli__main___fetch_scenario_source
-    oqlos__tools__cql_cli__main___fetch_scenario_source --> oqlos__tools__cql_cli__main___extract_scenario_source
-    oqlos__tools__cql_cli__main___fetch_scenario_source --> oqlos__tools__cql_cli__main___looks_like_html
-    oqlos__tools__cql_cli__main___print_cli_error --> examples__hardware__doctor_workflow__print
-    oqlos__tools__cql_cli__main___run_hardware_flags --> examples__hardware__doctor_workflow__print
-    oqlos__tools__cql_cli__main___run_hardware_flags --> oqlos__tools__hardware_diagnose__health__check_firmware_identify
-    oqlos__tools__cql_cli__main___run_hardware_flags --> oqlos__tools__hardware_diagnose__doctor__detect_hardware
-    oqlos__tools__cql_cli__main___run_hardware_flags --> oqlos__tools__hardware_diagnose__doctor__build_doctor_report
-    oqlos__tools__cql_cli__main___run_hardware_flags --> oqlos__tools__plugin_cli__cmd_health
-    oqlos__tools__cql_cli__main___run_hardware_flags --> oqlos__tools__hardware_diagnose__doctor__format_detection
-    oqlos__tools__cql_cli__main___run_hardware_flags --> oqlos__tools__hardware_diagnose__doctor__format_doctor
-    oqlos__tools__cql_cli__main__run_hardware_mode --> oqlos__tools__cql_cli__main___run_hardware_flags
-    oqlos__tools__cql_cli__main__run_hardware_mode --> oqlos__tools__cql_cli__main__create_hardware_parser
-    oqlos__tools__cql_cli__main__run_cmd_mode --> oqlos__tools__cql_cli__utils__parse_sensor_overrides
-    oqlos__tools__cql_cli__main__run_cmd_mode --> oqlos__tools__cql_cli__commands__run_single_command
-    oqlos__tools__cql_cli__main__run_cmd_mode --> oqlos__tools__cql_cli__commands__execute_command_with_cleanup
-    oqlos__tools__cql_cli__main__run_cmd_mode --> oqlos__tools__cql_cli__main__create_cmd_parser
-    oqlos__tools__cql_cli__main__run_cmd_mode --> oqlos__tools__cql_cli__preflight__preflight_hardware
-    oqlos__tools__cql_cli__main__run_format_mode --> oqlos__tools__cql_cli__formatting__canonicalize_oql_text
-    oqlos__tools__cql_cli__main__run_format_mode --> examples__hardware__doctor_workflow__print
-    oqlos__tools__cql_cli__main__run_format_mode --> oqlos__tools__cql_cli__main__create_format_parser
-    oqlos__tools__cql_cli__main___dispatch_to_mode --> oqlos__tools__cql_cli__main__run_cmd_mode
-    oqlos__tools__cql_cli__main___dispatch_to_mode --> oqlos__tools__cql_cli__main__run_hardware_mode
-    oqlos__tools__cql_cli__main___dispatch_to_mode --> oqlos__tools__cql_cli__main__run_file_mode
-    oqlos__tools__cql_cli__main___dispatch_to_mode --> oqlos__tools__cql_cli__main__run_format_mode
-    oqlos__tools__cql_cli__main___dispatch_to_mode --> oqlos__tools__cql_cli__commands__handle_list_command
-    oqlos__tools__cql_cli__main___dispatch_to_mode --> oqlos__tools__cql_cli__main__create_file_parser
-    oqlos__tools__cql_cli__main___dispatch_to_mode --> oqlos__tools__cql_cli__main__create_run_parser
-    oqlos__tools__cql_cli__main__main --> oqlos__tools__cql_cli__main___dispatch_to_mode
-    oqlos__tools__cql_cli__preflight__ensure_firmware_running --> oqlos__tools__cql_cli__preflight___is_firmware_running
-    oqlos__tools__cql_cli__preflight__ensure_firmware_running --> oqlos__tools__cql_cli__preflight___start_firmware_service
-    oqlos__tools__cql_cli__preflight__check_firmware_state --> oqlos__tools__hardware_diagnose__health__check_firmware_health
-    oqlos__tools__cql_cli__preflight__check_firmware_state --> oqlos__tools__hardware_diagnose__health__check_firmware_identify
-    oqlos__tools__cql_cli__preflight__check_firmware_state --> oqlos__tools__cql_cli__preflight___emit_preflight_error
-    oqlos__tools__cql_cli__preflight__check_required_adapter --> oqlos__tools__cql_cli__utils__resolve_required_adapter
-    oqlos__tools__cql_cli__preflight__check_required_adapter --> oqlos__tools__cql_cli__preflight___emit_preflight_error
-    oqlos__tools__cql_cli__preflight__check_required_adapter_health --> oqlos__tools__cql_cli__preflight___health_status_is_ok
-    oqlos__tools__cql_cli__preflight__check_required_adapter_health --> oqlos__tools__cql_cli__preflight___emit_preflight_error
-    oqlos__tools__cql_cli__preflight___emit_preflight_error --> oqlos__core__base__InterpreterOutput__output_yaml
-    oqlos__tools__cql_cli__preflight__emit_preflight_success --> oqlos__tools__cql_cli__preflight___emit_yaml_preflight
-    oqlos__tools__cql_cli__preflight__emit_preflight_success --> oqlos__tools__cql_cli__preflight___emit_text_preflight
-    oqlos__tools__cql_cli__preflight___emit_yaml_preflight --> oqlos__core__base__InterpreterOutput__output_yaml
-    oqlos__tools__cql_cli__preflight__preflight_hardware --> oqlos__tools__cql_cli__preflight__check_firmware_state
-    oqlos__tools__cql_cli__preflight__preflight_hardware --> oqlos__tools__cql_cli__preflight__check_required_adapter
-    oqlos__tools__cql_cli__preflight__preflight_hardware --> oqlos__tools__cql_cli__preflight__emit_preflight_success
-    oqlos__tools__cql_cli__preflight__preflight_hardware --> oqlos__tools__cql_cli__preflight__ensure_firmware_running
-    oqlos__tools__cql_cli__preflight__preflight_hardware --> oqlos__tools__cql_cli__preflight__check_required_adapter_health
-    oqlos__hardware__diagnosis__is_stale_hardware_entry --> oqlos__hardware__diagnosis__is_stale_hardware_message
-    oqlos__hardware__diagnosis__plugin_needs_repair --> oqlos__hardware__diagnosis__plugin_is_healthy
-    oqlos__hardware__diagnosis__modbus_plugins_need_repair --> oqlos__hardware__diagnosis___health_map
-    oqlos__hardware__diagnosis__modbus_plugins_need_repair --> oqlos__hardware__diagnosis__plugin_needs_repair
-    oqlos__hardware__diagnosis___infer_status --> oqlos__hardware__diagnosis__plugin_needs_repair
-    oqlos__hardware__diagnosis__report_to_dict --> oqlos__hardware__diagnosis___action_dict
-    oqlos__hardware__diagnosis___diagnose_plugin_devices --> oqlos__hardware__diagnosis___infer_status
-    oqlos__hardware__diagnosis___diagnose_plugin_devices --> oqlos__hardware__diagnosis___message_lower
-    oqlos__hardware__diagnosis___diagnose_plugin_devices --> oqlos__hardware__diagnosis___add_modbus_device_actions
-    oqlos__hardware__diagnosis___diagnose_plugin_devices --> oqlos__hardware__diagnosis___add_tic249_device_actions
-    oqlos__hardware__diagnosis___diagnose_plugin_devices --> oqlos__hardware__diagnosis___add_dri0050_device_actions
-    oqlos__hardware__diagnosis___build_stack_snapshot --> oqlos__hardware__stack_snapshot__build_hardware_stack_snapshot
-    oqlos__hardware__diagnosis__build_diagnosis_report --> oqlos__hardware__diagnosis___health_map
-    oqlos__hardware__diagnosis__build_diagnosis_report --> oqlos__hardware__diagnosis___adapter_index
-    oqlos__hardware__diagnosis__build_diagnosis_report --> oqlos__hardware__diagnosis___resolve_host_recover
-    oqlos__hardware__diagnosis__build_diagnosis_report --> oqlos__hardware__diagnosis___diagnose_plugin_devices
-    oqlos__hardware__diagnosis__build_diagnosis_report --> oqlos__hardware__diagnosis___diagnose_barcode_scanner
-    oqlos__hardware__diagnosis__build_diagnosis_report --> oqlos__hardware__diagnosis__modbus_plugins_need_repair
-    oqlos__hardware__diagnosis__build_diagnosis_report --> oqlos__hardware__diagnosis___build_report_global_actions
-    oqlos__hardware__diagnosis__build_diagnosis_report --> oqlos__hardware__diagnosis___build_stack_snapshot
-    oqlos__hardware__diagnosis___host_actions_from_report --> oqlos__core__base__VariableStore__set
-    oqlos__hardware__diagnosis___host_actions_from_report --> oqlos__core__base__VariableStore__all
-    oqlos__hardware__diagnosis___host_actions_from_report --> oqlos__hardware__diagnosis___should_include_host_action
-    oqlos__hardware__diagnosis___host_actions_from_report --> oqlos__hardware__diagnosis___action_dict
-    oqlos__hardware__diagnosis___recover_targets --> oqlos__hardware__diagnosis__plugin_is_healthy
-    oqlos__hardware__diagnosis___recover_targets --> oqlos__hardware__diagnosis__plugin_needs_repair
-    oqlos__hardware__diagnosis___recover_targets --> oqlos__hardware__diagnosis___report_device_status
-    oqlos__hardware__diagnosis___repair_dri0050_if_needed --> oqlos__hardware__sidecar_control__ensure_dri0050_sidecar
-    oqlos__hardware__diagnosis__execute_safe_recover --> oqlos__hardware__diagnosis___recover_targets
-    oqlos__hardware__diagnosis__execute_safe_recover --> oqlos__hardware__diagnosis___repair_dri0050_if_needed
-    oqlos__hardware__diagnosis__execute_safe_recover --> oqlos__hardware__diagnosis___host_actions_from_report
-    oqlos__hardware__diagnosis__execute_safe_recover --> oqlos__hardware__diagnosis__plugin_needs_repair
-    oqlos__hardware__config_schema__get_hardware_config --> oqlos__hardware__config_paths__resolve_oqlos_config_path
-    oqlos__hardware__config_schema__build_dynamic_schema_models --> oqlos__hardware__config_paths__resolve_oqlos_config_path
-    oqlos__hardware__config_schema__build_dynamic_schema_models --> oqlos__hardware__plugins__base__dynamic_plugin_schema_models
-    oqlos__hardware__rtc_probe___pirtc_request_sync --> oqlos__hardware__rtc_probe__get_pirtc_base_url
-    oqlos__hardware__rtc_probe__build_rtc_peripheral_status --> oqlos__hardware__rtc_probe___pirtc_request_sync
-    oqlos__hardware__rtc_probe__build_rtc_peripheral_status --> oqlos__hardware__rtc_probe__is_rtc_hardware_enabled
-    oqlos__hardware__rtc_probe__run_rtc_command --> oqlos__hardware__rtc_probe___pirtc_request_sync
-    oqlos__hardware__rtc_probe__run_rtc_command --> oqlos__hardware__rtc_probe__is_rtc_hardware_enabled
-    oqlos__hardware__rtc_probe__build_rtc_adapter_entry --> oqlos__hardware__rtc_probe___pirtc_request_sync
-    oqlos__hardware__rtc_probe__build_rtc_adapter_entry --> oqlos__hardware__rtc_probe__get_pirtc_base_url
-    oqlos__hardware__rtc_probe__enrich_rtc_adapter --> oqlos__hardware__rtc_probe__build_rtc_adapter_entry
-    oqlos__hardware__rtc_probe__enrich_rtc_adapter --> oqlos__hardware__rtc_probe__is_rtc_hardware_enabled
-    oqlos__hardware__gateway___ModbusAdapter____init__ --> oqlos__hardware__discovery__probe_waveshare_modbus
-    oqlos__hardware__hui_actions___set_valve --> oqlos__hardware__hui_actions___operation
-    oqlos__hardware__hui_actions___set_valve --> oqlos__hardware__hui_actions___success
-    oqlos__hardware__hui_actions___set_pump --> oqlos__hardware__hui_actions___operation
-    oqlos__hardware__hui_actions___set_pump --> oqlos__hardware__hui_actions___success
-    oqlos__hardware__hui_actions___set_pump_best_effort --> oqlos__hardware__hui_actions___set_pump
-    oqlos__hardware__hui_actions___set_pump_best_effort --> oqlos__hardware__hui_actions___operation
-    oqlos__hardware__hui_actions__shutdown_all_hui_hardware --> oqlos__core__base__VariableStore__all
-    oqlos__hardware__hui_actions__shutdown_all_hui_hardware --> oqlos__hardware__hui_actions___set_pump_best_effort
-    oqlos__hardware__hui_actions__shutdown_all_hui_hardware --> oqlos__hardware__hui_actions___set_valve
-    oqlos__hardware__hui_actions__shutdown_all_hui_hardware --> oqlos__hardware__hui_actions___operation
-    oqlos__hardware__hui_actions__start_hui_hold --> oqlos__hardware__hui_actions__shutdown_all_hui_hardware
-    oqlos__hardware__hui_actions__start_hui_hold --> oqlos__hardware__hui_actions___set_valve
-    oqlos__hardware__hui_actions__start_hui_hold --> oqlos__hardware__hui_actions___set_pump
-    oqlos__hardware__hui_actions__stop_hui_hold --> oqlos__hardware__hui_actions__shutdown_all_hui_hardware
-    oqlos__hardware__hui_actions__start_hui_artificial_lung --> oqlos__hardware__hui_actions___success
-    oqlos__hardware__hui_actions__start_hui_artificial_lung --> oqlos__hardware__hui_actions___set_valve
-    oqlos__hardware__hui_actions__start_hui_artificial_lung --> oqlos__hardware__hui_actions___run_tic249_reciprocate
-    oqlos__hardware__hui_actions__stop_hui_artificial_lung --> oqlos__hardware__hui_actions___set_valve
-    oqlos__hardware__sidecar_control___modbus_serial_candidates --> oqlos__core__base__VariableStore__set
-    oqlos__hardware__sidecar_control__resolve_dri0050_serial --> oqlos__hardware__sidecar_control___modbus_serial_candidates
-    oqlos__hardware__sidecar_control___dri0050_paths --> oqlos__hardware__sidecar_control__resolve_dri0050_serial
-    oqlos__hardware__sidecar_control___free_api_port --> oqlos__hardware__sidecar_control___run_cmd
-    oqlos__hardware__sidecar_control__ensure_dri0050_sidecar --> oqlos__hardware__sidecar_control___dri0050_paths
-    oqlos__hardware__sidecar_control__ensure_dri0050_sidecar --> oqlos__hardware__sidecar_control___free_api_port
-    oqlos__hardware__sidecar_control__ensure_dri0050_sidecar --> oqlos__hardware__sidecar_control___run_cmd
-    oqlos__hardware__sidecar_control__ensure_dri0050_sidecar --> oqlos__hardware__sidecar_control___http_sidecar_healthy
-    oqlos__hardware__sidecar_control__ensure_dri0050_sidecar --> oqlos__hardware__sidecar_control___http_sidecar_listening
-    oqlos__hardware__scanner_probe___canonical_match_key --> oqlos__hardware__scanner_probe___match_blob
-    oqlos__hardware__scanner_probe___match_priority --> oqlos__hardware__scanner_probe___match_blob
-    oqlos__hardware__scanner_probe___merge_matches --> oqlos__hardware__scanner_probe___canonical_match_key
-    oqlos__hardware__scanner_probe___merge_matches --> oqlos__hardware__scanner_probe___match_priority
-    oqlos__hardware__scanner_probe___scan_lsusb_matches --> oqlos__hardware__scanner_probe___is_likely_scanner_usb_blob
-    oqlos__hardware__scanner_probe___scan_input_matches --> oqlos__hardware__scanner_probe___is_likely_scanner_input
-    oqlos__hardware__scanner_probe___scan_diagnostics_usb_matches --> oqlos__hardware__scanner_probe___usb_product_blob
-    oqlos__hardware__scanner_probe___scan_diagnostics_usb_matches --> oqlos__hardware__scanner_probe___is_likely_scanner_usb_blob
 
     classDef highCC fill:#ff6b6b,stroke:#c92a2a,color:#fff
     classDef medCC fill:#ffd43b,stroke:#f08c00,color:#000
-    class setup_hardware_and_run_oql__detect_serial_devices,setup_hardware_and_run_oql__suggest_modbus_port,setup_hardware_and_run_oql__run_oql_scenario,oqlos__core___dsl_helpers___map_peripheral,oqlos__core___cql_tree_builder___parse_goal_line,oqlos__core___interpreter_actions___compare_values,oqlos__core___interpreter_actions___get_nested_value,oqlos__core___interpreter_actions__exec_action_func,oqlos__core___interpreter_actions__exec_action_shell,oqlos__core___interpreter_actions__exec_action_loop_block,oqlos__core___interpreter_actions__exec_action_set,oqlos__core___interpreter_actions___parse_motor2_duration_seconds,oqlos__core___interpreter_actions___parse_prefixed_motor2_setting,oqlos__core___interpreter_actions___motor2_build_plan,oqlos__core___interpreter_actions___try_exec_motor2_set,oqlos__core__oql_parser__tokenize,oqlos__core__oql_parser___expand_repeat_block_lines,oqlos__core__oql_parser___handle_block_header,oqlos__core__oql_parser___validate_oql_version,oqlos__core__oql_parser__parse_oql,oqlos__core__oql_parser__format_doc,oqlos__core__motor2_runtime__normalize_motor2_runtime_config,oqlos__core__parser___parse_runtime_line,oqlos__core__parser__parse_dsl_to_goal_with_issues,oqlos__core___func_resolver___collect_function_definitions,oqlos__core__executor___safe_resolve,oqlos__core__executor__ScenarioOrchestrator__execute_scenario,oqlos__core__executor__ScenarioOrchestrator__execute_step,oqlos__core__executor__ScenarioOrchestrator__update_dependent_sensors,oqlos__core___oql_adapter___load_includes medCC
+    class frontend__src__hooks__useUrlConfig__mergeParentContext,frontend__src__hooks__useUrlConfig__useUrlConfig,frontend__src__pages__MapEditor__readIntegrationMeta,frontend__src__pages__MapEditor__setMetaField,frontend__src__pages__MapEditor__editObjectActionArg,frontend__src__pages__MapEditor__renderObjectActionEditor,frontend__src__pages__HardwareRestart__loadPlan,frontend__src__pages__HardwareRestart__runCurrentStep,frontend__src__pages__HardwareRestart__runWithRetry,frontend__src__pages__HardwareRestart__attempt,frontend__src__pages__HardwareDemo__cancelled,frontend__src__utils__hardwareEventStream__normalizeHardwareEvent,frontend__src__utils__useSelectionCollapsePanel__RAIL_HOVER_OPEN_MS,frontend__src__utils__useSelectionCollapsePanel__RAIL_HOVER_CLOSE_MS,frontend__src__utils__useSelectionCollapsePanel__useSelectionCollapsePanel,frontend__src__utils__mapEditorFuncHardwareSummary__summarizeFuncToHardware,frontend__src__utils__mapEditorFuncHardwareSummary__objName,frontend__src__utils__mapEditorFuncHardwareSummary__actName,frontend__src__utils__hardware_wizard_steps__selectWizardProbeCandidate,frontend__src__context__AppConfigProvider__AppConfigContext,frontend__src__context__AppConfigProvider__AppConfigProvider,frontend__src__context__AppConfigProvider__handleEncoderCommand,frontend__src__api__hardwareApi__extractDiagnosticFailure,frontend__src__api__hardwareApi__request,oqlos__hardware__transport__manage_ops___run_diagnostic_command highCC
+    class setup_hardware_and_run_oql__detect_serial_devices,setup_hardware_and_run_oql__suggest_modbus_port,setup_hardware_and_run_oql__run_oql_scenario,frontend__src__hooks__useUrlConfig__resolveUserFromContextPayload,frontend__src__hooks__useUrlConfig__resolveViewportWidthPx,frontend__src__hooks__useUrlConfig__parseAppearanceParams,frontend__src__hooks__useUrlConfig__parseNavigationParams,frontend__src__hooks__useUrlConfig__onPop,frontend__src__hooks__useUrlConfig__onMessage,frontend__src__hooks__useUrlConfig__envelope,frontend__src__pages__MapEditor__ensureRequiredDefaultMappings,frontend__src__pages__MapEditor__isMapEmpty,frontend__src__pages__MapEditor__ensureParamConversion,frontend__src__pages__MapEditor__editParamConversionField,frontend__src__pages__MapEditor__editParamConversionAlgorithm,frontend__src__pages__MapEditor__editObjectActionBodyField,frontend__src__pages__MapEditor__editMotorRuntimeConfig,frontend__src__pages__MapEditor__reloadCurrent,frontend__src__pages__MapEditor__clearServerHardwareEvents,frontend__src__pages__MapEditor__applyAutoCollapse,frontend__src__pages__MapEditor__integrationMeta,frontend__src__pages__MapEditor__updateIntegrationMeta,frontend__src__pages__HardwareRestart__wizardStepSerialPort,frontend__src__pages__HardwareRestart__buildWizardProbePayload,frontend__src__pages__HardwareRestart__serialPort,frontend__src__pages__HardwareRestart__startOqlosAndRefreshPlan,frontend__src__pages__HardwareRestart__currentDeviceId,frontend__src__pages__HardwareDemo__sendDeviceNote,frontend__src__pages__HardwareDemo__playMelody,frontend__src__i18n__I18nProvider__I18nProvider medCC
