@@ -30,14 +30,14 @@ b59e5e6aa3655b323ce85a4f8f022f5d8d5558533466557742b30a66346f197c  ./api/hardware
 c6a9f441e83a294bd05eb209558eebb4eede5e1223cb3ee7088101b6c7c0372a  ./api/hardware_v3.py
 d0877fff8bfba5d3aa7ec8b88361c2fe4562b8afbd0b71c802baf176fc0a2c06  ./api/index.html
 8e5df053471d621528b2ed77dcfffab6ac6a1de62ea5f634a3ddc74a2bf97a39  ./api/logs.py
-76d98a59c63a8b49a56a66f7ffc3589aef32e879667999ebc3e7a0c4a3454262  ./api/main.py
+b5baa7e199fc5cc2ac0a849d7b918637bf182f4143907da6954847bf449a294a  ./api/main.py
 bce78caad92f094ee5e1222f3ec1443459839e5edaa7e5edbda4c3b51e2cbf78  ./api/oql_mqtt.py
 a09704dbe0650439bda43196247f705939178c99efc03f8fd9ae373d359d6ccc  ./api/peripherals.py
 0b3e212a3e2cd6653cfb3aac049e12bea44ea09301992baa0f712d55b6aee4f0  ./api/plugins.py
 f2ed0b6f110c58fa8014801cbaa86fc06ffa0a0c90fa786c79d542854b46dd19  ./api/scenarios.py
 e9c0f4590ce957ea72c21e9a0a7340a66b2b7f49b1216ae76f9317e662c274a0  ./api/state.py
 1f3e82b83a7c362d60b001a81e2bfd8afbaa2421f40c12c8e5491d74fd7fb6a0  ./api/static/editor.html
-8cdb40c897954a733b8041880f96dd8cfe11730c4e8de2f28a8818bc9f1532c4  ./api/static/hardware-status.html
+2406884ee678930e7bfeecba33f98ef145c2eb0a48a129c2a503c35fa78fdd1b  ./api/static/hardware-status.html
 504099177f39c172bce4f0a2026fe714b0c4498324fc412a2d9f81be981945c6  ./api/static/navigation.html
 c993d47c3db4660462a2fd0a2dc38b1d2422b66e88e9a477f3125d0cec340e9c  ./api/static/panel.html
 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  ./api/utils/__init__.py

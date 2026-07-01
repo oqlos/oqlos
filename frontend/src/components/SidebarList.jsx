@@ -33,6 +33,8 @@ export default function SidebarList({
     railLeave,
     panelEnter,
     panelLeave,
+    pinned,
+    togglePinned,
   } = useSelectionCollapsePanel({
     toggleId: collapseToggleId || "",
     storageKey: collapseStorageKey || `ui.${collapseToggleId || "sidebar"}-collapsed`,
@@ -106,6 +108,20 @@ export default function SidebarList({
           </button>
         )}
         <span style={styles.title}>{title}</span>
+        {collapseEnabled && (
+          <button
+            type="button"
+            style={{
+              ...styles.pinBtn,
+              opacity: pinned ? 1 : 0.4,
+            }}
+            onClick={togglePinned}
+            title={pinned ? t("sidebar.unpin", "Odepnij listę") : t("sidebar.pin", "Przypnij listę")}
+            aria-label={pinned ? t("sidebar.unpin", "Odepnij listę") : t("sidebar.pin", "Przypnij listę")}
+          >
+            📌
+          </button>
+        )}
         {(count !== undefined || items.length > 0) && (
           <span style={styles.count}>{count !== undefined ? count : items.length}</span>
         )}
@@ -219,6 +235,15 @@ const styles = {
     padding: "2px 6px",
     fontSize: rem.base,
     lineHeight: 1,
+  },
+  pinBtn: {
+    background: "none",
+    border: "none",
+    cursor: "pointer",
+    padding: "2px 6px",
+    fontSize: rem.sm,
+    lineHeight: 1,
+    transition: "opacity 0.15s ease",
   },
   header: {
     display: "flex",

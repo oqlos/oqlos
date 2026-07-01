@@ -31,10 +31,22 @@ export function useSelectionCollapsePanel({
   icon = "☰",
   badge,
 }) {
-  const [userCollapsed, setUserCollapsed] = useState(() => readStoredCollapsed(storageKey));
+  const [pinned, setPinned] = useState(() => {
+    try {
+      return localStorage.getItem(storageKey + "-pinned") === "true";
+    } catch (_) {
+      return false;
+    }
+  });
+  const [userCollapsed, setUserCollapsed] = useState(() => {
+    try {
+      if (localStorage.getItem(storageKey + "-pinned") === "true") return false;
+    } catch (_) {}
+    return readStoredCollapsed(storageKey);
+  });
   const [autoCollapsed, setAutoCollapsed] = useState(false);
   const timerRef = useRef(null);
-  const stowed = userCollapsed || autoCollapsed;
+  const stowed = (userCollapsed || autoCollapsed) && !pinned;
 
   const cancelAutoCollapse = useCallback(() => {
     if (timerRef.current) {
@@ -59,13 +71,14 @@ export function useSelectionCollapsePanel({
   const scheduleCollapse = useCallback(() => {
     cancelAutoCollapse();
     setHoverPreview(false);
+    if (pinned) return;
     if (userCollapsed) return;
     timerRef.current = setTimeout(() => {
       timerRef.current = null;
       setUserCollapsed(true);
       persistStoredCollapsed(storageKey, true);
     }, COLLAPSE_DELAY_MS);
-  }, [userCollapsed, cancelAutoCollapse, storageKey, setHoverPreview]);
+  }, [userCollapsed, cancelAutoCollapse, storageKey, setHoverPreview, pinned]);
 
   const expand = useCallback(() => {
     cancelAutoCollapse();
@@ -73,6 +86,20 @@ export function useSelectionCollapsePanel({
     setUserCollapsed(false);
     persistStoredCollapsed(storageKey, false);
   }, [cancelAutoCollapse, storageKey, setHoverPreview]);
+
+  const togglePinned = useCallback(() => {
+    setPinned((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem(storageKey + "-pinned", String(next));
+      } catch (_) {}
+      if (next) {
+        setUserCollapsed(false);
+        persistStoredCollapsed(storageKey, false);
+      }
+      return next;
+    });
+  }, [storageKey]);
 
   const toggleCollapsed = useCallback(() => {
     if (autoCollapsed) {
@@ -83,6 +110,12 @@ export function useSelectionCollapsePanel({
     setHoverPreview(false);
     setUserCollapsed((prev) => {
       const next = !prev;
+      if (next) {
+        setPinned(false);
+        try {
+          localStorage.setItem(storageKey + "-pinned", "false");
+        } catch (_) {}
+      }
       persistStoredCollapsed(storageKey, next);
       return next;
     });
@@ -129,5 +162,7 @@ export function useSelectionCollapsePanel({
     railLeave,
     panelEnter,
     panelLeave,
+    pinned,
+    togglePinned,
   };
 }

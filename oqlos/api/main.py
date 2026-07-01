@@ -320,9 +320,9 @@ async def _stop_oql_transport() -> None:
 
 # ============= Basic Endpoints =============
 
-@app.get("/", response_class=HTMLResponse)
-async def index_page():
-    return _serve_static_html("static/hardware-status.html", "OqlOS Hardware Status", "hardware-status.html not found.")
+@app.get("/")
+async def index_page(request: Request):
+    return RedirectResponse(_with_query("/ui/hardware-status", request))
 
 
 def _serve_static_html(relative_path: str, title: str, missing_message: str):
@@ -366,9 +366,9 @@ def _redirect_with_query(path: str, request: Request):
     return RedirectResponse(_with_query(path, request))
 
 
-@app.get("/hardware-status", response_class=HTMLResponse)
-async def hardware_status_page():
-    return _serve_static_html("static/hardware-status.html", "OqlOS Hardware Status", "hardware-status.html not found.")
+@app.get("/hardware-status")
+async def hardware_status_page(request: Request):
+    return RedirectResponse(_with_query("/ui/hardware-status", request))
 
 
 @app.get("/hardware-demo")

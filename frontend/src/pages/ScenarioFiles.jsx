@@ -8,7 +8,13 @@ import {
   fetchScenarioFilesList,
   saveScenarioFileContent,
 } from "../api/scenarioFilesApi";
-import { findFileByScenarioQuery, readScenarioFromUrl } from "../utils/scenarioFilesUrl";
+import {
+  findFileByScenarioQuery,
+  readScenarioFromUrl,
+  readScenarioSpeedFromUrl,
+  replaceScenarioFilesUrlState,
+  scenarioUrlPatchForFile,
+} from "../utils/scenarioFilesUrl";
 
 function formatLogTime() {
   return new Date().toLocaleTimeString();
@@ -26,7 +32,7 @@ export default function ScenarioFiles() {
   const [loadingFile, setLoadingFile] = useState(false);
   const [saving, setSaving] = useState(false);
   const [executing, setExecuting] = useState(false);
-  const [speed, setSpeed] = useState(1.0);
+  const [speed, setSpeed] = useState(() => readScenarioSpeedFromUrl() ?? 1.0);
 
   const isDirty = currentFile && content !== savedContent;
 
@@ -50,6 +56,7 @@ export default function ScenarioFiles() {
     if (!file) return;
     setCurrentFile(file);
     setLoadingFile(true);
+    replaceScenarioFilesUrlState(scenarioUrlPatchForFile(file, "edit"));
     try {
       setStatus({ message: t("scenarioFiles.statusLoading"), type: "info" });
       const text = await fetchScenarioFileContent(file.path);
@@ -82,6 +89,7 @@ export default function ScenarioFiles() {
   const saveFile = useCallback(async () => {
     if (!currentFile || saving) return;
     setSaving(true);
+    replaceScenarioFilesUrlState(scenarioUrlPatchForFile(currentFile, "save"));
     try {
       setStatus({ message: t("scenarioFiles.statusSaving"), type: "info" });
       await saveScenarioFileContent(currentFile.path, content);
@@ -99,6 +107,11 @@ export default function ScenarioFiles() {
   const runScenario = useCallback(async () => {
     if (!currentFile || executing) return;
     setExecuting(true);
+    replaceScenarioFilesUrlState({
+      ...scenarioUrlPatchForFile(currentFile, "execute"),
+      mode: "real",
+      speed,
+    });
     try {
       setStatus({ message: t("scenarioFiles.statusExecuting"), type: "info" });
       appendLog(
@@ -213,7 +226,17 @@ export default function ScenarioFiles() {
                   max="10"
                   step="0.1"
                   value={speed}
-                  onChange={(e) => setSpeed(Number.parseFloat(e.target.value) || 1)}
+                  onChange={(e) => {
+                    const nextSpeed = Number.parseFloat(e.target.value) || 1;
+                    setSpeed(nextSpeed);
+                    if (currentFile) {
+                      replaceScenarioFilesUrlState({
+                        ...scenarioUrlPatchForFile(currentFile, "configure"),
+                        mode: "real",
+                        speed: nextSpeed,
+                      });
+                    }
+                  }}
                 />
               </label>
             </div>

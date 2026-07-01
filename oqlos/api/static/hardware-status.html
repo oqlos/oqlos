@@ -76,6 +76,21 @@
     }
     button:hover { border-color: var(--accent); }
     button:disabled { opacity: .6; cursor: wait; }
+    .card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .card-head h2 { margin-bottom: 0; }
+    .copy-btn {
+      min-height: 26px;
+      padding: 0 10px;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .copy-btn.copied { border-color: var(--ok); color: #7be3a8; }
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -175,7 +190,10 @@
         <div class="row"><span class="muted">Transport</span><strong id="transport">direct-oqlos</strong></div>
       </article>
       <article class="card">
-        <h2>Health</h2>
+        <div class="card-head">
+          <h2>Health</h2>
+          <button class="copy-btn" type="button" data-copy-target="health">Copy</button>
+        </div>
         <pre id="health">-</pre>
       </article>
     </section>
@@ -196,17 +214,26 @@
 
     <section class="grid">
       <article class="card">
-        <h2>Serial Ports</h2>
+        <div class="card-head">
+          <h2>Serial Ports</h2>
+          <button class="copy-btn" type="button" data-copy-target="serial">Copy</button>
+        </div>
         <pre id="serial">-</pre>
       </article>
       <article class="card">
-        <h2>I2C Buses</h2>
+        <div class="card-head">
+          <h2>I2C Buses</h2>
+          <button class="copy-btn" type="button" data-copy-target="i2c">Copy</button>
+        </div>
         <pre id="i2c">-</pre>
       </article>
     </section>
 
     <section class="card">
-      <h2>USB Devices</h2>
+      <div class="card-head">
+        <h2>USB Devices</h2>
+        <button class="copy-btn" type="button" data-copy-target="usb">Copy</button>
+      </div>
       <pre id="usb">-</pre>
     </section>
   </main>
@@ -261,6 +288,34 @@
         btn.textContent = "Refresh";
       }
     }
+
+    async function copyLog(btn) {
+      const target = $(btn.dataset.copyTarget);
+      const text = target ? target.textContent : "";
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch (err) {
+        const area = document.createElement("textarea");
+        area.value = text;
+        area.style.position = "fixed";
+        area.style.opacity = "0";
+        document.body.appendChild(area);
+        area.select();
+        document.execCommand("copy");
+        document.body.removeChild(area);
+      }
+      const original = btn.textContent;
+      btn.textContent = "Copied!";
+      btn.classList.add("copied");
+      setTimeout(() => {
+        btn.textContent = original;
+        btn.classList.remove("copied");
+      }, 1500);
+    }
+
+    document.querySelectorAll(".copy-btn").forEach((btn) => {
+      btn.addEventListener("click", () => copyLog(btn));
+    });
 
     $("refresh").addEventListener("click", refresh);
     refresh();
