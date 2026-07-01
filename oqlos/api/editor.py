@@ -56,6 +56,46 @@ class ExecutionRequest(BaseModel):
     speed: float = 1.0
 
 
+def _normalize_oql_mode(mode: str) -> str:
+    raw = (mode or "").strip().lower().replace("_", "-")
+    if raw in {"", "real", "execute", "run"}:
+        return "execute"
+    if raw in {"dry-run", "dryrun", "simulation", "simulate", "mock"}:
+        return "dry-run"
+    if raw in {"validate", "validation"}:
+        return "validate"
+    return raw
+
+
+def _result_dict(result: Any) -> dict[str, Any]:
+    return result if isinstance(result, dict) else {}
+
+
+def _editor_response_from_oql(
+    *,
+    scenario_file: str,
+    response: Any,
+) -> dict[str, Any]:
+    result = _result_dict(getattr(response, "result", None))
+    ok = bool(getattr(response, "ok", False))
+    error = getattr(response, "error", None)
+    errors = list(result.get("errors") or [])
+    if error and error not in errors:
+        errors.append(str(error))
+    steps = result.get("steps") if isinstance(result.get("steps"), list) else []
+    return {
+        "status": "success" if ok else "error",
+        "ok": ok,
+        "scenario_name": result.get("source") or result.get("scenario_name") or scenario_file,
+        "steps_executed": result.get("total", len(steps)),
+        "duration_ms": result.get("duration_ms"),
+        "errors": errors,
+        "warnings": list(result.get("warnings") or []),
+        "node_id": getattr(response, "node_id", ""),
+        "result": result or None,
+    }
+
+
 def _safe_path(file_path: str) -> pathlib.Path:
     """Resolve file_path within SCENARIOS_DIR, raising HTTP 403 on escape."""
     try:
@@ -110,17 +150,36 @@ async def write_file_endpoint(file_path: str, file_content: FileContent) -> dict
 async def execute_scenario(request: ExecutionRequest) -> dict[str, Any]:
     """Execute a scenario file using oqlos runtime."""
     try:
-        from oqlos.core.interpreter import CqlInterpreter
+        from oqlos.api.oql_mqtt import get_oql_controller
 
         full_path = _safe_path(request.scenario_file)
         if not full_path.exists():
             raise HTTPException(status_code=404, detail="Scenario file not found")
 
         content = full_path.read_text(encoding="utf-8")
+        oql_mode = _normalize_oql_mode(request.mode)
+        skip_waits = request.speed > 2.0
+        controller = get_oql_controller()
+        if controller is not None:
+            response = await controller.execute(
+                content,
+                kind="script",
+                mode=oql_mode,
+                skip_waits=skip_waits,
+                timeout=max(15.0, min(300.0, 60.0 * max(request.speed, 1.0))),
+                source="editor",
+            )
+            return _editor_response_from_oql(
+                scenario_file=request.scenario_file,
+                response=response,
+            )
+
+        from oqlos.core.interpreter import CqlInterpreter
+
         interpreter = CqlInterpreter(
-            mode="execute",
+            mode=oql_mode,
             quiet=False,
-            skip_waits=request.speed > 2.0,
+            skip_waits=skip_waits,
         )
         doc = interpreter.parse(content, request.scenario_file)
         result = interpreter.execute(doc)

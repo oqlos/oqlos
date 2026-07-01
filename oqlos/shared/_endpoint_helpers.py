@@ -17,7 +17,13 @@ def serve_html_page(
 ) -> HTMLResponse | FileResponse:
     """Serve a static HTML file when present, else return a small fallback page."""
     if file_path.exists():
-        return FileResponse(file_path)
+        return FileResponse(
+            file_path,
+            headers={
+                "Cache-Control": "no-store, max-age=0",
+                "Pragma": "no-cache",
+            },
+        )
     return HTMLResponse(f"<h1>{missing_title}</h1><p>{missing_message}</p>")
 
 

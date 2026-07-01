@@ -32,10 +32,11 @@ def test_build_diagnosis_report_motors_error():
     payload = report_to_dict(report)
     assert payload["ok"] is False
     assert payload["devices"]["motor-tic249"]["status"] == "error"
-    host_actions = [
-        a for dev in payload["devices"].values() for a in dev["recommended_actions"] if a.get("scope") == "host"
-    ]
-    assert any(a["kind"] == "docker" for a in host_actions)
+    tic249_actions = payload["devices"]["motor-tic249"]["recommended_actions"]
+    assert any(
+        a["id"] == "tic249-ensure-sidecar" and a["scope"] == "oqlos" and a["auto_executable"]
+        for a in tic249_actions
+    )
 
 
 def test_motors_only_no_global_make_hardware_up():

@@ -193,12 +193,36 @@ async def _repair_dri0050_if_needed(
     repairs.append(await ensure_dri0050_sidecar(force_restart=force))
 
 
+async def _repair_tic249_if_needed(
+    targets: list[str],
+    health_before: dict[str, Any],
+    repairs: list[dict[str, Any]],
+) -> None:
+    """Restart hw-tic249.service if the lung motor plugin is in the repair target list."""
+    if "motor-tic249" not in targets:
+        return
+    from oqlos.hardware.sidecar_control import ensure_tic249_sidecar
+
+    entry = health_before.get("motor-tic249") if isinstance(health_before.get("motor-tic249"), dict) else {}
+    msg = str(entry.get("message") or "").lower()
+    force = (
+        "connection attempts failed" in msg
+        or "http 503" in msg
+        or "503" in msg
+        or "connect returned false" in msg
+        or "errno 19" in msg
+        or not entry
+    )
+    repairs.append(await ensure_tic249_sidecar(force_restart=force))
+
+
 async def execute_safe_recover(gateway: Any, report: DiagnosisReport) -> dict[str, Any]:
     """Reconnect failed plugins inside OqlOS; return host_actions for sidecars."""
     repairs: list[dict[str, Any]] = []
     health_before = await gateway.health()
     targets = _recover_targets(report, health_before)
     await _repair_dri0050_if_needed(targets, health_before, repairs)
+    await _repair_tic249_if_needed(targets, health_before, repairs)
     if not targets and report.requires_full_stack_restart:
         return {
             "ok": False,

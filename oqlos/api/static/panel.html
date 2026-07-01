@@ -43,9 +43,17 @@
   .card-fill .body{flex:1;display:flex;flex-direction:column;min-height:0}
   .card h2{font-size:13px;margin:0;padding:9px 12px;background:var(--panel2);border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
   .card .body{padding:11px 12px}
-  .group{margin-bottom:12px}
+  .groups-toolbar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:9px}
+  .groups-toolbar button{font-size:11px;padding:4px 8px}
+  .group{margin-bottom:12px;border:1px solid transparent;border-radius:8px;padding:2px 0}
   .group:last-child{margin-bottom:0}
   .group .glabel{font-size:12px;font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+  .group.is-collapsed{border-color:var(--border);background:rgba(255,255,255,.02);padding:6px 7px}
+  .group.is-collapsed .glabel{margin-bottom:0}
+  .group.is-collapsed .btns{display:none}
+  .group-tools{display:flex;align-items:center;gap:4px}
+  button.gtoggle{font-size:11px;padding:2px 7px;min-width:30px;background:var(--bg)}
+  .group-count{color:var(--muted);font-size:11px;font-weight:500}
   .dot{width:9px;height:9px;border-radius:50%}
   .btns{display:flex;flex-wrap:wrap;gap:6px}
   .btns button{font-size:12px;padding:5px 9px}
@@ -59,6 +67,8 @@
   .snip-palette .sg{margin-bottom:9px}
   .snip-palette .sgl{font-size:11px;font-weight:600;color:var(--muted);margin-bottom:5px;display:flex;align-items:center;gap:5px}
   .snip-palette .sgl .dot{width:8px;height:8px;border-radius:50%;flex:none}
+  .snip-palette .sg.is-collapsed .snip-items{display:none}
+  button.snip-toggle{margin-left:auto;font-size:10px;padding:1px 6px;background:var(--panel2)}
   .snip-btn{display:block;width:100%;text-align:left;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;padding:4px 7px;margin-bottom:3px;border:1px solid var(--border);border-radius:5px;background:var(--panel2);color:var(--text);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .snip-btn:hover{border-color:#3b82f6;background:var(--panel)}
   @media(max-width:900px){.editor-wrap{flex-direction:column}.snip-palette{width:auto;max-height:170px}}
@@ -122,7 +132,13 @@
   <div class="col">
     <div class="card">
       <h2>Predefiniowane grupy komend</h2>
-      <div class="body" id="groups"></div>
+      <div class="body">
+        <div class="groups-toolbar">
+          <button onclick="setAllGroupsCollapsed(false)" title="Rozwiń wszystkie grupy komend">Rozwiń grupy</button>
+          <button onclick="setAllGroupsCollapsed(true)" title="Zwiń wszystkie grupy komend">Zwiń grupy</button>
+        </div>
+        <div id="groups"></div>
+      </div>
       <div class="body" style="border-top:1px solid var(--border)">
         <span class="hint">● = akcja na realnym sprzęcie (w trybie <b>Wykonaj</b>). Komendy OQL respektują przełącznik trybu poniżej.</span>
       </div>
@@ -133,10 +149,11 @@
       <div class="body">
         <select id="scenarioSel" onchange="loadScenario()"></select>
         <div class="row" style="margin-top:8px">
+          <button onclick="loadEditorFileScenarios(true)" title="Odśwież listę plików z /api/v1/editor/files">⟳ Odśwież pliki</button>
           <button onclick="saveScenario()" title="Zapisz zawartość edytora jako własny scenariusz (w przeglądarce)">💾 Zapisz bieżący</button>
           <button onclick="deleteScenario()" title="Usuń wybrany własny scenariusz [moje]">🗑 Usuń wybrany</button>
         </div>
-        <div class="hint">Wybór wczytuje scenariusz do edytora. Lista: szablony wbudowane + <b>[moje]</b> (zapisane w przeglądarce) + z serwera.</div>
+        <div class="hint"><span id="scenarioListStatus">Ładowanie plików z /api/v1/editor/files…</span> Lista plików jest ta sama co w <code>/ui/scenario-files</code>; szablony panelu i własne zapisy są niżej.</div>
       </div>
     </div>
 
@@ -198,6 +215,36 @@
 </div>
 
 <script>
+const VALVE_IDS = [
+  "valve-1", "valve-2", "valve-3", "valve-4",
+  "valve-5", "valve-6", "valve-7", "valve-8",
+  "valve-nc", "valve-sc", "valve-wc",
+];
+const SENSOR_IDS = ["ai01","ai02","ai03","ai04","ai05","ai06","ai07","ai08"];
+const HUI_HOLD_KEYS = [
+  ["head-inflate", "Głowa +"],
+  ["head-deflate", "Głowa -"],
+  ["lp-pwm-plus5", "LP +5"],
+  ["lp-pwm-plus10", "LP +10"],
+  ["lp-pwm-minus5", "LP -5"],
+  ["lp-pwm-minus10", "LP -10"],
+  ["lp-bleed", "LP bleed"],
+];
+
+function valveCommandItems(){
+  return VALVE_IDS.flatMap(id=>[
+    {label:id+" OPEN", kind:"oql", oql:`SET '${id}' 'open'`, act:true},
+    {label:id+" CLOSE", kind:"oql", oql:`SET '${id}' 'closed'`, act:true},
+  ]);
+}
+
+function huiHoldItems(){
+  return HUI_HOLD_KEYS.flatMap(([key,label])=>[
+    {label:label+" START", kind:"manage", verb:"hui-hold-start", args:{key}, act:true},
+    {label:label+" STOP", kind:"manage", verb:"hui-hold-stop", args:{key}, act:true},
+  ]);
+}
+
 const GROUPS = [
   {title:"Diagnostyka", color:"#3b82f6", items:[
     {label:"Health", kind:"manage", verb:"health"},
@@ -207,14 +254,7 @@ const GROUPS = [
     {label:"Temperatura", kind:"manage", verb:"temperature"},
     {label:"Recover (safe)", kind:"manage", verb:"recover", args:{scope:"safe"}, act:true},
   ]},
-  {title:"Zawory", color:"#10b981", items:[
-    {label:"valve-1 OPEN", kind:"oql", oql:"SET 'valve-1' 'open'", act:true},
-    {label:"valve-1 CLOSE", kind:"oql", oql:"SET 'valve-1' 'closed'", act:true},
-    {label:"valve-2 OPEN", kind:"oql", oql:"SET 'valve-2' 'open'", act:true},
-    {label:"valve-2 CLOSE", kind:"oql", oql:"SET 'valve-2' 'closed'", act:true},
-    {label:"NC OPEN", kind:"oql", oql:"SET 'valve-NC' 'open'", act:true},
-    {label:"NC CLOSE", kind:"oql", oql:"SET 'valve-NC' 'closed'", act:true},
-  ]},
+  {title:"Zawory", color:"#10b981", items:valveCommandItems()},
   {title:"Pompa", color:"#f59e0b", items:[
     {label:"0%", kind:"oql", oql:"SET 'pump' 0", act:true},
     {label:"25%", kind:"oql", oql:"SET 'pump' 25", act:true},
@@ -222,16 +262,23 @@ const GROUPS = [
     {label:"100%", kind:"oql", oql:"SET 'pump' 100", act:true},
     {label:"STOP", kind:"manage", verb:"pump", args:{power_pct:0}, act:true},
   ]},
-  {title:"Płuco (Tic T249)", color:"#a855f7", items:[
+  {title:"Płuco (Tic T249)", color:"#a855f7", runAll:false, items:[
     {label:"Status", kind:"manage", verb:"diagnostic-command", args:{peripheral_id:"motor-tic249", command:"status"}},
+    {label:"AL status", kind:"manage", verb:"artificial-lung-status"},
+    {label:"P-Z 500 x5", kind:"manage", verb:"lung", args:{steps:500, speed:100000, cycles:5, pause:0.5}, act:true},
+    {label:"P-Z 1000 x3", kind:"manage", verb:"lung", args:{steps:1000, speed:100000, cycles:3, pause:0.5}, act:true},
+    {label:"HUI AL START", kind:"manage", verb:"hui-al-start", act:true},
+    {label:"HUI AL STOP", kind:"manage", verb:"hui-al-stop", act:true},
     {label:"Stop", kind:"manage", verb:"lung-stop", act:true},
     {label:"Disable", kind:"manage", verb:"lung-disable", act:true},
   ]},
-  {title:"Sensory (ADC)", color:"#06b6d4", items:[
-    {label:"AI01", kind:"manage", verb:"sensor", args:{sensor_id:"ai01"}},
-    {label:"AI02", kind:"manage", verb:"sensor", args:{sensor_id:"ai02"}},
-    {label:"AI03", kind:"manage", verb:"sensor", args:{sensor_id:"ai03"}},
+  {title:"HUI maska", color:"#84cc16", runAll:false, items:[
+    ...huiHoldItems(),
+    {label:"Wszystko STOP", kind:"manage", verb:"hui-shutdown", act:true},
   ]},
+  {title:"Sensory (ADC)", color:"#06b6d4", items:SENSOR_IDS.map(id=>(
+    {label:id.toUpperCase(), kind:"manage", verb:"sensor", args:{sensor_id:id}}
+  ))},
   {title:"Diagnostyka RPi3 / USB", color:"#ec4899", items:[
     {label:"Lista urządzeń USB", kind:"manage", verb:"usb-list"},
     {label:"Diagnostyka Pi", kind:"manage", verb:"pi-diagnostics"},
@@ -251,12 +298,10 @@ const OQL_SNIPPETS = [
     {label:"SET WAIT '500 ms'", t:"  SET WAIT '500 ms'\n"},
   ]},
   {title:"Zawory", color:"#10b981", items:[
-    {label:"valve-1 open", t:"  SET 'valve-1' 'open'\n"},
-    {label:"valve-1 closed", t:"  SET 'valve-1' 'closed'\n"},
-    {label:"valve-2 open", t:"  SET 'valve-2' 'open'\n"},
-    {label:"valve-2 closed", t:"  SET 'valve-2' 'closed'\n"},
-    {label:"valve-NC open", t:"  SET 'valve-NC' 'open'\n"},
-    {label:"valve-NC closed", t:"  SET 'valve-NC' 'closed'\n"},
+    ...VALVE_IDS.flatMap(id=>[
+      {label:id+" open", t:`  SET '${id}' 'open'\n`},
+      {label:id+" closed", t:`  SET '${id}' 'closed'\n`},
+    ]),
   ]},
   {title:"Pompa", color:"#f59e0b", items:[
     {label:"pump 0%", t:"  SET 'pump' 0\n"},
@@ -264,11 +309,14 @@ const OQL_SNIPPETS = [
     {label:"pump 50%", t:"  SET 'pump' 50\n"},
     {label:"pump 100%", t:"  SET 'pump' 100\n"},
   ]},
-  {title:"Sensory (ADC)", color:"#06b6d4", items:[
-    {label:"GET ai01", t:"  GET 'ai01'\n"},
-    {label:"GET ai02", t:"  GET 'ai02'\n"},
-    {label:"GET ai03", t:"  GET 'ai03'\n"},
+  {title:"Płuco", color:"#a855f7", items:[
+    {label:"lung start", t:"  SET 'lung' 5\n"},
+    {label:"lung stop", t:"  SET 'lung' 0\n"},
+    {label:"lung wait stop", t:"  SET 'lung' 5\n  SET WAIT '500 ms'\n  SET 'lung' 0\n"},
   ]},
+  {title:"Sensory (ADC)", color:"#06b6d4", items:SENSOR_IDS.map(id=>(
+    {label:"GET "+id, t:`  GET '${id}'\n`}
+  ))},
 ];
 
 const DEFAULT_EDITOR_OQL = `VERSION: 4
@@ -290,19 +338,54 @@ function insertAtCursor(text){
   ta.focus();
 }
 
+const GROUP_COLLAPSE_KEY='oqlos_panel_collapsed_groups';
+const SNIP_COLLAPSE_KEY='oqlos_panel_collapsed_snippets';
+function readCollapsedMap(key){
+  try{ return JSON.parse(localStorage.getItem(key)||'{}') || {}; }catch(e){ return {}; }
+}
+function writeCollapsedMap(key, map){
+  try{ localStorage.setItem(key, JSON.stringify(map)); }catch(e){}
+}
+function isCollapsed(key, title){
+  return !!readCollapsedMap(key)[title];
+}
+function setCollapsed(key, title, collapsed){
+  const map=readCollapsedMap(key);
+  if(collapsed) map[title]=true; else delete map[title];
+  writeCollapsedMap(key, map);
+}
+function toggleGroup(title){
+  setCollapsed(GROUP_COLLAPSE_KEY, title, !isCollapsed(GROUP_COLLAPSE_KEY, title));
+  renderGroups();
+}
+function setAllGroupsCollapsed(collapsed){
+  const map={};
+  if(collapsed) GROUPS.forEach(g=>{ map[g.title]=true; });
+  writeCollapsedMap(GROUP_COLLAPSE_KEY, map);
+  renderGroups();
+}
+function toggleSnippetGroup(title){
+  setCollapsed(SNIP_COLLAPSE_KEY, title, !isCollapsed(SNIP_COLLAPSE_KEY, title));
+  renderSnippets();
+}
+
 function renderSnippets(){
   const c = $('#snippets'); if(!c) return; c.innerHTML='';
   OQL_SNIPPETS.forEach(g=>{
-    const wrap=document.createElement('div'); wrap.className='sg';
+    const collapsed=isCollapsed(SNIP_COLLAPSE_KEY, g.title);
+    const wrap=document.createElement('div'); wrap.className='sg'+(collapsed?' is-collapsed':'');
     const lab=document.createElement('div'); lab.className='sgl';
-    lab.innerHTML=`<span class="dot" style="background:${g.color}"></span>${esc(g.title)}`;
+    lab.innerHTML=`<span class="dot" style="background:${g.color}"></span>${esc(g.title)}`
+      +`<button class="snip-toggle" type="button" title="${collapsed?'Rozwiń':'Zwiń'} snippet" onclick="toggleSnippetGroup('${escJsAttr(g.title)}')">${collapsed?'▸':'▾'}</button>`;
     wrap.appendChild(lab);
+    const items=document.createElement('div'); items.className='snip-items';
     g.items.forEach(it=>{
       const b=document.createElement('button'); b.className='snip-btn';
       b.textContent=it.label; b.title='Wstaw: '+it.t.trim();
       b.onclick=()=>insertAtCursor(it.t);
-      wrap.appendChild(b);
+      items.appendChild(b);
     });
+    wrap.appendChild(items);
     c.appendChild(wrap);
   });
 }
@@ -409,6 +492,8 @@ function summarize(env){
 }
 
 function esc(s){ return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+function escAttr(s){ return esc(s).replace(/"/g,'&quot;'); }
+function escJsAttr(s){ return escAttr(String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'")); }
 
 // Wszystkie wyniki sesji (do pobrania jako JSON).
 const RESULTS = [];
@@ -515,23 +600,33 @@ function runItem(it){
 
 function renderGroups(){
   const c=$('#groups'); c.innerHTML='';
-  for(const g of GROUPS){
+  GROUPS.forEach((g,gi)=>{
+    const collapsed=isCollapsed(GROUP_COLLAPSE_KEY, g.title);
+    const canRunGroup=g.runAll!==false;
     const div=document.createElement('div'); div.className='group';
-    const btns=g.items.map((it,i)=>`<button class="${it.act?'act':''}" data-g="${g.title}" data-i="${i}" title="${it.kind==='manage'?'manage: '+it.verb:it.oql}">${it.label}</button>`).join('');
-    div.innerHTML=`<div class="glabel"><span class="dot" style="background:${g.color}"></span>${g.title}`
-      +`<span style="flex:1"></span><button class="grun" data-grp="${g.title}" title="Uruchom wszystkie komendy w tej grupie po kolei">▶ grupa</button></div>`
+    if(collapsed) div.classList.add('is-collapsed');
+    const btns=g.items.map((it,i)=>{
+      const title=it.kind==='manage' ? `manage: ${it.verb}${it.args?' '+JSON.stringify(it.args):''}` : it.oql;
+      return `<button class="${it.act?'act':''}" data-gi="${gi}" data-i="${i}" title="${escAttr(title)}">${esc(it.label)}</button>`;
+    }).join('');
+    div.innerHTML=`<div class="glabel"><span class="dot" style="background:${g.color}"></span>${esc(g.title)} <span class="group-count">(${g.items.length})</span>`
+      +`<span style="flex:1"></span><span class="group-tools">`
+      +(canRunGroup?`<button class="grun" data-gi="${gi}" title="Uruchom wszystkie komendy w tej grupie po kolei">▶ grupa</button>`:'')
+      +`<button class="gtoggle" type="button" data-gi="${gi}" title="${collapsed?'Rozwiń grupę':'Zwiń grupę'}">${collapsed?'▸':'▾'}</button></span></div>`
       +`<div class="btns">${btns}</div>`;
     c.appendChild(div);
-  }
-  c.querySelectorAll('.btns button').forEach(b=>{
-    b.onclick=()=>{ const g=GROUPS.find(x=>x.title===b.dataset.g); runItem(g.items[+b.dataset.i]); };
   });
-  c.querySelectorAll('button.grun').forEach(b=>{ b.onclick=()=>runGroup(b.dataset.grp, b); });
+  c.querySelectorAll('.btns button').forEach(b=>{
+    b.onclick=()=>{ const g=GROUPS[+b.dataset.gi]; if(g) runItem(g.items[+b.dataset.i]); };
+  });
+  c.querySelectorAll('button.grun').forEach(b=>{ b.onclick=()=>runGroup(+b.dataset.gi, b); });
+  c.querySelectorAll('button.gtoggle').forEach(b=>{ b.onclick=()=>toggleGroup(GROUPS[+b.dataset.gi].title); });
 }
 
-async function runGroup(title, btn){
-  const g=GROUPS.find(x=>x.title===title); if(!g) return;
-  if(g.items.some(it=>it.act) && !confirm('Grupa „'+title+'" zawiera akcje na realnym sprzęcie. Uruchomić wszystkie po kolei?')) return;
+async function runGroup(groupRef, btn){
+  const g=typeof groupRef==='number' ? GROUPS[groupRef] : GROUPS.find(x=>x.title===groupRef);
+  if(!g || g.runAll===false) return;
+  if(g.items.some(it=>it.act) && !confirm('Grupa „'+g.title+'" zawiera akcje na realnym sprzęcie. Uruchomić wszystkie po kolei?')) return;
   const o=btn?btn.textContent:''; if(btn){ btn.disabled=true; btn.textContent='… działa'; }
   for(const it of g.items){ await runItem(it); await new Promise(r=>setTimeout(r,250)); }
   if(btn){ btn.textContent=o; btn.disabled=false; }
@@ -556,14 +651,44 @@ let FILE_SCENARIOS = [];
 const _MY_KEY='oqlos_panel_scenarios';
 function myScenarios(){ try{ return JSON.parse(localStorage.getItem(_MY_KEY)||'[]'); }catch(e){ return []; } }
 function setMyScenarios(arr){ try{ localStorage.setItem(_MY_KEY, JSON.stringify(arr)); }catch(e){ banner('Nie udało się zapisać (localStorage).'); } }
+function setScenarioListStatus(message){
+  const el=$('#scenarioListStatus');
+  if(el) el.textContent=message;
+}
+function fileScenarioLabel(file){
+  const name=String(file.name||file.path||'?');
+  const path=String(file.path||name);
+  return path && path!==name ? `${name} — ${path}` : name;
+}
 function rebuildScenarios(){
-  const mine=myScenarios().map(s=>({name:'[moje] '+s.name, oql:s.oql, _my:true, _name:s.name}));
-  SCENARIOS=BUILTIN_SCENARIOS.concat(mine).concat(FILE_SCENARIOS).concat(SERVER_SCENARIOS);
+  const placeholder=BUILTIN_SCENARIOS[0];
+  const mine=myScenarios().map(s=>({name:s.name, oql:s.oql, _my:true, _name:s.name, _group:'Moje scenariusze'}));
+  const builtins=BUILTIN_SCENARIOS.slice(1).map(s=>({...s, _group:'Szablony panelu'}));
+  SCENARIOS=[placeholder].concat(FILE_SCENARIOS).concat(mine).concat(builtins).concat(SERVER_SCENARIOS);
   renderScenarios();
 }
 function renderScenarios(){
   const sel=$('#scenarioSel'); sel.innerHTML='';
-  SCENARIOS.forEach((s,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=s.name; sel.appendChild(o); });
+  let currentGroup='';
+  let parent=sel;
+  SCENARIOS.forEach((s,i)=>{
+    if(s._group){
+      if(s._group!==currentGroup){
+        currentGroup=s._group;
+        parent=document.createElement('optgroup');
+        parent.label=currentGroup;
+        sel.appendChild(parent);
+      }
+    }else{
+      currentGroup='';
+      parent=sel;
+    }
+    const o=document.createElement('option');
+    o.value=i;
+    o.textContent=s.name;
+    if(s._filePath) o.title=s._filePath;
+    parent.appendChild(o);
+  });
 }
 async function loadScenario(){
   const i=+$('#scenarioSel').value; const s=SCENARIOS[i];
@@ -651,23 +776,32 @@ async function loadServerScenarios(){
   try{
     const r=await fetch('/api/v1/scenarios/fetch'); if(!r.ok) return;
     const list=await r.json(); if(!Array.isArray(list)) return;
-    SERVER_SCENARIOS=list.map(s=>({name:'[serwer] '+(s.id||s.name||'?'),
-      oql:(typeof s.source==='string'&&s.source)?s.source:null, _srv:s}))
+    SERVER_SCENARIOS=list.map(s=>({name:(s.id||s.name||'?'),
+      oql:(typeof s.source==='string'&&s.source)?s.source:null, _srv:s, _group:'Serwer DB'}))
       .filter(s=>s.name && s.oql);
     rebuildScenarios();
   }catch(e){}
 }
 
-async function loadEditorFileScenarios(){
+async function loadEditorFileScenarios(showBanner=false){
+  setScenarioListStatus('Ładowanie plików z /api/v1/editor/files…');
   try{
-    const r=await fetch('/api/v1/editor/files'); if(!r.ok) return;
+    const r=await fetch('/api/v1/editor/files?ts='+Date.now(), {cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
     const data=await r.json(); const files=Array.isArray(data.files)?data.files:[];
     FILE_SCENARIOS=files
       .filter(f=>f && !f.is_directory && /\.oql$/i.test(String(f.name||'')))
       .sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'pl',{sensitivity:'base'}))
-      .map(f=>({name:'[plik] '+f.name, oql:null, _file:true, _filePath:f.path}));
+      .map(f=>({name:fileScenarioLabel(f), oql:null, _file:true, _filePath:f.path, _group:'Pliki scenariuszy (/ui/scenario-files)'}));
     rebuildScenarios();
-  }catch(e){}
+    setScenarioListStatus(`Wczytano ${FILE_SCENARIOS.length} plików .oql z /api/v1/editor/files.`);
+    if(showBanner) banner(`Wczytano ${FILE_SCENARIOS.length} plików scenariuszy.`);
+  }catch(e){
+    FILE_SCENARIOS=[];
+    rebuildScenarios();
+    setScenarioListStatus('Nie udało się wczytać plików .oql: '+e.message);
+    banner('Nie udało się wczytać listy plików scenariuszy: '+e.message);
+  }
 }
 
 async function refreshStatus(){

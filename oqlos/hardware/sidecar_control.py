@@ -15,6 +15,11 @@ DRI0050_UNIT = "dri0050-motor-api"
 DRI0050_HEALTH_URL = os.environ.get("DRI0050_URL", "http://127.0.0.1:8203").rstrip("/") + "/health"
 _DRI0050_API_PORT = 8203
 
+TIC249_UNIT = "hw-tic249"
+_TIC249_BASE_URL = os.environ.get("TIC249_URL", "http://127.0.0.1:8205").rstrip("/")
+TIC249_STATUS_URL = _TIC249_BASE_URL + "/api/status"
+TIC249_CONNECT_URL = _TIC249_BASE_URL + "/api/connect"
+
 
 def _modbus_serial_candidates() -> set[str]:
     """Ports already used by Modbus plugins — do not assign to DRI0050 pump."""
@@ -219,4 +224,88 @@ async def ensure_dri0050_sidecar(*, force_restart: bool = False) -> dict[str, An
             )
         else:
             result["error"] = "dri0050-motor-api nie odpowiada na :8203 po systemd-run"
+    return result
+
+
+async def _tic249_status(timeout: float = 1.5) -> dict[str, Any] | None:
+    try:
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            resp = await client.get(TIC249_STATUS_URL)
+        if resp.status_code < 300:
+            return resp.json()
+    except (httpx.HTTPError, OSError, ValueError):
+        pass
+    return None
+
+
+async def _tic249_connect(timeout: float = 2.0) -> None:
+    """Ask the sidecar to (re)open its USB handle to the Pololu Tic — no motion commands."""
+    try:
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            await client.post(TIC249_CONNECT_URL, json={})
+    except (httpx.HTTPError, OSError):
+        pass
+
+
+async def _http_tic249_listening(*, attempts: int = 4, timeout: float = 1.5) -> bool:
+    """Sidecar process up (any HTTP response from /api/status), regardless of USB connect state."""
+    for _ in range(attempts):
+        if await _tic249_status(timeout=timeout) is not None:
+            return True
+        await asyncio.sleep(0.25)
+    return False
+
+
+async def _http_tic249_connected(*, attempts: int = 12, timeout: float = 1.5) -> bool:
+    """Sidecar reachable AND reports connected=true to the Pololu Tic USB device."""
+    for _ in range(attempts):
+        status = await _tic249_status(timeout=timeout)
+        if isinstance(status, dict) and bool(status.get("connected")):
+            return True
+        await _tic249_connect(timeout=timeout)
+        await asyncio.sleep(0.25)
+    return False
+
+
+async def ensure_tic249_sidecar(*, force_restart: bool = False) -> dict[str, Any]:
+    """Restart hw-tic249.service (systemd --user) and confirm the Pololu Tic reconnects.
+
+    Mirrors ensure_dri0050_sidecar: process-lifecycle + USB-handle recovery only,
+    never issues motion/energize commands to the lung motor.
+    """
+    if not force_restart:
+        if await _http_tic249_connected(attempts=4):
+            return {"ok": True, "step": "ensure-tic249-sidecar", "method": "already-connected"}
+        if await _http_tic249_listening(attempts=2):
+            force_restart = True
+
+    if not shutil.which("systemctl"):
+        return {"ok": False, "step": "ensure-tic249-sidecar", "error": "systemctl not available"}
+
+    await _run_cmd("systemctl", "--user", "reset-failed", f"{TIC249_UNIT}.service", timeout=10.0)
+    rc, out, err = await _run_cmd("systemctl", "--user", "restart", f"{TIC249_UNIT}.service", timeout=15.0)
+
+    listening = await _http_tic249_listening(attempts=24)
+    if not listening:
+        return {
+            "ok": False,
+            "step": "ensure-tic249-sidecar",
+            "method": "systemctl-restart",
+            "exit_code": rc,
+            "stdout": out[-800:],
+            "stderr": err[-800:],
+            "error": f"{TIC249_UNIT}.service nie odpowiada na :8205 po restarcie",
+        }
+
+    connected = await _http_tic249_connected(attempts=24)
+    result: dict[str, Any] = {
+        "ok": connected,
+        "step": "ensure-tic249-sidecar",
+        "method": "systemctl-restart",
+        "exit_code": rc,
+        "verified": connected,
+    }
+    if not connected:
+        result["error"] = "Pololu Tic USB nie połączył się po restarcie hw-tic249.service"
+        result["hint"] = "Sprawdź kabel USB Tic T249 (1ffb:00c9) i czy urządzenie jest zasilane."
     return result

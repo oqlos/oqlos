@@ -49,17 +49,21 @@ def add_tic249_device_actions(
         return
     if "errno 19" in msg:
         dev.issues.append("USB Tic — martwy handle po replug.")
+    if "connection attempts failed" in msg or "503" in msg or "connect returned false" in msg:
+        dev.issues.append(
+            "Sidecar hw-tic249 (:8205) niedostępny — OqlOS zrestartuje usługę systemd --user."
+        )
     dev.recommended_actions.extend(
         [
             DiagnosisAction(
-                id="tic249-docker-restart",
+                id="tic249-ensure-sidecar",
                 device_id=dev.device_id,
-                label="Restart hw-tic249 (Docker)",
-                kind="docker",
-                priority=20,
-                command="docker restart hw-tic249",
-                auto_executable=bool(host_recover),
-                scope="host",
+                label="Restart hw-tic249.service (OqlOS)",
+                kind="oqlos",
+                priority=5,
+                auto_executable=True,
+                scope="oqlos",
+                detail="systemctl --user restart hw-tic249.service, potem reconnect USB Tic (bez ruchu silnika).",
             ),
             DiagnosisAction(
                 id="tic249-oqlos-reconnect",

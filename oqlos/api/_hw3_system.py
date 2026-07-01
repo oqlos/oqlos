@@ -102,8 +102,8 @@ async def hardware_runtime_make_v3(payload: dict[str, object] = Body(default_fac
 
 @sub_router.post("/modbus/wizard/probe-isolated")
 async def hardware_modbus_wizard_probe_isolated_v3(payload: dict[str, Any] = Body(default_factory=dict)) -> dict[str, Any]:
-    from oqlos.api import hardware as hw
-    return await hw.hardware_modbus_wizard_probe_isolated(
+    from oqlos.api import hardware_modbus_routes as modbus_hw
+    return await modbus_hw.hardware_modbus_wizard_probe_isolated(
         serial_port=str(payload.get("serial_port") or ""),
         baudrates=payload.get("baudrates") if isinstance(payload.get("baudrates"), list) else None,
         parities=payload.get("parities") if isinstance(payload.get("parities"), list) else None,
@@ -114,8 +114,8 @@ async def hardware_modbus_wizard_probe_isolated_v3(payload: dict[str, Any] = Bod
 
 @sub_router.post("/modbus/wizard/program-isolated")
 async def hardware_modbus_wizard_program_isolated_v3(payload: dict[str, Any] = Body(default_factory=dict)) -> dict[str, Any]:
-    from oqlos.api import hardware as hw
-    return await hw.hardware_modbus_wizard_program_isolated(
+    from oqlos.api import hardware_modbus_routes as modbus_hw
+    return await modbus_hw.hardware_modbus_wizard_program_isolated(
         serial_port=str(payload.get("serial_port") or ""),
         current_device_id=int(payload.get("current_device_id") or 1),
         new_device_id=int(payload.get("new_device_id") or 1),
