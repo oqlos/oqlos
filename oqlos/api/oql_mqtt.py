@@ -15,9 +15,10 @@ import json
 import logging
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, Field
 
+from oqlos.errors import OqlosError
 from oqlos.hardware.transport.mqtt_oql_bridge import OqlMqttController
 
 logger = logging.getLogger(__name__)
@@ -64,7 +65,7 @@ class OqlExecuteResponse(BaseModel):
 @router.post("/execute", response_model=OqlExecuteResponse)
 async def execute_oql(req: OqlExecuteRequest) -> OqlExecuteResponse:
     if _controller is None:
-        raise HTTPException(status_code=503, detail="OQL MQTT transport is disabled (role=off)")
+        raise OqlosError(code="api_oql_transport_disabled", status_code=503)
     timeout = (req.timeout_ms / 1000.0) if req.timeout_ms else None
     resp = await _controller.execute(
         req.oql,
@@ -88,7 +89,7 @@ async def manage_hardware(req: OqlManageRequest) -> OqlExecuteResponse:
     sensor, lung, lung-stop, lung-disable, rtc-status, rtc-command, temperature.
     """
     if _controller is None:
-        raise HTTPException(status_code=503, detail="OQL MQTT transport is disabled (role=off)")
+        raise OqlosError(code="api_oql_transport_disabled", status_code=503)
     timeout = (req.timeout_ms / 1000.0) if req.timeout_ms else None
     resp = await _controller.manage(req.verb, req.args, timeout=timeout)
     return OqlExecuteResponse(ok=resp.ok, result=resp.result, error=resp.error, node_id=resp.node_id)

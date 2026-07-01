@@ -5,10 +5,11 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Query
 
 from oqlos.api.hardware_gateway import get_hardware_gateway
 from oqlos.api.hardware_identify import hardware_identify
+from oqlos.errors import OqlosError
 
 router = APIRouter(tags=["hardware-diagnosis"])
 
@@ -42,7 +43,11 @@ async def hardware_recover_route(
     from oqlos.hardware.diagnosis import build_diagnosis_report, execute_safe_recover, report_to_dict
 
     if scope.strip().lower() != "safe":
-        raise HTTPException(status_code=400, detail="Only scope=safe is supported via API")
+        raise OqlosError(
+            code="api_invalid_recover_scope",
+            status_code=400,
+            detail={"scope": scope},
+        )
     identify_payload = await hardware_identify(scan="never")
     report = build_diagnosis_report(identify_payload)
     execution = await execute_safe_recover(get_hardware_gateway(), report)

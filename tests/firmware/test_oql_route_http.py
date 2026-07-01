@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from oqlos.api.oql_mqtt import router, set_oql_controller
+from oqlos.errors.fastapi_integration import install_oqlos_error_handler
 from oqlos.hardware.transport.mqtt_oql_bridge import OqlResponse
 
 
@@ -29,6 +30,7 @@ class _FakeController:
 def client():
     app = FastAPI()
     app.include_router(router)
+    install_oqlos_error_handler(app)
     return TestClient(app)
 
 
@@ -36,6 +38,7 @@ def test_execute_returns_503_when_transport_disabled(client):
     set_oql_controller(None)
     resp = client.post("/api/v1/oql/execute", json={"oql": "SET 'VALVE-NC' 'open'"})
     assert resp.status_code == 503
+    assert resp.json()["code"] == "api_oql_transport_disabled"
 
 
 def test_execute_dispatches_to_controller(client):
@@ -96,6 +99,7 @@ def test_manage_returns_503_when_transport_disabled(client):
     set_oql_controller(None)
     resp = client.post("/api/v1/oql/manage", json={"verb": "usb-list"})
     assert resp.status_code == 503
+    assert resp.json()["code"] == "api_oql_transport_disabled"
 
 
 def test_manage_dispatches_verb_and_args(client):

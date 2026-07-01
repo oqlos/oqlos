@@ -69,6 +69,10 @@ python -m oqlos.tools.hardware_diagnose --report my_report.json
 | `remote_firmware_no_serial_access` | lokalny host widzi USB, ale zdalne firmware ich nie widzi | podłącz sprzęt do hosta firmware albo uruchom firmware lokalnie |
 | `adapter_*_not_ok` / `adapter_*_health_not_ok` | konkretny adapter firmware jest offline/no-access albo health zwraca błąd | sprawdź zasilanie, mounty, URL serwisów i uprawnienia |
 
+Pełny, zawsze aktualny rejestr kodów (generowany z `oqlos/errors/catalog.py`,
+razem z metadanymi naprawy — `scope`/`auto_executable`/`actuation_risk`) jest w
+[`docs/ERROR_CODES.md`](./ERROR_CODES.md).
+
 Przykład:
 
 ```bash

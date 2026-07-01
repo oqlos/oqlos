@@ -37,6 +37,9 @@ def test_build_diagnosis_report_motors_error():
         a["id"] == "tic249-ensure-sidecar" and a["scope"] == "oqlos" and a["auto_executable"]
         for a in tic249_actions
     )
+    ensure_action = next(a for a in tic249_actions if a["id"] == "tic249-ensure-sidecar")
+    assert ensure_action["code"] == "hw_tic249_sidecar_unreachable"
+    assert ensure_action["actuation_risk"] == "config"
 
 
 def test_motors_only_no_global_make_hardware_up():

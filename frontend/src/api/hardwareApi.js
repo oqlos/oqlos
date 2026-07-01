@@ -13,7 +13,7 @@ import { extractDiagnosticFailure } from "./hardware-diagnostic-failure.js";
 import { describeDetail, formatHardwareApiError, tryParseJson } from "./hardware-api-errors.js";
 
 export { extractDiagnosticFailure } from "./hardware-diagnostic-failure.js";
-export { formatHardwareApiError } from "./hardware-api-errors.js";
+export { formatHardwareApiError, parseOqlError } from "./hardware-api-errors.js";
 
 const API_BASE = (import.meta.env?.VITE_API_BASE || "").replace(/\/$/, "");
 

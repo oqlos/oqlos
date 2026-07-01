@@ -21,6 +21,8 @@ class DiagnosisAction:
     auto_executable: bool = False
     detail: str = ""
     scope: str = "oqlos"  # oqlos | host
+    code: str | None = None  # OqlIssue code this action remediates (oqlos/errors/catalog.py)
+    actuation_risk: str | None = None  # none | config | physical — gates automated repair
 
 
 @dataclass
@@ -56,6 +58,8 @@ def action_dict(action: DiagnosisAction) -> dict[str, Any]:
         "auto_executable": action.auto_executable,
         "detail": action.detail,
         "scope": action.scope,
+        "code": action.code,
+        "actuation_risk": action.actuation_risk,
     }
 
 

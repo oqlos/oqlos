@@ -38,6 +38,7 @@ from oqlos.api.oql_mqtt import router as oql_router, set_oql_controller, oql_ws 
 from oqlos.utils import load_sample_scenarios
 from oqlos.utils.hui_scenario import register_hui_test_scenario
 from oqlos.config import FIRMWARE_PORT, SERVICE_NAME, SERVICE_VERSION, get_settings
+from oqlos.errors.fastapi_integration import install_oqlos_error_handler
 from oqlos.shared._endpoint_helpers import serve_html_page
 
 if TYPE_CHECKING:
@@ -226,6 +227,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+install_oqlos_error_handler(app)
 
 # Runtime dependencies are initialized lazily on app startup.
 hardware: "PluginHardwareGateway | None" = None

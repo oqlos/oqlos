@@ -47,11 +47,35 @@ function extractErrorPayload(err) {
   return tryParseJson(err.body);
 }
 
+/**
+ * Parse the standard OqlIssue body (see oqlos/errors/catalog.py /
+ * oqlos.errors.OqlosError) out of a backend response payload.
+ * Returns null when the payload isn't in the OqlIssue shape — callers should
+ * fall back to the older, defensive `describeDetail` cascade in that case.
+ */
+export function parseOqlError(payload) {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload) || !payload.code) {
+    return null;
+  }
+  return {
+    code: payload.code,
+    domain: payload.domain || "unknown",
+    severity: payload.severity || "error",
+    message: payload.message || payload.code,
+    detail: payload.detail ?? null,
+    repair: payload.repair ?? null,
+  };
+}
+
 export function formatHardwareApiError(err, fallback = "Hardware API request failed") {
   if (!err) {
     return fallback;
   }
   const payload = extractErrorPayload(err);
+  const oqlError = parseOqlError(payload);
+  if (oqlError) {
+    return oqlError.message;
+  }
   const detail = payload?.detail ?? payload?.error ?? payload;
   const detailMessage = describeDetail(detail);
   if (detailMessage) {

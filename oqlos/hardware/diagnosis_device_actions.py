@@ -35,6 +35,8 @@ def add_modbus_device_actions(
             auto_executable=True,
             scope="oqlos",
             detail="Bezpieczne odświeżenie połączenia w procesie OqlOS.",
+            code="hw_modbus_serial_handle_stale",
+            actuation_risk="none",
         )
     )
 
@@ -47,6 +49,7 @@ def _sidecar_recovery_actions(
     ensure_detail: str,
     reconnect_id: str,
     reconnect_label: str,
+    issue_code: str | None = None,
 ) -> list[DiagnosisAction]:
     """Standard pair of in-process OqlOS actions offered for every motor sidecar."""
     return [
@@ -59,6 +62,8 @@ def _sidecar_recovery_actions(
             auto_executable=True,
             scope="oqlos",
             detail=ensure_detail,
+            code=issue_code,
+            actuation_risk="config" if issue_code else None,
         ),
         DiagnosisAction(
             id=reconnect_id,
@@ -94,6 +99,7 @@ def add_tic249_device_actions(
             ensure_detail="systemctl --user restart hw-tic249.service, potem reconnect USB Tic (bez ruchu silnika).",
             reconnect_id="tic249-oqlos-reconnect",
             reconnect_label="Reconnect motor-tic249 plugin (OqlOS)",
+            issue_code="hw_tic249_sidecar_unreachable",
         )
     )
 
@@ -120,6 +126,7 @@ def add_dri0050_device_actions(
             ensure_detail="systemd-run jak make hardware-up, bez restartu całego stacku.",
             reconnect_id="dri0050-reconnect",
             reconnect_label="Reconnect motor-dri0050 plugin (OqlOS)",
+            issue_code="hw_dri0050_sidecar_unreachable",
         )
     )
 
