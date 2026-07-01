@@ -1,6 +1,6 @@
 # code2llm call graph | /home/tom/github/oqlos/oqlos
-# generated in 0.23s
-# nodes: 449 | edges: 500 | modules: 52
+# generated in 0.27s
+# nodes: 453 | edges: 500 | modules: 53
 # CC̄=3.8
 
 HUBS[20]:
@@ -8,8 +8,8 @@ HUBS[20]:
     CC=0  in:225  out:0  total:225
   frontend.src.i18n.I18nProvider.dict
     CC=8  in:44  out:3  total:47
-  frontend.src.utils.hardware-wizard-steps.list
-    CC=2  in:41  out:0  total:41
+  frontend.src.pages.ScenarioFiles.list
+    CC=1  in:41  out:0  total:41
   oqlos.core._oql_adapter.oql_doc_to_cql
     CC=12  in:2  out:30  total:32
   oqlos.core.motor2_runtime.normalize_motor2_runtime_config
@@ -18,30 +18,30 @@ HUBS[20]:
     CC=14  in:7  out:21  total:28
   setup_hardware_and_run_oql.run_oql_scenario
     CC=8  in:1  out:24  total:25
-  oqlos.core.parser.parse_dsl_to_goal_with_issues
-    CC=13  in:3  out:21  total:24
-  oqlos.core.oql_parser.parse_oql
-    CC=14  in:3  out:21  total:24
   frontend.src.pages.MapEditor.applyMapMutation
     CC=2  in:16  out:8  total:24
+  oqlos.core.oql_parser.parse_oql
+    CC=14  in:3  out:21  total:24
+  oqlos.core.parser.parse_dsl_to_goal_with_issues
+    CC=13  in:3  out:21  total:24
   oqlos.core._action_motor2._motor2_build_plan
     CC=12  in:1  out:22  total:23
   oqlos.core._action_motor2._try_exec_motor2_set
     CC=13  in:1  out:22  total:23
   oqlos.core._line_parsers._parse_if_condition
     CC=9  in:1  out:22  total:23
-  oqlos.core._cql_tree_builder._parse_goal_line
-    CC=12  in:1  out:20  total:21
   oqlos.core._func_resolver._collect_function_definitions
     CC=13  in:1  out:19  total:20
-  oqlos.core.oql_parser.tokenize
-    CC=13  in:5  out:14  total:19
   frontend.src.api.wsClient.WsCqrsClient.super
     CC=1  in:18  out:1  total:19
   oqlos.core._interpreter_actions.exec_action_shell
     CC=13  in:0  out:19  total:19
+  oqlos.core.oql_parser.tokenize
+    CC=13  in:5  out:14  total:19
   frontend.src.utils.useSelectionCollapsePanel.useSelectionCollapsePanel
     CC=14  in:0  out:18  total:18
+  oqlos.core.oql_parser._expand_repeat_block_lines
+    CC=8  in:2  out:16  total:18
   frontend.src.utils.url-embed-config.mergeParentSearchIntoChildUrl
     CC=9  in:7  out:11  total:18
 
@@ -154,6 +154,16 @@ MODULES:
   frontend.src.pages.MapEditorObjectActionPanel  [2 funcs]
     _MotorRelativeParams  CC=1  out:3
     _motorArgLabel  CC=6  out:0
+  frontend.src.pages.ScenarioFiles  [9 funcs]
+    appendLog  CC=1  out:4
+    cancelled  CC=4  out:4
+    formatLogTime  CC=1  out:2
+    isDirty  CC=1  out:4
+    list  CC=1  out:0
+    loadFiles  CC=2  out:5
+    runScenario  CC=5  out:7
+    saveFile  CC=4  out:7
+    selectFile  CC=3  out:8
   frontend.src.utils.collapse-toggle-bridge  [2 funcs]
     isInIframe  CC=4  out:0
     postToParent  CC=4  out:8
@@ -176,10 +186,25 @@ MODULES:
   frontend.src.utils.hardware-api-retry  [2 funcs]
     attempt  CC=14  out:9
     sleep  CC=1  out:2
-  frontend.src.utils.hardware-wizard-steps  [4 funcs]
+  frontend.src.utils.hardware-demo-identify  [11 funcs]
+    adapters  CC=3  out:1
+    buildDeviceStatus  CC=4  out:1
+    buildStatusDetail  CC=3  out:1
+    next  CC=3  out:1
+    probeDemoDevices  CC=10  out:7
+    probeOk  CC=1  out:1
+    probePump  CC=2  out:4
+    pumpOk  CC=3  out:1
+    res  CC=3  out:1
+    resolveFallbackDeviceId  CC=3  out:0
+  frontend.src.utils.hardware-wizard-plan  [4 funcs]
+    assertPlanData  CC=3  out:1
+    extractWizardPlan  CC=1  out:3
+    findPlanData  CC=7  out:0
+    throwIfStackError  CC=7  out:2
+  frontend.src.utils.hardware-wizard-steps  [3 funcs]
     _filterCandidatesByRole  CC=6  out:3
     _findBestCandidate  CC=6  out:3
-    list  CC=2  out:0
     selectWizardProbeCandidate  CC=11  out:9
   frontend.src.utils.hardwareEventStream  [14 funcs]
     buildHardwareEventsWsUrl  CC=10  out:3
@@ -269,8 +294,7 @@ MODULES:
     _motor2_max_steps_per_second  CC=1  out:1
     _motor2_reciprocating_state  CC=2  out:3
     _motor2_set_state_value  CC=1  out:1
-  oqlos.core._compare  [2 funcs]
-    resolve_compare  CC=2  out:5
+  oqlos.core._compare  [1 funcs]
     resolve_compare_chain  CC=3  out:4
   oqlos.core._cql_tokenizer  [10 funcs]
     _match_first  CC=3  out:1
@@ -283,14 +307,8 @@ MODULES:
     _try_save  CC=5  out:7
     _try_set  CC=2  out:6
     _try_val  CC=2  out:4
-  oqlos.core._cql_tree_builder  [7 funcs]
-    _ensure_goal_for_step  CC=4  out:3
-    _ensure_step_for_actions  CC=3  out:2
+  oqlos.core._cql_tree_builder  [1 funcs]
     _parse_action_line  CC=4  out:3
-    _parse_goal_line  CC=12  out:20
-    _parse_metadata_kv  CC=6  out:5
-    _parse_scenario_line  CC=3  out:6
-    _parse_step_line  CC=3  out:5
   oqlos.core._dsl_helpers  [12 funcs]
     _looks_like_lung_object  CC=1  out:2
     _looks_like_pump_object  CC=1  out:2
@@ -340,25 +358,13 @@ MODULES:
     _lower_set  CC=3  out:7
     _parse_macro_line  CC=8  out:10
     _resolve_include  CC=6  out:8
-  oqlos.core._sensor_evaluator  [2 funcs]
-    __init__  CC=3  out:2
-    collect_sensor_constraints  CC=10  out:5
-  oqlos.core._value_normalizers  [1 funcs]
-    coerce_float  CC=5  out:9
   oqlos.core.base  [5 funcs]
     send_event  CC=4  out:7
     emit  CC=5  out:3
     output_yaml  CC=4  out:2
     __init__  CC=2  out:1
     all  CC=3  out:3
-  oqlos.core.cql_parser  [9 funcs]
-    _handle_goal  CC=3  out:5
-    _handle_scenario  CC=2  out:3
-    _handle_step  CC=2  out:4
-    _try_hierarchy  CC=7  out:6
-    _try_top_level  CC=2  out:1
-    _collect_all_goals  CC=2  out:2
-    _validate_intervals  CC=6  out:1
+  oqlos.core.cql_parser  [2 funcs]
     parse_cql  CC=2  out:6
     validate_cql  CC=5  out:5
   oqlos.core.executor  [6 funcs]
@@ -406,12 +412,10 @@ MODULES:
     _try_action_or_condition  CC=5  out:6
     parse_dsl_to_goal  CC=1  out:1
     parse_dsl_to_goal_with_issues  CC=13  out:21
-  oqlos.core.safe_eval  [8 funcs]
+  oqlos.core.safe_eval  [6 funcs]
     _eval_bin_op  CC=2  out:7
     _eval_bool_op  CC=4  out:7
-    _eval_call  CC=4  out:4
     _eval_compare  CC=1  out:2
-    _eval_if_exp  CC=2  out:3
     _eval_node  CC=2  out:5
     _eval_unary_op  CC=3  out:5
     safe_eval  CC=3  out:4
@@ -441,6 +445,12 @@ EDGES:
   frontend.src.hooks.useRailHoverPreview.panelEnter → frontend.src.hooks.useRailHoverPreview.cancelPanelClose
   frontend.src.hooks.useRailHoverPreview.panelLeave → frontend.src.hooks.useRailHoverPreview.cancelRailOpen
   frontend.src.pages.MapEditorObjectActionPanel._MotorRelativeParams → frontend.src.pages.MapEditorObjectActionPanel._motorArgLabel
+  frontend.src.pages.ScenarioFiles.isDirty → frontend.src.pages.ScenarioFiles.formatLogTime
+  frontend.src.pages.ScenarioFiles.appendLog → frontend.src.pages.ScenarioFiles.formatLogTime
+  frontend.src.pages.ScenarioFiles.cancelled → frontend.src.pages.ScenarioFiles.loadFiles
+  frontend.src.pages.ScenarioFiles.cancelled → frontend.src.pages.ScenarioFiles.selectFile
+  frontend.src.pages.ScenarioFiles.saveFile → frontend.src.pages.ScenarioFiles.appendLog
+  frontend.src.pages.ScenarioFiles.runScenario → frontend.src.pages.ScenarioFiles.appendLog
   frontend.src.pages.MapEditor.addObject → frontend.src.pages.MapEditor.applyMapMutation
   frontend.src.pages.MapEditor.name → frontend.src.pages.MapEditor.applyMapMutation
   frontend.src.pages.MapEditor.addParam → frontend.src.pages.MapEditor.applyMapMutation
@@ -468,9 +478,3 @@ EDGES:
   frontend.src.pages.HardwareRestart.startOqlosAndRefreshPlan → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
   frontend.src.pages.HardwareRestart.startOqlosAndRefreshPlan → frontend.src.pages.HardwareRestart.loadPlan
   frontend.src.pages.HardwareRestart.port → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
-  frontend.src.pages.HardwareRestart.port → frontend.src.pages.HardwareRestart.loadPlan
-  frontend.src.pages.HardwareRestart.steps → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
-  frontend.src.pages.HardwareRestart.currentStep → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
-  frontend.src.pages.HardwareRestart.isSeparateAdapters → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
-  frontend.src.pages.HardwareRestart.isConfigureStep → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
-  frontend.src.pages.HardwareRestart.requiresStepConfirm → frontend.src.pages.HardwareRestart.refreshRuntimeStatus

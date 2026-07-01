@@ -1944,7 +1944,7 @@ pip install -e .[dev]
 ### `project/map.toon.yaml`
 
 ```toon markpact:analysis path=project/map.toon.yaml
-# oqlos | 359f 53700L | python:274,javascript:70,shell:9,typescript:3,css:2,less:1 | 2026-07-01
+# oqlos | 359f 53752L | python:274,javascript:70,shell:9,typescript:3,css:2,less:1 | 2026-07-01
 # stats: 1420 func | 210 cls | 359 mod | CC̄=4.2 | critical:118 | cycles:0
 # alerts[5]: CC test_hardware_ui_aliases_and_status_page_are_served=20; CC test_navigation_index_and_short_aliases=15; CC _resolve_func_steps=14; CC _probe_i2c_ads1115=14; CC exec_action_loop_block=14
 # hotspots[5]: _resolve fan=22; build_diagnosis_report fan=19; hardware_identify fan=18; _build_waveshare_diagnose_report fan=18; _handle_start fan=18
@@ -1977,7 +1977,7 @@ M[359]:
   frontend/src/i18n/hardware-status-presets-translations.js,796
   frontend/src/pages/mapEditorConstants.js,42
   frontend/src/pages/mapEditorDefaultMap.js,1764
-  frontend/src/styles/global.css,2262
+  frontend/src/styles/global.css,2314
   frontend/src/utils/collapse-toggle-bridge.js,47
   frontend/src/utils/designRem.js,44
   frontend/src/utils/encoder-navigation.js,143
@@ -2586,7 +2586,7 @@ D:
     navigation_page()
     _with_query(path;request)
     _redirect_with_query(path;request)
-    hardware_status_page(request)
+    hardware_status_page()
     hardware_demo_alias(request)
     hardware_restart_alias(request)
     map_editor_alias(request)
@@ -4502,7 +4502,7 @@ project_file('frontend/src/i18n/hardware-status-panel-translations.js', 328, 'ja
 project_file('frontend/src/i18n/hardware-status-presets-translations.js', 796, 'javascript').
 project_file('frontend/src/pages/mapEditorConstants.js', 42, 'javascript').
 project_file('frontend/src/pages/mapEditorDefaultMap.js', 1764, 'javascript').
-project_file('frontend/src/styles/global.css', 2262, 'css').
+project_file('frontend/src/styles/global.css', 2314, 'css').
 project_file('frontend/src/utils/collapse-toggle-bridge.js', 47, 'javascript').
 project_file('frontend/src/utils/designRem.js', 44, 'javascript').
 project_file('frontend/src/utils/encoder-navigation.js', 143, 'javascript').
@@ -5038,7 +5038,7 @@ python_function('oqlos/api/main.py', 'panel_page', 0, 1, 2).
 python_function('oqlos/api/main.py', 'navigation_page', 0, 1, 2).
 python_function('oqlos/api/main.py', '_with_query', 2, 3, 1).
 python_function('oqlos/api/main.py', '_redirect_with_query', 2, 1, 2).
-python_function('oqlos/api/main.py', 'hardware_status_page', 1, 1, 3).
+python_function('oqlos/api/main.py', 'hardware_status_page', 0, 1, 2).
 python_function('oqlos/api/main.py', 'hardware_demo_alias', 1, 1, 3).
 python_function('oqlos/api/main.py', 'hardware_restart_alias', 1, 1, 3).
 python_function('oqlos/api/main.py', 'map_editor_alias', 1, 1, 3).
@@ -7423,7 +7423,7 @@ class Settings:  # Application settings loaded from environment variables and .
 
 ## Call Graph
 
-*452 nodes · 500 edges · 51 modules · CC̄=3.8*
+*453 nodes · 500 edges · 53 modules · CC̄=3.8*
 
 ### Hubs (by degree)
 
@@ -7440,8 +7440,8 @@ class Settings:  # Application settings loaded from environment variables and .
 
 ```toon markpact:analysis path=project/calls.toon.yaml
 # code2llm call graph | /home/tom/github/oqlos/oqlos
-# generated in 0.29s
-# nodes: 452 | edges: 500 | modules: 51
+# generated in 0.27s
+# nodes: 453 | edges: 500 | modules: 53
 # CC̄=3.8
 
 HUBS[20]:
@@ -7461,18 +7461,16 @@ HUBS[20]:
     CC=8  in:1  out:24  total:25
   frontend.src.pages.MapEditor.applyMapMutation
     CC=2  in:16  out:8  total:24
-  oqlos.core.parser.parse_dsl_to_goal_with_issues
-    CC=13  in:3  out:21  total:24
   oqlos.core.oql_parser.parse_oql
     CC=14  in:3  out:21  total:24
+  oqlos.core.parser.parse_dsl_to_goal_with_issues
+    CC=13  in:3  out:21  total:24
+  oqlos.core._action_motor2._motor2_build_plan
+    CC=12  in:1  out:22  total:23
   oqlos.core._action_motor2._try_exec_motor2_set
     CC=13  in:1  out:22  total:23
   oqlos.core._line_parsers._parse_if_condition
     CC=9  in:1  out:22  total:23
-  oqlos.core._action_motor2._motor2_build_plan
-    CC=12  in:1  out:22  total:23
-  oqlos.core._cql_tree_builder._parse_goal_line
-    CC=12  in:1  out:20  total:21
   oqlos.core._func_resolver._collect_function_definitions
     CC=13  in:1  out:19  total:20
   frontend.src.api.wsClient.WsCqrsClient.super
@@ -7481,10 +7479,12 @@ HUBS[20]:
     CC=13  in:0  out:19  total:19
   oqlos.core.oql_parser.tokenize
     CC=13  in:5  out:14  total:19
-  oqlos.core._line_parsers._parse_action_line
-    CC=10  in:0  out:18  total:18
   frontend.src.utils.useSelectionCollapsePanel.useSelectionCollapsePanel
     CC=14  in:0  out:18  total:18
+  oqlos.core.oql_parser._expand_repeat_block_lines
+    CC=8  in:2  out:16  total:18
+  frontend.src.utils.url-embed-config.mergeParentSearchIntoChildUrl
+    CC=9  in:7  out:11  total:18
 
 MODULES:
   examples.hardware.doctor-workflow  [1 funcs]
@@ -7627,6 +7627,22 @@ MODULES:
   frontend.src.utils.hardware-api-retry  [2 funcs]
     attempt  CC=14  out:9
     sleep  CC=1  out:2
+  frontend.src.utils.hardware-demo-identify  [11 funcs]
+    adapters  CC=3  out:1
+    buildDeviceStatus  CC=4  out:1
+    buildStatusDetail  CC=3  out:1
+    next  CC=3  out:1
+    probeDemoDevices  CC=10  out:7
+    probeOk  CC=1  out:1
+    probePump  CC=2  out:4
+    pumpOk  CC=3  out:1
+    res  CC=3  out:1
+    resolveFallbackDeviceId  CC=3  out:0
+  frontend.src.utils.hardware-wizard-plan  [4 funcs]
+    assertPlanData  CC=3  out:1
+    extractWizardPlan  CC=1  out:3
+    findPlanData  CC=7  out:0
+    throwIfStackError  CC=7  out:2
   frontend.src.utils.hardware-wizard-steps  [3 funcs]
     _filterCandidatesByRole  CC=6  out:3
     _findBestCandidate  CC=6  out:3
@@ -7719,8 +7735,7 @@ MODULES:
     _motor2_max_steps_per_second  CC=1  out:1
     _motor2_reciprocating_state  CC=2  out:3
     _motor2_set_state_value  CC=1  out:1
-  oqlos.core._compare  [2 funcs]
-    resolve_compare  CC=2  out:5
+  oqlos.core._compare  [1 funcs]
     resolve_compare_chain  CC=3  out:4
   oqlos.core._cql_tokenizer  [10 funcs]
     _match_first  CC=3  out:1
@@ -7733,14 +7748,8 @@ MODULES:
     _try_save  CC=5  out:7
     _try_set  CC=2  out:6
     _try_val  CC=2  out:4
-  oqlos.core._cql_tree_builder  [7 funcs]
-    _ensure_goal_for_step  CC=4  out:3
-    _ensure_step_for_actions  CC=3  out:2
+  oqlos.core._cql_tree_builder  [1 funcs]
     _parse_action_line  CC=4  out:3
-    _parse_goal_line  CC=12  out:20
-    _parse_metadata_kv  CC=6  out:5
-    _parse_scenario_line  CC=3  out:6
-    _parse_step_line  CC=3  out:5
   oqlos.core._dsl_helpers  [12 funcs]
     _looks_like_lung_object  CC=1  out:2
     _looks_like_pump_object  CC=1  out:2
@@ -7796,12 +7805,7 @@ MODULES:
     output_yaml  CC=4  out:2
     __init__  CC=2  out:1
     all  CC=3  out:3
-  oqlos.core.cql_parser  [7 funcs]
-    _handle_goal  CC=3  out:5
-    _handle_scenario  CC=2  out:3
-    _handle_step  CC=2  out:4
-    _try_hierarchy  CC=7  out:6
-    _try_top_level  CC=2  out:1
+  oqlos.core.cql_parser  [2 funcs]
     parse_cql  CC=2  out:6
     validate_cql  CC=5  out:5
   oqlos.core.executor  [6 funcs]
@@ -7849,12 +7853,10 @@ MODULES:
     _try_action_or_condition  CC=5  out:6
     parse_dsl_to_goal  CC=1  out:1
     parse_dsl_to_goal_with_issues  CC=13  out:21
-  oqlos.core.safe_eval  [8 funcs]
+  oqlos.core.safe_eval  [6 funcs]
     _eval_bin_op  CC=2  out:7
     _eval_bool_op  CC=4  out:7
-    _eval_call  CC=4  out:4
     _eval_compare  CC=1  out:2
-    _eval_if_exp  CC=2  out:3
     _eval_node  CC=2  out:5
     _eval_unary_op  CC=3  out:5
     safe_eval  CC=3  out:4

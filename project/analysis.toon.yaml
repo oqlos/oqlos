@@ -1,5 +1,5 @@
-# code2llm | 345f 58255L | python:197,javascript:86,md:21,yaml:13,shell:9,json:7,yml:4,typescript:3,conf:2,toml:1 | 2026-07-01
-# generated in 0.25s
+# code2llm | 345f 58264L | python:197,javascript:86,md:21,yaml:13,shell:9,json:7,yml:4,typescript:3,conf:2,toml:1 | 2026-07-01
+# generated in 0.15s
 # CC̅=3.8 | critical:0/2289 | dups:0 | cycles:0
 
 HEALTH[0]: ok
@@ -343,7 +343,7 @@ LAYERS:
   │ hardware-status-panel-translations.js   327L  0C    0m  CC=0.0    ←0
   │ SidebarList.jsx            316L  0C    4m  CC=6      ←0
   │ hardwareApi.js             257L  0C   23m  CC=14     ←0
-  │ ScenarioFiles.jsx          246L  0C   16m  CC=5      ←0
+  │ ScenarioFiles.jsx          246L  0C   16m  CC=5      ←27
   │ HardwareStatus.jsx         196L  0C    9m  CC=2      ←0
   │ url-embed-config.js        193L  0C   43m  CC=12     ←0
   │ hardware-demo-extra-translations.js   183L  0C    0m  CC=0.0    ←0
@@ -351,7 +351,7 @@ LAYERS:
   │ wsClient.js                138L  1C   30m  CC=13     ←10
   │ useSelectionCollapsePanel.js   133L  0C   11m  CC=14     ←0
   │ rbac.policy.js             121L  0C   20m  CC=6      ←0
-  │ hardware-wizard-steps.js   101L  0C   17m  CC=11     ←29
+  │ hardware-wizard-steps.js   101L  0C   17m  CC=11     ←2
   │ hardware-diagnostic-failure.js    97L  0C   19m  CC=14     ←0
   │ url-embed-config.test.js    92L  0C    6m  CC=2      ←0
   │ hardware-api-log.js         87L  0C    7m  CC=11     ←0
@@ -431,7 +431,7 @@ LAYERS:
   │ doctor-workflow.sh          52L  0C    1m  CC=0.0    ←17
   │
   docs/                           CC̄=0.0    ←in:0  →out:0
-  │ !! README.md                 2245L  0C    0m  CC=0.0    ←0
+  │ !! README.md                 2254L  0C    0m  CC=0.0    ←0
   │ !! cql-examples.md            588L  0C    0m  CC=0.0    ←0
   │ HARDWARE_DIAGNOSTICS.md    428L  0C    0m  CC=0.0    ←0
   │ HARDWARE_CONTROL_OQL_MQTT.md   319L  0C    0m  CC=0.0    ←0
@@ -493,20 +493,20 @@ COUPLING:
              oqlos.reporters                                                                                   2                                                                                                                                                                                                                                                          ──                            
                  oqlos.utils                                                                                                                                                                      ←2                                                                                                                                                                                                  ──
   CYCLES: none
-  HUB: examples.hardware/ (fan-in=225)
-  HUB: oqlos.core/ (fan-in=25)
-  HUB: oqlos.tools/ (fan-in=6)
-  HUB: oqlos.hardware/ (fan-in=25)
   HUB: oqlos/ (fan-in=9)
-  HUB: frontend.src/ (fan-in=212)
   HUB: oqlos.shared/ (fan-in=6)
-  SMELL: oqlos.core/ fan-out=23 → split needed
-  SMELL: oqlos.tools/ fan-out=231 → split needed
-  SMELL: oqlos.hardware/ fan-out=86 → split needed
+  HUB: oqlos.core/ (fan-in=25)
+  HUB: examples.hardware/ (fan-in=225)
+  HUB: oqlos.hardware/ (fan-in=25)
+  HUB: frontend.src/ (fan-in=212)
+  HUB: oqlos.tools/ (fan-in=6)
   SMELL: setup_hardware_and_run_oql/ fan-out=27 → split needed
-  SMELL: oqlos.shared/ fan-out=13 → split needed
   SMELL: oqlos.api/ fan-out=54 → split needed
   SMELL: scripts/ fan-out=72 → split needed
+  SMELL: oqlos.shared/ fan-out=13 → split needed
+  SMELL: oqlos.core/ fan-out=23 → split needed
+  SMELL: oqlos.hardware/ fan-out=86 → split needed
+  SMELL: oqlos.tools/ fan-out=231 → split needed
 
 EXTERNAL:
   validation: run `vallm batch .` → validation.toon

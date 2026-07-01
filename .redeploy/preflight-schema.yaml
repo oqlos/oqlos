@@ -1,5 +1,5 @@
 schema_version: '1.0'
-generated_at: '2026-06-30T19:56:33.645690+00:00'
+generated_at: '2026-07-01T05:47:57.586947+00:00'
 spec:
   path: redeploy/122/migration.md
   name: oqlos boardnet deploy
@@ -7,10 +7,15 @@ spec:
   target_strategy: systemd
   host: pi@boardnet.local
 plan:
-  steps_total: 19
+  steps_total: 20
   risk: low
   estimated_downtime: rolling (no downtime)
   steps:
+  - id: sync_project_tree
+    action: rsync
+    description: Sync full project tree to remote_dir (respect .gitignore/.redeployignore)
+    has_command_ref: false
+    insert_before: null
   - id: mkdir_hw_remote
     action: inline_script
     description: Utwórz katalogi na boardnet
@@ -226,9 +231,9 @@ checks:
     steps:
     - sync_pihw_config
   remote:
-    enabled: false
+    enabled: true
     host: pi@boardnet.local
-    reachable: null
+    reachable: true
     checks: []
 blockers: []
 summary:

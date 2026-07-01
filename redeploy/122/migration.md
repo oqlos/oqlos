@@ -1224,7 +1224,7 @@ extra_steps:
     dst: ~/maskservice/pirtc/RTC/python/lib/
     excludes: [__pycache__/]
 
-- id: assert_oqlos_checksum
+  - id: assert_oqlos_checksum
     action: inline_script
     description: "Weryfikacja sumą kontrolną wdrożonego pakietu oqlos/ (sha256 vs manifest źródła)"
     command_ref: assert-oqlos-checksum

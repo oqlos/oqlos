@@ -6,7 +6,7 @@ SUMMARY:
   dup_groups:    46
   dup_fragments: 99
   saved_lines:   243
-  scan_ms:       127757
+  scan_ms:       120375
 
 HOTSPOTS[7] (files with most duplication):
   oqlos/core/_cql_tokenizer.py  dup=92L  groups=7  frags=16  (0.3%)

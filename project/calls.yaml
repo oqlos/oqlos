@@ -1,142 +1,72 @@
 project: /home/tom/github/oqlos/oqlos
 generated_from: code2llm call graph analysis
 stats:
-  total_nodes: 449
+  total_nodes: 453
   total_edges: 500
-  modules_count: 52
+  modules_count: 53
 nodes:
-  frontend.src.hooks.useRailHoverPreview.cancelPanelClose:
-    name: cancelPanelClose
-    module: frontend.src.hooks.useRailHoverPreview
+  frontend.src.utils.mapEditorMapShape.src:
+    name: src
+    module: frontend.src.utils.mapEditorMapShape
     line: 24
     cyclomatic_complexity: 2
-    calls_out: 2
-    calls_in: 3
-  oqlos.core._dsl_helpers._looks_like_sensor_object:
-    name: _looks_like_sensor_object
-    module: oqlos.core._dsl_helpers
-    line: 38
+    calls_out: 1
+    calls_in: 0
+  frontend.src.pages.HardwareRestart.steps:
+    name: steps
+    module: frontend.src.pages.HardwareRestart
+    line: 99
+    cyclomatic_complexity: 1
+    calls_out: 4
+    calls_in: 0
+  frontend.src.utils.hardware-api-retry.sleep:
+    name: sleep
+    module: frontend.src.utils.hardware-api-retry
+    line: 3
     cyclomatic_complexity: 1
     calls_out: 2
-    calls_in: 2
-  oqlos.core.parser.parse_dsl_to_goal_with_issues:
-    name: parse_dsl_to_goal_with_issues
-    module: oqlos.core.parser
-    line: 114
-    cyclomatic_complexity: 13
-    calls_out: 21
-    calls_in: 3
-  frontend.src.api.hardware-diagnostic-failure._pickNestedObjectError:
-    name: _pickNestedObjectError
-    module: frontend.src.api.hardware-diagnostic-failure
-    line: 54
-    cyclomatic_complexity: 8
-    calls_out: 4
     calls_in: 1
-  oqlos.core.safe_eval._eval_bool_op:
-    name: _eval_bool_op
-    module: oqlos.core.safe_eval
-    line: 95
-    cyclomatic_complexity: 4
+  frontend.src.pages.MapEditor.editParamConversionField:
+    name: editParamConversionField
+    module: frontend.src.pages.MapEditor
+    line: 180
+    cyclomatic_complexity: 12
     calls_out: 7
     calls_in: 0
-  oqlos.core._oql_adapter.is_flat_oql:
-    name: is_flat_oql
-    module: oqlos.core._oql_adapter
-    line: 379
-    cyclomatic_complexity: 8
-    calls_out: 13
-    calls_in: 2
-  oqlos.core._compare.resolve_compare:
-    name: resolve_compare
-    module: oqlos.core._compare
-    line: 21
-    cyclomatic_complexity: 2
-    calls_out: 5
-    calls_in: 1
-  frontend.src.utils.encoder-navigation.handleEncoderCommand:
-    name: handleEncoderCommand
-    module: frontend.src.utils.encoder-navigation
-    line: 98
-    cyclomatic_complexity: 5
-    calls_out: 4
-    calls_in: 2
-  frontend.src.api.hardware-diagnostic-failure.failureFromOkFalsePayload:
-    name: failureFromOkFalsePayload
-    module: frontend.src.api.hardware-diagnostic-failure
-    line: 32
-    cyclomatic_complexity: 14
-    calls_out: 6
-    calls_in: 1
-  frontend.src.utils.rbac.policy.isReadOnlyConnectRole:
-    name: isReadOnlyConnectRole
-    module: frontend.src.utils.rbac.policy
-    line: 39
-    cyclomatic_complexity: 2
-    calls_out: 1
-    calls_in: 0
-  oqlos.core._line_parsers._set_valve_step:
-    name: _set_valve_step
-    module: oqlos.core._line_parsers
-    line: 79
-    cyclomatic_complexity: 4
-    calls_out: 4
-    calls_in: 1
-  frontend.src.pages.MapEditor.addFunc:
-    name: addFunc
+  frontend.src.pages.MapEditor.applyMapMutation:
+    name: applyMapMutation
     module: frontend.src.pages.MapEditor
-    line: 236
+    line: 105
     cyclomatic_complexity: 2
+    calls_out: 8
+    calls_in: 16
+  frontend.src.i18n.I18nProvider.t:
+    name: t
+    module: frontend.src.i18n.I18nProvider
+    line: 33
+    cyclomatic_complexity: 8
+    calls_out: 2
+    calls_in: 3
+  oqlos.core.safe_eval._eval_node:
+    name: _eval_node
+    module: oqlos.core.safe_eval
+    line: 133
+    cyclomatic_complexity: 2
+    calls_out: 5
+    calls_in: 10
+  frontend.src.api.hardware-api-errors.describeDetail:
+    name: describeDetail
+    module: frontend.src.api.hardware-api-errors
+    line: 12
+    cyclomatic_complexity: 13
     calls_out: 6
     calls_in: 1
-  oqlos.core._action_motor2._handle_motor2_reciprocating_setting:
-    name: _handle_motor2_reciprocating_setting
-    module: oqlos.core._action_motor2
-    line: 412
-    cyclomatic_complexity: 2
-    calls_out: 4
-    calls_in: 1
-  frontend.src.api.hardwareApi.normalized:
-    name: normalized
-    module: frontend.src.api.hardwareApi
-    line: 186
-    cyclomatic_complexity: 1
-    calls_out: 1
-    calls_in: 0
-  frontend.src.utils.rbac.policy.matched:
-    name: matched
-    module: frontend.src.utils.rbac.policy
-    line: 101
-    cyclomatic_complexity: 5
-    calls_out: 1
-    calls_in: 0
-  frontend.src.utils.mapEditorMapShape.ensureMapShape:
-    name: ensureMapShape
-    module: frontend.src.utils.mapEditorMapShape
-    line: 23
-    cyclomatic_complexity: 7
-    calls_out: 1
-    calls_in: 1
-  oqlos.core._interpreter_actions._lookup_peripheral_state:
-    name: _lookup_peripheral_state
+  oqlos.core._interpreter_actions.exec_action_save:
+    name: exec_action_save
     module: oqlos.core._interpreter_actions
-    line: 152
-    cyclomatic_complexity: 5
-    calls_out: 5
-    calls_in: 1
-  oqlos.core.oql_parser.parse_IF_DELTA:
-    name: parse_IF_DELTA
-    module: oqlos.core.oql_parser
-    line: 279
-    cyclomatic_complexity: 6
-    calls_out: 16
-    calls_in: 0
-  frontend.src.api.hardware-api-errors.tryParseJson:
-    name: tryParseJson
-    module: frontend.src.api.hardware-api-errors
-    line: 1
-    cyclomatic_complexity: 3
-    calls_out: 1
+    line: 204
+    cyclomatic_complexity: 4
+    calls_out: 6
     calls_in: 1
   frontend.src.pages.MapEditor.addObject:
     name: addObject
@@ -145,146 +75,34 @@ nodes:
     cyclomatic_complexity: 2
     calls_out: 6
     calls_in: 1
-  examples.hardware.doctor-workflow.print:
-    name: print
-    module: examples.hardware.doctor-workflow
-    line: 41
-    cyclomatic_complexity: 0
-    calls_out: 0
-    calls_in: 225
-  oqlos.core._action_motor2._motor2_set_state_value:
-    name: _motor2_set_state_value
-    module: oqlos.core._action_motor2
-    line: 262
-    cyclomatic_complexity: 1
-    calls_out: 1
-    calls_in: 1
-  frontend.src.utils.url-embed-config.nextHref:
-    name: nextHref
-    module: frontend.src.utils.url-embed-config
-    line: 166
+  oqlos.core.parser.parse_dsl_to_goal:
+    name: parse_dsl_to_goal
+    module: oqlos.core.parser
+    line: 174
     cyclomatic_complexity: 1
     calls_out: 1
     calls_in: 0
-  frontend.src.utils.mapEditorIntegrationMeta.nextValue:
-    name: nextValue
-    module: frontend.src.utils.mapEditorIntegrationMeta
-    line: 75
-    cyclomatic_complexity: 2
-    calls_out: 2
-    calls_in: 0
-  frontend.src.utils.encoder-navigation.createEncoderController:
-    name: createEncoderController
-    module: frontend.src.utils.encoder-navigation
-    line: 95
-    cyclomatic_complexity: 11
-    calls_out: 7
-    calls_in: 0
-  oqlos.core._dsl_helpers._map_action_value:
-    name: _map_action_value
-    module: oqlos.core._dsl_helpers
-    line: 115
-    cyclomatic_complexity: 7
-    calls_out: 8
-    calls_in: 2
-  frontend.src.utils.url-embed-config.resolveUserIdFromSearchParams:
-    name: resolveUserIdFromSearchParams
-    module: frontend.src.utils.url-embed-config
+  frontend.src.hooks.useUrlConfig.notifyParentChildReady:
+    name: notifyParentChildReady
+    module: frontend.src.hooks.useUrlConfig
     line: 27
     cyclomatic_complexity: 4
-    calls_out: 2
-    calls_in: 1
-  oqlos.core._interpreter_actions.exec_action_assert:
-    name: exec_action_assert
-    module: oqlos.core._interpreter_actions
-    line: 557
-    cyclomatic_complexity: 3
-    calls_out: 7
-    calls_in: 0
-  frontend.src.utils.url-embed-config.applyParentContextPayload:
-    name: applyParentContextPayload
-    module: frontend.src.utils.url-embed-config
-    line: 145
-    cyclomatic_complexity: 5
     calls_out: 5
-    calls_in: 6
-  frontend.src.utils.url-embed-config.parentSearch:
-    name: parentSearch
-    module: frontend.src.utils.url-embed-config
-    line: 163
-    cyclomatic_complexity: 4
-    calls_out: 3
-    calls_in: 0
-  frontend.src.utils.mapEditorMapShape.toPrettyJson:
-    name: toPrettyJson
-    module: frontend.src.utils.mapEditorMapShape
-    line: 56
-    cyclomatic_complexity: 1
-    calls_out: 2
-    calls_in: 0
-  oqlos.core.oql_parser._compact_duration:
-    name: _compact_duration
-    module: oqlos.core.oql_parser
-    line: 149
-    cyclomatic_complexity: 2
-    calls_out: 3
     calls_in: 1
-  frontend.src.utils.hardwareEventStream.id:
-    name: id
-    module: frontend.src.utils.hardwareEventStream
-    line: 40
-    cyclomatic_complexity: 3
-    calls_out: 1
-    calls_in: 1
-  oqlos.core.cql_parser._collect_all_goals:
-    name: _collect_all_goals
-    module: oqlos.core.cql_parser
-    line: 433
-    cyclomatic_complexity: 2
-    calls_out: 2
-    calls_in: 1
-  oqlos.core.oql_parser.parse_MAX:
-    name: parse_MAX
-    module: oqlos.core.oql_parser
-    line: 364
-    cyclomatic_complexity: 1
-    calls_out: 3
-    calls_in: 0
-  frontend.src.api.hardware-diagnostic-failure.failureFromSuccessFalse:
-    name: failureFromSuccessFalse
+  frontend.src.api.hardware-diagnostic-failure.extractDiagnosticFailure:
+    name: extractDiagnosticFailure
     module: frontend.src.api.hardware-diagnostic-failure
-    line: 42
-    cyclomatic_complexity: 14
-    calls_out: 3
-    calls_in: 1
-  frontend.src.utils.useSelectionCollapsePanel.useSelectionCollapsePanel:
-    name: useSelectionCollapsePanel
-    module: frontend.src.utils.useSelectionCollapsePanel
-    line: 27
-    cyclomatic_complexity: 14
-    calls_out: 18
+    line: 73
+    cyclomatic_complexity: 13
+    calls_out: 6
     calls_in: 0
-  oqlos.core._action_motor2._post_motor2_move_relative:
-    name: _post_motor2_move_relative
-    module: oqlos.core._action_motor2
-    line: 190
+  oqlos.core.interpreter.CqlInterpreter._exec_flat_action:
+    name: _exec_flat_action
+    module: oqlos.core.interpreter
+    line: 300
     cyclomatic_complexity: 6
-    calls_out: 13
+    calls_out: 6
     calls_in: 0
-  frontend.src.utils.mapEditorModel.cloneDefaultMap:
-    name: cloneDefaultMap
-    module: frontend.src.utils.mapEditorModel
-    line: 19
-    cyclomatic_complexity: 1
-    calls_out: 2
-    calls_in: 1
-  oqlos.core._action_motor2._parse_motor2_direction:
-    name: _parse_motor2_direction
-    module: oqlos.core._action_motor2
-    line: 36
-    cyclomatic_complexity: 6
-    calls_out: 4
-    calls_in: 2
   frontend.src.api.hardware-api-log.keys:
     name: keys
     module: frontend.src.api.hardware-api-log
@@ -292,845 +110,26 @@ nodes:
     cyclomatic_complexity: 2
     calls_out: 0
     calls_in: 1
-  frontend.src.pages.HardwareDemo.sendDeviceNote:
-    name: sendDeviceNote
-    module: frontend.src.pages.HardwareDemo
-    line: 221
-    cyclomatic_complexity: 10
-    calls_out: 9
-    calls_in: 1
-  frontend.src.utils.mapEditorFuncHardwareSummary.objectMap:
-    name: objectMap
-    module: frontend.src.utils.mapEditorFuncHardwareSummary
-    line: 22
-    cyclomatic_complexity: 3
-    calls_out: 2
-    calls_in: 0
-  frontend.src.api.wsClient.WsCqrsClient.clearTimeout:
-    name: clearTimeout
-    module: frontend.src.api.wsClient
-    line: 111
-    cyclomatic_complexity: 2
-    calls_out: 0
-    calls_in: 2
-  oqlos.core._oql_adapter.oql_doc_to_cql:
-    name: oql_doc_to_cql
-    module: oqlos.core._oql_adapter
-    line: 412
-    cyclomatic_complexity: 12
-    calls_out: 30
-    calls_in: 2
-  frontend.src.utils.hardware-activity-log.createHardwareActivityLogEntry:
-    name: createHardwareActivityLogEntry
-    module: frontend.src.utils.hardware-activity-log
-    line: 4
-    cyclomatic_complexity: 1
-    calls_out: 2
-    calls_in: 3
-  frontend.src.api.hardwareApi.bodySummary:
-    name: bodySummary
-    module: frontend.src.api.hardwareApi
-    line: 35
-    cyclomatic_complexity: 2
-    calls_out: 2
-    calls_in: 0
-  oqlos.core._action_motor2._parse_motor2_reciprocating_setting:
-    name: _parse_motor2_reciprocating_setting
-    module: oqlos.core._action_motor2
-    line: 150
-    cyclomatic_complexity: 6
-    calls_out: 5
-    calls_in: 1
-  oqlos.core.cql_parser._ParseState._try_top_level:
-    name: _try_top_level
-    module: oqlos.core.cql_parser
-    line: 166
-    cyclomatic_complexity: 2
-    calls_out: 1
-    calls_in: 0
-  oqlos.core.oql_parser.duration_to_ms:
-    name: duration_to_ms
-    module: oqlos.core.oql_parser
-    line: 162
-    cyclomatic_complexity: 1
-    calls_out: 2
-    calls_in: 3
-  oqlos.core.safe_eval._eval_bin_op:
-    name: _eval_bin_op
-    module: oqlos.core.safe_eval
-    line: 80
-    cyclomatic_complexity: 2
-    calls_out: 7
-    calls_in: 0
-  setup_hardware_and_run_oql.generate_env_content:
-    name: generate_env_content
-    module: setup_hardware_and_run_oql
-    line: 101
-    cyclomatic_complexity: 2
-    calls_out: 1
-    calls_in: 1
-  frontend.src.utils.mapEditorIntegrationMeta.firstBindingFromObjectMapping:
-    name: firstBindingFromObjectMapping
-    module: frontend.src.utils.mapEditorIntegrationMeta
-    line: 1
-    cyclomatic_complexity: 6
-    calls_out: 1
-    calls_in: 2
-  frontend.src.utils.url-embed-config.mergeParentSearchIntoChildUrl:
-    name: mergeParentSearchIntoChildUrl
-    module: frontend.src.utils.url-embed-config
-    line: 130
-    cyclomatic_complexity: 9
-    calls_out: 11
-    calls_in: 7
-  frontend.src.utils.encoder-navigation.handleSetActive:
-    name: handleSetActive
-    module: frontend.src.utils.encoder-navigation
-    line: 65
-    cyclomatic_complexity: 3
-    calls_out: 1
-    calls_in: 2
-  oqlos.core._oql_adapter._scenarios_root:
-    name: _scenarios_root
-    module: oqlos.core._oql_adapter
-    line: 52
-    cyclomatic_complexity: 1
-    calls_out: 2
-    calls_in: 1
-  frontend.src.pages.HardwareRestart.isConfigureStep:
-    name: isConfigureStep
-    module: frontend.src.pages.HardwareRestart
-    line: 102
-    cyclomatic_complexity: 1
-    calls_out: 4
-    calls_in: 0
-  frontend.src.utils.hardwareEventStream.matchesHardwareEventFilters:
-    name: matchesHardwareEventFilters
-    module: frontend.src.utils.hardwareEventStream
-    line: 44
-    cyclomatic_complexity: 9
-    calls_out: 4
-    calls_in: 0
-  frontend.src.utils.collapse-toggle-bridge.postToParent:
-    name: postToParent
-    module: frontend.src.utils.collapse-toggle-bridge
-    line: 23
-    cyclomatic_complexity: 4
-    calls_out: 8
-    calls_in: 0
-  frontend.src.utils.mapEditorFuncHardwareSummary.apiBindingHint:
-    name: apiBindingHint
-    module: frontend.src.utils.mapEditorFuncHardwareSummary
-    line: 9
-    cyclomatic_complexity: 12
-    calls_out: 0
-    calls_in: 3
-  oqlos.core._action_motor2._motor2_effective_steps_per_second:
-    name: _motor2_effective_steps_per_second
-    module: oqlos.core._action_motor2
-    line: 178
-    cyclomatic_complexity: 1
-    calls_out: 4
-    calls_in: 1
-  oqlos.core.cql_parser._ParseState._handle_goal:
-    name: _handle_goal
-    module: oqlos.core.cql_parser
-    line: 193
-    cyclomatic_complexity: 3
-    calls_out: 5
-    calls_in: 0
-  frontend.src.utils.mapEditorFuncHardwareSummary._asMap:
-    name: _asMap
-    module: frontend.src.utils.mapEditorFuncHardwareSummary
-    line: 5
-    cyclomatic_complexity: 3
-    calls_out: 0
-    calls_in: 1
-  frontend.src.api.hardwareApi.mode:
-    name: mode
-    module: frontend.src.api.hardwareApi
-    line: 181
-    cyclomatic_complexity: 1
-    calls_out: 1
-    calls_in: 0
-  oqlos.core._dsl_helpers._map_wait_action:
-    name: _map_wait_action
-    module: oqlos.core._dsl_helpers
-    line: 93
-    cyclomatic_complexity: 4
-    calls_out: 7
-    calls_in: 1
-  frontend.src.i18n.I18nProvider.getInitialLang:
-    name: getInitialLang
-    module: frontend.src.i18n.I18nProvider
-    line: 6
-    cyclomatic_complexity: 5
-    calls_out: 1
-    calls_in: 1
-  frontend.src.utils.rbac.policy.canConnectRoleAccessPath:
-    name: canConnectRoleAccessPath
-    module: frontend.src.utils.rbac.policy
-    line: 111
-    cyclomatic_complexity: 2
-    calls_out: 3
-    calls_in: 0
-  frontend.src.utils.mapEditorMapShape.cloneValue:
-    name: cloneValue
-    module: frontend.src.utils.mapEditorMapShape
-    line: 1
-    cyclomatic_complexity: 1
-    calls_out: 2
-    calls_in: 1
-  oqlos.core.oql_parser._handle_set_name:
-    name: _handle_set_name
-    module: oqlos.core.oql_parser
-    line: 563
-    cyclomatic_complexity: 5
-    calls_out: 8
-    calls_in: 1
-  frontend.src.api.hardwareApi.serialPort:
-    name: serialPort
-    module: frontend.src.api.hardwareApi
-    line: 171
-    cyclomatic_complexity: 2
-    calls_out: 1
-    calls_in: 0
-  frontend.src.utils.encoder-navigation.handleScroll:
-    name: handleScroll
-    module: frontend.src.utils.encoder-navigation
-    line: 74
-    cyclomatic_complexity: 4
-    calls_out: 4
-    calls_in: 2
-  oqlos.core._interpreter_actions.exec_action_func:
-    name: exec_action_func
-    module: oqlos.core._interpreter_actions
-    line: 413
-    cyclomatic_complexity: 9
-    calls_out: 15
-    calls_in: 0
-  frontend.src.pages.HardwareDemo.ensureAudioCtx:
-    name: ensureAudioCtx
-    module: frontend.src.pages.HardwareDemo
-    line: 181
-    cyclomatic_complexity: 4
-    calls_out: 4
-    calls_in: 3
-  frontend.src.utils.hardwareEventStream.commandName:
-    name: commandName
-    module: frontend.src.utils.hardwareEventStream
-    line: 38
-    cyclomatic_complexity: 3
-    calls_out: 1
-    calls_in: 0
-  frontend.src.api.wsClient.WsCqrsClient.query:
-    name: query
-    module: frontend.src.api.wsClient
-    line: 77
-    cyclomatic_complexity: 1
-    calls_out: 1
-    calls_in: 0
-  oqlos.core.executor.safe_eval_condition:
-    name: safe_eval_condition
-    module: oqlos.core.executor
-    line: 51
-    cyclomatic_complexity: 2
-    calls_out: 5
-    calls_in: 2
-  frontend.src.utils.mapEditorFuncHardwareSummary.resolveNamedActionHardwareHint:
-    name: resolveNamedActionHardwareHint
-    module: frontend.src.utils.mapEditorFuncHardwareSummary
-    line: 32
-    cyclomatic_complexity: 7
-    calls_out: 4
-    calls_in: 1
-  frontend.src.pages.MapEditor.updateIntegrationMeta:
-    name: updateIntegrationMeta
-    module: frontend.src.pages.MapEditor
-    line: 526
-    cyclomatic_complexity: 11
-    calls_out: 7
-    calls_in: 0
-  frontend.src.utils.mapEditorModel.createInitialEditorState:
-    name: createInitialEditorState
-    module: frontend.src.utils.mapEditorModel
-    line: 52
-    cyclomatic_complexity: 1
-    calls_out: 3
-    calls_in: 0
-  oqlos.core._interpreter_actions.exec_action_expect:
-    name: exec_action_expect
-    module: oqlos.core._interpreter_actions
-    line: 464
-    cyclomatic_complexity: 3
-    calls_out: 4
-    calls_in: 0
-  oqlos.core._interpreter_actions._assert_status:
-    name: _assert_status
-    module: oqlos.core._interpreter_actions
-    line: 474
-    cyclomatic_complexity: 5
-    calls_out: 7
-    calls_in: 0
-  frontend.src.utils.useSelectionCollapsePanel.onMessage:
-    name: onMessage
-    module: frontend.src.utils.useSelectionCollapsePanel
-    line: 110
-    cyclomatic_complexity: 1
-    calls_out: 1
-    calls_in: 0
-  oqlos.core._action_motor2._motor2_build_plan:
-    name: _motor2_build_plan
-    module: oqlos.core._action_motor2
-    line: 296
-    cyclomatic_complexity: 12
-    calls_out: 22
-    calls_in: 1
-  oqlos.core.executor.ScenarioOrchestrator._execute_validate_step:
-    name: _execute_validate_step
-    module: oqlos.core.executor
-    line: 294
-    cyclomatic_complexity: 7
-    calls_out: 7
-    calls_in: 0
-  frontend.src.i18n.I18nProvider.I18nProvider:
-    name: I18nProvider
-    module: frontend.src.i18n.I18nProvider
-    line: 18
-    cyclomatic_complexity: 13
-    calls_out: 8
-    calls_in: 0
-  frontend.src.api.wsClient.WsCqrsClient.timeout:
-    name: timeout
-    module: frontend.src.api.wsClient
-    line: 91
-    cyclomatic_complexity: 1
-    calls_out: 3
-    calls_in: 0
-  oqlos.core._interpreter_actions.exec_action_set:
-    name: exec_action_set
-    module: oqlos.core._interpreter_actions
-    line: 723
-    cyclomatic_complexity: 9
-    calls_out: 11
-    calls_in: 1
-  oqlos.core._dsl_helpers._looks_like_pump_object:
-    name: _looks_like_pump_object
-    module: oqlos.core._dsl_helpers
-    line: 30
-    cyclomatic_complexity: 1
-    calls_out: 2
-    calls_in: 2
-  frontend.src.pages.MapEditor.deleteKey:
-    name: deleteKey
-    module: frontend.src.pages.MapEditor
-    line: 264
-    cyclomatic_complexity: 2
-    calls_out: 4
-    calls_in: 0
-  oqlos.core.safe_eval._eval_if_exp:
-    name: _eval_if_exp
-    module: oqlos.core.safe_eval
-    line: 113
-    cyclomatic_complexity: 2
-    calls_out: 3
-    calls_in: 0
-  frontend.src.utils.mapEditorMapShape.isPlainObject:
-    name: isPlainObject
-    module: frontend.src.utils.mapEditorMapShape
-    line: 5
-    cyclomatic_complexity: 3
-    calls_out: 2
-    calls_in: 3
-  frontend.src.api.wsClient.WsCqrsClient._scheduleReconnect:
-    name: _scheduleReconnect
-    module: frontend.src.api.wsClient
-    line: 125
-    cyclomatic_complexity: 3
-    calls_out: 3
-    calls_in: 1
-  frontend.src.api.wsClient.WsCqrsClient.resolve:
-    name: resolve
-    module: frontend.src.api.wsClient
-    line: 48
-    cyclomatic_complexity: 1
-    calls_out: 0
-    calls_in: 3
-  frontend.src.utils.mapEditorIntegrationMeta.setMetaField:
-    name: setMetaField
-    module: frontend.src.utils.mapEditorIntegrationMeta
-    line: 73
-    cyclomatic_complexity: 9
-    calls_out: 6
-    calls_in: 0
-  frontend.src.pages.HardwareDemo.fb:
-    name: fb
-    module: frontend.src.pages.HardwareDemo
-    line: 244
-    cyclomatic_complexity: 2
-    calls_out: 5
-    calls_in: 0
-  frontend.src.utils.hardwareEventStream.timestamp:
-    name: timestamp
-    module: frontend.src.utils.hardwareEventStream
-    line: 39
-    cyclomatic_complexity: 3
-    calls_out: 1
-    calls_in: 0
-  oqlos.core.motor2_runtime._compute_motor2_speed:
-    name: _compute_motor2_speed
-    module: oqlos.core.motor2_runtime
-    line: 154
-    cyclomatic_complexity: 4
-    calls_out: 6
-    calls_in: 1
-  oqlos.core._interpreter_actions.exec_action_min_max:
-    name: exec_action_min_max
-    module: oqlos.core._interpreter_actions
-    line: 258
-    cyclomatic_complexity: 3
-    calls_out: 5
-    calls_in: 1
-  frontend.src.pages.HardwareRestart.refreshRuntimeStatus:
-    name: refreshRuntimeStatus
-    module: frontend.src.pages.HardwareRestart
-    line: 45
-    cyclomatic_complexity: 3
-    calls_out: 3
-    calls_in: 13
-  oqlos.core._oql_adapter._load_includes:
-    name: _load_includes
-    module: oqlos.core._oql_adapter
-    line: 102
-    cyclomatic_complexity: 12
-    calls_out: 15
-    calls_in: 2
-  oqlos.core.executor._resolve_compare:
-    name: _resolve_compare
-    module: oqlos.core.executor
-    line: 11
-    cyclomatic_complexity: 1
-    calls_out: 2
-    calls_in: 1
-  oqlos.core._action_motor2._parse_motor2_volume_liters:
-    name: _parse_motor2_volume_liters
-    module: oqlos.core._action_motor2
-    line: 84
-    cyclomatic_complexity: 6
-    calls_out: 5
-    calls_in: 2
-  oqlos.core.oql_parser.parse_duration:
-    name: parse_duration
-    module: oqlos.core.oql_parser
-    line: 153
-    cyclomatic_complexity: 3
-    calls_out: 6
-    calls_in: 2
-  oqlos.core.motor2_runtime._normalize_motor2_direction:
-    name: _normalize_motor2_direction
-    module: oqlos.core.motor2_runtime
-    line: 130
-    cyclomatic_complexity: 4
-    calls_out: 2
-    calls_in: 1
-  oqlos.core._cql_tokenizer._try_set:
-    name: _try_set
-    module: oqlos.core._cql_tokenizer
-    line: 182
-    cyclomatic_complexity: 2
-    calls_out: 6
-    calls_in: 0
-  frontend.src.pages.HardwareRestart.startOqlosAndRefreshPlan:
-    name: startOqlosAndRefreshPlan
-    module: frontend.src.pages.HardwareRestart
-    line: 76
-    cyclomatic_complexity: 9
-    calls_out: 10
-    calls_in: 0
-  oqlos.core._action_motor2._parse_motor2_float:
-    name: _parse_motor2_float
-    module: oqlos.core._action_motor2
-    line: 60
-    cyclomatic_complexity: 4
-    calls_out: 6
-    calls_in: 2
-  frontend.src.api.hardware-tic249-status.isIdempotentDiagnosticSuccess:
-    name: isIdempotentDiagnosticSuccess
-    module: frontend.src.api.hardware-tic249-status
-    line: 29
-    cyclomatic_complexity: 3
-    calls_out: 2
-    calls_in: 0
-  oqlos.core._oql_adapter._cmd_to_actions:
-    name: _cmd_to_actions
-    module: oqlos.core._oql_adapter
-    line: 318
-    cyclomatic_complexity: 2
-    calls_out: 3
-    calls_in: 3
-  frontend.src.utils.url-embed-config.IFRAME_ONLY_SEARCH_PARAMS:
-    name: IFRAME_ONLY_SEARCH_PARAMS
-    module: frontend.src.utils.url-embed-config
-    line: 128
-    cyclomatic_complexity: 9
-    calls_out: 11
-    calls_in: 0
-  oqlos.core._oql_adapter._MacroRegistry.register:
-    name: register
-    module: oqlos.core._oql_adapter
-    line: 95
-    cyclomatic_complexity: 1
-    calls_out: 1
-    calls_in: 0
-  oqlos.core._cql_tree_builder._parse_metadata_kv:
-    name: _parse_metadata_kv
-    module: oqlos.core._cql_tree_builder
-    line: 28
-    cyclomatic_complexity: 6
-    calls_out: 5
-    calls_in: 1
-  frontend.src.utils.useSelectionCollapsePanel._makeCollapseToggleHandler:
-    name: _makeCollapseToggleHandler
-    module: frontend.src.utils.useSelectionCollapsePanel
-    line: 13
-    cyclomatic_complexity: 8
-    calls_out: 3
-    calls_in: 2
-  oqlos.core.cql_parser.validate_cql:
-    name: validate_cql
-    module: oqlos.core.cql_parser
-    line: 452
-    cyclomatic_complexity: 5
-    calls_out: 5
-    calls_in: 1
-  frontend.src.pages.MapEditorObjectActionPanel._motorArgLabel:
-    name: _motorArgLabel
-    module: frontend.src.pages.MapEditorObjectActionPanel
+  frontend.src.api.hardware-api-log.summarizeHardwareApiBody:
+    name: summarizeHardwareApiBody
+    module: frontend.src.api.hardware-api-log
     line: 10
-    cyclomatic_complexity: 6
-    calls_out: 0
-    calls_in: 1
-  oqlos.core.safe_eval._eval_unary_op:
-    name: _eval_unary_op
-    module: oqlos.core.safe_eval
-    line: 70
-    cyclomatic_complexity: 3
-    calls_out: 5
-    calls_in: 0
-  oqlos.core.motor2_runtime._pick:
-    name: _pick
-    module: oqlos.core.motor2_runtime
-    line: 64
-    cyclomatic_complexity: 4
-    calls_out: 0
-    calls_in: 10
-  frontend.src.hooks.useRailHoverPreview.previewExpand:
-    name: previewExpand
-    module: frontend.src.hooks.useRailHoverPreview
-    line: 35
-    cyclomatic_complexity: 3
-    calls_out: 2
-    calls_in: 2
-  frontend.src.hooks.useRailHoverPreview.panelLeave:
-    name: panelLeave
-    module: frontend.src.hooks.useRailHoverPreview
-    line: 59
-    cyclomatic_complexity: 3
-    calls_out: 5
-    calls_in: 0
-  frontend.src.api.wsClient.WsCqrsClient.delay:
-    name: delay
-    module: frontend.src.api.wsClient
-    line: 127
-    cyclomatic_complexity: 2
-    calls_out: 2
-    calls_in: 0
-  frontend.src.api.hardwareApi._throwHttpError:
-    name: _throwHttpError
-    module: frontend.src.api.hardwareApi
-    line: 24
-    cyclomatic_complexity: 1
-    calls_out: 2
-    calls_in: 2
-  frontend.src.api.hardwareApi.get:
-    name: get
-    module: frontend.src.api.hardwareApi
-    line: 92
-    cyclomatic_complexity: 1
-    calls_out: 1
-    calls_in: 0
-  frontend.src.pages.HardwareDemo.playNote:
-    name: playNote
-    module: frontend.src.pages.HardwareDemo
-    line: 276
-    cyclomatic_complexity: 5
-    calls_out: 7
-    calls_in: 2
-  frontend.src.utils.hardwareEventStream.source:
-    name: source
-    module: frontend.src.utils.hardwareEventStream
-    line: 33
-    cyclomatic_complexity: 3
-    calls_out: 1
-    calls_in: 0
-  frontend.src.hooks.useRailHoverPreview.cancelRailOpen:
-    name: cancelRailOpen
-    module: frontend.src.hooks.useRailHoverPreview
-    line: 17
-    cyclomatic_complexity: 2
-    calls_out: 2
-    calls_in: 3
-  oqlos.core._sensor_evaluator.SensorEvaluator.collect_sensor_constraints:
-    name: collect_sensor_constraints
-    module: oqlos.core._sensor_evaluator
-    line: 74
-    cyclomatic_complexity: 10
-    calls_out: 5
-    calls_in: 0
-  oqlos.core._cql_tokenizer._try_if_block:
-    name: _try_if_block
-    module: oqlos.core._cql_tokenizer
-    line: 226
-    cyclomatic_complexity: 4
-    calls_out: 11
-    calls_in: 1
-  oqlos.core.executor._resolve_name_or_attr:
-    name: _resolve_name_or_attr
-    module: oqlos.core.executor
-    line: 16
-    cyclomatic_complexity: 4
-    calls_out: 6
-    calls_in: 1
-  frontend.src.utils.mapEditorObjectActionEdits.applyObjectActionBodyFieldMutation:
-    name: applyObjectActionBodyFieldMutation
-    module: frontend.src.utils.mapEditorObjectActionEdits
-    line: 36
-    cyclomatic_complexity: 8
-    calls_out: 1
-    calls_in: 0
-  oqlos.core.motor2_runtime.build_motor2_reciprocating_plan:
-    name: build_motor2_reciprocating_plan
-    module: oqlos.core.motor2_runtime
-    line: 170
-    cyclomatic_complexity: 7
-    calls_out: 8
-    calls_in: 1
-  setup_hardware_and_run_oql.load_env_file:
-    name: load_env_file
-    module: setup_hardware_and_run_oql
-    line: 193
-    cyclomatic_complexity: 6
-    calls_out: 11
-    calls_in: 2
-  oqlos.core._func_resolver._extract_func_name:
-    name: _extract_func_name
-    module: oqlos.core._func_resolver
-    line: 51
-    cyclomatic_complexity: 7
-    calls_out: 7
-    calls_in: 1
-  oqlos.core._cql_tree_builder._ensure_step_for_actions:
-    name: _ensure_step_for_actions
-    module: oqlos.core._cql_tree_builder
-    line: 158
-    cyclomatic_complexity: 3
-    calls_out: 2
-    calls_in: 1
-  oqlos.core.oql_parser.tokenize:
-    name: tokenize
-    module: oqlos.core.oql_parser
-    line: 178
-    cyclomatic_complexity: 13
-    calls_out: 14
-    calls_in: 5
-  frontend.src.utils.mapEditorIntegrationMeta.setHardwareAddressField:
-    name: setHardwareAddressField
-    module: frontend.src.utils.mapEditorIntegrationMeta
-    line: 57
-    cyclomatic_complexity: 8
-    calls_out: 0
-    calls_in: 1
-  frontend.src.utils.mapEditorObjectActionEdits.parsePromptedFieldValue:
-    name: parsePromptedFieldValue
-    module: frontend.src.utils.mapEditorObjectActionEdits
-    line: 3
-    cyclomatic_complexity: 5
-    calls_out: 4
-    calls_in: 1
-  oqlos.core.parser._try_action_or_condition:
-    name: _try_action_or_condition
-    module: oqlos.core.parser
-    line: 37
-    cyclomatic_complexity: 5
-    calls_out: 6
-    calls_in: 1
-  frontend.src.pages.HardwareDemo.now:
-    name: now
-    module: frontend.src.pages.HardwareDemo
-    line: 225
-    cyclomatic_complexity: 1
-    calls_out: 1
-    calls_in: 1
-  oqlos.core.base.VariableStore.all:
-    name: all
-    module: oqlos.core.base
-    line: 87
-    cyclomatic_complexity: 3
-    calls_out: 3
-    calls_in: 0
-  oqlos.config.get_settings:
-    name: get_settings
-    module: oqlos.config
-    line: 218
-    cyclomatic_complexity: 1
-    calls_out: 0
-    calls_in: 9
-  frontend.src.pages.HardwareRestart.loadPlan:
-    name: loadPlan
-    module: frontend.src.pages.HardwareRestart
-    line: 56
-    cyclomatic_complexity: 4
-    calls_out: 10
-    calls_in: 3
-  frontend.src.i18n.I18nProvider.dict:
-    name: dict
-    module: frontend.src.i18n.I18nProvider
-    line: 31
-    cyclomatic_complexity: 8
-    calls_out: 3
-    calls_in: 44
-  frontend.src.utils.rbac.policy.parseConnectRole:
-    name: parseConnectRole
-    module: frontend.src.utils.rbac.policy
-    line: 25
-    cyclomatic_complexity: 3
-    calls_out: 3
-    calls_in: 1
-  frontend.src.pages.MapEditor.runAddForTab:
-    name: runAddForTab
-    module: frontend.src.pages.MapEditor
-    line: 593
-    cyclomatic_complexity: 5
-    calls_out: 5
-    calls_in: 0
-  frontend.src.utils.mapEditorIntegrationMeta.readIntegrationMeta:
-    name: readIntegrationMeta
-    module: frontend.src.utils.mapEditorIntegrationMeta
-    line: 13
     cyclomatic_complexity: 11
-    calls_out: 2
-    calls_in: 0
-  frontend.src.utils.url-embed-config.pathname:
-    name: pathname
-    module: frontend.src.utils.url-embed-config
-    line: 161
-    cyclomatic_complexity: 4
-    calls_out: 3
-    calls_in: 0
-  frontend.src.utils.hardwareEventStream.payload:
-    name: payload
-    module: frontend.src.utils.hardwareEventStream
-    line: 35
-    cyclomatic_complexity: 3
-    calls_out: 1
-    calls_in: 0
-  frontend.src.api.wsClient.WsCqrsClient.setTimeout:
-    name: setTimeout
-    module: frontend.src.api.wsClient
-    line: 128
-    cyclomatic_complexity: 2
-    calls_out: 1
-    calls_in: 4
-  frontend.src.pages.MapEditor.editObjectActionBodyField:
-    name: editObjectActionBodyField
-    module: frontend.src.pages.MapEditor
-    line: 290
-    cyclomatic_complexity: 7
-    calls_out: 4
-    calls_in: 0
-  oqlos.core._interpreter_actions._do_sleep:
-    name: _do_sleep
-    module: oqlos.core._interpreter_actions
-    line: 243
-    cyclomatic_complexity: 3
-    calls_out: 10
-    calls_in: 2
-  oqlos.core._cql_tokenizer._try_goto:
-    name: _try_goto
-    module: oqlos.core._cql_tokenizer
-    line: 365
-    cyclomatic_complexity: 2
-    calls_out: 4
-    calls_in: 0
-  frontend.src.utils.mapEditorIntegrationMeta.source:
-    name: source
-    module: frontend.src.utils.mapEditorIntegrationMeta
-    line: 24
-    cyclomatic_complexity: 2
-    calls_out: 1
-    calls_in: 0
-  frontend.src.utils.mapEditorFuncHardwareSummary.uniqueHints:
-    name: uniqueHints
-    module: frontend.src.utils.mapEditorFuncHardwareSummary
-    line: 47
-    cyclomatic_complexity: 5
     calls_out: 5
-    calls_in: 1
-  oqlos.core._oql_adapter._lower_max:
-    name: _lower_max
-    module: oqlos.core._oql_adapter
-    line: 207
-    cyclomatic_complexity: 1
-    calls_out: 3
     calls_in: 0
-  frontend.src.utils.hardware-activity-log.loggedRef:
-    name: loggedRef
-    module: frontend.src.utils.hardware-activity-log
-    line: 19
-    cyclomatic_complexity: 2
-    calls_out: 4
-    calls_in: 0
-  oqlos.core._action_motor2._call_motor2_transport:
-    name: _call_motor2_transport
-    module: oqlos.core._action_motor2
-    line: 245
-    cyclomatic_complexity: 4
-    calls_out: 4
-    calls_in: 3
-  oqlos.core.safe_eval.safe_eval:
-    name: safe_eval
-    module: oqlos.core.safe_eval
-    line: 32
-    cyclomatic_complexity: 3
-    calls_out: 4
-    calls_in: 0
-  setup_hardware_and_run_oql.detect_serial_devices:
-    name: detect_serial_devices
-    module: setup_hardware_and_run_oql
-    line: 32
+  frontend.src.api.hardware-tic249-status.isIdempotentTic249Deenergized:
+    name: isIdempotentTic249Deenergized
+    module: frontend.src.api.hardware-tic249-status
+    line: 11
     cyclomatic_complexity: 12
-    calls_out: 7
-    calls_in: 1
-  oqlos.core.oql_parser._require:
-    name: _require
-    module: oqlos.core.oql_parser
-    line: 234
-    cyclomatic_complexity: 2
     calls_out: 2
-    calls_in: 11
-  oqlos.core._line_parsers._parse_set_line:
-    name: _parse_set_line
-    module: oqlos.core._line_parsers
-    line: 135
-    cyclomatic_complexity: 10
-    calls_out: 15
     calls_in: 1
-  oqlos.core._cql_tokenizer._try_min_max:
-    name: _try_min_max
-    module: oqlos.core._cql_tokenizer
-    line: 276
-    cyclomatic_complexity: 2
-    calls_out: 7
+  frontend.src.utils.url-embed-config.parentSearch:
+    name: parentSearch
+    module: frontend.src.utils.url-embed-config
+    line: 163
+    cyclomatic_complexity: 4
+    calls_out: 3
     calls_in: 0
   frontend.src.pages.HardwareRestart.skipOptionalStep:
     name: skipOptionalStep
@@ -1139,152 +138,47 @@ nodes:
     cyclomatic_complexity: 5
     calls_out: 6
     calls_in: 0
-  frontend.src.pages.HardwareDemo.onNoteClick:
-    name: onNoteClick
-    module: frontend.src.pages.HardwareDemo
-    line: 293
-    cyclomatic_complexity: 4
-    calls_out: 9
-    calls_in: 0
-  oqlos.core._action_motor2._motor2_state_handler:
-    name: _motor2_state_handler
+  oqlos.core._action_motor2._parse_motor2_speed_steps:
+    name: _parse_motor2_speed_steps
     module: oqlos.core._action_motor2
-    line: 270
-    cyclomatic_complexity: 1
-    calls_out: 3
-    calls_in: 0
-  frontend.src.utils.mapEditorIntegrationMeta.setApiServiceField:
-    name: setApiServiceField
-    module: frontend.src.utils.mapEditorIntegrationMeta
-    line: 42
-    cyclomatic_complexity: 2
-    calls_out: 0
-    calls_in: 1
-  oqlos.core.oql_parser._line_indent:
-    name: _line_indent
-    module: oqlos.core.oql_parser
-    line: 460
-    cyclomatic_complexity: 2
-    calls_out: 5
-    calls_in: 2
-  oqlos.core._cql_tokenizer._match_first:
-    name: _match_first
-    module: oqlos.core._cql_tokenizer
-    line: 129
-    cyclomatic_complexity: 3
-    calls_out: 1
-    calls_in: 7
-  frontend.src.api.hardware-diagnostic-failure.resultData:
-    name: resultData
-    module: frontend.src.api.hardware-diagnostic-failure
-    line: 13
+    line: 45
     cyclomatic_complexity: 4
-    calls_out: 0
+    calls_out: 4
     calls_in: 2
-  oqlos.core._oql_adapter._lower_call:
-    name: _lower_call
-    module: oqlos.core._oql_adapter
-    line: 157
-    cyclomatic_complexity: 6
-    calls_out: 10
-    calls_in: 0
-  frontend.src.utils.encoder-navigation.applyScrollToItems:
-    name: applyScrollToItems
+  frontend.src.utils.encoder-navigation.handleSetActive:
+    name: handleSetActive
     module: frontend.src.utils.encoder-navigation
-    line: 42
-    cyclomatic_complexity: 4
-    calls_out: 0
-    calls_in: 1
-  frontend.src.api.wsClient.WsCqrsClient.super:
-    name: super
-    module: frontend.src.api.wsClient
-    line: 18
-    cyclomatic_complexity: 1
-    calls_out: 1
-    calls_in: 18
-  oqlos.core._compare.resolve_compare_chain:
-    name: resolve_compare_chain
-    module: oqlos.core._compare
-    line: 29
+    line: 65
     cyclomatic_complexity: 3
-    calls_out: 4
-    calls_in: 2
-  frontend.src.utils.url-embed-config.resolveParentContextUpdate:
-    name: resolveParentContextUpdate
-    module: frontend.src.utils.url-embed-config
-    line: 159
-    cyclomatic_complexity: 12
-    calls_out: 4
-    calls_in: 0
-  oqlos.core._line_parsers._parse_action_line:
-    name: _parse_action_line
-    module: oqlos.core._line_parsers
-    line: 192
-    cyclomatic_complexity: 10
-    calls_out: 18
-    calls_in: 0
-  frontend.src.pages.HardwareRestart.confirmErrorKey:
-    name: confirmErrorKey
-    module: frontend.src.pages.HardwareRestart
-    line: 107
-    cyclomatic_complexity: 1
-    calls_out: 4
-    calls_in: 0
-  frontend.src.pages.HardwareDemo.controller:
-    name: controller
-    module: frontend.src.pages.HardwareDemo
-    line: 194
-    cyclomatic_complexity: 5
-    calls_out: 9
-    calls_in: 0
-  oqlos.core._action_motor2._parse_motor2_steps:
-    name: _parse_motor2_steps
-    module: oqlos.core._action_motor2
-    line: 166
-    cyclomatic_complexity: 1
     calls_out: 1
     calls_in: 2
-  frontend.src.pages.HardwareRestart.timestamp:
-    name: timestamp
-    module: frontend.src.pages.HardwareRestart
-    line: 13
-    cyclomatic_complexity: 1
-    calls_out: 2
-    calls_in: 4
-  frontend.src.pages.HardwareDemo.playToneOnSpeakers:
-    name: playToneOnSpeakers
-    module: frontend.src.pages.HardwareDemo
-    line: 105
-    cyclomatic_complexity: 4
-    calls_out: 9
-    calls_in: 1
-  oqlos.core._oql_adapter._lower_set:
-    name: _lower_set
-    module: oqlos.core._oql_adapter
-    line: 181
+  oqlos.core._interpreter_actions.exec_action_assert:
+    name: exec_action_assert
+    module: oqlos.core._interpreter_actions
+    line: 557
     cyclomatic_complexity: 3
     calls_out: 7
     calls_in: 0
-  oqlos.core._dsl_helpers._normalize_quote_syntax:
-    name: _normalize_quote_syntax
-    module: oqlos.core._dsl_helpers
-    line: 21
+  oqlos.core._interpreter_actions._oql_quote:
+    name: _oql_quote
+    module: oqlos.core._interpreter_actions
+    line: 96
     cyclomatic_complexity: 2
     calls_out: 3
-    calls_in: 7
-  oqlos.core.motor2_runtime.motor2_speed_raw:
-    name: motor2_speed_raw
-    module: oqlos.core.motor2_runtime
-    line: 125
-    cyclomatic_complexity: 1
-    calls_out: 5
     calls_in: 2
-  oqlos.core.oql_parser._validate_oql_version:
-    name: _validate_oql_version
-    module: oqlos.core.oql_parser
-    line: 618
-    cyclomatic_complexity: 8
-    calls_out: 6
+  frontend.src.pages.MapEditor.runAddForTab:
+    name: runAddForTab
+    module: frontend.src.pages.MapEditor
+    line: 593
+    cyclomatic_complexity: 5
+    calls_out: 5
+    calls_in: 0
+  frontend.src.utils.hardware-wizard-plan.throwIfStackError:
+    name: throwIfStackError
+    module: frontend.src.utils.hardware-wizard-plan
+    line: 13
+    cyclomatic_complexity: 7
+    calls_out: 2
     calls_in: 1
   setup_hardware_and_run_oql.setup_env_file:
     name: setup_env_file
@@ -1293,530 +187,131 @@ nodes:
     cyclomatic_complexity: 7
     calls_out: 16
     calls_in: 1
-  frontend.src.pages.HardwareDemo.sendDeviceStop:
-    name: sendDeviceStop
-    module: frontend.src.pages.HardwareDemo
-    line: 261
-    cyclomatic_complexity: 3
-    calls_out: 3
-    calls_in: 2
-  oqlos.core.interpreter.CqlInterpreter.parse:
-    name: parse
-    module: oqlos.core.interpreter
-    line: 137
-    cyclomatic_complexity: 3
-    calls_out: 5
-    calls_in: 0
-  oqlos.core._action_motor2._parse_motor2_acceleration:
-    name: _parse_motor2_acceleration
-    module: oqlos.core._action_motor2
-    line: 92
-    cyclomatic_complexity: 6
-    calls_out: 9
-    calls_in: 1
-  frontend.src.hooks.useMapEditorSidebarAutoCollapse.applyAutoCollapse:
-    name: applyAutoCollapse
-    module: frontend.src.hooks.useMapEditorSidebarAutoCollapse
-    line: 6
-    cyclomatic_complexity: 9
-    calls_out: 4
-    calls_in: 1
-  frontend.src.utils.mapEditorMapShape.fillMissingFields:
-    name: fillMissingFields
-    module: frontend.src.utils.mapEditorMapShape
-    line: 9
-    cyclomatic_complexity: 6
-    calls_out: 4
-    calls_in: 0
-  frontend.src.api.hardwareApi.request:
-    name: request
-    module: frontend.src.api.hardwareApi
-    line: 33
-    cyclomatic_complexity: 14
-    calls_out: 14
-    calls_in: 3
-  oqlos.core._action_motor2._parse_motor2_positive_int:
-    name: _parse_motor2_positive_int
-    module: oqlos.core._action_motor2
-    line: 52
-    cyclomatic_complexity: 3
-    calls_out: 9
-    calls_in: 2
-  frontend.src.utils.hardwareEventStream.normalizeHardwareEvent:
-    name: normalizeHardwareEvent
-    module: frontend.src.utils.hardwareEventStream
-    line: 32
-    cyclomatic_complexity: 8
-    calls_out: 5
-    calls_in: 0
-  frontend.src.pages.MapEditor.editJsonField:
-    name: editJsonField
-    module: frontend.src.pages.MapEditor
-    line: 271
-    cyclomatic_complexity: 5
-    calls_out: 3
-    calls_in: 0
-  frontend.src.api.wsClient.WsCqrsClient.command:
-    name: command
-    module: frontend.src.api.wsClient
-    line: 73
-    cyclomatic_complexity: 1
-    calls_out: 1
-    calls_in: 0
-  oqlos.core.oql_parser.parse_MIN:
-    name: parse_MIN
+  oqlos.core.oql_parser.to_num:
+    name: to_num
     module: oqlos.core.oql_parser
-    line: 357
-    cyclomatic_complexity: 1
-    calls_out: 3
-    calls_in: 0
-  oqlos.core._cql_tokenizer._try_if_else:
-    name: _try_if_else
-    module: oqlos.core._cql_tokenizer
-    line: 211
-    cyclomatic_complexity: 3
-    calls_out: 8
-    calls_in: 0
-  oqlos.core.base.InterpreterOutput.emit:
-    name: emit
-    module: oqlos.core.base
-    line: 121
-    cyclomatic_complexity: 5
-    calls_out: 3
-    calls_in: 0
-  frontend.src.api.hardware-api-log.summarizeHardwareApiBody:
-    name: summarizeHardwareApiBody
-    module: frontend.src.api.hardware-api-log
-    line: 10
-    cyclomatic_complexity: 11
-    calls_out: 5
-    calls_in: 0
-  oqlos.core.motor2_runtime.motor2_speed_for_duration:
-    name: motor2_speed_for_duration
-    module: oqlos.core.motor2_runtime
-    line: 112
-    cyclomatic_complexity: 1
-    calls_out: 9
-    calls_in: 2
-  oqlos.core._sensor_evaluator.SensorEvaluator.__init__:
-    name: __init__
-    module: oqlos.core._sensor_evaluator
-    line: 52
-    cyclomatic_complexity: 3
-    calls_out: 2
-    calls_in: 0
-  frontend.src.pages.MapEditorObjectActionPanel._MotorRelativeParams:
-    name: _MotorRelativeParams
-    module: frontend.src.pages.MapEditorObjectActionPanel
-    line: 16
-    cyclomatic_complexity: 1
-    calls_out: 3
-    calls_in: 0
-  oqlos.core._oql_adapter._resolve_include:
-    name: _resolve_include
-    module: oqlos.core._oql_adapter
-    line: 57
-    cyclomatic_complexity: 6
-    calls_out: 8
-    calls_in: 1
-  frontend.src.utils.useSelectionCollapsePanel.expand:
-    name: expand
-    module: frontend.src.utils.useSelectionCollapsePanel
-    line: 70
-    cyclomatic_complexity: 1
-    calls_out: 5
-    calls_in: 1
-  oqlos.core.cql_parser._ParseState._handle_scenario:
-    name: _handle_scenario
-    module: oqlos.core.cql_parser
-    line: 175
-    cyclomatic_complexity: 2
-    calls_out: 3
-    calls_in: 0
-  frontend.src.utils.hardware-api-retry.attempt:
-    name: attempt
-    module: frontend.src.utils.hardware-api-retry
-    line: 14
-    cyclomatic_complexity: 14
-    calls_out: 9
-    calls_in: 1
-  oqlos.core.executor.ScenarioOrchestrator.validate_goal:
-    name: validate_goal
-    module: oqlos.core.executor
-    line: 352
-    cyclomatic_complexity: 5
-    calls_out: 3
-    calls_in: 0
-  oqlos.core._interpreter_actions._record_failure:
-    name: _record_failure
-    module: oqlos.core._interpreter_actions
-    line: 126
-    cyclomatic_complexity: 1
-    calls_out: 3
-    calls_in: 8
-  frontend.src.utils.useSelectionCollapsePanel.toggleCollapsed:
-    name: toggleCollapsed
-    module: frontend.src.utils.useSelectionCollapsePanel
-    line: 77
+    line: 143
     cyclomatic_complexity: 2
     calls_out: 5
-    calls_in: 0
-  oqlos.core._action_motor2._motor2_do_start:
-    name: _motor2_do_start
-    module: oqlos.core._action_motor2
-    line: 337
-    cyclomatic_complexity: 4
-    calls_out: 10
-    calls_in: 0
-  frontend.src.api.scenarioFilesApi.fetchScenarioFilesList:
-    name: fetchScenarioFilesList
-    module: frontend.src.api.scenarioFilesApi
-    line: 8
-    cyclomatic_complexity: 2
-    calls_out: 4
-    calls_in: 0
-  oqlos.core._interpreter_actions._assert_json:
-    name: _assert_json
-    module: oqlos.core._interpreter_actions
-    line: 485
-    cyclomatic_complexity: 6
-    calls_out: 9
-    calls_in: 0
-  frontend.src.api.wsClient.WsCqrsClient.reject:
-    name: reject
-    module: frontend.src.api.wsClient
-    line: 93
-    cyclomatic_complexity: 1
-    calls_out: 1
-    calls_in: 5
-  frontend.src.pages.MapEditor.clearServerHardwareEvents:
-    name: clearServerHardwareEvents
-    module: frontend.src.pages.MapEditor
-    line: 402
-    cyclomatic_complexity: 8
-    calls_out: 9
-    calls_in: 0
-  oqlos.core._oql_adapter._substitute_args:
-    name: _substitute_args
-    module: oqlos.core._oql_adapter
-    line: 73
-    cyclomatic_complexity: 3
-    calls_out: 2
-    calls_in: 1
-  oqlos.core._cql_tree_builder._parse_step_line:
-    name: _parse_step_line
-    module: oqlos.core._cql_tree_builder
-    line: 119
-    cyclomatic_complexity: 3
-    calls_out: 5
-    calls_in: 1
-  oqlos.core._interpreter_actions.exec_action_wait:
-    name: exec_action_wait
-    module: oqlos.core._interpreter_actions
-    line: 230
-    cyclomatic_complexity: 3
-    calls_out: 4
-    calls_in: 1
-  frontend.src.pages.MapEditor.addParam:
-    name: addParam
-    module: frontend.src.pages.MapEditor
-    line: 153
-    cyclomatic_complexity: 2
-    calls_out: 4
-    calls_in: 1
-  frontend.src.pages.MapEditor.name:
-    name: name
-    module: frontend.src.pages.MapEditor
-    line: 237
-    cyclomatic_complexity: 1
-    calls_out: 3
-    calls_in: 0
-  oqlos.core._action_motor2._post_motor2_stop:
-    name: _post_motor2_stop
-    module: oqlos.core._action_motor2
-    line: 235
-    cyclomatic_complexity: 4
-    calls_out: 11
-    calls_in: 0
-  frontend.src.utils.mapEditorIntegrationMeta.setApiEndpointField:
-    name: setApiEndpointField
-    module: frontend.src.utils.mapEditorIntegrationMeta
-    line: 47
-    cyclomatic_complexity: 2
-    calls_out: 0
-    calls_in: 1
-  frontend.src.pages.MapEditor.next:
-    name: next
-    module: frontend.src.pages.MapEditor
-    line: 108
-    cyclomatic_complexity: 1
-    calls_out: 1
-    calls_in: 13
-  frontend.src.api.wsClient.WsCqrsClient.connected:
-    name: connected
-    module: frontend.src.api.wsClient
-    line: 28
-    cyclomatic_complexity: 3
-    calls_out: 0
-    calls_in: 1
-  frontend.src.utils.encoder-navigation.tryCancelPostMessage:
-    name: tryCancelPostMessage
-    module: frontend.src.utils.encoder-navigation
-    line: 57
-    cyclomatic_complexity: 2
-    calls_out: 1
-    calls_in: 1
-  oqlos.core._func_resolver._guard_recursion:
-    name: _guard_recursion
-    module: oqlos.core._func_resolver
-    line: 66
-    cyclomatic_complexity: 3
-    calls_out: 5
-    calls_in: 1
-  oqlos.core._interpreter_actions._normalize_bool:
-    name: _normalize_bool
-    module: oqlos.core._interpreter_actions
-    line: 140
-    cyclomatic_complexity: 5
-    calls_out: 4
-    calls_in: 2
-  frontend.src.utils.encoder-navigation.removeEncoderHighlights:
-    name: removeEncoderHighlights
-    module: frontend.src.utils.encoder-navigation
-    line: 28
-    cyclomatic_complexity: 1
-    calls_out: 3
-    calls_in: 3
-  frontend.src.api.hardwareApi.durationMs:
-    name: durationMs
-    module: frontend.src.api.hardwareApi
-    line: 62
-    cyclomatic_complexity: 7
-    calls_out: 6
-    calls_in: 0
-  frontend.src.utils.useSelectionCollapsePanel.collapsed:
-    name: collapsed
-    module: frontend.src.utils.useSelectionCollapsePanel
-    line: 57
-    cyclomatic_complexity: 2
-    calls_out: 6
-    calls_in: 0
-  oqlos.core._oql_adapter._fmt_value:
-    name: _fmt_value
-    module: oqlos.core._oql_adapter
-    line: 46
-    cyclomatic_complexity: 2
-    calls_out: 1
-    calls_in: 3
-  oqlos.core._interpreter_actions._get_nested_value:
-    name: _get_nested_value
-    module: oqlos.core._interpreter_actions
-    line: 105
-    cyclomatic_complexity: 9
-    calls_out: 7
-    calls_in: 1
-  frontend.src.pages.HardwareDemo.playMelody:
-    name: playMelody
-    module: frontend.src.pages.HardwareDemo
-    line: 318
-    cyclomatic_complexity: 9
-    calls_out: 11
-    calls_in: 0
-  frontend.src.api.hardware-api-errors.describeDetail:
-    name: describeDetail
-    module: frontend.src.api.hardware-api-errors
-    line: 12
-    cyclomatic_complexity: 13
-    calls_out: 6
-    calls_in: 1
-  frontend.src.utils.useSelectionCollapsePanel.cancelAutoCollapse:
-    name: cancelAutoCollapse
-    module: frontend.src.utils.useSelectionCollapsePanel
-    line: 39
-    cyclomatic_complexity: 2
-    calls_out: 2
-    calls_in: 5
-  oqlos.core.cql_parser._validate_intervals:
-    name: _validate_intervals
-    module: oqlos.core.cql_parser
-    line: 441
-    cyclomatic_complexity: 6
-    calls_out: 1
-    calls_in: 1
-  oqlos.core._interpreter_actions._assert_valve:
-    name: _assert_valve
-    module: oqlos.core._interpreter_actions
-    line: 528
-    cyclomatic_complexity: 5
-    calls_out: 8
-    calls_in: 0
-  oqlos.core.oql_parser.parse_WAIT:
-    name: parse_WAIT
-    module: oqlos.core.oql_parser
-    line: 266
-    cyclomatic_complexity: 2
-    calls_out: 7
-    calls_in: 1
-  oqlos.core._oql_adapter._lower_min:
-    name: _lower_min
-    module: oqlos.core._oql_adapter
-    line: 202
-    cyclomatic_complexity: 1
-    calls_out: 3
-    calls_in: 0
-  frontend.src.utils.url-embed-config.search:
-    name: search
-    module: frontend.src.utils.url-embed-config
-    line: 162
-    cyclomatic_complexity: 4
-    calls_out: 3
-    calls_in: 0
-  oqlos.core._interpreter_actions.parse_wait_secs:
-    name: parse_wait_secs
-    module: oqlos.core._interpreter_actions
-    line: 217
-    cyclomatic_complexity: 4
-    calls_out: 6
-    calls_in: 2
-  oqlos.core._action_motor2._post_motor2_reciprocate:
-    name: _post_motor2_reciprocate
-    module: oqlos.core._action_motor2
-    line: 204
-    cyclomatic_complexity: 7
-    calls_out: 11
-    calls_in: 0
-  frontend.src.utils.encoder-navigation.all:
-    name: all
-    module: frontend.src.utils.encoder-navigation
-    line: 16
-    cyclomatic_complexity: 6
-    calls_out: 2
     calls_in: 7
-  oqlos.core.motor2_runtime.motor2_acceleration_raw:
-    name: motor2_acceleration_raw
-    module: oqlos.core.motor2_runtime
-    line: 117
-    cyclomatic_complexity: 2
-    calls_out: 8
-    calls_in: 2
-  oqlos.core._value_normalizers.ValueNormalizer.coerce_float:
-    name: coerce_float
-    module: oqlos.core._value_normalizers
-    line: 28
-    cyclomatic_complexity: 5
-    calls_out: 9
+  frontend.src.pages.MapEditor.renameKey:
+    name: renameKey
+    module: frontend.src.pages.MapEditor
+    line: 254
+    cyclomatic_complexity: 3
+    calls_out: 4
     calls_in: 0
-  oqlos.core.safe_eval._eval_compare:
-    name: _eval_compare
-    module: oqlos.core.safe_eval
-    line: 90
+  oqlos.core._line_parsers._parse_set_line:
+    name: _parse_set_line
+    module: oqlos.core._line_parsers
+    line: 135
+    cyclomatic_complexity: 10
+    calls_out: 15
+    calls_in: 1
+  frontend.src.utils.mapEditorMapShape.isPlainObject:
+    name: isPlainObject
+    module: frontend.src.utils.mapEditorMapShape
+    line: 5
+    cyclomatic_complexity: 3
+    calls_out: 2
+    calls_in: 3
+  oqlos.core._action_motor2._handle_motor2_reciprocating_setting:
+    name: _handle_motor2_reciprocating_setting
+    module: oqlos.core._action_motor2
+    line: 412
+    cyclomatic_complexity: 2
+    calls_out: 4
+    calls_in: 1
+  frontend.src.utils.mapEditorFuncHardwareSummary._asMap:
+    name: _asMap
+    module: frontend.src.utils.mapEditorFuncHardwareSummary
+    line: 5
+    cyclomatic_complexity: 3
+    calls_out: 0
+    calls_in: 1
+  oqlos.core._interpreter_actions.exec_action_func:
+    name: exec_action_func
+    module: oqlos.core._interpreter_actions
+    line: 413
+    cyclomatic_complexity: 9
+    calls_out: 15
+    calls_in: 0
+  oqlos.core.oql_parser.parse_GET:
+    name: parse_GET
+    module: oqlos.core.oql_parser
+    line: 261
     cyclomatic_complexity: 1
     calls_out: 2
     calls_in: 0
-  oqlos.core._action_motor2._motor2_do_stop:
-    name: _motor2_do_stop
-    module: oqlos.core._action_motor2
-    line: 282
-    cyclomatic_complexity: 4
-    calls_out: 3
-    calls_in: 0
-  frontend.src.api.hardware-tic249-status.tic249ResultStatus:
-    name: tic249ResultStatus
-    module: frontend.src.api.hardware-tic249-status
-    line: 3
-    cyclomatic_complexity: 8
-    calls_out: 2
-    calls_in: 2
-  frontend.src.utils.rbac.policy.canHostRoleAccessPath:
-    name: canHostRoleAccessPath
-    module: frontend.src.utils.rbac.policy
-    line: 117
-    cyclomatic_complexity: 2
-    calls_out: 3
-    calls_in: 0
-  oqlos.core.base.VariableStore.__init__:
-    name: __init__
-    module: oqlos.core.base
-    line: 64
-    cyclomatic_complexity: 2
-    calls_out: 1
-    calls_in: 0
-  oqlos.core._action_motor2._motor2_reciprocating_state:
-    name: _motor2_reciprocating_state
-    module: oqlos.core._action_motor2
-    line: 254
-    cyclomatic_complexity: 2
-    calls_out: 3
-    calls_in: 1
-  oqlos.core._cql_tokenizer._parse_condition_value:
-    name: _parse_condition_value
-    module: oqlos.core._cql_tokenizer
-    line: 138
-    cyclomatic_complexity: 4
+  oqlos.core._compare.resolve_compare_chain:
+    name: resolve_compare_chain
+    module: oqlos.core._compare
+    line: 29
+    cyclomatic_complexity: 3
     calls_out: 4
     calls_in: 2
-  frontend.src.utils.url-embed-config.resolveUserFromContextPayload:
-    name: resolveUserFromContextPayload
-    module: frontend.src.utils.url-embed-config
-    line: 36
-    cyclomatic_complexity: 8
-    calls_out: 2
-    calls_in: 1
-  oqlos.core._interpreter_actions._resolve_numeric_token:
-    name: _resolve_numeric_token
-    module: oqlos.core._interpreter_actions
-    line: 335
-    cyclomatic_complexity: 6
-    calls_out: 9
-    calls_in: 1
-  oqlos.core._action_motor2._normalize_motor2_target:
-    name: _normalize_motor2_target
-    module: oqlos.core._action_motor2
-    line: 31
-    cyclomatic_complexity: 1
-    calls_out: 2
-    calls_in: 1
-  oqlos.core.oql_parser.parse_CALL:
-    name: parse_CALL
-    module: oqlos.core.oql_parser
-    line: 405
-    cyclomatic_complexity: 1
-    calls_out: 2
-    calls_in: 0
-  frontend.src.pages.HardwareDemo.fallbackDevice:
-    name: fallbackDevice
+  frontend.src.pages.HardwareDemo.fb:
+    name: fb
     module: frontend.src.pages.HardwareDemo
-    line: 243
+    line: 244
     cyclomatic_complexity: 2
     calls_out: 5
     calls_in: 0
-  frontend.src.utils.mapEditorModel.ensureRequiredDefaultMappings:
-    name: ensureRequiredDefaultMappings
-    module: frontend.src.utils.mapEditorModel
-    line: 23
+  frontend.src.api.hardware-diagnostic-failure.failureFromNestedOk:
+    name: failureFromNestedOk
+    module: frontend.src.api.hardware-diagnostic-failure
+    line: 61
     cyclomatic_complexity: 10
+    calls_out: 4
+    calls_in: 1
+  oqlos.core._action_motor2._parse_motor2_duration_seconds:
+    name: _parse_motor2_duration_seconds
+    module: oqlos.core._action_motor2
+    line: 70
+    cyclomatic_complexity: 8
+    calls_out: 7
+    calls_in: 1
+  frontend.src.utils.mapEditorIntegrationMeta.source:
+    name: source
+    module: frontend.src.utils.mapEditorIntegrationMeta
+    line: 24
+    cyclomatic_complexity: 2
+    calls_out: 1
+    calls_in: 0
+  oqlos.core.oql_parser._compact_duration:
+    name: _compact_duration
+    module: oqlos.core.oql_parser
+    line: 149
+    cyclomatic_complexity: 2
     calls_out: 3
     calls_in: 1
-  oqlos.core._line_parsers._parse_task_part:
-    name: _parse_task_part
-    module: oqlos.core._line_parsers
-    line: 20
-    cyclomatic_complexity: 10
-    calls_out: 14
-    calls_in: 2
-  oqlos.core._interpreter_actions.exec_action_save:
-    name: exec_action_save
-    module: oqlos.core._interpreter_actions
-    line: 204
-    cyclomatic_complexity: 4
-    calls_out: 6
+  oqlos.core.oql_parser._check_unnamed_goals:
+    name: _check_unnamed_goals
+    module: oqlos.core.oql_parser
+    line: 643
+    cyclomatic_complexity: 5
+    calls_out: 1
     calls_in: 1
-  frontend.src.i18n.I18nProvider.val:
-    name: val
-    module: frontend.src.i18n.I18nProvider
-    line: 35
+  oqlos.core._dsl_helpers._looks_like_valve_object:
+    name: _looks_like_valve_object
+    module: oqlos.core._dsl_helpers
+    line: 26
     cyclomatic_complexity: 2
-    calls_out: 2
+    calls_out: 3
+    calls_in: 2
+  frontend.src.pages.HardwareRestart.confirmLabelKey:
+    name: confirmLabelKey
+    module: frontend.src.pages.HardwareRestart
+    line: 104
+    cyclomatic_complexity: 1
+    calls_out: 4
+    calls_in: 0
+  frontend.src.hooks.useMapEditorSidebarAutoCollapse.useMapEditorSidebarAutoCollapse:
+    name: useMapEditorSidebarAutoCollapse
+    module: frontend.src.hooks.useMapEditorSidebarAutoCollapse
+    line: 4
+    cyclomatic_complexity: 9
+    calls_out: 11
     calls_in: 0
   frontend.src.utils.hardware-activity-log.prependHardwareActivityLogEntry:
     name: prependHardwareActivityLogEntry
@@ -1825,18 +320,578 @@ nodes:
     cyclomatic_complexity: 1
     calls_out: 2
     calls_in: 0
-  oqlos.core.cql_parser._ParseState._try_hierarchy:
-    name: _try_hierarchy
-    module: oqlos.core.cql_parser
-    line: 375
+  oqlos.core.safe_eval._eval_bin_op:
+    name: _eval_bin_op
+    module: oqlos.core.safe_eval
+    line: 80
+    cyclomatic_complexity: 2
+    calls_out: 7
+    calls_in: 0
+  oqlos.core._interpreter_actions._normalize_bool:
+    name: _normalize_bool
+    module: oqlos.core._interpreter_actions
+    line: 140
+    cyclomatic_complexity: 5
+    calls_out: 4
+    calls_in: 2
+  oqlos.core._action_motor2._motor2_effective_steps_per_second:
+    name: _motor2_effective_steps_per_second
+    module: oqlos.core._action_motor2
+    line: 178
+    cyclomatic_complexity: 1
+    calls_out: 4
+    calls_in: 1
+  oqlos.core._interpreter_actions._get_nested_value:
+    name: _get_nested_value
+    module: oqlos.core._interpreter_actions
+    line: 105
+    cyclomatic_complexity: 9
+    calls_out: 7
+    calls_in: 1
+  frontend.src.utils.rbac.policy.canHostRoleAccessPath:
+    name: canHostRoleAccessPath
+    module: frontend.src.utils.rbac.policy
+    line: 117
+    cyclomatic_complexity: 2
+    calls_out: 3
+    calls_in: 0
+  frontend.src.utils.mapEditorModel.cloneDefaultMap:
+    name: cloneDefaultMap
+    module: frontend.src.utils.mapEditorModel
+    line: 19
+    cyclomatic_complexity: 1
+    calls_out: 2
+    calls_in: 1
+  oqlos.core.base.VariableStore.all:
+    name: all
+    module: oqlos.core.base
+    line: 87
+    cyclomatic_complexity: 3
+    calls_out: 3
+    calls_in: 0
+  frontend.src.utils.mapEditorFuncHardwareSummary.uniqueHints:
+    name: uniqueHints
+    module: frontend.src.utils.mapEditorFuncHardwareSummary
+    line: 47
+    cyclomatic_complexity: 5
+    calls_out: 5
+    calls_in: 1
+  frontend.src.api.hardware-diagnostic-failure.failureFromOkFalsePayload:
+    name: failureFromOkFalsePayload
+    module: frontend.src.api.hardware-diagnostic-failure
+    line: 32
+    cyclomatic_complexity: 14
+    calls_out: 6
+    calls_in: 1
+  frontend.src.utils.rbac.policy.canConnectRoleAccessPath:
+    name: canConnectRoleAccessPath
+    module: frontend.src.utils.rbac.policy
+    line: 111
+    cyclomatic_complexity: 2
+    calls_out: 3
+    calls_in: 0
+  frontend.src.utils.encoder-navigation.getInteractiveItems:
+    name: getInteractiveItems
+    module: frontend.src.utils.encoder-navigation
+    line: 15
+    cyclomatic_complexity: 6
+    calls_out: 4
+    calls_in: 2
+  frontend.src.pages.ScenarioFiles.runScenario:
+    name: runScenario
+    module: frontend.src.pages.ScenarioFiles
+    line: 99
+    cyclomatic_complexity: 5
+    calls_out: 7
+    calls_in: 0
+  oqlos.core._oql_adapter.oql_doc_to_cql:
+    name: oql_doc_to_cql
+    module: oqlos.core._oql_adapter
+    line: 412
+    cyclomatic_complexity: 12
+    calls_out: 30
+    calls_in: 2
+  frontend.src.pages.HardwareRestart.log:
+    name: log
+    module: frontend.src.pages.HardwareRestart
+    line: 133
+    cyclomatic_complexity: 1
+    calls_out: 3
+    calls_in: 11
+  oqlos.core._interpreter_actions._assert_valve:
+    name: _assert_valve
+    module: oqlos.core._interpreter_actions
+    line: 528
+    cyclomatic_complexity: 5
+    calls_out: 8
+    calls_in: 0
+  frontend.src.pages.HardwareDemo.playToneOnSpeakers:
+    name: playToneOnSpeakers
+    module: frontend.src.pages.HardwareDemo
+    line: 105
+    cyclomatic_complexity: 4
+    calls_out: 9
+    calls_in: 1
+  frontend.src.pages.MapEditor.addFunc:
+    name: addFunc
+    module: frontend.src.pages.MapEditor
+    line: 236
+    cyclomatic_complexity: 2
+    calls_out: 6
+    calls_in: 1
+  oqlos.core._interpreter_actions._mark_success:
+    name: _mark_success
+    module: oqlos.core._interpreter_actions
+    line: 135
+    cyclomatic_complexity: 1
+    calls_out: 1
+    calls_in: 3
+  oqlos.core._cql_tokenizer._match_first:
+    name: _match_first
+    module: oqlos.core._cql_tokenizer
+    line: 129
+    cyclomatic_complexity: 3
+    calls_out: 1
+    calls_in: 7
+  oqlos.core._oql_adapter._substitute_args:
+    name: _substitute_args
+    module: oqlos.core._oql_adapter
+    line: 73
+    cyclomatic_complexity: 3
+    calls_out: 2
+    calls_in: 1
+  oqlos.core._oql_adapter._parse_macro_line:
+    name: _parse_macro_line
+    module: oqlos.core._oql_adapter
+    line: 328
+    cyclomatic_complexity: 8
+    calls_out: 10
+    calls_in: 1
+  frontend.src.api.wsClient.WsCqrsClient.command:
+    name: command
+    module: frontend.src.api.wsClient
+    line: 73
+    cyclomatic_complexity: 1
+    calls_out: 1
+    calls_in: 0
+  oqlos.core.motor2_runtime.motor2_speed_for_duration:
+    name: motor2_speed_for_duration
+    module: oqlos.core.motor2_runtime
+    line: 112
+    cyclomatic_complexity: 1
+    calls_out: 9
+    calls_in: 2
+  frontend.src.utils.rbac.policy.matchesPattern:
+    name: matchesPattern
+    module: frontend.src.utils.rbac.policy
+    line: 91
+    cyclomatic_complexity: 3
+    calls_out: 3
+    calls_in: 3
+  frontend.src.hooks.useRailHoverPreview.cancelPanelClose:
+    name: cancelPanelClose
+    module: frontend.src.hooks.useRailHoverPreview
+    line: 24
+    cyclomatic_complexity: 2
+    calls_out: 2
+    calls_in: 3
+  frontend.src.pages.HardwareRestart.canRunCurrentStep:
+    name: canRunCurrentStep
+    module: frontend.src.pages.HardwareRestart
+    line: 110
+    cyclomatic_complexity: 1
+    calls_out: 4
+    calls_in: 0
+  oqlos.core.oql_parser.parse_INCLUDE:
+    name: parse_INCLUDE
+    module: oqlos.core.oql_parser
+    line: 410
+    cyclomatic_complexity: 1
+    calls_out: 2
+    calls_in: 1
+  oqlos.core._action_motor2._motor2_do_start:
+    name: _motor2_do_start
+    module: oqlos.core._action_motor2
+    line: 337
+    cyclomatic_complexity: 4
+    calls_out: 10
+    calls_in: 0
+  oqlos.core.oql_parser.parse_IF_DELTA:
+    name: parse_IF_DELTA
+    module: oqlos.core.oql_parser
+    line: 279
+    cyclomatic_complexity: 6
+    calls_out: 16
+    calls_in: 0
+  frontend.src.api.wsClient.WsCqrsClient.delay:
+    name: delay
+    module: frontend.src.api.wsClient
+    line: 127
+    cyclomatic_complexity: 2
+    calls_out: 2
+    calls_in: 0
+  frontend.src.utils.url-embed-config.mergeParentContext:
+    name: mergeParentContext
+    module: frontend.src.utils.url-embed-config
+    line: 113
     cyclomatic_complexity: 7
+    calls_out: 4
+    calls_in: 6
+  oqlos.core.safe_eval._eval_bool_op:
+    name: _eval_bool_op
+    module: oqlos.core.safe_eval
+    line: 95
+    cyclomatic_complexity: 4
+    calls_out: 7
+    calls_in: 0
+  oqlos.core.motor2_runtime._pick:
+    name: _pick
+    module: oqlos.core.motor2_runtime
+    line: 64
+    cyclomatic_complexity: 4
+    calls_out: 0
+    calls_in: 10
+  oqlos.core.parser._parse_runtime_line:
+    name: _parse_runtime_line
+    module: oqlos.core.parser
+    line: 62
+    cyclomatic_complexity: 9
+    calls_out: 15
+    calls_in: 1
+  oqlos.core._oql_adapter._lower_set:
+    name: _lower_set
+    module: oqlos.core._oql_adapter
+    line: 181
+    cyclomatic_complexity: 3
+    calls_out: 7
+    calls_in: 0
+  frontend.src.utils.useSelectionCollapsePanel.collapsed:
+    name: collapsed
+    module: frontend.src.utils.useSelectionCollapsePanel
+    line: 57
+    cyclomatic_complexity: 2
     calls_out: 6
     calls_in: 0
-  frontend.src.api.hardware-api-log.isHardwareWizardPath:
-    name: isHardwareWizardPath
-    module: frontend.src.api.hardware-api-log
-    line: 5
+  oqlos.core._interpreter_actions._record_failure:
+    name: _record_failure
+    module: oqlos.core._interpreter_actions
+    line: 126
+    cyclomatic_complexity: 1
+    calls_out: 3
+    calls_in: 8
+  frontend.src.utils.mapEditorMapShape.toPrettyJson:
+    name: toPrettyJson
+    module: frontend.src.utils.mapEditorMapShape
+    line: 56
+    cyclomatic_complexity: 1
+    calls_out: 2
+    calls_in: 0
+  frontend.src.api.hardwareApi.mode:
+    name: mode
+    module: frontend.src.api.hardwareApi
+    line: 181
+    cyclomatic_complexity: 1
+    calls_out: 1
+    calls_in: 0
+  frontend.src.utils.hardware-demo-identify.stepperOk:
+    name: stepperOk
+    module: frontend.src.utils.hardware-demo-identify
+    line: 60
+    cyclomatic_complexity: 3
+    calls_out: 1
+    calls_in: 0
+  oqlos.core._dsl_helpers._normalize_quote_syntax:
+    name: _normalize_quote_syntax
+    module: oqlos.core._dsl_helpers
+    line: 21
     cyclomatic_complexity: 2
+    calls_out: 3
+    calls_in: 7
+  frontend.src.i18n.I18nProvider.dict:
+    name: dict
+    module: frontend.src.i18n.I18nProvider
+    line: 31
+    cyclomatic_complexity: 8
+    calls_out: 3
+    calls_in: 44
+  frontend.src.pages.HardwareRestart.requiresStepConfirm:
+    name: requiresStepConfirm
+    module: frontend.src.pages.HardwareRestart
+    line: 103
+    cyclomatic_complexity: 1
+    calls_out: 4
+    calls_in: 0
+  frontend.src.utils.mapEditorFuncHardwareSummary.summarizeFuncToHardware:
+    name: summarizeFuncToHardware
+    module: frontend.src.utils.mapEditorFuncHardwareSummary
+    line: 59
+    cyclomatic_complexity: 11
+    calls_out: 7
+    calls_in: 0
+  frontend.src.hooks.useRailHoverPreview.railLeave:
+    name: railLeave
+    module: frontend.src.hooks.useRailHoverPreview
+    line: 51
+    cyclomatic_complexity: 1
+    calls_out: 2
+    calls_in: 0
+  oqlos.core.executor._resolve_compare:
+    name: _resolve_compare
+    module: oqlos.core.executor
+    line: 11
+    cyclomatic_complexity: 1
+    calls_out: 2
+    calls_in: 1
+  oqlos.core._interpreter_actions._extract_action_tokens:
+    name: _extract_action_tokens
+    module: oqlos.core._interpreter_actions
+    line: 30
+    cyclomatic_complexity: 5
+    calls_out: 4
+    calls_in: 1
+  oqlos.core.safe_eval.safe_eval:
+    name: safe_eval
+    module: oqlos.core.safe_eval
+    line: 32
+    cyclomatic_complexity: 3
+    calls_out: 4
+    calls_in: 0
+  frontend.src.api.wsClient.WsCqrsClient.connected:
+    name: connected
+    module: frontend.src.api.wsClient
+    line: 28
+    cyclomatic_complexity: 3
+    calls_out: 0
+    calls_in: 1
+  oqlos.core._action_motor2._call_motor2_transport:
+    name: _call_motor2_transport
+    module: oqlos.core._action_motor2
+    line: 245
+    cyclomatic_complexity: 4
+    calls_out: 4
+    calls_in: 3
+  oqlos.core._oql_adapter._cmd_to_actions:
+    name: _cmd_to_actions
+    module: oqlos.core._oql_adapter
+    line: 318
+    cyclomatic_complexity: 2
+    calls_out: 3
+    calls_in: 3
+  frontend.src.utils.url-embed-config.resolveUserFromContextPayload:
+    name: resolveUserFromContextPayload
+    module: frontend.src.utils.url-embed-config
+    line: 36
+    cyclomatic_complexity: 8
+    calls_out: 2
+    calls_in: 1
+  oqlos.core._dsl_helpers._map_peripheral:
+    name: _map_peripheral
+    module: oqlos.core._dsl_helpers
+    line: 42
+    cyclomatic_complexity: 11
+    calls_out: 14
+    calls_in: 3
+  oqlos.core.oql_parser._require:
+    name: _require
+    module: oqlos.core.oql_parser
+    line: 234
+    cyclomatic_complexity: 2
+    calls_out: 2
+    calls_in: 11
+  frontend.src.utils.url-embed-config.applyParentContextPayload:
+    name: applyParentContextPayload
+    module: frontend.src.utils.url-embed-config
+    line: 145
+    cyclomatic_complexity: 5
+    calls_out: 5
+    calls_in: 6
+  frontend.src.utils.mapEditorFuncHardwareSummary.apiBindingHint:
+    name: apiBindingHint
+    module: frontend.src.utils.mapEditorFuncHardwareSummary
+    line: 9
+    cyclomatic_complexity: 12
+    calls_out: 0
+    calls_in: 3
+  frontend.src.utils.url-embed-config.parseIdentityParams:
+    name: parseIdentityParams
+    module: frontend.src.utils.url-embed-config
+    line: 74
+    cyclomatic_complexity: 4
+    calls_out: 6
+    calls_in: 1
+  oqlos.core._func_resolver._extract_func_name:
+    name: _extract_func_name
+    module: oqlos.core._func_resolver
+    line: 51
+    cyclomatic_complexity: 7
+    calls_out: 7
+    calls_in: 1
+  frontend.src.pages.MapEditor.next:
+    name: next
+    module: frontend.src.pages.MapEditor
+    line: 108
+    cyclomatic_complexity: 1
+    calls_out: 1
+    calls_in: 13
+  frontend.src.utils.encoder-navigation.handleScroll:
+    name: handleScroll
+    module: frontend.src.utils.encoder-navigation
+    line: 74
+    cyclomatic_complexity: 4
+    calls_out: 4
+    calls_in: 2
+  oqlos.core._interpreter_actions.exec_action_wait:
+    name: exec_action_wait
+    module: oqlos.core._interpreter_actions
+    line: 230
+    cyclomatic_complexity: 3
+    calls_out: 4
+    calls_in: 1
+  oqlos.core._action_motor2._motor2_max_steps_per_second:
+    name: _motor2_max_steps_per_second
+    module: oqlos.core._action_motor2
+    line: 174
+    cyclomatic_complexity: 1
+    calls_out: 1
+    calls_in: 3
+  frontend.src.pages.MapEditor.editParamConversionAlgorithm:
+    name: editParamConversionAlgorithm
+    module: frontend.src.pages.MapEditor
+    line: 199
+    cyclomatic_complexity: 11
+    calls_out: 9
+    calls_in: 0
+  oqlos.core.motor2_runtime.normalize_motor2_runtime_config:
+    name: normalize_motor2_runtime_config
+    module: oqlos.core.motor2_runtime
+    line: 76
+    cyclomatic_complexity: 12
+    calls_out: 29
+    calls_in: 1
+  frontend.src.pages.ScenarioFiles.selectFile:
+    name: selectFile
+    module: frontend.src.pages.ScenarioFiles
+    line: 49
+    cyclomatic_complexity: 3
+    calls_out: 8
+    calls_in: 1
+  frontend.src.utils.mapEditorIntegrationMeta.readIntegrationMeta:
+    name: readIntegrationMeta
+    module: frontend.src.utils.mapEditorIntegrationMeta
+    line: 13
+    cyclomatic_complexity: 11
+    calls_out: 2
+    calls_in: 0
+  oqlos.core._interpreter_actions.exec_action_val:
+    name: exec_action_val
+    module: oqlos.core._interpreter_actions
+    line: 271
+    cyclomatic_complexity: 3
+    calls_out: 4
+    calls_in: 1
+  frontend.src.hooks.useRailHoverPreview.railEnter:
+    name: railEnter
+    module: frontend.src.hooks.useRailHoverPreview
+    line: 41
+    cyclomatic_complexity: 3
+    calls_out: 4
+    calls_in: 0
+  frontend.src.pages.HardwareRestart.confirmErrorKey:
+    name: confirmErrorKey
+    module: frontend.src.pages.HardwareRestart
+    line: 107
+    cyclomatic_complexity: 1
+    calls_out: 4
+    calls_in: 0
+  frontend.src.api.hardware-diagnostic-failure.failureFromSuccessFalse:
+    name: failureFromSuccessFalse
+    module: frontend.src.api.hardware-diagnostic-failure
+    line: 42
+    cyclomatic_complexity: 14
+    calls_out: 3
+    calls_in: 1
+  frontend.src.utils.url-embed-config.parseNavigationParams:
+    name: parseNavigationParams
+    module: frontend.src.utils.url-embed-config
+    line: 84
+    cyclomatic_complexity: 10
+    calls_out: 3
+    calls_in: 1
+  oqlos.core._dsl_helpers._map_pump_action:
+    name: _map_pump_action
+    module: oqlos.core._dsl_helpers
+    line: 86
+    cyclomatic_complexity: 5
+    calls_out: 1
+    calls_in: 1
+  oqlos.core._oql_adapter._lower_call:
+    name: _lower_call
+    module: oqlos.core._oql_adapter
+    line: 157
+    cyclomatic_complexity: 6
+    calls_out: 10
+    calls_in: 0
+  frontend.src.utils.useSelectionCollapsePanel.useSelectionCollapsePanel:
+    name: useSelectionCollapsePanel
+    module: frontend.src.utils.useSelectionCollapsePanel
+    line: 27
+    cyclomatic_complexity: 14
+    calls_out: 18
+    calls_in: 0
+  oqlos.core.cql_parser.parse_cql:
+    name: parse_cql
+    module: oqlos.core.cql_parser
+    line: 414
+    cyclomatic_complexity: 2
+    calls_out: 6
+    calls_in: 2
+  frontend.src.hooks.useRailHoverPreview.previewExpand:
+    name: previewExpand
+    module: frontend.src.hooks.useRailHoverPreview
+    line: 35
+    cyclomatic_complexity: 3
+    calls_out: 2
+    calls_in: 2
+  oqlos.core.interpreter.CqlInterpreter.__init__:
+    name: __init__
+    module: oqlos.core.interpreter
+    line: 43
+    cyclomatic_complexity: 1
+    calls_out: 5
+    calls_in: 0
+  frontend.src.utils.encoder-navigation.handleClick:
+    name: handleClick
+    module: frontend.src.utils.encoder-navigation
+    line: 83
+    cyclomatic_complexity: 3
+    calls_out: 2
+    calls_in: 2
+  oqlos.core._interpreter_actions._assert_json:
+    name: _assert_json
+    module: oqlos.core._interpreter_actions
+    line: 485
+    cyclomatic_complexity: 6
+    calls_out: 9
+    calls_in: 0
+  frontend.src.pages.HardwareRestart.runCurrentStep:
+    name: runCurrentStep
+    module: frontend.src.pages.HardwareRestart
+    line: 129
+    cyclomatic_complexity: 10
+    calls_out: 14
+    calls_in: 0
+  frontend.src.pages.HardwareRestart.releaseRs485Port:
+    name: releaseRs485Port
+    module: frontend.src.pages.HardwareRestart
+    line: 112
+    cyclomatic_complexity: 1
+    calls_out: 4
+    calls_in: 0
+  frontend.src.utils.rbac.policy.parseConnectRole:
+    name: parseConnectRole
+    module: frontend.src.utils.rbac.policy
+    line: 25
+    cyclomatic_complexity: 3
     calls_out: 3
     calls_in: 1
   oqlos.core.executor._safe_resolve:
@@ -1846,27 +901,167 @@ nodes:
     cyclomatic_complexity: 14
     calls_out: 21
     calls_in: 7
-  frontend.src.utils.rbac.policy.resolveAllowedRolesForPath:
-    name: resolveAllowedRolesForPath
-    module: frontend.src.utils.rbac.policy
-    line: 99
-    cyclomatic_complexity: 6
-    calls_out: 2
-    calls_in: 2
-  frontend.src.pages.HardwareRestart.runCurrentStep:
-    name: runCurrentStep
-    module: frontend.src.pages.HardwareRestart
-    line: 129
+  oqlos.core.cql_parser.validate_cql:
+    name: validate_cql
+    module: oqlos.core.cql_parser
+    line: 452
+    cyclomatic_complexity: 5
+    calls_out: 5
+    calls_in: 1
+  frontend.src.utils.hardware-demo-identify.probeDemoDevices:
+    name: probeDemoDevices
+    module: frontend.src.utils.hardware-demo-identify
+    line: 44
     cyclomatic_complexity: 10
-    calls_out: 14
+    calls_out: 7
     calls_in: 0
-  frontend.src.utils.url-embed-config.mergeParentContext:
-    name: mergeParentContext
-    module: frontend.src.utils.url-embed-config
-    line: 113
-    cyclomatic_complexity: 7
+  frontend.src.pages.HardwareDemo.now:
+    name: now
+    module: frontend.src.pages.HardwareDemo
+    line: 225
+    cyclomatic_complexity: 1
+    calls_out: 1
+    calls_in: 1
+  frontend.src.api.hardware-api-log.logHardwareApiEvent:
+    name: logHardwareApiEvent
+    module: frontend.src.api.hardware-api-log
+    line: 75
+    cyclomatic_complexity: 6
     calls_out: 4
-    calls_in: 6
+    calls_in: 0
+  oqlos.core._cql_tokenizer._try_min_max:
+    name: _try_min_max
+    module: oqlos.core._cql_tokenizer
+    line: 276
+    cyclomatic_complexity: 2
+    calls_out: 7
+    calls_in: 0
+  frontend.src.pages.MapEditor.clearServerHardwareEvents:
+    name: clearServerHardwareEvents
+    module: frontend.src.pages.MapEditor
+    line: 402
+    cyclomatic_complexity: 8
+    calls_out: 9
+    calls_in: 0
+  frontend.src.api.scenarioFilesApi.filterListableFiles:
+    name: filterListableFiles
+    module: frontend.src.api.scenarioFilesApi
+    line: 3
+    cyclomatic_complexity: 3
+    calls_out: 2
+    calls_in: 1
+  frontend.src.utils.hardware-activity-log.loggedRef:
+    name: loggedRef
+    module: frontend.src.utils.hardware-activity-log
+    line: 19
+    cyclomatic_complexity: 2
+    calls_out: 4
+    calls_in: 0
+  frontend.src.api.hardwareApi._withCtx:
+    name: _withCtx
+    module: frontend.src.api.hardwareApi
+    line: 20
+    cyclomatic_complexity: 2
+    calls_out: 0
+    calls_in: 4
+  frontend.src.api.wsClient.WsCqrsClient.connect:
+    name: connect
+    module: frontend.src.api.wsClient
+    line: 32
+    cyclomatic_complexity: 5
+    calls_out: 10
+    calls_in: 4
+  frontend.src.api.wsClient.WsCqrsClient.query:
+    name: query
+    module: frontend.src.api.wsClient
+    line: 77
+    cyclomatic_complexity: 1
+    calls_out: 1
+    calls_in: 0
+  frontend.src.api.wsClient.WsCqrsClient.reject:
+    name: reject
+    module: frontend.src.api.wsClient
+    line: 93
+    cyclomatic_complexity: 1
+    calls_out: 1
+    calls_in: 5
+  oqlos.core.oql_parser.parse_SAMPLE:
+    name: parse_SAMPLE
+    module: oqlos.core.oql_parser
+    line: 371
+    cyclomatic_complexity: 3
+    calls_out: 6
+    calls_in: 0
+  oqlos.core._action_motor2._motor2_build_plan:
+    name: _motor2_build_plan
+    module: oqlos.core._action_motor2
+    line: 296
+    cyclomatic_complexity: 12
+    calls_out: 22
+    calls_in: 1
+  frontend.src.utils.hardware-demo-identify.probePump:
+    name: probePump
+    module: frontend.src.utils.hardware-demo-identify
+    line: 17
+    cyclomatic_complexity: 2
+    calls_out: 4
+    calls_in: 7
+  frontend.src.hooks.useRailHoverPreview.cancelRailOpen:
+    name: cancelRailOpen
+    module: frontend.src.hooks.useRailHoverPreview
+    line: 17
+    cyclomatic_complexity: 2
+    calls_out: 2
+    calls_in: 3
+  oqlos.core.oql_parser.parse_WAIT:
+    name: parse_WAIT
+    module: oqlos.core.oql_parser
+    line: 266
+    cyclomatic_complexity: 2
+    calls_out: 7
+    calls_in: 1
+  frontend.src.utils.hardware-demo-identify.adapters:
+    name: adapters
+    module: frontend.src.utils.hardware-demo-identify
+    line: 56
+    cyclomatic_complexity: 3
+    calls_out: 1
+    calls_in: 0
+  frontend.src.api.hardwareApi.startedAt:
+    name: startedAt
+    module: frontend.src.api.hardwareApi
+    line: 34
+    cyclomatic_complexity: 2
+    calls_out: 2
+    calls_in: 0
+  oqlos.core.oql_parser._validate_oql_version:
+    name: _validate_oql_version
+    module: oqlos.core.oql_parser
+    line: 618
+    cyclomatic_complexity: 8
+    calls_out: 6
+    calls_in: 1
+  frontend.src.utils.hardwareEventStream.timestamp:
+    name: timestamp
+    module: frontend.src.utils.hardwareEventStream
+    line: 39
+    cyclomatic_complexity: 3
+    calls_out: 1
+    calls_in: 0
+  frontend.src.utils.hardware-demo-identify.resolveFallbackDeviceId:
+    name: resolveFallbackDeviceId
+    module: frontend.src.utils.hardware-demo-identify
+    line: 39
+    cyclomatic_complexity: 3
+    calls_out: 0
+    calls_in: 1
+  oqlos.core._interpreter_actions._compare_values:
+    name: _compare_values
+    module: oqlos.core._interpreter_actions
+    line: 66
+    cyclomatic_complexity: 10
+    calls_out: 8
+    calls_in: 1
   oqlos.core.parser._dispatch_simple_parser:
     name: _dispatch_simple_parser
     module: oqlos.core.parser
@@ -1874,264 +1069,26 @@ nodes:
     cyclomatic_complexity: 3
     calls_out: 3
     calls_in: 1
-  oqlos.core._interpreter_actions._coerce_expected_value:
-    name: _coerce_expected_value
-    module: oqlos.core._interpreter_actions
-    line: 47
-    cyclomatic_complexity: 7
-    calls_out: 8
-    calls_in: 4
-  oqlos.core._line_parsers._set_lung_step:
-    name: _set_lung_step
-    module: oqlos.core._line_parsers
-    line: 105
-    cyclomatic_complexity: 4
-    calls_out: 3
-    calls_in: 1
-  frontend.src.utils.encoder-navigation.focusEncoderItem:
-    name: focusEncoderItem
-    module: frontend.src.utils.encoder-navigation
-    line: 49
-    cyclomatic_complexity: 1
-    calls_out: 3
-    calls_in: 1
-  frontend.src.api.hardwareApi.post:
-    name: post
-    module: frontend.src.api.hardwareApi
-    line: 96
-    cyclomatic_complexity: 1
-    calls_out: 1
-    calls_in: 3
-  oqlos.core._dsl_helpers._parse_numeric_value:
-    name: _parse_numeric_value
-    module: oqlos.core._dsl_helpers
-    line: 71
-    cyclomatic_complexity: 4
-    calls_out: 7
-    calls_in: 8
-  frontend.src.api.hardwareApi.text:
-    name: text
-    module: frontend.src.api.hardwareApi
-    line: 65
-    cyclomatic_complexity: 2
-    calls_out: 0
-    calls_in: 2
-  oqlos.core._action_motor2._motor2_max_steps_per_second:
-    name: _motor2_max_steps_per_second
-    module: oqlos.core._action_motor2
-    line: 174
-    cyclomatic_complexity: 1
-    calls_out: 1
-    calls_in: 3
-  frontend.src.pages.MapEditor.addAction:
-    name: addAction
-    module: frontend.src.pages.MapEditor
-    line: 215
-    cyclomatic_complexity: 2
-    calls_out: 6
-    calls_in: 1
-  oqlos.core.oql_parser._check_unnamed_goals:
-    name: _check_unnamed_goals
-    module: oqlos.core.oql_parser
-    line: 643
-    cyclomatic_complexity: 5
-    calls_out: 1
-    calls_in: 1
-  frontend.src.pages.MapEditor.editObjectActionArg:
-    name: editObjectActionArg
-    module: frontend.src.pages.MapEditor
-    line: 281
-    cyclomatic_complexity: 7
-    calls_out: 4
-    calls_in: 0
-  oqlos.core.oql_parser._split_set_value_unit:
-    name: _split_set_value_unit
-    module: oqlos.core.oql_parser
-    line: 245
-    cyclomatic_complexity: 2
-    calls_out: 2
-    calls_in: 1
-  frontend.src.utils.hardwareEventStream.data:
-    name: data
-    module: frontend.src.utils.hardwareEventStream
-    line: 34
+  oqlos.core._func_resolver._guard_recursion:
+    name: _guard_recursion
+    module: oqlos.core._func_resolver
+    line: 66
     cyclomatic_complexity: 3
-    calls_out: 1
-    calls_in: 0
-  oqlos.core._interpreter_actions._mock_api_response:
-    name: _mock_api_response
-    module: oqlos.core._interpreter_actions
-    line: 167
-    cyclomatic_complexity: 6
     calls_out: 5
     calls_in: 1
-  frontend.src.utils.hardwareEventStream.peripheralId:
-    name: peripheralId
-    module: frontend.src.utils.hardwareEventStream
-    line: 37
-    cyclomatic_complexity: 3
-    calls_out: 1
-    calls_in: 0
-  oqlos.core.cql_parser.parse_cql:
-    name: parse_cql
-    module: oqlos.core.cql_parser
-    line: 414
-    cyclomatic_complexity: 2
-    calls_out: 6
-    calls_in: 2
-  frontend.src.utils.url-embed-config.base:
-    name: base
-    module: frontend.src.utils.url-embed-config
-    line: 147
-    cyclomatic_complexity: 3
-    calls_out: 3
-    calls_in: 0
-  frontend.src.api.wsClient.WsCqrsClient.pending:
-    name: pending
+  frontend.src.api.wsClient.WsCqrsClient._request:
+    name: _request
     module: frontend.src.api.wsClient
-    line: 109
-    cyclomatic_complexity: 4
-    calls_out: 4
-    calls_in: 0
-  oqlos.core._interpreter_actions.exec_action_api:
-    name: exec_action_api
-    module: oqlos.core._interpreter_actions
-    line: 450
+    line: 87
     cyclomatic_complexity: 3
-    calls_out: 9
-    calls_in: 0
-  frontend.src.hooks.useUrlConfig.useUrlConfig:
-    name: useUrlConfig
-    module: frontend.src.hooks.useUrlConfig
-    line: 43
-    cyclomatic_complexity: 8
-    calls_out: 15
-    calls_in: 0
-  oqlos.core.oql_versioning.resolve_oql_version:
-    name: resolve_oql_version
-    module: oqlos.core.oql_versioning
-    line: 57
-    cyclomatic_complexity: 2
-    calls_out: 3
-    calls_in: 1
-  frontend.src.utils.useSelectionCollapsePanel.scheduleCollapse:
-    name: scheduleCollapse
-    module: frontend.src.utils.useSelectionCollapsePanel
-    line: 59
-    cyclomatic_complexity: 2
-    calls_out: 6
-    calls_in: 0
-  frontend.src.utils.hardwareEventStream.resolveEventStatus:
-    name: resolveEventStatus
-    module: frontend.src.utils.hardwareEventStream
-    line: 25
-    cyclomatic_complexity: 6
-    calls_out: 0
-    calls_in: 1
-  oqlos.core.interpreter.CqlInterpreter.execute:
-    name: execute
-    module: oqlos.core.interpreter
-    line: 227
-    cyclomatic_complexity: 4
-    calls_out: 9
-    calls_in: 0
-  oqlos.core._line_parsers._parse_inline_task:
-    name: _parse_inline_task
-    module: oqlos.core._line_parsers
-    line: 170
-    cyclomatic_complexity: 5
-    calls_out: 7
-    calls_in: 1
-  frontend.src.pages.MapEditor.integrationMeta:
-    name: integrationMeta
-    module: frontend.src.pages.MapEditor
-    line: 521
-    cyclomatic_complexity: 11
-    calls_out: 7
-    calls_in: 0
-  oqlos.core.oql_parser.parse_oql:
-    name: parse_oql
-    module: oqlos.core.oql_parser
-    line: 654
-    cyclomatic_complexity: 14
-    calls_out: 21
-    calls_in: 3
-  frontend.src.utils.url-embed-config.roleCandidate:
-    name: roleCandidate
-    module: frontend.src.utils.url-embed-config
-    line: 116
-    cyclomatic_complexity: 4
-    calls_out: 3
-    calls_in: 0
-  frontend.src.utils.hardwareEventStream.result:
-    name: result
-    module: frontend.src.utils.hardwareEventStream
-    line: 36
-    cyclomatic_complexity: 3
-    calls_out: 1
-    calls_in: 0
-  oqlos.core.oql_parser._expand_repeat_blocks:
-    name: _expand_repeat_blocks
-    module: oqlos.core.oql_parser
-    line: 499
-    cyclomatic_complexity: 2
-    calls_out: 2
-    calls_in: 1
-  oqlos.core.oql_parser.parse_GET:
-    name: parse_GET
-    module: oqlos.core.oql_parser
-    line: 261
-    cyclomatic_complexity: 1
-    calls_out: 2
-    calls_in: 0
-  frontend.src.utils.hardwareEventStream.safeObj:
-    name: safeObj
-    module: frontend.src.utils.hardwareEventStream
-    line: 21
-    cyclomatic_complexity: 3
-    calls_out: 0
-    calls_in: 1
-  frontend.src.i18n.I18nProvider.t:
-    name: t
-    module: frontend.src.i18n.I18nProvider
-    line: 33
-    cyclomatic_complexity: 8
-    calls_out: 2
-    calls_in: 3
-  frontend.src.utils.rbac.policy.normalizePath:
-    name: normalizePath
-    module: frontend.src.utils.rbac.policy
-    line: 80
-    cyclomatic_complexity: 6
-    calls_out: 4
-    calls_in: 1
-  oqlos.core._interpreter_actions._extract_action_tokens:
-    name: _extract_action_tokens
-    module: oqlos.core._interpreter_actions
-    line: 30
-    cyclomatic_complexity: 5
-    calls_out: 4
-    calls_in: 1
-  frontend.src.utils.url-embed-config.test:
-    name: test
-    module: frontend.src.utils.url-embed-config
-    line: 93
-    cyclomatic_complexity: 1
-    calls_out: 0
+    calls_out: 12
     calls_in: 2
-  oqlos.core.motor2_runtime._compute_motor2_cycles:
-    name: _compute_motor2_cycles
-    module: oqlos.core.motor2_runtime
-    line: 142
-    cyclomatic_complexity: 3
-    calls_out: 7
-    calls_in: 1
-  oqlos.core.interpreter.CqlInterpreter._build_script_result:
-    name: _build_script_result
-    module: oqlos.core.interpreter
-    line: 214
-    cyclomatic_complexity: 2
-    calls_out: 7
+  frontend.src.utils.hardware-wizard-steps.selectWizardProbeCandidate:
+    name: selectWizardProbeCandidate
+    module: frontend.src.utils.hardware-wizard-steps
+    line: 71
+    cyclomatic_complexity: 11
+    calls_out: 9
     calls_in: 0
   oqlos.core._cql_tree_builder._parse_action_line:
     name: _parse_action_line
@@ -2140,27 +1097,118 @@ nodes:
     cyclomatic_complexity: 4
     calls_out: 3
     calls_in: 2
-  frontend.src.hooks.useMapEditorSidebarAutoCollapse.useMapEditorSidebarAutoCollapse:
-    name: useMapEditorSidebarAutoCollapse
-    module: frontend.src.hooks.useMapEditorSidebarAutoCollapse
-    line: 4
-    cyclomatic_complexity: 9
-    calls_out: 11
-    calls_in: 0
-  frontend.src.utils.rbac.policy.matchesPattern:
-    name: matchesPattern
-    module: frontend.src.utils.rbac.policy
-    line: 91
-    cyclomatic_complexity: 3
-    calls_out: 3
-    calls_in: 3
-  oqlos.core._oql_adapter._parse_macro_line:
-    name: _parse_macro_line
-    module: oqlos.core._oql_adapter
-    line: 328
-    cyclomatic_complexity: 8
-    calls_out: 10
+  frontend.src.utils.hardware-api-retry.attempt:
+    name: attempt
+    module: frontend.src.utils.hardware-api-retry
+    line: 14
+    cyclomatic_complexity: 14
+    calls_out: 9
     calls_in: 1
+  oqlos.core._cql_tokenizer._try_if_block:
+    name: _try_if_block
+    module: oqlos.core._cql_tokenizer
+    line: 226
+    cyclomatic_complexity: 4
+    calls_out: 11
+    calls_in: 1
+  oqlos.core._dsl_helpers._looks_like_sensor_object:
+    name: _looks_like_sensor_object
+    module: oqlos.core._dsl_helpers
+    line: 38
+    cyclomatic_complexity: 1
+    calls_out: 2
+    calls_in: 2
+  frontend.src.api.wsClient.WsCqrsClient.timeout:
+    name: timeout
+    module: frontend.src.api.wsClient
+    line: 91
+    cyclomatic_complexity: 1
+    calls_out: 3
+    calls_in: 0
+  oqlos.core.oql_parser._expand_repeat_block_lines:
+    name: _expand_repeat_block_lines
+    module: oqlos.core.oql_parser
+    line: 465
+    cyclomatic_complexity: 8
+    calls_out: 16
+    calls_in: 2
+  oqlos.core.interpreter.CqlInterpreter._build_script_result:
+    name: _build_script_result
+    module: oqlos.core.interpreter
+    line: 214
+    cyclomatic_complexity: 2
+    calls_out: 7
+    calls_in: 0
+  frontend.src.api.wsClient.WsCqrsClient.pending:
+    name: pending
+    module: frontend.src.api.wsClient
+    line: 109
+    cyclomatic_complexity: 4
+    calls_out: 4
+    calls_in: 0
+  frontend.src.pages.HardwareRestart.startOqlosAndRefreshPlan:
+    name: startOqlosAndRefreshPlan
+    module: frontend.src.pages.HardwareRestart
+    line: 76
+    cyclomatic_complexity: 9
+    calls_out: 10
+    calls_in: 0
+  frontend.src.utils.hardware-activity-log.createHardwareActivityLogEntry:
+    name: createHardwareActivityLogEntry
+    module: frontend.src.utils.hardware-activity-log
+    line: 4
+    cyclomatic_complexity: 1
+    calls_out: 2
+    calls_in: 3
+  oqlos.core.motor2_runtime.build_motor2_reciprocating_plan:
+    name: build_motor2_reciprocating_plan
+    module: oqlos.core.motor2_runtime
+    line: 170
+    cyclomatic_complexity: 7
+    calls_out: 8
+    calls_in: 1
+  oqlos.core._interpreter_actions.exec_action_min_max:
+    name: exec_action_min_max
+    module: oqlos.core._interpreter_actions
+    line: 258
+    cyclomatic_complexity: 3
+    calls_out: 5
+    calls_in: 1
+  frontend.src.utils.encoder-navigation.tryCancelPostMessage:
+    name: tryCancelPostMessage
+    module: frontend.src.utils.encoder-navigation
+    line: 57
+    cyclomatic_complexity: 2
+    calls_out: 1
+    calls_in: 1
+  frontend.src.pages.ScenarioFiles.list:
+    name: list
+    module: frontend.src.pages.ScenarioFiles
+    line: 71
+    cyclomatic_complexity: 1
+    calls_out: 0
+    calls_in: 41
+  oqlos.core.executor.safe_eval_condition:
+    name: safe_eval_condition
+    module: oqlos.core.executor
+    line: 51
+    cyclomatic_complexity: 2
+    calls_out: 5
+    calls_in: 2
+  frontend.src.utils.mapEditorIntegrationMeta.setApiServiceField:
+    name: setApiServiceField
+    module: frontend.src.utils.mapEditorIntegrationMeta
+    line: 42
+    cyclomatic_complexity: 2
+    calls_out: 0
+    calls_in: 1
+  oqlos.core.oql_parser.parse_oql:
+    name: parse_oql
+    module: oqlos.core.oql_parser
+    line: 654
+    cyclomatic_complexity: 14
+    calls_out: 21
+    calls_in: 3
   frontend.src.pages.MapEditor.nextName:
     name: nextName
     module: frontend.src.pages.MapEditor
@@ -2168,251 +1216,132 @@ nodes:
     cyclomatic_complexity: 1
     calls_out: 1
     calls_in: 0
-  oqlos.core.motor2_runtime._coerce_int:
-    name: _coerce_int
-    module: oqlos.core.motor2_runtime
-    line: 45
-    cyclomatic_complexity: 3
-    calls_out: 6
-    calls_in: 5
-  frontend.src.api.hardware-diagnostic-failure.failureFromNestedOk:
-    name: failureFromNestedOk
-    module: frontend.src.api.hardware-diagnostic-failure
-    line: 61
-    cyclomatic_complexity: 10
-    calls_out: 4
-    calls_in: 1
-  frontend.src.api.hardware-diagnostic-failure._connectionError:
-    name: _connectionError
-    module: frontend.src.api.hardware-diagnostic-failure
-    line: 22
-    cyclomatic_complexity: 3
-    calls_out: 0
-    calls_in: 1
-  oqlos.core._cql_tree_builder._ensure_goal_for_step:
-    name: _ensure_goal_for_step
-    module: oqlos.core._cql_tree_builder
-    line: 145
+  frontend.src.pages.HardwareDemo.onNoteClick:
+    name: onNoteClick
+    module: frontend.src.pages.HardwareDemo
+    line: 293
     cyclomatic_complexity: 4
-    calls_out: 3
-    calls_in: 1
-  frontend.src.utils.mapEditorFuncHardwareSummary.summarizeFuncToHardware:
-    name: summarizeFuncToHardware
-    module: frontend.src.utils.mapEditorFuncHardwareSummary
-    line: 59
-    cyclomatic_complexity: 11
-    calls_out: 7
-    calls_in: 0
-  oqlos.core._interpreter_actions._mark_success:
-    name: _mark_success
-    module: oqlos.core._interpreter_actions
-    line: 135
-    cyclomatic_complexity: 1
-    calls_out: 1
-    calls_in: 3
-  oqlos.core._interpreter_actions.exec_action_val:
-    name: exec_action_val
-    module: oqlos.core._interpreter_actions
-    line: 271
-    cyclomatic_complexity: 3
-    calls_out: 4
-    calls_in: 1
-  oqlos.core._cql_tokenizer._try_val:
-    name: _try_val
-    module: oqlos.core._cql_tokenizer
-    line: 285
-    cyclomatic_complexity: 2
-    calls_out: 4
-    calls_in: 0
-  oqlos.core._dsl_helpers._looks_like_lung_object:
-    name: _looks_like_lung_object
-    module: oqlos.core._dsl_helpers
-    line: 34
-    cyclomatic_complexity: 1
-    calls_out: 2
-    calls_in: 2
-  oqlos.core.oql_parser.to_num:
-    name: to_num
-    module: oqlos.core.oql_parser
-    line: 143
-    cyclomatic_complexity: 2
-    calls_out: 5
-    calls_in: 7
-  frontend.src.pages.HardwareRestart.currentStep:
-    name: currentStep
-    module: frontend.src.pages.HardwareRestart
-    line: 100
-    cyclomatic_complexity: 1
-    calls_out: 4
-    calls_in: 0
-  setup_hardware_and_run_oql.main:
-    name: main
-    module: setup_hardware_and_run_oql
-    line: 261
-    cyclomatic_complexity: 3
-    calls_out: 18
-    calls_in: 0
-  oqlos.core.oql_parser._split_value_unit:
-    name: _split_value_unit
-    module: oqlos.core.oql_parser
-    line: 239
-    cyclomatic_complexity: 2
-    calls_out: 2
-    calls_in: 3
-  frontend.src.pages.MapEditor.renameKey:
-    name: renameKey
-    module: frontend.src.pages.MapEditor
-    line: 254
-    cyclomatic_complexity: 3
-    calls_out: 4
-    calls_in: 0
-  frontend.src.pages.MapEditor.editMotorRuntimeConfig:
-    name: editMotorRuntimeConfig
-    module: frontend.src.pages.MapEditor
-    line: 299
-    cyclomatic_complexity: 11
-    calls_out: 6
-    calls_in: 0
-  oqlos.core._interpreter_actions.exec_action_shell:
-    name: exec_action_shell
-    module: oqlos.core._interpreter_actions
-    line: 571
-    cyclomatic_complexity: 13
-    calls_out: 19
-    calls_in: 0
-  frontend.src.api.hardwareApi.put:
-    name: put
-    module: frontend.src.api.hardwareApi
-    line: 100
-    cyclomatic_complexity: 1
-    calls_out: 1
-    calls_in: 0
-  oqlos.core._cql_tokenizer._try_if_standalone:
-    name: _try_if_standalone
-    module: oqlos.core._cql_tokenizer
-    line: 252
-    cyclomatic_complexity: 2
-    calls_out: 1
-    calls_in: 0
-  frontend.src.utils.mapEditorIntegrationMeta._resolveHardwareAddress:
-    name: _resolveHardwareAddress
-    module: frontend.src.utils.mapEditorIntegrationMeta
-    line: 9
-    cyclomatic_complexity: 5
-    calls_out: 0
-    calls_in: 1
-  frontend.src.utils.url-embed-config.parseNavigationParams:
-    name: parseNavigationParams
-    module: frontend.src.utils.url-embed-config
-    line: 84
-    cyclomatic_complexity: 10
-    calls_out: 3
-    calls_in: 1
-  oqlos.core._line_parsers._parse_pump_line:
-    name: _parse_pump_line
-    module: oqlos.core._line_parsers
-    line: 53
-    cyclomatic_complexity: 6
-    calls_out: 8
-    calls_in: 1
-  oqlos.core.oql_parser._parse_and_append_command:
-    name: _parse_and_append_command
-    module: oqlos.core.oql_parser
-    line: 596
-    cyclomatic_complexity: 5
     calls_out: 9
-    calls_in: 1
-  oqlos.core.interpreter.CqlInterpreter._exec_flat_action:
-    name: _exec_flat_action
-    module: oqlos.core.interpreter
-    line: 300
-    cyclomatic_complexity: 6
-    calls_out: 6
     calls_in: 0
-  oqlos.core._dsl_helpers._map_valve_action:
-    name: _map_valve_action
-    module: oqlos.core._dsl_helpers
-    line: 80
-    cyclomatic_complexity: 3
+  frontend.src.api.hardwareApi.bodySummary:
+    name: bodySummary
+    module: frontend.src.api.hardwareApi
+    line: 35
+    cyclomatic_complexity: 2
+    calls_out: 2
+    calls_in: 0
+  frontend.src.pages.MapEditor.deleteKey:
+    name: deleteKey
+    module: frontend.src.pages.MapEditor
+    line: 264
+    cyclomatic_complexity: 2
+    calls_out: 4
+    calls_in: 0
+  frontend.src.utils.hardwareEventStream.resolveEventStatus:
+    name: resolveEventStatus
+    module: frontend.src.utils.hardwareEventStream
+    line: 25
+    cyclomatic_complexity: 6
     calls_out: 0
     calls_in: 1
-  oqlos.core.motor2_runtime.motor2_max_steps_per_second:
-    name: motor2_max_steps_per_second
-    module: oqlos.core.motor2_runtime
-    line: 71
-    cyclomatic_complexity: 2
-    calls_out: 3
-    calls_in: 2
-  oqlos.core.oql_parser.parse_CHECK:
-    name: parse_CHECK
-    module: oqlos.core.oql_parser
-    line: 319
-    cyclomatic_complexity: 2
-    calls_out: 10
-    calls_in: 2
-  frontend.src.api.hardware-diagnostic-failure.firstActionableError:
-    name: firstActionableError
-    module: frontend.src.api.hardware-diagnostic-failure
-    line: 17
-    cyclomatic_complexity: 3
-    calls_out: 4
-    calls_in: 1
-  frontend.src.api.hardware-diagnostic-failure._nestedOkMessage:
-    name: _nestedOkMessage
-    module: frontend.src.api.hardware-diagnostic-failure
-    line: 26
-    cyclomatic_complexity: 4
-    calls_out: 2
-    calls_in: 1
-  frontend.src.api.wsClient.WsCqrsClient.connect:
-    name: connect
-    module: frontend.src.api.wsClient
-    line: 32
-    cyclomatic_complexity: 5
-    calls_out: 10
-    calls_in: 4
-  setup_hardware_and_run_oql.run_oql_scenario:
-    name: run_oql_scenario
-    module: setup_hardware_and_run_oql
-    line: 209
-    cyclomatic_complexity: 8
-    calls_out: 24
-    calls_in: 1
-  oqlos.core.oql_parser.parse_IF:
-    name: parse_IF
-    module: oqlos.core.oql_parser
-    line: 338
-    cyclomatic_complexity: 2
-    calls_out: 10
-    calls_in: 1
-  frontend.src.api.hardware-api-errors.extractErrorPayload:
-    name: extractErrorPayload
-    module: frontend.src.api.hardware-api-errors
-    line: 37
-    cyclomatic_complexity: 4
-    calls_out: 1
-    calls_in: 1
-  oqlos.core.oql_parser._handle_block_header:
-    name: _handle_block_header
-    module: oqlos.core.oql_parser
-    line: 527
-    cyclomatic_complexity: 8
-    calls_out: 12
-    calls_in: 1
-  frontend.src.pages.MapEditor.editParamConversionField:
-    name: editParamConversionField
-    module: frontend.src.pages.MapEditor
-    line: 180
-    cyclomatic_complexity: 12
-    calls_out: 7
-    calls_in: 0
-  oqlos.core._dsl_helpers._map_peripheral:
-    name: _map_peripheral
-    module: oqlos.core._dsl_helpers
-    line: 42
-    cyclomatic_complexity: 11
+  frontend.src.api.hardwareApi.request:
+    name: request
+    module: frontend.src.api.hardwareApi
+    line: 33
+    cyclomatic_complexity: 14
     calls_out: 14
     calls_in: 3
+  oqlos.core._dsl_helpers._map_wait_action:
+    name: _map_wait_action
+    module: oqlos.core._dsl_helpers
+    line: 93
+    cyclomatic_complexity: 4
+    calls_out: 7
+    calls_in: 1
+  oqlos.core._cql_tokenizer._try_save:
+    name: _try_save
+    module: oqlos.core._cql_tokenizer
+    line: 172
+    cyclomatic_complexity: 5
+    calls_out: 7
+    calls_in: 0
+  oqlos.core.motor2_runtime._compute_motor2_speed:
+    name: _compute_motor2_speed
+    module: oqlos.core.motor2_runtime
+    line: 154
+    cyclomatic_complexity: 4
+    calls_out: 6
+    calls_in: 1
+  oqlos.core._action_motor2._parse_motor2_steps:
+    name: _parse_motor2_steps
+    module: oqlos.core._action_motor2
+    line: 166
+    cyclomatic_complexity: 1
+    calls_out: 1
+    calls_in: 2
+  frontend.src.api.hardwareApi._throwHttpError:
+    name: _throwHttpError
+    module: frontend.src.api.hardwareApi
+    line: 24
+    cyclomatic_complexity: 1
+    calls_out: 2
+    calls_in: 2
+  setup_hardware_and_run_oql.generate_env_content:
+    name: generate_env_content
+    module: setup_hardware_and_run_oql
+    line: 101
+    cyclomatic_complexity: 2
+    calls_out: 1
+    calls_in: 1
+  frontend.src.utils.hardware-wizard-steps._filterCandidatesByRole:
+    name: _filterCandidatesByRole
+    module: frontend.src.utils.hardware-wizard-steps
+    line: 55
+    cyclomatic_complexity: 6
+    calls_out: 3
+    calls_in: 1
+  oqlos.core.motor2_runtime._compute_motor2_cycles:
+    name: _compute_motor2_cycles
+    module: oqlos.core.motor2_runtime
+    line: 142
+    cyclomatic_complexity: 3
+    calls_out: 7
+    calls_in: 1
+  frontend.src.utils.hardwareEventStream.commandName:
+    name: commandName
+    module: frontend.src.utils.hardwareEventStream
+    line: 38
+    cyclomatic_complexity: 3
+    calls_out: 1
+    calls_in: 0
+  frontend.src.utils.encoder-navigation.focusEncoderItem:
+    name: focusEncoderItem
+    module: frontend.src.utils.encoder-navigation
+    line: 49
+    cyclomatic_complexity: 1
+    calls_out: 3
+    calls_in: 1
+  frontend.src.hooks.useUrlConfig.useUrlConfig:
+    name: useUrlConfig
+    module: frontend.src.hooks.useUrlConfig
+    line: 43
+    cyclomatic_complexity: 8
+    calls_out: 15
+    calls_in: 0
+  oqlos.core.base.InterpreterOutput.emit:
+    name: emit
+    module: oqlos.core.base
+    line: 121
+    cyclomatic_complexity: 5
+    calls_out: 3
+    calls_in: 0
+  frontend.src.utils.mapEditorModel.ensureRequiredDefaultMappings:
+    name: ensureRequiredDefaultMappings
+    module: frontend.src.utils.mapEditorModel
+    line: 23
+    cyclomatic_complexity: 10
+    calls_out: 3
+    calls_in: 1
   frontend.src.utils.url-embed-config.pickSupportedString:
     name: pickSupportedString
     module: frontend.src.utils.url-embed-config
@@ -2420,20 +1349,34 @@ nodes:
     cyclomatic_complexity: 4
     calls_out: 2
     calls_in: 3
-  oqlos.core._action_motor2._motor2_speed_for_duration:
-    name: _motor2_speed_for_duration
-    module: oqlos.core._action_motor2
-    line: 182
-    cyclomatic_complexity: 1
-    calls_out: 1
-    calls_in: 0
-  frontend.src.hooks.useRailHoverPreview.railEnter:
-    name: railEnter
-    module: frontend.src.hooks.useRailHoverPreview
-    line: 41
+  oqlos.core.interpreter.CqlInterpreter.parse:
+    name: parse
+    module: oqlos.core.interpreter
+    line: 137
     cyclomatic_complexity: 3
-    calls_out: 4
+    calls_out: 5
     calls_in: 0
+  frontend.src.pages.MapEditorObjectActionPanel._MotorRelativeParams:
+    name: _MotorRelativeParams
+    module: frontend.src.pages.MapEditorObjectActionPanel
+    line: 16
+    cyclomatic_complexity: 1
+    calls_out: 3
+    calls_in: 0
+  oqlos.core.oql_versioning.resolve_oql_version:
+    name: resolve_oql_version
+    module: oqlos.core.oql_versioning
+    line: 57
+    cyclomatic_complexity: 2
+    calls_out: 3
+    calls_in: 1
+  frontend.src.utils.mapEditorIntegrationMeta.setApiEndpointField:
+    name: setApiEndpointField
+    module: frontend.src.utils.mapEditorIntegrationMeta
+    line: 47
+    cyclomatic_complexity: 2
+    calls_out: 0
+    calls_in: 1
   frontend.src.api.hardware-api-errors.formatHardwareApiError:
     name: formatHardwareApiError
     module: frontend.src.api.hardware-api-errors
@@ -2441,39 +1384,130 @@ nodes:
     cyclomatic_complexity: 8
     calls_out: 2
     calls_in: 0
-  oqlos.core._action_motor2._motor2_acceleration_raw:
-    name: _motor2_acceleration_raw
+  oqlos.core._action_motor2._motor2_speed_raw:
+    name: _motor2_speed_raw
     module: oqlos.core._action_motor2
-    line: 186
+    line: 170
     cyclomatic_complexity: 1
     calls_out: 2
     calls_in: 1
-  oqlos.core.oql_parser.parse_SET:
-    name: parse_SET
-    module: oqlos.core.oql_parser
-    line: 252
-    cyclomatic_complexity: 3
+  frontend.src.utils.useSelectionCollapsePanel.onMessage:
+    name: onMessage
+    module: frontend.src.utils.useSelectionCollapsePanel
+    line: 110
+    cyclomatic_complexity: 1
+    calls_out: 1
+    calls_in: 0
+  oqlos.core._action_motor2._parse_motor2_reciprocating_setting:
+    name: _parse_motor2_reciprocating_setting
+    module: oqlos.core._action_motor2
+    line: 150
+    cyclomatic_complexity: 6
+    calls_out: 5
+    calls_in: 1
+  oqlos.core._action_motor2._parse_motor2_direction:
+    name: _parse_motor2_direction
+    module: oqlos.core._action_motor2
+    line: 36
+    cyclomatic_complexity: 6
+    calls_out: 4
+    calls_in: 2
+  oqlos.core.base.EventBridge.send_event:
+    name: send_event
+    module: oqlos.core.base
+    line: 293
+    cyclomatic_complexity: 4
     calls_out: 7
     calls_in: 0
-  oqlos.core.parser._parse_runtime_line:
-    name: _parse_runtime_line
-    module: oqlos.core.parser
-    line: 62
-    cyclomatic_complexity: 9
-    calls_out: 15
-    calls_in: 1
-  frontend.src.hooks.useRailHoverPreview.useRailHoverPreview:
-    name: useRailHoverPreview
-    module: frontend.src.hooks.useRailHoverPreview
-    line: 12
-    cyclomatic_complexity: 9
-    calls_out: 10
-    calls_in: 0
-  oqlos.core.safe_eval._eval_call:
-    name: _eval_call
-    module: oqlos.core.safe_eval
-    line: 105
+  frontend.src.api.hardware-diagnostic-failure._nestedOkMessage:
+    name: _nestedOkMessage
+    module: frontend.src.api.hardware-diagnostic-failure
+    line: 26
     cyclomatic_complexity: 4
+    calls_out: 2
+    calls_in: 1
+  frontend.src.pages.HardwareRestart.timestamp:
+    name: timestamp
+    module: frontend.src.pages.HardwareRestart
+    line: 13
+    cyclomatic_complexity: 1
+    calls_out: 2
+    calls_in: 4
+  frontend.src.utils.url-embed-config.parseAppearanceParams:
+    name: parseAppearanceParams
+    module: frontend.src.utils.url-embed-config
+    line: 63
+    cyclomatic_complexity: 9
+    calls_out: 4
+    calls_in: 1
+  frontend.src.hooks.useRailHoverPreview.panelLeave:
+    name: panelLeave
+    module: frontend.src.hooks.useRailHoverPreview
+    line: 59
+    cyclomatic_complexity: 3
+    calls_out: 5
+    calls_in: 0
+  frontend.src.pages.MapEditor.loadRecentHardwareEvents:
+    name: loadRecentHardwareEvents
+    module: frontend.src.pages.MapEditor
+    line: 388
+    cyclomatic_complexity: 6
+    calls_out: 10
+    calls_in: 1
+  oqlos.core.executor.ScenarioOrchestrator.validate_goal:
+    name: validate_goal
+    module: oqlos.core.executor
+    line: 352
+    cyclomatic_complexity: 5
+    calls_out: 3
+    calls_in: 0
+  frontend.src.i18n.I18nProvider.I18nProvider:
+    name: I18nProvider
+    module: frontend.src.i18n.I18nProvider
+    line: 18
+    cyclomatic_complexity: 13
+    calls_out: 8
+    calls_in: 0
+  oqlos.core.oql_versioning.first_meaningful_line:
+    name: first_meaningful_line
+    module: oqlos.core.oql_versioning
+    line: 35
+    cyclomatic_complexity: 4
+    calls_out: 4
+    calls_in: 2
+  frontend.src.api.hardware-api-errors.extractErrorPayload:
+    name: extractErrorPayload
+    module: frontend.src.api.hardware-api-errors
+    line: 37
+    cyclomatic_complexity: 4
+    calls_out: 1
+    calls_in: 1
+  frontend.src.utils.hardware-wizard-plan.extractWizardPlan:
+    name: extractWizardPlan
+    module: frontend.src.utils.hardware-wizard-plan
+    line: 36
+    cyclomatic_complexity: 1
+    calls_out: 3
+    calls_in: 0
+  oqlos.core._action_motor2._parse_prefixed_motor2_setting:
+    name: _parse_prefixed_motor2_setting
+    module: oqlos.core._action_motor2
+    line: 121
+    cyclomatic_complexity: 13
+    calls_out: 12
+    calls_in: 1
+  frontend.src.pages.MapEditor.editJsonField:
+    name: editJsonField
+    module: frontend.src.pages.MapEditor
+    line: 271
+    cyclomatic_complexity: 5
+    calls_out: 3
+    calls_in: 0
+  frontend.src.utils.hardwareEventStream.matchesHardwareEventFilters:
+    name: matchesHardwareEventFilters
+    module: frontend.src.utils.hardwareEventStream
+    line: 44
+    cyclomatic_complexity: 9
     calls_out: 4
     calls_in: 0
   frontend.src.utils.rbac.policy.normalizeHostRole:
@@ -2483,187 +1517,257 @@ nodes:
     cyclomatic_complexity: 2
     calls_out: 1
     calls_in: 1
-  frontend.src.utils.encoder-navigation.handleClick:
-    name: handleClick
-    module: frontend.src.utils.encoder-navigation
-    line: 83
-    cyclomatic_complexity: 3
-    calls_out: 2
-    calls_in: 2
-  frontend.src.utils.hardware-wizard-steps._filterCandidatesByRole:
-    name: _filterCandidatesByRole
-    module: frontend.src.utils.hardware-wizard-steps
-    line: 55
-    cyclomatic_complexity: 6
-    calls_out: 3
-    calls_in: 1
-  frontend.src.pages.HardwareRestart.steps:
-    name: steps
-    module: frontend.src.pages.HardwareRestart
-    line: 99
-    cyclomatic_complexity: 1
-    calls_out: 4
-    calls_in: 0
-  frontend.src.utils.encoder-navigation.getInteractiveItems:
-    name: getInteractiveItems
-    module: frontend.src.utils.encoder-navigation
-    line: 15
-    cyclomatic_complexity: 6
-    calls_out: 4
-    calls_in: 2
-  frontend.src.utils.rbac.policy.normalizeConnectRole:
-    name: normalizeConnectRole
-    module: frontend.src.utils.rbac.policy
-    line: 30
-    cyclomatic_complexity: 2
-    calls_out: 1
-    calls_in: 5
-  oqlos.core._action_motor2._try_exec_motor2_set:
-    name: _try_exec_motor2_set
-    module: oqlos.core._action_motor2
-    line: 426
-    cyclomatic_complexity: 13
-    calls_out: 22
-    calls_in: 1
-  frontend.src.api.hardware-diagnostic-failure.extractDiagnosticFailure:
-    name: extractDiagnosticFailure
-    module: frontend.src.api.hardware-diagnostic-failure
-    line: 73
-    cyclomatic_complexity: 13
-    calls_out: 6
-    calls_in: 0
-  frontend.src.utils.url-embed-config.parseAppearanceParams:
-    name: parseAppearanceParams
+  frontend.src.utils.url-embed-config.mergeParentSearchIntoChildUrl:
+    name: mergeParentSearchIntoChildUrl
     module: frontend.src.utils.url-embed-config
-    line: 63
+    line: 130
     cyclomatic_complexity: 9
-    calls_out: 4
-    calls_in: 1
-  frontend.src.pages.HardwareRestart.stepErr:
-    name: stepErr
-    module: frontend.src.pages.HardwareRestart
-    line: 149
-    cyclomatic_complexity: 1
-    calls_out: 1
+    calls_out: 11
+    calls_in: 7
+  frontend.src.utils.encoder-navigation.createEncoderController:
+    name: createEncoderController
+    module: frontend.src.utils.encoder-navigation
+    line: 95
+    cyclomatic_complexity: 11
+    calls_out: 7
     calls_in: 0
-  frontend.src.pages.HardwareRestart.requiresStepConfirm:
-    name: requiresStepConfirm
-    module: frontend.src.pages.HardwareRestart
-    line: 103
+  oqlos.core.motor2_runtime.motor2_speed_raw:
+    name: motor2_speed_raw
+    module: oqlos.core.motor2_runtime
+    line: 125
     cyclomatic_complexity: 1
-    calls_out: 4
-    calls_in: 0
-  frontend.src.pages.HardwareRestart.port:
-    name: port
-    module: frontend.src.pages.HardwareRestart
-    line: 77
-    cyclomatic_complexity: 6
-    calls_out: 9
-    calls_in: 0
-  frontend.src.utils.hardware-wizard-steps.list:
-    name: list
-    module: frontend.src.utils.hardware-wizard-steps
-    line: 72
-    cyclomatic_complexity: 2
-    calls_out: 0
-    calls_in: 41
-  oqlos.core._action_motor2._motor2_speed_raw:
-    name: _motor2_speed_raw
-    module: oqlos.core._action_motor2
-    line: 170
-    cyclomatic_complexity: 1
-    calls_out: 2
-    calls_in: 1
-  oqlos.core._oql_adapter.parse_flat_oql:
-    name: parse_flat_oql
-    module: oqlos.core._oql_adapter
-    line: 486
-    cyclomatic_complexity: 1
-    calls_out: 2
-    calls_in: 1
-  frontend.src.hooks.useUrlConfig.notifyParentChildReady:
-    name: notifyParentChildReady
-    module: frontend.src.hooks.useUrlConfig
-    line: 27
-    cyclomatic_complexity: 4
     calls_out: 5
-    calls_in: 1
-  frontend.src.pages.MapEditor.loadRecentHardwareEvents:
-    name: loadRecentHardwareEvents
-    module: frontend.src.pages.MapEditor
-    line: 388
-    cyclomatic_complexity: 6
-    calls_out: 10
-    calls_in: 1
-  frontend.src.pages.MapEditor.applyMapMutation:
-    name: applyMapMutation
-    module: frontend.src.pages.MapEditor
-    line: 105
-    cyclomatic_complexity: 2
-    calls_out: 8
-    calls_in: 16
-  oqlos.core._dsl_helpers._looks_like_valve_object:
-    name: _looks_like_valve_object
-    module: oqlos.core._dsl_helpers
-    line: 26
-    cyclomatic_complexity: 2
-    calls_out: 3
     calls_in: 2
-  frontend.src.utils.mapEditorIntegrationMeta._setOrDelete:
-    name: _setOrDelete
-    module: frontend.src.utils.mapEditorIntegrationMeta
+  oqlos.core.oql_parser.parse_duration:
+    name: parse_duration
+    module: oqlos.core.oql_parser
+    line: 153
+    cyclomatic_complexity: 3
+    calls_out: 6
+    calls_in: 2
+  oqlos.core.oql_parser.parse_FUNC_CALL:
+    name: parse_FUNC_CALL
+    module: oqlos.core.oql_parser
+    line: 415
+    cyclomatic_complexity: 1
+    calls_out: 2
+    calls_in: 0
+  frontend.src.pages.ScenarioFiles.loadFiles:
+    name: loadFiles
+    module: frontend.src.pages.ScenarioFiles
     line: 37
     cyclomatic_complexity: 2
-    calls_out: 0
-    calls_in: 2
-  frontend.src.pages.HardwareRestart.releaseRs485Port:
-    name: releaseRs485Port
-    module: frontend.src.pages.HardwareRestart
-    line: 112
-    cyclomatic_complexity: 1
-    calls_out: 4
-    calls_in: 0
-  frontend.src.api.wsClient.WsCqrsClient._request:
-    name: _request
-    module: frontend.src.api.wsClient
-    line: 87
-    cyclomatic_complexity: 3
-    calls_out: 12
-    calls_in: 2
-  oqlos.core._line_parsers._parse_if_condition:
-    name: _parse_if_condition
-    module: oqlos.core._line_parsers
-    line: 228
-    cyclomatic_complexity: 9
-    calls_out: 22
-    calls_in: 1
-  oqlos.core.safe_eval._eval_node:
-    name: _eval_node
-    module: oqlos.core.safe_eval
-    line: 133
-    cyclomatic_complexity: 2
     calls_out: 5
-    calls_in: 10
-  frontend.src.api.hardware-tic249-status.isIdempotentTic249Deenergized:
-    name: isIdempotentTic249Deenergized
-    module: frontend.src.api.hardware-tic249-status
-    line: 11
-    cyclomatic_complexity: 12
-    calls_out: 2
     calls_in: 1
-  oqlos.core._dsl_helpers._map_pump_action:
-    name: _map_pump_action
+  oqlos.core._action_motor2._post_motor2_stop:
+    name: _post_motor2_stop
+    module: oqlos.core._action_motor2
+    line: 235
+    cyclomatic_complexity: 4
+    calls_out: 11
+    calls_in: 0
+  oqlos.core._action_motor2._parse_motor2_volume_liters:
+    name: _parse_motor2_volume_liters
+    module: oqlos.core._action_motor2
+    line: 84
+    cyclomatic_complexity: 6
+    calls_out: 5
+    calls_in: 2
+  oqlos.core.oql_parser._parse_and_append_command:
+    name: _parse_and_append_command
+    module: oqlos.core.oql_parser
+    line: 596
+    cyclomatic_complexity: 5
+    calls_out: 9
+    calls_in: 1
+  oqlos.core._dsl_helpers._looks_like_lung_object:
+    name: _looks_like_lung_object
     module: oqlos.core._dsl_helpers
-    line: 86
+    line: 34
+    cyclomatic_complexity: 1
+    calls_out: 2
+    calls_in: 2
+  frontend.src.i18n.I18nProvider.getInitialLang:
+    name: getInitialLang
+    module: frontend.src.i18n.I18nProvider
+    line: 6
     cyclomatic_complexity: 5
     calls_out: 1
     calls_in: 1
-  oqlos.core.motor2_runtime.normalize_motor2_runtime_config:
-    name: normalize_motor2_runtime_config
-    module: oqlos.core.motor2_runtime
-    line: 76
+  frontend.src.utils.hardware-demo-identify.probeOk:
+    name: probeOk
+    module: frontend.src.utils.hardware-demo-identify
+    line: 63
+    cyclomatic_complexity: 1
+    calls_out: 1
+    calls_in: 0
+  oqlos.core._line_parsers._parse_inline_task:
+    name: _parse_inline_task
+    module: oqlos.core._line_parsers
+    line: 170
+    cyclomatic_complexity: 5
+    calls_out: 7
+    calls_in: 1
+  setup_hardware_and_run_oql.detect_serial_devices:
+    name: detect_serial_devices
+    module: setup_hardware_and_run_oql
+    line: 32
     cyclomatic_complexity: 12
-    calls_out: 29
+    calls_out: 7
+    calls_in: 1
+  oqlos.core.oql_parser.parse_SET:
+    name: parse_SET
+    module: oqlos.core.oql_parser
+    line: 252
+    cyclomatic_complexity: 3
+    calls_out: 7
+    calls_in: 0
+  frontend.src.utils.useSelectionCollapsePanel.toggleCollapsed:
+    name: toggleCollapsed
+    module: frontend.src.utils.useSelectionCollapsePanel
+    line: 77
+    cyclomatic_complexity: 2
+    calls_out: 5
+    calls_in: 0
+  frontend.src.utils.url-embed-config.IFRAME_ONLY_SEARCH_PARAMS:
+    name: IFRAME_ONLY_SEARCH_PARAMS
+    module: frontend.src.utils.url-embed-config
+    line: 128
+    cyclomatic_complexity: 9
+    calls_out: 11
+    calls_in: 0
+  oqlos.core.parser.parse_dsl_to_goal_with_issues:
+    name: parse_dsl_to_goal_with_issues
+    module: oqlos.core.parser
+    line: 114
+    cyclomatic_complexity: 13
+    calls_out: 21
+    calls_in: 3
+  frontend.src.utils.hardwareEventStream.normalizeText:
+    name: normalizeText
+    module: frontend.src.utils.hardwareEventStream
+    line: 1
+    cyclomatic_complexity: 2
+    calls_out: 1
+    calls_in: 11
+  frontend.src.utils.hardwareEventStream.result:
+    name: result
+    module: frontend.src.utils.hardwareEventStream
+    line: 36
+    cyclomatic_complexity: 3
+    calls_out: 1
+    calls_in: 0
+  frontend.src.utils.useSelectionCollapsePanel.expand:
+    name: expand
+    module: frontend.src.utils.useSelectionCollapsePanel
+    line: 70
+    cyclomatic_complexity: 1
+    calls_out: 5
+    calls_in: 1
+  frontend.src.utils.rbac.policy.isOperatorConnectRole:
+    name: isOperatorConnectRole
+    module: frontend.src.utils.rbac.policy
+    line: 44
+    cyclomatic_complexity: 4
+    calls_out: 1
+    calls_in: 0
+  oqlos.core._action_motor2._motor2_reciprocating_state:
+    name: _motor2_reciprocating_state
+    module: oqlos.core._action_motor2
+    line: 254
+    cyclomatic_complexity: 2
+    calls_out: 3
+    calls_in: 1
+  oqlos.core._interpreter_actions._mock_api_response:
+    name: _mock_api_response
+    module: oqlos.core._interpreter_actions
+    line: 167
+    cyclomatic_complexity: 6
+    calls_out: 5
+    calls_in: 1
+  oqlos.core._action_motor2._motor2_state_handler:
+    name: _motor2_state_handler
+    module: oqlos.core._action_motor2
+    line: 270
+    cyclomatic_complexity: 1
+    calls_out: 3
+    calls_in: 0
+  frontend.src.utils.mapEditorIntegrationMeta._resolveHardwareAddress:
+    name: _resolveHardwareAddress
+    module: frontend.src.utils.mapEditorIntegrationMeta
+    line: 9
+    cyclomatic_complexity: 5
+    calls_out: 0
+    calls_in: 1
+  frontend.src.utils.mapEditorMapShape.ensureMapShape:
+    name: ensureMapShape
+    module: frontend.src.utils.mapEditorMapShape
+    line: 23
+    cyclomatic_complexity: 7
+    calls_out: 1
+    calls_in: 1
+  oqlos.core.oql_parser._handle_set_name:
+    name: _handle_set_name
+    module: oqlos.core.oql_parser
+    line: 563
+    cyclomatic_complexity: 5
+    calls_out: 8
+    calls_in: 1
+  frontend.src.utils.url-embed-config.search:
+    name: search
+    module: frontend.src.utils.url-embed-config
+    line: 162
+    cyclomatic_complexity: 4
+    calls_out: 3
+    calls_in: 0
+  oqlos.core._action_motor2._motor2_do_stop:
+    name: _motor2_do_stop
+    module: oqlos.core._action_motor2
+    line: 282
+    cyclomatic_complexity: 4
+    calls_out: 3
+    calls_in: 0
+  frontend.src.pages.ScenarioFiles.formatLogTime:
+    name: formatLogTime
+    module: frontend.src.pages.ScenarioFiles
+    line: 13
+    cyclomatic_complexity: 1
+    calls_out: 2
+    calls_in: 2
+  oqlos.core.base.VariableStore.__init__:
+    name: __init__
+    module: oqlos.core.base
+    line: 64
+    cyclomatic_complexity: 2
+    calls_out: 1
+    calls_in: 0
+  oqlos.core._oql_adapter._scenarios_root:
+    name: _scenarios_root
+    module: oqlos.core._oql_adapter
+    line: 52
+    cyclomatic_complexity: 1
+    calls_out: 2
+    calls_in: 1
+  oqlos.core._oql_adapter._load_includes:
+    name: _load_includes
+    module: oqlos.core._oql_adapter
+    line: 102
+    cyclomatic_complexity: 12
+    calls_out: 15
+    calls_in: 2
+  frontend.src.api.hardware-tic249-status.isIdempotentDiagnosticSuccess:
+    name: isIdempotentDiagnosticSuccess
+    module: frontend.src.api.hardware-tic249-status
+    line: 29
+    cyclomatic_complexity: 3
+    calls_out: 2
+    calls_in: 0
+  oqlos.core._line_parsers._extract_set_params:
+    name: _extract_set_params
+    module: oqlos.core._line_parsers
+    line: 116
+    cyclomatic_complexity: 7
+    calls_out: 13
     calls_in: 1
   frontend.src.utils.url-embed-config.parseUrlEmbedConfig:
     name: parseUrlEmbedConfig
@@ -2672,61 +1776,61 @@ nodes:
     cyclomatic_complexity: 1
     calls_out: 4
     calls_in: 3
-  oqlos.core.oql_parser._expand_repeat_block_lines:
-    name: _expand_repeat_block_lines
-    module: oqlos.core.oql_parser
-    line: 465
-    cyclomatic_complexity: 8
-    calls_out: 16
-    calls_in: 2
-  frontend.src.utils.collapse-toggle-bridge.isInIframe:
-    name: isInIframe
-    module: frontend.src.utils.collapse-toggle-bridge
-    line: 18
-    cyclomatic_complexity: 4
-    calls_out: 0
-    calls_in: 1
-  frontend.src.pages.HardwareRestart.canRunCurrentStep:
-    name: canRunCurrentStep
+  frontend.src.utils.hardwareEventStream.peripheralId:
+    name: peripheralId
+    module: frontend.src.utils.hardwareEventStream
+    line: 37
+    cyclomatic_complexity: 3
+    calls_out: 1
+    calls_in: 0
+  oqlos.core._cql_tokenizer._try_set:
+    name: _try_set
+    module: oqlos.core._cql_tokenizer
+    line: 182
+    cyclomatic_complexity: 2
+    calls_out: 6
+    calls_in: 0
+  oqlos.core._oql_adapter._MacroRegistry.register:
+    name: register
+    module: oqlos.core._oql_adapter
+    line: 95
+    cyclomatic_complexity: 1
+    calls_out: 1
+    calls_in: 0
+  frontend.src.pages.HardwareRestart.currentStep:
+    name: currentStep
     module: frontend.src.pages.HardwareRestart
-    line: 110
+    line: 100
     cyclomatic_complexity: 1
     calls_out: 4
     calls_in: 0
-  frontend.src.api.wsClient.WsCqrsClient._handleMessage:
-    name: _handleMessage
-    module: frontend.src.api.wsClient
-    line: 104
-    cyclomatic_complexity: 13
-    calls_out: 10
-    calls_in: 1
-  frontend.src.utils.hardware-activity-log.usePageOpenedLog:
-    name: usePageOpenedLog
-    module: frontend.src.utils.hardware-activity-log
-    line: 18
-    cyclomatic_complexity: 2
-    calls_out: 5
-    calls_in: 0
-  oqlos.core._action_motor2._motor2_step_label:
-    name: _motor2_step_label
-    module: oqlos.core._action_motor2
-    line: 321
+  frontend.src.utils.encoder-navigation.applyScrollToItems:
+    name: applyScrollToItems
+    module: frontend.src.utils.encoder-navigation
+    line: 42
     cyclomatic_complexity: 4
-    calls_out: 1
+    calls_out: 0
     calls_in: 1
-  frontend.src.utils.hardwareEventStream.buildHardwareEventsWsUrl:
-    name: buildHardwareEventsWsUrl
-    module: frontend.src.utils.hardwareEventStream
-    line: 5
-    cyclomatic_complexity: 10
-    calls_out: 3
+  frontend.src.utils.url-embed-config.resolveViewportWidthPx:
+    name: resolveViewportWidthPx
+    module: frontend.src.utils.url-embed-config
+    line: 47
+    cyclomatic_complexity: 11
+    calls_out: 6
+    calls_in: 4
+  frontend.src.utils.url-embed-config.applyUrlEmbedPatch:
+    name: applyUrlEmbedPatch
+    module: frontend.src.utils.url-embed-config
+    line: 179
+    cyclomatic_complexity: 7
+    calls_out: 7
     calls_in: 0
-  oqlos.core._func_resolver._collect_function_definitions:
-    name: _collect_function_definitions
-    module: oqlos.core._func_resolver
-    line: 14
+  oqlos.core._action_motor2._try_exec_motor2_set:
+    name: _try_exec_motor2_set
+    module: oqlos.core._action_motor2
+    line: 426
     cyclomatic_complexity: 13
-    calls_out: 19
+    calls_out: 22
     calls_in: 1
   frontend.src.utils.encoder-navigation.onKeyDown:
     name: onKeyDown
@@ -2735,19 +1839,348 @@ nodes:
     cyclomatic_complexity: 7
     calls_out: 3
     calls_in: 0
-  frontend.src.utils.url-embed-config.resolveViewportWidthPx:
-    name: resolveViewportWidthPx
+  oqlos.core._action_motor2._post_motor2_reciprocate:
+    name: _post_motor2_reciprocate
+    module: oqlos.core._action_motor2
+    line: 204
+    cyclomatic_complexity: 7
+    calls_out: 11
+    calls_in: 0
+  frontend.src.utils.mapEditorMapShape.fillMissingFields:
+    name: fillMissingFields
+    module: frontend.src.utils.mapEditorMapShape
+    line: 9
+    cyclomatic_complexity: 6
+    calls_out: 4
+    calls_in: 0
+  oqlos.core._interpreter_actions.exec_action_api:
+    name: exec_action_api
+    module: oqlos.core._interpreter_actions
+    line: 450
+    cyclomatic_complexity: 3
+    calls_out: 9
+    calls_in: 0
+  frontend.src.utils.rbac.policy.matched:
+    name: matched
+    module: frontend.src.utils.rbac.policy
+    line: 101
+    cyclomatic_complexity: 5
+    calls_out: 1
+    calls_in: 0
+  frontend.src.utils.hardware-wizard-plan.findPlanData:
+    name: findPlanData
+    module: frontend.src.utils.hardware-wizard-plan
+    line: 21
+    cyclomatic_complexity: 7
+    calls_out: 0
+    calls_in: 1
+  frontend.src.utils.hardware-demo-identify.buildStatusDetail:
+    name: buildStatusDetail
+    module: frontend.src.utils.hardware-demo-identify
+    line: 32
+    cyclomatic_complexity: 3
+    calls_out: 1
+    calls_in: 1
+  frontend.src.api.hardware-api-log.isHardwareWizardPath:
+    name: isHardwareWizardPath
+    module: frontend.src.api.hardware-api-log
+    line: 5
+    cyclomatic_complexity: 2
+    calls_out: 3
+    calls_in: 1
+  oqlos.core.motor2_runtime.motor2_max_steps_per_second:
+    name: motor2_max_steps_per_second
+    module: oqlos.core.motor2_runtime
+    line: 71
+    cyclomatic_complexity: 2
+    calls_out: 3
+    calls_in: 2
+  oqlos.core._oql_adapter._fmt_value:
+    name: _fmt_value
+    module: oqlos.core._oql_adapter
+    line: 46
+    cyclomatic_complexity: 2
+    calls_out: 1
+    calls_in: 3
+  frontend.src.pages.HardwareDemo.playMelody:
+    name: playMelody
+    module: frontend.src.pages.HardwareDemo
+    line: 318
+    cyclomatic_complexity: 9
+    calls_out: 11
+    calls_in: 0
+  oqlos.core.oql_parser._line_indent:
+    name: _line_indent
+    module: oqlos.core.oql_parser
+    line: 460
+    cyclomatic_complexity: 2
+    calls_out: 5
+    calls_in: 2
+  frontend.src.pages.HardwareDemo.controller:
+    name: controller
+    module: frontend.src.pages.HardwareDemo
+    line: 194
+    cyclomatic_complexity: 5
+    calls_out: 9
+    calls_in: 0
+  frontend.src.api.scenarioFilesApi.fetchScenarioFilesList:
+    name: fetchScenarioFilesList
+    module: frontend.src.api.scenarioFilesApi
+    line: 8
+    cyclomatic_complexity: 2
+    calls_out: 4
+    calls_in: 0
+  frontend.src.pages.ScenarioFiles.appendLog:
+    name: appendLog
+    module: frontend.src.pages.ScenarioFiles
+    line: 33
+    cyclomatic_complexity: 1
+    calls_out: 4
+    calls_in: 2
+  examples.hardware.doctor-workflow.print:
+    name: print
+    module: examples.hardware.doctor-workflow
+    line: 41
+    cyclomatic_complexity: 0
+    calls_out: 0
+    calls_in: 225
+  oqlos.core.oql_versioning.extract_declared_version:
+    name: extract_declared_version
+    module: oqlos.core.oql_versioning
+    line: 45
+    cyclomatic_complexity: 3
+    calls_out: 4
+    calls_in: 1
+  frontend.src.utils.hardware-demo-identify.buildDeviceStatus:
+    name: buildDeviceStatus
+    module: frontend.src.utils.hardware-demo-identify
+    line: 7
+    cyclomatic_complexity: 4
+    calls_out: 1
+    calls_in: 1
+  oqlos.core._dsl_helpers._map_lung_action:
+    name: _map_lung_action
+    module: oqlos.core._dsl_helpers
+    line: 106
+    cyclomatic_complexity: 5
+    calls_out: 1
+    calls_in: 1
+  oqlos.core._oql_adapter._resolve_include:
+    name: _resolve_include
+    module: oqlos.core._oql_adapter
+    line: 57
+    cyclomatic_complexity: 6
+    calls_out: 8
+    calls_in: 1
+  frontend.src.utils.rbac.policy.isAdminConnectRole:
+    name: isAdminConnectRole
+    module: frontend.src.utils.rbac.policy
+    line: 49
+    cyclomatic_complexity: 1
+    calls_out: 1
+    calls_in: 0
+  oqlos.core._interpreter_actions.exec_action_set:
+    name: exec_action_set
+    module: oqlos.core._interpreter_actions
+    line: 723
+    cyclomatic_complexity: 9
+    calls_out: 11
+    calls_in: 1
+  frontend.src.utils.mapEditorIntegrationMeta.firstBindingFromObjectMapping:
+    name: firstBindingFromObjectMapping
+    module: frontend.src.utils.mapEditorIntegrationMeta
+    line: 1
+    cyclomatic_complexity: 6
+    calls_out: 1
+    calls_in: 2
+  frontend.src.utils.url-embed-config.test:
+    name: test
     module: frontend.src.utils.url-embed-config
-    line: 47
-    cyclomatic_complexity: 11
+    line: 93
+    cyclomatic_complexity: 1
+    calls_out: 0
+    calls_in: 2
+  frontend.src.utils.mapEditorFuncHardwareSummary.resolveNamedActionHardwareHint:
+    name: resolveNamedActionHardwareHint
+    module: frontend.src.utils.mapEditorFuncHardwareSummary
+    line: 32
+    cyclomatic_complexity: 7
+    calls_out: 4
+    calls_in: 1
+  oqlos.core._action_motor2._post_motor2_move_relative:
+    name: _post_motor2_move_relative
+    module: oqlos.core._action_motor2
+    line: 190
+    cyclomatic_complexity: 6
+    calls_out: 13
+    calls_in: 0
+  oqlos.core._action_motor2._parse_motor2_acceleration:
+    name: _parse_motor2_acceleration
+    module: oqlos.core._action_motor2
+    line: 92
+    cyclomatic_complexity: 6
+    calls_out: 9
+    calls_in: 1
+  oqlos.core._line_parsers._parse_pump_line:
+    name: _parse_pump_line
+    module: oqlos.core._line_parsers
+    line: 53
+    cyclomatic_complexity: 6
+    calls_out: 8
+    calls_in: 1
+  frontend.src.utils.hardwareEventStream.data:
+    name: data
+    module: frontend.src.utils.hardwareEventStream
+    line: 34
+    cyclomatic_complexity: 3
+    calls_out: 1
+    calls_in: 0
+  oqlos.core._action_motor2._parse_motor2_float:
+    name: _parse_motor2_float
+    module: oqlos.core._action_motor2
+    line: 60
+    cyclomatic_complexity: 4
     calls_out: 6
+    calls_in: 2
+  oqlos.core.base.InterpreterOutput.output_yaml:
+    name: output_yaml
+    module: oqlos.core.base
+    line: 183
+    cyclomatic_complexity: 4
+    calls_out: 2
     calls_in: 4
+  frontend.src.api.hardwareApi.post:
+    name: post
+    module: frontend.src.api.hardwareApi
+    line: 96
+    cyclomatic_complexity: 1
+    calls_out: 1
+    calls_in: 3
+  frontend.src.utils.hardware-demo-identify.next:
+    name: next
+    module: frontend.src.utils.hardware-demo-identify
+    line: 57
+    cyclomatic_complexity: 3
+    calls_out: 1
+    calls_in: 0
+  frontend.src.api.wsClient.WsCqrsClient.super:
+    name: super
+    module: frontend.src.api.wsClient
+    line: 18
+    cyclomatic_complexity: 1
+    calls_out: 1
+    calls_in: 18
+  frontend.src.pages.MapEditor.addAction:
+    name: addAction
+    module: frontend.src.pages.MapEditor
+    line: 215
+    cyclomatic_complexity: 2
+    calls_out: 6
+    calls_in: 1
+  frontend.src.api.hardwareApi.text:
+    name: text
+    module: frontend.src.api.hardwareApi
+    line: 65
+    cyclomatic_complexity: 2
+    calls_out: 0
+    calls_in: 2
+  frontend.src.utils.useSelectionCollapsePanel.cancelAutoCollapse:
+    name: cancelAutoCollapse
+    module: frontend.src.utils.useSelectionCollapsePanel
+    line: 39
+    cyclomatic_complexity: 2
+    calls_out: 2
+    calls_in: 5
+  frontend.src.utils.hardware-demo-identify.pumpOk:
+    name: pumpOk
+    module: frontend.src.utils.hardware-demo-identify
+    line: 59
+    cyclomatic_complexity: 3
+    calls_out: 1
+    calls_in: 0
+  oqlos.core._interpreter_actions.exec_action_expect:
+    name: exec_action_expect
+    module: oqlos.core._interpreter_actions
+    line: 464
+    cyclomatic_complexity: 3
+    calls_out: 4
+    calls_in: 0
   oqlos.core._interpreter_actions._exec_set_wait:
     name: _exec_set_wait
     module: oqlos.core._interpreter_actions
     line: 748
     cyclomatic_complexity: 3
     calls_out: 7
+    calls_in: 1
+  frontend.src.pages.HardwareDemo.playNote:
+    name: playNote
+    module: frontend.src.pages.HardwareDemo
+    line: 276
+    cyclomatic_complexity: 5
+    calls_out: 7
+    calls_in: 2
+  oqlos.core._interpreter_actions._drop_command_token:
+    name: _drop_command_token
+    module: oqlos.core._interpreter_actions
+    line: 38
+    cyclomatic_complexity: 6
+    calls_out: 5
+    calls_in: 3
+  frontend.src.api.hardwareApi.durationMs:
+    name: durationMs
+    module: frontend.src.api.hardwareApi
+    line: 62
+    cyclomatic_complexity: 7
+    calls_out: 6
+    calls_in: 0
+  frontend.src.pages.MapEditor.editMotorRuntimeConfig:
+    name: editMotorRuntimeConfig
+    module: frontend.src.pages.MapEditor
+    line: 299
+    cyclomatic_complexity: 11
+    calls_out: 6
+    calls_in: 0
+  oqlos.core._dsl_helpers._parse_numeric_value:
+    name: _parse_numeric_value
+    module: oqlos.core._dsl_helpers
+    line: 71
+    cyclomatic_complexity: 4
+    calls_out: 7
+    calls_in: 8
+  oqlos.core.oql_parser.parse_MIN:
+    name: parse_MIN
+    module: oqlos.core.oql_parser
+    line: 357
+    cyclomatic_complexity: 1
+    calls_out: 3
+    calls_in: 0
+  frontend.src.pages.MapEditor.updateIntegrationMeta:
+    name: updateIntegrationMeta
+    module: frontend.src.pages.MapEditor
+    line: 526
+    cyclomatic_complexity: 11
+    calls_out: 7
+    calls_in: 0
+  frontend.src.utils.url-embed-config.resolveUserIdFromSearchParams:
+    name: resolveUserIdFromSearchParams
+    module: frontend.src.utils.url-embed-config
+    line: 27
+    cyclomatic_complexity: 4
+    calls_out: 2
+    calls_in: 1
+  frontend.src.utils.encoder-navigation.handleCancel:
+    name: handleCancel
+    module: frontend.src.utils.encoder-navigation
+    line: 89
+    cyclomatic_complexity: 1
+    calls_out: 2
+    calls_in: 2
+  frontend.src.utils.hardwareEventStream.safeObj:
+    name: safeObj
+    module: frontend.src.utils.hardwareEventStream
+    line: 21
+    cyclomatic_complexity: 3
+    calls_out: 0
     calls_in: 1
   oqlos.core.oql_parser.parse_SAVE:
     name: parse_SAVE
@@ -2756,47 +2189,327 @@ nodes:
     cyclomatic_complexity: 1
     calls_out: 2
     calls_in: 0
-  frontend.src.utils.rbac.policy.isOperatorConnectRole:
-    name: isOperatorConnectRole
+  oqlos.core._dsl_helpers._map_action_value:
+    name: _map_action_value
+    module: oqlos.core._dsl_helpers
+    line: 115
+    cyclomatic_complexity: 7
+    calls_out: 8
+    calls_in: 2
+  frontend.src.api.hardware-api-errors.tryParseJson:
+    name: tryParseJson
+    module: frontend.src.api.hardware-api-errors
+    line: 1
+    cyclomatic_complexity: 3
+    calls_out: 1
+    calls_in: 1
+  frontend.src.pages.HardwareRestart.isSeparateAdapters:
+    name: isSeparateAdapters
+    module: frontend.src.pages.HardwareRestart
+    line: 101
+    cyclomatic_complexity: 1
+    calls_out: 4
+    calls_in: 0
+  frontend.src.api.wsClient.WsCqrsClient.resolve:
+    name: resolve
+    module: frontend.src.api.wsClient
+    line: 48
+    cyclomatic_complexity: 1
+    calls_out: 0
+    calls_in: 3
+  oqlos.core.oql_parser.duration_to_ms:
+    name: duration_to_ms
+    module: oqlos.core.oql_parser
+    line: 162
+    cyclomatic_complexity: 1
+    calls_out: 2
+    calls_in: 3
+  oqlos.core._func_resolver._collect_function_definitions:
+    name: _collect_function_definitions
+    module: oqlos.core._func_resolver
+    line: 14
+    cyclomatic_complexity: 13
+    calls_out: 19
+    calls_in: 1
+  frontend.src.api.wsClient.WsCqrsClient.clearTimeout:
+    name: clearTimeout
+    module: frontend.src.api.wsClient
+    line: 111
+    cyclomatic_complexity: 2
+    calls_out: 0
+    calls_in: 2
+  frontend.src.utils.rbac.policy.resolveAllowedRolesForPath:
+    name: resolveAllowedRolesForPath
     module: frontend.src.utils.rbac.policy
-    line: 44
-    cyclomatic_complexity: 4
+    line: 99
+    cyclomatic_complexity: 6
+    calls_out: 2
+    calls_in: 2
+  oqlos.core._action_motor2._motor2_speed_for_duration:
+    name: _motor2_speed_for_duration
+    module: oqlos.core._action_motor2
+    line: 182
+    cyclomatic_complexity: 1
     calls_out: 1
     calls_in: 0
-  frontend.src.pages.MapEditor.editParamConversionAlgorithm:
-    name: editParamConversionAlgorithm
-    module: frontend.src.pages.MapEditor
-    line: 199
-    cyclomatic_complexity: 11
-    calls_out: 9
-    calls_in: 0
-  oqlos.core.oql_parser._handle_modifier_cmd:
-    name: _handle_modifier_cmd
-    module: oqlos.core.oql_parser
-    line: 575
+  frontend.src.utils.encoder-navigation.handleEncoderCommand:
+    name: handleEncoderCommand
+    module: frontend.src.utils.encoder-navigation
+    line: 98
     cyclomatic_complexity: 5
+    calls_out: 4
+    calls_in: 2
+  oqlos.core.oql_parser.parse_MAX:
+    name: parse_MAX
+    module: oqlos.core.oql_parser
+    line: 364
+    cyclomatic_complexity: 1
+    calls_out: 3
+    calls_in: 0
+  frontend.src.api.wsClient.WsCqrsClient._scheduleReconnect:
+    name: _scheduleReconnect
+    module: frontend.src.api.wsClient
+    line: 125
+    cyclomatic_complexity: 3
     calls_out: 3
     calls_in: 1
-  oqlos.core.oql_parser.parse_FUNC_CALL:
-    name: parse_FUNC_CALL
+  oqlos.core._action_motor2._motor2_step_label:
+    name: _motor2_step_label
+    module: oqlos.core._action_motor2
+    line: 321
+    cyclomatic_complexity: 4
+    calls_out: 1
+    calls_in: 1
+  frontend.src.utils.mapEditorIntegrationMeta.nextValue:
+    name: nextValue
+    module: frontend.src.utils.mapEditorIntegrationMeta
+    line: 75
+    cyclomatic_complexity: 2
+    calls_out: 2
+    calls_in: 0
+  frontend.src.utils.hardware-activity-log.usePageOpenedLog:
+    name: usePageOpenedLog
+    module: frontend.src.utils.hardware-activity-log
+    line: 18
+    cyclomatic_complexity: 2
+    calls_out: 5
+    calls_in: 0
+  frontend.src.utils.mapEditorObjectActionEdits.parsePromptedFieldValue:
+    name: parsePromptedFieldValue
+    module: frontend.src.utils.mapEditorObjectActionEdits
+    line: 3
+    cyclomatic_complexity: 5
+    calls_out: 4
+    calls_in: 1
+  frontend.src.utils.mapEditorIntegrationMeta.setMetaField:
+    name: setMetaField
+    module: frontend.src.utils.mapEditorIntegrationMeta
+    line: 73
+    cyclomatic_complexity: 9
+    calls_out: 6
+    calls_in: 0
+  oqlos.core._action_motor2._motor2_acceleration_raw:
+    name: _motor2_acceleration_raw
+    module: oqlos.core._action_motor2
+    line: 186
+    cyclomatic_complexity: 1
+    calls_out: 2
+    calls_in: 1
+  frontend.src.pages.HardwareRestart.port:
+    name: port
+    module: frontend.src.pages.HardwareRestart
+    line: 77
+    cyclomatic_complexity: 6
+    calls_out: 9
+    calls_in: 0
+  frontend.src.pages.HardwareDemo.fallbackDevice:
+    name: fallbackDevice
+    module: frontend.src.pages.HardwareDemo
+    line: 243
+    cyclomatic_complexity: 2
+    calls_out: 5
+    calls_in: 0
+  frontend.src.utils.mapEditorIntegrationMeta._setOrDelete:
+    name: _setOrDelete
+    module: frontend.src.utils.mapEditorIntegrationMeta
+    line: 37
+    cyclomatic_complexity: 2
+    calls_out: 0
+    calls_in: 2
+  frontend.src.utils.encoder-navigation.removeEncoderHighlights:
+    name: removeEncoderHighlights
+    module: frontend.src.utils.encoder-navigation
+    line: 28
+    cyclomatic_complexity: 1
+    calls_out: 3
+    calls_in: 3
+  setup_hardware_and_run_oql.load_env_file:
+    name: load_env_file
+    module: setup_hardware_and_run_oql
+    line: 193
+    cyclomatic_complexity: 6
+    calls_out: 11
+    calls_in: 2
+  frontend.src.utils.useSelectionCollapsePanel.scheduleCollapse:
+    name: scheduleCollapse
+    module: frontend.src.utils.useSelectionCollapsePanel
+    line: 59
+    cyclomatic_complexity: 2
+    calls_out: 6
+    calls_in: 0
+  frontend.src.utils.rbac.policy.normalizePath:
+    name: normalizePath
+    module: frontend.src.utils.rbac.policy
+    line: 80
+    cyclomatic_complexity: 6
+    calls_out: 4
+    calls_in: 1
+  frontend.src.api.hardware-diagnostic-failure.firstActionableError:
+    name: firstActionableError
+    module: frontend.src.api.hardware-diagnostic-failure
+    line: 17
+    cyclomatic_complexity: 3
+    calls_out: 4
+    calls_in: 1
+  oqlos.core.oql_parser.parse_CALL:
+    name: parse_CALL
     module: oqlos.core.oql_parser
-    line: 415
+    line: 405
     cyclomatic_complexity: 1
     calls_out: 2
     calls_in: 0
-  frontend.src.utils.rbac.policy.isAdminConnectRole:
-    name: isAdminConnectRole
-    module: frontend.src.utils.rbac.policy
-    line: 49
+  oqlos.core.oql_parser._handle_top_level_line:
+    name: _handle_top_level_line
+    module: oqlos.core.oql_parser
+    line: 503
+    cyclomatic_complexity: 6
+    calls_out: 16
+    calls_in: 1
+  oqlos.core.motor2_runtime._normalize_motor2_direction:
+    name: _normalize_motor2_direction
+    module: oqlos.core.motor2_runtime
+    line: 130
+    cyclomatic_complexity: 4
+    calls_out: 2
+    calls_in: 1
+  oqlos.core._action_motor2._parse_motor2_positive_int:
+    name: _parse_motor2_positive_int
+    module: oqlos.core._action_motor2
+    line: 52
+    cyclomatic_complexity: 3
+    calls_out: 9
+    calls_in: 2
+  oqlos.core.motor2_runtime._coerce_int:
+    name: _coerce_int
+    module: oqlos.core.motor2_runtime
+    line: 45
+    cyclomatic_complexity: 3
+    calls_out: 6
+    calls_in: 5
+  oqlos.core._cql_tokenizer._try_val:
+    name: _try_val
+    module: oqlos.core._cql_tokenizer
+    line: 285
+    cyclomatic_complexity: 2
+    calls_out: 4
+    calls_in: 0
+  frontend.src.api.hardwareApi.normalized:
+    name: normalized
+    module: frontend.src.api.hardwareApi
+    line: 186
     cyclomatic_complexity: 1
     calls_out: 1
     calls_in: 0
-  oqlos.core._cql_tokenizer._try_save:
-    name: _try_save
+  oqlos.core.oql_parser.parse_IF:
+    name: parse_IF
+    module: oqlos.core.oql_parser
+    line: 338
+    cyclomatic_complexity: 2
+    calls_out: 10
+    calls_in: 1
+  frontend.src.pages.MapEditor.editObjectActionArg:
+    name: editObjectActionArg
+    module: frontend.src.pages.MapEditor
+    line: 281
+    cyclomatic_complexity: 7
+    calls_out: 4
+    calls_in: 0
+  frontend.src.utils.rbac.policy.isReadOnlyConnectRole:
+    name: isReadOnlyConnectRole
+    module: frontend.src.utils.rbac.policy
+    line: 39
+    cyclomatic_complexity: 2
+    calls_out: 1
+    calls_in: 0
+  oqlos.core._dsl_helpers._map_valve_action:
+    name: _map_valve_action
+    module: oqlos.core._dsl_helpers
+    line: 80
+    cyclomatic_complexity: 3
+    calls_out: 0
+    calls_in: 1
+  frontend.src.utils.url-embed-config.resolveParentContextUpdate:
+    name: resolveParentContextUpdate
+    module: frontend.src.utils.url-embed-config
+    line: 159
+    cyclomatic_complexity: 12
+    calls_out: 4
+    calls_in: 0
+  frontend.src.api.hardware-tic249-status.tic249ResultStatus:
+    name: tic249ResultStatus
+    module: frontend.src.api.hardware-tic249-status
+    line: 3
+    cyclomatic_complexity: 8
+    calls_out: 2
+    calls_in: 2
+  frontend.src.utils.mapEditorIntegrationMeta.setHardwareAddressField:
+    name: setHardwareAddressField
+    module: frontend.src.utils.mapEditorIntegrationMeta
+    line: 57
+    cyclomatic_complexity: 8
+    calls_out: 0
+    calls_in: 1
+  oqlos.core._func_resolver._parse_func_call:
+    name: _parse_func_call
+    module: oqlos.core._func_resolver
+    line: 74
+    cyclomatic_complexity: 5
+    calls_out: 4
+    calls_in: 1
+  oqlos.core._cql_tokenizer._try_if_standalone:
+    name: _try_if_standalone
     module: oqlos.core._cql_tokenizer
-    line: 172
+    line: 252
+    cyclomatic_complexity: 2
+    calls_out: 1
+    calls_in: 0
+  oqlos.core._action_motor2._normalize_motor2_value:
+    name: _normalize_motor2_value
+    module: oqlos.core._action_motor2
+    line: 102
+    cyclomatic_complexity: 2
+    calls_out: 4
+    calls_in: 1
+  oqlos.core._interpreter_actions._assert_status:
+    name: _assert_status
+    module: oqlos.core._interpreter_actions
+    line: 474
     cyclomatic_complexity: 5
     calls_out: 7
+    calls_in: 0
+  frontend.src.utils.mapEditorFuncHardwareSummary.objectMap:
+    name: objectMap
+    module: frontend.src.utils.mapEditorFuncHardwareSummary
+    line: 22
+    cyclomatic_complexity: 3
+    calls_out: 2
+    calls_in: 0
+  frontend.src.api.hardwareApi.put:
+    name: put
+    module: frontend.src.api.hardwareApi
+    line: 100
+    cyclomatic_complexity: 1
+    calls_out: 1
     calls_in: 0
   oqlos.core._interpreter_actions._format_set_command:
     name: _format_set_command
@@ -2805,39 +2518,382 @@ nodes:
     cyclomatic_complexity: 1
     calls_out: 2
     calls_in: 4
-  oqlos.core._cql_tree_builder._parse_goal_line:
-    name: _parse_goal_line
-    module: oqlos.core._cql_tree_builder
-    line: 71
-    cyclomatic_complexity: 12
-    calls_out: 20
+  oqlos.core._oql_adapter._lower_max:
+    name: _lower_max
+    module: oqlos.core._oql_adapter
+    line: 207
+    cyclomatic_complexity: 1
+    calls_out: 3
+    calls_in: 0
+  setup_hardware_and_run_oql.run_oql_scenario:
+    name: run_oql_scenario
+    module: setup_hardware_and_run_oql
+    line: 209
+    cyclomatic_complexity: 8
+    calls_out: 24
     calls_in: 1
-  frontend.src.utils.url-embed-config.applyUrlEmbedPatch:
-    name: applyUrlEmbedPatch
+  frontend.src.utils.hardwareEventStream.id:
+    name: id
+    module: frontend.src.utils.hardwareEventStream
+    line: 40
+    cyclomatic_complexity: 3
+    calls_out: 1
+    calls_in: 1
+  oqlos.core._oql_adapter.parse_flat_oql:
+    name: parse_flat_oql
+    module: oqlos.core._oql_adapter
+    line: 486
+    cyclomatic_complexity: 1
+    calls_out: 2
+    calls_in: 1
+  frontend.src.utils.url-embed-config.nextHref:
+    name: nextHref
     module: frontend.src.utils.url-embed-config
-    line: 179
-    cyclomatic_complexity: 7
+    line: 166
+    cyclomatic_complexity: 1
+    calls_out: 1
+    calls_in: 0
+  frontend.src.pages.MapEditor.integrationMeta:
+    name: integrationMeta
+    module: frontend.src.pages.MapEditor
+    line: 521
+    cyclomatic_complexity: 11
     calls_out: 7
     calls_in: 0
-  frontend.src.utils.mapEditorMapShape.src:
-    name: src
+  frontend.src.pages.HardwareRestart.skipPumpOffStep:
+    name: skipPumpOffStep
+    module: frontend.src.pages.HardwareRestart
+    line: 184
+    cyclomatic_complexity: 5
+    calls_out: 6
+    calls_in: 0
+  frontend.src.i18n.I18nProvider.val:
+    name: val
+    module: frontend.src.i18n.I18nProvider
+    line: 35
+    cyclomatic_complexity: 2
+    calls_out: 2
+    calls_in: 0
+  frontend.src.utils.rbac.policy.normalizeConnectRole:
+    name: normalizeConnectRole
+    module: frontend.src.utils.rbac.policy
+    line: 30
+    cyclomatic_complexity: 2
+    calls_out: 1
+    calls_in: 5
+  frontend.src.utils.url-embed-config.roleCandidate:
+    name: roleCandidate
+    module: frontend.src.utils.url-embed-config
+    line: 116
+    cyclomatic_complexity: 4
+    calls_out: 3
+    calls_in: 0
+  oqlos.core._interpreter_actions.exec_action_shell:
+    name: exec_action_shell
+    module: oqlos.core._interpreter_actions
+    line: 571
+    cyclomatic_complexity: 13
+    calls_out: 19
+    calls_in: 0
+  frontend.src.pages.ScenarioFiles.isDirty:
+    name: isDirty
+    module: frontend.src.pages.ScenarioFiles
+    line: 31
+    cyclomatic_complexity: 1
+    calls_out: 4
+    calls_in: 0
+  frontend.src.utils.hardwareEventStream.normalizeHardwareEvent:
+    name: normalizeHardwareEvent
+    module: frontend.src.utils.hardwareEventStream
+    line: 32
+    cyclomatic_complexity: 8
+    calls_out: 5
+    calls_in: 0
+  oqlos.core.oql_parser._expand_repeat_blocks:
+    name: _expand_repeat_blocks
+    module: oqlos.core.oql_parser
+    line: 499
+    cyclomatic_complexity: 2
+    calls_out: 2
+    calls_in: 1
+  oqlos.core._cql_tokenizer._try_if_else:
+    name: _try_if_else
+    module: oqlos.core._cql_tokenizer
+    line: 211
+    cyclomatic_complexity: 3
+    calls_out: 8
+    calls_in: 0
+  oqlos.core.motor2_runtime.motor2_acceleration_raw:
+    name: motor2_acceleration_raw
+    module: oqlos.core.motor2_runtime
+    line: 117
+    cyclomatic_complexity: 2
+    calls_out: 8
+    calls_in: 2
+  frontend.src.utils.useSelectionCollapsePanel._makeCollapseToggleHandler:
+    name: _makeCollapseToggleHandler
+    module: frontend.src.utils.useSelectionCollapsePanel
+    line: 13
+    cyclomatic_complexity: 8
+    calls_out: 3
+    calls_in: 2
+  oqlos.core.oql_parser._split_set_value_unit:
+    name: _split_set_value_unit
+    module: oqlos.core.oql_parser
+    line: 245
+    cyclomatic_complexity: 2
+    calls_out: 2
+    calls_in: 1
+  frontend.src.pages.HardwareRestart.loadPlan:
+    name: loadPlan
+    module: frontend.src.pages.HardwareRestart
+    line: 56
+    cyclomatic_complexity: 4
+    calls_out: 10
+    calls_in: 3
+  oqlos.core._line_parsers._set_lung_step:
+    name: _set_lung_step
+    module: oqlos.core._line_parsers
+    line: 105
+    cyclomatic_complexity: 4
+    calls_out: 3
+    calls_in: 1
+  frontend.src.utils.collapse-toggle-bridge.isInIframe:
+    name: isInIframe
+    module: frontend.src.utils.collapse-toggle-bridge
+    line: 18
+    cyclomatic_complexity: 4
+    calls_out: 0
+    calls_in: 1
+  oqlos.core._dsl_helpers._looks_like_pump_object:
+    name: _looks_like_pump_object
+    module: oqlos.core._dsl_helpers
+    line: 30
+    cyclomatic_complexity: 1
+    calls_out: 2
+    calls_in: 2
+  oqlos.core._action_motor2._motor2_set_state_value:
+    name: _motor2_set_state_value
+    module: oqlos.core._action_motor2
+    line: 262
+    cyclomatic_complexity: 1
+    calls_out: 1
+    calls_in: 1
+  oqlos.core._interpreter_actions._assert_sensor:
+    name: _assert_sensor
+    module: oqlos.core._interpreter_actions
+    line: 504
+    cyclomatic_complexity: 4
+    calls_out: 9
+    calls_in: 0
+  frontend.src.pages.HardwareRestart.refreshRuntimeStatus:
+    name: refreshRuntimeStatus
+    module: frontend.src.pages.HardwareRestart
+    line: 45
+    cyclomatic_complexity: 3
+    calls_out: 3
+    calls_in: 13
+  frontend.src.utils.mapEditorMapShape.cloneValue:
+    name: cloneValue
     module: frontend.src.utils.mapEditorMapShape
-    line: 24
+    line: 1
+    cyclomatic_complexity: 1
+    calls_out: 2
+    calls_in: 1
+  frontend.src.hooks.useRailHoverPreview.panelEnter:
+    name: panelEnter
+    module: frontend.src.hooks.useRailHoverPreview
+    line: 55
+    cyclomatic_complexity: 1
+    calls_out: 2
+    calls_in: 0
+  frontend.src.hooks.useMapEditorSidebarAutoCollapse.applyAutoCollapse:
+    name: applyAutoCollapse
+    module: frontend.src.hooks.useMapEditorSidebarAutoCollapse
+    line: 6
+    cyclomatic_complexity: 9
+    calls_out: 4
+    calls_in: 1
+  oqlos.core.interpreter.CqlInterpreter.execute:
+    name: execute
+    module: oqlos.core.interpreter
+    line: 227
+    cyclomatic_complexity: 4
+    calls_out: 9
+    calls_in: 0
+  frontend.src.utils.url-embed-config.pathname:
+    name: pathname
+    module: frontend.src.utils.url-embed-config
+    line: 161
+    cyclomatic_complexity: 4
+    calls_out: 3
+    calls_in: 0
+  oqlos.core._line_parsers._parse_action_line:
+    name: _parse_action_line
+    module: oqlos.core._line_parsers
+    line: 192
+    cyclomatic_complexity: 10
+    calls_out: 18
+    calls_in: 0
+  frontend.src.utils.url-embed-config.base:
+    name: base
+    module: frontend.src.utils.url-embed-config
+    line: 147
+    cyclomatic_complexity: 3
+    calls_out: 3
+    calls_in: 0
+  frontend.src.utils.hardware-wizard-plan.assertPlanData:
+    name: assertPlanData
+    module: frontend.src.utils.hardware-wizard-plan
+    line: 30
+    cyclomatic_complexity: 3
+    calls_out: 1
+    calls_in: 1
+  frontend.src.utils.rbac.policy.normalizedPath:
+    name: normalizedPath
+    module: frontend.src.utils.rbac.policy
+    line: 100
+    cyclomatic_complexity: 5
+    calls_out: 1
+    calls_in: 0
+  frontend.src.pages.HardwareRestart.serialPort:
+    name: serialPort
+    module: frontend.src.pages.HardwareRestart
+    line: 74
+    cyclomatic_complexity: 9
+    calls_out: 10
+    calls_in: 0
+  oqlos.core.oql_parser._split_value_unit:
+    name: _split_value_unit
+    module: oqlos.core.oql_parser
+    line: 239
+    cyclomatic_complexity: 2
+    calls_out: 2
+    calls_in: 3
+  oqlos.core.safe_eval._eval_compare:
+    name: _eval_compare
+    module: oqlos.core.safe_eval
+    line: 90
+    cyclomatic_complexity: 1
+    calls_out: 2
+    calls_in: 0
+  frontend.src.pages.HardwareDemo.appendLog:
+    name: appendLog
+    module: frontend.src.pages.HardwareDemo
+    line: 174
+    cyclomatic_complexity: 1
+    calls_out: 3
+    calls_in: 8
+  oqlos.config.get_settings:
+    name: get_settings
+    module: oqlos.config
+    line: 218
+    cyclomatic_complexity: 1
+    calls_out: 0
+    calls_in: 9
+  frontend.src.pages.MapEditor.name:
+    name: name
+    module: frontend.src.pages.MapEditor
+    line: 237
+    cyclomatic_complexity: 1
+    calls_out: 3
+    calls_in: 0
+  frontend.src.api.wsClient.WsCqrsClient.setTimeout:
+    name: setTimeout
+    module: frontend.src.api.wsClient
+    line: 128
+    cyclomatic_complexity: 2
+    calls_out: 1
+    calls_in: 4
+  oqlos.core._interpreter_actions._coerce_expected_value:
+    name: _coerce_expected_value
+    module: oqlos.core._interpreter_actions
+    line: 47
+    cyclomatic_complexity: 7
+    calls_out: 8
+    calls_in: 4
+  oqlos.core.executor._resolve_name_or_attr:
+    name: _resolve_name_or_attr
+    module: oqlos.core.executor
+    line: 16
+    cyclomatic_complexity: 4
+    calls_out: 6
+    calls_in: 1
+  frontend.src.pages.HardwareDemo.sendDeviceNote:
+    name: sendDeviceNote
+    module: frontend.src.pages.HardwareDemo
+    line: 221
+    cyclomatic_complexity: 10
+    calls_out: 9
+    calls_in: 1
+  frontend.src.utils.hardwareEventStream.payload:
+    name: payload
+    module: frontend.src.utils.hardwareEventStream
+    line: 35
+    cyclomatic_complexity: 3
+    calls_out: 1
+    calls_in: 0
+  frontend.src.utils.mapEditorFuncHardwareSummary.resolveObjectActionHardwareHint:
+    name: resolveObjectActionHardwareHint
+    module: frontend.src.utils.mapEditorFuncHardwareSummary
+    line: 18
+    cyclomatic_complexity: 6
+    calls_out: 2
+    calls_in: 1
+  frontend.src.pages.MapEditor.addParam:
+    name: addParam
+    module: frontend.src.pages.MapEditor
+    line: 153
+    cyclomatic_complexity: 2
+    calls_out: 4
+    calls_in: 1
+  frontend.src.api.hardwareApi.serialPort:
+    name: serialPort
+    module: frontend.src.api.hardwareApi
+    line: 171
     cyclomatic_complexity: 2
     calls_out: 1
     calls_in: 0
-  oqlos.core.base.InterpreterOutput.output_yaml:
-    name: output_yaml
-    module: oqlos.core.base
-    line: 183
-    cyclomatic_complexity: 4
-    calls_out: 2
-    calls_in: 4
-  oqlos.core.interpreter.CqlInterpreter.__init__:
-    name: __init__
-    module: oqlos.core.interpreter
-    line: 43
+  frontend.src.utils.mapEditorObjectActionEdits.applyObjectActionBodyFieldMutation:
+    name: applyObjectActionBodyFieldMutation
+    module: frontend.src.utils.mapEditorObjectActionEdits
+    line: 36
+    cyclomatic_complexity: 8
+    calls_out: 1
+    calls_in: 0
+  frontend.src.api.hardwareApi.get:
+    name: get
+    module: frontend.src.api.hardwareApi
+    line: 92
     cyclomatic_complexity: 1
+    calls_out: 1
+    calls_in: 0
+  oqlos.core._interpreter_actions.parse_wait_secs:
+    name: parse_wait_secs
+    module: oqlos.core._interpreter_actions
+    line: 217
+    cyclomatic_complexity: 4
+    calls_out: 6
+    calls_in: 2
+  oqlos.core._line_parsers._set_pump_step:
+    name: _set_pump_step
+    module: oqlos.core._line_parsers
+    line: 92
+    cyclomatic_complexity: 4
+    calls_out: 3
+    calls_in: 2
+  oqlos.core._line_parsers._parse_task_part:
+    name: _parse_task_part
+    module: oqlos.core._line_parsers
+    line: 20
+    cyclomatic_complexity: 10
+    calls_out: 14
+    calls_in: 2
+  oqlos.core.safe_eval._eval_unary_op:
+    name: _eval_unary_op
+    module: oqlos.core.safe_eval
+    line: 70
+    cyclomatic_complexity: 3
     calls_out: 5
     calls_in: 0
   frontend.src.utils.url-embed-config.fromUser:
@@ -2847,26 +2903,12 @@ nodes:
     cyclomatic_complexity: 4
     calls_out: 3
     calls_in: 0
-  frontend.src.utils.hardware-wizard-steps.selectWizardProbeCandidate:
-    name: selectWizardProbeCandidate
-    module: frontend.src.utils.hardware-wizard-steps
-    line: 71
-    cyclomatic_complexity: 11
-    calls_out: 9
-    calls_in: 0
-  oqlos.core.oql_versioning.first_meaningful_line:
-    name: first_meaningful_line
-    module: oqlos.core.oql_versioning
-    line: 35
-    cyclomatic_complexity: 4
-    calls_out: 4
-    calls_in: 2
-  frontend.src.pages.HardwareDemo.Ctx:
-    name: Ctx
-    module: frontend.src.pages.HardwareDemo
-    line: 183
-    cyclomatic_complexity: 2
-    calls_out: 2
+  oqlos.core.oql_parser._handle_modifier_cmd:
+    name: _handle_modifier_cmd
+    module: oqlos.core.oql_parser
+    line: 575
+    cyclomatic_complexity: 5
+    calls_out: 3
     calls_in: 1
   frontend.src.utils.url-embed-config.href:
     name: href
@@ -2875,180 +2917,131 @@ nodes:
     cyclomatic_complexity: 4
     calls_out: 3
     calls_in: 0
-  oqlos.core._interpreter_actions._drop_command_token:
-    name: _drop_command_token
-    module: oqlos.core._interpreter_actions
-    line: 38
-    cyclomatic_complexity: 6
-    calls_out: 5
-    calls_in: 3
-  frontend.src.utils.encoder-navigation.handleCancel:
-    name: handleCancel
-    module: frontend.src.utils.encoder-navigation
-    line: 89
+  frontend.src.utils.mapEditorModel.createInitialEditorState:
+    name: createInitialEditorState
+    module: frontend.src.utils.mapEditorModel
+    line: 52
     cyclomatic_complexity: 1
-    calls_out: 2
-    calls_in: 2
-  frontend.src.utils.hardware-api-retry.sleep:
-    name: sleep
-    module: frontend.src.utils.hardware-api-retry
-    line: 3
-    cyclomatic_complexity: 1
-    calls_out: 2
-    calls_in: 1
-  oqlos.core.oql_parser._handle_top_level_line:
-    name: _handle_top_level_line
-    module: oqlos.core.oql_parser
-    line: 503
-    cyclomatic_complexity: 6
-    calls_out: 16
-    calls_in: 1
-  oqlos.core._action_motor2._parse_prefixed_motor2_setting:
-    name: _parse_prefixed_motor2_setting
-    module: oqlos.core._action_motor2
-    line: 121
-    cyclomatic_complexity: 13
-    calls_out: 12
-    calls_in: 1
-  oqlos.core.parser.parse_dsl_to_goal:
-    name: parse_dsl_to_goal
-    module: oqlos.core.parser
-    line: 174
-    cyclomatic_complexity: 1
-    calls_out: 1
+    calls_out: 3
     calls_in: 0
-  oqlos.core.base.EventBridge.send_event:
-    name: send_event
-    module: oqlos.core.base
-    line: 293
-    cyclomatic_complexity: 4
-    calls_out: 7
-    calls_in: 0
-  oqlos.core._cql_tree_builder._parse_scenario_line:
-    name: _parse_scenario_line
-    module: oqlos.core._cql_tree_builder
-    line: 45
-    cyclomatic_complexity: 3
-    calls_out: 6
-    calls_in: 1
-  oqlos.core._func_resolver._parse_func_call:
-    name: _parse_func_call
-    module: oqlos.core._func_resolver
-    line: 74
-    cyclomatic_complexity: 5
-    calls_out: 4
-    calls_in: 1
-  oqlos.core._line_parsers._extract_set_params:
-    name: _extract_set_params
-    module: oqlos.core._line_parsers
-    line: 116
-    cyclomatic_complexity: 7
-    calls_out: 13
-    calls_in: 1
-  frontend.src.utils.hardwareEventStream.normalizeText:
-    name: normalizeText
-    module: frontend.src.utils.hardwareEventStream
-    line: 1
-    cyclomatic_complexity: 2
-    calls_out: 1
-    calls_in: 11
-  frontend.src.api.hardwareApi._withCtx:
-    name: _withCtx
-    module: frontend.src.api.hardwareApi
-    line: 20
-    cyclomatic_complexity: 2
-    calls_out: 0
-    calls_in: 4
-  frontend.src.api.hardwareApi.startedAt:
-    name: startedAt
-    module: frontend.src.api.hardwareApi
-    line: 34
-    cyclomatic_complexity: 2
-    calls_out: 2
-    calls_in: 0
-  oqlos.core._action_motor2._parse_motor2_duration_seconds:
-    name: _parse_motor2_duration_seconds
-    module: oqlos.core._action_motor2
-    line: 70
+  frontend.src.api.hardware-diagnostic-failure._pickNestedObjectError:
+    name: _pickNestedObjectError
+    module: frontend.src.api.hardware-diagnostic-failure
+    line: 54
     cyclomatic_complexity: 8
-    calls_out: 7
-    calls_in: 1
-  oqlos.core._action_motor2._normalize_motor2_value:
-    name: _normalize_motor2_value
-    module: oqlos.core._action_motor2
-    line: 102
-    cyclomatic_complexity: 2
     calls_out: 4
     calls_in: 1
-  oqlos.core._interpreter_actions._assert_sensor:
-    name: _assert_sensor
-    module: oqlos.core._interpreter_actions
-    line: 504
-    cyclomatic_complexity: 4
-    calls_out: 9
-    calls_in: 0
-  oqlos.core._dsl_helpers._map_lung_action:
-    name: _map_lung_action
-    module: oqlos.core._dsl_helpers
-    line: 106
-    cyclomatic_complexity: 5
+  frontend.src.utils.hardwareEventStream.source:
+    name: source
+    module: frontend.src.utils.hardwareEventStream
+    line: 33
+    cyclomatic_complexity: 3
     calls_out: 1
-    calls_in: 1
-  oqlos.core._line_parsers._set_pump_step:
-    name: _set_pump_step
-    module: oqlos.core._line_parsers
-    line: 92
-    cyclomatic_complexity: 4
-    calls_out: 3
-    calls_in: 2
-  frontend.src.pages.HardwareRestart.skipPumpOffStep:
-    name: skipPumpOffStep
-    module: frontend.src.pages.HardwareRestart
-    line: 184
-    cyclomatic_complexity: 5
-    calls_out: 6
     calls_in: 0
-  oqlos.core._interpreter_actions._compare_values:
-    name: _compare_values
-    module: oqlos.core._interpreter_actions
-    line: 66
-    cyclomatic_complexity: 10
-    calls_out: 8
-    calls_in: 1
-  frontend.src.pages.HardwareRestart.confirmLabelKey:
-    name: confirmLabelKey
-    module: frontend.src.pages.HardwareRestart
+  frontend.src.utils.encoder-navigation.all:
+    name: all
+    module: frontend.src.utils.encoder-navigation
+    line: 16
+    cyclomatic_complexity: 6
+    calls_out: 2
+    calls_in: 7
+  frontend.src.api.wsClient.WsCqrsClient._handleMessage:
+    name: _handleMessage
+    module: frontend.src.api.wsClient
     line: 104
+    cyclomatic_complexity: 13
+    calls_out: 10
+    calls_in: 1
+  oqlos.core._cql_tokenizer._parse_condition_value:
+    name: _parse_condition_value
+    module: oqlos.core._cql_tokenizer
+    line: 138
+    cyclomatic_complexity: 4
+    calls_out: 4
+    calls_in: 2
+  oqlos.core._oql_adapter.is_flat_oql:
+    name: is_flat_oql
+    module: oqlos.core._oql_adapter
+    line: 379
+    cyclomatic_complexity: 8
+    calls_out: 13
+    calls_in: 2
+  oqlos.core._cql_tokenizer._try_goto:
+    name: _try_goto
+    module: oqlos.core._cql_tokenizer
+    line: 365
+    cyclomatic_complexity: 2
+    calls_out: 4
+    calls_in: 0
+  frontend.src.hooks.useRailHoverPreview.useRailHoverPreview:
+    name: useRailHoverPreview
+    module: frontend.src.hooks.useRailHoverPreview
+    line: 12
+    cyclomatic_complexity: 9
+    calls_out: 10
+    calls_in: 0
+  frontend.src.utils.collapse-toggle-bridge.postToParent:
+    name: postToParent
+    module: frontend.src.utils.collapse-toggle-bridge
+    line: 23
+    cyclomatic_complexity: 4
+    calls_out: 8
+    calls_in: 0
+  frontend.src.api.hardware-diagnostic-failure._connectionError:
+    name: _connectionError
+    module: frontend.src.api.hardware-diagnostic-failure
+    line: 22
+    cyclomatic_complexity: 3
+    calls_out: 0
+    calls_in: 1
+  oqlos.core._interpreter_actions._resolve_numeric_token:
+    name: _resolve_numeric_token
+    module: oqlos.core._interpreter_actions
+    line: 335
+    cyclomatic_complexity: 6
+    calls_out: 9
+    calls_in: 1
+  oqlos.core.oql_parser.parse_CHECK:
+    name: parse_CHECK
+    module: oqlos.core.oql_parser
+    line: 319
+    cyclomatic_complexity: 2
+    calls_out: 10
+    calls_in: 2
+  frontend.src.api.hardware-diagnostic-failure.resultData:
+    name: resultData
+    module: frontend.src.api.hardware-diagnostic-failure
+    line: 13
+    cyclomatic_complexity: 4
+    calls_out: 0
+    calls_in: 2
+  frontend.src.pages.HardwareRestart.isConfigureStep:
+    name: isConfigureStep
+    module: frontend.src.pages.HardwareRestart
+    line: 102
     cyclomatic_complexity: 1
     calls_out: 4
     calls_in: 0
-  frontend.src.pages.HardwareDemo.appendLog:
-    name: appendLog
-    module: frontend.src.pages.HardwareDemo
-    line: 174
-    cyclomatic_complexity: 1
-    calls_out: 3
-    calls_in: 8
-  frontend.src.pages.HardwareRestart.log:
-    name: log
-    module: frontend.src.pages.HardwareRestart
-    line: 133
-    cyclomatic_complexity: 1
-    calls_out: 3
-    calls_in: 11
-  frontend.src.hooks.useRailHoverPreview.railLeave:
-    name: railLeave
-    module: frontend.src.hooks.useRailHoverPreview
-    line: 51
-    cyclomatic_complexity: 1
-    calls_out: 2
-    calls_in: 0
-  oqlos.core._interpreter_actions._oql_quote:
-    name: _oql_quote
+  frontend.src.pages.MapEditorObjectActionPanel._motorArgLabel:
+    name: _motorArgLabel
+    module: frontend.src.pages.MapEditorObjectActionPanel
+    line: 10
+    cyclomatic_complexity: 6
+    calls_out: 0
+    calls_in: 1
+  oqlos.core._line_parsers._parse_if_condition:
+    name: _parse_if_condition
+    module: oqlos.core._line_parsers
+    line: 228
+    cyclomatic_complexity: 9
+    calls_out: 22
+    calls_in: 1
+  oqlos.core._interpreter_actions._do_sleep:
+    name: _do_sleep
     module: oqlos.core._interpreter_actions
-    line: 96
-    cyclomatic_complexity: 2
-    calls_out: 3
+    line: 243
+    cyclomatic_complexity: 3
+    calls_out: 10
     calls_in: 2
   frontend.src.utils.hardware-wizard-steps._findBestCandidate:
     name: _findBestCandidate
@@ -3057,96 +3050,131 @@ nodes:
     cyclomatic_complexity: 6
     calls_out: 3
     calls_in: 1
-  frontend.src.hooks.useRailHoverPreview.panelEnter:
-    name: panelEnter
-    module: frontend.src.hooks.useRailHoverPreview
-    line: 55
-    cyclomatic_complexity: 1
-    calls_out: 2
-    calls_in: 0
-  oqlos.core.oql_parser.parse_INCLUDE:
-    name: parse_INCLUDE
-    module: oqlos.core.oql_parser
-    line: 410
-    cyclomatic_complexity: 1
-    calls_out: 2
-    calls_in: 1
-  frontend.src.utils.url-embed-config.parseIdentityParams:
-    name: parseIdentityParams
-    module: frontend.src.utils.url-embed-config
-    line: 74
-    cyclomatic_complexity: 4
-    calls_out: 6
-    calls_in: 1
-  frontend.src.utils.mapEditorFuncHardwareSummary.resolveObjectActionHardwareHint:
-    name: resolveObjectActionHardwareHint
-    module: frontend.src.utils.mapEditorFuncHardwareSummary
-    line: 18
-    cyclomatic_complexity: 6
-    calls_out: 2
-    calls_in: 1
-  oqlos.core.oql_parser.parse_SAMPLE:
-    name: parse_SAMPLE
-    module: oqlos.core.oql_parser
-    line: 371
-    cyclomatic_complexity: 3
-    calls_out: 6
-    calls_in: 0
-  frontend.src.api.scenarioFilesApi.filterListableFiles:
-    name: filterListableFiles
-    module: frontend.src.api.scenarioFilesApi
-    line: 3
-    cyclomatic_complexity: 3
-    calls_out: 2
-    calls_in: 1
-  frontend.src.pages.HardwareRestart.serialPort:
-    name: serialPort
-    module: frontend.src.pages.HardwareRestart
-    line: 74
-    cyclomatic_complexity: 9
-    calls_out: 10
-    calls_in: 0
-  frontend.src.pages.HardwareRestart.isSeparateAdapters:
-    name: isSeparateAdapters
-    module: frontend.src.pages.HardwareRestart
-    line: 101
-    cyclomatic_complexity: 1
-    calls_out: 4
-    calls_in: 0
-  oqlos.core.oql_versioning.extract_declared_version:
-    name: extract_declared_version
-    module: oqlos.core.oql_versioning
-    line: 45
-    cyclomatic_complexity: 3
-    calls_out: 4
-    calls_in: 1
-  frontend.src.api.hardware-api-log.logHardwareApiEvent:
-    name: logHardwareApiEvent
-    module: frontend.src.api.hardware-api-log
-    line: 75
-    cyclomatic_complexity: 6
-    calls_out: 4
-    calls_in: 0
-  oqlos.core.cql_parser._ParseState._handle_step:
-    name: _handle_step
-    module: oqlos.core.cql_parser
-    line: 218
-    cyclomatic_complexity: 2
-    calls_out: 4
-    calls_in: 0
-  oqlos.core._action_motor2._parse_motor2_speed_steps:
-    name: _parse_motor2_speed_steps
-    module: oqlos.core._action_motor2
-    line: 45
-    cyclomatic_complexity: 4
-    calls_out: 4
-    calls_in: 2
-  frontend.src.utils.rbac.policy.normalizedPath:
-    name: normalizedPath
-    module: frontend.src.utils.rbac.policy
-    line: 100
+  oqlos.core.parser._try_action_or_condition:
+    name: _try_action_or_condition
+    module: oqlos.core.parser
+    line: 37
     cyclomatic_complexity: 5
+    calls_out: 6
+    calls_in: 1
+  oqlos.core._line_parsers._set_valve_step:
+    name: _set_valve_step
+    module: oqlos.core._line_parsers
+    line: 79
+    cyclomatic_complexity: 4
+    calls_out: 4
+    calls_in: 1
+  frontend.src.pages.ScenarioFiles.saveFile:
+    name: saveFile
+    module: frontend.src.pages.ScenarioFiles
+    line: 82
+    cyclomatic_complexity: 4
+    calls_out: 7
+    calls_in: 0
+  frontend.src.utils.hardware-demo-identify.res:
+    name: res
+    module: frontend.src.utils.hardware-demo-identify
+    line: 53
+    cyclomatic_complexity: 3
     calls_out: 1
+    calls_in: 0
+  oqlos.core._interpreter_actions._lookup_peripheral_state:
+    name: _lookup_peripheral_state
+    module: oqlos.core._interpreter_actions
+    line: 152
+    cyclomatic_complexity: 5
+    calls_out: 5
+    calls_in: 1
+  frontend.src.pages.HardwareRestart.stepErr:
+    name: stepErr
+    module: frontend.src.pages.HardwareRestart
+    line: 149
+    cyclomatic_complexity: 1
+    calls_out: 1
+    calls_in: 0
+  frontend.src.pages.ScenarioFiles.cancelled:
+    name: cancelled
+    module: frontend.src.pages.ScenarioFiles
+    line: 69
+    cyclomatic_complexity: 4
+    calls_out: 4
+    calls_in: 0
+  oqlos.core.executor.ScenarioOrchestrator._execute_validate_step:
+    name: _execute_validate_step
+    module: oqlos.core.executor
+    line: 294
+    cyclomatic_complexity: 7
+    calls_out: 7
+    calls_in: 0
+  frontend.src.pages.HardwareDemo.ensureAudioCtx:
+    name: ensureAudioCtx
+    module: frontend.src.pages.HardwareDemo
+    line: 181
+    cyclomatic_complexity: 4
+    calls_out: 4
+    calls_in: 3
+  frontend.src.utils.hardwareEventStream.buildHardwareEventsWsUrl:
+    name: buildHardwareEventsWsUrl
+    module: frontend.src.utils.hardwareEventStream
+    line: 5
+    cyclomatic_complexity: 10
+    calls_out: 3
+    calls_in: 0
+  oqlos.core._oql_adapter._lower_min:
+    name: _lower_min
+    module: oqlos.core._oql_adapter
+    line: 202
+    cyclomatic_complexity: 1
+    calls_out: 3
+    calls_in: 0
+  oqlos.core._action_motor2._normalize_motor2_target:
+    name: _normalize_motor2_target
+    module: oqlos.core._action_motor2
+    line: 31
+    cyclomatic_complexity: 1
+    calls_out: 2
+    calls_in: 1
+  frontend.src.pages.HardwareDemo.sendDeviceStop:
+    name: sendDeviceStop
+    module: frontend.src.pages.HardwareDemo
+    line: 261
+    cyclomatic_complexity: 3
+    calls_out: 3
+    calls_in: 2
+  oqlos.core.oql_parser._handle_block_header:
+    name: _handle_block_header
+    module: oqlos.core.oql_parser
+    line: 527
+    cyclomatic_complexity: 8
+    calls_out: 12
+    calls_in: 1
+  frontend.src.pages.HardwareDemo.Ctx:
+    name: Ctx
+    module: frontend.src.pages.HardwareDemo
+    line: 183
+    cyclomatic_complexity: 2
+    calls_out: 2
+    calls_in: 1
+  oqlos.core.oql_parser.tokenize:
+    name: tokenize
+    module: oqlos.core.oql_parser
+    line: 178
+    cyclomatic_complexity: 13
+    calls_out: 14
+    calls_in: 5
+  setup_hardware_and_run_oql.main:
+    name: main
+    module: setup_hardware_and_run_oql
+    line: 261
+    cyclomatic_complexity: 3
+    calls_out: 18
+    calls_in: 0
+  frontend.src.pages.MapEditor.editObjectActionBodyField:
+    name: editObjectActionBodyField
+    module: frontend.src.pages.MapEditor
+    line: 290
+    cyclomatic_complexity: 7
+    calls_out: 4
     calls_in: 0
 edges:
 - caller: setup_hardware_and_run_oql.setup_env_file
@@ -3199,6 +3227,24 @@ edges:
   call_type: resolved
 - caller: frontend.src.pages.MapEditorObjectActionPanel._MotorRelativeParams
   callee: frontend.src.pages.MapEditorObjectActionPanel._motorArgLabel
+  call_type: resolved
+- caller: frontend.src.pages.ScenarioFiles.isDirty
+  callee: frontend.src.pages.ScenarioFiles.formatLogTime
+  call_type: resolved
+- caller: frontend.src.pages.ScenarioFiles.appendLog
+  callee: frontend.src.pages.ScenarioFiles.formatLogTime
+  call_type: resolved
+- caller: frontend.src.pages.ScenarioFiles.cancelled
+  callee: frontend.src.pages.ScenarioFiles.loadFiles
+  call_type: resolved
+- caller: frontend.src.pages.ScenarioFiles.cancelled
+  callee: frontend.src.pages.ScenarioFiles.selectFile
+  call_type: resolved
+- caller: frontend.src.pages.ScenarioFiles.saveFile
+  callee: frontend.src.pages.ScenarioFiles.appendLog
+  call_type: resolved
+- caller: frontend.src.pages.ScenarioFiles.runScenario
+  callee: frontend.src.pages.ScenarioFiles.appendLog
   call_type: resolved
 - caller: frontend.src.pages.MapEditor.addObject
   callee: frontend.src.pages.MapEditor.applyMapMutation
@@ -3650,6 +3696,36 @@ edges:
 - caller: frontend.src.utils.hardware-api-retry.attempt
   callee: frontend.src.utils.hardware-api-retry.sleep
   call_type: resolved
+- caller: frontend.src.utils.hardware-demo-identify.probeDemoDevices
+  callee: frontend.src.utils.hardware-demo-identify.buildDeviceStatus
+  call_type: resolved
+- caller: frontend.src.utils.hardware-demo-identify.probeDemoDevices
+  callee: frontend.src.utils.hardware-demo-identify.probePump
+  call_type: resolved
+- caller: frontend.src.utils.hardware-demo-identify.probeDemoDevices
+  callee: frontend.src.utils.hardware-demo-identify.buildStatusDetail
+  call_type: resolved
+- caller: frontend.src.utils.hardware-demo-identify.probeDemoDevices
+  callee: frontend.src.utils.hardware-demo-identify.resolveFallbackDeviceId
+  call_type: resolved
+- caller: frontend.src.utils.hardware-demo-identify.res
+  callee: frontend.src.utils.hardware-demo-identify.probePump
+  call_type: resolved
+- caller: frontend.src.utils.hardware-demo-identify.adapters
+  callee: frontend.src.utils.hardware-demo-identify.probePump
+  call_type: resolved
+- caller: frontend.src.utils.hardware-demo-identify.next
+  callee: frontend.src.utils.hardware-demo-identify.probePump
+  call_type: resolved
+- caller: frontend.src.utils.hardware-demo-identify.pumpOk
+  callee: frontend.src.utils.hardware-demo-identify.probePump
+  call_type: resolved
+- caller: frontend.src.utils.hardware-demo-identify.stepperOk
+  callee: frontend.src.utils.hardware-demo-identify.probePump
+  call_type: resolved
+- caller: frontend.src.utils.hardware-demo-identify.probeOk
+  callee: frontend.src.utils.hardware-demo-identify.probePump
+  call_type: resolved
 - caller: frontend.src.utils.rbac.policy.normalizeConnectRole
   callee: frontend.src.utils.rbac.policy.parseConnectRole
   call_type: resolved
@@ -3742,6 +3818,15 @@ edges:
   call_type: resolved
 - caller: frontend.src.utils.mapEditorObjectActionEdits.applyObjectActionBodyFieldMutation
   callee: frontend.src.utils.mapEditorObjectActionEdits.parsePromptedFieldValue
+  call_type: resolved
+- caller: frontend.src.utils.hardware-wizard-plan.extractWizardPlan
+  callee: frontend.src.utils.hardware-wizard-plan.throwIfStackError
+  call_type: resolved
+- caller: frontend.src.utils.hardware-wizard-plan.extractWizardPlan
+  callee: frontend.src.utils.hardware-wizard-plan.findPlanData
+  call_type: resolved
+- caller: frontend.src.utils.hardware-wizard-plan.extractWizardPlan
+  callee: frontend.src.utils.hardware-wizard-plan.assertPlanData
   call_type: resolved
 - caller: frontend.src.utils.collapse-toggle-bridge.postToParent
   callee: frontend.src.utils.collapse-toggle-bridge.isInIframe
@@ -4401,10 +4486,10 @@ edges:
   callee: oqlos.core._oql_adapter._scenarios_root
   call_type: resolved
 - caller: oqlos.core._oql_adapter._MacroRegistry.register
-  callee: frontend.src.utils.hardware-wizard-steps.list
+  callee: frontend.src.pages.ScenarioFiles.list
   call_type: resolved
 - caller: oqlos.core._oql_adapter._load_includes
-  callee: frontend.src.utils.hardware-wizard-steps.list
+  callee: frontend.src.pages.ScenarioFiles.list
   call_type: resolved
 - caller: oqlos.core._oql_adapter._load_includes
   callee: oqlos.core._oql_adapter._resolve_include
@@ -4413,7 +4498,7 @@ edges:
   callee: oqlos.core.oql_parser.parse_oql
   call_type: resolved
 - caller: oqlos.core._oql_adapter._lower_call
-  callee: frontend.src.utils.hardware-wizard-steps.list
+  callee: frontend.src.pages.ScenarioFiles.list
   call_type: resolved
 - caller: oqlos.core._oql_adapter._lower_call
   callee: oqlos.core._oql_adapter._parse_macro_line
@@ -4592,63 +4677,6 @@ edges:
 - caller: oqlos.core.safe_eval._eval_bool_op
   callee: oqlos.core.safe_eval._eval_node
   call_type: resolved
-- caller: oqlos.core.safe_eval._eval_bool_op
-  callee: frontend.src.utils.encoder-navigation.all
-  call_type: resolved
-- caller: oqlos.core.safe_eval._eval_call
-  callee: oqlos.core.safe_eval._eval_node
-  call_type: resolved
-- caller: oqlos.core.safe_eval._eval_if_exp
-  callee: oqlos.core.safe_eval._eval_node
-  call_type: resolved
-- caller: oqlos.core._compare.resolve_compare_chain
-  callee: oqlos.core._compare.resolve_compare
-  call_type: resolved
-- caller: oqlos.core.cql_parser._ParseState._try_top_level
-  callee: oqlos.core._cql_tree_builder._parse_metadata_kv
-  call_type: resolved
-- caller: oqlos.core.cql_parser._ParseState._handle_scenario
-  callee: oqlos.core._cql_tree_builder._parse_scenario_line
-  call_type: resolved
-- caller: oqlos.core.cql_parser._ParseState._handle_goal
-  callee: oqlos.core._cql_tree_builder._parse_goal_line
-  call_type: resolved
-- caller: oqlos.core.cql_parser._ParseState._handle_step
-  callee: oqlos.core._cql_tree_builder._ensure_goal_for_step
-  call_type: resolved
-- caller: oqlos.core.cql_parser._ParseState._handle_step
-  callee: oqlos.core._cql_tree_builder._parse_step_line
-  call_type: resolved
-- caller: oqlos.core.cql_parser._ParseState._try_hierarchy
-  callee: oqlos.core._cql_tree_builder._ensure_step_for_actions
-  call_type: resolved
-- caller: oqlos.core.cql_parser._ParseState._try_hierarchy
-  callee: oqlos.core._cql_tree_builder._parse_action_line
-  call_type: resolved
-- caller: oqlos.core.cql_parser.parse_cql
-  callee: oqlos.core._oql_adapter.is_flat_oql
-  call_type: resolved
-- caller: oqlos.core.cql_parser.parse_cql
-  callee: oqlos.core._oql_adapter.parse_flat_oql
-  call_type: resolved
-- caller: oqlos.core.cql_parser._collect_all_goals
-  callee: frontend.src.utils.hardware-wizard-steps.list
-  call_type: resolved
-- caller: oqlos.core.cql_parser.validate_cql
-  callee: oqlos.core.cql_parser._collect_all_goals
-  call_type: resolved
-- caller: oqlos.core.cql_parser.validate_cql
-  callee: oqlos.core.cql_parser._validate_intervals
-  call_type: resolved
-- caller: oqlos.core._value_normalizers.ValueNormalizer.coerce_float
-  callee: oqlos.core._dsl_helpers._parse_numeric_value
-  call_type: resolved
-- caller: oqlos.core._sensor_evaluator.SensorEvaluator.__init__
-  callee: frontend.src.i18n.I18nProvider.dict
-  call_type: resolved
-- caller: oqlos.core._sensor_evaluator.SensorEvaluator.collect_sensor_constraints
-  callee: frontend.src.utils.hardware-wizard-steps.list
-  call_type: resolved
 modules:
   examples.hardware.doctor-workflow:
   - examples.hardware.doctor-workflow.print
@@ -4790,6 +4818,16 @@ modules:
   frontend.src.pages.MapEditorObjectActionPanel:
   - frontend.src.pages.MapEditorObjectActionPanel._MotorRelativeParams
   - frontend.src.pages.MapEditorObjectActionPanel._motorArgLabel
+  frontend.src.pages.ScenarioFiles:
+  - frontend.src.pages.ScenarioFiles.appendLog
+  - frontend.src.pages.ScenarioFiles.cancelled
+  - frontend.src.pages.ScenarioFiles.formatLogTime
+  - frontend.src.pages.ScenarioFiles.isDirty
+  - frontend.src.pages.ScenarioFiles.list
+  - frontend.src.pages.ScenarioFiles.loadFiles
+  - frontend.src.pages.ScenarioFiles.runScenario
+  - frontend.src.pages.ScenarioFiles.saveFile
+  - frontend.src.pages.ScenarioFiles.selectFile
   frontend.src.utils.collapse-toggle-bridge:
   - frontend.src.utils.collapse-toggle-bridge.isInIframe
   - frontend.src.utils.collapse-toggle-bridge.postToParent
@@ -4815,10 +4853,26 @@ modules:
   frontend.src.utils.hardware-api-retry:
   - frontend.src.utils.hardware-api-retry.attempt
   - frontend.src.utils.hardware-api-retry.sleep
+  frontend.src.utils.hardware-demo-identify:
+  - frontend.src.utils.hardware-demo-identify.adapters
+  - frontend.src.utils.hardware-demo-identify.buildDeviceStatus
+  - frontend.src.utils.hardware-demo-identify.buildStatusDetail
+  - frontend.src.utils.hardware-demo-identify.next
+  - frontend.src.utils.hardware-demo-identify.probeDemoDevices
+  - frontend.src.utils.hardware-demo-identify.probeOk
+  - frontend.src.utils.hardware-demo-identify.probePump
+  - frontend.src.utils.hardware-demo-identify.pumpOk
+  - frontend.src.utils.hardware-demo-identify.res
+  - frontend.src.utils.hardware-demo-identify.resolveFallbackDeviceId
+  - frontend.src.utils.hardware-demo-identify.stepperOk
+  frontend.src.utils.hardware-wizard-plan:
+  - frontend.src.utils.hardware-wizard-plan.assertPlanData
+  - frontend.src.utils.hardware-wizard-plan.extractWizardPlan
+  - frontend.src.utils.hardware-wizard-plan.findPlanData
+  - frontend.src.utils.hardware-wizard-plan.throwIfStackError
   frontend.src.utils.hardware-wizard-steps:
   - frontend.src.utils.hardware-wizard-steps._filterCandidatesByRole
   - frontend.src.utils.hardware-wizard-steps._findBestCandidate
-  - frontend.src.utils.hardware-wizard-steps.list
   - frontend.src.utils.hardware-wizard-steps.selectWizardProbeCandidate
   frontend.src.utils.hardwareEventStream:
   - frontend.src.utils.hardwareEventStream.buildHardwareEventsWsUrl
@@ -4949,7 +5003,6 @@ modules:
   - oqlos.core._action_motor2._post_motor2_stop
   - oqlos.core._action_motor2._try_exec_motor2_set
   oqlos.core._compare:
-  - oqlos.core._compare.resolve_compare
   - oqlos.core._compare.resolve_compare_chain
   oqlos.core._cql_tokenizer:
   - oqlos.core._cql_tokenizer._match_first
@@ -4963,13 +5016,7 @@ modules:
   - oqlos.core._cql_tokenizer._try_set
   - oqlos.core._cql_tokenizer._try_val
   oqlos.core._cql_tree_builder:
-  - oqlos.core._cql_tree_builder._ensure_goal_for_step
-  - oqlos.core._cql_tree_builder._ensure_step_for_actions
   - oqlos.core._cql_tree_builder._parse_action_line
-  - oqlos.core._cql_tree_builder._parse_goal_line
-  - oqlos.core._cql_tree_builder._parse_metadata_kv
-  - oqlos.core._cql_tree_builder._parse_scenario_line
-  - oqlos.core._cql_tree_builder._parse_step_line
   oqlos.core._dsl_helpers:
   - oqlos.core._dsl_helpers._looks_like_lung_object
   - oqlos.core._dsl_helpers._looks_like_pump_object
@@ -5046,11 +5093,6 @@ modules:
   - oqlos.core._oql_adapter.is_flat_oql
   - oqlos.core._oql_adapter.oql_doc_to_cql
   - oqlos.core._oql_adapter.parse_flat_oql
-  oqlos.core._sensor_evaluator:
-  - oqlos.core._sensor_evaluator.SensorEvaluator.__init__
-  - oqlos.core._sensor_evaluator.SensorEvaluator.collect_sensor_constraints
-  oqlos.core._value_normalizers:
-  - oqlos.core._value_normalizers.ValueNormalizer.coerce_float
   oqlos.core.base:
   - oqlos.core.base.EventBridge.send_event
   - oqlos.core.base.InterpreterOutput.emit
@@ -5058,13 +5100,6 @@ modules:
   - oqlos.core.base.VariableStore.__init__
   - oqlos.core.base.VariableStore.all
   oqlos.core.cql_parser:
-  - oqlos.core.cql_parser._ParseState._handle_goal
-  - oqlos.core.cql_parser._ParseState._handle_scenario
-  - oqlos.core.cql_parser._ParseState._handle_step
-  - oqlos.core.cql_parser._ParseState._try_hierarchy
-  - oqlos.core.cql_parser._ParseState._try_top_level
-  - oqlos.core.cql_parser._collect_all_goals
-  - oqlos.core.cql_parser._validate_intervals
   - oqlos.core.cql_parser.parse_cql
   - oqlos.core.cql_parser.validate_cql
   oqlos.core.executor:
@@ -5138,9 +5173,7 @@ modules:
   oqlos.core.safe_eval:
   - oqlos.core.safe_eval._eval_bin_op
   - oqlos.core.safe_eval._eval_bool_op
-  - oqlos.core.safe_eval._eval_call
   - oqlos.core.safe_eval._eval_compare
-  - oqlos.core.safe_eval._eval_if_exp
   - oqlos.core.safe_eval._eval_node
   - oqlos.core.safe_eval._eval_unary_op
   - oqlos.core.safe_eval.safe_eval
@@ -5442,7 +5475,6 @@ entry_points:
 - frontend.src.pages.ScenarioFiles.data
 - frontend.src.pages.ScenarioFiles.file
 - frontend.src.pages.ScenarioFiles.isDirty
-- frontend.src.pages.ScenarioFiles.list
 - frontend.src.pages.ScenarioFiles.match
 - frontend.src.pages.ScenarioFiles.navContext
 - frontend.src.pages.ScenarioFiles.runScenario
@@ -5549,6 +5581,7 @@ entry_points:
 - frontend.src.utils.hardware-wizard-steps.isOptionalWizardStep
 - frontend.src.utils.hardware-wizard-steps.isPumpOffUnavailableError
 - frontend.src.utils.hardware-wizard-steps.isSkippablePumpOffWizardStep
+- frontend.src.utils.hardware-wizard-steps.list
 - frontend.src.utils.hardware-wizard-steps.matching
 - frontend.src.utils.hardware-wizard-steps.needsProgramming
 - frontend.src.utils.hardware-wizard-steps.normalized

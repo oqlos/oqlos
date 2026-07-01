@@ -124,7 +124,7 @@ valve commands to POST /api/v1/hardware/valve/{id} so t
 - **Calls**: argparse.ArgumentParser, parser.add_argument, parser.add_argument, parser.add_argument, parser.parse_args, None.resolve, examples.hardware.doctor-workflow.print, scripts.migrate_to_v4.find_oql_files
 
 ### scripts.fix_brackets_to_v4.main
-- **Calls**: argparse.ArgumentParser, parser.add_argument, parser.add_argument, parser.parse_args, Path, frontend.src.utils.hardware-wizard-steps.list, examples.hardware.doctor-workflow.print, examples.hardware.doctor-workflow.print
+- **Calls**: argparse.ArgumentParser, parser.add_argument, parser.add_argument, parser.parse_args, Path, frontend.src.pages.ScenarioFiles.list, examples.hardware.doctor-workflow.print, examples.hardware.doctor-workflow.print
 
 ### oqlos.tools.plugin_cli.main
 - **Calls**: argparse.ArgumentParser, parser.add_subparsers, subparsers.add_parser, subparsers.add_parser, subparsers.add_parser, caps_parser.add_argument, subparsers.add_parser, validate_parser.add_argument
@@ -152,7 +152,7 @@ valve commands to POST /api/v1/hardware/valve/{id} so t
 
 ### oqlos.api.hardware_probe_devices._probe_i2c_ads1115
 > Probe configured I2C bus(es) for ADS1115.
-- **Calls**: os.getenv, os.getenv, os.getenv, os.getenv, oqlos.api.hardware_probe_devices._local_ads1115_probe_allowed, int, frontend.src.utils.hardware-wizard-steps.list, None.join
+- **Calls**: os.getenv, os.getenv, os.getenv, os.getenv, oqlos.api.hardware_probe_devices._local_ads1115_probe_allowed, int, frontend.src.pages.ScenarioFiles.list, None.join
 
 ### oqlos.hardware.plugin_gateway.PluginHardwareGateway._initialize_plugins
 > Initialize all enabled plugins in parallel.
@@ -213,7 +213,7 @@ Expected payload::
 - **Calls**: topology._modbus_io_device_ids, int, sorted, topology._modbus_runtime_serial_ports, oqlos.api.hardware_modbus_waveshare._resolve_waveshare_ports, int, str, int
 
 ### oqlos.api.hardware_modbus_wizard._modbus_wizard_probe_isolated
-- **Calls**: oqlos.api.hardware_modbus_wizard._collect_wizard_serial_candidates, diagnose_shared_bus, report.to_dict, all_scans.append, frontend.src.utils.hardware-wizard-steps.list, bool, int, str
+- **Calls**: oqlos.api.hardware_modbus_wizard._collect_wizard_serial_candidates, diagnose_shared_bus, report.to_dict, all_scans.append, frontend.src.pages.ScenarioFiles.list, bool, int, str
 
 ### oqlos.core._interpreter_actions.exec_action_shell
 > Execute shell/export helpers in dry-run mode.
@@ -439,6 +439,9 @@ Key functions that process and transform data:
 ### frontend.src.hooks.useParentEncoderNavigation.useParentEncoderNavigation
 - **Output to**: frontend.src.hooks.useParentEncoderNavigation.useEffect, frontend.src.hooks.useParentEncoderNavigation.createEncoderController, frontend.src.hooks.useParentEncoderNavigation.parseParentEncoderEnvelope, frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand, frontend.src.hooks.useParentEncoderNavigation.isParentEncoderActive
 
+### frontend.src.pages.ScenarioFiles.formatLogTime
+- **Output to**: frontend.src.pages.ScenarioFiles.Date, frontend.src.pages.ScenarioFiles.toLocaleTimeString
+
 ### frontend.src.pages.MapEditor.parsed
 - **Output to**: frontend.src.pages.MapEditor.isPlainObject, frontend.src.pages.MapEditor.Error, frontend.src.pages.MapEditor.t
 
@@ -510,10 +513,6 @@ Key functions that process and transform data:
 ### oqlos.core._cql_tree_builder._parse_goal_line
 > Parse GOAL: (simple CQL) or named goal (ConnectGo 2-space indent).
 - **Output to**: RE_CONFIG_SIMPLE.match, RE_GOAL_SIMPLE.match, CqlGoal, RE_CONFIG_NAMED.match, CqlGoal
-
-### oqlos.core._cql_tree_builder._parse_goal_attrs
-> Parse goal-level attributes (description, editable, alarm).
-- **Output to**: RE_DESC.match, RE_EDITABLE.match, RE_ALARM.match, m.group, m.group
 
 ## Behavioral Patterns
 

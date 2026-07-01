@@ -1,4 +1,4 @@
-# oqlos | 2289 func | 259f | 58255L | python | 2026-07-01
+# oqlos | 2289 func | 259f | 58264L | python | 2026-07-01
 # generated in 0.00s
 
 HEALTH:
@@ -17,7 +17,7 @@ ALERTS[20]:
   !!  high_fan_out     useSelectionCollapsePanel = 18 (limit:10)
 
 MODULES[345] (top by size):
-  M[docs/README.md] 2245L C:0 F:0 CC↑0 D:0 (md)
+  M[docs/README.md] 2254L C:0 F:0 CC↑0 D:0 (md)
   M[frontend/src/i18n/dictionaries.js] 2053L C:0 F:4 CC↑5 D:0 (javascript)
   M[frontend/src/pages/mapEditorDefaultMap.js] 1763L C:0 F:3 CC↑1 D:0 (javascript)
   M[redeploy/122/migration.md] 1271L C:0 F:0 CC↑0 D:0 (md)
@@ -51,4 +51,4 @@ REFACTOR[15]:
   [5] H/H Split god module frontend/src/pages/MapEditor.jsx (998L, 0 classes)
 
 EVOLUTION:
-  2026-07-01 CC̄=3.8 crit=186 58255L // Automated analysis
+  2026-07-01 CC̄=3.8 crit=186 58264L // Automated analysis
