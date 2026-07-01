@@ -20,16 +20,12 @@ import logging
 import warnings
 from enum import Enum
 from pathlib import Path
-from typing import Any
 
 from pydantic import BaseModel
 
 from oqlos.hardware.config_paths import resolve_oqlos_config_path
 from oqlos.hardware.plugins.base import (
-    ConversionConfig,
-    PeripheralConfig,
     PluginConfig,
-    ScaleConfig,
     dynamic_plugin_schema_models,
 )
 from oqlos.hardware.plugins.registry import PluginRegistry

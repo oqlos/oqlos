@@ -7,8 +7,6 @@ plugin-based configuration system that is more flexible and maintainable.
 
 from __future__ import annotations
 
-from typing import Any
-
 
 # DSL target names → plugin ID mapping
 # This maps DSL peripheral names to their corresponding plugin IDs
@@ -48,7 +46,7 @@ _PERIPHERAL_TO_PLUGIN_MAP = {
     "valve-sc": "modbus-io",
     "valve-wc": "modbus-io",
     "zawór-nc": "modbus-io",
-    "zawor-sc": "modbus-io",
+    "zawór-sc": "modbus-io",
     "zawór-wc": "modbus-io",
     "zawor-nc": "modbus-io",
     "zawor-sc": "modbus-io",

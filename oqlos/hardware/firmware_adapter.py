@@ -12,7 +12,6 @@ Also reads sensor values from firmware state for condition evaluation.
 
 from __future__ import annotations
 
-import time
 from typing import Any
 
 try:

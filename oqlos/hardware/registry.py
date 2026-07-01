@@ -5,7 +5,7 @@ oqlos.hardware.registry — Driver registry for Hardware HAL.
 from __future__ import annotations
 
 import logging
-from typing import Any, Type
+from typing import Type
 
 from .protocol import HardwareProtocol, ProtocolType
 

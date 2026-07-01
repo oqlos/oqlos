@@ -97,7 +97,7 @@ def list_usb_devices() -> list[dict[str, Any]]:
             "dev_node": dev_node,
             "tty": tty,
             "serial_by_id": sorted(
-                {l for t in tty for l in byid.get(os.path.realpath(t), [])}
+                {link for t in tty for link in byid.get(os.path.realpath(t), [])}
             ),
         }
         devices.append(dev)

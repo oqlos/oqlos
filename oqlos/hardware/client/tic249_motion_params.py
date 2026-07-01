@@ -5,7 +5,6 @@ from typing import Any
 from oqlos.hardware.client.tic249_arg_helpers import tic249_arg
 from oqlos.hardware.client.tic249_rig_direction import apply_rig_direction_to_plugin_params
 from oqlos.hardware.tic249_units import (
-    TIC249_DEFAULT_LUNG_PAUSE_SECONDS,
     TIC249_DEFAULT_STEPS_PER_SECOND,
     TIC249_DEFAULT_TARGET_VELOCITY,
     steps_per_second_to_raw,

@@ -6,8 +6,8 @@ from typing import Any
 
 from oqlos.hardware.diagnosis_plugin_health import health_map
 from oqlos.hardware.diagnosis import (
-    is_stale_hardware_entry,
-    is_stale_hardware_message,
+    is_stale_hardware_entry,  # noqa: F401 — re-exported via oqlos.hardware.client
+    is_stale_hardware_message,  # noqa: F401 — re-exported via oqlos.hardware.client
     plugin_needs_repair as _oqlos_plugin_needs_repair,
 )
 

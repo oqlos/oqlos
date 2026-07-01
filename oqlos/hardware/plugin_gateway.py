@@ -17,6 +17,7 @@ from oqlos.config import get_settings
 from oqlos.hardware.config_paths import resolve_oqlos_config_path
 from oqlos.hardware.plugins import (
     PluginConfig,
+    PluginHealth,
     PluginRegistry,
     PiadcPlugin,
     ModbusAdcPlugin,

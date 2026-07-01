@@ -14,20 +14,18 @@ from oqlos.hardware.diagnosis_device_actions import (
 )
 from oqlos.hardware.diagnosis_plugin_health import (
     health_map,
-    is_stale_hardware_entry,
-    is_stale_hardware_message,
+    is_stale_hardware_entry,  # noqa: F401 — re-exported for oqlos.hardware.client.autorepair
+    is_stale_hardware_message,  # noqa: F401 — re-exported for oqlos.hardware.client.autorepair
     modbus_plugins_need_repair,
     plugin_is_healthy,
     plugin_needs_repair,
 )
 from oqlos.hardware.diagnosis_types import (
-    ActionKind,
-    DeviceDiagnosis,
-    DeviceStatus,
+    DeviceDiagnosis,  # noqa: F401 — re-exported for tests / API consumers
     DiagnosisAction,
     DiagnosisReport,
     action_dict,
-    report_to_dict,
+    report_to_dict,  # noqa: F401 — re-exported for oqlos.api.hardware_diagnosis_routes
 )
 from oqlos.hardware.plugins.registry import PluginRegistry
 from oqlos.hardware.stack_snapshot import build_hardware_stack_snapshot
