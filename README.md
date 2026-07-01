@@ -228,7 +228,7 @@ print(result.ok)  # True if successful
 OQL v3 is a flat, quote-free syntax with 12 base commands
 (`SET`, `GET`, `WAIT`, `SAVE`, `CHECK`, `MIN`, `MAX`, `SAMPLE`, `LOG`,
 `ERROR`, `CALL`, `INCLUDE`).  See `docs/oql-spec.md` for the full
-specification and `oqlos/scenarios/OQL-CHEATSHEET.md` for a quick
+specification and `scenarios/OQL-CHEATSHEET.md` for a quick
 reference.  The interpreter still parses legacy v1/v2 scripts with
 quoted identifiers for backward compatibility.
 
@@ -261,8 +261,8 @@ Notes (verified):
   hardware. **`execute`** sends real HTTP to the motor sidecars — if they are
   down you get `[Errno 111] Connection refused`; physical actuation also needs
   USB access to the device (udev rule / device-group membership on the Pi).
-- Shipped examples: `oqlos/scenarios/test-pompy.oql` (pump),
-  `oqlos/scenarios/hardware-lung-smoke.oql` (lung).
+- Shipped examples: `scenarios/test-pompy.oql` (pump),
+  `scenarios/hardware-lung-smoke.oql` (lung).
 
 ### API examples (curl)
 
@@ -445,7 +445,7 @@ GOAL:
 
 ### Macros and INCLUDE
 
-Reusable sequences live in `oqlos/scenarios/lib/` and are pulled in with
+Reusable sequences live in `scenarios/lib/` and are pulled in with
 `INCLUDE`.  Positional arguments use `$1`, `$2`, … placeholders:
 
 ```oql
@@ -493,7 +493,7 @@ oqlctl cmd "SET pompa-1 0" --mode dry-run
 oqlctl cmd "SET pompa-1 0" --mode dry-run --json -q
 
 # Validate every .oql in a directory tree
-oqlctl --validate-dir oqlos/scenarios
+oqlctl --validate-dir scenarios
 ```
 
 For URL runs, the response must be raw OQL/CQL text or JSON with one of
@@ -582,7 +582,7 @@ python3 scripts/oql_v2_to_v4_migrate_db.py \
 
 Notes:
 
-- `--prefer-local` reads local files from `oqlos/scenarios/<id>.oql`.
+- `--prefer-local` reads local files from `scenarios/<id>.oql`.
 - DB row `id` must match local filename (without `.oql`).
 - Run without `--apply` first to verify changes and runtime validation output.
 
@@ -638,7 +638,7 @@ status, and a diagnostics block with:
 - Best-effort bridge health snapshot for `piadc`, `motor`, `lung`, and `modbus`
 
 The current valve calibration flow uses raw `piADC` voltage windows in the test scenario
-`oqlos/oqlos/scenarios/test-zaworu.oql`, while `hardware-valves-smoke.oql` only verifies
+`scenarios/test-zaworu.oql`, while `hardware-valves-smoke.oql` only verifies
 basic open/close actuation.
 
 ### Recent Fixes (2026-05-05)

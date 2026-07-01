@@ -150,7 +150,7 @@ export default function ScenarioFiles() {
         : "scenario-files-status";
 
   return (
-    <div style={{ display: "flex", height: "100vh", overflow: "hidden" }}>
+    <div className="scenario-files-shell">
       <SidebarList
         title={t("scenarioFiles.sidebarTitle")}
         items={sidebarItems}
@@ -164,9 +164,9 @@ export default function ScenarioFiles() {
         collapseLabel={t("scenarioFiles.sidebarTitle")}
         collapseStorageKey="ui.scenario-files-sidebar-collapsed"
       />
-      <div className="dashboard" style={{ flex: 1, overflow: "auto" }}>
+      <div className="dashboard scenario-files-dashboard">
         <SharedNav navContext={navContext} />
-        <div className="dash-content">
+        <div className="dash-content scenario-files-content">
           <h2>{t("scenarioFiles.pageTitle")}</h2>
           <p className="section-desc">{t("scenarioFiles.subtitle")}</p>
 

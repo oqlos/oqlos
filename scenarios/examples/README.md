@@ -17,7 +17,7 @@ GOAL:
 ```
 
 ```bash
-oqlctl oqlos/scenarios/examples/config-basic.oql --mode dry-run
+oqlctl scenarios/examples/config-basic.oql --mode dry-run
 ```
 
 ## 2. Kalibracja systemu (`config-calibration.oql`)
@@ -96,7 +96,7 @@ GOAL:
   CALL hw-valves-smoke
 ```
 
-Pełen rejestr makr: `oqlos/scenarios/lib/README.md`.
+Pełen rejestr makr: `scenarios/lib/README.md`.
 
 ## Różnica CONFIG vs GOAL
 
@@ -113,16 +113,16 @@ W output widzisz:
 ## Szybki start
 
 ```bash
-ls oqlos/scenarios/examples/
-oqlctl oqlos/scenarios/examples/config-basic.oql --mode dry-run
-oqlctl oqlos/scenarios/examples/config-basic.oql --mode execute
+ls scenarios/examples/
+oqlctl scenarios/examples/config-basic.oql --mode dry-run
+oqlctl scenarios/examples/config-basic.oql --mode execute
 
 # Jednorazowa komenda na sprzęt
 oqlctl cmd "SET pompa-1 0"
 oqlctl cmd "SET valve-nc 1" --mode dry-run
 
 # Walidacja całego katalogu
-oqlctl --validate-dir oqlos/scenarios
+oqlctl --validate-dir scenarios
 ```
 
 ## Peryferia (HAL aliases)

@@ -5,22 +5,18 @@
 
 - **Project**: /home/tom/github/oqlos/oqlos
 - **Primary Language**: python
-- **Languages**: python: 195, javascript: 68, md: 20, yaml: 13, shell: 9
+- **Languages**: python: 197, javascript: 86, md: 21, yaml: 13, shell: 9
 - **Analysis Mode**: static
-- **Total Functions**: 2211
+- **Total Functions**: 2289
 - **Total Classes**: 123
-- **Modules**: 323
-- **Entry Points**: 1348
+- **Modules**: 345
+- **Entry Points**: 1410
 
 ## Architecture by Module
 
 ### frontend.src.pages.MapEditor
 - **Functions**: 92
 - **File**: `MapEditor.jsx`
-
-### frontend.src.pages.HardwareRestart
-- **Functions**: 52
-- **File**: `HardwareRestart.jsx`
 
 ### oqlos.core._interpreter_actions
 - **Functions**: 49
@@ -35,12 +31,12 @@
 - **Classes**: 1
 - **File**: `interpreter.py`
 
-### frontend.src.pages.HardwareDemo
-- **Functions**: 46
-- **File**: `HardwareDemo.jsx`
+### frontend.src.pages.HardwareRestart
+- **Functions**: 45
+- **File**: `HardwareRestart.jsx`
 
 ### oqlos.core.oql_parser
-- **Functions**: 43
+- **Functions**: 44
 - **Classes**: 3
 - **File**: `oql_parser.py`
 
@@ -48,6 +44,10 @@
 - **Functions**: 43
 - **Classes**: 1
 - **File**: `oql_v2_to_v4_migrate_db.py`
+
+### frontend.src.pages.HardwareDemo
+- **Functions**: 42
+- **File**: `HardwareDemo.jsx`
 
 ### oqlos.api.main
 - **Functions**: 35
@@ -77,28 +77,28 @@
 - **Classes**: 7
 - **File**: `base.py`
 
-### oqlos.hardware.client.proxy
-- **Functions**: 29
-- **Classes**: 1
-- **File**: `proxy.py`
-
 ### oqlos.core._oql_adapter
 - **Functions**: 29
 - **Classes**: 1
 - **File**: `_oql_adapter.py`
 
+### oqlos.hardware.client.proxy
+- **Functions**: 29
+- **Classes**: 1
+- **File**: `proxy.py`
+
 ### oqlos.core._cql_tokenizer
 - **Functions**: 27
 - **File**: `_cql_tokenizer.py`
+
+### frontend.src.api.hardwareApi
+- **Functions**: 26
+- **File**: `hardwareApi.js`
 
 ### oqlos.hardware.firmware_adapter
 - **Functions**: 26
 - **Classes**: 1
 - **File**: `firmware_adapter.py`
-
-### frontend.src.api.hardwareApi
-- **Functions**: 26
-- **File**: `hardwareApi.js`
 
 ### oqlos.hardware.gateway
 - **Functions**: 25
@@ -171,12 +171,19 @@ valve commands to POST /api/v1/hardware/valve/{id} so t
 ### oqlos.api.hardware_platform._detect_runtime_platform
 - **Calls**: oqlos.api.hardware_platform._board_model, oqlos.api.hardware_platform._os_release, oqlos.api.hardware_platform._in_container, oqlos.api.hardware_platform._classify_platform_type, oqlos.api.hardware_platform._selected_piadc_platform, topology._modbus_runtime_serial_ports, platform.system, None.lower
 
+### oqlos.core._firmware_executor.FirmwareExecutor._execute_plugin_action
+> Execute action using the new plugin gateway system.
+- **Calls**: self.vars.interpolate, self._resolve_gateway_result, self._is_success, self.out.error, self.normalizer.normalize_pump_power, self._plugin_gateway.set_pump, self.vars.set, self.out.step
+
 ### oqlos.tools.hardware_diagnose.__main__.main
 - **Calls**: argparse.ArgumentParser, parser.add_argument, parser.add_argument, parser.add_argument, parser.add_argument, parser.add_argument, parser.add_argument, parser.add_argument
 
 ### oqlos.tools.xml_import.generators.generate_dsl
 > Generate human-readable DSL text from parsed report.
-- **Calls**: frontend.src.pages.HardwareDemo.a, frontend.src.pages.HardwareDemo.a, frontend.src.pages.HardwareDemo.a, frontend.src.pages.HardwareDemo.a, frontend.src.pages.HardwareDemo.a, frontend.src.pages.HardwareDemo.a, frontend.src.pages.HardwareDemo.a, frontend.src.pages.HardwareDemo.a
+- **Calls**: frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a
+
+### oqlos.hardware.plugins.motor.MotorPlugin.__init__
+- **Calls**: None.__init__, None.rstrip, self.config.connection_params.get, self.config.connection_params.get, params.get, int, str, int
 
 ### oqlos.api.oql_mqtt.oql_ws
 > Bidirectional OQL channel: client sends OQL frames, receives results.
@@ -185,8 +192,9 @@ Inbound frame: ``{"oql": "...", "kind": "command", "mode": "execute"}``.
 Outbou
 - **Calls**: router.websocket, _controller.subscribe_events, asyncio.create_task, websocket.accept, oqlos.api.oql_mqtt._pump_events, pump_task.cancel, _controller.unsubscribe_events, websocket.send_json
 
-### oqlos.hardware.plugins.motor.MotorPlugin.__init__
-- **Calls**: None.__init__, None.rstrip, self.config.connection_params.get, self.config.connection_params.get, params.get, int, str, int
+### oqlos.hardware.client.autorepair.analyze_repair_needs
+> Return whether host stack restart is recommended and human-readable reasons.
+- **Calls**: oqlos.hardware.diagnosis_plugin_health.health_map, oqlos.hardware.client.autorepair._plugin_repair_reasons, reasons.extend, diagnostics.get, str, isinstance, isinstance, identify.get
 
 ### oqlos.shared.logs_query.LogsQueryService.query_logs
 > Query logs with filtering, pagination. Returns dict ready for API response.
@@ -207,23 +215,16 @@ Expected payload::
 ### oqlos.api.hardware_modbus_wizard._modbus_wizard_probe_isolated
 - **Calls**: oqlos.api.hardware_modbus_wizard._collect_wizard_serial_candidates, diagnose_shared_bus, report.to_dict, all_scans.append, frontend.src.utils.hardware-wizard-steps.list, bool, int, str
 
-### oqlos.hardware.client.autorepair.analyze_repair_needs
-> Return whether host stack restart is recommended and human-readable reasons.
-- **Calls**: oqlos.hardware.diagnosis_plugin_health.health_map, oqlos.hardware.client.autorepair._plugin_repair_reasons, reasons.extend, diagnostics.get, str, isinstance, isinstance, identify.get
-
 ### oqlos.core._interpreter_actions.exec_action_shell
 > Execute shell/export helpers in dry-run mode.
 - **Calls**: oqlos.core._interpreter_actions._drop_command_token, None.upper, oqlos.core._interpreter_actions._record_failure, interp.sensor_values.get, interp.vars.set, interp.out.step, interp.vars.set, interp.out.step
 
 ### oqlos.tools.xml_import.generators.generate_cql
 > Generate CQL (Connex Query Language) text from parsed report.
-- **Calls**: frontend.src.pages.HardwareDemo.a, frontend.src.pages.HardwareDemo.a, frontend.src.pages.HardwareDemo.a, frontend.src.pages.HardwareDemo.a, frontend.src.pages.HardwareDemo.a, frontend.src.pages.HardwareDemo.a, sorted, op.lp.split
+- **Calls**: frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, sorted, op.lp.split
 
 ### oqlos.hardware.transport.mqtt_oql_bridge.OqlRequest.from_json
 - **Calls**: json.loads, cls, str, str, str, str, str, bool
-
-### setup_hardware_and_run_oql.main
-- **Calls**: argparse.ArgumentParser, parser.add_argument, parser.add_argument, parser.add_argument, parser.add_argument, parser.add_argument, parser.add_argument, parser.add_argument
 
 ## Process Flows
 
@@ -387,6 +388,11 @@ Manages:
 - **Methods**: 11
 - **Key Methods**: oqlos.core.base.InterpreterOutput.__init__, oqlos.core.base.InterpreterOutput.emit, oqlos.core.base.InterpreterOutput._broadcast_event, oqlos.core.base.InterpreterOutput._emit_status, oqlos.core.base.InterpreterOutput.info, oqlos.core.base.InterpreterOutput.ok, oqlos.core.base.InterpreterOutput.fail, oqlos.core.base.InterpreterOutput.warn, oqlos.core.base.InterpreterOutput.error, oqlos.core.base.InterpreterOutput.step
 
+### oqlos.core._firmware_executor.FirmwareExecutor
+> Executes hardware actions via plugin gateway or legacy firmware.
+- **Methods**: 11
+- **Key Methods**: oqlos.core._firmware_executor.FirmwareExecutor.__init__, oqlos.core._firmware_executor.FirmwareExecutor._get_firmware, oqlos.core._firmware_executor.FirmwareExecutor._resolve_gateway_result, oqlos.core._firmware_executor.FirmwareExecutor._is_success, oqlos.core._firmware_executor.FirmwareExecutor.resolve_peripheral_id, oqlos.core._firmware_executor.FirmwareExecutor.normalize_peripheral_value, oqlos.core._firmware_executor.FirmwareExecutor.refresh_sensors_from_firmware, oqlos.core._firmware_executor.FirmwareExecutor.execute_firmware_action, oqlos.core._firmware_executor.FirmwareExecutor._execute_plugin_action, oqlos.core._firmware_executor.FirmwareExecutor._execute_legacy_firmware_action
+
 ### oqlos.shared.event_store.EventStore
 > Append-only event store with optional JSON file persistence.
 - **Methods**: 11
@@ -404,11 +410,6 @@ Each plugin must:
 - **Methods**: 10
 - **Key Methods**: oqlos.hardware.plugins.base.HardwarePlugin.__init__, oqlos.hardware.plugins.base.HardwarePlugin.connect, oqlos.hardware.plugins.base.HardwarePlugin.disconnect, oqlos.hardware.plugins.base.HardwarePlugin.health_check, oqlos.hardware.plugins.base.HardwarePlugin.validate_config, oqlos.hardware.plugins.base.HardwarePlugin.execute_command, oqlos.hardware.plugins.base.HardwarePlugin.get_capabilities, oqlos.hardware.plugins.base.HardwarePlugin.status, oqlos.hardware.plugins.base.HardwarePlugin.is_connected, oqlos.hardware.plugins.base.HardwarePlugin.__repr__
 - **Inherits**: ABC
-
-### oqlos.core._firmware_executor.FirmwareExecutor
-> Executes hardware actions via plugin gateway or legacy firmware.
-- **Methods**: 9
-- **Key Methods**: oqlos.core._firmware_executor.FirmwareExecutor.__init__, oqlos.core._firmware_executor.FirmwareExecutor._get_firmware, oqlos.core._firmware_executor.FirmwareExecutor.resolve_peripheral_id, oqlos.core._firmware_executor.FirmwareExecutor.normalize_peripheral_value, oqlos.core._firmware_executor.FirmwareExecutor.refresh_sensors_from_firmware, oqlos.core._firmware_executor.FirmwareExecutor.execute_firmware_action, oqlos.core._firmware_executor.FirmwareExecutor._execute_plugin_action, oqlos.core._firmware_executor.FirmwareExecutor._execute_legacy_firmware_action, oqlos.core._firmware_executor.FirmwareExecutor.exec_set_peripheral
 
 ### oqlos.hardware.transport.mqtt_oql_bridge._PahoAsyncClient
 > Wraps a paho client and bridges its network thread to an asyncio loop.
@@ -435,20 +436,6 @@ Subclasses override :meth:`_
 
 Key functions that process and transform data:
 
-### frontend.src.hooks.useParentEncoderNavigation.parseParentEncoderEnvelope
-
-### frontend.src.hooks.useParentEncoderNavigation._focusEncoderItem
-- **Output to**: frontend.src.hooks.useParentEncoderNavigation.add, frontend.src.hooks.useParentEncoderNavigation.focus, frontend.src.hooks.useParentEncoderNavigation.scrollIntoView
-
-### frontend.src.hooks.useParentEncoderNavigation.createEncoderController
-- **Output to**: frontend.src.hooks.useParentEncoderNavigation.removeHighlights, frontend.src.hooks.useParentEncoderNavigation.getInteractiveItems, frontend.src.hooks.useParentEncoderNavigation._applyScrollToItems, frontend.src.hooks.useParentEncoderNavigation._focusEncoderItem, frontend.src.hooks.useParentEncoderNavigation.click
-
-### frontend.src.hooks.useParentEncoderNavigation.parentEncoderActive
-- **Output to**: frontend.src.hooks.useParentEncoderNavigation.removeHighlights, frontend.src.hooks.useParentEncoderNavigation.getInteractiveItems, frontend.src.hooks.useParentEncoderNavigation._applyScrollToItems, frontend.src.hooks.useParentEncoderNavigation._focusEncoderItem, frontend.src.hooks.useParentEncoderNavigation.click
-
-### frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
-- **Output to**: frontend.src.hooks.useParentEncoderNavigation.removeHighlights, frontend.src.hooks.useParentEncoderNavigation.getInteractiveItems, frontend.src.hooks.useParentEncoderNavigation._applyScrollToItems, frontend.src.hooks.useParentEncoderNavigation._focusEncoderItem, frontend.src.hooks.useParentEncoderNavigation.click
-
 ### frontend.src.hooks.useParentEncoderNavigation.useParentEncoderNavigation
 - **Output to**: frontend.src.hooks.useParentEncoderNavigation.useEffect, frontend.src.hooks.useParentEncoderNavigation.createEncoderController, frontend.src.hooks.useParentEncoderNavigation.parseParentEncoderEnvelope, frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand, frontend.src.hooks.useParentEncoderNavigation.isParentEncoderActive
 
@@ -457,6 +444,20 @@ Key functions that process and transform data:
 
 ### frontend.src.pages.MapEditor.parsedJson
 - **Output to**: frontend.src.pages.MapEditor.isPlainObject, frontend.src.pages.MapEditor.Error, frontend.src.pages.MapEditor.t
+
+### frontend.src.utils.encoder-navigation.removeEncoderHighlights
+- **Output to**: frontend.src.utils.encoder-navigation.querySelectorAll, frontend.src.utils.encoder-navigation.forEach, frontend.src.utils.encoder-navigation.remove
+
+### frontend.src.utils.encoder-navigation.parseParentEncoderEnvelope
+
+### frontend.src.utils.encoder-navigation.focusEncoderItem
+- **Output to**: frontend.src.utils.encoder-navigation.add, frontend.src.utils.encoder-navigation.focus, frontend.src.utils.encoder-navigation.scrollIntoView
+
+### frontend.src.utils.encoder-navigation.createEncoderController
+- **Output to**: frontend.src.utils.encoder-navigation.handleSetActive, frontend.src.utils.encoder-navigation.handleScroll, frontend.src.utils.encoder-navigation.handleClick, frontend.src.utils.encoder-navigation.handleCancel, frontend.src.utils.encoder-navigation.preventDefault
+
+### frontend.src.utils.encoder-navigation.handleEncoderCommand
+- **Output to**: frontend.src.utils.encoder-navigation.handleSetActive, frontend.src.utils.encoder-navigation.handleScroll, frontend.src.utils.encoder-navigation.handleClick, frontend.src.utils.encoder-navigation.handleCancel
 
 ### frontend.src.utils.url-embed-config.parseAppearanceParams
 - **Output to**: frontend.src.utils.url-embed-config.get, frontend.src.utils.url-embed-config.trim, frontend.src.utils.url-embed-config.includes, frontend.src.utils.url-embed-config.resolveViewportWidthPx
@@ -472,6 +473,9 @@ Key functions that process and transform data:
 
 ### frontend.src.utils.rbac.policy.parseConnectRole
 - **Output to**: frontend.src.utils.rbac.policy.String, frontend.src.utils.rbac.policy.trim, frontend.src.utils.rbac.policy.toLowerCase
+
+### frontend.src.utils.hardwareStatusModel.formatHardwareJson
+- **Output to**: frontend.src.utils.hardwareStatusModel.stringify
 
 ### frontend.src.utils.mapEditorObjectActionEdits.parsePromptedFieldValue
 - **Output to**: frontend.src.utils.mapEditorObjectActionEdits.Number, frontend.src.utils.mapEditorObjectActionEdits.isFinite, frontend.src.utils.mapEditorObjectActionEdits.String, frontend.src.utils.mapEditorObjectActionEdits.trim
@@ -511,10 +515,6 @@ Key functions that process and transform data:
 > Parse goal-level attributes (description, editable, alarm).
 - **Output to**: RE_DESC.match, RE_EDITABLE.match, RE_ALARM.match, m.group, m.group
 
-### oqlos.core._cql_tree_builder._parse_step_line
-> Parse a numbered step line.
-- **Output to**: RE_STEP_NUM.match, CqlStep, m.group, None.strip, m.group
-
 ## Behavioral Patterns
 
 ### recursion__expand_repeat_block_lines
@@ -526,6 +526,11 @@ Key functions that process and transform data:
 - **Type**: recursion
 - **Confidence**: 0.90
 - **Functions**: oqlos.core.executor._safe_resolve
+
+### recursion__load_includes
+- **Type**: recursion
+- **Confidence**: 0.90
+- **Functions**: oqlos.core._oql_adapter._load_includes
 
 ### recursion__do_sleep
 - **Type**: recursion
@@ -541,11 +546,6 @@ Key functions that process and transform data:
 - **Type**: recursion
 - **Confidence**: 0.90
 - **Functions**: scripts.oql_validator_common.extract_code_from_json
-
-### recursion__load_includes
-- **Type**: recursion
-- **Confidence**: 0.90
-- **Functions**: oqlos.core._oql_adapter._load_includes
 
 ### state_machine_WsCqrsClient
 - **Type**: state_machine
@@ -603,8 +603,8 @@ Functions exposed as public API (no underscore prefix):
 - `oqlos.tools.plugin_cli.main` - 36 calls
 - `oqlos.hardware.usb_diagnostics.list_usb_devices` - 33 calls
 - `oqlos.tools.cql_cli.formatting.canonicalize_oql_line` - 31 calls
-- `scripts.oql_v2_to_v4_migrate_db.main` - 30 calls
 - `oqlos.core._oql_adapter.oql_doc_to_cql` - 30 calls
+- `scripts.oql_v2_to_v4_migrate_db.main` - 30 calls
 - `oqlos.core.motor2_runtime.normalize_motor2_runtime_config` - 29 calls
 - `oqlos.hardware.diagnosis.build_diagnosis_report` - 28 calls
 - `oqlos.hardware.usb_diagnostics.pi_system_diagnostics` - 28 calls
@@ -634,8 +634,8 @@ Functions exposed as public API (no underscore prefix):
 - `scripts.scenarios_export.export_one_bash` - 21 calls
 - `oqlos.tools.hardware_diagnose.health.cmd_diagnose` - 20 calls
 - `oqlos.tools.hardware_diagnose.doctor_modbus_analysis.analyze_modbus_config` - 20 calls
+- `oqlos.hardware.client.autorepair.analyze_repair_needs` - 20 calls
 - `oqlos.hardware.client.identify_enrich_modbus_io.expand_modbus_io_instances` - 20 calls
-- `oqlos.shared.logs_query.LogsQueryService.query_logs` - 20 calls
 
 ## System Interactions
 

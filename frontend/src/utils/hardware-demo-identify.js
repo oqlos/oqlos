@@ -1,5 +1,46 @@
 /** Hardware Demo mount-time identify + pump probe (extracted from HardwareDemo.jsx). */
 
+const PUMP_DEVICE_ID = "motor-dri0050";
+const STEPPER_DEVICE_ID = "motor-tic249";
+
+/** Build a status map for each requested device id from the adapter list. */
+function buildDeviceStatus(adapters, deviceIds) {
+  const next = {};
+  for (const id of deviceIds) {
+    const adapter = adapters.find((entry) => entry.id === id);
+    next[id] = adapter?.status || "unknown";
+  }
+  return next;
+}
+
+/** Send a pump_off command to verify the pump is actually reachable. */
+async function probePump({ runDiagnosticCommand, formatError, appendLog, t }) {
+  try {
+    await runDiagnosticCommand({
+      peripheral_id: PUMP_DEVICE_ID,
+      command: "pump_off",
+      args: {},
+    });
+    return true;
+  } catch (err) {
+    appendLog("warn", t("hardwareDemo.log.pumpProbeFailed"), formatError(err));
+    return false;
+  }
+}
+
+/** Resolve the human-readable detail line based on device availability. */
+function buildStatusDetail(pumpOk, stepperOk, t) {
+  if (pumpOk) return t("hardwareDemo.log.pumpConnectedDetail");
+  if (stepperOk) return t("hardwareDemo.log.pumpFallbackDetail");
+  return t("hardwareDemo.log.neitherDeviceDetail");
+}
+
+/** Determine which device (if any) should be used as fallback. */
+function resolveFallbackDeviceId(pumpOk, stepperOk) {
+  if (!pumpOk && stepperOk) return STEPPER_DEVICE_ID;
+  return null;
+}
+
 export async function probeDemoDevices({
   identify,
   runDiagnosticCommand,
@@ -13,26 +54,16 @@ export async function probeDemoDevices({
   if (signal?.aborted) return null;
 
   const adapters = res?.adapters || [];
-  const next = {};
-  for (const id of deviceIds) {
-    const adapter = adapters.find((entry) => entry.id === id);
-    next[id] = adapter?.status || "unknown";
-  }
+  const next = buildDeviceStatus(adapters, deviceIds);
 
-  let pumpOk = next["motor-dri0050"] === "ok";
-  const stepperOk = next["motor-tic249"] === "ok";
+  let pumpOk = next[PUMP_DEVICE_ID] === "ok";
+  const stepperOk = next[STEPPER_DEVICE_ID] === "ok";
 
   if (pumpOk) {
-    try {
-      await runDiagnosticCommand({
-        peripheral_id: "motor-dri0050",
-        command: "pump_off",
-        args: {},
-      });
-    } catch (err) {
+    const probeOk = await probePump({ runDiagnosticCommand, formatError, appendLog, t });
+    if (!probeOk) {
       pumpOk = false;
-      next["motor-dri0050"] = "probe-failed";
-      appendLog("warn", t("hardwareDemo.log.pumpProbeFailed"), formatError(err));
+      next[PUMP_DEVICE_ID] = "probe-failed";
     }
   }
 
@@ -41,18 +72,14 @@ export async function probeDemoDevices({
   appendLog(
     pumpOk ? "ok" : "warn",
     t("hardwareDemo.log.pumpStatusLine", {
-      pump: next["motor-dri0050"],
-      stepper: next["motor-tic249"],
+      pump: next[PUMP_DEVICE_ID],
+      stepper: next[STEPPER_DEVICE_ID],
     }),
-    pumpOk
-      ? t("hardwareDemo.log.pumpConnectedDetail")
-      : stepperOk
-        ? t("hardwareDemo.log.pumpFallbackDetail")
-        : t("hardwareDemo.log.neitherDeviceDetail"),
+    buildStatusDetail(pumpOk, stepperOk, t),
   );
 
   return {
     deviceStatus: { ...next },
-    fallbackDeviceId: !pumpOk && stepperOk ? "motor-tic249" : null,
+    fallbackDeviceId: resolveFallbackDeviceId(pumpOk, stepperOk),
   };
 }

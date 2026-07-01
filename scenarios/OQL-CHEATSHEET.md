@@ -188,7 +188,7 @@ oqlctl scenariusz.oql --mode execute
 oqlctl cmd "SET pompa-1 0"
 
 # Walidacja wszystkich plików w katalogu
-oqlctl --validate-dir oqlos/scenarios
+oqlctl --validate-dir scenarios
 ```
 
 ## Tryby sprzętu
@@ -208,4 +208,4 @@ export PIADC_URL=http://localhost:8080
 - `lib/hardware.oql` — `hw-pump-smoke`, `hw-valves-smoke`, `hw-lung-smoke`, `hw-sensors-baseline`, …
 - `lib/peripherals.oql` — `init-pump`, `init-valves-main`, `init-valves-bo`, `init-valves-numbered`, `init-all`, `stop-all`
 
-Pełna lista w `oqlos/scenarios/lib/README.md`.
+Pełna lista w `scenarios/lib/README.md`.

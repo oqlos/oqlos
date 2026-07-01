@@ -7,7 +7,7 @@
 <style>
   body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
        font:15px/1.5 system-ui,Segoe UI,Roboto,sans-serif;background:#0f1419;color:#e6edf3}
-  .card{background:#1a2029;border:1px solid #2e3a48;border-radius:14px;padding:28px 32px;max-width:520px;width:90%}
+  .card{background:#1a2029;border:1px solid #2e3a48;border-radius:14px;padding:28px 32px;max-width:760px;width:90%}
   h1{margin:0 0 4px;font-size:22px}
   .sub{color:#8b98a5;margin:0 0 20px;font-size:13px}
   a.link{display:flex;align-items:center;gap:12px;padding:13px 15px;margin:9px 0;border-radius:10px;
@@ -24,8 +24,14 @@
   <div class="card">
     <h1>OqlOS</h1>
     <p class="sub">Operation Query Language — runtime sterowania sprzętem <span id="node" class="badge">…</span></p>
-    <a class="link" href="/panel"><span class="ic">🧪</span><span><span class="t">Panel testowy</span><br><span class="d">Predefiniowane grupy komend, własne i gotowe scenariusze, diagnostyka RPi/USB</span></span></a>
-    <a class="link" href="/editor"><span class="ic">📝</span><span><span class="t">Edytor scenariuszy</span><br><span class="d">Edycja i uruchamianie scenariuszy OQL</span></span></a>
+    <a class="link" href="/hardware-status"><span class="ic">●</span><span><span class="t">Status sprzętu</span><br><span class="d">Runtime health, adaptery, USB, serial, I2C i diagnostyka</span></span></a>
+    <a class="link" href="/hardware-restart"><span class="ic">↻</span><span><span class="t">Restart sprzętu</span><br><span class="d">Wizard restartu i ponownej detekcji urządzeń</span></span></a>
+    <a class="link" href="/hardware-demo"><span class="ic">▶</span><span><span class="t">Demo sprzętu</span><br><span class="d">Ręczna kontrola firmware i panel testów hardware</span></span></a>
+    <a class="link" href="/scenario-files"><span class="ic">▣</span><span><span class="t">Pliki scenariuszy</span><br><span class="d">Edycja, zapis i uruchamianie scenariuszy OQL bezpośrednio z OqlOS</span></span></a>
+    <a class="link" href="/map-editor"><span class="ic">◇</span><span><span class="t">MAP editor</span><br><span class="d">Mapa sprzętu i powiązania funkcji ze sterownikami</span></span></a>
+    <a class="link" href="/func-editor"><span class="ic">ƒ</span><span><span class="t">Function editor</span><br><span class="d">Definicje funkcji OQL używane przez scenariusze</span></span></a>
+    <a class="link" href="/panel"><span class="ic">OQL</span><span><span class="t">Panel testowy OQL</span><br><span class="d">Komendy, scenariusze, manage verbs i diagnostyka RPi/USB</span></span></a>
+    <a class="link" href="/navigation"><span class="ic">↗</span><span><span class="t">Nawigacja i curl</span><br><span class="d">Lista stron, endpointów i przykładów CLI</span></span></a>
     <a class="link" href="/docs"><span class="ic">📚</span><span><span class="t">API (Swagger)</span><br><span class="d">Dokumentacja REST/OQL-over-MQTT</span></span></a>
     <a class="link" href="/health"><span class="ic">❤️</span><span><span class="t">Health</span><br><span class="d">Status usługi</span></span></a>
     <p class="foot">Aby sterować zdalnym węzłem sprzętowym, uruchom OqlOS w roli <b>controller</b>.</p>

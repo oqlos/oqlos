@@ -1944,13 +1944,13 @@ pip install -e .[dev]
 ### `project/map.toon.yaml`
 
 ```toon markpact:analysis path=project/map.toon.yaml
-# oqlos | 350f 52909L | python:270,javascript:65,shell:9,typescript:3,css:2,less:1 | 2026-06-30
-# stats: 1405 func | 206 cls | 350 mod | CC̄=4.2 | critical:118 | cycles:0
-# alerts[5]: CC test_hardware_ui_aliases_and_status_page_are_served=18; CC test_navigation_index_and_short_aliases=15; CC _resolve_func_steps=14; CC _probe_i2c_ads1115=14; CC exec_action_loop_block=14
+# oqlos | 359f 53700L | python:274,javascript:70,shell:9,typescript:3,css:2,less:1 | 2026-07-01
+# stats: 1420 func | 210 cls | 359 mod | CC̄=4.2 | critical:118 | cycles:0
+# alerts[5]: CC test_hardware_ui_aliases_and_status_page_are_served=20; CC test_navigation_index_and_short_aliases=15; CC _resolve_func_steps=14; CC _probe_i2c_ads1115=14; CC exec_action_loop_block=14
 # hotspots[5]: _resolve fan=22; build_diagnosis_report fan=19; hardware_identify fan=18; _build_waveshare_diagnose_report fan=18; _handle_start fan=18
 # evolution: baseline
 # Keys: M=modules, D=details, i=imports, e=exports, c=classes, f=functions, m=methods
-M[350]:
+M[359]:
   app.doql.css,165
   app.doql.less,316
   examples/curl-quickstart.sh,75
@@ -1961,6 +1961,7 @@ M[350]:
   frontend/src/api/hardware-diagnostic-failure.test.js,59
   frontend/src/api/hardware-tic249-status.js,36
   frontend/src/api/hardwareApi.js,258
+  frontend/src/api/scenarioFilesApi.js,54
   frontend/src/api/wsClient.js,139
   frontend/src/context/app-config-document.js,27
   frontend/src/hooks/useMapEditorHardwareEvents.js,62
@@ -1969,14 +1970,14 @@ M[350]:
   frontend/src/hooks/useRailHoverPreview.js,85
   frontend/src/hooks/useUrlConfig.js,86
   frontend/src/hooks/useWsStatus.js,27
-  frontend/src/i18n/dictionaries.js,1982
+  frontend/src/i18n/dictionaries.js,2054
   frontend/src/i18n/hardware-demo-extra-translations.js,184
   frontend/src/i18n/hardware-status-log-translations.js,82
-  frontend/src/i18n/hardware-status-panel-translations.js,310
+  frontend/src/i18n/hardware-status-panel-translations.js,328
   frontend/src/i18n/hardware-status-presets-translations.js,796
   frontend/src/pages/mapEditorConstants.js,42
   frontend/src/pages/mapEditorDefaultMap.js,1764
-  frontend/src/styles/global.css,2123
+  frontend/src/styles/global.css,2262
   frontend/src/utils/collapse-toggle-bridge.js,47
   frontend/src/utils/designRem.js,44
   frontend/src/utils/encoder-navigation.js,143
@@ -1984,7 +1985,7 @@ M[350]:
   frontend/src/utils/hardware-activity-log.js,35
   frontend/src/utils/hardware-api-retry.js,39
   frontend/src/utils/hardware-api-retry.test.js,46
-  frontend/src/utils/hardware-demo-identify.js,59
+  frontend/src/utils/hardware-demo-identify.js,86
   frontend/src/utils/hardware-demo-identify.test.js,28
   frontend/src/utils/hardware-restart-configure.js,69
   frontend/src/utils/hardware-restart-configure.test.js,31
@@ -1998,12 +1999,14 @@ M[350]:
   frontend/src/utils/hardware-restart-wizard-steps.js,47
   frontend/src/utils/hardware-restart-wizard-steps.test.js,32
   frontend/src/utils/hardware-time.js,5
-  frontend/src/utils/hardware-wizard-plan.js,23
+  frontend/src/utils/hardware-wizard-plan.js,42
   frontend/src/utils/hardware-wizard-plan.test.js,17
   frontend/src/utils/hardware-wizard-steps.js,102
   frontend/src/utils/hardware-wizard-steps.test.js,30
   frontend/src/utils/hardwareEventStream.js,53
   frontend/src/utils/hardwareEventStream.test.js,37
+  frontend/src/utils/hardwareStatusModel.js,39
+  frontend/src/utils/hardwareStatusModel.test.js,44
   frontend/src/utils/hui-shell-key.js,39
   frontend/src/utils/mapEditorFuncHardwareSummary.js,84
   frontend/src/utils/mapEditorFuncHardwareSummary.test.js,55
@@ -2018,6 +2021,8 @@ M[350]:
   frontend/src/utils/mapEditorTic249.test.js,14
   frontend/src/utils/parentUrlBridge.js,40
   frontend/src/utils/rbac.policy.js,122
+  frontend/src/utils/scenarioFilesUrl.js,17
+  frontend/src/utils/scenarioFilesUrl.test.js,20
   frontend/src/utils/url-embed-config.js,194
   frontend/src/utils/url-embed-config.test.js,93
   frontend/src/utils/useSelectionCollapsePanel.js,134
@@ -2068,10 +2073,10 @@ M[350]:
   oqlos/core/__init__.py,1
   oqlos/core/_action_motor2.py,482
   oqlos/core/_compare.py,41
-  oqlos/core/_cql_tokenizer.py,407
+  oqlos/core/_cql_tokenizer.py,410
   oqlos/core/_cql_tree_builder.py,168
   oqlos/core/_dsl_helpers.py,133
-  oqlos/core/_firmware_executor.py,211
+  oqlos/core/_firmware_executor.py,267
   oqlos/core/_func_resolver.py,97
   oqlos/core/_interpreter_actions.py,801
   oqlos/core/_line_parsers.py,262
@@ -2083,7 +2088,7 @@ M[350]:
   oqlos/core/executor.py,384
   oqlos/core/interpreter.py,691
   oqlos/core/motor2_runtime.py,210
-  oqlos/core/oql_parser.py,763
+  oqlos/core/oql_parser.py,771
   oqlos/core/oql_versioning.py,73
   oqlos/core/parser.py,185
   oqlos/core/safe_eval.py,139
@@ -2137,7 +2142,7 @@ M[350]:
   oqlos/hardware/identify_enrichment.py,19
   oqlos/hardware/modbus_identify.py,132
   oqlos/hardware/peripheral_mapping.py,139
-  oqlos/hardware/plugin_gateway.py,632
+  oqlos/hardware/plugin_gateway.py,634
   oqlos/hardware/plugins/__init__.py,50
   oqlos/hardware/plugins/_rtu_serial.py,34
   oqlos/hardware/plugins/_shared.py,60
@@ -2174,6 +2179,7 @@ M[350]:
   oqlos/reporters/html_report.py,267
   oqlos/reporters/json_reporter.py,139
   oqlos/reporters/junit.py,87
+  oqlos/scenarios/legacy_aliases.py,41
   oqlos/shared/__init__.py,1
   oqlos/shared/_endpoint_helpers.py,34
   oqlos/shared/config_factory.py,85
@@ -2220,7 +2226,7 @@ M[350]:
   oqlos/utils/sample_data.py,74
   project.sh,43
   scripts/fix_brackets_to_v4.py,96
-  scripts/gen-checksums.sh,25
+  scripts/gen-checksums.sh,28
   scripts/hardware-check.sh,341
   scripts/migrate_to_v4.py,341
   scripts/oql-stack.sh,105
@@ -2238,6 +2244,7 @@ M[350]:
   tests/firmware/test_dri0050_sidecar_control.py,84
   tests/firmware/test_dsl_parser_runtime.py,157
   tests/firmware/test_firmware.py,10
+  tests/firmware/test_firmware_executor.py,132
   tests/firmware/test_gateway_http.py,51
   tests/firmware/test_hardware_diagnosis_api.py,110
   tests/firmware/test_hardware_diagnosis_routes.py,37
@@ -2255,7 +2262,7 @@ M[350]:
   tests/firmware/test_hardware_probe_devices.py,27
   tests/firmware/test_hardware_runtime_routes.py,52
   tests/firmware/test_hardware_stack_snapshot.py,46
-  tests/firmware/test_hardware_v3_compat.py,152
+  tests/firmware/test_hardware_v3_compat.py,158
   tests/firmware/test_hui_actions.py,93
   tests/firmware/test_hui_scenario.py,12
   tests/firmware/test_identify_enrich_modbus_io.py,24
@@ -2269,12 +2276,12 @@ M[350]:
   tests/firmware/test_motor_modbus_handlers.py,110
   tests/firmware/test_motor_plugin.py,74
   tests/firmware/test_normalize_scenario.py,200
-  tests/firmware/test_oql_envelope.py,61
+  tests/firmware/test_oql_envelope.py,74
   tests/firmware/test_oql_manage_ops.py,187
   tests/firmware/test_oql_mqtt_bridge.py,255
-  tests/firmware/test_oql_route_http.py,119
+  tests/firmware/test_oql_route_http.py,136
   tests/firmware/test_oqlos_logging.py,21
-  tests/firmware/test_panel_ui.py,227
+  tests/firmware/test_panel_ui.py,249
   tests/firmware/test_parser_cycle.py,53
   tests/firmware/test_plugin_gateway_env.py,243
   tests/firmware/test_plugin_gateway_init.py,67
@@ -2289,15 +2296,17 @@ M[350]:
   tests/firmware/test_tic249_units.py,18
   tests/firmware/test_tokenizer_extended.py,194
   tests/firmware/test_usb_diagnostics.py,63
-  tests/test_core.py,854
+  tests/test_core.py,853
   tests/test_cql_cli.py,417
   tests/test_cql_inline_regressions.py,74
   tests/test_cql_scenarios.py,88
   tests/test_dsl_schema.py,20
   tests/test_oql_dry_run_regressions.py,62
-  tests/test_oql_parser_v3.py,494
+  tests/test_oql_parser_v3.py,492
   tests/test_oql_scenarios.py,74
   tests/test_reporting.py,46
+  tests/test_scenarios_dir.py,18
+  tests/test_scenarios_legacy_aliases.py,24
   tests/test_xml_import_generators.py,29
   tests/verify_block_if.py,61
   tests/verify_loops.py,34
@@ -2572,12 +2581,12 @@ D:
     _stop_oql_transport()
     index_page()
     _serve_static_html(relative_path;title;missing_message)
-    editor_page()
+    editor_page(request)
     panel_page()
     navigation_page()
     _with_query(path;request)
     _redirect_with_query(path;request)
-    hardware_status_page()
+    hardware_status_page(request)
     hardware_demo_alias(request)
     hardware_restart_alias(request)
     map_editor_alias(request)
@@ -2772,7 +2781,7 @@ D:
     _map_action_value(fn;obj;obj_raw;line;step_counter)
   oqlos/core/_firmware_executor.py:
     e: FirmwareExecutor
-    FirmwareExecutor: __init__(7),_get_firmware(0),resolve_peripheral_id(1),normalize_peripheral_value(2),refresh_sensors_from_firmware(1),execute_firmware_action(2),_execute_plugin_action(2),_execute_legacy_firmware_action(2),exec_set_peripheral(2)  # Executes hardware actions via plugin gateway or legacy firmw
+    FirmwareExecutor: __init__(7),_get_firmware(0),_resolve_gateway_result(2),_is_success(1),resolve_peripheral_id(1),normalize_peripheral_value(2),refresh_sensors_from_firmware(1),execute_firmware_action(2),_execute_plugin_action(2),_execute_legacy_firmware_action(2),exec_set_peripheral(2)  # Executes hardware actions via plugin gateway or legacy firmw
   oqlos/core/_func_resolver.py:
     e: _collect_function_definitions,_extract_func_name,_guard_recursion,_parse_func_call
     _collect_function_definitions(lines)
@@ -2920,11 +2929,12 @@ D:
     _compute_motor2_speed(steps;cycles;speed;duration_seconds;max_speed;default_speed)
     build_motor2_reciprocating_plan(config)
   oqlos/core/oql_parser.py:
-    e: to_num,parse_duration,duration_to_ms,_unescape,tokenize,_require,_split_value_unit,_split_set_value_unit,parse_SET,parse_GET,parse_WAIT,parse_IF_DELTA,parse_SAVE,parse_CHECK,parse_IF,parse_MIN,parse_MAX,parse_SAMPLE,parse_LOG,parse_ERROR,parse_CORRECT,parse_CALL,parse_INCLUDE,parse_FUNC_CALL,parse_REPEAT,_line_indent,_expand_repeat_block_lines,_expand_repeat_blocks,_handle_top_level_line,_handle_block_header,_handle_macro_body_line,_handle_set_name,_handle_modifier_cmd,_parse_and_append_command,_validate_oql_version,_check_unnamed_goals,parse_oql,format_doc,OqlCmd,OqlBlock,OqlDoc
+    e: to_num,_compact_duration,parse_duration,duration_to_ms,_unescape,tokenize,_require,_split_value_unit,_split_set_value_unit,parse_SET,parse_GET,parse_WAIT,parse_IF_DELTA,parse_SAVE,parse_CHECK,parse_IF,parse_MIN,parse_MAX,parse_SAMPLE,parse_LOG,parse_ERROR,parse_CORRECT,parse_CALL,parse_INCLUDE,parse_FUNC_CALL,parse_REPEAT,_line_indent,_expand_repeat_block_lines,_expand_repeat_blocks,_handle_top_level_line,_handle_block_header,_handle_macro_body_line,_handle_set_name,_handle_modifier_cmd,_parse_and_append_command,_validate_oql_version,_check_unnamed_goals,parse_oql,format_doc,OqlCmd,OqlBlock,OqlDoc
     OqlCmd: __repr__(0)  # A single command line inside a block.
     OqlBlock:  # A named block: ``GOAL``, ``CONFIG``, or ``MACRO``.
     OqlDoc: goals(0),configs(0),macros(0),funcs(0)  # Parsed OQL document.
     to_num(raw)
+    _compact_duration(token)
     parse_duration(token)
     duration_to_ms(token)
     _unescape(text)
@@ -3487,6 +3497,11 @@ D:
     e: report_junit,JUnitReporter
     JUnitReporter: generate(2),_add_testcase(3)  # Generate JUnit XML from a ScriptResult.
     report_junit(result;suite_name)
+  oqlos/scenarios/legacy_aliases.py:
+    e: _repo_scenarios_dir,_load_legacy_aliases,resolve_canonical_scenario_file
+    _repo_scenarios_dir()
+    _load_legacy_aliases()
+    resolve_canonical_scenario_file(scenario_id;scenarios_dir)
   oqlos/shared/__init__.py:
   oqlos/shared/_endpoint_helpers.py:
     e: serve_html_page,make_collection_route
@@ -3951,6 +3966,16 @@ D:
     e: test_placeholder,test_import
     test_placeholder()
     test_import()
+  tests/firmware/test_firmware_executor.py:
+    e: _executor,test_plugin_action_awaits_async_pump_gateway,test_plugin_action_treats_failed_pump_result_as_failure,test_plugin_action_uses_gateway_runtime_loop_from_worker_thread,_Vars,_Out,_Normalizer,_AsyncGateway
+    _Vars: __init__(0),interpolate(1),set(2)
+    _Out: __init__(0),step(2),error(1),warn(1)
+    _Normalizer: normalize_pump_power(1)
+    _AsyncGateway: __init__(1),set_pump(1),set_valve(2),set_lung(0)
+    _executor(gateway;vars_store;out)
+    test_plugin_action_awaits_async_pump_gateway()
+    test_plugin_action_treats_failed_pump_result_as_failure()
+    test_plugin_action_uses_gateway_runtime_loop_from_worker_thread()
   tests/firmware/test_gateway_http.py:
     e: test_gateway_get_json,_Response,_Client
     _Response: __init__(1),raise_for_status(0),json(0)
@@ -4149,8 +4174,9 @@ D:
     TestComputeSlug: test_explicit_slug(0),test_slug_from_code(0),test_slug_from_display_name(0),test_slug_from_sid(0),test_double_hyphens_collapsed(0),test_strips_leading_trailing_hyphens(0)
     TestNormalizeScenarioRow: test_full_row(0),test_minimal_row(0),test_missing_id_returns_none(0),test_empty_id_returns_none(0),test_fallback_fields(0)
   tests/firmware/test_oql_envelope.py:
-    e: test_request_json_roundtrip,test_response_json_roundtrip,test_topics_layout,test_build_result_payload_is_json_serializable
+    e: test_request_json_roundtrip,test_request_defaults_do_not_skip_waits,test_response_json_roundtrip,test_topics_layout,test_build_result_payload_is_json_serializable
     test_request_json_roundtrip()
+    test_request_defaults_do_not_skip_waits()
     test_response_json_roundtrip()
     test_topics_layout()
     test_build_result_payload_is_json_serializable()
@@ -4183,11 +4209,12 @@ D:
     test_manage_unknown_verb_is_ok_false(broker)
     test_agent_run_oql_handles_execution_errors(broker;monkeypatch)
   tests/firmware/test_oql_route_http.py:
-    e: client,test_execute_returns_503_when_transport_disabled,test_execute_dispatches_to_controller,test_execute_surfaces_remote_error_as_ok_false,test_manage_returns_503_when_transport_disabled,test_manage_dispatches_verb_and_args,test_manage_surfaces_remote_error,_FakeController
+    e: client,test_execute_returns_503_when_transport_disabled,test_execute_dispatches_to_controller,test_execute_accepts_explicit_skip_waits,test_execute_surfaces_remote_error_as_ok_false,test_manage_returns_503_when_transport_disabled,test_manage_dispatches_verb_and_args,test_manage_surfaces_remote_error,_FakeController
     _FakeController: __init__(1),execute(1),manage(2)
     client()
     test_execute_returns_503_when_transport_disabled(client)
     test_execute_dispatches_to_controller(client)
+    test_execute_accepts_explicit_skip_waits(client)
     test_execute_surfaces_remote_error_as_ok_false(client)
     test_manage_returns_503_when_transport_disabled(client)
     test_manage_dispatches_verb_and_args(client)
@@ -4196,7 +4223,7 @@ D:
     e: test_configure_oqlos_logging_writes_to_file
     test_configure_oqlos_logging_writes_to_file(tmp_path;monkeypatch)
   tests/firmware/test_panel_ui.py:
-    e: panel_source,_panel_manage_verbs,_panel_endpoints,test_panel_route_serves_html,test_panel_exposes_wait_execution_state_in_payload_and_url,test_health_route_contains_redeploy_probe_token,test_panel_manage_verbs_are_supported,test_panel_only_calls_known_endpoints,client_with_controller,test_panel_single_oql_command_payload_dispatches,test_panel_flow_script_payload_dispatches,test_panel_script_without_version_executes_named_goal,test_panel_script_accepts_set_wait_alias,test_panel_manage_payload_dispatches,_FakeController
+    e: panel_source,_panel_manage_verbs,_panel_endpoints,test_panel_route_serves_html,test_panel_exposes_wait_execution_state_in_payload_and_url,test_health_route_contains_redeploy_probe_token,test_panel_manage_verbs_are_supported,test_panel_only_calls_known_endpoints,test_panel_editor_and_results_use_equal_height_split,test_panel_loads_editor_file_scenarios,client_with_controller,test_panel_single_oql_command_payload_dispatches,test_panel_flow_script_payload_dispatches,test_panel_script_without_version_executes_named_goal,test_panel_script_accepts_set_wait_alias,test_panel_manage_payload_dispatches,_FakeController
     _FakeController: __init__(1),execute(1),manage(2)
     panel_source()
     _panel_manage_verbs(source)
@@ -4206,6 +4233,8 @@ D:
     test_health_route_contains_redeploy_probe_token()
     test_panel_manage_verbs_are_supported(panel_source)
     test_panel_only_calls_known_endpoints(panel_source)
+    test_panel_editor_and_results_use_equal_height_split(panel_source)
+    test_panel_loads_editor_file_scenarios(panel_source)
     client_with_controller()
     test_panel_single_oql_command_payload_dispatches(client_with_controller)
     test_panel_flow_script_payload_dispatches(client_with_controller)
@@ -4422,6 +4451,13 @@ D:
     MockWS: send(1),close(0)
     MockBridge: __init__(0),send_event(2)
     test_reporting()
+  tests/test_scenarios_dir.py:
+    e: test_default_scenarios_dir_points_at_repo_root
+    test_default_scenarios_dir_points_at_repo_root()
+  tests/test_scenarios_legacy_aliases.py:
+    e: test_legacy_alias_map_covers_renamed_exports,test_scenarios_root_has_no_ts_prefix_files
+    test_legacy_alias_map_covers_renamed_exports()
+    test_scenarios_root_has_no_ts_prefix_files()
   tests/test_xml_import_generators.py:
     e: test_generate_cql_uses_canonical_set_syntax
     test_generate_cql_uses_canonical_set_syntax()
@@ -4450,6 +4486,7 @@ project_file('frontend/src/api/hardware-diagnostic-failure.js', 98, 'javascript'
 project_file('frontend/src/api/hardware-diagnostic-failure.test.js', 59, 'javascript').
 project_file('frontend/src/api/hardware-tic249-status.js', 36, 'javascript').
 project_file('frontend/src/api/hardwareApi.js', 258, 'javascript').
+project_file('frontend/src/api/scenarioFilesApi.js', 54, 'javascript').
 project_file('frontend/src/api/wsClient.js', 139, 'javascript').
 project_file('frontend/src/context/app-config-document.js', 27, 'javascript').
 project_file('frontend/src/hooks/useMapEditorHardwareEvents.js', 62, 'javascript').
@@ -4458,14 +4495,14 @@ project_file('frontend/src/hooks/useParentEncoderNavigation.js', 40, 'javascript
 project_file('frontend/src/hooks/useRailHoverPreview.js', 85, 'javascript').
 project_file('frontend/src/hooks/useUrlConfig.js', 86, 'javascript').
 project_file('frontend/src/hooks/useWsStatus.js', 27, 'javascript').
-project_file('frontend/src/i18n/dictionaries.js', 1982, 'javascript').
+project_file('frontend/src/i18n/dictionaries.js', 2054, 'javascript').
 project_file('frontend/src/i18n/hardware-demo-extra-translations.js', 184, 'javascript').
 project_file('frontend/src/i18n/hardware-status-log-translations.js', 82, 'javascript').
-project_file('frontend/src/i18n/hardware-status-panel-translations.js', 310, 'javascript').
+project_file('frontend/src/i18n/hardware-status-panel-translations.js', 328, 'javascript').
 project_file('frontend/src/i18n/hardware-status-presets-translations.js', 796, 'javascript').
 project_file('frontend/src/pages/mapEditorConstants.js', 42, 'javascript').
 project_file('frontend/src/pages/mapEditorDefaultMap.js', 1764, 'javascript').
-project_file('frontend/src/styles/global.css', 2123, 'css').
+project_file('frontend/src/styles/global.css', 2262, 'css').
 project_file('frontend/src/utils/collapse-toggle-bridge.js', 47, 'javascript').
 project_file('frontend/src/utils/designRem.js', 44, 'javascript').
 project_file('frontend/src/utils/encoder-navigation.js', 143, 'javascript').
@@ -4473,7 +4510,7 @@ project_file('frontend/src/utils/encoder-navigation.test.js', 21, 'javascript').
 project_file('frontend/src/utils/hardware-activity-log.js', 35, 'javascript').
 project_file('frontend/src/utils/hardware-api-retry.js', 39, 'javascript').
 project_file('frontend/src/utils/hardware-api-retry.test.js', 46, 'javascript').
-project_file('frontend/src/utils/hardware-demo-identify.js', 59, 'javascript').
+project_file('frontend/src/utils/hardware-demo-identify.js', 86, 'javascript').
 project_file('frontend/src/utils/hardware-demo-identify.test.js', 28, 'javascript').
 project_file('frontend/src/utils/hardware-restart-configure.js', 69, 'javascript').
 project_file('frontend/src/utils/hardware-restart-configure.test.js', 31, 'javascript').
@@ -4487,12 +4524,14 @@ project_file('frontend/src/utils/hardware-restart-wizard-helpers.js', 42, 'javas
 project_file('frontend/src/utils/hardware-restart-wizard-steps.js', 47, 'javascript').
 project_file('frontend/src/utils/hardware-restart-wizard-steps.test.js', 32, 'javascript').
 project_file('frontend/src/utils/hardware-time.js', 5, 'javascript').
-project_file('frontend/src/utils/hardware-wizard-plan.js', 23, 'javascript').
+project_file('frontend/src/utils/hardware-wizard-plan.js', 42, 'javascript').
 project_file('frontend/src/utils/hardware-wizard-plan.test.js', 17, 'javascript').
 project_file('frontend/src/utils/hardware-wizard-steps.js', 102, 'javascript').
 project_file('frontend/src/utils/hardware-wizard-steps.test.js', 30, 'javascript').
 project_file('frontend/src/utils/hardwareEventStream.js', 53, 'javascript').
 project_file('frontend/src/utils/hardwareEventStream.test.js', 37, 'javascript').
+project_file('frontend/src/utils/hardwareStatusModel.js', 39, 'javascript').
+project_file('frontend/src/utils/hardwareStatusModel.test.js', 44, 'javascript').
 project_file('frontend/src/utils/hui-shell-key.js', 39, 'javascript').
 project_file('frontend/src/utils/mapEditorFuncHardwareSummary.js', 84, 'javascript').
 project_file('frontend/src/utils/mapEditorFuncHardwareSummary.test.js', 55, 'javascript').
@@ -4507,6 +4546,8 @@ project_file('frontend/src/utils/mapEditorTic249.js', 8, 'javascript').
 project_file('frontend/src/utils/mapEditorTic249.test.js', 14, 'javascript').
 project_file('frontend/src/utils/parentUrlBridge.js', 40, 'javascript').
 project_file('frontend/src/utils/rbac.policy.js', 122, 'javascript').
+project_file('frontend/src/utils/scenarioFilesUrl.js', 17, 'javascript').
+project_file('frontend/src/utils/scenarioFilesUrl.test.js', 20, 'javascript').
 project_file('frontend/src/utils/url-embed-config.js', 194, 'javascript').
 project_file('frontend/src/utils/url-embed-config.test.js', 93, 'javascript').
 project_file('frontend/src/utils/useSelectionCollapsePanel.js', 134, 'javascript').
@@ -4557,10 +4598,10 @@ project_file('oqlos/config.py', 221, 'python').
 project_file('oqlos/core/__init__.py', 1, 'python').
 project_file('oqlos/core/_action_motor2.py', 482, 'python').
 project_file('oqlos/core/_compare.py', 41, 'python').
-project_file('oqlos/core/_cql_tokenizer.py', 407, 'python').
+project_file('oqlos/core/_cql_tokenizer.py', 410, 'python').
 project_file('oqlos/core/_cql_tree_builder.py', 168, 'python').
 project_file('oqlos/core/_dsl_helpers.py', 133, 'python').
-project_file('oqlos/core/_firmware_executor.py', 211, 'python').
+project_file('oqlos/core/_firmware_executor.py', 267, 'python').
 project_file('oqlos/core/_func_resolver.py', 97, 'python').
 project_file('oqlos/core/_interpreter_actions.py', 801, 'python').
 project_file('oqlos/core/_line_parsers.py', 262, 'python').
@@ -4572,7 +4613,7 @@ project_file('oqlos/core/cql_parser.py', 468, 'python').
 project_file('oqlos/core/executor.py', 384, 'python').
 project_file('oqlos/core/interpreter.py', 691, 'python').
 project_file('oqlos/core/motor2_runtime.py', 210, 'python').
-project_file('oqlos/core/oql_parser.py', 763, 'python').
+project_file('oqlos/core/oql_parser.py', 771, 'python').
 project_file('oqlos/core/oql_versioning.py', 73, 'python').
 project_file('oqlos/core/parser.py', 185, 'python').
 project_file('oqlos/core/safe_eval.py', 139, 'python').
@@ -4626,7 +4667,7 @@ project_file('oqlos/hardware/hui_lung_recipe.py', 43, 'python').
 project_file('oqlos/hardware/identify_enrichment.py', 19, 'python').
 project_file('oqlos/hardware/modbus_identify.py', 132, 'python').
 project_file('oqlos/hardware/peripheral_mapping.py', 139, 'python').
-project_file('oqlos/hardware/plugin_gateway.py', 632, 'python').
+project_file('oqlos/hardware/plugin_gateway.py', 634, 'python').
 project_file('oqlos/hardware/plugins/__init__.py', 50, 'python').
 project_file('oqlos/hardware/plugins/_rtu_serial.py', 34, 'python').
 project_file('oqlos/hardware/plugins/_shared.py', 60, 'python').
@@ -4663,6 +4704,7 @@ project_file('oqlos/reporters/__init__.py', 7, 'python').
 project_file('oqlos/reporters/html_report.py', 267, 'python').
 project_file('oqlos/reporters/json_reporter.py', 139, 'python').
 project_file('oqlos/reporters/junit.py', 87, 'python').
+project_file('oqlos/scenarios/legacy_aliases.py', 41, 'python').
 project_file('oqlos/shared/__init__.py', 1, 'python').
 project_file('oqlos/shared/_endpoint_helpers.py', 34, 'python').
 project_file('oqlos/shared/config_factory.py', 85, 'python').
@@ -4709,7 +4751,7 @@ project_file('oqlos/utils/hui_scenario.py', 47, 'python').
 project_file('oqlos/utils/sample_data.py', 74, 'python').
 project_file('project.sh', 43, 'shell').
 project_file('scripts/fix_brackets_to_v4.py', 96, 'python').
-project_file('scripts/gen-checksums.sh', 25, 'shell').
+project_file('scripts/gen-checksums.sh', 28, 'shell').
 project_file('scripts/hardware-check.sh', 341, 'shell').
 project_file('scripts/migrate_to_v4.py', 341, 'python').
 project_file('scripts/oql-stack.sh', 105, 'shell').
@@ -4727,6 +4769,7 @@ project_file('tests/firmware/test_control_proxy.py', 204, 'python').
 project_file('tests/firmware/test_dri0050_sidecar_control.py', 84, 'python').
 project_file('tests/firmware/test_dsl_parser_runtime.py', 157, 'python').
 project_file('tests/firmware/test_firmware.py', 10, 'python').
+project_file('tests/firmware/test_firmware_executor.py', 132, 'python').
 project_file('tests/firmware/test_gateway_http.py', 51, 'python').
 project_file('tests/firmware/test_hardware_diagnosis_api.py', 110, 'python').
 project_file('tests/firmware/test_hardware_diagnosis_routes.py', 37, 'python').
@@ -4744,7 +4787,7 @@ project_file('tests/firmware/test_hardware_modbus_wizard.py', 353, 'python').
 project_file('tests/firmware/test_hardware_probe_devices.py', 27, 'python').
 project_file('tests/firmware/test_hardware_runtime_routes.py', 52, 'python').
 project_file('tests/firmware/test_hardware_stack_snapshot.py', 46, 'python').
-project_file('tests/firmware/test_hardware_v3_compat.py', 152, 'python').
+project_file('tests/firmware/test_hardware_v3_compat.py', 158, 'python').
 project_file('tests/firmware/test_hui_actions.py', 93, 'python').
 project_file('tests/firmware/test_hui_scenario.py', 12, 'python').
 project_file('tests/firmware/test_identify_enrich_modbus_io.py', 24, 'python').
@@ -4758,12 +4801,12 @@ project_file('tests/firmware/test_motor_http_handlers.py', 82, 'python').
 project_file('tests/firmware/test_motor_modbus_handlers.py', 110, 'python').
 project_file('tests/firmware/test_motor_plugin.py', 74, 'python').
 project_file('tests/firmware/test_normalize_scenario.py', 200, 'python').
-project_file('tests/firmware/test_oql_envelope.py', 61, 'python').
+project_file('tests/firmware/test_oql_envelope.py', 74, 'python').
 project_file('tests/firmware/test_oql_manage_ops.py', 187, 'python').
 project_file('tests/firmware/test_oql_mqtt_bridge.py', 255, 'python').
-project_file('tests/firmware/test_oql_route_http.py', 119, 'python').
+project_file('tests/firmware/test_oql_route_http.py', 136, 'python').
 project_file('tests/firmware/test_oqlos_logging.py', 21, 'python').
-project_file('tests/firmware/test_panel_ui.py', 227, 'python').
+project_file('tests/firmware/test_panel_ui.py', 249, 'python').
 project_file('tests/firmware/test_parser_cycle.py', 53, 'python').
 project_file('tests/firmware/test_plugin_gateway_env.py', 243, 'python').
 project_file('tests/firmware/test_plugin_gateway_init.py', 67, 'python').
@@ -4778,15 +4821,17 @@ project_file('tests/firmware/test_scanner_probe.py', 68, 'python').
 project_file('tests/firmware/test_tic249_units.py', 18, 'python').
 project_file('tests/firmware/test_tokenizer_extended.py', 194, 'python').
 project_file('tests/firmware/test_usb_diagnostics.py', 63, 'python').
-project_file('tests/test_core.py', 854, 'python').
+project_file('tests/test_core.py', 853, 'python').
 project_file('tests/test_cql_cli.py', 417, 'python').
 project_file('tests/test_cql_inline_regressions.py', 74, 'python').
 project_file('tests/test_cql_scenarios.py', 88, 'python').
 project_file('tests/test_dsl_schema.py', 20, 'python').
 project_file('tests/test_oql_dry_run_regressions.py', 62, 'python').
-project_file('tests/test_oql_parser_v3.py', 494, 'python').
+project_file('tests/test_oql_parser_v3.py', 492, 'python').
 project_file('tests/test_oql_scenarios.py', 74, 'python').
 project_file('tests/test_reporting.py', 46, 'python').
+project_file('tests/test_scenarios_dir.py', 18, 'python').
+project_file('tests/test_scenarios_legacy_aliases.py', 24, 'python').
 project_file('tests/test_xml_import_generators.py', 29, 'python').
 project_file('tests/verify_block_if.py', 61, 'python').
 project_file('tests/verify_loops.py', 34, 'python').
@@ -4988,12 +5033,12 @@ python_function('oqlos/api/main.py', '_start_oql_transport', 0, 8, 10).
 python_function('oqlos/api/main.py', '_stop_oql_transport', 0, 3, 2).
 python_function('oqlos/api/main.py', 'index_page', 0, 1, 2).
 python_function('oqlos/api/main.py', '_serve_static_html', 3, 1, 1).
-python_function('oqlos/api/main.py', 'editor_page', 0, 1, 2).
+python_function('oqlos/api/main.py', 'editor_page', 1, 1, 3).
 python_function('oqlos/api/main.py', 'panel_page', 0, 1, 2).
 python_function('oqlos/api/main.py', 'navigation_page', 0, 1, 2).
 python_function('oqlos/api/main.py', '_with_query', 2, 3, 1).
 python_function('oqlos/api/main.py', '_redirect_with_query', 2, 1, 2).
-python_function('oqlos/api/main.py', 'hardware_status_page', 0, 1, 2).
+python_function('oqlos/api/main.py', 'hardware_status_page', 1, 1, 3).
 python_function('oqlos/api/main.py', 'hardware_demo_alias', 1, 1, 3).
 python_function('oqlos/api/main.py', 'hardware_restart_alias', 1, 1, 3).
 python_function('oqlos/api/main.py', 'map_editor_alias', 1, 1, 3).
@@ -5265,16 +5310,17 @@ python_function('oqlos/core/motor2_runtime.py', '_compute_motor2_cycles', 3, 3, 
 python_function('oqlos/core/motor2_runtime.py', '_compute_motor2_speed', 6, 4, 5).
 python_function('oqlos/core/motor2_runtime.py', 'build_motor2_reciprocating_plan', 1, 7, 8).
 python_function('oqlos/core/oql_parser.py', 'to_num', 1, 2, 4).
-python_function('oqlos/core/oql_parser.py', 'parse_duration', 1, 3, 4).
+python_function('oqlos/core/oql_parser.py', '_compact_duration', 1, 2, 3).
+python_function('oqlos/core/oql_parser.py', 'parse_duration', 1, 3, 5).
 python_function('oqlos/core/oql_parser.py', 'duration_to_ms', 1, 1, 2).
 python_function('oqlos/core/oql_parser.py', '_unescape', 1, 1, 2).
 python_function('oqlos/core/oql_parser.py', 'tokenize', 1, 13, 8).
 python_function('oqlos/core/oql_parser.py', '_require', 5, 2, 2).
 python_function('oqlos/core/oql_parser.py', '_split_value_unit', 1, 2, 2).
 python_function('oqlos/core/oql_parser.py', '_split_set_value_unit', 1, 2, 2).
-python_function('oqlos/core/oql_parser.py', 'parse_SET', 3, 1, 3).
+python_function('oqlos/core/oql_parser.py', 'parse_SET', 3, 3, 7).
 python_function('oqlos/core/oql_parser.py', 'parse_GET', 3, 1, 2).
-python_function('oqlos/core/oql_parser.py', 'parse_WAIT', 3, 1, 4).
+python_function('oqlos/core/oql_parser.py', 'parse_WAIT', 3, 2, 7).
 python_function('oqlos/core/oql_parser.py', 'parse_IF_DELTA', 3, 6, 12).
 python_function('oqlos/core/oql_parser.py', 'parse_SAVE', 3, 1, 2).
 python_function('oqlos/core/oql_parser.py', 'parse_CHECK', 3, 2, 6).
@@ -5587,6 +5633,9 @@ python_function('oqlos/reporters/json_reporter.py', '_collect_thresholds', 1, 8,
 python_function('oqlos/reporters/json_reporter.py', '_extract_metadata', 1, 2, 2).
 python_function('oqlos/reporters/json_reporter.py', 'report_json', 1, 2, 8).
 python_function('oqlos/reporters/junit.py', 'report_junit', 2, 1, 2).
+python_function('oqlos/scenarios/legacy_aliases.py', '_repo_scenarios_dir', 0, 1, 2).
+python_function('oqlos/scenarios/legacy_aliases.py', '_load_legacy_aliases', 0, 4, 6).
+python_function('oqlos/scenarios/legacy_aliases.py', 'resolve_canonical_scenario_file', 2, 5, 5).
 python_function('oqlos/shared/_endpoint_helpers.py', 'serve_html_page', 1, 2, 3).
 python_function('oqlos/shared/_endpoint_helpers.py', 'make_collection_route', 2, 1, 3).
 python_function('oqlos/shared/config_factory.py', 'create_nfo_setup', 0, 1, 7).
@@ -5925,6 +5974,10 @@ python_function('tests/firmware/test_dri0050_sidecar_control.py', 'test_resolve_
 python_function('tests/firmware/test_dri0050_sidecar_control.py', 'test_ensure_restarts_when_listening_returns_503', 2, 3, 10).
 python_function('tests/firmware/test_firmware.py', 'test_placeholder', 0, 2, 0).
 python_function('tests/firmware/test_firmware.py', 'test_import', 0, 1, 0).
+python_function('tests/firmware/test_firmware_executor.py', '_executor', 3, 3, 4).
+python_function('tests/firmware/test_firmware_executor.py', 'test_plugin_action_awaits_async_pump_gateway', 0, 5, 6).
+python_function('tests/firmware/test_firmware_executor.py', 'test_plugin_action_treats_failed_pump_result_as_failure', 0, 4, 5).
+python_function('tests/firmware/test_firmware_executor.py', 'test_plugin_action_uses_gateway_runtime_loop_from_worker_thread', 0, 3, 15).
 python_function('tests/firmware/test_gateway_http.py', 'test_gateway_get_json', 1, 4, 5).
 python_function('tests/firmware/test_hardware_diagnosis_api.py', 'test_build_diagnosis_report_motors_error', 0, 7, 5).
 python_function('tests/firmware/test_hardware_diagnosis_api.py', 'test_motors_only_no_global_make_hardware_up', 0, 6, 6).
@@ -5995,7 +6048,7 @@ python_function('tests/firmware/test_hardware_v3_compat.py', '_client', 0, 1, 3)
 python_function('tests/firmware/test_hardware_v3_compat.py', 'test_hardware_v3_mapping_round_trip', 2, 9, 7).
 python_function('tests/firmware/test_hardware_v3_compat.py', 'test_hardware_v3_mapping_rejects_invalid_contract', 2, 3, 4).
 python_function('tests/firmware/test_hardware_v3_compat.py', 'test_hardware_v3_cqrs_events_record_diagnostic_failure', 1, 7, 6).
-python_function('tests/firmware/test_hardware_v3_compat.py', 'test_hardware_ui_aliases_and_status_page_are_served', 0, 18, 2).
+python_function('tests/firmware/test_hardware_v3_compat.py', 'test_hardware_ui_aliases_and_status_page_are_served', 0, 20, 2).
 python_function('tests/firmware/test_hardware_v3_compat.py', 'test_navigation_index_and_short_aliases', 0, 15, 4).
 python_function('tests/firmware/test_hui_actions.py', 'run', 1, 1, 1).
 python_function('tests/firmware/test_hui_actions.py', 'test_hui_hold_profile_runs_inside_oqlos', 1, 3, 4).
@@ -6027,6 +6080,7 @@ python_function('tests/firmware/test_motor_modbus_handlers.py', 'test_modbus_sta
 python_function('tests/firmware/test_motor_plugin.py', 'test_motor_plugin_http_stop_uses_global_time_import', 0, 4, 5).
 python_function('tests/firmware/test_motor_plugin.py', 'test_motor_plugin_health_rejects_missing_local_serial_port', 1, 4, 6).
 python_function('tests/firmware/test_oql_envelope.py', 'test_request_json_roundtrip', 0, 6, 4).
+python_function('tests/firmware/test_oql_envelope.py', 'test_request_defaults_do_not_skip_waits', 0, 3, 3).
 python_function('tests/firmware/test_oql_envelope.py', 'test_response_json_roundtrip', 0, 5, 3).
 python_function('tests/firmware/test_oql_envelope.py', 'test_topics_layout', 0, 6, 2).
 python_function('tests/firmware/test_oql_envelope.py', 'test_build_result_payload_is_json_serializable', 0, 2, 4).
@@ -6053,7 +6107,8 @@ python_function('tests/firmware/test_oql_mqtt_bridge.py', 'test_manage_unknown_v
 python_function('tests/firmware/test_oql_mqtt_bridge.py', 'test_agent_run_oql_handles_execution_errors', 2, 4, 6).
 python_function('tests/firmware/test_oql_route_http.py', 'client', 0, 1, 3).
 python_function('tests/firmware/test_oql_route_http.py', 'test_execute_returns_503_when_transport_disabled', 1, 2, 2).
-python_function('tests/firmware/test_oql_route_http.py', 'test_execute_dispatches_to_controller', 1, 7, 6).
+python_function('tests/firmware/test_oql_route_http.py', 'test_execute_dispatches_to_controller', 1, 8, 6).
+python_function('tests/firmware/test_oql_route_http.py', 'test_execute_accepts_explicit_skip_waits', 1, 3, 4).
 python_function('tests/firmware/test_oql_route_http.py', 'test_execute_surfaces_remote_error_as_ok_false', 1, 4, 5).
 python_function('tests/firmware/test_oql_route_http.py', 'test_manage_returns_503_when_transport_disabled', 1, 2, 2).
 python_function('tests/firmware/test_oql_route_http.py', 'test_manage_dispatches_verb_and_args', 1, 7, 6).
@@ -6066,7 +6121,9 @@ python_function('tests/firmware/test_panel_ui.py', 'test_panel_route_serves_html
 python_function('tests/firmware/test_panel_ui.py', 'test_panel_exposes_wait_execution_state_in_payload_and_url', 1, 7, 0).
 python_function('tests/firmware/test_panel_ui.py', 'test_health_route_contains_redeploy_probe_token', 0, 4, 3).
 python_function('tests/firmware/test_panel_ui.py', 'test_panel_manage_verbs_are_supported', 1, 3, 4).
-python_function('tests/firmware/test_panel_ui.py', 'test_panel_only_calls_known_endpoints', 1, 4, 1).
+python_function('tests/firmware/test_panel_ui.py', 'test_panel_only_calls_known_endpoints', 1, 5, 1).
+python_function('tests/firmware/test_panel_ui.py', 'test_panel_editor_and_results_use_equal_height_split', 1, 8, 1).
+python_function('tests/firmware/test_panel_ui.py', 'test_panel_loads_editor_file_scenarios', 1, 6, 0).
 python_function('tests/firmware/test_panel_ui.py', 'client_with_controller', 0, 1, 6).
 python_function('tests/firmware/test_panel_ui.py', 'test_panel_single_oql_command_payload_dispatches', 1, 4, 2).
 python_function('tests/firmware/test_panel_ui.py', 'test_panel_flow_script_payload_dispatches', 1, 4, 1).
@@ -6194,6 +6251,9 @@ python_function('tests/test_oql_scenarios.py', 'test_oql_scenario_dryrun', 1, 3,
 python_function('tests/test_oql_scenarios.py', 'test_oql_example_dryrun', 1, 2, 4).
 python_function('tests/test_oql_scenarios.py', 'test_oql_scenario_validate', 1, 2, 4).
 python_function('tests/test_reporting.py', 'test_reporting', 0, 3, 6).
+python_function('tests/test_scenarios_dir.py', 'test_default_scenarios_dir_points_at_repo_root', 0, 5, 5).
+python_function('tests/test_scenarios_legacy_aliases.py', 'test_legacy_alias_map_covers_renamed_exports', 0, 7, 7).
+python_function('tests/test_scenarios_legacy_aliases.py', 'test_scenarios_root_has_no_ts_prefix_files', 0, 2, 4).
 python_function('tests/test_xml_import_generators.py', 'test_generate_cql_uses_canonical_set_syntax', 0, 6, 7).
 python_function('tests/verify_block_if.py', 'test_block_if', 0, 10, 10).
 python_function('tests/verify_loops.py', 'test_loops', 0, 3, 8).
@@ -6232,11 +6292,13 @@ python_class('oqlos/config.py', 'Settings').
 python_class('oqlos/core/_firmware_executor.py', 'FirmwareExecutor').
 python_method('FirmwareExecutor', '__init__', 7, 3, 1).
 python_method('FirmwareExecutor', '_get_firmware', 0, 3, 2).
+python_method('FirmwareExecutor', '_resolve_gateway_result', 2, 9, 11).
+python_method('FirmwareExecutor', '_is_success', 1, 2, 3).
 python_method('FirmwareExecutor', 'resolve_peripheral_id', 1, 1, 4).
 python_method('FirmwareExecutor', 'normalize_peripheral_value', 2, 6, 4).
 python_method('FirmwareExecutor', 'refresh_sensors_from_firmware', 1, 2, 3).
 python_method('FirmwareExecutor', 'execute_firmware_action', 2, 3, 2).
-python_method('FirmwareExecutor', '_execute_plugin_action', 2, 11, 9).
+python_method('FirmwareExecutor', '_execute_plugin_action', 2, 11, 11).
 python_method('FirmwareExecutor', '_execute_legacy_firmware_action', 2, 3, 6).
 python_method('FirmwareExecutor', 'exec_set_peripheral', 2, 4, 6).
 python_class('oqlos/core/_oql_adapter.py', '_MacroRegistry').
@@ -6548,7 +6610,7 @@ python_method('PluginHardwareGateway', '_apply_shared_modbus_bus_env_overrides',
 python_method('PluginHardwareGateway', '_apply_modbus_env_overrides', 2, 8, 6).
 python_method('PluginHardwareGateway', 'modbus_preflight_report', 0, 4, 4).
 python_method('PluginHardwareGateway', '_log_modbus_preflight', 0, 3, 4).
-python_method('PluginHardwareGateway', 'ensure_initialized', 0, 3, 1).
+python_method('PluginHardwareGateway', 'ensure_initialized', 0, 3, 2).
 python_method('PluginHardwareGateway', '_get_or_connect_plugin', 1, 10, 9).
 python_method('PluginHardwareGateway', '_initialize_plugins', 0, 12, 11).
 python_method('PluginHardwareGateway', 'is_real', 0, 1, 0).
@@ -6824,6 +6886,22 @@ python_method('TestDslParserRuntime', 'test_expands_func_call_into_runtime_steps
 python_method('TestDslParserRuntime', 'test_reports_invalid_runtime_line_for_pompx_typo', 0, 4, 1).
 python_method('TestDslParserRuntime', 'test_accepts_pompa_with_suffix_as_real_pump_reference', 0, 5, 2).
 python_method('TestDslParserRuntime', 'test_accepts_set_pompa_alias', 0, 6, 2).
+python_class('tests/firmware/test_firmware_executor.py', '_Vars').
+python_method('_Vars', '__init__', 0, 2, 0).
+python_method('_Vars', 'interpolate', 1, 1, 1).
+python_method('_Vars', 'set', 2, 1, 0).
+python_class('tests/firmware/test_firmware_executor.py', '_Out').
+python_method('_Out', '__init__', 0, 2, 0).
+python_method('_Out', 'step', 2, 1, 1).
+python_method('_Out', 'error', 1, 1, 1).
+python_method('_Out', 'warn', 1, 1, 1).
+python_class('tests/firmware/test_firmware_executor.py', '_Normalizer').
+python_method('_Normalizer', 'normalize_pump_power', 1, 1, 1).
+python_class('tests/firmware/test_firmware_executor.py', '_AsyncGateway').
+python_method('_AsyncGateway', '__init__', 1, 2, 0).
+python_method('_AsyncGateway', 'set_pump', 1, 1, 1).
+python_method('_AsyncGateway', 'set_valve', 2, 1, 1).
+python_method('_AsyncGateway', 'set_lung', 0, 1, 1).
 python_class('tests/firmware/test_gateway_http.py', '_Response').
 python_method('_Response', '__init__', 1, 1, 0).
 python_method('_Response', 'raise_for_status', 0, 1, 0).
@@ -7117,7 +7195,7 @@ python_method('TestCqlParser', 'test_simple_metadata', 0, 2, 1).
 python_method('TestCqlParser', 'test_parses_set_as_pump', 0, 6, 2).
 python_method('TestCqlParser', 'test_parses_set_command_for_valve_and_compressor', 0, 7, 2).
 python_method('TestCqlParser', 'test_simple_goals', 0, 4, 2).
-python_method('TestCqlParser', 'test_simple_actions', 0, 10, 3).
+python_method('TestCqlParser', 'test_simple_actions', 0, 9, 2).
 python_method('TestCqlParser', 'test_connectgo_metadata', 0, 4, 1).
 python_method('TestCqlParser', 'test_connectgo_intervals', 0, 5, 2).
 python_method('TestCqlParser', 'test_connectgo_scenario', 0, 6, 2).
@@ -7345,7 +7423,7 @@ class Settings:  # Application settings loaded from environment variables and .
 
 ## Call Graph
 
-*434 nodes · 500 edges · 59 modules · CC̄=3.8*
+*452 nodes · 500 edges · 51 modules · CC̄=3.8*
 
 ### Hubs (by degree)
 
@@ -7353,17 +7431,17 @@ class Settings:  # Application settings loaded from environment variables and .
 |----------|----|----|-----|-------|
 | `print` *(in examples.hardware.doctor-workflow)* | 0 | 225 | 0 | **225** |
 | `dict` *(in frontend.src.i18n.I18nProvider)* | 8 | 44 | 3 | **47** |
-| `list` *(in frontend.src.utils.hardware-wizard-steps)* | 2 | 41 | 0 | **41** |
+| `list` *(in frontend.src.pages.ScenarioFiles)* | 1 | 41 | 0 | **41** |
 | `oql_doc_to_cql` *(in oqlos.core._oql_adapter)* | 12 ⚠ | 2 | 30 | **32** |
 | `normalize_motor2_runtime_config` *(in oqlos.core.motor2_runtime)* | 12 ⚠ | 1 | 29 | **30** |
 | `_safe_resolve` *(in oqlos.core.executor)* | 14 ⚠ | 7 | 21 | **28** |
 | `run_oql_scenario` *(in setup_hardware_and_run_oql)* | 8 | 1 | 24 | **25** |
-| `parse_oql` *(in oqlos.core.oql_parser)* | 14 ⚠ | 3 | 21 | **24** |
+| `applyMapMutation` *(in frontend.src.pages.MapEditor)* | 2 | 16 | 8 | **24** |
 
 ```toon markpact:analysis path=project/calls.toon.yaml
 # code2llm call graph | /home/tom/github/oqlos/oqlos
 # generated in 0.29s
-# nodes: 434 | edges: 500 | modules: 59
+# nodes: 452 | edges: 500 | modules: 51
 # CC̄=3.8
 
 HUBS[20]:
@@ -7371,8 +7449,8 @@ HUBS[20]:
     CC=0  in:225  out:0  total:225
   frontend.src.i18n.I18nProvider.dict
     CC=8  in:44  out:3  total:47
-  frontend.src.utils.hardware-wizard-steps.list
-    CC=2  in:41  out:0  total:41
+  frontend.src.pages.ScenarioFiles.list
+    CC=1  in:41  out:0  total:41
   oqlos.core._oql_adapter.oql_doc_to_cql
     CC=12  in:2  out:30  total:32
   oqlos.core.motor2_runtime.normalize_motor2_runtime_config
@@ -7381,32 +7459,32 @@ HUBS[20]:
     CC=14  in:7  out:21  total:28
   setup_hardware_and_run_oql.run_oql_scenario
     CC=8  in:1  out:24  total:25
-  oqlos.core.oql_parser.parse_oql
-    CC=14  in:3  out:21  total:24
   frontend.src.pages.MapEditor.applyMapMutation
     CC=2  in:16  out:8  total:24
   oqlos.core.parser.parse_dsl_to_goal_with_issues
     CC=13  in:3  out:21  total:24
-  oqlos.tools.hardware_diagnose.doctor_format.format_doctor
-    CC=6  in:2  out:21  total:23
-  oqlos.core._action_motor2._motor2_build_plan
-    CC=12  in:1  out:22  total:23
-  oqlos.core._line_parsers._parse_if_condition
-    CC=9  in:1  out:22  total:23
-  oqlos.tools.hardware_diagnose.doctor_modbus_analysis.analyze_modbus_adc_config
-    CC=12  in:1  out:22  total:23
+  oqlos.core.oql_parser.parse_oql
+    CC=14  in:3  out:21  total:24
   oqlos.core._action_motor2._try_exec_motor2_set
     CC=13  in:1  out:22  total:23
-  oqlos.tools.hardware_diagnose.health.cmd_diagnose
-    CC=6  in:2  out:20  total:22
-  oqlos.tools.hardware_diagnose.doctor_modbus_analysis.analyze_modbus_config
-    CC=11  in:1  out:20  total:21
+  oqlos.core._line_parsers._parse_if_condition
+    CC=9  in:1  out:22  total:23
+  oqlos.core._action_motor2._motor2_build_plan
+    CC=12  in:1  out:22  total:23
   oqlos.core._cql_tree_builder._parse_goal_line
     CC=12  in:1  out:20  total:21
-  oqlos.hardware.config_paths.resolve_oqlos_config_path
-    CC=6  in:8  out:13  total:21
-  oqlos.core.base.VariableStore.set
-    CC=4  in:19  out:2  total:21
+  oqlos.core._func_resolver._collect_function_definitions
+    CC=13  in:1  out:19  total:20
+  frontend.src.api.wsClient.WsCqrsClient.super
+    CC=1  in:18  out:1  total:19
+  oqlos.core._interpreter_actions.exec_action_shell
+    CC=13  in:0  out:19  total:19
+  oqlos.core.oql_parser.tokenize
+    CC=13  in:5  out:14  total:19
+  oqlos.core._line_parsers._parse_action_line
+    CC=10  in:0  out:18  total:18
+  frontend.src.utils.useSelectionCollapsePanel.useSelectionCollapsePanel
+    CC=14  in:0  out:18  total:18
 
 MODULES:
   examples.hardware.doctor-workflow  [1 funcs]
@@ -7421,10 +7499,34 @@ MODULES:
     keys  CC=2  out:0
     logHardwareApiEvent  CC=6  out:4
     summarizeHardwareApiBody  CC=11  out:5
+  frontend.src.api.hardware-diagnostic-failure  [9 funcs]
+    _connectionError  CC=3  out:0
+    _nestedOkMessage  CC=4  out:2
+    _pickNestedObjectError  CC=8  out:4
+    extractDiagnosticFailure  CC=13  out:6
+    failureFromNestedOk  CC=10  out:4
+    failureFromOkFalsePayload  CC=14  out:6
+    failureFromSuccessFalse  CC=14  out:3
+    firstActionableError  CC=3  out:4
+    resultData  CC=4  out:0
   frontend.src.api.hardware-tic249-status  [3 funcs]
     isIdempotentDiagnosticSuccess  CC=3  out:2
     isIdempotentTic249Deenergized  CC=12  out:2
     tic249ResultStatus  CC=8  out:2
+  frontend.src.api.hardwareApi  [13 funcs]
+    _throwHttpError  CC=1  out:2
+    _withCtx  CC=2  out:0
+    bodySummary  CC=2  out:2
+    durationMs  CC=7  out:6
+    get  CC=1  out:1
+    mode  CC=1  out:1
+    normalized  CC=1  out:1
+    post  CC=1  out:1
+    put  CC=1  out:1
+    request  CC=14  out:14
+  frontend.src.api.scenarioFilesApi  [2 funcs]
+    fetchScenarioFilesList  CC=2  out:4
+    filterListableFiles  CC=3  out:2
   frontend.src.api.wsClient  [15 funcs]
     _handleMessage  CC=13  out:10
     _request  CC=3  out:12
@@ -7439,17 +7541,6 @@ MODULES:
   frontend.src.hooks.useMapEditorSidebarAutoCollapse  [2 funcs]
     applyAutoCollapse  CC=9  out:4
     useMapEditorSidebarAutoCollapse  CC=9  out:11
-  frontend.src.hooks.useParentEncoderNavigation  [17 funcs]
-    _applyScrollToItems  CC=4  out:0
-    _focusEncoderItem  CC=1  out:3
-    _tryCancelPostMessage  CC=2  out:1
-    all  CC=6  out:2
-    controller  CC=3  out:2
-    createEncoderController  CC=17  out:9
-    getInteractiveItems  CC=6  out:4
-    handleEncoderCommand  CC=11  out:6
-    items  CC=4  out:3
-    onKeyDown  CC=7  out:3
   frontend.src.hooks.useRailHoverPreview  [8 funcs]
     cancelPanelClose  CC=2  out:2
     cancelRailOpen  CC=2  out:2
@@ -7468,10 +7559,10 @@ MODULES:
     getInitialLang  CC=5  out:1
     t  CC=8  out:2
     val  CC=2  out:2
-  frontend.src.pages.HardwareDemo  [15 funcs]
+  frontend.src.pages.HardwareDemo  [13 funcs]
     Ctx  CC=2  out:2
     appendLog  CC=1  out:3
-    cancelled  CC=16  out:10
+    controller  CC=5  out:9
     ensureAudioCtx  CC=4  out:4
     fallbackDevice  CC=2  out:5
     fb  CC=2  out:5
@@ -7479,6 +7570,17 @@ MODULES:
     onNoteClick  CC=4  out:9
     playMelody  CC=9  out:11
     playNote  CC=5  out:7
+  frontend.src.pages.HardwareRestart  [20 funcs]
+    canRunCurrentStep  CC=1  out:4
+    confirmErrorKey  CC=1  out:4
+    confirmLabelKey  CC=1  out:4
+    currentStep  CC=1  out:4
+    isConfigureStep  CC=1  out:4
+    isSeparateAdapters  CC=1  out:4
+    loadPlan  CC=4  out:10
+    log  CC=1  out:3
+    port  CC=6  out:9
+    refreshRuntimeStatus  CC=3  out:3
   frontend.src.pages.MapEditor  [21 funcs]
     addAction  CC=2  out:6
     addFunc  CC=2  out:6
@@ -7493,9 +7595,30 @@ MODULES:
   frontend.src.pages.MapEditorObjectActionPanel  [2 funcs]
     _MotorRelativeParams  CC=1  out:3
     _motorArgLabel  CC=6  out:0
+  frontend.src.pages.ScenarioFiles  [9 funcs]
+    appendLog  CC=1  out:4
+    cancelled  CC=4  out:4
+    formatLogTime  CC=1  out:2
+    isDirty  CC=1  out:4
+    list  CC=1  out:0
+    loadFiles  CC=2  out:5
+    runScenario  CC=5  out:7
+    saveFile  CC=4  out:7
+    selectFile  CC=3  out:8
   frontend.src.utils.collapse-toggle-bridge  [2 funcs]
     isInIframe  CC=4  out:0
     postToParent  CC=4  out:8
+  frontend.src.utils.encoder-navigation  [13 funcs]
+    all  CC=6  out:2
+    applyScrollToItems  CC=4  out:0
+    createEncoderController  CC=11  out:7
+    focusEncoderItem  CC=1  out:3
+    getInteractiveItems  CC=6  out:4
+    handleCancel  CC=1  out:2
+    handleClick  CC=3  out:2
+    handleEncoderCommand  CC=5  out:4
+    handleScroll  CC=4  out:4
+    handleSetActive  CC=3  out:1
   frontend.src.utils.hardware-activity-log  [4 funcs]
     createHardwareActivityLogEntry  CC=1  out:2
     loggedRef  CC=2  out:4
@@ -7504,12 +7627,9 @@ MODULES:
   frontend.src.utils.hardware-api-retry  [2 funcs]
     attempt  CC=14  out:9
     sleep  CC=1  out:2
-  frontend.src.utils.hardware-restart-wizard-steps  [1 funcs]
-    probe  CC=1  out:2
-  frontend.src.utils.hardware-wizard-steps  [4 funcs]
+  frontend.src.utils.hardware-wizard-steps  [3 funcs]
     _filterCandidatesByRole  CC=6  out:3
     _findBestCandidate  CC=6  out:3
-    list  CC=2  out:0
     selectWizardProbeCandidate  CC=11  out:9
   frontend.src.utils.hardwareEventStream  [14 funcs]
     buildHardwareEventsWsUrl  CC=10  out:3
@@ -7522,6 +7642,25 @@ MODULES:
     payload  CC=3  out:1
     peripheralId  CC=3  out:1
     resolveEventStatus  CC=6  out:0
+  frontend.src.utils.mapEditorFuncHardwareSummary  [7 funcs]
+    _asMap  CC=3  out:0
+    apiBindingHint  CC=12  out:0
+    objectMap  CC=3  out:2
+    resolveNamedActionHardwareHint  CC=7  out:4
+    resolveObjectActionHardwareHint  CC=6  out:2
+    summarizeFuncToHardware  CC=11  out:7
+    uniqueHints  CC=5  out:5
+  frontend.src.utils.mapEditorIntegrationMeta  [10 funcs]
+    _resolveHardwareAddress  CC=5  out:0
+    _setOrDelete  CC=2  out:0
+    firstBindingFromObjectMapping  CC=6  out:1
+    nextValue  CC=2  out:2
+    readIntegrationMeta  CC=11  out:2
+    setApiEndpointField  CC=2  out:0
+    setApiServiceField  CC=2  out:0
+    setHardwareAddressField  CC=8  out:0
+    setMetaField  CC=9  out:6
+    source  CC=2  out:1
   frontend.src.utils.mapEditorMapShape  [6 funcs]
     cloneValue  CC=1  out:2
     ensureMapShape  CC=7  out:1
@@ -7558,6 +7697,15 @@ MODULES:
     mergeParentSearchIntoChildUrl  CC=9  out:11
     nextHref  CC=1  out:1
     parentSearch  CC=4  out:3
+  frontend.src.utils.useSelectionCollapsePanel  [8 funcs]
+    _makeCollapseToggleHandler  CC=8  out:3
+    cancelAutoCollapse  CC=2  out:2
+    collapsed  CC=2  out:6
+    expand  CC=1  out:5
+    onMessage  CC=1  out:1
+    scheduleCollapse  CC=2  out:6
+    toggleCollapsed  CC=2  out:5
+    useSelectionCollapsePanel  CC=14  out:18
   oqlos.config  [1 funcs]
     get_settings  CC=1  out:0
   oqlos.core._action_motor2  [30 funcs]
@@ -7631,30 +7779,29 @@ MODULES:
     _set_lung_step  CC=4  out:3
     _set_pump_step  CC=4  out:3
     _set_valve_step  CC=4  out:4
-  oqlos.core._oql_adapter  [3 funcs]
-    is_flat_oql  CC=8  out:13
-    oql_doc_to_cql  CC=12  out:30
-    parse_flat_oql  CC=1  out:2
-  oqlos.core._sensor_evaluator  [2 funcs]
-    __init__  CC=3  out:2
-    collect_sensor_constraints  CC=10  out:5
-  oqlos.core._value_normalizers  [1 funcs]
-    coerce_float  CC=5  out:9
-  oqlos.core.base  [6 funcs]
+  oqlos.core._oql_adapter  [15 funcs]
+    register  CC=1  out:1
+    _cmd_to_actions  CC=2  out:3
+    _fmt_value  CC=2  out:1
+    _load_includes  CC=12  out:15
+    _lower_call  CC=6  out:10
+    _lower_max  CC=1  out:3
+    _lower_min  CC=1  out:3
+    _lower_set  CC=3  out:7
+    _parse_macro_line  CC=8  out:10
+    _resolve_include  CC=6  out:8
+  oqlos.core.base  [5 funcs]
     send_event  CC=4  out:7
     emit  CC=5  out:3
     output_yaml  CC=4  out:2
     __init__  CC=2  out:1
     all  CC=3  out:3
-    set  CC=4  out:2
-  oqlos.core.cql_parser  [9 funcs]
+  oqlos.core.cql_parser  [7 funcs]
     _handle_goal  CC=3  out:5
     _handle_scenario  CC=2  out:3
     _handle_step  CC=2  out:4
     _try_hierarchy  CC=7  out:6
     _try_top_level  CC=2  out:1
-    _collect_all_goals  CC=2  out:2
-    _validate_intervals  CC=6  out:1
     parse_cql  CC=2  out:6
     validate_cql  CC=5  out:5
   oqlos.core.executor  [6 funcs]
@@ -7681,8 +7828,9 @@ MODULES:
     motor2_max_steps_per_second  CC=2  out:3
     motor2_speed_for_duration  CC=1  out:9
     motor2_speed_raw  CC=1  out:5
-  oqlos.core.oql_parser  [31 funcs]
+  oqlos.core.oql_parser  [32 funcs]
     _check_unnamed_goals  CC=5  out:1
+    _compact_duration  CC=2  out:3
     _expand_repeat_block_lines  CC=8  out:16
     _expand_repeat_blocks  CC=2  out:2
     _handle_block_header  CC=8  out:12
@@ -7691,7 +7839,6 @@ MODULES:
     _handle_top_level_line  CC=6  out:16
     _line_indent  CC=2  out:5
     _parse_and_append_command  CC=5  out:9
-    _require  CC=2  out:2
   oqlos.core.oql_versioning  [3 funcs]
     extract_declared_version  CC=3  out:4
     first_meaningful_line  CC=4  out:4
@@ -7711,76 +7858,6 @@ MODULES:
     _eval_node  CC=2  out:5
     _eval_unary_op  CC=3  out:5
     safe_eval  CC=3  out:4
-  oqlos.hardware.config_paths  [1 funcs]
-    resolve_oqlos_config_path  CC=6  out:13
-  oqlos.hardware.health_status  [1 funcs]
-    health_status_is_ok  CC=11  out:9
-  oqlos.tools.hardware_diagnose.discovery  [1 funcs]
-    list_i2c_buses  CC=1  out:2
-  oqlos.tools.hardware_diagnose.doctor  [1 funcs]
-    build_doctor_report  CC=11  out:14
-  oqlos.tools.hardware_diagnose.doctor_common  [5 funcs]
-    add_issue  CC=2  out:1
-    collect_repairs  CC=5  out:7
-    modbus_adc_config  CC=1  out:1
-    modbus_config  CC=1  out:1
-    plugin_config  CC=3  out:4
-  oqlos.tools.hardware_diagnose.doctor_detection  [8 funcs]
-    _doctor  CC=1  out:0
-    detect_hardware  CC=4  out:13
-    firmware_hostname  CC=3  out:2
-    load_config_summary  CC=4  out:7
-    probe_modbus  CC=1  out:2
-    probe_modbus_adc  CC=1  out:2
-    run_modbus_probe  CC=5  out:9
-    usb_serial_only  CC=3  out:1
-  oqlos.tools.hardware_diagnose.doctor_firmware  [10 funcs]
-    adapter_health_status  CC=3  out:1
-    analyze_firmware_access  CC=7  out:11
-    check_firmware_adapters  CC=7  out:9
-    check_firmware_health_error  CC=3  out:2
-    check_firmware_mode  CC=3  out:4
-    check_firmware_serial_access  CC=11  out:13
-    firmware_adapter_status  CC=7  out:9
-    firmware_is_remote  CC=2  out:3
-    firmware_modbus_adc_health_ok  CC=4  out:6
-    firmware_modbus_health_ok  CC=10  out:16
-  oqlos.tools.hardware_diagnose.doctor_format  [4 funcs]
-    _format_doctor_applied_repairs  CC=4  out:5
-    _format_doctor_issues  CC=5  out:10
-    format_doctor  CC=6  out:21
-    format_modbus_status  CC=7  out:11
-  oqlos.tools.hardware_diagnose.doctor_modbus_analysis  [5 funcs]
-    analyze_modbus_adc_config  CC=12  out:22
-    analyze_modbus_config  CC=11  out:20
-    analyze_serial_port_owners  CC=13  out:19
-    expected_modbus_adc_params  CC=6  out:8
-    expected_modbus_params  CC=5  out:6
-  oqlos.tools.hardware_diagnose.doctor_repairs  [3 funcs]
-    apply_safe_fixes  CC=9  out:14
-    update_modbus_adc_config  CC=4  out:18
-    update_modbus_config  CC=2  out:17
-  oqlos.tools.hardware_diagnose.health  [7 funcs]
-    _format_health_value  CC=8  out:9
-    _is_health_ok  CC=5  out:6
-    _request_firmware_json  CC=8  out:9
-    check_firmware_health  CC=1  out:1
-    check_firmware_identify  CC=1  out:1
-    cmd_diagnose  CC=6  out:20
-    cmd_health  CC=5  out:10
-  oqlos.tools.hardware_diagnose.report  [1 funcs]
-    format_peripheral_table  CC=12  out:3
-  oqlos.tools.plugin_cli  [12 funcs]
-    _default_config_path  CC=1  out:2
-    _load_config_file  CC=4  out:16
-    cmd_capabilities  CC=2  out:6
-    cmd_connect  CC=4  out:6
-    cmd_disconnect  CC=2  out:4
-    cmd_execute  CC=3  out:7
-    cmd_health  CC=3  out:8
-    cmd_list  CC=3  out:9
-    cmd_peripherals  CC=8  out:16
-    cmd_reload  CC=4  out:10
   setup_hardware_and_run_oql  [6 funcs]
     detect_serial_devices  CC=12  out:7
     generate_env_content  CC=2  out:1
@@ -7798,35 +7875,6 @@ EDGES:
   setup_hardware_and_run_oql.main → setup_hardware_and_run_oql.run_oql_scenario
   frontend.src.hooks.useMapEditorSidebarAutoCollapse.useMapEditorSidebarAutoCollapse → frontend.src.hooks.useMapEditorSidebarAutoCollapse.applyAutoCollapse
   frontend.src.hooks.useUrlConfig.useUrlConfig → frontend.src.hooks.useUrlConfig.notifyParentChildReady
-  frontend.src.hooks.useParentEncoderNavigation.createEncoderController → frontend.src.hooks.useParentEncoderNavigation.removeHighlights
-  frontend.src.hooks.useParentEncoderNavigation.createEncoderController → frontend.src.hooks.useParentEncoderNavigation.getInteractiveItems
-  frontend.src.hooks.useParentEncoderNavigation.createEncoderController → frontend.src.hooks.useParentEncoderNavigation._applyScrollToItems
-  frontend.src.hooks.useParentEncoderNavigation.createEncoderController → frontend.src.hooks.useParentEncoderNavigation._focusEncoderItem
-  frontend.src.hooks.useParentEncoderNavigation.createEncoderController → frontend.src.hooks.useParentEncoderNavigation._tryCancelPostMessage
-  frontend.src.hooks.useParentEncoderNavigation.createEncoderController → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
-  frontend.src.hooks.useParentEncoderNavigation.parentEncoderActive → frontend.src.hooks.useParentEncoderNavigation.removeHighlights
-  frontend.src.hooks.useParentEncoderNavigation.parentEncoderActive → frontend.src.hooks.useParentEncoderNavigation.getInteractiveItems
-  frontend.src.hooks.useParentEncoderNavigation.parentEncoderActive → frontend.src.hooks.useParentEncoderNavigation._applyScrollToItems
-  frontend.src.hooks.useParentEncoderNavigation.parentEncoderActive → frontend.src.hooks.useParentEncoderNavigation._focusEncoderItem
-  frontend.src.hooks.useParentEncoderNavigation.parentEncoderActive → frontend.src.hooks.useParentEncoderNavigation._tryCancelPostMessage
-  frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand → frontend.src.hooks.useParentEncoderNavigation.removeHighlights
-  frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand → frontend.src.hooks.useParentEncoderNavigation.getInteractiveItems
-  frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand → frontend.src.hooks.useParentEncoderNavigation._applyScrollToItems
-  frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand → frontend.src.hooks.useParentEncoderNavigation._focusEncoderItem
-  frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand → frontend.src.hooks.useParentEncoderNavigation._tryCancelPostMessage
-  frontend.src.hooks.useParentEncoderNavigation.items → frontend.src.hooks.useParentEncoderNavigation.removeHighlights
-  frontend.src.hooks.useParentEncoderNavigation.items → frontend.src.hooks.useParentEncoderNavigation._applyScrollToItems
-  frontend.src.hooks.useParentEncoderNavigation.items → frontend.src.hooks.useParentEncoderNavigation._focusEncoderItem
-  frontend.src.hooks.useParentEncoderNavigation.onKeyDown → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
-  frontend.src.hooks.useParentEncoderNavigation.useParentEncoderNavigation → frontend.src.hooks.useParentEncoderNavigation.createEncoderController
-  frontend.src.hooks.useParentEncoderNavigation.useParentEncoderNavigation → frontend.src.hooks.useParentEncoderNavigation.parseParentEncoderEnvelope
-  frontend.src.hooks.useParentEncoderNavigation.useParentEncoderNavigation → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
-  frontend.src.hooks.useParentEncoderNavigation.controller → frontend.src.hooks.useParentEncoderNavigation.parseParentEncoderEnvelope
-  frontend.src.hooks.useParentEncoderNavigation.controller → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
-  frontend.src.hooks.useParentEncoderNavigation.onMessage → frontend.src.hooks.useParentEncoderNavigation.parseParentEncoderEnvelope
-  frontend.src.hooks.useParentEncoderNavigation.onMessage → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
-  frontend.src.hooks.useParentEncoderNavigation.onWheel → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
-  frontend.src.hooks.useParentEncoderNavigation.raw → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
   frontend.src.hooks.useRailHoverPreview.useRailHoverPreview → frontend.src.hooks.useRailHoverPreview.cancelPanelClose
   frontend.src.hooks.useRailHoverPreview.useRailHoverPreview → frontend.src.hooks.useRailHoverPreview.previewExpand
   frontend.src.hooks.useRailHoverPreview.useRailHoverPreview → frontend.src.hooks.useRailHoverPreview.cancelRailOpen
@@ -7836,10 +7884,39 @@ EDGES:
   frontend.src.hooks.useRailHoverPreview.panelEnter → frontend.src.hooks.useRailHoverPreview.cancelPanelClose
   frontend.src.hooks.useRailHoverPreview.panelLeave → frontend.src.hooks.useRailHoverPreview.cancelRailOpen
   frontend.src.pages.MapEditorObjectActionPanel._MotorRelativeParams → frontend.src.pages.MapEditorObjectActionPanel._motorArgLabel
+  frontend.src.pages.ScenarioFiles.isDirty → frontend.src.pages.ScenarioFiles.formatLogTime
+  frontend.src.pages.ScenarioFiles.appendLog → frontend.src.pages.ScenarioFiles.formatLogTime
+  frontend.src.pages.ScenarioFiles.cancelled → frontend.src.pages.ScenarioFiles.loadFiles
+  frontend.src.pages.ScenarioFiles.cancelled → frontend.src.pages.ScenarioFiles.selectFile
+  frontend.src.pages.ScenarioFiles.saveFile → frontend.src.pages.ScenarioFiles.appendLog
+  frontend.src.pages.ScenarioFiles.runScenario → frontend.src.pages.ScenarioFiles.appendLog
   frontend.src.pages.MapEditor.addObject → frontend.src.pages.MapEditor.applyMapMutation
   frontend.src.pages.MapEditor.name → frontend.src.pages.MapEditor.applyMapMutation
   frontend.src.pages.MapEditor.addParam → frontend.src.pages.MapEditor.applyMapMutation
   frontend.src.pages.MapEditor.editParamConversionField → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.editParamConversionAlgorithm → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.addAction → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.addFunc → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.renameKey → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.nextName → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.deleteKey → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.editJsonField → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.editObjectActionArg → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.editObjectActionBodyField → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.editMotorRuntimeConfig → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.clearServerHardwareEvents → frontend.src.pages.MapEditor.loadRecentHardwareEvents
+  frontend.src.pages.MapEditor.integrationMeta → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.updateIntegrationMeta → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.runAddForTab → frontend.src.pages.MapEditor.addObject
+  frontend.src.pages.MapEditor.runAddForTab → frontend.src.pages.MapEditor.addParam
+  frontend.src.pages.MapEditor.runAddForTab → frontend.src.pages.MapEditor.addAction
+  frontend.src.pages.MapEditor.runAddForTab → frontend.src.pages.MapEditor.addFunc
+  frontend.src.pages.HardwareRestart.loadPlan → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
+  frontend.src.pages.HardwareRestart.serialPort → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
+  frontend.src.pages.HardwareRestart.serialPort → frontend.src.pages.HardwareRestart.loadPlan
+  frontend.src.pages.HardwareRestart.startOqlosAndRefreshPlan → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
+  frontend.src.pages.HardwareRestart.startOqlosAndRefreshPlan → frontend.src.pages.HardwareRestart.loadPlan
+  frontend.src.pages.HardwareRestart.port → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
 ```
 
 ## API Stubs

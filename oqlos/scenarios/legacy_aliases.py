@@ -2,19 +2,26 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
-# ids / export filenames from 2026-04-30 DB snapshot → canonical repo files
-LEGACY_SCENARIO_ALIASES: dict[str, str] = {
-    "ts-flow": "test-przeplywu.oql",
-    "ts-kalibracja-czujnikow": "kalibracja-czujnikow.oql",
-    "ts-kaskadowy-cisnienie": "kaskadowy-pomiar-cisnienia-z-przelaczaniem-czujnikow.oql",
-    "ts-pelny-test-cisnieniowy": "pelny-test-cisnieniowy-z-przelaczaniem-zakresow.oql",
-    "ts-spadek-cisnienia": "test-spadku-cisnienia-automatu.oql",
-    "ts-wytrzymalosc-mech": "test-wytrzymalosci-mechanicznej.oql",
-    "ts-szczelnosc-maski": "test-szczelnosci-maski.oql",
-    "ts-temp-wilgotnosc": "test-temperatury-i-wilgotnosci.oql",
-}
+
+def _repo_scenarios_dir() -> Path:
+    return Path(__file__).resolve().parents[2] / "scenarios"
+
+
+def _load_legacy_aliases() -> dict[str, str]:
+    path = _repo_scenarios_dir() / "legacy_aliases.json"
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return {}
+    if not isinstance(data, dict):
+        return {}
+    return {str(key): str(value) for key, value in data.items()}
+
+
+LEGACY_SCENARIO_ALIASES: dict[str, str] = _load_legacy_aliases()
 
 
 def resolve_canonical_scenario_file(scenario_id: str, scenarios_dir: Path) -> Path | None:

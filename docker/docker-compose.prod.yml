@@ -11,7 +11,7 @@ services:
       - OQLOS_DB_PATH=/data/oqlos.db
     volumes:
       - oqlos-data:/data
-      - ../oqlos/scenarios:/scenarios:ro
+      - ../scenarios:/scenarios:ro
     ports:
       - "8200:8200"
 

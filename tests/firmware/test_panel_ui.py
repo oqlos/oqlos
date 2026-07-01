@@ -108,6 +108,18 @@ def test_panel_only_calls_known_endpoints(panel_source):
     assert "/api/v1/editor/files" in panel_source
 
 
+def test_panel_editor_and_results_use_equal_height_split(panel_source):
+    """Regression: editor card and results log should each take half of the main column."""
+    compressed = panel_source.replace(" ", "")
+    assert "body{margin:0;min-height:100dvh;height:100dvh;overflow:hidden;display:flex;flex-direction:column" in compressed
+    assert ".wrap{display:grid;" in compressed
+    assert "flex:1;min-height:0;overflow:hidden" in compressed
+    assert "col-split" in panel_source
+    assert "grid-template-rows:minmax(0,1fr)" in compressed
+    assert "card-fill" in panel_source
+    assert "flex:1;min-height:0;overflow:auto" in compressed
+
+
 def test_panel_loads_editor_file_scenarios(panel_source):
     """Regression: panel scenario dropdown must list on-disk .oql files like /editor."""
     assert "loadEditorFileScenarios" in panel_source

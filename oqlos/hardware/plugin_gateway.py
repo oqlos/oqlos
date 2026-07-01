@@ -58,6 +58,7 @@ class PluginHardwareGateway:
 
         self._init_done = False
         self._init_lock = asyncio.Lock()
+        self._runtime_loop: asyncio.AbstractEventLoop | None = None
         self.last_init_summary: dict[str, Any] = {}
         if self.mode == "real":
             self._load_hardware_schema(config_path)
@@ -271,6 +272,7 @@ class PluginHardwareGateway:
 
     async def ensure_initialized(self) -> None:
         """Await this to guarantee all plugins are connected."""
+        self._runtime_loop = asyncio.get_running_loop()
         if not self._init_done and self.mode == "real":
             await self._initialize_plugins()
 

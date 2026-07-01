@@ -74,7 +74,7 @@ oraz (opcjonalnie cały katalog):
 python3 - <<'PY'
 import os
 from oqlos.core.interpreter import CqlInterpreter
-root = 'oqlos/scenarios'
+root = 'scenarios'
 ok = fail = 0
 for d, _, fs in os.walk(root):
     for f in fs:

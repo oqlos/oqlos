@@ -6,6 +6,9 @@ Handles hardware action execution via plugin gateway or legacy firmware adapter.
 
 from __future__ import annotations
 
+import asyncio
+import inspect
+import threading
 from typing import Any, TYPE_CHECKING
 
 from oqlos.hardware.firmware_adapter import _PERIPHERAL_MAP
@@ -82,6 +85,47 @@ class FirmwareExecutor:
         return self._firmware
 
     @staticmethod
+    def _resolve_gateway_result(value: Any, gateway: Any = None) -> Any:
+        """Run async gateway calls from the synchronous interpreter path."""
+        if not inspect.isawaitable(value):
+            return value
+        preferred_loop = getattr(gateway, "_runtime_loop", None)
+        try:
+            running_loop = asyncio.get_running_loop()
+        except RuntimeError:
+            if preferred_loop is not None and preferred_loop.is_running():
+                return asyncio.run_coroutine_threadsafe(value, preferred_loop).result()
+            return asyncio.run(value)
+
+        if (
+            preferred_loop is not None
+            and preferred_loop.is_running()
+            and preferred_loop is not running_loop
+        ):
+            return asyncio.run_coroutine_threadsafe(value, preferred_loop).result()
+
+        result: dict[str, Any] = {}
+
+        def _runner() -> None:
+            try:
+                result["value"] = asyncio.run(value)
+            except BaseException as exc:  # pragma: no cover - re-raised below
+                result["error"] = exc
+
+        thread = threading.Thread(target=_runner, daemon=True)
+        thread.start()
+        thread.join()
+        if "error" in result:
+            raise result["error"]
+        return result.get("value")
+
+    @staticmethod
+    def _is_success(value: Any) -> bool:
+        if isinstance(value, dict):
+            return bool(value.get("success", value.get("ok", False)))
+        return bool(value)
+
+    @staticmethod
     def resolve_peripheral_id(target: str) -> str | None:
         """Resolve a known target name to a firmware peripheral id."""
         normalized = target.strip().lower().replace(" ", "-").replace("_", "-")
@@ -138,7 +182,11 @@ class FirmwareExecutor:
                     if method == "set" and self.normalizer
                     else 0.0
                 )
-                success = self._plugin_gateway.set_pump(power_pct)
+                result = self._resolve_gateway_result(
+                    self._plugin_gateway.set_pump(power_pct),
+                    self._plugin_gateway,
+                )
+                success = self._is_success(result)
                 if success:
                     self.vars.set(target, to_send)
                     self.out.step("    →", f"{act.target}.{act.method} {to_send}")
@@ -150,7 +198,11 @@ class FirmwareExecutor:
             elif method in {"open", "close"}:
                 # Valve command
                 value = (method == "open")
-                success = self._plugin_gateway.set_valve(target, value)
+                result = self._resolve_gateway_result(
+                    self._plugin_gateway.set_valve(target, value),
+                    self._plugin_gateway,
+                )
+                success = self._is_success(result)
                 if success:
                     self.vars.set(target, value)
                     self.out.step("    →", f"{act.target}.{act.method} {value}")
@@ -161,7 +213,11 @@ class FirmwareExecutor:
 
             elif method == "reciprocate":
                 # Lung command
-                success = self._plugin_gateway.set_lung()
+                result = self._resolve_gateway_result(
+                    self._plugin_gateway.set_lung(),
+                    self._plugin_gateway,
+                )
+                success = self._is_success(result)
                 if success:
                     self.out.step("    →", f"{act.target}.{act.method}")
                     return StepStatus.PASSED

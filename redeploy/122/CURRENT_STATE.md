@@ -1,6 +1,6 @@
 # OqlOS BoardNet — aktualny stan
 
-Ostatnio sprawdzono: 2026-06-30 13:58 Europe/Warsaw.
+Ostatnio sprawdzono: 2026-06-30 22:02 Europe/Warsaw.
 
 ## Rola
 
@@ -8,6 +8,7 @@ Ostatnio sprawdzono: 2026-06-30 13:58 Europe/Warsaw.
   - Hostname systemowy: `boardnet.local`.
   - Właściciel produkcyjnego OqlOS firmware i bezpośrednio podłączonego hardware.
   - OqlOS API/UI: `:8202`; DRI0050: `:8203`; Tic249: `:8205`; piRTC: `:8125`.
+  - Strefa czasu: `Europe/Warsaw`; piRTC DS3231 zsynchronizowany z czasem systemowym BoardNet.
 - **DisplayNet / RPi5**: `pi@192.168.188.109`
   - Hostname systemowy: `displaynet`.
   - Właściciel GUI/kiosku/orchestracji c2004.
@@ -33,6 +34,8 @@ HTTP do `:8202`.
 ssh pi@192.168.188.122 'hostname; tr -d "\0" </proc/device-tree/model; echo'
 ssh pi@192.168.188.122 'systemctl --user is-active oqlos-hardware-api hw-tic249 dri0050-motor-api mosquitto pirtc-api'
 curl -s http://192.168.188.122:8202/api/v1/hardware/health
+curl -s http://192.168.188.122:8125/api/status
+curl -s http://192.168.188.122:8202/api/v1/hardware/rtc/status
 curl -s http://192.168.188.122:8205/api/status
 curl -s http://192.168.188.122:8203/health
 ```
@@ -42,8 +45,18 @@ curl -s http://192.168.188.122:8203/health
 - `oqlos-hardware-api.service`, `hw-tic249.service`,
   `dri0050-motor-api.service`, `mosquitto.service` i `pirtc-api.service` są
   aktywne.
+- piRTC WatchDog HAT jest rozpoznany realnie na BoardNet:
+  - `/dev/i2c-1` i `/dev/i2c-2` są obecne,
+  - `http://192.168.188.122:8125/api/status` zwraca `rtc.available=true`,
+    `watchdog.available=true`, `mock=false`,
+  - `http://192.168.188.122:8202/api/v1/hardware/rtc/status` zwraca
+    `connected=true`, `ready=true`, `mock=false`,
+  - po reboot BoardNet `.122` piRTC wrócił jako `active` i nadal zwraca
+    `rtc.available=true`, `watchdog.available=true`, `mock=false`,
+  - ostatni sprawdzony czas DS3231: `2026-06-30 22:02 Europe/Warsaw`.
 - Po reboot BoardNet `.122` wszystkie powyższe usługi wróciły jako `active`,
-  a `systemctl --user --failed` był pusty.
+  porty `1883`, `8125`, `8202`, `8203`, `8205` słuchały, a
+  `systemctl --user --failed` był pusty.
 - USB widoczne na BoardNet:
   - Pololu Tic T249: `1ffb:00c9`
   - CH340 USB Single Serial: `/dev/ttyACM0`
@@ -75,6 +88,9 @@ curl -s http://192.168.188.122:8203/health
 - Po restarcie OqlOS: `modbus-io` jest healthy, Tic249 nadal
   `energized=false`.
 - Po reboot BoardNet: Tic249 nadal `energized=false`.
+- Po reboot DisplayNet `.109`: proxy c2004 nadal czyta BoardNet piRTC po
+  `http://192.168.188.122:8125`, a RTC w `/api/v3/hardware/identify` ma
+  `status=ok`, `mock=false`.
 
 Powiązany snapshot po stronie c2004:
 `/home/tom/github/maskservice/c2004/redeploy/pi109/CURRENT_STATE.md`.

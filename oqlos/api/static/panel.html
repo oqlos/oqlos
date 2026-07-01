@@ -15,8 +15,9 @@
     --text:#1a2029; --muted:#5a6b7b; --accent:#2563eb;
   }
   *{box-sizing:border-box}
-  body{margin:0;font:14px/1.45 system-ui,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text)}
-  header{display:flex;align-items:center;gap:14px;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:5}
+  html{height:100%}
+  body{margin:0;min-height:100dvh;height:100dvh;overflow:hidden;display:flex;flex-direction:column;font:14px/1.45 system-ui,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text)}
+  header{display:flex;align-items:center;gap:14px;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:5;flex:none}
   header h1{font-size:16px;margin:0;font-weight:600}
   .badge{padding:3px 9px;border-radius:999px;font-size:12px;font-weight:600;border:1px solid var(--border)}
   .badge.ok{background:rgba(34,197,94,.15);color:var(--ok);border-color:var(--ok)}
@@ -32,10 +33,14 @@
   button:hover{border-color:var(--accent)}
   button:active{transform:translateY(1px)}
   button.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
-  .wrap{display:grid;grid-template-columns:340px 1fr;gap:14px;padding:14px;max-width:1500px;margin:0 auto}
-  @media(max-width:900px){.wrap{grid-template-columns:1fr}}
-  .col{display:flex;flex-direction:column;gap:14px;min-width:0}
+  .wrap{display:grid;grid-template-columns:340px minmax(0,1fr);gap:14px;padding:14px;width:100%;max-width:none;margin:0 auto;flex:1;min-height:0;overflow:hidden;align-items:stretch}
+  @media(max-width:900px){body{height:auto;overflow:auto}.wrap{grid-template-columns:1fr;min-height:0;overflow:visible}}
+  .col{display:flex;flex-direction:column;gap:14px;min-width:0;min-height:0;overflow:auto}
+  .col-split{display:grid;grid-template-rows:minmax(0,1fr) minmax(0,1fr);gap:14px;min-height:0;overflow:hidden}
+  @media(max-width:900px){.col{overflow:visible}.col-split{grid-template-rows:auto;min-height:0;overflow:visible}}
   .card{background:var(--panel);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+  .card-fill{display:flex;flex-direction:column;min-height:0}
+  .card-fill .body{flex:1;display:flex;flex-direction:column;min-height:0}
   .card h2{font-size:13px;margin:0;padding:9px 12px;background:var(--panel2);border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
   .card .body{padding:11px 12px}
   .group{margin-bottom:12px}
@@ -47,10 +52,10 @@
   .act::after{content:"●";color:var(--warn);margin-left:5px;font-size:9px}
   select,textarea,input{font:inherit;color:var(--text);background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:7px}
   select{width:100%}
-  textarea{width:100%;min-height:230px;resize:vertical;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;tab-size:2}
-  .editor-wrap{display:flex;gap:10px;align-items:stretch}
-  .editor-wrap textarea{flex:1;min-width:0}
-  .snip-palette{width:190px;flex:none;max-height:248px;overflow:auto;border:1px solid var(--border);border-radius:7px;background:var(--bg);padding:8px}
+  textarea{width:100%;min-height:120px;resize:vertical;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;tab-size:2}
+  .editor-wrap{display:flex;gap:10px;align-items:stretch;flex:1;min-height:0}
+  .editor-wrap textarea{flex:1;min-width:0;min-height:0;height:100%;resize:none}
+  .snip-palette{width:190px;flex:none;overflow:auto;border:1px solid var(--border);border-radius:7px;background:var(--bg);padding:8px}
   .snip-palette .sg{margin-bottom:9px}
   .snip-palette .sgl{font-size:11px;font-weight:600;color:var(--muted);margin-bottom:5px;display:flex;align-items:center;gap:5px}
   .snip-palette .sgl .dot{width:8px;height:8px;border-radius:50%;flex:none}
@@ -64,7 +69,7 @@
   .toggle input:checked + label{background:var(--accent);color:#fff;font-weight:600}
   .wait-toggle{font-size:12px;display:inline-flex;align-items:center;gap:6px;color:var(--muted)}
   .wait-toggle input{width:auto}
-  #log{display:flex;flex-direction:column;gap:8px;max-height:60vh;overflow:auto}
+  #log{display:flex;flex-direction:column;gap:8px;flex:1;min-height:0;overflow:auto}
   .entry{border:1px solid var(--border);border-radius:8px;background:var(--panel2);padding:8px 10px}
   .entry .top{display:flex;align-items:center;gap:8px;font-size:12px}
   .entry .title{font-weight:600}
@@ -154,9 +159,9 @@
     </div>
   </div>
 
-  <!-- RIGHT: editor + results -->
-  <div class="col">
-    <div class="card">
+  <!-- RIGHT: editor + results (50% / 50% of main column height) -->
+  <div class="col col-split">
+    <div class="card card-fill">
       <h2>Edytor scenariusza (OQL)</h2>
       <div class="body">
         <div class="editor-wrap">
@@ -182,10 +187,10 @@
       </div>
     </div>
 
-    <div class="card">
+    <div class="card card-fill">
       <h2>Wyniki</h2>
       <div class="body">
-        <input id="logFilter" placeholder="filtruj wyniki (tytuł / komenda / odpowiedź)…" oninput="filterLog()" style="width:100%;margin-bottom:8px">
+        <input id="logFilter" placeholder="filtruj wyniki (tytuł / komenda / odpowiedź)…" oninput="filterLog()" style="width:100%;margin-bottom:8px;flex:none">
         <div id="log"><span class="muted">Brak wyników — uruchom komendę lub scenariusz.</span></div>
       </div>
     </div>

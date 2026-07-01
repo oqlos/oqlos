@@ -1,25 +1,17 @@
-# code2llm/evolution | 2096 func | 230f | 2026-06-30
+# code2llm/evolution | 2174 func | 248f | 2026-07-01
 # generated in 0.01s
 
-NEXT[5] (ranked by impact):
+NEXT[3] (ranked by impact):
   [1] !! SPLIT           frontend/src/i18n/dictionaries.js
-      WHY: 1981L, 0 classes, max CC=5
-      EFFORT: ~4h  IMPACT: 9905
+      WHY: 2053L, 0 classes, max CC=5
+      EFFORT: ~4h  IMPACT: 10265
 
   [2] !! SPLIT           frontend/src/pages/mapEditorDefaultMap.js
       WHY: 1763L, 0 classes, max CC=1
       EFFORT: ~4h  IMPACT: 1763
 
-  [3] !! SPLIT-FUNC      executeConfigureStep  CC=28  fan=13
-      WHY: CC=28 exceeds 15
-      EFFORT: ~1h  IMPACT: 364
-
-  [4] !  SPLIT-FUNC      runCurrentStep  CC=15  fan=18
-      WHY: CC=15 exceeds 15
-      EFFORT: ~1h  IMPACT: 270
-
-  [5] !! SPLIT           docs/README.md
-      WHY: 2119L, 0 classes, max CC=0
+  [3] !! SPLIT           docs/README.md
+      WHY: 2245L, 0 classes, max CC=0
       EFFORT: ~4h  IMPACT: 0
 
 
@@ -30,9 +22,9 @@ RISKS[3]:
 
 METRICS-TARGET:
   CC̄:          3.8 → ≤2.7
-  max-CC:      28 → ≤14
-  god-modules: 20 → 0
-  high-CC(≥15): 6 → ≤3
+  max-CC:      14 → ≤7
+  god-modules: 19 → 0
+  high-CC(≥15): 0 → ≤0
   hub-types:   0 → ≤0
 
 PATTERNS (language parser shared logic):
@@ -60,4 +52,4 @@ PATTERNS (language parser shared logic):
     - Standardized FunctionInfo/ClassInfo models
 
 HISTORY:
-  prev CC̄=3.9 → now CC̄=3.8
+  prev CC̄=3.8 → now CC̄=3.8

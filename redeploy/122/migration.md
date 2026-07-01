@@ -77,7 +77,16 @@ echo "PASS: katalogi boardnet utworzone"
 set -euo pipefail
 sudo loginctl enable-linger pi 2>/dev/null || true
 sudo usermod -aG dialout,plugdev,i2c,gpio pi 2>/dev/null || true
-echo "PASS: linger + grupy (dialout,plugdev,i2c,gpio) ustawione"
+sudo timedatectl set-timezone Europe/Warsaw 2>/dev/null || true
+if command -v raspi-config >/dev/null 2>&1; then
+  sudo raspi-config nonint do_i2c 0 >/dev/null 2>&1 || true
+fi
+CFG=/boot/firmware/config.txt
+[ -f "$CFG" ] || CFG=/boot/config.txt
+if [ -f "$CFG" ] && ! grep -Eq '^[[:space:]]*dtparam=i2c_arm=on([[:space:]]|$)' "$CFG"; then
+  printf '\n# OqlOS BoardNet piRTC / Waveshare DS3231\n%s\n' 'dtparam=i2c_arm=on' | sudo tee -a "$CFG" >/dev/null
+fi
+echo "PASS: linger + grupy (dialout,plugdev,i2c,gpio), timezone Europe/Warsaw; I2C wlaczone w config.txt"
 ```
 
 ```bash markpact:ref install-mosquitto
@@ -337,6 +346,22 @@ set -euo pipefail
 mkdir -p /home/pi/.config/systemd/user /home/pi/maskservice/logs
 PIRTC_DIR=/home/pi/maskservice/pirtc
 [ -f "$PIRTC_DIR/pyproject.toml" ] || { echo "FAIL: brak $PIRTC_DIR — uruchom sync_pirtc"; exit 1; }
+[ -d "$PIRTC_DIR/RTC/python/lib/waveshare_DS3231" ] || { echo "FAIL: brak sterownika $PIRTC_DIR/RTC/python/lib/waveshare_DS3231 — uruchom sync_pirtc_rtc_lib"; exit 1; }
+if ! command -v i2cdetect >/dev/null 2>&1; then
+  sudo apt-get update -qq
+  sudo apt-get install -y i2c-tools
+fi
+if ! compgen -G '/dev/i2c-*' >/dev/null; then
+  if command -v raspi-config >/dev/null 2>&1; then
+    sudo raspi-config nonint do_i2c 0 >/dev/null 2>&1 || true
+  fi
+  CFG=/boot/firmware/config.txt
+  [ -f "$CFG" ] || CFG=/boot/config.txt
+  if [ -f "$CFG" ] && ! grep -Eq '^[[:space:]]*dtparam=i2c_arm=on([[:space:]]|$)' "$CFG"; then
+    printf '\n# OqlOS BoardNet piRTC / Waveshare DS3231\n%s\n' 'dtparam=i2c_arm=on' | sudo tee -a "$CFG" >/dev/null
+  fi
+  echo "WARN: /dev/i2c-* nie istnieje — I2C wlaczone w config.txt, wymagany reboot BoardNet"
+fi
 cd "$PIRTC_DIR"
 python3 -m venv .venv
 .venv/bin/pip install -q --upgrade pip
@@ -351,6 +376,7 @@ After=network-online.target
 Type=simple
 WorkingDirectory=/home/pi/maskservice/pirtc
 Environment=PATH=/home/pi/maskservice/pirtc/.venv/bin:/usr/local/bin:/usr/bin:/bin
+Environment=PYTHONPATH=/home/pi/maskservice/pirtc:/home/pi/maskservice/pirtc/RTC/python/lib
 Environment=API_HOST=0.0.0.0
 Environment=API_PORT=8125
 Environment=RTC_MOCK=false
@@ -371,7 +397,8 @@ WantedBy=default.target
 UNIT
 
 systemctl --user daemon-reload
-systemctl --user enable --now pirtc-api.service
+systemctl --user enable pirtc-api.service
+systemctl --user restart pirtc-api.service
 sleep 3
 if ! systemctl --user is-active pirtc-api.service >/dev/null 2>&1; then
   if [ "${PIHW_ALLOW_MISSING_HARDWARE:-1}" = "1" ]; then
@@ -382,7 +409,22 @@ if ! systemctl --user is-active pirtc-api.service >/dev/null 2>&1; then
   exit 1
 fi
 STATUS=$(curl -sf http://127.0.0.1:8125/api/status 2>/dev/null || true)
-if echo "$STATUS" | grep -Eq '"available"[[:space:]]*:[[:space:]]*true' && echo "$STATUS" | grep -Eq '"mock"[[:space:]]*:[[:space:]]*false'; then
+if python3 - "$STATUS" <<'PY'
+import json
+import sys
+try:
+    data = json.loads(sys.argv[1])
+except Exception:
+    raise SystemExit(1)
+rtc = data.get("rtc", {}) if isinstance(data, dict) else {}
+raise SystemExit(0 if rtc.get("available") is True and rtc.get("mock") is False else 1)
+PY
+then
+  if curl -sf -X POST http://127.0.0.1:8125/api/rtc/sync-from-system >/dev/null 2>&1; then
+    STATUS=$(curl -sf http://127.0.0.1:8125/api/status 2>/dev/null || true)
+  else
+    echo "WARN: piRTC dostępny, ale sync-from-system nie powiódł się"
+  fi
   echo "PASS: piRTC sidecar :8125 — RTC HAT dostępny (nie mock)"
 elif [ "${PIHW_ALLOW_MISSING_HARDWARE:-1}" = "1" ]; then
   echo "WARN: piRTC bez działającego RTC — PIHW_ALLOW_MISSING_HARDWARE=1"
@@ -842,7 +884,8 @@ if _curl_get http://127.0.0.1:8125/api/status "$TMPDIR/pirtc-status.json" 6; the
   if python3 - "$TMPDIR/pirtc-status.json" <<'PY'
 import json, sys
 data = json.load(open(sys.argv[1], encoding="utf-8"))
-raise SystemExit(0 if data.get("available") is True and data.get("mock") is False else 1)
+rtc = data.get("rtc", {}) if isinstance(data, dict) else {}
+raise SystemExit(0 if rtc.get("available") is True and rtc.get("mock") is False else 1)
 PY
   then
     _pass "piRTC :8125 available=true mock=false"
@@ -1174,7 +1217,14 @@ extra_steps:
     dst: ~/maskservice/pirtc/
     excludes: [.git/, .venv/, venv/, __pycache__/]
 
-  - id: assert_oqlos_checksum
+  - id: sync_pirtc_rtc_lib
+    action: rsync
+    description: "Sync sterownika Waveshare DS3231 dla piRTC (pirtc/.gitignore ignoruje lib/)"
+    src: /home/tom/github/maskservice/pirtc/RTC/python/lib/
+    dst: ~/maskservice/pirtc/RTC/python/lib/
+    excludes: [__pycache__/]
+
+- id: assert_oqlos_checksum
     action: inline_script
     description: "Weryfikacja sumą kontrolną wdrożonego pakietu oqlos/ (sha256 vs manifest źródła)"
     command_ref: assert-oqlos-checksum

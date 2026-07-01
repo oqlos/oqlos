@@ -1,5 +1,5 @@
 schema_version: '1.0'
-generated_at: '2026-06-30T19:11:10.183501+00:00'
+generated_at: '2026-06-30T19:56:33.645690+00:00'
 spec:
   path: redeploy/122/migration.md
   name: oqlos boardnet deploy
@@ -11,11 +11,6 @@ plan:
   risk: low
   estimated_downtime: rolling (no downtime)
   steps:
-  - id: sync_project_tree
-    action: rsync
-    description: Sync full project tree to remote_dir (respect .gitignore/.redeployignore)
-    has_command_ref: false
-    insert_before: null
   - id: mkdir_hw_remote
     action: inline_script
     description: Utwórz katalogi na boardnet
@@ -60,6 +55,12 @@ plan:
   - id: sync_pirtc
     action: rsync
     description: Sync piRTC sidecar
+    has_command_ref: false
+    insert_before: null
+  - id: sync_pirtc_rtc_lib
+    action: rsync
+    description: Sync sterownika Waveshare DS3231 dla piRTC (pirtc/.gitignore ignoruje
+      lib/)
     has_command_ref: false
     insert_before: null
   - id: assert_oqlos_checksum
@@ -189,6 +190,12 @@ checks:
     steps:
     - sync_pirtc
   - kind: src
+    path: /home/tom/github/maskservice/pirtc/RTC/python/lib/
+    resolved: /home/tom/github/maskservice/pirtc/RTC/python/lib
+    exists: true
+    steps:
+    - sync_pirtc_rtc_lib
+  - kind: src
     path: /home/tom/github/maskservice/rpi-motor-DRI0050/
     resolved: /home/tom/github/maskservice/rpi-motor-DRI0050
     exists: true
@@ -219,9 +226,9 @@ checks:
     steps:
     - sync_pihw_config
   remote:
-    enabled: true
+    enabled: false
     host: pi@boardnet.local
-    reachable: true
+    reachable: null
     checks: []
 blockers: []
 summary:

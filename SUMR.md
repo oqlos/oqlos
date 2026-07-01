@@ -632,7 +632,7 @@ class Settings:  # Application settings loaded from environment variables and .
 
 ## Call Graph
 
-*434 nodes · 500 edges · 59 modules · CC̄=3.8*
+*452 nodes · 500 edges · 51 modules · CC̄=3.8*
 
 ### Hubs (by degree)
 
@@ -640,17 +640,17 @@ class Settings:  # Application settings loaded from environment variables and .
 |----------|----|----|-----|-------|
 | `print` *(in examples.hardware.doctor-workflow)* | 0 | 225 | 0 | **225** |
 | `dict` *(in frontend.src.i18n.I18nProvider)* | 8 | 44 | 3 | **47** |
-| `list` *(in frontend.src.utils.hardware-wizard-steps)* | 2 | 41 | 0 | **41** |
+| `list` *(in frontend.src.pages.ScenarioFiles)* | 1 | 41 | 0 | **41** |
 | `oql_doc_to_cql` *(in oqlos.core._oql_adapter)* | 12 ⚠ | 2 | 30 | **32** |
 | `normalize_motor2_runtime_config` *(in oqlos.core.motor2_runtime)* | 12 ⚠ | 1 | 29 | **30** |
 | `_safe_resolve` *(in oqlos.core.executor)* | 14 ⚠ | 7 | 21 | **28** |
 | `run_oql_scenario` *(in setup_hardware_and_run_oql)* | 8 | 1 | 24 | **25** |
-| `parse_oql` *(in oqlos.core.oql_parser)* | 14 ⚠ | 3 | 21 | **24** |
+| `applyMapMutation` *(in frontend.src.pages.MapEditor)* | 2 | 16 | 8 | **24** |
 
 ```toon markpact:analysis path=project/calls.toon.yaml
 # code2llm call graph | /home/tom/github/oqlos/oqlos
 # generated in 0.29s
-# nodes: 434 | edges: 500 | modules: 59
+# nodes: 452 | edges: 500 | modules: 51
 # CC̄=3.8
 
 HUBS[20]:
@@ -658,8 +658,8 @@ HUBS[20]:
     CC=0  in:225  out:0  total:225
   frontend.src.i18n.I18nProvider.dict
     CC=8  in:44  out:3  total:47
-  frontend.src.utils.hardware-wizard-steps.list
-    CC=2  in:41  out:0  total:41
+  frontend.src.pages.ScenarioFiles.list
+    CC=1  in:41  out:0  total:41
   oqlos.core._oql_adapter.oql_doc_to_cql
     CC=12  in:2  out:30  total:32
   oqlos.core.motor2_runtime.normalize_motor2_runtime_config
@@ -668,32 +668,32 @@ HUBS[20]:
     CC=14  in:7  out:21  total:28
   setup_hardware_and_run_oql.run_oql_scenario
     CC=8  in:1  out:24  total:25
-  oqlos.core.oql_parser.parse_oql
-    CC=14  in:3  out:21  total:24
   frontend.src.pages.MapEditor.applyMapMutation
     CC=2  in:16  out:8  total:24
   oqlos.core.parser.parse_dsl_to_goal_with_issues
     CC=13  in:3  out:21  total:24
-  oqlos.tools.hardware_diagnose.doctor_format.format_doctor
-    CC=6  in:2  out:21  total:23
-  oqlos.core._action_motor2._motor2_build_plan
-    CC=12  in:1  out:22  total:23
-  oqlos.core._line_parsers._parse_if_condition
-    CC=9  in:1  out:22  total:23
-  oqlos.tools.hardware_diagnose.doctor_modbus_analysis.analyze_modbus_adc_config
-    CC=12  in:1  out:22  total:23
+  oqlos.core.oql_parser.parse_oql
+    CC=14  in:3  out:21  total:24
   oqlos.core._action_motor2._try_exec_motor2_set
     CC=13  in:1  out:22  total:23
-  oqlos.tools.hardware_diagnose.health.cmd_diagnose
-    CC=6  in:2  out:20  total:22
-  oqlos.tools.hardware_diagnose.doctor_modbus_analysis.analyze_modbus_config
-    CC=11  in:1  out:20  total:21
+  oqlos.core._line_parsers._parse_if_condition
+    CC=9  in:1  out:22  total:23
+  oqlos.core._action_motor2._motor2_build_plan
+    CC=12  in:1  out:22  total:23
   oqlos.core._cql_tree_builder._parse_goal_line
     CC=12  in:1  out:20  total:21
-  oqlos.hardware.config_paths.resolve_oqlos_config_path
-    CC=6  in:8  out:13  total:21
-  oqlos.core.base.VariableStore.set
-    CC=4  in:19  out:2  total:21
+  oqlos.core._func_resolver._collect_function_definitions
+    CC=13  in:1  out:19  total:20
+  frontend.src.api.wsClient.WsCqrsClient.super
+    CC=1  in:18  out:1  total:19
+  oqlos.core._interpreter_actions.exec_action_shell
+    CC=13  in:0  out:19  total:19
+  oqlos.core.oql_parser.tokenize
+    CC=13  in:5  out:14  total:19
+  oqlos.core._line_parsers._parse_action_line
+    CC=10  in:0  out:18  total:18
+  frontend.src.utils.useSelectionCollapsePanel.useSelectionCollapsePanel
+    CC=14  in:0  out:18  total:18
 
 MODULES:
   examples.hardware.doctor-workflow  [1 funcs]
@@ -708,10 +708,34 @@ MODULES:
     keys  CC=2  out:0
     logHardwareApiEvent  CC=6  out:4
     summarizeHardwareApiBody  CC=11  out:5
+  frontend.src.api.hardware-diagnostic-failure  [9 funcs]
+    _connectionError  CC=3  out:0
+    _nestedOkMessage  CC=4  out:2
+    _pickNestedObjectError  CC=8  out:4
+    extractDiagnosticFailure  CC=13  out:6
+    failureFromNestedOk  CC=10  out:4
+    failureFromOkFalsePayload  CC=14  out:6
+    failureFromSuccessFalse  CC=14  out:3
+    firstActionableError  CC=3  out:4
+    resultData  CC=4  out:0
   frontend.src.api.hardware-tic249-status  [3 funcs]
     isIdempotentDiagnosticSuccess  CC=3  out:2
     isIdempotentTic249Deenergized  CC=12  out:2
     tic249ResultStatus  CC=8  out:2
+  frontend.src.api.hardwareApi  [13 funcs]
+    _throwHttpError  CC=1  out:2
+    _withCtx  CC=2  out:0
+    bodySummary  CC=2  out:2
+    durationMs  CC=7  out:6
+    get  CC=1  out:1
+    mode  CC=1  out:1
+    normalized  CC=1  out:1
+    post  CC=1  out:1
+    put  CC=1  out:1
+    request  CC=14  out:14
+  frontend.src.api.scenarioFilesApi  [2 funcs]
+    fetchScenarioFilesList  CC=2  out:4
+    filterListableFiles  CC=3  out:2
   frontend.src.api.wsClient  [15 funcs]
     _handleMessage  CC=13  out:10
     _request  CC=3  out:12
@@ -726,17 +750,6 @@ MODULES:
   frontend.src.hooks.useMapEditorSidebarAutoCollapse  [2 funcs]
     applyAutoCollapse  CC=9  out:4
     useMapEditorSidebarAutoCollapse  CC=9  out:11
-  frontend.src.hooks.useParentEncoderNavigation  [17 funcs]
-    _applyScrollToItems  CC=4  out:0
-    _focusEncoderItem  CC=1  out:3
-    _tryCancelPostMessage  CC=2  out:1
-    all  CC=6  out:2
-    controller  CC=3  out:2
-    createEncoderController  CC=17  out:9
-    getInteractiveItems  CC=6  out:4
-    handleEncoderCommand  CC=11  out:6
-    items  CC=4  out:3
-    onKeyDown  CC=7  out:3
   frontend.src.hooks.useRailHoverPreview  [8 funcs]
     cancelPanelClose  CC=2  out:2
     cancelRailOpen  CC=2  out:2
@@ -755,10 +768,10 @@ MODULES:
     getInitialLang  CC=5  out:1
     t  CC=8  out:2
     val  CC=2  out:2
-  frontend.src.pages.HardwareDemo  [15 funcs]
+  frontend.src.pages.HardwareDemo  [13 funcs]
     Ctx  CC=2  out:2
     appendLog  CC=1  out:3
-    cancelled  CC=16  out:10
+    controller  CC=5  out:9
     ensureAudioCtx  CC=4  out:4
     fallbackDevice  CC=2  out:5
     fb  CC=2  out:5
@@ -766,6 +779,17 @@ MODULES:
     onNoteClick  CC=4  out:9
     playMelody  CC=9  out:11
     playNote  CC=5  out:7
+  frontend.src.pages.HardwareRestart  [20 funcs]
+    canRunCurrentStep  CC=1  out:4
+    confirmErrorKey  CC=1  out:4
+    confirmLabelKey  CC=1  out:4
+    currentStep  CC=1  out:4
+    isConfigureStep  CC=1  out:4
+    isSeparateAdapters  CC=1  out:4
+    loadPlan  CC=4  out:10
+    log  CC=1  out:3
+    port  CC=6  out:9
+    refreshRuntimeStatus  CC=3  out:3
   frontend.src.pages.MapEditor  [21 funcs]
     addAction  CC=2  out:6
     addFunc  CC=2  out:6
@@ -780,9 +804,30 @@ MODULES:
   frontend.src.pages.MapEditorObjectActionPanel  [2 funcs]
     _MotorRelativeParams  CC=1  out:3
     _motorArgLabel  CC=6  out:0
+  frontend.src.pages.ScenarioFiles  [9 funcs]
+    appendLog  CC=1  out:4
+    cancelled  CC=4  out:4
+    formatLogTime  CC=1  out:2
+    isDirty  CC=1  out:4
+    list  CC=1  out:0
+    loadFiles  CC=2  out:5
+    runScenario  CC=5  out:7
+    saveFile  CC=4  out:7
+    selectFile  CC=3  out:8
   frontend.src.utils.collapse-toggle-bridge  [2 funcs]
     isInIframe  CC=4  out:0
     postToParent  CC=4  out:8
+  frontend.src.utils.encoder-navigation  [13 funcs]
+    all  CC=6  out:2
+    applyScrollToItems  CC=4  out:0
+    createEncoderController  CC=11  out:7
+    focusEncoderItem  CC=1  out:3
+    getInteractiveItems  CC=6  out:4
+    handleCancel  CC=1  out:2
+    handleClick  CC=3  out:2
+    handleEncoderCommand  CC=5  out:4
+    handleScroll  CC=4  out:4
+    handleSetActive  CC=3  out:1
   frontend.src.utils.hardware-activity-log  [4 funcs]
     createHardwareActivityLogEntry  CC=1  out:2
     loggedRef  CC=2  out:4
@@ -791,12 +836,9 @@ MODULES:
   frontend.src.utils.hardware-api-retry  [2 funcs]
     attempt  CC=14  out:9
     sleep  CC=1  out:2
-  frontend.src.utils.hardware-restart-wizard-steps  [1 funcs]
-    probe  CC=1  out:2
-  frontend.src.utils.hardware-wizard-steps  [4 funcs]
+  frontend.src.utils.hardware-wizard-steps  [3 funcs]
     _filterCandidatesByRole  CC=6  out:3
     _findBestCandidate  CC=6  out:3
-    list  CC=2  out:0
     selectWizardProbeCandidate  CC=11  out:9
   frontend.src.utils.hardwareEventStream  [14 funcs]
     buildHardwareEventsWsUrl  CC=10  out:3
@@ -809,6 +851,25 @@ MODULES:
     payload  CC=3  out:1
     peripheralId  CC=3  out:1
     resolveEventStatus  CC=6  out:0
+  frontend.src.utils.mapEditorFuncHardwareSummary  [7 funcs]
+    _asMap  CC=3  out:0
+    apiBindingHint  CC=12  out:0
+    objectMap  CC=3  out:2
+    resolveNamedActionHardwareHint  CC=7  out:4
+    resolveObjectActionHardwareHint  CC=6  out:2
+    summarizeFuncToHardware  CC=11  out:7
+    uniqueHints  CC=5  out:5
+  frontend.src.utils.mapEditorIntegrationMeta  [10 funcs]
+    _resolveHardwareAddress  CC=5  out:0
+    _setOrDelete  CC=2  out:0
+    firstBindingFromObjectMapping  CC=6  out:1
+    nextValue  CC=2  out:2
+    readIntegrationMeta  CC=11  out:2
+    setApiEndpointField  CC=2  out:0
+    setApiServiceField  CC=2  out:0
+    setHardwareAddressField  CC=8  out:0
+    setMetaField  CC=9  out:6
+    source  CC=2  out:1
   frontend.src.utils.mapEditorMapShape  [6 funcs]
     cloneValue  CC=1  out:2
     ensureMapShape  CC=7  out:1
@@ -845,6 +906,15 @@ MODULES:
     mergeParentSearchIntoChildUrl  CC=9  out:11
     nextHref  CC=1  out:1
     parentSearch  CC=4  out:3
+  frontend.src.utils.useSelectionCollapsePanel  [8 funcs]
+    _makeCollapseToggleHandler  CC=8  out:3
+    cancelAutoCollapse  CC=2  out:2
+    collapsed  CC=2  out:6
+    expand  CC=1  out:5
+    onMessage  CC=1  out:1
+    scheduleCollapse  CC=2  out:6
+    toggleCollapsed  CC=2  out:5
+    useSelectionCollapsePanel  CC=14  out:18
   oqlos.config  [1 funcs]
     get_settings  CC=1  out:0
   oqlos.core._action_motor2  [30 funcs]
@@ -918,30 +988,29 @@ MODULES:
     _set_lung_step  CC=4  out:3
     _set_pump_step  CC=4  out:3
     _set_valve_step  CC=4  out:4
-  oqlos.core._oql_adapter  [3 funcs]
-    is_flat_oql  CC=8  out:13
-    oql_doc_to_cql  CC=12  out:30
-    parse_flat_oql  CC=1  out:2
-  oqlos.core._sensor_evaluator  [2 funcs]
-    __init__  CC=3  out:2
-    collect_sensor_constraints  CC=10  out:5
-  oqlos.core._value_normalizers  [1 funcs]
-    coerce_float  CC=5  out:9
-  oqlos.core.base  [6 funcs]
+  oqlos.core._oql_adapter  [15 funcs]
+    register  CC=1  out:1
+    _cmd_to_actions  CC=2  out:3
+    _fmt_value  CC=2  out:1
+    _load_includes  CC=12  out:15
+    _lower_call  CC=6  out:10
+    _lower_max  CC=1  out:3
+    _lower_min  CC=1  out:3
+    _lower_set  CC=3  out:7
+    _parse_macro_line  CC=8  out:10
+    _resolve_include  CC=6  out:8
+  oqlos.core.base  [5 funcs]
     send_event  CC=4  out:7
     emit  CC=5  out:3
     output_yaml  CC=4  out:2
     __init__  CC=2  out:1
     all  CC=3  out:3
-    set  CC=4  out:2
-  oqlos.core.cql_parser  [9 funcs]
+  oqlos.core.cql_parser  [7 funcs]
     _handle_goal  CC=3  out:5
     _handle_scenario  CC=2  out:3
     _handle_step  CC=2  out:4
     _try_hierarchy  CC=7  out:6
     _try_top_level  CC=2  out:1
-    _collect_all_goals  CC=2  out:2
-    _validate_intervals  CC=6  out:1
     parse_cql  CC=2  out:6
     validate_cql  CC=5  out:5
   oqlos.core.executor  [6 funcs]
@@ -968,8 +1037,9 @@ MODULES:
     motor2_max_steps_per_second  CC=2  out:3
     motor2_speed_for_duration  CC=1  out:9
     motor2_speed_raw  CC=1  out:5
-  oqlos.core.oql_parser  [31 funcs]
+  oqlos.core.oql_parser  [32 funcs]
     _check_unnamed_goals  CC=5  out:1
+    _compact_duration  CC=2  out:3
     _expand_repeat_block_lines  CC=8  out:16
     _expand_repeat_blocks  CC=2  out:2
     _handle_block_header  CC=8  out:12
@@ -978,7 +1048,6 @@ MODULES:
     _handle_top_level_line  CC=6  out:16
     _line_indent  CC=2  out:5
     _parse_and_append_command  CC=5  out:9
-    _require  CC=2  out:2
   oqlos.core.oql_versioning  [3 funcs]
     extract_declared_version  CC=3  out:4
     first_meaningful_line  CC=4  out:4
@@ -998,76 +1067,6 @@ MODULES:
     _eval_node  CC=2  out:5
     _eval_unary_op  CC=3  out:5
     safe_eval  CC=3  out:4
-  oqlos.hardware.config_paths  [1 funcs]
-    resolve_oqlos_config_path  CC=6  out:13
-  oqlos.hardware.health_status  [1 funcs]
-    health_status_is_ok  CC=11  out:9
-  oqlos.tools.hardware_diagnose.discovery  [1 funcs]
-    list_i2c_buses  CC=1  out:2
-  oqlos.tools.hardware_diagnose.doctor  [1 funcs]
-    build_doctor_report  CC=11  out:14
-  oqlos.tools.hardware_diagnose.doctor_common  [5 funcs]
-    add_issue  CC=2  out:1
-    collect_repairs  CC=5  out:7
-    modbus_adc_config  CC=1  out:1
-    modbus_config  CC=1  out:1
-    plugin_config  CC=3  out:4
-  oqlos.tools.hardware_diagnose.doctor_detection  [8 funcs]
-    _doctor  CC=1  out:0
-    detect_hardware  CC=4  out:13
-    firmware_hostname  CC=3  out:2
-    load_config_summary  CC=4  out:7
-    probe_modbus  CC=1  out:2
-    probe_modbus_adc  CC=1  out:2
-    run_modbus_probe  CC=5  out:9
-    usb_serial_only  CC=3  out:1
-  oqlos.tools.hardware_diagnose.doctor_firmware  [10 funcs]
-    adapter_health_status  CC=3  out:1
-    analyze_firmware_access  CC=7  out:11
-    check_firmware_adapters  CC=7  out:9
-    check_firmware_health_error  CC=3  out:2
-    check_firmware_mode  CC=3  out:4
-    check_firmware_serial_access  CC=11  out:13
-    firmware_adapter_status  CC=7  out:9
-    firmware_is_remote  CC=2  out:3
-    firmware_modbus_adc_health_ok  CC=4  out:6
-    firmware_modbus_health_ok  CC=10  out:16
-  oqlos.tools.hardware_diagnose.doctor_format  [4 funcs]
-    _format_doctor_applied_repairs  CC=4  out:5
-    _format_doctor_issues  CC=5  out:10
-    format_doctor  CC=6  out:21
-    format_modbus_status  CC=7  out:11
-  oqlos.tools.hardware_diagnose.doctor_modbus_analysis  [5 funcs]
-    analyze_modbus_adc_config  CC=12  out:22
-    analyze_modbus_config  CC=11  out:20
-    analyze_serial_port_owners  CC=13  out:19
-    expected_modbus_adc_params  CC=6  out:8
-    expected_modbus_params  CC=5  out:6
-  oqlos.tools.hardware_diagnose.doctor_repairs  [3 funcs]
-    apply_safe_fixes  CC=9  out:14
-    update_modbus_adc_config  CC=4  out:18
-    update_modbus_config  CC=2  out:17
-  oqlos.tools.hardware_diagnose.health  [7 funcs]
-    _format_health_value  CC=8  out:9
-    _is_health_ok  CC=5  out:6
-    _request_firmware_json  CC=8  out:9
-    check_firmware_health  CC=1  out:1
-    check_firmware_identify  CC=1  out:1
-    cmd_diagnose  CC=6  out:20
-    cmd_health  CC=5  out:10
-  oqlos.tools.hardware_diagnose.report  [1 funcs]
-    format_peripheral_table  CC=12  out:3
-  oqlos.tools.plugin_cli  [12 funcs]
-    _default_config_path  CC=1  out:2
-    _load_config_file  CC=4  out:16
-    cmd_capabilities  CC=2  out:6
-    cmd_connect  CC=4  out:6
-    cmd_disconnect  CC=2  out:4
-    cmd_execute  CC=3  out:7
-    cmd_health  CC=3  out:8
-    cmd_list  CC=3  out:9
-    cmd_peripherals  CC=8  out:16
-    cmd_reload  CC=4  out:10
   setup_hardware_and_run_oql  [6 funcs]
     detect_serial_devices  CC=12  out:7
     generate_env_content  CC=2  out:1
@@ -1085,35 +1084,6 @@ EDGES:
   setup_hardware_and_run_oql.main → setup_hardware_and_run_oql.run_oql_scenario
   frontend.src.hooks.useMapEditorSidebarAutoCollapse.useMapEditorSidebarAutoCollapse → frontend.src.hooks.useMapEditorSidebarAutoCollapse.applyAutoCollapse
   frontend.src.hooks.useUrlConfig.useUrlConfig → frontend.src.hooks.useUrlConfig.notifyParentChildReady
-  frontend.src.hooks.useParentEncoderNavigation.createEncoderController → frontend.src.hooks.useParentEncoderNavigation.removeHighlights
-  frontend.src.hooks.useParentEncoderNavigation.createEncoderController → frontend.src.hooks.useParentEncoderNavigation.getInteractiveItems
-  frontend.src.hooks.useParentEncoderNavigation.createEncoderController → frontend.src.hooks.useParentEncoderNavigation._applyScrollToItems
-  frontend.src.hooks.useParentEncoderNavigation.createEncoderController → frontend.src.hooks.useParentEncoderNavigation._focusEncoderItem
-  frontend.src.hooks.useParentEncoderNavigation.createEncoderController → frontend.src.hooks.useParentEncoderNavigation._tryCancelPostMessage
-  frontend.src.hooks.useParentEncoderNavigation.createEncoderController → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
-  frontend.src.hooks.useParentEncoderNavigation.parentEncoderActive → frontend.src.hooks.useParentEncoderNavigation.removeHighlights
-  frontend.src.hooks.useParentEncoderNavigation.parentEncoderActive → frontend.src.hooks.useParentEncoderNavigation.getInteractiveItems
-  frontend.src.hooks.useParentEncoderNavigation.parentEncoderActive → frontend.src.hooks.useParentEncoderNavigation._applyScrollToItems
-  frontend.src.hooks.useParentEncoderNavigation.parentEncoderActive → frontend.src.hooks.useParentEncoderNavigation._focusEncoderItem
-  frontend.src.hooks.useParentEncoderNavigation.parentEncoderActive → frontend.src.hooks.useParentEncoderNavigation._tryCancelPostMessage
-  frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand → frontend.src.hooks.useParentEncoderNavigation.removeHighlights
-  frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand → frontend.src.hooks.useParentEncoderNavigation.getInteractiveItems
-  frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand → frontend.src.hooks.useParentEncoderNavigation._applyScrollToItems
-  frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand → frontend.src.hooks.useParentEncoderNavigation._focusEncoderItem
-  frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand → frontend.src.hooks.useParentEncoderNavigation._tryCancelPostMessage
-  frontend.src.hooks.useParentEncoderNavigation.items → frontend.src.hooks.useParentEncoderNavigation.removeHighlights
-  frontend.src.hooks.useParentEncoderNavigation.items → frontend.src.hooks.useParentEncoderNavigation._applyScrollToItems
-  frontend.src.hooks.useParentEncoderNavigation.items → frontend.src.hooks.useParentEncoderNavigation._focusEncoderItem
-  frontend.src.hooks.useParentEncoderNavigation.onKeyDown → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
-  frontend.src.hooks.useParentEncoderNavigation.useParentEncoderNavigation → frontend.src.hooks.useParentEncoderNavigation.createEncoderController
-  frontend.src.hooks.useParentEncoderNavigation.useParentEncoderNavigation → frontend.src.hooks.useParentEncoderNavigation.parseParentEncoderEnvelope
-  frontend.src.hooks.useParentEncoderNavigation.useParentEncoderNavigation → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
-  frontend.src.hooks.useParentEncoderNavigation.controller → frontend.src.hooks.useParentEncoderNavigation.parseParentEncoderEnvelope
-  frontend.src.hooks.useParentEncoderNavigation.controller → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
-  frontend.src.hooks.useParentEncoderNavigation.onMessage → frontend.src.hooks.useParentEncoderNavigation.parseParentEncoderEnvelope
-  frontend.src.hooks.useParentEncoderNavigation.onMessage → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
-  frontend.src.hooks.useParentEncoderNavigation.onWheel → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
-  frontend.src.hooks.useParentEncoderNavigation.raw → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
   frontend.src.hooks.useRailHoverPreview.useRailHoverPreview → frontend.src.hooks.useRailHoverPreview.cancelPanelClose
   frontend.src.hooks.useRailHoverPreview.useRailHoverPreview → frontend.src.hooks.useRailHoverPreview.previewExpand
   frontend.src.hooks.useRailHoverPreview.useRailHoverPreview → frontend.src.hooks.useRailHoverPreview.cancelRailOpen
@@ -1123,10 +1093,39 @@ EDGES:
   frontend.src.hooks.useRailHoverPreview.panelEnter → frontend.src.hooks.useRailHoverPreview.cancelPanelClose
   frontend.src.hooks.useRailHoverPreview.panelLeave → frontend.src.hooks.useRailHoverPreview.cancelRailOpen
   frontend.src.pages.MapEditorObjectActionPanel._MotorRelativeParams → frontend.src.pages.MapEditorObjectActionPanel._motorArgLabel
+  frontend.src.pages.ScenarioFiles.isDirty → frontend.src.pages.ScenarioFiles.formatLogTime
+  frontend.src.pages.ScenarioFiles.appendLog → frontend.src.pages.ScenarioFiles.formatLogTime
+  frontend.src.pages.ScenarioFiles.cancelled → frontend.src.pages.ScenarioFiles.loadFiles
+  frontend.src.pages.ScenarioFiles.cancelled → frontend.src.pages.ScenarioFiles.selectFile
+  frontend.src.pages.ScenarioFiles.saveFile → frontend.src.pages.ScenarioFiles.appendLog
+  frontend.src.pages.ScenarioFiles.runScenario → frontend.src.pages.ScenarioFiles.appendLog
   frontend.src.pages.MapEditor.addObject → frontend.src.pages.MapEditor.applyMapMutation
   frontend.src.pages.MapEditor.name → frontend.src.pages.MapEditor.applyMapMutation
   frontend.src.pages.MapEditor.addParam → frontend.src.pages.MapEditor.applyMapMutation
   frontend.src.pages.MapEditor.editParamConversionField → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.editParamConversionAlgorithm → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.addAction → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.addFunc → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.renameKey → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.nextName → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.deleteKey → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.editJsonField → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.editObjectActionArg → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.editObjectActionBodyField → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.editMotorRuntimeConfig → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.clearServerHardwareEvents → frontend.src.pages.MapEditor.loadRecentHardwareEvents
+  frontend.src.pages.MapEditor.integrationMeta → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.updateIntegrationMeta → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.runAddForTab → frontend.src.pages.MapEditor.addObject
+  frontend.src.pages.MapEditor.runAddForTab → frontend.src.pages.MapEditor.addParam
+  frontend.src.pages.MapEditor.runAddForTab → frontend.src.pages.MapEditor.addAction
+  frontend.src.pages.MapEditor.runAddForTab → frontend.src.pages.MapEditor.addFunc
+  frontend.src.pages.HardwareRestart.loadPlan → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
+  frontend.src.pages.HardwareRestart.serialPort → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
+  frontend.src.pages.HardwareRestart.serialPort → frontend.src.pages.HardwareRestart.loadPlan
+  frontend.src.pages.HardwareRestart.startOqlosAndRefreshPlan → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
+  frontend.src.pages.HardwareRestart.startOqlosAndRefreshPlan → frontend.src.pages.HardwareRestart.loadPlan
+  frontend.src.pages.HardwareRestart.port → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
 ```
 
 ## Test Contracts
@@ -1180,7 +1179,7 @@ EDGES:
 ```toon markpact:analysis path=project/calls.toon.yaml
 # code2llm call graph | /home/tom/github/oqlos/oqlos
 # generated in 0.29s
-# nodes: 434 | edges: 500 | modules: 59
+# nodes: 452 | edges: 500 | modules: 51
 # CC̄=3.8
 
 HUBS[20]:
@@ -1188,8 +1187,8 @@ HUBS[20]:
     CC=0  in:225  out:0  total:225
   frontend.src.i18n.I18nProvider.dict
     CC=8  in:44  out:3  total:47
-  frontend.src.utils.hardware-wizard-steps.list
-    CC=2  in:41  out:0  total:41
+  frontend.src.pages.ScenarioFiles.list
+    CC=1  in:41  out:0  total:41
   oqlos.core._oql_adapter.oql_doc_to_cql
     CC=12  in:2  out:30  total:32
   oqlos.core.motor2_runtime.normalize_motor2_runtime_config
@@ -1198,32 +1197,32 @@ HUBS[20]:
     CC=14  in:7  out:21  total:28
   setup_hardware_and_run_oql.run_oql_scenario
     CC=8  in:1  out:24  total:25
-  oqlos.core.oql_parser.parse_oql
-    CC=14  in:3  out:21  total:24
   frontend.src.pages.MapEditor.applyMapMutation
     CC=2  in:16  out:8  total:24
   oqlos.core.parser.parse_dsl_to_goal_with_issues
     CC=13  in:3  out:21  total:24
-  oqlos.tools.hardware_diagnose.doctor_format.format_doctor
-    CC=6  in:2  out:21  total:23
-  oqlos.core._action_motor2._motor2_build_plan
-    CC=12  in:1  out:22  total:23
-  oqlos.core._line_parsers._parse_if_condition
-    CC=9  in:1  out:22  total:23
-  oqlos.tools.hardware_diagnose.doctor_modbus_analysis.analyze_modbus_adc_config
-    CC=12  in:1  out:22  total:23
+  oqlos.core.oql_parser.parse_oql
+    CC=14  in:3  out:21  total:24
   oqlos.core._action_motor2._try_exec_motor2_set
     CC=13  in:1  out:22  total:23
-  oqlos.tools.hardware_diagnose.health.cmd_diagnose
-    CC=6  in:2  out:20  total:22
-  oqlos.tools.hardware_diagnose.doctor_modbus_analysis.analyze_modbus_config
-    CC=11  in:1  out:20  total:21
+  oqlos.core._line_parsers._parse_if_condition
+    CC=9  in:1  out:22  total:23
+  oqlos.core._action_motor2._motor2_build_plan
+    CC=12  in:1  out:22  total:23
   oqlos.core._cql_tree_builder._parse_goal_line
     CC=12  in:1  out:20  total:21
-  oqlos.hardware.config_paths.resolve_oqlos_config_path
-    CC=6  in:8  out:13  total:21
-  oqlos.core.base.VariableStore.set
-    CC=4  in:19  out:2  total:21
+  oqlos.core._func_resolver._collect_function_definitions
+    CC=13  in:1  out:19  total:20
+  frontend.src.api.wsClient.WsCqrsClient.super
+    CC=1  in:18  out:1  total:19
+  oqlos.core._interpreter_actions.exec_action_shell
+    CC=13  in:0  out:19  total:19
+  oqlos.core.oql_parser.tokenize
+    CC=13  in:5  out:14  total:19
+  oqlos.core._line_parsers._parse_action_line
+    CC=10  in:0  out:18  total:18
+  frontend.src.utils.useSelectionCollapsePanel.useSelectionCollapsePanel
+    CC=14  in:0  out:18  total:18
 
 MODULES:
   examples.hardware.doctor-workflow  [1 funcs]
@@ -1238,10 +1237,34 @@ MODULES:
     keys  CC=2  out:0
     logHardwareApiEvent  CC=6  out:4
     summarizeHardwareApiBody  CC=11  out:5
+  frontend.src.api.hardware-diagnostic-failure  [9 funcs]
+    _connectionError  CC=3  out:0
+    _nestedOkMessage  CC=4  out:2
+    _pickNestedObjectError  CC=8  out:4
+    extractDiagnosticFailure  CC=13  out:6
+    failureFromNestedOk  CC=10  out:4
+    failureFromOkFalsePayload  CC=14  out:6
+    failureFromSuccessFalse  CC=14  out:3
+    firstActionableError  CC=3  out:4
+    resultData  CC=4  out:0
   frontend.src.api.hardware-tic249-status  [3 funcs]
     isIdempotentDiagnosticSuccess  CC=3  out:2
     isIdempotentTic249Deenergized  CC=12  out:2
     tic249ResultStatus  CC=8  out:2
+  frontend.src.api.hardwareApi  [13 funcs]
+    _throwHttpError  CC=1  out:2
+    _withCtx  CC=2  out:0
+    bodySummary  CC=2  out:2
+    durationMs  CC=7  out:6
+    get  CC=1  out:1
+    mode  CC=1  out:1
+    normalized  CC=1  out:1
+    post  CC=1  out:1
+    put  CC=1  out:1
+    request  CC=14  out:14
+  frontend.src.api.scenarioFilesApi  [2 funcs]
+    fetchScenarioFilesList  CC=2  out:4
+    filterListableFiles  CC=3  out:2
   frontend.src.api.wsClient  [15 funcs]
     _handleMessage  CC=13  out:10
     _request  CC=3  out:12
@@ -1256,17 +1279,6 @@ MODULES:
   frontend.src.hooks.useMapEditorSidebarAutoCollapse  [2 funcs]
     applyAutoCollapse  CC=9  out:4
     useMapEditorSidebarAutoCollapse  CC=9  out:11
-  frontend.src.hooks.useParentEncoderNavigation  [17 funcs]
-    _applyScrollToItems  CC=4  out:0
-    _focusEncoderItem  CC=1  out:3
-    _tryCancelPostMessage  CC=2  out:1
-    all  CC=6  out:2
-    controller  CC=3  out:2
-    createEncoderController  CC=17  out:9
-    getInteractiveItems  CC=6  out:4
-    handleEncoderCommand  CC=11  out:6
-    items  CC=4  out:3
-    onKeyDown  CC=7  out:3
   frontend.src.hooks.useRailHoverPreview  [8 funcs]
     cancelPanelClose  CC=2  out:2
     cancelRailOpen  CC=2  out:2
@@ -1285,10 +1297,10 @@ MODULES:
     getInitialLang  CC=5  out:1
     t  CC=8  out:2
     val  CC=2  out:2
-  frontend.src.pages.HardwareDemo  [15 funcs]
+  frontend.src.pages.HardwareDemo  [13 funcs]
     Ctx  CC=2  out:2
     appendLog  CC=1  out:3
-    cancelled  CC=16  out:10
+    controller  CC=5  out:9
     ensureAudioCtx  CC=4  out:4
     fallbackDevice  CC=2  out:5
     fb  CC=2  out:5
@@ -1296,6 +1308,17 @@ MODULES:
     onNoteClick  CC=4  out:9
     playMelody  CC=9  out:11
     playNote  CC=5  out:7
+  frontend.src.pages.HardwareRestart  [20 funcs]
+    canRunCurrentStep  CC=1  out:4
+    confirmErrorKey  CC=1  out:4
+    confirmLabelKey  CC=1  out:4
+    currentStep  CC=1  out:4
+    isConfigureStep  CC=1  out:4
+    isSeparateAdapters  CC=1  out:4
+    loadPlan  CC=4  out:10
+    log  CC=1  out:3
+    port  CC=6  out:9
+    refreshRuntimeStatus  CC=3  out:3
   frontend.src.pages.MapEditor  [21 funcs]
     addAction  CC=2  out:6
     addFunc  CC=2  out:6
@@ -1310,9 +1333,30 @@ MODULES:
   frontend.src.pages.MapEditorObjectActionPanel  [2 funcs]
     _MotorRelativeParams  CC=1  out:3
     _motorArgLabel  CC=6  out:0
+  frontend.src.pages.ScenarioFiles  [9 funcs]
+    appendLog  CC=1  out:4
+    cancelled  CC=4  out:4
+    formatLogTime  CC=1  out:2
+    isDirty  CC=1  out:4
+    list  CC=1  out:0
+    loadFiles  CC=2  out:5
+    runScenario  CC=5  out:7
+    saveFile  CC=4  out:7
+    selectFile  CC=3  out:8
   frontend.src.utils.collapse-toggle-bridge  [2 funcs]
     isInIframe  CC=4  out:0
     postToParent  CC=4  out:8
+  frontend.src.utils.encoder-navigation  [13 funcs]
+    all  CC=6  out:2
+    applyScrollToItems  CC=4  out:0
+    createEncoderController  CC=11  out:7
+    focusEncoderItem  CC=1  out:3
+    getInteractiveItems  CC=6  out:4
+    handleCancel  CC=1  out:2
+    handleClick  CC=3  out:2
+    handleEncoderCommand  CC=5  out:4
+    handleScroll  CC=4  out:4
+    handleSetActive  CC=3  out:1
   frontend.src.utils.hardware-activity-log  [4 funcs]
     createHardwareActivityLogEntry  CC=1  out:2
     loggedRef  CC=2  out:4
@@ -1321,12 +1365,9 @@ MODULES:
   frontend.src.utils.hardware-api-retry  [2 funcs]
     attempt  CC=14  out:9
     sleep  CC=1  out:2
-  frontend.src.utils.hardware-restart-wizard-steps  [1 funcs]
-    probe  CC=1  out:2
-  frontend.src.utils.hardware-wizard-steps  [4 funcs]
+  frontend.src.utils.hardware-wizard-steps  [3 funcs]
     _filterCandidatesByRole  CC=6  out:3
     _findBestCandidate  CC=6  out:3
-    list  CC=2  out:0
     selectWizardProbeCandidate  CC=11  out:9
   frontend.src.utils.hardwareEventStream  [14 funcs]
     buildHardwareEventsWsUrl  CC=10  out:3
@@ -1339,6 +1380,25 @@ MODULES:
     payload  CC=3  out:1
     peripheralId  CC=3  out:1
     resolveEventStatus  CC=6  out:0
+  frontend.src.utils.mapEditorFuncHardwareSummary  [7 funcs]
+    _asMap  CC=3  out:0
+    apiBindingHint  CC=12  out:0
+    objectMap  CC=3  out:2
+    resolveNamedActionHardwareHint  CC=7  out:4
+    resolveObjectActionHardwareHint  CC=6  out:2
+    summarizeFuncToHardware  CC=11  out:7
+    uniqueHints  CC=5  out:5
+  frontend.src.utils.mapEditorIntegrationMeta  [10 funcs]
+    _resolveHardwareAddress  CC=5  out:0
+    _setOrDelete  CC=2  out:0
+    firstBindingFromObjectMapping  CC=6  out:1
+    nextValue  CC=2  out:2
+    readIntegrationMeta  CC=11  out:2
+    setApiEndpointField  CC=2  out:0
+    setApiServiceField  CC=2  out:0
+    setHardwareAddressField  CC=8  out:0
+    setMetaField  CC=9  out:6
+    source  CC=2  out:1
   frontend.src.utils.mapEditorMapShape  [6 funcs]
     cloneValue  CC=1  out:2
     ensureMapShape  CC=7  out:1
@@ -1375,6 +1435,15 @@ MODULES:
     mergeParentSearchIntoChildUrl  CC=9  out:11
     nextHref  CC=1  out:1
     parentSearch  CC=4  out:3
+  frontend.src.utils.useSelectionCollapsePanel  [8 funcs]
+    _makeCollapseToggleHandler  CC=8  out:3
+    cancelAutoCollapse  CC=2  out:2
+    collapsed  CC=2  out:6
+    expand  CC=1  out:5
+    onMessage  CC=1  out:1
+    scheduleCollapse  CC=2  out:6
+    toggleCollapsed  CC=2  out:5
+    useSelectionCollapsePanel  CC=14  out:18
   oqlos.config  [1 funcs]
     get_settings  CC=1  out:0
   oqlos.core._action_motor2  [30 funcs]
@@ -1448,30 +1517,29 @@ MODULES:
     _set_lung_step  CC=4  out:3
     _set_pump_step  CC=4  out:3
     _set_valve_step  CC=4  out:4
-  oqlos.core._oql_adapter  [3 funcs]
-    is_flat_oql  CC=8  out:13
-    oql_doc_to_cql  CC=12  out:30
-    parse_flat_oql  CC=1  out:2
-  oqlos.core._sensor_evaluator  [2 funcs]
-    __init__  CC=3  out:2
-    collect_sensor_constraints  CC=10  out:5
-  oqlos.core._value_normalizers  [1 funcs]
-    coerce_float  CC=5  out:9
-  oqlos.core.base  [6 funcs]
+  oqlos.core._oql_adapter  [15 funcs]
+    register  CC=1  out:1
+    _cmd_to_actions  CC=2  out:3
+    _fmt_value  CC=2  out:1
+    _load_includes  CC=12  out:15
+    _lower_call  CC=6  out:10
+    _lower_max  CC=1  out:3
+    _lower_min  CC=1  out:3
+    _lower_set  CC=3  out:7
+    _parse_macro_line  CC=8  out:10
+    _resolve_include  CC=6  out:8
+  oqlos.core.base  [5 funcs]
     send_event  CC=4  out:7
     emit  CC=5  out:3
     output_yaml  CC=4  out:2
     __init__  CC=2  out:1
     all  CC=3  out:3
-    set  CC=4  out:2
-  oqlos.core.cql_parser  [9 funcs]
+  oqlos.core.cql_parser  [7 funcs]
     _handle_goal  CC=3  out:5
     _handle_scenario  CC=2  out:3
     _handle_step  CC=2  out:4
     _try_hierarchy  CC=7  out:6
     _try_top_level  CC=2  out:1
-    _collect_all_goals  CC=2  out:2
-    _validate_intervals  CC=6  out:1
     parse_cql  CC=2  out:6
     validate_cql  CC=5  out:5
   oqlos.core.executor  [6 funcs]
@@ -1498,8 +1566,9 @@ MODULES:
     motor2_max_steps_per_second  CC=2  out:3
     motor2_speed_for_duration  CC=1  out:9
     motor2_speed_raw  CC=1  out:5
-  oqlos.core.oql_parser  [31 funcs]
+  oqlos.core.oql_parser  [32 funcs]
     _check_unnamed_goals  CC=5  out:1
+    _compact_duration  CC=2  out:3
     _expand_repeat_block_lines  CC=8  out:16
     _expand_repeat_blocks  CC=2  out:2
     _handle_block_header  CC=8  out:12
@@ -1508,7 +1577,6 @@ MODULES:
     _handle_top_level_line  CC=6  out:16
     _line_indent  CC=2  out:5
     _parse_and_append_command  CC=5  out:9
-    _require  CC=2  out:2
   oqlos.core.oql_versioning  [3 funcs]
     extract_declared_version  CC=3  out:4
     first_meaningful_line  CC=4  out:4
@@ -1528,76 +1596,6 @@ MODULES:
     _eval_node  CC=2  out:5
     _eval_unary_op  CC=3  out:5
     safe_eval  CC=3  out:4
-  oqlos.hardware.config_paths  [1 funcs]
-    resolve_oqlos_config_path  CC=6  out:13
-  oqlos.hardware.health_status  [1 funcs]
-    health_status_is_ok  CC=11  out:9
-  oqlos.tools.hardware_diagnose.discovery  [1 funcs]
-    list_i2c_buses  CC=1  out:2
-  oqlos.tools.hardware_diagnose.doctor  [1 funcs]
-    build_doctor_report  CC=11  out:14
-  oqlos.tools.hardware_diagnose.doctor_common  [5 funcs]
-    add_issue  CC=2  out:1
-    collect_repairs  CC=5  out:7
-    modbus_adc_config  CC=1  out:1
-    modbus_config  CC=1  out:1
-    plugin_config  CC=3  out:4
-  oqlos.tools.hardware_diagnose.doctor_detection  [8 funcs]
-    _doctor  CC=1  out:0
-    detect_hardware  CC=4  out:13
-    firmware_hostname  CC=3  out:2
-    load_config_summary  CC=4  out:7
-    probe_modbus  CC=1  out:2
-    probe_modbus_adc  CC=1  out:2
-    run_modbus_probe  CC=5  out:9
-    usb_serial_only  CC=3  out:1
-  oqlos.tools.hardware_diagnose.doctor_firmware  [10 funcs]
-    adapter_health_status  CC=3  out:1
-    analyze_firmware_access  CC=7  out:11
-    check_firmware_adapters  CC=7  out:9
-    check_firmware_health_error  CC=3  out:2
-    check_firmware_mode  CC=3  out:4
-    check_firmware_serial_access  CC=11  out:13
-    firmware_adapter_status  CC=7  out:9
-    firmware_is_remote  CC=2  out:3
-    firmware_modbus_adc_health_ok  CC=4  out:6
-    firmware_modbus_health_ok  CC=10  out:16
-  oqlos.tools.hardware_diagnose.doctor_format  [4 funcs]
-    _format_doctor_applied_repairs  CC=4  out:5
-    _format_doctor_issues  CC=5  out:10
-    format_doctor  CC=6  out:21
-    format_modbus_status  CC=7  out:11
-  oqlos.tools.hardware_diagnose.doctor_modbus_analysis  [5 funcs]
-    analyze_modbus_adc_config  CC=12  out:22
-    analyze_modbus_config  CC=11  out:20
-    analyze_serial_port_owners  CC=13  out:19
-    expected_modbus_adc_params  CC=6  out:8
-    expected_modbus_params  CC=5  out:6
-  oqlos.tools.hardware_diagnose.doctor_repairs  [3 funcs]
-    apply_safe_fixes  CC=9  out:14
-    update_modbus_adc_config  CC=4  out:18
-    update_modbus_config  CC=2  out:17
-  oqlos.tools.hardware_diagnose.health  [7 funcs]
-    _format_health_value  CC=8  out:9
-    _is_health_ok  CC=5  out:6
-    _request_firmware_json  CC=8  out:9
-    check_firmware_health  CC=1  out:1
-    check_firmware_identify  CC=1  out:1
-    cmd_diagnose  CC=6  out:20
-    cmd_health  CC=5  out:10
-  oqlos.tools.hardware_diagnose.report  [1 funcs]
-    format_peripheral_table  CC=12  out:3
-  oqlos.tools.plugin_cli  [12 funcs]
-    _default_config_path  CC=1  out:2
-    _load_config_file  CC=4  out:16
-    cmd_capabilities  CC=2  out:6
-    cmd_connect  CC=4  out:6
-    cmd_disconnect  CC=2  out:4
-    cmd_execute  CC=3  out:7
-    cmd_health  CC=3  out:8
-    cmd_list  CC=3  out:9
-    cmd_peripherals  CC=8  out:16
-    cmd_reload  CC=4  out:10
   setup_hardware_and_run_oql  [6 funcs]
     detect_serial_devices  CC=12  out:7
     generate_env_content  CC=2  out:1
@@ -1615,35 +1613,6 @@ EDGES:
   setup_hardware_and_run_oql.main → setup_hardware_and_run_oql.run_oql_scenario
   frontend.src.hooks.useMapEditorSidebarAutoCollapse.useMapEditorSidebarAutoCollapse → frontend.src.hooks.useMapEditorSidebarAutoCollapse.applyAutoCollapse
   frontend.src.hooks.useUrlConfig.useUrlConfig → frontend.src.hooks.useUrlConfig.notifyParentChildReady
-  frontend.src.hooks.useParentEncoderNavigation.createEncoderController → frontend.src.hooks.useParentEncoderNavigation.removeHighlights
-  frontend.src.hooks.useParentEncoderNavigation.createEncoderController → frontend.src.hooks.useParentEncoderNavigation.getInteractiveItems
-  frontend.src.hooks.useParentEncoderNavigation.createEncoderController → frontend.src.hooks.useParentEncoderNavigation._applyScrollToItems
-  frontend.src.hooks.useParentEncoderNavigation.createEncoderController → frontend.src.hooks.useParentEncoderNavigation._focusEncoderItem
-  frontend.src.hooks.useParentEncoderNavigation.createEncoderController → frontend.src.hooks.useParentEncoderNavigation._tryCancelPostMessage
-  frontend.src.hooks.useParentEncoderNavigation.createEncoderController → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
-  frontend.src.hooks.useParentEncoderNavigation.parentEncoderActive → frontend.src.hooks.useParentEncoderNavigation.removeHighlights
-  frontend.src.hooks.useParentEncoderNavigation.parentEncoderActive → frontend.src.hooks.useParentEncoderNavigation.getInteractiveItems
-  frontend.src.hooks.useParentEncoderNavigation.parentEncoderActive → frontend.src.hooks.useParentEncoderNavigation._applyScrollToItems
-  frontend.src.hooks.useParentEncoderNavigation.parentEncoderActive → frontend.src.hooks.useParentEncoderNavigation._focusEncoderItem
-  frontend.src.hooks.useParentEncoderNavigation.parentEncoderActive → frontend.src.hooks.useParentEncoderNavigation._tryCancelPostMessage
-  frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand → frontend.src.hooks.useParentEncoderNavigation.removeHighlights
-  frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand → frontend.src.hooks.useParentEncoderNavigation.getInteractiveItems
-  frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand → frontend.src.hooks.useParentEncoderNavigation._applyScrollToItems
-  frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand → frontend.src.hooks.useParentEncoderNavigation._focusEncoderItem
-  frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand → frontend.src.hooks.useParentEncoderNavigation._tryCancelPostMessage
-  frontend.src.hooks.useParentEncoderNavigation.items → frontend.src.hooks.useParentEncoderNavigation.removeHighlights
-  frontend.src.hooks.useParentEncoderNavigation.items → frontend.src.hooks.useParentEncoderNavigation._applyScrollToItems
-  frontend.src.hooks.useParentEncoderNavigation.items → frontend.src.hooks.useParentEncoderNavigation._focusEncoderItem
-  frontend.src.hooks.useParentEncoderNavigation.onKeyDown → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
-  frontend.src.hooks.useParentEncoderNavigation.useParentEncoderNavigation → frontend.src.hooks.useParentEncoderNavigation.createEncoderController
-  frontend.src.hooks.useParentEncoderNavigation.useParentEncoderNavigation → frontend.src.hooks.useParentEncoderNavigation.parseParentEncoderEnvelope
-  frontend.src.hooks.useParentEncoderNavigation.useParentEncoderNavigation → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
-  frontend.src.hooks.useParentEncoderNavigation.controller → frontend.src.hooks.useParentEncoderNavigation.parseParentEncoderEnvelope
-  frontend.src.hooks.useParentEncoderNavigation.controller → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
-  frontend.src.hooks.useParentEncoderNavigation.onMessage → frontend.src.hooks.useParentEncoderNavigation.parseParentEncoderEnvelope
-  frontend.src.hooks.useParentEncoderNavigation.onMessage → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
-  frontend.src.hooks.useParentEncoderNavigation.onWheel → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
-  frontend.src.hooks.useParentEncoderNavigation.raw → frontend.src.hooks.useParentEncoderNavigation.handleEncoderCommand
   frontend.src.hooks.useRailHoverPreview.useRailHoverPreview → frontend.src.hooks.useRailHoverPreview.cancelPanelClose
   frontend.src.hooks.useRailHoverPreview.useRailHoverPreview → frontend.src.hooks.useRailHoverPreview.previewExpand
   frontend.src.hooks.useRailHoverPreview.useRailHoverPreview → frontend.src.hooks.useRailHoverPreview.cancelRailOpen
@@ -1653,130 +1622,155 @@ EDGES:
   frontend.src.hooks.useRailHoverPreview.panelEnter → frontend.src.hooks.useRailHoverPreview.cancelPanelClose
   frontend.src.hooks.useRailHoverPreview.panelLeave → frontend.src.hooks.useRailHoverPreview.cancelRailOpen
   frontend.src.pages.MapEditorObjectActionPanel._MotorRelativeParams → frontend.src.pages.MapEditorObjectActionPanel._motorArgLabel
+  frontend.src.pages.ScenarioFiles.isDirty → frontend.src.pages.ScenarioFiles.formatLogTime
+  frontend.src.pages.ScenarioFiles.appendLog → frontend.src.pages.ScenarioFiles.formatLogTime
+  frontend.src.pages.ScenarioFiles.cancelled → frontend.src.pages.ScenarioFiles.loadFiles
+  frontend.src.pages.ScenarioFiles.cancelled → frontend.src.pages.ScenarioFiles.selectFile
+  frontend.src.pages.ScenarioFiles.saveFile → frontend.src.pages.ScenarioFiles.appendLog
+  frontend.src.pages.ScenarioFiles.runScenario → frontend.src.pages.ScenarioFiles.appendLog
   frontend.src.pages.MapEditor.addObject → frontend.src.pages.MapEditor.applyMapMutation
   frontend.src.pages.MapEditor.name → frontend.src.pages.MapEditor.applyMapMutation
   frontend.src.pages.MapEditor.addParam → frontend.src.pages.MapEditor.applyMapMutation
   frontend.src.pages.MapEditor.editParamConversionField → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.editParamConversionAlgorithm → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.addAction → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.addFunc → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.renameKey → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.nextName → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.deleteKey → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.editJsonField → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.editObjectActionArg → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.editObjectActionBodyField → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.editMotorRuntimeConfig → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.clearServerHardwareEvents → frontend.src.pages.MapEditor.loadRecentHardwareEvents
+  frontend.src.pages.MapEditor.integrationMeta → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.updateIntegrationMeta → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.runAddForTab → frontend.src.pages.MapEditor.addObject
+  frontend.src.pages.MapEditor.runAddForTab → frontend.src.pages.MapEditor.addParam
+  frontend.src.pages.MapEditor.runAddForTab → frontend.src.pages.MapEditor.addAction
+  frontend.src.pages.MapEditor.runAddForTab → frontend.src.pages.MapEditor.addFunc
+  frontend.src.pages.HardwareRestart.loadPlan → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
+  frontend.src.pages.HardwareRestart.serialPort → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
+  frontend.src.pages.HardwareRestart.serialPort → frontend.src.pages.HardwareRestart.loadPlan
+  frontend.src.pages.HardwareRestart.startOqlosAndRefreshPlan → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
+  frontend.src.pages.HardwareRestart.startOqlosAndRefreshPlan → frontend.src.pages.HardwareRestart.loadPlan
+  frontend.src.pages.HardwareRestart.port → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
 ```
 
 ### Code Analysis (`project/analysis.toon.yaml`)
 
 ```toon markpact:analysis path=project/analysis.toon.yaml
-# code2llm | 323f 56951L | python:195,javascript:68,md:20,yaml:13,shell:9,json:6,yml:4,typescript:3,conf:2,toml:1 | 2026-06-30
-# generated in 0.17s
-# CC̅=3.8 | critical:6/2211 | dups:0 | cycles:0
+# code2llm | 345f 58209L | python:197,javascript:86,md:21,yaml:13,shell:9,json:7,yml:4,typescript:3,conf:2,toml:1 | 2026-07-01
+# generated in 0.15s
+# CC̅=3.8 | critical:2/2280 | dups:0 | cycles:0
 
-HEALTH[6]:
-  🟡 CC    createEncoderController CC=17 (limit:15)
-  🟡 CC    cancelled CC=16 (limit:15)
-  🟡 CC    _validate_motor2 CC=19 (limit:15)
-  🟡 CC    _extractWizardPlan CC=15 (limit:15)
-  🟡 CC    runCurrentStep CC=15 (limit:15)
-  🟡 CC    executeConfigureStep CC=28 (limit:15)
+HEALTH[2]:
+  🟡 CC    probeDemoDevices CC=17 (limit:15)
+  🟡 CC    extractWizardPlan CC=15 (limit:15)
 
 REFACTOR[1]:
-  1. split 6 high-CC methods  (CC>15)
+  1. split 2 high-CC methods  (CC>15)
 
-PIPELINES[1122]:
+PIPELINES[1159]:
   [1] Src [main]: main → run_oql_scenario → print
       PURITY: 100% pure
-  [2] Src [RootRedirect]: RootRedirect
+  [2] Src [LocalizedApp]: LocalizedApp
       PURITY: 100% pure
-  [3] Src [LocalizedApp]: LocalizedApp
+  [3] Src [useWsStatus]: useWsStatus
       PURITY: 100% pure
-  [4] Src [useWsStatus]: useWsStatus
+  [4] Src [client]: client
       PURITY: 100% pure
-  [5] Src [client]: client
+  [5] Src [onOpen]: onOpen
       PURITY: 100% pure
-  [6] Src [onOpen]: onOpen
+  [6] Src [onClose]: onClose
       PURITY: 100% pure
-  [7] Src [onClose]: onClose
+  [7] Src [useMapEditorSidebarAutoCollapse]: useMapEditorSidebarAutoCollapse → applyAutoCollapse
       PURITY: 100% pure
-  [8] Src [useMapEditorSidebarAutoCollapse]: useMapEditorSidebarAutoCollapse → applyAutoCollapse
+  [8] Src [root]: root
       PURITY: 100% pure
-  [9] Src [root]: root
+  [9] Src [font]: font
       PURITY: 100% pure
-  [10] Src [font]: font
+  [10] Src [viewportWidth]: viewportWidth
       PURITY: 100% pure
-  [11] Src [viewportWidth]: viewportWidth
+  [11] Src [denseFont]: denseFont
       PURITY: 100% pure
-  [12] Src [denseFont]: denseFont
+  [12] Src [minWidth]: minWidth
       PURITY: 100% pure
-  [13] Src [minWidth]: minWidth
+  [13] Src [observer]: observer
       PURITY: 100% pure
-  [14] Src [observer]: observer
+  [14] Src [useMapEditorHardwareEvents]: useMapEditorHardwareEvents
       PURITY: 100% pure
-  [15] Src [useMapEditorHardwareEvents]: useMapEditorHardwareEvents
+  [15] Src [wsUrl]: wsUrl
       PURITY: 100% pure
-  [16] Src [wsUrl]: wsUrl
+  [16] Src [closed]: closed
       PURITY: 100% pure
-  [17] Src [closed]: closed
+  [17] Src [socket]: socket
       PURITY: 100% pure
-  [18] Src [socket]: socket
+  [18] Src [useUrlConfig]: useUrlConfig → notifyParentChildReady
       PURITY: 100% pure
-  [19] Src [useUrlConfig]: useUrlConfig → notifyParentChildReady
+  [19] Src [onPop]: onPop
       PURITY: 100% pure
-  [20] Src [onPop]: onPop
+  [20] Src [onMessage]: onMessage
       PURITY: 100% pure
-  [21] Src [onMessage]: onMessage
+  [21] Src [envelope]: envelope
       PURITY: 100% pure
-  [22] Src [envelope]: envelope
+  [22] Src [patch]: patch
       PURITY: 100% pure
-  [23] Src [patch]: patch
+  [23] Src [useParentEncoderNavigation]: useParentEncoderNavigation
       PURITY: 100% pure
-  [24] Src [parentEncoderActive]: parentEncoderActive → removeHighlights
+  [24] Src [controller]: controller
       PURITY: 100% pure
-  [25] Src [items]: items → removeHighlights
+  [25] Src [onMessage]: onMessage
       PURITY: 100% pure
-  [26] Src [target]: target
+  [26] Src [onWheel]: onWheel
       PURITY: 100% pure
-  [27] Src [onKeyDown]: onKeyDown → handleEncoderCommand → removeHighlights
+  [27] Src [raw]: raw
       PURITY: 100% pure
-  [28] Src [useParentEncoderNavigation]: useParentEncoderNavigation → createEncoderController → removeHighlights
+  [28] Src [useRailHoverPreview]: useRailHoverPreview → cancelPanelClose
       PURITY: 100% pure
-  [29] Src [controller]: controller → parseParentEncoderEnvelope
+  [29] Src [railOpenTimerRef]: railOpenTimerRef
       PURITY: 100% pure
-  [30] Src [onMessage]: onMessage → parseParentEncoderEnvelope
+  [30] Src [panelCloseTimerRef]: panelCloseTimerRef
       PURITY: 100% pure
-  [31] Src [onWheel]: onWheel → handleEncoderCommand → removeHighlights
+  [31] Src [previewCollapse]: previewCollapse
       PURITY: 100% pure
-  [32] Src [raw]: raw → handleEncoderCommand → removeHighlights
+  [32] Src [railEnter]: railEnter → cancelPanelClose
       PURITY: 100% pure
-  [33] Src [useRailHoverPreview]: useRailHoverPreview → cancelPanelClose
+  [33] Src [railLeave]: railLeave → cancelRailOpen
       PURITY: 100% pure
-  [34] Src [railOpenTimerRef]: railOpenTimerRef
+  [34] Src [panelEnter]: panelEnter → cancelPanelClose
       PURITY: 100% pure
-  [35] Src [panelCloseTimerRef]: panelCloseTimerRef
+  [35] Src [panelLeave]: panelLeave → cancelRailOpen
       PURITY: 100% pure
-  [36] Src [previewCollapse]: previewCollapse
+  [36] Src [location]: location
       PURITY: 100% pure
-  [37] Src [railEnter]: railEnter → cancelPanelClose
+  [37] Src [currentPath]: currentPath
       PURITY: 100% pure
-  [38] Src [railLeave]: railLeave → cancelRailOpen
+  [38] Src [visibleNavItems]: visibleNavItems
       PURITY: 100% pure
-  [39] Src [panelEnter]: panelEnter → cancelPanelClose
+  [39] Src [hasViewTabs]: hasViewTabs
       PURITY: 100% pure
-  [40] Src [panelLeave]: panelLeave → cancelRailOpen
+  [40] Src [hostLabel]: hostLabel
       PURITY: 100% pure
-  [41] Src [location]: location
+  [41] Src [renderNavItem]: renderNavItem
       PURITY: 100% pure
-  [42] Src [currentPath]: currentPath
+  [42] Src [itemPath]: itemPath
       PURITY: 100% pure
-  [43] Src [visibleNavItems]: visibleNavItems
+  [43] Src [active]: active
       PURITY: 100% pure
-  [44] Src [hasViewTabs]: hasViewTabs
+  [44] Src [collapseEnabled]: collapseEnabled
       PURITY: 100% pure
-  [45] Src [hostLabel]: hostLabel
+  [45] Src [inPreview]: inPreview
       PURITY: 100% pure
-  [46] Src [renderNavItem]: renderNavItem
+  [46] Src [filtered]: filtered
       PURITY: 100% pure
-  [47] Src [itemPath]: itemPath
+  [47] Src [handleSelect]: handleSelect
       PURITY: 100% pure
-  [48] Src [active]: active
+  [48] Src [MapEditorParamConversionPanel]: MapEditorParamConversionPanel
       PURITY: 100% pure
-  [49] Src [collapseEnabled]: collapseEnabled
+  [49] Src [MapEditorIntegrationMetaPanel]: MapEditorIntegrationMetaPanel
       PURITY: 100% pure
-  [50] Src [inPreview]: inPreview
+  [50] Src [MapEditorMotorRuntimePanel]: MapEditorMotorRuntimePanel
       PURITY: 100% pure
 
 LAYERS:
@@ -1800,9 +1794,9 @@ LAYERS:
   │
   oqlos/                          CC̄=4.0    ←in:9  →out:0
   │ !! _interpreter_actions       800L  0C   49m  CC=14     ←1
-  │ !! oql_parser                 762L  3C   43m  CC=14     ←2
+  │ !! oql_parser                 770L  3C   44m  CC=14     ←2
   │ !! interpreter                690L  1C   48m  CC=11     ←0
-  │ !! plugin_gateway             631L  1C   22m  CC=14     ←0
+  │ !! plugin_gateway             633L  1C   22m  CC=14     ←0
   │ !! hardware_modbus_waveshare   624L  0C   16m  CC=11     ←0
   │ !! main                       571L  0C   35m  CC=8      ←0
   │ mqtt_oql_bridge            494L  6C   34m  CC=5      ←0
@@ -1813,7 +1807,7 @@ LAYERS:
   │ proxy                      460L  1C   29m  CC=13     ←0
   │ generators                 452L  0C   20m  CC=14     ←0
   │ main                       415L  1C   18m  CC=9      ←2
-  │ _cql_tokenizer             406L  0C   27m  CC=5      ←0
+  │ _cql_tokenizer             409L  0C   27m  CC=5      ←0
   │ motor                      405L  1C   20m  CC=14     ←0
   │ hardware_modbus_wizard     399L  0C    9m  CC=10     ←0
   │ modbus_adc                 398L  1C   17m  CC=12     ←0
@@ -1830,6 +1824,7 @@ LAYERS:
   │ preflight                  309L  0C   11m  CC=13     ←1
   │ schema                     296L  5C    6m  CC=7      ←0
   │ piadc                      270L  1C   12m  CC=11     ←0
+  │ _firmware_executor         266L  1C   11m  CC=11     ←0
   │ html_report                266L  0C    5m  CC=10     ←0
   │ scanner_probe              262L  0C   13m  CC=14     ←1
   │ _line_parsers              261L  0C   10m  CC=10     ←1
@@ -1840,8 +1835,6 @@ LAYERS:
   │ sidecar_control            222L  0C    9m  CC=13     ←1
   │ config                     220L  1C    1m  CC=1      ←5
   │ tic249_extended            215L  0C    7m  CC=10     ←0
-  │ OQL-CHEATSHEET.md          211L  0C    0m  CC=0.0    ←0
-  │ _firmware_executor         210L  1C    9m  CC=11     ←0
   │ motor2_runtime             209L  2C   12m  CC=12     ←1
   │ motor_modbus_handlers      207L  0C    6m  CC=8      ←1
   │ modbus_probe               205L  0C   16m  CC=5      ←1
@@ -1880,11 +1873,10 @@ LAYERS:
   │ shell                      138L  0C    5m  CC=6      ←1
   │ peripheral_mapping         138L  0C    4m  CC=2      ←0
   │ json_reporter              138L  0C    5m  CC=8      ←0
-  │ README.md                  137L  0C    0m  CC=0.0    ←0
   │ hardware_events            135L  0C   10m  CC=11     ←3
   │ _hw3_system                134L  0C   19m  CC=6      ←0
-  │ _hw3_peripheral            133L  0C    5m  CC=11     ←0
   │ autorepair                 133L  0C    8m  CC=12     ←0
+  │ _hw3_peripheral            133L  0C    5m  CC=11     ←0
   │ _dsl_helpers               132L  0C   12m  CC=11     ←4
   │ modbus_identify            131L  0C    8m  CC=10     ←1
   │ doctor_detection           130L  0C    8m  CC=5      ←3
@@ -1913,7 +1905,6 @@ LAYERS:
   │ identify_enrich_modbus_io    89L  0C    4m  CC=13     ←1
   │ gpio                        89L  1C    7m  CC=6      ←0
   │ logger                      89L  0C    2m  CC=12     ←0
-  │ !! hardware_mapping_contract    89L  1C    4m  CC=19     ←1
   │ stack_snapshot              88L  0C    4m  CC=8      ←1
   │ dsl_models                  87L  8C    0m  CC=0.0    ←0
   │ diagnosis_plugin_health     86L  0C    8m  CC=8      ←3
@@ -1941,6 +1932,7 @@ LAYERS:
   │ adc                         64L  0C    3m  CC=10     ←2
   │ report                      63L  0C    2m  CC=12     ←3
   │ formatting                  63L  0C    3m  CC=14     ←2
+  │ hardware_mapping_contract    63L  1C    3m  CC=6      ←1
   │ execution_ctrl              62L  0C    3m  CC=1      ←0
   │ hardware_hui                61L  0C    8m  CC=2      ←0
   │ hardware_registry           61L  0C    0m  CC=0.0    ←0
@@ -1955,12 +1947,14 @@ LAYERS:
   │ tic249_command_mapping      49L  0C    2m  CC=13     ←1
   │ __init__                    49L  0C    0m  CC=0.0    ←0
   │ manage_ops_diagnostic       48L  0C    2m  CC=12     ←0
+  │ hardware_mapping_motor2     48L  0C    5m  CC=10     ←1
   │ hui_scenario                46L  0C    1m  CC=2      ←1
   │ logs                        45L  0C    3m  CC=1      ←0
   │ tic249_rig_direction        43L  0C    2m  CC=5      ←1
   │ hui_lung_recipe             42L  0C    1m  CC=1      ←0
   │ config_paths                41L  0C    1m  CC=6      ←5
   │ _compare                    40L  0C    2m  CC=3      ←2
+  │ legacy_aliases              40L  0C    3m  CC=5      ←0
   │ tic249_units                39L  0C    2m  CC=5      ←2
   │ scenario                    35L  4C    0m  CC=0.0    ←0
   │ _endpoint_helpers           34L  0C    2m  CC=2      ←1
@@ -2002,28 +1996,29 @@ LAYERS:
   │ test-hardware.sh            83L  0C    0m  CC=0.0    ←0
   │ verify-rpi-checksum.sh      75L  0C    1m  CC=0.0    ←0
   │ provision-rpi-sudo.sh       67L  0C    0m  CC=0.0    ←0
-  │ gen-checksums.sh            24L  0C    0m  CC=0.0    ←0
+  │ gen-checksums.sh            27L  0C    0m  CC=0.0    ←0
   │
-  frontend/                       CC̄=3.5    ←in:0  →out:0
-  │ !! dictionaries.js           1981L  0C    4m  CC=5      ←0
+  frontend/                       CC̄=3.3    ←in:0  →out:0
+  │ !! dictionaries.js           2053L  0C    4m  CC=5      ←0
   │ !! mapEditorDefaultMap.js    1763L  0C    3m  CC=1      ←0
   │ !! MapEditor.jsx              998L  0C   62m  CC=12     ←6
   │ !! hardware-status-presets-translations.js   795L  0C    0m  CC=0.0    ←0
-  │ !! HardwareDemo.jsx           585L  0C   41m  CC=16     ←1
-  │ !! HardwareRestart.jsx        512L  0C   50m  CC=15     ←1
+  │ !! HardwareDemo.jsx           556L  0C   37m  CC=10     ←0
+  │ HardwareRestart.jsx        470L  0C   44m  CC=10     ←2
+  │ hardware-status-panel-translations.js   327L  0C    0m  CC=0.0    ←0
   │ SidebarList.jsx            316L  0C    4m  CC=6      ←0
-  │ hardware-status-panel-translations.js   309L  0C    0m  CC=0.0    ←0
   │ hardwareApi.js             257L  0C   23m  CC=14     ←0
+  │ ScenarioFiles.jsx          246L  0C   16m  CC=5      ←27
+  │ HardwareStatus.jsx         196L  0C    9m  CC=2      ←0
   │ url-embed-config.js        193L  0C   43m  CC=12     ←0
   │ hardware-demo-extra-translations.js   183L  0C    0m  CC=0.0    ←0
-  │ !! useParentEncoderNavigation.js   151L  0C   21m  CC=17     ←7
+  │ encoder-navigation.js      142L  0C   17m  CC=11     ←7
   │ wsClient.js                138L  1C   30m  CC=13     ←10
   │ useSelectionCollapsePanel.js   133L  0C   11m  CC=14     ←0
   │ rbac.policy.js             121L  0C   20m  CC=6      ←0
-  │ hardware-wizard-steps.js   101L  0C   17m  CC=11     ←29
+  │ hardware-wizard-steps.js   101L  0C   17m  CC=11     ←2
   │ hardware-diagnostic-failure.js    97L  0C   19m  CC=14     ←0
   │ url-embed-config.test.js    92L  0C    6m  CC=2      ←0
-  │ !! hardware-restart-wizard-steps.js    92L  0C   21m  CC=28     ←1
   │ hardware-api-log.js         87L  0C    7m  CC=11     ←0
   │ SharedNav.jsx               86L  0C    8m  CC=5      ←0
   │ useUrlConfig.js             85L  0C    6m  CC=8      ←0
@@ -2032,50 +2027,67 @@ LAYERS:
   │ hardware-status-log-translations.js    81L  0C    0m  CC=0.0    ←0
   │ mapEditorIntegrationMeta.js    80L  0C   11m  CC=11     ←0
   │ MapEditorObjectActionPanel.jsx    72L  0C    7m  CC=13     ←0
+  │ hardware-restart-configure.js    68L  0C   10m  CC=14     ←1
   │ I18nProvider.jsx            65L  0C   10m  CC=13     ←26
   │ hardware-api-errors.js      63L  0C   10m  CC=13     ←0
   │ useMapEditorHardwareEvents.js    61L  0C    6m  CC=14     ←0
   │ mapEditorModel.js           61L  0C    8m  CC=10     ←0
+  │ !! hardware-demo-identify.js    58L  0C    6m  CC=17     ←0
   │ mapEditorMapShape.js        58L  0C    8m  CC=11     ←0
   │ hardware-diagnostic-failure.test.js    58L  0C    0m  CC=0.0    ←0
   │ mapEditorFuncHardwareSummary.test.js    54L  0C    1m  CC=1      ←0
+  │ scenarioFilesApi.js         53L  0C    7m  CC=3      ←0
   │ hardwareEventStream.js      52L  0C   22m  CC=10     ←1
+  │ hardware-restart-wizard-steps.js    46L  0C    9m  CC=9      ←0
   │ collapse-toggle-bridge.js    46L  0C    6m  CC=4      ←0
   │ hardware-api-retry.test.js    45L  0C    3m  CC=2      ←0
   │ mapEditorObjectActionEdits.js    44L  0C    8m  CC=13     ←0
+  │ hardwareStatusModel.test.js    43L  0C    2m  CC=1      ←0
   │ mapEditorIntegrationMeta.test.js    43L  0C    1m  CC=1      ←0
   │ designRem.js                43L  0C    2m  CC=1      ←0
   │ AppConfigProvider.jsx       42L  0C    5m  CC=2      ←0
   │ MapEditorMotorRuntimePanel.jsx    41L  0C    2m  CC=3      ←0
   │ mapEditorConstants.js       41L  0C    7m  CC=1      ←0
   │ hardware-restart-wizard-helpers.js    41L  0C    7m  CC=14     ←0
+  │ useParentEncoderNavigation.js    39L  0C    7m  CC=9      ←0
   │ MapEditorParamConversionPanel.jsx    39L  0C    2m  CC=4      ←0
   │ parentUrlBridge.js          39L  0C    3m  CC=10     ←0
   │ paths.ts                    39L  0C    4m  CC=2      ←0
   │ hardware-api-retry.js       38L  0C    8m  CC=14     ←1
   │ hui-shell-key.js            38L  0C    5m  CC=5      ←0
+  │ hardwareStatusModel.js      38L  0C    7m  CC=11     ←0
   │ hardwareEventStream.test.js    36L  0C    1m  CC=1      ←0
   │ vite.config.ts              36L  0C    0m  CC=0.0    ←0
   │ hardware-tic249-status.js    35L  0C    6m  CC=12     ←0
-  │ App.jsx                     34L  0C    2m  CC=3      ←0
   │ hardware-activity-log.js    34L  0C    4m  CC=2      ←0
   │ mapEditorObjectActionEdits.test.js    33L  0C    1m  CC=1      ←0
   │ MapEditorIntegrationMetaPanel.jsx    32L  0C    1m  CC=3      ←0
   │ mapEditorModel.test.js      32L  0C    1m  CC=1      ←0
-  │ index.ts                    31L  0C    2m  CC=1      ←0
   │ hardware-restart-wizard-steps.test.js    31L  0C    1m  CC=1      ←0
+  │ index.ts                    31L  0C    2m  CC=1      ←0
   │ main.jsx                    30L  0C    1m  CC=1      ←0
+  │ hardware-restart-configure.test.js    30L  0C    2m  CC=3      ←0
   │ useMapEditorSidebarAutoCollapse.js    29L  0C    8m  CC=9      ←0
   │ hardware-wizard-steps.test.js    29L  0C    1m  CC=1      ←0
-  │ HardwareStatus.jsx          28L  0C    1m  CC=5      ←0
+  │ hardware-demo-identify.test.js    27L  0C    2m  CC=2      ←0
   │ useWsStatus.js              26L  0C    4m  CC=3      ←0
   │ app-config-document.js      26L  0C    4m  CC=6      ←0
+  │ App.jsx                     24L  0C    0m  CC=0.0    ←0
   │ HardwareActivityLog.jsx     24L  0C    0m  CC=0.0    ←0
+  │ hardware-restart-step-runner.js    23L  0C    1m  CC=6      ←0
+  │ !! hardware-wizard-plan.js     22L  0C    5m  CC=15     ←0
   │ package.json                22L  0C    0m  CC=0.0    ←0
+  │ encoder-navigation.test.js    20L  0C    1m  CC=1      ←0
+  │ hardware-restart-probe-select.js    19L  0C    5m  CC=10     ←0
+  │ scenarioFilesUrl.test.js    19L  0C    0m  CC=0.0    ←0
+  │ hardware-restart-step-runner.test.js    17L  0C    1m  CC=1      ←0
+  │ scenarioFilesUrl.js         16L  0C    4m  CC=9      ←0
+  │ hardware-wizard-plan.test.js    16L  0C    1m  CC=1      ←0
+  │ hardware-restart-step-errors.js    15L  0C    3m  CC=4      ←0
   │ mapEditorTic249.test.js     13L  0C    0m  CC=0.0    ←0
   │ hardware-restart-docs.js    11L  0C    2m  CC=2      ←0
-  │ hardware-wizard-plan.js     10L  0C    2m  CC=5      ←0
   │ mapEditorTic249.js           7L  0C    2m  CC=3      ←0
+  │ hardware-restart-step-outcome.js     6L  0C    1m  CC=3      ←0
   │ hardware-time.js             4L  0C    1m  CC=1      ←0
   │
   examples/                       CC̄=0.0    ←in:0  →out:0
@@ -2084,25 +2096,25 @@ LAYERS:
   │ doctor-workflow.sh          52L  0C    1m  CC=0.0    ←17
   │
   docs/                           CC̄=0.0    ←in:0  →out:0
-  │ !! README.md                 2119L  0C    0m  CC=0.0    ←0
+  │ !! README.md                 2245L  0C    0m  CC=0.0    ←0
   │ !! cql-examples.md            588L  0C    0m  CC=0.0    ←0
   │ HARDWARE_DIAGNOSTICS.md    428L  0C    0m  CC=0.0    ←0
   │ HARDWARE_CONTROL_OQL_MQTT.md   319L  0C    0m  CC=0.0    ←0
   │ oql-spec.md                258L  0C    0m  CC=0.0    ←0
   │ OQL_V4_MIGRATION_MANUAL.md   216L  0C    0m  CC=0.0    ←0
+  │ refactor-plan.md           116L  0C    0m  CC=0.0    ←0
   │ DEDUP-connect-scenario.md   108L  0C    0m  CC=0.0    ←0
-  │ refactor-plan.md           106L  0C    0m  CC=0.0    ←0
   │ oql_v4_llm_validator.schema.json    93L  0C    0m  CC=0.0    ←0
   │ oql_v2_llm_validator.schema.json    89L  0C    0m  CC=0.0    ←0
   │ cql-spec.md                 77L  0C    0m  CC=0.0    ←0
   │ boardnet-navigation.md      56L  0C    0m  CC=0.0    ←0
   │
   redeploy/                       CC̄=0.0    ←in:0  →out:0
-  │ !! migration.md              1221L  0C    0m  CC=0.0    ←0
+  │ !! migration.md              1271L  0C    0m  CC=0.0    ←0
   │ !! migration.md               639L  0C    0m  CC=0.0    ←0
-  │ RUNBOOK.md                 101L  0C    0m  CC=0.0    ←0
+  │ RUNBOOK.md                 103L  0C    0m  CC=0.0    ←0
+  │ CURRENT_STATE.md            96L  0C    0m  CC=0.0    ←0
   │ RUNBOOK.md                  87L  0C    0m  CC=0.0    ←0
-  │ CURRENT_STATE.md            80L  0C    0m  CC=0.0    ←0
   │ oqlos-hw.yaml               66L  0C    0m  CC=0.0    ←0
   │ oqlos-hw.yaml               66L  0C    0m  CC=0.0    ←0
   │ mosquitto.conf              19L  0C    0m  CC=0.0    ←0
@@ -2121,7 +2133,11 @@ LAYERS:
   │ cross-project-integration.testql.toon.yaml    11L  0C    0m  CC=0.0    ←0
   │
   scenarios/                      CC̄=0.0    ←in:0  →out:0
-  │ manifest.json              182L  0C    0m  CC=0.0    ←0
+  │ OQL-CHEATSHEET.md          211L  0C    0m  CC=0.0    ←0
+  │ README.md                  137L  0C    0m  CC=0.0    ←0
+  │ manifest.json              134L  0C    0m  CC=0.0    ←0
+  │ SCENARIO_DEDUP_REFACTOR_REPORT.md    71L  0C    0m  CC=0.0    ←0
+  │ legacy_aliases.json         10L  0C    0m  CC=0.0    ←0
   │
   ── zero ──
      oqlos/core/__init__.py                    0L
@@ -2142,20 +2158,20 @@ COUPLING:
              oqlos.reporters                                                                                   2                                                                                                                                                                                                                                                          ──                            
                  oqlos.utils                                                                                                                                                                      ←2                                                                                                                                                                                                  ──
   CYCLES: none
-  HUB: frontend.src/ (fan-in=212)
-  HUB: examples.hardware/ (fan-in=225)
-  HUB: oqlos.hardware/ (fan-in=25)
-  HUB: oqlos.shared/ (fan-in=6)
   HUB: oqlos.core/ (fan-in=25)
   HUB: oqlos.tools/ (fan-in=6)
+  HUB: frontend.src/ (fan-in=212)
   HUB: oqlos/ (fan-in=9)
-  SMELL: setup_hardware_and_run_oql/ fan-out=27 → split needed
-  SMELL: oqlos.hardware/ fan-out=86 → split needed
-  SMELL: oqlos.api/ fan-out=54 → split needed
-  SMELL: oqlos.shared/ fan-out=13 → split needed
+  HUB: examples.hardware/ (fan-in=225)
+  HUB: oqlos.shared/ (fan-in=6)
+  HUB: oqlos.hardware/ (fan-in=25)
   SMELL: oqlos.core/ fan-out=23 → split needed
   SMELL: oqlos.tools/ fan-out=231 → split needed
+  SMELL: oqlos.api/ fan-out=54 → split needed
   SMELL: scripts/ fan-out=72 → split needed
+  SMELL: setup_hardware_and_run_oql/ fan-out=27 → split needed
+  SMELL: oqlos.shared/ fan-out=13 → split needed
+  SMELL: oqlos.hardware/ fan-out=86 → split needed
 
 EXTERNAL:
   validation: run `vallm batch .` → validation.toon
@@ -2165,21 +2181,21 @@ EXTERNAL:
 ### Duplication (`project/duplication.toon.yaml`)
 
 ```toon markpact:analysis path=project/duplication.toon.yaml
-# redup/duplication | 46 groups | 201f 32572L | 2026-06-30
+# redup/duplication | 46 groups | 203f 32703L | 2026-07-01
 
 SUMMARY:
-  files_scanned: 201
-  total_lines:   32572
+  files_scanned: 203
+  total_lines:   32703
   dup_groups:    46
-  dup_fragments: 100
-  saved_lines:   248
-  scan_ms:       184807
+  dup_fragments: 99
+  saved_lines:   243
+  scan_ms:       127757
 
 HOTSPOTS[7] (files with most duplication):
   oqlos/core/_cql_tokenizer.py  dup=92L  groups=7  frags=16  (0.3%)
   oqlos/core/interpreter.py  dup=41L  groups=5  frags=11  (0.1%)
-  oqlos/core/oql_parser.py  dup=39L  groups=4  frags=11  (0.1%)
   scripts/oql_v2_to_v4_migrate_db.py  dup=39L  groups=3  frags=7  (0.1%)
+  oqlos/core/oql_parser.py  dup=34L  groups=4  frags=10  (0.1%)
   oqlos/hardware/plugins/modbus_adc.py  dup=24L  groups=4  frags=5  (0.1%)
   oqlos/hardware/plugins/lung.py  dup=22L  groups=4  frags=6  (0.1%)
   oqlos/dsl/schema.py  dup=20L  groups=1  frags=2  (0.1%)
@@ -2187,22 +2203,18 @@ HOTSPOTS[7] (files with most duplication):
 DUPLICATES[46] (ranked by impact):
   [F0024]   FUZZ  _exec_set_peripheral  L=11 N=2 saved=11 sim=0.94
       oqlos/core/interpreter.py:333-343  (_exec_set_peripheral)
-      oqlos/core/_firmware_executor.py:197-210  (exec_set_peripheral)
+      oqlos/core/_firmware_executor.py:253-266  (exec_set_peripheral)
   [072bf17442930dfb]   STRU  _try_task  L=5 N=3 saved=10 sim=1.00
-      oqlos/core/_cql_tokenizer.py:163-167  (_try_task)
-      oqlos/core/_cql_tokenizer.py:242-246  (_try_if_fail_block)
-      oqlos/core/_cql_tokenizer.py:368-372  (_try_save_ws)
-  [72f2147f8d49b415]   STRU  parse_SET  L=5 N=3 saved=10 sim=1.00
-      oqlos/core/oql_parser.py:247-251  (parse_SET)
-      oqlos/core/oql_parser.py:349-353  (parse_MIN)
-      oqlos/core/oql_parser.py:356-360  (parse_MAX)
+      oqlos/core/_cql_tokenizer.py:166-170  (_try_task)
+      oqlos/core/_cql_tokenizer.py:245-249  (_try_if_fail_block)
+      oqlos/core/_cql_tokenizer.py:371-375  (_try_save_ws)
   [d884e769a616fa58]   STRU  _merge_object_function_map  L=10 N=2 saved=10 sim=1.00
       oqlos/dsl/schema.py:99-108  (_merge_object_function_map)
       oqlos/dsl/schema.py:111-120  (_merge_param_unit_map)
   [F0015]   FUZZ  _try_set  L=5 N=3 saved=10 sim=0.88
-      oqlos/core/_cql_tokenizer.py:179-183  (_try_set)
-      oqlos/core/_cql_tokenizer.py:282-286  (_try_val)
-      oqlos/core/_cql_tokenizer.py:362-366  (_try_goto)
+      oqlos/core/_cql_tokenizer.py:182-186  (_try_set)
+      oqlos/core/_cql_tokenizer.py:285-289  (_try_val)
+      oqlos/core/_cql_tokenizer.py:365-369  (_try_goto)
   [F0019]   FUZZ  _mig_goto  L=5 N=3 saved=10 sim=0.85
       scripts/oql_v2_to_v4_migrate_db.py:377-381  (_mig_goto)
       scripts/oql_v2_to_v4_migrate_db.py:391-395  (_mig_else_info)
@@ -2211,8 +2223,8 @@ DUPLICATES[46] (ranked by impact):
       scripts/oql_v2_to_v4_migrate_db.py:313-320  (_mig_minmax_eq)
       scripts/oql_v2_to_v4_migrate_db.py:323-330  (_mig_minmax_simple)
   [F0020]   FUZZ  _make_args_parser  L=8 N=2 saved=8 sim=0.91
-      oqlos/core/_cql_tokenizer.py:97-104  (_make_args_parser)
-      oqlos/core/_cql_tokenizer.py:116-123  (_make_method_parser)
+      oqlos/core/_cql_tokenizer.py:100-107  (_make_args_parser)
+      oqlos/core/_cql_tokenizer.py:119-126  (_make_method_parser)
   [F0022]   FUZZ  _handle_status_modbus  L=8 N=2 saved=8 sim=0.89
       oqlos/hardware/plugins/motor.py:327-334  (_handle_status_modbus)
       oqlos/hardware/plugins/motor.py:286-294  (_handle_stop_modbus)
@@ -2220,19 +2232,19 @@ DUPLICATES[46] (ranked by impact):
       scripts/migrate_to_v4.py:115-121  (_migrate_wait_line)
       scripts/migrate_to_v4.py:139-145  (_migrate_save_line)
   [F0021]   FUZZ  _try_arrow_action  L=8 N=2 saved=8 sim=0.86
-      oqlos/core/_cql_tokenizer.py:154-161  (_try_arrow_action)
-      oqlos/core/_cql_tokenizer.py:331-338  (_try_func)
+      oqlos/core/_cql_tokenizer.py:157-164  (_try_arrow_action)
+      oqlos/core/_cql_tokenizer.py:334-341  (_try_func)
   [528e8d469f4eb20b]   EXAC  modbus_plugins_need_repair  L=6 N=2 saved=6 sim=1.00
       oqlos/hardware/client/autorepair.py:30-35  (modbus_plugins_need_repair)
       oqlos/hardware/diagnosis_plugin_health.py:62-67  (modbus_plugins_need_repair)
   [9b5d9d160eb47842]   STRU  parse_GET  L=3 N=3 saved=6 sim=1.00
-      oqlos/core/oql_parser.py:254-256  (parse_GET)
-      oqlos/core/oql_parser.py:306-308  (parse_SAVE)
-      oqlos/core/oql_parser.py:402-404  (parse_INCLUDE)
+      oqlos/core/oql_parser.py:261-263  (parse_GET)
+      oqlos/core/oql_parser.py:314-316  (parse_SAVE)
+      oqlos/core/oql_parser.py:410-412  (parse_INCLUDE)
   [c5e35493de881001]   STRU  parse_LOG  L=3 N=3 saved=6 sim=1.00
-      oqlos/core/oql_parser.py:382-384  (parse_LOG)
-      oqlos/core/oql_parser.py:387-389  (parse_ERROR)
-      oqlos/core/oql_parser.py:392-394  (parse_CORRECT)
+      oqlos/core/oql_parser.py:390-392  (parse_LOG)
+      oqlos/core/oql_parser.py:395-397  (parse_ERROR)
+      oqlos/core/oql_parser.py:400-402  (parse_CORRECT)
   [F0006]   FUZZ  _execute_firmware_action  L=3 N=3 saved=6 sim=0.93
       oqlos/core/interpreter.py:349-351  (_execute_firmware_action)
       oqlos/core/interpreter.py:353-355  (_execute_plugin_action)
@@ -2257,8 +2269,11 @@ DUPLICATES[46] (ranked by impact):
       oqlos/api/hardware_events.py:18-22  (_default_path)
       oqlos/api/hardware_mapping_store.py:23-27  (_default_path)
   [604ad2c312cebf88]   STRU  _try_var  L=5 N=2 saved=5 sim=1.00
-      oqlos/core/_cql_tokenizer.py:322-326  (_try_var)
-      oqlos/core/_cql_tokenizer.py:352-356  (_try_api)
+      oqlos/core/_cql_tokenizer.py:325-329  (_try_var)
+      oqlos/core/_cql_tokenizer.py:355-359  (_try_api)
+  [72f2147f8d49b415]   STRU  parse_MIN  L=5 N=2 saved=5 sim=1.00
+      oqlos/core/oql_parser.py:357-361  (parse_MIN)
+      oqlos/core/oql_parser.py:364-368  (parse_MAX)
   [43e47beaf70d4a45]   STRU  disconnect  L=5 N=2 saved=5 sim=1.00
       oqlos/hardware/plugins/lung.py:85-89  (disconnect)
       oqlos/hardware/plugins/piadc.py:142-146  (disconnect)
@@ -2266,8 +2281,8 @@ DUPLICATES[46] (ranked by impact):
       oqlos/hardware/scanner_probe.py:57-61  (_match_blob)
       oqlos/hardware/scanner_probe.py:88-92  (_usb_product_blob)
   [F0014]   FUZZ  parser  L=5 N=2 saved=5 sim=0.91
-      oqlos/core/_cql_tokenizer.py:99-103  (parser)
-      oqlos/core/_cql_tokenizer.py:118-122  (parser)
+      oqlos/core/_cql_tokenizer.py:102-106  (parser)
+      oqlos/core/_cql_tokenizer.py:121-125  (parser)
   [F0018]   FUZZ  _read_address  L=5 N=2 saved=5 sim=0.90
       oqlos/hardware/plugins/modbus_adc.py:350-354  (_read_address)
       oqlos/hardware/plugins/modbus_adc.py:356-360  (_read_count)
@@ -2275,8 +2290,8 @@ DUPLICATES[46] (ranked by impact):
       oqlos/hardware/gateway_http.py:12-16  (get_json)
       oqlos/hardware/gateway_http.py:19-23  (post_json)
   [F0016]   FUZZ  _try_repeat_start  L=5 N=2 saved=5 sim=0.86
-      oqlos/core/_cql_tokenizer.py:310-314  (_try_repeat_start)
-      oqlos/core/_cql_tokenizer.py:316-320  (_try_repeat_stop)
+      oqlos/core/_cql_tokenizer.py:313-317  (_try_repeat_start)
+      oqlos/core/_cql_tokenizer.py:319-323  (_try_repeat_stop)
   [b7e062311606029c]   EXAC  to_json  L=4 N=2 saved=4 sim=1.00
       oqlos/hardware/transport/mqtt_oql_bridge.py:109-112  (to_json)
       oqlos/hardware/transport/mqtt_oql_bridge.py:141-144  (to_json)
@@ -2296,8 +2311,8 @@ DUPLICATES[46] (ranked by impact):
       oqlos/core/executor.py:11-13  (_resolve_compare)
       oqlos/core/safe_eval.py:90-92  (_eval_compare)
   [48a7ed090e2f6e93]   STRU  parse_CALL  L=3 N=2 saved=3 sim=1.00
-      oqlos/core/oql_parser.py:397-399  (parse_CALL)
-      oqlos/core/oql_parser.py:407-409  (parse_FUNC_CALL)
+      oqlos/core/oql_parser.py:405-407  (parse_CALL)
+      oqlos/core/oql_parser.py:415-417  (parse_FUNC_CALL)
   [af1f7d2eecf9deab]   STRU  check_firmware_health  L=3 N=2 saved=3 sim=1.00
       oqlos/tools/hardware_diagnose/health.py:30-32  (check_firmware_health)
       oqlos/tools/hardware_diagnose/health.py:35-37  (check_firmware_identify)
@@ -2339,66 +2354,66 @@ REFACTOR[46] (ranked by priority):
   [2] ○ extract_function   → oqlos/core/utils/_try_task.py
       WHY: 3 occurrences of 5-line block across 1 files — saves 10 lines
       FILES: oqlos/core/_cql_tokenizer.py
-  [3] ○ extract_function   → oqlos/core/utils/parse_SET.py
-      WHY: 3 occurrences of 5-line block across 1 files — saves 10 lines
-      FILES: oqlos/core/oql_parser.py
-  [4] ○ extract_function   → oqlos/dsl/utils/_merge_object_function_map.py
+  [3] ○ extract_function   → oqlos/dsl/utils/_merge_object_function_map.py
       WHY: 2 occurrences of 10-line block across 1 files — saves 10 lines
       FILES: oqlos/dsl/schema.py
-  [5] ○ extract_function   → oqlos/core/utils/_try_set.py
+  [4] ○ extract_function   → oqlos/core/utils/_try_set.py
       WHY: 3 occurrences of 5-line block across 1 files — saves 10 lines
       FILES: oqlos/core/_cql_tokenizer.py
-  [6] ○ extract_function   → scripts/utils/_mig_goto.py
+  [5] ○ extract_function   → scripts/utils/_mig_goto.py
       WHY: 3 occurrences of 5-line block across 1 files — saves 10 lines
       FILES: scripts/oql_v2_to_v4_migrate_db.py
-  [7] ○ extract_function   → scripts/utils/_mig_minmax_eq.py
+  [6] ○ extract_function   → scripts/utils/_mig_minmax_eq.py
       WHY: 2 occurrences of 8-line block across 1 files — saves 8 lines
       FILES: scripts/oql_v2_to_v4_migrate_db.py
-  [8] ○ extract_function   → oqlos/core/utils/_make_args_parser.py
+  [7] ○ extract_function   → oqlos/core/utils/_make_args_parser.py
       WHY: 2 occurrences of 8-line block across 1 files — saves 8 lines
       FILES: oqlos/core/_cql_tokenizer.py
-  [9] ○ extract_class      → oqlos/hardware/plugins/utils/_handle_status_modbus.py
+  [8] ○ extract_class      → oqlos/hardware/plugins/utils/_handle_status_modbus.py
       WHY: 2 occurrences of 8-line block across 1 files — saves 8 lines
       FILES: oqlos/hardware/plugins/motor.py
-  [10] ○ extract_function   → scripts/utils/_migrate_wait_line.py
+  [9] ○ extract_function   → scripts/utils/_migrate_wait_line.py
       WHY: 2 occurrences of 7-line block across 1 files — saves 7 lines
       FILES: scripts/migrate_to_v4.py
-  [11] ○ extract_function   → oqlos/core/utils/_try_arrow_action.py
+  [10] ○ extract_function   → oqlos/core/utils/_try_arrow_action.py
       WHY: 2 occurrences of 8-line block across 1 files — saves 8 lines
       FILES: oqlos/core/_cql_tokenizer.py
-  [12] ○ extract_function   → oqlos/hardware/utils/modbus_plugins_need_repair.py
+  [11] ○ extract_function   → oqlos/hardware/utils/modbus_plugins_need_repair.py
       WHY: 2 occurrences of 6-line block across 2 files — saves 6 lines
       FILES: oqlos/hardware/client/autorepair.py, oqlos/hardware/diagnosis_plugin_health.py
-  [13] ○ extract_function   → oqlos/core/utils/parse_GET.py
+  [12] ○ extract_function   → oqlos/core/utils/parse_GET.py
       WHY: 3 occurrences of 3-line block across 1 files — saves 6 lines
       FILES: oqlos/core/oql_parser.py
-  [14] ○ extract_function   → oqlos/core/utils/parse_LOG.py
+  [13] ○ extract_function   → oqlos/core/utils/parse_LOG.py
       WHY: 3 occurrences of 3-line block across 1 files — saves 6 lines
       FILES: oqlos/core/oql_parser.py
-  [15] ○ extract_class      → oqlos/core/utils/_execute_firmware_action.py
+  [14] ○ extract_class      → oqlos/core/utils/_execute_firmware_action.py
       WHY: 3 occurrences of 3-line block across 1 files — saves 6 lines
       FILES: oqlos/core/interpreter.py
-  [16] ○ extract_class      → oqlos/core/utils/_firmware.py
+  [15] ○ extract_class      → oqlos/core/utils/_firmware.py
       WHY: 3 occurrences of 3-line block across 1 files — saves 6 lines
       FILES: oqlos/core/interpreter.py
-  [17] ○ extract_function   → oqlos/utils/_read_text_file.py
+  [16] ○ extract_function   → oqlos/utils/_read_text_file.py
       WHY: 2 occurrences of 5-line block across 2 files — saves 5 lines
       FILES: oqlos/api/hardware_platform.py, oqlos/hardware/plugins/piadc.py
-  [18] ○ extract_function   → oqlos/hardware/plugins/utils/_rtu_timeout.py
+  [17] ○ extract_function   → oqlos/hardware/plugins/utils/_rtu_timeout.py
       WHY: 2 occurrences of 5-line block across 2 files — saves 5 lines
       FILES: oqlos/hardware/plugins/modbus.py, oqlos/hardware/plugins/modbus_adc.py
-  [19] ○ extract_function   → oqlos/hardware/plugins/utils/_device_id.py
+  [18] ○ extract_function   → oqlos/hardware/plugins/utils/_device_id.py
       WHY: 2 occurrences of 5-line block across 2 files — saves 5 lines
       FILES: oqlos/hardware/plugins/modbus.py, oqlos/hardware/plugins/modbus_adc.py
-  [20] ○ extract_function   → oqlos/api/utils/get_execution.py
+  [19] ○ extract_function   → oqlos/api/utils/get_execution.py
       WHY: 2 occurrences of 5-line block across 2 files — saves 5 lines
       FILES: oqlos/api/execution.py, oqlos/api/peripherals.py
-  [21] ○ extract_function   → oqlos/api/utils/_default_path.py
+  [20] ○ extract_function   → oqlos/api/utils/_default_path.py
       WHY: 2 occurrences of 5-line block across 2 files — saves 5 lines
       FILES: oqlos/api/hardware_events.py, oqlos/api/hardware_mapping_store.py
-  [22] ○ extract_function   → oqlos/core/utils/_try_var.py
+  [21] ○ extract_function   → oqlos/core/utils/_try_var.py
       WHY: 2 occurrences of 5-line block across 1 files — saves 5 lines
       FILES: oqlos/core/_cql_tokenizer.py
+  [22] ○ extract_function   → oqlos/core/utils/parse_MIN.py
+      WHY: 2 occurrences of 5-line block across 1 files — saves 5 lines
+      FILES: oqlos/core/oql_parser.py
   [23] ○ extract_function   → oqlos/hardware/plugins/utils/disconnect.py
       WHY: 2 occurrences of 5-line block across 2 files — saves 5 lines
       FILES: oqlos/hardware/plugins/lung.py, oqlos/hardware/plugins/piadc.py
@@ -2472,32 +2487,31 @@ REFACTOR[46] (ranked by priority):
       WHY: 2 occurrences of 3-line block across 1 files — saves 3 lines
       FILES: oqlos/api/_hw3_system.py
 
-QUICK_WINS[16] (low risk, high savings — do first):
+QUICK_WINS[15] (low risk, high savings — do first):
   [1] extract_function   saved=11L  → oqlos/core/utils/_exec_set_peripheral.py
       FILES: _firmware_executor.py, interpreter.py
   [2] extract_function   saved=10L  → oqlos/core/utils/_try_task.py
       FILES: _cql_tokenizer.py
-  [3] extract_function   saved=10L  → oqlos/core/utils/parse_SET.py
-      FILES: oql_parser.py
-  [4] extract_function   saved=10L  → oqlos/dsl/utils/_merge_object_function_map.py
+  [3] extract_function   saved=10L  → oqlos/dsl/utils/_merge_object_function_map.py
       FILES: schema.py
-  [5] extract_function   saved=10L  → oqlos/core/utils/_try_set.py
+  [4] extract_function   saved=10L  → oqlos/core/utils/_try_set.py
       FILES: _cql_tokenizer.py
-  [6] extract_function   saved=10L  → scripts/utils/_mig_goto.py
+  [5] extract_function   saved=10L  → scripts/utils/_mig_goto.py
       FILES: oql_v2_to_v4_migrate_db.py
-  [7] extract_function   saved=8L  → scripts/utils/_mig_minmax_eq.py
+  [6] extract_function   saved=8L  → scripts/utils/_mig_minmax_eq.py
       FILES: oql_v2_to_v4_migrate_db.py
-  [8] extract_function   saved=8L  → oqlos/core/utils/_make_args_parser.py
+  [7] extract_function   saved=8L  → oqlos/core/utils/_make_args_parser.py
       FILES: _cql_tokenizer.py
-  [9] extract_class      saved=8L  → oqlos/hardware/plugins/utils/_handle_status_modbus.py
+  [8] extract_class      saved=8L  → oqlos/hardware/plugins/utils/_handle_status_modbus.py
       FILES: motor.py
-  [11] extract_function   saved=8L  → oqlos/core/utils/_try_arrow_action.py
+  [10] extract_function   saved=8L  → oqlos/core/utils/_try_arrow_action.py
       FILES: _cql_tokenizer.py
+  [9] extract_function   saved=7L  → scripts/utils/_migrate_wait_line.py
+      FILES: migrate_to_v4.py
 
-EFFORT_ESTIMATE (total ≈ 8.3h):
+EFFORT_ESTIMATE (total ≈ 8.1h):
   easy   _exec_set_peripheral                saved=11L  ~22min
   easy   _try_task                           saved=10L  ~20min
-  easy   parse_SET                           saved=10L  ~20min
   easy   _merge_object_function_map          saved=10L  ~20min
   easy   _try_set                            saved=10L  ~20min
   easy   _mig_goto                           saved=10L  ~20min
@@ -2505,38 +2519,31 @@ EFFORT_ESTIMATE (total ≈ 8.3h):
   easy   _make_args_parser                   saved=8L  ~16min
   easy   _handle_status_modbus               saved=8L  ~16min
   easy   _migrate_wait_line                  saved=7L  ~14min
-  ... +36 more (~312min)
+  easy   _try_arrow_action                   saved=8L  ~16min
+  ... +36 more (~306min)
 
 METRICS-TARGET:
   dup_groups:  46 → 0
-  saved_lines: 248 lines recoverable
+  saved_lines: 243 lines recoverable
 ```
 
 ### Evolution / Churn (`project/evolution.toon.yaml`)
 
 ```toon markpact:analysis path=project/evolution.toon.yaml
-# code2llm/evolution | 2096 func | 230f | 2026-06-30
+# code2llm/evolution | 2165 func | 248f | 2026-07-01
 # generated in 0.01s
 
-NEXT[5] (ranked by impact):
+NEXT[3] (ranked by impact):
   [1] !! SPLIT           frontend/src/i18n/dictionaries.js
-      WHY: 1981L, 0 classes, max CC=5
-      EFFORT: ~4h  IMPACT: 9905
+      WHY: 2053L, 0 classes, max CC=5
+      EFFORT: ~4h  IMPACT: 10265
 
   [2] !! SPLIT           frontend/src/pages/mapEditorDefaultMap.js
       WHY: 1763L, 0 classes, max CC=1
       EFFORT: ~4h  IMPACT: 1763
 
-  [3] !! SPLIT-FUNC      executeConfigureStep  CC=28  fan=13
-      WHY: CC=28 exceeds 15
-      EFFORT: ~1h  IMPACT: 364
-
-  [4] !  SPLIT-FUNC      runCurrentStep  CC=15  fan=18
-      WHY: CC=15 exceeds 15
-      EFFORT: ~1h  IMPACT: 270
-
-  [5] !! SPLIT           docs/README.md
-      WHY: 2119L, 0 classes, max CC=0
+  [3] !! SPLIT           docs/README.md
+      WHY: 2245L, 0 classes, max CC=0
       EFFORT: ~4h  IMPACT: 0
 
 
@@ -2547,9 +2554,9 @@ RISKS[3]:
 
 METRICS-TARGET:
   CC̄:          3.8 → ≤2.7
-  max-CC:      28 → ≤14
-  god-modules: 20 → 0
-  high-CC(≥15): 6 → ≤3
+  max-CC:      17 → ≤8
+  god-modules: 19 → 0
+  high-CC(≥15): 2 → ≤1
   hub-types:   0 → ≤0
 
 PATTERNS (language parser shared logic):
@@ -2577,7 +2584,7 @@ PATTERNS (language parser shared logic):
     - Standardized FunctionInfo/ClassInfo models
 
 HISTORY:
-  prev CC̄=3.9 → now CC̄=3.8
+  prev CC̄=3.8 → now CC̄=3.8
 ```
 
 ### Validation (`project/validation.toon.yaml`)

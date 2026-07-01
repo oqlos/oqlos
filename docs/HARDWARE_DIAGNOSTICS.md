@@ -217,7 +217,7 @@ Test kalibracji sprawdza:
 1. **Pump response** - czas odpowiedzi pompy DRI0050
 2. **Valve actuation** - sekwencja otwarcia/zamknięcia zaworów NC/SC/WC
 3. **Sensor readings** - surowe odczyty napięcia ADC z NC/SC/WC
-4. **Calibrated valve validation** - scenariusz `oqlos/oqlos/scenarios/test-zaworu.oql` z oknami napięć
+4. **Calibrated valve validation** - scenariusz `scenarios/test-zaworu.oql` z oknami napięć
 
 Do samego potwierdzenia sterowania zaworami użyj `hardware-valves-smoke.oql`; do walidacji progów na realnym sprzęcie użyj `test-zaworu.oql`.
 

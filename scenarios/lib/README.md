@@ -23,7 +23,7 @@ GOAL smoke:
 
 1. ścieżki absolutnej (jeśli podana),
 2. katalogu pliku wywołującego,
-3. `oqlos/scenarios/` (korzeń scenariuszy).
+3. `scenarios/` (korzeń scenariuszy).
 
 ## Argumenty pozycjonalne
 

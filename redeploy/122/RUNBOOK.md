@@ -23,9 +23,10 @@ ssh pi@boardnet.local true             # verify key-only login works
 ## 3. Base packages
 ```bash
 ssh pi@boardnet.local 'sudo apt-get update && \
-  sudo apt-get install -y python3-venv python3-pip mosquitto mosquitto-clients'
+  sudo apt-get install -y python3-venv python3-pip mosquitto mosquitto-clients i2c-tools'
 ```
-If the RTC HAT is fitted, enable I2C:
+If the RTC HAT is fitted, enable I2C. The migration repeats this idempotently,
+but a reboot may be required after the first enable:
 ```bash
 ssh pi@boardnet.local 'sudo raspi-config nonint do_i2c 0'
 ```
@@ -90,10 +91,11 @@ Do not expose these ports outside the trusted lab LAN.
 
 ## Current hardware note
 
-As of 2026-06-30 13:58 CEST, BoardNet is up after reboot in `mode=real` with
+As of 2026-06-30 22:02 CEST, BoardNet is up after reboot in `mode=real` with
 `overall_ok=true`. Tic249 and DRI0050 are healthy, Tic249 is de-energized when
-idle, and Modbus-IO is healthy on `9600/N`, slave ID `2`. `modbus-adc` is
-disabled because the ADC adapter is not present.
+idle, Modbus-IO is healthy on `9600/N`, slave ID `2`, and piRTC reports
+`rtc.available=true`, `watchdog.available=true`, `mock=false` on `:8125`.
+`modbus-adc` is disabled because the ADC adapter is not present.
 
 ## Rollback to single-Pi
 If boardnet is unavailable, set `PI109_HARDWARE_LOCAL=1` in the c2004 deployment

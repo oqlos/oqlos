@@ -74,4 +74,4 @@ GOAL smoke:
 
 - Full language details: [OQL v3 Specification](oql-spec.md).
 - Visual anatomy: [`docs/oql-grammar-anatomy.html`](oql-grammar-anatomy.html).
-- Quick reference: `oqlos/scenarios/OQL-CHEATSHEET.md`.
+- Quick reference: `scenarios/OQL-CHEATSHEET.md`.

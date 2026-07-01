@@ -2153,12 +2153,39 @@ html[data-iframe-child="1"] #root {
 }
 
 /* Scenario file editor (hardware-demo shell) */
+.scenario-files-shell {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.scenario-files-dashboard {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+}
+
+.scenario-files-content {
+  width: 100%;
+  max-width: none;
+  min-height: calc(100vh - 65px);
+  margin: 0;
+  padding: 20px 24px 24px;
+  display: flex;
+  flex-direction: column;
+}
+
 .scenario-files-editor-card {
   margin-top: 12px;
   display: flex;
   flex-direction: column;
   gap: 10px;
   min-height: 360px;
+}
+
+.scenario-files-content .scenario-files-editor-card {
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .scenario-files-toolbar {
@@ -2189,6 +2216,10 @@ html[data-iframe-child="1"] #root {
   line-height: 1.5;
   padding: 12px;
   outline: none;
+}
+
+.scenario-files-content .scenario-files-textarea {
+  min-height: 420px;
 }
 
 .scenario-files-textarea:focus {
@@ -2259,3 +2290,24 @@ html[data-iframe-child="1"] #root {
   border-color: color-mix(in srgb, var(--accent-red) 40%, var(--border-color));
 }
 
+@media (max-width: 900px) {
+  .scenario-files-shell {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+    flex-direction: column;
+  }
+
+  .scenario-files-dashboard {
+    overflow: visible;
+  }
+
+  .scenario-files-content {
+    min-height: 0;
+    padding: 16px;
+  }
+
+  .scenario-files-content .scenario-files-textarea {
+    min-height: 320px;
+  }
+}
