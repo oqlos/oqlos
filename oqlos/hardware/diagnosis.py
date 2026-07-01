@@ -171,6 +171,16 @@ def _recover_targets(report: DiagnosisReport, health: dict[str, Any]) -> list[st
     return targets
 
 
+_SIDECAR_DOWN_MARKERS = ("connection attempts failed", "http 503", "503", "connect returned false")
+
+
+def _should_force_sidecar_restart(entry: dict[str, Any], *, extra_markers: tuple[str, ...] = ()) -> bool:
+    if not entry:
+        return True
+    msg = str(entry.get("message") or "").lower()
+    return any(marker in msg for marker in (*_SIDECAR_DOWN_MARKERS, *extra_markers))
+
+
 async def _repair_dri0050_if_needed(
     targets: list[str],
     health_before: dict[str, Any],
@@ -182,14 +192,7 @@ async def _repair_dri0050_if_needed(
     from oqlos.hardware.sidecar_control import ensure_dri0050_sidecar
 
     entry = health_before.get("motor-dri0050") if isinstance(health_before.get("motor-dri0050"), dict) else {}
-    msg = str(entry.get("message") or "").lower()
-    force = (
-        "connection attempts failed" in msg
-        or "http 503" in msg
-        or "503" in msg
-        or "connect returned false" in msg
-        or not entry
-    )
+    force = _should_force_sidecar_restart(entry)
     repairs.append(await ensure_dri0050_sidecar(force_restart=force))
 
 
@@ -204,15 +207,7 @@ async def _repair_tic249_if_needed(
     from oqlos.hardware.sidecar_control import ensure_tic249_sidecar
 
     entry = health_before.get("motor-tic249") if isinstance(health_before.get("motor-tic249"), dict) else {}
-    msg = str(entry.get("message") or "").lower()
-    force = (
-        "connection attempts failed" in msg
-        or "http 503" in msg
-        or "503" in msg
-        or "connect returned false" in msg
-        or "errno 19" in msg
-        or not entry
-    )
+    force = _should_force_sidecar_restart(entry, extra_markers=("errno 19",))
     repairs.append(await ensure_tic249_sidecar(force_restart=force))
 
 

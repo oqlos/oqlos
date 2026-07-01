@@ -10,8 +10,9 @@ const navItems = [
   { path: "/scenario-files", labelKey: "nav.scenarioFiles" },
   { path: "/map-editor", labelKey: "nav.map" },
   { path: "/func-editor", labelKey: "nav.func" },
-  { href: "/panel", labelKey: "nav.panel" },
-  { href: "/navigation", labelKey: "nav.navigation" },
+  { path: "/motor-services", labelKey: "nav.motorServices" },
+  { href: "/ui/panel", labelKey: "nav.panel" },
+  { href: "/ui/navigation", labelKey: "nav.navigation" },
   { href: "/docs", labelKey: "nav.apiDocs" },
 ];
 
@@ -51,7 +52,7 @@ export default function SharedNav({
   return (
     <nav className="nav">
       <div className="nav-brand">
-        <a href="/navigation" className="nav-brand-title">OqlOS</a>
+        <a href="/ui/navigation" className="nav-brand-title">OqlOS</a>
         <span className="nav-brand-host">{hostLabel}</span>
       </div>
       {navContext ? <div className="nav-context">{navContext}</div> : null}

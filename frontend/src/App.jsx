@@ -4,6 +4,7 @@ import HardwareDemo from "./pages/HardwareDemo";
 import HardwareRestart from "./pages/HardwareRestart";
 import MapEditor from "./pages/MapEditor";
 import ScenarioFiles from "./pages/ScenarioFiles";
+import MotorServices from "./pages/MotorServices";
 
 // Standalone hardware UI moved out of c2004 connect-scenario. RBAC GuardedRoute
 // was an app-shell concern; here routes render directly (SharedNav still reflects
@@ -18,6 +19,7 @@ export default function App() {
       <Route path="/map-editor" element={<MapEditor />} />
       <Route path="/scenario-files" element={<ScenarioFiles />} />
       <Route path="/func-editor" element={<ScenarioFiles />} />
+      <Route path="/motor-services" element={<MotorServices />} />
       <Route path="*" element={<Navigate to="/hardware-status" replace />} />
     </Routes>
   );

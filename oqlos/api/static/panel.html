@@ -106,14 +106,15 @@
   <span id="nodeBadge" class="badge warn">łączenie…</span>
   <span id="svcBadge" class="badge">—</span>
   <nav class="top-nav" aria-label="OqlOS navigation">
-    <a href="/hardware-status">Status</a>
-    <a href="/hardware-restart">Restart</a>
-    <a href="/hardware-demo">Demo</a>
-    <a href="/map-editor">MAP</a>
-    <a href="/scenario-files">Scenarios</a>
-    <a href="/func-editor">Functions</a>
-    <a class="active" href="/panel">OQL</a>
-    <a href="/navigation">Navigation</a>
+    <a href="/ui/hardware-status">Status</a>
+    <a href="/ui/hardware-restart">Restart</a>
+    <a href="/ui/hardware-demo">Demo</a>
+    <a href="/ui/map-editor">MAP</a>
+    <a href="/ui/scenario-files">Scenarios</a>
+    <a href="/ui/func-editor">Functions</a>
+    <a href="/ui/motor-services">Motors</a>
+    <a class="active" href="/ui/panel">OQL</a>
+    <a href="/ui/navigation">Navigation</a>
     <a href="/docs">API</a>
   </nav>
   <div class="spacer"></div>
@@ -696,7 +697,8 @@ async function loadScenario(){
   if(s._file && s._filePath && !s.oql){
     try{
       banner('');
-      const r=await fetch('/api/v1/editor/file/'+s._filePath);
+      const encodedPath=String(s._filePath).split('/').map(encodeURIComponent).join('/');
+      const r=await fetch('/api/v1/editor/file/'+encodedPath, {cache:'no-store'});
       if(!r.ok) throw new Error('HTTP '+r.status);
       const data=await r.json();
       s.oql=(typeof data.content==='string')?data.content:'';

@@ -1,5 +1,5 @@
 schema_version: '1.0'
-generated_at: '2026-07-01T06:17:07.674011+00:00'
+generated_at: '2026-07-01T07:12:24.569107+00:00'
 spec:
   path: redeploy/122/migration.md
   name: oqlos boardnet deploy

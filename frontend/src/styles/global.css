@@ -1818,6 +1818,16 @@ html[data-iframe-child="1"] #root {
   background: var(--bg-card);
 }
 
+.hw-issue-list {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  color: var(--text-secondary);
+}
+
+.hw-issue-list li {
+  margin: 4px 0;
+}
+
 .hw-device-diagnosis__head {
   display: flex;
   flex-wrap: wrap;

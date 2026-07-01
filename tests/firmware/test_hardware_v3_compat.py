@@ -115,10 +115,14 @@ def test_hardware_ui_aliases_and_status_page_are_served():
     assert editor.status_code in {302, 307}
     assert editor.headers["location"] == "/ui/scenario-files?scenario=demo.oql"
 
-    navigation = client.get("/navigation")
-    assert navigation.status_code == 200
-    assert "OqlOS BoardNet navigation" in navigation.text
-    assert "/api/v1/oql/manage" in navigation.text
+    navigation = client.get("/navigation", follow_redirects=False)
+    assert navigation.status_code in {302, 307}
+    assert navigation.headers["location"] == "/ui/navigation"
+
+    ui_navigation = client.get("/ui/navigation")
+    assert ui_navigation.status_code == 200
+    assert "OqlOS BoardNet navigation" in ui_navigation.text
+    assert "/api/v1/oql/manage" in ui_navigation.text
 
 
 def test_navigation_index_and_short_aliases():
@@ -132,24 +136,26 @@ def test_navigation_index_and_short_aliases():
     api_paths = {item["path"] for item in body["api"]}
     aliases = {item["path"]: item["target"] for item in body["aliases"]}
 
-    assert "/navigation" in page_paths
-    assert "/hardware-status" in page_paths
-    assert "/panel" in page_paths
+    assert "/ui/navigation" in page_paths
+    assert "/ui/hardware-status" in page_paths
+    assert "/ui/panel" in page_paths
     assert "/api/v1/oql/execute" in api_paths
     assert "/api/v1/oql/manage" in api_paths
-    assert aliases["/status"] == "/hardware-status"
-    assert aliases["/oql"] == "/panel"
+    assert aliases["/status"] == "/ui/hardware-status"
+    assert aliases["/oql"] == "/ui/panel"
 
     expected_redirects = {
-        "/nav": "/navigation",
-        "/status": "/hardware-status",
-        "/restart": "/hardware-restart",
-        "/demo": "/hardware-demo",
-        "/map": "/map-editor",
-        "/files": "/scenario-files",
-        "/functions": "/func-editor",
-        "/oql": "/panel",
-        "/oql-panel": "/panel",
+        "/nav": "/ui/navigation",
+        "/navigation": "/ui/navigation",
+        "/status": "/ui/hardware-status",
+        "/restart": "/ui/hardware-restart",
+        "/demo": "/ui/hardware-demo",
+        "/map": "/ui/map-editor",
+        "/files": "/ui/scenario-files",
+        "/functions": "/ui/func-editor",
+        "/oql": "/ui/panel",
+        "/oql-panel": "/ui/panel",
+        "/panel": "/ui/panel",
     }
     for path, target in expected_redirects.items():
         redirected = client.get(path, follow_redirects=False)

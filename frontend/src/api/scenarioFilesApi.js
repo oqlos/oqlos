@@ -1,4 +1,5 @@
 const API_BASE = "/api/v1/editor";
+const OQL_API_BASE = "/api/v1/oql";
 
 export function filterListableFiles(files) {
   if (!Array.isArray(files)) return [];
@@ -48,6 +49,31 @@ export async function executeScenarioFile({ scenarioFile, mode = "real", speed =
   const data = await response.json();
   if (!response.ok) {
     throw new Error(data.detail || `HTTP ${response.status}`);
+  }
+  return data;
+}
+
+export async function executeOqlScript({ oql, mode = "real", speed = 1.0, timeoutMs } = {}) {
+  const normalizedMode = mode === "real" ? "execute" : mode;
+  const numericSpeed = Number.parseFloat(speed);
+  const payload = {
+    kind: "script",
+    mode: normalizedMode,
+    oql,
+    skip_waits: Number.isFinite(numericSpeed) && numericSpeed > 2,
+  };
+  if (Number.isFinite(timeoutMs) && timeoutMs > 0) {
+    payload.timeout_ms = Math.round(timeoutMs);
+  }
+
+  const response = await fetch(`${OQL_API_BASE}/execute`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || data.ok === false) {
+    throw new Error(data.detail || data.error || `HTTP ${response.status}`);
   }
   return data;
 }

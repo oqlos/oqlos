@@ -33,6 +33,74 @@ _VALVE_STAGGER_SECONDS = 0.1
 _active_hold_key: str | None = None
 
 
+def _normalize_hui_profile_key(key: Any) -> str:
+    text = str(key or "").strip().lower()
+    if text.startswith("hui.hold."):
+        return text.removeprefix("hui.hold.")
+    return text
+
+
+def _coerce_valve_ids(value: Any) -> tuple[str, ...] | None:
+    if isinstance(value, str):
+        items = [item.strip() for item in value.split(",")]
+    elif isinstance(value, (list, tuple)):
+        items = [str(item).strip() for item in value]
+    else:
+        return None
+    return tuple(item for item in items if item)
+
+
+def _coerce_float(value: Any) -> float | None:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _profile_from_map_action(binding: Any) -> dict[str, Any] | None:
+    if not isinstance(binding, dict):
+        return None
+    body = binding.get("body") if isinstance(binding.get("body"), dict) else binding
+    kind = str(binding.get("kind") or body.get("kind") or "").strip().lower()
+    command = str(body.get("command") or "").strip().lower()
+    has_profile_fields = any(field in body for field in ("valves_on", "valvesOn", "pump_pct", "pumpPct"))
+    if kind not in {"hui-hold", "hui_hold"} and command not in {"hui_hold", "hold_profile"} and not has_profile_fields:
+        return None
+
+    valves = _coerce_valve_ids(body.get("valves_on", body.get("valvesOn")))
+    pump_pct = _coerce_float(body.get("pump_pct", body.get("pumpPct", body.get("power_pct"))))
+    if valves is None or pump_pct is None:
+        return None
+    return {"valves_on": valves, "pump_pct": pump_pct}
+
+
+def _mapped_hui_hold_profiles() -> dict[str, dict[str, Any]]:
+    try:
+        from oqlos.api.hardware_mapping_store import mapping_store
+
+        mapping = mapping_store.get()
+    except Exception:
+        return {}
+
+    actions = mapping.get("actions") if isinstance(mapping.get("actions"), dict) else {}
+    profiles: dict[str, dict[str, Any]] = {}
+    for key, binding in actions.items():
+        normalized_key = _normalize_hui_profile_key(key)
+        profile = _profile_from_map_action(binding)
+        if normalized_key and profile is not None:
+            profiles[normalized_key] = profile
+    return profiles
+
+
+def get_hui_hold_profiles() -> dict[str, dict[str, Any]]:
+    profiles = {
+        key: {"valves_on": tuple(profile["valves_on"]), "pump_pct": float(profile["pump_pct"])}
+        for key, profile in HUI_HOLD_PROFILES.items()
+    }
+    profiles.update(_mapped_hui_hold_profiles())
+    return profiles
+
+
 def _success(value: Any) -> bool:
     if isinstance(value, bool):
         return value
@@ -143,7 +211,7 @@ async def _engage_hold_pump_if_needed(
 async def start_hui_hold(gateway: Any, key: str) -> dict[str, Any]:
     global _active_hold_key
     hold_key = str(key or "").strip().lower()
-    profile = HUI_HOLD_PROFILES.get(hold_key)
+    profile = get_hui_hold_profiles().get(hold_key)
     if profile is None:
         return {"ok": False, "command": "hold_start", "key": hold_key, "error": "Unknown HUI hold key"}
 

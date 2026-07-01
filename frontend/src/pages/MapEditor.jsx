@@ -296,6 +296,29 @@ export default function MapEditor() {
     });
   }, [applyMapMutation, mapData]);
 
+  const editActionBodyField = useCallback((actionName, field, type = "text") => {
+    const current = mapData.actions?.[actionName]?.body?.[field];
+    const currentValue = Array.isArray(current) ? current.join(", ") : current ?? "";
+    const value = prompt(`${actionName}.body.${field}:`, currentValue);
+    if (value === null) return;
+    applyMapMutation((next) => {
+      const target = next.actions?.[actionName];
+      if (!target || typeof target !== "object") return;
+      if (!target.body || typeof target.body !== "object" || Array.isArray(target.body)) {
+        target.body = {};
+      }
+      if (type === "number") {
+        const parsed = Number(value);
+        if (!Number.isFinite(parsed)) return;
+        target.body[field] = parsed;
+      } else if (type === "list") {
+        target.body[field] = value.split(",").map((item) => item.trim()).filter(Boolean);
+      } else {
+        target.body[field] = value.trim();
+      }
+    });
+  }, [applyMapMutation, mapData]);
+
   const editMotorRuntimeConfig = useCallback((field, type = "number") => {
     const current = mapData.runtimeConfig?.motor2?.[field];
     const value = prompt(`motor2.${field}:`, current ?? "");
@@ -853,6 +876,37 @@ export default function MapEditor() {
                       </span>
                     </div>
                     <pre>{JSON.stringify(detailCfg, null, 2)}</pre>
+                    {detailCfg?.kind === "hui-hold" && (
+                      <div className="mapx-meta-box">
+                        <div className="mapx-meta-title">HUI hold profile</div>
+                        <div className="mapx-meta-grid">
+                          <div className="mapx-meta-row">
+                            <span className="mapx-meta-label">valves_on</span>
+                            <span className="mapx-meta-value">{(detailCfg.body?.valves_on || []).join(", ") || "—"}</span>
+                            <button
+                              type="button"
+                              className="mapx-btn"
+                              onClick={() => editActionBodyField(selectedEntryKey, "valves_on", "list")}
+                              disabled={isReadOnly}
+                            >
+                              {t("mapEditor.editMeta")}
+                            </button>
+                          </div>
+                          <div className="mapx-meta-row">
+                            <span className="mapx-meta-label">pump_pct</span>
+                            <span className="mapx-meta-value">{detailCfg.body?.pump_pct ?? "—"}</span>
+                            <button
+                              type="button"
+                              className="mapx-btn"
+                              onClick={() => editActionBodyField(selectedEntryKey, "pump_pct", "number")}
+                              disabled={isReadOnly}
+                            >
+                              {t("mapEditor.editMeta")}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     <MapEditorIntegrationMetaPanel
                       detailCfg={detailCfg}
                       integrationMeta={integrationMeta}

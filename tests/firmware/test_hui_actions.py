@@ -62,6 +62,37 @@ def test_hui_hold_profile_runs_inside_oqlos(monkeypatch) -> None:
     ]
 
 
+def test_hui_hold_profile_can_be_overridden_from_hardware_map(monkeypatch) -> None:
+    monkeypatch.setattr(hui_hold, "_VALVE_STAGGER_SECONDS", 0)
+    monkeypatch.setattr(
+        hui_hold,
+        "_mapped_hui_hold_profiles",
+        lambda: {"head-inflate": {"valves_on": ("valve-8",), "pump_pct": 12.5}},
+    )
+    gateway = FakeGateway()
+
+    payload = run(hui_actions.start_hui_hold(gateway, "head-inflate"))
+
+    assert payload["ok"] is True
+    assert gateway.calls[-2:] == [
+        ("valve", "valve-8", True),
+        ("pump", 12.5),
+    ]
+
+
+def test_hui_actions_list_uses_mapped_profiles(monkeypatch) -> None:
+    monkeypatch.setattr(
+        hui_hold,
+        "_mapped_hui_hold_profiles",
+        lambda: {"head-inflate": {"valves_on": ("valve-8",), "pump_pct": 12.5}},
+    )
+
+    payload = hui_actions.list_hui_actions()
+
+    assert payload["ok"] is True
+    assert payload["profiles"]["head-inflate"] == {"valves_on": ["valve-8"], "pump_pct": 12.5}
+
+
 def test_hui_artificial_lung_uses_tic249_plugin_recipe() -> None:
     plugin = FakeTic249Plugin()
     gateway = FakeGateway(real=True, plugin=plugin)

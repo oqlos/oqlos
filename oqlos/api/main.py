@@ -59,55 +59,82 @@ STATIC_DIR = Path(__file__).parent
 
 NAVIGATION_PAGES = [
     {
-        "path": "/navigation",
+        "path": "/ui/navigation",
         "label": "Navigation",
         "description": "Human-readable BoardNet entrypoint with links and curl examples.",
     },
     {
-        "path": "/hardware-status",
+        "path": "/ui/hardware-status",
         "label": "Hardware status",
         "description": "Runtime health, detected adapters, USB, serial and I2C diagnostics.",
     },
     {
-        "path": "/hardware-restart",
+        "path": "/ui/hardware-restart",
         "label": "Hardware restart",
         "description": "Guided hardware restart and detection wizard.",
     },
     {
-        "path": "/hardware-demo",
+        "path": "/ui/hardware-demo",
         "label": "Hardware demo",
         "description": "Manual hardware controls and firmware demo panel.",
     },
     {
-        "path": "/map-editor",
+        "path": "/ui/map-editor",
         "label": "MAP editor",
         "description": "Hardware map and function-to-hardware bindings.",
     },
     {
-        "path": "/scenario-files",
+        "path": "/ui/scenario-files",
         "label": "Scenario files",
         "description": "OQL scenario editor served directly by OqlOS.",
     },
     {
-        "path": "/func-editor",
+        "path": "/ui/func-editor",
         "label": "Function editor",
         "description": "Reusable OQL function definitions.",
     },
     {
-        "path": "/panel",
+        "path": "/ui/motor-services",
+        "label": "Motor services",
+        "description": "Sidecar status/restart for the lung (Tic249) and pump (DRI0050) motor services.",
+    },
+    {
+        "path": "/ui/panel",
         "label": "OQL panel",
         "description": "Direct OQL command, scenario and manage verb tester.",
     },
     {
-        "path": "/editor",
+        "path": "/ui/editor",
         "label": "Legacy editor",
-        "description": "Simple built-in scenario editor.",
+        "description": "Simple built-in scenario editor (redirects to scenario files).",
     },
     {
         "path": "/docs",
         "label": "API docs",
         "description": "FastAPI Swagger documentation for all HTTP endpoints.",
     },
+]
+
+NAVIGATION_ALIASES = [
+    {"path": "/nav", "target": "/ui/navigation"},
+    {"path": "/navigation", "target": "/ui/navigation"},
+    {"path": "/status", "target": "/ui/hardware-status"},
+    {"path": "/hardware-status", "target": "/ui/hardware-status"},
+    {"path": "/restart", "target": "/ui/hardware-restart"},
+    {"path": "/hardware-restart", "target": "/ui/hardware-restart"},
+    {"path": "/demo", "target": "/ui/hardware-demo"},
+    {"path": "/hardware-demo", "target": "/ui/hardware-demo"},
+    {"path": "/map", "target": "/ui/map-editor"},
+    {"path": "/map-editor", "target": "/ui/map-editor"},
+    {"path": "/files", "target": "/ui/scenario-files"},
+    {"path": "/scenario-files", "target": "/ui/scenario-files"},
+    {"path": "/functions", "target": "/ui/func-editor"},
+    {"path": "/func-editor", "target": "/ui/func-editor"},
+    {"path": "/motor-services", "target": "/ui/motor-services"},
+    {"path": "/panel", "target": "/ui/panel"},
+    {"path": "/oql", "target": "/ui/panel"},
+    {"path": "/oql-panel", "target": "/ui/panel"},
+    {"path": "/editor", "target": "/ui/scenario-files"},
 ]
 
 NAVIGATION_API_ENDPOINTS = [
@@ -161,18 +188,6 @@ NAVIGATION_API_ENDPOINTS = [
         "path": "/ws/oql",
         "description": "OQL transport event stream.",
     },
-]
-
-NAVIGATION_ALIASES = [
-    {"path": "/nav", "target": "/navigation"},
-    {"path": "/status", "target": "/hardware-status"},
-    {"path": "/restart", "target": "/hardware-restart"},
-    {"path": "/demo", "target": "/hardware-demo"},
-    {"path": "/map", "target": "/map-editor"},
-    {"path": "/files", "target": "/scenario-files"},
-    {"path": "/functions", "target": "/func-editor"},
-    {"path": "/oql", "target": "/panel"},
-    {"path": "/oql-panel", "target": "/panel"},
 ]
 
 @asynccontextmanager
@@ -336,13 +351,23 @@ def _serve_static_html(relative_path: str, title: str, missing_message: str):
 async def editor_page(request: Request):
     return RedirectResponse(_with_query("/ui/scenario-files", request))
 
-@app.get("/panel", response_class=HTMLResponse)
-async def panel_page():
+@app.get("/panel")
+async def panel_alias(request: Request):
+    return _redirect_with_query("/ui/panel", request)
+
+
+@app.get("/navigation")
+async def navigation_alias(request: Request):
+    return _redirect_with_query("/ui/navigation", request)
+
+
+@app.get("/ui/panel", response_class=HTMLResponse)
+async def ui_panel_page():
     return _serve_static_html("static/panel.html", "OqlOS Panel", "panel.html not found.")
 
 
-@app.get("/navigation", response_class=HTMLResponse)
-async def navigation_page():
+@app.get("/ui/navigation", response_class=HTMLResponse)
+async def ui_navigation_page():
     return _serve_static_html(
         "static/navigation.html",
         "OqlOS Navigation",
@@ -398,45 +423,50 @@ async def func_editor_alias(request: Request):
     return RedirectResponse(_with_query("/ui/scenario-files", request))
 
 
+@app.get("/motor-services")
+async def motor_services_alias(request: Request):
+    return RedirectResponse(_with_query("/ui/motor-services", request))
+
+
 @app.get("/nav")
 async def nav_alias(request: Request):
-    return _redirect_with_query("/navigation", request)
+    return _redirect_with_query("/ui/navigation", request)
 
 
 @app.get("/status")
 async def status_alias(request: Request):
-    return _redirect_with_query("/hardware-status", request)
+    return _redirect_with_query("/ui/hardware-status", request)
 
 
 @app.get("/restart")
 async def restart_alias(request: Request):
-    return _redirect_with_query("/hardware-restart", request)
+    return _redirect_with_query("/ui/hardware-restart", request)
 
 
 @app.get("/demo")
 async def demo_alias(request: Request):
-    return _redirect_with_query("/hardware-demo", request)
+    return _redirect_with_query("/ui/hardware-demo", request)
 
 
 @app.get("/map")
 async def map_alias(request: Request):
-    return _redirect_with_query("/map-editor", request)
+    return _redirect_with_query("/ui/map-editor", request)
 
 
 @app.get("/files")
 async def files_alias(request: Request):
-    return _redirect_with_query("/scenario-files", request)
+    return _redirect_with_query("/ui/scenario-files", request)
 
 
 @app.get("/functions")
 async def functions_alias(request: Request):
-    return _redirect_with_query("/func-editor", request)
+    return _redirect_with_query("/ui/func-editor", request)
 
 
 @app.get("/oql")
 @app.get("/oql-panel")
 async def oql_panel_alias(request: Request):
-    return _redirect_with_query("/panel", request)
+    return _redirect_with_query("/ui/panel", request)
 
 if (_UI_DIST / "assets").is_dir():
     app.mount("/ui/assets", StaticFiles(directory=_UI_DIST / "assets"), name="ui-assets")

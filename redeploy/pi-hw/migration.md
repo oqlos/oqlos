@@ -376,7 +376,8 @@ sleep 2
 IO_DEV=$(ls -1 /dev/serial/by-id/usb-1a86_USB_Single_Serial_*-if00 2>/dev/null | head -1 || true)
 [ -n "${IO_DEV:-}" ] && [ -e "$IO_DEV" ] || { for _p in /dev/ttyACM*; do [ -e "$_p" ] && IO_DEV="$_p" && break; done; }
 [ -n "${IO_DEV:-}" ] && [ -e "$IO_DEV" ] || IO_DEV=/dev/ttyACM0
-ADC_DEV=$(ls -1 /dev/serial/by-id/usb-1a86_USB2.0-Serial-if00-port0 2>/dev/null | head -1 || true)
+ADC_DEV=$(ls -1 /dev/serial/by-id/usb-FTDI_FT232R_USB_UART_*-if00-port0 2>/dev/null | head -1 || true)
+[ -n "${ADC_DEV:-}" ] && [ -e "$ADC_DEV" ] || ADC_DEV=$(ls -1 /dev/serial/by-id/usb-1a86_USB2.0-Serial-if00-port0 2>/dev/null | head -1 || true)
 [ -n "${ADC_DEV:-}" ] && [ -e "$ADC_DEV" ] || { for _p in /dev/ttyUSB*; do [ -e "$_p" ] && ADC_DEV="$_p" && break; done; }
 [ -n "${ADC_DEV:-}" ] && [ -e "$ADC_DEV" ] || ADC_DEV=/dev/ttyUSB0
 IO_BAUD=9600

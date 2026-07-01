@@ -1342,6 +1342,132 @@ const DEFAULT_MAP = Object.freeze(
     }
   },
   "actions": {
+    "head-inflate": {
+      "kind": "hui-hold",
+      "service": "oqlos-hardware-api",
+      "environment": "lab",
+      "usageMode": "control",
+      "endpoint": "/api/v1/hardware/hui/hold/head-inflate/start",
+      "url": "/api/v1/hardware/hui/hold/head-inflate/start",
+      "hardwareAddress": "hui://mask-tester/head-inflate",
+      "handlerRuntime": "python",
+      "handlerFunction": "start_hui_hold",
+      "method": "POST",
+      "body": {
+        "command": "hui_hold",
+        "key": "head-inflate",
+        "valves_on": ["valve-5", "valve-2"],
+        "pump_pct": 70
+      }
+    },
+    "head-deflate": {
+      "kind": "hui-hold",
+      "service": "oqlos-hardware-api",
+      "environment": "lab",
+      "usageMode": "control",
+      "endpoint": "/api/v1/hardware/hui/hold/head-deflate/start",
+      "url": "/api/v1/hardware/hui/hold/head-deflate/start",
+      "hardwareAddress": "hui://mask-tester/head-deflate",
+      "handlerRuntime": "python",
+      "handlerFunction": "start_hui_hold",
+      "method": "POST",
+      "body": {
+        "command": "hui_hold",
+        "key": "head-deflate",
+        "valves_on": ["valve-3", "valve-6"],
+        "pump_pct": 0
+      }
+    },
+    "lp-pwm-plus5": {
+      "kind": "hui-hold",
+      "service": "oqlos-hardware-api",
+      "environment": "lab",
+      "usageMode": "control",
+      "endpoint": "/api/v1/hardware/hui/hold/lp-pwm-plus5/start",
+      "url": "/api/v1/hardware/hui/hold/lp-pwm-plus5/start",
+      "hardwareAddress": "hui://mask-tester/lp-pwm-plus5",
+      "handlerRuntime": "python",
+      "handlerFunction": "start_hui_hold",
+      "method": "POST",
+      "body": {
+        "command": "hui_hold",
+        "key": "lp-pwm-plus5",
+        "valves_on": ["valve-5"],
+        "pump_pct": 50
+      }
+    },
+    "lp-pwm-plus10": {
+      "kind": "hui-hold",
+      "service": "oqlos-hardware-api",
+      "environment": "lab",
+      "usageMode": "control",
+      "endpoint": "/api/v1/hardware/hui/hold/lp-pwm-plus10/start",
+      "url": "/api/v1/hardware/hui/hold/lp-pwm-plus10/start",
+      "hardwareAddress": "hui://mask-tester/lp-pwm-plus10",
+      "handlerRuntime": "python",
+      "handlerFunction": "start_hui_hold",
+      "method": "POST",
+      "body": {
+        "command": "hui_hold",
+        "key": "lp-pwm-plus10",
+        "valves_on": ["valve-5"],
+        "pump_pct": 100
+      }
+    },
+    "lp-pwm-minus5": {
+      "kind": "hui-hold",
+      "service": "oqlos-hardware-api",
+      "environment": "lab",
+      "usageMode": "control",
+      "endpoint": "/api/v1/hardware/hui/hold/lp-pwm-minus5/start",
+      "url": "/api/v1/hardware/hui/hold/lp-pwm-minus5/start",
+      "hardwareAddress": "hui://mask-tester/lp-pwm-minus5",
+      "handlerRuntime": "python",
+      "handlerFunction": "start_hui_hold",
+      "method": "POST",
+      "body": {
+        "command": "hui_hold",
+        "key": "lp-pwm-minus5",
+        "valves_on": ["valve-6"],
+        "pump_pct": 50
+      }
+    },
+    "lp-pwm-minus10": {
+      "kind": "hui-hold",
+      "service": "oqlos-hardware-api",
+      "environment": "lab",
+      "usageMode": "control",
+      "endpoint": "/api/v1/hardware/hui/hold/lp-pwm-minus10/start",
+      "url": "/api/v1/hardware/hui/hold/lp-pwm-minus10/start",
+      "hardwareAddress": "hui://mask-tester/lp-pwm-minus10",
+      "handlerRuntime": "python",
+      "handlerFunction": "start_hui_hold",
+      "method": "POST",
+      "body": {
+        "command": "hui_hold",
+        "key": "lp-pwm-minus10",
+        "valves_on": ["valve-6"],
+        "pump_pct": 100
+      }
+    },
+    "lp-bleed": {
+      "kind": "hui-hold",
+      "service": "oqlos-hardware-api",
+      "environment": "lab",
+      "usageMode": "control",
+      "endpoint": "/api/v1/hardware/hui/hold/lp-bleed/start",
+      "url": "/api/v1/hardware/hui/hold/lp-bleed/start",
+      "hardwareAddress": "hui://mask-tester/lp-bleed",
+      "handlerRuntime": "python",
+      "handlerFunction": "start_hui_hold",
+      "method": "POST",
+      "body": {
+        "command": "hui_hold",
+        "key": "lp-bleed",
+        "valves_on": ["valve-4"],
+        "pump_pct": 0
+      }
+    },
     "Reset alarmu": {
       "kind": "api",
       "service": "hardware-proxy",

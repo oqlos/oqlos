@@ -24,6 +24,16 @@ function SummaryRow({ label, value }) {
   );
 }
 
+function downloadJson(name, text) {
+  const blob = new Blob([text], { type: "application/json;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = name;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export default function HardwareStatus() {
   const { t } = useI18n();
   const [health, setHealth] = useState(null);
@@ -31,6 +41,7 @@ export default function HardwareStatus() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [activityLog, setActivityLog] = useState([]);
+  const [copyStatus, setCopyStatus] = useState("");
 
   usePageOpenedLog(
     t,
@@ -92,6 +103,28 @@ export default function HardwareStatus() {
   const adapters = useMemo(() => listHardwareAdapters(identify), [identify]);
   const diagnostics = useMemo(() => extractHardwareDiagnostics(identify), [identify]);
 
+  const copyAllJson = useCallback(async () => {
+    const payload = JSON.stringify(
+      {
+        health,
+        adapters,
+        serial_ports: diagnostics.serialPorts,
+        i2c_buses: diagnostics.i2cBuses,
+        usb_devices: diagnostics.usbDevices,
+      },
+      null,
+      2,
+    );
+    try {
+      await navigator.clipboard.writeText(payload);
+      setCopyStatus(t("hardware.copyAllOk"));
+    } catch {
+      downloadJson(`oqlos-hardware-status-${Date.now()}.json`, payload);
+      setCopyStatus(t("hardware.copyAllDownload"));
+    }
+    setTimeout(() => setCopyStatus(""), 2500);
+  }, [health, adapters, diagnostics, t]);
+
   const navContext = (
     <div className="section-label" style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: 0 }}>
       <span>{t("hardware.title")}</span>
@@ -116,10 +149,20 @@ export default function HardwareStatus() {
             >
               {loading ? t("hardware.refreshing") : t("hardware.refresh")}
             </button>
+            <button
+              type="button"
+              className="run-btn role-force"
+              onClick={copyAllJson}
+              disabled={!health}
+              style={{ marginLeft: 8 }}
+            >
+              {t("hardware.copyJson")}
+            </button>
           </div>
         </div>
 
         {error ? <div className="mapx-error">{error}</div> : null}
+        {copyStatus ? <div className="section-desc">{copyStatus}</div> : null}
 
         <div className="hw-grid">
           <div className="hw-card">

@@ -100,26 +100,39 @@ def _dri0050_paths() -> tuple[Path, Path, str, str]:
     return repo_root, python, serial, freq
 
 
-async def _http_sidecar_probe(*, attempts: int, timeout: float, healthy_only: bool) -> bool:
+async def _poll_until_ok(check, *, attempts: int, timeout: float, on_retry=None) -> bool:
+    """Call `check(timeout=timeout)` up to `attempts` times, 0.25s apart.
+
+    `on_retry(timeout=timeout)`, if given, runs after each failed check —
+    e.g. to nudge a sidecar into (re)connecting before the next attempt.
+    """
     for _ in range(attempts):
-        try:
-            async with httpx.AsyncClient(timeout=timeout) as client:
-                resp = await client.get(DRI0050_HEALTH_URL)
-            if not healthy_only or resp.status_code < 300:
-                return True
-        except (httpx.HTTPError, OSError):
-            pass
+        if await check(timeout=timeout):
+            return True
+        if on_retry is not None:
+            await on_retry(timeout=timeout)
         await asyncio.sleep(0.25)
     return False
 
 
+async def _dri0050_probe_ok(*, timeout: float, healthy_only: bool) -> bool:
+    try:
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            resp = await client.get(DRI0050_HEALTH_URL)
+        return (not healthy_only) or resp.status_code < 300
+    except (httpx.HTTPError, OSError):
+        return False
+
+
 async def _http_sidecar_listening(*, attempts: int = 4, timeout: float = 1.5) -> bool:
     """Sidecar process up (any HTTP response), including 503 serial I/O."""
-    return await _http_sidecar_probe(attempts=attempts, timeout=timeout, healthy_only=False)
+    check = lambda *, timeout: _dri0050_probe_ok(timeout=timeout, healthy_only=False)  # noqa: E731
+    return await _poll_until_ok(check, attempts=attempts, timeout=timeout)
 
 
 async def _http_sidecar_healthy(*, attempts: int = 12, timeout: float = 1.5) -> bool:
-    return await _http_sidecar_probe(attempts=attempts, timeout=timeout, healthy_only=True)
+    check = lambda *, timeout: _dri0050_probe_ok(timeout=timeout, healthy_only=True)  # noqa: E731
+    return await _poll_until_ok(check, attempts=attempts, timeout=timeout)
 
 
 async def _run_cmd(*args: str, timeout: float = 60.0) -> tuple[int, str, str]:
@@ -247,24 +260,25 @@ async def _tic249_connect(timeout: float = 2.0) -> None:
         pass
 
 
+async def _tic249_listening_ok(*, timeout: float) -> bool:
+    return await _tic249_status(timeout=timeout) is not None
+
+
+async def _tic249_connected_ok(*, timeout: float) -> bool:
+    status = await _tic249_status(timeout=timeout)
+    return isinstance(status, dict) and bool(status.get("connected"))
+
+
 async def _http_tic249_listening(*, attempts: int = 4, timeout: float = 1.5) -> bool:
     """Sidecar process up (any HTTP response from /api/status), regardless of USB connect state."""
-    for _ in range(attempts):
-        if await _tic249_status(timeout=timeout) is not None:
-            return True
-        await asyncio.sleep(0.25)
-    return False
+    return await _poll_until_ok(_tic249_listening_ok, attempts=attempts, timeout=timeout)
 
 
 async def _http_tic249_connected(*, attempts: int = 12, timeout: float = 1.5) -> bool:
     """Sidecar reachable AND reports connected=true to the Pololu Tic USB device."""
-    for _ in range(attempts):
-        status = await _tic249_status(timeout=timeout)
-        if isinstance(status, dict) and bool(status.get("connected")):
-            return True
-        await _tic249_connect(timeout=timeout)
-        await asyncio.sleep(0.25)
-    return False
+    return await _poll_until_ok(
+        _tic249_connected_ok, attempts=attempts, timeout=timeout, on_retry=_tic249_connect
+    )
 
 
 async def ensure_tic249_sidecar(*, force_restart: bool = False) -> dict[str, Any]:

@@ -3,11 +3,12 @@ import SharedNav from "../components/SharedNav";
 import SidebarList from "../components/SidebarList";
 import { useI18n } from "../i18n/I18nProvider";
 import {
-  executeScenarioFile,
+  executeOqlScript,
   fetchScenarioFileContent,
   fetchScenarioFilesList,
   saveScenarioFileContent,
 } from "../api/scenarioFilesApi";
+import { splitOqlIntoGoalScripts, timeoutMsForOqlScript } from "../utils/oqlGoals";
 import {
   findFileByScenarioQuery,
   readScenarioFromUrl,
@@ -113,23 +114,68 @@ export default function ScenarioFiles() {
       speed,
     });
     try {
-      setStatus({ message: t("scenarioFiles.statusExecuting"), type: "info" });
+      const goalScripts = splitOqlIntoGoalScripts(content);
+      if (goalScripts.length === 0) {
+        throw new Error(t("scenarioFiles.errorEmptyScenario"));
+      }
+      setStatus({ message: t("scenarioFiles.statusExecutingGoals", { count: goalScripts.length }), type: "info" });
       appendLog(
         "info",
         t("scenarioFiles.logStarting", { name: currentFile.name, speed: String(speed) }),
       );
-      const data = await executeScenarioFile({
-        scenarioFile: currentFile.path,
-        mode: "real",
-        speed,
-      });
+      appendLog("info", t("scenarioFiles.logGoalsDetected", { count: goalScripts.length }));
+      let lastResponse = null;
+      for (const goal of goalScripts) {
+        setStatus({
+          message: t("scenarioFiles.statusGoalExecuting", {
+            index: goal.index,
+            total: goal.total,
+            name: goal.name,
+          }),
+          type: "info",
+        });
+        appendLog(
+          "info",
+          t("scenarioFiles.logGoalStarting", {
+            index: goal.index,
+            total: goal.total,
+            name: goal.name,
+          }),
+        );
+        try {
+          lastResponse = await executeOqlScript({
+            oql: goal.script,
+            mode: "real",
+            speed,
+            timeoutMs: timeoutMsForOqlScript(goal.script, speed),
+          });
+        } catch (err) {
+          appendLog(
+            "error",
+            t("scenarioFiles.logGoalFailed", {
+              index: goal.index,
+              total: goal.total,
+              name: goal.name,
+              error: err.message,
+            }),
+          );
+          throw err;
+        }
+        appendLog(
+          "success",
+          t("scenarioFiles.logGoalCompleted", {
+            index: goal.index,
+            total: goal.total,
+            name: goal.name,
+          }),
+        );
+      }
       setStatus({
-        message: t("scenarioFiles.statusExecutionStarted", { id: data.execution_id }),
+        message: t("scenarioFiles.statusGoalsComplete", { count: goalScripts.length }),
         type: "success",
       });
-      appendLog("success", t("scenarioFiles.logExecutionId", { id: data.execution_id }));
-      if (data.scenario_name) {
-        appendLog("success", t("scenarioFiles.logScenarioName", { name: data.scenario_name }));
+      if (lastResponse?.node_id) {
+        appendLog("success", t("scenarioFiles.logNodeId", { node: lastResponse.node_id }));
       }
     } catch (err) {
       setStatus({ message: t("scenarioFiles.statusExecuteError", { error: err.message }), type: "error" });
@@ -137,7 +183,7 @@ export default function ScenarioFiles() {
     } finally {
       setExecuting(false);
     }
-  }, [appendLog, currentFile, executing, speed, t]);
+  }, [appendLog, content, currentFile, executing, speed, t]);
 
   const sidebarItems = useMemo(
     () =>

@@ -8,6 +8,7 @@ from oqlos.hardware.hui_artificial_lung import start_hui_artificial_lung, stop_h
 from oqlos.hardware.hui_hold import (
     HUI_ALL_VALVE_IDS,
     HUI_HOLD_PROFILES,
+    get_hui_hold_profiles,
     shutdown_all_hui_hardware,
     start_hui_hold,
     stop_hui_hold,
@@ -30,6 +31,7 @@ __all__ = [
     "HUI_LUNG_RAMP_SECONDS",
     "HUI_LUNG_RECIPROCATE_ARGS",
     "HUI_LUNG_STROKE_STEPS",
+    "get_hui_hold_profiles",
     "list_hui_actions",
     "shutdown_all_hui_hardware",
     "start_hui_artificial_lung",
@@ -40,16 +42,17 @@ __all__ = [
 
 
 def list_hui_actions() -> dict[str, Any]:
+    profiles = get_hui_hold_profiles()
     return {
         "ok": True,
-        "hold_keys": list(HUI_HOLD_PROFILES.keys()),
+        "hold_keys": list(profiles.keys()),
         "al_keys": ["al-start", "al-stop"],
         "profiles": {
             key: {
                 "valves_on": list(profile["valves_on"]),
                 "pump_pct": profile["pump_pct"],
             }
-            for key, profile in HUI_HOLD_PROFILES.items()
+            for key, profile in profiles.items()
         },
         "artificial_lung": {
             "valve_id": HUI_AL_LUNG_VALVE_ID,

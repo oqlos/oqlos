@@ -20,6 +20,16 @@ export function cloneDefaultMap() {
   return JSON.parse(JSON.stringify(DEFAULT_MAP));
 }
 
+const REQUIRED_ACTION_KEYS = [
+  "head-inflate",
+  "head-deflate",
+  "lp-pwm-plus5",
+  "lp-pwm-plus10",
+  "lp-pwm-minus5",
+  "lp-pwm-minus10",
+  "lp-bleed",
+];
+
 export function ensureRequiredDefaultMappings(mapData) {
   const shaped = ensureMapShape(mapData);
   shaped.runtimeConfig = fillMissingFields(
@@ -32,6 +42,15 @@ export function ensureRequiredDefaultMappings(mapData) {
       isPlainObject(shaped.objectActionMap.motor2) ? shaped.objectActionMap.motor2 : {},
       defaultMotor2,
     );
+  }
+  for (const key of REQUIRED_ACTION_KEYS) {
+    const defaultAction = DEFAULT_MAP.actions?.[key];
+    if (defaultAction) {
+      shaped.actions[key] = fillMissingFields(
+        isPlainObject(shaped.actions[key]) ? shaped.actions[key] : {},
+        defaultAction,
+      );
+    }
   }
   for (const key of [
     "V1", "V2", "V3", "V4", "V5", "V6", "V7", "V8",

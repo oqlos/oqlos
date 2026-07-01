@@ -124,7 +124,8 @@ def test_panel_loads_editor_file_scenarios(panel_source):
     """Regression: panel scenario dropdown must list on-disk .oql files like /editor."""
     assert "loadEditorFileScenarios" in panel_source
     assert "FILE_SCENARIOS" in panel_source
-    assert "[plik]" in panel_source
+    assert "_group" in panel_source
+    assert "Pliki scenariuszy" in panel_source
     assert "_filePath" in panel_source
     assert "loadEditorFileScenarios();" in panel_source
 

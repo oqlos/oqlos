@@ -45,7 +45,7 @@ async def test_diagnostic_command_routes_to_plugin_execute(monkeypatch):
         {"peripheral_id": "motor-tic249", "command": "status", "args": {"x": 1}},
     )
     assert result["success"] is True
-    assert calls == [("motor-tic249", {"command": "status", "params": {"x": 1}})]
+    assert calls == [("motor-tic249", {"command": "status", "params": {}})]
 
 
 @pytest.mark.asyncio
@@ -128,6 +128,64 @@ async def test_modbus_io_valve_diagnostic_preserves_set_valve_failure(monkeypatc
     assert result["success"] is False
     assert result["ok"] is False
     assert result["result"] == {"valve_id": "valve-wc", "value": False, "ok": False}
+
+
+@pytest.mark.asyncio
+async def test_pump_off_diagnostic_uses_set_pump(monkeypatch):
+    calls: list[float] = []
+
+    class _Gateway:
+        async def set_pump(self, power_pct: float):
+            calls.append(power_pct)
+            return {"success": True, "data": {"power_pct": power_pct}}
+
+    monkeypatch.setattr(
+        "oqlos.api.hardware_gateway.get_hardware_gateway",
+        lambda: _Gateway(),
+        raising=True,
+    )
+
+    async def _unexpected_execute(*_args, **_kwargs):
+        raise AssertionError("pump_off must not go through raw plugin execute")
+
+    monkeypatch.setattr("oqlos.api.plugins.execute_plugin_command", _unexpected_execute, raising=True)
+
+    result = await manage_ops.run_manage_verb(
+        "diagnostic-command",
+        {"peripheral_id": "motor-dri0050", "command": "pump_off", "args": {}},
+    )
+
+    assert result["success"] is True
+    assert calls == [0.0]
+
+
+@pytest.mark.asyncio
+async def test_move_relative_diagnostic_maps_to_plugin_move(monkeypatch):
+    calls: list[tuple[str, dict]] = []
+
+    async def _fake_execute(plugin_id, command):
+        calls.append((plugin_id, command))
+        if command["command"] == "status":
+            return {"success": True, "data": {"position": 100}}
+        return {"success": True, "data": {"position": 120}}
+
+    monkeypatch.setattr("oqlos.api.plugins.execute_plugin_command", _fake_execute, raising=True)
+
+    result = await manage_ops.run_manage_verb(
+        "diagnostic-command",
+        {
+            "peripheral_id": "motor-tic249",
+            "command": "move_relative",
+            "args": {"direction": "right", "steps": 20, "speed": 100},
+        },
+    )
+
+    assert result["success"] is True
+    assert calls[0] == ("motor-tic249", {"command": "status", "params": {}})
+    move_call = calls[1][1]
+    assert move_call["command"] == "move"
+    assert move_call["params"]["position"] == 120
+    assert move_call["params"]["offset"] == 20
 
 
 def test_diagnostic_command_listed():
