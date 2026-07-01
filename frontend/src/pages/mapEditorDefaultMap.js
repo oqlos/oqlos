@@ -1381,8 +1381,8 @@ const DEFAULT_MAP = Object.freeze(
       "method": "POST",
       "body": {
         "command": "lung",
-        "steps": 1000000,
-        "speed": 100000000,
+        "steps": 500,
+        "speed": 10000000,
         "cycles": 5,
         "pause": 0.5
       }
@@ -1400,8 +1400,8 @@ const DEFAULT_MAP = Object.freeze(
       "method": "POST",
       "body": {
         "command": "lung",
-        "steps": 1000000,
-        "speed": 100000000,
+        "steps": 1000,
+        "speed": 10000000,
         "cycles": 3,
         "pause": 0.5
       }
