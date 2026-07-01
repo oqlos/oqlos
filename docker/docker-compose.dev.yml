@@ -1,4 +1,12 @@
 services:
+  mqtt:
+    image: eclipse-mosquitto:2
+    command: mosquitto -c /mosquitto/config/mosquitto.conf
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+    ports:
+      - "1883:1883"
+
   traefik:
     image: traefik:v3
     command:
@@ -16,12 +24,18 @@ services:
       context: ..
       dockerfile: docker/Dockerfile
     command: oqlos-server --host 0.0.0.0 --port 8200
+    depends_on:
+      - mqtt
     labels:
       - "traefik.http.routers.oqlos.rule=Host(`api.oqlos.localhost`)"
     environment:
       - OQLOS_ENV=dev
       - OQLOS_HARDWARE_MODE=mock
       - OQLOS_DB_PATH=/data/oqlos.db
+      - OQLOS_OQL_TRANSPORT_ROLE=both
+      - OQLOS_OQL_NODE_ID=docker
+      - OQLOS_OQL_MQTT_HOST=mqtt
+      - OQLOS_OQL_MQTT_PORT=1883
     volumes:
       - ./data:/data
       - ../scenarios:/scenarios:ro

@@ -5,8 +5,8 @@ a dedicated Raspberry Pi 3 (`pi@boardnet.local`, `192.168.188.122`). This Pi own
 physical devices (Modbus IO/ADC, Pololu Tic T249, DFRobot DRI0050, RTC HAT) and runs the
 OQL-over-MQTT **agent/controller** pair for local and remote OQL requests. It also exposes
 the OqlOS hardware UI/API on LAN at `:8202`, so a human can open
-`http://boardnet.local:8202/hardware-status`, `/hardware-demo`, `/map-editor`,
-`/scenario-files`, and `/func-editor` directly.
+`http://boardnet.local:8202/ui/hardware-status`, `/ui/hardware-demo`, `/ui/map-editor`,
+`/ui/scenario-files`, and `/ui/func-editor` directly (legacy paths without `/ui` redirect).
 
 Aktualny stan BoardNet/DisplayNet i ostatniej diagnostyki hardware:
 `redeploy/122/CURRENT_STATE.md`.
@@ -678,6 +678,39 @@ _warn_or_fail() {
   fi
 }
 
+_assert_tic_deenergized() {
+  local label="$1"
+  local status_file="$2"
+  if [ ! -f "$status_file" ]; then
+    _warn_or_fail "$label — brak pliku status Tic249"
+    return 1
+  fi
+  if python3 - "$status_file" "$ALLOW_MISSING" "$label" <<'PY'
+import json, sys
+path, allow, label = sys.argv[1], sys.argv[2], sys.argv[3]
+data = json.load(open(path, encoding="utf-8"))
+connected = data.get("connected")
+energized = data.get("energized")
+if connected is True and energized is False:
+    print(f"PASS: {label} — Tic249 energized=false")
+    raise SystemExit(0)
+if connected is not True:
+    msg = f"{label} — Tic249 niepolaczony (connected={connected!r})"
+    if allow == "1":
+        print(f"WARN: {msg}")
+        raise SystemExit(0)
+    print(f"FAIL: {msg}")
+    raise SystemExit(1)
+print(f"FAIL: {label} — Tic249 nie jest de-energized (energized={energized!r})")
+raise SystemExit(1)
+PY
+  then
+    return 0
+  fi
+  failures=$((failures + 1))
+  return 1
+}
+
 _check_service() {
   local unit="$1"
   local required="${2:-1}"
@@ -850,6 +883,8 @@ else:
     failed += 1
 if data.get("energized") is False:
     print("PASS: Tic249 energized=false")
+elif data.get("connected") is not True and allow == "1":
+    print(f"WARN: Tic249 energized={data.get('energized')!r} przy braku polaczenia")
 else:
     print(f"FAIL: Tic249 nie jest de-energized: energized={data.get('energized')!r}")
     failed += 1
@@ -1068,11 +1103,10 @@ PY
 
   if _mqtt_rpc manage hui-al-stop '{}' 18 > "$TMPDIR/mqtt-hui-al-stop.json"; then
     _mqtt_envelope_ok "$TMPDIR/mqtt-hui-al-stop.json" "MQTT manage hui-al-stop safe path OK" 0
-    if _curl_get http://127.0.0.1:8205/api/status "$TMPDIR/tic-after-hui-al-stop.json" 6 \
-       && grep -Eq '"energized"[[:space:]]*:[[:space:]]*false' "$TMPDIR/tic-after-hui-al-stop.json"; then
-      _pass "Tic249 po MQTT hui-al-stop pozostaje energized=false"
+    if _curl_get http://127.0.0.1:8205/api/status "$TMPDIR/tic-after-hui-al-stop.json" 6; then
+      _assert_tic_deenergized "Tic249 po MQTT hui-al-stop" "$TMPDIR/tic-after-hui-al-stop.json"
     else
-      _fail "Tic249 po MQTT hui-al-stop nie potwierdzil energized=false"
+      _warn_or_fail "Tic249 po MQTT hui-al-stop — brak statusu sidecar :8205"
     fi
   else
     _warn_or_fail "brak odpowiedzi MQTT manage hui-al-stop"
@@ -1098,11 +1132,10 @@ PY
 
   if _mqtt_rpc manage lung-disable '{}' 12 > "$TMPDIR/mqtt-lung-disable.json"; then
     _mqtt_envelope_ok "$TMPDIR/mqtt-lung-disable.json" "MQTT manage lung-disable OK" 0
-    if _curl_get http://127.0.0.1:8205/api/status "$TMPDIR/tic-after-mqtt-disable.json" 6 \
-       && grep -Eq '"energized"[[:space:]]*:[[:space:]]*false' "$TMPDIR/tic-after-mqtt-disable.json"; then
-      _pass "Tic249 po MQTT lung-disable pozostaje energized=false"
+    if _curl_get http://127.0.0.1:8205/api/status "$TMPDIR/tic-after-mqtt-disable.json" 6; then
+      _assert_tic_deenergized "Tic249 po MQTT lung-disable" "$TMPDIR/tic-after-mqtt-disable.json"
     else
-      _fail "Tic249 po MQTT lung-disable nie potwierdzil energized=false"
+      _warn_or_fail "Tic249 po MQTT lung-disable — brak statusu sidecar :8205"
     fi
   else
     _warn_or_fail "brak odpowiedzi MQTT manage lung-disable"

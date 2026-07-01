@@ -127,8 +127,14 @@ def _detect_runtime_platform() -> dict[str, Any]:
     modbus_ports = topology._modbus_runtime_serial_ports()
     modbus_io_serial = modbus_ports["io_serial_port"]
     modbus_adc_serial = modbus_ports["adc_serial_port"]
+    serial_ports_error = ""
+    try:
+        serial_ports = [port.get("device") for port in list_serial_ports()]
+    except RuntimeError as exc:
+        serial_ports = []
+        serial_ports_error = str(exc)
 
-    return {
+    payload = {
         "selected": _selected_hardware_platform(),
         "piadc_selected": piadc_selected,
         "modbus_adc_selected": "modbus-rtu",
@@ -158,6 +164,8 @@ def _detect_runtime_platform() -> dict[str, Any]:
         "piadc_driver_role": "replaced-by-modbus-adc",
         "piadc_local_probe_allowed": False,
         "i2c_buses": sorted(glob.glob("/dev/i2c-*")),
-        "serial_ports": [port.get("device") for port in list_serial_ports()],
+        "serial_ports": serial_ports,
     }
-
+    if serial_ports_error:
+        payload["serial_ports_error"] = serial_ports_error
+    return payload

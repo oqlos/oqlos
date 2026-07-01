@@ -907,6 +907,64 @@ export default function MapEditor() {
                         </div>
                       </div>
                     )}
+                    {detailCfg?.kind === "hui-al" && (
+                      <div className="mapx-meta-box">
+                        <div className="mapx-meta-title">HUI AL / Tic249 profile</div>
+                        <div className="mapx-meta-grid">
+                          {[
+                            ["valve_id", "text"],
+                            ["steps", "number"],
+                            ["stroke_steps", "number"],
+                            ["speed", "number"],
+                            ["cycles", "number"],
+                            ["pause", "number"],
+                            ["ramp_seconds", "number"],
+                            ["acceleration", "number"],
+                            ["limit_mode", "text"],
+                            ["start_direction", "text"],
+                          ].map(([field, type]) => (
+                            <div key={field} className="mapx-meta-row">
+                              <span className="mapx-meta-label">{field}</span>
+                              <span className="mapx-meta-value">{detailCfg.body?.[field] ?? "—"}</span>
+                              <button
+                                type="button"
+                                className="mapx-btn"
+                                onClick={() => editActionBodyField(selectedEntryKey, field, type)}
+                                disabled={isReadOnly}
+                              >
+                                {t("mapEditor.editMeta")}
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {detailCfg?.kind === "lung-preset" && (
+                      <div className="mapx-meta-box">
+                        <div className="mapx-meta-title">Panel P-Z preset</div>
+                        <div className="mapx-meta-grid">
+                          {[
+                            ["steps", "number"],
+                            ["speed", "number"],
+                            ["cycles", "number"],
+                            ["pause", "number"],
+                          ].map(([field, type]) => (
+                            <div key={field} className="mapx-meta-row">
+                              <span className="mapx-meta-label">{field}</span>
+                              <span className="mapx-meta-value">{detailCfg.body?.[field] ?? "—"}</span>
+                              <button
+                                type="button"
+                                className="mapx-btn"
+                                onClick={() => editActionBodyField(selectedEntryKey, field, type)}
+                                disabled={isReadOnly}
+                              >
+                                {t("mapEditor.editMeta")}
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     <MapEditorIntegrationMetaPanel
                       detailCfg={detailCfg}
                       integrationMeta={integrationMeta}

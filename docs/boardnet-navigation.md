@@ -1,35 +1,40 @@
 # BoardNet OqlOS navigation
 
 BoardNet (`192.168.188.122`, `boardnet.local`) serves the OqlOS firmware UI and
-API on port `8202`.
+API on port `8202`. Human pages use the **`/ui/*`** prefix (React SPA + static HTML).
 
 Primary human entrypoints:
 
 | URL | Purpose |
 | --- | --- |
-| `http://192.168.188.122:8202/navigation` | Operator navigation and curl examples |
-| `http://192.168.188.122:8202/hardware-status` | Hardware health and diagnostics |
-| `http://192.168.188.122:8202/hardware-restart` | Hardware restart/detection wizard |
-| `http://192.168.188.122:8202/hardware-demo` | Manual hardware demo controls |
-| `http://192.168.188.122:8202/map-editor` | MAP and hardware binding editor |
-| `http://192.168.188.122:8202/scenario-files` | OQL scenario editor |
-| `http://192.168.188.122:8202/func-editor` | Function editor |
-| `http://192.168.188.122:8202/panel` | Direct OQL/manage test panel |
+| `http://192.168.188.122:8202/ui/navigation` | Operator navigation and curl examples |
+| `http://192.168.188.122:8202/ui/hardware-status` | Hardware health and diagnostics |
+| `http://192.168.188.122:8202/ui/hardware-restart` | Hardware restart/detection wizard |
+| `http://192.168.188.122:8202/ui/hardware-demo` | Manual hardware demo controls |
+| `http://192.168.188.122:8202/ui/map-editor` | MAP and hardware binding editor |
+| `http://192.168.188.122:8202/ui/scenario-files` | OQL scenario editor |
+| `http://192.168.188.122:8202/ui/func-editor` | Function editor |
+| `http://192.168.188.122:8202/ui/panel` | Direct OQL/manage test panel |
 | `http://192.168.188.122:8202/docs` | FastAPI Swagger API docs |
 
-Short aliases:
+Legacy paths without `/ui` (e.g. `/hardware-demo`, `/panel`, `/navigation`) redirect to
+the canonical `/ui/*` URLs with query string preserved.
+
+Short aliases (also redirect to `/ui/*`):
 
 | Alias | Target |
 | --- | --- |
-| `/nav` | `/navigation` |
-| `/status` | `/hardware-status` |
-| `/restart` | `/hardware-restart` |
-| `/demo` | `/hardware-demo` |
-| `/map` | `/map-editor` |
-| `/files` | `/scenario-files` |
-| `/functions` | `/func-editor` |
-| `/oql` | `/panel` |
-| `/oql-panel` | `/panel` |
+| `/nav` | `/ui/navigation` |
+| `/status` | `/ui/hardware-status` |
+| `/restart` | `/ui/hardware-restart` |
+| `/demo` | `/ui/hardware-demo` |
+| `/map` | `/ui/map-editor` |
+| `/files` | `/ui/scenario-files` |
+| `/functions` | `/ui/func-editor` |
+| `/oql` | `/ui/panel` |
+| `/oql-panel` | `/ui/panel` |
+| `/panel` | `/ui/panel` |
+| `/navigation` | `/ui/navigation` |
 
 Machine-readable navigation:
 

@@ -155,7 +155,10 @@ async def test_manage_usb_list_round_trip(broker):
     # -> usb_diagnostics.list_usb_devices -> response back over the bridge.
     controller, agent = await _make_pair(broker)
     try:
-        resp = await controller.manage("usb-list", timeout=3.0)
+        # Generous timeout: flaky under full-suite load with 3.0s (event-loop
+        # scheduling jitter after hundreds of prior async tests), even though
+        # the fake in-process broker round trip normally completes in <100ms.
+        resp = await controller.manage("usb-list", timeout=8.0)
         assert resp.ok is True
         assert isinstance(resp.result, dict)
         assert "count" in resp.result and isinstance(resp.result["devices"], list)

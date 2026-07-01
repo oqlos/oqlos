@@ -20,6 +20,8 @@ from oqlos.hardware.hui_lung_recipe import (
     HUI_LUNG_RAMP_SECONDS,
     HUI_LUNG_RECIPROCATE_ARGS,
     HUI_LUNG_STROKE_STEPS,
+    get_hui_lung_reciprocate_args,
+    get_hui_lung_valve_id,
 )
 
 __all__ = [
@@ -32,6 +34,8 @@ __all__ = [
     "HUI_LUNG_RECIPROCATE_ARGS",
     "HUI_LUNG_STROKE_STEPS",
     "get_hui_hold_profiles",
+    "get_hui_lung_reciprocate_args",
+    "get_hui_lung_valve_id",
     "list_hui_actions",
     "shutdown_all_hui_hardware",
     "start_hui_artificial_lung",
@@ -55,7 +59,7 @@ def list_hui_actions() -> dict[str, Any]:
             for key, profile in profiles.items()
         },
         "artificial_lung": {
-            "valve_id": HUI_AL_LUNG_VALVE_ID,
-            "reciprocate_args": dict(HUI_LUNG_RECIPROCATE_ARGS),
+            "valve_id": get_hui_lung_valve_id(),
+            "reciprocate_args": get_hui_lung_reciprocate_args(),
         },
     }

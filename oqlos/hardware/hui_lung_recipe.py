@@ -39,4 +39,109 @@ def build_hui_lung_reciprocate_args() -> dict[str, Any]:
     }
 
 
-HUI_LUNG_RECIPROCATE_ARGS: dict[str, Any] = build_hui_lung_reciprocate_args()
+DEFAULT_HUI_LUNG_RECIPROCATE_ARGS: dict[str, Any] = build_hui_lung_reciprocate_args()
+HUI_LUNG_RECIPROCATE_ARGS: dict[str, Any] = dict(DEFAULT_HUI_LUNG_RECIPROCATE_ARGS)
+
+
+def _mapped_hui_lung_action_body() -> dict[str, Any]:
+    try:
+        from oqlos.api.hardware_mapping_store import mapping_store
+
+        mapping = mapping_store.get()
+    except Exception:
+        return {}
+
+    actions = mapping.get("actions") if isinstance(mapping.get("actions"), dict) else {}
+    for key, binding in actions.items():
+        normalized = str(key or "").strip().lower().replace("_", "-").replace(" ", "-")
+        if normalized not in {"hui-al-start", "hui.al.start", "hui-al"}:
+            continue
+        if not isinstance(binding, dict):
+            return {}
+        body = binding.get("body") if isinstance(binding.get("body"), dict) else binding
+        return body if isinstance(body, dict) else {}
+    return {}
+
+
+def _int_from_body(body: dict[str, Any], *keys: str, fallback: int) -> int:
+    for key in keys:
+        if key not in body:
+            continue
+        try:
+            return int(float(body[key]))
+        except (TypeError, ValueError):
+            continue
+    return fallback
+
+
+def _float_from_body(body: dict[str, Any], *keys: str, fallback: float) -> float:
+    for key in keys:
+        if key not in body:
+            continue
+        try:
+            return float(body[key])
+        except (TypeError, ValueError):
+            continue
+    return fallback
+
+
+def _text_from_body(body: dict[str, Any], *keys: str, fallback: str) -> str:
+    for key in keys:
+        value = str(body.get(key) or "").strip()
+        if value:
+            return value
+    return fallback
+
+
+def get_hui_lung_valve_id() -> str:
+    body = _mapped_hui_lung_action_body()
+    return _text_from_body(body, "valve_id", "valveId", fallback=HUI_AL_LUNG_VALVE_ID)
+
+
+def get_hui_lung_reciprocate_args() -> dict[str, Any]:
+    defaults = dict(DEFAULT_HUI_LUNG_RECIPROCATE_ARGS)
+    body = _mapped_hui_lung_action_body()
+    args = body.get("reciprocate_args") or body.get("reciprocateArgs") or body.get("args")
+    if isinstance(args, dict):
+        body = {**body, **args}
+
+    max_steps_per_second = _int_from_body(
+        body,
+        "max_steps_per_second",
+        "maxStepsPerSecond",
+        fallback=HUI_LUNG_MAX_SPEED_STEPS_PER_S,
+    )
+    speed_steps_per_second = body.get("speed_steps_per_second", body.get("speedStepsPerSecond"))
+    if speed_steps_per_second is not None and "speed" not in body:
+        speed = steps_per_second_to_raw(speed_steps_per_second, max_steps_per_second=max_steps_per_second)
+    else:
+        speed = _int_from_body(body, "speed", "target_velocity", "targetVelocity", fallback=int(defaults["speed"]))
+
+    ramp_seconds = _float_from_body(body, "ramp_seconds", "rampSeconds", fallback=float(defaults["ramp_seconds"]))
+    acceleration = _int_from_body(
+        body,
+        "acceleration",
+        "acceleration_raw",
+        "accelerationRaw",
+        fallback=raw_acceleration_for_ramp(speed, ramp_seconds),
+    )
+    steps = _int_from_body(body, "steps", "stroke_steps", "strokeSteps", fallback=int(defaults["steps"]))
+
+    return {
+        **defaults,
+        "direction": _text_from_body(body, "direction", fallback=str(defaults["direction"])),
+        "start_direction": _text_from_body(
+            body,
+            "start_direction",
+            "startDirection",
+            fallback=str(defaults["start_direction"]),
+        ),
+        "limit_mode": _text_from_body(body, "limit_mode", "limitMode", fallback=str(defaults["limit_mode"])),
+        "steps": steps,
+        "stroke_steps": _int_from_body(body, "stroke_steps", "strokeSteps", fallback=steps),
+        "speed": speed,
+        "cycles": _int_from_body(body, "cycles", fallback=int(defaults["cycles"])),
+        "pause": _float_from_body(body, "pause", fallback=float(defaults["pause"])),
+        "ramp_seconds": ramp_seconds,
+        "acceleration": acceleration,
+    }

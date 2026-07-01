@@ -39,6 +39,39 @@ def add_modbus_device_actions(
     )
 
 
+def _sidecar_recovery_actions(
+    device_id: str,
+    *,
+    ensure_id: str,
+    ensure_label: str,
+    ensure_detail: str,
+    reconnect_id: str,
+    reconnect_label: str,
+) -> list[DiagnosisAction]:
+    """Standard pair of in-process OqlOS actions offered for every motor sidecar."""
+    return [
+        DiagnosisAction(
+            id=ensure_id,
+            device_id=device_id,
+            label=ensure_label,
+            kind="oqlos",
+            priority=5,
+            auto_executable=True,
+            scope="oqlos",
+            detail=ensure_detail,
+        ),
+        DiagnosisAction(
+            id=reconnect_id,
+            device_id=device_id,
+            label=reconnect_label,
+            kind="oqlos",
+            priority=18,
+            auto_executable=True,
+            scope="oqlos",
+        ),
+    ]
+
+
 def add_tic249_device_actions(
     dev: DeviceDiagnosis,
     status: str,
@@ -54,27 +87,14 @@ def add_tic249_device_actions(
             "Sidecar hw-tic249 (:8205) niedostępny — OqlOS zrestartuje usługę systemd --user."
         )
     dev.recommended_actions.extend(
-        [
-            DiagnosisAction(
-                id="tic249-ensure-sidecar",
-                device_id=dev.device_id,
-                label="Restart hw-tic249.service (OqlOS)",
-                kind="oqlos",
-                priority=5,
-                auto_executable=True,
-                scope="oqlos",
-                detail="systemctl --user restart hw-tic249.service, potem reconnect USB Tic (bez ruchu silnika).",
-            ),
-            DiagnosisAction(
-                id="tic249-oqlos-reconnect",
-                device_id=dev.device_id,
-                label="Reconnect motor-tic249 plugin (OqlOS)",
-                kind="oqlos",
-                priority=18,
-                auto_executable=True,
-                scope="oqlos",
-            ),
-        ]
+        _sidecar_recovery_actions(
+            dev.device_id,
+            ensure_id="tic249-ensure-sidecar",
+            ensure_label="Restart hw-tic249.service (OqlOS)",
+            ensure_detail="systemctl --user restart hw-tic249.service, potem reconnect USB Tic (bez ruchu silnika).",
+            reconnect_id="tic249-oqlos-reconnect",
+            reconnect_label="Reconnect motor-tic249 plugin (OqlOS)",
+        )
     )
 
 
@@ -93,27 +113,14 @@ def add_dri0050_device_actions(
     if "errno 5" in msg or "input/output error" in msg:
         dev.issues.append("Martwy handle USB RS485 pompy — odłącz/podłącz kabel pompy.")
     dev.recommended_actions.extend(
-        [
-            DiagnosisAction(
-                id="dri0050-ensure-sidecar",
-                device_id=dev.device_id,
-                label="Uruchom dri0050-motor-api (OqlOS)",
-                kind="oqlos",
-                priority=5,
-                auto_executable=True,
-                scope="oqlos",
-                detail="systemd-run jak make hardware-up, bez restartu całego stacku.",
-            ),
-            DiagnosisAction(
-                id="dri0050-reconnect",
-                device_id=dev.device_id,
-                label="Reconnect motor-dri0050 plugin (OqlOS)",
-                kind="oqlos",
-                priority=18,
-                auto_executable=True,
-                scope="oqlos",
-            ),
-        ]
+        _sidecar_recovery_actions(
+            dev.device_id,
+            ensure_id="dri0050-ensure-sidecar",
+            ensure_label="Uruchom dri0050-motor-api (OqlOS)",
+            ensure_detail="systemd-run jak make hardware-up, bez restartu całego stacku.",
+            reconnect_id="dri0050-reconnect",
+            reconnect_label="Reconnect motor-dri0050 plugin (OqlOS)",
+        )
     )
 
 

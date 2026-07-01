@@ -5,3 +5,12 @@
 !oqlos.yaml
 !oqlos/
 !oqlos/**
+!frontend/
+!frontend/index.html
+!frontend/package.json
+!frontend/package-lock.json
+!frontend/vite.config.ts
+!frontend/src/
+!frontend/src/**
+!frontend/vendor/
+!frontend/vendor/**

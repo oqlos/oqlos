@@ -21,7 +21,7 @@ Current UI ownership after the c2004 split:
 - On boardnet/RPi3 the public firmware/controller origin is
   `http://192.168.188.122:8202`.
 - BoardNet exposes a human navigation index at
-  `http://192.168.188.122:8202/navigation` and a machine-readable index at
+  `http://192.168.188.122:8202/ui/navigation` and a machine-readable index at
   `/api/v1/navigation`.
 - c2004 connect-scenario keeps only DB-backed scenario building at
   `http://localhost:8096/scenarios`; its old hardware/editor paths redirect to

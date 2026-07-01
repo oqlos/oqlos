@@ -1342,6 +1342,70 @@ const DEFAULT_MAP = Object.freeze(
     }
   },
   "actions": {
+    "hui-al-start": {
+      "kind": "hui-al",
+      "service": "oqlos-hardware-api",
+      "environment": "lab",
+      "usageMode": "control",
+      "endpoint": "/api/v1/hardware/hui/al/start",
+      "url": "/api/v1/hardware/hui/al/start",
+      "hardwareAddress": "hui://mask-tester/artificial-lung",
+      "handlerRuntime": "python",
+      "handlerFunction": "start_hui_artificial_lung",
+      "method": "POST",
+      "body": {
+        "command": "hui_al_start",
+        "valve_id": "valve-4",
+        "direction": "right",
+        "start_direction": "right",
+        "limit_mode": "reverse_on_limit",
+        "steps": 1000000,
+        "stroke_steps": 1000000,
+        "speed": 100000000,
+        "cycles": 1000000,
+        "pause": 0.5,
+        "ramp_seconds": 0.5,
+        "acceleration": 200000000
+      }
+    },
+    "lung-pz-500x5": {
+      "kind": "lung-preset",
+      "service": "oqlos-hardware-api",
+      "environment": "lab",
+      "usageMode": "control",
+      "endpoint": "/api/v1/oql/manage",
+      "url": "/api/v1/oql/manage",
+      "hardwareAddress": "hui://mask-tester/artificial-lung/pz-500x5",
+      "handlerRuntime": "python",
+      "handlerFunction": "set_lung",
+      "method": "POST",
+      "body": {
+        "command": "lung",
+        "steps": 1000000,
+        "speed": 100000000,
+        "cycles": 5,
+        "pause": 0.5
+      }
+    },
+    "lung-pz-1000x3": {
+      "kind": "lung-preset",
+      "service": "oqlos-hardware-api",
+      "environment": "lab",
+      "usageMode": "control",
+      "endpoint": "/api/v1/oql/manage",
+      "url": "/api/v1/oql/manage",
+      "hardwareAddress": "hui://mask-tester/artificial-lung/pz-1000x3",
+      "handlerRuntime": "python",
+      "handlerFunction": "set_lung",
+      "method": "POST",
+      "body": {
+        "command": "lung",
+        "steps": 1000000,
+        "speed": 100000000,
+        "cycles": 3,
+        "pause": 0.5
+      }
+    },
     "head-inflate": {
       "kind": "hui-hold",
       "service": "oqlos-hardware-api",

@@ -21,6 +21,9 @@ export function cloneDefaultMap() {
 }
 
 const REQUIRED_ACTION_KEYS = [
+  "hui-al-start",
+  "lung-pz-500x5",
+  "lung-pz-1000x3",
   "head-inflate",
   "head-deflate",
   "lp-pwm-plus5",

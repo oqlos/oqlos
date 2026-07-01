@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
-from oqlos.hardware import hui_actions, hui_hold
+from oqlos.hardware import hui_actions, hui_hold, hui_lung_recipe
 
 
 def run(coro):
@@ -110,6 +110,83 @@ def test_hui_artificial_lung_uses_tic249_plugin_recipe() -> None:
     assert args["pause"] == 0.5
     assert args["ramp_seconds"] == 0.5
     assert args["acceleration"] == 200_000_000
+
+
+def test_hui_artificial_lung_recipe_can_be_overridden_from_hardware_map(monkeypatch) -> None:
+    monkeypatch.setattr(
+        hui_lung_recipe,
+        "_mapped_hui_lung_action_body",
+        lambda: {
+            "valve_id": "valve-8",
+            "steps": 2000,
+            "speed": 30_000_000,
+            "cycles": 7,
+            "pause": 0.2,
+            "ramp_seconds": 0.1,
+            "acceleration": 300_000_000,
+        },
+    )
+    plugin = FakeTic249Plugin()
+    gateway = FakeGateway(real=True, plugin=plugin)
+
+    payload = run(hui_actions.start_hui_artificial_lung(gateway))
+
+    assert payload["ok"] is True
+    assert gateway.calls[0] == ("valve", "valve-8", True)
+    args = plugin.commands[0][1]
+    assert args["steps"] == 2000
+    assert args["speed"] == 30_000_000
+    assert args["cycles"] == 7
+    assert args["pause"] == 0.2
+    assert args["ramp_seconds"] == 0.1
+    assert args["acceleration"] == 300_000_000
+
+
+def test_stop_hui_artificial_lung_closes_the_configured_valve() -> None:
+    """Regression: stop must not crash (was NameError: HUI_AL_LUNG_VALVE_ID) and must close the valve."""
+    gateway = FakeGateway()
+
+    payload = run(hui_actions.stop_hui_artificial_lung(gateway))
+
+    assert payload["ok"] is True
+    assert ("stop_lung",) in gateway.calls
+    assert ("valve", "valve-4", False) in gateway.calls
+
+
+def test_stop_hui_artificial_lung_uses_overridden_valve(monkeypatch) -> None:
+    """Regression: stop must close whichever valve start would have opened, not the hardcoded default."""
+    monkeypatch.setattr(
+        hui_lung_recipe,
+        "_mapped_hui_lung_action_body",
+        lambda: {"valve_id": "valve-8"},
+    )
+    gateway = FakeGateway()
+
+    payload = run(hui_actions.stop_hui_artificial_lung(gateway))
+
+    assert payload["ok"] is True
+    assert ("valve", "valve-8", False) in gateway.calls
+
+
+def test_hui_artificial_lung_start_failure_cleans_up_same_valve_it_opened(monkeypatch) -> None:
+    """Regression: cleanup-on-failure must close the same (possibly overridden) valve it opened."""
+    monkeypatch.setattr(
+        hui_lung_recipe,
+        "_mapped_hui_lung_action_body",
+        lambda: {"valve_id": "valve-8"},
+    )
+
+    class FailingPlugin:
+        async def execute_command(self, command: str, params: dict[str, Any]) -> dict[str, Any]:
+            return {"success": False, "error": "boom"}
+
+    gateway = FakeGateway(real=True, plugin=FailingPlugin())
+
+    payload = run(hui_actions.start_hui_artificial_lung(gateway))
+
+    assert payload["ok"] is False
+    assert gateway.calls[0] == ("valve", "valve-8", True)
+    assert gateway.calls[-1] == ("valve", "valve-8", False)
 
 
 def test_hui_shutdown_turns_off_pump_and_all_known_valves() -> None:

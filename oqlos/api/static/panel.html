@@ -231,6 +231,46 @@ const HUI_HOLD_KEYS = [
   ["lp-pwm-minus10", "LP -10"],
   ["lp-bleed", "LP bleed"],
 ];
+const LUNG_PANEL_PRESETS = {
+  "lung-pz-500x5": {steps:1000000, speed:100000000, cycles:5, pause:0.5},
+  "lung-pz-1000x3": {steps:1000000, speed:100000000, cycles:3, pause:0.5},
+};
+function numericPresetField(value, fallback){
+  const n=Number(value);
+  return Number.isFinite(n) ? n : fallback;
+}
+function normalizeLungPresetArgs(raw, fallback){
+  const src=(raw&&typeof raw==='object')?raw:{};
+  return {
+    steps:Math.round(numericPresetField(src.steps??src.stroke_steps??src.strokeSteps, fallback.steps)),
+    speed:Math.round(numericPresetField(src.speed??src.target_velocity??src.targetVelocity, fallback.speed)),
+    cycles:Math.round(numericPresetField(src.cycles, fallback.cycles)),
+    pause:numericPresetField(src.pause, fallback.pause),
+  };
+}
+function actionBodyArgs(action){
+  if(!action || typeof action!=='object') return null;
+  const body=(action.body&&typeof action.body==='object')?action.body:action;
+  const nested=(body.args&&typeof body.args==='object')?body.args:null;
+  return nested ? {...body, ...nested} : body;
+}
+function lungPresetArgs(key){
+  return {...(LUNG_PANEL_PRESETS[key]||LUNG_PANEL_PRESETS["lung-pz-500x5"])};
+}
+async function loadHardwareMapLungPresets(){
+  try{
+    const r=await fetch('/api/v3/hardware/mapping?ts='+Date.now(), {cache:'no-store'});
+    if(!r.ok) return;
+    const data=await r.json();
+    const actions=(data.mapping&&data.mapping.actions&&typeof data.mapping.actions==='object')?data.mapping.actions:{};
+    for(const key of Object.keys(LUNG_PANEL_PRESETS)){
+      if(actions[key]){
+        LUNG_PANEL_PRESETS[key]=normalizeLungPresetArgs(actionBodyArgs(actions[key]), LUNG_PANEL_PRESETS[key]);
+      }
+    }
+    renderGroups();
+  }catch(e){}
+}
 
 function valveCommandItems(){
   return VALVE_IDS.flatMap(id=>[
@@ -266,8 +306,8 @@ const GROUPS = [
   {title:"Płuco (Tic T249)", color:"#a855f7", runAll:false, items:[
     {label:"Status", kind:"manage", verb:"diagnostic-command", args:{peripheral_id:"motor-tic249", command:"status"}},
     {label:"AL status", kind:"manage", verb:"artificial-lung-status"},
-    {label:"P-Z 500 x5", kind:"manage", verb:"lung", args:{steps:500, speed:100000, cycles:5, pause:0.5}, act:true},
-    {label:"P-Z 1000 x3", kind:"manage", verb:"lung", args:{steps:1000, speed:100000, cycles:3, pause:0.5}, act:true},
+    {label:"P-Z fast x5", kind:"manage", verb:"lung", presetKey:"lung-pz-500x5", act:true},
+    {label:"P-Z fast x3", kind:"manage", verb:"lung", presetKey:"lung-pz-1000x3", act:true},
     {label:"HUI AL START", kind:"manage", verb:"hui-al-start", act:true},
     {label:"HUI AL STOP", kind:"manage", verb:"hui-al-stop", act:true},
     {label:"Stop", kind:"manage", verb:"lung-stop", act:true},
@@ -595,7 +635,7 @@ function normalizeEditorOql(text){
 }
 
 function runItem(it){
-  if(it.kind==='manage') return runManage(it.verb, it.args, it.label+(it.verb?' ('+it.verb+')':''));
+  if(it.kind==='manage') return runManage(it.verb, it.presetKey ? lungPresetArgs(it.presetKey) : it.args, it.label+(it.verb?' ('+it.verb+')':''));
   return runOql(it.oql, 'command', 'OQL · '+it.label);
 }
 
@@ -607,7 +647,8 @@ function renderGroups(){
     const div=document.createElement('div'); div.className='group';
     if(collapsed) div.classList.add('is-collapsed');
     const btns=g.items.map((it,i)=>{
-      const title=it.kind==='manage' ? `manage: ${it.verb}${it.args?' '+JSON.stringify(it.args):''}` : it.oql;
+      const args=it.presetKey ? lungPresetArgs(it.presetKey) : it.args;
+      const title=it.kind==='manage' ? `manage: ${it.verb}${args?' '+JSON.stringify(args):''}` : it.oql;
       return `<button class="${it.act?'act':''}" data-gi="${gi}" data-i="${i}" title="${escAttr(title)}">${esc(it.label)}</button>`;
     }).join('');
     div.innerHTML=`<div class="glabel"><span class="dot" style="background:${g.color}"></span>${esc(g.title)} <span class="group-count">(${g.items.length})</span>`
@@ -872,6 +913,7 @@ document.addEventListener('keydown', e=>{
 });
 
 renderGroups();
+loadHardwareMapLungPresets();
 renderSnippets();
 rebuildScenarios();
 if(!$('#editor').value.trim()) $('#editor').value=DEFAULT_EDITOR_OQL;

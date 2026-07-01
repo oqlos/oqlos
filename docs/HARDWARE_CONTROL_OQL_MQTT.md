@@ -167,7 +167,7 @@ jest trybem opcjonalnym/legacy dla lokalnego controller bridge.
 Serwowany przez instancję OqlOS pod **`/panel`**;
 strona startowa z linkami pod **`/`**.
 
-- BoardNet: `http://192.168.188.122:8202/panel`
+- BoardNet: `http://192.168.188.122:8202/ui/panel` (legacy `/panel` redirects)
 - Opcjonalny controller dev: `http://<host-controllera>:8210/panel`
 - Aby panel był dostępny z innych urządzeń, OqlOS musi nasłuchiwać na `--host 0.0.0.0`.
 
