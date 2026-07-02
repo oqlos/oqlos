@@ -6,14 +6,15 @@ from __future__ import annotations
 
 import logging
 import os
-import pathlib
 import platform
 from typing import Any
 
 import httpx
 
+from oqlos.shared.file_ops import read_text_file_or_empty as _read_text_file
+
 from .base import HardwarePlugin, PluginConfig, PluginHealth, PluginStatus
-from ._shared import http_health_check, not_connected_health, health_check_exception, http_disconnect
+from ._shared import http_health_check, not_connected_health, health_check_exception, disconnect_http_plugin
 from .plugin_http_handlers import http_get_command
 
 logger = logging.getLogger(__name__)
@@ -42,13 +43,6 @@ _SENSOR_CHANNEL_ALIASES: dict[str, int] = {
     "ai04": 3,
     "spare": 3,
 }
-
-
-def _read_text_file(path: str) -> str:
-    try:
-        return pathlib.Path(path).read_text(encoding="utf-8", errors="ignore").strip("\x00\n ")
-    except OSError:
-        return ""
 
 
 def _is_raspberry_pi_host() -> bool:
@@ -141,9 +135,7 @@ class PiadcPlugin(HardwarePlugin):
 
     async def disconnect(self) -> None:
         """Disconnect from piADC service."""
-        await http_disconnect(self._client, "piADC")
-        self._client = None
-        self._status = PluginStatus.CONFIGURED
+        await disconnect_http_plugin(self, "piADC")
 
     async def health_check(self) -> PluginHealth:
         """Check piADC health and compatibility."""

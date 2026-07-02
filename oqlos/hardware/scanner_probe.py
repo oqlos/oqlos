@@ -54,11 +54,12 @@ _USB_EXCLUDE_HINTS = (
 )
 
 
+def _join_blob(source: dict[str, Any], keys: tuple[str, ...]) -> str:
+    return " ".join(str(source.get(key) or "") for key in keys).strip()
+
+
 def _match_blob(item: dict[str, str]) -> str:
-    return " ".join(
-        str(item.get(key) or "")
-        for key in ("id", "name", "product", "manufacturer", "description", "handlers", "path")
-    ).strip()
+    return _join_blob(item, ("id", "name", "product", "manufacturer", "description", "handlers", "path"))
 
 
 def _is_likely_scanner_usb_blob(blob: str) -> bool:
@@ -86,10 +87,7 @@ def _is_likely_scanner_input(name: str, handlers: str) -> bool:
 
 
 def _usb_product_blob(device: dict[str, Any]) -> str:
-    return " ".join(
-        str(device.get(key) or "")
-        for key in ("manufacturer", "product", "description", "id", "vendor_id", "product_id", "path")
-    ).strip()
+    return _join_blob(device, ("manufacturer", "product", "description", "id", "vendor_id", "product_id", "path"))
 
 
 def _canonical_match_key(item: dict[str, str]) -> str:

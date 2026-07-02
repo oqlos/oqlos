@@ -89,6 +89,44 @@ async def run_motor_tic249_extended(command: str, params: dict[str, Any]) -> dic
     }
 
 
+_TIC249_DISABLE_COMMANDS = frozenset({"motor_disable", "deenergize", "disable", "standby"})
+_TIC249_STOP_COMMANDS = frozenset({"stop", "lung_stop", "stop_lung", "emergency_stop"})
+
+
+def _extract_diagnostic_ids(a: dict[str, Any]) -> tuple[str, str]:
+    plugin_id = str(a.get("peripheral_id") or a.get("plugin_id") or "").strip()
+    if not plugin_id:
+        raise ValueError("diagnostic-command requires 'peripheral_id'")
+    command = str(a.get("command") or "").strip()
+    return plugin_id, command
+
+
+def _extract_params(a: dict[str, Any]) -> dict[str, Any]:
+    args = a.get("args")
+    if isinstance(args, dict):
+        return args
+    params = a.get("params")
+    return params if isinstance(params, dict) else {}
+
+
+async def _route_tic249_lung_command(command: str, hw: Any) -> dict[str, Any] | None:
+    if command in _TIC249_DISABLE_COMMANDS:
+        return await hw.disable_lung()
+    if command in _TIC249_STOP_COMMANDS:
+        return await hw.stop_lung()
+    return None
+
+
+async def _route_diagnostic_command(plugin_id: str, command: str, params: dict[str, Any], hw: Any, pl: Any) -> dict[str, Any]:
+    if plugin_id == "modbus-io" and command in {"valve_on", "valve_off", "set_valve"}:
+        return await run_modbus_io_valve(hw, command, params)
+    if plugin_id == "motor-dri0050" and command in {"pump_off", "pump_set"}:
+        return await run_pump_diagnostic(command, params)
+    if plugin_id == "motor-tic249" and command in MOTOR_TIC249_EXTENDED_COMMANDS:
+        return await run_motor_tic249_extended(command, params)
+    return await pl.execute_plugin_command(plugin_id, {"command": command, "params": params})
+
+
 async def run_diagnostic_command(a: dict[str, Any]) -> dict[str, Any]:
     """Generic peripheral command — mirrors connect-scenario's proxy_diagnostic_command.
 
@@ -100,24 +138,10 @@ async def run_diagnostic_command(a: dict[str, Any]) -> dict[str, Any]:
     from oqlos.api import hardware as hw
     from oqlos.api import plugins as pl
 
-    plugin_id = str(a.get("peripheral_id") or a.get("plugin_id") or "").strip()
-    if not plugin_id:
-        raise ValueError("diagnostic-command requires 'peripheral_id'")
-    command = str(a.get("command") or "").strip()
+    plugin_id, command = _extract_diagnostic_ids(a)
     if plugin_id == "motor-tic249":
-        if command in {"motor_disable", "deenergize", "disable", "standby"}:
-            return await hw.disable_lung()
-        if command in {"stop", "lung_stop", "stop_lung", "emergency_stop"}:
-            return await hw.stop_lung()
-    params: dict[str, Any] = (
-        a.get("args")
-        if isinstance(a.get("args"), dict)
-        else (a.get("params") if isinstance(a.get("params"), dict) else {})
-    )
-    if plugin_id == "modbus-io" and command in {"valve_on", "valve_off", "set_valve"}:
-        return await run_modbus_io_valve(hw, command, params)
-    if plugin_id == "motor-dri0050" and command in {"pump_off", "pump_set"}:
-        return await run_pump_diagnostic(command, params)
-    if plugin_id == "motor-tic249" and command in MOTOR_TIC249_EXTENDED_COMMANDS:
-        return await run_motor_tic249_extended(command, params)
-    return await pl.execute_plugin_command(plugin_id, {"command": command, "params": params})
+        lung_result = await _route_tic249_lung_command(command, hw)
+        if lung_result is not None:
+            return lung_result
+    params = _extract_params(a)
+    return await _route_diagnostic_command(plugin_id, command, params, hw, pl)

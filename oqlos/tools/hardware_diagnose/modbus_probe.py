@@ -28,9 +28,13 @@ READ_METHODS = {
 }
 
 
-def _env_int(name: str, default: int) -> int:
+def _env_typed(name: str, default, cast):
     value = os.environ.get(name)
-    return int(value) if value else default
+    return cast(value) if value else default
+
+
+def _env_int(name: str, default: int) -> int:
+    return _env_typed(name, default, int)
 
 
 def _env_int_list(name: str, fallback: list[int]) -> list[int]:
@@ -59,8 +63,7 @@ def _env_str_list(name: str, fallback: list[str]) -> list[str]:
 
 
 def _env_float(name: str, default: float) -> float:
-    value = os.environ.get(name)
-    return float(value) if value else default
+    return _env_typed(name, default, float)
 
 
 def _split_values(values: str | list[str]) -> list[str]:

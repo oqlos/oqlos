@@ -1,17 +1,17 @@
-# code2llm/evolution | 2174 func | 248f | 2026-07-01
+# code2llm/evolution | 2286 func | 258f | 2026-07-02
 # generated in 0.01s
 
 NEXT[3] (ranked by impact):
   [1] !! SPLIT           frontend/src/i18n/dictionaries.js
-      WHY: 2053L, 0 classes, max CC=5
-      EFFORT: ~4h  IMPACT: 10265
+      WHY: 2135L, 0 classes, max CC=5
+      EFFORT: ~4h  IMPACT: 10675
 
   [2] !! SPLIT           frontend/src/pages/mapEditorDefaultMap.js
-      WHY: 1763L, 0 classes, max CC=1
-      EFFORT: ~4h  IMPACT: 1763
+      WHY: 1953L, 0 classes, max CC=1
+      EFFORT: ~4h  IMPACT: 1953
 
   [3] !! SPLIT           docs/README.md
-      WHY: 2254L, 0 classes, max CC=0
+      WHY: 2358L, 0 classes, max CC=0
       EFFORT: ~4h  IMPACT: 0
 
 

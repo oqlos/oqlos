@@ -4,6 +4,7 @@ from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import TypeVar
 
+from fastapi import HTTPException
 from fastapi.responses import FileResponse, HTMLResponse
 
 T = TypeVar("T")
@@ -38,3 +39,10 @@ def make_collection_route(
 
     handler.__name__ = route_name
     return handler
+
+
+def get_or_404(collection: Mapping[str, T], key: str, not_found_detail: str) -> T:
+    """Look up *key* in a dict-backed state collection, or raise HTTP 404."""
+    if key not in collection:
+        raise HTTPException(status_code=404, detail=not_found_detail)
+    return collection[key]

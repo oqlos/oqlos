@@ -126,6 +126,39 @@ def _make_method_parser(regex, kind):
     return parser
 
 
+def _make_stripped_field_parser(regex, kind, field):
+    """Factory: match regex, return CqlAction(kind, **{field: group(1).strip()})."""
+    def parser(line, stripped):
+        m = regex.match(line)
+        if not m:
+            return None
+        return CqlAction(kind=kind, raw=stripped, **{field: m.group(1).strip()})
+    return parser
+
+
+def _make_two_group_parser(regex, kind, field):
+    """Factory: match regex, return CqlAction(kind, args=group(2), **{field: group(1)})."""
+    def parser(line, stripped):
+        m = regex.match(line)
+        if not m:
+            return None
+        return CqlAction(kind=kind, raw=stripped, args=m.group(2), **{field: m.group(1)})
+    return parser
+
+
+def _make_target_method_args_parser(regex, kind, *, args_transform=lambda s: s):
+    """Factory: match regex, return CqlAction(kind, target=group(1), method=group(2), args=transform(group(3)))."""
+    def parser(line, stripped):
+        m = regex.match(line)
+        if not m:
+            return None
+        return CqlAction(
+            kind=kind, target=m.group(1), method=m.group(2),
+            args=args_transform(m.group(3)), raw=stripped,
+        )
+    return parser
+
+
 def _match_first(line: str, *regexes):
     """Return the first successful regex match for *line*."""
     for regex in regexes:
@@ -154,20 +187,11 @@ def _parse_condition_value(raw_value: str, *, keep_unit_tail: bool) -> tuple[flo
 # Individual action parsers
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def _try_arrow_action(line: str, stripped: str) -> CqlAction | None:
-    m = RE_ACTION_ARROW.match(line)
-    if not m:
-        return None
-    return CqlAction(
-        kind="action", target=m.group(1), method=m.group(2),
-        args=m.group(3).strip().strip('"'), raw=stripped,
-    )
+_try_arrow_action = _make_target_method_args_parser(
+    RE_ACTION_ARROW, "action", args_transform=lambda s: s.strip().strip('"')
+)
 
-def _try_task(line: str, stripped: str) -> CqlAction | None:
-    m = RE_TASK_BRACKET.match(line)
-    if not m:
-        return None
-    return CqlAction(kind="task", args=m.group(1).strip(), raw=stripped)
+_try_task = _make_stripped_field_parser(RE_TASK_BRACKET, "task", "args")
 
 def _try_save(line: str, stripped: str) -> CqlAction | None:
     m = _match_first(line, RE_SAVE, RE_SAVE_BRACKET, RE_SAVE_CHECK)
@@ -242,11 +266,7 @@ def _try_if_block(line: str, stripped: str) -> CqlAction | None:
     return CqlAction(kind="if_block", args=m.group(1).strip(), raw=stripped)
 
 
-def _try_if_fail_block(line: str, stripped: str) -> CqlAction | None:
-    m = RE_IF_FAIL_BLOCK.match(line)
-    if not m:
-        return None
-    return CqlAction(kind="if_fail_block", target=m.group(1).strip(), raw=stripped)
+_try_if_fail_block = _make_stripped_field_parser(RE_IF_FAIL_BLOCK, "if_fail_block", "target")
 
 
 def _try_if_standalone(line: str, stripped: str) -> CqlAction | None:
@@ -322,23 +342,12 @@ def _try_repeat_stop(line: str, stripped: str) -> CqlAction | None:
         return None
     return CqlAction(kind="endloop", raw=stripped)
 
-def _try_var(line: str, stripped: str) -> CqlAction | None:
-    m = RE_VAR.match(line)
-    if not m:
-        return None
-    return CqlAction(kind="var_set", target=m.group(1), args=m.group(2), raw=stripped)
+_try_var = _make_two_group_parser(RE_VAR, "var_set", "target")
 
 _try_error = _make_args_parser(RE_ERROR, "error")
 _try_log = _make_args_parser(RE_LOG, "log")
 
-def _try_func(line: str, stripped: str) -> CqlAction | None:
-    m = RE_FUNC.match(line)
-    if not m:
-        return None
-    return CqlAction(
-        kind="func", target=m.group(1), method=m.group(2),
-        args=m.group(3), raw=stripped
-    )
+_try_func = _make_target_method_args_parser(RE_FUNC, "func")
 
 def _try_sample(line: str, stripped: str) -> CqlAction | None:
     m = RE_SAMPLE.match(line)
@@ -352,11 +361,7 @@ def _try_sample(line: str, stripped: str) -> CqlAction | None:
         args=args, raw=stripped
     )
 
-def _try_api(line: str, stripped: str) -> CqlAction | None:
-    m = RE_API.match(line)
-    if not m:
-        return None
-    return CqlAction(kind="api", method=m.group(1), args=m.group(2), raw=stripped)
+_try_api = _make_two_group_parser(RE_API, "api", "method")
 
 _try_assert = _make_method_parser(RE_ASSERT, "assert")
 _try_expect = _make_method_parser(RE_EXPECT, "expect")
@@ -368,11 +373,7 @@ def _try_goto(line: str, stripped: str) -> CqlAction | None:
         return None
     return CqlAction(kind="goto", target=m.group(1).strip(), raw=stripped)
 
-def _try_save_ws(line: str, stripped: str) -> CqlAction | None:
-    m = RE_SAVE_WS.match(line)
-    if not m:
-        return None
-    return CqlAction(kind="save", target=m.group(1).strip(), raw=stripped)
+_try_save_ws = _make_stripped_field_parser(RE_SAVE_WS, "save", "target")
 
 _ACTION_PARSERS = [
     _try_if_else,

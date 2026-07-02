@@ -124,15 +124,18 @@ async def _dri0050_probe_ok(*, timeout: float, healthy_only: bool) -> bool:
         return False
 
 
+async def _http_sidecar_poll(*, healthy_only: bool, attempts: int, timeout: float = 1.5) -> bool:
+    check = lambda *, timeout: _dri0050_probe_ok(timeout=timeout, healthy_only=healthy_only)  # noqa: E731
+    return await _poll_until_ok(check, attempts=attempts, timeout=timeout)
+
+
 async def _http_sidecar_listening(*, attempts: int = 4, timeout: float = 1.5) -> bool:
     """Sidecar process up (any HTTP response), including 503 serial I/O."""
-    check = lambda *, timeout: _dri0050_probe_ok(timeout=timeout, healthy_only=False)  # noqa: E731
-    return await _poll_until_ok(check, attempts=attempts, timeout=timeout)
+    return await _http_sidecar_poll(healthy_only=False, attempts=attempts, timeout=timeout)
 
 
 async def _http_sidecar_healthy(*, attempts: int = 12, timeout: float = 1.5) -> bool:
-    check = lambda *, timeout: _dri0050_probe_ok(timeout=timeout, healthy_only=True)  # noqa: E731
-    return await _poll_until_ok(check, attempts=attempts, timeout=timeout)
+    return await _http_sidecar_poll(healthy_only=True, attempts=attempts, timeout=timeout)
 
 
 async def _run_cmd(*args: str, timeout: float = 60.0) -> tuple[int, str, str]:

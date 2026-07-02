@@ -47,12 +47,18 @@ export function scenarioUrlPatchForFile(file, action = "edit") {
   };
 }
 
-export function replaceScenarioFilesUrlState(patch, options = {}) {
+function _resolveUrlParts(options) {
   const location = options.location ?? globalThis.location;
-  const history = options.history ?? globalThis.history;
-  const pathname = options.pathname ?? location?.pathname ?? "";
-  const search = options.search ?? location?.search ?? "";
-  const hash = options.hash ?? location?.hash ?? "";
+  return {
+    history: options.history ?? globalThis.history,
+    pathname: options.pathname ?? location?.pathname ?? "",
+    search: options.search ?? location?.search ?? "",
+    hash: options.hash ?? location?.hash ?? "",
+  };
+}
+
+export function replaceScenarioFilesUrlState(patch, options = {}) {
+  const { history, pathname, search, hash } = _resolveUrlParts(options);
   const nextSearch = buildScenarioFilesSearch(search, patch);
   if (history?.replaceState && pathname) {
     history.replaceState(null, "", `${pathname}${nextSearch}${hash}`);

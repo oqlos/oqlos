@@ -31,3 +31,17 @@ async def reopen_rtu_after_stale(plugin: Any, exc: BaseException, *, label: str)
     except Exception as exc:
         logger.warning("%s: RTU reopen failed: %s", label, exc)
         return False
+
+
+def rtu_timeout(config: Any) -> float:
+    try:
+        return max(0.1, float(config.timeout))
+    except (TypeError, ValueError):
+        return 2.0
+
+
+def rtu_device_id(config: Any) -> int:
+    try:
+        return max(1, int(config.connection_params.get("device_id", 1)))
+    except (TypeError, ValueError):
+        return 1

@@ -6,20 +6,21 @@ import asyncio
 from collections import deque
 from datetime import datetime, timezone
 import json
-import os
 from pathlib import Path
 from typing import Any
 from uuid import uuid4
+
+from oqlos.shared.file_ops import env_configured_path
 
 _recent_events: deque[dict[str, Any]] = deque(maxlen=500)
 _subscribers: dict[str, asyncio.Queue[dict[str, Any]]] = {}
 
 
 def _default_path() -> Path:
-    configured = os.environ.get("OQLOS_HARDWARE_EVENTS_FILE") or os.environ.get("HARDWARE_EVENTS_FILE")
-    if configured:
-        return Path(configured).expanduser()
-    return Path.home() / "oqlos" / "hardware-events.jsonl"
+    return env_configured_path(
+        ("OQLOS_HARDWARE_EVENTS_FILE", "HARDWARE_EVENTS_FILE"),
+        Path.home() / "oqlos" / "hardware-events.jsonl",
+    )
 
 
 _event_store_path = _default_path()

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import shutil
+from collections.abc import Awaitable, Callable
 from datetime import datetime, timezone
 from typing import Any
 
@@ -179,43 +180,34 @@ def _should_force_sidecar_restart(entry: dict[str, Any], *, extra_markers: tuple
     return any(marker in msg for marker in (*_SIDECAR_DOWN_MARKERS, *extra_markers))
 
 
-async def _repair_dri0050_if_needed(
+async def _repair_sidecar_if_needed(
+    plugin_id: str,
+    ensure_sidecar: Callable[..., Awaitable[dict[str, Any]]],
     targets: list[str],
     health_before: dict[str, Any],
     repairs: list[dict[str, Any]],
+    *,
+    extra_markers: tuple[str, ...] = (),
 ) -> None:
-    """Ensure dri0050 sidecar is running if it's in the repair target list."""
-    if "motor-dri0050" not in targets:
+    """Ensure the plugin's sidecar is running if it's in the repair target list."""
+    if plugin_id not in targets:
         return
-    from oqlos.hardware.sidecar_control import ensure_dri0050_sidecar
-
-    entry = health_before.get("motor-dri0050") if isinstance(health_before.get("motor-dri0050"), dict) else {}
-    force = _should_force_sidecar_restart(entry)
-    repairs.append(await ensure_dri0050_sidecar(force_restart=force))
-
-
-async def _repair_tic249_if_needed(
-    targets: list[str],
-    health_before: dict[str, Any],
-    repairs: list[dict[str, Any]],
-) -> None:
-    """Restart hw-tic249.service if the lung motor plugin is in the repair target list."""
-    if "motor-tic249" not in targets:
-        return
-    from oqlos.hardware.sidecar_control import ensure_tic249_sidecar
-
-    entry = health_before.get("motor-tic249") if isinstance(health_before.get("motor-tic249"), dict) else {}
-    force = _should_force_sidecar_restart(entry, extra_markers=("errno 19",))
-    repairs.append(await ensure_tic249_sidecar(force_restart=force))
+    entry = health_before.get(plugin_id) if isinstance(health_before.get(plugin_id), dict) else {}
+    force = _should_force_sidecar_restart(entry, extra_markers=extra_markers)
+    repairs.append(await ensure_sidecar(force_restart=force))
 
 
 async def execute_safe_recover(gateway: Any, report: DiagnosisReport) -> dict[str, Any]:
     """Reconnect failed plugins inside OqlOS; return host_actions for sidecars."""
+    from oqlos.hardware.sidecar_control import ensure_dri0050_sidecar, ensure_tic249_sidecar
+
     repairs: list[dict[str, Any]] = []
     health_before = await gateway.health()
     targets = _recover_targets(report, health_before)
-    await _repair_dri0050_if_needed(targets, health_before, repairs)
-    await _repair_tic249_if_needed(targets, health_before, repairs)
+    await _repair_sidecar_if_needed("motor-dri0050", ensure_dri0050_sidecar, targets, health_before, repairs)
+    await _repair_sidecar_if_needed(
+        "motor-tic249", ensure_tic249_sidecar, targets, health_before, repairs, extra_markers=("errno 19",)
+    )
     if not targets and report.requires_full_stack_restart:
         return {
             "ok": False,

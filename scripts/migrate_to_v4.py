@@ -21,11 +21,7 @@ from typing import Optional
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from oqlos.core.oql_versioning import OQL_VERSION_CURRENT
-from oqlos.tools.cql_cli.formatting import canonicalize_oql_text
-
-
-def _quote_oql(value: str) -> str:
-    return "'" + str(value or "").strip().replace("\\", "\\\\").replace("'", "\\'") + "'"
+from oqlos.tools.cql_cli.formatting import _quote_oql, canonicalize_oql_text
 
 
 def find_oql_files(root_dir: Path) -> list[Path]:
@@ -112,13 +108,18 @@ def _migrate_set_line(line: str, stripped: str) -> tuple[str | None, None]:
     return None, None
 
 
+def _migrate_simple_quoted_line(stripped: str, keyword: str) -> tuple[str | None, str | None]:
+    """Transform KEYWORD 'x' -> KEYWORD x. Returns (new_line, change) or (None, None)."""
+    m = re.match(rf"^{keyword}\s+['\"](.+?)['\"]\s*$", stripped, re.IGNORECASE)
+    if m:
+        value = m.group(1)
+        return f"  {keyword} {value}", f"{keyword} '{value}' -> {keyword} {value}"
+    return None, None
+
+
 def _migrate_wait_line(stripped: str) -> tuple[str | None, str | None]:
     """Transform WAIT 'X' -> WAIT X. Returns (new_line, change) or (None, None)."""
-    wait_match = re.match(r"^WAIT\s+['\"](.+?)['\"]\s*$", stripped, re.IGNORECASE)
-    if wait_match:
-        duration = wait_match.group(1)
-        return f"  WAIT {duration}", f"WAIT '{duration}' -> WAIT {duration}"
-    return None, None
+    return _migrate_simple_quoted_line(stripped, "WAIT")
 
 
 def _migrate_minmax_line(stripped: str) -> tuple[str | None, str | None]:
@@ -138,11 +139,7 @@ def _migrate_minmax_line(stripped: str) -> tuple[str | None, str | None]:
 
 def _migrate_save_line(stripped: str) -> tuple[str | None, str | None]:
     """Transform SAVE 'label' -> SAVE label. Returns (new_line, change) or (None, None)."""
-    save_match = re.match(r"^SAVE\s+['\"]([^'\"]+)['\"]\s*$", stripped, re.IGNORECASE)
-    if save_match:
-        label = save_match.group(1)
-        return f"  SAVE {label}", f"SAVE '{label}' -> SAVE {label}"
-    return None, None
+    return _migrate_simple_quoted_line(stripped, "SAVE")
 
 
 def _migrate_single_line(line: str) -> tuple[list[str], list[str]]:

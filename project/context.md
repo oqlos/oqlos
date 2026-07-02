@@ -5,17 +5,17 @@
 
 - **Project**: /home/tom/github/oqlos/oqlos
 - **Primary Language**: python
-- **Languages**: python: 197, javascript: 86, md: 21, yaml: 13, shell: 9
+- **Languages**: python: 203, javascript: 90, md: 22, yaml: 13, shell: 9
 - **Analysis Mode**: static
-- **Total Functions**: 2289
-- **Total Classes**: 123
-- **Modules**: 345
-- **Entry Points**: 1410
+- **Total Functions**: 2403
+- **Total Classes**: 128
+- **Modules**: 357
+- **Entry Points**: 1474
 
 ## Architecture by Module
 
 ### frontend.src.pages.MapEditor
-- **Functions**: 92
+- **Functions**: 101
 - **File**: `MapEditor.jsx`
 
 ### oqlos.core._interpreter_actions
@@ -35,13 +35,8 @@
 - **Functions**: 45
 - **File**: `HardwareRestart.jsx`
 
-### oqlos.core.oql_parser
-- **Functions**: 44
-- **Classes**: 3
-- **File**: `oql_parser.py`
-
 ### scripts.oql_v2_to_v4_migrate_db
-- **Functions**: 43
+- **Functions**: 45
 - **Classes**: 1
 - **File**: `oql_v2_to_v4_migrate_db.py`
 
@@ -49,13 +44,18 @@
 - **Functions**: 42
 - **File**: `HardwareDemo.jsx`
 
+### oqlos.core.oql_parser
+- **Functions**: 38
+- **Classes**: 3
+- **File**: `oql_parser.py`
+
 ### oqlos.api.main
-- **Functions**: 35
+- **Functions**: 38
 - **File**: `main.py`
 
 ### oqlos.hardware.transport.mqtt_oql_bridge
-- **Functions**: 34
-- **Classes**: 6
+- **Functions**: 33
+- **Classes**: 7
 - **File**: `mqtt_oql_bridge.py`
 
 ### frontend.src.api.wsClient
@@ -77,19 +77,15 @@
 - **Classes**: 7
 - **File**: `base.py`
 
-### oqlos.core._oql_adapter
-- **Functions**: 29
-- **Classes**: 1
-- **File**: `_oql_adapter.py`
-
 ### oqlos.hardware.client.proxy
 - **Functions**: 29
 - **Classes**: 1
 - **File**: `proxy.py`
 
-### oqlos.core._cql_tokenizer
-- **Functions**: 27
-- **File**: `_cql_tokenizer.py`
+### oqlos.core._oql_adapter
+- **Functions**: 28
+- **Classes**: 1
+- **File**: `_oql_adapter.py`
 
 ### frontend.src.api.hardwareApi
 - **Functions**: 26
@@ -104,6 +100,10 @@
 - **Functions**: 25
 - **Classes**: 5
 - **File**: `gateway.py`
+
+### oqlos.core._cql_tokenizer
+- **Functions**: 23
+- **File**: `_cql_tokenizer.py`
 
 ## Key Entry Points
 
@@ -161,15 +161,15 @@ valve commands to POST /api/v1/hardware/valve/{id} so t
 ### oqlos.shared.event_server.EventServer._handle_message
 - **Calls**: json.loads, self._normalize_event, self.event_store.append, None.get, examples.hardware.doctor-workflow.print, data.get, data.get, data.get
 
+### oqlos.api.hardware_platform._detect_runtime_platform
+- **Calls**: oqlos.api.hardware_platform._board_model, oqlos.api.hardware_platform._os_release, oqlos.api.hardware_platform._in_container, oqlos.api.hardware_platform._classify_platform_type, oqlos.api.hardware_platform._selected_piadc_platform, topology._modbus_runtime_serial_ports, platform.system, None.lower
+
 ### oqlos.api.hardware_peripherals_routes.read_modbus_adc_raw
 > Return raw Modbus ADC diagnostics for HUI troubleshooting.
 - **Calls**: router.get, health.get, isinstance, modbus_adc_health.get, plugin.execute_command, result.get, health.get, result.get
 
 ### scripts.scenarios_export.main
 - **Calls**: argparse.ArgumentParser, parser.add_argument, parser.add_mutually_exclusive_group, group.add_argument, group.add_argument, group.add_argument, parser.add_argument, parser.add_argument
-
-### oqlos.api.hardware_platform._detect_runtime_platform
-- **Calls**: oqlos.api.hardware_platform._board_model, oqlos.api.hardware_platform._os_release, oqlos.api.hardware_platform._in_container, oqlos.api.hardware_platform._classify_platform_type, oqlos.api.hardware_platform._selected_piadc_platform, topology._modbus_runtime_serial_ports, platform.system, None.lower
 
 ### oqlos.core._firmware_executor.FirmwareExecutor._execute_plugin_action
 > Execute action using the new plugin gateway system.
@@ -180,7 +180,7 @@ valve commands to POST /api/v1/hardware/valve/{id} so t
 
 ### oqlos.tools.xml_import.generators.generate_dsl
 > Generate human-readable DSL text from parsed report.
-- **Calls**: frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a
+- **Calls**: frontend.src.pages.HardwareStatus.a, frontend.src.pages.HardwareStatus.a, frontend.src.pages.HardwareStatus.a, frontend.src.pages.HardwareStatus.a, frontend.src.pages.HardwareStatus.a, frontend.src.pages.HardwareStatus.a, frontend.src.pages.HardwareStatus.a, frontend.src.pages.HardwareStatus.a
 
 ### oqlos.hardware.plugins.motor.MotorPlugin.__init__
 - **Calls**: None.__init__, None.rstrip, self.config.connection_params.get, self.config.connection_params.get, params.get, int, str, int
@@ -221,7 +221,7 @@ Expected payload::
 
 ### oqlos.tools.xml_import.generators.generate_cql
 > Generate CQL (Connex Query Language) text from parsed report.
-- **Calls**: frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, frontend.src.pages.HardwareRestart.a, sorted, op.lp.split
+- **Calls**: frontend.src.pages.HardwareStatus.a, frontend.src.pages.HardwareStatus.a, frontend.src.pages.HardwareStatus.a, frontend.src.pages.HardwareStatus.a, frontend.src.pages.HardwareStatus.a, frontend.src.pages.HardwareStatus.a, sorted, op.lp.split
 
 ### oqlos.hardware.transport.mqtt_oql_bridge.OqlRequest.from_json
 - **Calls**: json.loads, cls, str, str, str, str, str, bool
@@ -370,7 +370,7 @@ Configuration:
 > Plugin for Waveshare Modbus RTU Analog Input 8CH.
 
 The module exposes AI1-AI8 through input register
-- **Methods**: 15
+- **Methods**: 16
 - **Key Methods**: oqlos.hardware.plugins.modbus_adc.ModbusAdcPlugin.__init__, oqlos.hardware.plugins.modbus_adc.ModbusAdcPlugin.validate_config, oqlos.hardware.plugins.modbus_adc.ModbusAdcPlugin.connect, oqlos.hardware.plugins.modbus_adc.ModbusAdcPlugin.disconnect, oqlos.hardware.plugins.modbus_adc.ModbusAdcPlugin.health_check, oqlos.hardware.plugins.modbus_adc.ModbusAdcPlugin.execute_command, oqlos.hardware.plugins.modbus_adc.ModbusAdcPlugin._read_registers, oqlos.hardware.plugins.modbus_adc.ModbusAdcPlugin._format_channels, oqlos.hardware.plugins.modbus_adc.ModbusAdcPlugin._format_channel, oqlos.hardware.plugins.modbus_adc.ModbusAdcPlugin._peripheral_for_channel
 - **Inherits**: HardwarePlugin
 
@@ -442,6 +442,9 @@ Key functions that process and transform data:
 ### frontend.src.pages.ScenarioFiles.formatLogTime
 - **Output to**: frontend.src.pages.ScenarioFiles.Date, frontend.src.pages.ScenarioFiles.toLocaleTimeString
 
+### frontend.src.pages.MapEditor._parseFieldValue
+- **Output to**: frontend.src.pages.MapEditor.Number, frontend.src.pages.MapEditor.isFinite, frontend.src.pages.MapEditor.split, frontend.src.pages.MapEditor.map, frontend.src.pages.MapEditor.trim
+
 ### frontend.src.pages.MapEditor.parsed
 - **Output to**: frontend.src.pages.MapEditor.isPlainObject, frontend.src.pages.MapEditor.Error, frontend.src.pages.MapEditor.t
 
@@ -477,6 +480,8 @@ Key functions that process and transform data:
 ### frontend.src.utils.rbac.policy.parseConnectRole
 - **Output to**: frontend.src.utils.rbac.policy.String, frontend.src.utils.rbac.policy.trim, frontend.src.utils.rbac.policy.toLowerCase
 
+### frontend.src.utils.scenarioFilesUrl.parsed
+
 ### frontend.src.utils.hardwareStatusModel.formatHardwareJson
 - **Output to**: frontend.src.utils.hardwareStatusModel.stringify
 
@@ -485,34 +490,23 @@ Key functions that process and transform data:
 
 ### frontend.src.utils.mapEditorObjectActionEdits.parsed
 
+### frontend.src.utils.collapse-toggle-bridge.formatBadge
+- **Output to**: frontend.src.utils.collapse-toggle-bridge.String
+
+### frontend.src.api.hardware-api-errors.test.parsed
+- **Output to**: frontend.src.api.hardware-api-errors.test.test
+
 ### frontend.src.api.hardware-api-errors.tryParseJson
 - **Output to**: frontend.src.api.hardware-api-errors.parse
 
+### frontend.src.api.hardware-api-errors.parseOqlError
+- **Output to**: frontend.src.api.hardware-api-errors.isArray
+
 ### frontend.src.api.hardware-api-errors.formatHardwareApiError
-- **Output to**: frontend.src.api.hardware-api-errors.extractErrorPayload, frontend.src.api.hardware-api-errors.describeDetail
+- **Output to**: frontend.src.api.hardware-api-errors.extractErrorPayload, frontend.src.api.hardware-api-errors.parseOqlError, frontend.src.api.hardware-api-errors.describeDetail
 
 ### oqlos.core.base.BaseInterpreter.parse
 > Parse source into an AST / structure.
-
-### oqlos.core._dsl_helpers._parse_numeric_value
-> Extract a numeric value from DSL snippets like `5 bar` or `7.5l`.
-- **Output to**: re.search, float, None.replace, match.group, value.is_integer
-
-### oqlos.core._cql_tree_builder._parse_metadata_kv
-> Parse top-level SCENARIO/DEVICE_TYPE/DEVICE_MODEL/MANUFACTURER lines.
-- **Output to**: RE_METADATA_KV.match, m.group, None.strip, None.strip, m.group
-
-### oqlos.core._cql_tree_builder._parse_scenario_line
-> Parse @Namespace.Name scenario header.
-- **Output to**: RE_SCENARIO.match, None.rsplit, CqlScenario, doc.scenarios.append, m.group
-
-### oqlos.core._cql_tree_builder._parse_scenario_attrs
-> Parse scenario-level attributes (description, intervals ref).
-- **Output to**: RE_DESC.match, RE_INTERVALS_REF.match, m.group, x.strip, None.split
-
-### oqlos.core._cql_tree_builder._parse_goal_line
-> Parse GOAL: (simple CQL) or named goal (ConnectGo 2-space indent).
-- **Output to**: RE_CONFIG_SIMPLE.match, RE_GOAL_SIMPLE.match, CqlGoal, RE_CONFIG_NAMED.match, CqlGoal
 
 ## Behavioral Patterns
 
@@ -605,6 +599,7 @@ Functions exposed as public API (no underscore prefix):
 - `oqlos.core._oql_adapter.oql_doc_to_cql` - 30 calls
 - `scripts.oql_v2_to_v4_migrate_db.main` - 30 calls
 - `oqlos.core.motor2_runtime.normalize_motor2_runtime_config` - 29 calls
+- `oqlos.hardware.hui_lung_recipe.get_hui_lung_reciprocate_args` - 29 calls
 - `oqlos.hardware.diagnosis.build_diagnosis_report` - 28 calls
 - `oqlos.hardware.usb_diagnostics.pi_system_diagnostics` - 28 calls
 - `oqlos.tools.hardware_diagnose.modbus_probe.probe_options_from_args` - 27 calls
@@ -620,6 +615,7 @@ Functions exposed as public API (no underscore prefix):
 - `oqlos.shared.logger.configure_oqlos_logging` - 23 calls
 - `oqlos.api.hardware_peripherals_routes.read_modbus_adc_raw` - 23 calls
 - `scripts.scenarios_export.main` - 23 calls
+- `oqlos.tools.gen_error_docs.generate_markdown` - 22 calls
 - `oqlos.tools.hardware_diagnose.doctor_modbus_analysis.analyze_modbus_adc_config` - 22 calls
 - `oqlos.tools.cql_cli.commands.handle_list_command` - 22 calls
 - `oqlos.core.oql_parser.parse_oql` - 21 calls
@@ -633,8 +629,6 @@ Functions exposed as public API (no underscore prefix):
 - `scripts.scenarios_export.export_one_bash` - 21 calls
 - `oqlos.tools.hardware_diagnose.health.cmd_diagnose` - 20 calls
 - `oqlos.tools.hardware_diagnose.doctor_modbus_analysis.analyze_modbus_config` - 20 calls
-- `oqlos.hardware.client.autorepair.analyze_repair_needs` - 20 calls
-- `oqlos.hardware.client.identify_enrich_modbus_io.expand_modbus_io_instances` - 20 calls
 
 ## System Interactions
 

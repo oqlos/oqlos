@@ -258,9 +258,15 @@ def parse_SET(tokens: list[str], ln: int, raw: str) -> OqlCmd:
     return OqlCmd("SET", {"target": target, "value": value, "unit": unit}, ln, raw)
 
 
-def parse_GET(tokens: list[str], ln: int, raw: str) -> OqlCmd:
-    _require(tokens, 1, "GET", ln, "sensor")
-    return OqlCmd("GET", {"sensor": tokens[0]}, ln, raw)
+def _make_single_field_parser(cmd: str, field: str, required_desc: str):
+    """Factory: require one token, return OqlCmd(cmd, {field: tokens[0]})."""
+    def parser(tokens: list[str], ln: int, raw: str) -> OqlCmd:
+        _require(tokens, 1, cmd, ln, required_desc)
+        return OqlCmd(cmd, {field: tokens[0]}, ln, raw)
+    return parser
+
+
+parse_GET = _make_single_field_parser("GET", "sensor", "sensor")
 
 
 def parse_WAIT(tokens: list[str], ln: int, raw: str) -> OqlCmd:
@@ -311,9 +317,7 @@ def parse_IF_DELTA(tokens: list[str], ln: int, raw: str) -> OqlCmd:
     )
 
 
-def parse_SAVE(tokens: list[str], ln: int, raw: str) -> OqlCmd:
-    _require(tokens, 1, "SAVE", ln, "label")
-    return OqlCmd("SAVE", {"label": tokens[0]}, ln, raw)
+parse_SAVE = _make_single_field_parser("SAVE", "label", "label")
 
 
 def parse_CHECK(rest: str, ln: int, raw: str) -> OqlCmd:
@@ -354,18 +358,18 @@ def parse_IF(rest: str, ln: int, raw: str) -> OqlCmd:
     )
 
 
-def parse_MIN(tokens: list[str], ln: int, raw: str) -> OqlCmd:
-    _require(tokens, 2, "MIN", ln, "sensor value [unit]")
-    sensor = tokens[0]
-    value, unit = _split_value_unit(tokens[1:])
-    return OqlCmd("MIN", {"sensor": sensor, "value": value, "unit": unit}, ln, raw)
+def _make_minmax_parser(cmd: str):
+    """Factory: require sensor + value [unit], return OqlCmd(cmd, {sensor, value, unit})."""
+    def parser(tokens: list[str], ln: int, raw: str) -> OqlCmd:
+        _require(tokens, 2, cmd, ln, "sensor value [unit]")
+        sensor = tokens[0]
+        value, unit = _split_value_unit(tokens[1:])
+        return OqlCmd(cmd, {"sensor": sensor, "value": value, "unit": unit}, ln, raw)
+    return parser
 
 
-def parse_MAX(tokens: list[str], ln: int, raw: str) -> OqlCmd:
-    _require(tokens, 2, "MAX", ln, "sensor value [unit]")
-    sensor = tokens[0]
-    value, unit = _split_value_unit(tokens[1:])
-    return OqlCmd("MAX", {"sensor": sensor, "value": value, "unit": unit}, ln, raw)
+parse_MIN = _make_minmax_parser("MIN")
+parse_MAX = _make_minmax_parser("MAX")
 
 
 def parse_SAMPLE(tokens: list[str], ln: int, raw: str) -> OqlCmd:
@@ -387,34 +391,33 @@ def parse_SAMPLE(tokens: list[str], ln: int, raw: str) -> OqlCmd:
     )
 
 
-def parse_LOG(tokens: list[str], ln: int, raw: str) -> OqlCmd:
-    message = " ".join(tokens)
-    return OqlCmd("LOG", {"message": message}, ln, raw)
+def _make_message_parser(cmd: str):
+    """Factory: join all tokens as a message, return OqlCmd(cmd, {message})."""
+    def parser(tokens: list[str], ln: int, raw: str) -> OqlCmd:
+        message = " ".join(tokens)
+        return OqlCmd(cmd, {"message": message}, ln, raw)
+    return parser
 
 
-def parse_ERROR(tokens: list[str], ln: int, raw: str) -> OqlCmd:
-    message = " ".join(tokens)
-    return OqlCmd("ERROR", {"message": message}, ln, raw)
+parse_LOG = _make_message_parser("LOG")
+parse_ERROR = _make_message_parser("ERROR")
+parse_CORRECT = _make_message_parser("CORRECT")
 
 
-def parse_CORRECT(tokens: list[str], ln: int, raw: str) -> OqlCmd:
-    message = " ".join(tokens)
-    return OqlCmd("CORRECT", {"message": message}, ln, raw)
+def _make_call_parser(cmd: str, field: str, required_desc: str):
+    """Factory: require one token + rest as args, return OqlCmd(cmd, {field, args})."""
+    def parser(tokens: list[str], ln: int, raw: str) -> OqlCmd:
+        _require(tokens, 1, cmd, ln, required_desc)
+        return OqlCmd(cmd, {field: tokens[0], "args": tokens[1:]}, ln, raw)
+    return parser
 
 
-def parse_CALL(tokens: list[str], ln: int, raw: str) -> OqlCmd:
-    _require(tokens, 1, "CALL", ln, "macro-name [args...]")
-    return OqlCmd("CALL", {"macro": tokens[0], "args": tokens[1:]}, ln, raw)
+parse_CALL = _make_call_parser("CALL", "macro", "macro-name [args...]")
+
+parse_INCLUDE = _make_single_field_parser("INCLUDE", "path", '"path.oql"')
 
 
-def parse_INCLUDE(tokens: list[str], ln: int, raw: str) -> OqlCmd:
-    _require(tokens, 1, "INCLUDE", ln, '"path.oql"')
-    return OqlCmd("INCLUDE", {"path": tokens[0]}, ln, raw)
-
-
-def parse_FUNC_CALL(tokens: list[str], ln: int, raw: str) -> OqlCmd:
-    _require(tokens, 1, "FUNC", ln, '"func-name" [args...]')
-    return OqlCmd("FUNC", {"name": tokens[0], "args": tokens[1:]}, ln, raw)
+parse_FUNC_CALL = _make_call_parser("FUNC", "name", '"func-name" [args...]')
 
 
 def parse_REPEAT(tokens: list[str], ln: int, raw: str) -> OqlCmd:

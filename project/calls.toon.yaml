@@ -1,15 +1,15 @@
 # code2llm call graph | /home/tom/github/oqlos/oqlos
-# generated in 0.27s
-# nodes: 453 | edges: 500 | modules: 53
+# generated in 0.37s
+# nodes: 463 | edges: 500 | modules: 55
 # CC̄=3.8
 
 HUBS[20]:
   examples.hardware.doctor-workflow.print
-    CC=0  in:225  out:0  total:225
+    CC=0  in:228  out:0  total:228
   frontend.src.i18n.I18nProvider.dict
-    CC=8  in:44  out:3  total:47
+    CC=8  in:43  out:3  total:46
   frontend.src.pages.ScenarioFiles.list
-    CC=1  in:41  out:0  total:41
+    CC=1  in:43  out:0  total:43
   oqlos.core._oql_adapter.oql_doc_to_cql
     CC=12  in:2  out:30  total:32
   oqlos.core.motor2_runtime.normalize_motor2_runtime_config
@@ -19,39 +19,40 @@ HUBS[20]:
   setup_hardware_and_run_oql.run_oql_scenario
     CC=8  in:1  out:24  total:25
   frontend.src.pages.MapEditor.applyMapMutation
-    CC=2  in:16  out:8  total:24
-  oqlos.core.oql_parser.parse_oql
-    CC=14  in:3  out:21  total:24
+    CC=2  in:17  out:8  total:25
   oqlos.core.parser.parse_dsl_to_goal_with_issues
     CC=13  in:3  out:21  total:24
-  oqlos.core._action_motor2._motor2_build_plan
-    CC=12  in:1  out:22  total:23
+  oqlos.core.oql_parser.parse_oql
+    CC=14  in:3  out:21  total:24
   oqlos.core._action_motor2._try_exec_motor2_set
     CC=13  in:1  out:22  total:23
+  oqlos.core._action_motor2._motor2_build_plan
+    CC=12  in:1  out:22  total:23
   oqlos.core._line_parsers._parse_if_condition
     CC=9  in:1  out:22  total:23
+  frontend.src.api.wsClient.WsCqrsClient.super
+    CC=1  in:19  out:1  total:20
   oqlos.core._func_resolver._collect_function_definitions
     CC=13  in:1  out:19  total:20
-  frontend.src.api.wsClient.WsCqrsClient.super
-    CC=1  in:18  out:1  total:19
-  oqlos.core._interpreter_actions.exec_action_shell
-    CC=13  in:0  out:19  total:19
   oqlos.core.oql_parser.tokenize
     CC=13  in:5  out:14  total:19
-  frontend.src.utils.useSelectionCollapsePanel.useSelectionCollapsePanel
-    CC=14  in:0  out:18  total:18
+  oqlos.core._interpreter_actions.exec_action_shell
+    CC=13  in:0  out:19  total:19
   oqlos.core.oql_parser._expand_repeat_block_lines
     CC=8  in:2  out:16  total:18
+  setup_hardware_and_run_oql.main
+    CC=3  in:0  out:18  total:18
   frontend.src.utils.url-embed-config.mergeParentSearchIntoChildUrl
     CC=9  in:7  out:11  total:18
 
 MODULES:
   examples.hardware.doctor-workflow  [1 funcs]
     print  CC=0  out:0
-  frontend.src.api.hardware-api-errors  [4 funcs]
+  frontend.src.api.hardware-api-errors  [5 funcs]
     describeDetail  CC=13  out:6
     extractErrorPayload  CC=4  out:1
-    formatHardwareApiError  CC=8  out:2
+    formatHardwareApiError  CC=9  out:3
+    parseOqlError  CC=10  out:1
     tryParseJson  CC=3  out:1
   frontend.src.api.hardware-api-log  [4 funcs]
     isHardwareWizardPath  CC=2  out:3
@@ -140,7 +141,15 @@ MODULES:
     log  CC=1  out:3
     port  CC=6  out:9
     refreshRuntimeStatus  CC=3  out:3
-  frontend.src.pages.MapEditor  [21 funcs]
+  frontend.src.pages.HardwareStatus  [5 funcs]
+    adapters  CC=2  out:8
+    copyAllJson  CC=2  out:8
+    diagnostics  CC=2  out:8
+    downloadJson  CC=1  out:5
+    summary  CC=2  out:8
+  frontend.src.pages.MapEditor  [24 funcs]
+    _parseFieldValue  CC=4  out:6
+    _setBodyField  CC=8  out:2
     addAction  CC=2  out:6
     addFunc  CC=2  out:6
     addObject  CC=2  out:6
@@ -148,22 +157,21 @@ MODULES:
     applyMapMutation  CC=2  out:8
     clearServerHardwareEvents  CC=8  out:9
     deleteKey  CC=2  out:4
-    editJsonField  CC=5  out:3
-    editMotorRuntimeConfig  CC=11  out:6
-    editObjectActionArg  CC=7  out:4
+    editActionBodyField  CC=7  out:6
   frontend.src.pages.MapEditorObjectActionPanel  [2 funcs]
     _MotorRelativeParams  CC=1  out:3
     _motorArgLabel  CC=6  out:0
-  frontend.src.pages.ScenarioFiles  [9 funcs]
+  frontend.src.pages.ScenarioFiles  [10 funcs]
     appendLog  CC=1  out:4
     cancelled  CC=4  out:4
     formatLogTime  CC=1  out:2
     isDirty  CC=1  out:4
+    lastResponse  CC=3  out:5
     list  CC=1  out:0
     loadFiles  CC=2  out:5
-    runScenario  CC=5  out:7
-    saveFile  CC=4  out:7
-    selectFile  CC=3  out:8
+    runScenario  CC=9  out:12
+    saveFile  CC=4  out:9
+    selectFile  CC=3  out:10
   frontend.src.utils.collapse-toggle-bridge  [2 funcs]
     isInIframe  CC=4  out:0
     postToParent  CC=4  out:8
@@ -246,10 +254,19 @@ MODULES:
   frontend.src.utils.mapEditorModel  [3 funcs]
     cloneDefaultMap  CC=1  out:2
     createInitialEditorState  CC=1  out:3
-    ensureRequiredDefaultMappings  CC=10  out:3
+    ensureRequiredDefaultMappings  CC=14  out:3
   frontend.src.utils.mapEditorObjectActionEdits  [2 funcs]
     applyObjectActionBodyFieldMutation  CC=8  out:1
     parsePromptedFieldValue  CC=5  out:4
+  frontend.src.utils.oqlGoals  [8 funcs]
+    estimateOqlWaitMs  CC=9  out:8
+    firstLineTitle  CC=6  out:2
+    goalTitleFromLines  CC=10  out:2
+    header  CC=2  out:4
+    match  CC=5  out:1
+    normalizeSource  CC=2  out:2
+    splitOqlIntoGoalScripts  CC=9  out:8
+    timeoutMsForOqlScript  CC=3  out:5
   frontend.src.utils.rbac.policy  [13 funcs]
     canConnectRoleAccessPath  CC=2  out:3
     canHostRoleAccessPath  CC=2  out:3
@@ -261,6 +278,10 @@ MODULES:
     normalizeConnectRole  CC=2  out:1
     normalizeHostRole  CC=2  out:1
     normalizePath  CC=6  out:4
+  frontend.src.utils.scenarioFilesUrl  [3 funcs]
+    _resolveUrlParts  CC=12  out:0
+    buildScenarioFilesSearch  CC=5  out:6
+    replaceScenarioFilesUrlState  CC=4  out:3
   frontend.src.utils.url-embed-config  [23 funcs]
     IFRAME_ONLY_SEARCH_PARAMS  CC=9  out:11
     applyParentContextPayload  CC=5  out:5
@@ -272,15 +293,16 @@ MODULES:
     mergeParentSearchIntoChildUrl  CC=9  out:11
     nextHref  CC=1  out:1
     parentSearch  CC=4  out:3
-  frontend.src.utils.useSelectionCollapsePanel  [8 funcs]
+  frontend.src.utils.useSelectionCollapsePanel  [9 funcs]
     _makeCollapseToggleHandler  CC=8  out:3
+    _useIframeCollapseToggle  CC=6  out:7
     cancelAutoCollapse  CC=2  out:2
-    collapsed  CC=2  out:6
+    collapsed  CC=3  out:6
     expand  CC=1  out:5
     onMessage  CC=1  out:1
-    scheduleCollapse  CC=2  out:6
-    toggleCollapsed  CC=2  out:5
-    useSelectionCollapsePanel  CC=14  out:18
+    scheduleCollapse  CC=3  out:6
+    toggleCollapsed  CC=3  out:7
+    useSelectionCollapsePanel  CC=11  out:17
   oqlos.config  [1 funcs]
     get_settings  CC=1  out:0
   oqlos.core._action_motor2  [30 funcs]
@@ -336,9 +358,8 @@ MODULES:
     _drop_command_token  CC=6  out:5
     _exec_set_wait  CC=3  out:7
     _extract_action_tokens  CC=5  out:4
-  oqlos.core._line_parsers  [10 funcs]
+  oqlos.core._line_parsers  [9 funcs]
     _extract_set_params  CC=7  out:13
-    _parse_action_line  CC=10  out:18
     _parse_if_condition  CC=9  out:22
     _parse_inline_task  CC=5  out:7
     _parse_pump_line  CC=6  out:8
@@ -347,17 +368,17 @@ MODULES:
     _set_lung_step  CC=4  out:3
     _set_pump_step  CC=4  out:3
     _set_valve_step  CC=4  out:4
-  oqlos.core._oql_adapter  [15 funcs]
+  oqlos.core._oql_adapter  [14 funcs]
     register  CC=1  out:1
     _cmd_to_actions  CC=2  out:3
     _fmt_value  CC=2  out:1
     _load_includes  CC=12  out:15
     _lower_call  CC=6  out:10
-    _lower_max  CC=1  out:3
-    _lower_min  CC=1  out:3
     _lower_set  CC=3  out:7
+    _make_lower_minmax  CC=1  out:3
     _parse_macro_line  CC=8  out:10
     _resolve_include  CC=6  out:8
+    _scenarios_root  CC=1  out:2
   oqlos.core.base  [5 funcs]
     send_event  CC=4  out:7
     emit  CC=5  out:3
@@ -391,7 +412,7 @@ MODULES:
     motor2_max_steps_per_second  CC=2  out:3
     motor2_speed_for_duration  CC=1  out:9
     motor2_speed_raw  CC=1  out:5
-  oqlos.core.oql_parser  [32 funcs]
+  oqlos.core.oql_parser  [28 funcs]
     _check_unnamed_goals  CC=5  out:1
     _compact_duration  CC=2  out:3
     _expand_repeat_block_lines  CC=8  out:16
@@ -401,7 +422,7 @@ MODULES:
     _handle_set_name  CC=5  out:8
     _handle_top_level_line  CC=6  out:16
     _line_indent  CC=2  out:5
-    _parse_and_append_command  CC=5  out:9
+    _make_call_parser  CC=1  out:2
   oqlos.core.oql_versioning  [3 funcs]
     extract_declared_version  CC=3  out:4
     first_meaningful_line  CC=4  out:4
@@ -412,13 +433,6 @@ MODULES:
     _try_action_or_condition  CC=5  out:6
     parse_dsl_to_goal  CC=1  out:1
     parse_dsl_to_goal_with_issues  CC=13  out:21
-  oqlos.core.safe_eval  [6 funcs]
-    _eval_bin_op  CC=2  out:7
-    _eval_bool_op  CC=4  out:7
-    _eval_compare  CC=1  out:2
-    _eval_node  CC=2  out:5
-    _eval_unary_op  CC=3  out:5
-    safe_eval  CC=3  out:4
   setup_hardware_and_run_oql  [6 funcs]
     detect_serial_devices  CC=12  out:7
     generate_env_content  CC=2  out:1
@@ -451,6 +465,8 @@ EDGES:
   frontend.src.pages.ScenarioFiles.cancelled → frontend.src.pages.ScenarioFiles.selectFile
   frontend.src.pages.ScenarioFiles.saveFile → frontend.src.pages.ScenarioFiles.appendLog
   frontend.src.pages.ScenarioFiles.runScenario → frontend.src.pages.ScenarioFiles.appendLog
+  frontend.src.pages.ScenarioFiles.lastResponse → frontend.src.pages.ScenarioFiles.appendLog
+  frontend.src.pages.MapEditor._setBodyField → frontend.src.pages.MapEditor._parseFieldValue
   frontend.src.pages.MapEditor.addObject → frontend.src.pages.MapEditor.applyMapMutation
   frontend.src.pages.MapEditor.name → frontend.src.pages.MapEditor.applyMapMutation
   frontend.src.pages.MapEditor.addParam → frontend.src.pages.MapEditor.applyMapMutation
@@ -464,6 +480,8 @@ EDGES:
   frontend.src.pages.MapEditor.editJsonField → frontend.src.pages.MapEditor.applyMapMutation
   frontend.src.pages.MapEditor.editObjectActionArg → frontend.src.pages.MapEditor.applyMapMutation
   frontend.src.pages.MapEditor.editObjectActionBodyField → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.editActionBodyField → frontend.src.pages.MapEditor.applyMapMutation
+  frontend.src.pages.MapEditor.editActionBodyField → frontend.src.pages.MapEditor._setBodyField
   frontend.src.pages.MapEditor.editMotorRuntimeConfig → frontend.src.pages.MapEditor.applyMapMutation
   frontend.src.pages.MapEditor.clearServerHardwareEvents → frontend.src.pages.MapEditor.loadRecentHardwareEvents
   frontend.src.pages.MapEditor.integrationMeta → frontend.src.pages.MapEditor.applyMapMutation
@@ -472,9 +490,5 @@ EDGES:
   frontend.src.pages.MapEditor.runAddForTab → frontend.src.pages.MapEditor.addParam
   frontend.src.pages.MapEditor.runAddForTab → frontend.src.pages.MapEditor.addAction
   frontend.src.pages.MapEditor.runAddForTab → frontend.src.pages.MapEditor.addFunc
-  frontend.src.pages.HardwareRestart.loadPlan → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
-  frontend.src.pages.HardwareRestart.serialPort → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
-  frontend.src.pages.HardwareRestart.serialPort → frontend.src.pages.HardwareRestart.loadPlan
-  frontend.src.pages.HardwareRestart.startOqlosAndRefreshPlan → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
-  frontend.src.pages.HardwareRestart.startOqlosAndRefreshPlan → frontend.src.pages.HardwareRestart.loadPlan
-  frontend.src.pages.HardwareRestart.port → frontend.src.pages.HardwareRestart.refreshRuntimeStatus
+  frontend.src.pages.HardwareStatus.summary → frontend.src.pages.HardwareStatus.downloadJson
+  frontend.src.pages.HardwareStatus.adapters → frontend.src.pages.HardwareStatus.downloadJson

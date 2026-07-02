@@ -9,7 +9,7 @@ import logging
 from typing import Any
 
 from .base import HardwarePlugin, PluginConfig, PluginHealth, PluginStatus
-from ._rtu_serial import reopen_rtu_after_stale, serial_error_is_stale
+from ._rtu_serial import reopen_rtu_after_stale, rtu_device_id, rtu_timeout, serial_error_is_stale
 
 logger = logging.getLogger(__name__)
 
@@ -282,10 +282,7 @@ class ModbusPlugin(HardwarePlugin):
             return {"success": False, "error": str(exc)}
 
     def _rtu_timeout(self) -> float:
-        try:
-            return max(0.1, float(self.config.timeout))
-        except (TypeError, ValueError):
-            return 2.0
+        return rtu_timeout(self.config)
 
     async def _rtu_call(self, method_name: str, **kwargs: Any) -> Any:
         if self._bus is not None:
@@ -297,10 +294,7 @@ class ModbusPlugin(HardwarePlugin):
         )
 
     def _device_id(self) -> int:
-        try:
-            return max(1, int(self.config.connection_params.get("device_id", 1)))
-        except (TypeError, ValueError):
-            return 1
+        return rtu_device_id(self.config)
 
     @classmethod
     def get_capabilities(cls) -> dict[str, Any]:

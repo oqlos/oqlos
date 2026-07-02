@@ -10,7 +10,7 @@ from typing import Any
 import httpx
 
 from .base import HardwarePlugin, PluginConfig, PluginHealth, PluginStatus
-from ._shared import not_connected_health, health_check_exception, http_disconnect
+from ._shared import not_connected_health, health_check_exception, disconnect_http_plugin
 from .plugin_http_handlers import http_get_command, http_post_command
 from oqlos.hardware.tic249_units import TIC249_DEFAULT_TARGET_VELOCITY
 
@@ -84,9 +84,7 @@ class LungPlugin(HardwarePlugin):
 
     async def disconnect(self) -> None:
         """Disconnect from lung motor service."""
-        await http_disconnect(self._client, "lung motor")
-        self._client = None
-        self._status = PluginStatus.CONFIGURED
+        await disconnect_http_plugin(self, "lung motor")
 
     async def _health_check_http(self) -> PluginHealth:
         """Try each endpoint in order, return health on first 2xx response."""

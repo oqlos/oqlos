@@ -199,14 +199,16 @@ def _lower_save(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "list
     return [CqlAction(kind="save", target=cmd.args["label"], raw=cmd.raw)]
 
 
-def _lower_min(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "list[CqlAction]":
-    args = _fmt_value(cmd.args["value"], cmd.args.get("unit"))
-    return [CqlAction(kind="min", target=cmd.args["sensor"], args=args, raw=cmd.raw)]
+def _make_lower_minmax(kind: str):
+    """Factory: lower a MIN/MAX OqlCmd into a matching CqlAction."""
+    def lower(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "list[CqlAction]":
+        args = _fmt_value(cmd.args["value"], cmd.args.get("unit"))
+        return [CqlAction(kind=kind, target=cmd.args["sensor"], args=args, raw=cmd.raw)]
+    return lower
 
 
-def _lower_max(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "list[CqlAction]":
-    args = _fmt_value(cmd.args["value"], cmd.args.get("unit"))
-    return [CqlAction(kind="max", target=cmd.args["sensor"], args=args, raw=cmd.raw)]
+_lower_min = _make_lower_minmax("min")
+_lower_max = _make_lower_minmax("max")
 
 
 def _lower_check(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "list[CqlAction]":

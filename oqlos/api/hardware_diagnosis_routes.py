@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-import asyncio
 from typing import Any
 
 from fastapi import APIRouter, Query
 
-from oqlos.api.hardware_gateway import get_hardware_gateway
+from oqlos.api.hardware_gateway import get_hardware_gateway, snapshot_via_health
 from oqlos.api.hardware_identify import hardware_identify
 from oqlos.errors import OqlosError
 
@@ -19,8 +18,7 @@ async def hardware_stack_snapshot() -> dict[str, Any]:
     """Single autodetect + configuration-cycle snapshot (health, ports, wizard plan)."""
     from oqlos.hardware.stack_snapshot import build_hardware_stack_snapshot
 
-    health = await get_hardware_gateway().health()
-    return await asyncio.to_thread(build_hardware_stack_snapshot, health)
+    return await snapshot_via_health(build_hardware_stack_snapshot)
 
 
 @router.get("/diagnosis")

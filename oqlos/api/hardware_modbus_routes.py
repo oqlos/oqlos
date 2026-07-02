@@ -7,7 +7,7 @@ from typing import Any
 
 from fastapi import APIRouter, Body
 
-from oqlos.api.hardware_gateway import get_hardware_gateway
+from oqlos.api.hardware_gateway import snapshot_via_health
 from oqlos.api.hardware_modbus_waveshare import _build_waveshare_diagnose_report
 from oqlos.api.hardware_modbus_wizard import (
     _modbus_wizard_plan,
@@ -23,8 +23,7 @@ router = APIRouter(tags=["hardware-modbus"])
 @router.get("/modbus/waveshare-diagnose")
 async def hardware_modbus_waveshare_diagnose() -> dict[str, Any]:
     """Run Waveshare-focused Modbus scan matrix and per-slave register checks."""
-    health = await get_hardware_gateway().health()
-    return await asyncio.to_thread(_build_waveshare_diagnose_report, health)
+    return await snapshot_via_health(_build_waveshare_diagnose_report)
 
 
 @router.get("/modbus/wizard/plan")

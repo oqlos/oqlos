@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from copy import deepcopy
 import json
-import os
 from pathlib import Path
 from typing import Any
 
@@ -13,6 +12,7 @@ from oqlos.hardware.client.tic249_arg_contract import (
     MOTOR2_RUNTIME_ALIASES,
     canonicalize_motor2_runtime_key,
 )
+from oqlos.shared.file_ops import env_configured_path
 
 try:
     import yaml
@@ -21,10 +21,10 @@ except Exception:  # pragma: no cover - optional dependency failure
 
 
 def _default_path() -> Path:
-    configured = os.environ.get("OQLOS_HARDWARE_MAP_FILE") or os.environ.get("HARDWARE_MAP_FILE")
-    if configured:
-        return Path(configured).expanduser()
-    return Path.home() / "oqlos" / "hardware-map.yaml"
+    return env_configured_path(
+        ("OQLOS_HARDWARE_MAP_FILE", "HARDWARE_MAP_FILE"),
+        Path.home() / "oqlos" / "hardware-map.yaml",
+    )
 
 
 def empty_mapping() -> dict[str, Any]:

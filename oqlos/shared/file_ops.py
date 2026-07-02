@@ -7,6 +7,7 @@ component that needs to read/write files relative to a trusted directory.
 
 from __future__ import annotations
 
+import os
 import pathlib
 from typing import Iterator
 
@@ -89,6 +90,27 @@ def read_file(base: pathlib.Path, rel: str) -> str:
     if full_path.is_dir():
         raise IsADirectoryError(f"Path is a directory: {rel}")
     return full_path.read_text(encoding="utf-8")
+
+
+def env_configured_path(env_vars: tuple[str, ...], default: pathlib.Path) -> pathlib.Path:
+    """Resolve a configurable file path from the first set env var, else *default*."""
+    for var in env_vars:
+        configured = os.environ.get(var)
+        if configured:
+            return pathlib.Path(configured).expanduser()
+    return default
+
+
+def read_text_file_or_empty(path: str) -> str:
+    """Best-effort read of a raw filesystem path (e.g. a sysfs/procfs entry).
+
+    Unlike read_file(), this is not sandboxed to a base directory — it's for
+    probing known system files. Returns "" on any OSError instead of raising.
+    """
+    try:
+        return pathlib.Path(path).read_text(encoding="utf-8", errors="ignore").strip("\x00\n ")
+    except OSError:
+        return ""
 
 
 def write_file(base: pathlib.Path, rel: str, content: str) -> pathlib.Path:

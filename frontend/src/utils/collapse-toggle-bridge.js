@@ -44,3 +44,17 @@ export function persistStoredCollapsed(storageKey, collapsed) {
   try { window.localStorage.setItem(storageKey, collapsed ? "1" : "0"); }
   catch { /* silent */ }
 }
+
+export function readPinned(storageKey) {
+  try { return localStorage.getItem(storageKey + "-pinned") === "true"; }
+  catch { return false; }
+}
+
+export function writePinned(storageKey, value) {
+  try { localStorage.setItem(storageKey + "-pinned", String(value)); }
+  catch { /* silent */ }
+}
+
+export function formatBadge(badge) {
+  return badge !== undefined && badge !== null && String(badge).length ? String(badge) : "";
+}

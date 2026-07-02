@@ -6,12 +6,9 @@ from typing import Any
 
 from oqlos.config import get_settings
 from oqlos.api import hardware_modbus_topology as topology
+from oqlos.api.hardware_gateway import is_plugin_compatible as _is_plugin_compatible
 
 _settings = get_settings()
-
-
-def _is_plugin_compatible(health_entry: Any) -> bool:
-    return isinstance(health_entry, dict) and bool(health_entry.get("compatible"))
 
 
 def _diagnose_shared_bus_matrix(

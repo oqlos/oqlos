@@ -68,16 +68,10 @@ def safe_eval_condition(expr: str, context: dict[str, Any]) -> bool:
 
 logger = logging.getLogger(__name__)
 
-try:
-    from nfo import logged
-except ImportError:
-    def logged(cls=None, **kw):
-        return cls if cls is not None else (lambda c: c)
-
 from oqlos.models.scenario import Step, Goal
 from oqlos.models.execution import ExecutionStatus
 from oqlos.models.peripheral import Peripheral
-from oqlos.core.state import StateManager
+from oqlos.core.state import StateManager, logged
 from oqlos.hardware.plugin_gateway import PluginHardwareGateway
 
 @logged

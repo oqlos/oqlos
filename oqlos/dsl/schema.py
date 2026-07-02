@@ -96,28 +96,28 @@ def _build_inferred_param_unit_map(
     return inferred
 
 
+def _merge_binding_map(explicit_map, inferred_map, binding_cls, field: str):
+    """Overlay explicit bindings (re-normalized) onto an inferred binding map."""
+    merged = dict(inferred_map)
+    for key, binding in explicit_map.items():
+        normalized = _normalize_name_list(getattr(binding, field))
+        if normalized:
+            merged[key] = binding_cls(**{field: normalized})
+    return merged
+
+
 def _merge_object_function_map(
     explicit_map: dict[str, DslFunctionBinding],
     inferred_map: dict[str, DslFunctionBinding],
 ) -> dict[str, DslFunctionBinding]:
-    merged = dict(inferred_map)
-    for key, binding in explicit_map.items():
-        normalized = _normalize_name_list(binding.functions)
-        if normalized:
-            merged[key] = DslFunctionBinding(functions=normalized)
-    return merged
+    return _merge_binding_map(explicit_map, inferred_map, DslFunctionBinding, "functions")
 
 
 def _merge_param_unit_map(
     explicit_map: dict[str, DslParamUnitBinding],
     inferred_map: dict[str, DslParamUnitBinding],
 ) -> dict[str, DslParamUnitBinding]:
-    merged = dict(inferred_map)
-    for key, binding in explicit_map.items():
-        normalized = _normalize_name_list(binding.units)
-        if normalized:
-            merged[key] = DslParamUnitBinding(units=normalized)
-    return merged
+    return _merge_binding_map(explicit_map, inferred_map, DslParamUnitBinding, "units")
 
 
 def get_default_dsl_schema() -> DslSchema:

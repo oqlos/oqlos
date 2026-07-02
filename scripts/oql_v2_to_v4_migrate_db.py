@@ -310,24 +310,22 @@ def _mig_sample(stripped: str, normalized: str) -> list[str] | None:
     return [f"  SAMPLE {sensor} {direction}"]
 
 
-def _mig_minmax_eq(stripped: str, normalized: str) -> list[str] | None:
-    m = re.match(r"^(MIN|MAX)\s+(.+?)\s*=\s*(.+)$", stripped, re.IGNORECASE)
+def _mig_minmax(text: str, regex: str, *, sensor_transform=lambda s: s) -> list[str] | None:
+    m = re.match(regex, text, re.IGNORECASE)
     if not m:
         return None
     kind = m.group(1).upper()
-    sensor = _to_v4_token(_normalize_bracket_tokens(m.group(2)))
+    sensor = _to_v4_token(sensor_transform(m.group(2)))
     value_joined = _join_value_unit(_normalize_bracket_tokens(m.group(3).strip()))
     return [f"  __MINMAX__{kind}__{sensor}__{value_joined}"]
+
+
+def _mig_minmax_eq(stripped: str, normalized: str) -> list[str] | None:
+    return _mig_minmax(stripped, r"^(MIN|MAX)\s+(.+?)\s*=\s*(.+)$", sensor_transform=_normalize_bracket_tokens)
 
 
 def _mig_minmax_simple(stripped: str, normalized: str) -> list[str] | None:
-    m = re.match(r"^(MIN|MAX)\s+([^\s]+)\s+(.+)$", normalized, re.IGNORECASE)
-    if not m:
-        return None
-    kind = m.group(1).upper()
-    sensor = _to_v4_token(m.group(2))
-    value_joined = _join_value_unit(_normalize_bracket_tokens(m.group(3).strip()))
-    return [f"  __MINMAX__{kind}__{sensor}__{value_joined}"]
+    return _mig_minmax(normalized, r"^(MIN|MAX)\s+([^\s]+)\s+(.+)$")
 
 
 def _mig_delta(stripped: str, normalized: str) -> list[str] | None:
@@ -340,16 +338,18 @@ def _mig_delta(stripped: str, normalized: str) -> list[str] | None:
     return [f"  DELTA {sensor_v4} = {value_joined}"]
 
 
-def _mig_calc(stripped: str, normalized: str) -> list[str] | None:
-    if not re.match(r"^CALC\s+", normalized, re.IGNORECASE):
+def _mig_as_log(normalized: str, keyword: str) -> list[str] | None:
+    if not re.match(rf"^{keyword}\s+", normalized, re.IGNORECASE):
         return None
     return [f"  LOG {_quote(normalized)}"]
+
+
+def _mig_calc(stripped: str, normalized: str) -> list[str] | None:
+    return _mig_as_log(normalized, "CALC")
 
 
 def _mig_val(stripped: str, normalized: str) -> list[str] | None:
-    if not re.match(r"^VAL\s+", normalized, re.IGNORECASE):
-        return None
-    return [f"  LOG {_quote(normalized)}"]
+    return _mig_as_log(normalized, "VAL")
 
 
 def _mig_if_comparison(stripped: str, normalized: str) -> list[str] | None:

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 if TYPE_CHECKING:
     import httpx
@@ -57,3 +57,10 @@ async def http_disconnect(client: httpx.AsyncClient | None, label: str) -> None:
     if client:
         await client.aclose()
     logger.info(f"Disconnected from {label}")
+
+
+async def disconnect_http_plugin(plugin: Any, label: str) -> None:
+    """Close plugin._client, clear the reference, and mark plugin as CONFIGURED."""
+    await http_disconnect(plugin._client, label)
+    plugin._client = None
+    plugin._status = PluginStatus.CONFIGURED

@@ -7,7 +7,7 @@ import inspect
 from typing import Any
 
 from oqlos.api import hardware_platform as platform
-from oqlos.api.hardware_gateway import try_get_hardware_gateway
+from oqlos.api.hardware_gateway import is_plugin_compatible as _is_plugin_compatible, try_get_hardware_gateway
 from oqlos.api.hardware_probe_devices import (
     _local_ads1115_probe_allowed,
     _probe_configured_waveshare_rtu,
@@ -52,11 +52,6 @@ def _collect_hardware_diagnostics() -> dict[str, Any]:
         "i2c_buses": sorted(glob.glob("/dev/i2c-*")),
         "modbus_preflight": _modbus_preflight_report(),
     }
-
-
-def _is_plugin_compatible(health_entry: Any) -> bool:
-    """Return True when plugin health confirms adapter is reachable and compatible."""
-    return isinstance(health_entry, dict) and bool(health_entry.get("compatible"))
 
 
 def _needs_live_scan(health: dict[str, Any]) -> bool:

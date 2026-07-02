@@ -3,7 +3,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException
 
 from oqlos.models.peripheral import PeripheralMode
-from oqlos.shared._endpoint_helpers import make_collection_route
+from oqlos.shared._endpoint_helpers import get_or_404, make_collection_route
 from oqlos.api.utils import execution_ctrl as _ctrl
 
 router = APIRouter(prefix="/api/v1/peripherals", tags=["peripherals"])
@@ -17,9 +17,7 @@ router.get("")(get_peripherals)
 @router.get("/{peripheral_id}")
 async def get_peripheral(peripheral_id: str):
     """Get specific peripheral"""
-    if peripheral_id not in _ctrl.state_manager.peripherals:
-        raise HTTPException(status_code=404, detail="Peripheral not found")
-    return _ctrl.state_manager.peripherals[peripheral_id]
+    return get_or_404(_ctrl.state_manager.peripherals, peripheral_id, "Peripheral not found")
 
 @router.put("/{peripheral_id}")
 async def update_peripheral(peripheral_id: str, update_data: dict):

@@ -9,7 +9,7 @@ import logging
 from typing import Any
 
 from .base import HardwarePlugin, PeripheralConfig, PluginConfig, PluginHealth, PluginStatus
-from ._rtu_serial import reopen_rtu_after_stale, serial_error_is_stale
+from ._rtu_serial import reopen_rtu_after_stale, rtu_device_id, rtu_timeout, serial_error_is_stale
 
 logger = logging.getLogger(__name__)
 
@@ -336,28 +336,22 @@ class ModbusAdcPlugin(HardwarePlugin):
         return None
 
     def _rtu_timeout(self) -> float:
-        try:
-            return max(0.1, float(self.config.timeout))
-        except (TypeError, ValueError):
-            return 2.0
+        return rtu_timeout(self.config)
 
     def _device_id(self) -> int:
+        return rtu_device_id(self.config)
+
+    def _config_int(self, key: str, default: int, minimum: int) -> int:
         try:
-            return max(1, int(self.config.connection_params.get("device_id", 1)))
+            return max(minimum, int(self.config.connection_params.get(key, default)))
         except (TypeError, ValueError):
-            return 1
+            return default
 
     def _read_address(self) -> int:
-        try:
-            return max(0, int(self.config.connection_params.get("read_address", 0)))
-        except (TypeError, ValueError):
-            return 0
+        return self._config_int("read_address", 0, 0)
 
     def _read_count(self) -> int:
-        try:
-            return max(1, int(self.config.connection_params.get("read_count", 8)))
-        except (TypeError, ValueError):
-            return 8
+        return self._config_int("read_count", 8, 1)
 
     @classmethod
     def get_capabilities(cls) -> dict[str, Any]:

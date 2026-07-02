@@ -5,6 +5,9 @@ import {
   postToParent,
   readStoredCollapsed,
   persistStoredCollapsed,
+  readPinned,
+  writePinned,
+  formatBadge,
 } from "./collapse-toggle-bridge.js";
 import { useRailHoverPreview } from "../hooks/useRailHoverPreview.js";
 
@@ -21,6 +24,27 @@ function _makeCollapseToggleHandler(toggleId, { expand, previewExpand, previewCo
   };
 }
 
+function _useIframeCollapseToggle(toggleId, stowed, { expand, previewExpand, previewCollapse, label, icon, badge }) {
+  useEffect(() => {
+    if (!toggleId || !isInIframe()) return undefined;
+    if (stowed) {
+      postToParent("child.collapse-toggle.register", {
+        id: toggleId, label, icon, badge: formatBadge(badge),
+      });
+      return () => postToParent("child.collapse-toggle.unregister", { id: toggleId });
+    }
+    postToParent("child.collapse-toggle.unregister", { id: toggleId });
+    return undefined;
+  }, [stowed, toggleId, label, icon, badge]);
+
+  useEffect(() => {
+    if (!toggleId || !isInIframe()) return undefined;
+    const onMessage = _makeCollapseToggleHandler(toggleId, { expand, previewExpand, previewCollapse });
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, [toggleId, expand, previewExpand, previewCollapse]);
+}
+
 /**
  * Selection-driven panel collapse with optional parent top-bar reveal toggle.
  */
@@ -31,17 +55,9 @@ export function useSelectionCollapsePanel({
   icon = "☰",
   badge,
 }) {
-  const [pinned, setPinned] = useState(() => {
-    try {
-      return localStorage.getItem(storageKey + "-pinned") === "true";
-    } catch (_) {
-      return false;
-    }
-  });
+  const [pinned, setPinned] = useState(() => readPinned(storageKey));
   const [userCollapsed, setUserCollapsed] = useState(() => {
-    try {
-      if (localStorage.getItem(storageKey + "-pinned") === "true") return false;
-    } catch (_) {}
+    if (readPinned(storageKey)) return false;
     return readStoredCollapsed(storageKey);
   });
   const [autoCollapsed, setAutoCollapsed] = useState(false);
@@ -71,8 +87,7 @@ export function useSelectionCollapsePanel({
   const scheduleCollapse = useCallback(() => {
     cancelAutoCollapse();
     setHoverPreview(false);
-    if (pinned) return;
-    if (userCollapsed) return;
+    if (pinned || userCollapsed) return;
     timerRef.current = setTimeout(() => {
       timerRef.current = null;
       setUserCollapsed(true);
@@ -90,9 +105,7 @@ export function useSelectionCollapsePanel({
   const togglePinned = useCallback(() => {
     setPinned((prev) => {
       const next = !prev;
-      try {
-        localStorage.setItem(storageKey + "-pinned", String(next));
-      } catch (_) {}
+      writePinned(storageKey, next);
       if (next) {
         setUserCollapsed(false);
         persistStoredCollapsed(storageKey, false);
@@ -112,9 +125,7 @@ export function useSelectionCollapsePanel({
       const next = !prev;
       if (next) {
         setPinned(false);
-        try {
-          localStorage.setItem(storageKey + "-pinned", "false");
-        } catch (_) {}
+        writePinned(storageKey, false);
       }
       persistStoredCollapsed(storageKey, next);
       return next;
@@ -123,27 +134,7 @@ export function useSelectionCollapsePanel({
 
   useEffect(() => cancelAutoCollapse, [cancelAutoCollapse]);
 
-  useEffect(() => {
-    if (!toggleId || !isInIframe()) return undefined;
-    if (stowed) {
-      postToParent("child.collapse-toggle.register", {
-        id: toggleId,
-        label,
-        icon,
-        badge: badge !== undefined && badge !== null && String(badge).length ? String(badge) : "",
-      });
-      return () => postToParent("child.collapse-toggle.unregister", { id: toggleId });
-    }
-    postToParent("child.collapse-toggle.unregister", { id: toggleId });
-    return undefined;
-  }, [stowed, toggleId, label, icon, badge]);
-
-  useEffect(() => {
-    if (!toggleId || !isInIframe()) return undefined;
-    const onMessage = _makeCollapseToggleHandler(toggleId, { expand, previewExpand, previewCollapse });
-    window.addEventListener("message", onMessage);
-    return () => window.removeEventListener("message", onMessage);
-  }, [toggleId, expand, previewExpand, previewCollapse]);
+  _useIframeCollapseToggle(toggleId, stowed, { expand, previewExpand, previewCollapse, label, icon, badge });
 
   return {
     collapsed,

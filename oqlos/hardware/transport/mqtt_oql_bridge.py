@@ -85,8 +85,17 @@ def build_topics(prefix: str, node_id: str) -> Topics:
 # ---------------------------------------------------------------------------
 # Envelopes
 # ---------------------------------------------------------------------------
+class _JsonEnvelopeMixin:
+    """Shared to_json() for versioned MQTT envelope dataclasses."""
+
+    def to_json(self) -> str:
+        payload = asdict(self)
+        payload["v"] = ENVELOPE_VERSION
+        return json.dumps(payload, ensure_ascii=False)
+
+
 @dataclass
-class OqlRequest:
+class OqlRequest(_JsonEnvelopeMixin):
     """A request to execute on a remote node.
 
     For ``kind`` in {"command", "script"} the ``oql`` field carries OQL text.
@@ -106,11 +115,6 @@ class OqlRequest:
     timeout_ms: int = 15000
     source: str = ""
 
-    def to_json(self) -> str:
-        payload = asdict(self)
-        payload["v"] = ENVELOPE_VERSION
-        return json.dumps(payload, ensure_ascii=False)
-
     @classmethod
     def from_json(cls, raw: str | bytes) -> "OqlRequest":
         data = json.loads(raw)
@@ -129,7 +133,7 @@ class OqlRequest:
 
 
 @dataclass
-class OqlResponse:
+class OqlResponse(_JsonEnvelopeMixin):
     """The result of executing OQL on a remote node."""
 
     correlation_id: str
@@ -137,11 +141,6 @@ class OqlResponse:
     result: dict[str, Any] | None = None
     error: str | None = None
     node_id: str = ""
-
-    def to_json(self) -> str:
-        payload = asdict(self)
-        payload["v"] = ENVELOPE_VERSION
-        return json.dumps(payload, ensure_ascii=False)
 
     @classmethod
     def from_json(cls, raw: str | bytes) -> "OqlResponse":

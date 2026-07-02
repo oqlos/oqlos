@@ -43,6 +43,25 @@ import { MapEditorMotorRuntimePanel } from "./MapEditorMotorRuntimePanel.jsx";
 import { MapEditorObjectActionPanel } from "./MapEditorObjectActionPanel.jsx";
 import { MapEditorParamConversionPanel } from "./MapEditorParamConversionPanel.jsx";
 
+function _parseFieldValue(value, type) {
+  if (type === "number") {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  }
+  if (type === "list") return value.split(",").map((item) => item.trim()).filter(Boolean);
+  return value.trim();
+}
+
+function _setBodyField(target, actionName, field, value, type) {
+  const action = target.actions?.[actionName];
+  if (!action || typeof action !== "object") return;
+  if (!action.body || typeof action.body !== "object" || Array.isArray(action.body)) {
+    action.body = {};
+  }
+  const parsed = _parseFieldValue(value, type);
+  if (parsed !== undefined) action.body[field] = parsed;
+}
+
 export default function MapEditor() {
   const { isReadOnly, isAdmin, isOperator } = useAppConfig();
   const { t } = useI18n();
@@ -301,22 +320,7 @@ export default function MapEditor() {
     const currentValue = Array.isArray(current) ? current.join(", ") : current ?? "";
     const value = prompt(`${actionName}.body.${field}:`, currentValue);
     if (value === null) return;
-    applyMapMutation((next) => {
-      const target = next.actions?.[actionName];
-      if (!target || typeof target !== "object") return;
-      if (!target.body || typeof target.body !== "object" || Array.isArray(target.body)) {
-        target.body = {};
-      }
-      if (type === "number") {
-        const parsed = Number(value);
-        if (!Number.isFinite(parsed)) return;
-        target.body[field] = parsed;
-      } else if (type === "list") {
-        target.body[field] = value.split(",").map((item) => item.trim()).filter(Boolean);
-      } else {
-        target.body[field] = value.trim();
-      }
-    });
+    applyMapMutation((next) => _setBodyField(next, actionName, field, value, type));
   }, [applyMapMutation, mapData]);
 
   const editMotorRuntimeConfig = useCallback((field, type = "number") => {

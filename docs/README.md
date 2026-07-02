@@ -67,8 +67,8 @@ Detailed guide: [Hardware Diagnostics](HARDWARE_DIAGNOSTICS.md).
 
 <!-- code2docs:start --># oqlos
 
-![version](https://img.shields.io/badge/version-0.1.0-blue) ![python](https://img.shields.io/badge/python-%3E%3D3.10-blue) ![coverage](https://img.shields.io/badge/coverage-unknown-lightgrey) ![functions](https://img.shields.io/badge/functions-2289-green)
-> **2289** functions | **123** classes | **352** files | CC̄ = 3.8
+![version](https://img.shields.io/badge/version-0.1.0-blue) ![python](https://img.shields.io/badge/python-%3E%3D3.10-blue) ![coverage](https://img.shields.io/badge/coverage-unknown-lightgrey) ![functions](https://img.shields.io/badge/functions-2404-green)
+> **2404** functions | **128** classes | **364** files | CC̄ = 3.8
 
 > Auto-generated project documentation from source code analysis.
 
@@ -180,6 +180,7 @@ oqlos/
             ├── MapEditorObjectActionPanel
             ├── ScenarioFiles
             ├── MapEditor
+            ├── MotorServices
             ├── HardwareStatus
             ├── HardwareRestart
             ├── HardwareDemo
@@ -205,6 +206,7 @@ oqlos/
                 ├── test
                 ├── test
                 ├── test
+                ├── test
             ├── hardware-api-retry
             ├── hardware-demo-identify
                 ├── policy
@@ -226,6 +228,7 @@ oqlos/
                 ├── test
             ├── hardware-wizard-steps
             ├── mapEditorMapShape
+            ├── oqlGoals
                 ├── test
             ├── mapEditorTic249
             ├── hardware-restart-step-outcome
@@ -242,6 +245,7 @@ oqlos/
                 ├── test
             ├── scenarioFilesApi
             ├── hardware-tic249-status
+                ├── test
             ├── wsClient
             ├── hardwareApi
             ├── hardware-api-log
@@ -253,6 +257,7 @@ oqlos/
         ├── schema
     ├── cql-examples
     ├── oql-spec
+    ├── ERROR_CODES
         ├── schema
     ├── HARDWARE_DIAGNOSTICS
     ├── DEDUP-connect-scenario
@@ -273,6 +278,7 @@ oqlos/
     ├── plugin-config
     ├── curl-quickstart
         ├── doctor-workflow
+    ├── mosquitto
         ├── prod
         ├── dev
     ├── Dockerfile
@@ -300,6 +306,7 @@ oqlos/
         ├── _firmware_executor
         ├── _value_normalizers
         ├── _sensor_evaluator
+        ├── gen_error_docs
         ├── hardware_diagnose/
         ├── plugin_cli
             ├── doctor_format
@@ -333,6 +340,11 @@ oqlos/
         ├── dsl_models
         ├── scenario
         ├── peripheral
+        ├── exceptions
+        ├── catalog
+        ├── fastapi_integration
+    ├── errors/
+        ├── repair_commit
         ├── config_paths
         ├── diagnosis_plugin_health
         ├── diagnosis_device_actions
@@ -541,6 +553,10 @@ oqlos/
 - **`PeripheralStatus`** — —
 - **`PeripheralMode`** — —
 - **`Peripheral`** — —
+- **`OqlosError`** — —
+- **`RepairTemplate`** — —
+- **`IssueDefinition`** — —
+- **`CodePattern`** — A templated code family (e.g. one code per adapter id), not a fixed set.
 - **`ProtocolType`** — Supported hardware communication protocols.
 - **`HardwareProtocol`** — Base class for all hardware drivers.
 - **`UnitType`** — Standard unit types for hardware parameters.
@@ -707,10 +723,14 @@ oqlos/
 - `match()` — —
 - `saveFile()` — —
 - `runScenario()` — —
-- `data()` — —
+- `goalScripts()` — —
+- `lastResponse()` — —
 - `sidebarItems()` — —
 - `navContext()` — —
 - `file()` — —
+- `nextSpeed()` — —
+- `parsed()` — —
+- `action()` — —
 - `wsOnline()` — —
 - `initial()` — —
 - `tab()` — —
@@ -720,7 +740,6 @@ oqlos/
 - `setTabAndUrl()` — —
 - `url()` — —
 - `onJsonChange()` — —
-- `parsed()` — —
 - `applyMapMutation()` — —
 - `next()` — —
 - `pretty()` — —
@@ -743,6 +762,8 @@ oqlos/
 - `editJsonField()` — —
 - `editObjectActionArg()` — —
 - `editObjectActionBodyField()` — —
+- `editActionBodyField()` — —
+- `currentValue()` — —
 - `editMotorRuntimeConfig()` — —
 - `saveMap()` — —
 - `parsedJson()` — —
@@ -773,7 +794,19 @@ oqlos/
 - `result()` — —
 - `filteredHardwareEvents()` — —
 - `runAddForTab()` — —
+- `DeviceCard()` — —
+- `refresh()` — —
+- `data()` — —
+- `runRepair()` — —
+- `result()` — —
+- `devices()` — —
+- `motorRepairs()` — —
+- `navContext()` — —
 - `SummaryRow()` — —
+- `downloadJson()` — —
+- `blob()` — —
+- `url()` — —
+- `a()` — —
 - `refresh()` — —
 - `startedAt()` — —
 - `durationMs()` — —
@@ -781,6 +814,8 @@ oqlos/
 - `summary()` — —
 - `adapters()` — —
 - `diagnostics()` — —
+- `copyAllJson()` — —
+- `payload()` — —
 - `navContext()` — —
 - `timestamp()` — —
 - `txtDownload()` — —
@@ -939,6 +974,7 @@ oqlos/
 - `programPayload()` — —
 - `program()` — —
 - `envelope()` — —
+- `onMessage()` — —
 - `useSelectionCollapsePanel()` — —
 - `timerRef()` — —
 - `stowed()` — —
@@ -946,8 +982,8 @@ oqlos/
 - `collapsed()` — —
 - `scheduleCollapse()` — —
 - `expand()` — —
+- `togglePinned()` — —
 - `toggleCollapsed()` — —
-- `onMessage()` — —
 - `APP_CONFIG_DEFAULTS()` — —
 - `resolveUserIdFromSearchParams()` — —
 - `value()` — —
@@ -995,6 +1031,7 @@ oqlos/
 - `ensureRequiredDefaultMappings()` — —
 - `shaped()` — —
 - `defaultMotor2()` — —
+- `defaultAction()` — —
 - `defaultParam()` — —
 - `createInitialEditorState()` — —
 - `seeded()` — —
@@ -1008,8 +1045,10 @@ oqlos/
 - `status()` — —
 - `executeFinalDiagnoseStep()` — —
 - `diagnose()` — —
+- `search()` — —
 - `diagnostics()` — —
 - `summary()` — —
+- `goals()` — —
 - `t()` — —
 - `candidate()` — —
 - `sleep()` — —
@@ -1068,9 +1107,20 @@ oqlos/
 - `huiShortcutClass()` — —
 - `huiShortcutLabelClass()` — —
 - `readScenarioFromUrl()` — —
+- `params()` — —
 - `raw()` — —
 - `findFileByScenarioQuery()` — —
 - `needle()` — —
+- `readScenarioSpeedFromUrl()` — —
+- `parsed()` — —
+- `buildScenarioFilesSearch()` — —
+- `query()` — —
+- `scenarioUrlPatchForFile()` — —
+- `scenario()` — —
+- `basename()` — —
+- `location()` — —
+- `replaceScenarioFilesUrlState()` — —
+- `nextSearch()` — —
 - `plan()` — —
 - `adapterStatusBadgeClass()` — —
 - `normalized()` — —
@@ -1141,6 +1191,25 @@ oqlos/
 - `isMapEmpty()` — —
 - `ensureParamConversion()` — —
 - `toPrettyJson()` — —
+- `normalizeSource()` — —
+- `goalTitleFromLines()` — —
+- `firstLineTitle()` — —
+- `match()` — —
+- `splitOqlIntoGoalScripts()` — —
+- `lines()` — —
+- `currentGoal()` — —
+- `script()` — —
+- `header()` — —
+- `goal()` — —
+- `body()` — —
+- `estimateOqlWaitMs()` — —
+- `totalMs()` — —
+- `text()` — —
+- `value()` — —
+- `unit()` — —
+- `timeoutMsForOqlScript()` — —
+- `numericSpeed()` — —
+- `waitMs()` — —
 - `t()` — —
 - `result()` — —
 - `tic249RawTargetVelocity()` — —
@@ -1178,6 +1247,9 @@ oqlos/
 - `postToParent()` — —
 - `readStoredCollapsed()` — —
 - `persistStoredCollapsed()` — —
+- `readPinned()` — —
+- `writePinned()` — —
+- `formatBadge()` — —
 - `FONT_USER_SCALE()` — —
 - `applyDocumentAppConfig()` — —
 - `root()` — —
@@ -1194,12 +1266,17 @@ oqlos/
 - `fetchScenarioFileContent()` — —
 - `saveScenarioFileContent()` — —
 - `executeScenarioFile()` — —
+- `executeOqlScript()` — —
+- `normalizedMode()` — —
+- `numericSpeed()` — —
 - `TIC249_DEENERGIZE_COMMANDS()` — —
 - `tic249ResultStatus()` — —
 - `data()` — —
 - `isIdempotentTic249Deenergized()` — —
 - `status()` — —
 - `isIdempotentDiagnosticSuccess()` — —
+- `parsed()` — —
+- `err()` — —
 - `RECONNECT_DELAY_MS()` — —
 - `RECONNECT_MAX_ATTEMPTS()` — —
 - `REQUEST_TIMEOUT_MS()` — —
@@ -1257,8 +1334,10 @@ oqlos/
 - `issues()` — —
 - `lastError()` — —
 - `extractErrorPayload()` — —
+- `parseOqlError()` — —
 - `formatHardwareApiError()` — —
 - `payload()` — —
+- `oqlError()` — —
 - `detail()` — —
 - `detailMessage()` — —
 - `oqlosArtificialLungCommandPath()` — —
@@ -1298,21 +1377,11 @@ oqlos/
 - `duration_to_ms(token)` — Convert a duration token into integer milliseconds.
 - `tokenize(rest)` — Split a command tail into tokens.
 - `parse_SET(tokens, ln, raw)` — —
-- `parse_GET(tokens, ln, raw)` — —
 - `parse_WAIT(tokens, ln, raw)` — —
 - `parse_IF_DELTA(tokens, ln, raw)` — —
-- `parse_SAVE(tokens, ln, raw)` — —
 - `parse_CHECK(rest, ln, raw)` — —
 - `parse_IF(rest, ln, raw)` — —
-- `parse_MIN(tokens, ln, raw)` — —
-- `parse_MAX(tokens, ln, raw)` — —
 - `parse_SAMPLE(tokens, ln, raw)` — —
-- `parse_LOG(tokens, ln, raw)` — —
-- `parse_ERROR(tokens, ln, raw)` — —
-- `parse_CORRECT(tokens, ln, raw)` — —
-- `parse_CALL(tokens, ln, raw)` — —
-- `parse_INCLUDE(tokens, ln, raw)` — —
-- `parse_FUNC_CALL(tokens, ln, raw)` — —
 - `parse_REPEAT(tokens, ln, raw)` — —
 - `parse_oql(text, filename)` — Parse OQL source into an :class:`OqlDoc`.
 - `format_doc(doc)` — Pretty-print for ad-hoc debugging.
@@ -1337,6 +1406,8 @@ oqlos/
 - `resolve_compare_chain(node, resolve_value)` — Evaluate a chained comparison using the caller's node resolver.
 - `parse_cql(source, filename)` — Parse CQL source into AST.
 - `validate_cql(doc)` — Validate a parsed CQL document. Returns list of issues.
+- `generate_markdown()` — —
+- `main()` — —
 - `cmd_list(args)` — List all registered plugins.
 - `cmd_status(args)` — Show status of all plugins.
 - `cmd_capabilities(args)` — Show capabilities of a specific plugin.
@@ -1448,6 +1519,12 @@ oqlos/
 - `check_required_adapter_health(required_adapter, health, yaml_output, quiet)` — Check required adapter service health when firmware exposes it.
 - `emit_preflight_success(firmware_url, health, identify, required_adapter)` — Emit preflight success output in appropriate format.
 - `preflight_hardware(command, firmware_url)` — Check whether the requested command can run on real hardware.
+- `get_issue_definition(code)` — —
+- `matches_known_pattern(code)` — —
+- `all_codes()` — —
+- `install_oqlos_error_handler(app)` — Register the standard OqlIssue JSON response for any raised OqlosError.
+- `is_eligible_for_automated_commit(action)` — True only for in-process-safe, config-only, already-auto_executable actions.
+- `format_repair_commit_message()` — Build a `fix(<code>): <summary>` commit message with an OqlOS-Issue trailer.
 - `resolve_oqlos_config_path(config_path)` — Resolve the canonical ``oqlos.yaml`` path.
 - `health_map(identify)` — —
 - `is_stale_hardware_message(message)` — —
@@ -1465,6 +1542,7 @@ oqlos/
 - `build_report_global_actions(modbus_bad, motors_bad, c2004_root, host_recover)` — Build the global recovery actions for the full stack restart path.
 - `build_diagnosis_report(identify)` — Build per-device diagnosis from an identify payload (same shape as GET /identify).
 - `execute_safe_recover(gateway, report)` — Reconnect failed plugins inside OqlOS; return host_actions for sidecars.
+- `get_hui_hold_profiles()` — —
 - `shutdown_all_hui_hardware(gateway)` — —
 - `start_hui_hold(gateway, key)` — —
 - `stop_hui_hold(gateway, key)` — —
@@ -1481,6 +1559,7 @@ oqlos/
 - `list_hui_actions()` — —
 - `resolve_dri0050_serial(configured)` — Pick pump USB-serial: env, stable by-id, then ttyUSB not used by Modbus.
 - `ensure_dri0050_sidecar()` — Start or restart dri0050-motor-api via systemd-run (same as make hardware-up).
+- `ensure_tic249_sidecar()` — Restart hw-tic249.service (systemd --user) and confirm the Pololu Tic reconnects.
 - `resolve_scanner_presence(diagnostics)` — —
 - `build_scanner_adapter_entry(diagnostics)` — —
 - `enrich_scanner_adapter(payload)` — —
@@ -1492,6 +1571,8 @@ oqlos/
 - `steps_per_second_to_raw(value)` — Convert human steps/s into Tic249 target-velocity raw units.
 - `raw_acceleration_for_ramp(raw_speed, ramp_seconds)` — Derive Tic raw acceleration so speed ramps in ``ramp_seconds``.
 - `build_hui_lung_reciprocate_args()` — Canonical HUI AL reciprocate payload for motor-tic249 / sidecar.
+- `get_hui_lung_valve_id()` — —
+- `get_hui_lung_reciprocate_args()` — —
 - `collect_modbus_serial_candidates(diagnostics)` — —
 - `enrich_platform_modbus_ports(payload)` — —
 - `enrich_modbus_serial_hints(payload)` — —
@@ -1513,6 +1594,8 @@ oqlos/
 - `pi_diagnostics(_a)` — Raspberry Pi system diagnostics snapshot.
 - `usb_reset(a)` — Driver-level reset/re-enumeration of a USB device (best-effort; may need root).
 - `run_modbus_io_valve(hw, command, params)` — —
+- `run_pump_diagnostic(command, params)` — Map connect-scenario pump_off/pump_set to the motor plugin set_speed path.
+- `run_motor_tic249_extended(command, params)` — Run Tic249 UI commands locally (same names as connect-scenario proxy).
 - `run_diagnostic_command(a)` — Generic peripheral command — mirrors connect-scenario's proxy_diagnostic_command.
 - `run_manage_verb(verb, args)` — Execute a management verb and return a JSON-serializable result dict.
 - `list_manage_verbs()` — Return the supported verb names (for discovery/tests).
@@ -1605,8 +1688,11 @@ oqlos/
 - `not_connected_health(label)` — —
 - `health_check_exception(exc)` — —
 - `http_disconnect(client, label)` — Close an httpx client (if open) and log disconnect.
+- `disconnect_http_plugin(plugin, label)` — Close plugin._client, clear the reference, and mark plugin as CONFIGURED.
 - `serial_error_is_stale(exc)` — —
 - `reopen_rtu_after_stale(plugin, exc)` — Close and reopen the RTU bus after USB tty re-enumeration (EIO).
+- `rtu_timeout(config)` — —
+- `rtu_device_id(config)` — —
 - `motor_http_request(client, base_url)` — Execute an HTTP motor API call and wrap the JSON response.
 - `motor_cli_command(cmd_args)` — Run a motor CLI subprocess and return a standardized plugin result.
 - `render_html_report(data_json)` — Render a self-contained HTML report from an ``oqlos-report-v1`` JSON string.
@@ -1619,9 +1705,12 @@ oqlos/
 - `main()` — —
 - `serve_html_page(file_path)` — Serve a static HTML file when present, else return a small fallback page.
 - `make_collection_route(route_name, get_collection)` — Create a trivial list-all route for dict-backed state collections.
+- `get_or_404(collection, key, not_found_detail)` — Look up *key* in a dict-backed state collection, or raise HTTP 404.
 - `list_files(base, pattern, recursive)` — List files (not directories) matching *pattern* under *base*.
 - `iter_entries(base)` — Iterate over direct children of *base*, yielding info dicts.
 - `read_file(base, rel)` — Read a file safely within *base*.
+- `env_configured_path(env_vars, default)` — Resolve a configurable file path from the first set env var, else *default*.
+- `read_text_file_or_empty(path)` — Best-effort read of a raw filesystem path (e.g. a sysfs/procfs entry).
 - `write_file(base, rel, content)` — Write *content* to a file safely within *base*.
 - `resolve_logs_db_path(project_root_fallback)` — Resolve logs.db path from environment or default.
 - `create_nfo_setup()` — Factory that creates a service-specific setup_nfo() function.
@@ -1733,16 +1822,19 @@ oqlos/
 - `hardware_modbus_wizard_plan()` — Return guided step-by-step Modbus configuration plan.
 - `hardware_modbus_wizard_probe_isolated(serial_port, baudrates, parities, device_ids)` — Probe one isolated module before writing address/UART settings.
 - `hardware_modbus_wizard_program_isolated(serial_port, current_device_id, new_device_id, new_baudrate)` — Program one isolated module (address + UART), then verify config.
-- `index_page()` — —
+- `index_page(request)` — —
 - `editor_page(request)` — —
-- `panel_page()` — —
-- `navigation_page()` — —
-- `hardware_status_page()` — —
+- `panel_alias(request)` — —
+- `navigation_alias(request)` — —
+- `ui_panel_page()` — —
+- `ui_navigation_page()` — —
+- `hardware_status_page(request)` — —
 - `hardware_demo_alias(request)` — —
 - `hardware_restart_alias(request)` — —
 - `map_editor_alias(request)` — —
 - `scenario_files_alias(request)` — —
 - `func_editor_alias(request)` — —
+- `motor_services_alias(request)` — —
 - `nav_alias(request)` — —
 - `status_alias(request)` — —
 - `restart_alias(request)` — —
@@ -1845,7 +1937,9 @@ oqlos/
 📄 `docker.Dockerfile`
 📄 `docker.docker-compose.dev`
 📄 `docker.docker-compose.prod`
+📄 `docker.mosquitto`
 📄 `docs.DEDUP-connect-scenario`
+📄 `docs.ERROR_CODES`
 📄 `docs.HARDWARE_CONTROL_OQL_MQTT`
 📄 `docs.HARDWARE_DIAGNOSTICS`
 📄 `docs.OQL_V4_MIGRATION_MANUAL`
@@ -1862,13 +1956,14 @@ oqlos/
 📄 `examples.plugin-config`
 📄 `frontend.package`
 📄 `frontend.src.App`
-📄 `frontend.src.api.hardware-api-errors` (10 functions)
+📄 `frontend.src.api.hardware-api-errors` (12 functions)
+📄 `frontend.src.api.hardware-api-errors.test` (5 functions)
 📄 `frontend.src.api.hardware-api-log` (9 functions)
 📄 `frontend.src.api.hardware-diagnostic-failure` (22 functions)
 📄 `frontend.src.api.hardware-diagnostic-failure.test`
 📄 `frontend.src.api.hardware-tic249-status` (8 functions)
 📄 `frontend.src.api.hardwareApi` (26 functions)
-📄 `frontend.src.api.scenarioFilesApi` (12 functions)
+📄 `frontend.src.api.scenarioFilesApi` (17 functions)
 📄 `frontend.src.api.wsClient` (32 functions, 1 classes)
 📄 `frontend.src.components.HardwareActivityLog`
 📄 `frontend.src.components.SharedNav` (8 functions)
@@ -1890,16 +1985,17 @@ oqlos/
 📄 `frontend.src.main` (1 functions)
 📄 `frontend.src.pages.HardwareDemo` (42 functions)
 📄 `frontend.src.pages.HardwareRestart` (45 functions)
-📄 `frontend.src.pages.HardwareStatus` (10 functions)
-📄 `frontend.src.pages.MapEditor` (92 functions)
+📄 `frontend.src.pages.HardwareStatus` (16 functions)
+📄 `frontend.src.pages.MapEditor` (101 functions)
 📄 `frontend.src.pages.MapEditorIntegrationMetaPanel` (1 functions)
 📄 `frontend.src.pages.MapEditorMotorRuntimePanel` (2 functions)
 📄 `frontend.src.pages.MapEditorObjectActionPanel` (7 functions)
 📄 `frontend.src.pages.MapEditorParamConversionPanel` (2 functions)
-📄 `frontend.src.pages.ScenarioFiles` (17 functions)
+📄 `frontend.src.pages.MotorServices` (8 functions)
+📄 `frontend.src.pages.ScenarioFiles` (19 functions)
 📄 `frontend.src.pages.mapEditorConstants` (7 functions)
 📄 `frontend.src.pages.mapEditorDefaultMap` (3 functions)
-📄 `frontend.src.utils.collapse-toggle-bridge` (6 functions)
+📄 `frontend.src.utils.collapse-toggle-bridge` (9 functions)
 📄 `frontend.src.utils.designRem` (2 functions)
 📄 `frontend.src.utils.encoder-navigation` (18 functions)
 📄 `frontend.src.utils.encoder-navigation.test` (1 functions)
@@ -1934,19 +2030,21 @@ oqlos/
 📄 `frontend.src.utils.mapEditorIntegrationMeta` (11 functions)
 📄 `frontend.src.utils.mapEditorIntegrationMeta.test` (2 functions)
 📄 `frontend.src.utils.mapEditorMapShape` (8 functions)
-📄 `frontend.src.utils.mapEditorModel` (8 functions)
+📄 `frontend.src.utils.mapEditorModel` (9 functions)
 📄 `frontend.src.utils.mapEditorModel.test` (1 functions)
 📄 `frontend.src.utils.mapEditorObjectActionEdits` (11 functions)
 📄 `frontend.src.utils.mapEditorObjectActionEdits.test` (1 functions)
 📄 `frontend.src.utils.mapEditorTic249` (2 functions)
 📄 `frontend.src.utils.mapEditorTic249.test`
+📄 `frontend.src.utils.oqlGoals` (19 functions)
+📄 `frontend.src.utils.oqlGoals.test` (2 functions)
 📄 `frontend.src.utils.parentUrlBridge` (3 functions)
 📄 `frontend.src.utils.rbac.policy` (22 functions)
-📄 `frontend.src.utils.scenarioFilesUrl` (4 functions)
-📄 `frontend.src.utils.scenarioFilesUrl.test`
+📄 `frontend.src.utils.scenarioFilesUrl` (18 functions)
+📄 `frontend.src.utils.scenarioFilesUrl.test` (1 functions)
 📄 `frontend.src.utils.url-embed-config` (48 functions)
 📄 `frontend.src.utils.url-embed-config.test` (8 functions)
-📄 `frontend.src.utils.useSelectionCollapsePanel` (11 functions)
+📄 `frontend.src.utils.useSelectionCollapsePanel` (13 functions)
 📦 `frontend.vendor.hardware-client` (2 functions)
 📄 `frontend.vendor.hardware-client.paths` (4 functions)
 📄 `frontend.vite.config`
@@ -1960,7 +2058,7 @@ oqlos/
 📄 `oqlos.api._hw3_models` (7 functions, 9 classes)
 📄 `oqlos.api._hw3_peripheral` (5 functions)
 📄 `oqlos.api._hw3_system` (19 functions)
-📄 `oqlos.api.editor` (6 functions, 3 classes)
+📄 `oqlos.api.editor` (9 functions, 3 classes)
 📄 `oqlos.api.execution` (16 functions)
 📄 `oqlos.api.hardware`
 📄 `oqlos.api.hardware_actuators` (2 functions)
@@ -1978,14 +2076,14 @@ oqlos/
 📄 `oqlos.api.hardware_modbus_waveshare` (16 functions)
 📄 `oqlos.api.hardware_modbus_wizard` (9 functions)
 📄 `oqlos.api.hardware_peripherals_routes` (3 functions)
-📄 `oqlos.api.hardware_platform` (9 functions)
+📄 `oqlos.api.hardware_platform` (8 functions)
 📄 `oqlos.api.hardware_probe` (9 functions)
 📄 `oqlos.api.hardware_probe_devices` (7 functions)
 📄 `oqlos.api.hardware_registry`
 📄 `oqlos.api.hardware_runtime` (8 functions)
 📄 `oqlos.api.hardware_v3` (3 functions)
 📄 `oqlos.api.logs` (3 functions)
-📄 `oqlos.api.main` (35 functions)
+📄 `oqlos.api.main` (38 functions)
 📄 `oqlos.api.oql_mqtt` (6 functions, 3 classes)
 📄 `oqlos.api.peripherals` (4 functions)
 📄 `oqlos.api.plugins` (12 functions)
@@ -1997,14 +2095,14 @@ oqlos/
 📦 `oqlos.core`
 📄 `oqlos.core._action_motor2` (30 functions)
 📄 `oqlos.core._compare` (2 functions)
-📄 `oqlos.core._cql_tokenizer` (27 functions)
+📄 `oqlos.core._cql_tokenizer` (23 functions)
 📄 `oqlos.core._cql_tree_builder` (9 functions)
 📄 `oqlos.core._dsl_helpers` (12 functions)
 📄 `oqlos.core._firmware_executor` (11 functions, 1 classes)
 📄 `oqlos.core._func_resolver` (4 functions)
 📄 `oqlos.core._interpreter_actions` (49 functions)
 📄 `oqlos.core._line_parsers` (10 functions)
-📄 `oqlos.core._oql_adapter` (29 functions, 1 classes)
+📄 `oqlos.core._oql_adapter` (28 functions, 1 classes)
 📄 `oqlos.core._sensor_evaluator` (6 functions, 1 classes)
 📄 `oqlos.core._value_normalizers` (7 functions, 1 classes)
 📄 `oqlos.core.base` (29 functions, 7 classes)
@@ -2012,13 +2110,18 @@ oqlos/
 📄 `oqlos.core.executor` (21 functions, 1 classes)
 📄 `oqlos.core.interpreter` (48 functions, 1 classes)
 📄 `oqlos.core.motor2_runtime` (12 functions, 2 classes)
-📄 `oqlos.core.oql_parser` (44 functions, 3 classes)
+📄 `oqlos.core.oql_parser` (38 functions, 3 classes)
 📄 `oqlos.core.oql_versioning` (4 functions, 1 classes)
 📄 `oqlos.core.parser` (5 functions)
 📄 `oqlos.core.safe_eval` (10 functions, 1 classes)
 📄 `oqlos.core.state` (3 functions, 1 classes)
 📦 `oqlos.dsl`
-📄 `oqlos.dsl.schema` (6 functions, 5 classes)
+📄 `oqlos.dsl.schema` (7 functions, 5 classes)
+📦 `oqlos.errors`
+📄 `oqlos.errors.catalog` (4 functions, 3 classes)
+📄 `oqlos.errors.exceptions` (2 functions, 1 classes)
+📄 `oqlos.errors.fastapi_integration` (1 functions)
+📄 `oqlos.errors.repair_commit` (2 functions)
 📦 `oqlos.hardware`
 📄 `oqlos.hardware.artificial_lung` (10 functions)
 📦 `oqlos.hardware.client`
@@ -2046,8 +2149,8 @@ oqlos/
 📄 `oqlos.hardware.config_paths` (1 functions)
 📄 `oqlos.hardware.config_schema` (4 functions, 1 classes)
 📄 `oqlos.hardware.control_proxy` (1 functions, 1 classes)
-📄 `oqlos.hardware.diagnosis` (10 functions)
-📄 `oqlos.hardware.diagnosis_device_actions` (6 functions)
+📄 `oqlos.hardware.diagnosis` (11 functions)
+📄 `oqlos.hardware.diagnosis_device_actions` (7 functions)
 📄 `oqlos.hardware.diagnosis_plugin_health` (8 functions)
 📄 `oqlos.hardware.diagnosis_types` (2 functions, 3 classes)
 📄 `oqlos.hardware.discovery` (4 functions)
@@ -2061,37 +2164,37 @@ oqlos/
 📄 `oqlos.hardware.health_status` (1 functions)
 📄 `oqlos.hardware.hui_actions` (1 functions)
 📄 `oqlos.hardware.hui_artificial_lung` (3 functions)
-📄 `oqlos.hardware.hui_hold` (11 functions)
-📄 `oqlos.hardware.hui_lung_recipe` (1 functions)
+📄 `oqlos.hardware.hui_hold` (17 functions)
+📄 `oqlos.hardware.hui_lung_recipe` (7 functions)
 📄 `oqlos.hardware.identify_enrichment` (1 functions)
 📄 `oqlos.hardware.modbus_identify` (8 functions)
 📄 `oqlos.hardware.peripheral_mapping` (4 functions)
 📄 `oqlos.hardware.plugin_gateway` (22 functions, 1 classes)
 📦 `oqlos.hardware.plugins`
-📄 `oqlos.hardware.plugins._rtu_serial` (2 functions)
-📄 `oqlos.hardware.plugins._shared` (5 functions)
+📄 `oqlos.hardware.plugins._rtu_serial` (4 functions)
+📄 `oqlos.hardware.plugins._shared` (6 functions)
 📄 `oqlos.hardware.plugins.base` (21 functions, 9 classes)
 📄 `oqlos.hardware.plugins.lung` (20 functions, 1 classes)
 📄 `oqlos.hardware.plugins.modbus` (16 functions, 1 classes)
-📄 `oqlos.hardware.plugins.modbus_adc` (17 functions, 1 classes)
+📄 `oqlos.hardware.plugins.modbus_adc` (18 functions, 1 classes)
 📄 `oqlos.hardware.plugins.motor` (20 functions, 1 classes)
 📄 `oqlos.hardware.plugins.motor_http_handlers` (2 functions)
 📄 `oqlos.hardware.plugins.motor_modbus_handlers` (6 functions)
-📄 `oqlos.hardware.plugins.piadc` (12 functions, 1 classes)
+📄 `oqlos.hardware.plugins.piadc` (11 functions, 1 classes)
 📄 `oqlos.hardware.plugins.plugin_http_handlers` (2 functions)
 📄 `oqlos.hardware.plugins.registry` (14 functions, 1 classes)
 📄 `oqlos.hardware.protocol` (6 functions, 2 classes)
 📄 `oqlos.hardware.registry` (3 functions, 1 classes)
 📄 `oqlos.hardware.rtc_probe` (7 functions)
-📄 `oqlos.hardware.scanner_probe` (13 functions)
-📄 `oqlos.hardware.sidecar_control` (9 functions)
+📄 `oqlos.hardware.scanner_probe` (14 functions)
+📄 `oqlos.hardware.sidecar_control` (18 functions)
 📄 `oqlos.hardware.stack_snapshot` (4 functions)
 📄 `oqlos.hardware.tic249_units` (2 functions)
 📦 `oqlos.hardware.transport`
 📄 `oqlos.hardware.transport.manage_ops` (3 functions)
-📄 `oqlos.hardware.transport.manage_ops_diagnostic` (2 functions)
+📄 `oqlos.hardware.transport.manage_ops_diagnostic` (10 functions)
 📄 `oqlos.hardware.transport.manage_ops_usb` (3 functions)
-📄 `oqlos.hardware.transport.mqtt_oql_bridge` (34 functions, 6 classes)
+📄 `oqlos.hardware.transport.mqtt_oql_bridge` (33 functions, 7 classes)
 📄 `oqlos.hardware.usb_diagnostics` (5 functions)
 📄 `oqlos.models.dsl_models` (8 classes)
 📄 `oqlos.models.execution` (3 classes)
@@ -2102,11 +2205,11 @@ oqlos/
 📄 `oqlos.reporters.json_reporter` (5 functions)
 📄 `oqlos.reporters.junit` (3 functions, 1 classes)
 📄 `oqlos.scenarios.legacy_aliases` (3 functions)
-📄 `oqlos.shared._endpoint_helpers` (2 functions)
+📄 `oqlos.shared._endpoint_helpers` (3 functions)
 📄 `oqlos.shared.config_factory` (1 functions)
 📄 `oqlos.shared.event_server` (11 functions, 2 classes)
 📄 `oqlos.shared.event_store` (10 functions, 1 classes)
-📄 `oqlos.shared.file_ops` (5 functions, 1 classes)
+📄 `oqlos.shared.file_ops` (7 functions, 1 classes)
 📄 `oqlos.shared.logger` (2 functions)
 📄 `oqlos.shared.logs_query` (5 functions, 1 classes)
 📄 `oqlos.shared.release_version` (7 functions)
@@ -2117,6 +2220,7 @@ oqlos/
 📄 `oqlos.tools.cql_cli.main` (18 functions, 1 classes)
 📄 `oqlos.tools.cql_cli.preflight` (11 functions)
 📄 `oqlos.tools.cql_cli.utils` (10 functions)
+📄 `oqlos.tools.gen_error_docs` (3 functions)
 📦 `oqlos.tools.hardware_diagnose` (1 functions)
 📄 `oqlos.tools.hardware_diagnose.__main__` (11 functions)
 📄 `oqlos.tools.hardware_diagnose.benchmark` (1 functions)
@@ -2131,7 +2235,7 @@ oqlos/
 📄 `oqlos.tools.hardware_diagnose.doctor_repairs` (3 functions)
 📄 `oqlos.tools.hardware_diagnose.doctor_serial` (5 functions)
 📄 `oqlos.tools.hardware_diagnose.health` (7 functions)
-📄 `oqlos.tools.hardware_diagnose.modbus_probe` (16 functions)
+📄 `oqlos.tools.hardware_diagnose.modbus_probe` (17 functions)
 📄 `oqlos.tools.hardware_diagnose.report` (2 functions)
 📄 `oqlos.tools.hardware_diagnose.shell` (5 functions)
 📄 `oqlos.tools.plugin_cli` (14 functions)
@@ -2163,9 +2267,9 @@ oqlos/
 📄 `scripts.fix_brackets_to_v4` (2 functions)
 📄 `scripts.gen-checksums`
 📄 `scripts.hardware-check` (11 functions)
-📄 `scripts.migrate_to_v4` (19 functions)
+📄 `scripts.migrate_to_v4` (20 functions)
 📄 `scripts.oql-stack` (5 functions)
-📄 `scripts.oql_v2_to_v4_migrate_db` (43 functions, 1 classes)
+📄 `scripts.oql_v2_to_v4_migrate_db` (45 functions, 1 classes)
 📄 `scripts.oql_v2_validator` (6 functions, 1 classes)
 📄 `scripts.oql_v4_validator` (8 functions, 1 classes)
 📄 `scripts.oql_validator_common` (6 functions)

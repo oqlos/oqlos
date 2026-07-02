@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import glob
 import os
-import pathlib
 import platform
 import sys
 from typing import Any
@@ -12,14 +11,9 @@ from typing import Any
 from oqlos.api import hardware_modbus_topology as topology
 from oqlos.config import get_settings
 from oqlos.hardware.discovery import list_serial_ports
+from oqlos.shared.file_ops import read_text_file_or_empty as _read_text_file
 
 _settings = get_settings()
-
-def _read_text_file(path: str) -> str:
-    try:
-        return pathlib.Path(path).read_text(encoding="utf-8", errors="ignore").strip("\x00\n ")
-    except OSError:
-        return ""
 
 
 def _board_model() -> str:

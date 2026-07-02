@@ -7,6 +7,7 @@ from typing import Any
 
 from oqlos.models.execution import ExecutionRequest
 from oqlos.models.scenario import Step
+from oqlos.shared._endpoint_helpers import get_or_404
 from oqlos.api.utils import execution_ctrl as _ctrl
 
 router = APIRouter(prefix="/api/v1/execution", tags=["execution"])
@@ -198,9 +199,7 @@ stop_execution   = router.post("/{execution_id}/stop")(_make_exec_route(_ctrl.do
 @router.get("/by-id/{execution_id}")
 async def get_execution(execution_id: str):
     """Get execution status"""
-    if execution_id not in _ctrl.state_manager.executions:
-        raise HTTPException(status_code=404, detail="Execution not found")
-    return _ctrl.state_manager.executions[execution_id]
+    return get_or_404(_ctrl.state_manager.executions, execution_id, "Execution not found")
 
 @router.get("/projection")
 async def get_execution_projection():
