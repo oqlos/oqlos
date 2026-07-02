@@ -146,6 +146,22 @@ async def write_file_endpoint(file_path: str, file_content: FileContent) -> dict
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
+def _sensor_telemetry_recorder():
+    """Build an on_sensors_observed callback bound to the shared event store.
+
+    Best-effort: returns None when no StateManager is initialised (e.g. CLI
+    or test contexts), so real-hardware runs get an audit trail without
+    forcing every CqlInterpreter caller to depend on oqlos.core.cqrs.
+    """
+    from oqlos.api.utils import execution_ctrl as _ctrl
+    from oqlos.core.cqrs.telemetry import record_sensor_readings
+
+    state_manager = _ctrl.state_manager
+    if state_manager is None:
+        return None
+    return lambda readings: record_sensor_readings(state_manager.event_store, readings)
+
+
 @router.post("/execute")
 async def execute_scenario(request: ExecutionRequest) -> dict[str, Any]:
     """Execute a scenario file using oqlos runtime."""
@@ -180,6 +196,7 @@ async def execute_scenario(request: ExecutionRequest) -> dict[str, Any]:
             mode=oql_mode,
             quiet=False,
             skip_waits=skip_waits,
+            on_sensors_observed=_sensor_telemetry_recorder(),
         )
         doc = interpreter.parse(content, request.scenario_file)
         result = interpreter.execute(doc)

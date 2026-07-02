@@ -14,9 +14,10 @@ WORKDIR /app
 COPY pyproject.toml .
 COPY oqlos.yaml .
 COPY oqlos/ oqlos/
+COPY packages/ packages/
 COPY --from=ui-build /frontend/dist frontend/dist
 
-RUN pip install --no-cache-dir -e .
+RUN pip install --no-cache-dir -e packages/oqlos-models -e packages/oqlos-core -e .
 
 EXPOSE 8200
 CMD ["oqlos-server", "--host", "0.0.0.0", "--port", "8200"]

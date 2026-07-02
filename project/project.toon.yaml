@@ -1,8 +1,8 @@
-# oqlos | 2403 func | 269f | 60755L | python | 2026-07-02
+# oqlos | 2445 func | 278f | 61672L | python | 2026-07-02
 # generated in 0.00s
 
 HEALTH:
-  CC̄=3.8  critical=192 (limit:10)  dup=3  cycles=0
+  CC̄=3.7  critical=192 (limit:10)  dup=5  cycles=0
 
 ALERTS[20]:
   !!! high_fan_out     _resolve = 23 (limit:10)
@@ -11,28 +11,28 @@ ALERTS[20]:
   !!! high_fan_out     pi_system_diagnostics = 20 (limit:10)
   !!! high_fan_out     _detect_runtime_platform = 20 (limit:10)
   !!! high_fan_out     main = 20 (limit:10)
+  !!  high_fan_out     hardware_identify = 19 (limit:10)
   !!  high_fan_out     parse_oql = 19 (limit:10)
   !!  high_fan_out     oql_doc_to_cql = 19 (limit:10)
-  !!  high_fan_out     hardware_identify = 19 (limit:10)
   !!  high_fan_out     main = 18 (limit:10)
 
-MODULES[357] (top by size):
-  M[docs/README.md] 2358L C:0 F:0 CC↑0 D:0 (md)
+MODULES[375] (top by size):
+  M[docs/README.md] 2360L C:0 F:0 CC↑0 D:0 (md)
   M[frontend/src/i18n/dictionaries.js] 2135L C:0 F:4 CC↑5 D:0 (javascript)
   M[frontend/src/pages/mapEditorDefaultMap.js] 1953L C:0 F:3 CC↑1 D:0 (javascript)
   M[redeploy/122/migration.md] 1305L C:0 F:0 CC↑0 D:0 (md)
   M[frontend/src/pages/MapEditor.jsx] 1114L C:0 F:67 CC↑12 D:8 (javascript)
   M[openapi.yaml] 1035L C:0 F:0 CC↑0 D:0 (yaml)
   M[openapi_spec.yaml] 1035L C:0 F:0 CC↑0 D:0 (yaml)
-  M[oqlos/core/_interpreter_actions.py] 800L C:0 F:49 CC↑14 D:1 (python)
+  M[packages/oqlos-core/src/oqlos/core/_interpreter_actions.py] 800L C:0 F:49 CC↑14 D:1 (python)
   M[frontend/src/i18n/hardware-status-presets-translations.js] 795L C:0 F:0 CC↑0 D:0 (javascript)
-  M[oqlos/core/oql_parser.py] 773L C:3 F:38 CC↑14 D:2 (python)
+  M[packages/oqlos-core/src/oqlos/core/oql_parser.py] 773L C:3 F:38 CC↑14 D:2 (python)
   M[README.md] 772L C:0 F:0 CC↑0 D:0 (md)
-  M[oqlos/core/interpreter.py] 690L C:1 F:48 CC↑11 D:0 (python)
+  M[packages/oqlos-core/src/oqlos/core/interpreter.py] 690L C:1 F:48 CC↑11 D:0 (python)
   M[scripts/oql_v2_to_v4_migrate_db.py] 662L C:1 F:45 CC↑14 D:1 (python)
   M[redeploy/pi-hw/migration.md] 640L C:0 F:0 CC↑0 D:0 (md)
   M[oqlos/hardware/plugin_gateway.py] 634L C:1 F:22 CC↑14 D:0 (python)
-  LANGS: python:203/javascript:90/md:22/yaml:13/shell:9/json:7/yml:4/typescript:3/conf:3/other:2/toml:1
+  LANGS: python:216/javascript:90/md:25/yaml:13/shell:9/json:7/yml:4/typescript:3/conf:3/toml:3/other:2
 
 HOTSPOTS[10]:
   ★ _resolve fan=23  // Orchestrates 23 calls
@@ -44,11 +44,11 @@ Routes pump commands to POST /api/v1/har
   ★ _detect_runtime_platform fan=20  // Orchestrates 20 calls
 
 REFACTOR[15]:
-  [1] H/H Split god module oqlos/core/_interpreter_actions.py (800L, 0 classes)
-  [2] H/H Split god module oqlos/core/oql_parser.py (773L, 3 classes)
-  [3] H/H Split god module oqlos/hardware/plugin_gateway.py (634L, 1 classes)
+  [1] H/H Split god module oqlos/hardware/plugin_gateway.py (634L, 1 classes)
+  [2] H/H Split god module packages/oqlos-core/src/oqlos/core/_interpreter_actions.py (800L, 0 classes)
+  [3] H/H Split god module packages/oqlos-core/src/oqlos/core/oql_parser.py (773L, 3 classes)
   [4] H/H Split god module scripts/oql_v2_to_v4_migrate_db.py (662L, 1 classes)
   [5] H/H Split god module frontend/src/pages/MapEditor.jsx (1114L, 0 classes)
 
 EVOLUTION:
-  2026-07-02 CC̄=3.8 crit=192 60755L // Automated analysis
+  2026-07-02 CC̄=3.7 crit=192 61672L // Automated analysis

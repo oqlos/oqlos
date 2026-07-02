@@ -18,5 +18,6 @@ make test
 
 ## Consumers (e.g. c2004)
 
-- Today: `oqlos>=0.1.29` (meta package pulls `oqlos-models` + `oqlos-core`).
-- Next: `backend/dsl` may depend only on `oqlos-core` once published.
+- **Done locally:** `c2004/backend/dsl` depends on `oqlos-models>=0.2.0` + `oqlos-core>=0.2.1` (see `c2004/project/refactor-tasks.yaml` REF-A3).
+- Meta package `oqlos>=0.1.29` still pulls models + core for full hardware consumers (`backend/firmware`).
+- Publish to PyPI required for clean CI without editable install (REF-A2).

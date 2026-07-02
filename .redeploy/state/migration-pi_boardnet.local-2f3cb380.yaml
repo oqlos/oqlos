@@ -1,0 +1,31 @@
+spec_path: redeploy/122/migration.md
+host: pi@boardnet.local
+total_steps: 20
+completed_step_ids:
+- sync_project_tree
+- mkdir_hw_remote
+- enable_linger_groups
+- sync_oqlos_core
+- sync_oqlos_frontend_dist
+- sync_pihw_config
+- sync_pimodbus
+- sync_rpi_motor_tic249
+- sync_rpi_motor_dri0050
+- sync_pirtc
+- sync_pirtc_rtc_lib
+- assert_oqlos_checksum
+- install_mosquitto
+- deploy_pololu_udev
+- deploy_hw_tic249_service
+- deploy_dri0050_motor_service
+- deploy_pirtc_sidecar
+failed_step_id: deploy_oqlos_hw_api
+failed_error: '[deploy_oqlos_hw_api] script failed with exit=1: ERROR: Could not find
+  a version that satisfies the requirement oqlos-models==0.2.0 (from oqlos) (from
+  versions: none)
+
+  ERROR: No matching distribution found for oqlos-models==0.2.0
+
+  '
+started_at: '2026-07-02T13:08:23+00:00'
+updated_at: '2026-07-02T13:59:40+00:00'

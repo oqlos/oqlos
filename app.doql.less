@@ -2,11 +2,11 @@
 
 app {
   name: oqlos;
-  version: 0.1.28;
+  version: 0.1.29;
 }
 
 dependencies {
-  runtime: "fastapi>=0.110, uvicorn>=0.28, pydantic>=2.0, pydantic-settings>=2.2.0, pyserial>=3.5, pymodbus>=3.6, httpx>=0.25, nfo>=0.2.3, goal>=2.1.0, costs>=0.1.20, pfix>=0.1.60, paho-mqtt>=1.6.1, pluggy>=1.4, pytest-asyncio>=0.23, PyYAML>=6.0, testql>=0.2.0";
+  runtime: "oqlos-models==0.2.0, oqlos-core==0.2.1, fastapi>=0.110, uvicorn>=0.28, pydantic>=2.0, pydantic-settings>=2.2.0, pyserial>=3.5, pymodbus>=3.6, httpx>=0.25, nfo>=0.2.3, goal>=2.1.0, costs>=0.1.20, pfix>=0.1.60, paho-mqtt>=1.6.1, pluggy>=1.4, pytest-asyncio>=0.23, PyYAML>=6.0, testql>=0.2.0";
   rpi: "RPi.GPIO>=0.7, smbus2>=0.4";
   server: websockets>=13.0;
   dev: "pytest, pytest-asyncio, httpx, websockets>=13.0, goal>=2.1.0, costs>=0.1.20, pfix>=0.1.60, paho-mqtt>=1.6.1";
@@ -93,6 +93,11 @@ interface[type="cli"] page[name="oqlos-modbus-probe"] {
 
 integration[name="modbus"] {
   type: hardware;
+}
+
+workflow[name="install-dev"] {
+  trigger: manual;
+  step-1: run cmd=pip install -e packages/oqlos-models -e packages/oqlos-core -e .;
 }
 
 workflow[name="test"] {

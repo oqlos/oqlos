@@ -107,6 +107,22 @@ Po regeneracji `project/analysis.toon.yaml` oczekiwane: **HEALTH critical = 0**.
 2. Faza 2 (wizard — izolowany flow restart)
 3. Faza 3 (UI — większy blast radius)
 4. Faza 4–5 (backend, po stabilizacji frontend API)
+5. **Faza 8** (2026-07) — patrz poniżej
+
+## Faza 8 — Package split + data monoliths (2026-07)
+
+Źródło: `project/map.toon.yaml` (2026-07-02), cross-repo plan c2004: `docs/refactor-roadmap-2026-07.md`.
+
+| ID | Zadanie | Plik | Priorytet |
+|----|---------|------|-----------|
+| REF-E1 | Commit + publish `oqlos-models`, `oqlos-core` | `packages/*` | P0 |
+| REF-E2 | Split i18n monolith | `dictionaries.js` (2135L) | P2 |
+| REF-E3 | Externalize default map data | `mapEditorDefaultMap.js` (1953L) | P2 |
+| REF-E4 | Trim MapEditor.jsx | 1114L, CC=12 | P3 |
+| REF-E5 | Optional parser/interpreter extractions | `oql_parser.py`, `_interpreter_actions.py` | P3 |
+| REF-E6 | plugin_gateway split | 634L, CC=14 | P3 |
+
+**Stan package split:** lokalnie w repo; c2004 `backend/dsl` już zależy od `oqlos-core>=0.2.1` (commit pending).
 
 ## Definition of done (faza)
 

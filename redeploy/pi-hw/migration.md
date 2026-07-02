@@ -359,7 +359,7 @@ fi
 cd /home/pi/oqlos/oqlos
 if [ ! -x /home/pi/oqlos/venv/bin/oqlos-server ]; then
   python3 -m venv /home/pi/oqlos/venv
-  /home/pi/oqlos/venv/bin/pip install -q -e .
+  /home/pi/oqlos/venv/bin/pip install -q -e packages/oqlos-models -e packages/oqlos-core -e .
   echo "PASS: utworzono /home/pi/oqlos/venv"
 else
   echo "INFO: uzywam istniejacego /home/pi/oqlos/venv"

@@ -25,7 +25,7 @@ OqlOS — Operation Query Language runtime for hardware testing
 ## Metadata
 
 - **name**: `oqlos`
-- **version**: `0.1.28`
+- **version**: `0.1.29`
 - **python_requires**: `>=3.10`
 - **license**: {'text': 'Apache-2.0'}
 - **ai_model**: `openrouter/qwen/qwen3-coder-next`
@@ -46,11 +46,11 @@ SUMD (description) → DOQL/source (code) → taskfile (automation) → testql (
 
 app {
   name: oqlos;
-  version: 0.1.28;
+  version: 0.1.29;
 }
 
 dependencies {
-  runtime: "fastapi>=0.110, uvicorn>=0.28, pydantic>=2.0, pydantic-settings>=2.2.0, pyserial>=3.5, pymodbus>=3.6, httpx>=0.25, nfo>=0.2.3, goal>=2.1.0, costs>=0.1.20, pfix>=0.1.60, paho-mqtt>=1.6.1, pluggy>=1.4, pytest-asyncio>=0.23, PyYAML>=6.0, testql>=0.2.0";
+  runtime: "oqlos-models==0.2.0, oqlos-core==0.2.1, fastapi>=0.110, uvicorn>=0.28, pydantic>=2.0, pydantic-settings>=2.2.0, pyserial>=3.5, pymodbus>=3.6, httpx>=0.25, nfo>=0.2.3, goal>=2.1.0, costs>=0.1.20, pfix>=0.1.60, paho-mqtt>=1.6.1, pluggy>=1.4, pytest-asyncio>=0.23, PyYAML>=6.0, testql>=0.2.0";
   rpi: "RPi.GPIO>=0.7, smbus2>=0.4";
   server: websockets>=13.0;
   dev: "pytest, pytest-asyncio, httpx, websockets>=13.0, goal>=2.1.0, costs>=0.1.20, pfix>=0.1.60, paho-mqtt>=1.6.1";
@@ -137,6 +137,11 @@ interface[type="cli"] page[name="oqlos-modbus-probe"] {
 
 integration[name="modbus"] {
   type: hardware;
+}
+
+workflow[name="install-dev"] {
+  trigger: manual;
+  step-1: run cmd=pip install -e packages/oqlos-models -e packages/oqlos-core -e .;
 }
 
 workflow[name="test"] {
@@ -1833,7 +1838,7 @@ pipeline:
 ```yaml
 project:
   name: oqlos
-  version: 0.1.28
+  version: 0.1.29
   env: local
 ```
 
@@ -1842,6 +1847,8 @@ project:
 ### Runtime
 
 ```text markpact:deps python
+oqlos-models==0.2.0
+oqlos-core==0.2.1
 fastapi>=0.110
 uvicorn>=0.28
 pydantic>=2.0
@@ -1925,6 +1932,7 @@ pip install -e .[dev]
 
 ## Makefile Targets
 
+- `install-dev`
 - `help`
 - `test` — --- testy ----------------------------------------------------------------
 - `test-hw`
@@ -1945,15 +1953,15 @@ pip install -e .[dev]
 ### `project/map.toon.yaml`
 
 ```toon markpact:analysis path=project/map.toon.yaml
-# oqlos | 374f 56179L | python:286,javascript:73,shell:9,typescript:3,css:2,less:1 | 2026-07-02
-# stats: 1502 func | 215 cls | 374 mod | CC̄=4.1 | critical:120 | cycles:0
-# alerts[5]: CC test_hardware_ui_aliases_and_status_page_are_served=22; CC test_navigation_index_and_short_aliases=15; CC _resolve_func_steps=14; CC _probe_i2c_ads1115=14; CC exec_action_loop_block=14
+# oqlos | 387f 57057L | python:299,javascript:73,shell:9,typescript:3,css:2,less:1 | 2026-07-02
+# stats: 1519 func | 244 cls | 387 mod | CC̄=4.1 | critical:120 | cycles:0
+# alerts[5]: CC test_hardware_ui_aliases_and_status_page_are_served=22; CC test_navigation_index_and_short_aliases=15; CC _resolve_func_steps=14; CC _probe_i2c_ads1115=14; CC _safe_resolve=14
 # hotspots[5]: _resolve fan=22; build_diagnosis_report fan=19; hardware_identify fan=18; _build_waveshare_diagnose_report fan=18; _handle_start fan=18
 # evolution: baseline
 # Keys: M=modules, D=details, i=imports, e=exports, c=classes, f=functions, m=methods
-M[374]:
+M[387]:
   app.doql.css,165
-  app.doql.less,316
+  app.doql.less,321
   examples/curl-quickstart.sh,75
   examples/hardware/doctor-workflow.sh,53
   frontend/src/api/hardware-api-errors.js,88
@@ -2033,7 +2041,7 @@ M[374]:
   frontend/vendor/hardware-client/index.ts,32
   frontend/vendor/hardware-client/paths.ts,40
   frontend/vite.config.ts,37
-  oqlos/__init__.py,4
+  oqlos/__init__.py,8
   oqlos/api/__init__.py,18
   oqlos/api/_hw3_mapping.py,158
   oqlos/api/_hw3_models.py,195
@@ -2066,37 +2074,24 @@ M[374]:
   oqlos/api/logs.py,46
   oqlos/api/main.py,606
   oqlos/api/oql_mqtt.py,153
-  oqlos/api/peripherals.py,69
+  oqlos/api/peripherals.py,77
   oqlos/api/plugins.py,182
   oqlos/api/scenarios.py,252
   oqlos/api/state.py,371
   oqlos/api/utils/__init__.py,1
-  oqlos/api/utils/execution_ctrl.py,63
+  oqlos/api/utils/execution_ctrl.py,66
   oqlos/api/version.py,25
   oqlos/config.py,221
-  oqlos/core/__init__.py,1
-  oqlos/core/_action_motor2.py,482
-  oqlos/core/_compare.py,41
-  oqlos/core/_cql_tokenizer.py,411
-  oqlos/core/_cql_tree_builder.py,168
-  oqlos/core/_dsl_helpers.py,133
-  oqlos/core/_firmware_executor.py,267
-  oqlos/core/_func_resolver.py,97
-  oqlos/core/_interpreter_actions.py,801
-  oqlos/core/_line_parsers.py,262
-  oqlos/core/_oql_adapter.py,491
-  oqlos/core/_sensor_evaluator.py,146
-  oqlos/core/_value_normalizers.py,127
-  oqlos/core/base.py,312
-  oqlos/core/cql_parser.py,468
-  oqlos/core/executor.py,378
-  oqlos/core/interpreter.py,691
-  oqlos/core/motor2_runtime.py,210
-  oqlos/core/oql_parser.py,774
-  oqlos/core/oql_versioning.py,73
-  oqlos/core/parser.py,185
-  oqlos/core/safe_eval.py,139
-  oqlos/core/state.py,125
+  oqlos/core/__init__.py,4
+  oqlos/core/cqrs/__init__.py,37
+  oqlos/core/cqrs/aggregate.py,40
+  oqlos/core/cqrs/commands.py,41
+  oqlos/core/cqrs/events.py,73
+  oqlos/core/cqrs/execution.py,166
+  oqlos/core/cqrs/peripheral.py,186
+  oqlos/core/cqrs/projection.py,26
+  oqlos/core/executor.py,409
+  oqlos/core/state.py,148
   oqlos/dsl/__init__.py,19
   oqlos/dsl/schema.py,296
   oqlos/errors/__init__.py,44
@@ -2179,21 +2174,15 @@ M[374]:
   oqlos/hardware/transport/mqtt_oql_bridge.py,494
   oqlos/hardware/usb_diagnostics.py,186
   oqlos/ide/__init__.py,1
-  oqlos/models/__init__.py,1
-  oqlos/models/dsl_models.py,88
-  oqlos/models/execution.py,23
-  oqlos/models/peripheral.py,34
-  oqlos/models/scenario.py,36
   oqlos/reporters/__init__.py,7
   oqlos/reporters/html_report.py,267
   oqlos/reporters/json_reporter.py,139
   oqlos/reporters/junit.py,87
   oqlos/scenarios/legacy_aliases.py,41
-  oqlos/shared/__init__.py,1
+  oqlos/shared/__init__.py,4
   oqlos/shared/_endpoint_helpers.py,49
   oqlos/shared/config_factory.py,85
   oqlos/shared/event_server.py,172
-  oqlos/shared/event_store.py,78
   oqlos/shared/file_ops.py,131
   oqlos/shared/logger.py,90
   oqlos/shared/logs_query.py,146
@@ -2234,6 +2223,38 @@ M[374]:
   oqlos/utils/__init__.py,4
   oqlos/utils/hui_scenario.py,47
   oqlos/utils/sample_data.py,74
+  packages/oqlos-core/src/oqlos/core/__init__.py,1
+  packages/oqlos-core/src/oqlos/core/_action_motor2.py,482
+  packages/oqlos-core/src/oqlos/core/_compare.py,41
+  packages/oqlos-core/src/oqlos/core/_cql_tokenizer.py,411
+  packages/oqlos-core/src/oqlos/core/_cql_tree_builder.py,168
+  packages/oqlos-core/src/oqlos/core/_dsl_helpers.py,133
+  packages/oqlos-core/src/oqlos/core/_firmware_executor.py,275
+  packages/oqlos-core/src/oqlos/core/_func_resolver.py,97
+  packages/oqlos-core/src/oqlos/core/_interpreter_actions.py,801
+  packages/oqlos-core/src/oqlos/core/_line_parsers.py,262
+  packages/oqlos-core/src/oqlos/core/_oql_adapter.py,496
+  packages/oqlos-core/src/oqlos/core/_runtime_settings.py,32
+  packages/oqlos-core/src/oqlos/core/_sensor_evaluator.py,146
+  packages/oqlos-core/src/oqlos/core/_value_normalizers.py,126
+  packages/oqlos-core/src/oqlos/core/base.py,312
+  packages/oqlos-core/src/oqlos/core/cql_parser.py,468
+  packages/oqlos-core/src/oqlos/core/interpreter.py,691
+  packages/oqlos-core/src/oqlos/core/motor2_runtime.py,210
+  packages/oqlos-core/src/oqlos/core/oql_parser.py,774
+  packages/oqlos-core/src/oqlos/core/oql_versioning.py,73
+  packages/oqlos-core/src/oqlos/core/parser.py,185
+  packages/oqlos-core/src/oqlos/core/safe_eval.py,139
+  packages/oqlos-core/src/oqlos/core/state.py,125
+  packages/oqlos-core/src/oqlos/shared/__init__.py,1
+  packages/oqlos-core/src/oqlos/shared/event_store.py,78
+  packages/oqlos-core/tests/test_parse_cql_smoke.py,22
+  packages/oqlos-models/src/oqlos/models/__init__.py,1
+  packages/oqlos-models/src/oqlos/models/dsl_models.py,88
+  packages/oqlos-models/src/oqlos/models/execution.py,29
+  packages/oqlos-models/src/oqlos/models/peripheral.py,40
+  packages/oqlos-models/src/oqlos/models/scenario.py,36
+  packages/oqlos-models/tests/test_import.py,24
   project.sh,43
   scripts/fix_brackets_to_v4.py,96
   scripts/gen-checksums.sh,28
@@ -2710,308 +2731,68 @@ D:
     Settings:  # Application settings loaded from environment variables and .
     get_settings()
   oqlos/core/__init__.py:
-  oqlos/core/_action_motor2.py:
-    e: _normalize_motor2_target,_parse_motor2_direction,_parse_motor2_speed_steps,_parse_motor2_positive_int,_parse_motor2_float,_parse_motor2_duration_seconds,_parse_motor2_volume_liters,_parse_motor2_acceleration,_normalize_motor2_value,_parse_prefixed_motor2_setting,_parse_motor2_reciprocating_setting,_parse_motor2_steps,_motor2_speed_raw,_motor2_max_steps_per_second,_motor2_effective_steps_per_second,_motor2_speed_for_duration,_motor2_acceleration_raw,_post_motor2_move_relative,_post_motor2_reciprocate,_post_motor2_stop,_call_motor2_transport,_motor2_reciprocating_state,_motor2_set_state_value,_motor2_state_handler,_motor2_do_stop,_motor2_build_plan,_motor2_step_label,_motor2_do_start,_handle_motor2_reciprocating_setting,_try_exec_motor2_set
-    _normalize_motor2_target(target_lower)
-    _parse_motor2_direction(value)
-    _parse_motor2_speed_steps(value)
-    _parse_motor2_positive_int(value)
-    _parse_motor2_float(value)
-    _parse_motor2_duration_seconds(value)
-    _parse_motor2_volume_liters(value)
-    _parse_motor2_acceleration(value)
-    _normalize_motor2_value(value)
-    _parse_prefixed_motor2_setting(normalized)
-    _parse_motor2_reciprocating_setting(value)
-    _parse_motor2_steps(value)
-    _motor2_speed_raw(steps_per_second)
-    _motor2_max_steps_per_second()
-    _motor2_effective_steps_per_second(steps_per_second)
-    _motor2_speed_for_duration(steps;cycles;duration_seconds)
-    _motor2_acceleration_raw(steps_per_second;percent)
-    _post_motor2_move_relative(direction;steps;speed_raw;acceleration_raw)
-    _post_motor2_reciprocate(direction;steps;speed_raw;acceleration_raw;cycles;pause;limit_mode)
-    _post_motor2_stop()
-    _call_motor2_transport(name;fallback)
-    _motor2_reciprocating_state(interp)
-    _motor2_set_state_value(interp;state;key;value;label)
-    _motor2_state_handler(key;value_fn;label_fn)
-    _motor2_do_stop(interp;setting;state)
-    _motor2_build_plan(interp;setting;state)
-    _motor2_step_label(plan;mode)
-    _motor2_do_start(interp;setting;state)
-    _handle_motor2_reciprocating_setting(interp;setting)
-    _try_exec_motor2_set(interp;target_lower;value)
-  oqlos/core/_compare.py:
-    e: resolve_compare,resolve_compare_chain
-    resolve_compare(left;op;right)
-    resolve_compare_chain(node;resolve_value)
-  oqlos/core/_cql_tokenizer.py:
-    e: _make_args_parser,_make_keyword_parser,_make_method_parser,_make_stripped_field_parser,_make_two_group_parser,_make_target_method_args_parser,_match_first,_parse_condition_value,_try_save,_try_set,_try_condition_range,_try_condition_cmp,_try_if_else,_try_if_block,_try_if_standalone,_try_else_standalone,_try_min_max,_try_val,_try_loop_start,_try_repeat_start,_try_repeat_stop,_try_sample,_try_goto
-    _make_args_parser(regex;kind)
-    _make_keyword_parser(regex;kind)
-    _make_method_parser(regex;kind)
-    _make_stripped_field_parser(regex;kind;field)
-    _make_two_group_parser(regex;kind;field)
-    _make_target_method_args_parser(regex;kind)
-    _match_first(line)
-    _parse_condition_value(raw_value)
-    _try_save(line;stripped)
-    _try_set(line;stripped)
-    _try_condition_range(line;stripped)
-    _try_condition_cmp(line;stripped)
-    _try_if_else(line;stripped)
-    _try_if_block(line;stripped)
-    _try_if_standalone(line;stripped)
-    _try_else_standalone(line;stripped)
-    _try_min_max(line;stripped)
-    _try_val(line;stripped)
-    _try_loop_start(line;stripped)
-    _try_repeat_start(line;stripped)
-    _try_repeat_stop(line;stripped)
-    _try_sample(line;stripped)
-    _try_goto(line;stripped)
-  oqlos/core/_cql_tree_builder.py:
-    e: _parse_metadata_kv,_parse_scenario_line,_parse_scenario_attrs,_parse_goal_line,_parse_goal_attrs,_parse_step_line,_parse_action_line,_ensure_goal_for_step,_ensure_step_for_actions
-    _parse_metadata_kv(doc;stripped)
-    _parse_scenario_line(doc;stripped)
-    _parse_scenario_attrs(line;current_scenario)
-    _parse_goal_line(stripped;line;indent;current_scenario)
-    _parse_goal_attrs(line;current_goal)
-    _parse_step_line(line;current_goal)
-    _parse_action_line(line;stripped;actions_list;doc;lineno)
-    _ensure_goal_for_step(current_goal;current_scenario;line)
-    _ensure_step_for_actions(current_step;current_goal)
-  oqlos/core/_dsl_helpers.py:
-    e: _normalize_quote_syntax,_looks_like_valve_object,_looks_like_pump_object,_looks_like_lung_object,_looks_like_sensor_object,_map_peripheral,_parse_numeric_value,_map_valve_action,_map_pump_action,_map_wait_action,_map_lung_action,_map_action_value
-    _normalize_quote_syntax(line)
-    _looks_like_valve_object(obj)
-    _looks_like_pump_object(obj)
-    _looks_like_lung_object(obj)
-    _looks_like_sensor_object(obj)
-    _map_peripheral(obj)
-    _parse_numeric_value(raw)
-    _map_valve_action(fn)
-    _map_pump_action(fn;obj_raw;line)
-    _map_wait_action(fn;obj;obj_raw;line;step_counter)
-    _map_lung_action(fn;obj_raw;line)
-    _map_action_value(fn;obj;obj_raw;line;step_counter)
-  oqlos/core/_firmware_executor.py:
-    e: FirmwareExecutor
-    FirmwareExecutor: __init__(7),_get_firmware(0),_resolve_gateway_result(2),_is_success(1),resolve_peripheral_id(1),normalize_peripheral_value(2),refresh_sensors_from_firmware(1),execute_firmware_action(2),_execute_plugin_action(2),_execute_legacy_firmware_action(2),exec_set_peripheral(2)  # Executes hardware actions via plugin gateway or legacy firmw
-  oqlos/core/_func_resolver.py:
-    e: _collect_function_definitions,_extract_func_name,_guard_recursion,_parse_func_call
-    _collect_function_definitions(lines)
-    _extract_func_name(line;indent)
-    _guard_recursion(func_name;call_stack)
-    _parse_func_call(line;step_counter;steps;func_defs;indent;call_stack;parse_line_fn)
-  oqlos/core/_interpreter_actions.py:
-    e: _extract_action_tokens,_drop_command_token,_coerce_expected_value,_compare_values,_oql_quote,_format_set_command,_get_nested_value,_record_failure,_mark_success,_normalize_bool,_lookup_peripheral_state,_mock_api_response,exec_action_task,exec_action_save,parse_wait_secs,exec_action_wait,_do_sleep,exec_action_min_max,exec_action_val,exec_action_log,exec_action_error,exec_action_else,exec_action_sample,_resolve_numeric_token,_func_avg,_func_sum,_func_reduce_or_zero,_func_sub,_func_div,_func_mul,exec_action_func,exec_action_goto,exec_action_api,exec_action_expect,_assert_status,_assert_json,_assert_sensor,_assert_valve,exec_action_assert,exec_action_shell,exec_action_var_set,exec_action_condition,exec_action_if_fail_block,exec_action_if_block,exec_action_loop_block,exec_action_endloop,exec_action_set,_exec_set_wait,exec_action_action
-    _extract_action_tokens(text)
-    _drop_command_token(act)
-    _coerce_expected_value(value)
-    _compare_values(actual;operator;expected)
-    _oql_quote(value)
-    _format_set_command(target;value)
-    _get_nested_value(payload;path)
-    _record_failure(interp;key;message)
-    _mark_success(interp;key)
-    _normalize_bool(value)
-    _lookup_peripheral_state(interp;target)
-    _mock_api_response(interp;endpoint)
-    exec_action_task(interp;act)
-    exec_action_save(interp;act)
-    parse_wait_secs(raw)
-    exec_action_wait(interp;act)
-    _do_sleep(interp;secs;label)
-    exec_action_min_max(interp;act)
-    exec_action_val(interp;act)
-    exec_action_log(interp;act)
-    exec_action_error(interp;act)
-    exec_action_else(interp;act)
-    exec_action_sample(interp;act)
-    _resolve_numeric_token(interp;token)
-    _func_avg(values)
-    _func_sum(values)
-    _func_reduce_or_zero(values;reducer)
-    _func_sub(values)
-    _func_div(values;interp;target)
-    _func_mul(values)
-    exec_action_func(interp;act)
-    exec_action_goto(interp;act)
-    exec_action_api(interp;act)
-    exec_action_expect(interp;act)
-    _assert_status(interp;act;tokens)
-    _assert_json(interp;act;tokens)
-    _assert_sensor(interp;act;tokens)
-    _assert_valve(interp;act;tokens)
-    exec_action_assert(interp;act)
-    exec_action_shell(interp;act)
-    exec_action_var_set(interp;act)
-    exec_action_condition(interp;act)
-    exec_action_if_fail_block(interp;act)
-    exec_action_if_block(interp;act)
-    exec_action_loop_block(interp;act)
-    exec_action_endloop(interp;act)
-    exec_action_set(interp;act)
-    _exec_set_wait(interp;act;value)
-    exec_action_action(interp;act)
-  oqlos/core/_line_parsers.py:
-    e: _parse_task_part,_parse_pump_line,_set_valve_step,_set_pump_step,_set_lung_step,_extract_set_params,_parse_set_line,_parse_inline_task,_parse_action_line,_parse_if_condition
-    _parse_task_part(part;step_counter)
-    _parse_pump_line(line;step_counter)
-    _set_valve_step(peripheral;value_raw;step_counter;line)
-    _set_pump_step(peripheral;value_raw;step_counter;line)
-    _set_lung_step(peripheral;value_raw;step_counter;line)
-    _extract_set_params(normalized_line)
-    _parse_set_line(line;step_counter)
-    _parse_inline_task(line;step_counter;steps)
-    _parse_action_line(line;step_counter;steps)
-    _parse_if_condition(line;step_counter;steps)
-  oqlos/core/_oql_adapter.py:
-    e: _fmt_value,_scenarios_root,_resolve_include,_substitute_args,_load_includes,_lower_include,_lower_call,_lower_set,_lower_get,_lower_wait,_lower_save,_make_lower_minmax,_lower_check,_lower_if_delta,_lower_sample,_lower_log,_lower_error_cmd,_lower_repeat,_cmd_to_actions,_parse_macro_line,_has_anonymous_named_goal,is_flat_oql,oql_doc_to_cql,_split_device_field,parse_flat_oql,_MacroRegistry
-    _MacroRegistry: __init__(0),register(1),get(1)  # Collect ``MACRO`` definitions (raw body lines) from the root
-    _fmt_value(value;unit)
-    _scenarios_root()
-    _resolve_include(path;base)
-    _substitute_args(raw;args)
-    _load_includes(doc;macros;base;seen)
-    _lower_include(cmd;macros;visiting)
-    _lower_call(cmd;macros;visiting)
-    _lower_set(cmd;macros;visiting)
-    _lower_get(cmd;macros;visiting)
-    _lower_wait(cmd;macros;visiting)
-    _lower_save(cmd;macros;visiting)
-    _make_lower_minmax(kind)
-    _lower_check(cmd;macros;visiting)
-    _lower_if_delta(cmd;macros;visiting)
-    _lower_sample(cmd;macros;visiting)
-    _lower_log(cmd;macros;visiting)
-    _lower_error_cmd(cmd;macros;visiting)
-    _lower_repeat(cmd;macros;visiting)
-    _cmd_to_actions(cmd;macros;visiting)
-    _parse_macro_line(raw_line;ln;args)
-    _has_anonymous_named_goal(source)
-    is_flat_oql(source)
-    oql_doc_to_cql(doc)
-    _split_device_field(device;index)
-    parse_flat_oql(source;filename)
-  oqlos/core/_sensor_evaluator.py:
-    e: SensorEvaluator
-    SensorEvaluator: __init__(3),collect_sensor_constraints(1),seed_sensors_from_conditions(1),auto_mock_sensor(3),compare_sensor(3),get_sensor_value(1)  # Evaluates sensor conditions and manages sensor values.
-  oqlos/core/_value_normalizers.py:
-    e: ValueNormalizer
-    ValueNormalizer: __init__(1),coerce_float(1),_get_pump_flow_full_scale_lpm(0),normalize_pump_power(1),normalize_valve_value(1),normalize_lung_value(1),coerce_generic_peripheral_value(1)  # Normalizes DSL values to hardware-compatible formats.
-  oqlos/core/base.py:
-    e: StepStatus,StepResult,ScriptResult,VariableStore,InterpreterOutput,BaseInterpreter,EventBridge
-    StepStatus:
-    StepResult:
-    ScriptResult: passed(0),failed(0),summary(0)
-    VariableStore: __init__(2),set(3),get(2),has(1),all(1),clear(0),interpolate(1)  # Hierarchical key-value store with interpolation support.
-    InterpreterOutput: __init__(3),emit(2),_broadcast_event(2),_emit_status(1),info(1),ok(1),fail(1),warn(1),error(1),step(2),output_yaml(0)  # Collects interpreter output lines for display or testing, an
-    BaseInterpreter: __init__(4),parse(2),execute(1),run(2),run_file(1),strip_comments(1)  # Abstract base for language interpreters.
-    EventBridge: __init__(1),connect(0),disconnect(0),send_event(2),connected(0)  # Optional WebSocket bridge to DSL Event Server (port 8104).
-  oqlos/core/cql_parser.py:
-    e: parse_cql,_collect_all_goals,_validate_intervals,validate_cql,_ParseState
-    _ParseState: __init__(2),parse(0),_peek_next_significant_indent(0),_flush_pending_inline_if(0),_attach_pending_inline_if(2),_get_line_info(0),_process_line(0),_try_skip_block(2),_try_intervals_block(3),_try_top_level(3),_handle_scenario(1),_handle_scenario_attrs(1),_handle_goal(3),_handle_goal_attrs(1),_handle_current_attrs(4),_handle_step(1),_init_block_stack(0),_add_action_to_parent(1),_append_parent_stack_action(1),_pop_block_with_warning(2),_handle_block_control(1),_handle_else_block(0),_try_handle_structure_levels(3),_handle_inline_if_logic(2),_handle_action_dispatch(2),_try_hierarchy(3)  # Encapsulates the parsing state to simplify the main loop.
-    parse_cql(source;filename)
-    _collect_all_goals(doc)
-    _validate_intervals(doc)
-    validate_cql(doc)
+  oqlos/core/cqrs/__init__.py:
+    e: build_command_bus
+    build_command_bus(store)
+  oqlos/core/cqrs/aggregate.py:
+    e: Aggregate
+    Aggregate: __init__(1),apply(1),load(1),rehydrate(3)  # Base for event-sourced aggregates.
+  oqlos/core/cqrs/commands.py:
+    e: Command,CommandBus
+    Command:  # Base class for commands: an intent to change state.
+    CommandBus: __init__(1),register(2),dispatch(1)  # Dispatches a command to its registered handler and persists 
+  oqlos/core/cqrs/events.py:
+    e: Event,EventStore
+    Event: event_type(0)  # Base class for immutable domain events. Subclasses add their
+    EventStore: __init__(0),append(1),append_many(1),replay(1),all_events(0),stream_ids(0),subscribe(1)  # Append-only, replayable event store.
+  oqlos/core/cqrs/execution.py:
+    e: handle_start_execution,handle_start_goal,handle_start_step,handle_update_progress,handle_set_execution_status,ExecutionStarted,ExecutionGoalStarted,ExecutionStepStarted,ExecutionProgressUpdated,ExecutionStatusChanged,ExecutionAggregate,StartExecutionCommand,StartGoalCommand,StartStepCommand,UpdateProgressCommand,SetExecutionStatusCommand,ExecutionsProjection
+    ExecutionStarted:
+    ExecutionGoalStarted:
+    ExecutionStepStarted:
+    ExecutionProgressUpdated:
+    ExecutionStatusChanged:
+    ExecutionAggregate: __init__(1),apply(1)  # Rehydrates a single execution's current shape by replaying i
+    StartExecutionCommand:
+    StartGoalCommand:
+    StartStepCommand:
+    UpdateProgressCommand:
+    SetExecutionStatusCommand:
+    ExecutionsProjection: __init__(0),apply(1)  # Read model: `executions[id]` mirrors the latest replayed sta
+    handle_start_execution(cmd)
+    handle_start_goal(cmd)
+    handle_start_step(cmd)
+    handle_update_progress(cmd)
+    handle_set_execution_status(cmd)
+  oqlos/core/cqrs/peripheral.py:
+    e: handle_register_peripheral,handle_set_peripheral_value,handle_set_peripheral_mode,handle_set_peripheral_status,PeripheralRegistered,PeripheralValueSet,PeripheralModeChanged,PeripheralStatusChanged,PeripheralAggregate,RegisterPeripheralCommand,SetPeripheralValueCommand,SetPeripheralModeCommand,SetPeripheralStatusCommand,PeripheralsProjection
+    PeripheralRegistered:
+    PeripheralValueSet:
+    PeripheralModeChanged:
+    PeripheralStatusChanged:
+    PeripheralAggregate: __init__(1),apply(1)  # Rehydrates a single Peripheral's current shape by replaying 
+    RegisterPeripheralCommand:
+    SetPeripheralValueCommand:
+    SetPeripheralModeCommand:
+    SetPeripheralStatusCommand:
+    PeripheralsProjection: __init__(0),apply(1)  # Read model: `peripherals[id]` mirrors the latest replayed st
+    handle_register_peripheral(cmd)
+    handle_set_peripheral_value(cmd)
+    handle_set_peripheral_mode(cmd)
+    handle_set_peripheral_status(cmd)
+  oqlos/core/cqrs/projection.py:
+    e: Projection
+    Projection: apply(1),rebuild(1),attach(1)  # Read-model base. Subscribes to an EventStore and folds match
   oqlos/core/executor.py:
     e: _resolve_compare,_resolve_name_or_attr,_safe_resolve,safe_eval_condition,ScenarioOrchestrator
-    ScenarioOrchestrator: __init__(2),_sanitize_identifier(1),_build_eval_context(0),_sanitize_expression(1),_build_step_plan(1),_execute_goal_steps(7),execute_scenario(4),execute_step(3),_execute_lung_step(2),_execute_valve_step(2),_execute_pump_step(3),_execute_wait_step(2),_execute_sensor_read_step(1),_execute_validate_step(1),update_dependent_sensors(1),validate_goal(1),log_event(2)
+    ScenarioOrchestrator: __init__(2),current_execution(0),_sanitize_identifier(1),_build_eval_context(0),_sanitize_expression(1),_build_step_plan(1),_execute_goal_steps(6),execute_scenario(4),execute_step(3),_execute_lung_step(2),_execute_valve_step(2),_execute_pump_step(3),_execute_wait_step(2),_execute_sensor_read_step(1),_execute_validate_step(1),update_dependent_sensors(1),validate_goal(1),log_event(2)
     _resolve_compare(node;context)
     _resolve_name_or_attr(node;context)
     _safe_resolve(node;context)
     safe_eval_condition(expr;context)
-  oqlos/core/interpreter.py:
-    e: CqlInterpreter
-    CqlInterpreter: __init__(11),sensor_values(0),sensor_values(1),_firmware(0),_firmware(1),_firmware_url(0),_firmware_url(1),_coerce_float(1),_resolve_peripheral_id(1),_get_pump_flow_full_scale_lpm(0),_normalize_pump_power(1),_normalize_valve_value(1),_normalize_lung_value(1),parse(2),_print_header(2),_collect_warnings(2),_planned_step_results(1),_run_validation_mode(4),_collect_all_goals(1),_execute_single_goal(2),_execute_all_goals(1),_build_script_result(2),execute(1),_execute_step(2),_execute_action(1),_exec_flat_action(1),_do_sleep(2),_normalize_peripheral_value(2),_coerce_generic_peripheral_value(1),_exec_set_peripheral(2),_get_firmware(0),_execute_firmware_action(2),_execute_plugin_action(2),_execute_legacy_firmware_action(2),_refresh_sensors_from_firmware(0),_auto_mock_sensor(3),_compare_sensor(3),_resolve_sensor_value(1),_resolve_delta_sensor_value(1),_resolve_windowed_delta_sensor_value(2),_extract_window_seconds(1),_resolve_condition_rhs(3),_evaluate_resolved_condition(0),_eval_condition_clause(2),_evaluate_inline_condition_expression(1),_tokenize_condition_expression(1),_aggregate_condition_results(2),_apply_connector(3),_finalize_condition_result(4),_evaluate_range_condition(2),_evaluate_condition(1)  # CQL interpreter with three modes:
-  oqlos/core/motor2_runtime.py:
-    e: _coerce_int,_coerce_float,_pick,motor2_max_steps_per_second,normalize_motor2_runtime_config,motor2_speed_for_duration,motor2_acceleration_raw,motor2_speed_raw,_normalize_motor2_direction,_compute_motor2_cycles,_compute_motor2_speed,build_motor2_reciprocating_plan,Motor2RuntimeConfig,Motor2ReciprocatingPlan
-    Motor2RuntimeConfig:
-    Motor2ReciprocatingPlan: speed_was_clamped(0)
-    _coerce_int(value;default)
-    _coerce_float(value;default)
-    _pick(source)
-    motor2_max_steps_per_second(default)
-    normalize_motor2_runtime_config(source)
-    motor2_speed_for_duration(steps;cycles;duration_seconds)
-    motor2_acceleration_raw(steps_per_second;percent;max_steps_per_second)
-    motor2_speed_raw(steps_per_second;max_steps_per_second)
-    _normalize_motor2_direction(direction)
-    _compute_motor2_cycles(cycles;volume_liters;cycle_volume)
-    _compute_motor2_speed(steps;cycles;speed;duration_seconds;max_speed;default_speed)
-    build_motor2_reciprocating_plan(config)
-  oqlos/core/oql_parser.py:
-    e: to_num,_compact_duration,parse_duration,duration_to_ms,_unescape,tokenize,_require,_split_value_unit,_split_set_value_unit,parse_SET,_make_single_field_parser,parse_WAIT,parse_IF_DELTA,parse_CHECK,parse_IF,_make_minmax_parser,parse_SAMPLE,_make_message_parser,_make_call_parser,parse_REPEAT,_line_indent,_expand_repeat_block_lines,_expand_repeat_blocks,_handle_top_level_line,_handle_block_header,_handle_macro_body_line,_handle_set_name,_handle_modifier_cmd,_parse_and_append_command,_validate_oql_version,_check_unnamed_goals,parse_oql,format_doc,OqlCmd,OqlBlock,OqlDoc
-    OqlCmd: __repr__(0)  # A single command line inside a block.
-    OqlBlock:  # A named block: ``GOAL``, ``CONFIG``, or ``MACRO``.
-    OqlDoc: goals(0),configs(0),macros(0),funcs(0)  # Parsed OQL document.
-    to_num(raw)
-    _compact_duration(token)
-    parse_duration(token)
-    duration_to_ms(token)
-    _unescape(text)
-    tokenize(rest)
-    _require(tokens;minimum;cmd;ln;shape)
-    _split_value_unit(tokens)
-    _split_set_value_unit(tokens)
-    parse_SET(tokens;ln;raw)
-    _make_single_field_parser(cmd;field;required_desc)
-    parse_WAIT(tokens;ln;raw)
-    parse_IF_DELTA(tokens;ln;raw)
-    parse_CHECK(rest;ln;raw)
-    parse_IF(rest;ln;raw)
-    _make_minmax_parser(cmd)
-    parse_SAMPLE(tokens;ln;raw)
-    _make_message_parser(cmd)
-    _make_call_parser(cmd;field;required_desc)
-    parse_REPEAT(tokens;ln;raw)
-    _line_indent(line)
-    _expand_repeat_block_lines(lines)
-    _expand_repeat_blocks(text)
-    _handle_top_level_line(doc;raw;line;ln)
-    _handle_block_header(doc;line;ln;version_info)
-    _handle_macro_body_line(line;ln;current)
-    _handle_set_name(line;current)
-    _handle_modifier_cmd(doc;line;ln;cmd;rest;current)
-    _parse_and_append_command(doc;line;ln;cmd;rest;current)
-    _validate_oql_version(doc;version_info)
-    _check_unnamed_goals(doc;version_info)
-    parse_oql(text;filename)
-    format_doc(doc)
-  oqlos/core/oql_versioning.py:
-    e: first_meaningful_line,extract_declared_version,resolve_oql_version,is_supported_oql_version,OqlVersionInfo
-    OqlVersionInfo: is_current(0)  # Resolved OQL version metadata for a source document.
-    first_meaningful_line(text)
-    extract_declared_version(text)
-    resolve_oql_version(text)
-    is_supported_oql_version(version)
-  oqlos/core/parser.py:
-    e: _dispatch_simple_parser,_try_action_or_condition,_parse_runtime_line,parse_dsl_to_goal_with_issues,parse_dsl_to_goal
-    _dispatch_simple_parser(kind;line;step_counter;steps)
-    _try_action_or_condition(line;normalized_line;step_counter;steps;record_invalid)
-    _parse_runtime_line(line;step_counter;steps;func_defs;indent;call_stack;invalid_lines)
-    parse_dsl_to_goal_with_issues(dsl;scenario_id)
-    parse_dsl_to_goal(dsl;scenario_id)
-  oqlos/core/safe_eval.py:
-    e: safe_eval,_eval_constant,_eval_name,_eval_unary_op,_eval_bin_op,_eval_compare,_eval_bool_op,_eval_call,_eval_if_exp,_eval_node,SafeEvalError
-    SafeEvalError:  # Raised when an expression cannot be safely evaluated.
-    safe_eval(expr;context)
-    _eval_constant(node;ctx)
-    _eval_name(node;ctx)
-    _eval_unary_op(node;ctx)
-    _eval_bin_op(node;ctx)
-    _eval_compare(node;ctx)
-    _eval_bool_op(node;ctx)
-    _eval_call(node;ctx)
-    _eval_if_exp(node;ctx)
-    _eval_node(node;ctx)
   oqlos/core/state.py:
     e: StateManager
-    StateManager: __init__(0),initialize_peripherals(0),broadcast_event(1)
+    StateManager: __init__(0),peripherals(0),executions(0),initialize_peripherals(0),broadcast_event(1)  # Peripheral and execution state are event-sourced: this class
   oqlos/dsl/__init__.py:
   oqlos/dsl/schema.py:
     e: _normalize_name_list,_build_inferred_object_function_map,_build_inferred_param_unit_map,_merge_binding_map,_merge_object_function_map,_merge_param_unit_map,get_default_dsl_schema,DslDialect,DslItem,DslFunctionBinding,DslParamUnitBinding,DslSchema
@@ -3515,34 +3296,6 @@ D:
     pi_system_diagnostics()
     reset_usb_device(vendor_id;product_id;dev_node)
   oqlos/ide/__init__.py:
-  oqlos/models/__init__.py:
-  oqlos/models/dsl_models.py:
-    e: CqlMetadata,CqlInterval,CqlCondition,CqlAction,CqlStep,CqlGoal,CqlScenario,CqlDocument
-    CqlMetadata:
-    CqlInterval:
-    CqlCondition:  # Sensor condition: AI01 ∈ [min, max] unit | ACTION 'msg'
-    CqlAction:  # An action within a step: → Target.method args, TASK, SET, WA
-    CqlStep:  # A numbered step within a goal: 1. Step name:
-    CqlGoal:  # A test goal within a scenario.
-    CqlScenario:  # A named scenario block: @Namespace.Name
-    CqlDocument:  # Root AST node for a .cql file.
-  oqlos/models/execution.py:
-    e: ExecutionRequest,ExecutionStatus,CommandEnvelope
-    ExecutionRequest:
-    ExecutionStatus:
-    CommandEnvelope:
-  oqlos/models/peripheral.py:
-    e: PeripheralType,PeripheralStatus,PeripheralMode,Peripheral
-    PeripheralType:
-    PeripheralStatus:
-    PeripheralMode:
-    Peripheral:
-  oqlos/models/scenario.py:
-    e: Step,ValidationRule,Goal,Scenario
-    Step:
-    ValidationRule:
-    Goal:
-    Scenario:
   oqlos/reporters/__init__.py:
   oqlos/reporters/html_report.py:
     e: render_html_report,_render_device_meta,_render_goal,_render_thresholds_table,_render_step
@@ -3581,9 +3334,6 @@ D:
     ConnectionManager: __init__(0),connect(2),disconnect(1),broadcast(2),get_stats(0)  # Tracks connected WebSocket clients and broadcasts messages.
     EventServer: __init__(3),handle_client(1),_handle_message(2),_normalize_event(1),start(0)  # WebSocket event broker with persistence.
     main()
-  oqlos/shared/event_store.py:
-    e: EventStore
-    EventStore: __init__(1),append(1),get_all(0),get_recent(1),get_by_correlation(1),clear(0),to_json(0),from_json(1),count(0),_save(0),_load(0)  # Append-only event store with optional JSON file persistence.
   oqlos/shared/file_ops.py:
     e: _ensure_safe_path,list_files,iter_entries,read_file,env_configured_path,read_text_file_or_empty,write_file,PathEscapeError
     PathEscapeError:  # Raised when a resolved path would escape the base directory.
@@ -3884,6 +3634,347 @@ D:
   oqlos/utils/sample_data.py:
     e: load_sample_scenarios
     load_sample_scenarios(state_manager)
+  packages/oqlos-core/src/oqlos/core/__init__.py:
+  packages/oqlos-core/src/oqlos/core/_action_motor2.py:
+    e: _normalize_motor2_target,_parse_motor2_direction,_parse_motor2_speed_steps,_parse_motor2_positive_int,_parse_motor2_float,_parse_motor2_duration_seconds,_parse_motor2_volume_liters,_parse_motor2_acceleration,_normalize_motor2_value,_parse_prefixed_motor2_setting,_parse_motor2_reciprocating_setting,_parse_motor2_steps,_motor2_speed_raw,_motor2_max_steps_per_second,_motor2_effective_steps_per_second,_motor2_speed_for_duration,_motor2_acceleration_raw,_post_motor2_move_relative,_post_motor2_reciprocate,_post_motor2_stop,_call_motor2_transport,_motor2_reciprocating_state,_motor2_set_state_value,_motor2_state_handler,_motor2_do_stop,_motor2_build_plan,_motor2_step_label,_motor2_do_start,_handle_motor2_reciprocating_setting,_try_exec_motor2_set
+    _normalize_motor2_target(target_lower)
+    _parse_motor2_direction(value)
+    _parse_motor2_speed_steps(value)
+    _parse_motor2_positive_int(value)
+    _parse_motor2_float(value)
+    _parse_motor2_duration_seconds(value)
+    _parse_motor2_volume_liters(value)
+    _parse_motor2_acceleration(value)
+    _normalize_motor2_value(value)
+    _parse_prefixed_motor2_setting(normalized)
+    _parse_motor2_reciprocating_setting(value)
+    _parse_motor2_steps(value)
+    _motor2_speed_raw(steps_per_second)
+    _motor2_max_steps_per_second()
+    _motor2_effective_steps_per_second(steps_per_second)
+    _motor2_speed_for_duration(steps;cycles;duration_seconds)
+    _motor2_acceleration_raw(steps_per_second;percent)
+    _post_motor2_move_relative(direction;steps;speed_raw;acceleration_raw)
+    _post_motor2_reciprocate(direction;steps;speed_raw;acceleration_raw;cycles;pause;limit_mode)
+    _post_motor2_stop()
+    _call_motor2_transport(name;fallback)
+    _motor2_reciprocating_state(interp)
+    _motor2_set_state_value(interp;state;key;value;label)
+    _motor2_state_handler(key;value_fn;label_fn)
+    _motor2_do_stop(interp;setting;state)
+    _motor2_build_plan(interp;setting;state)
+    _motor2_step_label(plan;mode)
+    _motor2_do_start(interp;setting;state)
+    _handle_motor2_reciprocating_setting(interp;setting)
+    _try_exec_motor2_set(interp;target_lower;value)
+  packages/oqlos-core/src/oqlos/core/_compare.py:
+    e: resolve_compare,resolve_compare_chain
+    resolve_compare(left;op;right)
+    resolve_compare_chain(node;resolve_value)
+  packages/oqlos-core/src/oqlos/core/_cql_tokenizer.py:
+    e: _make_args_parser,_make_keyword_parser,_make_method_parser,_make_stripped_field_parser,_make_two_group_parser,_make_target_method_args_parser,_match_first,_parse_condition_value,_try_save,_try_set,_try_condition_range,_try_condition_cmp,_try_if_else,_try_if_block,_try_if_standalone,_try_else_standalone,_try_min_max,_try_val,_try_loop_start,_try_repeat_start,_try_repeat_stop,_try_sample,_try_goto
+    _make_args_parser(regex;kind)
+    _make_keyword_parser(regex;kind)
+    _make_method_parser(regex;kind)
+    _make_stripped_field_parser(regex;kind;field)
+    _make_two_group_parser(regex;kind;field)
+    _make_target_method_args_parser(regex;kind)
+    _match_first(line)
+    _parse_condition_value(raw_value)
+    _try_save(line;stripped)
+    _try_set(line;stripped)
+    _try_condition_range(line;stripped)
+    _try_condition_cmp(line;stripped)
+    _try_if_else(line;stripped)
+    _try_if_block(line;stripped)
+    _try_if_standalone(line;stripped)
+    _try_else_standalone(line;stripped)
+    _try_min_max(line;stripped)
+    _try_val(line;stripped)
+    _try_loop_start(line;stripped)
+    _try_repeat_start(line;stripped)
+    _try_repeat_stop(line;stripped)
+    _try_sample(line;stripped)
+    _try_goto(line;stripped)
+  packages/oqlos-core/src/oqlos/core/_cql_tree_builder.py:
+    e: _parse_metadata_kv,_parse_scenario_line,_parse_scenario_attrs,_parse_goal_line,_parse_goal_attrs,_parse_step_line,_parse_action_line,_ensure_goal_for_step,_ensure_step_for_actions
+    _parse_metadata_kv(doc;stripped)
+    _parse_scenario_line(doc;stripped)
+    _parse_scenario_attrs(line;current_scenario)
+    _parse_goal_line(stripped;line;indent;current_scenario)
+    _parse_goal_attrs(line;current_goal)
+    _parse_step_line(line;current_goal)
+    _parse_action_line(line;stripped;actions_list;doc;lineno)
+    _ensure_goal_for_step(current_goal;current_scenario;line)
+    _ensure_step_for_actions(current_step;current_goal)
+  packages/oqlos-core/src/oqlos/core/_dsl_helpers.py:
+    e: _normalize_quote_syntax,_looks_like_valve_object,_looks_like_pump_object,_looks_like_lung_object,_looks_like_sensor_object,_map_peripheral,_parse_numeric_value,_map_valve_action,_map_pump_action,_map_wait_action,_map_lung_action,_map_action_value
+    _normalize_quote_syntax(line)
+    _looks_like_valve_object(obj)
+    _looks_like_pump_object(obj)
+    _looks_like_lung_object(obj)
+    _looks_like_sensor_object(obj)
+    _map_peripheral(obj)
+    _parse_numeric_value(raw)
+    _map_valve_action(fn)
+    _map_pump_action(fn;obj_raw;line)
+    _map_wait_action(fn;obj;obj_raw;line;step_counter)
+    _map_lung_action(fn;obj_raw;line)
+    _map_action_value(fn;obj;obj_raw;line;step_counter)
+  packages/oqlos-core/src/oqlos/core/_firmware_executor.py:
+    e: _load_peripheral_map,_plugin_gateway_cls,FirmwareExecutor
+    FirmwareExecutor: __init__(7),_get_firmware(0),_resolve_gateway_result(2),_is_success(1),resolve_peripheral_id(1),normalize_peripheral_value(2),refresh_sensors_from_firmware(1),execute_firmware_action(2),_execute_plugin_action(2),_execute_legacy_firmware_action(2),exec_set_peripheral(2)  # Executes hardware actions via plugin gateway or legacy firmw
+    _load_peripheral_map()
+    _plugin_gateway_cls()
+  packages/oqlos-core/src/oqlos/core/_func_resolver.py:
+    e: _collect_function_definitions,_extract_func_name,_guard_recursion,_parse_func_call
+    _collect_function_definitions(lines)
+    _extract_func_name(line;indent)
+    _guard_recursion(func_name;call_stack)
+    _parse_func_call(line;step_counter;steps;func_defs;indent;call_stack;parse_line_fn)
+  packages/oqlos-core/src/oqlos/core/_interpreter_actions.py:
+    e: _extract_action_tokens,_drop_command_token,_coerce_expected_value,_compare_values,_oql_quote,_format_set_command,_get_nested_value,_record_failure,_mark_success,_normalize_bool,_lookup_peripheral_state,_mock_api_response,exec_action_task,exec_action_save,parse_wait_secs,exec_action_wait,_do_sleep,exec_action_min_max,exec_action_val,exec_action_log,exec_action_error,exec_action_else,exec_action_sample,_resolve_numeric_token,_func_avg,_func_sum,_func_reduce_or_zero,_func_sub,_func_div,_func_mul,exec_action_func,exec_action_goto,exec_action_api,exec_action_expect,_assert_status,_assert_json,_assert_sensor,_assert_valve,exec_action_assert,exec_action_shell,exec_action_var_set,exec_action_condition,exec_action_if_fail_block,exec_action_if_block,exec_action_loop_block,exec_action_endloop,exec_action_set,_exec_set_wait,exec_action_action
+    _extract_action_tokens(text)
+    _drop_command_token(act)
+    _coerce_expected_value(value)
+    _compare_values(actual;operator;expected)
+    _oql_quote(value)
+    _format_set_command(target;value)
+    _get_nested_value(payload;path)
+    _record_failure(interp;key;message)
+    _mark_success(interp;key)
+    _normalize_bool(value)
+    _lookup_peripheral_state(interp;target)
+    _mock_api_response(interp;endpoint)
+    exec_action_task(interp;act)
+    exec_action_save(interp;act)
+    parse_wait_secs(raw)
+    exec_action_wait(interp;act)
+    _do_sleep(interp;secs;label)
+    exec_action_min_max(interp;act)
+    exec_action_val(interp;act)
+    exec_action_log(interp;act)
+    exec_action_error(interp;act)
+    exec_action_else(interp;act)
+    exec_action_sample(interp;act)
+    _resolve_numeric_token(interp;token)
+    _func_avg(values)
+    _func_sum(values)
+    _func_reduce_or_zero(values;reducer)
+    _func_sub(values)
+    _func_div(values;interp;target)
+    _func_mul(values)
+    exec_action_func(interp;act)
+    exec_action_goto(interp;act)
+    exec_action_api(interp;act)
+    exec_action_expect(interp;act)
+    _assert_status(interp;act;tokens)
+    _assert_json(interp;act;tokens)
+    _assert_sensor(interp;act;tokens)
+    _assert_valve(interp;act;tokens)
+    exec_action_assert(interp;act)
+    exec_action_shell(interp;act)
+    exec_action_var_set(interp;act)
+    exec_action_condition(interp;act)
+    exec_action_if_fail_block(interp;act)
+    exec_action_if_block(interp;act)
+    exec_action_loop_block(interp;act)
+    exec_action_endloop(interp;act)
+    exec_action_set(interp;act)
+    _exec_set_wait(interp;act;value)
+    exec_action_action(interp;act)
+  packages/oqlos-core/src/oqlos/core/_line_parsers.py:
+    e: _parse_task_part,_parse_pump_line,_set_valve_step,_set_pump_step,_set_lung_step,_extract_set_params,_parse_set_line,_parse_inline_task,_parse_action_line,_parse_if_condition
+    _parse_task_part(part;step_counter)
+    _parse_pump_line(line;step_counter)
+    _set_valve_step(peripheral;value_raw;step_counter;line)
+    _set_pump_step(peripheral;value_raw;step_counter;line)
+    _set_lung_step(peripheral;value_raw;step_counter;line)
+    _extract_set_params(normalized_line)
+    _parse_set_line(line;step_counter)
+    _parse_inline_task(line;step_counter;steps)
+    _parse_action_line(line;step_counter;steps)
+    _parse_if_condition(line;step_counter;steps)
+  packages/oqlos-core/src/oqlos/core/_oql_adapter.py:
+    e: _fmt_value,_scenarios_root,_resolve_include,_substitute_args,_load_includes,_lower_include,_lower_call,_lower_set,_lower_get,_lower_wait,_lower_save,_make_lower_minmax,_lower_check,_lower_if_delta,_lower_sample,_lower_log,_lower_error_cmd,_lower_repeat,_cmd_to_actions,_parse_macro_line,_has_anonymous_named_goal,is_flat_oql,oql_doc_to_cql,_split_device_field,parse_flat_oql,_MacroRegistry
+    _MacroRegistry: __init__(0),register(1),get(1)  # Collect ``MACRO`` definitions (raw body lines) from the root
+    _fmt_value(value;unit)
+    _scenarios_root()
+    _resolve_include(path;base)
+    _substitute_args(raw;args)
+    _load_includes(doc;macros;base;seen)
+    _lower_include(cmd;macros;visiting)
+    _lower_call(cmd;macros;visiting)
+    _lower_set(cmd;macros;visiting)
+    _lower_get(cmd;macros;visiting)
+    _lower_wait(cmd;macros;visiting)
+    _lower_save(cmd;macros;visiting)
+    _make_lower_minmax(kind)
+    _lower_check(cmd;macros;visiting)
+    _lower_if_delta(cmd;macros;visiting)
+    _lower_sample(cmd;macros;visiting)
+    _lower_log(cmd;macros;visiting)
+    _lower_error_cmd(cmd;macros;visiting)
+    _lower_repeat(cmd;macros;visiting)
+    _cmd_to_actions(cmd;macros;visiting)
+    _parse_macro_line(raw_line;ln;args)
+    _has_anonymous_named_goal(source)
+    is_flat_oql(source)
+    oql_doc_to_cql(doc)
+    _split_device_field(device;index)
+    parse_flat_oql(source;filename)
+  packages/oqlos-core/src/oqlos/core/_runtime_settings.py:
+    e: lung_motor_url,pump_flow_full_scale_lpm
+    lung_motor_url()
+    pump_flow_full_scale_lpm(default)
+  packages/oqlos-core/src/oqlos/core/_sensor_evaluator.py:
+    e: SensorEvaluator
+    SensorEvaluator: __init__(3),collect_sensor_constraints(1),seed_sensors_from_conditions(1),auto_mock_sensor(3),compare_sensor(3),get_sensor_value(1)  # Evaluates sensor conditions and manages sensor values.
+  packages/oqlos-core/src/oqlos/core/_value_normalizers.py:
+    e: ValueNormalizer
+    ValueNormalizer: __init__(1),coerce_float(1),_get_pump_flow_full_scale_lpm(0),normalize_pump_power(1),normalize_valve_value(1),normalize_lung_value(1),coerce_generic_peripheral_value(1)  # Normalizes DSL values to hardware-compatible formats.
+  packages/oqlos-core/src/oqlos/core/base.py:
+    e: StepStatus,StepResult,ScriptResult,VariableStore,InterpreterOutput,BaseInterpreter,EventBridge
+    StepStatus:
+    StepResult:
+    ScriptResult: passed(0),failed(0),summary(0)
+    VariableStore: __init__(2),set(3),get(2),has(1),all(1),clear(0),interpolate(1)  # Hierarchical key-value store with interpolation support.
+    InterpreterOutput: __init__(3),emit(2),_broadcast_event(2),_emit_status(1),info(1),ok(1),fail(1),warn(1),error(1),step(2),output_yaml(0)  # Collects interpreter output lines for display or testing, an
+    BaseInterpreter: __init__(4),parse(2),execute(1),run(2),run_file(1),strip_comments(1)  # Abstract base for language interpreters.
+    EventBridge: __init__(1),connect(0),disconnect(0),send_event(2),connected(0)  # Optional WebSocket bridge to DSL Event Server (port 8104).
+  packages/oqlos-core/src/oqlos/core/cql_parser.py:
+    e: parse_cql,_collect_all_goals,_validate_intervals,validate_cql,_ParseState
+    _ParseState: __init__(2),parse(0),_peek_next_significant_indent(0),_flush_pending_inline_if(0),_attach_pending_inline_if(2),_get_line_info(0),_process_line(0),_try_skip_block(2),_try_intervals_block(3),_try_top_level(3),_handle_scenario(1),_handle_scenario_attrs(1),_handle_goal(3),_handle_goal_attrs(1),_handle_current_attrs(4),_handle_step(1),_init_block_stack(0),_add_action_to_parent(1),_append_parent_stack_action(1),_pop_block_with_warning(2),_handle_block_control(1),_handle_else_block(0),_try_handle_structure_levels(3),_handle_inline_if_logic(2),_handle_action_dispatch(2),_try_hierarchy(3)  # Encapsulates the parsing state to simplify the main loop.
+    parse_cql(source;filename)
+    _collect_all_goals(doc)
+    _validate_intervals(doc)
+    validate_cql(doc)
+  packages/oqlos-core/src/oqlos/core/interpreter.py:
+    e: CqlInterpreter
+    CqlInterpreter: __init__(11),sensor_values(0),sensor_values(1),_firmware(0),_firmware(1),_firmware_url(0),_firmware_url(1),_coerce_float(1),_resolve_peripheral_id(1),_get_pump_flow_full_scale_lpm(0),_normalize_pump_power(1),_normalize_valve_value(1),_normalize_lung_value(1),parse(2),_print_header(2),_collect_warnings(2),_planned_step_results(1),_run_validation_mode(4),_collect_all_goals(1),_execute_single_goal(2),_execute_all_goals(1),_build_script_result(2),execute(1),_execute_step(2),_execute_action(1),_exec_flat_action(1),_do_sleep(2),_normalize_peripheral_value(2),_coerce_generic_peripheral_value(1),_exec_set_peripheral(2),_get_firmware(0),_execute_firmware_action(2),_execute_plugin_action(2),_execute_legacy_firmware_action(2),_refresh_sensors_from_firmware(0),_auto_mock_sensor(3),_compare_sensor(3),_resolve_sensor_value(1),_resolve_delta_sensor_value(1),_resolve_windowed_delta_sensor_value(2),_extract_window_seconds(1),_resolve_condition_rhs(3),_evaluate_resolved_condition(0),_eval_condition_clause(2),_evaluate_inline_condition_expression(1),_tokenize_condition_expression(1),_aggregate_condition_results(2),_apply_connector(3),_finalize_condition_result(4),_evaluate_range_condition(2),_evaluate_condition(1)  # CQL interpreter with three modes:
+  packages/oqlos-core/src/oqlos/core/motor2_runtime.py:
+    e: _coerce_int,_coerce_float,_pick,motor2_max_steps_per_second,normalize_motor2_runtime_config,motor2_speed_for_duration,motor2_acceleration_raw,motor2_speed_raw,_normalize_motor2_direction,_compute_motor2_cycles,_compute_motor2_speed,build_motor2_reciprocating_plan,Motor2RuntimeConfig,Motor2ReciprocatingPlan
+    Motor2RuntimeConfig:
+    Motor2ReciprocatingPlan: speed_was_clamped(0)
+    _coerce_int(value;default)
+    _coerce_float(value;default)
+    _pick(source)
+    motor2_max_steps_per_second(default)
+    normalize_motor2_runtime_config(source)
+    motor2_speed_for_duration(steps;cycles;duration_seconds)
+    motor2_acceleration_raw(steps_per_second;percent;max_steps_per_second)
+    motor2_speed_raw(steps_per_second;max_steps_per_second)
+    _normalize_motor2_direction(direction)
+    _compute_motor2_cycles(cycles;volume_liters;cycle_volume)
+    _compute_motor2_speed(steps;cycles;speed;duration_seconds;max_speed;default_speed)
+    build_motor2_reciprocating_plan(config)
+  packages/oqlos-core/src/oqlos/core/oql_parser.py:
+    e: to_num,_compact_duration,parse_duration,duration_to_ms,_unescape,tokenize,_require,_split_value_unit,_split_set_value_unit,parse_SET,_make_single_field_parser,parse_WAIT,parse_IF_DELTA,parse_CHECK,parse_IF,_make_minmax_parser,parse_SAMPLE,_make_message_parser,_make_call_parser,parse_REPEAT,_line_indent,_expand_repeat_block_lines,_expand_repeat_blocks,_handle_top_level_line,_handle_block_header,_handle_macro_body_line,_handle_set_name,_handle_modifier_cmd,_parse_and_append_command,_validate_oql_version,_check_unnamed_goals,parse_oql,format_doc,OqlCmd,OqlBlock,OqlDoc
+    OqlCmd: __repr__(0)  # A single command line inside a block.
+    OqlBlock:  # A named block: ``GOAL``, ``CONFIG``, or ``MACRO``.
+    OqlDoc: goals(0),configs(0),macros(0),funcs(0)  # Parsed OQL document.
+    to_num(raw)
+    _compact_duration(token)
+    parse_duration(token)
+    duration_to_ms(token)
+    _unescape(text)
+    tokenize(rest)
+    _require(tokens;minimum;cmd;ln;shape)
+    _split_value_unit(tokens)
+    _split_set_value_unit(tokens)
+    parse_SET(tokens;ln;raw)
+    _make_single_field_parser(cmd;field;required_desc)
+    parse_WAIT(tokens;ln;raw)
+    parse_IF_DELTA(tokens;ln;raw)
+    parse_CHECK(rest;ln;raw)
+    parse_IF(rest;ln;raw)
+    _make_minmax_parser(cmd)
+    parse_SAMPLE(tokens;ln;raw)
+    _make_message_parser(cmd)
+    _make_call_parser(cmd;field;required_desc)
+    parse_REPEAT(tokens;ln;raw)
+    _line_indent(line)
+    _expand_repeat_block_lines(lines)
+    _expand_repeat_blocks(text)
+    _handle_top_level_line(doc;raw;line;ln)
+    _handle_block_header(doc;line;ln;version_info)
+    _handle_macro_body_line(line;ln;current)
+    _handle_set_name(line;current)
+    _handle_modifier_cmd(doc;line;ln;cmd;rest;current)
+    _parse_and_append_command(doc;line;ln;cmd;rest;current)
+    _validate_oql_version(doc;version_info)
+    _check_unnamed_goals(doc;version_info)
+    parse_oql(text;filename)
+    format_doc(doc)
+  packages/oqlos-core/src/oqlos/core/oql_versioning.py:
+    e: first_meaningful_line,extract_declared_version,resolve_oql_version,is_supported_oql_version,OqlVersionInfo
+    OqlVersionInfo: is_current(0)  # Resolved OQL version metadata for a source document.
+    first_meaningful_line(text)
+    extract_declared_version(text)
+    resolve_oql_version(text)
+    is_supported_oql_version(version)
+  packages/oqlos-core/src/oqlos/core/parser.py:
+    e: _dispatch_simple_parser,_try_action_or_condition,_parse_runtime_line,parse_dsl_to_goal_with_issues,parse_dsl_to_goal
+    _dispatch_simple_parser(kind;line;step_counter;steps)
+    _try_action_or_condition(line;normalized_line;step_counter;steps;record_invalid)
+    _parse_runtime_line(line;step_counter;steps;func_defs;indent;call_stack;invalid_lines)
+    parse_dsl_to_goal_with_issues(dsl;scenario_id)
+    parse_dsl_to_goal(dsl;scenario_id)
+  packages/oqlos-core/src/oqlos/core/safe_eval.py:
+    e: safe_eval,_eval_constant,_eval_name,_eval_unary_op,_eval_bin_op,_eval_compare,_eval_bool_op,_eval_call,_eval_if_exp,_eval_node,SafeEvalError
+    SafeEvalError:  # Raised when an expression cannot be safely evaluated.
+    safe_eval(expr;context)
+    _eval_constant(node;ctx)
+    _eval_name(node;ctx)
+    _eval_unary_op(node;ctx)
+    _eval_bin_op(node;ctx)
+    _eval_compare(node;ctx)
+    _eval_bool_op(node;ctx)
+    _eval_call(node;ctx)
+    _eval_if_exp(node;ctx)
+    _eval_node(node;ctx)
+  packages/oqlos-core/src/oqlos/core/state.py:
+    e: StateManager
+    StateManager: __init__(0),initialize_peripherals(0),broadcast_event(1)
+  packages/oqlos-core/src/oqlos/shared/__init__.py:
+  packages/oqlos-core/src/oqlos/shared/event_store.py:
+    e: EventStore
+    EventStore: __init__(1),append(1),get_all(0),get_recent(1),get_by_correlation(1),clear(0),to_json(0),from_json(1),count(0),_save(0),_load(0)  # Append-only event store with optional JSON file persistence.
+  packages/oqlos-core/tests/test_parse_cql_smoke.py:
+    e: test_parse_cql_smoke,test_validate_cql_smoke
+    test_parse_cql_smoke()
+    test_validate_cql_smoke()
+  packages/oqlos-models/src/oqlos/models/__init__.py:
+  packages/oqlos-models/src/oqlos/models/dsl_models.py:
+    e: CqlMetadata,CqlInterval,CqlCondition,CqlAction,CqlStep,CqlGoal,CqlScenario,CqlDocument
+    CqlMetadata:
+    CqlInterval:
+    CqlCondition:  # Sensor condition: AI01 ∈ [min, max] unit | ACTION 'msg'
+    CqlAction:  # An action within a step: → Target.method args, TASK, SET, WA
+    CqlStep:  # A numbered step within a goal: 1. Step name:
+    CqlGoal:  # A test goal within a scenario.
+    CqlScenario:  # A named scenario block: @Namespace.Name
+    CqlDocument:  # Root AST node for a .cql file.
+  packages/oqlos-models/src/oqlos/models/execution.py:
+    e: ExecutionRequest,ExecutionStatus,CommandEnvelope
+    ExecutionRequest:
+    ExecutionStatus:  # Event-sourced: only oqlos.core.cqrs.execution may produce a 
+    CommandEnvelope:
+  packages/oqlos-models/src/oqlos/models/peripheral.py:
+    e: PeripheralType,PeripheralStatus,PeripheralMode,Peripheral
+    PeripheralType:
+    PeripheralStatus:
+    PeripheralMode:
+    Peripheral:  # Event-sourced: only oqlos.core.cqrs.peripheral may produce a
+  packages/oqlos-models/src/oqlos/models/scenario.py:
+    e: Step,ValidationRule,Goal,Scenario
+    Step:
+    ValidationRule:
+    Goal:
+    Scenario:
+  packages/oqlos-models/tests/test_import.py:
+    e: test_models_importable
+    test_models_importable()
   scripts/fix_brackets_to_v4.py:
     e: needs_migration,main
     needs_migration(text)
@@ -4599,11 +4690,11 @@ D:
 
 ```prolog markpact:analysis path=project/logic.pl
 % ── Project Metadata ─────────────────────────────────────
-project_metadata('oqlos', '0.1.28', 'python').
+project_metadata('oqlos', '0.1.29', 'python').
 
 % ── Project Files ────────────────────────────────────────
 project_file('app.doql.css', 165, 'css').
-project_file('app.doql.less', 316, 'less').
+project_file('app.doql.less', 321, 'less').
 project_file('examples/curl-quickstart.sh', 75, 'shell').
 project_file('examples/hardware/doctor-workflow.sh', 53, 'shell').
 project_file('frontend/src/api/hardware-api-errors.js', 88, 'javascript').
@@ -4683,7 +4774,7 @@ project_file('frontend/src/utils/useSelectionCollapsePanel.js', 160, 'javascript
 project_file('frontend/vendor/hardware-client/index.ts', 32, 'typescript').
 project_file('frontend/vendor/hardware-client/paths.ts', 40, 'typescript').
 project_file('frontend/vite.config.ts', 37, 'typescript').
-project_file('oqlos/__init__.py', 4, 'python').
+project_file('oqlos/__init__.py', 8, 'python').
 project_file('oqlos/api/__init__.py', 18, 'python').
 project_file('oqlos/api/_hw3_mapping.py', 158, 'python').
 project_file('oqlos/api/_hw3_models.py', 195, 'python').
@@ -4716,37 +4807,24 @@ project_file('oqlos/api/hardware_v3.py', 61, 'python').
 project_file('oqlos/api/logs.py', 46, 'python').
 project_file('oqlos/api/main.py', 606, 'python').
 project_file('oqlos/api/oql_mqtt.py', 153, 'python').
-project_file('oqlos/api/peripherals.py', 69, 'python').
+project_file('oqlos/api/peripherals.py', 77, 'python').
 project_file('oqlos/api/plugins.py', 182, 'python').
 project_file('oqlos/api/scenarios.py', 252, 'python').
 project_file('oqlos/api/state.py', 371, 'python').
 project_file('oqlos/api/utils/__init__.py', 1, 'python').
-project_file('oqlos/api/utils/execution_ctrl.py', 63, 'python').
+project_file('oqlos/api/utils/execution_ctrl.py', 66, 'python').
 project_file('oqlos/api/version.py', 25, 'python').
 project_file('oqlos/config.py', 221, 'python').
-project_file('oqlos/core/__init__.py', 1, 'python').
-project_file('oqlos/core/_action_motor2.py', 482, 'python').
-project_file('oqlos/core/_compare.py', 41, 'python').
-project_file('oqlos/core/_cql_tokenizer.py', 411, 'python').
-project_file('oqlos/core/_cql_tree_builder.py', 168, 'python').
-project_file('oqlos/core/_dsl_helpers.py', 133, 'python').
-project_file('oqlos/core/_firmware_executor.py', 267, 'python').
-project_file('oqlos/core/_func_resolver.py', 97, 'python').
-project_file('oqlos/core/_interpreter_actions.py', 801, 'python').
-project_file('oqlos/core/_line_parsers.py', 262, 'python').
-project_file('oqlos/core/_oql_adapter.py', 491, 'python').
-project_file('oqlos/core/_sensor_evaluator.py', 146, 'python').
-project_file('oqlos/core/_value_normalizers.py', 127, 'python').
-project_file('oqlos/core/base.py', 312, 'python').
-project_file('oqlos/core/cql_parser.py', 468, 'python').
-project_file('oqlos/core/executor.py', 378, 'python').
-project_file('oqlos/core/interpreter.py', 691, 'python').
-project_file('oqlos/core/motor2_runtime.py', 210, 'python').
-project_file('oqlos/core/oql_parser.py', 774, 'python').
-project_file('oqlos/core/oql_versioning.py', 73, 'python').
-project_file('oqlos/core/parser.py', 185, 'python').
-project_file('oqlos/core/safe_eval.py', 139, 'python').
-project_file('oqlos/core/state.py', 125, 'python').
+project_file('oqlos/core/__init__.py', 4, 'python').
+project_file('oqlos/core/cqrs/__init__.py', 37, 'python').
+project_file('oqlos/core/cqrs/aggregate.py', 40, 'python').
+project_file('oqlos/core/cqrs/commands.py', 41, 'python').
+project_file('oqlos/core/cqrs/events.py', 73, 'python').
+project_file('oqlos/core/cqrs/execution.py', 166, 'python').
+project_file('oqlos/core/cqrs/peripheral.py', 186, 'python').
+project_file('oqlos/core/cqrs/projection.py', 26, 'python').
+project_file('oqlos/core/executor.py', 409, 'python').
+project_file('oqlos/core/state.py', 148, 'python').
 project_file('oqlos/dsl/__init__.py', 19, 'python').
 project_file('oqlos/dsl/schema.py', 296, 'python').
 project_file('oqlos/errors/__init__.py', 44, 'python').
@@ -4829,21 +4907,15 @@ project_file('oqlos/hardware/transport/manage_ops_usb.py', 34, 'python').
 project_file('oqlos/hardware/transport/mqtt_oql_bridge.py', 494, 'python').
 project_file('oqlos/hardware/usb_diagnostics.py', 186, 'python').
 project_file('oqlos/ide/__init__.py', 1, 'python').
-project_file('oqlos/models/__init__.py', 1, 'python').
-project_file('oqlos/models/dsl_models.py', 88, 'python').
-project_file('oqlos/models/execution.py', 23, 'python').
-project_file('oqlos/models/peripheral.py', 34, 'python').
-project_file('oqlos/models/scenario.py', 36, 'python').
 project_file('oqlos/reporters/__init__.py', 7, 'python').
 project_file('oqlos/reporters/html_report.py', 267, 'python').
 project_file('oqlos/reporters/json_reporter.py', 139, 'python').
 project_file('oqlos/reporters/junit.py', 87, 'python').
 project_file('oqlos/scenarios/legacy_aliases.py', 41, 'python').
-project_file('oqlos/shared/__init__.py', 1, 'python').
+project_file('oqlos/shared/__init__.py', 4, 'python').
 project_file('oqlos/shared/_endpoint_helpers.py', 49, 'python').
 project_file('oqlos/shared/config_factory.py', 85, 'python').
 project_file('oqlos/shared/event_server.py', 172, 'python').
-project_file('oqlos/shared/event_store.py', 78, 'python').
 project_file('oqlos/shared/file_ops.py', 131, 'python').
 project_file('oqlos/shared/logger.py', 90, 'python').
 project_file('oqlos/shared/logs_query.py', 146, 'python').
@@ -4884,6 +4956,38 @@ project_file('oqlos/tools/xml_import/parser.py', 176, 'python').
 project_file('oqlos/utils/__init__.py', 4, 'python').
 project_file('oqlos/utils/hui_scenario.py', 47, 'python').
 project_file('oqlos/utils/sample_data.py', 74, 'python').
+project_file('packages/oqlos-core/src/oqlos/core/__init__.py', 1, 'python').
+project_file('packages/oqlos-core/src/oqlos/core/_action_motor2.py', 482, 'python').
+project_file('packages/oqlos-core/src/oqlos/core/_compare.py', 41, 'python').
+project_file('packages/oqlos-core/src/oqlos/core/_cql_tokenizer.py', 411, 'python').
+project_file('packages/oqlos-core/src/oqlos/core/_cql_tree_builder.py', 168, 'python').
+project_file('packages/oqlos-core/src/oqlos/core/_dsl_helpers.py', 133, 'python').
+project_file('packages/oqlos-core/src/oqlos/core/_firmware_executor.py', 275, 'python').
+project_file('packages/oqlos-core/src/oqlos/core/_func_resolver.py', 97, 'python').
+project_file('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', 801, 'python').
+project_file('packages/oqlos-core/src/oqlos/core/_line_parsers.py', 262, 'python').
+project_file('packages/oqlos-core/src/oqlos/core/_oql_adapter.py', 496, 'python').
+project_file('packages/oqlos-core/src/oqlos/core/_runtime_settings.py', 32, 'python').
+project_file('packages/oqlos-core/src/oqlos/core/_sensor_evaluator.py', 146, 'python').
+project_file('packages/oqlos-core/src/oqlos/core/_value_normalizers.py', 126, 'python').
+project_file('packages/oqlos-core/src/oqlos/core/base.py', 312, 'python').
+project_file('packages/oqlos-core/src/oqlos/core/cql_parser.py', 468, 'python').
+project_file('packages/oqlos-core/src/oqlos/core/interpreter.py', 691, 'python').
+project_file('packages/oqlos-core/src/oqlos/core/motor2_runtime.py', 210, 'python').
+project_file('packages/oqlos-core/src/oqlos/core/oql_parser.py', 774, 'python').
+project_file('packages/oqlos-core/src/oqlos/core/oql_versioning.py', 73, 'python').
+project_file('packages/oqlos-core/src/oqlos/core/parser.py', 185, 'python').
+project_file('packages/oqlos-core/src/oqlos/core/safe_eval.py', 139, 'python').
+project_file('packages/oqlos-core/src/oqlos/core/state.py', 125, 'python').
+project_file('packages/oqlos-core/src/oqlos/shared/__init__.py', 1, 'python').
+project_file('packages/oqlos-core/src/oqlos/shared/event_store.py', 78, 'python').
+project_file('packages/oqlos-core/tests/test_parse_cql_smoke.py', 22, 'python').
+project_file('packages/oqlos-models/src/oqlos/models/__init__.py', 1, 'python').
+project_file('packages/oqlos-models/src/oqlos/models/dsl_models.py', 88, 'python').
+project_file('packages/oqlos-models/src/oqlos/models/execution.py', 29, 'python').
+project_file('packages/oqlos-models/src/oqlos/models/peripheral.py', 40, 'python').
+project_file('packages/oqlos-models/src/oqlos/models/scenario.py', 36, 'python').
+project_file('packages/oqlos-models/tests/test_import.py', 24, 'python').
 project_file('project.sh', 43, 'shell').
 project_file('scripts/fix_brackets_to_v4.py', 96, 'python').
 project_file('scripts/gen-checksums.sh', 28, 'shell').
@@ -5215,8 +5319,8 @@ python_function('oqlos/api/oql_mqtt.py', 'manage_hardware', 1, 3, 4).
 python_function('oqlos/api/oql_mqtt.py', 'oql_ws', 1, 6, 14).
 python_function('oqlos/api/oql_mqtt.py', '_pump_events', 2, 4, 3).
 python_function('oqlos/api/peripherals.py', 'get_peripheral', 1, 1, 2).
-python_function('oqlos/api/peripherals.py', 'update_peripheral', 2, 5, 5).
-python_function('oqlos/api/peripherals.py', 'set_peripheral', 3, 2, 5).
+python_function('oqlos/api/peripherals.py', 'update_peripheral', 2, 5, 9).
+python_function('oqlos/api/peripherals.py', 'set_peripheral', 3, 2, 8).
 python_function('oqlos/api/peripherals.py', 'reset_peripherals', 0, 1, 2).
 python_function('oqlos/api/plugins.py', 'ensure_plugins_initialized', 0, 2, 2).
 python_function('oqlos/api/plugins.py', '_plugin_health_http_status', 1, 2, 0).
@@ -5264,244 +5368,25 @@ python_function('oqlos/api/state.py', '_make_state_handler', 1, 1, 1).
 python_function('oqlos/api/state.py', 'post_commands', 2, 3, 5).
 python_function('oqlos/api/utils/execution_ctrl.py', 'set_dependencies', 2, 1, 0).
 python_function('oqlos/api/utils/execution_ctrl.py', '_make_getter', 2, 1, 3).
-python_function('oqlos/api/utils/execution_ctrl.py', '_make_exec_handler', 3, 1, 3).
+python_function('oqlos/api/utils/execution_ctrl.py', '_make_exec_handler', 3, 1, 5).
 python_function('oqlos/config.py', 'get_settings', 0, 1, 0).
-python_function('oqlos/core/_action_motor2.py', '_normalize_motor2_target', 1, 1, 2).
-python_function('oqlos/core/_action_motor2.py', '_parse_motor2_direction', 1, 6, 4).
-python_function('oqlos/core/_action_motor2.py', '_parse_motor2_speed_steps', 1, 4, 4).
-python_function('oqlos/core/_action_motor2.py', '_parse_motor2_positive_int', 1, 3, 9).
-python_function('oqlos/core/_action_motor2.py', '_parse_motor2_float', 1, 4, 6).
-python_function('oqlos/core/_action_motor2.py', '_parse_motor2_duration_seconds', 1, 8, 5).
-python_function('oqlos/core/_action_motor2.py', '_parse_motor2_volume_liters', 1, 6, 5).
-python_function('oqlos/core/_action_motor2.py', '_parse_motor2_acceleration', 1, 6, 9).
-python_function('oqlos/core/_action_motor2.py', '_normalize_motor2_value', 1, 2, 4).
-python_function('oqlos/core/_action_motor2.py', '_parse_prefixed_motor2_setting', 1, 13, 5).
-python_function('oqlos/core/_action_motor2.py', '_parse_motor2_reciprocating_setting', 1, 6, 5).
-python_function('oqlos/core/_action_motor2.py', '_parse_motor2_steps', 1, 1, 1).
-python_function('oqlos/core/_action_motor2.py', '_motor2_speed_raw', 1, 1, 2).
-python_function('oqlos/core/_action_motor2.py', '_motor2_max_steps_per_second', 0, 1, 1).
-python_function('oqlos/core/_action_motor2.py', '_motor2_effective_steps_per_second', 1, 1, 4).
-python_function('oqlos/core/_action_motor2.py', '_motor2_speed_for_duration', 3, 1, 1).
-python_function('oqlos/core/_action_motor2.py', '_motor2_acceleration_raw', 2, 1, 2).
-python_function('oqlos/core/_action_motor2.py', '_post_motor2_move_relative', 4, 6, 11).
-python_function('oqlos/core/_action_motor2.py', '_post_motor2_reciprocate', 7, 7, 10).
-python_function('oqlos/core/_action_motor2.py', '_post_motor2_stop', 0, 4, 10).
-python_function('oqlos/core/_action_motor2.py', '_call_motor2_transport', 2, 4, 4).
-python_function('oqlos/core/_action_motor2.py', '_motor2_reciprocating_state', 1, 2, 3).
-python_function('oqlos/core/_action_motor2.py', '_motor2_set_state_value', 5, 1, 1).
-python_function('oqlos/core/_action_motor2.py', '_motor2_state_handler', 3, 1, 3).
-python_function('oqlos/core/_action_motor2.py', '_motor2_do_stop', 3, 4, 3).
-python_function('oqlos/core/_action_motor2.py', '_motor2_build_plan', 3, 12, 6).
-python_function('oqlos/core/_action_motor2.py', '_motor2_step_label', 2, 4, 1).
-python_function('oqlos/core/_action_motor2.py', '_motor2_do_start', 3, 4, 10).
-python_function('oqlos/core/_action_motor2.py', '_handle_motor2_reciprocating_setting', 2, 2, 3).
-python_function('oqlos/core/_action_motor2.py', '_try_exec_motor2_set', 3, 13, 17).
-python_function('oqlos/core/_compare.py', 'resolve_compare', 3, 2, 4).
-python_function('oqlos/core/_compare.py', 'resolve_compare_chain', 2, 3, 3).
-python_function('oqlos/core/_cql_tokenizer.py', '_make_args_parser', 2, 1, 3).
-python_function('oqlos/core/_cql_tokenizer.py', '_make_keyword_parser', 2, 1, 2).
-python_function('oqlos/core/_cql_tokenizer.py', '_make_method_parser', 2, 1, 3).
-python_function('oqlos/core/_cql_tokenizer.py', '_make_stripped_field_parser', 3, 1, 4).
-python_function('oqlos/core/_cql_tokenizer.py', '_make_two_group_parser', 3, 1, 3).
-python_function('oqlos/core/_cql_tokenizer.py', '_make_target_method_args_parser', 2, 1, 4).
-python_function('oqlos/core/_cql_tokenizer.py', '_match_first', 1, 3, 1).
-python_function('oqlos/core/_cql_tokenizer.py', '_parse_condition_value', 1, 4, 4).
-python_function('oqlos/core/_cql_tokenizer.py', '_try_save', 2, 5, 4).
-python_function('oqlos/core/_cql_tokenizer.py', '_try_set', 2, 2, 4).
-python_function('oqlos/core/_cql_tokenizer.py', '_try_condition_range', 2, 5, 5).
-python_function('oqlos/core/_cql_tokenizer.py', '_try_condition_cmp', 2, 5, 5).
-python_function('oqlos/core/_cql_tokenizer.py', '_try_if_else', 2, 3, 5).
-python_function('oqlos/core/_cql_tokenizer.py', '_try_if_block', 2, 4, 7).
-python_function('oqlos/core/_cql_tokenizer.py', '_try_if_standalone', 2, 2, 1).
-python_function('oqlos/core/_cql_tokenizer.py', '_try_else_standalone', 2, 2, 5).
-python_function('oqlos/core/_cql_tokenizer.py', '_try_min_max', 2, 2, 5).
-python_function('oqlos/core/_cql_tokenizer.py', '_try_val', 2, 2, 3).
-python_function('oqlos/core/_cql_tokenizer.py', '_try_loop_start', 2, 5, 7).
-python_function('oqlos/core/_cql_tokenizer.py', '_try_repeat_start', 2, 2, 3).
-python_function('oqlos/core/_cql_tokenizer.py', '_try_repeat_stop', 2, 2, 2).
-python_function('oqlos/core/_cql_tokenizer.py', '_try_sample', 2, 3, 3).
-python_function('oqlos/core/_cql_tokenizer.py', '_try_goto', 2, 2, 4).
-python_function('oqlos/core/_cql_tree_builder.py', '_parse_metadata_kv', 2, 6, 3).
-python_function('oqlos/core/_cql_tree_builder.py', '_parse_scenario_line', 2, 3, 6).
-python_function('oqlos/core/_cql_tree_builder.py', '_parse_scenario_attrs', 2, 4, 4).
-python_function('oqlos/core/_cql_tree_builder.py', '_parse_goal_line', 4, 12, 4).
-python_function('oqlos/core/_cql_tree_builder.py', '_parse_goal_attrs', 2, 4, 3).
-python_function('oqlos/core/_cql_tree_builder.py', '_parse_step_line', 2, 3, 4).
-python_function('oqlos/core/_cql_tree_builder.py', '_parse_action_line', 5, 4, 3).
-python_function('oqlos/core/_cql_tree_builder.py', '_ensure_goal_for_step', 3, 4, 3).
-python_function('oqlos/core/_cql_tree_builder.py', '_ensure_step_for_actions', 2, 3, 2).
-python_function('oqlos/core/_dsl_helpers.py', '_normalize_quote_syntax', 1, 2, 3).
-python_function('oqlos/core/_dsl_helpers.py', '_looks_like_valve_object', 1, 2, 2).
-python_function('oqlos/core/_dsl_helpers.py', '_looks_like_pump_object', 1, 1, 2).
-python_function('oqlos/core/_dsl_helpers.py', '_looks_like_lung_object', 1, 1, 2).
-python_function('oqlos/core/_dsl_helpers.py', '_looks_like_sensor_object', 1, 1, 2).
-python_function('oqlos/core/_dsl_helpers.py', '_map_peripheral', 1, 11, 14).
-python_function('oqlos/core/_dsl_helpers.py', '_parse_numeric_value', 1, 4, 7).
-python_function('oqlos/core/_dsl_helpers.py', '_map_valve_action', 1, 3, 0).
-python_function('oqlos/core/_dsl_helpers.py', '_map_pump_action', 3, 5, 1).
-python_function('oqlos/core/_dsl_helpers.py', '_map_wait_action', 5, 4, 6).
-python_function('oqlos/core/_dsl_helpers.py', '_map_lung_action', 3, 5, 1).
-python_function('oqlos/core/_dsl_helpers.py', '_map_action_value', 5, 7, 8).
-python_function('oqlos/core/_func_resolver.py', '_collect_function_definitions', 1, 13, 8).
-python_function('oqlos/core/_func_resolver.py', '_extract_func_name', 2, 7, 4).
-python_function('oqlos/core/_func_resolver.py', '_guard_recursion', 2, 3, 3).
-python_function('oqlos/core/_func_resolver.py', '_parse_func_call', 7, 5, 4).
-python_function('oqlos/core/_interpreter_actions.py', '_extract_action_tokens', 1, 5, 4).
-python_function('oqlos/core/_interpreter_actions.py', '_drop_command_token', 1, 6, 4).
-python_function('oqlos/core/_interpreter_actions.py', '_coerce_expected_value', 1, 7, 8).
-python_function('oqlos/core/_interpreter_actions.py', '_compare_values', 3, 10, 5).
-python_function('oqlos/core/_interpreter_actions.py', '_oql_quote', 1, 2, 2).
-python_function('oqlos/core/_interpreter_actions.py', '_format_set_command', 2, 1, 1).
-python_function('oqlos/core/_interpreter_actions.py', '_get_nested_value', 2, 9, 6).
-python_function('oqlos/core/_interpreter_actions.py', '_record_failure', 3, 1, 3).
-python_function('oqlos/core/_interpreter_actions.py', '_mark_success', 2, 1, 1).
-python_function('oqlos/core/_interpreter_actions.py', '_normalize_bool', 1, 5, 4).
-python_function('oqlos/core/_interpreter_actions.py', '_lookup_peripheral_state', 2, 5, 5).
-python_function('oqlos/core/_interpreter_actions.py', '_mock_api_response', 2, 6, 4).
-python_function('oqlos/core/_interpreter_actions.py', 'exec_action_task', 2, 1, 2).
-python_function('oqlos/core/_interpreter_actions.py', 'exec_action_save', 2, 4, 4).
-python_function('oqlos/core/_interpreter_actions.py', 'parse_wait_secs', 1, 4, 6).
-python_function('oqlos/core/_interpreter_actions.py', 'exec_action_wait', 2, 3, 3).
-python_function('oqlos/core/_interpreter_actions.py', '_do_sleep', 3, 3, 6).
-python_function('oqlos/core/_interpreter_actions.py', 'exec_action_min_max', 2, 3, 5).
-python_function('oqlos/core/_interpreter_actions.py', 'exec_action_val', 2, 3, 3).
-python_function('oqlos/core/_interpreter_actions.py', 'exec_action_log', 2, 2, 2).
-python_function('oqlos/core/_interpreter_actions.py', 'exec_action_error', 2, 2, 3).
-python_function('oqlos/core/_interpreter_actions.py', 'exec_action_else', 2, 7, 7).
-python_function('oqlos/core/_interpreter_actions.py', 'exec_action_sample', 2, 7, 9).
-python_function('oqlos/core/_interpreter_actions.py', '_resolve_numeric_token', 2, 6, 6).
-python_function('oqlos/core/_interpreter_actions.py', '_func_avg', 1, 2, 2).
-python_function('oqlos/core/_interpreter_actions.py', '_func_sum', 1, 1, 1).
-python_function('oqlos/core/_interpreter_actions.py', '_func_reduce_or_zero', 2, 2, 1).
-python_function('oqlos/core/_interpreter_actions.py', '_func_sub', 1, 2, 1).
-python_function('oqlos/core/_interpreter_actions.py', '_func_div', 3, 4, 1).
-python_function('oqlos/core/_interpreter_actions.py', '_func_mul', 1, 2, 0).
-python_function('oqlos/core/_interpreter_actions.py', 'exec_action_func', 2, 9, 11).
-python_function('oqlos/core/_interpreter_actions.py', 'exec_action_goto', 2, 1, 2).
-python_function('oqlos/core/_interpreter_actions.py', 'exec_action_api', 2, 3, 6).
-python_function('oqlos/core/_interpreter_actions.py', 'exec_action_expect', 2, 3, 4).
-python_function('oqlos/core/_interpreter_actions.py', '_assert_status', 3, 5, 5).
-python_function('oqlos/core/_interpreter_actions.py', '_assert_json', 3, 6, 6).
-python_function('oqlos/core/_interpreter_actions.py', '_assert_sensor', 3, 4, 8).
-python_function('oqlos/core/_interpreter_actions.py', '_assert_valve', 3, 5, 6).
-python_function('oqlos/core/_interpreter_actions.py', 'exec_action_assert', 2, 3, 7).
-python_function('oqlos/core/_interpreter_actions.py', 'exec_action_shell', 2, 13, 11).
-python_function('oqlos/core/_interpreter_actions.py', 'exec_action_var_set', 2, 1, 3).
-python_function('oqlos/core/_interpreter_actions.py', 'exec_action_condition', 2, 2, 2).
-python_function('oqlos/core/_interpreter_actions.py', 'exec_action_if_fail_block', 2, 4, 3).
-python_function('oqlos/core/_interpreter_actions.py', 'exec_action_if_block', 2, 7, 3).
-python_function('oqlos/core/_interpreter_actions.py', 'exec_action_loop_block', 2, 14, 11).
-python_function('oqlos/core/_interpreter_actions.py', 'exec_action_endloop', 2, 1, 1).
-python_function('oqlos/core/_interpreter_actions.py', 'exec_action_set', 2, 9, 10).
-python_function('oqlos/core/_interpreter_actions.py', '_exec_set_wait', 3, 3, 4).
-python_function('oqlos/core/_interpreter_actions.py', 'exec_action_action', 2, 2, 3).
-python_function('oqlos/core/_line_parsers.py', '_parse_task_part', 2, 10, 8).
-python_function('oqlos/core/_line_parsers.py', '_parse_pump_line', 2, 6, 7).
-python_function('oqlos/core/_line_parsers.py', '_set_valve_step', 4, 4, 4).
-python_function('oqlos/core/_line_parsers.py', '_set_pump_step', 4, 4, 3).
-python_function('oqlos/core/_line_parsers.py', '_set_lung_step', 4, 4, 3).
-python_function('oqlos/core/_line_parsers.py', '_extract_set_params', 1, 7, 3).
-python_function('oqlos/core/_line_parsers.py', '_parse_set_line', 2, 10, 12).
-python_function('oqlos/core/_line_parsers.py', '_parse_inline_task', 3, 5, 6).
-python_function('oqlos/core/_line_parsers.py', '_parse_action_line', 3, 10, 10).
-python_function('oqlos/core/_line_parsers.py', '_parse_if_condition', 3, 9, 9).
-python_function('oqlos/core/_oql_adapter.py', '_fmt_value', 2, 2, 1).
-python_function('oqlos/core/_oql_adapter.py', '_scenarios_root', 0, 1, 2).
-python_function('oqlos/core/_oql_adapter.py', '_resolve_include', 2, 6, 6).
-python_function('oqlos/core/_oql_adapter.py', '_substitute_args', 2, 3, 2).
-python_function('oqlos/core/_oql_adapter.py', '_load_includes', 4, 12, 11).
-python_function('oqlos/core/_oql_adapter.py', '_lower_include', 3, 1, 0).
-python_function('oqlos/core/_oql_adapter.py', '_lower_call', 3, 6, 7).
-python_function('oqlos/core/_oql_adapter.py', '_lower_set', 3, 3, 6).
-python_function('oqlos/core/_oql_adapter.py', '_lower_get', 3, 1, 1).
-python_function('oqlos/core/_oql_adapter.py', '_lower_wait', 3, 2, 2).
-python_function('oqlos/core/_oql_adapter.py', '_lower_save', 3, 1, 1).
-python_function('oqlos/core/_oql_adapter.py', '_make_lower_minmax', 1, 1, 3).
-python_function('oqlos/core/_oql_adapter.py', '_lower_check', 3, 5, 4).
-python_function('oqlos/core/_oql_adapter.py', '_lower_if_delta', 3, 10, 6).
-python_function('oqlos/core/_oql_adapter.py', '_lower_sample', 3, 2, 2).
-python_function('oqlos/core/_oql_adapter.py', '_lower_log', 3, 1, 2).
-python_function('oqlos/core/_oql_adapter.py', '_lower_error_cmd', 3, 1, 2).
-python_function('oqlos/core/_oql_adapter.py', '_lower_repeat', 3, 3, 2).
-python_function('oqlos/core/_oql_adapter.py', '_cmd_to_actions', 3, 2, 3).
-python_function('oqlos/core/_oql_adapter.py', '_parse_macro_line', 3, 8, 10).
-python_function('oqlos/core/_oql_adapter.py', '_has_anonymous_named_goal', 1, 8, 5).
-python_function('oqlos/core/_oql_adapter.py', 'is_flat_oql', 1, 8, 4).
-python_function('oqlos/core/_oql_adapter.py', 'oql_doc_to_cql', 1, 12, 16).
-python_function('oqlos/core/_oql_adapter.py', '_split_device_field', 2, 4, 3).
-python_function('oqlos/core/_oql_adapter.py', 'parse_flat_oql', 2, 1, 2).
-python_function('oqlos/core/cql_parser.py', 'parse_cql', 2, 2, 6).
-python_function('oqlos/core/cql_parser.py', '_collect_all_goals', 1, 2, 2).
-python_function('oqlos/core/cql_parser.py', '_validate_intervals', 1, 6, 1).
-python_function('oqlos/core/cql_parser.py', 'validate_cql', 1, 5, 4).
+python_function('oqlos/core/cqrs/__init__.py', 'build_command_bus', 1, 3, 3).
+python_function('oqlos/core/cqrs/execution.py', 'handle_start_execution', 1, 1, 1).
+python_function('oqlos/core/cqrs/execution.py', 'handle_start_goal', 1, 1, 1).
+python_function('oqlos/core/cqrs/execution.py', 'handle_start_step', 1, 1, 1).
+python_function('oqlos/core/cqrs/execution.py', 'handle_update_progress', 1, 1, 1).
+python_function('oqlos/core/cqrs/execution.py', 'handle_set_execution_status', 1, 1, 1).
+python_function('oqlos/core/cqrs/peripheral.py', 'handle_register_peripheral', 1, 1, 1).
+python_function('oqlos/core/cqrs/peripheral.py', 'handle_set_peripheral_value', 1, 1, 1).
+python_function('oqlos/core/cqrs/peripheral.py', 'handle_set_peripheral_mode', 1, 1, 1).
+python_function('oqlos/core/cqrs/peripheral.py', 'handle_set_peripheral_status', 1, 1, 1).
+python_function('oqlos/core/cqrs/telemetry.py', 'record_sensor_readings', 2, 4, 4).
+python_function('oqlos/core/cqrs/telemetry.py', 'latest_sensor_values', 1, 1, 2).
+python_function('oqlos/core/cqrs/telemetry.py', 'sensor_history', 2, 3, 2).
 python_function('oqlos/core/executor.py', '_resolve_compare', 2, 1, 2).
 python_function('oqlos/core/executor.py', '_resolve_name_or_attr', 2, 4, 5).
 python_function('oqlos/core/executor.py', '_safe_resolve', 2, 14, 8).
 python_function('oqlos/core/executor.py', 'safe_eval_condition', 2, 2, 5).
-python_function('oqlos/core/motor2_runtime.py', '_coerce_int', 2, 3, 6).
-python_function('oqlos/core/motor2_runtime.py', '_coerce_float', 2, 2, 4).
-python_function('oqlos/core/motor2_runtime.py', '_pick', 1, 4, 0).
-python_function('oqlos/core/motor2_runtime.py', 'motor2_max_steps_per_second', 1, 2, 2).
-python_function('oqlos/core/motor2_runtime.py', 'normalize_motor2_runtime_config', 1, 12, 10).
-python_function('oqlos/core/motor2_runtime.py', 'motor2_speed_for_duration', 3, 1, 4).
-python_function('oqlos/core/motor2_runtime.py', 'motor2_acceleration_raw', 3, 2, 3).
-python_function('oqlos/core/motor2_runtime.py', 'motor2_speed_raw', 2, 1, 3).
-python_function('oqlos/core/motor2_runtime.py', '_normalize_motor2_direction', 1, 4, 2).
-python_function('oqlos/core/motor2_runtime.py', '_compute_motor2_cycles', 3, 3, 4).
-python_function('oqlos/core/motor2_runtime.py', '_compute_motor2_speed', 6, 4, 5).
-python_function('oqlos/core/motor2_runtime.py', 'build_motor2_reciprocating_plan', 1, 7, 8).
-python_function('oqlos/core/oql_parser.py', 'to_num', 1, 2, 4).
-python_function('oqlos/core/oql_parser.py', '_compact_duration', 1, 2, 3).
-python_function('oqlos/core/oql_parser.py', 'parse_duration', 1, 3, 5).
-python_function('oqlos/core/oql_parser.py', 'duration_to_ms', 1, 1, 2).
-python_function('oqlos/core/oql_parser.py', '_unescape', 1, 1, 2).
-python_function('oqlos/core/oql_parser.py', 'tokenize', 1, 13, 8).
-python_function('oqlos/core/oql_parser.py', '_require', 5, 2, 2).
-python_function('oqlos/core/oql_parser.py', '_split_value_unit', 1, 2, 2).
-python_function('oqlos/core/oql_parser.py', '_split_set_value_unit', 1, 2, 2).
-python_function('oqlos/core/oql_parser.py', 'parse_SET', 3, 3, 7).
-python_function('oqlos/core/oql_parser.py', '_make_single_field_parser', 3, 1, 2).
-python_function('oqlos/core/oql_parser.py', 'parse_WAIT', 3, 2, 7).
-python_function('oqlos/core/oql_parser.py', 'parse_IF_DELTA', 3, 6, 12).
-python_function('oqlos/core/oql_parser.py', 'parse_CHECK', 3, 2, 6).
-python_function('oqlos/core/oql_parser.py', 'parse_IF', 3, 2, 6).
-python_function('oqlos/core/oql_parser.py', '_make_minmax_parser', 1, 1, 3).
-python_function('oqlos/core/oql_parser.py', 'parse_SAMPLE', 3, 3, 6).
-python_function('oqlos/core/oql_parser.py', '_make_message_parser', 1, 1, 2).
-python_function('oqlos/core/oql_parser.py', '_make_call_parser', 3, 1, 2).
-python_function('oqlos/core/oql_parser.py', 'parse_REPEAT', 3, 3, 2).
-python_function('oqlos/core/oql_parser.py', '_line_indent', 1, 2, 4).
-python_function('oqlos/core/oql_parser.py', '_expand_repeat_block_lines', 1, 8, 11).
-python_function('oqlos/core/oql_parser.py', '_expand_repeat_blocks', 1, 2, 2).
-python_function('oqlos/core/oql_parser.py', '_handle_top_level_line', 4, 6, 11).
-python_function('oqlos/core/oql_parser.py', '_handle_block_header', 4, 8, 8).
-python_function('oqlos/core/oql_parser.py', '_handle_macro_body_line', 3, 4, 5).
-python_function('oqlos/core/oql_parser.py', '_handle_set_name', 2, 5, 6).
-python_function('oqlos/core/oql_parser.py', '_handle_modifier_cmd', 6, 5, 3).
-python_function('oqlos/core/oql_parser.py', '_parse_and_append_command', 6, 5, 7).
-python_function('oqlos/core/oql_parser.py', '_validate_oql_version', 2, 8, 4).
-python_function('oqlos/core/oql_parser.py', '_check_unnamed_goals', 2, 5, 1).
-python_function('oqlos/core/oql_parser.py', 'parse_oql', 2, 14, 18).
-python_function('oqlos/core/oql_parser.py', 'format_doc', 1, 9, 3).
-python_function('oqlos/core/oql_versioning.py', 'first_meaningful_line', 1, 4, 4).
-python_function('oqlos/core/oql_versioning.py', 'extract_declared_version', 1, 3, 4).
-python_function('oqlos/core/oql_versioning.py', 'resolve_oql_version', 1, 2, 3).
-python_function('oqlos/core/oql_versioning.py', 'is_supported_oql_version', 1, 1, 0).
-python_function('oqlos/core/parser.py', '_dispatch_simple_parser', 4, 3, 3).
-python_function('oqlos/core/parser.py', '_try_action_or_condition', 5, 5, 4).
-python_function('oqlos/core/parser.py', '_parse_runtime_line', 7, 9, 10).
-python_function('oqlos/core/parser.py', 'parse_dsl_to_goal_with_issues', 2, 13, 13).
-python_function('oqlos/core/parser.py', 'parse_dsl_to_goal', 2, 1, 1).
-python_function('oqlos/core/safe_eval.py', 'safe_eval', 2, 3, 4).
-python_function('oqlos/core/safe_eval.py', '_eval_constant', 2, 1, 0).
-python_function('oqlos/core/safe_eval.py', '_eval_name', 2, 3, 1).
-python_function('oqlos/core/safe_eval.py', '_eval_unary_op', 2, 3, 4).
-python_function('oqlos/core/safe_eval.py', '_eval_bin_op', 2, 2, 5).
-python_function('oqlos/core/safe_eval.py', '_eval_compare', 2, 1, 2).
-python_function('oqlos/core/safe_eval.py', '_eval_bool_op', 2, 4, 6).
-python_function('oqlos/core/safe_eval.py', '_eval_call', 2, 4, 4).
-python_function('oqlos/core/safe_eval.py', '_eval_if_exp', 2, 2, 1).
-python_function('oqlos/core/safe_eval.py', '_eval_node', 2, 2, 4).
 python_function('oqlos/dsl/schema.py', '_normalize_name_list', 1, 6, 5).
 python_function('oqlos/dsl/schema.py', '_build_inferred_object_function_map', 2, 4, 2).
 python_function('oqlos/dsl/schema.py', '_build_inferred_param_unit_map', 2, 7, 2).
@@ -6032,6 +5917,245 @@ python_function('oqlos/tools/xml_import/parser.py', '_parse_operation', 4, 6, 9)
 python_function('oqlos/tools/xml_import/parser.py', '_parse_operation_params', 3, 9, 12).
 python_function('oqlos/utils/hui_scenario.py', 'register_hui_test_scenario', 1, 2, 4).
 python_function('oqlos/utils/sample_data.py', 'load_sample_scenarios', 1, 1, 4).
+python_function('packages/oqlos-core/src/oqlos/core/_action_motor2.py', '_normalize_motor2_target', 1, 1, 2).
+python_function('packages/oqlos-core/src/oqlos/core/_action_motor2.py', '_parse_motor2_direction', 1, 6, 4).
+python_function('packages/oqlos-core/src/oqlos/core/_action_motor2.py', '_parse_motor2_speed_steps', 1, 4, 4).
+python_function('packages/oqlos-core/src/oqlos/core/_action_motor2.py', '_parse_motor2_positive_int', 1, 3, 9).
+python_function('packages/oqlos-core/src/oqlos/core/_action_motor2.py', '_parse_motor2_float', 1, 4, 6).
+python_function('packages/oqlos-core/src/oqlos/core/_action_motor2.py', '_parse_motor2_duration_seconds', 1, 8, 5).
+python_function('packages/oqlos-core/src/oqlos/core/_action_motor2.py', '_parse_motor2_volume_liters', 1, 6, 5).
+python_function('packages/oqlos-core/src/oqlos/core/_action_motor2.py', '_parse_motor2_acceleration', 1, 6, 9).
+python_function('packages/oqlos-core/src/oqlos/core/_action_motor2.py', '_normalize_motor2_value', 1, 2, 4).
+python_function('packages/oqlos-core/src/oqlos/core/_action_motor2.py', '_parse_prefixed_motor2_setting', 1, 13, 5).
+python_function('packages/oqlos-core/src/oqlos/core/_action_motor2.py', '_parse_motor2_reciprocating_setting', 1, 6, 5).
+python_function('packages/oqlos-core/src/oqlos/core/_action_motor2.py', '_parse_motor2_steps', 1, 1, 1).
+python_function('packages/oqlos-core/src/oqlos/core/_action_motor2.py', '_motor2_speed_raw', 1, 1, 2).
+python_function('packages/oqlos-core/src/oqlos/core/_action_motor2.py', '_motor2_max_steps_per_second', 0, 1, 1).
+python_function('packages/oqlos-core/src/oqlos/core/_action_motor2.py', '_motor2_effective_steps_per_second', 1, 1, 4).
+python_function('packages/oqlos-core/src/oqlos/core/_action_motor2.py', '_motor2_speed_for_duration', 3, 1, 1).
+python_function('packages/oqlos-core/src/oqlos/core/_action_motor2.py', '_motor2_acceleration_raw', 2, 1, 2).
+python_function('packages/oqlos-core/src/oqlos/core/_action_motor2.py', '_post_motor2_move_relative', 4, 6, 10).
+python_function('packages/oqlos-core/src/oqlos/core/_action_motor2.py', '_post_motor2_reciprocate', 7, 7, 9).
+python_function('packages/oqlos-core/src/oqlos/core/_action_motor2.py', '_post_motor2_stop', 0, 4, 9).
+python_function('packages/oqlos-core/src/oqlos/core/_action_motor2.py', '_call_motor2_transport', 2, 4, 4).
+python_function('packages/oqlos-core/src/oqlos/core/_action_motor2.py', '_motor2_reciprocating_state', 1, 2, 3).
+python_function('packages/oqlos-core/src/oqlos/core/_action_motor2.py', '_motor2_set_state_value', 5, 1, 1).
+python_function('packages/oqlos-core/src/oqlos/core/_action_motor2.py', '_motor2_state_handler', 3, 1, 3).
+python_function('packages/oqlos-core/src/oqlos/core/_action_motor2.py', '_motor2_do_stop', 3, 4, 3).
+python_function('packages/oqlos-core/src/oqlos/core/_action_motor2.py', '_motor2_build_plan', 3, 12, 6).
+python_function('packages/oqlos-core/src/oqlos/core/_action_motor2.py', '_motor2_step_label', 2, 4, 1).
+python_function('packages/oqlos-core/src/oqlos/core/_action_motor2.py', '_motor2_do_start', 3, 4, 10).
+python_function('packages/oqlos-core/src/oqlos/core/_action_motor2.py', '_handle_motor2_reciprocating_setting', 2, 2, 3).
+python_function('packages/oqlos-core/src/oqlos/core/_action_motor2.py', '_try_exec_motor2_set', 3, 13, 17).
+python_function('packages/oqlos-core/src/oqlos/core/_compare.py', 'resolve_compare', 3, 2, 4).
+python_function('packages/oqlos-core/src/oqlos/core/_compare.py', 'resolve_compare_chain', 2, 3, 3).
+python_function('packages/oqlos-core/src/oqlos/core/_cql_tokenizer.py', '_make_args_parser', 2, 1, 3).
+python_function('packages/oqlos-core/src/oqlos/core/_cql_tokenizer.py', '_make_keyword_parser', 2, 1, 2).
+python_function('packages/oqlos-core/src/oqlos/core/_cql_tokenizer.py', '_make_method_parser', 2, 1, 3).
+python_function('packages/oqlos-core/src/oqlos/core/_cql_tokenizer.py', '_make_stripped_field_parser', 3, 1, 4).
+python_function('packages/oqlos-core/src/oqlos/core/_cql_tokenizer.py', '_make_two_group_parser', 3, 1, 3).
+python_function('packages/oqlos-core/src/oqlos/core/_cql_tokenizer.py', '_make_target_method_args_parser', 2, 1, 4).
+python_function('packages/oqlos-core/src/oqlos/core/_cql_tokenizer.py', '_match_first', 1, 3, 1).
+python_function('packages/oqlos-core/src/oqlos/core/_cql_tokenizer.py', '_parse_condition_value', 1, 4, 4).
+python_function('packages/oqlos-core/src/oqlos/core/_cql_tokenizer.py', '_try_save', 2, 5, 4).
+python_function('packages/oqlos-core/src/oqlos/core/_cql_tokenizer.py', '_try_set', 2, 2, 4).
+python_function('packages/oqlos-core/src/oqlos/core/_cql_tokenizer.py', '_try_condition_range', 2, 5, 5).
+python_function('packages/oqlos-core/src/oqlos/core/_cql_tokenizer.py', '_try_condition_cmp', 2, 5, 5).
+python_function('packages/oqlos-core/src/oqlos/core/_cql_tokenizer.py', '_try_if_else', 2, 3, 5).
+python_function('packages/oqlos-core/src/oqlos/core/_cql_tokenizer.py', '_try_if_block', 2, 4, 7).
+python_function('packages/oqlos-core/src/oqlos/core/_cql_tokenizer.py', '_try_if_standalone', 2, 2, 1).
+python_function('packages/oqlos-core/src/oqlos/core/_cql_tokenizer.py', '_try_else_standalone', 2, 2, 5).
+python_function('packages/oqlos-core/src/oqlos/core/_cql_tokenizer.py', '_try_min_max', 2, 2, 5).
+python_function('packages/oqlos-core/src/oqlos/core/_cql_tokenizer.py', '_try_val', 2, 2, 3).
+python_function('packages/oqlos-core/src/oqlos/core/_cql_tokenizer.py', '_try_loop_start', 2, 5, 7).
+python_function('packages/oqlos-core/src/oqlos/core/_cql_tokenizer.py', '_try_repeat_start', 2, 2, 3).
+python_function('packages/oqlos-core/src/oqlos/core/_cql_tokenizer.py', '_try_repeat_stop', 2, 2, 2).
+python_function('packages/oqlos-core/src/oqlos/core/_cql_tokenizer.py', '_try_sample', 2, 3, 3).
+python_function('packages/oqlos-core/src/oqlos/core/_cql_tokenizer.py', '_try_goto', 2, 2, 4).
+python_function('packages/oqlos-core/src/oqlos/core/_cql_tree_builder.py', '_parse_metadata_kv', 2, 6, 3).
+python_function('packages/oqlos-core/src/oqlos/core/_cql_tree_builder.py', '_parse_scenario_line', 2, 3, 6).
+python_function('packages/oqlos-core/src/oqlos/core/_cql_tree_builder.py', '_parse_scenario_attrs', 2, 4, 4).
+python_function('packages/oqlos-core/src/oqlos/core/_cql_tree_builder.py', '_parse_goal_line', 4, 12, 4).
+python_function('packages/oqlos-core/src/oqlos/core/_cql_tree_builder.py', '_parse_goal_attrs', 2, 4, 3).
+python_function('packages/oqlos-core/src/oqlos/core/_cql_tree_builder.py', '_parse_step_line', 2, 3, 4).
+python_function('packages/oqlos-core/src/oqlos/core/_cql_tree_builder.py', '_parse_action_line', 5, 4, 3).
+python_function('packages/oqlos-core/src/oqlos/core/_cql_tree_builder.py', '_ensure_goal_for_step', 3, 4, 3).
+python_function('packages/oqlos-core/src/oqlos/core/_cql_tree_builder.py', '_ensure_step_for_actions', 2, 3, 2).
+python_function('packages/oqlos-core/src/oqlos/core/_dsl_helpers.py', '_normalize_quote_syntax', 1, 2, 3).
+python_function('packages/oqlos-core/src/oqlos/core/_dsl_helpers.py', '_looks_like_valve_object', 1, 2, 2).
+python_function('packages/oqlos-core/src/oqlos/core/_dsl_helpers.py', '_looks_like_pump_object', 1, 1, 2).
+python_function('packages/oqlos-core/src/oqlos/core/_dsl_helpers.py', '_looks_like_lung_object', 1, 1, 2).
+python_function('packages/oqlos-core/src/oqlos/core/_dsl_helpers.py', '_looks_like_sensor_object', 1, 1, 2).
+python_function('packages/oqlos-core/src/oqlos/core/_dsl_helpers.py', '_map_peripheral', 1, 11, 14).
+python_function('packages/oqlos-core/src/oqlos/core/_dsl_helpers.py', '_parse_numeric_value', 1, 4, 7).
+python_function('packages/oqlos-core/src/oqlos/core/_dsl_helpers.py', '_map_valve_action', 1, 3, 0).
+python_function('packages/oqlos-core/src/oqlos/core/_dsl_helpers.py', '_map_pump_action', 3, 5, 1).
+python_function('packages/oqlos-core/src/oqlos/core/_dsl_helpers.py', '_map_wait_action', 5, 4, 6).
+python_function('packages/oqlos-core/src/oqlos/core/_dsl_helpers.py', '_map_lung_action', 3, 5, 1).
+python_function('packages/oqlos-core/src/oqlos/core/_dsl_helpers.py', '_map_action_value', 5, 7, 8).
+python_function('packages/oqlos-core/src/oqlos/core/_firmware_executor.py', '_load_peripheral_map', 0, 1, 0).
+python_function('packages/oqlos-core/src/oqlos/core/_firmware_executor.py', '_plugin_gateway_cls', 0, 1, 0).
+python_function('packages/oqlos-core/src/oqlos/core/_func_resolver.py', '_collect_function_definitions', 1, 13, 8).
+python_function('packages/oqlos-core/src/oqlos/core/_func_resolver.py', '_extract_func_name', 2, 7, 4).
+python_function('packages/oqlos-core/src/oqlos/core/_func_resolver.py', '_guard_recursion', 2, 3, 3).
+python_function('packages/oqlos-core/src/oqlos/core/_func_resolver.py', '_parse_func_call', 7, 5, 4).
+python_function('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', '_extract_action_tokens', 1, 5, 4).
+python_function('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', '_drop_command_token', 1, 6, 4).
+python_function('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', '_coerce_expected_value', 1, 7, 8).
+python_function('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', '_compare_values', 3, 10, 5).
+python_function('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', '_oql_quote', 1, 2, 2).
+python_function('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', '_format_set_command', 2, 1, 1).
+python_function('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', '_get_nested_value', 2, 9, 6).
+python_function('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', '_record_failure', 3, 1, 3).
+python_function('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', '_mark_success', 2, 1, 1).
+python_function('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', '_normalize_bool', 1, 5, 4).
+python_function('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', '_lookup_peripheral_state', 2, 5, 5).
+python_function('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', '_mock_api_response', 2, 6, 4).
+python_function('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', 'exec_action_task', 2, 1, 2).
+python_function('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', 'exec_action_save', 2, 4, 4).
+python_function('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', 'parse_wait_secs', 1, 4, 6).
+python_function('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', 'exec_action_wait', 2, 3, 3).
+python_function('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', '_do_sleep', 3, 3, 6).
+python_function('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', 'exec_action_min_max', 2, 3, 5).
+python_function('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', 'exec_action_val', 2, 3, 3).
+python_function('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', 'exec_action_log', 2, 2, 2).
+python_function('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', 'exec_action_error', 2, 2, 3).
+python_function('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', 'exec_action_else', 2, 7, 7).
+python_function('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', 'exec_action_sample', 2, 7, 9).
+python_function('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', '_resolve_numeric_token', 2, 6, 6).
+python_function('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', '_func_avg', 1, 2, 2).
+python_function('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', '_func_sum', 1, 1, 1).
+python_function('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', '_func_reduce_or_zero', 2, 2, 1).
+python_function('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', '_func_sub', 1, 2, 1).
+python_function('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', '_func_div', 3, 4, 1).
+python_function('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', '_func_mul', 1, 2, 0).
+python_function('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', 'exec_action_func', 2, 9, 11).
+python_function('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', 'exec_action_goto', 2, 1, 2).
+python_function('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', 'exec_action_api', 2, 3, 6).
+python_function('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', 'exec_action_expect', 2, 3, 4).
+python_function('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', '_assert_status', 3, 5, 5).
+python_function('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', '_assert_json', 3, 6, 6).
+python_function('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', '_assert_sensor', 3, 4, 8).
+python_function('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', '_assert_valve', 3, 5, 6).
+python_function('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', 'exec_action_assert', 2, 3, 7).
+python_function('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', 'exec_action_shell', 2, 13, 11).
+python_function('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', 'exec_action_var_set', 2, 1, 3).
+python_function('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', 'exec_action_condition', 2, 2, 2).
+python_function('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', 'exec_action_if_fail_block', 2, 4, 3).
+python_function('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', 'exec_action_if_block', 2, 7, 3).
+python_function('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', 'exec_action_loop_block', 2, 14, 11).
+python_function('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', 'exec_action_endloop', 2, 1, 1).
+python_function('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', 'exec_action_set', 2, 9, 10).
+python_function('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', '_exec_set_wait', 3, 3, 4).
+python_function('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', 'exec_action_action', 2, 2, 3).
+python_function('packages/oqlos-core/src/oqlos/core/_line_parsers.py', '_parse_task_part', 2, 10, 8).
+python_function('packages/oqlos-core/src/oqlos/core/_line_parsers.py', '_parse_pump_line', 2, 6, 7).
+python_function('packages/oqlos-core/src/oqlos/core/_line_parsers.py', '_set_valve_step', 4, 4, 4).
+python_function('packages/oqlos-core/src/oqlos/core/_line_parsers.py', '_set_pump_step', 4, 4, 3).
+python_function('packages/oqlos-core/src/oqlos/core/_line_parsers.py', '_set_lung_step', 4, 4, 3).
+python_function('packages/oqlos-core/src/oqlos/core/_line_parsers.py', '_extract_set_params', 1, 7, 3).
+python_function('packages/oqlos-core/src/oqlos/core/_line_parsers.py', '_parse_set_line', 2, 10, 12).
+python_function('packages/oqlos-core/src/oqlos/core/_line_parsers.py', '_parse_inline_task', 3, 5, 6).
+python_function('packages/oqlos-core/src/oqlos/core/_line_parsers.py', '_parse_action_line', 3, 10, 10).
+python_function('packages/oqlos-core/src/oqlos/core/_line_parsers.py', '_parse_if_condition', 3, 9, 9).
+python_function('packages/oqlos-core/src/oqlos/core/_oql_adapter.py', '_fmt_value', 2, 2, 1).
+python_function('packages/oqlos-core/src/oqlos/core/_oql_adapter.py', '_scenarios_root', 0, 3, 3).
+python_function('packages/oqlos-core/src/oqlos/core/_oql_adapter.py', '_resolve_include', 2, 6, 6).
+python_function('packages/oqlos-core/src/oqlos/core/_oql_adapter.py', '_substitute_args', 2, 3, 2).
+python_function('packages/oqlos-core/src/oqlos/core/_oql_adapter.py', '_load_includes', 4, 12, 11).
+python_function('packages/oqlos-core/src/oqlos/core/_oql_adapter.py', '_lower_include', 3, 1, 0).
+python_function('packages/oqlos-core/src/oqlos/core/_oql_adapter.py', '_lower_call', 3, 6, 7).
+python_function('packages/oqlos-core/src/oqlos/core/_oql_adapter.py', '_lower_set', 3, 3, 6).
+python_function('packages/oqlos-core/src/oqlos/core/_oql_adapter.py', '_lower_get', 3, 1, 1).
+python_function('packages/oqlos-core/src/oqlos/core/_oql_adapter.py', '_lower_wait', 3, 2, 2).
+python_function('packages/oqlos-core/src/oqlos/core/_oql_adapter.py', '_lower_save', 3, 1, 1).
+python_function('packages/oqlos-core/src/oqlos/core/_oql_adapter.py', '_make_lower_minmax', 1, 1, 3).
+python_function('packages/oqlos-core/src/oqlos/core/_oql_adapter.py', '_lower_check', 3, 5, 4).
+python_function('packages/oqlos-core/src/oqlos/core/_oql_adapter.py', '_lower_if_delta', 3, 10, 6).
+python_function('packages/oqlos-core/src/oqlos/core/_oql_adapter.py', '_lower_sample', 3, 2, 2).
+python_function('packages/oqlos-core/src/oqlos/core/_oql_adapter.py', '_lower_log', 3, 1, 2).
+python_function('packages/oqlos-core/src/oqlos/core/_oql_adapter.py', '_lower_error_cmd', 3, 1, 2).
+python_function('packages/oqlos-core/src/oqlos/core/_oql_adapter.py', '_lower_repeat', 3, 3, 2).
+python_function('packages/oqlos-core/src/oqlos/core/_oql_adapter.py', '_cmd_to_actions', 3, 2, 3).
+python_function('packages/oqlos-core/src/oqlos/core/_oql_adapter.py', '_parse_macro_line', 3, 8, 10).
+python_function('packages/oqlos-core/src/oqlos/core/_oql_adapter.py', '_has_anonymous_named_goal', 1, 8, 5).
+python_function('packages/oqlos-core/src/oqlos/core/_oql_adapter.py', 'is_flat_oql', 1, 8, 4).
+python_function('packages/oqlos-core/src/oqlos/core/_oql_adapter.py', 'oql_doc_to_cql', 1, 12, 16).
+python_function('packages/oqlos-core/src/oqlos/core/_oql_adapter.py', '_split_device_field', 2, 4, 3).
+python_function('packages/oqlos-core/src/oqlos/core/_oql_adapter.py', 'parse_flat_oql', 2, 1, 2).
+python_function('packages/oqlos-core/src/oqlos/core/_runtime_settings.py', 'lung_motor_url', 0, 3, 2).
+python_function('packages/oqlos-core/src/oqlos/core/_runtime_settings.py', 'pump_flow_full_scale_lpm', 1, 7, 7).
+python_function('packages/oqlos-core/src/oqlos/core/cql_parser.py', 'parse_cql', 2, 2, 6).
+python_function('packages/oqlos-core/src/oqlos/core/cql_parser.py', '_collect_all_goals', 1, 2, 2).
+python_function('packages/oqlos-core/src/oqlos/core/cql_parser.py', '_validate_intervals', 1, 6, 1).
+python_function('packages/oqlos-core/src/oqlos/core/cql_parser.py', 'validate_cql', 1, 5, 4).
+python_function('packages/oqlos-core/src/oqlos/core/motor2_runtime.py', '_coerce_int', 2, 3, 6).
+python_function('packages/oqlos-core/src/oqlos/core/motor2_runtime.py', '_coerce_float', 2, 2, 4).
+python_function('packages/oqlos-core/src/oqlos/core/motor2_runtime.py', '_pick', 1, 4, 0).
+python_function('packages/oqlos-core/src/oqlos/core/motor2_runtime.py', 'motor2_max_steps_per_second', 1, 2, 2).
+python_function('packages/oqlos-core/src/oqlos/core/motor2_runtime.py', 'normalize_motor2_runtime_config', 1, 12, 10).
+python_function('packages/oqlos-core/src/oqlos/core/motor2_runtime.py', 'motor2_speed_for_duration', 3, 1, 4).
+python_function('packages/oqlos-core/src/oqlos/core/motor2_runtime.py', 'motor2_acceleration_raw', 3, 2, 3).
+python_function('packages/oqlos-core/src/oqlos/core/motor2_runtime.py', 'motor2_speed_raw', 2, 1, 3).
+python_function('packages/oqlos-core/src/oqlos/core/motor2_runtime.py', '_normalize_motor2_direction', 1, 4, 2).
+python_function('packages/oqlos-core/src/oqlos/core/motor2_runtime.py', '_compute_motor2_cycles', 3, 3, 4).
+python_function('packages/oqlos-core/src/oqlos/core/motor2_runtime.py', '_compute_motor2_speed', 6, 4, 5).
+python_function('packages/oqlos-core/src/oqlos/core/motor2_runtime.py', 'build_motor2_reciprocating_plan', 1, 7, 8).
+python_function('packages/oqlos-core/src/oqlos/core/oql_parser.py', 'to_num', 1, 2, 4).
+python_function('packages/oqlos-core/src/oqlos/core/oql_parser.py', '_compact_duration', 1, 2, 3).
+python_function('packages/oqlos-core/src/oqlos/core/oql_parser.py', 'parse_duration', 1, 3, 5).
+python_function('packages/oqlos-core/src/oqlos/core/oql_parser.py', 'duration_to_ms', 1, 1, 2).
+python_function('packages/oqlos-core/src/oqlos/core/oql_parser.py', '_unescape', 1, 1, 2).
+python_function('packages/oqlos-core/src/oqlos/core/oql_parser.py', 'tokenize', 1, 13, 8).
+python_function('packages/oqlos-core/src/oqlos/core/oql_parser.py', '_require', 5, 2, 2).
+python_function('packages/oqlos-core/src/oqlos/core/oql_parser.py', '_split_value_unit', 1, 2, 2).
+python_function('packages/oqlos-core/src/oqlos/core/oql_parser.py', '_split_set_value_unit', 1, 2, 2).
+python_function('packages/oqlos-core/src/oqlos/core/oql_parser.py', 'parse_SET', 3, 3, 7).
+python_function('packages/oqlos-core/src/oqlos/core/oql_parser.py', '_make_single_field_parser', 3, 1, 2).
+python_function('packages/oqlos-core/src/oqlos/core/oql_parser.py', 'parse_WAIT', 3, 2, 7).
+python_function('packages/oqlos-core/src/oqlos/core/oql_parser.py', 'parse_IF_DELTA', 3, 6, 12).
+python_function('packages/oqlos-core/src/oqlos/core/oql_parser.py', 'parse_CHECK', 3, 2, 6).
+python_function('packages/oqlos-core/src/oqlos/core/oql_parser.py', 'parse_IF', 3, 2, 6).
+python_function('packages/oqlos-core/src/oqlos/core/oql_parser.py', '_make_minmax_parser', 1, 1, 3).
+python_function('packages/oqlos-core/src/oqlos/core/oql_parser.py', 'parse_SAMPLE', 3, 3, 6).
+python_function('packages/oqlos-core/src/oqlos/core/oql_parser.py', '_make_message_parser', 1, 1, 2).
+python_function('packages/oqlos-core/src/oqlos/core/oql_parser.py', '_make_call_parser', 3, 1, 2).
+python_function('packages/oqlos-core/src/oqlos/core/oql_parser.py', 'parse_REPEAT', 3, 3, 2).
+python_function('packages/oqlos-core/src/oqlos/core/oql_parser.py', '_line_indent', 1, 2, 4).
+python_function('packages/oqlos-core/src/oqlos/core/oql_parser.py', '_expand_repeat_block_lines', 1, 8, 11).
+python_function('packages/oqlos-core/src/oqlos/core/oql_parser.py', '_expand_repeat_blocks', 1, 2, 2).
+python_function('packages/oqlos-core/src/oqlos/core/oql_parser.py', '_handle_top_level_line', 4, 6, 11).
+python_function('packages/oqlos-core/src/oqlos/core/oql_parser.py', '_handle_block_header', 4, 8, 8).
+python_function('packages/oqlos-core/src/oqlos/core/oql_parser.py', '_handle_macro_body_line', 3, 4, 5).
+python_function('packages/oqlos-core/src/oqlos/core/oql_parser.py', '_handle_set_name', 2, 5, 6).
+python_function('packages/oqlos-core/src/oqlos/core/oql_parser.py', '_handle_modifier_cmd', 6, 5, 3).
+python_function('packages/oqlos-core/src/oqlos/core/oql_parser.py', '_parse_and_append_command', 6, 5, 7).
+python_function('packages/oqlos-core/src/oqlos/core/oql_parser.py', '_validate_oql_version', 2, 8, 4).
+python_function('packages/oqlos-core/src/oqlos/core/oql_parser.py', '_check_unnamed_goals', 2, 5, 1).
+python_function('packages/oqlos-core/src/oqlos/core/oql_parser.py', 'parse_oql', 2, 14, 18).
+python_function('packages/oqlos-core/src/oqlos/core/oql_parser.py', 'format_doc', 1, 9, 3).
+python_function('packages/oqlos-core/src/oqlos/core/oql_versioning.py', 'first_meaningful_line', 1, 4, 4).
+python_function('packages/oqlos-core/src/oqlos/core/oql_versioning.py', 'extract_declared_version', 1, 3, 4).
+python_function('packages/oqlos-core/src/oqlos/core/oql_versioning.py', 'resolve_oql_version', 1, 2, 3).
+python_function('packages/oqlos-core/src/oqlos/core/oql_versioning.py', 'is_supported_oql_version', 1, 1, 0).
+python_function('packages/oqlos-core/src/oqlos/core/parser.py', '_dispatch_simple_parser', 4, 3, 3).
+python_function('packages/oqlos-core/src/oqlos/core/parser.py', '_try_action_or_condition', 5, 5, 4).
+python_function('packages/oqlos-core/src/oqlos/core/parser.py', '_parse_runtime_line', 7, 9, 10).
+python_function('packages/oqlos-core/src/oqlos/core/parser.py', 'parse_dsl_to_goal_with_issues', 2, 13, 13).
+python_function('packages/oqlos-core/src/oqlos/core/parser.py', 'parse_dsl_to_goal', 2, 1, 1).
+python_function('packages/oqlos-core/src/oqlos/core/safe_eval.py', 'safe_eval', 2, 3, 4).
+python_function('packages/oqlos-core/src/oqlos/core/safe_eval.py', '_eval_constant', 2, 1, 0).
+python_function('packages/oqlos-core/src/oqlos/core/safe_eval.py', '_eval_name', 2, 3, 1).
+python_function('packages/oqlos-core/src/oqlos/core/safe_eval.py', '_eval_unary_op', 2, 3, 4).
+python_function('packages/oqlos-core/src/oqlos/core/safe_eval.py', '_eval_bin_op', 2, 2, 5).
+python_function('packages/oqlos-core/src/oqlos/core/safe_eval.py', '_eval_compare', 2, 1, 2).
+python_function('packages/oqlos-core/src/oqlos/core/safe_eval.py', '_eval_bool_op', 2, 4, 6).
+python_function('packages/oqlos-core/src/oqlos/core/safe_eval.py', '_eval_call', 2, 4, 4).
+python_function('packages/oqlos-core/src/oqlos/core/safe_eval.py', '_eval_if_exp', 2, 2, 1).
+python_function('packages/oqlos-core/src/oqlos/core/safe_eval.py', '_eval_node', 2, 2, 4).
+python_function('packages/oqlos-core/tests/test_parse_cql_smoke.py', 'test_parse_cql_smoke', 0, 4, 2).
+python_function('packages/oqlos-core/tests/test_parse_cql_smoke.py', 'test_validate_cql_smoke', 0, 2, 2).
+python_function('packages/oqlos-models/tests/test_import.py', 'test_models_importable', 0, 5, 4).
 python_function('scripts/fix_brackets_to_v4.py', 'needs_migration', 1, 6, 1).
 python_function('scripts/fix_brackets_to_v4.py', 'main', 0, 14, 16).
 python_function('scripts/migrate_to_v4.py', 'find_oql_files', 1, 6, 6).
@@ -6512,190 +6636,88 @@ python_class('oqlos/api/oql_mqtt.py', 'OqlExecuteRequest').
 python_class('oqlos/api/oql_mqtt.py', 'OqlManageRequest').
 python_class('oqlos/api/oql_mqtt.py', 'OqlExecuteResponse').
 python_class('oqlos/config.py', 'Settings').
-python_class('oqlos/core/_firmware_executor.py', 'FirmwareExecutor').
-python_method('FirmwareExecutor', '__init__', 7, 3, 1).
-python_method('FirmwareExecutor', '_get_firmware', 0, 3, 2).
-python_method('FirmwareExecutor', '_resolve_gateway_result', 2, 9, 11).
-python_method('FirmwareExecutor', '_is_success', 1, 2, 3).
-python_method('FirmwareExecutor', 'resolve_peripheral_id', 1, 1, 4).
-python_method('FirmwareExecutor', 'normalize_peripheral_value', 2, 6, 4).
-python_method('FirmwareExecutor', 'refresh_sensors_from_firmware', 1, 2, 3).
-python_method('FirmwareExecutor', 'execute_firmware_action', 2, 3, 2).
-python_method('FirmwareExecutor', '_execute_plugin_action', 2, 11, 11).
-python_method('FirmwareExecutor', '_execute_legacy_firmware_action', 2, 3, 6).
-python_method('FirmwareExecutor', 'exec_set_peripheral', 2, 4, 6).
-python_class('oqlos/core/_oql_adapter.py', '_MacroRegistry').
-python_method('_MacroRegistry', '__init__', 0, 1, 0).
-python_method('_MacroRegistry', 'register', 1, 1, 1).
-python_method('_MacroRegistry', 'get', 1, 1, 1).
-python_class('oqlos/core/_sensor_evaluator.py', 'SensorEvaluator').
-python_method('SensorEvaluator', '__init__', 3, 3, 2).
-python_method('SensorEvaluator', 'collect_sensor_constraints', 1, 10, 5).
-python_method('SensorEvaluator', 'seed_sensors_from_conditions', 1, 10, 4).
-python_method('SensorEvaluator', 'auto_mock_sensor', 3, 8, 2).
-python_method('SensorEvaluator', 'compare_sensor', 3, 6, 1).
-python_method('SensorEvaluator', 'get_sensor_value', 1, 2, 2).
-python_class('oqlos/core/_value_normalizers.py', 'ValueNormalizer').
-python_method('ValueNormalizer', '__init__', 1, 1, 0).
-python_method('ValueNormalizer', 'coerce_float', 1, 5, 6).
-python_method('ValueNormalizer', '_get_pump_flow_full_scale_lpm', 0, 7, 4).
-python_method('ValueNormalizer', 'normalize_pump_power', 1, 10, 10).
-python_method('ValueNormalizer', 'normalize_valve_value', 1, 7, 8).
-python_method('ValueNormalizer', 'normalize_lung_value', 1, 4, 7).
-python_method('ValueNormalizer', 'coerce_generic_peripheral_value', 1, 6, 5).
-python_class('oqlos/core/base.py', 'StepStatus').
-python_class('oqlos/core/base.py', 'StepResult').
-python_class('oqlos/core/base.py', 'ScriptResult').
-python_method('ScriptResult', 'passed', 0, 3, 1).
-python_method('ScriptResult', 'failed', 0, 3, 1).
-python_method('ScriptResult', 'summary', 0, 2, 1).
-python_class('oqlos/core/base.py', 'VariableStore').
-python_method('VariableStore', '__init__', 2, 1, 1).
-python_method('VariableStore', 'set', 3, 4, 2).
-python_method('VariableStore', 'get', 2, 3, 1).
-python_method('VariableStore', 'has', 1, 3, 1).
-python_method('VariableStore', 'all', 1, 3, 3).
-python_method('VariableStore', 'clear', 0, 1, 1).
-python_method('VariableStore', 'interpolate', 1, 1, 4).
-python_class('oqlos/core/base.py', 'InterpreterOutput').
-python_method('InterpreterOutput', '__init__', 3, 1, 0).
-python_method('InterpreterOutput', 'emit', 2, 5, 3).
-python_method('InterpreterOutput', '_broadcast_event', 2, 6, 5).
-python_method('InterpreterOutput', '_emit_status', 1, 2, 3).
-python_method('InterpreterOutput', 'info', 1, 1, 1).
-python_method('InterpreterOutput', 'ok', 1, 1, 1).
-python_method('InterpreterOutput', 'fail', 1, 1, 1).
-python_method('InterpreterOutput', 'warn', 1, 1, 1).
-python_method('InterpreterOutput', 'error', 1, 1, 1).
-python_method('InterpreterOutput', 'step', 2, 2, 3).
-python_method('InterpreterOutput', 'output_yaml', 0, 4, 2).
-python_class('oqlos/core/base.py', 'BaseInterpreter').
-python_method('BaseInterpreter', '__init__', 4, 1, 3).
-python_method('BaseInterpreter', 'parse', 2, 1, 0).
-python_method('BaseInterpreter', 'execute', 1, 1, 0).
-python_method('BaseInterpreter', 'run', 2, 7, 8).
-python_method('BaseInterpreter', 'run_file', 1, 1, 3).
-python_method('BaseInterpreter', 'strip_comments', 1, 3, 3).
-python_class('oqlos/core/base.py', 'EventBridge').
-python_method('EventBridge', '__init__', 1, 1, 0).
-python_method('EventBridge', 'connect', 0, 2, 1).
-python_method('EventBridge', 'disconnect', 0, 3, 1).
-python_method('EventBridge', 'send_event', 2, 4, 7).
-python_method('EventBridge', 'connected', 0, 1, 0).
-python_class('oqlos/core/cql_parser.py', '_ParseState').
-python_method('_ParseState', '__init__', 2, 1, 1).
-python_method('_ParseState', 'parse', 0, 2, 2).
-python_method('_ParseState', '_peek_next_significant_indent', 0, 4, 4).
-python_method('_ParseState', '_flush_pending_inline_if', 0, 5, 1).
-python_method('_ParseState', '_attach_pending_inline_if', 2, 8, 2).
-python_method('_ParseState', '_get_line_info', 0, 1, 3).
-python_method('_ParseState', '_process_line', 0, 8, 7).
-python_method('_ParseState', '_try_skip_block', 2, 5, 2).
-python_method('_ParseState', '_try_intervals_block', 3, 6, 5).
-python_method('_ParseState', '_try_top_level', 3, 2, 1).
-python_method('_ParseState', '_handle_scenario', 1, 2, 3).
-python_method('_ParseState', '_handle_scenario_attrs', 1, 1, 1).
-python_method('_ParseState', '_handle_goal', 3, 3, 4).
-python_method('_ParseState', '_handle_goal_attrs', 1, 1, 1).
-python_method('_ParseState', '_handle_current_attrs', 4, 3, 1).
-python_method('_ParseState', '_handle_step', 1, 2, 4).
-python_method('_ParseState', '_init_block_stack', 0, 1, 0).
-python_method('_ParseState', '_add_action_to_parent', 1, 7, 1).
-python_method('_ParseState', '_append_parent_stack_action', 1, 4, 2).
-python_method('_ParseState', '_pop_block_with_warning', 2, 4, 2).
-python_method('_ParseState', '_handle_block_control', 1, 7, 4).
-python_method('_ParseState', '_handle_else_block', 0, 3, 2).
-python_method('_ParseState', '_try_handle_structure_levels', 3, 6, 5).
-python_method('_ParseState', '_handle_inline_if_logic', 2, 5, 2).
-python_method('_ParseState', '_handle_action_dispatch', 2, 5, 3).
-python_method('_ParseState', '_try_hierarchy', 3, 7, 6).
+python_class('oqlos/core/cqrs/aggregate.py', 'Aggregate').
+python_method('Aggregate', '__init__', 1, 1, 0).
+python_method('Aggregate', 'apply', 1, 1, 0).
+python_method('Aggregate', 'load', 1, 2, 2).
+python_method('Aggregate', 'rehydrate', 3, 1, 2).
+python_class('oqlos/core/cqrs/commands.py', 'Command').
+python_class('oqlos/core/cqrs/commands.py', 'CommandBus').
+python_method('CommandBus', '__init__', 1, 1, 0).
+python_method('CommandBus', 'register', 2, 1, 0).
+python_method('CommandBus', 'dispatch', 1, 2, 5).
+python_class('oqlos/core/cqrs/events.py', 'Event').
+python_method('Event', 'event_type', 0, 1, 1).
+python_class('oqlos/core/cqrs/events.py', 'EventStore').
+python_method('EventStore', '__init__', 0, 1, 1).
+python_method('EventStore', 'append', 1, 2, 5).
+python_method('EventStore', 'append_many', 1, 2, 1).
+python_method('EventStore', 'replay', 1, 1, 2).
+python_method('EventStore', 'all_events', 0, 1, 3).
+python_method('EventStore', 'stream_ids', 0, 1, 2).
+python_method('EventStore', 'subscribe', 1, 1, 1).
+python_class('oqlos/core/cqrs/execution.py', 'ExecutionStarted').
+python_class('oqlos/core/cqrs/execution.py', 'ExecutionGoalStarted').
+python_class('oqlos/core/cqrs/execution.py', 'ExecutionStepStarted').
+python_class('oqlos/core/cqrs/execution.py', 'ExecutionProgressUpdated').
+python_class('oqlos/core/cqrs/execution.py', 'ExecutionStatusChanged').
+python_class('oqlos/core/cqrs/execution.py', 'ExecutionAggregate').
+python_method('ExecutionAggregate', '__init__', 1, 1, 2).
+python_method('ExecutionAggregate', 'apply', 1, 3, 3).
+python_class('oqlos/core/cqrs/execution.py', 'StartExecutionCommand').
+python_class('oqlos/core/cqrs/execution.py', 'StartGoalCommand').
+python_class('oqlos/core/cqrs/execution.py', 'StartStepCommand').
+python_class('oqlos/core/cqrs/execution.py', 'UpdateProgressCommand').
+python_class('oqlos/core/cqrs/execution.py', 'SetExecutionStatusCommand').
+python_class('oqlos/core/cqrs/execution.py', 'ExecutionsProjection').
+python_method('ExecutionsProjection', '__init__', 0, 1, 0).
+python_method('ExecutionsProjection', 'apply', 1, 3, 4).
+python_class('oqlos/core/cqrs/peripheral.py', 'PeripheralRegistered').
+python_class('oqlos/core/cqrs/peripheral.py', 'PeripheralValueSet').
+python_class('oqlos/core/cqrs/peripheral.py', 'PeripheralModeChanged').
+python_class('oqlos/core/cqrs/peripheral.py', 'PeripheralStatusChanged').
+python_class('oqlos/core/cqrs/peripheral.py', 'PeripheralAggregate').
+python_method('PeripheralAggregate', '__init__', 1, 1, 2).
+python_method('PeripheralAggregate', 'apply', 1, 3, 4).
+python_class('oqlos/core/cqrs/peripheral.py', 'RegisterPeripheralCommand').
+python_class('oqlos/core/cqrs/peripheral.py', 'SetPeripheralValueCommand').
+python_class('oqlos/core/cqrs/peripheral.py', 'SetPeripheralModeCommand').
+python_class('oqlos/core/cqrs/peripheral.py', 'SetPeripheralStatusCommand').
+python_class('oqlos/core/cqrs/peripheral.py', 'PeripheralsProjection').
+python_method('PeripheralsProjection', '__init__', 0, 1, 0).
+python_method('PeripheralsProjection', 'apply', 1, 3, 4).
+python_class('oqlos/core/cqrs/projection.py', 'Projection').
+python_method('Projection', 'apply', 1, 1, 0).
+python_method('Projection', 'rebuild', 1, 2, 2).
+python_method('Projection', 'attach', 1, 1, 2).
+python_class('oqlos/core/cqrs/telemetry.py', 'SensorObserved').
+python_class('oqlos/core/cqrs/telemetry.py', 'SensorTelemetryProjection').
+python_method('SensorTelemetryProjection', '__init__', 0, 1, 0).
+python_method('SensorTelemetryProjection', 'apply', 1, 2, 1).
 python_class('oqlos/core/executor.py', 'ScenarioOrchestrator').
 python_method('ScenarioOrchestrator', '__init__', 2, 2, 1).
+python_method('ScenarioOrchestrator', 'current_execution', 0, 2, 1).
 python_method('ScenarioOrchestrator', '_sanitize_identifier', 1, 1, 1).
 python_method('ScenarioOrchestrator', '_build_eval_context', 0, 5, 2).
 python_method('ScenarioOrchestrator', '_sanitize_expression', 1, 3, 3).
 python_method('ScenarioOrchestrator', '_build_step_plan', 1, 4, 1).
-python_method('ScenarioOrchestrator', '_execute_goal_steps', 7, 6, 5).
-python_method('ScenarioOrchestrator', 'execute_scenario', 4, 10, 11).
+python_method('ScenarioOrchestrator', '_execute_goal_steps', 6, 6, 8).
+python_method('ScenarioOrchestrator', 'execute_scenario', 4, 10, 14).
 python_method('ScenarioOrchestrator', 'execute_step', 3, 10, 9).
 python_method('ScenarioOrchestrator', '_execute_lung_step', 2, 5, 4).
-python_method('ScenarioOrchestrator', '_execute_valve_step', 2, 6, 3).
-python_method('ScenarioOrchestrator', '_execute_pump_step', 3, 6, 6).
+python_method('ScenarioOrchestrator', '_execute_valve_step', 2, 6, 5).
+python_method('ScenarioOrchestrator', '_execute_pump_step', 3, 6, 8).
 python_method('ScenarioOrchestrator', '_execute_wait_step', 2, 2, 1).
-python_method('ScenarioOrchestrator', '_execute_sensor_read_step', 1, 4, 2).
+python_method('ScenarioOrchestrator', '_execute_sensor_read_step', 1, 4, 4).
 python_method('ScenarioOrchestrator', '_execute_validate_step', 1, 7, 5).
-python_method('ScenarioOrchestrator', 'update_dependent_sensors', 1, 11, 5).
+python_method('ScenarioOrchestrator', 'update_dependent_sensors', 1, 11, 7).
 python_method('ScenarioOrchestrator', 'validate_goal', 1, 5, 2).
 python_method('ScenarioOrchestrator', 'log_event', 2, 1, 3).
-python_class('oqlos/core/interpreter.py', 'CqlInterpreter').
-python_method('CqlInterpreter', '__init__', 11, 1, 5).
-python_method('CqlInterpreter', 'sensor_values', 0, 1, 0).
-python_method('CqlInterpreter', 'sensor_values', 1, 1, 0).
-python_method('CqlInterpreter', '_firmware', 0, 1, 0).
-python_method('CqlInterpreter', '_firmware', 1, 1, 0).
-python_method('CqlInterpreter', '_firmware_url', 0, 1, 0).
-python_method('CqlInterpreter', '_firmware_url', 1, 1, 0).
-python_method('CqlInterpreter', '_coerce_float', 1, 1, 1).
-python_method('CqlInterpreter', '_resolve_peripheral_id', 1, 1, 1).
-python_method('CqlInterpreter', '_get_pump_flow_full_scale_lpm', 0, 1, 1).
-python_method('CqlInterpreter', '_normalize_pump_power', 1, 1, 1).
-python_method('CqlInterpreter', '_normalize_valve_value', 1, 1, 1).
-python_method('CqlInterpreter', '_normalize_lung_value', 1, 1, 1).
-python_method('CqlInterpreter', 'parse', 2, 3, 5).
-python_method('CqlInterpreter', '_print_header', 2, 3, 2).
-python_method('CqlInterpreter', '_collect_warnings', 2, 3, 2).
-python_method('CqlInterpreter', '_planned_step_results', 1, 3, 2).
-python_method('CqlInterpreter', '_run_validation_mode', 4, 1, 5).
-python_method('CqlInterpreter', '_collect_all_goals', 1, 4, 1).
-python_method('CqlInterpreter', '_execute_single_goal', 2, 4, 4).
-python_method('CqlInterpreter', '_execute_all_goals', 1, 2, 1).
-python_method('CqlInterpreter', '_build_script_result', 2, 2, 5).
-python_method('CqlInterpreter', 'execute', 1, 4, 9).
-python_method('CqlInterpreter', '_execute_step', 2, 5, 5).
-python_method('CqlInterpreter', '_execute_action', 1, 4, 4).
-python_method('CqlInterpreter', '_exec_flat_action', 1, 6, 6).
-python_method('CqlInterpreter', '_do_sleep', 2, 1, 1).
-python_method('CqlInterpreter', '_normalize_peripheral_value', 2, 1, 1).
-python_method('CqlInterpreter', '_coerce_generic_peripheral_value', 1, 1, 1).
-python_method('CqlInterpreter', '_exec_set_peripheral', 2, 4, 6).
-python_method('CqlInterpreter', '_get_firmware', 0, 1, 1).
-python_method('CqlInterpreter', '_execute_firmware_action', 2, 1, 1).
-python_method('CqlInterpreter', '_execute_plugin_action', 2, 1, 1).
-python_method('CqlInterpreter', '_execute_legacy_firmware_action', 2, 1, 1).
-python_method('CqlInterpreter', '_refresh_sensors_from_firmware', 0, 1, 1).
-python_method('CqlInterpreter', '_auto_mock_sensor', 3, 1, 1).
-python_method('CqlInterpreter', '_compare_sensor', 3, 1, 1).
-python_method('CqlInterpreter', '_resolve_sensor_value', 1, 7, 5).
-python_method('CqlInterpreter', '_resolve_delta_sensor_value', 1, 6, 5).
-python_method('CqlInterpreter', '_resolve_windowed_delta_sensor_value', 2, 11, 8).
-python_method('CqlInterpreter', '_extract_window_seconds', 1, 5, 5).
-python_method('CqlInterpreter', '_resolve_condition_rhs', 3, 8, 9).
-python_method('CqlInterpreter', '_evaluate_resolved_condition', 0, 7, 7).
-python_method('CqlInterpreter', '_eval_condition_clause', 2, 11, 9).
-python_method('CqlInterpreter', '_evaluate_inline_condition_expression', 1, 4, 3).
-python_method('CqlInterpreter', '_tokenize_condition_expression', 1, 4, 3).
-python_method('CqlInterpreter', '_aggregate_condition_results', 2, 4, 4).
-python_method('CqlInterpreter', '_apply_connector', 3, 5, 0).
-python_method('CqlInterpreter', '_finalize_condition_result', 4, 3, 3).
-python_method('CqlInterpreter', '_evaluate_range_condition', 2, 7, 5).
-python_method('CqlInterpreter', '_evaluate_condition', 1, 11, 7).
-python_class('oqlos/core/motor2_runtime.py', 'Motor2RuntimeConfig').
-python_class('oqlos/core/motor2_runtime.py', 'Motor2ReciprocatingPlan').
-python_method('Motor2ReciprocatingPlan', 'speed_was_clamped', 0, 1, 0).
-python_class('oqlos/core/oql_parser.py', 'OqlCmd').
-python_method('OqlCmd', '__repr__', 0, 3, 2).
-python_class('oqlos/core/oql_parser.py', 'OqlBlock').
-python_class('oqlos/core/oql_parser.py', 'OqlDoc').
-python_method('OqlDoc', 'goals', 0, 3, 0).
-python_method('OqlDoc', 'configs', 0, 3, 0).
-python_method('OqlDoc', 'macros', 0, 3, 0).
-python_method('OqlDoc', 'funcs', 0, 3, 0).
-python_class('oqlos/core/oql_versioning.py', 'OqlVersionInfo').
-python_method('OqlVersionInfo', 'is_current', 0, 1, 0).
-python_class('oqlos/core/safe_eval.py', 'SafeEvalError').
 python_class('oqlos/core/state.py', 'StateManager').
-python_method('StateManager', '__init__', 0, 1, 1).
-python_method('StateManager', 'initialize_peripherals', 0, 3, 3).
+python_method('StateManager', '__init__', 0, 1, 6).
+python_method('StateManager', 'peripherals', 0, 1, 0).
+python_method('StateManager', 'executions', 0, 1, 0).
+python_method('StateManager', 'initialize_peripherals', 0, 3, 4).
 python_method('StateManager', 'broadcast_event', 1, 4, 3).
 python_class('oqlos/dsl/schema.py', 'DslDialect').
 python_class('oqlos/dsl/schema.py', 'DslItem').
@@ -7038,25 +7060,6 @@ python_method('OqlMqttAgent', '_on_payload', 2, 4, 4).
 python_method('OqlMqttAgent', '_handle_request', 1, 5, 10).
 python_method('OqlMqttAgent', '_run_manage', 1, 3, 7).
 python_method('OqlMqttAgent', '_run_oql', 1, 5, 9).
-python_class('oqlos/models/dsl_models.py', 'CqlMetadata').
-python_class('oqlos/models/dsl_models.py', 'CqlInterval').
-python_class('oqlos/models/dsl_models.py', 'CqlCondition').
-python_class('oqlos/models/dsl_models.py', 'CqlAction').
-python_class('oqlos/models/dsl_models.py', 'CqlStep').
-python_class('oqlos/models/dsl_models.py', 'CqlGoal').
-python_class('oqlos/models/dsl_models.py', 'CqlScenario').
-python_class('oqlos/models/dsl_models.py', 'CqlDocument').
-python_class('oqlos/models/execution.py', 'ExecutionRequest').
-python_class('oqlos/models/execution.py', 'ExecutionStatus').
-python_class('oqlos/models/execution.py', 'CommandEnvelope').
-python_class('oqlos/models/peripheral.py', 'PeripheralType').
-python_class('oqlos/models/peripheral.py', 'PeripheralStatus').
-python_class('oqlos/models/peripheral.py', 'PeripheralMode').
-python_class('oqlos/models/peripheral.py', 'Peripheral').
-python_class('oqlos/models/scenario.py', 'Step').
-python_class('oqlos/models/scenario.py', 'ValidationRule').
-python_class('oqlos/models/scenario.py', 'Goal').
-python_class('oqlos/models/scenario.py', 'Scenario').
 python_class('oqlos/reporters/junit.py', 'JUnitReporter').
 python_method('JUnitReporter', 'generate', 2, 7, 11).
 python_method('JUnitReporter', '_add_testcase', 3, 8, 1).
@@ -7072,18 +7075,6 @@ python_method('EventServer', 'handle_client', 1, 7, 8).
 python_method('EventServer', '_handle_message', 2, 6, 10).
 python_method('EventServer', '_normalize_event', 1, 3, 5).
 python_method('EventServer', 'start', 0, 2, 4).
-python_class('oqlos/shared/event_store.py', 'EventStore').
-python_method('EventStore', '__init__', 1, 3, 2).
-python_method('EventStore', 'append', 1, 2, 2).
-python_method('EventStore', 'get_all', 0, 1, 1).
-python_method('EventStore', 'get_recent', 1, 1, 0).
-python_method('EventStore', 'get_by_correlation', 1, 3, 1).
-python_method('EventStore', 'clear', 0, 2, 1).
-python_method('EventStore', 'to_json', 0, 1, 1).
-python_method('EventStore', 'from_json', 1, 1, 1).
-python_method('EventStore', 'count', 0, 1, 1).
-python_method('EventStore', '_save', 0, 2, 2).
-python_method('EventStore', '_load', 0, 2, 2).
 python_class('oqlos/shared/file_ops.py', 'PathEscapeError').
 python_class('oqlos/shared/logs_query.py', 'LogsQueryService').
 python_method('LogsQueryService', '__init__', 1, 1, 0).
@@ -7099,6 +7090,204 @@ python_class('oqlos/tools/xml_import/models.py', 'Output').
 python_class('oqlos/tools/xml_import/models.py', 'Operation').
 python_class('oqlos/tools/xml_import/models.py', 'TestRun').
 python_class('oqlos/tools/xml_import/models.py', 'DeviceReport').
+python_class('packages/oqlos-core/src/oqlos/core/_firmware_executor.py', 'FirmwareExecutor').
+python_method('FirmwareExecutor', '__init__', 7, 3, 1).
+python_method('FirmwareExecutor', '_get_firmware', 0, 3, 2).
+python_method('FirmwareExecutor', '_resolve_gateway_result', 2, 9, 11).
+python_method('FirmwareExecutor', '_is_success', 1, 2, 3).
+python_method('FirmwareExecutor', 'resolve_peripheral_id', 1, 1, 5).
+python_method('FirmwareExecutor', 'normalize_peripheral_value', 2, 6, 4).
+python_method('FirmwareExecutor', 'refresh_sensors_from_firmware', 1, 2, 3).
+python_method('FirmwareExecutor', 'execute_firmware_action', 2, 3, 2).
+python_method('FirmwareExecutor', '_execute_plugin_action', 2, 11, 11).
+python_method('FirmwareExecutor', '_execute_legacy_firmware_action', 2, 3, 6).
+python_method('FirmwareExecutor', 'exec_set_peripheral', 2, 4, 6).
+python_class('packages/oqlos-core/src/oqlos/core/_oql_adapter.py', '_MacroRegistry').
+python_method('_MacroRegistry', '__init__', 0, 1, 0).
+python_method('_MacroRegistry', 'register', 1, 1, 1).
+python_method('_MacroRegistry', 'get', 1, 1, 1).
+python_class('packages/oqlos-core/src/oqlos/core/_sensor_evaluator.py', 'SensorEvaluator').
+python_method('SensorEvaluator', '__init__', 3, 3, 2).
+python_method('SensorEvaluator', 'collect_sensor_constraints', 1, 10, 5).
+python_method('SensorEvaluator', 'seed_sensors_from_conditions', 1, 10, 4).
+python_method('SensorEvaluator', 'auto_mock_sensor', 3, 8, 2).
+python_method('SensorEvaluator', 'compare_sensor', 3, 6, 1).
+python_method('SensorEvaluator', 'get_sensor_value', 1, 2, 2).
+python_class('packages/oqlos-core/src/oqlos/core/_value_normalizers.py', 'ValueNormalizer').
+python_method('ValueNormalizer', '__init__', 1, 1, 0).
+python_method('ValueNormalizer', 'coerce_float', 1, 5, 6).
+python_method('ValueNormalizer', '_get_pump_flow_full_scale_lpm', 0, 7, 3).
+python_method('ValueNormalizer', 'normalize_pump_power', 1, 10, 10).
+python_method('ValueNormalizer', 'normalize_valve_value', 1, 7, 8).
+python_method('ValueNormalizer', 'normalize_lung_value', 1, 4, 7).
+python_method('ValueNormalizer', 'coerce_generic_peripheral_value', 1, 6, 5).
+python_class('packages/oqlos-core/src/oqlos/core/base.py', 'StepStatus').
+python_class('packages/oqlos-core/src/oqlos/core/base.py', 'StepResult').
+python_class('packages/oqlos-core/src/oqlos/core/base.py', 'ScriptResult').
+python_method('ScriptResult', 'passed', 0, 3, 1).
+python_method('ScriptResult', 'failed', 0, 3, 1).
+python_method('ScriptResult', 'summary', 0, 2, 1).
+python_class('packages/oqlos-core/src/oqlos/core/base.py', 'VariableStore').
+python_method('VariableStore', '__init__', 2, 1, 1).
+python_method('VariableStore', 'set', 3, 4, 2).
+python_method('VariableStore', 'get', 2, 3, 1).
+python_method('VariableStore', 'has', 1, 3, 1).
+python_method('VariableStore', 'all', 1, 3, 3).
+python_method('VariableStore', 'clear', 0, 1, 1).
+python_method('VariableStore', 'interpolate', 1, 1, 4).
+python_class('packages/oqlos-core/src/oqlos/core/base.py', 'InterpreterOutput').
+python_method('InterpreterOutput', '__init__', 3, 1, 0).
+python_method('InterpreterOutput', 'emit', 2, 5, 3).
+python_method('InterpreterOutput', '_broadcast_event', 2, 6, 5).
+python_method('InterpreterOutput', '_emit_status', 1, 2, 3).
+python_method('InterpreterOutput', 'info', 1, 1, 1).
+python_method('InterpreterOutput', 'ok', 1, 1, 1).
+python_method('InterpreterOutput', 'fail', 1, 1, 1).
+python_method('InterpreterOutput', 'warn', 1, 1, 1).
+python_method('InterpreterOutput', 'error', 1, 1, 1).
+python_method('InterpreterOutput', 'step', 2, 2, 3).
+python_method('InterpreterOutput', 'output_yaml', 0, 4, 2).
+python_class('packages/oqlos-core/src/oqlos/core/base.py', 'BaseInterpreter').
+python_method('BaseInterpreter', '__init__', 4, 1, 3).
+python_method('BaseInterpreter', 'parse', 2, 1, 0).
+python_method('BaseInterpreter', 'execute', 1, 1, 0).
+python_method('BaseInterpreter', 'run', 2, 7, 8).
+python_method('BaseInterpreter', 'run_file', 1, 1, 3).
+python_method('BaseInterpreter', 'strip_comments', 1, 3, 3).
+python_class('packages/oqlos-core/src/oqlos/core/base.py', 'EventBridge').
+python_method('EventBridge', '__init__', 1, 1, 0).
+python_method('EventBridge', 'connect', 0, 2, 1).
+python_method('EventBridge', 'disconnect', 0, 3, 1).
+python_method('EventBridge', 'send_event', 2, 4, 7).
+python_method('EventBridge', 'connected', 0, 1, 0).
+python_class('packages/oqlos-core/src/oqlos/core/cql_parser.py', '_ParseState').
+python_method('_ParseState', '__init__', 2, 1, 1).
+python_method('_ParseState', 'parse', 0, 2, 2).
+python_method('_ParseState', '_peek_next_significant_indent', 0, 4, 4).
+python_method('_ParseState', '_flush_pending_inline_if', 0, 5, 1).
+python_method('_ParseState', '_attach_pending_inline_if', 2, 8, 2).
+python_method('_ParseState', '_get_line_info', 0, 1, 3).
+python_method('_ParseState', '_process_line', 0, 8, 7).
+python_method('_ParseState', '_try_skip_block', 2, 5, 2).
+python_method('_ParseState', '_try_intervals_block', 3, 6, 5).
+python_method('_ParseState', '_try_top_level', 3, 2, 1).
+python_method('_ParseState', '_handle_scenario', 1, 2, 3).
+python_method('_ParseState', '_handle_scenario_attrs', 1, 1, 1).
+python_method('_ParseState', '_handle_goal', 3, 3, 4).
+python_method('_ParseState', '_handle_goal_attrs', 1, 1, 1).
+python_method('_ParseState', '_handle_current_attrs', 4, 3, 1).
+python_method('_ParseState', '_handle_step', 1, 2, 4).
+python_method('_ParseState', '_init_block_stack', 0, 1, 0).
+python_method('_ParseState', '_add_action_to_parent', 1, 7, 1).
+python_method('_ParseState', '_append_parent_stack_action', 1, 4, 2).
+python_method('_ParseState', '_pop_block_with_warning', 2, 4, 2).
+python_method('_ParseState', '_handle_block_control', 1, 7, 4).
+python_method('_ParseState', '_handle_else_block', 0, 3, 2).
+python_method('_ParseState', '_try_handle_structure_levels', 3, 6, 5).
+python_method('_ParseState', '_handle_inline_if_logic', 2, 5, 2).
+python_method('_ParseState', '_handle_action_dispatch', 2, 5, 3).
+python_method('_ParseState', '_try_hierarchy', 3, 7, 6).
+python_class('packages/oqlos-core/src/oqlos/core/interpreter.py', 'CqlInterpreter').
+python_method('CqlInterpreter', '__init__', 11, 1, 5).
+python_method('CqlInterpreter', 'sensor_values', 0, 1, 0).
+python_method('CqlInterpreter', 'sensor_values', 1, 1, 0).
+python_method('CqlInterpreter', '_firmware', 0, 1, 0).
+python_method('CqlInterpreter', '_firmware', 1, 1, 0).
+python_method('CqlInterpreter', '_firmware_url', 0, 1, 0).
+python_method('CqlInterpreter', '_firmware_url', 1, 1, 0).
+python_method('CqlInterpreter', '_coerce_float', 1, 1, 1).
+python_method('CqlInterpreter', '_resolve_peripheral_id', 1, 1, 1).
+python_method('CqlInterpreter', '_get_pump_flow_full_scale_lpm', 0, 1, 1).
+python_method('CqlInterpreter', '_normalize_pump_power', 1, 1, 1).
+python_method('CqlInterpreter', '_normalize_valve_value', 1, 1, 1).
+python_method('CqlInterpreter', '_normalize_lung_value', 1, 1, 1).
+python_method('CqlInterpreter', 'parse', 2, 3, 5).
+python_method('CqlInterpreter', '_print_header', 2, 3, 2).
+python_method('CqlInterpreter', '_collect_warnings', 2, 3, 2).
+python_method('CqlInterpreter', '_planned_step_results', 1, 3, 2).
+python_method('CqlInterpreter', '_run_validation_mode', 4, 1, 5).
+python_method('CqlInterpreter', '_collect_all_goals', 1, 4, 1).
+python_method('CqlInterpreter', '_execute_single_goal', 2, 4, 4).
+python_method('CqlInterpreter', '_execute_all_goals', 1, 2, 1).
+python_method('CqlInterpreter', '_build_script_result', 2, 2, 5).
+python_method('CqlInterpreter', 'execute', 1, 4, 9).
+python_method('CqlInterpreter', '_execute_step', 2, 5, 5).
+python_method('CqlInterpreter', '_execute_action', 1, 4, 4).
+python_method('CqlInterpreter', '_exec_flat_action', 1, 6, 6).
+python_method('CqlInterpreter', '_do_sleep', 2, 1, 1).
+python_method('CqlInterpreter', '_normalize_peripheral_value', 2, 1, 1).
+python_method('CqlInterpreter', '_coerce_generic_peripheral_value', 1, 1, 1).
+python_method('CqlInterpreter', '_exec_set_peripheral', 2, 4, 6).
+python_method('CqlInterpreter', '_get_firmware', 0, 1, 1).
+python_method('CqlInterpreter', '_execute_firmware_action', 2, 1, 1).
+python_method('CqlInterpreter', '_execute_plugin_action', 2, 1, 1).
+python_method('CqlInterpreter', '_execute_legacy_firmware_action', 2, 1, 1).
+python_method('CqlInterpreter', '_refresh_sensors_from_firmware', 0, 1, 1).
+python_method('CqlInterpreter', '_auto_mock_sensor', 3, 1, 1).
+python_method('CqlInterpreter', '_compare_sensor', 3, 1, 1).
+python_method('CqlInterpreter', '_resolve_sensor_value', 1, 7, 5).
+python_method('CqlInterpreter', '_resolve_delta_sensor_value', 1, 6, 5).
+python_method('CqlInterpreter', '_resolve_windowed_delta_sensor_value', 2, 11, 8).
+python_method('CqlInterpreter', '_extract_window_seconds', 1, 5, 5).
+python_method('CqlInterpreter', '_resolve_condition_rhs', 3, 8, 9).
+python_method('CqlInterpreter', '_evaluate_resolved_condition', 0, 7, 7).
+python_method('CqlInterpreter', '_eval_condition_clause', 2, 11, 9).
+python_method('CqlInterpreter', '_evaluate_inline_condition_expression', 1, 4, 3).
+python_method('CqlInterpreter', '_tokenize_condition_expression', 1, 4, 3).
+python_method('CqlInterpreter', '_aggregate_condition_results', 2, 4, 4).
+python_method('CqlInterpreter', '_apply_connector', 3, 5, 0).
+python_method('CqlInterpreter', '_finalize_condition_result', 4, 3, 3).
+python_method('CqlInterpreter', '_evaluate_range_condition', 2, 7, 5).
+python_method('CqlInterpreter', '_evaluate_condition', 1, 11, 7).
+python_class('packages/oqlos-core/src/oqlos/core/motor2_runtime.py', 'Motor2RuntimeConfig').
+python_class('packages/oqlos-core/src/oqlos/core/motor2_runtime.py', 'Motor2ReciprocatingPlan').
+python_method('Motor2ReciprocatingPlan', 'speed_was_clamped', 0, 1, 0).
+python_class('packages/oqlos-core/src/oqlos/core/oql_parser.py', 'OqlCmd').
+python_method('OqlCmd', '__repr__', 0, 3, 2).
+python_class('packages/oqlos-core/src/oqlos/core/oql_parser.py', 'OqlBlock').
+python_class('packages/oqlos-core/src/oqlos/core/oql_parser.py', 'OqlDoc').
+python_method('OqlDoc', 'goals', 0, 3, 0).
+python_method('OqlDoc', 'configs', 0, 3, 0).
+python_method('OqlDoc', 'macros', 0, 3, 0).
+python_method('OqlDoc', 'funcs', 0, 3, 0).
+python_class('packages/oqlos-core/src/oqlos/core/oql_versioning.py', 'OqlVersionInfo').
+python_method('OqlVersionInfo', 'is_current', 0, 1, 0).
+python_class('packages/oqlos-core/src/oqlos/core/safe_eval.py', 'SafeEvalError').
+python_class('packages/oqlos-core/src/oqlos/core/state.py', 'StateManager').
+python_method('StateManager', '__init__', 0, 1, 1).
+python_method('StateManager', 'initialize_peripherals', 0, 3, 3).
+python_method('StateManager', 'broadcast_event', 1, 4, 3).
+python_class('packages/oqlos-core/src/oqlos/shared/event_store.py', 'EventStore').
+python_method('EventStore', '__init__', 1, 3, 2).
+python_method('EventStore', 'append', 1, 2, 2).
+python_method('EventStore', 'get_all', 0, 1, 1).
+python_method('EventStore', 'get_recent', 1, 1, 0).
+python_method('EventStore', 'get_by_correlation', 1, 3, 1).
+python_method('EventStore', 'clear', 0, 2, 1).
+python_method('EventStore', 'to_json', 0, 1, 1).
+python_method('EventStore', 'from_json', 1, 1, 1).
+python_method('EventStore', 'count', 0, 1, 1).
+python_method('EventStore', '_save', 0, 2, 2).
+python_method('EventStore', '_load', 0, 2, 2).
+python_class('packages/oqlos-models/src/oqlos/models/dsl_models.py', 'CqlMetadata').
+python_class('packages/oqlos-models/src/oqlos/models/dsl_models.py', 'CqlInterval').
+python_class('packages/oqlos-models/src/oqlos/models/dsl_models.py', 'CqlCondition').
+python_class('packages/oqlos-models/src/oqlos/models/dsl_models.py', 'CqlAction').
+python_class('packages/oqlos-models/src/oqlos/models/dsl_models.py', 'CqlStep').
+python_class('packages/oqlos-models/src/oqlos/models/dsl_models.py', 'CqlGoal').
+python_class('packages/oqlos-models/src/oqlos/models/dsl_models.py', 'CqlScenario').
+python_class('packages/oqlos-models/src/oqlos/models/dsl_models.py', 'CqlDocument').
+python_class('packages/oqlos-models/src/oqlos/models/execution.py', 'ExecutionRequest').
+python_class('packages/oqlos-models/src/oqlos/models/execution.py', 'ExecutionStatus').
+python_class('packages/oqlos-models/src/oqlos/models/execution.py', 'CommandEnvelope').
+python_class('packages/oqlos-models/src/oqlos/models/peripheral.py', 'PeripheralType').
+python_class('packages/oqlos-models/src/oqlos/models/peripheral.py', 'PeripheralStatus').
+python_class('packages/oqlos-models/src/oqlos/models/peripheral.py', 'PeripheralMode').
+python_class('packages/oqlos-models/src/oqlos/models/peripheral.py', 'Peripheral').
+python_class('packages/oqlos-models/src/oqlos/models/scenario.py', 'Step').
+python_class('packages/oqlos-models/src/oqlos/models/scenario.py', 'ValidationRule').
+python_class('packages/oqlos-models/src/oqlos/models/scenario.py', 'Goal').
+python_class('packages/oqlos-models/src/oqlos/models/scenario.py', 'Scenario').
 python_class('scripts/oql_v2_to_v4_migrate_db.py', 'MigrationResult').
 python_class('scripts/oql_v2_validator.py', 'Issue').
 python_class('scripts/oql_v4_validator.py', 'Issue').
@@ -7492,6 +7681,7 @@ python_method('MockBridge', 'send_event', 2, 1, 1).
 % ── Dependencies ─────────────────────────────────────────
 
 % ── Makefile Targets ─────────────────────────────────────
+makefile_target('install-dev', '').
 makefile_target('help', '').
 makefile_target('test', '--- testy ----------------------------------------------------------------').
 makefile_target('test-hw', '').
@@ -7574,6 +7764,8 @@ sumd_interface('api', '').
 sumd_interface('cli', 'argparse').
 sumd_interface('cli', '').
 sumd_interface('cli', '').
+sumd_workflow('install-dev', 'manual').
+sumd_workflow_step('install-dev', 1, 'pip install -e packages/oqlos-models -e packages/oqlos-core -e .').
 sumd_workflow('test', 'manual').
 sumd_workflow_step('test', 1, '$(PYTHON) -m pytest -q').
 sumd_workflow('test-hw', 'manual').
@@ -7654,68 +7846,68 @@ class Settings:  # Application settings loaded from environment variables and .
 
 ## Call Graph
 
-*463 nodes · 500 edges · 55 modules · CC̄=3.8*
+*435 nodes · 500 edges · 66 modules · CC̄=3.7*
 
 ### Hubs (by degree)
 
 | Function | CC | in | out | total |
 |----------|----|----|-----|-------|
 | `print` *(in examples.hardware.doctor-workflow)* | 0 | 228 | 0 | **228** |
+| `a` *(in frontend.src.pages.HardwareStatus)* | 1 | 75 | 0 | **75** |
+| `list` *(in frontend.src.pages.ScenarioFiles)* | 1 | 47 | 0 | **47** |
 | `dict` *(in frontend.src.i18n.I18nProvider)* | 8 | 43 | 3 | **46** |
-| `list` *(in frontend.src.pages.ScenarioFiles)* | 1 | 43 | 0 | **43** |
-| `oql_doc_to_cql` *(in oqlos.core._oql_adapter)* | 12 ⚠ | 2 | 30 | **32** |
-| `normalize_motor2_runtime_config` *(in oqlos.core.motor2_runtime)* | 12 ⚠ | 1 | 29 | **30** |
-| `_safe_resolve` *(in oqlos.core.executor)* | 14 ⚠ | 7 | 21 | **28** |
-| `run_oql_scenario` *(in setup_hardware_and_run_oql)* | 8 | 1 | 24 | **25** |
-| `applyMapMutation` *(in frontend.src.pages.MapEditor)* | 2 | 17 | 8 | **25** |
+| `canonicalize_oql_line` *(in oqlos.tools.cql_cli.formatting)* | 14 ⚠ | 1 | 31 | **32** |
+| `_emit_dsl_test_run` *(in oqlos.tools.xml_import.generators)* | 10 ⚠ | 1 | 28 | **29** |
+| `probe_options_from_args` *(in oqlos.tools.hardware_diagnose.modbus_probe)* | 2 | 1 | 27 | **28** |
+| `format_detection` *(in oqlos.tools.hardware_diagnose.doctor_format)* | 10 ⚠ | 3 | 25 | **28** |
 
 ```toon markpact:analysis path=project/calls.toon.yaml
 # code2llm call graph | /home/tom/github/oqlos/oqlos
-# generated in 0.37s
-# nodes: 463 | edges: 500 | modules: 55
-# CC̄=3.8
+# generated in 0.26s
+# nodes: 435 | edges: 500 | modules: 66
+# CC̄=3.7
 
 HUBS[20]:
   examples.hardware.doctor-workflow.print
     CC=0  in:228  out:0  total:228
+  frontend.src.pages.HardwareStatus.a
+    CC=1  in:75  out:0  total:75
+  frontend.src.pages.ScenarioFiles.list
+    CC=1  in:47  out:0  total:47
   frontend.src.i18n.I18nProvider.dict
     CC=8  in:43  out:3  total:46
-  frontend.src.pages.ScenarioFiles.list
-    CC=1  in:43  out:0  total:43
-  oqlos.core._oql_adapter.oql_doc_to_cql
-    CC=12  in:2  out:30  total:32
-  oqlos.core.motor2_runtime.normalize_motor2_runtime_config
-    CC=12  in:1  out:29  total:30
-  oqlos.core.executor._safe_resolve
-    CC=14  in:7  out:21  total:28
+  oqlos.tools.cql_cli.formatting.canonicalize_oql_line
+    CC=14  in:1  out:31  total:32
+  oqlos.tools.xml_import.generators._emit_dsl_test_run
+    CC=10  in:1  out:28  total:29
+  oqlos.tools.hardware_diagnose.modbus_probe.probe_options_from_args
+    CC=2  in:1  out:27  total:28
+  oqlos.tools.hardware_diagnose.doctor_format.format_detection
+    CC=10  in:3  out:25  total:28
   setup_hardware_and_run_oql.run_oql_scenario
     CC=8  in:1  out:24  total:25
   frontend.src.pages.MapEditor.applyMapMutation
     CC=2  in:17  out:8  total:25
-  oqlos.core.parser.parse_dsl_to_goal_with_issues
-    CC=13  in:3  out:21  total:24
-  oqlos.core.oql_parser.parse_oql
-    CC=14  in:3  out:21  total:24
-  oqlos.core._action_motor2._try_exec_motor2_set
-    CC=13  in:1  out:22  total:23
-  oqlos.core._action_motor2._motor2_build_plan
+  oqlos.tools.hardware_diagnose.doctor_format.format_doctor
+    CC=6  in:2  out:21  total:23
+  oqlos.tools.cql_cli.commands.handle_list_command
+    CC=7  in:1  out:22  total:23
+  oqlos.tools.hardware_diagnose.doctor_modbus_analysis.analyze_modbus_adc_config
     CC=12  in:1  out:22  total:23
-  oqlos.core._line_parsers._parse_if_condition
-    CC=9  in:1  out:22  total:23
+  oqlos.tools.gen_error_docs.generate_markdown
+    CC=6  in:1  out:22  total:23
+  oqlos.tools.hardware_diagnose.health.cmd_diagnose
+    CC=6  in:2  out:20  total:22
+  oqlos.tools.xml_import.parser._parse_operation_params
+    CC=9  in:1  out:21  total:22
   frontend.src.api.wsClient.WsCqrsClient.super
-    CC=1  in:19  out:1  total:20
-  oqlos.core._func_resolver._collect_function_definitions
-    CC=13  in:1  out:19  total:20
-  oqlos.core.oql_parser.tokenize
-    CC=13  in:5  out:14  total:19
-  oqlos.core._interpreter_actions.exec_action_shell
-    CC=13  in:0  out:19  total:19
-  oqlos.core.oql_parser._expand_repeat_block_lines
-    CC=8  in:2  out:16  total:18
-  setup_hardware_and_run_oql.main
-    CC=3  in:0  out:18  total:18
-  frontend.src.utils.url-embed-config.mergeParentSearchIntoChildUrl
-    CC=9  in:7  out:11  total:18
+    CC=1  in:21  out:1  total:22
+  oqlos.tools.hardware_diagnose.shell._dispatch_command
+    CC=6  in:1  out:21  total:22
+  packages.oqlos-core.src.oqlos.core.base.VariableStore.set
+    CC=4  in:19  out:2  total:21
+  oqlos.tools.hardware_diagnose.doctor_modbus_analysis.analyze_modbus_config
+    CC=11  in:1  out:20  total:21
 
 MODULES:
   examples.hardware.doctor-workflow  [1 funcs]
@@ -7813,13 +8005,14 @@ MODULES:
     log  CC=1  out:3
     port  CC=6  out:9
     refreshRuntimeStatus  CC=3  out:3
-  frontend.src.pages.HardwareStatus  [5 funcs]
+  frontend.src.pages.HardwareStatus  [6 funcs]
+    a  CC=1  out:0
     adapters  CC=2  out:8
     copyAllJson  CC=2  out:8
     diagnostics  CC=2  out:8
     downloadJson  CC=1  out:5
     summary  CC=2  out:8
-  frontend.src.pages.MapEditor  [24 funcs]
+  frontend.src.pages.MapEditor  [23 funcs]
     _parseFieldValue  CC=4  out:6
     _setBodyField  CC=8  out:2
     addAction  CC=2  out:6
@@ -7847,8 +8040,7 @@ MODULES:
   frontend.src.utils.collapse-toggle-bridge  [2 funcs]
     isInIframe  CC=4  out:0
     postToParent  CC=4  out:8
-  frontend.src.utils.encoder-navigation  [13 funcs]
-    all  CC=6  out:2
+  frontend.src.utils.encoder-navigation  [12 funcs]
     applyScrollToItems  CC=4  out:0
     createEncoderController  CC=11  out:7
     focusEncoderItem  CC=1  out:3
@@ -7858,6 +8050,7 @@ MODULES:
     handleEncoderCommand  CC=5  out:4
     handleScroll  CC=4  out:4
     handleSetActive  CC=3  out:1
+    onKeyDown  CC=7  out:3
   frontend.src.utils.hardware-activity-log  [4 funcs]
     createHardwareActivityLogEntry  CC=1  out:2
     loggedRef  CC=2  out:4
@@ -7877,6 +8070,8 @@ MODULES:
     pumpOk  CC=3  out:1
     res  CC=3  out:1
     resolveFallbackDeviceId  CC=3  out:0
+  frontend.src.utils.hardware-restart-configure  [1 funcs]
+    probe  CC=1  out:0
   frontend.src.utils.hardware-wizard-plan  [4 funcs]
     assertPlanData  CC=3  out:1
     extractWizardPlan  CC=1  out:3
@@ -7975,136 +8170,165 @@ MODULES:
     scheduleCollapse  CC=3  out:6
     toggleCollapsed  CC=3  out:7
     useSelectionCollapsePanel  CC=11  out:17
-  oqlos.config  [1 funcs]
-    get_settings  CC=1  out:0
-  oqlos.core._action_motor2  [30 funcs]
-    _call_motor2_transport  CC=4  out:4
-    _handle_motor2_reciprocating_setting  CC=2  out:4
-    _motor2_acceleration_raw  CC=1  out:2
-    _motor2_build_plan  CC=12  out:22
-    _motor2_do_start  CC=4  out:10
-    _motor2_do_stop  CC=4  out:3
-    _motor2_effective_steps_per_second  CC=1  out:4
-    _motor2_max_steps_per_second  CC=1  out:1
-    _motor2_reciprocating_state  CC=2  out:3
-    _motor2_set_state_value  CC=1  out:1
-  oqlos.core._compare  [1 funcs]
-    resolve_compare_chain  CC=3  out:4
-  oqlos.core._cql_tokenizer  [10 funcs]
-    _match_first  CC=3  out:1
-    _parse_condition_value  CC=4  out:4
-    _try_goto  CC=2  out:4
-    _try_if_block  CC=4  out:11
-    _try_if_else  CC=3  out:8
-    _try_if_standalone  CC=2  out:1
-    _try_min_max  CC=2  out:7
-    _try_save  CC=5  out:7
-    _try_set  CC=2  out:6
-    _try_val  CC=2  out:4
-  oqlos.core._cql_tree_builder  [1 funcs]
-    _parse_action_line  CC=4  out:3
-  oqlos.core._dsl_helpers  [12 funcs]
-    _looks_like_lung_object  CC=1  out:2
-    _looks_like_pump_object  CC=1  out:2
-    _looks_like_sensor_object  CC=1  out:2
-    _looks_like_valve_object  CC=2  out:3
-    _map_action_value  CC=7  out:8
-    _map_lung_action  CC=5  out:1
-    _map_peripheral  CC=11  out:14
-    _map_pump_action  CC=5  out:1
-    _map_valve_action  CC=3  out:0
-    _map_wait_action  CC=4  out:7
-  oqlos.core._func_resolver  [4 funcs]
-    _collect_function_definitions  CC=13  out:19
-    _extract_func_name  CC=7  out:7
-    _guard_recursion  CC=3  out:5
-    _parse_func_call  CC=5  out:4
-  oqlos.core._interpreter_actions  [30 funcs]
-    _assert_json  CC=6  out:9
-    _assert_sensor  CC=4  out:9
-    _assert_status  CC=5  out:7
-    _assert_valve  CC=5  out:8
-    _coerce_expected_value  CC=7  out:8
-    _compare_values  CC=10  out:8
-    _do_sleep  CC=3  out:10
-    _drop_command_token  CC=6  out:5
-    _exec_set_wait  CC=3  out:7
-    _extract_action_tokens  CC=5  out:4
-  oqlos.core._line_parsers  [9 funcs]
-    _extract_set_params  CC=7  out:13
-    _parse_if_condition  CC=9  out:22
-    _parse_inline_task  CC=5  out:7
-    _parse_pump_line  CC=6  out:8
-    _parse_set_line  CC=10  out:15
-    _parse_task_part  CC=10  out:14
-    _set_lung_step  CC=4  out:3
-    _set_pump_step  CC=4  out:3
-    _set_valve_step  CC=4  out:4
-  oqlos.core._oql_adapter  [14 funcs]
-    register  CC=1  out:1
-    _cmd_to_actions  CC=2  out:3
-    _fmt_value  CC=2  out:1
-    _load_includes  CC=12  out:15
-    _lower_call  CC=6  out:10
-    _lower_set  CC=3  out:7
-    _make_lower_minmax  CC=1  out:3
-    _parse_macro_line  CC=8  out:10
-    _resolve_include  CC=6  out:8
-    _scenarios_root  CC=1  out:2
-  oqlos.core.base  [5 funcs]
-    send_event  CC=4  out:7
-    emit  CC=5  out:3
-    output_yaml  CC=4  out:2
-    __init__  CC=2  out:1
-    all  CC=3  out:3
-  oqlos.core.cql_parser  [2 funcs]
-    parse_cql  CC=2  out:6
-    validate_cql  CC=5  out:5
-  oqlos.core.executor  [6 funcs]
-    _execute_validate_step  CC=7  out:7
-    validate_goal  CC=5  out:3
-    _resolve_compare  CC=1  out:2
-    _resolve_name_or_attr  CC=4  out:6
-    _safe_resolve  CC=14  out:21
-    safe_eval_condition  CC=2  out:5
-  oqlos.core.interpreter  [5 funcs]
-    __init__  CC=1  out:5
-    _build_script_result  CC=2  out:7
-    _exec_flat_action  CC=6  out:6
-    execute  CC=4  out:9
-    parse  CC=3  out:5
-  oqlos.core.motor2_runtime  [11 funcs]
-    _coerce_int  CC=3  out:6
-    _compute_motor2_cycles  CC=3  out:7
-    _compute_motor2_speed  CC=4  out:6
-    _normalize_motor2_direction  CC=4  out:2
-    _pick  CC=4  out:0
-    build_motor2_reciprocating_plan  CC=7  out:8
-    motor2_acceleration_raw  CC=2  out:8
-    motor2_max_steps_per_second  CC=2  out:3
-    motor2_speed_for_duration  CC=1  out:9
-    motor2_speed_raw  CC=1  out:5
-  oqlos.core.oql_parser  [28 funcs]
-    _check_unnamed_goals  CC=5  out:1
-    _compact_duration  CC=2  out:3
-    _expand_repeat_block_lines  CC=8  out:16
-    _expand_repeat_blocks  CC=2  out:2
-    _handle_block_header  CC=8  out:12
-    _handle_modifier_cmd  CC=5  out:3
-    _handle_set_name  CC=5  out:8
-    _handle_top_level_line  CC=6  out:16
-    _line_indent  CC=2  out:5
-    _make_call_parser  CC=1  out:2
-  oqlos.core.oql_versioning  [3 funcs]
-    extract_declared_version  CC=3  out:4
-    first_meaningful_line  CC=4  out:4
-    resolve_oql_version  CC=2  out:3
-  oqlos.core.parser  [5 funcs]
-    _dispatch_simple_parser  CC=3  out:3
-    _parse_runtime_line  CC=9  out:15
-    _try_action_or_condition  CC=5  out:6
-    parse_dsl_to_goal  CC=1  out:1
-    parse_dsl_to_goal_with_issues  CC=13  out:21
+  oqlos.hardware.config_paths  [1 funcs]
+    resolve_oqlos_config_path  CC=6  out:13
+  oqlos.hardware.health_status  [1 funcs]
+    health_status_is_ok  CC=11  out:9
+  oqlos.tools.cql_cli  [2 funcs]
+    _sync_compat_symbols  CC=1  out:0
+    main  CC=1  out:2
+  oqlos.tools.cql_cli.commands  [6 funcs]
+    _run_continuous_mode  CC=4  out:20
+    default_firmware_url  CC=3  out:2
+    execute_command_with_cleanup  CC=8  out:7
+    handle_list_command  CC=7  out:22
+    run_single_command  CC=1  out:2
+    run_source  CC=2  out:3
+  oqlos.tools.cql_cli.formatting  [2 funcs]
+    canonicalize_oql_line  CC=14  out:31
+    canonicalize_oql_text  CC=3  out:4
+  oqlos.tools.cql_cli.utils  [3 funcs]
+    build_result_payload  CC=2  out:2
+    build_single_command_scenario  CC=2  out:3
+    output_yaml  CC=2  out:2
+  oqlos.tools.gen_error_docs  [2 funcs]
+    generate_markdown  CC=6  out:22
+    main  CC=4  out:11
+  oqlos.tools.hardware_diagnose.__main__  [9 funcs]
+    _handle_report_action  CC=3  out:4
+    _print_benchmark  CC=3  out:11
+    _print_calibrate  CC=6  out:9
+    _print_detect  CC=2  out:4
+    _print_diagnose  CC=3  out:9
+    _print_doctor  CC=2  out:4
+    _print_health  CC=2  out:5
+    _print_list  CC=3  out:8
+    _print_modbus_probe  CC=2  out:5
+  oqlos.tools.hardware_diagnose.benchmark  [1 funcs]
+    run_benchmark  CC=6  out:15
+  oqlos.tools.hardware_diagnose.calibration  [4 funcs]
+    _calibrate_pump  CC=3  out:8
+    _calibrate_sensors  CC=5  out:8
+    _calibrate_valves  CC=4  out:6
+    run_calibration_test  CC=2  out:8
+  oqlos.tools.hardware_diagnose.discovery  [4 funcs]
+    _run_shell_command  CC=2  out:2
+    detect_chips_on_i2c  CC=8  out:10
+    list_i2c_buses  CC=1  out:2
+    list_usb_serial_devices  CC=7  out:9
+  oqlos.tools.hardware_diagnose.doctor  [1 funcs]
+    build_doctor_report  CC=11  out:14
+  oqlos.tools.hardware_diagnose.doctor_common  [5 funcs]
+    add_issue  CC=2  out:1
+    collect_repairs  CC=5  out:7
+    modbus_adc_config  CC=1  out:1
+    modbus_config  CC=1  out:1
+    plugin_config  CC=3  out:4
+  oqlos.tools.hardware_diagnose.doctor_detection  [8 funcs]
+    _doctor  CC=1  out:0
+    detect_hardware  CC=4  out:13
+    firmware_hostname  CC=3  out:2
+    load_config_summary  CC=4  out:7
+    probe_modbus  CC=1  out:2
+    probe_modbus_adc  CC=1  out:2
+    run_modbus_probe  CC=5  out:9
+    usb_serial_only  CC=3  out:1
+  oqlos.tools.hardware_diagnose.doctor_firmware  [10 funcs]
+    adapter_health_status  CC=3  out:1
+    analyze_firmware_access  CC=7  out:11
+    check_firmware_adapters  CC=7  out:9
+    check_firmware_health_error  CC=3  out:2
+    check_firmware_mode  CC=3  out:4
+    check_firmware_serial_access  CC=11  out:13
+    firmware_adapter_status  CC=7  out:9
+    firmware_is_remote  CC=2  out:3
+    firmware_modbus_adc_health_ok  CC=4  out:6
+    firmware_modbus_health_ok  CC=10  out:16
+  oqlos.tools.hardware_diagnose.doctor_format  [5 funcs]
+    _format_doctor_applied_repairs  CC=4  out:5
+    _format_doctor_issues  CC=5  out:10
+    format_detection  CC=10  out:25
+    format_doctor  CC=6  out:21
+    format_modbus_status  CC=7  out:11
+  oqlos.tools.hardware_diagnose.doctor_modbus_analysis  [5 funcs]
+    analyze_modbus_adc_config  CC=12  out:22
+    analyze_modbus_config  CC=11  out:20
+    analyze_serial_port_owners  CC=13  out:19
+    expected_modbus_adc_params  CC=6  out:8
+    expected_modbus_params  CC=5  out:6
+  oqlos.tools.hardware_diagnose.doctor_repairs  [3 funcs]
+    apply_safe_fixes  CC=9  out:14
+    update_modbus_adc_config  CC=4  out:18
+    update_modbus_config  CC=2  out:17
+  oqlos.tools.hardware_diagnose.doctor_serial  [5 funcs]
+    canonical_device_path  CC=3  out:4
+    describe_pid  CC=4  out:4
+    extract_pids  CC=4  out:4
+    owners_for_configured_port  CC=4  out:3
+    serial_port_owners  CC=6  out:4
+  oqlos.tools.hardware_diagnose.health  [7 funcs]
+    _format_health_value  CC=8  out:9
+    _is_health_ok  CC=5  out:6
+    _request_firmware_json  CC=8  out:9
+    check_firmware_health  CC=1  out:1
+    check_firmware_identify  CC=1  out:1
+    cmd_diagnose  CC=6  out:20
+    cmd_health  CC=5  out:10
+  oqlos.tools.hardware_diagnose.modbus_probe  [17 funcs]
+    _arg_count_list  CC=3  out:2
+    _arg_int_list  CC=3  out:2
+    _arg_str_list  CC=2  out:1
+    _env_count_list  CC=2  out:2
+    _env_float  CC=1  out:1
+    _env_int  CC=1  out:1
+    _env_int_list  CC=5  out:5
+    _env_str_list  CC=3  out:2
+    _env_typed  CC=2  out:2
+    _serials_from_env  CC=3  out:4
+  oqlos.tools.hardware_diagnose.report  [2 funcs]
+    format_peripheral_table  CC=12  out:3
+    save_diagnostic_report  CC=3  out:13
+  oqlos.tools.hardware_diagnose.shell  [5 funcs]
+    _cmd_benchmark  CC=4  out:8
+    _cmd_calibrate  CC=4  out:5
+    _cmd_list  CC=5  out:11
+    _dispatch_command  CC=6  out:21
+    interactive_shell  CC=6  out:8
+  oqlos.tools.plugin_cli  [12 funcs]
+    _default_config_path  CC=1  out:2
+    _load_config_file  CC=4  out:16
+    cmd_capabilities  CC=2  out:6
+    cmd_connect  CC=4  out:6
+    cmd_disconnect  CC=2  out:4
+    cmd_execute  CC=3  out:7
+    cmd_health  CC=3  out:8
+    cmd_list  CC=3  out:9
+    cmd_peripherals  CC=8  out:16
+    cmd_reload  CC=4  out:10
+  oqlos.tools.xml_import._utils  [3 funcs]
+    is_compressor_output  CC=5  out:2
+    is_pump_output  CC=4  out:2
+    normalize_output_name  CC=11  out:12
+  oqlos.tools.xml_import.generators  [19 funcs]
+    _append_sensor_assertion  CC=6  out:3
+    _build_steps_from_op  CC=10  out:14
+    _build_validation_criteria  CC=14  out:3
+    _emit_cql_output  CC=5  out:15
+    _emit_cql_param  CC=7  out:5
+    _emit_cql_sensor_param  CC=13  out:11
+    _emit_dsl_metadata  CC=1  out:10
+    _emit_dsl_output  CC=5  out:7
+    _emit_dsl_param  CC=10  out:13
+    _emit_dsl_sensors  CC=8  out:7
+  oqlos.tools.xml_import.parser  [6 funcs]
+    _parse_intervals  CC=4  out:7
+    _parse_operation  CC=6  out:18
+    _parse_operation_params  CC=9  out:21
+    _parse_test_run  CC=7  out:19
+    _populate_report_fields  CC=1  out:16
+    parse_xml  CC=6  out:16
+  packages.oqlos-core.src.oqlos.core.base  [1 funcs]
+    set  CC=4  out:2
   setup_hardware_and_run_oql  [6 funcs]
     detect_serial_devices  CC=12  out:7
     generate_env_content  CC=2  out:1

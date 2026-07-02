@@ -463,7 +463,7 @@ if [ ! -x /home/pi/oqlos/venv/bin/oqlos-server ]; then
 else
   echo "INFO: odswiezam istniejace /home/pi/oqlos/venv"
 fi
-/home/pi/oqlos/venv/bin/pip install -q -e .
+/home/pi/oqlos/venv/bin/pip install -q -e packages/oqlos-models -e packages/oqlos-core -e .
 /home/pi/oqlos/venv/bin/python - <<'PY'
 import oqlos.api.main
 PY

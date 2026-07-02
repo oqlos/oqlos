@@ -1,12 +1,12 @@
-# oqlos | 374f 56179L | python:286,javascript:73,shell:9,typescript:3,css:2,less:1 | 2026-07-02
-# stats: 1502 func | 215 cls | 374 mod | CC̄=4.1 | critical:120 | cycles:0
-# alerts[5]: CC test_hardware_ui_aliases_and_status_page_are_served=22; CC test_navigation_index_and_short_aliases=15; CC _resolve_func_steps=14; CC _probe_i2c_ads1115=14; CC exec_action_loop_block=14
+# oqlos | 388f 57122L | python:300,javascript:73,shell:9,typescript:3,css:2,less:1 | 2026-07-02
+# stats: 1522 func | 246 cls | 388 mod | CC̄=4.1 | critical:120 | cycles:0
+# alerts[5]: CC test_hardware_ui_aliases_and_status_page_are_served=22; CC test_navigation_index_and_short_aliases=15; CC _resolve_func_steps=14; CC _probe_i2c_ads1115=14; CC _safe_resolve=14
 # hotspots[5]: _resolve fan=22; build_diagnosis_report fan=19; hardware_identify fan=18; _build_waveshare_diagnose_report fan=18; _handle_start fan=18
 # evolution: baseline
 # Keys: M=modules, D=details, i=imports, e=exports, c=classes, f=functions, m=methods
-M[374]:
+M[388]:
   app.doql.css,165
-  app.doql.less,316
+  app.doql.less,321
   examples/curl-quickstart.sh,75
   examples/hardware/doctor-workflow.sh,53
   frontend/src/api/hardware-api-errors.js,88
@@ -86,7 +86,7 @@ M[374]:
   frontend/vendor/hardware-client/index.ts,32
   frontend/vendor/hardware-client/paths.ts,40
   frontend/vite.config.ts,37
-  oqlos/__init__.py,4
+  oqlos/__init__.py,8
   oqlos/api/__init__.py,18
   oqlos/api/_hw3_mapping.py,158
   oqlos/api/_hw3_models.py,195
@@ -119,37 +119,25 @@ M[374]:
   oqlos/api/logs.py,46
   oqlos/api/main.py,606
   oqlos/api/oql_mqtt.py,153
-  oqlos/api/peripherals.py,69
+  oqlos/api/peripherals.py,77
   oqlos/api/plugins.py,182
   oqlos/api/scenarios.py,252
   oqlos/api/state.py,371
   oqlos/api/utils/__init__.py,1
-  oqlos/api/utils/execution_ctrl.py,63
+  oqlos/api/utils/execution_ctrl.py,66
   oqlos/api/version.py,25
   oqlos/config.py,221
-  oqlos/core/__init__.py,1
-  oqlos/core/_action_motor2.py,482
-  oqlos/core/_compare.py,41
-  oqlos/core/_cql_tokenizer.py,411
-  oqlos/core/_cql_tree_builder.py,168
-  oqlos/core/_dsl_helpers.py,133
-  oqlos/core/_firmware_executor.py,267
-  oqlos/core/_func_resolver.py,97
-  oqlos/core/_interpreter_actions.py,801
-  oqlos/core/_line_parsers.py,262
-  oqlos/core/_oql_adapter.py,491
-  oqlos/core/_sensor_evaluator.py,146
-  oqlos/core/_value_normalizers.py,127
-  oqlos/core/base.py,312
-  oqlos/core/cql_parser.py,468
-  oqlos/core/executor.py,378
-  oqlos/core/interpreter.py,691
-  oqlos/core/motor2_runtime.py,210
-  oqlos/core/oql_parser.py,774
-  oqlos/core/oql_versioning.py,73
-  oqlos/core/parser.py,185
-  oqlos/core/safe_eval.py,139
-  oqlos/core/state.py,125
+  oqlos/core/__init__.py,4
+  oqlos/core/cqrs/__init__.py,37
+  oqlos/core/cqrs/aggregate.py,40
+  oqlos/core/cqrs/commands.py,41
+  oqlos/core/cqrs/events.py,73
+  oqlos/core/cqrs/execution.py,166
+  oqlos/core/cqrs/peripheral.py,186
+  oqlos/core/cqrs/projection.py,26
+  oqlos/core/cqrs/telemetry.py,65
+  oqlos/core/executor.py,409
+  oqlos/core/state.py,148
   oqlos/dsl/__init__.py,19
   oqlos/dsl/schema.py,296
   oqlos/errors/__init__.py,44
@@ -232,21 +220,15 @@ M[374]:
   oqlos/hardware/transport/mqtt_oql_bridge.py,494
   oqlos/hardware/usb_diagnostics.py,186
   oqlos/ide/__init__.py,1
-  oqlos/models/__init__.py,1
-  oqlos/models/dsl_models.py,88
-  oqlos/models/execution.py,23
-  oqlos/models/peripheral.py,34
-  oqlos/models/scenario.py,36
   oqlos/reporters/__init__.py,7
   oqlos/reporters/html_report.py,267
   oqlos/reporters/json_reporter.py,139
   oqlos/reporters/junit.py,87
   oqlos/scenarios/legacy_aliases.py,41
-  oqlos/shared/__init__.py,1
+  oqlos/shared/__init__.py,4
   oqlos/shared/_endpoint_helpers.py,49
   oqlos/shared/config_factory.py,85
   oqlos/shared/event_server.py,172
-  oqlos/shared/event_store.py,78
   oqlos/shared/file_ops.py,131
   oqlos/shared/logger.py,90
   oqlos/shared/logs_query.py,146
@@ -287,6 +269,38 @@ M[374]:
   oqlos/utils/__init__.py,4
   oqlos/utils/hui_scenario.py,47
   oqlos/utils/sample_data.py,74
+  packages/oqlos-core/src/oqlos/core/__init__.py,1
+  packages/oqlos-core/src/oqlos/core/_action_motor2.py,482
+  packages/oqlos-core/src/oqlos/core/_compare.py,41
+  packages/oqlos-core/src/oqlos/core/_cql_tokenizer.py,411
+  packages/oqlos-core/src/oqlos/core/_cql_tree_builder.py,168
+  packages/oqlos-core/src/oqlos/core/_dsl_helpers.py,133
+  packages/oqlos-core/src/oqlos/core/_firmware_executor.py,275
+  packages/oqlos-core/src/oqlos/core/_func_resolver.py,97
+  packages/oqlos-core/src/oqlos/core/_interpreter_actions.py,801
+  packages/oqlos-core/src/oqlos/core/_line_parsers.py,262
+  packages/oqlos-core/src/oqlos/core/_oql_adapter.py,496
+  packages/oqlos-core/src/oqlos/core/_runtime_settings.py,32
+  packages/oqlos-core/src/oqlos/core/_sensor_evaluator.py,146
+  packages/oqlos-core/src/oqlos/core/_value_normalizers.py,126
+  packages/oqlos-core/src/oqlos/core/base.py,312
+  packages/oqlos-core/src/oqlos/core/cql_parser.py,468
+  packages/oqlos-core/src/oqlos/core/interpreter.py,691
+  packages/oqlos-core/src/oqlos/core/motor2_runtime.py,210
+  packages/oqlos-core/src/oqlos/core/oql_parser.py,774
+  packages/oqlos-core/src/oqlos/core/oql_versioning.py,73
+  packages/oqlos-core/src/oqlos/core/parser.py,185
+  packages/oqlos-core/src/oqlos/core/safe_eval.py,139
+  packages/oqlos-core/src/oqlos/core/state.py,125
+  packages/oqlos-core/src/oqlos/shared/__init__.py,1
+  packages/oqlos-core/src/oqlos/shared/event_store.py,78
+  packages/oqlos-core/tests/test_parse_cql_smoke.py,22
+  packages/oqlos-models/src/oqlos/models/__init__.py,1
+  packages/oqlos-models/src/oqlos/models/dsl_models.py,88
+  packages/oqlos-models/src/oqlos/models/execution.py,29
+  packages/oqlos-models/src/oqlos/models/peripheral.py,40
+  packages/oqlos-models/src/oqlos/models/scenario.py,36
+  packages/oqlos-models/tests/test_import.py,24
   project.sh,43
   scripts/fix_brackets_to_v4.py,96
   scripts/gen-checksums.sh,28
@@ -763,308 +777,75 @@ D:
     Settings:  # Application settings loaded from environment variables and .
     get_settings()
   oqlos/core/__init__.py:
-  oqlos/core/_action_motor2.py:
-    e: _normalize_motor2_target,_parse_motor2_direction,_parse_motor2_speed_steps,_parse_motor2_positive_int,_parse_motor2_float,_parse_motor2_duration_seconds,_parse_motor2_volume_liters,_parse_motor2_acceleration,_normalize_motor2_value,_parse_prefixed_motor2_setting,_parse_motor2_reciprocating_setting,_parse_motor2_steps,_motor2_speed_raw,_motor2_max_steps_per_second,_motor2_effective_steps_per_second,_motor2_speed_for_duration,_motor2_acceleration_raw,_post_motor2_move_relative,_post_motor2_reciprocate,_post_motor2_stop,_call_motor2_transport,_motor2_reciprocating_state,_motor2_set_state_value,_motor2_state_handler,_motor2_do_stop,_motor2_build_plan,_motor2_step_label,_motor2_do_start,_handle_motor2_reciprocating_setting,_try_exec_motor2_set
-    _normalize_motor2_target(target_lower)
-    _parse_motor2_direction(value)
-    _parse_motor2_speed_steps(value)
-    _parse_motor2_positive_int(value)
-    _parse_motor2_float(value)
-    _parse_motor2_duration_seconds(value)
-    _parse_motor2_volume_liters(value)
-    _parse_motor2_acceleration(value)
-    _normalize_motor2_value(value)
-    _parse_prefixed_motor2_setting(normalized)
-    _parse_motor2_reciprocating_setting(value)
-    _parse_motor2_steps(value)
-    _motor2_speed_raw(steps_per_second)
-    _motor2_max_steps_per_second()
-    _motor2_effective_steps_per_second(steps_per_second)
-    _motor2_speed_for_duration(steps;cycles;duration_seconds)
-    _motor2_acceleration_raw(steps_per_second;percent)
-    _post_motor2_move_relative(direction;steps;speed_raw;acceleration_raw)
-    _post_motor2_reciprocate(direction;steps;speed_raw;acceleration_raw;cycles;pause;limit_mode)
-    _post_motor2_stop()
-    _call_motor2_transport(name;fallback)
-    _motor2_reciprocating_state(interp)
-    _motor2_set_state_value(interp;state;key;value;label)
-    _motor2_state_handler(key;value_fn;label_fn)
-    _motor2_do_stop(interp;setting;state)
-    _motor2_build_plan(interp;setting;state)
-    _motor2_step_label(plan;mode)
-    _motor2_do_start(interp;setting;state)
-    _handle_motor2_reciprocating_setting(interp;setting)
-    _try_exec_motor2_set(interp;target_lower;value)
-  oqlos/core/_compare.py:
-    e: resolve_compare,resolve_compare_chain
-    resolve_compare(left;op;right)
-    resolve_compare_chain(node;resolve_value)
-  oqlos/core/_cql_tokenizer.py:
-    e: _make_args_parser,_make_keyword_parser,_make_method_parser,_make_stripped_field_parser,_make_two_group_parser,_make_target_method_args_parser,_match_first,_parse_condition_value,_try_save,_try_set,_try_condition_range,_try_condition_cmp,_try_if_else,_try_if_block,_try_if_standalone,_try_else_standalone,_try_min_max,_try_val,_try_loop_start,_try_repeat_start,_try_repeat_stop,_try_sample,_try_goto
-    _make_args_parser(regex;kind)
-    _make_keyword_parser(regex;kind)
-    _make_method_parser(regex;kind)
-    _make_stripped_field_parser(regex;kind;field)
-    _make_two_group_parser(regex;kind;field)
-    _make_target_method_args_parser(regex;kind)
-    _match_first(line)
-    _parse_condition_value(raw_value)
-    _try_save(line;stripped)
-    _try_set(line;stripped)
-    _try_condition_range(line;stripped)
-    _try_condition_cmp(line;stripped)
-    _try_if_else(line;stripped)
-    _try_if_block(line;stripped)
-    _try_if_standalone(line;stripped)
-    _try_else_standalone(line;stripped)
-    _try_min_max(line;stripped)
-    _try_val(line;stripped)
-    _try_loop_start(line;stripped)
-    _try_repeat_start(line;stripped)
-    _try_repeat_stop(line;stripped)
-    _try_sample(line;stripped)
-    _try_goto(line;stripped)
-  oqlos/core/_cql_tree_builder.py:
-    e: _parse_metadata_kv,_parse_scenario_line,_parse_scenario_attrs,_parse_goal_line,_parse_goal_attrs,_parse_step_line,_parse_action_line,_ensure_goal_for_step,_ensure_step_for_actions
-    _parse_metadata_kv(doc;stripped)
-    _parse_scenario_line(doc;stripped)
-    _parse_scenario_attrs(line;current_scenario)
-    _parse_goal_line(stripped;line;indent;current_scenario)
-    _parse_goal_attrs(line;current_goal)
-    _parse_step_line(line;current_goal)
-    _parse_action_line(line;stripped;actions_list;doc;lineno)
-    _ensure_goal_for_step(current_goal;current_scenario;line)
-    _ensure_step_for_actions(current_step;current_goal)
-  oqlos/core/_dsl_helpers.py:
-    e: _normalize_quote_syntax,_looks_like_valve_object,_looks_like_pump_object,_looks_like_lung_object,_looks_like_sensor_object,_map_peripheral,_parse_numeric_value,_map_valve_action,_map_pump_action,_map_wait_action,_map_lung_action,_map_action_value
-    _normalize_quote_syntax(line)
-    _looks_like_valve_object(obj)
-    _looks_like_pump_object(obj)
-    _looks_like_lung_object(obj)
-    _looks_like_sensor_object(obj)
-    _map_peripheral(obj)
-    _parse_numeric_value(raw)
-    _map_valve_action(fn)
-    _map_pump_action(fn;obj_raw;line)
-    _map_wait_action(fn;obj;obj_raw;line;step_counter)
-    _map_lung_action(fn;obj_raw;line)
-    _map_action_value(fn;obj;obj_raw;line;step_counter)
-  oqlos/core/_firmware_executor.py:
-    e: FirmwareExecutor
-    FirmwareExecutor: __init__(7),_get_firmware(0),_resolve_gateway_result(2),_is_success(1),resolve_peripheral_id(1),normalize_peripheral_value(2),refresh_sensors_from_firmware(1),execute_firmware_action(2),_execute_plugin_action(2),_execute_legacy_firmware_action(2),exec_set_peripheral(2)  # Executes hardware actions via plugin gateway or legacy firmw
-  oqlos/core/_func_resolver.py:
-    e: _collect_function_definitions,_extract_func_name,_guard_recursion,_parse_func_call
-    _collect_function_definitions(lines)
-    _extract_func_name(line;indent)
-    _guard_recursion(func_name;call_stack)
-    _parse_func_call(line;step_counter;steps;func_defs;indent;call_stack;parse_line_fn)
-  oqlos/core/_interpreter_actions.py:
-    e: _extract_action_tokens,_drop_command_token,_coerce_expected_value,_compare_values,_oql_quote,_format_set_command,_get_nested_value,_record_failure,_mark_success,_normalize_bool,_lookup_peripheral_state,_mock_api_response,exec_action_task,exec_action_save,parse_wait_secs,exec_action_wait,_do_sleep,exec_action_min_max,exec_action_val,exec_action_log,exec_action_error,exec_action_else,exec_action_sample,_resolve_numeric_token,_func_avg,_func_sum,_func_reduce_or_zero,_func_sub,_func_div,_func_mul,exec_action_func,exec_action_goto,exec_action_api,exec_action_expect,_assert_status,_assert_json,_assert_sensor,_assert_valve,exec_action_assert,exec_action_shell,exec_action_var_set,exec_action_condition,exec_action_if_fail_block,exec_action_if_block,exec_action_loop_block,exec_action_endloop,exec_action_set,_exec_set_wait,exec_action_action
-    _extract_action_tokens(text)
-    _drop_command_token(act)
-    _coerce_expected_value(value)
-    _compare_values(actual;operator;expected)
-    _oql_quote(value)
-    _format_set_command(target;value)
-    _get_nested_value(payload;path)
-    _record_failure(interp;key;message)
-    _mark_success(interp;key)
-    _normalize_bool(value)
-    _lookup_peripheral_state(interp;target)
-    _mock_api_response(interp;endpoint)
-    exec_action_task(interp;act)
-    exec_action_save(interp;act)
-    parse_wait_secs(raw)
-    exec_action_wait(interp;act)
-    _do_sleep(interp;secs;label)
-    exec_action_min_max(interp;act)
-    exec_action_val(interp;act)
-    exec_action_log(interp;act)
-    exec_action_error(interp;act)
-    exec_action_else(interp;act)
-    exec_action_sample(interp;act)
-    _resolve_numeric_token(interp;token)
-    _func_avg(values)
-    _func_sum(values)
-    _func_reduce_or_zero(values;reducer)
-    _func_sub(values)
-    _func_div(values;interp;target)
-    _func_mul(values)
-    exec_action_func(interp;act)
-    exec_action_goto(interp;act)
-    exec_action_api(interp;act)
-    exec_action_expect(interp;act)
-    _assert_status(interp;act;tokens)
-    _assert_json(interp;act;tokens)
-    _assert_sensor(interp;act;tokens)
-    _assert_valve(interp;act;tokens)
-    exec_action_assert(interp;act)
-    exec_action_shell(interp;act)
-    exec_action_var_set(interp;act)
-    exec_action_condition(interp;act)
-    exec_action_if_fail_block(interp;act)
-    exec_action_if_block(interp;act)
-    exec_action_loop_block(interp;act)
-    exec_action_endloop(interp;act)
-    exec_action_set(interp;act)
-    _exec_set_wait(interp;act;value)
-    exec_action_action(interp;act)
-  oqlos/core/_line_parsers.py:
-    e: _parse_task_part,_parse_pump_line,_set_valve_step,_set_pump_step,_set_lung_step,_extract_set_params,_parse_set_line,_parse_inline_task,_parse_action_line,_parse_if_condition
-    _parse_task_part(part;step_counter)
-    _parse_pump_line(line;step_counter)
-    _set_valve_step(peripheral;value_raw;step_counter;line)
-    _set_pump_step(peripheral;value_raw;step_counter;line)
-    _set_lung_step(peripheral;value_raw;step_counter;line)
-    _extract_set_params(normalized_line)
-    _parse_set_line(line;step_counter)
-    _parse_inline_task(line;step_counter;steps)
-    _parse_action_line(line;step_counter;steps)
-    _parse_if_condition(line;step_counter;steps)
-  oqlos/core/_oql_adapter.py:
-    e: _fmt_value,_scenarios_root,_resolve_include,_substitute_args,_load_includes,_lower_include,_lower_call,_lower_set,_lower_get,_lower_wait,_lower_save,_make_lower_minmax,_lower_check,_lower_if_delta,_lower_sample,_lower_log,_lower_error_cmd,_lower_repeat,_cmd_to_actions,_parse_macro_line,_has_anonymous_named_goal,is_flat_oql,oql_doc_to_cql,_split_device_field,parse_flat_oql,_MacroRegistry
-    _MacroRegistry: __init__(0),register(1),get(1)  # Collect ``MACRO`` definitions (raw body lines) from the root
-    _fmt_value(value;unit)
-    _scenarios_root()
-    _resolve_include(path;base)
-    _substitute_args(raw;args)
-    _load_includes(doc;macros;base;seen)
-    _lower_include(cmd;macros;visiting)
-    _lower_call(cmd;macros;visiting)
-    _lower_set(cmd;macros;visiting)
-    _lower_get(cmd;macros;visiting)
-    _lower_wait(cmd;macros;visiting)
-    _lower_save(cmd;macros;visiting)
-    _make_lower_minmax(kind)
-    _lower_check(cmd;macros;visiting)
-    _lower_if_delta(cmd;macros;visiting)
-    _lower_sample(cmd;macros;visiting)
-    _lower_log(cmd;macros;visiting)
-    _lower_error_cmd(cmd;macros;visiting)
-    _lower_repeat(cmd;macros;visiting)
-    _cmd_to_actions(cmd;macros;visiting)
-    _parse_macro_line(raw_line;ln;args)
-    _has_anonymous_named_goal(source)
-    is_flat_oql(source)
-    oql_doc_to_cql(doc)
-    _split_device_field(device;index)
-    parse_flat_oql(source;filename)
-  oqlos/core/_sensor_evaluator.py:
-    e: SensorEvaluator
-    SensorEvaluator: __init__(3),collect_sensor_constraints(1),seed_sensors_from_conditions(1),auto_mock_sensor(3),compare_sensor(3),get_sensor_value(1)  # Evaluates sensor conditions and manages sensor values.
-  oqlos/core/_value_normalizers.py:
-    e: ValueNormalizer
-    ValueNormalizer: __init__(1),coerce_float(1),_get_pump_flow_full_scale_lpm(0),normalize_pump_power(1),normalize_valve_value(1),normalize_lung_value(1),coerce_generic_peripheral_value(1)  # Normalizes DSL values to hardware-compatible formats.
-  oqlos/core/base.py:
-    e: StepStatus,StepResult,ScriptResult,VariableStore,InterpreterOutput,BaseInterpreter,EventBridge
-    StepStatus:
-    StepResult:
-    ScriptResult: passed(0),failed(0),summary(0)
-    VariableStore: __init__(2),set(3),get(2),has(1),all(1),clear(0),interpolate(1)  # Hierarchical key-value store with interpolation support.
-    InterpreterOutput: __init__(3),emit(2),_broadcast_event(2),_emit_status(1),info(1),ok(1),fail(1),warn(1),error(1),step(2),output_yaml(0)  # Collects interpreter output lines for display or testing, an
-    BaseInterpreter: __init__(4),parse(2),execute(1),run(2),run_file(1),strip_comments(1)  # Abstract base for language interpreters.
-    EventBridge: __init__(1),connect(0),disconnect(0),send_event(2),connected(0)  # Optional WebSocket bridge to DSL Event Server (port 8104).
-  oqlos/core/cql_parser.py:
-    e: parse_cql,_collect_all_goals,_validate_intervals,validate_cql,_ParseState
-    _ParseState: __init__(2),parse(0),_peek_next_significant_indent(0),_flush_pending_inline_if(0),_attach_pending_inline_if(2),_get_line_info(0),_process_line(0),_try_skip_block(2),_try_intervals_block(3),_try_top_level(3),_handle_scenario(1),_handle_scenario_attrs(1),_handle_goal(3),_handle_goal_attrs(1),_handle_current_attrs(4),_handle_step(1),_init_block_stack(0),_add_action_to_parent(1),_append_parent_stack_action(1),_pop_block_with_warning(2),_handle_block_control(1),_handle_else_block(0),_try_handle_structure_levels(3),_handle_inline_if_logic(2),_handle_action_dispatch(2),_try_hierarchy(3)  # Encapsulates the parsing state to simplify the main loop.
-    parse_cql(source;filename)
-    _collect_all_goals(doc)
-    _validate_intervals(doc)
-    validate_cql(doc)
+  oqlos/core/cqrs/__init__.py:
+    e: build_command_bus
+    build_command_bus(store)
+  oqlos/core/cqrs/aggregate.py:
+    e: Aggregate
+    Aggregate: __init__(1),apply(1),load(1),rehydrate(3)  # Base for event-sourced aggregates.
+  oqlos/core/cqrs/commands.py:
+    e: Command,CommandBus
+    Command:  # Base class for commands: an intent to change state.
+    CommandBus: __init__(1),register(2),dispatch(1)  # Dispatches a command to its registered handler and persists 
+  oqlos/core/cqrs/events.py:
+    e: Event,EventStore
+    Event: event_type(0)  # Base class for immutable domain events. Subclasses add their
+    EventStore: __init__(0),append(1),append_many(1),replay(1),all_events(0),stream_ids(0),subscribe(1)  # Append-only, replayable event store.
+  oqlos/core/cqrs/execution.py:
+    e: handle_start_execution,handle_start_goal,handle_start_step,handle_update_progress,handle_set_execution_status,ExecutionStarted,ExecutionGoalStarted,ExecutionStepStarted,ExecutionProgressUpdated,ExecutionStatusChanged,ExecutionAggregate,StartExecutionCommand,StartGoalCommand,StartStepCommand,UpdateProgressCommand,SetExecutionStatusCommand,ExecutionsProjection
+    ExecutionStarted:
+    ExecutionGoalStarted:
+    ExecutionStepStarted:
+    ExecutionProgressUpdated:
+    ExecutionStatusChanged:
+    ExecutionAggregate: __init__(1),apply(1)  # Rehydrates a single execution's current shape by replaying i
+    StartExecutionCommand:
+    StartGoalCommand:
+    StartStepCommand:
+    UpdateProgressCommand:
+    SetExecutionStatusCommand:
+    ExecutionsProjection: __init__(0),apply(1)  # Read model: `executions[id]` mirrors the latest replayed sta
+    handle_start_execution(cmd)
+    handle_start_goal(cmd)
+    handle_start_step(cmd)
+    handle_update_progress(cmd)
+    handle_set_execution_status(cmd)
+  oqlos/core/cqrs/peripheral.py:
+    e: handle_register_peripheral,handle_set_peripheral_value,handle_set_peripheral_mode,handle_set_peripheral_status,PeripheralRegistered,PeripheralValueSet,PeripheralModeChanged,PeripheralStatusChanged,PeripheralAggregate,RegisterPeripheralCommand,SetPeripheralValueCommand,SetPeripheralModeCommand,SetPeripheralStatusCommand,PeripheralsProjection
+    PeripheralRegistered:
+    PeripheralValueSet:
+    PeripheralModeChanged:
+    PeripheralStatusChanged:
+    PeripheralAggregate: __init__(1),apply(1)  # Rehydrates a single Peripheral's current shape by replaying 
+    RegisterPeripheralCommand:
+    SetPeripheralValueCommand:
+    SetPeripheralModeCommand:
+    SetPeripheralStatusCommand:
+    PeripheralsProjection: __init__(0),apply(1)  # Read model: `peripherals[id]` mirrors the latest replayed st
+    handle_register_peripheral(cmd)
+    handle_set_peripheral_value(cmd)
+    handle_set_peripheral_mode(cmd)
+    handle_set_peripheral_status(cmd)
+  oqlos/core/cqrs/projection.py:
+    e: Projection
+    Projection: apply(1),rebuild(1),attach(1)  # Read-model base. Subscribes to an EventStore and folds match
+  oqlos/core/cqrs/telemetry.py:
+    e: record_sensor_readings,latest_sensor_values,sensor_history,SensorObserved,SensorTelemetryProjection
+    SensorObserved:
+    SensorTelemetryProjection: __init__(0),apply(1)  # Read model: `latest[sensor_id]` and full per-sensor history.
+    record_sensor_readings(store;readings)
+    latest_sensor_values(store)
+    sensor_history(store;sensor_id)
   oqlos/core/executor.py:
     e: _resolve_compare,_resolve_name_or_attr,_safe_resolve,safe_eval_condition,ScenarioOrchestrator
-    ScenarioOrchestrator: __init__(2),_sanitize_identifier(1),_build_eval_context(0),_sanitize_expression(1),_build_step_plan(1),_execute_goal_steps(7),execute_scenario(4),execute_step(3),_execute_lung_step(2),_execute_valve_step(2),_execute_pump_step(3),_execute_wait_step(2),_execute_sensor_read_step(1),_execute_validate_step(1),update_dependent_sensors(1),validate_goal(1),log_event(2)
+    ScenarioOrchestrator: __init__(2),current_execution(0),_sanitize_identifier(1),_build_eval_context(0),_sanitize_expression(1),_build_step_plan(1),_execute_goal_steps(6),execute_scenario(4),execute_step(3),_execute_lung_step(2),_execute_valve_step(2),_execute_pump_step(3),_execute_wait_step(2),_execute_sensor_read_step(1),_execute_validate_step(1),update_dependent_sensors(1),validate_goal(1),log_event(2)
     _resolve_compare(node;context)
     _resolve_name_or_attr(node;context)
     _safe_resolve(node;context)
     safe_eval_condition(expr;context)
-  oqlos/core/interpreter.py:
-    e: CqlInterpreter
-    CqlInterpreter: __init__(11),sensor_values(0),sensor_values(1),_firmware(0),_firmware(1),_firmware_url(0),_firmware_url(1),_coerce_float(1),_resolve_peripheral_id(1),_get_pump_flow_full_scale_lpm(0),_normalize_pump_power(1),_normalize_valve_value(1),_normalize_lung_value(1),parse(2),_print_header(2),_collect_warnings(2),_planned_step_results(1),_run_validation_mode(4),_collect_all_goals(1),_execute_single_goal(2),_execute_all_goals(1),_build_script_result(2),execute(1),_execute_step(2),_execute_action(1),_exec_flat_action(1),_do_sleep(2),_normalize_peripheral_value(2),_coerce_generic_peripheral_value(1),_exec_set_peripheral(2),_get_firmware(0),_execute_firmware_action(2),_execute_plugin_action(2),_execute_legacy_firmware_action(2),_refresh_sensors_from_firmware(0),_auto_mock_sensor(3),_compare_sensor(3),_resolve_sensor_value(1),_resolve_delta_sensor_value(1),_resolve_windowed_delta_sensor_value(2),_extract_window_seconds(1),_resolve_condition_rhs(3),_evaluate_resolved_condition(0),_eval_condition_clause(2),_evaluate_inline_condition_expression(1),_tokenize_condition_expression(1),_aggregate_condition_results(2),_apply_connector(3),_finalize_condition_result(4),_evaluate_range_condition(2),_evaluate_condition(1)  # CQL interpreter with three modes:
-  oqlos/core/motor2_runtime.py:
-    e: _coerce_int,_coerce_float,_pick,motor2_max_steps_per_second,normalize_motor2_runtime_config,motor2_speed_for_duration,motor2_acceleration_raw,motor2_speed_raw,_normalize_motor2_direction,_compute_motor2_cycles,_compute_motor2_speed,build_motor2_reciprocating_plan,Motor2RuntimeConfig,Motor2ReciprocatingPlan
-    Motor2RuntimeConfig:
-    Motor2ReciprocatingPlan: speed_was_clamped(0)
-    _coerce_int(value;default)
-    _coerce_float(value;default)
-    _pick(source)
-    motor2_max_steps_per_second(default)
-    normalize_motor2_runtime_config(source)
-    motor2_speed_for_duration(steps;cycles;duration_seconds)
-    motor2_acceleration_raw(steps_per_second;percent;max_steps_per_second)
-    motor2_speed_raw(steps_per_second;max_steps_per_second)
-    _normalize_motor2_direction(direction)
-    _compute_motor2_cycles(cycles;volume_liters;cycle_volume)
-    _compute_motor2_speed(steps;cycles;speed;duration_seconds;max_speed;default_speed)
-    build_motor2_reciprocating_plan(config)
-  oqlos/core/oql_parser.py:
-    e: to_num,_compact_duration,parse_duration,duration_to_ms,_unescape,tokenize,_require,_split_value_unit,_split_set_value_unit,parse_SET,_make_single_field_parser,parse_WAIT,parse_IF_DELTA,parse_CHECK,parse_IF,_make_minmax_parser,parse_SAMPLE,_make_message_parser,_make_call_parser,parse_REPEAT,_line_indent,_expand_repeat_block_lines,_expand_repeat_blocks,_handle_top_level_line,_handle_block_header,_handle_macro_body_line,_handle_set_name,_handle_modifier_cmd,_parse_and_append_command,_validate_oql_version,_check_unnamed_goals,parse_oql,format_doc,OqlCmd,OqlBlock,OqlDoc
-    OqlCmd: __repr__(0)  # A single command line inside a block.
-    OqlBlock:  # A named block: ``GOAL``, ``CONFIG``, or ``MACRO``.
-    OqlDoc: goals(0),configs(0),macros(0),funcs(0)  # Parsed OQL document.
-    to_num(raw)
-    _compact_duration(token)
-    parse_duration(token)
-    duration_to_ms(token)
-    _unescape(text)
-    tokenize(rest)
-    _require(tokens;minimum;cmd;ln;shape)
-    _split_value_unit(tokens)
-    _split_set_value_unit(tokens)
-    parse_SET(tokens;ln;raw)
-    _make_single_field_parser(cmd;field;required_desc)
-    parse_WAIT(tokens;ln;raw)
-    parse_IF_DELTA(tokens;ln;raw)
-    parse_CHECK(rest;ln;raw)
-    parse_IF(rest;ln;raw)
-    _make_minmax_parser(cmd)
-    parse_SAMPLE(tokens;ln;raw)
-    _make_message_parser(cmd)
-    _make_call_parser(cmd;field;required_desc)
-    parse_REPEAT(tokens;ln;raw)
-    _line_indent(line)
-    _expand_repeat_block_lines(lines)
-    _expand_repeat_blocks(text)
-    _handle_top_level_line(doc;raw;line;ln)
-    _handle_block_header(doc;line;ln;version_info)
-    _handle_macro_body_line(line;ln;current)
-    _handle_set_name(line;current)
-    _handle_modifier_cmd(doc;line;ln;cmd;rest;current)
-    _parse_and_append_command(doc;line;ln;cmd;rest;current)
-    _validate_oql_version(doc;version_info)
-    _check_unnamed_goals(doc;version_info)
-    parse_oql(text;filename)
-    format_doc(doc)
-  oqlos/core/oql_versioning.py:
-    e: first_meaningful_line,extract_declared_version,resolve_oql_version,is_supported_oql_version,OqlVersionInfo
-    OqlVersionInfo: is_current(0)  # Resolved OQL version metadata for a source document.
-    first_meaningful_line(text)
-    extract_declared_version(text)
-    resolve_oql_version(text)
-    is_supported_oql_version(version)
-  oqlos/core/parser.py:
-    e: _dispatch_simple_parser,_try_action_or_condition,_parse_runtime_line,parse_dsl_to_goal_with_issues,parse_dsl_to_goal
-    _dispatch_simple_parser(kind;line;step_counter;steps)
-    _try_action_or_condition(line;normalized_line;step_counter;steps;record_invalid)
-    _parse_runtime_line(line;step_counter;steps;func_defs;indent;call_stack;invalid_lines)
-    parse_dsl_to_goal_with_issues(dsl;scenario_id)
-    parse_dsl_to_goal(dsl;scenario_id)
-  oqlos/core/safe_eval.py:
-    e: safe_eval,_eval_constant,_eval_name,_eval_unary_op,_eval_bin_op,_eval_compare,_eval_bool_op,_eval_call,_eval_if_exp,_eval_node,SafeEvalError
-    SafeEvalError:  # Raised when an expression cannot be safely evaluated.
-    safe_eval(expr;context)
-    _eval_constant(node;ctx)
-    _eval_name(node;ctx)
-    _eval_unary_op(node;ctx)
-    _eval_bin_op(node;ctx)
-    _eval_compare(node;ctx)
-    _eval_bool_op(node;ctx)
-    _eval_call(node;ctx)
-    _eval_if_exp(node;ctx)
-    _eval_node(node;ctx)
   oqlos/core/state.py:
     e: StateManager
-    StateManager: __init__(0),initialize_peripherals(0),broadcast_event(1)
+    StateManager: __init__(0),peripherals(0),executions(0),initialize_peripherals(0),broadcast_event(1)  # Peripheral and execution state are event-sourced: this class
   oqlos/dsl/__init__.py:
   oqlos/dsl/schema.py:
     e: _normalize_name_list,_build_inferred_object_function_map,_build_inferred_param_unit_map,_merge_binding_map,_merge_object_function_map,_merge_param_unit_map,get_default_dsl_schema,DslDialect,DslItem,DslFunctionBinding,DslParamUnitBinding,DslSchema
@@ -1568,34 +1349,6 @@ D:
     pi_system_diagnostics()
     reset_usb_device(vendor_id;product_id;dev_node)
   oqlos/ide/__init__.py:
-  oqlos/models/__init__.py:
-  oqlos/models/dsl_models.py:
-    e: CqlMetadata,CqlInterval,CqlCondition,CqlAction,CqlStep,CqlGoal,CqlScenario,CqlDocument
-    CqlMetadata:
-    CqlInterval:
-    CqlCondition:  # Sensor condition: AI01 ∈ [min, max] unit | ACTION 'msg'
-    CqlAction:  # An action within a step: → Target.method args, TASK, SET, WA
-    CqlStep:  # A numbered step within a goal: 1. Step name:
-    CqlGoal:  # A test goal within a scenario.
-    CqlScenario:  # A named scenario block: @Namespace.Name
-    CqlDocument:  # Root AST node for a .cql file.
-  oqlos/models/execution.py:
-    e: ExecutionRequest,ExecutionStatus,CommandEnvelope
-    ExecutionRequest:
-    ExecutionStatus:
-    CommandEnvelope:
-  oqlos/models/peripheral.py:
-    e: PeripheralType,PeripheralStatus,PeripheralMode,Peripheral
-    PeripheralType:
-    PeripheralStatus:
-    PeripheralMode:
-    Peripheral:
-  oqlos/models/scenario.py:
-    e: Step,ValidationRule,Goal,Scenario
-    Step:
-    ValidationRule:
-    Goal:
-    Scenario:
   oqlos/reporters/__init__.py:
   oqlos/reporters/html_report.py:
     e: render_html_report,_render_device_meta,_render_goal,_render_thresholds_table,_render_step
@@ -1634,9 +1387,6 @@ D:
     ConnectionManager: __init__(0),connect(2),disconnect(1),broadcast(2),get_stats(0)  # Tracks connected WebSocket clients and broadcasts messages.
     EventServer: __init__(3),handle_client(1),_handle_message(2),_normalize_event(1),start(0)  # WebSocket event broker with persistence.
     main()
-  oqlos/shared/event_store.py:
-    e: EventStore
-    EventStore: __init__(1),append(1),get_all(0),get_recent(1),get_by_correlation(1),clear(0),to_json(0),from_json(1),count(0),_save(0),_load(0)  # Append-only event store with optional JSON file persistence.
   oqlos/shared/file_ops.py:
     e: _ensure_safe_path,list_files,iter_entries,read_file,env_configured_path,read_text_file_or_empty,write_file,PathEscapeError
     PathEscapeError:  # Raised when a resolved path would escape the base directory.
@@ -1937,6 +1687,347 @@ D:
   oqlos/utils/sample_data.py:
     e: load_sample_scenarios
     load_sample_scenarios(state_manager)
+  packages/oqlos-core/src/oqlos/core/__init__.py:
+  packages/oqlos-core/src/oqlos/core/_action_motor2.py:
+    e: _normalize_motor2_target,_parse_motor2_direction,_parse_motor2_speed_steps,_parse_motor2_positive_int,_parse_motor2_float,_parse_motor2_duration_seconds,_parse_motor2_volume_liters,_parse_motor2_acceleration,_normalize_motor2_value,_parse_prefixed_motor2_setting,_parse_motor2_reciprocating_setting,_parse_motor2_steps,_motor2_speed_raw,_motor2_max_steps_per_second,_motor2_effective_steps_per_second,_motor2_speed_for_duration,_motor2_acceleration_raw,_post_motor2_move_relative,_post_motor2_reciprocate,_post_motor2_stop,_call_motor2_transport,_motor2_reciprocating_state,_motor2_set_state_value,_motor2_state_handler,_motor2_do_stop,_motor2_build_plan,_motor2_step_label,_motor2_do_start,_handle_motor2_reciprocating_setting,_try_exec_motor2_set
+    _normalize_motor2_target(target_lower)
+    _parse_motor2_direction(value)
+    _parse_motor2_speed_steps(value)
+    _parse_motor2_positive_int(value)
+    _parse_motor2_float(value)
+    _parse_motor2_duration_seconds(value)
+    _parse_motor2_volume_liters(value)
+    _parse_motor2_acceleration(value)
+    _normalize_motor2_value(value)
+    _parse_prefixed_motor2_setting(normalized)
+    _parse_motor2_reciprocating_setting(value)
+    _parse_motor2_steps(value)
+    _motor2_speed_raw(steps_per_second)
+    _motor2_max_steps_per_second()
+    _motor2_effective_steps_per_second(steps_per_second)
+    _motor2_speed_for_duration(steps;cycles;duration_seconds)
+    _motor2_acceleration_raw(steps_per_second;percent)
+    _post_motor2_move_relative(direction;steps;speed_raw;acceleration_raw)
+    _post_motor2_reciprocate(direction;steps;speed_raw;acceleration_raw;cycles;pause;limit_mode)
+    _post_motor2_stop()
+    _call_motor2_transport(name;fallback)
+    _motor2_reciprocating_state(interp)
+    _motor2_set_state_value(interp;state;key;value;label)
+    _motor2_state_handler(key;value_fn;label_fn)
+    _motor2_do_stop(interp;setting;state)
+    _motor2_build_plan(interp;setting;state)
+    _motor2_step_label(plan;mode)
+    _motor2_do_start(interp;setting;state)
+    _handle_motor2_reciprocating_setting(interp;setting)
+    _try_exec_motor2_set(interp;target_lower;value)
+  packages/oqlos-core/src/oqlos/core/_compare.py:
+    e: resolve_compare,resolve_compare_chain
+    resolve_compare(left;op;right)
+    resolve_compare_chain(node;resolve_value)
+  packages/oqlos-core/src/oqlos/core/_cql_tokenizer.py:
+    e: _make_args_parser,_make_keyword_parser,_make_method_parser,_make_stripped_field_parser,_make_two_group_parser,_make_target_method_args_parser,_match_first,_parse_condition_value,_try_save,_try_set,_try_condition_range,_try_condition_cmp,_try_if_else,_try_if_block,_try_if_standalone,_try_else_standalone,_try_min_max,_try_val,_try_loop_start,_try_repeat_start,_try_repeat_stop,_try_sample,_try_goto
+    _make_args_parser(regex;kind)
+    _make_keyword_parser(regex;kind)
+    _make_method_parser(regex;kind)
+    _make_stripped_field_parser(regex;kind;field)
+    _make_two_group_parser(regex;kind;field)
+    _make_target_method_args_parser(regex;kind)
+    _match_first(line)
+    _parse_condition_value(raw_value)
+    _try_save(line;stripped)
+    _try_set(line;stripped)
+    _try_condition_range(line;stripped)
+    _try_condition_cmp(line;stripped)
+    _try_if_else(line;stripped)
+    _try_if_block(line;stripped)
+    _try_if_standalone(line;stripped)
+    _try_else_standalone(line;stripped)
+    _try_min_max(line;stripped)
+    _try_val(line;stripped)
+    _try_loop_start(line;stripped)
+    _try_repeat_start(line;stripped)
+    _try_repeat_stop(line;stripped)
+    _try_sample(line;stripped)
+    _try_goto(line;stripped)
+  packages/oqlos-core/src/oqlos/core/_cql_tree_builder.py:
+    e: _parse_metadata_kv,_parse_scenario_line,_parse_scenario_attrs,_parse_goal_line,_parse_goal_attrs,_parse_step_line,_parse_action_line,_ensure_goal_for_step,_ensure_step_for_actions
+    _parse_metadata_kv(doc;stripped)
+    _parse_scenario_line(doc;stripped)
+    _parse_scenario_attrs(line;current_scenario)
+    _parse_goal_line(stripped;line;indent;current_scenario)
+    _parse_goal_attrs(line;current_goal)
+    _parse_step_line(line;current_goal)
+    _parse_action_line(line;stripped;actions_list;doc;lineno)
+    _ensure_goal_for_step(current_goal;current_scenario;line)
+    _ensure_step_for_actions(current_step;current_goal)
+  packages/oqlos-core/src/oqlos/core/_dsl_helpers.py:
+    e: _normalize_quote_syntax,_looks_like_valve_object,_looks_like_pump_object,_looks_like_lung_object,_looks_like_sensor_object,_map_peripheral,_parse_numeric_value,_map_valve_action,_map_pump_action,_map_wait_action,_map_lung_action,_map_action_value
+    _normalize_quote_syntax(line)
+    _looks_like_valve_object(obj)
+    _looks_like_pump_object(obj)
+    _looks_like_lung_object(obj)
+    _looks_like_sensor_object(obj)
+    _map_peripheral(obj)
+    _parse_numeric_value(raw)
+    _map_valve_action(fn)
+    _map_pump_action(fn;obj_raw;line)
+    _map_wait_action(fn;obj;obj_raw;line;step_counter)
+    _map_lung_action(fn;obj_raw;line)
+    _map_action_value(fn;obj;obj_raw;line;step_counter)
+  packages/oqlos-core/src/oqlos/core/_firmware_executor.py:
+    e: _load_peripheral_map,_plugin_gateway_cls,FirmwareExecutor
+    FirmwareExecutor: __init__(7),_get_firmware(0),_resolve_gateway_result(2),_is_success(1),resolve_peripheral_id(1),normalize_peripheral_value(2),refresh_sensors_from_firmware(1),execute_firmware_action(2),_execute_plugin_action(2),_execute_legacy_firmware_action(2),exec_set_peripheral(2)  # Executes hardware actions via plugin gateway or legacy firmw
+    _load_peripheral_map()
+    _plugin_gateway_cls()
+  packages/oqlos-core/src/oqlos/core/_func_resolver.py:
+    e: _collect_function_definitions,_extract_func_name,_guard_recursion,_parse_func_call
+    _collect_function_definitions(lines)
+    _extract_func_name(line;indent)
+    _guard_recursion(func_name;call_stack)
+    _parse_func_call(line;step_counter;steps;func_defs;indent;call_stack;parse_line_fn)
+  packages/oqlos-core/src/oqlos/core/_interpreter_actions.py:
+    e: _extract_action_tokens,_drop_command_token,_coerce_expected_value,_compare_values,_oql_quote,_format_set_command,_get_nested_value,_record_failure,_mark_success,_normalize_bool,_lookup_peripheral_state,_mock_api_response,exec_action_task,exec_action_save,parse_wait_secs,exec_action_wait,_do_sleep,exec_action_min_max,exec_action_val,exec_action_log,exec_action_error,exec_action_else,exec_action_sample,_resolve_numeric_token,_func_avg,_func_sum,_func_reduce_or_zero,_func_sub,_func_div,_func_mul,exec_action_func,exec_action_goto,exec_action_api,exec_action_expect,_assert_status,_assert_json,_assert_sensor,_assert_valve,exec_action_assert,exec_action_shell,exec_action_var_set,exec_action_condition,exec_action_if_fail_block,exec_action_if_block,exec_action_loop_block,exec_action_endloop,exec_action_set,_exec_set_wait,exec_action_action
+    _extract_action_tokens(text)
+    _drop_command_token(act)
+    _coerce_expected_value(value)
+    _compare_values(actual;operator;expected)
+    _oql_quote(value)
+    _format_set_command(target;value)
+    _get_nested_value(payload;path)
+    _record_failure(interp;key;message)
+    _mark_success(interp;key)
+    _normalize_bool(value)
+    _lookup_peripheral_state(interp;target)
+    _mock_api_response(interp;endpoint)
+    exec_action_task(interp;act)
+    exec_action_save(interp;act)
+    parse_wait_secs(raw)
+    exec_action_wait(interp;act)
+    _do_sleep(interp;secs;label)
+    exec_action_min_max(interp;act)
+    exec_action_val(interp;act)
+    exec_action_log(interp;act)
+    exec_action_error(interp;act)
+    exec_action_else(interp;act)
+    exec_action_sample(interp;act)
+    _resolve_numeric_token(interp;token)
+    _func_avg(values)
+    _func_sum(values)
+    _func_reduce_or_zero(values;reducer)
+    _func_sub(values)
+    _func_div(values;interp;target)
+    _func_mul(values)
+    exec_action_func(interp;act)
+    exec_action_goto(interp;act)
+    exec_action_api(interp;act)
+    exec_action_expect(interp;act)
+    _assert_status(interp;act;tokens)
+    _assert_json(interp;act;tokens)
+    _assert_sensor(interp;act;tokens)
+    _assert_valve(interp;act;tokens)
+    exec_action_assert(interp;act)
+    exec_action_shell(interp;act)
+    exec_action_var_set(interp;act)
+    exec_action_condition(interp;act)
+    exec_action_if_fail_block(interp;act)
+    exec_action_if_block(interp;act)
+    exec_action_loop_block(interp;act)
+    exec_action_endloop(interp;act)
+    exec_action_set(interp;act)
+    _exec_set_wait(interp;act;value)
+    exec_action_action(interp;act)
+  packages/oqlos-core/src/oqlos/core/_line_parsers.py:
+    e: _parse_task_part,_parse_pump_line,_set_valve_step,_set_pump_step,_set_lung_step,_extract_set_params,_parse_set_line,_parse_inline_task,_parse_action_line,_parse_if_condition
+    _parse_task_part(part;step_counter)
+    _parse_pump_line(line;step_counter)
+    _set_valve_step(peripheral;value_raw;step_counter;line)
+    _set_pump_step(peripheral;value_raw;step_counter;line)
+    _set_lung_step(peripheral;value_raw;step_counter;line)
+    _extract_set_params(normalized_line)
+    _parse_set_line(line;step_counter)
+    _parse_inline_task(line;step_counter;steps)
+    _parse_action_line(line;step_counter;steps)
+    _parse_if_condition(line;step_counter;steps)
+  packages/oqlos-core/src/oqlos/core/_oql_adapter.py:
+    e: _fmt_value,_scenarios_root,_resolve_include,_substitute_args,_load_includes,_lower_include,_lower_call,_lower_set,_lower_get,_lower_wait,_lower_save,_make_lower_minmax,_lower_check,_lower_if_delta,_lower_sample,_lower_log,_lower_error_cmd,_lower_repeat,_cmd_to_actions,_parse_macro_line,_has_anonymous_named_goal,is_flat_oql,oql_doc_to_cql,_split_device_field,parse_flat_oql,_MacroRegistry
+    _MacroRegistry: __init__(0),register(1),get(1)  # Collect ``MACRO`` definitions (raw body lines) from the root
+    _fmt_value(value;unit)
+    _scenarios_root()
+    _resolve_include(path;base)
+    _substitute_args(raw;args)
+    _load_includes(doc;macros;base;seen)
+    _lower_include(cmd;macros;visiting)
+    _lower_call(cmd;macros;visiting)
+    _lower_set(cmd;macros;visiting)
+    _lower_get(cmd;macros;visiting)
+    _lower_wait(cmd;macros;visiting)
+    _lower_save(cmd;macros;visiting)
+    _make_lower_minmax(kind)
+    _lower_check(cmd;macros;visiting)
+    _lower_if_delta(cmd;macros;visiting)
+    _lower_sample(cmd;macros;visiting)
+    _lower_log(cmd;macros;visiting)
+    _lower_error_cmd(cmd;macros;visiting)
+    _lower_repeat(cmd;macros;visiting)
+    _cmd_to_actions(cmd;macros;visiting)
+    _parse_macro_line(raw_line;ln;args)
+    _has_anonymous_named_goal(source)
+    is_flat_oql(source)
+    oql_doc_to_cql(doc)
+    _split_device_field(device;index)
+    parse_flat_oql(source;filename)
+  packages/oqlos-core/src/oqlos/core/_runtime_settings.py:
+    e: lung_motor_url,pump_flow_full_scale_lpm
+    lung_motor_url()
+    pump_flow_full_scale_lpm(default)
+  packages/oqlos-core/src/oqlos/core/_sensor_evaluator.py:
+    e: SensorEvaluator
+    SensorEvaluator: __init__(3),collect_sensor_constraints(1),seed_sensors_from_conditions(1),auto_mock_sensor(3),compare_sensor(3),get_sensor_value(1)  # Evaluates sensor conditions and manages sensor values.
+  packages/oqlos-core/src/oqlos/core/_value_normalizers.py:
+    e: ValueNormalizer
+    ValueNormalizer: __init__(1),coerce_float(1),_get_pump_flow_full_scale_lpm(0),normalize_pump_power(1),normalize_valve_value(1),normalize_lung_value(1),coerce_generic_peripheral_value(1)  # Normalizes DSL values to hardware-compatible formats.
+  packages/oqlos-core/src/oqlos/core/base.py:
+    e: StepStatus,StepResult,ScriptResult,VariableStore,InterpreterOutput,BaseInterpreter,EventBridge
+    StepStatus:
+    StepResult:
+    ScriptResult: passed(0),failed(0),summary(0)
+    VariableStore: __init__(2),set(3),get(2),has(1),all(1),clear(0),interpolate(1)  # Hierarchical key-value store with interpolation support.
+    InterpreterOutput: __init__(3),emit(2),_broadcast_event(2),_emit_status(1),info(1),ok(1),fail(1),warn(1),error(1),step(2),output_yaml(0)  # Collects interpreter output lines for display or testing, an
+    BaseInterpreter: __init__(4),parse(2),execute(1),run(2),run_file(1),strip_comments(1)  # Abstract base for language interpreters.
+    EventBridge: __init__(1),connect(0),disconnect(0),send_event(2),connected(0)  # Optional WebSocket bridge to DSL Event Server (port 8104).
+  packages/oqlos-core/src/oqlos/core/cql_parser.py:
+    e: parse_cql,_collect_all_goals,_validate_intervals,validate_cql,_ParseState
+    _ParseState: __init__(2),parse(0),_peek_next_significant_indent(0),_flush_pending_inline_if(0),_attach_pending_inline_if(2),_get_line_info(0),_process_line(0),_try_skip_block(2),_try_intervals_block(3),_try_top_level(3),_handle_scenario(1),_handle_scenario_attrs(1),_handle_goal(3),_handle_goal_attrs(1),_handle_current_attrs(4),_handle_step(1),_init_block_stack(0),_add_action_to_parent(1),_append_parent_stack_action(1),_pop_block_with_warning(2),_handle_block_control(1),_handle_else_block(0),_try_handle_structure_levels(3),_handle_inline_if_logic(2),_handle_action_dispatch(2),_try_hierarchy(3)  # Encapsulates the parsing state to simplify the main loop.
+    parse_cql(source;filename)
+    _collect_all_goals(doc)
+    _validate_intervals(doc)
+    validate_cql(doc)
+  packages/oqlos-core/src/oqlos/core/interpreter.py:
+    e: CqlInterpreter
+    CqlInterpreter: __init__(11),sensor_values(0),sensor_values(1),_firmware(0),_firmware(1),_firmware_url(0),_firmware_url(1),_coerce_float(1),_resolve_peripheral_id(1),_get_pump_flow_full_scale_lpm(0),_normalize_pump_power(1),_normalize_valve_value(1),_normalize_lung_value(1),parse(2),_print_header(2),_collect_warnings(2),_planned_step_results(1),_run_validation_mode(4),_collect_all_goals(1),_execute_single_goal(2),_execute_all_goals(1),_build_script_result(2),execute(1),_execute_step(2),_execute_action(1),_exec_flat_action(1),_do_sleep(2),_normalize_peripheral_value(2),_coerce_generic_peripheral_value(1),_exec_set_peripheral(2),_get_firmware(0),_execute_firmware_action(2),_execute_plugin_action(2),_execute_legacy_firmware_action(2),_refresh_sensors_from_firmware(0),_auto_mock_sensor(3),_compare_sensor(3),_resolve_sensor_value(1),_resolve_delta_sensor_value(1),_resolve_windowed_delta_sensor_value(2),_extract_window_seconds(1),_resolve_condition_rhs(3),_evaluate_resolved_condition(0),_eval_condition_clause(2),_evaluate_inline_condition_expression(1),_tokenize_condition_expression(1),_aggregate_condition_results(2),_apply_connector(3),_finalize_condition_result(4),_evaluate_range_condition(2),_evaluate_condition(1)  # CQL interpreter with three modes:
+  packages/oqlos-core/src/oqlos/core/motor2_runtime.py:
+    e: _coerce_int,_coerce_float,_pick,motor2_max_steps_per_second,normalize_motor2_runtime_config,motor2_speed_for_duration,motor2_acceleration_raw,motor2_speed_raw,_normalize_motor2_direction,_compute_motor2_cycles,_compute_motor2_speed,build_motor2_reciprocating_plan,Motor2RuntimeConfig,Motor2ReciprocatingPlan
+    Motor2RuntimeConfig:
+    Motor2ReciprocatingPlan: speed_was_clamped(0)
+    _coerce_int(value;default)
+    _coerce_float(value;default)
+    _pick(source)
+    motor2_max_steps_per_second(default)
+    normalize_motor2_runtime_config(source)
+    motor2_speed_for_duration(steps;cycles;duration_seconds)
+    motor2_acceleration_raw(steps_per_second;percent;max_steps_per_second)
+    motor2_speed_raw(steps_per_second;max_steps_per_second)
+    _normalize_motor2_direction(direction)
+    _compute_motor2_cycles(cycles;volume_liters;cycle_volume)
+    _compute_motor2_speed(steps;cycles;speed;duration_seconds;max_speed;default_speed)
+    build_motor2_reciprocating_plan(config)
+  packages/oqlos-core/src/oqlos/core/oql_parser.py:
+    e: to_num,_compact_duration,parse_duration,duration_to_ms,_unescape,tokenize,_require,_split_value_unit,_split_set_value_unit,parse_SET,_make_single_field_parser,parse_WAIT,parse_IF_DELTA,parse_CHECK,parse_IF,_make_minmax_parser,parse_SAMPLE,_make_message_parser,_make_call_parser,parse_REPEAT,_line_indent,_expand_repeat_block_lines,_expand_repeat_blocks,_handle_top_level_line,_handle_block_header,_handle_macro_body_line,_handle_set_name,_handle_modifier_cmd,_parse_and_append_command,_validate_oql_version,_check_unnamed_goals,parse_oql,format_doc,OqlCmd,OqlBlock,OqlDoc
+    OqlCmd: __repr__(0)  # A single command line inside a block.
+    OqlBlock:  # A named block: ``GOAL``, ``CONFIG``, or ``MACRO``.
+    OqlDoc: goals(0),configs(0),macros(0),funcs(0)  # Parsed OQL document.
+    to_num(raw)
+    _compact_duration(token)
+    parse_duration(token)
+    duration_to_ms(token)
+    _unescape(text)
+    tokenize(rest)
+    _require(tokens;minimum;cmd;ln;shape)
+    _split_value_unit(tokens)
+    _split_set_value_unit(tokens)
+    parse_SET(tokens;ln;raw)
+    _make_single_field_parser(cmd;field;required_desc)
+    parse_WAIT(tokens;ln;raw)
+    parse_IF_DELTA(tokens;ln;raw)
+    parse_CHECK(rest;ln;raw)
+    parse_IF(rest;ln;raw)
+    _make_minmax_parser(cmd)
+    parse_SAMPLE(tokens;ln;raw)
+    _make_message_parser(cmd)
+    _make_call_parser(cmd;field;required_desc)
+    parse_REPEAT(tokens;ln;raw)
+    _line_indent(line)
+    _expand_repeat_block_lines(lines)
+    _expand_repeat_blocks(text)
+    _handle_top_level_line(doc;raw;line;ln)
+    _handle_block_header(doc;line;ln;version_info)
+    _handle_macro_body_line(line;ln;current)
+    _handle_set_name(line;current)
+    _handle_modifier_cmd(doc;line;ln;cmd;rest;current)
+    _parse_and_append_command(doc;line;ln;cmd;rest;current)
+    _validate_oql_version(doc;version_info)
+    _check_unnamed_goals(doc;version_info)
+    parse_oql(text;filename)
+    format_doc(doc)
+  packages/oqlos-core/src/oqlos/core/oql_versioning.py:
+    e: first_meaningful_line,extract_declared_version,resolve_oql_version,is_supported_oql_version,OqlVersionInfo
+    OqlVersionInfo: is_current(0)  # Resolved OQL version metadata for a source document.
+    first_meaningful_line(text)
+    extract_declared_version(text)
+    resolve_oql_version(text)
+    is_supported_oql_version(version)
+  packages/oqlos-core/src/oqlos/core/parser.py:
+    e: _dispatch_simple_parser,_try_action_or_condition,_parse_runtime_line,parse_dsl_to_goal_with_issues,parse_dsl_to_goal
+    _dispatch_simple_parser(kind;line;step_counter;steps)
+    _try_action_or_condition(line;normalized_line;step_counter;steps;record_invalid)
+    _parse_runtime_line(line;step_counter;steps;func_defs;indent;call_stack;invalid_lines)
+    parse_dsl_to_goal_with_issues(dsl;scenario_id)
+    parse_dsl_to_goal(dsl;scenario_id)
+  packages/oqlos-core/src/oqlos/core/safe_eval.py:
+    e: safe_eval,_eval_constant,_eval_name,_eval_unary_op,_eval_bin_op,_eval_compare,_eval_bool_op,_eval_call,_eval_if_exp,_eval_node,SafeEvalError
+    SafeEvalError:  # Raised when an expression cannot be safely evaluated.
+    safe_eval(expr;context)
+    _eval_constant(node;ctx)
+    _eval_name(node;ctx)
+    _eval_unary_op(node;ctx)
+    _eval_bin_op(node;ctx)
+    _eval_compare(node;ctx)
+    _eval_bool_op(node;ctx)
+    _eval_call(node;ctx)
+    _eval_if_exp(node;ctx)
+    _eval_node(node;ctx)
+  packages/oqlos-core/src/oqlos/core/state.py:
+    e: StateManager
+    StateManager: __init__(0),initialize_peripherals(0),broadcast_event(1)
+  packages/oqlos-core/src/oqlos/shared/__init__.py:
+  packages/oqlos-core/src/oqlos/shared/event_store.py:
+    e: EventStore
+    EventStore: __init__(1),append(1),get_all(0),get_recent(1),get_by_correlation(1),clear(0),to_json(0),from_json(1),count(0),_save(0),_load(0)  # Append-only event store with optional JSON file persistence.
+  packages/oqlos-core/tests/test_parse_cql_smoke.py:
+    e: test_parse_cql_smoke,test_validate_cql_smoke
+    test_parse_cql_smoke()
+    test_validate_cql_smoke()
+  packages/oqlos-models/src/oqlos/models/__init__.py:
+  packages/oqlos-models/src/oqlos/models/dsl_models.py:
+    e: CqlMetadata,CqlInterval,CqlCondition,CqlAction,CqlStep,CqlGoal,CqlScenario,CqlDocument
+    CqlMetadata:
+    CqlInterval:
+    CqlCondition:  # Sensor condition: AI01 ∈ [min, max] unit | ACTION 'msg'
+    CqlAction:  # An action within a step: → Target.method args, TASK, SET, WA
+    CqlStep:  # A numbered step within a goal: 1. Step name:
+    CqlGoal:  # A test goal within a scenario.
+    CqlScenario:  # A named scenario block: @Namespace.Name
+    CqlDocument:  # Root AST node for a .cql file.
+  packages/oqlos-models/src/oqlos/models/execution.py:
+    e: ExecutionRequest,ExecutionStatus,CommandEnvelope
+    ExecutionRequest:
+    ExecutionStatus:  # Event-sourced: only oqlos.core.cqrs.execution may produce a 
+    CommandEnvelope:
+  packages/oqlos-models/src/oqlos/models/peripheral.py:
+    e: PeripheralType,PeripheralStatus,PeripheralMode,Peripheral
+    PeripheralType:
+    PeripheralStatus:
+    PeripheralMode:
+    Peripheral:  # Event-sourced: only oqlos.core.cqrs.peripheral may produce a
+  packages/oqlos-models/src/oqlos/models/scenario.py:
+    e: Step,ValidationRule,Goal,Scenario
+    Step:
+    ValidationRule:
+    Goal:
+    Scenario:
+  packages/oqlos-models/tests/test_import.py:
+    e: test_models_importable
+    test_models_importable()
   scripts/fix_brackets_to_v4.py:
     e: needs_migration,main
     needs_migration(text)

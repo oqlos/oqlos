@@ -9,7 +9,7 @@ from __future__ import annotations
 import asyncio
 import inspect
 import threading
-from typing import Any, TYPE_CHECKING
+from typing import Any, Callable, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from oqlos.hardware.plugin_gateway import PluginHardwareGateway
@@ -46,6 +46,7 @@ class FirmwareExecutor:
         output_handler: Any = None,
         normalizer: Any = None,
         gateway: "PluginHardwareGateway | None" = None,
+        on_sensors_observed: Callable[[dict[str, float]], None] | None = None,
     ):
         """
         Initialize firmware executor.
@@ -61,6 +62,11 @@ class FirmwareExecutor:
                 provided, the executor does NOT construct its own gateway — this
                 lets the OQL-over-MQTT agent share the app's singleton gateway so
                 the RS485/USB serial ports are not opened twice.
+            on_sensors_observed: Optional callback invoked with the raw sensor
+                readings whenever they're refreshed from real firmware. This
+                package stays dependency-light (no event store here) — callers
+                that want an audit trail (e.g. oqlos.core.cqrs.telemetry) inject
+                the recording behaviour through this hook instead.
         """
         self.mode = mode
         self._firmware_url = firmware_url
@@ -70,6 +76,7 @@ class FirmwareExecutor:
         self.normalizer = normalizer
         self._firmware = None
         self._plugin_gateway: Any | None = None
+        self._on_sensors_observed = on_sensors_observed
 
         # Use plugin gateway instead of old hardware system. Prefer an injected,
         # already-initialized gateway over constructing a fresh one.
@@ -155,6 +162,8 @@ class FirmwareExecutor:
             fw = self._get_firmware()
             readings = fw.read_all_sensors()
             sensor_values.update(readings)
+            if self._on_sensors_observed is not None:
+                self._on_sensors_observed(readings)
         except Exception:
             pass  # Keep existing mock values on failure
 

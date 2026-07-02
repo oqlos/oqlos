@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import re
 import time
-from typing import Any
+from typing import Any, Callable
 
 from oqlos.core.base import (
     BaseInterpreter,
@@ -53,6 +53,7 @@ class CqlInterpreter(BaseInterpreter):
         yaml_output: bool = False,
         use_plugin_gateway: bool = True,
         gateway: Any = None,
+        on_sensors_observed: Callable[[dict[str, float]], None] | None = None,
     ):
         super().__init__(variables=variables, quiet=quiet, bridge_url=bridge_url)
         self.mode = mode  # validate, dry-run, execute
@@ -76,6 +77,7 @@ class CqlInterpreter(BaseInterpreter):
             output_handler=self.out,
             normalizer=self._normalizer,
             gateway=gateway,
+            on_sensors_observed=on_sensors_observed,
         )
 
     # --- Delegated properties for backward compatibility ---

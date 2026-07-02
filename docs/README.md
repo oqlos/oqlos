@@ -67,8 +67,8 @@ Detailed guide: [Hardware Diagnostics](HARDWARE_DIAGNOSTICS.md).
 
 <!-- code2docs:start --># oqlos
 
-![version](https://img.shields.io/badge/version-0.1.0-blue) ![python](https://img.shields.io/badge/python-%3E%3D3.10-blue) ![coverage](https://img.shields.io/badge/coverage-unknown-lightgrey) ![functions](https://img.shields.io/badge/functions-2403-green)
-> **2403** functions | **128** classes | **364** files | CC̄ = 3.8
+![version](https://img.shields.io/badge/version-0.1.0-blue) ![python](https://img.shields.io/badge/python-%3E%3D3.10-blue) ![coverage](https://img.shields.io/badge/coverage-unknown-lightgrey) ![functions](https://img.shields.io/badge/functions-2442-green)
+> **2442** functions | **156** classes | **380** files | CC̄ = 3.8
 
 > Auto-generated project documentation from source code analysis.
 
@@ -159,6 +159,39 @@ oqlos/
 ├── openapi
 ├── project
 ├── README
+    ├── README
+        ├── pyproject
+        ├── README
+                    ├── execution
+        ├── dsl_models
+    ├── core/
+        ├── scenario
+                    ├── peripheral
+        ├── pyproject
+        ├── README
+        ├── state
+        ├── base
+        ├── _dsl_helpers
+        ├── _cql_tree_builder
+        ├── _interpreter_actions
+        ├── oql_parser
+        ├── motor2_runtime
+                    ├── _action_motor2
+        ├── oql_versioning
+        ├── parser
+        ├── _func_resolver
+                    ├── _oql_adapter
+        ├── interpreter
+        ├── _cql_tokenizer
+                    ├── _runtime_settings
+        ├── _line_parsers
+        ├── safe_eval
+        ├── _compare
+        ├── cql_parser
+                    ├── _firmware_executor
+                    ├── _value_normalizers
+        ├── _sensor_evaluator
+        ├── event_store
         ├── config
     ├── package
         ├── App
@@ -283,29 +316,14 @@ oqlos/
         ├── dev
     ├── Dockerfile
     ├── config
-        ├── state
-        ├── base
-        ├── _dsl_helpers
-        ├── _cql_tree_builder
-        ├── _interpreter_actions
-        ├── oql_parser
-        ├── motor2_runtime
-    ├── core/
-        ├── _action_motor2
-        ├── oql_versioning
-        ├── parser
-        ├── _func_resolver
         ├── executor
-        ├── _oql_adapter
-        ├── interpreter
-        ├── _cql_tokenizer
-        ├── _line_parsers
-        ├── safe_eval
-        ├── _compare
-        ├── cql_parser
-        ├── _firmware_executor
-        ├── _value_normalizers
-        ├── _sensor_evaluator
+            ├── aggregate
+            ├── projection
+            ├── commands
+            ├── events
+            ├── execution
+        ├── cqrs/
+            ├── peripheral
         ├── gen_error_docs
         ├── hardware_diagnose/
         ├── plugin_cli
@@ -336,10 +354,6 @@ oqlos/
             ├── utils
             ├── main
             ├── preflight
-        ├── execution
-        ├── dsl_models
-        ├── scenario
-        ├── peripheral
         ├── exceptions
         ├── catalog
         ├── fastapi_integration
@@ -433,7 +447,6 @@ oqlos/
         ├── config_factory
         ├── event_server
         ├── version_endpoint
-        ├── event_store
         ├── logger
         ├── hardware_lung
         ├── _hw3_models
@@ -505,37 +518,8 @@ oqlos/
 
 ### Classes
 
-- **`WsCqrsClient`** — —
-- **`Settings`** — Application settings loaded from environment variables and .env file
-- **`StateManager`** — —
-- **`StepStatus`** — —
-- **`StepResult`** — —
-- **`ScriptResult`** — —
-- **`VariableStore`** — Hierarchical key-value store with interpolation support.
-- **`InterpreterOutput`** — Collects interpreter output lines for display or testing, and optionally broadcasts events.
-- **`BaseInterpreter`** — Abstract base for language interpreters.
-- **`EventBridge`** — Optional WebSocket bridge to DSL Event Server (port 8104).
-- **`OqlCmd`** — A single command line inside a block.
-- **`OqlBlock`** — A named block: ``GOAL``, ``CONFIG``, or ``MACRO``.
-- **`OqlDoc`** — Parsed OQL document.
-- **`Motor2RuntimeConfig`** — —
-- **`Motor2ReciprocatingPlan`** — —
-- **`OqlVersionInfo`** — Resolved OQL version metadata for a source document.
-- **`ScenarioOrchestrator`** — —
-- **`CqlInterpreter`** — CQL interpreter with three modes:
-- **`SafeEvalError`** — Raised when an expression cannot be safely evaluated.
-- **`FirmwareExecutor`** — Executes hardware actions via plugin gateway or legacy firmware.
-- **`ValueNormalizer`** — Normalizes DSL values to hardware-compatible formats.
-- **`SensorEvaluator`** — Evaluates sensor conditions and manages sensor values.
-- **`UsbDevice`** — USB device information.
-- **`SensorParam`** — Parameter measurement from an operation.
-- **`Output`** — Hardware output setting.
-- **`Operation`** — Single test operation (step).
-- **`TestRun`** — A test run (scenario) within a device type.
-- **`DeviceReport`** — Parsed device test report.
-- **`ScenarioFetchError`** — Raised when an HTTP scenario target is not runnable OQL/CQL source.
 - **`ExecutionRequest`** — —
-- **`ExecutionStatus`** — —
+- **`ExecutionStatus`** — Event-sourced: only oqlos.core.cqrs.execution may produce a new instance
 - **`CommandEnvelope`** — —
 - **`CqlMetadata`** — —
 - **`CqlInterval`** — —
@@ -552,7 +536,65 @@ oqlos/
 - **`PeripheralType`** — —
 - **`PeripheralStatus`** — —
 - **`PeripheralMode`** — —
-- **`Peripheral`** — —
+- **`Peripheral`** — Event-sourced: only oqlos.core.cqrs.peripheral may produce a new instance
+- **`StateManager`** — Peripheral and execution state are event-sourced: this class only ever
+- **`StepStatus`** — —
+- **`StepResult`** — —
+- **`ScriptResult`** — —
+- **`VariableStore`** — Hierarchical key-value store with interpolation support.
+- **`InterpreterOutput`** — Collects interpreter output lines for display or testing, and optionally broadcasts events.
+- **`BaseInterpreter`** — Abstract base for language interpreters.
+- **`EventBridge`** — Optional WebSocket bridge to DSL Event Server (port 8104).
+- **`OqlCmd`** — A single command line inside a block.
+- **`OqlBlock`** — A named block: ``GOAL``, ``CONFIG``, or ``MACRO``.
+- **`OqlDoc`** — Parsed OQL document.
+- **`Motor2RuntimeConfig`** — —
+- **`Motor2ReciprocatingPlan`** — —
+- **`OqlVersionInfo`** — Resolved OQL version metadata for a source document.
+- **`CqlInterpreter`** — CQL interpreter with three modes:
+- **`SafeEvalError`** — Raised when an expression cannot be safely evaluated.
+- **`FirmwareExecutor`** — Executes hardware actions via plugin gateway or legacy firmware.
+- **`ValueNormalizer`** — Normalizes DSL values to hardware-compatible formats.
+- **`SensorEvaluator`** — Evaluates sensor conditions and manages sensor values.
+- **`EventStore`** — Append-only event store with optional JSON file persistence.
+- **`WsCqrsClient`** — —
+- **`Settings`** — Application settings loaded from environment variables and .env file
+- **`ScenarioOrchestrator`** — —
+- **`Aggregate`** — Base for event-sourced aggregates.
+- **`Projection`** — Read-model base. Subscribes to an EventStore and folds matching events.
+- **`Command`** — Base class for commands: an intent to change state.
+- **`CommandBus`** — Dispatches a command to its registered handler and persists the resulting events.
+- **`Event`** — Base class for immutable domain events. Subclasses add their own fields.
+- **`EventStore`** — Append-only, replayable event store.
+- **`ExecutionStarted`** — —
+- **`ExecutionGoalStarted`** — —
+- **`ExecutionStepStarted`** — —
+- **`ExecutionProgressUpdated`** — —
+- **`ExecutionStatusChanged`** — —
+- **`ExecutionAggregate`** — Rehydrates a single execution's current shape by replaying its event stream.
+- **`StartExecutionCommand`** — —
+- **`StartGoalCommand`** — —
+- **`StartStepCommand`** — —
+- **`UpdateProgressCommand`** — —
+- **`SetExecutionStatusCommand`** — —
+- **`ExecutionsProjection`** — Read model: `executions[id]` mirrors the latest replayed state of each stream.
+- **`PeripheralRegistered`** — —
+- **`PeripheralValueSet`** — —
+- **`PeripheralModeChanged`** — —
+- **`PeripheralStatusChanged`** — —
+- **`PeripheralAggregate`** — Rehydrates a single Peripheral's current shape by replaying its event stream.
+- **`RegisterPeripheralCommand`** — —
+- **`SetPeripheralValueCommand`** — —
+- **`SetPeripheralModeCommand`** — —
+- **`SetPeripheralStatusCommand`** — —
+- **`PeripheralsProjection`** — Read model: `peripherals[id]` mirrors the latest replayed state of each stream.
+- **`UsbDevice`** — USB device information.
+- **`SensorParam`** — Parameter measurement from an operation.
+- **`Output`** — Hardware output setting.
+- **`Operation`** — Single test operation (step).
+- **`TestRun`** — A test run (scenario) within a device type.
+- **`DeviceReport`** — Parsed device test report.
+- **`ScenarioFetchError`** — Raised when an HTTP scenario target is not runnable OQL/CQL source.
 - **`OqlosError`** — —
 - **`RepairTemplate`** — —
 - **`IssueDefinition`** — —
@@ -599,7 +641,6 @@ oqlos/
 - **`LogsQueryService`** — Read-only query service for nfo logs SQLite database.
 - **`ConnectionManager`** — Tracks connected WebSocket clients and broadcasts messages.
 - **`EventServer`** — WebSocket event broker with persistence.
-- **`EventStore`** — Append-only event store with optional JSON file persistence.
 - **`DiagnosticCommandRequest`** — —
 - **`MappingReplaceRequest`** — —
 - **`MappingImportRequest`** — —
@@ -635,6 +676,65 @@ oqlos/
 - `load_env_file(env_path)` — Load .env file into environment variables.
 - `run_oql_scenario(scenario_path, mode, firmware_url)` — Run OQL scenario with loaded configuration.
 - `main()` — —
+- `exec_action_task(interp, act)` — Execute TASK action.
+- `exec_action_save(interp, act)` — Execute SAVE action.
+- `parse_wait_secs(raw)` — Parse a WAIT value to seconds. Default unit is ms.
+- `exec_action_wait(interp, act)` — Execute WAIT action.
+- `exec_action_min_max(interp, act)` — Execute MIN/MAX action.
+- `exec_action_val(interp, act)` — Execute VAL action.
+- `exec_action_log(interp, act)` — Execute LOG action.
+- `exec_action_error(interp, act)` — Execute ERROR action.
+- `exec_action_else(interp, act)` — Execute inline ELSE ERROR/INFO/WARNING action.
+- `exec_action_sample(interp, act)` — Execute SAMPLE action as dry-run sampling metadata.
+- `exec_action_func(interp, act)` — Execute FUNC action using simple arithmetic over literals and variables.
+- `exec_action_goto(interp, act)` — Execute GOTO action by skipping the rest of the current goal.
+- `exec_action_api(interp, act)` — Execute API_* action with deterministic dry-run responses.
+- `exec_action_expect(interp, act)` — Execute EXPECT_* diagnostics as dry-run discovery checks.
+- `exec_action_assert(interp, act)` — Execute ASSERT_* actions for dry-run diagnostics and API checks.
+- `exec_action_shell(interp, act)` — Execute shell/export helpers in dry-run mode.
+- `exec_action_var_set(interp, act)` — Execute VAR assignment action.
+- `exec_action_condition(interp, act)` — Execute condition action.
+- `exec_action_if_fail_block(interp, act)` — Execute IF_FAIL block when a tracked diagnostic target has failed.
+- `exec_action_if_block(interp, act)` — Execute IF block action.
+- `exec_action_loop_block(interp, act)` — Execute LOOP block action.
+- `exec_action_endloop(interp, act)` — Execute REPEAT STOP as a break for the current loop.
+- `exec_action_set(interp, act)` — Execute SET action with intelligent dispatch.
+- `exec_action_action(interp, act)` — Execute generic ACTION.
+- `to_num(raw)` — Convert '6.0' → 6.0, '3' → 3, '-10,5' → -10.5 (accepts comma).
+- `parse_duration(token)` — Parse ``3s``, ``500ms``, ``3000`` (bare number defaults to ``ms``).
+- `duration_to_ms(token)` — Convert a duration token into integer milliseconds.
+- `tokenize(rest)` — Split a command tail into tokens.
+- `parse_SET(tokens, ln, raw)` — —
+- `parse_WAIT(tokens, ln, raw)` — —
+- `parse_IF_DELTA(tokens, ln, raw)` — —
+- `parse_CHECK(rest, ln, raw)` — —
+- `parse_IF(rest, ln, raw)` — —
+- `parse_SAMPLE(tokens, ln, raw)` — —
+- `parse_REPEAT(tokens, ln, raw)` — —
+- `parse_oql(text, filename)` — Parse OQL source into an :class:`OqlDoc`.
+- `format_doc(doc)` — Pretty-print for ad-hoc debugging.
+- `motor2_max_steps_per_second(default)` — —
+- `normalize_motor2_runtime_config(source)` — —
+- `motor2_speed_for_duration(steps, cycles, duration_seconds)` — —
+- `motor2_acceleration_raw(steps_per_second, percent, max_steps_per_second)` — —
+- `motor2_speed_raw(steps_per_second, max_steps_per_second)` — —
+- `build_motor2_reciprocating_plan(config)` — —
+- `first_meaningful_line(text)` — Return first non-empty/non-comment line as (line_no, text).
+- `extract_declared_version(text)` — Extract VERSION header value when present on first meaningful line.
+- `resolve_oql_version(text)` — Resolve OQL version from source text with backward-compatible default.
+- `is_supported_oql_version(version)` — —
+- `parse_dsl_to_goal_with_issues(dsl, scenario_id)` — Parse DSL and return a runtime goal plus invalid runtime lines.
+- `parse_dsl_to_goal(dsl, scenario_id)` — Parse DSL string to a runtime Goal with Steps.
+- `is_flat_oql(source)` — Heuristic: detect flat OQL source (v3/v4).
+- `oql_doc_to_cql(doc)` — Convert a parsed :class:`OqlDoc` into a :class:`CqlDocument`.
+- `parse_flat_oql(source, filename)` — Convenience: parse flat OQL directly to a :class:`CqlDocument`.
+- `lung_motor_url()` — —
+- `pump_flow_full_scale_lpm(default)` — —
+- `safe_eval(expr, context)` — Evaluate a simple expression safely without using eval().
+- `resolve_compare(left, op, right)` — Evaluate a single comparison: left op right.
+- `resolve_compare_chain(node, resolve_value)` — Evaluate a chained comparison using the caller's node resolver.
+- `parse_cql(source, filename)` — Parse CQL source into AST.
+- `validate_cql(doc)` — Validate a parsed CQL document. Returns list of issues.
 - `LocalizedApp()` — —
 - `useWsStatus()` — —
 - `client()` — —
@@ -1348,64 +1448,17 @@ oqlos/
 - `q()` — —
 - `print()` — —
 - `get_settings()` — Get the application settings instance.
-- `exec_action_task(interp, act)` — Execute TASK action.
-- `exec_action_save(interp, act)` — Execute SAVE action.
-- `parse_wait_secs(raw)` — Parse a WAIT value to seconds. Default unit is ms.
-- `exec_action_wait(interp, act)` — Execute WAIT action.
-- `exec_action_min_max(interp, act)` — Execute MIN/MAX action.
-- `exec_action_val(interp, act)` — Execute VAL action.
-- `exec_action_log(interp, act)` — Execute LOG action.
-- `exec_action_error(interp, act)` — Execute ERROR action.
-- `exec_action_else(interp, act)` — Execute inline ELSE ERROR/INFO/WARNING action.
-- `exec_action_sample(interp, act)` — Execute SAMPLE action as dry-run sampling metadata.
-- `exec_action_func(interp, act)` — Execute FUNC action using simple arithmetic over literals and variables.
-- `exec_action_goto(interp, act)` — Execute GOTO action by skipping the rest of the current goal.
-- `exec_action_api(interp, act)` — Execute API_* action with deterministic dry-run responses.
-- `exec_action_expect(interp, act)` — Execute EXPECT_* diagnostics as dry-run discovery checks.
-- `exec_action_assert(interp, act)` — Execute ASSERT_* actions for dry-run diagnostics and API checks.
-- `exec_action_shell(interp, act)` — Execute shell/export helpers in dry-run mode.
-- `exec_action_var_set(interp, act)` — Execute VAR assignment action.
-- `exec_action_condition(interp, act)` — Execute condition action.
-- `exec_action_if_fail_block(interp, act)` — Execute IF_FAIL block when a tracked diagnostic target has failed.
-- `exec_action_if_block(interp, act)` — Execute IF block action.
-- `exec_action_loop_block(interp, act)` — Execute LOOP block action.
-- `exec_action_endloop(interp, act)` — Execute REPEAT STOP as a break for the current loop.
-- `exec_action_set(interp, act)` — Execute SET action with intelligent dispatch.
-- `exec_action_action(interp, act)` — Execute generic ACTION.
-- `to_num(raw)` — Convert '6.0' → 6.0, '3' → 3, '-10,5' → -10.5 (accepts comma).
-- `parse_duration(token)` — Parse ``3s``, ``500ms``, ``3000`` (bare number defaults to ``ms``).
-- `duration_to_ms(token)` — Convert a duration token into integer milliseconds.
-- `tokenize(rest)` — Split a command tail into tokens.
-- `parse_SET(tokens, ln, raw)` — —
-- `parse_WAIT(tokens, ln, raw)` — —
-- `parse_IF_DELTA(tokens, ln, raw)` — —
-- `parse_CHECK(rest, ln, raw)` — —
-- `parse_IF(rest, ln, raw)` — —
-- `parse_SAMPLE(tokens, ln, raw)` — —
-- `parse_REPEAT(tokens, ln, raw)` — —
-- `parse_oql(text, filename)` — Parse OQL source into an :class:`OqlDoc`.
-- `format_doc(doc)` — Pretty-print for ad-hoc debugging.
-- `motor2_max_steps_per_second(default)` — —
-- `normalize_motor2_runtime_config(source)` — —
-- `motor2_speed_for_duration(steps, cycles, duration_seconds)` — —
-- `motor2_acceleration_raw(steps_per_second, percent, max_steps_per_second)` — —
-- `motor2_speed_raw(steps_per_second, max_steps_per_second)` — —
-- `build_motor2_reciprocating_plan(config)` — —
-- `first_meaningful_line(text)` — Return first non-empty/non-comment line as (line_no, text).
-- `extract_declared_version(text)` — Extract VERSION header value when present on first meaningful line.
-- `resolve_oql_version(text)` — Resolve OQL version from source text with backward-compatible default.
-- `is_supported_oql_version(version)` — —
-- `parse_dsl_to_goal_with_issues(dsl, scenario_id)` — Parse DSL and return a runtime goal plus invalid runtime lines.
-- `parse_dsl_to_goal(dsl, scenario_id)` — Parse DSL string to a runtime Goal with Steps.
 - `safe_eval_condition(expr, context)` — Evaluate a simple comparison expression without using eval().
-- `is_flat_oql(source)` — Heuristic: detect flat OQL source (v3/v4).
-- `oql_doc_to_cql(doc)` — Convert a parsed :class:`OqlDoc` into a :class:`CqlDocument`.
-- `parse_flat_oql(source, filename)` — Convenience: parse flat OQL directly to a :class:`CqlDocument`.
-- `safe_eval(expr, context)` — Evaluate a simple expression safely without using eval().
-- `resolve_compare(left, op, right)` — Evaluate a single comparison: left op right.
-- `resolve_compare_chain(node, resolve_value)` — Evaluate a chained comparison using the caller's node resolver.
-- `parse_cql(source, filename)` — Parse CQL source into AST.
-- `validate_cql(doc)` — Validate a parsed CQL document. Returns list of issues.
+- `handle_start_execution(cmd)` — —
+- `handle_start_goal(cmd)` — —
+- `handle_start_step(cmd)` — —
+- `handle_update_progress(cmd)` — —
+- `handle_set_execution_status(cmd)` — —
+- `build_command_bus(store)` — Construct a CommandBus with every domain handler in this package registered.
+- `handle_register_peripheral(cmd)` — —
+- `handle_set_peripheral_value(cmd)` — —
+- `handle_set_peripheral_mode(cmd)` — —
+- `handle_set_peripheral_status(cmd)` — —
 - `generate_markdown()` — —
 - `main()` — —
 - `cmd_list(args)` — List all registered plugins.
@@ -2095,20 +2148,23 @@ oqlos/
 📄 `oqlos.api.version`
 📄 `oqlos.config` (1 functions, 1 classes)
 📦 `oqlos.core`
-📄 `oqlos.core._action_motor2` (30 functions)
 📄 `oqlos.core._compare` (2 functions)
 📄 `oqlos.core._cql_tokenizer` (23 functions)
 📄 `oqlos.core._cql_tree_builder` (9 functions)
 📄 `oqlos.core._dsl_helpers` (12 functions)
-📄 `oqlos.core._firmware_executor` (11 functions, 1 classes)
 📄 `oqlos.core._func_resolver` (4 functions)
 📄 `oqlos.core._interpreter_actions` (49 functions)
 📄 `oqlos.core._line_parsers` (10 functions)
-📄 `oqlos.core._oql_adapter` (28 functions, 1 classes)
 📄 `oqlos.core._sensor_evaluator` (6 functions, 1 classes)
-📄 `oqlos.core._value_normalizers` (7 functions, 1 classes)
 📄 `oqlos.core.base` (29 functions, 7 classes)
 📄 `oqlos.core.cql_parser` (30 functions, 1 classes)
+📦 `oqlos.core.cqrs` (1 functions)
+📄 `oqlos.core.cqrs.aggregate` (4 functions, 1 classes)
+📄 `oqlos.core.cqrs.commands` (3 functions, 2 classes)
+📄 `oqlos.core.cqrs.events` (7 functions, 2 classes)
+📄 `oqlos.core.cqrs.execution` (9 functions, 12 classes)
+📄 `oqlos.core.cqrs.peripheral` (8 functions, 10 classes)
+📄 `oqlos.core.cqrs.projection` (3 functions, 1 classes)
 📄 `oqlos.core.executor` (21 functions, 1 classes)
 📄 `oqlos.core.interpreter` (48 functions, 1 classes)
 📄 `oqlos.core.motor2_runtime` (12 functions, 2 classes)
@@ -2199,8 +2255,6 @@ oqlos/
 📄 `oqlos.hardware.transport.mqtt_oql_bridge` (33 functions, 7 classes)
 📄 `oqlos.hardware.usb_diagnostics` (5 functions)
 📄 `oqlos.models.dsl_models` (8 classes)
-📄 `oqlos.models.execution` (3 classes)
-📄 `oqlos.models.peripheral` (4 classes)
 📄 `oqlos.models.scenario` (4 classes)
 📦 `oqlos.reporters`
 📄 `oqlos.reporters.html_report` (5 functions)
@@ -2249,6 +2303,18 @@ oqlos/
 📦 `oqlos.utils`
 📄 `oqlos.utils.hui_scenario` (1 functions)
 📄 `oqlos.utils.sample_data` (1 functions)
+📄 `packages.README`
+📄 `packages.oqlos-core.README`
+📄 `packages.oqlos-core.pyproject`
+📄 `packages.oqlos-core.src.oqlos.core._action_motor2` (30 functions)
+📄 `packages.oqlos-core.src.oqlos.core._firmware_executor` (13 functions, 1 classes)
+📄 `packages.oqlos-core.src.oqlos.core._oql_adapter` (28 functions, 1 classes)
+📄 `packages.oqlos-core.src.oqlos.core._runtime_settings` (2 functions)
+📄 `packages.oqlos-core.src.oqlos.core._value_normalizers` (7 functions, 1 classes)
+📄 `packages.oqlos-models.README`
+📄 `packages.oqlos-models.pyproject`
+📄 `packages.oqlos-models.src.oqlos.models.execution` (3 classes)
+📄 `packages.oqlos-models.src.oqlos.models.peripheral` (4 classes)
 📄 `project`
 📄 `pyproject`
 📄 `pyqual`
@@ -2291,7 +2357,7 @@ oqlos/
 ## Requirements
 
 - Python >= >=3.10
-- fastapi >=0.110- uvicorn >=0.28- pydantic >=2.0- pydantic-settings >=2.2.0- pyserial >=3.5- pymodbus >=3.6- httpx >=0.25- nfo >=0.2.3- goal >=2.1.0- costs >=0.1.20- pfix >=0.1.60- paho-mqtt >=1.6.1- pluggy >=1.4- pytest-asyncio >=0.23- PyYAML >=6.0- testql >=0.2.0
+- oqlos-models ==0.2.0- oqlos-core ==0.2.1- fastapi >=0.110- uvicorn >=0.28- pydantic >=2.0- pydantic-settings >=2.2.0- pyserial >=3.5- pymodbus >=3.6- httpx >=0.25- nfo >=0.2.3- goal >=2.1.0- costs >=0.1.20- pfix >=0.1.60- paho-mqtt >=1.6.1- pluggy >=1.4- pytest-asyncio >=0.23- PyYAML >=6.0- testql >=0.2.0
 
 ## Contributing
 
