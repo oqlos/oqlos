@@ -4,7 +4,7 @@
 036dafa3109e22d5c78ed604e2325c547631e7e57bb3e22b5dbadd3e5ed573f6  ./api/_hw3_models.py
 4fb33c4e136354b71c725fa8b4ae9d89475f7db87e859bc5e5eb00c590b9ceb9  ./api/_hw3_peripheral.py
 09eee8de7a794e3a03f5bb634380e822c6aaae422ca78430f969b3b8b9bd6085  ./api/_hw3_system.py
-dbb7bf968fdea2ef6f2fe124b6eea1567a6352044baebac29d399b006a08b866  ./api/editor.py
+1f73f6fff28bd938345e972f611bc575450f8bf582d5e51e360c2acb50b8a8ad  ./api/editor.py
 17714659e7e33100044a8ff1a7d96fb519ac13c882d8854cc1f8797e1b684bac  ./api/execution.py
 1157d2e017a4b4423cada3a59f17c58cdf01fde2f07f14a2f98dc92a50db5920  ./api/hardware.py
 abd05c878773fe6cc4e0c984223046480e6872e7fee77a5f2f92b57e5a1e603f  ./api/hardware_actuators.py
@@ -52,6 +52,7 @@ a7f7e0ec817b3fa150c030620be9e5af2f45c61fe6cb4b102d4ed837f29ffdfd  ./core/cqrs/ag
 0042d0f75faa942d04cc61d25b70b3ea71f2b46270011c7b34af2b09b063a718  ./core/cqrs/execution.py
 e30d874a60c86b80cc1ae0733443fd231d98319f990cd290f42edb335e5c17d7  ./core/cqrs/peripheral.py
 562698e689d578ebbe777086b1fcf4f1e4d016601a1addcf63dc54c6670ef486  ./core/cqrs/projection.py
+399a3fc3e6b7438a6f9003c02018a4a2eb021f73eb07791683de9631d8428e11  ./core/cqrs/telemetry.py
 7fc1debaece3b9366c1680b6f21e870cbdfd219517be6e6e4d6305a64979db18  ./core/executor.py
 48a8eb866bbee8d6baba1ecf2bc5b1294ee388d099533c7956791de02b9ba041  ./core/state.py
 767fab67016c7393ed159121b07f012fba33a2fe4a7ce9634e5e97154484af81  ./dsl/__init__.py

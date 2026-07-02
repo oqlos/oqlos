@@ -1,4 +1,4 @@
-# code2llm/evolution | 2328 func | 267f | 2026-07-02
+# code2llm/evolution | 2331 func | 267f | 2026-07-02
 # generated in 0.01s
 
 NEXT[3] (ranked by impact):
@@ -11,7 +11,7 @@ NEXT[3] (ranked by impact):
       EFFORT: ~4h  IMPACT: 1953
 
   [3] !! SPLIT           docs/README.md
-      WHY: 2360L, 0 classes, max CC=0
+      WHY: 2426L, 0 classes, max CC=0
       EFFORT: ~4h  IMPACT: 0
 
 
@@ -52,4 +52,4 @@ PATTERNS (language parser shared logic):
     - Standardized FunctionInfo/ClassInfo models
 
 HISTORY:
-  prev CC̄=3.8 → now CC̄=3.7
+  prev CC̄=3.7 → now CC̄=3.7

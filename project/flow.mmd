@@ -1,25 +1,25 @@
 flowchart TD
-%% generated in 0.08s
+%% generated in 0.06s
 
     %% Entry points (blue)
     classDef entry fill:#4dabf7,stroke:#1971c2,color:#fff
 
     subgraph Core
         setup_hardware_and_run_oql__main["main"]
-        frontend__src__main__LocalizedApp["LocalizedApp"]
-        frontend__src__hooks__useWsStatus__useWsStatus["useWsStatus"]
-        frontend__src__hooks__useWsStatus__client["client"]
-        frontend__src__hooks__useWsStatus__onOpen["onOpen"]
-        frontend__src__hooks__useWsStatus__onClose["onClose"]
-        frontend__src__hooks__useMapEditorSidebarAutoCollapse__useMapEditorSidebarAutoCollapse["useMapEditorSidebarAutoCollaps"]
-        frontend__src__hooks__useMapEditorSidebarAutoCollapse__root["root"]
-        frontend__src__hooks__useMapEditorSidebarAutoCollapse__font["font"]
-        frontend__src__hooks__useMapEditorSidebarAutoCollapse__viewportWidth["viewportWidth"]
-        frontend__src__hooks__useMapEditorSidebarAutoCollapse__denseFont["denseFont"]
-        frontend__src__hooks__useMapEditorSidebarAutoCollapse__minWidth["minWidth"]
-        frontend__src__hooks__useMapEditorSidebarAutoCollapse__observer["observer"]
-        frontend__src__hooks__useMapEditorHardwareEvents__useMapEditorHardwareEvents["useMapEditorHardwareEvents"]
-        frontend__src__hooks__useMapEditorHardwareEvents__wsUrl["wsUrl"]
+        oqlos__core__state__StateManager__initialize_peripherals["initialize_peripherals"]
+        oqlos__core__state__StateManager__broadcast_event["broadcast_event"]
+        oqlos__core__base__ScriptResult__summary["summary"]
+        oqlos__core__base__VariableStore__get["get"]
+        oqlos__core__base__VariableStore__has["has"]
+        oqlos__core__base__VariableStore__clear["clear"]
+        oqlos__core__base__VariableStore__interpolate["interpolate"]
+        oqlos__core__base__InterpreterOutput__emit["emit"]
+        oqlos__core__base__InterpreterOutput___broadcast_event["_broadcast_event"]
+        oqlos__core__base__InterpreterOutput___emit_status["_emit_status"]
+        oqlos__core__base__InterpreterOutput__info["info"]
+        oqlos__core__base__InterpreterOutput__ok["ok"]
+        oqlos__core__base__InterpreterOutput__fail["fail"]
+        oqlos__core__base__InterpreterOutput__warn["warn"]
         ...["+1553 more"]
     end
 
@@ -29,4 +29,4 @@ flowchart TD
         oqlos__api___hw3_mapping__hardware_mapping_export_v3["hardware_mapping_export_v3"]
     end
 
-    class setup_hardware_and_run_oql__main,frontend__src__main__LocalizedApp,frontend__src__hooks__useWsStatus__useWsStatus,frontend__src__hooks__useWsStatus__client,frontend__src__hooks__useWsStatus__onOpen,frontend__src__hooks__useWsStatus__onClose,frontend__src__hooks__useMapEditorSidebarAutoCollapse__useMapEditorSidebarAutoCollapse,frontend__src__hooks__useMapEditorSidebarAutoCollapse__root,frontend__src__hooks__useMapEditorSidebarAutoCollapse__font,frontend__src__hooks__useMapEditorSidebarAutoCollapse__viewportWidth entry
+    class setup_hardware_and_run_oql__main,oqlos__core__state__StateManager__initialize_peripherals,oqlos__core__state__StateManager__broadcast_event,oqlos__core__base__ScriptResult__summary,oqlos__core__base__VariableStore__get,oqlos__core__base__VariableStore__has,oqlos__core__base__VariableStore__clear,oqlos__core__base__VariableStore__interpolate,oqlos__core__base__InterpreterOutput__emit,oqlos__core__base__InterpreterOutput___broadcast_event entry

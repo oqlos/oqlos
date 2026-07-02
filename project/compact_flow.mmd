@@ -1,18 +1,18 @@
 flowchart TD
-%% generated in 0.08s
+%% generated in 0.06s
     examples__hardware["examples.hardware<br/>1 funcs"]
     frontend__src["frontend.src<br/>747 funcs"]
-    oqlos__api["oqlos.api<br/>297 funcs"]
+    oqlos__api["oqlos.api<br/>298 funcs"]
     oqlos__config["oqlos.config<br/>1 funcs"]
-    oqlos__core["oqlos.core<br/>59 funcs"]
+    oqlos__core["oqlos.core<br/>307 funcs"]
     oqlos__dsl["oqlos.dsl<br/>7 funcs"]
     oqlos__errors["oqlos.errors<br/>9 funcs"]
     oqlos__hardware["oqlos.hardware<br/>560 funcs"]
     oqlos__reporters["oqlos.reporters<br/>13 funcs"]
-    oqlos__shared["oqlos.shared<br/>38 funcs"]
+    oqlos__shared["oqlos.shared<br/>48 funcs"]
     oqlos__tools["oqlos.tools<br/>195 funcs"]
     oqlos__utils["oqlos.utils<br/>2 funcs"]
-    packages__oqlos_core["packages.oqlos-core<br/>384 funcs"]
+    packages__oqlos_core["packages.oqlos-core<br/>128 funcs"]
     scripts__fix_brackets_to_v4["scripts.fix_brackets_to_v4<br/>2 funcs"]
     scripts__migrate_to_v4["scripts.migrate_to_v4<br/>19 funcs"]
     scripts__oql_v2_to_v4_migrate_db["scripts.oql_v2_to_v4_migrate_db<br/>45 funcs"]
@@ -23,26 +23,29 @@ flowchart TD
     setup_hardware_and_run_oql["setup_hardware_and_run_oql<br/>7 funcs"]
     oqlos__tools ==>|128| examples__hardware
     oqlos__tools ==>|89| frontend__src
-    oqlos__hardware ==>|73| frontend__src
+    oqlos__hardware ==>|71| frontend__src
     scripts__migrate_to_v4 ==>|37| examples__hardware
     setup_hardware_and_run_oql ==>|27| examples__hardware
-    oqlos__api ==>|23| frontend__src
+    packages__oqlos_core ==>|23| oqlos__core
+    oqlos__api ==>|21| frontend__src
     scripts__fix_brackets_to_v4 ==>|19| examples__hardware
     oqlos__api ==>|17| oqlos__hardware
-    packages__oqlos_core ==>|17| frontend__src
+    oqlos__core ==>|16| frontend__src
+    oqlos__tools ==>|10| oqlos__core
     oqlos__api ==>|10| oqlos__shared
+    oqlos__api ==>|9| oqlos__core
+    oqlos__hardware ==>|8| oqlos__core
     oqlos__tools ==>|7| oqlos__hardware
     oqlos__shared ==>|7| examples__hardware
-    oqlos__core ==>|7| frontend__src
-    oqlos__tools ==>|6| packages__oqlos_core
-    oqlos__hardware ==>|6| packages__oqlos_core
-    oqlos__api ==>|6| packages__oqlos_core
+    packages__oqlos_core ==>|5| frontend__src
     oqlos__shared ==>|4| frontend__src
     scripts__migrate_to_v4 ==>|4| oqlos__tools
+    oqlos__core -->|3| packages__oqlos_core
     oqlos__hardware -->|3| oqlos__config
     oqlos__hardware -->|3| oqlos__tools
     scripts__oql_validator_common -->|3| examples__hardware
     scripts__oql_v2_to_v4_migrate_db -->|3| examples__hardware
+    oqlos__core -->|2| examples__hardware
     oqlos__hardware -->|2| oqlos__api
     oqlos__reporters -->|2| frontend__src
     oqlos__api -->|2| oqlos__utils
@@ -50,13 +53,13 @@ flowchart TD
     scripts__fix_brackets_to_v4 -->|2| scripts__oql_v2_to_v4_migrate_db
     scripts__oql_v2_to_v4_migrate_db -->|2| frontend__src
     scripts__scenarios_export -->|2| examples__hardware
-    packages__oqlos_core -->|2| examples__hardware
+    packages__oqlos_core -->|1| oqlos__config
     oqlos__errors -->|1| frontend__src
-    oqlos__shared -->|1| packages__oqlos_core
+    oqlos__shared -->|1| oqlos__core
     oqlos__shared -->|1| oqlos__config
-    oqlos__dsl -->|1| packages__oqlos_core
+    oqlos__dsl -->|1| oqlos__core
     oqlos__dsl -->|1| frontend__src
-    scripts__oql_validator_common -->|1| packages__oqlos_core
+    scripts__oql_validator_common -->|1| oqlos__core
     scripts__oql_validator_common -->|1| oqlos__hardware
     scripts__oql_v4_validator -->|1| oqlos__tools
     scripts__oql_v4_validator -->|1| scripts__oql_validator_common
@@ -64,5 +67,3 @@ flowchart TD
     scripts__oql_v2_validator -->|1| oqlos__tools
     scripts__oql_v2_validator -->|1| scripts__oql_validator_common
     scripts__scenarios_export -->|1| scripts__oql_v4_validator
-    packages__oqlos_core -->|1| oqlos__config
-    oqlos__core -->|1| packages__oqlos_core

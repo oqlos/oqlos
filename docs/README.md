@@ -67,8 +67,8 @@ Detailed guide: [Hardware Diagnostics](HARDWARE_DIAGNOSTICS.md).
 
 <!-- code2docs:start --># oqlos
 
-![version](https://img.shields.io/badge/version-0.1.0-blue) ![python](https://img.shields.io/badge/python-%3E%3D3.10-blue) ![coverage](https://img.shields.io/badge/coverage-unknown-lightgrey) ![functions](https://img.shields.io/badge/functions-2442-green)
-> **2442** functions | **156** classes | **380** files | CC̄ = 3.8
+![version](https://img.shields.io/badge/version-0.1.0-blue) ![python](https://img.shields.io/badge/python-%3E%3D3.10-blue) ![coverage](https://img.shields.io/badge/coverage-unknown-lightgrey) ![functions](https://img.shields.io/badge/functions-2448-green)
+> **2448** functions | **158** classes | **381** files | CC̄ = 3.7
 
 > Auto-generated project documentation from source code analysis.
 
@@ -181,7 +181,7 @@ oqlos/
         ├── parser
         ├── _func_resolver
                     ├── _oql_adapter
-        ├── interpreter
+                    ├── interpreter
         ├── _cql_tokenizer
                     ├── _runtime_settings
         ├── _line_parsers
@@ -323,6 +323,7 @@ oqlos/
             ├── events
             ├── execution
         ├── cqrs/
+            ├── telemetry
             ├── peripheral
         ├── gen_error_docs
         ├── hardware_diagnose/
@@ -578,6 +579,8 @@ oqlos/
 - **`UpdateProgressCommand`** — —
 - **`SetExecutionStatusCommand`** — —
 - **`ExecutionsProjection`** — Read model: `executions[id]` mirrors the latest replayed state of each stream.
+- **`SensorObserved`** — —
+- **`SensorTelemetryProjection`** — Read model: `latest[sensor_id]` and full per-sensor history.
 - **`PeripheralRegistered`** — —
 - **`PeripheralValueSet`** — —
 - **`PeripheralModeChanged`** — —
@@ -1455,6 +1458,9 @@ oqlos/
 - `handle_update_progress(cmd)` — —
 - `handle_set_execution_status(cmd)` — —
 - `build_command_bus(store)` — Construct a CommandBus with every domain handler in this package registered.
+- `record_sensor_readings(store, readings)` — Append one SensorObserved event per reading. No-op if *store* is None.
+- `latest_sensor_values(store)` — Query: current best-known value per sensor, derived from the event log.
+- `sensor_history(store, sensor_id)` — Query: every recorded observation for *sensor_id*, oldest first.
 - `handle_register_peripheral(cmd)` — —
 - `handle_set_peripheral_value(cmd)` — —
 - `handle_set_peripheral_mode(cmd)` — —
@@ -2113,7 +2119,7 @@ oqlos/
 📄 `oqlos.api._hw3_models` (7 functions, 9 classes)
 📄 `oqlos.api._hw3_peripheral` (5 functions)
 📄 `oqlos.api._hw3_system` (19 functions)
-📄 `oqlos.api.editor` (9 functions, 3 classes)
+📄 `oqlos.api.editor` (10 functions, 3 classes)
 📄 `oqlos.api.execution` (16 functions)
 📄 `oqlos.api.hardware`
 📄 `oqlos.api.hardware_actuators` (2 functions)
@@ -2165,8 +2171,8 @@ oqlos/
 📄 `oqlos.core.cqrs.execution` (9 functions, 12 classes)
 📄 `oqlos.core.cqrs.peripheral` (8 functions, 10 classes)
 📄 `oqlos.core.cqrs.projection` (3 functions, 1 classes)
+📄 `oqlos.core.cqrs.telemetry` (5 functions, 2 classes)
 📄 `oqlos.core.executor` (21 functions, 1 classes)
-📄 `oqlos.core.interpreter` (48 functions, 1 classes)
 📄 `oqlos.core.motor2_runtime` (12 functions, 2 classes)
 📄 `oqlos.core.oql_parser` (38 functions, 3 classes)
 📄 `oqlos.core.oql_versioning` (4 functions, 1 classes)
@@ -2311,6 +2317,7 @@ oqlos/
 📄 `packages.oqlos-core.src.oqlos.core._oql_adapter` (28 functions, 1 classes)
 📄 `packages.oqlos-core.src.oqlos.core._runtime_settings` (2 functions)
 📄 `packages.oqlos-core.src.oqlos.core._value_normalizers` (7 functions, 1 classes)
+📄 `packages.oqlos-core.src.oqlos.core.interpreter` (48 functions, 1 classes)
 📄 `packages.oqlos-models.README`
 📄 `packages.oqlos-models.pyproject`
 📄 `packages.oqlos-models.src.oqlos.models.execution` (3 classes)
