@@ -70,8 +70,15 @@ logger = logging.getLogger(__name__)
 
 from oqlos.models.scenario import Step, Goal
 from oqlos.models.execution import ExecutionStatus
-from oqlos.models.peripheral import Peripheral
 from oqlos.core.state import StateManager, logged
+from oqlos.core.cqrs.execution import (
+    SetExecutionStatusCommand,
+    StartExecutionCommand,
+    StartGoalCommand,
+    StartStepCommand,
+    UpdateProgressCommand,
+)
+from oqlos.core.cqrs.peripheral import SetPeripheralValueCommand
 from oqlos.hardware.plugin_gateway import PluginHardwareGateway
 
 @logged
@@ -81,9 +88,16 @@ class ScenarioOrchestrator:
         self.hardware = hardware or PluginHardwareGateway()
         self.running = False
         self.paused = False
-        self.current_execution = None
+        self.current_execution_id: str | None = None
         self.current_index: int = -1
         self._step_plan: list[Step] = []
+
+    @property
+    def current_execution(self) -> ExecutionStatus | None:
+        """Always resolved fresh from the event-sourced projection — never a stale reference."""
+        if self.current_execution_id is None:
+            return None
+        return self.state_manager.executions.get(self.current_execution_id)
     
     def _sanitize_identifier(self, name: str) -> str:
         """Convert peripheral IDs like 'nc-sensor'/'pump-main' to python-safe identifiers."""
@@ -121,17 +135,18 @@ class ScenarioOrchestrator:
         self.current_index = -1
 
     async def _execute_goal_steps(
-        self, goal, execution: ExecutionStatus, execution_id: str,
+        self, goal, execution_id: str,
         mode: str, speed: float, total_steps: int, completed_steps: int
     ) -> int:
         """Run all steps in a single goal, returning updated completed_steps count."""
+        bus = self.state_manager.command_bus
         for step in goal.steps:
             if not self.running:
                 break
             while self.paused:
                 await asyncio.sleep(0.1)
 
-            execution.currentStep = step.id
+            bus.dispatch(StartStepCommand(execution_id=execution_id, step_id=step.id))
             self.current_index = self._step_counter
             self._step_counter += 1
 
@@ -142,8 +157,11 @@ class ScenarioOrchestrator:
             await self.execute_step(step, mode, speed)
 
             completed_steps += 1
-            execution.progress = (completed_steps / total_steps) * 100
+            bus.dispatch(UpdateProgressCommand(
+                execution_id=execution_id, progress=(completed_steps / total_steps) * 100
+            ))
 
+            execution = self.state_manager.executions[execution_id]
             await self.state_manager.broadcast_event({
                 'type': 'execution_update',
                 'executionId': execution_id,
@@ -162,19 +180,12 @@ class ScenarioOrchestrator:
             raise ValueError(f"Scenario {scenario_id} not found")
         
         execution_id = f"exec-{datetime.now(timezone.utc).timestamp()}"
-        execution = ExecutionStatus(
-            executionId=execution_id,
-            scenarioId=scenario_id,
-            status='running',
-            currentGoal=None,
-            currentStep=None,
-            progress=0
-        )
-        
-        self.state_manager.executions[execution_id] = execution
-        self.current_execution = execution
+        bus = self.state_manager.command_bus
+        bus.dispatch(StartExecutionCommand(execution_id=execution_id, scenario_id=scenario_id))
+
+        self.current_execution_id = execution_id
         self.running = True
-        
+
         # Filter goals if specified
         goals_to_run = scenario.goals
         if goals:
@@ -183,24 +194,24 @@ class ScenarioOrchestrator:
         total_steps = sum(len(g.steps) for g in goals_to_run)
         completed_steps = 0
         self._build_step_plan(goals_to_run)
-        
+
         for goal in goals_to_run:
             if not self.running:
                 break
-            execution.currentGoal = goal.id
+            bus.dispatch(StartGoalCommand(execution_id=execution_id, goal_id=goal.id))
             await self.log_event('info', f'Starting GOAL: {goal.name}')
 
             completed_steps = await self._execute_goal_steps(
-                goal, execution, execution_id, mode, speed, total_steps, completed_steps
+                goal, execution_id, mode, speed, total_steps, completed_steps
             )
-            
+
             validation_passed = await self.validate_goal(goal)
             if validation_passed:
                 await self.log_event('success', f'✓ GOAL completed successfully')
             else:
                 await self.log_event('error', f'✗ GOAL validation failed')
-        
-        execution.status = 'completed'
+
+        bus.dispatch(SetExecutionStatusCommand(execution_id=execution_id, status='completed'))
         self.running = False
         if self._step_plan:
             self.current_index = len(self._step_plan) - 1
@@ -249,8 +260,9 @@ class ScenarioOrchestrator:
         if step.peripheral and step.peripheral in self.state_manager.peripherals:
             peripheral = self.state_manager.peripherals[step.peripheral]
             if mode == 'auto' or peripheral.mode == 'auto':
-                peripheral.currentValue = step.value
-                peripheral.targetValue = step.value
+                self.state_manager.command_bus.dispatch(SetPeripheralValueCommand(
+                    peripheral_id=step.peripheral, current_value=step.value, target_value=step.value,
+                ))
                 await self.log_event('info', f'{peripheral.name}: {"OPEN" if step.value else "CLOSED"}')
                 await self.hardware.set_valve(step.peripheral, bool(step.value))
 
@@ -260,14 +272,20 @@ class ScenarioOrchestrator:
             peripheral = self.state_manager.peripherals[step.peripheral]
             if mode == 'auto' or peripheral.mode == 'auto':
                 # Simulate gradual pump power change
+                bus = self.state_manager.command_bus
                 start_value = peripheral.currentValue
                 target_value = step.value
                 steps = 10
                 for i in range(steps):
-                    peripheral.currentValue = start_value + (target_value - start_value) * (i + 1) / steps
-                    await self.update_dependent_sensors(peripheral)
+                    current_value = start_value + (target_value - start_value) * (i + 1) / steps
+                    bus.dispatch(SetPeripheralValueCommand(
+                        peripheral_id=step.peripheral, current_value=current_value, target_value=peripheral.targetValue,
+                    ))
+                    await self.update_dependent_sensors(step.peripheral)
                     await asyncio.sleep(0.1 / speed)
-                peripheral.targetValue = target_value
+                bus.dispatch(SetPeripheralValueCommand(
+                    peripheral_id=step.peripheral, current_value=target_value, target_value=target_value,
+                ))
                 await self.log_event('info', f'Pump power: {target_value}%')
                 await self.hardware.set_pump(float(target_value))
 
@@ -282,7 +300,10 @@ class ScenarioOrchestrator:
             peripheral = self.state_manager.peripherals[step.peripheral]
             hw_value = await self.hardware.read_sensor(step.peripheral)
             if hw_value is not None:
-                peripheral.currentValue = hw_value
+                self.state_manager.command_bus.dispatch(SetPeripheralValueCommand(
+                    peripheral_id=step.peripheral, current_value=hw_value, target_value=peripheral.targetValue,
+                ))
+                peripheral = self.state_manager.peripherals[step.peripheral]
             await self.log_event('info', f'{peripheral.name} reading: {peripheral.currentValue} {peripheral.unit}')
 
     async def _execute_validate_step(self, step: Step):
@@ -306,35 +327,45 @@ class ScenarioOrchestrator:
                 # Do not crash the whole execution; log and continue
                 await self.log_event('error', f'Failed to evaluate validation: {step.condition} ({ex})')
     
-    async def update_dependent_sensors(self, pump: Peripheral):
+    async def update_dependent_sensors(self, pump_id: str):
         """Update sensor values based on pump and valve states"""
         # Simplified physics simulation
-        pump_power = pump.currentValue
-        
+        bus = self.state_manager.command_bus
+        pump_power = self.state_manager.peripherals[pump_id].currentValue
+
         # Update NC sensor if valve is open
         valve_nc = self.state_manager.peripherals.get('valve-nc')
         if valve_nc and valve_nc.currentValue:
             nc_sensor = self.state_manager.peripherals.get('nc-sensor')
             if nc_sensor:
                 # Negative pressure proportional to pump power
-                nc_sensor.currentValue = -pump_power * 0.6  # -60 mbar at 100% power
-                await self.log_event('info', f'NC Sensor: {nc_sensor.currentValue:.1f} mbar')
-        
+                value = -pump_power * 0.6  # -60 mbar at 100% power
+                bus.dispatch(SetPeripheralValueCommand(
+                    peripheral_id='nc-sensor', current_value=value, target_value=nc_sensor.targetValue,
+                ))
+                await self.log_event('info', f'NC Sensor: {value:.1f} mbar')
+
         # Update SC sensor if valve is open
         valve_sc = self.state_manager.peripherals.get('valve-sc')
         if valve_sc and valve_sc.currentValue:
             sc_sensor = self.state_manager.peripherals.get('sc-sensor')
             if sc_sensor:
-                sc_sensor.currentValue = pump_power * 0.25  # 25 bar at 100% power
-                await self.log_event('info', f'SC Sensor: {sc_sensor.currentValue:.1f} bar')
-        
+                value = pump_power * 0.25  # 25 bar at 100% power
+                bus.dispatch(SetPeripheralValueCommand(
+                    peripheral_id='sc-sensor', current_value=value, target_value=sc_sensor.targetValue,
+                ))
+                await self.log_event('info', f'SC Sensor: {value:.1f} bar')
+
         # Update WC sensor if valve is open
         valve_wc = self.state_manager.peripherals.get('valve-wc')
         if valve_wc and valve_wc.currentValue:
             wc_sensor = self.state_manager.peripherals.get('wc-sensor')
             if wc_sensor:
-                wc_sensor.currentValue = pump_power * 4  # 400 bar at 100% power
-                await self.log_event('info', f'WC Sensor: {wc_sensor.currentValue:.1f} bar')
+                value = pump_power * 4  # 400 bar at 100% power
+                bus.dispatch(SetPeripheralValueCommand(
+                    peripheral_id='wc-sensor', current_value=value, target_value=wc_sensor.targetValue,
+                ))
+                await self.log_event('info', f'WC Sensor: {value:.1f} bar')
         
         # Broadcast peripheral updates
         for peripheral in self.state_manager.peripherals.values():

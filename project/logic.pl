@@ -95,7 +95,7 @@ project_file('oqlos/api/hardware.py', 86, 'python').
 project_file('oqlos/api/hardware_actuators.py', 24, 'python').
 project_file('oqlos/api/hardware_diagnosis_routes.py', 57, 'python').
 project_file('oqlos/api/hardware_events.py', 137, 'python').
-project_file('oqlos/api/hardware_gateway.py', 30, 'python').
+project_file('oqlos/api/hardware_gateway.py', 35, 'python').
 project_file('oqlos/api/hardware_hui.py', 62, 'python').
 project_file('oqlos/api/hardware_identify.py', 171, 'python').
 project_file('oqlos/api/hardware_lung.py', 86, 'python').
@@ -104,11 +104,11 @@ project_file('oqlos/api/hardware_mapping_motor2.py', 49, 'python').
 project_file('oqlos/api/hardware_mapping_store.py', 153, 'python').
 project_file('oqlos/api/hardware_modbus_routes.py', 80, 'python').
 project_file('oqlos/api/hardware_modbus_topology.py', 93, 'python').
-project_file('oqlos/api/hardware_modbus_waveshare.py', 625, 'python').
+project_file('oqlos/api/hardware_modbus_waveshare.py', 622, 'python').
 project_file('oqlos/api/hardware_modbus_wizard.py', 400, 'python').
 project_file('oqlos/api/hardware_peripherals_routes.py', 91, 'python').
 project_file('oqlos/api/hardware_platform.py', 166, 'python').
-project_file('oqlos/api/hardware_probe.py', 140, 'python').
+project_file('oqlos/api/hardware_probe.py', 135, 'python').
 project_file('oqlos/api/hardware_probe_devices.py', 189, 'python').
 project_file('oqlos/api/hardware_registry.py', 62, 'python').
 project_file('oqlos/api/hardware_runtime.py', 190, 'python').
@@ -139,7 +139,7 @@ project_file('oqlos/core/_sensor_evaluator.py', 146, 'python').
 project_file('oqlos/core/_value_normalizers.py', 127, 'python').
 project_file('oqlos/core/base.py', 312, 'python').
 project_file('oqlos/core/cql_parser.py', 468, 'python').
-project_file('oqlos/core/executor.py', 384, 'python').
+project_file('oqlos/core/executor.py', 378, 'python').
 project_file('oqlos/core/interpreter.py', 691, 'python').
 project_file('oqlos/core/motor2_runtime.py', 210, 'python').
 project_file('oqlos/core/oql_parser.py', 774, 'python').
@@ -288,7 +288,7 @@ project_file('project.sh', 43, 'shell').
 project_file('scripts/fix_brackets_to_v4.py', 96, 'python').
 project_file('scripts/gen-checksums.sh', 28, 'shell').
 project_file('scripts/hardware-check.sh', 341, 'shell').
-project_file('scripts/migrate_to_v4.py', 342, 'python').
+project_file('scripts/migrate_to_v4.py', 338, 'python').
 project_file('scripts/oql-stack.sh', 105, 'shell').
 project_file('scripts/oql_v2_to_v4_migrate_db.py', 663, 'python').
 project_file('scripts/oql_v2_validator.py', 225, 'python').
@@ -465,6 +465,7 @@ python_function('oqlos/api/hardware_gateway.py', 'set_hardware_gateway', 1, 1, 0
 python_function('oqlos/api/hardware_gateway.py', 'get_hardware_gateway', 0, 2, 1).
 python_function('oqlos/api/hardware_gateway.py', 'try_get_hardware_gateway', 0, 1, 0).
 python_function('oqlos/api/hardware_gateway.py', 'snapshot_via_health', 1, 1, 3).
+python_function('oqlos/api/hardware_gateway.py', 'is_plugin_compatible', 1, 2, 3).
 python_function('oqlos/api/hardware_hui.py', 'raise_if_hui_failed', 1, 2, 2).
 python_function('oqlos/api/hardware_hui.py', 'start_hui_action', 1, 1, 3).
 python_function('oqlos/api/hardware_hui.py', 'hui_actions', 0, 1, 2).
@@ -505,7 +506,6 @@ python_function('oqlos/api/hardware_modbus_topology.py', '_modbus_io_device_ids'
 python_function('oqlos/api/hardware_modbus_topology.py', '_modbus_topology_mode', 0, 5, 3).
 python_function('oqlos/api/hardware_modbus_topology.py', '_apply_modbus_topology', 4, 11, 0).
 python_function('oqlos/api/hardware_modbus_topology.py', '_modbus_runtime_serial_ports', 0, 12, 5).
-python_function('oqlos/api/hardware_modbus_waveshare.py', '_is_plugin_compatible', 1, 2, 3).
 python_function('oqlos/api/hardware_modbus_waveshare.py', '_diagnose_shared_bus_matrix', 0, 2, 4).
 python_function('oqlos/api/hardware_modbus_waveshare.py', '_merge_unique_text_list', 2, 5, 2).
 python_function('oqlos/api/hardware_modbus_waveshare.py', '_merge_waveshare_scan_dicts', 0, 11, 9).
@@ -543,7 +543,6 @@ python_function('oqlos/api/hardware_platform.py', '_classify_platform_type', 4, 
 python_function('oqlos/api/hardware_platform.py', '_detect_runtime_platform', 0, 9, 17).
 python_function('oqlos/api/hardware_probe.py', '_probe_all_hardware', 1, 11, 4).
 python_function('oqlos/api/hardware_probe.py', '_collect_hardware_diagnostics', 0, 1, 6).
-python_function('oqlos/api/hardware_probe.py', '_is_plugin_compatible', 1, 2, 3).
 python_function('oqlos/api/hardware_probe.py', '_needs_live_scan', 1, 3, 2).
 python_function('oqlos/api/hardware_probe.py', '_unhealthy_plugin_ids', 1, 3, 2).
 python_function('oqlos/api/hardware_probe.py', '_modbus_health_is_no_response', 1, 5, 2).
@@ -1435,7 +1434,6 @@ python_function('oqlos/utils/hui_scenario.py', 'register_hui_test_scenario', 1, 
 python_function('oqlos/utils/sample_data.py', 'load_sample_scenarios', 1, 1, 4).
 python_function('scripts/fix_brackets_to_v4.py', 'needs_migration', 1, 6, 1).
 python_function('scripts/fix_brackets_to_v4.py', 'main', 0, 14, 16).
-python_function('scripts/migrate_to_v4.py', '_quote_oql', 1, 2, 3).
 python_function('scripts/migrate_to_v4.py', 'find_oql_files', 1, 6, 6).
 python_function('scripts/migrate_to_v4.py', 'has_version_header', 1, 4, 5).
 python_function('scripts/migrate_to_v4.py', 'extract_version', 1, 5, 6).

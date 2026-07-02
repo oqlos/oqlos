@@ -1,7 +1,7 @@
 # firmware/models/peripherals.py
 from enum import Enum
 from typing import Any
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 class PeripheralType(str, Enum):
     PRESSURE_SENSOR = 'pressure_sensor'
@@ -21,6 +21,12 @@ class PeripheralMode(str, Enum):
     MANUAL = 'manual'
 
 class Peripheral(BaseModel):
+    """Event-sourced: only oqlos.core.cqrs.peripheral may produce a new instance
+    (via model_copy in PeripheralAggregate.apply). Frozen so any code that tries
+    to mutate a field directly — bypassing the CommandBus — fails loudly."""
+
+    model_config = ConfigDict(frozen=True)
+
     id: str
     type: PeripheralType
     name: str

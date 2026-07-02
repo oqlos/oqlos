@@ -10,44 +10,21 @@ except ImportError:
 from oqlos.models.peripheral import Peripheral, PeripheralType, PeripheralStatus, PeripheralMode
 from oqlos.models.scenario import Scenario
 from oqlos.models.execution import ExecutionStatus
-from oqlos.core.cqrs import EventStore, build_command_bus
-from oqlos.core.cqrs.peripheral import PeripheralsProjection, RegisterPeripheralCommand
-from oqlos.core.cqrs.execution import ExecutionsProjection
 
 @logged
 class StateManager:
-    """Peripheral and execution state are event-sourced: this class only ever
-    dispatches Commands through `command_bus`. `peripherals` / `executions`
-    are read-only Projections rebuilt by replaying `event_store` — nothing
-    outside oqlos.core.cqrs mutates a Peripheral or ExecutionStatus directly.
-    """
-
     def __init__(self):
-        self.event_store = EventStore()
-        self.command_bus = build_command_bus(self.event_store)
-
-        self._peripherals_projection = PeripheralsProjection()
-        self._peripherals_projection.attach(self.event_store)
-        self._executions_projection = ExecutionsProjection()
-        self._executions_projection.attach(self.event_store)
-
+        self.peripherals: dict[str, Peripheral] = {}
+        self.executions: dict[str, ExecutionStatus] = {}
         self.scenarios: dict[str, Scenario] = {}
         self.websocket_connections: list[WebSocket] = []
         self.initialize_peripherals()
-
-    @property
-    def peripherals(self) -> dict[str, Peripheral]:
-        return self._peripherals_projection.peripherals
-
-    @property
-    def executions(self) -> dict[str, ExecutionStatus]:
-        return self._executions_projection.executions
-
+        
     def initialize_peripherals(self):
-        """Register all peripheral devices via commands (replaces direct dict writes)."""
+        """Initialize all peripheral devices"""
         # Pressure Sensors
-        self.command_bus.dispatch(RegisterPeripheralCommand(
-            peripheral_id='nc-sensor',
+        self.peripherals['nc-sensor'] = Peripheral(
+            id='nc-sensor',
             type=PeripheralType.PRESSURE_SENSOR,
             name='NC Sensor (Low Pressure)',
             currentValue=0,
@@ -56,11 +33,11 @@ class StateManager:
             range={'min': -60, 'max': 60},
             status=PeripheralStatus.OK,
             mode=PeripheralMode.AUTO,
-            dependencies=('valve-nc', 'pump-main'),
-        ))
-
-        self.command_bus.dispatch(RegisterPeripheralCommand(
-            peripheral_id='sc-sensor',
+            dependencies=['valve-nc', 'pump-main']
+        )
+        
+        self.peripherals['sc-sensor'] = Peripheral(
+            id='sc-sensor',
             type=PeripheralType.PRESSURE_SENSOR,
             name='SC Sensor (Medium Pressure)',
             currentValue=0,
@@ -69,11 +46,11 @@ class StateManager:
             range={'min': 0, 'max': 25},
             status=PeripheralStatus.OK,
             mode=PeripheralMode.AUTO,
-            dependencies=('valve-sc', 'pump-main'),
-        ))
-
-        self.command_bus.dispatch(RegisterPeripheralCommand(
-            peripheral_id='wc-sensor',
+            dependencies=['valve-sc', 'pump-main']
+        )
+        
+        self.peripherals['wc-sensor'] = Peripheral(
+            id='wc-sensor',
             type=PeripheralType.PRESSURE_SENSOR,
             name='WC Sensor (High Pressure)',
             currentValue=0,
@@ -82,36 +59,36 @@ class StateManager:
             range={'min': 0, 'max': 400},
             status=PeripheralStatus.OK,
             mode=PeripheralMode.AUTO,
-            dependencies=('valve-wc', 'pump-main'),
-        ))
-
+            dependencies=['valve-wc', 'pump-main']
+        )
+        
         # Valves (numbered 1-14)
         for i in range(1, 15):
-            self.command_bus.dispatch(RegisterPeripheralCommand(
-                peripheral_id=f'valve-{i}',
+            self.peripherals[f'valve-{i}'] = Peripheral(
+                id=f'valve-{i}',
                 type=PeripheralType.VALVE,
                 name=f'Valve #{i}',
                 currentValue=False,
                 targetValue=False,
                 status=PeripheralStatus.OK,
-                mode=PeripheralMode.AUTO,
-            ))
-
+                mode=PeripheralMode.AUTO
+            )
+        
         # Special circuit valves
         for circuit in ['nc', 'sc', 'wc']:
-            self.command_bus.dispatch(RegisterPeripheralCommand(
-                peripheral_id=f'valve-{circuit}',
+            self.peripherals[f'valve-{circuit}'] = Peripheral(
+                id=f'valve-{circuit}',
                 type=PeripheralType.VALVE,
                 name=f'{circuit.upper()} Circuit Valve',
                 currentValue=False,
                 targetValue=False,
                 status=PeripheralStatus.OK,
-                mode=PeripheralMode.AUTO,
-            ))
-
+                mode=PeripheralMode.AUTO
+            )
+        
         # Main Pump
-        self.command_bus.dispatch(RegisterPeripheralCommand(
-            peripheral_id='pump-main',
+        self.peripherals['pump-main'] = Peripheral(
+            id='pump-main',
             type=PeripheralType.PUMP,
             name='Main Pump',
             currentValue=0,
@@ -119,21 +96,21 @@ class StateManager:
             unit='%',
             range={'min': 0, 'max': 100},
             status=PeripheralStatus.OK,
-            mode=PeripheralMode.AUTO,
-        ))
-
+            mode=PeripheralMode.AUTO
+        )
+        
         # Artificial Lung
-        self.command_bus.dispatch(RegisterPeripheralCommand(
-            peripheral_id='lung-main',
+        self.peripherals['lung-main'] = Peripheral(
+            id='lung-main',
             type=PeripheralType.ARTIFICIAL_LUNG,
             name='Artificial Lung',
             currentValue={'volume': 0, 'pressure': 0},
             targetValue={'volume': 0, 'pressure': 0},
             status=PeripheralStatus.OK,
             mode=PeripheralMode.AUTO,
-            dependencies=('nc-sensor', 'valve-1'),
-        ))
-
+            dependencies=['nc-sensor', 'valve-1']
+        )
+    
     async def broadcast_event(self, event: dict):
         """Broadcast event to all connected WebSocket clients"""
         disconnected = []
@@ -142,6 +119,6 @@ class StateManager:
                 await ws.send_json(event)
             except Exception:
                 disconnected.append(ws)
-
+        
         for ws in disconnected:
             self.websocket_connections.remove(ws)

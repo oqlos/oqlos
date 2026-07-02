@@ -8,6 +8,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from oqlos.core.cqrs.execution import SetExecutionStatusCommand
+
 if TYPE_CHECKING:
     from oqlos.core.state import StateManager
     from oqlos.core.executor import ScenarioOrchestrator
@@ -48,10 +50,11 @@ def _make_exec_handler(orch_attr: str, orch_value: bool, target_status: str):
         sm = get_state_manager()
         orch = get_orchestrator()
         setattr(orch, orch_attr, orch_value)
-        if execution_id and execution_id in sm.executions:
-            sm.executions[execution_id].status = target_status
-        elif orch.current_execution:
-            orch.current_execution.status = target_status
+        target_id = execution_id if execution_id and execution_id in sm.executions else (
+            orch.current_execution.executionId if orch.current_execution else None
+        )
+        if target_id:
+            sm.command_bus.dispatch(SetExecutionStatusCommand(execution_id=target_id, status=target_status))
         return {"status": target_status}
     handler.__name__ = f"do_{target_status}"
     return handler

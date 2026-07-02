@@ -1,4 +1,4 @@
-# oqlos | 2404 func | 269f | 60768L | python | 2026-07-02
+# oqlos | 2403 func | 269f | 60755L | python | 2026-07-02
 # generated in 0.00s
 
 HEALTH:
@@ -11,13 +11,13 @@ ALERTS[20]:
   !!! high_fan_out     pi_system_diagnostics = 20 (limit:10)
   !!! high_fan_out     _detect_runtime_platform = 20 (limit:10)
   !!! high_fan_out     main = 20 (limit:10)
-  !!  high_fan_out     hardware_identify = 19 (limit:10)
   !!  high_fan_out     parse_oql = 19 (limit:10)
   !!  high_fan_out     oql_doc_to_cql = 19 (limit:10)
+  !!  high_fan_out     hardware_identify = 19 (limit:10)
   !!  high_fan_out     main = 18 (limit:10)
 
 MODULES[357] (top by size):
-  M[docs/README.md] 2362L C:0 F:0 CC↑0 D:0 (md)
+  M[docs/README.md] 2358L C:0 F:0 CC↑0 D:0 (md)
   M[frontend/src/i18n/dictionaries.js] 2135L C:0 F:4 CC↑5 D:0 (javascript)
   M[frontend/src/pages/mapEditorDefaultMap.js] 1953L C:0 F:3 CC↑1 D:0 (javascript)
   M[redeploy/122/migration.md] 1305L C:0 F:0 CC↑0 D:0 (md)
@@ -51,4 +51,4 @@ REFACTOR[15]:
   [5] H/H Split god module frontend/src/pages/MapEditor.jsx (1114L, 0 classes)
 
 EVOLUTION:
-  2026-07-02 CC̄=3.8 crit=192 60768L // Automated analysis
+  2026-07-02 CC̄=3.8 crit=192 60755L // Automated analysis

@@ -4,11 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "oqlos"
-version = "0.1.28"
+version = "0.1.29"
 description = "OqlOS — Operation Query Language runtime for hardware testing"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+    "oqlos-models==0.2.0",
+    "oqlos-core==0.2.1",
     "fastapi>=0.110",
     "uvicorn>=0.28",
     "pydantic>=2.0",
@@ -50,6 +52,7 @@ hardware-services = ["dri0050>=1.0.0", "piADC>=1.0.0", "piRTC>=1.0.0"]
 
 [tool.setuptools.packages.find]
 include = ["oqlos*"]
+exclude = ["oqlos.models*", "oqlos.shared.event_store"]
 
 [tool.pfix]
 # Self-healing Python configuration

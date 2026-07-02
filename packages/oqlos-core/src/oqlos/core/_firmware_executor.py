@@ -11,12 +11,20 @@ import inspect
 import threading
 from typing import Any, TYPE_CHECKING
 
-from oqlos.hardware.firmware_adapter import _PERIPHERAL_MAP
-from oqlos.hardware.plugin_gateway import PluginHardwareGateway
-
 if TYPE_CHECKING:
-    from oqlos.models.dsl_models import CqlAction
-    from oqlos.core.base import StepStatus
+    from oqlos.hardware.plugin_gateway import PluginHardwareGateway
+
+
+def _load_peripheral_map():
+    from oqlos.hardware.firmware_adapter import _PERIPHERAL_MAP
+
+    return _PERIPHERAL_MAP
+
+
+def _plugin_gateway_cls():
+    from oqlos.hardware.plugin_gateway import PluginHardwareGateway
+
+    return PluginHardwareGateway
 
 
 class FirmwareExecutor:
@@ -61,7 +69,7 @@ class FirmwareExecutor:
         self.out = output_handler
         self.normalizer = normalizer
         self._firmware = None
-        self._plugin_gateway: PluginHardwareGateway | None = None
+        self._plugin_gateway: Any | None = None
 
         # Use plugin gateway instead of old hardware system. Prefer an injected,
         # already-initialized gateway over constructing a fresh one.
@@ -69,7 +77,7 @@ class FirmwareExecutor:
             self._plugin_gateway = gateway
             self._use_plugin_gateway = True
         elif use_plugin_gateway:
-            self._plugin_gateway = PluginHardwareGateway(mode=mode)
+            self._plugin_gateway = _plugin_gateway_cls()(mode=mode)
 
     def _get_firmware(self):
         """Lazy-init firmware adapter."""
@@ -129,7 +137,7 @@ class FirmwareExecutor:
     def resolve_peripheral_id(target: str) -> str | None:
         """Resolve a known target name to a firmware peripheral id."""
         normalized = target.strip().lower().replace(" ", "-").replace("_", "-")
-        return _PERIPHERAL_MAP.get(normalized)
+        return _load_peripheral_map().get(normalized)
 
     def normalize_peripheral_value(self, resolved: str | None, value: str) -> Any:
         """Normalize a DSL value according to the resolved peripheral family."""

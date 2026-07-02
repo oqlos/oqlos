@@ -15,8 +15,11 @@ PYTHON ?= python
 
 .DEFAULT_GOAL := help
 
-.PHONY: help test test-hw smoke checksums verify-rpi sync-rpi restart \
+.PHONY: help install-dev test test-hw smoke checksums verify-rpi sync-rpi restart \
         redeploy deploy 122 pi-hw serve panel-url
+
+install-dev: ## Editable install: oqlos-models + oqlos-core + oqlos (monorepo)
+	pip install -e packages/oqlos-models -e packages/oqlos-core -e .
 
 help: ## Pokaż dostępne cele
 	@echo "OqlOS — cele make (PI=$(PI) NODE=$(NODE))"
@@ -27,7 +30,7 @@ help: ## Pokaż dostępne cele
 	@echo "Przykłady:  make test-hw   |   make 122   |   make restart PI=pi@boardnet.local"
 
 # --- testy ----------------------------------------------------------------
-test: ## Testy jednostkowe (pytest, lokalnie)
+test: install-dev ## Testy jednostkowe (pytest, lokalnie)
 	$(PYTHON) -m pytest -q
 
 test-hw: ## Pełny test węzła sprzętowego na $(PI): łączność + sha256 + smoke-test

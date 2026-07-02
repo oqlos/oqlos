@@ -12,7 +12,7 @@ from typing import Any, TYPE_CHECKING
 
 import httpx
 
-from oqlos.config import get_settings
+from oqlos.core._runtime_settings import lung_motor_url
 from oqlos.core.motor2_runtime import (
     build_motor2_reciprocating_plan,
     motor2_acceleration_raw,
@@ -188,7 +188,7 @@ def _motor2_acceleration_raw(steps_per_second: int, percent: int | None) -> int 
 
 
 def _post_motor2_move_relative(direction: str, steps: int, speed_raw: int, acceleration_raw: int | None) -> None:
-    base_url = get_settings().lung_motor_url.rstrip("/")
+    base_url = lung_motor_url()
     offset = -abs(steps) if direction == "left" else abs(steps)
     payload: dict[str, Any] = {"offset": offset, "speed": speed_raw}
     if acceleration_raw is not None:
@@ -210,7 +210,7 @@ def _post_motor2_reciprocate(
     pause: float,
     limit_mode: str | None,
 ) -> None:
-    base_url = get_settings().lung_motor_url.rstrip("/")
+    base_url = lung_motor_url()
     start_direction = "reverse" if direction == "left" else "forward"
     payload: dict[str, Any] = {
         "steps": steps,
@@ -233,7 +233,7 @@ def _post_motor2_reciprocate(
 
 
 def _post_motor2_stop() -> None:
-    base_url = get_settings().lung_motor_url.rstrip("/")
+    base_url = lung_motor_url()
     with httpx.Client(base_url=base_url, timeout=10.0) as client:
         response = client.post("/api/stop")
         response.raise_for_status()

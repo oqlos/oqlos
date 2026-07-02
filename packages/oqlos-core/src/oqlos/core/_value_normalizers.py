@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import Any
 
-import oqlos.config as oql_config
+from oqlos.core._runtime_settings import lung_motor_url, pump_flow_full_scale_lpm
 from oqlos.core._dsl_helpers import _parse_numeric_value
 
 
@@ -48,8 +48,7 @@ class ValueNormalizer:
                 return scale
 
         try:
-            settings = oql_config.get_settings()
-            scale = self.coerce_float(getattr(settings, "pump_flow_full_scale_lpm", None))
+            scale = self.coerce_float(pump_flow_full_scale_lpm())
             if scale and scale > 0:
                 return scale
         except Exception:

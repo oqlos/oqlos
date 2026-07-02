@@ -67,8 +67,8 @@ Detailed guide: [Hardware Diagnostics](HARDWARE_DIAGNOSTICS.md).
 
 <!-- code2docs:start --># oqlos
 
-![version](https://img.shields.io/badge/version-0.1.0-blue) ![python](https://img.shields.io/badge/python-%3E%3D3.10-blue) ![coverage](https://img.shields.io/badge/coverage-unknown-lightgrey) ![functions](https://img.shields.io/badge/functions-2404-green)
-> **2404** functions | **128** classes | **364** files | CC̄ = 3.8
+![version](https://img.shields.io/badge/version-0.1.0-blue) ![python](https://img.shields.io/badge/python-%3E%3D3.10-blue) ![coverage](https://img.shields.io/badge/coverage-unknown-lightgrey) ![functions](https://img.shields.io/badge/functions-2403-green)
+> **2403** functions | **128** classes | **364** files | CC̄ = 3.8
 
 > Auto-generated project documentation from source code analysis.
 
@@ -1743,6 +1743,8 @@ oqlos/
 - `set_hardware_gateway(gw)` — —
 - `get_hardware_gateway()` — —
 - `try_get_hardware_gateway()` — —
+- `snapshot_via_health(build_fn)` — Fetch gateway health, then build a report from it off the event loop.
+- `is_plugin_compatible(health_entry)` — Return True when plugin health confirms adapter is reachable and compatible.
 - `hardware_peripheral_status_v3(peripheral_id)` — —
 - `hardware_diagnostic_command_v3(req)` — —
 - `hardware_scanner_status_v3()` — —
@@ -2064,7 +2066,7 @@ oqlos/
 📄 `oqlos.api.hardware_actuators` (2 functions)
 📄 `oqlos.api.hardware_diagnosis_routes` (3 functions)
 📄 `oqlos.api.hardware_events` (10 functions)
-📄 `oqlos.api.hardware_gateway` (3 functions)
+📄 `oqlos.api.hardware_gateway` (5 functions)
 📄 `oqlos.api.hardware_hui` (8 functions)
 📄 `oqlos.api.hardware_identify` (5 functions)
 📄 `oqlos.api.hardware_lung` (7 functions)
@@ -2073,11 +2075,11 @@ oqlos/
 📄 `oqlos.api.hardware_mapping_store` (13 functions, 1 classes)
 📄 `oqlos.api.hardware_modbus_routes` (4 functions)
 📄 `oqlos.api.hardware_modbus_topology` (5 functions)
-📄 `oqlos.api.hardware_modbus_waveshare` (16 functions)
+📄 `oqlos.api.hardware_modbus_waveshare` (15 functions)
 📄 `oqlos.api.hardware_modbus_wizard` (9 functions)
 📄 `oqlos.api.hardware_peripherals_routes` (3 functions)
 📄 `oqlos.api.hardware_platform` (8 functions)
-📄 `oqlos.api.hardware_probe` (9 functions)
+📄 `oqlos.api.hardware_probe` (8 functions)
 📄 `oqlos.api.hardware_probe_devices` (7 functions)
 📄 `oqlos.api.hardware_registry`
 📄 `oqlos.api.hardware_runtime` (8 functions)
@@ -2267,7 +2269,7 @@ oqlos/
 📄 `scripts.fix_brackets_to_v4` (2 functions)
 📄 `scripts.gen-checksums`
 📄 `scripts.hardware-check` (11 functions)
-📄 `scripts.migrate_to_v4` (20 functions)
+📄 `scripts.migrate_to_v4` (19 functions)
 📄 `scripts.oql-stack` (5 functions)
 📄 `scripts.oql_v2_to_v4_migrate_db` (45 functions, 1 classes)
 📄 `scripts.oql_v2_validator` (6 functions, 1 classes)
