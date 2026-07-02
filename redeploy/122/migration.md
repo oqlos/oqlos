@@ -463,7 +463,10 @@ if [ ! -x /home/pi/oqlos/venv/bin/oqlos-server ]; then
 else
   echo "INFO: odswiezam istniejace /home/pi/oqlos/venv"
 fi
-/home/pi/oqlos/venv/bin/pip install -q -e packages/oqlos-models -e packages/oqlos-core -e .
+# Install namespace sub-packages first (--no-deps) so pip's resolver sees them
+# in the environment when resolving the main package's pinned dependencies.
+/home/pi/oqlos/venv/bin/pip install -q --no-deps -e packages/oqlos-models -e packages/oqlos-core
+/home/pi/oqlos/venv/bin/pip install -q -e .
 /home/pi/oqlos/venv/bin/python - <<'PY'
 import oqlos.api.main
 PY
