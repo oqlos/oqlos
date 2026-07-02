@@ -89,7 +89,7 @@ project_file('oqlos/api/_hw3_mapping.py', 158, 'python').
 project_file('oqlos/api/_hw3_models.py', 195, 'python').
 project_file('oqlos/api/_hw3_peripheral.py', 134, 'python').
 project_file('oqlos/api/_hw3_system.py', 135, 'python').
-project_file('oqlos/api/editor.py', 201, 'python').
+project_file('oqlos/api/editor.py', 218, 'python').
 project_file('oqlos/api/execution.py', 359, 'python').
 project_file('oqlos/api/hardware.py', 86, 'python').
 project_file('oqlos/api/hardware_actuators.py', 24, 'python').
@@ -272,7 +272,7 @@ project_file('packages/oqlos-core/src/oqlos/core/_compare.py', 41, 'python').
 project_file('packages/oqlos-core/src/oqlos/core/_cql_tokenizer.py', 411, 'python').
 project_file('packages/oqlos-core/src/oqlos/core/_cql_tree_builder.py', 168, 'python').
 project_file('packages/oqlos-core/src/oqlos/core/_dsl_helpers.py', 133, 'python').
-project_file('packages/oqlos-core/src/oqlos/core/_firmware_executor.py', 275, 'python').
+project_file('packages/oqlos-core/src/oqlos/core/_firmware_executor.py', 284, 'python').
 project_file('packages/oqlos-core/src/oqlos/core/_func_resolver.py', 97, 'python').
 project_file('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', 801, 'python').
 project_file('packages/oqlos-core/src/oqlos/core/_line_parsers.py', 262, 'python').
@@ -282,7 +282,7 @@ project_file('packages/oqlos-core/src/oqlos/core/_sensor_evaluator.py', 146, 'py
 project_file('packages/oqlos-core/src/oqlos/core/_value_normalizers.py', 126, 'python').
 project_file('packages/oqlos-core/src/oqlos/core/base.py', 312, 'python').
 project_file('packages/oqlos-core/src/oqlos/core/cql_parser.py', 468, 'python').
-project_file('packages/oqlos-core/src/oqlos/core/interpreter.py', 691, 'python').
+project_file('packages/oqlos-core/src/oqlos/core/interpreter.py', 693, 'python').
 project_file('packages/oqlos-core/src/oqlos/core/motor2_runtime.py', 210, 'python').
 project_file('packages/oqlos-core/src/oqlos/core/oql_parser.py', 774, 'python').
 project_file('packages/oqlos-core/src/oqlos/core/oql_versioning.py', 73, 'python').
@@ -443,7 +443,8 @@ python_function('oqlos/api/editor.py', '_safe_path', 1, 2, 3).
 python_function('oqlos/api/editor.py', 'list_files', 0, 3, 7).
 python_function('oqlos/api/editor.py', 'read_file_endpoint', 1, 4, 6).
 python_function('oqlos/api/editor.py', 'write_file_endpoint', 2, 3, 5).
-python_function('oqlos/api/editor.py', 'execute_scenario', 1, 6, 16).
+python_function('oqlos/api/editor.py', '_sensor_telemetry_recorder', 0, 2, 1).
+python_function('oqlos/api/editor.py', 'execute_scenario', 1, 6, 17).
 python_function('oqlos/api/execution.py', '_resolve_step_label', 3, 11, 2).
 python_function('oqlos/api/execution.py', '_flatten_steps_for_scenario', 1, 6, 3).
 python_function('oqlos/api/execution.py', '_build_step_labels', 1, 6, 2).
@@ -2401,13 +2402,13 @@ python_class('oqlos/tools/xml_import/models.py', 'Operation').
 python_class('oqlos/tools/xml_import/models.py', 'TestRun').
 python_class('oqlos/tools/xml_import/models.py', 'DeviceReport').
 python_class('packages/oqlos-core/src/oqlos/core/_firmware_executor.py', 'FirmwareExecutor').
-python_method('FirmwareExecutor', '__init__', 7, 3, 1).
+python_method('FirmwareExecutor', '__init__', 8, 3, 1).
 python_method('FirmwareExecutor', '_get_firmware', 0, 3, 2).
 python_method('FirmwareExecutor', '_resolve_gateway_result', 2, 9, 11).
 python_method('FirmwareExecutor', '_is_success', 1, 2, 3).
 python_method('FirmwareExecutor', 'resolve_peripheral_id', 1, 1, 5).
 python_method('FirmwareExecutor', 'normalize_peripheral_value', 2, 6, 4).
-python_method('FirmwareExecutor', 'refresh_sensors_from_firmware', 1, 2, 3).
+python_method('FirmwareExecutor', 'refresh_sensors_from_firmware', 1, 3, 4).
 python_method('FirmwareExecutor', 'execute_firmware_action', 2, 3, 2).
 python_method('FirmwareExecutor', '_execute_plugin_action', 2, 11, 11).
 python_method('FirmwareExecutor', '_execute_legacy_firmware_action', 2, 3, 6).
@@ -2498,7 +2499,7 @@ python_method('_ParseState', '_handle_inline_if_logic', 2, 5, 2).
 python_method('_ParseState', '_handle_action_dispatch', 2, 5, 3).
 python_method('_ParseState', '_try_hierarchy', 3, 7, 6).
 python_class('packages/oqlos-core/src/oqlos/core/interpreter.py', 'CqlInterpreter').
-python_method('CqlInterpreter', '__init__', 11, 1, 5).
+python_method('CqlInterpreter', '__init__', 12, 1, 5).
 python_method('CqlInterpreter', 'sensor_values', 0, 1, 0).
 python_method('CqlInterpreter', 'sensor_values', 1, 1, 0).
 python_method('CqlInterpreter', '_firmware', 0, 1, 0).

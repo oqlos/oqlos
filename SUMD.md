@@ -1953,13 +1953,13 @@ pip install -e .[dev]
 ### `project/map.toon.yaml`
 
 ```toon markpact:analysis path=project/map.toon.yaml
-# oqlos | 387f 57057L | python:299,javascript:73,shell:9,typescript:3,css:2,less:1 | 2026-07-02
-# stats: 1519 func | 244 cls | 387 mod | CC̄=4.1 | critical:120 | cycles:0
+# oqlos | 388f 57150L | python:300,javascript:73,shell:9,typescript:3,css:2,less:1 | 2026-07-02
+# stats: 1523 func | 246 cls | 388 mod | CC̄=4.1 | critical:120 | cycles:0
 # alerts[5]: CC test_hardware_ui_aliases_and_status_page_are_served=22; CC test_navigation_index_and_short_aliases=15; CC _resolve_func_steps=14; CC _probe_i2c_ads1115=14; CC _safe_resolve=14
 # hotspots[5]: _resolve fan=22; build_diagnosis_report fan=19; hardware_identify fan=18; _build_waveshare_diagnose_report fan=18; _handle_start fan=18
 # evolution: baseline
 # Keys: M=modules, D=details, i=imports, e=exports, c=classes, f=functions, m=methods
-M[387]:
+M[388]:
   app.doql.css,165
   app.doql.less,321
   examples/curl-quickstart.sh,75
@@ -2047,7 +2047,7 @@ M[387]:
   oqlos/api/_hw3_models.py,195
   oqlos/api/_hw3_peripheral.py,134
   oqlos/api/_hw3_system.py,135
-  oqlos/api/editor.py,201
+  oqlos/api/editor.py,218
   oqlos/api/execution.py,359
   oqlos/api/hardware.py,86
   oqlos/api/hardware_actuators.py,24
@@ -2090,6 +2090,7 @@ M[387]:
   oqlos/core/cqrs/execution.py,166
   oqlos/core/cqrs/peripheral.py,186
   oqlos/core/cqrs/projection.py,26
+  oqlos/core/cqrs/telemetry.py,65
   oqlos/core/executor.py,409
   oqlos/core/state.py,148
   oqlos/dsl/__init__.py,19
@@ -2229,7 +2230,7 @@ M[387]:
   packages/oqlos-core/src/oqlos/core/_cql_tokenizer.py,411
   packages/oqlos-core/src/oqlos/core/_cql_tree_builder.py,168
   packages/oqlos-core/src/oqlos/core/_dsl_helpers.py,133
-  packages/oqlos-core/src/oqlos/core/_firmware_executor.py,275
+  packages/oqlos-core/src/oqlos/core/_firmware_executor.py,284
   packages/oqlos-core/src/oqlos/core/_func_resolver.py,97
   packages/oqlos-core/src/oqlos/core/_interpreter_actions.py,801
   packages/oqlos-core/src/oqlos/core/_line_parsers.py,262
@@ -2239,7 +2240,7 @@ M[387]:
   packages/oqlos-core/src/oqlos/core/_value_normalizers.py,126
   packages/oqlos-core/src/oqlos/core/base.py,312
   packages/oqlos-core/src/oqlos/core/cql_parser.py,468
-  packages/oqlos-core/src/oqlos/core/interpreter.py,691
+  packages/oqlos-core/src/oqlos/core/interpreter.py,693
   packages/oqlos-core/src/oqlos/core/motor2_runtime.py,210
   packages/oqlos-core/src/oqlos/core/oql_parser.py,774
   packages/oqlos-core/src/oqlos/core/oql_versioning.py,73
@@ -2411,7 +2412,7 @@ D:
     hardware_modbus_wizard_program_isolated_v3(payload)
     hardware_runtime_python_v3(payload)
   oqlos/api/editor.py:
-    e: _default_scenarios_dir,_normalize_oql_mode,_result_dict,_editor_response_from_oql,_safe_path,list_files,read_file_endpoint,write_file_endpoint,execute_scenario,FileInfo,FileContent,ExecutionRequest
+    e: _default_scenarios_dir,_normalize_oql_mode,_result_dict,_editor_response_from_oql,_safe_path,list_files,read_file_endpoint,write_file_endpoint,_sensor_telemetry_recorder,execute_scenario,FileInfo,FileContent,ExecutionRequest
     FileInfo:
     FileContent:
     ExecutionRequest:
@@ -2423,6 +2424,7 @@ D:
     list_files()
     read_file_endpoint(file_path)
     write_file_endpoint(file_path;file_content)
+    _sensor_telemetry_recorder()
     execute_scenario(request)
   oqlos/api/execution.py:
     e: _resolve_step_label,_flatten_steps_for_scenario,_build_step_labels,_resolve_current_index,_current_projection,start_execution,execute_step,_register_dsl_scenario,_make_exec_route,get_execution,get_execution_projection,get_execution_status,get_execution_logs,_make_legacy_route,execution_stream,execution_logs_stream
@@ -2783,6 +2785,13 @@ D:
   oqlos/core/cqrs/projection.py:
     e: Projection
     Projection: apply(1),rebuild(1),attach(1)  # Read-model base. Subscribes to an EventStore and folds match
+  oqlos/core/cqrs/telemetry.py:
+    e: record_sensor_readings,latest_sensor_values,sensor_history,SensorObserved,SensorTelemetryProjection
+    SensorObserved:
+    SensorTelemetryProjection: __init__(0),apply(1)  # Read model: `latest[sensor_id]` and full per-sensor history.
+    record_sensor_readings(store;readings)
+    latest_sensor_values(store)
+    sensor_history(store;sensor_id)
   oqlos/core/executor.py:
     e: _resolve_compare,_resolve_name_or_attr,_safe_resolve,safe_eval_condition,ScenarioOrchestrator
     ScenarioOrchestrator: __init__(2),current_execution(0),_sanitize_identifier(1),_build_eval_context(0),_sanitize_expression(1),_build_step_plan(1),_execute_goal_steps(6),execute_scenario(4),execute_step(3),_execute_lung_step(2),_execute_valve_step(2),_execute_pump_step(3),_execute_wait_step(2),_execute_sensor_read_step(1),_execute_validate_step(1),update_dependent_sensors(1),validate_goal(1),log_event(2)
@@ -3723,7 +3732,7 @@ D:
     _map_action_value(fn;obj;obj_raw;line;step_counter)
   packages/oqlos-core/src/oqlos/core/_firmware_executor.py:
     e: _load_peripheral_map,_plugin_gateway_cls,FirmwareExecutor
-    FirmwareExecutor: __init__(7),_get_firmware(0),_resolve_gateway_result(2),_is_success(1),resolve_peripheral_id(1),normalize_peripheral_value(2),refresh_sensors_from_firmware(1),execute_firmware_action(2),_execute_plugin_action(2),_execute_legacy_firmware_action(2),exec_set_peripheral(2)  # Executes hardware actions via plugin gateway or legacy firmw
+    FirmwareExecutor: __init__(8),_get_firmware(0),_resolve_gateway_result(2),_is_success(1),resolve_peripheral_id(1),normalize_peripheral_value(2),refresh_sensors_from_firmware(1),execute_firmware_action(2),_execute_plugin_action(2),_execute_legacy_firmware_action(2),exec_set_peripheral(2)  # Executes hardware actions via plugin gateway or legacy firmw
     _load_peripheral_map()
     _plugin_gateway_cls()
   packages/oqlos-core/src/oqlos/core/_func_resolver.py:
@@ -3851,7 +3860,7 @@ D:
     validate_cql(doc)
   packages/oqlos-core/src/oqlos/core/interpreter.py:
     e: CqlInterpreter
-    CqlInterpreter: __init__(11),sensor_values(0),sensor_values(1),_firmware(0),_firmware(1),_firmware_url(0),_firmware_url(1),_coerce_float(1),_resolve_peripheral_id(1),_get_pump_flow_full_scale_lpm(0),_normalize_pump_power(1),_normalize_valve_value(1),_normalize_lung_value(1),parse(2),_print_header(2),_collect_warnings(2),_planned_step_results(1),_run_validation_mode(4),_collect_all_goals(1),_execute_single_goal(2),_execute_all_goals(1),_build_script_result(2),execute(1),_execute_step(2),_execute_action(1),_exec_flat_action(1),_do_sleep(2),_normalize_peripheral_value(2),_coerce_generic_peripheral_value(1),_exec_set_peripheral(2),_get_firmware(0),_execute_firmware_action(2),_execute_plugin_action(2),_execute_legacy_firmware_action(2),_refresh_sensors_from_firmware(0),_auto_mock_sensor(3),_compare_sensor(3),_resolve_sensor_value(1),_resolve_delta_sensor_value(1),_resolve_windowed_delta_sensor_value(2),_extract_window_seconds(1),_resolve_condition_rhs(3),_evaluate_resolved_condition(0),_eval_condition_clause(2),_evaluate_inline_condition_expression(1),_tokenize_condition_expression(1),_aggregate_condition_results(2),_apply_connector(3),_finalize_condition_result(4),_evaluate_range_condition(2),_evaluate_condition(1)  # CQL interpreter with three modes:
+    CqlInterpreter: __init__(12),sensor_values(0),sensor_values(1),_firmware(0),_firmware(1),_firmware_url(0),_firmware_url(1),_coerce_float(1),_resolve_peripheral_id(1),_get_pump_flow_full_scale_lpm(0),_normalize_pump_power(1),_normalize_valve_value(1),_normalize_lung_value(1),parse(2),_print_header(2),_collect_warnings(2),_planned_step_results(1),_run_validation_mode(4),_collect_all_goals(1),_execute_single_goal(2),_execute_all_goals(1),_build_script_result(2),execute(1),_execute_step(2),_execute_action(1),_exec_flat_action(1),_do_sleep(2),_normalize_peripheral_value(2),_coerce_generic_peripheral_value(1),_exec_set_peripheral(2),_get_firmware(0),_execute_firmware_action(2),_execute_plugin_action(2),_execute_legacy_firmware_action(2),_refresh_sensors_from_firmware(0),_auto_mock_sensor(3),_compare_sensor(3),_resolve_sensor_value(1),_resolve_delta_sensor_value(1),_resolve_windowed_delta_sensor_value(2),_extract_window_seconds(1),_resolve_condition_rhs(3),_evaluate_resolved_condition(0),_eval_condition_clause(2),_evaluate_inline_condition_expression(1),_tokenize_condition_expression(1),_aggregate_condition_results(2),_apply_connector(3),_finalize_condition_result(4),_evaluate_range_condition(2),_evaluate_condition(1)  # CQL interpreter with three modes:
   packages/oqlos-core/src/oqlos/core/motor2_runtime.py:
     e: _coerce_int,_coerce_float,_pick,motor2_max_steps_per_second,normalize_motor2_runtime_config,motor2_speed_for_duration,motor2_acceleration_raw,motor2_speed_raw,_normalize_motor2_direction,_compute_motor2_cycles,_compute_motor2_speed,build_motor2_reciprocating_plan,Motor2RuntimeConfig,Motor2ReciprocatingPlan
     Motor2RuntimeConfig:
@@ -4780,7 +4789,7 @@ project_file('oqlos/api/_hw3_mapping.py', 158, 'python').
 project_file('oqlos/api/_hw3_models.py', 195, 'python').
 project_file('oqlos/api/_hw3_peripheral.py', 134, 'python').
 project_file('oqlos/api/_hw3_system.py', 135, 'python').
-project_file('oqlos/api/editor.py', 201, 'python').
+project_file('oqlos/api/editor.py', 218, 'python').
 project_file('oqlos/api/execution.py', 359, 'python').
 project_file('oqlos/api/hardware.py', 86, 'python').
 project_file('oqlos/api/hardware_actuators.py', 24, 'python').
@@ -4823,6 +4832,7 @@ project_file('oqlos/core/cqrs/events.py', 73, 'python').
 project_file('oqlos/core/cqrs/execution.py', 166, 'python').
 project_file('oqlos/core/cqrs/peripheral.py', 186, 'python').
 project_file('oqlos/core/cqrs/projection.py', 26, 'python').
+project_file('oqlos/core/cqrs/telemetry.py', 65, 'python').
 project_file('oqlos/core/executor.py', 409, 'python').
 project_file('oqlos/core/state.py', 148, 'python').
 project_file('oqlos/dsl/__init__.py', 19, 'python').
@@ -4962,7 +4972,7 @@ project_file('packages/oqlos-core/src/oqlos/core/_compare.py', 41, 'python').
 project_file('packages/oqlos-core/src/oqlos/core/_cql_tokenizer.py', 411, 'python').
 project_file('packages/oqlos-core/src/oqlos/core/_cql_tree_builder.py', 168, 'python').
 project_file('packages/oqlos-core/src/oqlos/core/_dsl_helpers.py', 133, 'python').
-project_file('packages/oqlos-core/src/oqlos/core/_firmware_executor.py', 275, 'python').
+project_file('packages/oqlos-core/src/oqlos/core/_firmware_executor.py', 284, 'python').
 project_file('packages/oqlos-core/src/oqlos/core/_func_resolver.py', 97, 'python').
 project_file('packages/oqlos-core/src/oqlos/core/_interpreter_actions.py', 801, 'python').
 project_file('packages/oqlos-core/src/oqlos/core/_line_parsers.py', 262, 'python').
@@ -4972,7 +4982,7 @@ project_file('packages/oqlos-core/src/oqlos/core/_sensor_evaluator.py', 146, 'py
 project_file('packages/oqlos-core/src/oqlos/core/_value_normalizers.py', 126, 'python').
 project_file('packages/oqlos-core/src/oqlos/core/base.py', 312, 'python').
 project_file('packages/oqlos-core/src/oqlos/core/cql_parser.py', 468, 'python').
-project_file('packages/oqlos-core/src/oqlos/core/interpreter.py', 691, 'python').
+project_file('packages/oqlos-core/src/oqlos/core/interpreter.py', 693, 'python').
 project_file('packages/oqlos-core/src/oqlos/core/motor2_runtime.py', 210, 'python').
 project_file('packages/oqlos-core/src/oqlos/core/oql_parser.py', 774, 'python').
 project_file('packages/oqlos-core/src/oqlos/core/oql_versioning.py', 73, 'python').
@@ -5133,7 +5143,8 @@ python_function('oqlos/api/editor.py', '_safe_path', 1, 2, 3).
 python_function('oqlos/api/editor.py', 'list_files', 0, 3, 7).
 python_function('oqlos/api/editor.py', 'read_file_endpoint', 1, 4, 6).
 python_function('oqlos/api/editor.py', 'write_file_endpoint', 2, 3, 5).
-python_function('oqlos/api/editor.py', 'execute_scenario', 1, 6, 16).
+python_function('oqlos/api/editor.py', '_sensor_telemetry_recorder', 0, 2, 1).
+python_function('oqlos/api/editor.py', 'execute_scenario', 1, 6, 17).
 python_function('oqlos/api/execution.py', '_resolve_step_label', 3, 11, 2).
 python_function('oqlos/api/execution.py', '_flatten_steps_for_scenario', 1, 6, 3).
 python_function('oqlos/api/execution.py', '_build_step_labels', 1, 6, 2).
@@ -7091,13 +7102,13 @@ python_class('oqlos/tools/xml_import/models.py', 'Operation').
 python_class('oqlos/tools/xml_import/models.py', 'TestRun').
 python_class('oqlos/tools/xml_import/models.py', 'DeviceReport').
 python_class('packages/oqlos-core/src/oqlos/core/_firmware_executor.py', 'FirmwareExecutor').
-python_method('FirmwareExecutor', '__init__', 7, 3, 1).
+python_method('FirmwareExecutor', '__init__', 8, 3, 1).
 python_method('FirmwareExecutor', '_get_firmware', 0, 3, 2).
 python_method('FirmwareExecutor', '_resolve_gateway_result', 2, 9, 11).
 python_method('FirmwareExecutor', '_is_success', 1, 2, 3).
 python_method('FirmwareExecutor', 'resolve_peripheral_id', 1, 1, 5).
 python_method('FirmwareExecutor', 'normalize_peripheral_value', 2, 6, 4).
-python_method('FirmwareExecutor', 'refresh_sensors_from_firmware', 1, 2, 3).
+python_method('FirmwareExecutor', 'refresh_sensors_from_firmware', 1, 3, 4).
 python_method('FirmwareExecutor', 'execute_firmware_action', 2, 3, 2).
 python_method('FirmwareExecutor', '_execute_plugin_action', 2, 11, 11).
 python_method('FirmwareExecutor', '_execute_legacy_firmware_action', 2, 3, 6).
@@ -7188,7 +7199,7 @@ python_method('_ParseState', '_handle_inline_if_logic', 2, 5, 2).
 python_method('_ParseState', '_handle_action_dispatch', 2, 5, 3).
 python_method('_ParseState', '_try_hierarchy', 3, 7, 6).
 python_class('packages/oqlos-core/src/oqlos/core/interpreter.py', 'CqlInterpreter').
-python_method('CqlInterpreter', '__init__', 11, 1, 5).
+python_method('CqlInterpreter', '__init__', 12, 1, 5).
 python_method('CqlInterpreter', 'sensor_values', 0, 1, 0).
 python_method('CqlInterpreter', 'sensor_values', 1, 1, 0).
 python_method('CqlInterpreter', '_firmware', 0, 1, 0).
@@ -7846,108 +7857,87 @@ class Settings:  # Application settings loaded from environment variables and .
 
 ## Call Graph
 
-*435 nodes · 500 edges · 66 modules · CC̄=3.7*
+*460 nodes · 500 edges · 56 modules · CC̄=3.7*
 
 ### Hubs (by degree)
 
 | Function | CC | in | out | total |
 |----------|----|----|-----|-------|
 | `print` *(in examples.hardware.doctor-workflow)* | 0 | 228 | 0 | **228** |
-| `a` *(in frontend.src.pages.HardwareStatus)* | 1 | 75 | 0 | **75** |
 | `list` *(in frontend.src.pages.ScenarioFiles)* | 1 | 47 | 0 | **47** |
 | `dict` *(in frontend.src.i18n.I18nProvider)* | 8 | 43 | 3 | **46** |
-| `canonicalize_oql_line` *(in oqlos.tools.cql_cli.formatting)* | 14 ⚠ | 1 | 31 | **32** |
-| `_emit_dsl_test_run` *(in oqlos.tools.xml_import.generators)* | 10 ⚠ | 1 | 28 | **29** |
-| `probe_options_from_args` *(in oqlos.tools.hardware_diagnose.modbus_probe)* | 2 | 1 | 27 | **28** |
-| `format_detection` *(in oqlos.tools.hardware_diagnose.doctor_format)* | 10 ⚠ | 3 | 25 | **28** |
+| `oql_doc_to_cql` *(in packages.oqlos-core.src.oqlos.core._oql_adapter)* | 12 ⚠ | 2 | 30 | **32** |
+| `normalize_motor2_runtime_config` *(in oqlos.core.motor2_runtime)* | 12 ⚠ | 1 | 29 | **30** |
+| `run_oql_scenario` *(in setup_hardware_and_run_oql)* | 8 | 1 | 24 | **25** |
+| `applyMapMutation` *(in frontend.src.pages.MapEditor)* | 2 | 17 | 8 | **25** |
+| `parse_oql` *(in oqlos.core.oql_parser)* | 14 ⚠ | 3 | 21 | **24** |
 
 ```toon markpact:analysis path=project/calls.toon.yaml
 # code2llm call graph | /home/tom/github/oqlos/oqlos
-# generated in 0.26s
-# nodes: 435 | edges: 500 | modules: 66
+# generated in 0.28s
+# nodes: 460 | edges: 500 | modules: 56
 # CC̄=3.7
 
 HUBS[20]:
   examples.hardware.doctor-workflow.print
     CC=0  in:228  out:0  total:228
-  frontend.src.pages.HardwareStatus.a
-    CC=1  in:75  out:0  total:75
   frontend.src.pages.ScenarioFiles.list
     CC=1  in:47  out:0  total:47
   frontend.src.i18n.I18nProvider.dict
     CC=8  in:43  out:3  total:46
-  oqlos.tools.cql_cli.formatting.canonicalize_oql_line
-    CC=14  in:1  out:31  total:32
-  oqlos.tools.xml_import.generators._emit_dsl_test_run
-    CC=10  in:1  out:28  total:29
-  oqlos.tools.hardware_diagnose.modbus_probe.probe_options_from_args
-    CC=2  in:1  out:27  total:28
-  oqlos.tools.hardware_diagnose.doctor_format.format_detection
-    CC=10  in:3  out:25  total:28
+  packages.oqlos-core.src.oqlos.core._oql_adapter.oql_doc_to_cql
+    CC=12  in:2  out:30  total:32
+  oqlos.core.motor2_runtime.normalize_motor2_runtime_config
+    CC=12  in:1  out:29  total:30
   setup_hardware_and_run_oql.run_oql_scenario
     CC=8  in:1  out:24  total:25
   frontend.src.pages.MapEditor.applyMapMutation
     CC=2  in:17  out:8  total:25
-  oqlos.tools.hardware_diagnose.doctor_format.format_doctor
-    CC=6  in:2  out:21  total:23
-  oqlos.tools.cql_cli.commands.handle_list_command
-    CC=7  in:1  out:22  total:23
-  oqlos.tools.hardware_diagnose.doctor_modbus_analysis.analyze_modbus_adc_config
+  oqlos.core.oql_parser.parse_oql
+    CC=14  in:3  out:21  total:24
+  oqlos.core.parser.parse_dsl_to_goal_with_issues
+    CC=13  in:3  out:21  total:24
+  oqlos.core._line_parsers._parse_if_condition
+    CC=9  in:1  out:22  total:23
+  packages.oqlos-core.src.oqlos.core._action_motor2._motor2_build_plan
     CC=12  in:1  out:22  total:23
-  oqlos.tools.gen_error_docs.generate_markdown
-    CC=6  in:1  out:22  total:23
-  oqlos.tools.hardware_diagnose.health.cmd_diagnose
-    CC=6  in:2  out:20  total:22
-  oqlos.tools.xml_import.parser._parse_operation_params
-    CC=9  in:1  out:21  total:22
+  packages.oqlos-core.src.oqlos.core._action_motor2._try_exec_motor2_set
+    CC=13  in:1  out:22  total:23
   frontend.src.api.wsClient.WsCqrsClient.super
     CC=1  in:21  out:1  total:22
-  oqlos.tools.hardware_diagnose.shell._dispatch_command
-    CC=6  in:1  out:21  total:22
-  packages.oqlos-core.src.oqlos.core.base.VariableStore.set
-    CC=4  in:19  out:2  total:21
-  oqlos.tools.hardware_diagnose.doctor_modbus_analysis.analyze_modbus_config
-    CC=11  in:1  out:20  total:21
+  oqlos.core._cql_tree_builder._parse_goal_line
+    CC=12  in:1  out:20  total:21
+  oqlos.core._func_resolver._collect_function_definitions
+    CC=13  in:1  out:19  total:20
+  oqlos.core._interpreter_actions.exec_action_shell
+    CC=13  in:0  out:19  total:19
+  oqlos.core.oql_parser.tokenize
+    CC=13  in:5  out:14  total:19
+  frontend.src.utils.url-embed-config.mergeParentSearchIntoChildUrl
+    CC=9  in:7  out:11  total:18
+  oqlos.core.oql_parser._expand_repeat_block_lines
+    CC=8  in:2  out:16  total:18
+  oqlos.core._line_parsers._parse_action_line
+    CC=10  in:0  out:18  total:18
 
 MODULES:
   examples.hardware.doctor-workflow  [1 funcs]
     print  CC=0  out:0
-  frontend.src.api.hardware-api-errors  [5 funcs]
-    describeDetail  CC=13  out:6
-    extractErrorPayload  CC=4  out:1
-    formatHardwareApiError  CC=9  out:3
-    parseOqlError  CC=10  out:1
-    tryParseJson  CC=3  out:1
-  frontend.src.api.hardware-api-log  [4 funcs]
-    isHardwareWizardPath  CC=2  out:3
-    keys  CC=2  out:0
-    logHardwareApiEvent  CC=6  out:4
-    summarizeHardwareApiBody  CC=11  out:5
-  frontend.src.api.hardware-diagnostic-failure  [9 funcs]
-    _connectionError  CC=3  out:0
-    _nestedOkMessage  CC=4  out:2
-    _pickNestedObjectError  CC=8  out:4
-    extractDiagnosticFailure  CC=13  out:6
-    failureFromNestedOk  CC=10  out:4
-    failureFromOkFalsePayload  CC=14  out:6
-    failureFromSuccessFalse  CC=14  out:3
-    firstActionableError  CC=3  out:4
-    resultData  CC=4  out:0
   frontend.src.api.hardware-tic249-status  [3 funcs]
     isIdempotentDiagnosticSuccess  CC=3  out:2
     isIdempotentTic249Deenergized  CC=12  out:2
     tic249ResultStatus  CC=8  out:2
-  frontend.src.api.hardwareApi  [13 funcs]
+  frontend.src.api.hardwareApi  [12 funcs]
     _throwHttpError  CC=1  out:2
     _withCtx  CC=2  out:0
     bodySummary  CC=2  out:2
     durationMs  CC=7  out:6
     get  CC=1  out:1
     mode  CC=1  out:1
-    normalized  CC=1  out:1
     post  CC=1  out:1
     put  CC=1  out:1
     request  CC=14  out:14
+    serialPort  CC=2  out:1
   frontend.src.api.scenarioFilesApi  [2 funcs]
     fetchScenarioFilesList  CC=2  out:4
     filterListableFiles  CC=3  out:2
@@ -8005,14 +7995,13 @@ MODULES:
     log  CC=1  out:3
     port  CC=6  out:9
     refreshRuntimeStatus  CC=3  out:3
-  frontend.src.pages.HardwareStatus  [6 funcs]
-    a  CC=1  out:0
+  frontend.src.pages.HardwareStatus  [5 funcs]
     adapters  CC=2  out:8
     copyAllJson  CC=2  out:8
     diagnostics  CC=2  out:8
     downloadJson  CC=1  out:5
     summary  CC=2  out:8
-  frontend.src.pages.MapEditor  [23 funcs]
+  frontend.src.pages.MapEditor  [24 funcs]
     _parseFieldValue  CC=4  out:6
     _setBodyField  CC=8  out:2
     addAction  CC=2  out:6
@@ -8070,8 +8059,6 @@ MODULES:
     pumpOk  CC=3  out:1
     res  CC=3  out:1
     resolveFallbackDeviceId  CC=3  out:0
-  frontend.src.utils.hardware-restart-configure  [1 funcs]
-    probe  CC=1  out:0
   frontend.src.utils.hardware-wizard-plan  [4 funcs]
     assertPlanData  CC=3  out:1
     extractWizardPlan  CC=1  out:3
@@ -8170,165 +8157,160 @@ MODULES:
     scheduleCollapse  CC=3  out:6
     toggleCollapsed  CC=3  out:7
     useSelectionCollapsePanel  CC=11  out:17
-  oqlos.hardware.config_paths  [1 funcs]
-    resolve_oqlos_config_path  CC=6  out:13
-  oqlos.hardware.health_status  [1 funcs]
-    health_status_is_ok  CC=11  out:9
-  oqlos.tools.cql_cli  [2 funcs]
-    _sync_compat_symbols  CC=1  out:0
-    main  CC=1  out:2
-  oqlos.tools.cql_cli.commands  [6 funcs]
-    _run_continuous_mode  CC=4  out:20
-    default_firmware_url  CC=3  out:2
-    execute_command_with_cleanup  CC=8  out:7
-    handle_list_command  CC=7  out:22
-    run_single_command  CC=1  out:2
-    run_source  CC=2  out:3
-  oqlos.tools.cql_cli.formatting  [2 funcs]
-    canonicalize_oql_line  CC=14  out:31
-    canonicalize_oql_text  CC=3  out:4
-  oqlos.tools.cql_cli.utils  [3 funcs]
-    build_result_payload  CC=2  out:2
-    build_single_command_scenario  CC=2  out:3
-    output_yaml  CC=2  out:2
-  oqlos.tools.gen_error_docs  [2 funcs]
-    generate_markdown  CC=6  out:22
-    main  CC=4  out:11
-  oqlos.tools.hardware_diagnose.__main__  [9 funcs]
-    _handle_report_action  CC=3  out:4
-    _print_benchmark  CC=3  out:11
-    _print_calibrate  CC=6  out:9
-    _print_detect  CC=2  out:4
-    _print_diagnose  CC=3  out:9
-    _print_doctor  CC=2  out:4
-    _print_health  CC=2  out:5
-    _print_list  CC=3  out:8
-    _print_modbus_probe  CC=2  out:5
-  oqlos.tools.hardware_diagnose.benchmark  [1 funcs]
-    run_benchmark  CC=6  out:15
-  oqlos.tools.hardware_diagnose.calibration  [4 funcs]
-    _calibrate_pump  CC=3  out:8
-    _calibrate_sensors  CC=5  out:8
-    _calibrate_valves  CC=4  out:6
-    run_calibration_test  CC=2  out:8
-  oqlos.tools.hardware_diagnose.discovery  [4 funcs]
-    _run_shell_command  CC=2  out:2
-    detect_chips_on_i2c  CC=8  out:10
-    list_i2c_buses  CC=1  out:2
-    list_usb_serial_devices  CC=7  out:9
-  oqlos.tools.hardware_diagnose.doctor  [1 funcs]
-    build_doctor_report  CC=11  out:14
-  oqlos.tools.hardware_diagnose.doctor_common  [5 funcs]
-    add_issue  CC=2  out:1
-    collect_repairs  CC=5  out:7
-    modbus_adc_config  CC=1  out:1
-    modbus_config  CC=1  out:1
-    plugin_config  CC=3  out:4
-  oqlos.tools.hardware_diagnose.doctor_detection  [8 funcs]
-    _doctor  CC=1  out:0
-    detect_hardware  CC=4  out:13
-    firmware_hostname  CC=3  out:2
-    load_config_summary  CC=4  out:7
-    probe_modbus  CC=1  out:2
-    probe_modbus_adc  CC=1  out:2
-    run_modbus_probe  CC=5  out:9
-    usb_serial_only  CC=3  out:1
-  oqlos.tools.hardware_diagnose.doctor_firmware  [10 funcs]
-    adapter_health_status  CC=3  out:1
-    analyze_firmware_access  CC=7  out:11
-    check_firmware_adapters  CC=7  out:9
-    check_firmware_health_error  CC=3  out:2
-    check_firmware_mode  CC=3  out:4
-    check_firmware_serial_access  CC=11  out:13
-    firmware_adapter_status  CC=7  out:9
-    firmware_is_remote  CC=2  out:3
-    firmware_modbus_adc_health_ok  CC=4  out:6
-    firmware_modbus_health_ok  CC=10  out:16
-  oqlos.tools.hardware_diagnose.doctor_format  [5 funcs]
-    _format_doctor_applied_repairs  CC=4  out:5
-    _format_doctor_issues  CC=5  out:10
-    format_detection  CC=10  out:25
-    format_doctor  CC=6  out:21
-    format_modbus_status  CC=7  out:11
-  oqlos.tools.hardware_diagnose.doctor_modbus_analysis  [5 funcs]
-    analyze_modbus_adc_config  CC=12  out:22
-    analyze_modbus_config  CC=11  out:20
-    analyze_serial_port_owners  CC=13  out:19
-    expected_modbus_adc_params  CC=6  out:8
-    expected_modbus_params  CC=5  out:6
-  oqlos.tools.hardware_diagnose.doctor_repairs  [3 funcs]
-    apply_safe_fixes  CC=9  out:14
-    update_modbus_adc_config  CC=4  out:18
-    update_modbus_config  CC=2  out:17
-  oqlos.tools.hardware_diagnose.doctor_serial  [5 funcs]
-    canonical_device_path  CC=3  out:4
-    describe_pid  CC=4  out:4
-    extract_pids  CC=4  out:4
-    owners_for_configured_port  CC=4  out:3
-    serial_port_owners  CC=6  out:4
-  oqlos.tools.hardware_diagnose.health  [7 funcs]
-    _format_health_value  CC=8  out:9
-    _is_health_ok  CC=5  out:6
-    _request_firmware_json  CC=8  out:9
-    check_firmware_health  CC=1  out:1
-    check_firmware_identify  CC=1  out:1
-    cmd_diagnose  CC=6  out:20
-    cmd_health  CC=5  out:10
-  oqlos.tools.hardware_diagnose.modbus_probe  [17 funcs]
-    _arg_count_list  CC=3  out:2
-    _arg_int_list  CC=3  out:2
-    _arg_str_list  CC=2  out:1
-    _env_count_list  CC=2  out:2
-    _env_float  CC=1  out:1
-    _env_int  CC=1  out:1
-    _env_int_list  CC=5  out:5
-    _env_str_list  CC=3  out:2
-    _env_typed  CC=2  out:2
-    _serials_from_env  CC=3  out:4
-  oqlos.tools.hardware_diagnose.report  [2 funcs]
-    format_peripheral_table  CC=12  out:3
-    save_diagnostic_report  CC=3  out:13
-  oqlos.tools.hardware_diagnose.shell  [5 funcs]
-    _cmd_benchmark  CC=4  out:8
-    _cmd_calibrate  CC=4  out:5
-    _cmd_list  CC=5  out:11
-    _dispatch_command  CC=6  out:21
-    interactive_shell  CC=6  out:8
-  oqlos.tools.plugin_cli  [12 funcs]
-    _default_config_path  CC=1  out:2
-    _load_config_file  CC=4  out:16
-    cmd_capabilities  CC=2  out:6
-    cmd_connect  CC=4  out:6
-    cmd_disconnect  CC=2  out:4
-    cmd_execute  CC=3  out:7
-    cmd_health  CC=3  out:8
-    cmd_list  CC=3  out:9
-    cmd_peripherals  CC=8  out:16
-    cmd_reload  CC=4  out:10
-  oqlos.tools.xml_import._utils  [3 funcs]
-    is_compressor_output  CC=5  out:2
-    is_pump_output  CC=4  out:2
-    normalize_output_name  CC=11  out:12
-  oqlos.tools.xml_import.generators  [19 funcs]
-    _append_sensor_assertion  CC=6  out:3
-    _build_steps_from_op  CC=10  out:14
-    _build_validation_criteria  CC=14  out:3
-    _emit_cql_output  CC=5  out:15
-    _emit_cql_param  CC=7  out:5
-    _emit_cql_sensor_param  CC=13  out:11
-    _emit_dsl_metadata  CC=1  out:10
-    _emit_dsl_output  CC=5  out:7
-    _emit_dsl_param  CC=10  out:13
-    _emit_dsl_sensors  CC=8  out:7
-  oqlos.tools.xml_import.parser  [6 funcs]
-    _parse_intervals  CC=4  out:7
-    _parse_operation  CC=6  out:18
-    _parse_operation_params  CC=9  out:21
-    _parse_test_run  CC=7  out:19
-    _populate_report_fields  CC=1  out:16
-    parse_xml  CC=6  out:16
-  packages.oqlos-core.src.oqlos.core.base  [1 funcs]
-    set  CC=4  out:2
+  oqlos.config  [1 funcs]
+    get_settings  CC=1  out:0
+  oqlos.core._compare  [2 funcs]
+    resolve_compare  CC=2  out:5
+    resolve_compare_chain  CC=3  out:4
+  oqlos.core._cql_tokenizer  [10 funcs]
+    _match_first  CC=3  out:1
+    _parse_condition_value  CC=4  out:4
+    _try_goto  CC=2  out:4
+    _try_if_block  CC=4  out:11
+    _try_if_else  CC=3  out:8
+    _try_if_standalone  CC=2  out:1
+    _try_min_max  CC=2  out:7
+    _try_save  CC=5  out:7
+    _try_set  CC=2  out:6
+    _try_val  CC=2  out:4
+  oqlos.core._cql_tree_builder  [7 funcs]
+    _ensure_goal_for_step  CC=4  out:3
+    _ensure_step_for_actions  CC=3  out:2
+    _parse_action_line  CC=4  out:3
+    _parse_goal_line  CC=12  out:20
+    _parse_metadata_kv  CC=6  out:5
+    _parse_scenario_line  CC=3  out:6
+    _parse_step_line  CC=3  out:5
+  oqlos.core._dsl_helpers  [12 funcs]
+    _looks_like_lung_object  CC=1  out:2
+    _looks_like_pump_object  CC=1  out:2
+    _looks_like_sensor_object  CC=1  out:2
+    _looks_like_valve_object  CC=2  out:3
+    _map_action_value  CC=7  out:8
+    _map_lung_action  CC=5  out:1
+    _map_peripheral  CC=11  out:14
+    _map_pump_action  CC=5  out:1
+    _map_valve_action  CC=3  out:0
+    _map_wait_action  CC=4  out:7
+  oqlos.core._func_resolver  [4 funcs]
+    _collect_function_definitions  CC=13  out:19
+    _extract_func_name  CC=7  out:7
+    _guard_recursion  CC=3  out:5
+    _parse_func_call  CC=5  out:4
+  oqlos.core._interpreter_actions  [27 funcs]
+    _assert_json  CC=6  out:9
+    _assert_sensor  CC=4  out:9
+    _assert_status  CC=5  out:7
+    _assert_valve  CC=5  out:8
+    _coerce_expected_value  CC=7  out:8
+    _compare_values  CC=10  out:8
+    _do_sleep  CC=3  out:10
+    _drop_command_token  CC=6  out:5
+    _exec_set_wait  CC=3  out:7
+    _extract_action_tokens  CC=5  out:4
+  oqlos.core._line_parsers  [10 funcs]
+    _extract_set_params  CC=7  out:13
+    _parse_action_line  CC=10  out:18
+    _parse_if_condition  CC=9  out:22
+    _parse_inline_task  CC=5  out:7
+    _parse_pump_line  CC=6  out:8
+    _parse_set_line  CC=10  out:15
+    _parse_task_part  CC=10  out:14
+    _set_lung_step  CC=4  out:3
+    _set_pump_step  CC=4  out:3
+    _set_valve_step  CC=4  out:4
+  oqlos.core._sensor_evaluator  [2 funcs]
+    __init__  CC=3  out:2
+    collect_sensor_constraints  CC=10  out:5
+  oqlos.core.base  [5 funcs]
+    send_event  CC=4  out:7
+    emit  CC=5  out:3
+    output_yaml  CC=4  out:2
+    __init__  CC=2  out:1
+    all  CC=3  out:3
+  oqlos.core.cql_parser  [9 funcs]
+    _handle_goal  CC=3  out:5
+    _handle_scenario  CC=2  out:3
+    _handle_step  CC=2  out:4
+    _try_hierarchy  CC=7  out:6
+    _try_top_level  CC=2  out:1
+    _collect_all_goals  CC=2  out:2
+    _validate_intervals  CC=6  out:1
+    parse_cql  CC=2  out:6
+    validate_cql  CC=5  out:5
+  oqlos.core.cqrs  [1 funcs]
+    build_command_bus  CC=3  out:5
+  oqlos.core.motor2_runtime  [11 funcs]
+    _coerce_int  CC=3  out:6
+    _compute_motor2_cycles  CC=3  out:7
+    _compute_motor2_speed  CC=4  out:6
+    _normalize_motor2_direction  CC=4  out:2
+    _pick  CC=4  out:0
+    build_motor2_reciprocating_plan  CC=7  out:8
+    motor2_acceleration_raw  CC=2  out:8
+    motor2_max_steps_per_second  CC=2  out:3
+    motor2_speed_for_duration  CC=1  out:9
+    motor2_speed_raw  CC=1  out:5
+  oqlos.core.oql_parser  [28 funcs]
+    _check_unnamed_goals  CC=5  out:1
+    _compact_duration  CC=2  out:3
+    _expand_repeat_block_lines  CC=8  out:16
+    _expand_repeat_blocks  CC=2  out:2
+    _handle_block_header  CC=8  out:12
+    _handle_modifier_cmd  CC=5  out:3
+    _handle_set_name  CC=5  out:8
+    _handle_top_level_line  CC=6  out:16
+    _line_indent  CC=2  out:5
+    _make_call_parser  CC=1  out:2
+  oqlos.core.oql_versioning  [3 funcs]
+    extract_declared_version  CC=3  out:4
+    first_meaningful_line  CC=4  out:4
+    resolve_oql_version  CC=2  out:3
+  oqlos.core.parser  [5 funcs]
+    _dispatch_simple_parser  CC=3  out:3
+    _parse_runtime_line  CC=9  out:15
+    _try_action_or_condition  CC=5  out:6
+    parse_dsl_to_goal  CC=1  out:1
+    parse_dsl_to_goal_with_issues  CC=13  out:21
+  oqlos.core.safe_eval  [8 funcs]
+    _eval_bin_op  CC=2  out:7
+    _eval_bool_op  CC=4  out:7
+    _eval_call  CC=4  out:4
+    _eval_compare  CC=1  out:2
+    _eval_if_exp  CC=2  out:3
+    _eval_node  CC=2  out:5
+    _eval_unary_op  CC=3  out:5
+    safe_eval  CC=3  out:4
+  oqlos.core.state  [1 funcs]
+    __init__  CC=1  out:7
+  packages.oqlos-core.src.oqlos.core._action_motor2  [30 funcs]
+    _call_motor2_transport  CC=4  out:4
+    _handle_motor2_reciprocating_setting  CC=2  out:4
+    _motor2_acceleration_raw  CC=1  out:2
+    _motor2_build_plan  CC=12  out:22
+    _motor2_do_start  CC=4  out:10
+    _motor2_do_stop  CC=4  out:3
+    _motor2_effective_steps_per_second  CC=1  out:4
+    _motor2_max_steps_per_second  CC=1  out:1
+    _motor2_reciprocating_state  CC=2  out:3
+    _motor2_set_state_value  CC=1  out:1
+  packages.oqlos-core.src.oqlos.core._oql_adapter  [14 funcs]
+    register  CC=1  out:1
+    _cmd_to_actions  CC=2  out:3
+    _fmt_value  CC=2  out:1
+    _load_includes  CC=12  out:15
+    _lower_call  CC=6  out:10
+    _lower_set  CC=3  out:7
+    _make_lower_minmax  CC=1  out:3
+    _parse_macro_line  CC=8  out:10
+    _resolve_include  CC=6  out:8
+    _scenarios_root  CC=3  out:3
+  packages.oqlos-core.src.oqlos.core._runtime_settings  [2 funcs]
+    lung_motor_url  CC=3  out:3
+    pump_flow_full_scale_lpm  CC=7  out:9
+  packages.oqlos-core.src.oqlos.core._value_normalizers  [2 funcs]
+    _get_pump_flow_full_scale_lpm  CC=7  out:4
+    coerce_float  CC=5  out:9
   setup_hardware_and_run_oql  [6 funcs]
     detect_serial_devices  CC=12  out:7
     generate_env_content  CC=2  out:1
@@ -8344,50 +8326,50 @@ EDGES:
   setup_hardware_and_run_oql.load_env_file → examples.hardware.doctor-workflow.print
   setup_hardware_and_run_oql.run_oql_scenario → examples.hardware.doctor-workflow.print
   setup_hardware_and_run_oql.main → setup_hardware_and_run_oql.run_oql_scenario
-  frontend.src.hooks.useMapEditorSidebarAutoCollapse.useMapEditorSidebarAutoCollapse → frontend.src.hooks.useMapEditorSidebarAutoCollapse.applyAutoCollapse
-  frontend.src.hooks.useUrlConfig.useUrlConfig → frontend.src.hooks.useUrlConfig.notifyParentChildReady
-  frontend.src.hooks.useRailHoverPreview.useRailHoverPreview → frontend.src.hooks.useRailHoverPreview.cancelPanelClose
-  frontend.src.hooks.useRailHoverPreview.useRailHoverPreview → frontend.src.hooks.useRailHoverPreview.previewExpand
-  frontend.src.hooks.useRailHoverPreview.useRailHoverPreview → frontend.src.hooks.useRailHoverPreview.cancelRailOpen
-  frontend.src.hooks.useRailHoverPreview.railEnter → frontend.src.hooks.useRailHoverPreview.cancelPanelClose
-  frontend.src.hooks.useRailHoverPreview.railEnter → frontend.src.hooks.useRailHoverPreview.previewExpand
-  frontend.src.hooks.useRailHoverPreview.railLeave → frontend.src.hooks.useRailHoverPreview.cancelRailOpen
-  frontend.src.hooks.useRailHoverPreview.panelEnter → frontend.src.hooks.useRailHoverPreview.cancelPanelClose
-  frontend.src.hooks.useRailHoverPreview.panelLeave → frontend.src.hooks.useRailHoverPreview.cancelRailOpen
-  frontend.src.pages.MapEditorObjectActionPanel._MotorRelativeParams → frontend.src.pages.MapEditorObjectActionPanel._motorArgLabel
-  frontend.src.pages.ScenarioFiles.isDirty → frontend.src.pages.ScenarioFiles.formatLogTime
-  frontend.src.pages.ScenarioFiles.appendLog → frontend.src.pages.ScenarioFiles.formatLogTime
-  frontend.src.pages.ScenarioFiles.cancelled → frontend.src.pages.ScenarioFiles.loadFiles
-  frontend.src.pages.ScenarioFiles.cancelled → frontend.src.pages.ScenarioFiles.selectFile
-  frontend.src.pages.ScenarioFiles.saveFile → frontend.src.pages.ScenarioFiles.appendLog
-  frontend.src.pages.ScenarioFiles.runScenario → frontend.src.pages.ScenarioFiles.appendLog
-  frontend.src.pages.ScenarioFiles.lastResponse → frontend.src.pages.ScenarioFiles.appendLog
-  frontend.src.pages.MapEditor._setBodyField → frontend.src.pages.MapEditor._parseFieldValue
-  frontend.src.pages.MapEditor.addObject → frontend.src.pages.MapEditor.applyMapMutation
-  frontend.src.pages.MapEditor.name → frontend.src.pages.MapEditor.applyMapMutation
-  frontend.src.pages.MapEditor.addParam → frontend.src.pages.MapEditor.applyMapMutation
-  frontend.src.pages.MapEditor.editParamConversionField → frontend.src.pages.MapEditor.applyMapMutation
-  frontend.src.pages.MapEditor.editParamConversionAlgorithm → frontend.src.pages.MapEditor.applyMapMutation
-  frontend.src.pages.MapEditor.addAction → frontend.src.pages.MapEditor.applyMapMutation
-  frontend.src.pages.MapEditor.addFunc → frontend.src.pages.MapEditor.applyMapMutation
-  frontend.src.pages.MapEditor.renameKey → frontend.src.pages.MapEditor.applyMapMutation
-  frontend.src.pages.MapEditor.nextName → frontend.src.pages.MapEditor.applyMapMutation
-  frontend.src.pages.MapEditor.deleteKey → frontend.src.pages.MapEditor.applyMapMutation
-  frontend.src.pages.MapEditor.editJsonField → frontend.src.pages.MapEditor.applyMapMutation
-  frontend.src.pages.MapEditor.editObjectActionArg → frontend.src.pages.MapEditor.applyMapMutation
-  frontend.src.pages.MapEditor.editObjectActionBodyField → frontend.src.pages.MapEditor.applyMapMutation
-  frontend.src.pages.MapEditor.editActionBodyField → frontend.src.pages.MapEditor.applyMapMutation
-  frontend.src.pages.MapEditor.editActionBodyField → frontend.src.pages.MapEditor._setBodyField
-  frontend.src.pages.MapEditor.editMotorRuntimeConfig → frontend.src.pages.MapEditor.applyMapMutation
-  frontend.src.pages.MapEditor.clearServerHardwareEvents → frontend.src.pages.MapEditor.loadRecentHardwareEvents
-  frontend.src.pages.MapEditor.integrationMeta → frontend.src.pages.MapEditor.applyMapMutation
-  frontend.src.pages.MapEditor.updateIntegrationMeta → frontend.src.pages.MapEditor.applyMapMutation
-  frontend.src.pages.MapEditor.runAddForTab → frontend.src.pages.MapEditor.addObject
-  frontend.src.pages.MapEditor.runAddForTab → frontend.src.pages.MapEditor.addParam
-  frontend.src.pages.MapEditor.runAddForTab → frontend.src.pages.MapEditor.addAction
-  frontend.src.pages.MapEditor.runAddForTab → frontend.src.pages.MapEditor.addFunc
-  frontend.src.pages.HardwareStatus.summary → frontend.src.pages.HardwareStatus.downloadJson
-  frontend.src.pages.HardwareStatus.adapters → frontend.src.pages.HardwareStatus.downloadJson
+  oqlos.core.state.StateManager.__init__ → oqlos.core.cqrs.build_command_bus
+  oqlos.core.base.VariableStore.__init__ → frontend.src.i18n.I18nProvider.dict
+  oqlos.core.base.VariableStore.all → frontend.src.i18n.I18nProvider.dict
+  oqlos.core.base.InterpreterOutput.emit → examples.hardware.doctor-workflow.print
+  oqlos.core.base.InterpreterOutput.output_yaml → examples.hardware.doctor-workflow.print
+  oqlos.core.base.EventBridge.send_event → frontend.src.utils.hardwareEventStream.id
+  oqlos.core._dsl_helpers._map_peripheral → oqlos.core._dsl_helpers._looks_like_valve_object
+  oqlos.core._dsl_helpers._map_peripheral → oqlos.core._dsl_helpers._looks_like_pump_object
+  oqlos.core._dsl_helpers._map_peripheral → oqlos.core._dsl_helpers._looks_like_lung_object
+  oqlos.core._dsl_helpers._map_peripheral → oqlos.core._dsl_helpers._looks_like_sensor_object
+  oqlos.core._dsl_helpers._map_pump_action → oqlos.core._dsl_helpers._parse_numeric_value
+  oqlos.core._dsl_helpers._map_lung_action → oqlos.core._dsl_helpers._parse_numeric_value
+  oqlos.core._dsl_helpers._map_action_value → oqlos.core._dsl_helpers._looks_like_valve_object
+  oqlos.core._dsl_helpers._map_action_value → oqlos.core._dsl_helpers._looks_like_pump_object
+  oqlos.core._dsl_helpers._map_action_value → oqlos.core._dsl_helpers._looks_like_lung_object
+  oqlos.core._dsl_helpers._map_action_value → oqlos.core._dsl_helpers._map_valve_action
+  oqlos.core._dsl_helpers._map_action_value → oqlos.core._dsl_helpers._map_pump_action
+  oqlos.core._dsl_helpers._map_action_value → oqlos.core._dsl_helpers._map_lung_action
+  oqlos.core._dsl_helpers._map_action_value → oqlos.core._dsl_helpers._looks_like_sensor_object
+  oqlos.core._dsl_helpers._map_action_value → oqlos.core._dsl_helpers._map_wait_action
+  oqlos.core._interpreter_actions._extract_action_tokens → frontend.src.pages.MapEditor.next
+  oqlos.core._interpreter_actions._drop_command_token → oqlos.core._interpreter_actions._extract_action_tokens
+  oqlos.core._interpreter_actions._compare_values → oqlos.core._interpreter_actions._coerce_expected_value
+  oqlos.core._interpreter_actions._format_set_command → oqlos.core._interpreter_actions._oql_quote
+  oqlos.core._interpreter_actions._mock_api_response → frontend.src.i18n.I18nProvider.dict
+  oqlos.core._interpreter_actions.exec_action_wait → oqlos.core._interpreter_actions.parse_wait_secs
+  oqlos.core._interpreter_actions.exec_action_wait → oqlos.core._interpreter_actions._do_sleep
+  oqlos.core._interpreter_actions.exec_action_func → oqlos.core._interpreter_actions._resolve_numeric_token
+  oqlos.core._interpreter_actions.exec_action_api → oqlos.core._interpreter_actions._mock_api_response
+  oqlos.core._interpreter_actions.exec_action_expect → oqlos.core._interpreter_actions._drop_command_token
+  oqlos.core._interpreter_actions.exec_action_expect → oqlos.core._interpreter_actions._mark_success
+  oqlos.core._interpreter_actions._assert_status → oqlos.core._interpreter_actions._record_failure
+  oqlos.core._interpreter_actions._assert_status → oqlos.core._interpreter_actions._coerce_expected_value
+  oqlos.core._interpreter_actions._assert_json → oqlos.core._interpreter_actions._get_nested_value
+  oqlos.core._interpreter_actions._assert_json → oqlos.core._interpreter_actions._record_failure
+  oqlos.core._interpreter_actions._assert_json → oqlos.core._interpreter_actions._compare_values
+  oqlos.core._interpreter_actions._assert_sensor → oqlos.core._interpreter_actions._record_failure
+  oqlos.core._interpreter_actions._assert_sensor → oqlos.core._interpreter_actions._mark_success
+  oqlos.core._interpreter_actions._assert_valve → oqlos.core._interpreter_actions._lookup_peripheral_state
+  oqlos.core._interpreter_actions._assert_valve → oqlos.core._interpreter_actions._normalize_bool
+  oqlos.core._interpreter_actions._assert_valve → oqlos.core._interpreter_actions._mark_success
+  oqlos.core._interpreter_actions._assert_valve → oqlos.core._interpreter_actions._record_failure
+  oqlos.core._interpreter_actions.exec_action_assert → oqlos.core._interpreter_actions._drop_command_token
+  oqlos.core._interpreter_actions.exec_action_assert → oqlos.core._interpreter_actions._record_failure
 ```
 
 ## API Stubs
