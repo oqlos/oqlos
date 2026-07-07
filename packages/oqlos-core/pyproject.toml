@@ -17,7 +17,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-firmware = ["oqlos>=0.1.29"]
+firmware = ["oqlos>=0.1.30"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

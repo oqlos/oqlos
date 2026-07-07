@@ -53,10 +53,14 @@ RUNBOOK can run them manually over ssh if the automation needs adjusting.
   `oqlos/_CHECKSUMS.sha256` (wygenerowanego na źródle przez `scripts/gen-checksums.sh` i
   dowiezionego przez `sync_oqlos_core`). Brak manifestu = FAIL z instrukcją. Manifest jest
   artefaktem deployu — w `.gitignore`, regeneruj przed każdym `redeploy run`.
-- Stan z 2026-06-30 13:58 CEST: BoardNet działa po reboot w `mode=real`,
-  `overall_ok=true`; Tic249, DRI0050 i Modbus-IO są zdrowe. Modbus-IO
-  odpowiada na `9600/N`, slave ID `2`. `modbus-adc` jest wyłączony, bo adapter
-  ADC nie jest obecny. Szczegóły: `redeploy/122/CURRENT_STATE.md`.
+- Stan z 2026-07-07: BoardNet odpowiada na `:8202` (`mode=real`, wersja firmware w
+  `/health`). HTTP HUI katalog (`/api/v1/hardware/hui/actions`) zawiera 7 hold +
+  AL (`reverse_on_limit`). Bench może być **degraded**: `modbus-io` timeout RS485
+  → `hold/*/start` i `al/stop` zwracają `ok=false` mimo poprawnego mapowania
+  kluczy (np. `lp-pwm-minus10` → `valve-6` + pump 100%). UI SPA:
+  `/ui/scenario-files` (lista `.oql` po lewej) i `/ui/map-editor` (drzewo MAP po
+  lewej) — ten sam pasek nawigacji górnego (Status, Scenariusze, MAP, …).
+  Szczegóły: `redeploy/122/CURRENT_STATE.md`, `docs/boardnet-navigation.md`.
 
 ## Scripts
 
@@ -807,10 +811,16 @@ else
 fi
 
 for page in hardware-status hardware-demo map-editor scenario-files func-editor; do
-  if _wait_get "http://127.0.0.1:8202/${page}" "$TMPDIR/oqlos-${page}.html" 30 8; then
-    _pass "OqlOS UI /${page} OK"
+  if _wait_get "http://127.0.0.1:8202/ui/${page}" "$TMPDIR/oqlos-ui-${page}.html" 30 8; then
+    _pass "OqlOS UI /ui/${page} OK"
   else
-    _fail "OqlOS UI /${page} nie odpowiada"
+    _fail "OqlOS UI /ui/${page} nie odpowiada"
+  fi
+  # Legacy redirect (bez /ui) — nadal musi przekierować na kanoniczny SPA.
+  if _wait_get "http://127.0.0.1:8202/${page}" "$TMPDIR/oqlos-legacy-${page}.html" 15 4; then
+    _pass "OqlOS legacy /${page} redirect OK"
+  else
+    _warn_or_fail "OqlOS legacy /${page} nie odpowiada (sprawdz recznie /ui/${page})"
   fi
 done
 
@@ -961,6 +971,74 @@ if _curl_get 'http://127.0.0.1:8202/api/v1/hardware/identify?scan=never' "$TMPDI
   _pass "OqlOS identify(scan=never) odpowiada"
 else
   _fail "OqlOS identify(scan=never) nie odpowiada"
+fi
+
+# HTTP HUI API — ścieżka DisplayNet GUI (bez ruchu AL, tylko katalog + safe stop).
+if _curl_get http://127.0.0.1:8202/api/v1/hardware/hui/actions "$TMPDIR/hui-actions.json" 12; then
+  if python3 - "$TMPDIR/hui-actions.json" <<'PY'
+import json, sys
+data = json.load(open(sys.argv[1], encoding="utf-8"))
+if data.get("ok") is not True:
+    print(f"FAIL: hui/actions ok={data.get('ok')!r}")
+    raise SystemExit(1)
+hold = set(data.get("hold_keys") or [])
+al = set(data.get("al_keys") or [])
+required = {"head-inflate", "head-deflate", "lp-bleed", "lp-pwm-plus5", "lp-pwm-minus10"}
+if not required.issubset(hold) or "al-stop" not in al or "al-start" not in al:
+    print(f"FAIL: HUI catalog hold={sorted(hold)} al={sorted(al)}")
+    raise SystemExit(1)
+# Ctrl+Alt+1..9 (c2004 HUI_TEST_BUTTON_ORDER) — indeksy 1-based.
+index_map = {
+    1: "head-deflate", 2: "lp-pwm-plus5", 3: "lp-pwm-plus10", 4: "al-start",
+    5: "lp-bleed", 6: "head-inflate", 7: "lp-pwm-minus5", 8: "lp-pwm-minus10", 9: "al-stop",
+}
+for idx, key in index_map.items():
+    if key in hold or key in al:
+        continue
+    print(f"FAIL: Ctrl+Alt+{idx} -> {key} brak w katalogu HUI")
+    raise SystemExit(1)
+profiles = data.get("profiles") or {}
+if profiles.get("lp-pwm-minus10", {}).get("pump_pct") != 100.0:
+    print("FAIL: HUI profile lp-pwm-minus10 pump_pct != 100")
+    raise SystemExit(1)
+lung = ((data.get("artificial_lung") or {}).get("reciprocate_args") or {})
+if lung.get("limit_mode") != "reverse_on_limit":
+    print(f"FAIL: HUI AL limit_mode={lung.get('limit_mode')!r}")
+    raise SystemExit(1)
+print("PASS: HTTP HUI action catalog OK")
+PY
+  then
+    _pass "OqlOS HTTP /api/v1/hardware/hui/actions OK"
+  else
+    failures=$((failures + 1))
+  fi
+else
+  _fail "OqlOS HTTP /api/v1/hardware/hui/actions nie odpowiada"
+fi
+
+if _curl_post http://127.0.0.1:8202/api/v1/hardware/hui/al/stop "$TMPDIR/hui-al-stop.json" '{"source":"redeploy-assert"}' 20; then
+  if grep -q 'stop_lung' "$TMPDIR/hui-al-stop.json"; then
+    _pass "HTTP HUI al/stop osiagalny (lung stop)"
+  else
+    _warn_or_fail "HTTP HUI al/stop bez potwierdzenia stop_lung"
+  fi
+  if grep -Eq '"ok"[[:space:]]*:[[:space:]]*true' "$TMPDIR/hui-al-stop.json"; then
+    _pass "HTTP HUI al/stop ok=true"
+  else
+    _warn_or_fail "HTTP HUI al/stop ok=false (typowe przy degraded modbus-io)"
+  fi
+else
+  _warn_or_fail "HTTP HUI al/stop nie odpowiada"
+fi
+
+if _curl_post http://127.0.0.1:8202/api/v1/hardware/hui/shutdown "$TMPDIR/hui-shutdown.json" '{"source":"redeploy-assert"}' 25; then
+  if grep -Eq '"ok"[[:space:]]*:[[:space:]]*true' "$TMPDIR/hui-shutdown.json"; then
+    _pass "HTTP HUI shutdown ok=true"
+  else
+    _warn_or_fail "HTTP HUI shutdown ok=false (sprawdz modbus-io / pompe)"
+  fi
+else
+  _warn_or_fail "HTTP HUI shutdown nie odpowiada"
 fi
 
 # OQL-over-MQTT agent round-trips: ping, health, usb-list, pi-diagnostics, lung-disable.

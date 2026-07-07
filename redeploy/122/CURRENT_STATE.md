@@ -1,6 +1,45 @@
 # OqlOS BoardNet — aktualny stan
 
-Ostatnio sprawdzono: 2026-06-30 22:02 Europe/Warsaw.
+Ostatnio sprawdzono: 2026-07-07 Europe/Warsaw.
+
+## UI BoardNet (kanoniczne URL)
+
+| URL | Lewy panel | Górne menu |
+| --- | --- | --- |
+| `http://192.168.188.122:8202/ui/scenario-files` | Lista plików `.oql` + wyszukiwarka | OqlOS, Status, Restart, Demo, Scenariusze, MAP, Funkcje, Silniki, OQL, Nawigacja, API |
+| `http://192.168.188.122:8202/ui/map-editor` | Drzewo definicji MAP (FUNC / Obiekty / Parametry / Akcje / JSON) + filtr mapowań | Ten sam pasek nawigacji |
+
+`/ui/map-editor` to **właściwa** strona edytora MAP (nie mylić z `/ui/scenario-files`).
+Oba widoki używają tego samego shell SPA; różni się **zawartość lewego panelu**
+(scenariusze vs mapowania sprzętowe), nie brak menu.
+
+Skróty legacy (`/map-editor`, `/scenario-files`) przekierowują na `/ui/*`.
+Pełna tabela: `docs/boardnet-navigation.md`.
+
+## HUI Ctrl+Alt+1…9 (mapowanie)
+
+Katalog: `GET http://192.168.188.122:8202/api/v1/hardware/hui/actions`
+
+| Skrót | Klucz | Profil (skrót) |
+| --- | --- | --- |
+| Ctrl+Alt+1 | `head-deflate` | valve-3, valve-6, pump 0% |
+| Ctrl+Alt+2 | `lp-pwm-plus5` | valve-5, pump 50% |
+| Ctrl+Alt+3 | `lp-pwm-plus10` | valve-5, pump 100% |
+| Ctrl+Alt+4 | `al-start` | płuco L→R (`reverse_on_limit`) |
+| Ctrl+Alt+5 | `lp-bleed` | valve-4, pump 0% |
+| Ctrl+Alt+6 | `head-inflate` | valve-5, valve-2, pump 70% |
+| Ctrl+Alt+7 | `lp-pwm-minus5` | valve-6, pump 50% |
+| Ctrl+Alt+8 | `lp-pwm-minus10` | valve-6, pump 100% |
+| Ctrl+Alt+9 | `al-stop` | stop płuca |
+
+**2026-07-07:** katalog `ok=true`, wszystkie 9 kluczy obecne. Wykonanie na benchu
+bywa **degraded**: `modbus-io` timeout → `POST .../hold/lp-pwm-minus10/start`
+zwraca `Valve valve-6 failed`; `al/stop` kończy `stop_lung` OK, ale
+`set_valve valve-4` może być `ok=false`. Mapowanie logiczne jest poprawne;
+naprawa wymaga stabilnego RS485 (slave ID 2, patrz sekcja „Ostatnia naprawa”).
+
+DisplayNet (`:8100`) używa tego samego API przez proxy:
+`/api/v3/hardware/hui/*` → `http://192.168.188.122:8202/api/v1/hardware/hui/*`.
 
 ## Rola
 
@@ -18,9 +57,9 @@ Ostatnio sprawdzono: 2026-06-30 22:02 Europe/Warsaw.
 
 ```text
 Browser/HUI on DisplayNet :8100
-  -> /api/v3/hardware/* on c2004/connect-scenario backend
+  -> /api/v3/hardware/hui/* + diagnostic-command on c2004/connect-scenario backend
   -> OQLOS_API_URL=http://192.168.188.122:8202
-  -> OqlOS on BoardNet
+  -> OqlOS on BoardNet (/api/v1/hardware/hui/*)
   -> local USB/Modbus/Tic/DRI hardware on BoardNet
 ```
 
@@ -34,6 +73,7 @@ HTTP do `:8202`.
 ssh pi@192.168.188.122 'hostname; tr -d "\0" </proc/device-tree/model; echo'
 ssh pi@192.168.188.122 'systemctl --user is-active oqlos-hardware-api hw-tic249 dri0050-motor-api mosquitto pirtc-api'
 curl -s http://192.168.188.122:8202/api/v1/hardware/health
+curl -s http://192.168.188.122:8202/api/v1/hardware/hui/actions
 curl -s http://192.168.188.122:8125/api/status
 curl -s http://192.168.188.122:8202/api/v1/hardware/rtc/status
 curl -s http://192.168.188.122:8205/api/status
@@ -63,8 +103,13 @@ curl -s http://192.168.188.122:8203/health
   - CH340 USB2.0-Serial: `/dev/ttyUSB0`
 - Tic249 raportuje `connected=true`, `energized=false`.
 - DRI0050 raportuje zdrowy stan na `:8203`.
-- Modbus-IO raportuje `status=connected`, `compatible=true`.
-- OqlOS działa w `mode=real`, `overall_ok=true`, `degraded=false`.
+- Modbus-IO w `/api/v1/hardware/health` może raportować `status=error` (timeout
+  RS485) mimo wcześniejszej naprawy slave ID — wtedy HUI hold/al zwraca
+  `ok=false` przy poprawnym katalogu kluczy.
+- OqlOS działa w `mode=real`; `overall_ok` może być `false` przy degraded Modbus/Tic.
+- HTTP HUI: `GET /api/v1/hardware/hui/actions` zwraca katalog hold/AL;
+  bezpieczne `POST /api/v1/hardware/hui/al/stop` i `shutdown` weryfikuje
+  `assert_hw_node_healthy` w `redeploy/122/migration.md`.
 - `modbus-adc` jest świadomie wyłączony (`enabled=false`, `status=disabled`),
   ponieważ adapter ADC nie jest obecny.
 
