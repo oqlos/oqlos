@@ -229,6 +229,7 @@ export default function ScenarioFiles() {
           <h2>{t("scenarioFiles.pageTitle")}</h2>
           <p className="section-desc">{t("scenarioFiles.subtitle")}</p>
 
+          <div className="scenario-files-workspace">
           <div className="hw-card scenario-files-editor-card">
             <div className="scenario-files-toolbar">
               <button
@@ -303,6 +304,7 @@ export default function ScenarioFiles() {
                 ))
               )}
             </div>
+          </div>
           </div>
 
           <div className={statusClass} role="status">
