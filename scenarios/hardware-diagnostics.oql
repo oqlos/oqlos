@@ -1,4 +1,4 @@
-VERSION: 4
+VERSION: 5
 SCENARIO: Hardware Diagnostics
 DEVICE_TYPE: TEST_EQUIPMENT
 DESCRIPTION: Smoke-test dla pompy, zaworów, płuca i czujników Modbus ADC.
@@ -31,15 +31,18 @@ GOAL:
   LOG 'Test: czujniki Modbus ADC (AI01/AI02/AI03)'
   CALL hw-sensors-baseline
   # sanity-checki zakresów przy braku ciśnienia
-  IF 'AI01' '-5 .. 5 V'
-  CORRECT 'Czujnik AI01 w zakresie bazowym'
-  ERROR 'Błąd: czujnik AI01 poza zakresem -5 do 5 V'
-  IF 'AI02' '-5 .. 5 V'
-  CORRECT 'Czujnik AI02 w zakresie bazowym'
-  ERROR 'Błąd: czujnik AI02 poza zakresem -5 do 5 V'
-  IF 'AI03' '-5 .. 5 V'
-  CORRECT 'Czujnik AI03 w zakresie bazowym'
-  ERROR 'Błąd: czujnik AI03 poza zakresem -5 do 5 V'
+  RANGE 'AI01' '-5 V' .. '5 V'
+  VAL 'AI01' 'V'
+  PASS 'Czujnik AI01 w zakresie bazowym'
+  FAIL 'Błąd: czujnik AI01 poza zakresem -5 do 5 V'
+  RANGE 'AI02' '-5 V' .. '5 V'
+  VAL 'AI02' 'V'
+  PASS 'Czujnik AI02 w zakresie bazowym'
+  FAIL 'Błąd: czujnik AI02 poza zakresem -5 do 5 V'
+  RANGE 'AI03' '-5 V' .. '5 V'
+  VAL 'AI03' 'V'
+  PASS 'Czujnik AI03 w zakresie bazowym'
+  FAIL 'Błąd: czujnik AI03 poza zakresem -5 do 5 V'
 
 GOAL:
   SET NAME 'koniec'

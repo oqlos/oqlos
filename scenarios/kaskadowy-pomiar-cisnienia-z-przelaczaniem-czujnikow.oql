@@ -1,4 +1,4 @@
-VERSION: 4
+VERSION: 5
 SCENARIO: Kaskadowy pomiar ciśnienia
 DESCRIPTION: Przełączanie zakresów pomiarowych (niski/wysoki).
 
@@ -13,9 +13,10 @@ GOAL:
   SET WAIT '5 s'
   SAMPLE ciśnienie-niskie STOP
   SAVE cn
-  IF 'ciśnienie-niskie' '0 .. 50 mbar'
-  CORRECT 'Pomiar zakresu niskiego OK (0-50 mbar)'
-  ERROR 'Błąd: pomiar zakresu niskiego poza zakresem'
+  RANGE 'ciśnienie-niskie' '0 mbar' .. '50 mbar'
+  VAL 'ciśnienie-niskie' 'mbar'
+  PASS 'Pomiar zakresu niskiego OK (0-50 mbar)'
+  FAIL 'Błąd: pomiar zakresu niskiego poza zakresem'
 
 GOAL:
   SET NAME 'pomiar zakres wysoki'
@@ -24,9 +25,10 @@ GOAL:
   SET WAIT '5 s'
   SAMPLE ciśnienie-wysokie STOP
   SAVE cw
-  IF 'ciśnienie-wysokie' '50 .. 1000 mbar'
-  CORRECT 'Pomiar zakresu wysokiego OK (50-1000 mbar)'
-  ERROR 'Błąd: pomiar zakresu wysokiego poza zakresem'
+  RANGE 'ciśnienie-wysokie' '50 mbar' .. '1000 mbar'
+  VAL 'ciśnienie-wysokie' 'mbar'
+  PASS 'Pomiar zakresu wysokiego OK (50-1000 mbar)'
+  FAIL 'Błąd: pomiar zakresu wysokiego poza zakresem'
 
 GOAL:
   SET NAME 'raport kaskadowy'

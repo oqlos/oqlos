@@ -1,4 +1,4 @@
-VERSION: 4
+VERSION: 5
 SCENARIO: PSS 7000 — Test szczelności automatu (przez maskę)
 DESCRIPTION: Sekwencyjna wersja testu z płaską strukturą (bez zagnieżdżonego IF).
 
@@ -7,17 +7,19 @@ GOAL:
   SET 'pump-main' '0 l/min'
   SET WAIT '3 s'
   SAVE ciśnienie-sc
-  IF 'AI02' '6.0 .. 10.0 bar'
-  CORRECT 'Ciśnienie SC w normie (6-10 bar)'
-  ERROR 'Błąd: ciśnienie SC poza zakresem'
+  RANGE 'AI02' '6.0 bar' .. '10.0 bar'
+  VAL 'AI02' 'bar'
+  PASS 'Ciśnienie SC w normie (6-10 bar)'
+  FAIL 'Błąd: ciśnienie SC poza zakresem'
 
 GOAL:
   SET NAME 'Delta SC'
   SET WAIT '60 s'
   SAVE delta-ciśnienia-sc
-  IF 'AI02' '-0.3 .. 0.6 bar'
-  CORRECT 'Delta ciśnienia SC w normie'
-  ERROR 'Błąd: delta ciśnienia SC poza zakresem'
+  RANGE 'AI02' '-0.3 bar' .. '0.6 bar'
+  VAL 'AI02' 'bar'
+  PASS 'Delta ciśnienia SC w normie'
+  FAIL 'Błąd: delta ciśnienia SC poza zakresem'
 
 GOAL:
   SET NAME 'Ciśnienie otwarcia automatu'
@@ -25,27 +27,30 @@ GOAL:
   SET 'valve-nc' '1'
   SET WAIT '8 s'
   SAVE ciśnienie-nc-min
-  IF 'AI01' '-29.0 .. -5.0 mbar'
-  CORRECT 'Ciśnienie otwarcia w normie'
-  ERROR 'Błąd: ciśnienie otwarcia poza zakresem'
+  RANGE 'AI01' '-29.0 mbar' .. '-5.0 mbar'
+  VAL 'AI01' 'mbar'
+  PASS 'Ciśnienie otwarcia w normie'
+  FAIL 'Błąd: ciśnienie otwarcia poza zakresem'
 
 GOAL:
   SET NAME 'Nadciśnienie statyczne'
   SET 'pump-main' '0 l/min'
   SET WAIT '10 s'
   SAVE nadciśnienie
-  IF 'AI01' '2.0 .. 4.0 mbar'
-  CORRECT 'Nadciśnienie statyczne w normie'
-  ERROR 'Błąd: nadciśnienie poza zakresem'
+  RANGE 'AI01' '2.0 mbar' .. '4.0 mbar'
+  VAL 'AI01' 'mbar'
+  PASS 'Nadciśnienie statyczne w normie'
+  FAIL 'Błąd: nadciśnienie poza zakresem'
 
 GOAL:
   SET NAME 'Sygnał akustyczny'
   SET 'pump-main' '5.0 l/min'
   SET 'valve-nc' '1'
   SET WAIT '2 s'
-  IF 'AI01' '0.0 .. 1.0 mbar'
-  CORRECT 'Sygnał akustyczny OK'
-  ERROR 'Błąd: sygnał akustyczny poza zakresem'
+  RANGE 'AI01' '0.0 mbar' .. '1.0 mbar'
+  VAL 'AI01' 'mbar'
+  PASS 'Sygnał akustyczny OK'
+  FAIL 'Błąd: sygnał akustyczny poza zakresem'
   SAVE wynik-operatora
 
 GOAL:
@@ -53,9 +58,10 @@ GOAL:
   SET 'pump-main' '5.0 l/min'
   SET 'valve-nc' '1'
   SET WAIT '20 s'
-  IF 'AI01' '-15.0 .. -10.0 mbar'
-  CORRECT 'Podciśnienie w normie'
-  ERROR 'Błąd: podciśnienie poza zakresem'
+  RANGE 'AI01' '-15.0 mbar' .. '-10.0 mbar'
+  VAL 'AI01' 'mbar'
+  PASS 'Podciśnienie w normie'
+  FAIL 'Błąd: podciśnienie poza zakresem'
 
 GOAL:
   SET NAME 'Szczelność automatu'
@@ -63,6 +69,7 @@ GOAL:
   SET 'valve-nc' '0'
   SET WAIT '15 s'
   SAVE ciśnienie-nc-końcowe
-  IF 'AI01' '-12.0 .. -6.5 mbar'
-  CORRECT 'Szczelność automatu OK'
-  ERROR 'Błąd: szczelność automatu poza zakresem'
+  RANGE 'AI01' '-12.0 mbar' .. '-6.5 mbar'
+  VAL 'AI01' 'mbar'
+  PASS 'Szczelność automatu OK'
+  FAIL 'Błąd: szczelność automatu poza zakresem'

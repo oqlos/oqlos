@@ -1,4 +1,4 @@
-VERSION: 4
+VERSION: 5
 SCENARIO: Test wytrzymałości mechanicznej
 DESCRIPTION: Pojedynczy cykl obciążenia/odciążenia — pętla cykli jest sterowana z zewnątrz.
 
@@ -16,15 +16,17 @@ GOAL:
   SAVE siła-aktualna
   GET pozycja-aktualna
   SAVE pozycja-aktualna
-  IF 'siła-aktualna' '0 .. 1100 N'
-  CORRECT 'Siła w zakresie wytrzymałości (0-1100 N)'
-  ERROR 'Błąd: siła poza zakresem wytrzymałości'
+  RANGE 'siła-aktualna' '0 N' .. '1100 N'
+  VAL 'siła-aktualna' 'N'
+  PASS 'Siła w zakresie wytrzymałości (0-1100 N)'
+  FAIL 'Błąd: siła poza zakresem wytrzymałości'
   SET 'pozycja-docelowa' '0 mm'
   SET WAIT '1 s'
 GOAL:
   SET NAME 'Ocena wyniku'
-  IF 'cykle-wykonane' '100 .. 1000 szt'
-  CORRECT 'Liczba cykli w normie'
-  ERROR 'Błąd: liczba cykli poniżej minimum'
+  RANGE 'cykle-wykonane' '100 szt' .. '1000 szt'
+  VAL 'cykle-wykonane' 'szt'
+  PASS 'Liczba cykli w normie'
+  FAIL 'Błąd: liczba cykli poniżej minimum'
   SET 'siłownik' '0'
   SAVE raport-wytrzymałości

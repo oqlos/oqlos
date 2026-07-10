@@ -800,9 +800,11 @@ def test_adapter_pass_and_fail_lowering():
     cdoc = parse_flat_oql(src)
     assert not cdoc.errors
     actions = cdoc.goals[0].steps[0].actions
-    assert [(a.kind, a.args, a.raw) for a in actions] == [
-        ("log", "OK", "PASS 'OK'"),
-        ("error", "NOK", "FAIL 'NOK'"),
+    # werdykty deklaratywne lowerują się jak ELSE INFO/ERROR (kind=else),
+    # nie jako bezwarunkowe log/error
+    assert [(a.kind, a.method, a.args, a.raw) for a in actions] == [
+        ("else", "INFO", "OK", "PASS 'OK'"),
+        ("else", "ERROR", "NOK", "FAIL 'NOK'"),
     ]
 
 
@@ -821,7 +823,7 @@ def test_adapter_fail_goto_emits_goto_action():
     # raw akcji error jest syntetyczne (bez ogona) — pełna linia w obu raw
     # podwajałaby kroki w goals_from_cql (c2004).
     assert [(a.kind, a.target, a.raw) for a in actions] == [
-        ("error", "", "FAIL 'NOK'"),
+        ("else", "", "FAIL 'NOK'"),
         ("goto", "Pomiar w zakresie wysokim", "GOTO 'Pomiar w zakresie wysokim'"),
     ]
 
@@ -838,6 +840,6 @@ def test_adapter_fail_retry_emits_retry_action():
     cdoc = parse_flat_oql(src)
     assert not cdoc.errors
     actions = cdoc.goals[0].steps[0].actions
-    assert [(a.kind, a.args) for a in actions] == [("error", "NOK"), ("retry", "2")]
+    assert [(a.kind, a.args) for a in actions] == [("else", "NOK"), ("retry", "2")]
     assert actions[0].raw == "FAIL 'NOK'"
     assert actions[1].raw == "RETRY 2"

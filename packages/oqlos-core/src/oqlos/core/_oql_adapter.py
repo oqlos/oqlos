@@ -345,8 +345,14 @@ def _lower_range(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "lis
 
 
 def _lower_pass(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "list[CqlAction]":
-    """PASS 'msg' — alias semantyczny CORRECT: komunikat pozytywny (log/info)."""
-    return [CqlAction(kind="log", args=cmd.args.get("message", ""), raw=cmd.raw)]
+    """PASS 'msg' — alias semantyczny CORRECT: komunikat werdyktu pozytywnego.
+
+    Lowering jak ``ELSE INFO`` (kind=else) — werdykt jest deklaracją;
+    o wyniku GOAL-a decydują ewaluacje MIN/MAX/RANGE.
+    """
+    return [
+        CqlAction(kind="else", method="INFO", args=cmd.args.get("message", ""), raw=cmd.raw)
+    ]
 
 
 def _lower_fail(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "list[CqlAction]":
@@ -361,7 +367,9 @@ def _lower_fail(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "list
     goto_target = cmd.args.get("goto")
     retry = cmd.args.get("retry")
     fail_raw = cmd.raw if not (goto_target or retry) else f"FAIL '{message}'"
-    actions = [CqlAction(kind="error", args=message, raw=fail_raw)]
+    # kind=else (jak ELSE ERROR), nie kind=error: FAIL to deklaracja werdyktu —
+    # bezwarunkowy kind=error obalałby każdy GOAL już w dry-run.
+    actions = [CqlAction(kind="else", method="ERROR", args=message, raw=fail_raw)]
     if goto_target:
         actions.append(
             CqlAction(kind="goto", target=goto_target, raw=f"GOTO '{goto_target}'")

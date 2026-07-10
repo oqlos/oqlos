@@ -1,4 +1,4 @@
-VERSION: 4
+VERSION: 5
 
 SCENARIO: "Mask Leak Test"
 DEVICE_TYPE: "pp-mask"
@@ -15,15 +15,16 @@ GOAL:
   SET 'pompa-1' '2.0 l/min'
   SET 'valve-nc' '1'
   SET WAIT '2000 ms'
-  IF 'AI01' '-11.0 .. -9.0 mbar'
-  CORRECT 'Podciśnienie startowe w zakresie -11.0 .. -9.0 mbar'
-  ERROR 'Podciśnienie startowe poza zakresem'
+  RANGE 'AI01' '-11.0 mbar' .. '-9.0 mbar'
+  VAL 'AI01' 'mbar'
+  PASS 'Podciśnienie startowe w zakresie -11.0 .. -9.0 mbar'
+  FAIL 'Podciśnienie startowe poza zakresem'
   SAVE AI01.value
   SET 'pompa-1' '0 l/min'
   SET WAIT '60 s'
-  IF 'AI01' '-11.0 .. -9.0 mbar'
-  CORRECT 'Maska szczelna po 60 sekundach'
-  ERROR 'Maska nieszczelna - delta większa niż 1 mbar'
+  RANGE 'AI01' '-11.0 mbar' .. '-9.0 mbar'
+  PASS 'Maska szczelna po 60 sekundach'
+  FAIL 'Maska nieszczelna - delta większa niż 1 mbar'
   SAVE AI01.value
 
 GOAL:
@@ -31,9 +32,10 @@ GOAL:
   SET 'pompa-1' '0.5 l/min'
   SET 'valve-nc' '0'
   SET WAIT '1000 ms'
-  IF 'AI01' '4.2 .. 6.0 mbar'
-  CORRECT 'Ciśnienie otwarcia zaworu w zakresie 4.2 .. 6.0 mbar'
-  ERROR 'Ciśnienie otwarcia poza zakresem'
+  RANGE 'AI01' '4.2 mbar' .. '6.0 mbar'
+  VAL 'AI01' 'mbar'
+  PASS 'Ciśnienie otwarcia zaworu w zakresie 4.2 .. 6.0 mbar'
+  FAIL 'Ciśnienie otwarcia poza zakresem'
   SAVE AI01.min
 
 GOAL:
@@ -41,9 +43,10 @@ GOAL:
   SET 'pompa-1' '0.5 l/min'
   SET 'valve-overpressure' '1'
   SET WAIT '3000 ms'
-  IF 'AI01' '1.0 .. 3.9 mbar'
-  CORRECT 'Nadciśnienie statyczne w zakresie 1.0 .. 3.9 mbar'
-  ERROR 'Nadciśnienie statyczne poza zakresem'
+  RANGE 'AI01' '1.0 mbar' .. '3.9 mbar'
+  VAL 'AI01' 'mbar'
+  PASS 'Nadciśnienie statyczne w zakresie 1.0 .. 3.9 mbar'
+  FAIL 'Nadciśnienie statyczne poza zakresem'
   SAVE AI01.value
   SET 'pump-main' '0 l/min'
   SET 'valve-overpressure' '0'

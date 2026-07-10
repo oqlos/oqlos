@@ -1,4 +1,4 @@
-VERSION: 4
+VERSION: 5
 SCENARIO: Kalibracja czujników ciśnienia
 
 FUNC:
@@ -32,11 +32,13 @@ GOAL:
   SET WAIT '3 s'
   SAVE odczyt-1
   SAVE odczyt-2
-  IF 'czujnik-1' '48 .. 52 mbar'
-  CORRECT 'Czujnik 1 kalibracja OK (48-52 mbar)'
-  ERROR 'Błąd: czujnik 1 poza zakresem kalibracji'
-  IF 'czujnik-2' '48 .. 52 mbar'
-  CORRECT 'Czujnik 2 kalibracja OK (48-52 mbar)'
-  ERROR 'Błąd: czujnik 2 poza zakresem kalibracji'
+  RANGE 'czujnik-1' '48 mbar' .. '52 mbar'
+  VAL 'czujnik-1' 'mbar'
+  PASS 'Czujnik 1 kalibracja OK (48-52 mbar)'
+  FAIL 'Błąd: czujnik 1 poza zakresem kalibracji'
+  RANGE 'czujnik-2' '48 mbar' .. '52 mbar'
+  VAL 'czujnik-2' 'mbar'
+  PASS 'Czujnik 2 kalibracja OK (48-52 mbar)'
+  FAIL 'Błąd: czujnik 2 poza zakresem kalibracji'
   SET 'pompa-testowa' '0'
   SAVE certyfikat-kalibracji

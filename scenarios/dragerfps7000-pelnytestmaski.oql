@@ -1,4 +1,4 @@
-VERSION: 4
+VERSION: 5
 SCENARIO: Dräger FPS 7000 — Pełny test maski (sekwencyjny)
 DESCRIPTION: Płaska wersja — każdy etap osobnym GOAL; brak IF/ENDIF.
 
@@ -16,36 +16,40 @@ GOAL:
   SET 'valve-nc' '1'
   SET 'pump-main' '5 l/min'
   SET WAIT '10 s'
-  IF 'AI01' '-15.0 .. -11.0 mbar'
-  CORRECT 'Podciśnienie w normie'
-  ERROR 'Błąd: podciśnienie poza zakresem'
+  RANGE 'AI01' '-15.0 mbar' .. '-11.0 mbar'
+  VAL 'AI01' 'mbar'
+  PASS 'Podciśnienie w normie'
+  FAIL 'Błąd: podciśnienie poza zakresem'
 
 GOAL:
   SET NAME 'Faza 2: Stabilizacja'
   SET 'pump-main' '0 l/min'
   SET WAIT '10 s'
   SET 'valve-nc' '0'
-  IF 'AI01' '-15.0 .. -10.1 mbar'
-  CORRECT 'Stabilizacja w normie'
-  ERROR 'Błąd: stabilizacja poza zakresem'
+  RANGE 'AI01' '-15.0 mbar' .. '-10.1 mbar'
+  VAL 'AI01' 'mbar'
+  PASS 'Stabilizacja w normie'
+  FAIL 'Błąd: stabilizacja poza zakresem'
 
 GOAL:
   SET NAME 'Faza 3: Szczelność maski'
   SET 'pump-main' '0 l/min'
   SET WAIT '20 s'
   SAVE szczelność-maska
-  IF 'AI01' '-12.0 .. -9.0 mbar'
-  CORRECT 'Szczelność maski OK'
-  ERROR 'Błąd: nieszczelność maski'
+  RANGE 'AI01' '-12.0 mbar' .. '-9.0 mbar'
+  VAL 'AI01' 'mbar'
+  PASS 'Szczelność maski OK'
+  FAIL 'Błąd: nieszczelność maski'
 
 GOAL:
   SET NAME 'Faza 4: Zawór wydechowy'
   SET 'valve-sc' '1'
   SET 'pump-main' '10 l/min'
   SET WAIT '5 s'
-  IF 'AI01' '4.2 .. 6.0 mbar'
-  CORRECT 'Ciśnienie zaworu wydechowego OK (4.2-6.0 mbar)'
-  ERROR 'Błąd: ciśnienie zaworu wydechowego poza zakresem'
+  RANGE 'AI01' '4.2 mbar' .. '6.0 mbar'
+  VAL 'AI01' 'mbar'
+  PASS 'Ciśnienie zaworu wydechowego OK (4.2-6.0 mbar)'
+  FAIL 'Błąd: ciśnienie zaworu wydechowego poza zakresem'
   SAVE ciśnienie-wydechu
 
 GOAL:

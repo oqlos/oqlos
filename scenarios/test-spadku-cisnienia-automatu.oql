@@ -1,4 +1,4 @@
-VERSION: 4
+VERSION: 5
 SCENARIO: Test spadku ciśnienia automatu
 
 GOAL:
@@ -9,7 +9,8 @@ GOAL:
   SET WAIT '10 s'
   SAMPLE ciśnienie STOP
   SAVE dp-srednie
-  IF 'ciśnienie' '0.5 .. 3.5 mbar'
-  CORRECT 'Spadek ciśnienia automatu OK (0.5-3.5 mbar)'
-  ERROR 'Błąd: spadek ciśnienia poza zakresem'
+  RANGE 'ciśnienie' '0.5 mbar' .. '3.5 mbar'
+  VAL 'ciśnienie' 'mbar'
+  PASS 'Spadek ciśnienia automatu OK (0.5-3.5 mbar)'
+  FAIL 'Błąd: spadek ciśnienia poza zakresem'
   SET 'pompa-1' '0'
