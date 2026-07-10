@@ -471,11 +471,16 @@ def parse_ELSE(tokens: list[str], ln: int, raw: str) -> OqlCmd:
 parse_GOTO = _make_single_field_parser("GOTO", "target", "target")
 
 
-def _range_bound(tokens: list[str]) -> tuple[float | int, Optional[str]]:
-    """Parse a RANGE bound: ``['4.2', 'mbar']`` or quoted ``['4.2 mbar']``."""
+def _range_bound(tokens: list[str]) -> tuple[float | int, Optional[str], str]:
+    """Parse a RANGE bound: ``['4.2', 'mbar']`` or quoted ``['4.2 mbar']``.
+
+    Returns ``(value, unit, spec)`` where ``spec`` is the bound exactly as
+    written (np. ``'11.0 bar'``) — lowering zachowuje oryginalny zapis liczby.
+    """
     if len(tokens) == 1 and re.search(r"\s", tokens[0]):
         tokens = tokens[0].split()
-    return _split_value_unit(tokens)
+    value, unit = _split_value_unit(tokens)
+    return value, unit, " ".join(tokens)
 
 
 def parse_RANGE(tokens: list[str], ln: int, raw: str) -> OqlCmd:
@@ -496,8 +501,8 @@ def parse_RANGE(tokens: list[str], ln: int, raw: str) -> OqlCmd:
             f"RANGE wymaga granicy po obu stronach separatora '..' (linia {ln})"
         )
     try:
-        min_value, min_unit = _range_bound(lo_tokens)
-        max_value, max_unit = _range_bound(hi_tokens)
+        min_value, min_unit, min_spec = _range_bound(lo_tokens)
+        max_value, max_unit, max_spec = _range_bound(hi_tokens)
     except ValueError as exc:
         raise ValueError(f"RANGE: nieprawidłowa granica ({exc}, linia {ln})") from exc
     if min_unit and max_unit and min_unit != max_unit:
@@ -508,7 +513,14 @@ def parse_RANGE(tokens: list[str], ln: int, raw: str) -> OqlCmd:
     unit = min_unit or max_unit
     return OqlCmd(
         "RANGE",
-        {"sensor": sensor, "min": min_value, "max": max_value, "unit": unit},
+        {
+            "sensor": sensor,
+            "min": min_value,
+            "max": max_value,
+            "unit": unit,
+            "min_spec": min_spec,
+            "max_spec": max_spec,
+        },
         ln,
         raw,
     )

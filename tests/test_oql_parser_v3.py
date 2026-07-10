@@ -690,7 +690,10 @@ def test_parse_range_with_units():
     assert not doc.errors
     cmd = doc.blocks[0].cmds[0]
     assert cmd.cmd == "RANGE"
-    assert cmd.args == {"sensor": "ciśnienie NC", "min": 4.2, "max": 6.0, "unit": "mbar"}
+    assert cmd.args == {
+        "sensor": "ciśnienie NC", "min": 4.2, "max": 6.0, "unit": "mbar",
+        "min_spec": "4.2 mbar", "max_spec": "6.0 mbar",
+    }
     assert cmd.raw == "RANGE 'ciśnienie NC' '4.2 mbar' .. '6.0 mbar'"
 
 
@@ -698,7 +701,10 @@ def test_parse_range_without_units():
     doc = _single_goal_doc("RANGE 'Timer' '1' .. '3'")
     assert not doc.errors
     cmd = doc.blocks[0].cmds[0]
-    assert cmd.args == {"sensor": "Timer", "min": 1, "max": 3, "unit": None}
+    assert cmd.args == {
+        "sensor": "Timer", "min": 1, "max": 3, "unit": None,
+        "min_spec": "1", "max_spec": "3",
+    }
 
 
 def test_parse_range_single_unit_applies():
@@ -711,7 +717,10 @@ def test_parse_range_bare_tokens():
     doc = _single_goal_doc("RANGE AI02 6.0 bar .. 8.0 bar")
     assert not doc.errors
     cmd = doc.blocks[0].cmds[0]
-    assert cmd.args == {"sensor": "AI02", "min": 6.0, "max": 8.0, "unit": "bar"}
+    assert cmd.args == {
+        "sensor": "AI02", "min": 6.0, "max": 8.0, "unit": "bar",
+        "min_spec": "6.0 bar", "max_spec": "8.0 bar",
+    }
 
 
 def test_parse_range_mismatched_units_is_error():
@@ -771,10 +780,10 @@ def test_adapter_range_lowers_to_min_max_with_synthetic_raw():
     cdoc = parse_flat_oql(src)
     assert not cdoc.errors
     actions = cdoc.goals[0].steps[0].actions
-    # to_num normalizuje 6.0 → 6 (spójnie z istniejącym lowering MIN/MAX)
+    # lowering zachowuje oryginalny zapis liczby ('6.0', nie '6')
     assert [(a.kind, a.target, a.args, a.raw) for a in actions] == [
         ("min", "ciśnienie NC", "4.2 mbar", "MIN 'ciśnienie NC' '4.2 mbar'"),
-        ("max", "ciśnienie NC", "6 mbar", "MAX 'ciśnienie NC' '6 mbar'"),
+        ("max", "ciśnienie NC", "6.0 mbar", "MAX 'ciśnienie NC' '6.0 mbar'"),
     ]
 
 

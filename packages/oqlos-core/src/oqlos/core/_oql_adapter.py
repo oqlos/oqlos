@@ -335,8 +335,9 @@ def _lower_range(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "lis
     """
     sensor = cmd.args["sensor"]
     unit = cmd.args.get("unit")
-    min_args = _fmt_value(cmd.args["min"], unit)
-    max_args = _fmt_value(cmd.args["max"], unit)
+    # min_spec/max_spec zachowują oryginalny zapis liczby ('11.0 bar', nie '11 bar')
+    min_args = cmd.args.get("min_spec") or _fmt_value(cmd.args["min"], unit)
+    max_args = cmd.args.get("max_spec") or _fmt_value(cmd.args["max"], unit)
     return [
         CqlAction(kind="min", target=sensor, args=min_args, raw=f"MIN '{sensor}' '{min_args}'"),
         CqlAction(kind="max", target=sensor, args=max_args, raw=f"MAX '{sensor}' '{max_args}'"),
