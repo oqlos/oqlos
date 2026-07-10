@@ -288,6 +288,44 @@ def _lower_error_cmd(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> 
     return [CqlAction(kind="error", args=cmd.args.get("message", ""), raw=cmd.raw)]
 
 
+def _lower_val_cmd(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "list[CqlAction]":
+    return [
+        CqlAction(
+            kind="val",
+            target=cmd.args["param"],
+            args=cmd.args.get("unit") or "",
+            raw=cmd.raw,
+        )
+    ]
+
+
+def _lower_if_cmd(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "list[CqlAction]":
+    return [
+        CqlAction(
+            kind="if",
+            target=cmd.args.get("param", ""),
+            method=cmd.args.get("operator", ""),
+            args=cmd.args.get("value", ""),
+            raw=cmd.raw,
+        )
+    ]
+
+
+def _lower_else_cmd(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "list[CqlAction]":
+    return [
+        CqlAction(
+            kind="else",
+            method=cmd.args.get("action", ""),
+            args=cmd.args.get("message", ""),
+            raw=cmd.raw,
+        )
+    ]
+
+
+def _lower_goto(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "list[CqlAction]":
+    return [CqlAction(kind="goto", target=cmd.args["target"], raw=cmd.raw)]
+
+
 def _lower_repeat(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "list[CqlAction]":
     action = cmd.args.get("action")
     if action == "start":
@@ -319,6 +357,10 @@ _CMD_LOWERERS: dict = {
     "LOG": _lower_log,
     "ERROR": _lower_error_cmd,
     "REPEAT": _lower_repeat,
+    "VAL": _lower_val_cmd,
+    "IF": _lower_if_cmd,
+    "ELSE": _lower_else_cmd,
+    "GOTO": _lower_goto,
 }
 
 

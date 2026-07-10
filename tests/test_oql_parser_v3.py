@@ -489,3 +489,144 @@ def test_adapter_if_delta_uses_custom_messages_and_delta_sensor():
     assert action.condition.unit == "l/min"
     assert action.condition.pass_message == "Delta OK"
     assert action.condition.fail_message == "Delta NOK"
+
+
+# ── legacy quoted commands: VAL / IF / ELSE / GOTO ────────────────
+
+
+def _single_goal_doc(body: str, name: str = "test"):
+    src = f"GOAL {name}:\n" + textwrap.indent(textwrap.dedent(body).strip(), "  ") + "\n"
+    return parse_oql(src)
+
+
+def test_parse_val_with_unit():
+    doc = _single_goal_doc("VAL 'temperatura' '°C'")
+    assert not doc.errors
+    cmd = doc.blocks[0].cmds[0]
+    assert cmd.cmd == "VAL"
+    assert cmd.args == {"param": "temperatura", "unit": "°C"}
+    assert cmd.raw == "VAL 'temperatura' '°C'"
+
+
+def test_parse_val_without_unit():
+    doc = _single_goal_doc("VAL 'wynik'")
+    assert not doc.errors
+    cmd = doc.blocks[0].cmds[0]
+    assert cmd.args == {"param": "wynik", "unit": None}
+
+
+def test_parse_if_legacy_comparison():
+    doc = _single_goal_doc("IF 'AI01' ≤ '-10.1'")
+    assert not doc.errors
+    cmd = doc.blocks[0].cmds[0]
+    assert cmd.cmd == "IF"
+    assert cmd.args == {"param": "AI01", "operator": "≤", "value": "-10.1"}
+    assert cmd.raw == "IF 'AI01' ≤ '-10.1'"
+
+
+def test_parse_if_legacy_with_unit_value():
+    doc = _single_goal_doc("IF 'ciśnienie NC' < '6.5 mbar'")
+    assert not doc.errors
+    cmd = doc.blocks[0].cmds[0]
+    assert cmd.cmd == "IF"
+    assert cmd.args["param"] == "ciśnienie NC"
+    assert cmd.args["value"] == "6.5 mbar"
+
+
+def test_parse_if_legacy_with_or():
+    doc = _single_goal_doc("IF 'cn' < '25' OR 'cn' > '35'")
+    assert not doc.errors
+    cmd = doc.blocks[0].cmds[0]
+    assert cmd.args["or_param"] == "cn"
+    assert cmd.args["or_operator"] == ">"
+    assert cmd.args["or_value"] == "35"
+
+
+def test_parse_if_legacy_with_inline_else():
+    raw = "IF 'AI01' < '-11.0 mbar' ELSE ERROR 'Wytworzenie podciśnienia [mbar]'"
+    doc = _single_goal_doc(raw)
+    assert not doc.errors
+    cmd = doc.blocks[0].cmds[0]
+    assert cmd.cmd == "IF"
+    assert cmd.args["else_clause"] == "ERROR 'Wytworzenie podciśnienia [mbar]'"
+    assert cmd.raw == raw
+
+
+def test_parse_if_range_still_lowers_to_check():
+    doc = _single_goal_doc("IF AI02 6.0 .. 8.0 bar")
+    assert not doc.errors
+    assert doc.blocks[0].cmds[0].cmd == "CHECK"
+
+
+def test_parse_else_error_and_info():
+    doc = _single_goal_doc(
+        """
+        ELSE ERROR 'Temperatura poniżej minimum'
+        ELSE INFO 'Zakończono cykle testowe'
+        """
+    )
+    assert not doc.errors
+    first, second = doc.blocks[0].cmds
+    assert first.cmd == "ELSE"
+    assert first.args == {"action": "ERROR", "message": "Temperatura poniżej minimum"}
+    assert second.args == {"action": "INFO", "message": "Zakończono cykle testowe"}
+
+
+def test_parse_else_rejects_unknown_action():
+    doc = _single_goal_doc("ELSE WARN 'x'")
+    assert any("ERROR lub INFO" in e for e in doc.errors)
+
+
+def test_parse_goto():
+    doc = _single_goal_doc("GOTO 'Pomiar w zakresie wysokim'")
+    assert not doc.errors
+    cmd = doc.blocks[0].cmds[0]
+    assert cmd.cmd == "GOTO"
+    assert cmd.args == {"target": "Pomiar w zakresie wysokim"}
+
+
+def test_parse_minmax_quoted_combined_value_unit():
+    doc = _single_goal_doc(
+        """
+        MIN 'temperatura' '15 °C'
+        MAX 'wilgotnosc' '70 %RH'
+        """
+    )
+    assert not doc.errors
+    mn, mx = doc.blocks[0].cmds
+    assert mn.args == {"sensor": "temperatura", "value": 15, "unit": "°C"}
+    assert mx.args == {"sensor": "wilgotnosc", "value": 70, "unit": "%RH"}
+
+
+def test_adapter_lowers_legacy_commands_preserving_raw():
+    src = textwrap.dedent(
+        """
+        VERSION: 4
+        GOAL:
+          SET NAME 'Pomiar'
+          VAL 'cn' 'mbar'
+          IF 'cn' > 'próg_przełączenia'
+          GOTO 'Pomiar w zakresie wysokim'
+          ELSE ERROR 'Ciśnienie poza zakresem'
+        """
+    )
+    cdoc = parse_flat_oql(src)
+    assert not cdoc.errors
+    goal = cdoc.goals[0]
+    assert goal.name == "Pomiar"
+    actions = goal.steps[0].actions
+    kinds = [a.kind for a in actions]
+    assert kinds == ["val", "if", "goto", "else"]
+    raws = [a.raw for a in actions]
+    assert raws == [
+        "VAL 'cn' 'mbar'",
+        "IF 'cn' > 'próg_przełączenia'",
+        "GOTO 'Pomiar w zakresie wysokim'",
+        "ELSE ERROR 'Ciśnienie poza zakresem'",
+    ]
+    val = actions[0]
+    assert val.target == "cn" and val.args == "mbar"
+    goto = actions[2]
+    assert goto.target == "Pomiar w zakresie wysokim"
+    els = actions[3]
+    assert els.method == "ERROR" and els.args == "Ciśnienie poza zakresem"

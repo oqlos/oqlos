@@ -56,6 +56,15 @@ IF_RE = re.compile(
     rf"^(\S+)\s+({NUM})\s*\.\.\s*({NUM})(?:\s+(\S+))?$"
 )
 
+#: ``IF`` comparison clause (legacy quoted style):
+#: ``'param' <op> 'value' [OR 'param2' <op2> 'value2'] [ELSE ...]``.
+IF_CMP_RE = re.compile(
+    r"^'([^']*)'\s*([<>=≤≥!]+)\s*'([^']*)'"
+    r"(?:\s+OR\s+'([^']*)'\s*([<>=≤≥!]+)\s*'([^']*)')?"
+    r"(?:\s+ELSE\s+(.+))?$",
+    re.IGNORECASE,
+)
+
 DELTA_RE = re.compile(r"^([+-]?\d+(?:[\.,]\d+)?)(.*)$")
 
 #: Whitelisted metadata keys.  Unknown ``KEY:`` lines at the top level are
@@ -341,20 +350,37 @@ def parse_CHECK(rest: str, ln: int, raw: str) -> OqlCmd:
 
 def parse_IF(rest: str, ln: int, raw: str) -> OqlCmd:
     match = IF_RE.match(rest.strip())
-    if not match:
-        raise ValueError(
-            f"IF wymaga: sensor min .. max [unit] (linia {ln})"
+    if match:
+        return OqlCmd(
+            "CHECK",
+            {
+                "sensor": match.group(1),
+                "min": to_num(match.group(2)),
+                "max": to_num(match.group(3)),
+                "unit": match.group(4),
+            },
+            ln,
+            raw,
         )
-    return OqlCmd(
-        "CHECK",
-        {
-            "sensor": match.group(1),
-            "min": to_num(match.group(2)),
-            "max": to_num(match.group(3)),
-            "unit": match.group(4),
-        },
-        ln,
-        raw,
+
+    cmp_match = IF_CMP_RE.match(rest.strip())
+    if cmp_match:
+        args: dict = {
+            "param": cmp_match.group(1),
+            "operator": cmp_match.group(2),
+            "value": cmp_match.group(3),
+        }
+        if cmp_match.group(4) is not None:
+            args["or_param"] = cmp_match.group(4)
+            args["or_operator"] = cmp_match.group(5)
+            args["or_value"] = cmp_match.group(6)
+        if cmp_match.group(7):
+            args["else_clause"] = cmp_match.group(7).strip()
+        return OqlCmd("IF", args, ln, raw)
+
+    raise ValueError(
+        f"IF wymaga: sensor min .. max [unit] albo "
+        f"'param' <op> 'value' [OR ...] (linia {ln})"
     )
 
 
@@ -363,7 +389,11 @@ def _make_minmax_parser(cmd: str):
     def parser(tokens: list[str], ln: int, raw: str) -> OqlCmd:
         _require(tokens, 2, cmd, ln, "sensor value [unit]")
         sensor = tokens[0]
-        value, unit = _split_value_unit(tokens[1:])
+        value_tokens = tokens[1:]
+        if len(value_tokens) == 1 and re.search(r"\s", value_tokens[0]):
+            # quoted combined form: MIN 'sensor' '48 mbar'
+            value_tokens = value_tokens[0].split()
+        value, unit = _split_value_unit(value_tokens)
         return OqlCmd(cmd, {"sensor": sensor, "value": value, "unit": unit}, ln, raw)
     return parser
 
@@ -420,6 +450,27 @@ parse_INCLUDE = _make_single_field_parser("INCLUDE", "path", '"path.oql"')
 parse_FUNC_CALL = _make_call_parser("FUNC", "name", '"func-name" [args...]')
 
 
+def parse_VAL(tokens: list[str], ln: int, raw: str) -> OqlCmd:
+    _require(tokens, 1, "VAL", ln, "param [unit]")
+    unit = tokens[1] if len(tokens) > 1 else None
+    return OqlCmd("VAL", {"param": tokens[0], "unit": unit}, ln, raw)
+
+
+def parse_ELSE(tokens: list[str], ln: int, raw: str) -> OqlCmd:
+    _require(tokens, 2, "ELSE", ln, "ERROR|INFO 'message'")
+    action = tokens[0].upper()
+    if action not in {"ERROR", "INFO"}:
+        raise ValueError(
+            f"ELSE: pierwszy argument musi być ERROR lub INFO (linia {ln})"
+        )
+    return OqlCmd(
+        "ELSE", {"action": action, "message": " ".join(tokens[1:])}, ln, raw
+    )
+
+
+parse_GOTO = _make_single_field_parser("GOTO", "target", "target")
+
+
 def parse_REPEAT(tokens: list[str], ln: int, raw: str) -> OqlCmd:
     if not tokens or tokens[0].upper() == "STOP":
         return OqlCmd("REPEAT", {"action": "stop"}, ln, raw)
@@ -445,6 +496,9 @@ DISPATCHERS = {
     "FUNC":    parse_FUNC_CALL,
     "REPEAT":  parse_REPEAT,
     "IF_DELTA": parse_IF_DELTA,
+    "VAL":     parse_VAL,
+    "ELSE":    parse_ELSE,
+    "GOTO":    parse_GOTO,
 }
 
 #: Ordered list of canonical base commands (used by documentation tests).
