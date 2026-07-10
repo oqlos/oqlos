@@ -1,5 +1,5 @@
 """
-OQL parser (v3 + v4 compatibility) — flat, quote-free syntax.
+OQL parser (v3 + v4 + v5 compatibility) — flat, quote-free syntax.
 
 Design (see docs/oql-spec.md):
   * 12 base commands:
@@ -26,8 +26,8 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from .oql_versioning import (
-    OQL_VERSION_CURRENT,
     OQL_VERSION_LEGACY,
+    OQL_VERSION_V4,
     SUPPORTED_OQL_VERSIONS,
     resolve_oql_version,
 )
@@ -471,6 +471,94 @@ def parse_ELSE(tokens: list[str], ln: int, raw: str) -> OqlCmd:
 parse_GOTO = _make_single_field_parser("GOTO", "target", "target")
 
 
+def _range_bound(tokens: list[str]) -> tuple[float | int, Optional[str]]:
+    """Parse a RANGE bound: ``['4.2', 'mbar']`` or quoted ``['4.2 mbar']``."""
+    if len(tokens) == 1 and re.search(r"\s", tokens[0]):
+        tokens = tokens[0].split()
+    return _split_value_unit(tokens)
+
+
+def parse_RANGE(tokens: list[str], ln: int, raw: str) -> OqlCmd:
+    """``RANGE 'param' 'min [unit]' .. 'max [unit]'`` — deklaratywny zakres (v5)."""
+    _require(tokens, 4, "RANGE", ln, "'param' 'min [unit]' .. 'max [unit]'")
+    sensor = tokens[0]
+    try:
+        sep = tokens.index("..")
+    except ValueError:
+        raise ValueError(
+            f"RANGE wymaga separatora '..' między granicami "
+            f"(np. RANGE 'param' '4.2 mbar' .. '6.0 mbar', linia {ln})"
+        ) from None
+    lo_tokens = tokens[1:sep]
+    hi_tokens = tokens[sep + 1 :]
+    if not lo_tokens or not hi_tokens:
+        raise ValueError(
+            f"RANGE wymaga granicy po obu stronach separatora '..' (linia {ln})"
+        )
+    try:
+        min_value, min_unit = _range_bound(lo_tokens)
+        max_value, max_unit = _range_bound(hi_tokens)
+    except ValueError as exc:
+        raise ValueError(f"RANGE: nieprawidłowa granica ({exc}, linia {ln})") from exc
+    if min_unit and max_unit and min_unit != max_unit:
+        raise ValueError(
+            f"RANGE: jednostki granic muszą być identyczne "
+            f"({min_unit!r} vs {max_unit!r}, linia {ln})"
+        )
+    unit = min_unit or max_unit
+    return OqlCmd(
+        "RANGE",
+        {"sensor": sensor, "min": min_value, "max": max_value, "unit": unit},
+        ln,
+        raw,
+    )
+
+
+def parse_PASS(tokens: list[str], ln: int, raw: str) -> OqlCmd:
+    """``PASS 'message'`` — werdykt pozytywny (v5, alias semantyczny CORRECT)."""
+    _require(tokens, 1, "PASS", ln, "'message'")
+    return OqlCmd("PASS", {"message": " ".join(tokens)}, ln, raw)
+
+
+def parse_FAIL(tokens: list[str], ln: int, raw: str) -> OqlCmd:
+    """``FAIL 'message' [GOTO 'target' | RETRY n]`` — werdykt negatywny (v5)."""
+    _require(tokens, 1, "FAIL", ln, "'message' [GOTO 'target' | RETRY n]")
+    tail_idx = None
+    for idx, token in enumerate(tokens[1:], start=1):
+        if token.upper() in {"GOTO", "RETRY"}:
+            tail_idx = idx
+            break
+    if tail_idx is None:
+        return OqlCmd("FAIL", {"message": " ".join(tokens)}, ln, raw)
+
+    args: dict = {"message": " ".join(tokens[:tail_idx])}
+    keyword = tokens[tail_idx].upper()
+    tail = tokens[tail_idx + 1 :]
+    if keyword == "GOTO":
+        if len(tail) != 1:
+            raise ValueError(
+                f"FAIL … GOTO wymaga dokładnie jednego celu 'target' (linia {ln})"
+            )
+        args["goto"] = tail[0]
+    else:  # RETRY
+        if len(tail) != 1:
+            raise ValueError(
+                f"FAIL … RETRY wymaga liczby powtórzeń (linia {ln})"
+            )
+        try:
+            count = int(tail[0])
+        except ValueError:
+            raise ValueError(
+                f"FAIL … RETRY wymaga liczby całkowitej, nie {tail[0]!r} (linia {ln})"
+            ) from None
+        if count < 1:
+            raise ValueError(
+                f"FAIL … RETRY wymaga liczby dodatniej (linia {ln})"
+            )
+        args["retry"] = count
+    return OqlCmd("FAIL", args, ln, raw)
+
+
 def parse_REPEAT(tokens: list[str], ln: int, raw: str) -> OqlCmd:
     if not tokens or tokens[0].upper() == "STOP":
         return OqlCmd("REPEAT", {"action": "stop"}, ln, raw)
@@ -499,6 +587,9 @@ DISPATCHERS = {
     "VAL":     parse_VAL,
     "ELSE":    parse_ELSE,
     "GOTO":    parse_GOTO,
+    "RANGE":   parse_RANGE,   # v5: deklaratywny zakres (CHECK = alias historyczny)
+    "PASS":    parse_PASS,    # v5: alias semantyczny CORRECT
+    "FAIL":    parse_FAIL,    # v5: alias semantyczny ERROR (+ GOTO / RETRY)
 }
 
 #: Ordered list of canonical base commands (used by documentation tests).
@@ -593,12 +684,13 @@ def _handle_block_header(
         name = name[1:-1].strip()
     block_type = block.group(1).upper()
     if (
-        version_info.effective == OQL_VERSION_CURRENT
+        version_info.effective >= OQL_VERSION_V4
         and block_type == "GOAL"
         and name
     ):
         doc.errors.append(
-            f"Linia {ln}: w VERSION: 4 użyj 'GOAL:' i nazwy przez 'SET NAME ...'"
+            f"Linia {ln}: w VERSION: {version_info.effective} "
+            f"użyj 'GOAL:' i nazwy przez 'SET NAME ...'"
         )
     new_block = OqlBlock(type=block_type, name=name, line=ln)
     doc.blocks.append(new_block)
@@ -683,28 +775,30 @@ def _validate_oql_version(doc: "OqlDoc", version_info: object) -> None:
             f"(obsługiwane: {', '.join(str(v) for v in SUPPORTED_OQL_VERSIONS)})"
         )
     if (
-        version_info.effective == OQL_VERSION_CURRENT
+        version_info.effective >= OQL_VERSION_V4
         and version_info.first_meaningful_line
         and not re.match(
-            rf"^VERSION\s*:\s*{OQL_VERSION_CURRENT}\s*$",
+            rf"^VERSION\s*:\s*{version_info.effective}\s*$",
             version_info.first_meaningful_line,
             re.IGNORECASE,
         )
     ):
         line_no = version_info.first_meaningful_line_number or 1
         doc.errors.append(
-            f"Linia {line_no}: pierwsza istotna linia musi mieć postać 'VERSION: 4'"
+            f"Linia {line_no}: pierwsza istotna linia musi mieć postać "
+            f"'VERSION: {version_info.effective}'"
         )
 
 
 def _check_unnamed_goals(doc: "OqlDoc", version_info: object) -> None:
-    """Report GOAL blocks missing SET NAME in VERSION: 4 documents."""
-    if version_info.effective != OQL_VERSION_CURRENT:
+    """Report GOAL blocks missing SET NAME in VERSION: >= 4 documents."""
+    if version_info.effective < OQL_VERSION_V4:
         return
     for block in doc.blocks:
         if block.type == "GOAL" and not block.name:
             doc.errors.append(
-                f"Linia {block.line}: GOAL w VERSION: 4 wymaga 'SET NAME ...' jako pierwszej komendy"
+                f"Linia {block.line}: GOAL w VERSION: {version_info.effective} "
+                f"wymaga 'SET NAME ...' jako pierwszej komendy"
             )
 
 

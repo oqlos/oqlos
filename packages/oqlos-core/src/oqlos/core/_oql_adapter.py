@@ -326,6 +326,51 @@ def _lower_goto(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "list
     return [CqlAction(kind="goto", target=cmd.args["target"], raw=cmd.raw)]
 
 
+def _lower_range(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "list[CqlAction]":
+    """RANGE 'p' 'min u' .. 'max u' → dwie akcje min/max.
+
+    ``raw`` obu akcji jest SYNTETYCZNE (``MIN 'p' 'min u'`` / ``MAX 'p' 'max u'``),
+    bo generator goals JSON w c2004 (``goals_from_cql``) odtwarza kroki z linii
+    ``raw`` — dzięki temu RANGE działa tam bez zmian po stronie konsumenta.
+    """
+    sensor = cmd.args["sensor"]
+    unit = cmd.args.get("unit")
+    min_args = _fmt_value(cmd.args["min"], unit)
+    max_args = _fmt_value(cmd.args["max"], unit)
+    return [
+        CqlAction(kind="min", target=sensor, args=min_args, raw=f"MIN '{sensor}' '{min_args}'"),
+        CqlAction(kind="max", target=sensor, args=max_args, raw=f"MAX '{sensor}' '{max_args}'"),
+    ]
+
+
+def _lower_pass(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "list[CqlAction]":
+    """PASS 'msg' — alias semantyczny CORRECT: komunikat pozytywny (log/info)."""
+    return [CqlAction(kind="log", args=cmd.args.get("message", ""), raw=cmd.raw)]
+
+
+def _lower_fail(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "list[CqlAction]":
+    """FAIL 'msg' [GOTO 't' | RETRY n] — alias semantyczny ERROR (+ opcjonalny ogon).
+
+    Ogon jest emitowany jako osobna akcja, a ``raw`` każdej akcji jest
+    SYNTETYCZNE (``FAIL 'msg'`` / ``GOTO 't'`` / ``RETRY n``) — pełna linia w
+    obu ``raw`` podwajałaby kroki w generatorze goals c2004, który odtwarza
+    kroki z linii ``raw`` (ta sama zasada co przy lowering RANGE→MIN/MAX).
+    """
+    message = cmd.args.get("message", "")
+    goto_target = cmd.args.get("goto")
+    retry = cmd.args.get("retry")
+    fail_raw = cmd.raw if not (goto_target or retry) else f"FAIL '{message}'"
+    actions = [CqlAction(kind="error", args=message, raw=fail_raw)]
+    if goto_target:
+        actions.append(
+            CqlAction(kind="goto", target=goto_target, raw=f"GOTO '{goto_target}'")
+        )
+    if retry:
+        # Semantyka runtime (brak konsumenta w c2004) — patrz docs/oql-spec.md, v5.
+        actions.append(CqlAction(kind="retry", args=str(retry), raw=f"RETRY {retry}"))
+    return actions
+
+
 def _lower_repeat(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "list[CqlAction]":
     action = cmd.args.get("action")
     if action == "start":
@@ -361,6 +406,9 @@ _CMD_LOWERERS: dict = {
     "IF": _lower_if_cmd,
     "ELSE": _lower_else_cmd,
     "GOTO": _lower_goto,
+    "RANGE": _lower_range,
+    "PASS": _lower_pass,
+    "FAIL": _lower_fail,
 }
 
 

@@ -282,3 +282,78 @@ przy rozbieżności z tym dokumentem obowiązuje kod.
 Powiązane dokumenty: `OQL_V4_MIGRATION_MANUAL.md` (proces migracji),
 `oql_v4_llm_validator.schema.json` (schemat walidacji), glosariusz nazw
 w c2004: `docs/GLOSSARY.md`.
+
+
+---
+
+## OQL v5 — deklaratywne warunki (2026-07-10)
+
+`OQL_VERSION_CURRENT = 5` (`oqlos/core/oql_versioning.py`);
+obsługiwane wersje: 3 (legacy), 4, 5. Dokumenty `VERSION: 4` parsują dalej
+bez zmian zachowania (co najwyżej raportowane jako „nie-current").
+
+### Filozofia
+
+v5 rezygnuje z imperatywnego przepływu sterowania na rzecz deklaracji:
+
+- **Bez `IF`** — warunki to deklaracje `MIN` / `MAX` / `RANGE`, które
+  **kumulują się per parametr** w obrębie `GOAL`-a.
+- Zadeklarowane granice są **ewaluowane przy każdym `GET` / `VAL`**
+  danego parametru.
+- **Werdykt `GOAL`-a = AND wszystkich ewaluacji** — cel przechodzi tylko,
+  gdy każdy odczyt każdego parametru mieścił się w zadeklarowanych granicach.
+- `PASS` / `FAIL` deklarują komunikaty werdyktu (pozytywny / negatywny),
+  zamiast gałęzi `ELSE ERROR|INFO`.
+
+### Komendy v5
+
+| Komenda | Składnia | Działanie |
+|---|---|---|
+| `RANGE` | `RANGE 'param' 'min [unit]' .. 'max [unit]'` | Deklaracja zakresu (dolna i górna granica naraz). Separator `..` musi być osobnym tokenem (otoczony spacjami). Jeśli obie granice mają jednostkę, muszą być **identyczne** — inaczej błąd parsera. |
+| `PASS` | `PASS 'message'` | Komunikat werdyktu pozytywnego (alias semantyczny `CORRECT`). |
+| `FAIL` | `FAIL 'message'` | Komunikat werdyktu negatywnego (alias semantyczny `ERROR`). |
+| `FAIL … GOTO` | `FAIL 'message' GOTO 'target'` | Przy niepowodzeniu skok do celu/etykiety (dodatkowa akcja `goto`). |
+| `FAIL … RETRY` | `FAIL 'message' RETRY n` | Przy niepowodzeniu powtórz cel maksymalnie *n* razy. **Semantyka runtime** — adapter emituje akcję `retry` (args = n, `raw` zachowany); na dziś brak konsumenta w c2004 (goals JSON pomija ogon RETRY, zachowując komunikat). |
+
+Lowering (adapter OQL→CQL, `core/_oql_adapter.py`):
+
+- `RANGE` → **dwie** akcje CQL: `kind=min` + `kind=max`. Pole `raw` obu akcji
+  jest syntetyczne: `MIN 'param' 'min unit'` / `MAX 'param' 'max unit'` —
+  generator goals JSON w c2004 (`goals_from_cql`) liczy się z linii `raw`,
+  więc konsumenci działają bez zmian.
+- `PASS` → komunikat pozytywny (jak `CORRECT`; w c2004: krok
+  `{type: else, action: INFO}`).
+- `FAIL` → komunikat błędu (jak `ERROR`; w c2004: krok
+  `{type: else, action: ERROR}`), plus opcjonalnie `goto` / `retry`.
+
+### Przykład
+
+```oql
+VERSION: 5
+SCENARIO: Test zaworu wydechowego
+
+GOAL:
+  SET NAME 'Ciśnienie otwarcia zaworu wydechowego'
+  SET 'PUMP' '5 l'
+  SET WAIT '3 s'
+  RANGE 'ciśnienie NC' '4.2 mbar' .. '6.0 mbar'
+  GET 'ciśnienie NC'
+  PASS 'Ciśnienie otwarcia w normie'
+  FAIL 'Ciśnienie otwarcia poza zakresem 4.2–6.0 mbar'
+```
+
+Deklaracja `RANGE` obowiązuje dla wszystkich późniejszych odczytów
+`ciśnienie NC` w tym `GOAL`-u; werdykt celu to AND wszystkich ewaluacji.
+
+### Status aliasów
+
+| Historyczne | v5 | Status |
+|---|---|---|
+| `CHECK min <= sensor <= max unit` | `RANGE 'sensor' 'min unit' .. 'max unit'` | `CHECK` = alias historyczny `RANGE`, nadal obsługiwany |
+| `CORRECT 'msg'` | `PASS 'msg'` | alias historyczny |
+| `ERROR 'msg'` | `FAIL 'msg'` | alias historyczny |
+| `IF` / `ELSE` | deklaracje `MIN`/`MAX`/`RANGE` + `PASS`/`FAIL` | **wyłącznie warstwa zgodności legacy** (import starych CQL) |
+
+Zasada nadrzędna: **przy rozbieżności spec vs kod obowiązuje parser + testy**
+(`packages/oqlos-core/src/oqlos/core/oql_parser.py`,
+`tests/test_oql_parser_v3.py`).

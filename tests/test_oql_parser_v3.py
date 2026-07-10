@@ -630,3 +630,205 @@ def test_adapter_lowers_legacy_commands_preserving_raw():
     assert goto.target == "Pomiar w zakresie wysokim"
     els = actions[3]
     assert els.method == "ERROR" and els.args == "Ciśnienie poza zakresem"
+
+
+# ── OQL v5: RANGE / PASS / FAIL + wersjonowanie ───────────────────
+
+
+def test_version_constants_v5():
+    from oqlos.core.oql_versioning import (
+        OQL_VERSION_LEGACY,
+        OQL_VERSION_V4,
+        SUPPORTED_OQL_VERSIONS,
+    )
+
+    assert OQL_VERSION_CURRENT == 5
+    assert SUPPORTED_OQL_VERSIONS == (OQL_VERSION_LEGACY, OQL_VERSION_V4, OQL_VERSION_CURRENT)
+
+
+def test_parse_version5_accepted():
+    src = textwrap.dedent(
+        """
+        VERSION: 5
+        GOAL:
+          SET NAME 'Test v5'
+          SET WAIT '500 ms'
+        """
+    )
+    doc = parse_oql(src)
+    assert not doc.errors
+    assert doc.oql_version == 5
+    assert doc.blocks[0].name == "Test v5"
+
+
+def test_parse_version4_still_works_unchanged():
+    src = textwrap.dedent(
+        """
+        VERSION: 4
+        GOAL:
+          SET NAME 'Test v4'
+          SET 'PUMP' '5 l'
+          MIN 'AI01' '-11.0 mbar'
+        """
+    )
+    doc = parse_oql(src)
+    assert not doc.errors
+    assert doc.oql_version == 4
+    assert doc.blocks[0].name == "Test v4"
+
+
+def test_parse_version4_goal_rules_still_enforced():
+    # v4 nie może stracić swoich reguł po podbiciu current → 5
+    doc = parse_oql("VERSION: 4\nGOAL nazwa-inline:\n  SET x 0\n")
+    assert any("użyj 'GOAL:'" in e for e in doc.errors)
+    doc2 = parse_oql("VERSION: 4\nGOAL:\n  SET x 0\n")
+    assert any("wymaga 'SET NAME ...'" in e for e in doc2.errors)
+
+
+def test_parse_range_with_units():
+    doc = _single_goal_doc("RANGE 'ciśnienie NC' '4.2 mbar' .. '6.0 mbar'")
+    assert not doc.errors
+    cmd = doc.blocks[0].cmds[0]
+    assert cmd.cmd == "RANGE"
+    assert cmd.args == {"sensor": "ciśnienie NC", "min": 4.2, "max": 6.0, "unit": "mbar"}
+    assert cmd.raw == "RANGE 'ciśnienie NC' '4.2 mbar' .. '6.0 mbar'"
+
+
+def test_parse_range_without_units():
+    doc = _single_goal_doc("RANGE 'Timer' '1' .. '3'")
+    assert not doc.errors
+    cmd = doc.blocks[0].cmds[0]
+    assert cmd.args == {"sensor": "Timer", "min": 1, "max": 3, "unit": None}
+
+
+def test_parse_range_single_unit_applies():
+    doc = _single_goal_doc("RANGE 'AI02' '6.0' .. '8.0 bar'")
+    assert not doc.errors
+    assert doc.blocks[0].cmds[0].args["unit"] == "bar"
+
+
+def test_parse_range_bare_tokens():
+    doc = _single_goal_doc("RANGE AI02 6.0 bar .. 8.0 bar")
+    assert not doc.errors
+    cmd = doc.blocks[0].cmds[0]
+    assert cmd.args == {"sensor": "AI02", "min": 6.0, "max": 8.0, "unit": "bar"}
+
+
+def test_parse_range_mismatched_units_is_error():
+    doc = _single_goal_doc("RANGE 'AI01' '4.2 mbar' .. '6.0 bar'")
+    assert any("jednostki granic muszą być identyczne" in e for e in doc.errors)
+
+
+def test_parse_range_missing_separator_is_error():
+    doc = _single_goal_doc("RANGE 'AI01' '4.2 mbar' '6.0 mbar' zonk")
+    assert any("separatora '..'" in e for e in doc.errors)
+
+
+def test_parse_pass_message():
+    doc = _single_goal_doc("PASS 'Ciśnienie otwarcia w normie'")
+    assert not doc.errors
+    cmd = doc.blocks[0].cmds[0]
+    assert cmd.cmd == "PASS"
+    assert cmd.args == {"message": "Ciśnienie otwarcia w normie"}
+
+
+def test_parse_fail_message():
+    doc = _single_goal_doc("FAIL 'Ciśnienie poza zakresem'")
+    assert not doc.errors
+    cmd = doc.blocks[0].cmds[0]
+    assert cmd.cmd == "FAIL"
+    assert cmd.args == {"message": "Ciśnienie poza zakresem"}
+
+
+def test_parse_fail_with_goto_tail():
+    doc = _single_goal_doc("FAIL 'Poza zakresem' GOTO 'Pomiar w zakresie wysokim'")
+    assert not doc.errors
+    cmd = doc.blocks[0].cmds[0]
+    assert cmd.args == {"message": "Poza zakresem", "goto": "Pomiar w zakresie wysokim"}
+
+
+def test_parse_fail_with_retry_tail():
+    doc = _single_goal_doc("FAIL 'Poza zakresem' RETRY 3")
+    assert not doc.errors
+    cmd = doc.blocks[0].cmds[0]
+    assert cmd.args == {"message": "Poza zakresem", "retry": 3}
+
+
+def test_parse_fail_retry_requires_integer():
+    doc = _single_goal_doc("FAIL 'msg' RETRY dużo")
+    assert any("liczby całkowitej" in e for e in doc.errors)
+
+
+def test_adapter_range_lowers_to_min_max_with_synthetic_raw():
+    src = textwrap.dedent(
+        """
+        VERSION: 5
+        GOAL:
+          SET NAME 'Zakres'
+          RANGE 'ciśnienie NC' '4.2 mbar' .. '6.0 mbar'
+        """
+    )
+    cdoc = parse_flat_oql(src)
+    assert not cdoc.errors
+    actions = cdoc.goals[0].steps[0].actions
+    # to_num normalizuje 6.0 → 6 (spójnie z istniejącym lowering MIN/MAX)
+    assert [(a.kind, a.target, a.args, a.raw) for a in actions] == [
+        ("min", "ciśnienie NC", "4.2 mbar", "MIN 'ciśnienie NC' '4.2 mbar'"),
+        ("max", "ciśnienie NC", "6 mbar", "MAX 'ciśnienie NC' '6 mbar'"),
+    ]
+
+
+def test_adapter_pass_and_fail_lowering():
+    src = textwrap.dedent(
+        """
+        VERSION: 5
+        GOAL:
+          SET NAME 'Werdykt'
+          PASS 'OK'
+          FAIL 'NOK'
+        """
+    )
+    cdoc = parse_flat_oql(src)
+    assert not cdoc.errors
+    actions = cdoc.goals[0].steps[0].actions
+    assert [(a.kind, a.args, a.raw) for a in actions] == [
+        ("log", "OK", "PASS 'OK'"),
+        ("error", "NOK", "FAIL 'NOK'"),
+    ]
+
+
+def test_adapter_fail_goto_emits_goto_action():
+    src = textwrap.dedent(
+        """
+        VERSION: 5
+        GOAL:
+          SET NAME 'Skok'
+          FAIL 'NOK' GOTO 'Pomiar w zakresie wysokim'
+        """
+    )
+    cdoc = parse_flat_oql(src)
+    assert not cdoc.errors
+    actions = cdoc.goals[0].steps[0].actions
+    # raw akcji error jest syntetyczne (bez ogona) — pełna linia w obu raw
+    # podwajałaby kroki w goals_from_cql (c2004).
+    assert [(a.kind, a.target, a.raw) for a in actions] == [
+        ("error", "", "FAIL 'NOK'"),
+        ("goto", "Pomiar w zakresie wysokim", "GOTO 'Pomiar w zakresie wysokim'"),
+    ]
+
+
+def test_adapter_fail_retry_emits_retry_action():
+    src = textwrap.dedent(
+        """
+        VERSION: 5
+        GOAL:
+          SET NAME 'Powtórka'
+          FAIL 'NOK' RETRY 2
+        """
+    )
+    cdoc = parse_flat_oql(src)
+    assert not cdoc.errors
+    actions = cdoc.goals[0].steps[0].actions
+    assert [(a.kind, a.args) for a in actions] == [("error", "NOK"), ("retry", "2")]
+    assert actions[0].raw == "FAIL 'NOK'"
+    assert actions[1].raw == "RETRY 2"

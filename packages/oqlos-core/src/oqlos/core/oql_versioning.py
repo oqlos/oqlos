@@ -11,8 +11,14 @@ from dataclasses import dataclass
 import re
 
 OQL_VERSION_LEGACY = 3
-OQL_VERSION_CURRENT = 4
-SUPPORTED_OQL_VERSIONS: tuple[int, ...] = (OQL_VERSION_LEGACY, OQL_VERSION_CURRENT)
+#: First version with flat named-goal rules (``GOAL:`` + ``SET NAME``).
+OQL_VERSION_V4 = 4
+OQL_VERSION_CURRENT = 5
+SUPPORTED_OQL_VERSIONS: tuple[int, ...] = (
+    OQL_VERSION_LEGACY,
+    OQL_VERSION_V4,
+    OQL_VERSION_CURRENT,
+)
 
 
 @dataclass(frozen=True)
