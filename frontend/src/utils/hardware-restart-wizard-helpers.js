@@ -15,7 +15,9 @@ export function buildWizardProbePayload(plan, serialPort, moduleRole) {
   const targetBaud = Number(plan?.target_baudrate || 9600);
   const targetParity = String(plan?.target_parity || "N");
   const targetIds = Array.isArray(plan?.target_ids) ? plan.target_ids.map(Number) : [1, 2];
-  const baudrates = [targetBaud, 19200].filter((v, i, a) => a.indexOf(v) === i);
+  const baudrates = Array.isArray(plan?.baud_probe_sequence) && plan.baud_probe_sequence.length
+    ? plan.baud_probe_sequence.map(Number)
+    : (targetBaud === 9600 ? [9600] : [9600, targetBaud]);
   const parities = [targetParity];
   const device_ids = [...new Set([...targetIds, 1, 2, 3])];
   return {

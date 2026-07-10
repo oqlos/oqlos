@@ -123,8 +123,17 @@ function playToneOnSpeakers(ctx, freq, durationMs) {
   osc.stop(end + 0.02);
 }
 
-// ── Page ─────────────────────────────────────────────────────────────────────
-export default function HardwareDemo() {
+// ── Motor test panel (keyboard, melodies, activity log) ────────────────────
+export function MotorHardwareDemoPanel({
+  navTitleKey = "hardwareDemo.title",
+  pageTitleKey = "hardwareDemo.pageTitle",
+  subtitleKey = "hardwareDemo.subtitle",
+  beforeContent = null,
+  topActions = null,
+  hidePageHeader = false,
+  sidebarCollapseToggleId = "hardware-demo-devices",
+  sidebarCollapseStorageKey = "ui.hardware-demo-sidebar-collapsed",
+}) {
   const { t } = useI18n();
   const deviceMeta = useMemo(
     () => ({
@@ -392,12 +401,12 @@ export default function HardwareDemo() {
 
   const navContext = (
     <div className="section-label" style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: 0 }}>
-      <span>{t("hardwareDemo.title")}</span>
+      <span>{t(navTitleKey)}</span>
     </div>
   );
 
   return (
-    <div style={{ display: "flex", height: "100vh", overflow: "hidden" }}>
+    <div className="mapx-shell">
       <SidebarList
         title={t("hardwareDemo.sidebarTitle")}
         items={sidebarItems}
@@ -405,17 +414,23 @@ export default function HardwareDemo() {
         onSelect={(id) => {
           if (!playingMelody) setDeviceId(id);
         }}
-        collapseToggleId="hardware-demo-devices"
+        collapseToggleId={sidebarCollapseToggleId}
         collapseLabel={t("hardwareDemo.sidebarTitle")}
-        collapseStorageKey="ui.hardware-demo-sidebar-collapsed"
+        collapseStorageKey={sidebarCollapseStorageKey}
       />
-      <div className="dashboard" style={{ flex: 1, overflow: "auto" }}>
+      <div className="dashboard mapx-main-dashboard">
         <SharedNav navContext={navContext} />
         <div className="dash-content">
-          <h2>{t("hardwareDemo.pageTitle")}</h2>
-          <p className="section-desc">
-            {t("hardwareDemo.subtitle")}
-          </p>
+          {topActions}
+          {beforeContent}
+          {!hidePageHeader ? (
+            <>
+              <h2>{t(pageTitleKey)}</h2>
+              <p className="section-desc">
+                {t(subtitleKey)}
+              </p>
+            </>
+          ) : null}
 
           {/* ── Device selector + status row ───────────────────────────── */}
           <div

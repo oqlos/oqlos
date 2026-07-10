@@ -1,4 +1,4 @@
-/** Wizard step classification for /hardware-restart kit + Modbus flow. */
+/** Wizard step classification for /hardware-modbus kit + Modbus flow. */
 
 /**
  * @param {{ step?: string; action?: { type?: string }; verify_endpoint?: string } | null | undefined} step

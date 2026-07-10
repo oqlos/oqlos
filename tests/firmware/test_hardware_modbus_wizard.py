@@ -146,6 +146,7 @@ def test_build_waveshare_diagnose_uses_target_baud_fast_path(monkeypatch):
             },
         )(),
     )
+    monkeypatch.setattr(waveshare, "effective_modbus_target_baud", lambda _settings: 9600)
 
     result = hw._build_waveshare_diagnose_report()
     assert result["ok"] is True

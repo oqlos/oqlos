@@ -16,7 +16,7 @@ export function AppConfigProvider({ children }) {
 
   useEffect(() => {
     applyDocumentAppConfig(config);
-  }, [config.theme, config.font, config.role, config.user, config.lang, config.size, config.iframeChild]);
+  }, [config.theme, config.font, config.role, config.user, config.lang, config.size, config.iframeChild, config.mode]);
 
   useParentEncoderNavigation(config.iframeChild);
 

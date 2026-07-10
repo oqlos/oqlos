@@ -33,10 +33,42 @@ from oqlos.hardware.stack_snapshot import build_hardware_stack_snapshot
 
 _MONITOR_PLUGINS = ("modbus-io", "modbus-adc", "motor-tic249", "motor-dri0050")
 _OQLOS_SAFE_PLUGINS = ("modbus-io", "modbus-adc", "motor-tic249", "motor-dri0050")
+_MOTOR_PLUGIN_IDS = frozenset({"motor-tic249", "motor-dri0050"})
 
 # Backward-compatible aliases
 _health_map = health_map
 _action_dict = action_dict
+
+
+def resolve_recover_plugin_ids(devices: str) -> tuple[str, ...]:
+    if str(devices or "").strip().lower() == "motors":
+        return tuple(sorted(_MOTOR_PLUGIN_IDS))
+    return _OQLOS_SAFE_PLUGINS
+
+
+def filter_diagnosis_dict_for_devices(payload: dict[str, Any], devices: str) -> dict[str, Any]:
+    if str(devices or "").strip().lower() != "motors":
+        return payload
+    device_map = payload.get("devices") if isinstance(payload.get("devices"), dict) else {}
+    filtered_devices = {
+        key: value for key, value in device_map.items() if key in _MOTOR_PLUGIN_IDS
+    }
+    global_actions = [
+        action
+        for action in (payload.get("global_actions") or [])
+        if isinstance(action, dict)
+        and not str(action.get("id") or "").startswith("global-modbus")
+        and not str(action.get("device_id") or "").startswith("modbus")
+        and (
+            str(action.get("device_id") or "") in _MOTOR_PLUGIN_IDS
+            or str(action.get("device_id") or "") == "*"
+        )
+    ]
+    return {
+        **payload,
+        "devices": filtered_devices,
+        "global_actions": global_actions,
+    }
 
 
 def _report_device_status(report: DiagnosisReport, plugin_id: str) -> str:
@@ -156,10 +188,16 @@ def _host_actions_from_report(
     return host
 
 
-def _recover_targets(report: DiagnosisReport, health: dict[str, Any]) -> list[str]:
+def _recover_targets(
+    report: DiagnosisReport,
+    health: dict[str, Any],
+    *,
+    plugin_ids: tuple[str, ...] | None = None,
+) -> list[str]:
     """Only plugins marked error in diagnosis AND unhealthy in live health."""
+    allowed = plugin_ids or _OQLOS_SAFE_PLUGINS
     targets: list[str] = []
-    for pid in _OQLOS_SAFE_PLUGINS:
+    for pid in allowed:
         if _report_device_status(report, pid) != "error":
             continue
         entry = health.get(pid) if isinstance(health.get(pid), dict) else {}
@@ -197,13 +235,19 @@ async def _repair_sidecar_if_needed(
     repairs.append(await ensure_sidecar(force_restart=force))
 
 
-async def execute_safe_recover(gateway: Any, report: DiagnosisReport) -> dict[str, Any]:
+async def execute_safe_recover(
+    gateway: Any,
+    report: DiagnosisReport,
+    *,
+    plugin_ids: tuple[str, ...] | None = None,
+) -> dict[str, Any]:
     """Reconnect failed plugins inside OqlOS; return host_actions for sidecars."""
     from oqlos.hardware.sidecar_control import ensure_dri0050_sidecar, ensure_tic249_sidecar
 
+    allowed = plugin_ids or _OQLOS_SAFE_PLUGINS
     repairs: list[dict[str, Any]] = []
     health_before = await gateway.health()
-    targets = _recover_targets(report, health_before)
+    targets = _recover_targets(report, health_before, plugin_ids=allowed)
     await _repair_sidecar_if_needed("motor-dri0050", ensure_dri0050_sidecar, targets, health_before, repairs)
     await _repair_sidecar_if_needed(
         "motor-tic249", ensure_tic249_sidecar, targets, health_before, repairs, extra_markers=("errno 19",)
@@ -234,7 +278,7 @@ async def execute_safe_recover(gateway: Any, report: DiagnosisReport) -> dict[st
     health_after = await gateway.health()
     still_bad = [
         pid
-        for pid in _MONITOR_PLUGINS
+        for pid in allowed
         if plugin_needs_repair(pid, health_after.get(pid) if isinstance(health_after.get(pid), dict) else {})
     ]
     return {

@@ -1,10 +1,16 @@
 import { useCallback, useEffect, useState } from "react";
-import SharedNav from "../components/SharedNav";
+import { useSearchParams } from "react-router-dom";
 import { HardwareApi, formatHardwareApiError } from "../api/hardwareApi";
 import { useI18n } from "../i18n/I18nProvider";
 import { adapterStatusBadgeClass } from "../utils/hardwareStatusModel.js";
-
-const MOTOR_DEVICE_IDS = ["motor-tic249", "motor-dri0050"];
+import {
+  filterMotorDiagnosis,
+  filterMotorRepairs,
+  MOTOR_DEVICE_IDS,
+} from "../utils/motor-services-diagnosis.js";
+import { readModbusProfileFromSearch } from "../utils/modbus-profiles.js";
+import { persistUiUrlArgsToCookie } from "../utils/ui-url-args-cookie.js";
+import { MotorHardwareDemoPanel } from "./HardwareDemo.jsx";
 
 function DeviceCard({ device }) {
   const { t } = useI18n();
@@ -47,17 +53,28 @@ function DeviceCard({ device }) {
 
 export default function MotorServices() {
   const { t } = useI18n();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [diagnosis, setDiagnosis] = useState(null);
   const [repairResult, setRepairResult] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [repairing, setRepairing] = useState(false);
 
+  useEffect(() => {
+    if (!readModbusProfileFromSearch(searchParams.toString())) return;
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.delete("submenu");
+      return next;
+    }, { replace: true });
+    persistUiUrlArgsToCookie({ submenu: null });
+  }, [searchParams, setSearchParams]);
+
   const refresh = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const data = await HardwareApi.getIntelligentDiagnosis();
+      const data = filterMotorDiagnosis(await HardwareApi.getIntelligentDiagnosis({ devices: "motors" }));
       setDiagnosis(data);
     } catch (err) {
       setError(formatHardwareApiError(err, t("motorServices.loadFailed")));
@@ -75,9 +92,9 @@ export default function MotorServices() {
     setError("");
     setRepairResult(null);
     try {
-      const result = await HardwareApi.runDiagnosisRepair();
+      const result = await HardwareApi.runDiagnosisRepair({ devices: "motors" });
       setRepairResult(result);
-      setDiagnosis(result.device_diagnosis || null);
+      setDiagnosis(filterMotorDiagnosis(result.device_diagnosis || null));
     } catch (err) {
       setError(formatHardwareApiError(err, t("motorServices.repairFailed")));
     } finally {
@@ -86,69 +103,71 @@ export default function MotorServices() {
   }, [t]);
 
   const devices = diagnosis?.devices || {};
-  const motorRepairs = (repairResult?.repairs || []).filter((r) =>
-    String(r?.step || "").includes("tic249") || String(r?.step || "").includes("dri0050"),
+  const motorRepairs = filterMotorRepairs(repairResult?.repairs);
+
+  const topActions = (
+    <div className="mapx-header" style={{ marginBottom: 12 }}>
+      <div>
+        <h2 style={{ marginBottom: 4 }}>{t("motorServices.diagnosticsTitle")}</h2>
+        <p className="section-desc" style={{ marginBottom: 0 }}>{t("motorServices.subtitle")}</p>
+      </div>
+      <div className="mapx-header-actions">
+        <button type="button" className="run-btn role-force" onClick={refresh} disabled={loading}>
+          {loading ? t("motorServices.refreshing") : t("motorServices.refresh")}
+        </button>
+        <button
+          type="button"
+          className="run-btn role-force"
+          onClick={runRepair}
+          disabled={repairing}
+          style={{ marginLeft: 8 }}
+        >
+          {repairing ? t("motorServices.repairing") : t("motorServices.repairNow")}
+        </button>
+      </div>
+    </div>
   );
 
-  const navContext = (
-    <div className="section-label" style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: 0 }}>
-      <span>{t("motorServices.title")}</span>
-    </div>
+  const beforeContent = (
+    <>
+      {error ? <div className="mapx-error">{error}</div> : null}
+      <div className="hw-grid">
+        {MOTOR_DEVICE_IDS.map((id) => (
+          <DeviceCard key={id} device={devices[id]} />
+        ))}
+      </div>
+      {repairResult ? (
+        <div className="hw-card" style={{ marginTop: 12, marginBottom: 16 }}>
+          <h3>{t("motorServices.lastRepairResult")}</h3>
+          <ul className="hw-issue-list">
+            {motorRepairs.length === 0 ? (
+              <li>{t("motorServices.noRepairsNeeded")}</li>
+            ) : (
+              motorRepairs.map((r, idx) => (
+                <li key={idx}>
+                  <strong>{r.step}</strong>: {r.ok ? t("motorServices.ok") : t("motorServices.failed")}
+                  {r.method ? ` (${r.method})` : ""}
+                  {r.error ? ` — ${r.error}` : ""}
+                  {r.hint ? ` — ${r.hint}` : ""}
+                </li>
+              ))
+            )}
+          </ul>
+        </div>
+      ) : null}
+      <h3 style={{ marginTop: 8, marginBottom: 4 }}>{t("motorServices.manualTestTitle")}</h3>
+      <p className="section-desc" style={{ marginTop: 0 }}>{t("motorServices.manualTestSubtitle")}</p>
+    </>
   );
 
   return (
-    <div className="dashboard">
-      <SharedNav navContext={navContext} />
-      <div className="dash-content">
-        <div className="mapx-header">
-          <div>
-            <h2>{t("motorServices.title")}</h2>
-            <p className="section-desc">{t("motorServices.subtitle")}</p>
-          </div>
-          <div className="mapx-header-actions">
-            <button type="button" className="run-btn role-force" onClick={refresh} disabled={loading}>
-              {loading ? t("motorServices.refreshing") : t("motorServices.refresh")}
-            </button>
-            <button
-              type="button"
-              className="run-btn role-force"
-              onClick={runRepair}
-              disabled={repairing}
-              style={{ marginLeft: 8 }}
-            >
-              {repairing ? t("motorServices.repairing") : t("motorServices.repairNow")}
-            </button>
-          </div>
-        </div>
-
-        {error ? <div className="mapx-error">{error}</div> : null}
-
-        <div className="hw-grid">
-          {MOTOR_DEVICE_IDS.map((id) => (
-            <DeviceCard key={id} device={devices[id]} />
-          ))}
-        </div>
-
-        {repairResult ? (
-          <div className="hw-card" style={{ marginTop: 12 }}>
-            <h3>{t("motorServices.lastRepairResult")}</h3>
-            <ul className="hw-issue-list">
-              {motorRepairs.length === 0 ? (
-                <li>{t("motorServices.noRepairsNeeded")}</li>
-              ) : (
-                motorRepairs.map((r, idx) => (
-                  <li key={idx}>
-                    <strong>{r.step}</strong>: {r.ok ? t("motorServices.ok") : t("motorServices.failed")}
-                    {r.method ? ` (${r.method})` : ""}
-                    {r.error ? ` — ${r.error}` : ""}
-                    {r.hint ? ` — ${r.hint}` : ""}
-                  </li>
-                ))
-              )}
-            </ul>
-          </div>
-        ) : null}
-      </div>
-    </div>
+    <MotorHardwareDemoPanel
+      navTitleKey="motorServices.title"
+      hidePageHeader
+      topActions={topActions}
+      beforeContent={beforeContent}
+      sidebarCollapseToggleId="motor-services-devices"
+      sidebarCollapseStorageKey="ui.motor-services-sidebar-collapsed"
+    />
   );
 }

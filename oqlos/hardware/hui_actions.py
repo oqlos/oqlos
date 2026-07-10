@@ -13,6 +13,7 @@ from oqlos.hardware.hui_hold import (
     start_hui_hold,
     stop_hui_hold,
 )
+from oqlos.hardware.hui_valve import get_hui_valve_specs, run_hui_valve_key
 from oqlos.hardware.hui_lung_recipe import (
     HUI_AL_LUNG_VALVE_ID,
     HUI_LUNG_MAX_SPEED_STEPS_PER_S,
@@ -36,7 +37,9 @@ __all__ = [
     "get_hui_hold_profiles",
     "get_hui_lung_reciprocate_args",
     "get_hui_lung_valve_id",
+    "get_hui_valve_specs",
     "list_hui_actions",
+    "run_hui_valve_key",
     "shutdown_all_hui_hardware",
     "start_hui_artificial_lung",
     "start_hui_hold",
@@ -47,9 +50,11 @@ __all__ = [
 
 def list_hui_actions() -> dict[str, Any]:
     profiles = get_hui_hold_profiles()
+    valve_specs = get_hui_valve_specs()
     return {
         "ok": True,
         "hold_keys": list(profiles.keys()),
+        "valve_keys": list(valve_specs.keys()),
         "al_keys": ["al-start", "al-stop"],
         "profiles": {
             key: {
@@ -57,6 +62,10 @@ def list_hui_actions() -> dict[str, Any]:
                 "pump_pct": profile["pump_pct"],
             }
             for key, profile in profiles.items()
+        },
+        "valve_specs": {
+            key: {"valve_id": spec["valve_id"], "value": bool(spec["value"])}
+            for key, spec in valve_specs.items()
         },
         "artificial_lung": {
             "valve_id": get_hui_lung_valve_id(),

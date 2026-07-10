@@ -24,21 +24,30 @@ async def hardware_stack_snapshot() -> dict[str, Any]:
 @router.get("/diagnosis")
 async def hardware_diagnosis_route(
     scan: str = Query(default="never", description="Identify scan mode passed before diagnosis"),
+    devices: str = Query(default="all", description="Device subset: all | motors"),
 ) -> dict[str, Any]:
     """Per-device diagnosis plan (environment + recommended actions)."""
-    from oqlos.hardware.diagnosis import build_diagnosis_report, report_to_dict
+    from oqlos.hardware.diagnosis import build_diagnosis_report, filter_diagnosis_dict_for_devices, report_to_dict
 
     identify_payload = await hardware_identify(scan=scan)
     report = build_diagnosis_report(identify_payload)
-    return report_to_dict(report)
+    payload = report_to_dict(report)
+    return filter_diagnosis_dict_for_devices(payload, devices)
 
 
 @router.post("/recover")
 async def hardware_recover_route(
     scope: str = Query(default="safe", description="Recovery scope: safe = in-process plugin reconnect only"),
+    devices: str = Query(default="all", description="Device subset: all | motors"),
 ) -> dict[str, Any]:
     """Safe auto-recovery inside OqlOS; host sidecar steps are returned as host_actions."""
-    from oqlos.hardware.diagnosis import build_diagnosis_report, execute_safe_recover, report_to_dict
+    from oqlos.hardware.diagnosis import (
+        build_diagnosis_report,
+        execute_safe_recover,
+        filter_diagnosis_dict_for_devices,
+        report_to_dict,
+        resolve_recover_plugin_ids,
+    )
 
     if scope.strip().lower() != "safe":
         raise OqlosError(
@@ -48,9 +57,11 @@ async def hardware_recover_route(
         )
     identify_payload = await hardware_identify(scan="never")
     report = build_diagnosis_report(identify_payload)
-    execution = await execute_safe_recover(get_hardware_gateway(), report)
+    plugin_ids = resolve_recover_plugin_ids(devices)
+    execution = await execute_safe_recover(get_hardware_gateway(), report, plugin_ids=plugin_ids)
+    device_diagnosis = filter_diagnosis_dict_for_devices(report_to_dict(report), devices)
     return {
         **execution,
-        "device_diagnosis": report_to_dict(report),
+        "device_diagnosis": device_diagnosis,
         "source": "oqlos.hardware.recover",
     }

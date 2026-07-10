@@ -26,6 +26,15 @@ test("buildWizardProbePayload dedupes baudrates and device ids", () => {
   );
   assert.equal(payload.serial_port, "/dev/ttyUSB0");
   assert.equal(payload.module_role, "modbus-io");
-  assert.deepEqual(payload.baudrates, [9600, 19200]);
+  assert.deepEqual(payload.baudrates, [9600]);
   assert.deepEqual(payload.device_ids, [2, 1, 3]);
+});
+
+test("buildWizardProbePayload uses baseline then target baud sequence", () => {
+  const payload = buildWizardProbePayload(
+    { target_baudrate: 115200, target_parity: "N", target_ids: [2], baud_probe_sequence: [9600, 115200] },
+    "/dev/ttyUSB0",
+    "modbus-adc",
+  );
+  assert.deepEqual(payload.baudrates, [9600, 115200]);
 });

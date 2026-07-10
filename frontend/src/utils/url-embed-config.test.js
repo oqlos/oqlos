@@ -5,11 +5,17 @@ import {
   APP_CONFIG_DEFAULTS,
   applyParentContextPayload,
   applyUrlEmbedPatch,
+  buildEmbedConfigUrlPatch,
   mergeParentContext,
+  preserveEmbedSearchParams,
   mergeParentSearchIntoChildUrl,
   parseUrlEmbedConfig,
   resolveParentContextUpdate,
   resolveViewportWidthPx,
+  sidebarCollapsedFromUrlParam,
+  sidebarUrlFromCollapsed,
+  SIDEBAR_URL_OFF,
+  SIDEBAR_URL_ON,
   SUPPORTED_LANGS_ENUM,
 } from "./url-embed-config.js";
 
@@ -79,6 +85,57 @@ test("applyUrlEmbedPatch updates device and test query params", () => {
   assert.match(nextPath, /device=DEV-001/);
   assert.equal(config.device, "DEV-001");
   assert.equal(config.test, "mask-tightness-test.oql");
+});
+
+test("buildEmbedConfigUrlPatch backfills missing embed params from config", () => {
+  const patch = buildEmbedConfigUrlPatch(
+    { font: "large", theme: "dark", lang: "en", role: "operator", size: 1280, mode: "keyboard" },
+    "",
+  );
+  assert.equal(patch.font, "large");
+  assert.equal(patch.theme, "dark");
+  assert.equal(patch.lang, "en");
+  assert.equal(patch.role, "operator");
+  assert.equal(patch.size, 1280);
+  assert.equal(patch.mode, "keyboard");
+});
+
+test("buildEmbedConfigUrlPatch skips keys already matching URL", () => {
+  const patch = buildEmbedConfigUrlPatch(
+    { font: "large", theme: "dark", lang: "en", role: "operator", size: 1280, mode: "keyboard" },
+    "?font=large&theme=dark&lang=en&role=operator&size=1280&mode=keyboard",
+  );
+  assert.deepEqual(patch, {});
+});
+
+test("preserveEmbedSearchParams keeps shell chrome when changing routes", () => {
+  assert.equal(
+    preserveEmbedSearchParams(
+      "/func-editor",
+      "?font=large&theme=dark&lang=en&size=1280&sidebar=off&scenario=demo.oql",
+    ),
+    "/func-editor?font=large&theme=dark&lang=en&size=1280&sidebar=off",
+  );
+});
+
+test("sidebarCollapsedFromUrlParam accepts on/off and legacy open/collapsed", () => {
+  assert.equal(sidebarCollapsedFromUrlParam("on"), false);
+  assert.equal(sidebarCollapsedFromUrlParam("off"), true);
+  assert.equal(sidebarCollapsedFromUrlParam("open"), false);
+  assert.equal(sidebarCollapsedFromUrlParam("collapsed"), true);
+  assert.equal(sidebarCollapsedFromUrlParam("nope"), null);
+});
+
+test("sidebarUrlFromCollapsed writes on/off tokens", () => {
+  assert.equal(sidebarUrlFromCollapsed(false), SIDEBAR_URL_ON);
+  assert.equal(sidebarUrlFromCollapsed(true), SIDEBAR_URL_OFF);
+});
+
+test("parseUrlEmbedConfig normalizes sidebar query to on/off", () => {
+  assert.equal(parseUrlEmbedConfig("?sidebar=off").sidebar, SIDEBAR_URL_OFF);
+  assert.equal(parseUrlEmbedConfig("?sidebar=on").sidebar, SIDEBAR_URL_ON);
+  assert.equal(parseUrlEmbedConfig("?sidebar=collapsed").sidebar, SIDEBAR_URL_OFF);
+  assert.equal(parseUrlEmbedConfig("").sidebar, SIDEBAR_URL_ON);
 });
 
 test("resolveParentContextUpdate returns nextHref when search changes", () => {

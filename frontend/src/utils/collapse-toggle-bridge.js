@@ -1,5 +1,7 @@
 /** Cross-frame + localStorage helpers for auto-collapsing side panels. */
 
+import { queueUiPrefPersist } from "./ui-prefs-client.js";
+
 export const COLLAPSE_DELAY_MS = 3000;
 
 /** Stable ids for `child.collapse-toggle.register` (scoped as `cql:<id>` in parent iframe). */
@@ -11,7 +13,7 @@ export const COLLAPSE_TOGGLE_IDS = Object.freeze({
   scenarioTerminal: "scenario-terminal",
   scenarioExecutionStatus: "scenario-execution-status",
   scenarioReportJson: "scenario-report-json",
-  hardwareDemoDevices: "hardware-demo-devices",
+  motorServicesDevices: "motor-services-devices",
   hardwareStatusPeripherals: "hardware-status-peripherals",
 });
 
@@ -41,8 +43,10 @@ export function readStoredCollapsed(storageKey) {
 
 export function persistStoredCollapsed(storageKey, collapsed) {
   if (!storageKey) return;
-  try { window.localStorage.setItem(storageKey, collapsed ? "1" : "0"); }
+  const value = collapsed ? "1" : "0";
+  try { window.localStorage.setItem(storageKey, value); }
   catch { /* silent */ }
+  queueUiPrefPersist(storageKey, value);
 }
 
 export function readPinned(storageKey) {
@@ -51,8 +55,10 @@ export function readPinned(storageKey) {
 }
 
 export function writePinned(storageKey, value) {
-  try { localStorage.setItem(storageKey + "-pinned", String(value)); }
+  const token = String(value);
+  try { localStorage.setItem(storageKey + "-pinned", token); }
   catch { /* silent */ }
+  queueUiPrefPersist(`${storageKey}-pinned`, token);
 }
 
 export function formatBadge(badge) {

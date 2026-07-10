@@ -1,0 +1,10 @@
+# local.dev.txt — locally developed dependencies of this project (generated 2026-07-04)
+# by ~/github/local.dev.sh — DO NOT EDIT; see ~/github/local.dev.md
+# project: oqlos-core 0.2.1 (python) at /home/tom/github/oqlos/oqlos/packages/oqlos-core
+# deps declared: 5 | with local source: 2
+
+## LOCAL DEPS  (dep | required | local source (version) | installed | status)
+oqlos | >=0.1.29 | /home/tom/github/oqlos/oqlos (0.1.29) | 0.1.29 editable | OK-EDITABLE  [pyproject.toml[firmware]]
+oqlos-models | ==0.2.0 | /home/tom/github/oqlos/oqlos/packages/oqlos-models (0.2.0) | 0.2.0 editable | OK-EDITABLE  [pyproject.toml]
+
+## EXTERNAL DEPS (no local source, 3): PyYAML, httpx, pydantic

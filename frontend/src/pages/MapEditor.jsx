@@ -35,13 +35,13 @@ import {
   LIVE_EVENTS_LIMIT,
   MAP_EDITOR_TABS,
   META_FIELDS,
-  PARAM_CONVERSION_ALGORITHMS,
   SECTION_DESC_KEY,
 } from "./mapEditorConstants.js";
 import { MapEditorIntegrationMetaPanel } from "./MapEditorIntegrationMetaPanel.jsx";
 import { MapEditorMotorRuntimePanel } from "./MapEditorMotorRuntimePanel.jsx";
 import { MapEditorObjectActionPanel } from "./MapEditorObjectActionPanel.jsx";
 import { MapEditorParamConversionPanel } from "./MapEditorParamConversionPanel.jsx";
+import { normalizeParamConversionPatch } from "../utils/mapEditorParamConversion.js";
 
 function _parseFieldValue(value, type) {
   if (type === "number") {
@@ -98,14 +98,6 @@ export default function MapEditor() {
   const canClearPersistentEvents = isAdmin;
 
   const isDirty = jsonText !== originalJson && !jsonError;
-
-  const setTabAndUrl = useCallback((tab) => {
-    setActiveTab(tab);
-    setDefinitionFilter("");
-    const url = new URL(globalThis.location.href);
-    url.searchParams.set("tab", tab);
-    globalThis.history.replaceState(null, "", `${url.pathname}${url.search}`);
-  }, []);
 
   const onJsonChange = useCallback((value) => {
     setJsonText(value);
@@ -196,40 +188,15 @@ export default function MapEditor() {
     });
   }, [applyMapMutation, t]);
 
-  const editParamConversionField = useCallback((field, type = "text") => {
-    if (activeTab !== "params" || !selectedEntryKey) return;
-    const current = mapData.paramSensorMap?.[selectedEntryKey] || {};
-    const value = prompt(`${selectedEntryKey}.${field}:`, current[field] ?? "");
-    if (value === null) return;
+  const updateParamConversion = useCallback((patch) => {
+    if (activeTab !== "params" || !selectedEntryKey || isReadOnly) return;
     applyMapMutation((next) => {
       const target = next.paramSensorMap?.[selectedEntryKey];
       if (!target || typeof target !== "object") return;
       ensureParamConversion(target);
-      if (type === "number") {
-        const parsed = Number(value);
-        if (!Number.isFinite(parsed)) return;
-        target[field] = parsed;
-      } else {
-        target[field] = value.trim();
-      }
+      Object.assign(target, normalizeParamConversionPatch(patch, target));
     });
-  }, [activeTab, selectedEntryKey, mapData.paramSensorMap, applyMapMutation]);
-
-  const editParamConversionAlgorithm = useCallback(() => {
-    if (activeTab !== "params" || !selectedEntryKey) return;
-    const current = mapData.paramSensorMap?.[selectedEntryKey] || {};
-    const hint = `algorithm (${PARAM_CONVERSION_ALGORITHMS.join(", ")}):`;
-    const value = prompt(hint, current.conversionAlgorithm || "identity");
-    if (value === null) return;
-    const normalized = value.trim().toLowerCase();
-    if (!PARAM_CONVERSION_ALGORITHMS.includes(normalized)) return;
-    applyMapMutation((next) => {
-      const target = next.paramSensorMap?.[selectedEntryKey];
-      if (!target || typeof target !== "object") return;
-      ensureParamConversion(target);
-      target.conversionAlgorithm = normalized;
-    });
-  }, [activeTab, selectedEntryKey, mapData.paramSensorMap, applyMapMutation]);
+  }, [activeTab, selectedEntryKey, isReadOnly, applyMapMutation]);
 
   const addAction = useCallback(() => {
     const name = prompt(t("mapEditor.prompts.actionName"));
@@ -510,10 +477,13 @@ export default function MapEditor() {
     cancelAutoCollapse: cancelSidebarCollapse,
     toggleCollapsed: toggleSidebarCollapsed,
     setAutoCollapsed: setSidebarAutoCollapsed,
+    expand: expandSidebar,
     railEnter: sidebarRailEnter,
     railLeave: sidebarRailLeave,
     panelEnter: sidebarPanelEnter,
     panelLeave: sidebarPanelLeave,
+    pinned: sidebarPinned,
+    togglePinned: toggleSidebarPinned,
   } = useSelectionCollapsePanel({
     toggleId: "map-editor-definitions",
     storageKey: "ui.map-editor-sidebar-collapsed",
@@ -521,6 +491,16 @@ export default function MapEditor() {
     icon: "☰",
     badge: filteredEntryKeys.length,
   });
+
+  const setTabAndUrl = useCallback((tab) => {
+    cancelSidebarCollapse();
+    expandSidebar();
+    setActiveTab(tab);
+    setDefinitionFilter("");
+    const url = new URL(globalThis.location.href);
+    url.searchParams.set("tab", tab);
+    globalThis.history.replaceState(null, "", `${url.pathname}${url.search}`);
+  }, [cancelSidebarCollapse, expandSidebar]);
 
   useMapEditorSidebarAutoCollapse(setSidebarAutoCollapsed);
 
@@ -530,8 +510,8 @@ export default function MapEditor() {
 
   const handleSelectEntry = useCallback((name) => {
     setSelectedEntryKey(name);
-    if (activeTab !== "json") scheduleSidebarCollapse();
-  }, [activeTab, scheduleSidebarCollapse]);
+    if (activeTab !== "json" && !sidebarPinned) scheduleSidebarCollapse();
+  }, [activeTab, scheduleSidebarCollapse, sidebarPinned]);
 
   useEffect(() => {
     if (activeTab === "json") return;
@@ -674,6 +654,17 @@ export default function MapEditor() {
             «
           </button>
           <span style={{ flex: 1 }}>{t("mapEditor.title")}</span>
+          <button
+            type="button"
+            className="mapx-sidebar-pin-btn"
+            onClick={toggleSidebarPinned}
+            title={sidebarPinned ? t("sidebar.unpin", "Odepnij listę") : t("sidebar.pin", "Przypnij listę")}
+            aria-label={sidebarPinned ? t("sidebar.unpin", "Odepnij listę") : t("sidebar.pin", "Przypnij listę")}
+            aria-pressed={sidebarPinned ? "true" : "false"}
+            style={{ opacity: sidebarPinned ? 1 : 0.4 }}
+          >
+            📌
+          </button>
         </div>
         <nav className="mapx-def-tabs mapx-tabs mapx-tabs--toolbar" aria-label={t("mapEditor.title")}>
           {MAP_EDITOR_TABS.map((tab) => (
@@ -857,9 +848,7 @@ export default function MapEditor() {
                     <MapEditorParamConversionPanel
                       target={mapData.paramSensorMap?.[selectedEntryKey]}
                       isReadOnly={isReadOnly}
-                      t={t}
-                      onEditAlgorithm={editParamConversionAlgorithm}
-                      onEditField={editParamConversionField}
+                      onChange={updateParamConversion}
                     />
                     <MapEditorIntegrationMetaPanel
                       detailCfg={detailCfg}

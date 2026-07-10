@@ -1,0 +1,85 @@
+/* OqlOS Swagger UI — high-contrast theme overrides */
+
+body {
+  margin: 0;
+  background: #000000 !important;
+}
+
+.swagger-ui {
+  color: #ffffff;
+}
+
+.swagger-ui .topbar {
+  display: none;
+}
+
+.swagger-ui .info .title,
+.swagger-ui .info h1,
+.swagger-ui .info h2,
+.swagger-ui .info h3,
+.swagger-ui .info h4,
+.swagger-ui .info h5,
+.swagger-ui .opblock-tag,
+.swagger-ui .opblock .opblock-summary-path,
+.swagger-ui .parameter__name,
+.swagger-ui .response-col_status,
+.swagger-ui .model-title,
+.swagger-ui section.models h4 {
+  color: #ffffff;
+}
+
+.swagger-ui .info p,
+.swagger-ui .info li,
+.swagger-ui .markdown p,
+.swagger-ui .markdown li,
+.swagger-ui .opblock .opblock-summary-description,
+.swagger-ui .response-col_description,
+.swagger-ui .parameter__in {
+  color: #ffff00;
+}
+
+.swagger-ui a {
+  color: #00d4ff;
+}
+
+.swagger-ui .opblock-tag,
+.swagger-ui section.models,
+.swagger-ui .opblock,
+.swagger-ui .scheme-container {
+  border-color: #ffff00;
+}
+
+.swagger-ui .opblock,
+.swagger-ui .model-box,
+.swagger-ui .scheme-container,
+.swagger-ui .opblock .opblock-section-header {
+  background: #0c0c0c;
+}
+
+.swagger-ui input[type="text"],
+.swagger-ui input[type="search"],
+.swagger-ui textarea,
+.swagger-ui select,
+.swagger-ui .filter .operation-filter-input {
+  background: #000000;
+  color: #ffffff;
+  border: 2px solid #ffff00;
+}
+
+.swagger-ui .btn {
+  background: #000000;
+  color: #ffffff;
+  border: 2px solid #ffff00;
+}
+
+.swagger-ui .btn.execute {
+  background: #00d4ff;
+  color: #000000;
+  border-color: #00d4ff;
+}
+
+.swagger-ui .highlight-code,
+.swagger-ui .microlight {
+  background: #000000 !important;
+  color: #ffffff !important;
+}

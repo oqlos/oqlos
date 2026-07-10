@@ -1,0 +1,14 @@
+# SCENARIO: Panel editor API smoke
+# TYPE: api
+
+CONFIG[3]{key, value}:
+  base_url, http://localhost:8202
+  timeout_ms, 10000
+  retry_count, 2
+
+API[5]{method, endpoint, expected_status}:
+  GET, /ui/panel, 200
+  GET, /api/v1/editor/files, 200
+  GET, /health, 200
+  GET, /api/v1/navigation, 200
+  GET, /api/v1/hardware/sensors/batch, 200

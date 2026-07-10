@@ -17,11 +17,14 @@ export default function SidebarList({
   collapseLabel,
   collapseStorageKey,
   collapseIcon = "☰",
+  collapseOnSelect = true,
 }) {
   const { t } = useI18n();
   const [filter, setFilter] = useState("");
 
   const collapseEnabled = Boolean(collapseToggleId);
+  const selectableItems = items.filter((i) => i.kind !== "header");
+
   const {
     collapsed,
     userCollapsed,
@@ -40,20 +43,21 @@ export default function SidebarList({
     storageKey: collapseStorageKey || `ui.${collapseToggleId || "sidebar"}-collapsed`,
     label: collapseLabel || title,
     icon: collapseIcon,
-    badge: count !== undefined ? count : items.length,
+    badge: count !== undefined ? count : selectableItems.length,
   });
 
   const inPreview = collapseEnabled && !collapsed && userCollapsed;
 
   const filtered = filter
-    ? items.filter((i) =>
+    ? selectableItems.filter((i) =>
         (i.title || "").toLowerCase().includes(filter.toLowerCase())
         || (i.subtitle || "").toLowerCase().includes(filter.toLowerCase()))
     : items;
 
   const handleSelect = (id, item) => {
+    if (item?.kind === "header") return;
     if (onSelect) onSelect(id, item);
-    if (collapseEnabled) scheduleCollapse();
+    if (collapseEnabled && collapseOnSelect) scheduleCollapse();
   };
 
   if (collapseEnabled && collapsed) {
@@ -62,10 +66,6 @@ export default function SidebarList({
         className={`sidebar-list-panel collapsed${inIframe ? " collapsed--hosted" : ""}`}
         data-collapsed="1"
         data-toggle-hosted={inIframe ? "parent" : "self"}
-        style={{
-          ...styles.panel,
-          ...styles.panelRail,
-        }}
       >
         <button
           type="button"
@@ -78,9 +78,8 @@ export default function SidebarList({
           title={collapseLabel || title}
           aria-label={collapseLabel || title}
           aria-pressed="true"
-          style={styles.rail}
         >
-          <span aria-hidden="true" style={styles.railIcon}>{collapseIcon}</span>
+          <span aria-hidden="true" className="sidebar-list-rail-icon">{collapseIcon}</span>
         </button>
       </div>
     );
@@ -89,7 +88,6 @@ export default function SidebarList({
   return (
     <div
       className={`sidebar-list-panel${inPreview ? " preview" : ""}`}
-      style={{ ...styles.panel, ...(inPreview ? styles.panelPreview : {}) }}
       data-collapsed="0"
       data-preview={inPreview ? "1" : "0"}
       onMouseEnter={inPreview ? panelEnter : undefined}
@@ -122,8 +120,8 @@ export default function SidebarList({
             📌
           </button>
         )}
-        {(count !== undefined || items.length > 0) && (
-          <span style={styles.count}>{count !== undefined ? count : items.length}</span>
+        {(count !== undefined || selectableItems.length > 0) && (
+          <span style={styles.count}>{count !== undefined ? count : selectableItems.length}</span>
         )}
         {onRefresh && (
           <button style={styles.iconBtn} onClick={onRefresh} title={t("sidebar.refresh", "Odśwież")}>↻</button>
@@ -147,7 +145,15 @@ export default function SidebarList({
         {filtered.length === 0 && (
           <div style={styles.msg}>{t("sidebar.noItems", "Brak elementów")}</div>
         )}
-        {filtered.map((item) => (
+        {filtered.map((item) => {
+          if (item.kind === "header") {
+            return (
+              <div key={item.id} style={styles.sectionHeader}>
+                {item.title}
+              </div>
+            );
+          }
+          return (
           <div
             key={item.id}
             style={{
@@ -164,7 +170,8 @@ export default function SidebarList({
             )}
             {item.extraNode}
           </div>
-        ))}
+          );
+        })}
       </div>
       {footer && <div style={styles.footer}>{footer}</div>}
     </div>
@@ -172,61 +179,6 @@ export default function SidebarList({
 }
 
 const styles = {
-  panel: {
-    display: "flex",
-    flexDirection: "column",
-    width: "25%",
-    minWidth: "200px",
-    maxWidth: "400px",
-    background: "var(--bg-card)",
-    borderRight: "1px solid var(--border-color)",
-    flexShrink: 0,
-    overflow: "hidden",
-    height: "100%",
-    transition: "width 0.25s ease, min-width 0.25s ease, max-width 0.25s ease",
-  },
-  panelRail: {
-    width: "10px",
-    minWidth: "10px",
-    maxWidth: "10px",
-    padding: 0,
-    position: "sticky",
-    top: 0,
-    alignSelf: "flex-start",
-    minHeight: "120px",
-    maxHeight: "100dvh",
-    height: "100dvh",
-    overflow: "visible",
-    borderRight: "none",
-    background: "transparent",
-    zIndex: 20,
-  },
-  panelPreview: {
-    boxShadow: "0 4px 18px rgba(0,0,0,0.22)",
-    zIndex: 5,
-  },
-  rail: {
-    position: "absolute",
-    inset: "0 auto 0 0",
-    width: "10px",
-    minWidth: "10px",
-    height: "100%",
-    padding: 0,
-    margin: 0,
-    border: 0,
-    background: "var(--border-color)",
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 10,
-    transition: "background-color 0.15s ease",
-  },
-  railIcon: {
-    fontSize: "var(--font-rem-xxs)",
-    color: "transparent",
-    pointerEvents: "none",
-  },
   collapseBtn: {
     background: "none",
     border: "none",
@@ -310,6 +262,19 @@ const styles = {
     cursor: "pointer",
     borderBottom: "1px solid var(--border-color)",
     transition: "background 0.1s",
+  },
+  sectionHeader: {
+    padding: "8px 10px 4px",
+    fontSize: rem.xxs,
+    fontWeight: 700,
+    textTransform: "uppercase",
+    letterSpacing: "0.06em",
+    color: "var(--text-muted)",
+    background: "var(--bg-deep)",
+    borderBottom: "1px solid var(--border-color)",
+    position: "sticky",
+    top: 0,
+    zIndex: 1,
   },
   itemActive: {
     background: "rgba(59,130,246,0.15)",

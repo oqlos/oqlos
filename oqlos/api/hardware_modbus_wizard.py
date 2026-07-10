@@ -8,6 +8,13 @@ from typing import Any
 
 from oqlos.config import get_settings
 from oqlos.api import hardware_modbus_topology as topology
+from oqlos.api.hardware_modbus_settings import (
+    MODBUS_BASELINE_BAUD,
+    MODBUS_TARGET_BAUD_OPTIONS,
+    build_init_baud_sequence,
+    effective_modbus_target_baud,
+    normalize_probe_baudrates,
+)
 
 _settings = get_settings()
 
@@ -22,7 +29,7 @@ def _modbus_wizard_plan() -> dict[str, Any]:
     io_port = ports["io_serial_port"] or str(_settings.modbus_serial_port)
     adc_port = ports["adc_serial_port"] or io_port
     separate = ports["topology"] == "separate-adapters"
-    target_baud = int(_settings.modbus_baud)
+    target_baud = effective_modbus_target_baud(_settings)
     target_parity = str(_settings.modbus_parity).upper()
 
     configure_steps: list[dict[str, Any]] = []
@@ -88,6 +95,9 @@ def _modbus_wizard_plan() -> dict[str, Any]:
         "topology_mode": ports.get("topology_mode", "auto"),
         "target_baudrate": target_baud,
         "target_parity": target_parity,
+        "baseline_baudrate": MODBUS_BASELINE_BAUD,
+        "baud_probe_sequence": build_init_baud_sequence(target_baud),
+        "baudrate_options": list(MODBUS_TARGET_BAUD_OPTIONS),
         "target_ids": _modbus_wizard_target_ids(),
         "steps": configure_steps,
     }
@@ -124,6 +134,8 @@ def _modbus_wizard_probe_isolated(
         return {"ok": False, "error": f"pimodbus is not available: {exc}"}
 
     serial_candidates = _collect_wizard_serial_candidates(serial_port)
+    target_max = effective_modbus_target_baud(_settings)
+    scan_bauds = normalize_probe_baudrates(baudrates, target_max)
 
     all_scans: list[dict[str, Any]] = []
     candidates: list[dict[str, Any]] = []
@@ -131,11 +143,11 @@ def _modbus_wizard_probe_isolated(
     for serial in serial_candidates:
         report = diagnose_shared_bus(
             serial_port=serial,
-            target_baudrate=int(_settings.modbus_baud),
+            target_baudrate=MODBUS_BASELINE_BAUD,
             target_parity=str(_settings.modbus_parity),
             io_device_id=int(_settings.modbus_device_id),
             adc_device_id=int(_settings.modbus_adc_device_id),
-            baudrates=baudrates,
+            baudrates=scan_bauds,
             parities=parities,
             device_ids=device_ids,
             timeout=1.0,

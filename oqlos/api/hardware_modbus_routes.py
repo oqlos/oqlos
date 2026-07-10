@@ -14,16 +14,49 @@ from oqlos.api.hardware_modbus_wizard import (
     _modbus_wizard_probe_isolated,
     _modbus_wizard_program_isolated,
 )
+from oqlos.api.hardware_modbus_settings import (
+    build_init_baud_sequence,
+    effective_modbus_target_baud,
+    normalize_probe_baudrates,
+    read_modbus_baud_settings,
+    write_modbus_baud_settings,
+)
 from oqlos.config import get_settings
 
 _settings = get_settings()
 router = APIRouter(tags=["hardware-modbus"])
 
 
+@router.get("/modbus/settings")
+async def hardware_modbus_settings_get() -> dict[str, Any]:
+    """Return baseline/target Modbus baud configuration for the hardware-modbus UI."""
+    return read_modbus_baud_settings(_settings)
+
+
+@router.put("/modbus/settings")
+async def hardware_modbus_settings_put(payload: dict[str, Any] = Body(default_factory=dict)) -> dict[str, Any]:
+    """Persist operator-selected target Modbus baud (init still probes 9600 first)."""
+    return write_modbus_baud_settings(_settings, payload)
+
+
 @router.get("/modbus/waveshare-diagnose")
 async def hardware_modbus_waveshare_diagnose() -> dict[str, Any]:
     """Run Waveshare-focused Modbus scan matrix and per-slave register checks."""
     return await snapshot_via_health(_build_waveshare_diagnose_report)
+
+
+@router.get("/modbus/profile-channels")
+async def hardware_modbus_profile_channels_get(profile: str = "modbus-adc") -> dict[str, Any]:
+    from oqlos.api.hardware_modbus_channels import read_modbus_profile_channels
+
+    return await read_modbus_profile_channels(profile)
+
+
+@router.put("/modbus/channel-value")
+async def hardware_modbus_channel_value_put(payload: dict[str, Any] = Body(default_factory=dict)) -> dict[str, Any]:
+    from oqlos.api.hardware_modbus_channels import write_modbus_channel_value
+
+    return await write_modbus_channel_value(payload)
 
 
 @router.get("/modbus/wizard/plan")
@@ -42,7 +75,8 @@ async def hardware_modbus_wizard_probe_isolated(
 ) -> dict[str, Any]:
     """Probe one isolated module before writing address/UART settings."""
     serial = serial_port or str(_settings.modbus_serial_port)
-    scan_bauds = baudrates or [9600, 4800, 19200, 38400, 57600, 115200]
+    target = effective_modbus_target_baud(_settings)
+    scan_bauds = normalize_probe_baudrates(baudrates, target)
     scan_parities = [str(value).upper() for value in (parities or ["N", "E", "O"])]
     scan_ids = device_ids or [1, 2, 3, 4, 5, 8, 16, 32, 64, 128, 247]
     role = str(module_role or "").strip()

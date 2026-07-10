@@ -6,6 +6,11 @@ from typing import Any
 
 from oqlos.config import get_settings
 from oqlos.api import hardware_modbus_topology as topology
+from oqlos.api.hardware_modbus_settings import (
+    MODBUS_BASELINE_BAUD,
+    build_init_baud_sequence,
+    effective_modbus_target_baud,
+)
 from oqlos.api.hardware_gateway import is_plugin_compatible as _is_plugin_compatible
 
 _settings = get_settings()
@@ -25,22 +30,40 @@ def _diagnose_shared_bus_matrix(
 ):
     from pimodbus.repair import diagnose_shared_bus
 
-    baud_sequence = [4800, 9600, 19200, 38400, 57600, 115200]
-    target_report = diagnose_shared_bus(
+    target_max = int(target_baudrate)
+    baseline_bauds = build_init_baud_sequence(target_max)
+    baseline_report = diagnose_shared_bus(
         serial_port=serial_port,
-        target_baudrate=target_baudrate,
+        target_baudrate=MODBUS_BASELINE_BAUD,
         target_parity=target_parity,
         io_device_id=io_device_id,
         adc_device_id=adc_device_id,
-        baudrates=[int(target_baudrate)],
+        baudrates=baseline_bauds,
         parities=[str(target_parity).upper()],
         device_ids=device_ids,
         timeout=timeout_fast,
         scan_all_ports=True,
         required_roles=required_roles,
     )
-    if target_report.ok:
-        return target_report
+    if baseline_report.ok and target_max != MODBUS_BASELINE_BAUD:
+        target_report = diagnose_shared_bus(
+            serial_port=serial_port,
+            target_baudrate=target_max,
+            target_parity=target_parity,
+            io_device_id=io_device_id,
+            adc_device_id=adc_device_id,
+            baudrates=[target_max],
+            parities=[str(target_parity).upper()],
+            device_ids=device_ids,
+            timeout=timeout_fast,
+            scan_all_ports=True,
+            required_roles=required_roles,
+        )
+        if target_report.ok:
+            return target_report
+    if baseline_report.ok:
+        return baseline_report
+    baud_sequence = [4800, 9600, 19200, 38400, 57600, 115200]
     return diagnose_shared_bus(
         serial_port=serial_port,
         target_baudrate=target_baudrate,
@@ -549,7 +572,7 @@ def _build_waveshare_diagnose_report(health: dict[str, Any] | None = None) -> di
     separate = ports["topology"] == "separate-adapters"
     io_port, adc_port = _resolve_waveshare_ports(ports)
 
-    target_baud = int(_settings.modbus_baud)
+    target_baud = effective_modbus_target_baud(_settings)
     target_parity = str(_settings.modbus_parity)
     io_device_id = int(_settings.modbus_device_id)
 

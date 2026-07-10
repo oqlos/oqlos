@@ -1,0 +1,18 @@
+# local.dev.txt — locally developed dependencies of this project (generated 2026-07-04)
+# by ~/github/local.dev.sh — DO NOT EDIT; see ~/github/local.dev.md
+# project: oqlos 0.1.29 (python) at /home/tom/github/oqlos/oqlos
+# deps declared: 25 | with local source: 10
+
+## LOCAL DEPS  (dep | required | local source (version) | installed | status)
+costs | >=0.1.20 | /home/tom/github/semcod/costs (0.1.53) | 0.1.50 non-editable | STALE-INSTALL (local 0.1.53) -> fix: pip install -e /home/tom/github/semcod/costs  [pyproject.toml]
+dri0050 | >=1.0.0 | /home/tom/github/maskservice/rpi-motor-DRI0050 (1.0.1) | 1.0.1 editable | OK-EDITABLE  [pyproject.toml[hardware-services]]
+goal | >=2.1.0 | /home/tom/github/semcod/goal (2.1.266) | 2.1.218 non-editable | STALE-INSTALL (local 2.1.266) -> fix: pip install -e /home/tom/github/semcod/goal  [pyproject.toml]
+nfo | >=0.2.3 | /home/tom/github/semcod/nfo (0.2.22) | 0.2.22 non-editable | NON-EDITABLE -> fix: pip install -e /home/tom/github/semcod/nfo  [pyproject.toml]
+oqlos-core | ==0.2.1 | /home/tom/github/oqlos/oqlos/packages/oqlos-core (0.2.1) | 0.2.1 editable | OK-EDITABLE  [pyproject.toml]
+oqlos-models | ==0.2.0 | /home/tom/github/oqlos/oqlos/packages/oqlos-models (0.2.0) | 0.2.0 editable | OK-EDITABLE  [pyproject.toml]
+pfix | >=0.1.60 | /home/tom/github/semcod/pfix (0.1.76) | 0.1.72 non-editable | STALE-INSTALL (local 0.1.76) -> fix: pip install -e /home/tom/github/semcod/pfix  [pyproject.toml]
+piADC | >=1.0.0 | /home/tom/github/maskservice/piadc (1.0.6) | 1.0.2 editable | OK-EDITABLE  [pyproject.toml[hardware-services]]
+piRTC | >=1.0.0 | /home/tom/github/maskservice/pirtc (1.0.6) | 1.0.6 editable | OK-EDITABLE  [pyproject.toml[hardware-services]]
+testql | >=0.2.0 | /home/tom/github/oqlos/testql (1.2.60) | 1.2.45 non-editable | STALE-INSTALL (local 1.2.60) -> fix: pip install -e /home/tom/github/oqlos/testql  [pyproject.toml]
+
+## EXTERNAL DEPS (no local source, 15): PyYAML, RPi.GPIO, fastapi, httpx, paho-mqtt, pluggy, pydantic, pydantic-settings, pymodbus, pyserial, pytest, pytest-asyncio, smbus2, uvicorn, websockets

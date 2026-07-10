@@ -7,10 +7,10 @@ Primary human entrypoints:
 
 | URL | Purpose |
 | --- | --- |
-| `http://192.168.188.122:8202/ui/navigation` | Operator navigation and curl examples |
-| `http://192.168.188.122:8202/ui/hardware-status` | Hardware health and diagnostics |
-| `http://192.168.188.122:8202/ui/hardware-restart` | Hardware restart/detection wizard |
-| `http://192.168.188.122:8202/ui/hardware-demo` | Manual hardware demo controls |
+| `http://192.168.188.122:8202/ui/status` | BoardNet status: navigation index, runtime health, adapters, USB/serial/I2C diagnostics |
+| `http://192.168.188.122:8202/ui/hardware-modbus` | Modbus autodetect wizard and adapter configuration |
+| `http://192.168.188.122:8202/ui/hardware-rtc` | Waveshare DS3231 RTC and watchdog diagnostics (piRTC sidecar) |
+| `http://192.168.188.122:8202/ui/motor-services` | Motor diagnostics and manual PWM/stepper tests (Tic249, DRI0050) |
 | `http://192.168.188.122:8202/ui/map-editor` | MAP and hardware binding editor |
 | `http://192.168.188.122:8202/ui/scenario-files` | OQL scenario editor |
 | `http://192.168.188.122:8202/ui/func-editor` | Function editor |
@@ -24,17 +24,28 @@ Short aliases (also redirect to `/ui/*`):
 
 | Alias | Target |
 | --- | --- |
-| `/nav` | `/ui/navigation` |
-| `/status` | `/ui/hardware-status` |
-| `/restart` | `/ui/hardware-restart` |
-| `/demo` | `/ui/hardware-demo` |
+| `/nav` | `/ui/status` |
+| `/navigation` | `/ui/status` |
+| `/status` | `/ui/status` |
+| `/hardware-status` | `/ui/status` |
+| `/restart` | `/ui/hardware-modbus` |
+| `/hardware-restart` | `/ui/hardware-modbus` |
+| `/modbus` | `/ui/hardware-modbus` |
+| `/hardware-rtc` | `/ui/hardware-rtc` |
+| `/rtc` | `/ui/hardware-rtc` |
+| `/demo` | `/ui/motor-services` |
+| `/hardware-demo` | `/ui/motor-services` |
 | `/map` | `/ui/map-editor` |
 | `/files` | `/ui/scenario-files` |
 | `/functions` | `/ui/func-editor` |
 | `/oql` | `/ui/panel` |
 | `/oql-panel` | `/ui/panel` |
 | `/panel` | `/ui/panel` |
-| `/navigation` | `/ui/navigation` |
+
+Legacy UI paths `/ui/navigation` and `/ui/hardware-status` redirect to `/ui/status`.
+
+Module-specific API examples (Modbus channels, RTC, motor-only diagnosis) are documented in
+[hardware-ui-modules.md](hardware-ui-modules.md).
 
 Machine-readable navigation:
 

@@ -47,8 +47,15 @@ export function ensureParamConversion(target) {
   if (target.conversionScale === undefined) target.conversionScale = 1;
   if (target.conversionOffset === undefined) target.conversionOffset = 0;
   if (!target.conversionExpression) target.conversionExpression = "x";
+  if (target.conversionZeroPoint === undefined) target.conversionZeroPoint = 0;
+  if (target.conversionAdcPerVolt === undefined) target.conversionAdcPerVolt = 3950;
   if (!target.conversionInputUnit) {
-    target.conversionInputUnit = target.inputMode === "current" ? "mA" : "V";
+    const addr = String(target.hardwareAddress || "");
+    if (addr.includes("modbus-adc") || target.inputMode === "adc") {
+      target.conversionInputUnit = "ADC";
+    } else {
+      target.conversionInputUnit = target.inputMode === "current" ? "mA" : "V";
+    }
   }
   if (!target.conversionOutputUnit) target.conversionOutputUnit = target.unit || target.conversionInputUnit;
 }

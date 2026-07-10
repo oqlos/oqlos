@@ -4,6 +4,8 @@ import assert from "node:assert/strict";
 import {
   buildScenarioFilesSearch,
   findFileByScenarioQuery,
+  findSidebarItemByScenarioQuery,
+  panelScenarioUrlPatch,
   readScenarioFromUrl,
   readScenarioSpeedFromUrl,
   replaceScenarioFilesUrlState,
@@ -55,6 +57,47 @@ test("buildScenarioFilesSearch merges and removes query params", () => {
     }),
     "?theme=dark&action=save&scenario=examples%2Fdemo.oql&test=demo.oql",
   );
+});
+
+test("buildScenarioFilesSearch ignores chrome keys in patch", () => {
+  assert.equal(
+    buildScenarioFilesSearch("?theme=dark&mode=keyboard", {
+      scenario: "demo.oql",
+      mode: "real",
+      theme: "light",
+      sidebar: "off",
+    }),
+    "?theme=dark&mode=keyboard&scenario=demo.oql",
+  );
+});
+
+test("findSidebarItemByScenarioQuery matches file path or title", () => {
+  const items = [
+    { id: "file:examples/demo.oql", title: "demo.oql", subtitle: "Pliki" },
+    { id: "tpl:Health-check sensorów", title: "Health-check sensorów", subtitle: "Szablony" },
+  ];
+  assert.equal(findSidebarItemByScenarioQuery(items, "demo.oql")?.id, "file:examples/demo.oql");
+  assert.equal(findSidebarItemByScenarioQuery(items, "examples/demo.oql")?.id, "file:examples/demo.oql");
+  assert.equal(
+    findSidebarItemByScenarioQuery(items, "Health-check sensorów")?.id,
+    "tpl:Health-check sensorów",
+  );
+  assert.equal(findSidebarItemByScenarioQuery(items, "missing.oql"), null);
+});
+
+test("panelScenarioUrlPatch writes shareable panel edit state", () => {
+  assert.deepEqual(panelScenarioUrlPatch({ id: "file:examples/demo.oql", title: "demo.oql" }), {
+    view: "edit",
+    scenario: "examples/demo.oql",
+    test: "demo.oql",
+    action: "edit",
+  });
+  assert.deepEqual(panelScenarioUrlPatch({ id: "tpl:Smoke test", title: "Smoke test" }), {
+    view: "edit",
+    scenario: "Smoke test",
+    test: "Smoke test",
+    action: "edit",
+  });
 });
 
 test("replaceScenarioFilesUrlState updates browser history", () => {

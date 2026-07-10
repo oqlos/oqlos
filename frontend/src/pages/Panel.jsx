@@ -1,7 +1,27 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import SharedNav from "../components/SharedNav";
+import SidebarList from "../components/SidebarList";
+import { createScenarioFile, deleteScenarioFile, saveScenarioFileContent } from "../api/scenarioFilesApi";
 import { useI18n } from "../i18n/I18nProvider";
+import { readPanelRunModeFromSearch, PANEL_RUN_MODE_PARAM, PANEL_RUN_MODES } from "../utils/panel-run-mode.js";
+import {
+  buildScenarioFilesSearch,
+  findSidebarItemByScenarioQuery,
+  panelScenarioUrlPatch,
+  readScenarioFromUrl,
+} from "../utils/scenarioFilesUrl.js";
+import {
+  buildPanelSidebarItems,
+  canDeletePanelScenario,
+  isPanelEditorDirty,
+  isPanelScenarioFileId,
+  shouldProceedWithScenarioSwitch,
+} from "../utils/panelSidebar.js";
+import {
+  defaultNewScenarioContent,
+  normalizeScenarioFilePath,
+} from "../utils/panelScenarioCreate.js";
 import { rem } from "../utils/designRem.js";
 
 const VALVE_IDS = [
@@ -126,7 +146,7 @@ export default function Panel() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Mode and Skip Waits state synchronized with URL search params
-  const mode = searchParams.get("mode") || "dry-run";
+  const runMode = readPanelRunModeFromSearch(`?${searchParams.toString()}`);
   const skipWaits = searchParams.get("skip_waits") === "true";
 
   const [editorText, setEditorText] = useState(DEFAULT_EDITOR_OQL);
@@ -163,7 +183,11 @@ export default function Panel() {
   const [serverScenarios, setServerScenarios] = useState([]);
   const [fileScenarios, setFileScenarios] = useState([]);
   const [scenarioListStatus, setScenarioListStatus] = useState("Ładowanie plików z /api/v1/editor/files…");
-  const [selectedScenarioIdx, setSelectedScenarioIdx] = useState("");
+  const [selectedScenarioId, setSelectedScenarioId] = useState("");
+  const [savedEditorText, setSavedEditorText] = useState("");
+  const [savingScenario, setSavingScenario] = useState(false);
+  const [deletingScenario, setDeletingScenario] = useState(false);
+  const urlScenarioBootRef = useRef(false);
 
   // Live Monitor State
   const [monMetric, setMonMetric] = useState("cpu");
@@ -297,25 +321,31 @@ export default function Panel() {
     loadScenarios();
   }, [loadScenarios]);
 
-  // Combine scenarios list
-  const combinedScenarios = [
-    BUILTIN_SCENARIOS[0],
-    ...fileScenarios,
-    ...myScenarios.map((s) => ({
-      name: s.name,
-      oql: s.oql,
-      _my: true,
-      _name: s.name,
-      _group: "Moje scenariusze",
-    })),
-    ...BUILTIN_SCENARIOS.slice(1).map((s) => ({ ...s, _group: "Szablony panelu" })),
-    ...serverScenarios,
-  ];
+  const sidebarItems = useMemo(
+    () => buildPanelSidebarItems({
+      fileScenarios,
+      myScenarios,
+      builtinTemplates: BUILTIN_SCENARIOS.slice(1),
+      serverScenarios,
+    }),
+    [fileScenarios, myScenarios, serverScenarios],
+  );
 
-  // Handle scenario dropdown selection
-  const handleSelectScenario = async (idx) => {
-    setSelectedScenarioIdx(idx);
-    const s = combinedScenarios[Number(idx)];
+  const selectedScenarioTitle = sidebarItems.find((i) => i.id === selectedScenarioId)?.title || "";
+  const selectedScenarioIsFile = isPanelScenarioFileId(selectedScenarioId);
+  const editorIsDirty = isPanelEditorDirty({ selectedScenarioId, editorText, savedEditorText });
+
+  const syncScenarioUrl = useCallback((item, action = "edit") => {
+    if (!item) return;
+    const patch = panelScenarioUrlPatch(item, action);
+    const nextSearch = buildScenarioFilesSearch(`?${searchParams.toString()}`, patch);
+    setSearchParams(new URLSearchParams(nextSearch.slice(1) || ""), { replace: true });
+  }, [searchParams, setSearchParams]);
+
+  const handleSelectScenario = useCallback(async (id) => {
+    setSelectedScenarioId(id);
+    const item = sidebarItems.find((i) => i.id === id);
+    const s = item?._scenario;
     if (!s) return;
 
     if (s._file && s._filePath && !s.oql) {
@@ -334,8 +364,35 @@ export default function Panel() {
 
     if (s && s.oql) {
       setEditorText(s.oql);
+      setSavedEditorText(s.oql);
+      syncScenarioUrl(item);
     }
-  };
+  }, [sidebarItems, syncScenarioUrl]);
+
+  const requestSelectScenario = useCallback(async (id) => {
+    if (!shouldProceedWithScenarioSwitch({
+      selectedScenarioId,
+      nextId: id,
+      editorText,
+      savedEditorText,
+      confirmDiscard: () => window.confirm(
+        "Masz niezapisane zmiany w edytorze. Przejść do innego scenariusza bez zapisu?",
+      ),
+    })) {
+      return;
+    }
+    await handleSelectScenario(id);
+  }, [selectedScenarioId, editorText, savedEditorText, handleSelectScenario]);
+
+  useEffect(() => {
+    if (urlScenarioBootRef.current || sidebarItems.length === 0) return;
+    const query = readScenarioFromUrl(`?${searchParams.toString()}`);
+    if (!query) return;
+    const item = findSidebarItemByScenarioQuery(sidebarItems, query);
+    if (!item) return;
+    urlScenarioBootRef.current = true;
+    handleSelectScenario(item.id);
+  }, [sidebarItems, searchParams, handleSelectScenario]);
 
   const saveLocalScenario = () => {
     const oql = editorText.trim();
@@ -352,17 +409,99 @@ export default function Panel() {
     setBannerMsg(`Zapisano scenariusz „${name}” (w przeglądarce).`);
   };
 
-  const deleteLocalScenario = () => {
-    const s = combinedScenarios[Number(selectedScenarioIdx)];
-    if (!s || !s._my) {
-      setBannerMsg("Wybierz własny scenariusz [moje] do usunięcia.");
+  const saveSelectedScenario = async () => {
+    const oql = editorText.trim();
+    if (!oql) {
+      setBannerMsg("Edytor jest pusty — nie ma czego zapisać.");
       return;
     }
-    const updated = myScenarios.filter((x) => x.name !== s._name);
+    if (selectedScenarioIsFile) {
+      const path = selectedScenarioId.slice(5);
+      setSavingScenario(true);
+      try {
+        await saveScenarioFileContent(path, editorText);
+        setSavedEditorText(editorText);
+        const item = sidebarItems.find((i) => i.id === selectedScenarioId);
+        if (item) syncScenarioUrl(item, "save");
+        setBannerMsg(`Zapisano plik „${path}”.`);
+      } catch (e) {
+        setBannerMsg("Nie udało się zapisać pliku: " + e.message);
+      } finally {
+        setSavingScenario(false);
+      }
+      return;
+    }
+    saveLocalScenario();
+  };
+
+  const createNewScenarioFile = async () => {
+    if (creatingScenario) return;
+    if (
+      selectedScenarioId
+      && editorText !== savedEditorText
+      && !window.confirm("Masz niezapisane zmiany. Utworzyć nowy plik bez zapisu bieżącego scenariusza?")
+    ) {
+      return;
+    }
+    const raw = prompt("Nazwa nowego pliku (.oql):", "moj-scenariusz.oql");
+    if (!raw) return;
+    try {
+      const path = normalizeScenarioFilePath(raw);
+      const duplicate = fileScenarios.some(
+        (f) => String(f._filePath || "").toLowerCase() === path.toLowerCase(),
+      );
+      if (duplicate) {
+        setBannerMsg(`Plik „${path}” już istnieje — wybierz inną nazwę.`);
+        return;
+      }
+      const content = defaultNewScenarioContent(path);
+      setCreatingScenario(true);
+      setBannerMsg("");
+      await createScenarioFile(path, content);
+      await loadScenarios();
+      setSelectedScenarioId(`file:${path}`);
+      setEditorText(content);
+      setSavedEditorText(content);
+      syncScenarioUrl({ id: `file:${path}`, title: path.replace(/\.oql$/i, "") }, "edit");
+      setBannerMsg(`Utworzono i otwarto plik „${path}”.`);
+    } catch (e) {
+      setBannerMsg("Nie udało się utworzyć pliku: " + e.message);
+    } finally {
+      setCreatingScenario(false);
+    }
+  };
+
+  const deleteSelectedScenario = async () => {
+    if (!canDeletePanelScenario(selectedScenarioId)) {
+      setBannerMsg("Usuń można tylko plik .oql lub własny scenariusz z localStorage.");
+      return;
+    }
+    if (selectedScenarioIsFile) {
+      const path = selectedScenarioId.slice(5);
+      if (!window.confirm(`Usunąć plik scenariusza „${path}”? Tej operacji nie można cofnąć.`)) {
+        return;
+      }
+      setDeletingScenario(true);
+      try {
+        await deleteScenarioFile(path);
+        await loadScenarios();
+        setSelectedScenarioId("");
+        setEditorText(DEFAULT_EDITOR_OQL);
+        setSavedEditorText("");
+        setBannerMsg(`Usunięto plik „${path}”.`);
+      } catch (e) {
+        setBannerMsg("Nie udało się usunąć pliku: " + e.message);
+      } finally {
+        setDeletingScenario(false);
+      }
+      return;
+    }
+    const name = selectedScenarioId.slice(3);
+    const updated = myScenarios.filter((x) => x.name !== name);
     setMyScenarios(updated);
     localStorage.setItem(MY_SCENARIOS_KEY, JSON.stringify(updated));
-    setBannerMsg(`Usunięto „${s._name}”.`);
-    setSelectedScenarioIdx("");
+    setBannerMsg(`Usunięto „${name}”.`);
+    setSelectedScenarioId("");
   };
 
   // Sparkline Chart draw helper
@@ -558,10 +697,10 @@ export default function Panel() {
 
   const runOql = async (oql, kind, label) => {
     const k = kind || "command";
-    const payload = { oql, kind: k, mode, skip_waits: skipWaits };
+    const payload = { oql, kind: k, mode: runMode, skip_waits: skipWaits };
     const sent = `POST /api/v1/oql/execute  ${JSON.stringify({
       kind: k,
-      mode,
+      mode: runMode,
       skip_waits: skipWaits,
       oql,
     })}`;
@@ -607,13 +746,15 @@ export default function Panel() {
       return;
     }
     setBannerMsg("");
+    const item = sidebarItems.find((i) => i.id === selectedScenarioId);
+    if (item) syncScenarioUrl(item, "execute");
     // Normalize script
     const hasVersion = /^\s*VERSION\s*:\s*\d+\s*$/im.test(txt);
     const isNamedV4Goal = /^\s*GOAL\s*:\s*$/im.test(txt) && /^[ \t]+SET\s+NAME\b/im.test(txt);
     if (!hasVersion && isNamedV4Goal) {
       txt = "VERSION: 4\n" + txt;
     }
-    runOql(txt, "script", `Scenariusz (${mode})`);
+    runOql(txt, "script", `Scenariusz (${runMode})`);
   };
 
   // Clipboard Helpers
@@ -930,10 +1071,13 @@ export default function Panel() {
           <button
             key={m}
             type="button"
-            className={`mode-btn ${mode === m ? "active" : ""}`}
+            className={`mode-btn ${runMode === m ? "active" : ""}`}
             onClick={() => {
               const newParams = new URLSearchParams(searchParams);
-              newParams.set("mode", m);
+              newParams.set(PANEL_RUN_MODE_PARAM, m);
+              if (PANEL_RUN_MODES.includes(newParams.get("mode") || "")) {
+                newParams.delete("mode");
+              }
               setSearchParams(newParams);
             }}
           >
@@ -957,6 +1101,17 @@ export default function Panel() {
 
       <div className="panel-editor-toolbar-spacer" />
 
+      {selectedScenarioIsFile ? (
+        <button
+          type="button"
+          className="run-btn role-force"
+          onClick={saveSelectedScenario}
+          disabled={!editorIsDirty || savingScenario}
+        >
+          {savingScenario ? "…" : "💾 Zapisz plik"}
+        </button>
+      ) : null}
+
       <button type="button" className="run-btn run-btn--primary role-force" onClick={runEditor}>
         ▶ Uruchom scenariusz
       </button>
@@ -969,10 +1124,67 @@ export default function Panel() {
     </div>
   );
 
+  const scenarioSidebarFooter = (
+    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+      <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+        <button
+          type="button"
+          className="run-btn run-btn--primary role-force"
+          onClick={createNewScenarioFile}
+          disabled={creatingScenario}
+        >
+          {creatingScenario ? "…" : "+ Nowy .oql"}
+        </button>
+        <button
+          type="button"
+          className="run-btn role-force"
+          onClick={saveSelectedScenario}
+          disabled={selectedScenarioIsFile && (!editorIsDirty || savingScenario)}
+        >
+          {selectedScenarioIsFile ? "💾 Zapisz plik" : "💾 Zapisz lokalnie"}
+        </button>
+        <button
+          type="button"
+          className="run-btn role-force"
+          onClick={deleteSelectedScenario}
+          disabled={!canDeletePanelScenario(selectedScenarioId) || deletingScenario}
+        >
+          {deletingScenario ? "…" : selectedScenarioIsFile ? "🗑 Usuń plik" : "🗑 Usuń wybrany"}
+        </button>
+      </div>
+      <div style={{ fontSize: rem.xs, color: "var(--text-muted)" }}>{scenarioListStatus}</div>
+      <a
+        href={`/ui/scenario-files${buildScenarioFilesSearch(`?${searchParams.toString()}`, {})}`}
+        className="run-btn role-force"
+        style={{ textAlign: "center", textDecoration: "none" }}
+      >
+        ↗ Pełny edytor plików
+      </a>
+    </div>
+  );
+
   return (
-    <div className="dashboard oql-panel-page">
-      <SharedNav />
-      <div className="dash-content">
+    <div className="mapx-shell oql-panel-shell">
+      <SidebarList
+        title="Scenariusze"
+        items={sidebarItems}
+        activeId={selectedScenarioId || null}
+        onSelect={(id) => requestSelectScenario(id)}
+        onRefresh={loadScenarios}
+        collapseToggleId="panel-scenarios-list"
+        collapseLabel="Scenariusze"
+        collapseStorageKey="ui.panel-scenarios-sidebar-collapsed"
+        collapseIcon="📋"
+        collapseOnSelect={false}
+        footer={scenarioSidebarFooter}
+      />
+      <div className="dashboard mapx-main-dashboard oql-panel-page">
+        <SharedNav navContext={(
+          <div className="section-label" style={{ marginBottom: 0 }}>
+            {t("nav.panel", "OQL")}
+          </div>
+        )} />
+        <div className="dash-content oql-panel-content">
         <div className="mapx-header">
           <div className="mapx-header-actions" style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginLeft: "auto" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
@@ -1094,49 +1306,6 @@ export default function Panel() {
               </div>
             </div>
 
-            {/* Ready Scenarios */}
-            <div className="hw-card" style={{ marginTop: "14px" }}>
-              <h3>Gotowe scenariusze</h3>
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                <select
-                  className="nav-control-select"
-                  style={{ width: "100%", padding: "7px" }}
-                  value={selectedScenarioIdx}
-                  onChange={(e) => handleSelectScenario(e.target.value)}
-                >
-                  {combinedScenarios.map((s, idx) => {
-                    if (s._group) {
-                      // Custom rendering for groupings if we just display in select
-                      return (
-                        <option key={idx} value={idx}>
-                          {s._group ? `[${s._group}] ${s.name}` : s.name}
-                        </option>
-                      );
-                    }
-                    return (
-                      <option key={idx} value={idx}>
-                        {s.name}
-                      </option>
-                    );
-                  })}
-                </select>
-                <div style={{ display: "flex", gap: "6px" }}>
-                  <button type="button" className="run-btn role-force" onClick={loadScenarios}>
-                    ⟳ Odśwież listę
-                  </button>
-                  <button type="button" className="run-btn role-force" onClick={saveLocalScenario}>
-                    💾 Zapisz bieżący
-                  </button>
-                  <button type="button" className="run-btn role-force" onClick={deleteLocalScenario}>
-                    🗑 Usuń wybrany
-                  </button>
-                </div>
-                <div style={{ fontSize: rem.xs, color: "var(--text-muted)" }}>
-                  {scenarioListStatus}
-                </div>
-              </div>
-            </div>
-
             {/* Live Monitor */}
             <div className="hw-card" style={{ marginTop: "14px" }}>
               <h3>Monitor na żywo</h3>
@@ -1192,7 +1361,15 @@ export default function Panel() {
           {/* RIGHT: Editor + Results */}
           <div className="panel-col panel-col-split">
             <div className="hw-card panel-card-fill panel-editor-card">
-              <h3>Edytor scenariusza (OQL)</h3>
+              <h3>
+                Edytor scenariusza (OQL)
+                {selectedScenarioTitle ? (
+                  <span style={{ fontWeight: 400, fontSize: rem.sm, color: "var(--text-muted)", marginLeft: "8px" }}>
+                    — {selectedScenarioTitle}
+                    {editorIsDirty ? " *" : ""}
+                  </span>
+                ) : null}
+              </h3>
               {editorToolbar("top")}
               <div className="panel-editor-wrap">
                 <textarea
@@ -1334,6 +1511,7 @@ export default function Panel() {
               </div>
             </div>
           </div>
+        </div>
         </div>
       </div>
     </div>

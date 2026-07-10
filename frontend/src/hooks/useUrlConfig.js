@@ -2,9 +2,14 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { bridgeSearchToParent } from "../utils/parentUrlBridge.js";
 import {
   applyUrlEmbedPatch,
+  buildEmbedConfigUrlPatch,
   parseUrlEmbedConfig,
   resolveParentContextUpdate,
 } from "../utils/url-embed-config.js";
+import {
+  hydrateUrlFromUiArgsCookie,
+  persistUiUrlArgsToCookie,
+} from "../utils/ui-url-args-cookie.js";
 
 export {
   APP_CONFIG_DEFAULTS,
@@ -41,7 +46,10 @@ function notifyParentChildReady() {
 }
 
 export function useUrlConfig() {
-  const [config, setConfig] = useState(() => parseUrlEmbedConfig(window.location.search));
+  const [config, setConfig] = useState(() => {
+    hydrateUrlFromUiArgsCookie();
+    return parseUrlEmbedConfig(window.location.search);
+  });
 
   useEffect(() => {
     const onPop = () => setConfig(parseUrlEmbedConfig(window.location.search));
@@ -74,10 +82,23 @@ export function useUrlConfig() {
     };
   }, []);
 
+  // Keep the address bar in sync with active chrome config (font/theme/lang/size…).
+  useEffect(() => {
+    const patch = buildEmbedConfigUrlPatch(config, window.location.search);
+    if (Object.keys(patch).length === 0) return;
+    const { nextPath } = applyUrlEmbedPatch(window.location.href, patch);
+    const current = `${window.location.pathname}${window.location.search}`;
+    if (nextPath !== current) {
+      window.history.replaceState({}, "", nextPath);
+      persistUiUrlArgsToCookie(patch);
+    }
+  }, [config.font, config.theme, config.lang, config.role, config.size, config.mode]);
+
   const patch = useCallback((partial) => {
     const { nextPath, config: nextConfig } = applyUrlEmbedPatch(window.location.href, partial);
     window.history.replaceState({}, "", nextPath);
     setConfig(nextConfig);
+    persistUiUrlArgsToCookie(partial);
     bridgeSearchToParent(partial);
   }, []);
 

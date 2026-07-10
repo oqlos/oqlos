@@ -506,76 +506,84 @@ fi
 systemctl --user stop oqlos-hardware-api.service 2>/dev/null || true
 sleep 2
 
-# --- Autodetect Modbus serial ports (by-id differs per Pi) ---
-IO_DEV=$(ls -1 /dev/serial/by-id/usb-1a86_USB_Single_Serial_*-if00 2>/dev/null | head -1 || true)
-[ -n "${IO_DEV:-}" ] && [ -e "$IO_DEV" ] || { for _p in /dev/ttyACM*; do [ -e "$_p" ] && IO_DEV="$_p" && break; done; }
+# --- Autodetect Modbus serial ports (role-based probe) ---
+# The two Waveshare modules can sit behind cloned FT232R adapters that share one USB
+# serial number, so /dev/serial/by-id is ambiguous — probe every free RS485 adapter
+# and assign roles by Modbus response: read_coils answers => IO 8CH module,
+# read_input_registers answers => Analog Input 8CH module. Stable /dev/serial/by-path
+# names (physical USB port) are written to the config instead of by-id.
+MB_DETECT=$(timeout 120 /home/pi/oqlos/venv/bin/python - << 'PY' 2>/dev/null || true
+import glob
+import os
+
+from pymodbus.client import ModbusSerialClient
+
+
+def by_id_name(real: str) -> str:
+    for link in glob.glob("/dev/serial/by-id/*"):
+        if os.path.realpath(link) == real:
+            return os.path.basename(link)
+    return ""
+
+
+candidates = []
+seen = set()
+for link in sorted(glob.glob("/dev/serial/by-path/platform-*")):
+    real = os.path.realpath(link)
+    if real in seen:
+        continue
+    seen.add(real)
+    if by_id_name(real).startswith("usb-1a86_USB2.0-Serial"):
+        continue  # DRI0050 pump adapter (CH340) — not an RS485 bus
+    candidates.append(link)
+if not candidates:
+    candidates = sorted(glob.glob("/dev/ttyACM*")) + sorted(glob.glob("/dev/ttyUSB*"))
+
+io_dev = io_id = adc_dev = adc_id = None
+for port in candidates:
+    if io_dev and adc_dev:
+        break
+    for device_id in range(1, 9):
+        if io_dev and adc_dev:
+            break
+        cli = ModbusSerialClient(port=port, baudrate=9600, parity="N", stopbits=1, bytesize=8, timeout=0.35)
+        try:
+            if not cli.connect():
+                break  # busy or unopenable — skip this port
+            if not io_dev:
+                resp = cli.read_coils(address=0, count=1, device_id=device_id)
+                if resp is not None and not resp.isError():
+                    io_dev, io_id = port, device_id
+            if not adc_dev:
+                resp = cli.read_input_registers(address=0, count=1, device_id=device_id)
+                if resp is not None and not resp.isError():
+                    adc_dev, adc_id = port, device_id
+        except Exception:
+            pass
+        finally:
+            try:
+                cli.close()
+            except Exception:
+                pass
+print(f"MB_IO_DEV='{io_dev or ''}' MB_IO_ID='{io_id or ''}' MB_ADC_DEV='{adc_dev or ''}' MB_ADC_ID='{adc_id or ''}'")
+PY
+)
+eval "${MB_DETECT:-}"
+IO_BAUD=9600
 IO_ENABLED=true
-if [ -z "${IO_DEV:-}" ] || [ ! -e "$IO_DEV" ]; then
+IO_DEV="${MB_IO_DEV:-}"
+IO_DEVICE_ID="${MB_IO_ID:-1}"
+if [ -z "$IO_DEV" ]; then
   IO_ENABLED=false
   IO_DEV=/dev/serial/by-id/io-not-present
 fi
-ADC_DEV=$(ls -1 /dev/serial/by-id/usb-FTDI_FT232R_USB_UART_*-if00-port0 2>/dev/null | head -1 || true)
-[ -n "${ADC_DEV:-}" ] && [ -e "$ADC_DEV" ] || ADC_DEV=$(ls -1 /dev/serial/by-id/usb-1a86_USB2.0-Serial-if00-port0 2>/dev/null | head -1 || true)
-[ -n "${ADC_DEV:-}" ] && [ -e "$ADC_DEV" ] || { for _p in /dev/ttyUSB*; do [ -e "$_p" ] && ADC_DEV="$_p" && break; done; }
-[ -n "${ADC_DEV:-}" ] && [ -e "$ADC_DEV" ] || ADC_DEV=/dev/ttyUSB0
-IO_BAUD=9600
-IO_DEVICE_ID=2
-if [ "$IO_ENABLED" = true ]; then
-  DETECTED_IO_DEVICE_ID=$(
-    timeout 20 /home/pi/oqlos/venv/bin/python - "$IO_DEV" << 'PY' 2>/dev/null || true
-from pymodbus.client import ModbusSerialClient
-import sys
-port = sys.argv[1]
-for device_id in (1, 2, 3, 4, 5, 6, 7, 8):
-    cli = ModbusSerialClient(port=port, baudrate=9600, parity="N", stopbits=1, bytesize=8, timeout=0.35)
-    try:
-        if not cli.connect():
-            continue
-        resp = cli.read_coils(address=0, count=1, device_id=device_id)
-        if resp is not None and not resp.isError():
-            print(device_id); raise SystemExit(0)
-    except Exception:
-        continue
-    finally:
-        try: cli.close()
-        except Exception: pass
-print("none")
-PY
-  )
-  case "$DETECTED_IO_DEVICE_ID" in
-    1|2|3|4|5|6|7|8) IO_DEVICE_ID="$DETECTED_IO_DEVICE_ID" ;;
-  esac
-fi
-
 ADC_ENABLED=true
-ADC_DEVICE_ID=2
-DETECTED_ADC_DEVICE_ID=$(
-  timeout 30 /home/pi/oqlos/venv/bin/python - "$ADC_DEV" << 'PY' 2>/dev/null || true
-from pymodbus.client import ModbusSerialClient
-import sys
-port = sys.argv[1]
-for device_id in (2, 1):
-    cli = ModbusSerialClient(port=port, baudrate=9600, parity="N", stopbits=1, bytesize=8, timeout=0.35)
-    try:
-        if not cli.connect():
-            continue
-        resp = cli.read_input_registers(address=0, count=1, device_id=device_id)
-        if resp is not None and not resp.isError():
-            print(device_id); raise SystemExit(0)
-    except Exception:
-        continue
-    finally:
-        try: cli.close()
-        except Exception: pass
-print("none")
-PY
-)
-case "$DETECTED_ADC_DEVICE_ID" in
-  1|2) ADC_DEVICE_ID="$DETECTED_ADC_DEVICE_ID" ;;
-  none) ADC_ENABLED=false ;;
-esac
-ADC_SERIAL_FOR_CONFIG="$ADC_DEV"
-[ "$ADC_ENABLED" = false ] && ADC_SERIAL_FOR_CONFIG=/dev/serial/by-id/adc-not-present
+ADC_SERIAL_FOR_CONFIG="${MB_ADC_DEV:-}"
+ADC_DEVICE_ID="${MB_ADC_ID:-2}"
+if [ -z "$ADC_SERIAL_FOR_CONFIG" ]; then
+  ADC_ENABLED=false
+  ADC_SERIAL_FOR_CONFIG=/dev/serial/by-id/adc-not-present
+fi
 DRI_ENABLED=false
 if curl -sf --max-time 3 http://127.0.0.1:8203/api/status >/dev/null 2>&1; then
   DRI_ENABLED=true

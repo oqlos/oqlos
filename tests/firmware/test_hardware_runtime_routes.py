@@ -49,3 +49,41 @@ def test_read_sensor_values_skips_live_reads_when_adc_unavailable():
     )
     assert sensors["ai01"]["ok"] is False
     assert sensors["ai01"]["value"] is None
+
+
+class _BatchAdcGateway:
+    read_sensor_calls = 0
+    read_all_calls = 0
+
+    async def health(self):
+        return {"mode": "real", "modbus-adc": {"compatible": True, "status": "connected"}}
+
+    async def read_adc_channels(self):
+        type(self).read_all_calls += 1
+        return {
+            "ai01": {"sensor_id": "ai01", "value": 7901.0, "raw": 7901},
+            "ai02": {"sensor_id": "ai02", "value": 7893.0, "raw": 7893},
+            "ai03": {"sensor_id": "ai03", "value": 8275.0, "raw": 8275},
+        }
+
+    async def read_sensor(self, sensor_id: str):
+        type(self).read_sensor_calls += 1
+        raise AssertionError(f"sequential read_sensor should not run in batch fast path: {sensor_id}")
+
+
+def test_read_sensor_values_uses_single_adc_read_all_for_batch(monkeypatch):
+    _BatchAdcGateway.read_sensor_calls = 0
+    _BatchAdcGateway.read_all_calls = 0
+    runtime._BATCH_HEALTH_CACHE["expires_at"] = 0.0
+    runtime._BATCH_HEALTH_CACHE["payload"] = None
+    gateway = _BatchAdcGateway()
+    monkeypatch.setattr(runtime, "get_hardware_gateway", lambda: gateway)
+    healthy = {"mode": "real", "modbus-adc": {"compatible": True, "status": "connected"}}
+
+    sensors = asyncio.run(
+        runtime.read_sensor_values(["ai01", "ai02", "ai03"], health=healthy),
+    )
+    assert _BatchAdcGateway.read_all_calls == 1
+    assert _BatchAdcGateway.read_sensor_calls == 0
+    assert sensors["ai01"]["value"] == 7901.0
+    assert sensors["ai03"]["ok"] is True

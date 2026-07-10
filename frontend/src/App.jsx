@@ -1,10 +1,12 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import HardwareStatus from "./pages/HardwareStatus";
-import HardwareDemo from "./pages/HardwareDemo";
 import HardwareRestart from "./pages/HardwareRestart";
+import HardwareRtc from "./pages/HardwareRtc";
 import MapEditor from "./pages/MapEditor";
 import ScenarioFiles from "./pages/ScenarioFiles";
 import MotorServices from "./pages/MotorServices";
+import Panel from "./pages/Panel";
+import ApiDocs from "./pages/ApiDocs";
 
 // Standalone hardware UI moved out of c2004 connect-scenario. RBAC GuardedRoute
 // was an app-shell concern; here routes render directly (SharedNav still reflects
@@ -12,15 +14,21 @@ import MotorServices from "./pages/MotorServices";
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/hardware-status" replace />} />
-      <Route path="/hardware-status" element={<HardwareStatus />} />
-      <Route path="/hardware-restart" element={<HardwareRestart />} />
-      <Route path="/hardware-demo" element={<HardwareDemo />} />
+      <Route path="/" element={<Navigate to="/status" replace />} />
+      <Route path="/status" element={<HardwareStatus />} />
+      <Route path="/hardware-status" element={<Navigate to="/status" replace />} />
+      <Route path="/navigation" element={<Navigate to="/status" replace />} />
+      <Route path="/hardware-modbus" element={<HardwareRestart />} />
+      <Route path="/hardware-restart" element={<Navigate to="/hardware-modbus" replace />} />
+      <Route path="/hardware-rtc" element={<HardwareRtc />} />
+      <Route path="/hardware-demo" element={<Navigate to="/motor-services" replace />} />
       <Route path="/map-editor" element={<MapEditor />} />
       <Route path="/scenario-files" element={<ScenarioFiles />} />
       <Route path="/func-editor" element={<ScenarioFiles />} />
       <Route path="/motor-services" element={<MotorServices />} />
-      <Route path="*" element={<Navigate to="/hardware-status" replace />} />
+      <Route path="/panel" element={<Panel />} />
+      <Route path="/api-docs" element={<ApiDocs />} />
+      <Route path="*" element={<Navigate to="/status" replace />} />
     </Routes>
   );
 }

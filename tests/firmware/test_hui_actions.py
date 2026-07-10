@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
-from oqlos.hardware import hui_actions, hui_hold, hui_lung_recipe
+from oqlos.hardware import hui_actions, hui_hold, hui_lung_recipe, hui_valve
 
 
 def run(coro):
@@ -187,6 +187,34 @@ def test_hui_artificial_lung_start_failure_cleans_up_same_valve_it_opened(monkey
     assert payload["ok"] is False
     assert gateway.calls[0] == ("valve", "valve-8", True)
     assert gateway.calls[-1] == ("valve", "valve-8", False)
+
+
+def test_hui_valve_key_can_be_overridden_from_hardware_map(monkeypatch) -> None:
+    monkeypatch.setattr(
+        hui_valve,
+        "_mapped_hui_valve_specs",
+        lambda: {"wc-press": {"valve_id": "valve-8", "value": True}},
+    )
+    gateway = FakeGateway()
+
+    payload = run(hui_valve.run_hui_valve_key(gateway, "wc-press"))
+
+    assert payload["ok"] is True
+    assert gateway.calls == [("valve", "valve-8", True)]
+
+
+def test_hui_actions_list_includes_valve_specs(monkeypatch) -> None:
+    monkeypatch.setattr(
+        hui_valve,
+        "_mapped_hui_valve_specs",
+        lambda: {"wc-bleed": {"valve_id": "valve-wc", "value": False}},
+    )
+
+    payload = hui_actions.list_hui_actions()
+
+    assert payload["ok"] is True
+    assert "wc-press" in payload["valve_keys"]
+    assert payload["valve_specs"]["wc-bleed"] == {"valve_id": "valve-wc", "value": False}
 
 
 def test_hui_shutdown_turns_off_pump_and_all_known_valves() -> None:

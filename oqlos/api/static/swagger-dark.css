@@ -1,0 +1,273 @@
+/* OqlOS Swagger UI — dark theme overrides (load after swagger-ui.css) */
+
+html {
+  box-sizing: border-box;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: inherit;
+}
+
+body {
+  margin: 0;
+  background: #0a0f1a !important;
+}
+
+.swagger-ui {
+  color: #e2e8f0;
+}
+
+.swagger-ui .topbar {
+  display: none;
+}
+
+.swagger-ui .info .title,
+.swagger-ui .info h1,
+.swagger-ui .info h2,
+.swagger-ui .info h3,
+.swagger-ui .info h4,
+.swagger-ui .info h5 {
+  color: #f8fafc;
+}
+
+.swagger-ui .info p,
+.swagger-ui .info li,
+.swagger-ui .info table,
+.swagger-ui .info .base-url {
+  color: #cbd5e1;
+}
+
+.swagger-ui a {
+  color: #60a5fa;
+}
+
+.swagger-ui a:hover {
+  color: #93c5fd;
+}
+
+.swagger-ui .opblock-tag {
+  color: #f1f5f9;
+  border-bottom: 1px solid #475569;
+}
+
+.swagger-ui .opblock-tag:hover {
+  background: #1a2335;
+}
+
+.swagger-ui .opblock-tag small {
+  color: #94a3b8;
+}
+
+.swagger-ui .opblock {
+  background: #111827;
+  border: 1px solid #334155;
+  box-shadow: none;
+}
+
+.swagger-ui .opblock .opblock-summary-path,
+.swagger-ui .opblock .opblock-summary-path__deprecated,
+.swagger-ui .opblock .opblock-summary-operation-id,
+.swagger-ui .opblock .opblock-summary-description {
+  color: #e2e8f0;
+}
+
+.swagger-ui .opblock .opblock-section-header {
+  background: #1a2335;
+  border-color: #334155;
+}
+
+.swagger-ui .opblock .opblock-section-header h4 {
+  color: #f8fafc;
+}
+
+.swagger-ui .opblock-body,
+.swagger-ui .opblock-description-wrapper,
+.swagger-ui .opblock-external-docs-wrapper {
+  background: #0f172a;
+}
+
+.swagger-ui .opblock-description-wrapper p,
+.swagger-ui .opblock-external-docs-wrapper p,
+.swagger-ui .opblock-title_normal {
+  color: #cbd5e1;
+}
+
+.swagger-ui table thead tr td,
+.swagger-ui table thead tr th {
+  color: #f1f5f9;
+  border-color: #475569;
+}
+
+.swagger-ui table tbody tr td {
+  color: #e2e8f0;
+  border-color: #334155;
+}
+
+.swagger-ui .parameter__name,
+.swagger-ui .parameter__extension,
+.swagger-ui .response-col_links {
+  color: #f8fafc;
+}
+
+.swagger-ui .parameter__type {
+  color: #93c5fd;
+}
+
+.swagger-ui .parameter__in,
+.swagger-ui .parameter__deprecated {
+  color: #94a3b8;
+}
+
+.swagger-ui .response-col_status {
+  color: #f8fafc;
+}
+
+.swagger-ui .response-col_description,
+.swagger-ui .response-col_links {
+  color: #cbd5e1;
+}
+
+.swagger-ui .model-box,
+.swagger-ui .model-box-control {
+  background: #111827;
+}
+
+.swagger-ui .model,
+.swagger-ui .model-title,
+.swagger-ui .model .property.primitive {
+  color: #e2e8f0;
+}
+
+.swagger-ui section.models {
+  border-color: #475569;
+  background: #0a0f1a;
+}
+
+.swagger-ui section.models h4 {
+  color: #f8fafc;
+}
+
+.swagger-ui .model-title__text {
+  color: #f8fafc;
+}
+
+.swagger-ui .prop-type {
+  color: #93c5fd;
+}
+
+.swagger-ui .prop-format,
+.swagger-ui .property.primitive {
+  color: #94a3b8;
+}
+
+.swagger-ui input[type="text"],
+.swagger-ui input[type="email"],
+.swagger-ui input[type="password"],
+.swagger-ui input[type="search"],
+.swagger-ui textarea,
+.swagger-ui select {
+  background: #060a12;
+  color: #f8fafc;
+  border: 1px solid #64748b;
+}
+
+.swagger-ui input::placeholder,
+.swagger-ui textarea::placeholder {
+  color: #94a3b8;
+}
+
+.swagger-ui .btn {
+  color: #f8fafc;
+  border-color: #64748b;
+  background: #1a2335;
+}
+
+.swagger-ui .btn:hover {
+  background: #243044;
+}
+
+.swagger-ui .btn.execute {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #ffffff;
+}
+
+.swagger-ui .btn.cancel {
+  background: #334155;
+  border-color: #64748b;
+  color: #f8fafc;
+}
+
+.swagger-ui .highlight-code,
+.swagger-ui .microlight,
+.swagger-ui .renderedMarkdown pre {
+  background: #060a12 !important;
+}
+
+.swagger-ui .microlight,
+.swagger-ui .highlight-code > div,
+.swagger-ui .renderedMarkdown code {
+  color: #e2e8f0 !important;
+}
+
+.swagger-ui .markdown p,
+.swagger-ui .markdown li,
+.swagger-ui .renderedMarkdown p {
+  color: #cbd5e1;
+}
+
+.swagger-ui .scheme-container {
+  background: #111827;
+  box-shadow: none;
+  border: 1px solid #475569;
+}
+
+.swagger-ui .scheme-container .schemes > label {
+  color: #e2e8f0;
+}
+
+.swagger-ui .filter .operation-filter-input {
+  background: #060a12;
+  color: #f8fafc;
+  border: 1px solid #64748b;
+}
+
+.swagger-ui .dialog-ux .modal-ux {
+  background: #111827;
+  border: 1px solid #475569;
+}
+
+.swagger-ui .dialog-ux .modal-ux-header h3,
+.swagger-ui .dialog-ux .modal-ux-content p,
+.swagger-ui .dialog-ux .modal-ux-content h4 {
+  color: #f8fafc;
+}
+
+.swagger-ui .errors-wrapper {
+  background: #3f1d1d;
+  border-color: #ef4444;
+}
+
+.swagger-ui .errors-wrapper .errors h4,
+.swagger-ui .errors-wrapper .errors .message {
+  color: #fecaca;
+}
+
+.swagger-ui .copy-to-clipboard {
+  background: #1a2335;
+}
+
+.swagger-ui .copy-to-clipboard button {
+  background: #334155;
+}
+
+.swagger-ui .authorization__btn {
+  border-color: #64748b;
+  color: #f8fafc;
+}
+
+.swagger-ui .arrow {
+  fill: #cbd5e1;
+}

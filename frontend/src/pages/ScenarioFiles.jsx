@@ -110,7 +110,6 @@ export default function ScenarioFiles() {
     setExecuting(true);
     replaceScenarioFilesUrlState({
       ...scenarioUrlPatchForFile(currentFile, "execute"),
-      mode: "real",
       speed,
     });
     try {
@@ -209,7 +208,7 @@ export default function ScenarioFiles() {
         : "scenario-files-status";
 
   return (
-    <div className="scenario-files-shell">
+    <div className="mapx-shell">
       <SidebarList
         title={t("scenarioFiles.sidebarTitle")}
         items={sidebarItems}
@@ -279,7 +278,6 @@ export default function ScenarioFiles() {
                     if (currentFile) {
                       replaceScenarioFilesUrlState({
                         ...scenarioUrlPatchForFile(currentFile, "configure"),
-                        mode: "real",
                         speed: nextSpeed,
                       });
                     }

@@ -461,6 +461,26 @@ class PluginHardwareGateway:
             logger.error("PluginHardwareGateway.read_sensor error: %s", exc)
             return None
 
+    async def read_adc_channels(self) -> dict[str, Any] | None:
+        """Read all Modbus ADC channels in one RTU transaction."""
+        if not self.is_real:
+            return None
+
+        plugin = await self._get_or_connect_plugin("modbus-adc")
+        if not plugin:
+            return None
+
+        try:
+            result = await plugin.execute_command("read_all", {})
+            if not result.get("success"):
+                return None
+            data = result.get("data") or {}
+            channels = data.get("channels")
+            return channels if isinstance(channels, dict) else None
+        except Exception as exc:
+            logger.error("PluginHardwareGateway.read_adc_channels error: %s", exc)
+            return None
+
     async def set_lung_result(
         self,
         steps: int = 500,
@@ -596,7 +616,7 @@ class PluginHardwareGateway:
 
         if self._plugin_configs:
             async def _check_enabled(plugin_id: str) -> tuple[str, PluginHealth | None]:
-                health = await PluginRegistry.health_check(plugin_id, timeout=2.5)
+                health = await PluginRegistry.health_check(plugin_id, timeout=1.0)
                 return plugin_id, health
 
             checks = [
@@ -606,7 +626,7 @@ class PluginHardwareGateway:
             ]
             health_results = dict(await asyncio.gather(*checks)) if checks else {}
         else:
-            health_results = await PluginRegistry.health_check_all(timeout=2.5)
+            health_results = await PluginRegistry.health_check_all(timeout=1.0)
         for plugin_id, health in health_results.items():
             if health is None:
                 continue

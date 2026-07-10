@@ -7,6 +7,8 @@
   pełna lista verbów `manage` (w tym `usb-list`, `pi-diagnostics`, `usb-reset`), wdrożenie, troubleshooting.
 - **[BoardNet navigation](boardnet-navigation.md)**
   — aktualne linki operatora, krótkie aliasy i endpointy API dla `192.168.188.122:8202`.
+- **[Hardware UI modules — status](hardware-ui-modules.md)**
+  — co działa (status, Modbus, RTC, silniki), API v3, testy i otwarte zadania.
 - [Hardware Diagnostics](HARDWARE_DIAGNOSTICS.md)
 - [OQL v4 Migration Manual](OQL_V4_MIGRATION_MANUAL.md)
 - [OQL spec](oql-spec.md) · [CQL spec](cql-spec.md) · [CQL examples](cql-examples.md)
@@ -15,13 +17,16 @@
 
 Current UI ownership after the c2004 split:
 
-- OqlOS serves hardware/file tooling directly: `/hardware-status`,
-  `/hardware-restart`, `/hardware-demo`, `/map-editor`, `/scenario-files`,
-  `/func-editor`.
+- OqlOS serves hardware/file tooling directly: **`/ui/status`** (navigation + diagnostics),
+  **`/ui/hardware-modbus`** (Modbus wizard; legacy `/hardware-restart` redirects here),
+  **`/ui/hardware-rtc`** (DS3231 / piRTC), **`/ui/motor-services`** (Tic249 + DRI0050),
+  `/map-editor`, `/scenario-files`, `/func-editor`, `/panel`.
+  Legacy `/hardware-status`, `/navigation`, `/hardware-demo` redirect to canonical `/ui/*` pages.
+- Operator module guide: [hardware-ui-modules.md](hardware-ui-modules.md).
 - On boardnet/RPi3 the public firmware/controller origin is
   `http://192.168.188.122:8202`.
-- BoardNet exposes a human navigation index at
-  `http://192.168.188.122:8202/ui/navigation` and a machine-readable index at
+- BoardNet exposes a combined status + navigation page at
+  `http://192.168.188.122:8202/ui/status` and a machine-readable index at
   `/api/v1/navigation`.
 - c2004 connect-scenario keeps only DB-backed scenario building at
   `http://localhost:8096/scenarios`; its old hardware/editor paths redirect to

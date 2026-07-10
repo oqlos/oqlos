@@ -128,3 +128,19 @@ def write_file(base: pathlib.Path, rel: str, content: str) -> pathlib.Path:
     full_path.parent.mkdir(parents=True, exist_ok=True)
     full_path.write_text(content, encoding="utf-8")
     return full_path
+
+
+def delete_file(base: pathlib.Path, rel: str) -> None:
+    """Delete a file safely within *base*.
+
+    Raises:
+        PathEscapeError: Path escapes base directory.
+        FileNotFoundError: File does not exist.
+        IsADirectoryError: Path points to a directory.
+    """
+    full_path = _ensure_safe_path(base, rel)
+    if not full_path.exists():
+        raise FileNotFoundError(f"File not found: {rel}")
+    if full_path.is_dir():
+        raise IsADirectoryError(f"Path is a directory: {rel}")
+    full_path.unlink()

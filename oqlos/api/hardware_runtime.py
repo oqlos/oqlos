@@ -4,15 +4,19 @@ from __future__ import annotations
 
 import pathlib
 import subprocess
+import time
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query
 
 from oqlos.api.hardware_gateway import get_hardware_gateway
+from oqlos.hardware.client.adc import adc_sensor_alias
 
 router = APIRouter(tags=["hardware-runtime"])
 
 DEFAULT_BATCH_SENSOR_IDS = ("ai01", "ai02", "ai03")
+BATCH_HEALTH_TTL_SEC = 3.0
+_BATCH_HEALTH_CACHE: dict[str, Any] = {"expires_at": 0.0, "payload": None}
 
 
 def read_cpu_temperature() -> dict[str, Any]:
@@ -84,21 +88,74 @@ def unavailable_sensor_entry(sensor_id: str, modbus_adc_health: Any) -> dict[str
     }
 
 
+def _adc_channel_key(sensor_id: str) -> str:
+    _, oqlos_sensor_id = adc_sensor_alias(sensor_id)
+    return oqlos_sensor_id
+
+
+def _sensor_entry_from_channel(sensor_id: str, channel: Any) -> dict[str, Any]:
+    if isinstance(channel, dict):
+        value = channel.get("value")
+        return {
+            "sensor_id": sensor_id,
+            "value": value,
+            "ok": value is not None,
+            **({"details": channel} if channel.get("raw") is not None else {}),
+        }
+    return {
+        "sensor_id": sensor_id,
+        "value": channel,
+        "ok": channel is not None,
+    }
+
+
+async def cached_gateway_health(*, force: bool = False) -> dict[str, Any]:
+    """Short-lived health cache so polling endpoints do not probe every plugin each tick."""
+    now = time.monotonic()
+    cached = _BATCH_HEALTH_CACHE.get("payload")
+    if (
+        not force
+        and isinstance(cached, dict)
+        and now < float(_BATCH_HEALTH_CACHE.get("expires_at", 0))
+    ):
+        return cached
+
+    payload = await get_hardware_gateway().health()
+    _BATCH_HEALTH_CACHE["payload"] = payload
+    _BATCH_HEALTH_CACHE["expires_at"] = now + BATCH_HEALTH_TTL_SEC
+    return payload
+
+
 async def read_sensor_values(
     sensor_ids: list[str],
     *,
     health: dict[str, Any] | None = None,
 ) -> dict[str, dict[str, Any]]:
-    gateway_health = health if health is not None else await get_hardware_gateway().health()
+    gateway_health = health if health is not None else await cached_gateway_health()
     modbus_unavailable, modbus_adc_health = modbus_adc_unavailable(gateway_health)
+
+    if modbus_unavailable:
+        return {
+            sensor_id: unavailable_sensor_entry(sensor_id, modbus_adc_health)
+            for sensor_id in sensor_ids
+        }
+
+    gateway = get_hardware_gateway()
+    read_adc_channels = getattr(gateway, "read_adc_channels", None)
+    if callable(read_adc_channels):
+        channel_keys = [_adc_channel_key(sensor_id) for sensor_id in sensor_ids]
+        if channel_keys and all(key.startswith("ai") for key in channel_keys):
+            channels = await read_adc_channels()
+            if isinstance(channels, dict):
+                return {
+                    sensor_id: _sensor_entry_from_channel(sensor_id, channels.get(channel_key))
+                    for sensor_id, channel_key in zip(sensor_ids, channel_keys, strict=True)
+                }
 
     sensors: dict[str, dict[str, Any]] = {}
     for sensor_id in sensor_ids:
-        if modbus_unavailable:
-            sensors[sensor_id] = unavailable_sensor_entry(sensor_id, modbus_adc_health)
-            continue
         try:
-            value = await get_hardware_gateway().read_sensor(sensor_id)
+            value = await gateway.read_sensor(sensor_id)
             sensors[sensor_id] = {
                 "sensor_id": sensor_id,
                 "value": value,
@@ -158,7 +215,7 @@ async def read_sensors_batch(
 ) -> dict[str, Any]:
     """Read multiple sensors without making HUI fall back to repeated failing requests."""
     ids = [sensor_id.strip() for sensor_id in sensor_ids.split(",") if sensor_id.strip()]
-    health = await get_hardware_gateway().health()
+    health = await cached_gateway_health()
     modbus_unavailable, modbus_adc_health = modbus_adc_unavailable(health)
     sensors = await read_sensor_values(ids, health=health)
 
@@ -176,7 +233,7 @@ async def read_sensors_batch(
 async def hardware_diagnose() -> dict[str, Any]:
     """Return HUI-friendly hardware diagnostics without failing the request."""
     try:
-        health = await get_hardware_gateway().health()
+        health = await cached_gateway_health(force=True)
     except Exception as exc:
         return {"ok": False, "error": str(exc)}
 

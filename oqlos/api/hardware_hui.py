@@ -9,6 +9,7 @@ from fastapi import APIRouter, HTTPException
 from oqlos.api.hardware_gateway import get_hardware_gateway
 from oqlos.hardware.hui_actions import (
     list_hui_actions,
+    run_hui_valve_key,
     shutdown_all_hui_hardware,
     start_hui_artificial_lung,
     start_hui_hold,
@@ -49,6 +50,11 @@ async def hui_hold_start(key: str) -> dict[str, Any]:
 @router.post("/hui/hold/{key}/stop", summary="Stop a named HUI hold action and return hardware to a safe state")
 async def hui_hold_stop(key: str) -> dict[str, Any]:
     return await stop_hui_hold(get_hardware_gateway(), key)
+
+
+@router.post("/hui/valve/{key}", summary="Run a named HUI valve toggle (WC press/bleed)")
+async def hui_valve_key(key: str) -> dict[str, Any]:
+    return await start_hui_action(run_hui_valve_key, key)
 
 
 @router.post("/hui/al/start", summary="Start the HUI artificial-lung action")

@@ -1,14 +1,31 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
+import UiNavLink from "../components/UiNavLink.jsx";
 import SharedNav from "../components/SharedNav";
+import SidebarList from "../components/SidebarList";
+import ModbusProfileSettings from "../components/ModbusProfileSettings";
+import ModbusChannelInspector from "../components/ModbusChannelInspector";
 import { HardwareApi, formatHardwareApiError } from "../api/hardwareApi";
 import { useI18n } from "../i18n/I18nProvider";
 import { rem } from "../utils/designRem.js";
+import {
+  MODBUS_BAUD_OPTIONS,
+  MODBUS_DEFAULT_BAUD,
+  buildModbusSidebarItems,
+  filterWizardStepsByProfile,
+  patchModbusProfileSearchParams,
+  profileUsesSeparateAdapter,
+  readModbusProfileFromSearch,
+  resolveModbusProfileId,
+  resolveProfile,
+} from "../utils/modbus-profiles.js";
+import { persistUiUrlArgsToCookie } from "../utils/ui-url-args-cookie.js";
 import { isOptionalWizardStep, isSkippablePumpOffWizardStep } from "../utils/hardware-wizard-steps.js";
 import { runWizardStep, resolveStepAdvance, buildStepError } from "../utils/hardware-restart-step-runner.js";
 import { hardwareRestartDocsUrl } from "../utils/hardware-restart-docs.js";
 import { extractWizardPlan, isOqlosUnreachableError } from "../utils/hardware-wizard-plan.js";
 import { runApiWithRetry } from "../utils/hardware-api-retry.js";
+import { copyTextToClipboard } from "../utils/clipboard.js";
 
 function timestamp() {
   return new Date().toISOString();
@@ -26,6 +43,7 @@ function txtDownload(name, text) {
 
 export default function HardwareRestart() {
   const { t } = useI18n();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [plan, setPlan] = useState(null);
   const [planError, setPlanError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -41,6 +59,25 @@ export default function HardwareRestart() {
   const [copyStatus, setCopyStatus] = useState("");
   const logPanelRef = useRef(null);
   const [runtimeStatus, setRuntimeStatus] = useState(null);
+  const [modbusSettings, setModbusSettings] = useState(null);
+  const [targetBaudDraft, setTargetBaudDraft] = useState(String(MODBUS_DEFAULT_BAUD));
+  const [serialPortDraft, setSerialPortDraft] = useState("");
+  const [settingsStatus, setSettingsStatus] = useState("");
+  const [channelRefreshToken, setChannelRefreshToken] = useState(0);
+
+  const profileFromUrl = useMemo(
+    () => readModbusProfileFromSearch(searchParams.toString()),
+    [searchParams],
+  );
+  const activeProfileId = resolveModbusProfileId(
+    profileFromUrl || modbusSettings?.active_profile,
+    "modbus-adc",
+  );
+
+  const syncProfileUrl = useCallback((profileId) => {
+    setSearchParams((prev) => patchModbusProfileSearchParams(prev, profileId), { replace: true });
+    persistUiUrlArgsToCookie({ submenu: profileId });
+  }, [setSearchParams]);
 
   const refreshRuntimeStatus = useCallback(async (port) => {
     try {
@@ -53,6 +90,37 @@ export default function HardwareRestart() {
     }
   }, []);
 
+  const syncProfileDraft = useCallback((settings, profileId, planData) => {
+    const profile = resolveProfile(settings, profileId, planData);
+    setTargetBaudDraft(String(profile?.target_baudrate || settings?.target_baudrate || 9600));
+    setSerialPortDraft(String(profile?.serial_port || ""));
+  }, []);
+
+  const loadModbusSettings = useCallback(async (planData) => {
+    const urlProfile = readModbusProfileFromSearch(window.location.search);
+    try {
+      const settings = await HardwareApi.getModbusSettings({ logContext: "modbus-settings" });
+      setModbusSettings(settings);
+      const profileId = resolveModbusProfileId(
+        urlProfile || settings?.active_profile,
+        "modbus-adc",
+      );
+      syncProfileDraft(settings, profileId, planData);
+      if (!urlProfile && settings?.active_profile) {
+        syncProfileUrl(profileId);
+      }
+      return settings;
+    } catch {
+      setModbusSettings(null);
+      const profileId = resolveModbusProfileId(urlProfile, "modbus-adc");
+      syncProfileDraft(null, profileId, planData);
+      if (!urlProfile) {
+        syncProfileUrl(profileId);
+      }
+      return null;
+    }
+  }, [syncProfileDraft, syncProfileUrl]);
+
   const loadPlan = useCallback(async () => {
     setBusy(true);
     setPlanError("");
@@ -62,16 +130,60 @@ export default function HardwareRestart() {
       setPlan(data);
       setCurrentStepIndex(0);
       setStepResults({});
+      await loadModbusSettings(data);
       await refreshRuntimeStatus(data?.serial_port || "");
     } catch (err) {
       setPlanError(formatHardwareApiError(err, "Nie udalo sie pobrac planu konfiguracji Modbus."));
+      await loadModbusSettings(null);
       await refreshRuntimeStatus("");
     } finally {
       setBusy(false);
     }
-  }, [refreshRuntimeStatus]);
+  }, [loadModbusSettings, refreshRuntimeStatus]);
 
-  const serialPort = plan?.serial_port || "";
+  const saveTargetBaud = useCallback(async () => {
+    setBusy(true);
+    setSettingsStatus("");
+    try {
+      const updated = await HardwareApi.updateModbusSettings(
+        {
+          profile_id: activeProfileId,
+          active_profile: activeProfileId,
+          target_baudrate: Number(targetBaudDraft),
+          serial_port: serialPortDraft.trim(),
+        },
+        { logContext: "modbus-settings-save" },
+      );
+      setModbusSettings(updated);
+      syncProfileDraft(updated, activeProfileId, plan);
+      setSettingsStatus(t("hardwareRestart.baudSaved"));
+      await loadPlan();
+    } catch (err) {
+      setSettingsStatus(formatHardwareApiError(err, t("hardwareRestart.baudSaveFailed")));
+    } finally {
+      setBusy(false);
+    }
+  }, [activeProfileId, loadPlan, plan, serialPortDraft, syncProfileDraft, t, targetBaudDraft]);
+
+  const selectProfile = useCallback(async (profileId) => {
+    syncProfileUrl(profileId);
+    syncProfileDraft(modbusSettings, profileId, plan);
+    setSettingsStatus("");
+    setCurrentStepIndex(0);
+    setConfirmIsolated(false);
+    try {
+      const updated = await HardwareApi.updateModbusSettings(
+        { active_profile: profileId },
+        { logContext: "modbus-profile-select" },
+      );
+      setModbusSettings(updated);
+      syncProfileDraft(updated, profileId, plan);
+      setChannelRefreshToken((token) => token + 1);
+    } catch {
+      // UI działa lokalnie nawet gdy zapis aktywnego profilu się nie powiedzie
+    }
+    setChannelRefreshToken((token) => token + 1);
+  }, [modbusSettings, plan, syncProfileDraft, syncProfileUrl]);
 
   const startOqlosAndRefreshPlan = useCallback(async () => {
     const port = plan?.serial_port || "";
@@ -96,9 +208,31 @@ export default function HardwareRestart() {
     loadPlan();
   }, [loadPlan]);
 
+  useEffect(() => {
+    syncProfileDraft(modbusSettings, activeProfileId, plan);
+  }, [activeProfileId, modbusSettings, plan, syncProfileDraft]);
+
   const steps = useMemo(() => (Array.isArray(plan?.steps) ? plan.steps : []), [plan]);
-  const currentStep = steps[currentStepIndex] || null;
-  const isSeparateAdapters = plan?.modbus_topology === "separate-adapters";
+  const profileSteps = useMemo(
+    () => filterWizardStepsByProfile(steps, activeProfileId),
+    [activeProfileId, steps],
+  );
+  const baudOptions = useMemo(
+    () => (Array.isArray(modbusSettings?.baudrate_options) ? modbusSettings.baudrate_options : plan?.baudrate_options || MODBUS_BAUD_OPTIONS),
+    [modbusSettings, plan],
+  );
+  const activeProfile = useMemo(
+    () => resolveProfile(modbusSettings, activeProfileId, plan),
+    [activeProfileId, modbusSettings, plan],
+  );
+  const sidebarItems = useMemo(
+    () => buildModbusSidebarItems(modbusSettings, t, plan),
+    [modbusSettings, plan, t],
+  );
+  const profileSerialPort = serialPortDraft || activeProfile?.serial_port || plan?.serial_port || "";
+  const serialPort = profileSerialPort;
+  const currentStep = profileSteps[currentStepIndex] || null;
+  const isSeparateAdapters = profileUsesSeparateAdapter(activeProfileId);
   const isConfigureStep = Boolean(currentStep?.step?.startsWith("configure-"));
   const requiresStepConfirm = isConfigureStep;
   const confirmLabelKey = isSeparateAdapters
@@ -163,7 +297,7 @@ export default function HardwareRestart() {
           ...(optionalSkip ? { optional_skip: true, attempted_ok: ok } : {}),
         },
       }));
-      if (advanceOk && currentStepIndex < steps.length - 1) setCurrentStepIndex((prev) => prev + 1);
+      if (advanceOk && currentStepIndex < profileSteps.length - 1) setCurrentStepIndex((prev) => prev + 1);
       setStepLog((prev) => ({ ...prev, ok: advanceOk, payload }));
       setBusy(false);
     }
@@ -177,7 +311,7 @@ export default function HardwareRestart() {
     plan,
     refreshRuntimeStatus,
     serialPort,
-    steps.length,
+    profileSteps.length,
     t,
   ]);
 
@@ -201,10 +335,10 @@ export default function HardwareRestart() {
       lines: [...prev.lines, entry],
       payload: { step: currentStep, skipped: true },
     }));
-    if (currentStepIndex < steps.length - 1) {
+    if (currentStepIndex < profileSteps.length - 1) {
       setCurrentStepIndex((prev) => prev + 1);
     }
-  }, [busy, currentStep, currentStepIndex, steps.length]);
+  }, [busy, currentStep, currentStepIndex, profileSteps.length]);
 
   const skipOptionalStep = useCallback(() => {
     if (!currentStep || busy || !isOptionalWizardStep(currentStep)) return;
@@ -225,10 +359,10 @@ export default function HardwareRestart() {
       lines: [...prev.lines, entry],
       payload: { step: currentStep, skipped: true },
     }));
-    if (currentStepIndex < steps.length - 1) {
+    if (currentStepIndex < profileSteps.length - 1) {
       setCurrentStepIndex((prev) => prev + 1);
     }
-  }, [busy, currentStep, currentStepIndex, steps.length]);
+  }, [busy, currentStep, currentStepIndex, profileSteps.length]);
 
   const logText = useMemo(() => stepLog.lines.join("\n"), [stepLog.lines]);
 
@@ -240,10 +374,9 @@ export default function HardwareRestart() {
   const stepRunning = stepLog.ok === null && Boolean(stepLog.step) && busy;
 
   const copyLogsToClipboard = useCallback(async () => {
-    try {
-      await navigator.clipboard.writeText(exportText);
+    if (await copyTextToClipboard(exportText)) {
       setCopyStatus(t("hardwareRestart.logsCopied"));
-    } catch {
+    } else {
       setCopyStatus(t("hardwareRestart.logsCopyFailed"));
     }
   }, [exportText]);
@@ -262,7 +395,18 @@ export default function HardwareRestart() {
   }, [copyStatus]);
 
   return (
-    <div className="dashboard" style={{ minHeight: "100vh", overflow: "auto" }}>
+    <div className="mapx-shell">
+      <SidebarList
+        title={t("hardwareRestart.sidebarTitle")}
+        items={sidebarItems}
+        activeId={activeProfileId}
+        onSelect={(id) => selectProfile(id)}
+        collapseToggleId="hardware-modbus-profiles"
+        collapseLabel={t("hardwareRestart.sidebarTitle")}
+        collapseStorageKey="ui.hardware-modbus-sidebar-collapsed"
+        collapseIcon="⚙"
+      />
+      <div className="dashboard mapx-main-dashboard">
       <SharedNav navContext={<div className="section-label">{t("hardwareRestart.navTitle")}</div>} />
       <div className="dash-content">
         <h2>{t("hardwareRestart.pageTitle")}</h2>
@@ -282,9 +426,9 @@ export default function HardwareRestart() {
           <button className="run-btn role-force" onClick={loadPlan} disabled={busy}>
             {busy ? t("hardwareRestart.loadingPlan") : t("hardwareRestart.refreshPlan")}
           </button>
-          <Link className="run-btn role-force" to="/hardware-status" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center" }}>
+          <UiNavLink className="run-btn role-force" to="/status" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center" }}>
             {t("hardwareRestart.backToStatus")}
-          </Link>
+          </UiNavLink>
           <a
             className="run-btn role-force"
             href={hardwareRestartDocsUrl(globalThis.location?.origin || "")}
@@ -332,12 +476,32 @@ export default function HardwareRestart() {
           </div>
         </div>
 
+        <ModbusProfileSettings
+          profileId={activeProfileId}
+          profile={activeProfile}
+          baudOptions={baudOptions}
+          targetBaudDraft={targetBaudDraft}
+          serialPortDraft={serialPortDraft}
+          onTargetBaudChange={setTargetBaudDraft}
+          onSerialPortChange={setSerialPortDraft}
+          onSave={saveTargetBaud}
+          busy={busy}
+          settingsStatus={settingsStatus}
+          baselineBaud={modbusSettings?.baseline_baudrate || plan?.baseline_baudrate || 9600}
+        />
+
+        <ModbusChannelInspector
+          profileId={activeProfileId}
+          refreshToken={channelRefreshToken}
+          busy={busy}
+        />
+
         <div className="hw-card">
           <h3>{t("hardwareRestart.wizardSteps")}</h3>
           <div className="hw-kv"><span>{t("hardwareRestart.serialPort")}</span><strong>{serialPort || "-"}</strong></div>
-          <div className="hw-kv"><span>{t("hardwareRestart.targetUart")}</span><strong>{plan ? `${plan.target_baudrate} / ${plan.target_parity}` : "-"}</strong></div>
+          <div className="hw-kv"><span>{t("hardwareRestart.targetUart")}</span><strong>{activeProfile ? `${activeProfile.target_baudrate} / ${activeProfile.target_parity || "N"}` : "-"}</strong></div>
           <ol style={{ margin: "12px 0 0 18px", fontSize: rem.md }}>
-            {steps.map((step, idx) => {
+            {profileSteps.map((step, idx) => {
               const result = stepResults[step.step];
               const skippedOptional = Boolean(result?.optional_skip);
               const done = Boolean(result?.ok);
@@ -463,6 +627,7 @@ export default function HardwareRestart() {
             </details>
           ) : null}
         </div>
+      </div>
       </div>
     </div>
   );

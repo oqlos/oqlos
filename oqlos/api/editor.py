@@ -13,6 +13,7 @@ from pydantic import BaseModel
 from oqlos.shared.file_ops import (
     PathEscapeError,
     _ensure_safe_path,
+    delete_file,
     iter_entries,
     read_file,
     write_file,
@@ -143,6 +144,23 @@ async def write_file_endpoint(file_path: str, file_content: FileContent) -> dict
         raise HTTPException(status_code=403, detail=str(e)) from e
     except Exception as e:
         logger.error("Error writing file: %s", e)
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+
+@router.delete("/file/{file_path:path}")
+async def delete_file_endpoint(file_path: str) -> dict[str, str]:
+    """Delete a scenario file from the scenarios directory."""
+    try:
+        delete_file(SCENARIOS_DIR, file_path)
+        return {"status": "success", "path": file_path}
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+    except IsADirectoryError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except PathEscapeError as e:
+        raise HTTPException(status_code=403, detail=str(e)) from e
+    except Exception as e:
+        logger.error("Error deleting file: %s", e)
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 

@@ -7,6 +7,8 @@ vars:
   APP_NAME: oqlos
   DOQL_OUTPUT: app.doql.less
   DOQL_CMD: "{{if eq OS \"windows\"}}doql.exe{{else}}doql{{end}}"
+  PYTHON: "{{if .PYTHON}}{{.PYTHON}}{{else if (and (OS) (eq OS \"windows\"))}}python{{else}}.venv/bin/python{{end}}"
+  PYTEST: "{{if .PYTEST}}{{.PYTEST}}{{else}}.venv/bin/pytest{{end}}"
 
 env:
   PYTHONPATH: "{{.PWD}}"
@@ -19,7 +21,7 @@ tasks:
   install:
     desc: Install Python dependencies (editable)
     cmds:
-      - pip install -e .[dev]
+      - pip install -e packages/oqlos-models -e packages/oqlos-core -e .[dev]
 
   deps:update:
     desc: Upgrade all outdated Python packages in the active / project venv
@@ -55,13 +57,29 @@ tasks:
   test:
     desc: Run pytest suite
     cmds:
-      - pytest -q
+      - "{{.PYTEST}} -q"
 
   test:frontend:
     desc: Run frontend unit tests (node:test)
     dir: frontend
     cmds:
       - npm run test:unit
+
+  test:all:
+    desc: Run pytest and frontend unit tests
+    cmds:
+      - task: test
+      - task: test:frontend
+
+  test:panel-smoke:
+    desc: Run panel editor live API smoke via testql (requires :8202)
+    cmds:
+      - testql run testql-scenarios/panel-editor-smoke.testql.toon.yaml --url http://localhost:8202
+
+  test:panel-crud:
+    desc: Live editor file create/read/delete smoke via curl (requires :8202)
+    cmds:
+      - bash scripts/panel-editor-crud-smoke.sh http://localhost:8202
 
   lint:
     desc: Run ruff lint check

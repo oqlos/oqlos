@@ -1,6 +1,10 @@
 const API_BASE = "/api/v1/editor";
 const OQL_API_BASE = "/api/v1/oql";
 
+export function encodeEditorFilePath(filePath) {
+  return String(filePath).split("/").map(encodeURIComponent).join("/");
+}
+
 export function filterListableFiles(files) {
   if (!Array.isArray(files)) return [];
   return files.filter((file) => file && !file.is_directory);
@@ -16,7 +20,7 @@ export async function fetchScenarioFilesList() {
 }
 
 export async function fetchScenarioFileContent(filePath) {
-  const response = await fetch(`${API_BASE}/file/${filePath}`);
+  const response = await fetch(`${API_BASE}/file/${encodeEditorFilePath(filePath)}`);
   if (!response.ok) {
     throw new Error(`HTTP ${response.status}`);
   }
@@ -25,10 +29,27 @@ export async function fetchScenarioFileContent(filePath) {
 }
 
 export async function saveScenarioFileContent(filePath, content) {
-  const response = await fetch(`${API_BASE}/file/${filePath}`, {
+  const encodedPath = encodeEditorFilePath(filePath);
+  const response = await fetch(`${API_BASE}/file/${encodedPath}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ path: filePath, content }),
+  });
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+  return true;
+}
+
+export async function createScenarioFile(filePath, content) {
+  await saveScenarioFileContent(filePath, content);
+  return filePath;
+}
+
+export async function deleteScenarioFile(filePath) {
+  const encodedPath = encodeEditorFilePath(filePath);
+  const response = await fetch(`${API_BASE}/file/${encodedPath}`, {
+    method: "DELETE",
   });
   if (!response.ok) {
     throw new Error(`HTTP ${response.status}`);

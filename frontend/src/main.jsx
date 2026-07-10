@@ -6,8 +6,13 @@ import { I18nProvider } from "./i18n/I18nProvider";
 import { AppConfigProvider, useAppConfig } from "./context/AppConfigProvider";
 import "./styles/global.css";
 
-// Standalone OqlOS hardware UI. No iframe-child protocol / scanner bridge (those
-// belonged to the c2004 app shell); hardware actuation goes through /api/v3/hardware/*.
+import { hydrateUiPrefsFromServer } from "./utils/ui-prefs-client.js";
+import { hydrateUrlFromUiArgsCookie } from "./utils/ui-url-args-cookie.js";
+
+void hydrateUiPrefsFromServer();
+hydrateUrlFromUiArgsCookie();
+
+// Standalone OqlOS hardware UI.
 
 // Thin bridge so I18nProvider picks up the lang from AppConfigProvider.
 function LocalizedApp() {

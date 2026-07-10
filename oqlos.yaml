@@ -15,8 +15,8 @@ plugins:
       device_id: 2
       read_address: 0
       read_count: 8
-    timeout: 2.0
-    retry_count: 3
+    timeout: 0.6
+    retry_count: 1
     metadata:
       description: "Waveshare Modbus RTU Analog Input 8CH — 8-channel analog input sensor"
       wiki: "https://www.waveshare.com/wiki/Modbus_RTU_Analog_Input_8CH"
@@ -114,8 +114,8 @@ plugins:
       baudrate: 9600
       parity: N
       device_id: 1
-    timeout: 2.0
-    retry_count: 3
+    timeout: 0.6
+    retry_count: 1
     metadata:
       description: "8DI + 8DO industrial I/O module — valve & signal control"
     peripherals:

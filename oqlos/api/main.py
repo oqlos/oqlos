@@ -16,6 +16,7 @@ from fastapi.staticfiles import StaticFiles
 import uvicorn
 
 # Import refactored components
+from oqlos.api.swagger_docs import register_swagger_routes
 from oqlos.core.state import StateManager
 from oqlos.core.executor import ScenarioOrchestrator
 from oqlos.api import (
@@ -34,7 +35,8 @@ from oqlos.api.utils.execution_ctrl import set_dependencies as set_shared_depend
 from oqlos.api.hardware import set_hardware_gateway
 from oqlos.api.hardware_v3 import router as hardware_v3_router
 from oqlos.api.hardware_v3 import hardware_events_ws as _hardware_events_ws_handler
-from oqlos.api.oql_mqtt import router as oql_router, set_oql_controller, oql_ws as _oql_ws_handler
+from oqlos.api.ui_prefs_routes import router as ui_prefs_router
+from oqlos.api.oql_mqtt import router as oql_router, set_oql_controller
 from oqlos.utils import load_sample_scenarios
 from oqlos.utils.hui_scenario import register_hui_test_scenario
 from oqlos.config import FIRMWARE_PORT, SERVICE_NAME, SERVICE_VERSION, get_settings
@@ -60,24 +62,24 @@ STATIC_DIR = Path(__file__).parent
 
 NAVIGATION_PAGES = [
     {
-        "path": "/ui/navigation",
-        "label": "Navigation",
-        "description": "Human-readable BoardNet entrypoint with links and curl examples.",
+        "path": "/ui/status",
+        "label": "Status",
+        "description": "BoardNet entrypoint: navigation, runtime health, adapters, USB, serial and I2C diagnostics.",
     },
     {
-        "path": "/ui/hardware-status",
-        "label": "Hardware status",
-        "description": "Runtime health, detected adapters, USB, serial and I2C diagnostics.",
+        "path": "/ui/hardware-modbus",
+        "label": "Hardware Modbus",
+        "description": "Modbus autodetect wizard, adapter configuration and IO/ADC bring-up.",
     },
     {
-        "path": "/ui/hardware-restart",
-        "label": "Hardware restart",
-        "description": "Guided hardware restart and detection wizard.",
+        "path": "/ui/hardware-rtc",
+        "label": "Hardware RTC",
+        "description": "Waveshare DS3231 RTC and watchdog diagnostics via piRTC sidecar.",
     },
     {
-        "path": "/ui/hardware-demo",
-        "label": "Hardware demo",
-        "description": "Manual hardware controls and firmware demo panel.",
+        "path": "/ui/motor-services",
+        "label": "Motor services",
+        "description": "Motor diagnostics, manual PWM/stepper tests, repair and sidecar status (Tic249, DRI0050).",
     },
     {
         "path": "/ui/map-editor",
@@ -95,11 +97,6 @@ NAVIGATION_PAGES = [
         "description": "Reusable OQL function definitions.",
     },
     {
-        "path": "/ui/motor-services",
-        "label": "Motor services",
-        "description": "Sidecar status/restart for the lung (Tic249) and pump (DRI0050) motor services.",
-    },
-    {
         "path": "/ui/panel",
         "label": "OQL panel",
         "description": "Direct OQL command, scenario and manage verb tester.",
@@ -110,21 +107,30 @@ NAVIGATION_PAGES = [
         "description": "Simple built-in scenario editor (redirects to scenario files).",
     },
     {
-        "path": "/docs",
+        "path": "/ui/api-docs",
         "label": "API docs",
-        "description": "FastAPI Swagger documentation for all HTTP endpoints.",
+        "description": "FastAPI Swagger embedded in the OqlOS UI shell.",
+    },
+    {
+        "path": "/docs",
+        "label": "API docs (raw)",
+        "description": "FastAPI Swagger documentation (also embedded at /ui/api-docs).",
     },
 ]
 
 NAVIGATION_ALIASES = [
-    {"path": "/nav", "target": "/ui/navigation"},
-    {"path": "/navigation", "target": "/ui/navigation"},
-    {"path": "/status", "target": "/ui/hardware-status"},
-    {"path": "/hardware-status", "target": "/ui/hardware-status"},
-    {"path": "/restart", "target": "/ui/hardware-restart"},
-    {"path": "/hardware-restart", "target": "/ui/hardware-restart"},
-    {"path": "/demo", "target": "/ui/hardware-demo"},
-    {"path": "/hardware-demo", "target": "/ui/hardware-demo"},
+    {"path": "/nav", "target": "/ui/status"},
+    {"path": "/navigation", "target": "/ui/status"},
+    {"path": "/status", "target": "/ui/status"},
+    {"path": "/hardware-status", "target": "/ui/status"},
+    {"path": "/restart", "target": "/ui/hardware-modbus"},
+    {"path": "/hardware-restart", "target": "/ui/hardware-modbus"},
+    {"path": "/modbus", "target": "/ui/hardware-modbus"},
+    {"path": "/hardware-modbus", "target": "/ui/hardware-modbus"},
+    {"path": "/hardware-rtc", "target": "/ui/hardware-rtc"},
+    {"path": "/rtc", "target": "/ui/hardware-rtc"},
+    {"path": "/demo", "target": "/ui/motor-services"},
+    {"path": "/hardware-demo", "target": "/ui/motor-services"},
     {"path": "/map", "target": "/ui/map-editor"},
     {"path": "/map-editor", "target": "/ui/map-editor"},
     {"path": "/files", "target": "/ui/scenario-files"},
@@ -136,6 +142,7 @@ NAVIGATION_ALIASES = [
     {"path": "/oql", "target": "/ui/panel"},
     {"path": "/oql-panel", "target": "/ui/panel"},
     {"path": "/editor", "target": "/ui/scenario-files"},
+    {"path": "/api-docs", "target": "/ui/api-docs"},
 ]
 
 NAVIGATION_API_ENDPOINTS = [
@@ -205,6 +212,12 @@ async def _app_lifespan(_: FastAPI):
                 summary.get("failed"),
                 summary.get("disabled"),
             )
+        try:
+            from oqlos.hardware.startup_diagnostics import run_startup_diagnostics_and_repair
+
+            await run_startup_diagnostics_and_repair()
+        except Exception:  # pragma: no cover - startup diagnostics must never block boot
+            logger.exception("Startup diagnostics wrapper failed")
     await _start_oql_transport()
     try:
         yield
@@ -217,6 +230,8 @@ app = FastAPI(
     title="Test Simulator Backend",
     version=SERVICE_VERSION,
     lifespan=_app_lifespan,
+    docs_url=None,
+    redoc_url=None,
 )
 
 # CORS configuration
@@ -230,6 +245,7 @@ app.add_middleware(
 
 
 install_oqlos_error_handler(app)
+register_swagger_routes(app)
 
 # Runtime dependencies are initialized lazily on app startup.
 hardware: "PluginHardwareGateway | None" = None
@@ -249,6 +265,7 @@ app.include_router(logs_router)
 app.include_router(version_router)
 app.include_router(hardware_router)
 app.include_router(hardware_v3_router)
+app.include_router(ui_prefs_router)
 app.include_router(editor_router)
 app.include_router(plugins_router.router)
 app.include_router(oql_router)
@@ -341,7 +358,7 @@ async def _stop_oql_transport() -> None:
 
 @app.get("/")
 async def index_page(request: Request):
-    return RedirectResponse(_with_query("/ui/hardware-status", request))
+    return RedirectResponse(_with_query("/ui/status", request))
 
 
 def _serve_static_html(relative_path: str, title: str, missing_message: str):
@@ -362,16 +379,16 @@ async def panel_alias(request: Request):
 
 @app.get("/navigation")
 async def navigation_alias(request: Request):
-    return _redirect_with_query("/ui/navigation", request)
+    return _redirect_with_query("/ui/status", request)
 
 
-@app.get("/ui/panel", response_class=HTMLResponse)
-async def ui_panel_page():
+@app.get("/ui/legacy-panel", response_class=HTMLResponse)
+async def ui_legacy_panel_page():
     return _serve_static_html("static/panel.html", "OqlOS Panel", "panel.html not found.")
 
 
-@app.get("/ui/navigation", response_class=HTMLResponse)
-async def ui_navigation_page():
+@app.get("/ui/legacy-navigation", response_class=HTMLResponse)
+async def ui_legacy_navigation_page():
     return _serve_static_html(
         "static/navigation.html",
         "OqlOS Navigation",
@@ -397,17 +414,32 @@ def _redirect_with_query(path: str, request: Request):
 
 @app.get("/hardware-status")
 async def hardware_status_page(request: Request):
-    return RedirectResponse(_with_query("/ui/hardware-status", request))
+    return RedirectResponse(_with_query("/ui/status", request))
 
 
 @app.get("/hardware-demo")
 async def hardware_demo_alias(request: Request):
-    return RedirectResponse(_with_query("/ui/hardware-demo", request))
+    return RedirectResponse(_with_query("/ui/motor-services", request))
 
 
 @app.get("/hardware-restart")
 async def hardware_restart_alias(request: Request):
-    return RedirectResponse(_with_query("/ui/hardware-restart", request))
+    return RedirectResponse(_with_query("/ui/hardware-modbus", request))
+
+
+@app.get("/hardware-modbus")
+async def hardware_modbus_alias(request: Request):
+    return RedirectResponse(_with_query("/ui/hardware-modbus", request))
+
+
+@app.get("/hardware-rtc")
+async def hardware_rtc_alias(request: Request):
+    return RedirectResponse(_with_query("/ui/hardware-rtc", request))
+
+
+@app.get("/rtc")
+async def rtc_alias(request: Request):
+    return RedirectResponse(_with_query("/ui/hardware-rtc", request))
 
 
 @app.get("/map-editor")
@@ -424,7 +456,7 @@ async def scenario_files_alias(request: Request):
 @app.get("/func-editor")
 @app.get("/func-editor/{full_path:path}")
 async def func_editor_alias(request: Request):
-    return RedirectResponse(_with_query("/ui/scenario-files", request))
+    return RedirectResponse(_with_query("/ui/func-editor", request))
 
 
 @app.get("/motor-services")
@@ -434,22 +466,27 @@ async def motor_services_alias(request: Request):
 
 @app.get("/nav")
 async def nav_alias(request: Request):
-    return _redirect_with_query("/ui/navigation", request)
+    return _redirect_with_query("/ui/status", request)
 
 
 @app.get("/status")
 async def status_alias(request: Request):
-    return _redirect_with_query("/ui/hardware-status", request)
+    return _redirect_with_query("/ui/status", request)
 
 
 @app.get("/restart")
 async def restart_alias(request: Request):
-    return _redirect_with_query("/ui/hardware-restart", request)
+    return _redirect_with_query("/ui/hardware-modbus", request)
+
+
+@app.get("/modbus")
+async def modbus_alias(request: Request):
+    return _redirect_with_query("/ui/hardware-modbus", request)
 
 
 @app.get("/demo")
 async def demo_alias(request: Request):
-    return _redirect_with_query("/ui/hardware-demo", request)
+    return _redirect_with_query("/ui/motor-services", request)
 
 
 @app.get("/map")
@@ -467,6 +504,11 @@ async def functions_alias(request: Request):
     return _redirect_with_query("/ui/func-editor", request)
 
 
+@app.get("/api-docs")
+async def api_docs_alias(request: Request):
+    return _redirect_with_query("/ui/api-docs", request)
+
+
 @app.get("/oql")
 @app.get("/oql-panel")
 async def oql_panel_alias(request: Request):
@@ -474,6 +516,12 @@ async def oql_panel_alias(request: Request):
 
 if (_UI_DIST / "assets").is_dir():
     app.mount("/ui/assets", StaticFiles(directory=_UI_DIST / "assets"), name="ui-assets")
+
+
+@app.get("/ui/navigation")
+@app.get("/ui/hardware-status")
+async def ui_legacy_status_routes(request: Request):
+    return _redirect_with_query("/ui/status", request)
 
 
 @app.get("/ui", response_class=HTMLResponse)

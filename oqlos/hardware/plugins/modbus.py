@@ -268,6 +268,75 @@ class ModbusPlugin(HardwarePlugin):
             return {"success": False, "error": f"Unknown valve_id: {valve_id}"}
         return await self.execute_command("set_coil", {"coil": coil, "value": params.get("value", False)})
 
+    def _rtu_timeout(self) -> float:
+        return rtu_timeout(self.config)
+
+    async def _rtu_call(self, method_name: str, **kwargs: Any) -> Any:
+        if self._bus is not None:
+            method = getattr(self._bus, method_name, None)
+            if method is not None and method_name in {"read_coils", "write_coil", "read_input_registers"}:
+                return await method(timeout=self._rtu_timeout(), **kwargs)
+            return await self._bus.call(method_name, timeout=self._rtu_timeout(), **kwargs)
+        return await asyncio.wait_for(
+            asyncio.to_thread(getattr(self._client, method_name), **kwargs),
+            timeout=self._rtu_timeout(),
+        )
+
+    def _rtu_result_values(self, result: Any, *, attr: str) -> list[Any]:
+        if not result or getattr(result, "isError", lambda: True)():
+            raise RuntimeError(f"Modbus {attr} read failed: {result}")
+        return list(getattr(result, attr, []) or [])
+
+    async def _execute_read_io_snapshot(self) -> dict[str, Any]:
+        device_id = self._device_id()
+        coils = self._rtu_result_values(
+            await self._rtu_call("read_coils", address=0, count=8, device_id=device_id),
+            attr="bits",
+        )
+        discrete = self._rtu_result_values(
+            await self._rtu_call("read_discrete_inputs", address=0, count=8, device_id=device_id),
+            attr="bits",
+        )
+        modes = self._rtu_result_values(
+            await self._rtu_call("read_holding_registers", address=0x1000, count=8, device_id=device_id),
+            attr="registers",
+        )
+        addr_regs = self._rtu_result_values(
+            await self._rtu_call("read_holding_registers", address=0x4000, count=1, device_id=device_id),
+            attr="registers",
+        )
+        uart_regs = self._rtu_result_values(
+            await self._rtu_call("read_holding_registers", address=0x2000, count=1, device_id=device_id),
+            attr="registers",
+        )
+        from pimodbus.provisioning import decode_uart_register
+
+        uart_raw = int(uart_regs[0]) if uart_regs else None
+        return {
+            "success": True,
+            "data": {
+                "coils": [bool(value) for value in coils[:8]],
+                "discrete_inputs": [bool(value) for value in discrete[:8]],
+                "output_mode_registers": [int(value) for value in modes[:8]],
+                "device_id_register": int(addr_regs[0]) if addr_regs else None,
+                "uart_register_raw": uart_raw,
+                "uart_register": decode_uart_register(uart_raw) if uart_raw is not None else None,
+            },
+        }
+
+    async def _execute_write_holding_register(self, params: dict[str, Any]) -> dict[str, Any]:
+        address = int(params.get("address"))
+        value = int(params.get("value"))
+        result = await self._rtu_call(
+            "write_register",
+            address=address,
+            value=value,
+            device_id=self._device_id(),
+        )
+        if result and not getattr(result, "isError", lambda: True)():
+            return {"success": True, "data": {"address": address, "value": value}}
+        return {"success": False, "error": str(result)}
+
     async def execute_command(self, command: str, params: dict[str, Any]) -> dict[str, Any]:
         """Execute modbus command."""
         if not self._client and not self._bus:
@@ -275,23 +344,15 @@ class ModbusPlugin(HardwarePlugin):
         try:
             if command == "set_coil":
                 return await self._execute_set_coil(params)
-            elif command == "set_valve":
+            if command == "set_valve":
                 return await self._execute_set_valve(params)
+            if command == "read_io_snapshot":
+                return await self._execute_read_io_snapshot()
+            if command == "write_holding_register":
+                return await self._execute_write_holding_register(params)
             return {"success": False, "error": f"Unknown command: {command}"}
         except Exception as exc:
             return {"success": False, "error": str(exc)}
-
-    def _rtu_timeout(self) -> float:
-        return rtu_timeout(self.config)
-
-    async def _rtu_call(self, method_name: str, **kwargs: Any) -> Any:
-        if self._bus is not None:
-            method = getattr(self._bus, method_name)
-            return await method(timeout=self._rtu_timeout(), **kwargs)
-        return await asyncio.wait_for(
-            asyncio.to_thread(getattr(self._client, method_name), **kwargs),
-            timeout=self._rtu_timeout(),
-        )
 
     def _device_id(self) -> int:
         return rtu_device_id(self.config)
@@ -301,7 +362,7 @@ class ModbusPlugin(HardwarePlugin):
         """Return modbus plugin capabilities."""
         capabilities = super().get_capabilities()
         capabilities.update({
-            "supported_commands": ["set_coil", "set_valve"],
+            "supported_commands": ["set_coil", "set_valve", "read_io_snapshot", "write_holding_register"],
             "valve_mapping": {
                 "valve-1": 0, "valve-2": 1, "valve-3": 2, "valve-4": 3,
                 "valve-5": 4, "valve-6": 5, "valve-7": 6, "valve-8": 7,

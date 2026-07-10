@@ -1,4 +1,4 @@
-export const CONNECT_CONTEXT_QUERY_KEYS = ["font", "theme", "role", "lang", "size"];
+export const CONNECT_CONTEXT_QUERY_KEYS = ["font", "theme", "role", "lang", "size", "sidebar"];
 
 export const CONNECT_SUPPORTED_ROLES = [
   "admin",
@@ -65,7 +65,12 @@ const VIEW_ROLE_BINDINGS = [
   { pattern: "/connect-live-protocol*", roles: ["admin", "manager", "technician", "operator", "viewer"] },
   { pattern: "/connect-scenario*", roles: ["admin", "manager", "technician", "operator", "viewer"] },
   { pattern: "/scenario-files*", roles: ["admin", "manager", "technician", "operator", "viewer"] },
+  { pattern: "/status*", roles: ["admin", "manager", "technician", "operator", "viewer"] },
   { pattern: "/hardware-status*", roles: ["admin", "manager", "technician", "operator", "viewer"] },
+  { pattern: "/hardware-modbus*", roles: ["admin", "manager", "technician", "operator", "viewer"] },
+  { pattern: "/hardware-rtc*", roles: ["admin", "manager", "technician", "operator", "viewer"] },
+  { pattern: "/ui/hardware-modbus*", roles: ["admin", "manager", "technician", "operator", "viewer"] },
+  { pattern: "/ui/hardware-rtc*", roles: ["admin", "manager", "technician", "operator", "viewer"] },
   { pattern: "/hardware-restart*", roles: ["admin", "manager", "technician", "operator", "viewer"] },
   { pattern: "/hardware-demo*", roles: ["admin", "manager", "technician", "operator", "viewer"] },
   { pattern: "/map-editor*", roles: ["admin", "manager", "technician", "operator", "viewer"] },
@@ -74,8 +79,9 @@ const VIEW_ROLE_BINDINGS = [
   { pattern: "/panel*", roles: ["admin", "manager", "technician", "operator", "viewer"] },
   { pattern: "/ui/panel*", roles: ["admin", "manager", "technician", "operator", "viewer"] },
   { pattern: "/navigation*", roles: ["admin", "manager", "technician", "operator", "viewer"] },
-  { pattern: "/ui/navigation*", roles: ["admin", "manager", "technician", "operator", "viewer"] },
+  { pattern: "/ui/status*", roles: ["admin", "manager", "technician", "operator", "viewer"] },
   { pattern: "/docs*", roles: ["admin", "manager", "technician", "operator", "viewer"] },
+  { pattern: "/api-docs*", roles: ["admin", "manager", "technician", "operator", "viewer"] },
   { pattern: "/templates*", roles: ["admin", "manager", "technician", "operator", "viewer"] },
   { pattern: "/operator-parameters*", roles: ["admin", "manager", "technician", "operator", "viewer"] },
 ];

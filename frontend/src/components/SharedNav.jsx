@@ -3,17 +3,18 @@ import { Link, useLocation } from "react-router-dom";
 import { canConnectRoleAccessPath } from "../utils/rbac.policy.js";
 import { useAppConfig } from "../context/AppConfigProvider";
 import { useI18n } from "../i18n/I18nProvider";
+import { preserveUiNavSearchParams } from "../utils/ui-url-args-cookie.js";
 
 const navItems = [
-  { path: "/hardware-status", labelKey: "nav.hardware" },
+  { path: "/status", labelKey: "nav.hardware" },
   { path: "/hardware-modbus", labelKey: "nav.modbus" },
+  { path: "/hardware-rtc", labelKey: "nav.rtc" },
   { path: "/motor-services", labelKey: "nav.motorServices" },
   { path: "/scenario-files", labelKey: "nav.scenarioFiles" },
   { path: "/map-editor", labelKey: "nav.map" },
   { path: "/func-editor", labelKey: "nav.func" },
   { path: "/panel", labelKey: "nav.panel" },
-  { path: "/navigation", labelKey: "nav.navigation" },
-  { href: "/docs", labelKey: "nav.apiDocs" },
+  { path: "/api-docs", labelKey: "nav.apiDocs" },
 ];
 
 export default function SharedNav({
@@ -69,7 +70,7 @@ export default function SharedNav({
       );
     }
     return (
-      <Link key={itemPath} to={item.path} className={className}>
+      <Link key={itemPath} to={preserveUiNavSearchParams(item.path, location.search)} className={className}>
         {t(item.labelKey)}
       </Link>
     );
@@ -91,7 +92,7 @@ export default function SharedNav({
             </button>
           )}
           <div className="nav-brand">
-            <a href="/ui/navigation" className="nav-brand-title">OqlOS</a>
+            <Link to={preserveUiNavSearchParams("/status", location.search)} className="nav-brand-title">OqlOS</Link>
             <span className="nav-brand-host">{hostLabel}</span>
           </div>
           {navContext ? <div className="nav-context">{navContext}</div> : null}

@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from fastapi.testclient import TestClient
-
-from oqlos.api.main import app
-
 
 def test_hardware_diagnosis_route(monkeypatch):
+  from fastapi.testclient import TestClient
+  from oqlos.api.main import app
+
   async def _fake_identify(*, scan: str = "never"):
     return {"platform": {}, "diagnostics": {"health": {}}, "adapters": []}
 
@@ -31,6 +30,9 @@ def test_hardware_diagnosis_route(monkeypatch):
 
 
 def test_hardware_recover_rejects_unknown_scope(monkeypatch):
+  from fastapi.testclient import TestClient
+  from oqlos.api.main import app
+
   client = TestClient(app)
   response = client.post("/api/v1/hardware/recover?scope=full")
   assert response.status_code == 400

@@ -276,11 +276,58 @@ class ModbusAdcPlugin(HardwarePlugin):
                     return {"success": True, "data": reading["value"], "details": reading}
                 return {"success": True, "data": reading}
 
+            if command == "read_config_snapshot":
+                return await self._execute_read_config_snapshot()
+            if command == "write_holding_register":
+                return await self._execute_write_holding_register(params)
+
             return {"success": False, "error": f"Unknown command: {command}"}
         except asyncio.TimeoutError:
             return {"success": False, "error": f"Modbus ADC read_input_registers timed out after {self._rtu_timeout():.1f}s"}
         except Exception as exc:
             return {"success": False, "error": str(exc)}
+
+    async def _execute_write_holding_register(self, params: dict[str, Any]) -> dict[str, Any]:
+        address = int(params.get("address"))
+        value = int(params.get("value"))
+        result = await self._rtu_call(
+            "write_register",
+            address=address,
+            value=value,
+            device_id=self._device_id(),
+        )
+        if result and not getattr(result, "isError", lambda: True)():
+            return {"success": True, "data": {"address": address, "value": value}}
+        return {"success": False, "error": str(result)}
+
+    async def _execute_read_config_snapshot(self) -> dict[str, Any]:
+        device_id = self._device_id()
+        addr_regs = await self._rtu_call("read_holding_registers", address=0x4000, count=1, device_id=device_id)
+        uart_regs = await self._rtu_call("read_holding_registers", address=0x2000, count=1, device_id=device_id)
+        if not addr_regs or addr_regs.isError() or not uart_regs or uart_regs.isError():
+            raise RuntimeError("Failed to read Modbus ADC config registers")
+        from pimodbus.provisioning import decode_uart_register
+
+        uart_raw = int(list(uart_regs.registers or [0])[0])
+        return {
+            "success": True,
+            "data": {
+                "device_id_register": int(list(addr_regs.registers or [0])[0]),
+                "uart_register_raw": uart_raw,
+                "uart_register": decode_uart_register(uart_raw),
+            },
+        }
+
+    async def _rtu_call(self, method_name: str, **kwargs: Any) -> Any:
+        if self._bus is not None:
+            method = getattr(self._bus, method_name, None)
+            if method is not None and method_name in {"read_input_registers"}:
+                return await method(timeout=self._rtu_timeout(), **kwargs)
+            return await self._bus.call(method_name, timeout=self._rtu_timeout(), **kwargs)
+        return await asyncio.wait_for(
+            asyncio.to_thread(getattr(self._client, method_name), **kwargs),
+            timeout=self._rtu_timeout(),
+        )
 
     async def _read_registers(self) -> list[int]:
         if self._bus is not None:
@@ -357,7 +404,7 @@ class ModbusAdcPlugin(HardwarePlugin):
     def get_capabilities(cls) -> dict[str, Any]:
         capabilities = super().get_capabilities()
         capabilities.update({
-            "supported_commands": ["read_all", "read_channel", "read_sensor"],
+            "supported_commands": ["read_all", "read_channel", "read_sensor", "read_config_snapshot", "write_holding_register"],
             "supported_sensors": [
                 "AI01",
                 "AI02",

@@ -1,4 +1,4 @@
-import { CONNECT_SUPPORTED_ROLES, normalizeConnectRole } from "./rbac.policy.js";
+import { CONNECT_CONTEXT_QUERY_KEYS, CONNECT_SUPPORTED_ROLES, normalizeConnectRole } from "./rbac.policy.js";
 import { isValidShellHuiKey, SHELL_HUI_KEY_PARAM } from "./hui-shell-key.js";
 
 // Canonical iframe-embed params when hosted inside maskservice /connect-scenario.
@@ -21,7 +21,25 @@ export const APP_CONFIG_DEFAULTS = Object.freeze({
   test: "",
   key: "",
   iframeChild: false,
+  mode: "keyboard",
+  sidebar: "on",
 });
+
+export const SIDEBAR_URL_ON = "on";
+export const SIDEBAR_URL_OFF = "off";
+
+/** @returns {boolean|null} true = collapsed/off, false = expanded/on */
+export function sidebarCollapsedFromUrlParam(raw) {
+  const token = String(raw ?? "").trim().toLowerCase();
+  if (!token) return null;
+  if (token === SIDEBAR_URL_OFF || token === "collapsed" || token === "0" || token === "false") return true;
+  if (token === SIDEBAR_URL_ON || token === "open" || token === "1" || token === "true") return false;
+  return null;
+}
+
+export function sidebarUrlFromCollapsed(collapsed) {
+  return collapsed ? SIDEBAR_URL_OFF : SIDEBAR_URL_ON;
+}
 
 /** @param {URLSearchParams} params */
 export function resolveUserIdFromSearchParams(params) {
@@ -69,6 +87,10 @@ function parseAppearanceParams(params, out) {
   if (lang && SUPPORTED_LANGS_ENUM.includes(lang)) out.lang = lang;
   const resolved = resolveViewportWidthPx(params.get("size"));
   if (resolved != null) out.size = resolved;
+  const mode = (params.get("mode") || "").trim();
+  if (mode && ["keyboard", "encoder", "scanner"].includes(mode)) out.mode = mode;
+  const sidebarCollapsed = sidebarCollapsedFromUrlParam(params.get("sidebar"));
+  if (sidebarCollapsed !== null) out.sidebar = sidebarUrlFromCollapsed(sidebarCollapsed);
 }
 
 function parseIdentityParams(params, out) {
@@ -122,6 +144,7 @@ export function mergeParentContext(prev, ctx) {
     role: normalizeConnectRole(roleCandidate, prev.role),
     user: fromUser.userId || prev.user,
     size: resolveViewportWidthPx(ctx.size) ?? prev.size,
+    mode: pickSupportedString(ctx.mode, ["keyboard", "encoder", "scanner"], prev.mode),
   };
 }
 
@@ -174,6 +197,43 @@ export function resolveParentContextUpdate(prev, ctx, locationLike) {
     }
   }
   return { config: mergeParentContext(prev, ctx) };
+}
+
+/** Shell chrome keys mirrored in the address bar (maskservice CONNECT_CONTEXT + mode). */
+export const EMBED_URL_SYNC_KEYS = [...CONNECT_CONTEXT_QUERY_KEYS, "mode"];
+
+/** Keys carried when navigating between OqlOS routes via SharedNav. */
+export const NAV_PRESERVE_QUERY_KEYS = [...EMBED_URL_SYNC_KEYS, "user", "submenu"];
+
+export function buildEmbedConfigUrlPatch(config, search = "") {
+  if (!config || typeof config !== "object") return {};
+  const params = new URLSearchParams(String(search || "").replace(/^\?/, ""));
+  const patch = {};
+  const entries = {
+    font: config.font,
+    theme: config.theme,
+    role: config.role,
+    lang: config.lang,
+    size: config.size,
+    mode: config.mode,
+  };
+  Object.entries(entries).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === "") return;
+    const next = String(value);
+    if (params.get(key) !== next) patch[key] = value;
+  });
+  return patch;
+}
+
+export function preserveEmbedSearchParams(pathname, search = "") {
+  const params = new URLSearchParams(String(search || "").replace(/^\?/, ""));
+  const kept = new URLSearchParams();
+  NAV_PRESERVE_QUERY_KEYS.forEach((key) => {
+    const value = params.get(key);
+    if (value) kept.set(key, value);
+  });
+  const query = kept.toString();
+  return query ? `${pathname}?${query}` : pathname;
 }
 
 export function applyUrlEmbedPatch(currentHref, partial) {

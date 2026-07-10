@@ -145,13 +145,15 @@ export const HardwareApi = {
   },
 
   /** Per-device diagnosis plan (environment + recommended actions, no repairs). */
-  async getIntelligentDiagnosis(options) {
-    return get("/api/v3/hardware/diagnosis", options);
+  async getIntelligentDiagnosis(options = {}) {
+    const devices = options.devices ? `?devices=${encodeURIComponent(options.devices)}` : "";
+    return get(`/api/v3/hardware/diagnosis${devices}`, options);
   },
 
   /** Diagnose + run targeted auto-repair (motors / Modbus), return before/after. */
-  async runDiagnosisRepair(options) {
-    return post("/api/v3/hardware/diagnosis/repair", {}, options);
+  async runDiagnosisRepair(options = {}) {
+    const devices = options.devices ? `?devices=${encodeURIComponent(options.devices)}` : "";
+    return post(`/api/v3/hardware/diagnosis/repair${devices}`, {}, options);
   },
 
   async getModbusWaveshareDiagnose(options) {
@@ -162,7 +164,32 @@ export const HardwareApi = {
     return get("/api/v3/hardware/modbus/wizard/plan", options);
   },
 
-  /** Central autodetect + wizard plan (starts OqlOS if down). Prefer over raw plan on /hardware-restart. */
+  async getModbusSettings(options) {
+    return get("/api/v3/hardware/modbus/settings", options);
+  },
+
+  async updateModbusSettings(payload, options) {
+    return put("/api/v3/hardware/modbus/settings", payload || {}, options);
+  },
+
+  async getModbusProfileChannels(profileId, options = {}) {
+    const query = profileId ? `?profile=${encodeURIComponent(profileId)}` : "";
+    return get(`/api/v3/hardware/modbus/profile-channels${query}`, options);
+  },
+
+  async writeModbusChannelValue(payload, options) {
+    return put("/api/v3/hardware/modbus/channel-value", payload || {}, options);
+  },
+
+  async getRtcStatus(options) {
+    return get("/api/v3/hardware/rtc/status", options);
+  },
+
+  async runRtcCommand(command, args = {}, options) {
+    return post("/api/v3/hardware/rtc/command", { command, args: args || {} }, options);
+  },
+
+  /** Central autodetect + wizard plan (starts OqlOS if down). Prefer over raw plan on /hardware-modbus. */
   async getHardwareStackSnapshot(options) {
     return get("/api/v3/hardware/stack/snapshot", options);
   },
@@ -185,6 +212,20 @@ export const HardwareApi = {
   async runC2004Make(target, options = {}) {
     const normalized = String(target || "").trim();
     return post("/api/v3/hardware/runtime/make", { target: normalized }, options);
+  },
+
+  /** Whole-board system reboot (sudo systemctl reboot on the hardware host). */
+  async rebootHost(options = {}) {
+    return post("/api/v3/hardware/host/reboot", { confirm: true }, options);
+  },
+
+  async listHardwareLogs(options) {
+    return get("/api/v3/hardware/logs", options);
+  },
+
+  async readHardwareLog(logId, options = {}) {
+    const lines = options.lines ? `?lines=${encodeURIComponent(String(options.lines))}` : "";
+    return get(`/api/v3/hardware/logs/${encodeURIComponent(logId)}${lines}`, options);
   },
 
   async probeModbusWizardIsolated(payload, options) {

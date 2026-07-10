@@ -53,7 +53,7 @@ def test_panel_route_serves_html():
     from oqlos.api.main import app
 
     client = TestClient(app)
-    resp = client.get("/panel")
+    resp = client.get("/ui/legacy-panel")
     assert resp.status_code == 200
     assert "text/html" in resp.headers["content-type"]
     body = resp.text

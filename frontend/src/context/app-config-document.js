@@ -18,9 +18,11 @@ export function applyDocumentAppConfig(config) {
   root.setAttribute("data-user", config.user || "");
   root.setAttribute("data-lang", config.lang);
   root.setAttribute("data-iframe-child", config.iframeChild ? "1" : "0");
+  root.setAttribute("data-input-mode", config.mode || "keyboard");
   root.style.setProperty("--viewport-size", `${config.size}px`);
   const scale = FONT_USER_SCALE[config.font] ?? FONT_USER_SCALE.default;
   root.style.setProperty("--font-user-scale", scale);
   document.body.dataset.font = config.font;
   document.body.dataset.iframeChild = config.iframeChild ? "1" : "0";
+  document.body.dataset.inputMode = config.mode || "keyboard";
 }

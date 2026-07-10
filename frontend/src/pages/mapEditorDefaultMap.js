@@ -1162,7 +1162,15 @@ const DEFAULT_MAP = Object.freeze(
       "handlerFunction": "mapMaskPressure",
       "unit": "mbar",
       "inputMode": "voltage",
-      "physicalInput": "V1"
+      "physicalInput": "V1",
+      "conversionAlgorithm": "linear",
+      "conversionInputUnit": "V",
+      "conversionZeroPoint": 2,
+      "conversionScale": 34,
+      "conversionOffset": 0,
+      "conversionAdcPerVolt": 3950,
+      "conversionExpression": "x",
+      "conversionOutputUnit": "mbar"
     },
     "VI2": {
       "sensor": "V2",
@@ -1174,9 +1182,17 @@ const DEFAULT_MAP = Object.freeze(
       "hardwareAddress": "modbus://rack-a/modbus-adc/V2",
       "handlerRuntime": "nodejs",
       "handlerFunction": "mapVoltageInput",
-      "unit": "V",
+      "unit": "bar",
       "inputMode": "voltage",
-      "physicalInput": "V2"
+      "physicalInput": "V2",
+      "conversionAlgorithm": "linear",
+      "conversionInputUnit": "V",
+      "conversionZeroPoint": 1,
+      "conversionScale": 12.5,
+      "conversionOffset": 0,
+      "conversionAdcPerVolt": 3950,
+      "conversionExpression": "x",
+      "conversionOutputUnit": "bar"
     },
     "VI3": {
       "sensor": "V3",
@@ -1188,9 +1204,17 @@ const DEFAULT_MAP = Object.freeze(
       "hardwareAddress": "modbus://rack-a/modbus-adc/V3",
       "handlerRuntime": "nodejs",
       "handlerFunction": "mapVoltageInput",
-      "unit": "V",
+      "unit": "bar",
       "inputMode": "voltage",
-      "physicalInput": "V3"
+      "physicalInput": "V3",
+      "conversionAlgorithm": "linear",
+      "conversionInputUnit": "V",
+      "conversionZeroPoint": 0.5,
+      "conversionScale": 200,
+      "conversionOffset": 0,
+      "conversionAdcPerVolt": 3950,
+      "conversionExpression": "x",
+      "conversionOutputUnit": "bar"
     },
     "VI4": {
       "sensor": "V4",
@@ -1530,6 +1554,42 @@ const DEFAULT_MAP = Object.freeze(
         "key": "lp-bleed",
         "valves_on": ["valve-4"],
         "pump_pct": 0
+      }
+    },
+    "wc-press": {
+      "kind": "hui-valve",
+      "service": "oqlos-hardware-api",
+      "environment": "lab",
+      "usageMode": "control",
+      "endpoint": "/api/v1/hardware/hui/valve/wc-press",
+      "url": "/api/v1/hardware/hui/valve/wc-press",
+      "hardwareAddress": "hui://mask-tester/wc-press",
+      "handlerRuntime": "python",
+      "handlerFunction": "run_hui_valve_key",
+      "method": "POST",
+      "body": {
+        "command": "hui_valve",
+        "key": "wc-press",
+        "valve_id": "valve-wc",
+        "value": true
+      }
+    },
+    "wc-bleed": {
+      "kind": "hui-valve",
+      "service": "oqlos-hardware-api",
+      "environment": "lab",
+      "usageMode": "control",
+      "endpoint": "/api/v1/hardware/hui/valve/wc-bleed",
+      "url": "/api/v1/hardware/hui/valve/wc-bleed",
+      "hardwareAddress": "hui://mask-tester/wc-bleed",
+      "handlerRuntime": "python",
+      "handlerFunction": "run_hui_valve_key",
+      "method": "POST",
+      "body": {
+        "command": "hui_valve",
+        "key": "wc-bleed",
+        "valve_id": "valve-wc",
+        "value": false
       }
     },
     "Reset alarmu": {

@@ -375,6 +375,10 @@ systemctl --user stop oqlos-hardware-api.service 2>/dev/null || true
 sleep 2
 
 # --- Autodetect Modbus serial ports (by-id differs per Pi) ---
+# NOTE: this by-id heuristic assumes adapters have unique USB serial numbers. If the kit
+# has cloned FT232R adapters sharing one serial (as on boardnet), by-id is ambiguous —
+# use the role-based probe from redeploy/122/migration.md (by-path + read_coils vs
+# read_input_registers role detection) instead.
 IO_DEV=$(ls -1 /dev/serial/by-id/usb-1a86_USB_Single_Serial_*-if00 2>/dev/null | head -1 || true)
 [ -n "${IO_DEV:-}" ] && [ -e "$IO_DEV" ] || { for _p in /dev/ttyACM*; do [ -e "$_p" ] && IO_DEV="$_p" && break; done; }
 [ -n "${IO_DEV:-}" ] && [ -e "$IO_DEV" ] || IO_DEV=/dev/ttyACM0

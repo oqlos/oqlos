@@ -30,3 +30,11 @@ test("ensureParamConversion applies identity defaults", () => {
   assert.equal(target.conversionExpression, "x");
   assert.equal(target.conversionInputUnit, "V");
 });
+
+test("ensureParamConversion defaults modbus-adc input unit to ADC", () => {
+  const target = { hardwareAddress: "modbus://rack-a/modbus-adc/V1" };
+  ensureParamConversion(target);
+  assert.equal(target.conversionInputUnit, "ADC");
+  assert.equal(target.conversionZeroPoint, 0);
+  assert.equal(target.conversionAdcPerVolt, 3950);
+});

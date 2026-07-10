@@ -9,9 +9,31 @@ import {
   writePinned,
   formatBadge,
 } from "./collapse-toggle-bridge.js";
+import {
+  sidebarCollapsedFromUrlParam,
+  sidebarUrlFromCollapsed,
+} from "./url-embed-config.js";
+import { applyUrlEmbedPatchAndPersist } from "./ui-url-args-cookie.js";
 import { useRailHoverPreview } from "../hooks/useRailHoverPreview.js";
 
 export { RAIL_HOVER_OPEN_MS, RAIL_HOVER_CLOSE_MS } from "../hooks/useRailHoverPreview.js";
+
+function readSidebarCollapsedFromUrl() {
+  try {
+    return sidebarCollapsedFromUrlParam(new URL(window.location.href).searchParams.get("sidebar"));
+  } catch { /* silent */ }
+  return null;
+}
+
+function syncSidebarUrl(stowed) {
+  try {
+    const nextSidebar = sidebarUrlFromCollapsed(stowed);
+    const params = new URL(window.location.href).searchParams;
+    if (params.get("sidebar") === nextSidebar) return;
+    const { nextPath } = applyUrlEmbedPatchAndPersist(window.location.href, { sidebar: nextSidebar });
+    window.history.replaceState(null, "", nextPath);
+  } catch { /* silent */ }
+}
 
 function _makeCollapseToggleHandler(toggleId, { expand, previewExpand, previewCollapse }) {
   return (event) => {
@@ -58,6 +80,8 @@ export function useSelectionCollapsePanel({
   const [pinned, setPinned] = useState(() => readPinned(storageKey));
   const [userCollapsed, setUserCollapsed] = useState(() => {
     if (readPinned(storageKey)) return false;
+    const fromUrl = readSidebarCollapsedFromUrl();
+    if (fromUrl !== null) return fromUrl;
     return readStoredCollapsed(storageKey);
   });
   const [autoCollapsed, setAutoCollapsed] = useState(false);
@@ -92,6 +116,7 @@ export function useSelectionCollapsePanel({
       timerRef.current = null;
       setUserCollapsed(true);
       persistStoredCollapsed(storageKey, true);
+      syncSidebarUrl(true);
     }, COLLAPSE_DELAY_MS);
   }, [userCollapsed, cancelAutoCollapse, storageKey, setHoverPreview, pinned]);
 
@@ -100,6 +125,7 @@ export function useSelectionCollapsePanel({
     setHoverPreview(false);
     setUserCollapsed(false);
     persistStoredCollapsed(storageKey, false);
+    syncSidebarUrl(false);
   }, [cancelAutoCollapse, storageKey, setHoverPreview]);
 
   const togglePinned = useCallback(() => {
@@ -109,6 +135,7 @@ export function useSelectionCollapsePanel({
       if (next) {
         setUserCollapsed(false);
         persistStoredCollapsed(storageKey, false);
+        syncSidebarUrl(false);
       }
       return next;
     });
@@ -128,11 +155,30 @@ export function useSelectionCollapsePanel({
         writePinned(storageKey, false);
       }
       persistStoredCollapsed(storageKey, next);
+      syncSidebarUrl(next);
       return next;
     });
   }, [autoCollapsed, cancelAutoCollapse, storageKey, setHoverPreview]);
 
   useEffect(() => cancelAutoCollapse, [cancelAutoCollapse]);
+
+  useEffect(() => {
+    syncSidebarUrl(stowed);
+  }, [stowed]);
+
+  useEffect(() => {
+    window.__activeSidebar = {
+      toggleCollapsed,
+      collapsed,
+    };
+    window.dispatchEvent(new CustomEvent("oqlos-sidebar-registered"));
+    return () => {
+      if (window.__activeSidebar && window.__activeSidebar.toggleCollapsed === toggleCollapsed) {
+        window.__activeSidebar = null;
+        window.dispatchEvent(new CustomEvent("oqlos-sidebar-registered"));
+      }
+    };
+  }, [toggleCollapsed, collapsed]);
 
   _useIframeCollapseToggle(toggleId, stowed, { expand, previewExpand, previewCollapse, label, icon, badge });
 

@@ -85,19 +85,31 @@ def test_hardware_ui_aliases_and_status_page_are_served():
     client = TestClient(app)
     status = client.get("/hardware-status", follow_redirects=False)
     assert status.status_code in {302, 307}
-    assert status.headers["location"] == "/ui/hardware-status"
+    assert status.headers["location"] == "/ui/status"
 
-    ui_status = client.get("/ui/hardware-status")
+    ui_status = client.get("/ui/status")
     assert ui_status.status_code == 200
     assert "text/html" in ui_status.headers["content-type"]
 
+    legacy_ui_status = client.get("/ui/hardware-status", follow_redirects=False)
+    assert legacy_ui_status.status_code in {302, 307}
+    assert legacy_ui_status.headers["location"] == "/ui/status"
+
     demo = client.get("/hardware-demo?lang=pl", follow_redirects=False)
     assert demo.status_code in {302, 307}
-    assert demo.headers["location"] == "/ui/hardware-demo?lang=pl"
+    assert demo.headers["location"] == "/ui/motor-services?lang=pl"
 
-    restart = client.get("/hardware-restart", follow_redirects=False)
+    restart = client.get("/hardware-restart?lang=pl", follow_redirects=False)
     assert restart.status_code in {302, 307}
-    assert restart.headers["location"] == "/ui/hardware-restart"
+    assert restart.headers["location"] == "/ui/hardware-modbus?lang=pl"
+
+    modbus = client.get("/hardware-modbus?lang=pl", follow_redirects=False)
+    assert modbus.status_code in {302, 307}
+    assert modbus.headers["location"] == "/ui/hardware-modbus?lang=pl"
+
+    rtc = client.get("/hardware-rtc?lang=pl", follow_redirects=False)
+    assert rtc.status_code in {302, 307}
+    assert rtc.headers["location"] == "/ui/hardware-rtc?lang=pl"
 
     editor = client.get("/map-editor", follow_redirects=False)
     assert editor.status_code in {302, 307}
@@ -109,7 +121,7 @@ def test_hardware_ui_aliases_and_status_page_are_served():
 
     func_editor = client.get("/func-editor", follow_redirects=False)
     assert func_editor.status_code in {302, 307}
-    assert func_editor.headers["location"] == "/ui/scenario-files"
+    assert func_editor.headers["location"] == "/ui/func-editor"
 
     editor = client.get("/editor?scenario=demo.oql", follow_redirects=False)
     assert editor.status_code in {302, 307}
@@ -117,12 +129,11 @@ def test_hardware_ui_aliases_and_status_page_are_served():
 
     navigation = client.get("/navigation", follow_redirects=False)
     assert navigation.status_code in {302, 307}
-    assert navigation.headers["location"] == "/ui/navigation"
+    assert navigation.headers["location"] == "/ui/status"
 
-    ui_navigation = client.get("/ui/navigation")
-    assert ui_navigation.status_code == 200
-    assert "OqlOS BoardNet navigation" in ui_navigation.text
-    assert "/api/v1/oql/manage" in ui_navigation.text
+    ui_navigation = client.get("/ui/navigation", follow_redirects=False)
+    assert ui_navigation.status_code in {302, 307}
+    assert ui_navigation.headers["location"] == "/ui/status"
 
 
 def test_navigation_index_and_short_aliases():
@@ -136,20 +147,24 @@ def test_navigation_index_and_short_aliases():
     api_paths = {item["path"] for item in body["api"]}
     aliases = {item["path"]: item["target"] for item in body["aliases"]}
 
-    assert "/ui/navigation" in page_paths
-    assert "/ui/hardware-status" in page_paths
+    assert "/ui/status" in page_paths
     assert "/ui/panel" in page_paths
+    assert "/ui/hardware-rtc" in page_paths
     assert "/api/v1/oql/execute" in api_paths
     assert "/api/v1/oql/manage" in api_paths
-    assert aliases["/status"] == "/ui/hardware-status"
+    assert aliases["/status"] == "/ui/status"
     assert aliases["/oql"] == "/ui/panel"
 
     expected_redirects = {
-        "/nav": "/ui/navigation",
-        "/navigation": "/ui/navigation",
-        "/status": "/ui/hardware-status",
-        "/restart": "/ui/hardware-restart",
-        "/demo": "/ui/hardware-demo",
+        "/nav": "/ui/status",
+        "/navigation": "/ui/status",
+        "/status": "/ui/status",
+        "/restart": "/ui/hardware-modbus",
+        "/hardware-restart": "/ui/hardware-modbus",
+        "/modbus": "/ui/hardware-modbus",
+        "/hardware-rtc": "/ui/hardware-rtc",
+        "/rtc": "/ui/hardware-rtc",
+        "/demo": "/ui/motor-services",
         "/map": "/ui/map-editor",
         "/files": "/ui/scenario-files",
         "/functions": "/ui/func-editor",

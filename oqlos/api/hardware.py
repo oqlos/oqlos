@@ -18,6 +18,7 @@ from oqlos.api.hardware_hui import (
     hui_hold_start,
     hui_hold_stop,
     hui_shutdown,
+    hui_valve_key,
     router as hardware_hui_router,
 )
 from oqlos.api.hardware_identify import (

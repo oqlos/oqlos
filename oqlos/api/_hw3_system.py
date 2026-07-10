@@ -36,6 +36,11 @@ async def hardware_hui_hold_stop_v3(key: str, payload: dict[str, Any] = Body(def
     return await _hardware_hui_hold_v3(key, "stop")
 
 
+@sub_router.post("/hui/valve/{key}")
+async def hardware_hui_valve_v3(key: str, payload: dict[str, Any] = Body(default_factory=dict)) -> dict[str, Any]:
+    return await _hardware_v1_call("hui_valve_key", key)
+
+
 @sub_router.post("/hui/al/{command}")
 async def hardware_hui_al_command_v3(command: str, payload: dict[str, Any] = Body(default_factory=dict)) -> dict[str, Any]:
     from oqlos.api import hardware as hw
@@ -54,19 +59,58 @@ async def hardware_modbus_autoconfigure_v3() -> dict[str, Any]:
 
 
 @sub_router.get("/diagnosis")
-async def hardware_diagnosis_v3() -> dict[str, Any]:
-    return await _hardware_v1_call("hardware_diagnosis_route", scan="never")
+async def hardware_diagnosis_v3(
+    scan: str = "never",
+    devices: str = "all",
+) -> dict[str, Any]:
+    return await _hardware_v1_call("hardware_diagnosis_route", scan=scan, devices=devices)
 
 
 @sub_router.post("/diagnosis/repair")
-async def hardware_diagnosis_repair_v3() -> dict[str, Any]:
-    return await _hardware_v1_call("hardware_recover_route", scope="safe")
+async def hardware_diagnosis_repair_v3(devices: str = "all") -> dict[str, Any]:
+    return await _hardware_v1_call("hardware_recover_route", scope="safe", devices=devices)
+
+
+@sub_router.get("/modbus/settings")
+async def hardware_modbus_settings_v3() -> dict[str, Any]:
+    from oqlos.api import hardware_modbus_routes as modbus_hw
+    return await modbus_hw.hardware_modbus_settings_get()
+
+
+@sub_router.put("/modbus/settings")
+async def hardware_modbus_settings_update_v3(payload: dict[str, Any] = Body(default_factory=dict)) -> dict[str, Any]:
+    from oqlos.api import hardware_modbus_routes as modbus_hw
+    return await modbus_hw.hardware_modbus_settings_put(payload)
 
 
 @sub_router.get("/modbus/waveshare-diagnose")
 async def hardware_modbus_waveshare_diagnose_v3(exclusive: bool = False) -> dict[str, Any]:
     from oqlos.api import hardware_modbus_routes as modbus_hw
     return await modbus_hw.hardware_modbus_waveshare_diagnose()
+
+
+@sub_router.get("/modbus/profile-channels")
+async def hardware_modbus_profile_channels_v3(profile: str = "modbus-adc") -> dict[str, Any]:
+    from oqlos.api import hardware_modbus_routes as modbus_hw
+    return await modbus_hw.hardware_modbus_profile_channels_get(profile)
+
+
+@sub_router.put("/modbus/channel-value")
+async def hardware_modbus_channel_value_v3(payload: dict[str, Any] = Body(default_factory=dict)) -> dict[str, Any]:
+    from oqlos.api import hardware_modbus_routes as modbus_hw
+    return await modbus_hw.hardware_modbus_channel_value_put(payload)
+
+
+@sub_router.get("/rtc/status")
+async def hardware_rtc_status_v3() -> dict[str, Any]:
+    from oqlos.api import hardware_peripherals_routes as periph_hw
+    return await periph_hw.rtc_status()
+
+
+@sub_router.post("/rtc/command")
+async def hardware_rtc_command_v3(payload: dict[str, Any] = Body(default_factory=dict)) -> dict[str, Any]:
+    from oqlos.api import hardware_peripherals_routes as periph_hw
+    return await periph_hw.rtc_command(payload)
 
 
 @sub_router.get("/modbus/wizard/plan")
@@ -98,6 +142,72 @@ async def hardware_runtime_start_v3(payload: dict[str, object] = Body(default_fa
 @sub_router.post("/runtime/make")
 async def hardware_runtime_make_v3(payload: dict[str, object] = Body(default_factory=dict)) -> dict[str, object]:
     return _runtime_control_skipped("make", target=str(payload.get("target") or ""))
+
+
+@sub_router.post("/host/reboot")
+async def hardware_host_reboot_v3(payload: dict[str, Any] = Body(default_factory=dict)) -> dict[str, Any]:
+    """Reboot the whole hardware board (system-level, via sudo systemctl reboot)."""
+    from oqlos.hardware.host_power import schedule_host_reboot
+
+    return schedule_host_reboot(confirm=bool(payload.get("confirm")))
+
+
+@sub_router.get("/systemd/services")
+async def hardware_systemd_services_v3() -> dict[str, Any]:
+    """Status of every whitelisted C2004/OqlOS systemd unit on the hardware node."""
+    from oqlos.hardware.systemd_services import list_services
+
+    return list_services()
+
+
+@sub_router.post("/systemd/services/{unit}/{action}")
+async def hardware_systemd_control_v3(unit: str, action: str) -> dict[str, Any]:
+    """Start/stop/restart/status a whitelisted C2004/OqlOS systemd unit."""
+    from oqlos.hardware.systemd_services import control_service, is_whitelisted
+
+    if not is_whitelisted(unit):
+        raise HTTPException(status_code=403, detail=f"Unit not in C2004/OqlOS whitelist: {unit}")
+    result = control_service(unit, action)
+    if not result.get("ok") and result.get("error", "").startswith("Unsupported action"):
+        raise HTTPException(status_code=400, detail=result["error"])
+    return result
+
+
+@sub_router.get("/systemd/services/{unit}/logs")
+async def hardware_systemd_logs_v3(unit: str, lines: int = 100) -> dict[str, Any]:
+    """Recent journal logs for a whitelisted C2004/OqlOS systemd unit."""
+    from oqlos.hardware.systemd_services import is_whitelisted, service_logs
+
+    if not is_whitelisted(unit):
+        raise HTTPException(status_code=403, detail=f"Unit not in C2004/OqlOS whitelist: {unit}")
+    return service_logs(unit, lines=lines)
+
+
+@sub_router.get("/logs")
+async def hardware_logs_list_v3() -> dict[str, Any]:
+    """List log files grouped by day plus whitelisted journal units."""
+    from oqlos.hardware.log_files import list_log_files
+
+    return list_log_files()
+
+
+@sub_router.get("/logs/{log_id:path}")
+async def hardware_logs_read_v3(log_id: str, lines: int = 200) -> dict[str, Any]:
+    """Tail a whitelisted log file or journal unit."""
+    from oqlos.hardware.log_files import read_log
+
+    return read_log(log_id, lines=lines)
+
+
+@sub_router.get("/startup-diagnostics")
+async def hardware_startup_diagnostics_v3() -> dict[str, Any]:
+    """Cached result of the diagnostics/auto-repair run performed at OqlOS startup."""
+    from oqlos.hardware.startup_diagnostics import last_startup_diagnostics
+
+    result = last_startup_diagnostics()
+    if result is None:
+        return {"ran": False, "reason": "startup diagnostics have not run yet"}
+    return result
 
 
 @sub_router.post("/modbus/wizard/probe-isolated")
