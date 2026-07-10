@@ -1,4 +1,4 @@
-VERSION: 4
+VERSION: 5
 # lib/peripherals.oql — inicjalizacja peryferii do znanego stanu.
 
 SCENARIO: lib/peripherals — makra inicjalizacyjne

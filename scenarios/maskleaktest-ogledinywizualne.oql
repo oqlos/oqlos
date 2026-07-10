@@ -1,4 +1,4 @@
-VERSION: 4
+VERSION: 5
 GOAL:
   SET NAME 'oglediny wizualne'
   LOG 'Wymagane potwierdzenie operatora (check-list wizualny)'
