@@ -256,3 +256,29 @@ scenariuszy. Pliki v1/v2 działają na starej ścieżce parsera (deprecated).
 - Cheatsheet: `scenarios/OQL-CHEATSHEET.md`
 - Parser: `oqlos/core/oql_parser.py`
 - Adapter: `oqlos/core/_oql_adapter.py`
+
+
+---
+
+## Dodatek: OQL v4 — komendy zgodności legacy-CQL (2026-07-10)
+
+`OQL_VERSION_CURRENT = 4` (`oqlos/core/oql_versioning.py`). Od 2026-07-10
+gramatyka flat OQL zawiera komendy zgodności wprowadzone przy konwersji
+scenariuszy legacy CQL z c2004 (commit 8895cbe; testy `tests/test_oql_parser_v3.py`):
+
+| Komenda | Składnia | Uwagi |
+|---|---|---|
+| `VAL` | `VAL 'param' 'unit'` | rejestracja pomiaru do protokołu |
+| `IF` (forma porównaniowa) | `IF 'param' <op> 'value' [OR 'p2' <op2> 'v2'] [ELSE ERROR\|INFO 'msg']` | operatory `< > = ≤ ≥ !`; wartości nienumeryczne dozwolone jako string |
+| `ELSE` | `ELSE ERROR\|INFO 'message'` | także samodzielnie, po `IF` |
+| `GOTO` | `GOTO 'target'` | skok do celu/etykiety |
+| `MIN`/`MAX` (rozszerzenie) | `MIN 'sensor' '15 °C'` | akceptują cytowany token wartość+jednostka |
+
+Te komendy przechodzą przez adapter OQL→CQL (`core/_oql_adapter.py`) z
+zachowaniem surowej linii (`raw`), na której bazuje generator goals JSON
+w c2004 (`goals_from_cql`). Kanoniczna definicja zachowania = parser + testy;
+przy rozbieżności z tym dokumentem obowiązuje kod.
+
+Powiązane dokumenty: `OQL_V4_MIGRATION_MANUAL.md` (proces migracji),
+`oql_v4_llm_validator.schema.json` (schemat walidacji), glosariusz nazw
+w c2004: `docs/GLOSSARY.md`.
