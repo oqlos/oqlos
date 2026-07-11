@@ -357,3 +357,11 @@ Deklaracja `RANGE` obowiązuje dla wszystkich późniejszych odczytów
 Zasada nadrzędna: **przy rozbieżności spec vs kod obowiązuje parser + testy**
 (`packages/oqlos-core/src/oqlos/core/oql_parser.py`,
 `tests/test_oql_parser_v3.py`).
+
+### Nota o cudzysłowach (spójność v3 ↔ v4/v5)
+
+Zasada v3 „bez cudzysłowów" dotyczy **gołych identyfikatorów** komend bazowych
+(`pump-main`, `CALL macro-name`). Komendy warstwy pomiarowej i zgodności
+(`SET/GET/VAL/MIN/MAX/RANGE/PASS/FAIL/IF`) przyjmują argumenty **w pojedynczych
+cudzysłowach**, bo przenoszą frazy z jednostkami i spacjami (`'ciśnienie NC'`,
+`'-11 mbar'`). Obie konwencje współistnieją od v4 i są zamierzone.

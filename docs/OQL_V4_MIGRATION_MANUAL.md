@@ -1,5 +1,10 @@
 # OQL VERSION: 4 — Manual migracji, testowania i naprawy
 
+> **Uwaga (2026-07-11):** bieżąca wersja języka to **VERSION: 5** (deklaratywne warunki
+> RANGE/PASS/FAIL — patrz `oql-spec.md`, sekcja v5, oraz `oql_v5_llm_validator.schema.json`).
+> Ten manual opisuje krok legacy→v4; podbicie v4→v5 wykonuje
+> `c2004/backend/scripts/oql_v4_to_v5.py` z walidacją równości goals.
+
 Ten dokument opisuje jak **LLM** i developer mają:
 - pobrać scenariusz (np. `http://localhost:8096/scenarios?scenario=maskleaktest-cisnienieotwarciazaworu`),
 - wykryć stare wzorce,
