@@ -154,3 +154,85 @@ GOAL: Demo
         assert goal.steps[0].action == 'SET_PUMP'
         assert goal.steps[0].peripheral == 'pump-main'
         assert goal.steps[0].value == 5
+
+
+class TestFlatOqlRuntime:
+    """Flat OQL (v3/v4/v5) parsed through the canonical parser (parse_cql)."""
+
+    def test_flat_v5_goal_with_range_pass_fail(self):
+        dsl = """VERSION: 5
+SCENARIO: Smoke
+
+GOAL:
+  SET NAME 'Test ciśnienia'
+  SET 'zawór 2' '1'
+  WAIT 500ms
+  RANGE 'ciśnienie NC' '0.5 bar' .. '2.0 bar'
+  PASS 'Ciśnienie OK'
+  FAIL 'Ciśnienie poza zakresem'
+"""
+
+        goal, issues = parse_dsl_to_goal_with_issues(dsl, 'flat-v5')
+
+        assert goal is not None
+        assert goal.name == 'Test ciśnienia'
+        assert goal.id == 'goal-runtime-flat-v5'
+        assert issues == []
+        assert [step.action for step in goal.steps] == [
+            'SET_VALVE', 'WAIT', 'VALIDATE', 'VALIDATE',
+        ]
+        assert goal.steps[0].peripheral == 'valve-2'
+        assert goal.steps[0].value is True
+        assert goal.steps[1].duration == 500
+        assert goal.steps[2].condition == 'nc-sensor.currentValue >= 0.5'
+        assert goal.steps[3].condition == 'nc-sensor.currentValue <= 2.0'
+        assert goal.expectedResult == 'Ciśnienie OK'
+        assert [rule.errorMessage for rule in goal.validationCriteria] == [
+            'Ciśnienie poza zakresem',
+        ]
+
+    def test_flat_v3_named_goal_block(self):
+        dsl = """VERSION: 3
+GOAL test-zaworu:
+  SET 'zawór 14' '1'
+  MIN 'ciśnienie NC' '0.3 bar'
+"""
+
+        goal = parse_dsl_to_goal(dsl, 'flat-v3')
+
+        assert goal is not None
+        assert goal.name == 'test-zaworu'
+        assert [step.action for step in goal.steps] == ['SET_VALVE', 'VALIDATE']
+        assert goal.steps[1].condition == 'nc-sensor.currentValue >= 0.3'
+
+    def test_flat_multiple_goals_returns_first_with_issue(self):
+        dsl = """VERSION: 5
+GOAL:
+  SET NAME 'Pierwszy'
+  SET 'zawór 2' '1'
+
+GOAL:
+  SET NAME 'Drugi'
+  SET 'zawór 2' '0'
+"""
+
+        goal, issues = parse_dsl_to_goal_with_issues(dsl, 'flat-multi')
+
+        assert goal is not None
+        assert goal.name == 'Pierwszy'
+        assert len(goal.steps) == 1
+        assert len(issues) == 1
+        assert '2 GOAL blocks' in issues[0]
+
+    def test_legacy_dialect_not_hijacked_by_flat_detector(self):
+        dsl = """SCENARIO: Legacy guard
+GOAL: Demo
+  TASK: [Otwórz] [zawór 13]
+  SET WAIT '1 s'
+"""
+
+        goal = parse_dsl_to_goal(dsl, 'legacy-guard')
+
+        assert goal is not None
+        assert goal.name == 'Demo'
+        assert [step.action for step in goal.steps] == ['SET_VALVE', 'WAIT']
