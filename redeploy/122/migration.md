@@ -470,8 +470,19 @@ else
 fi
 # Install namespace sub-packages first (--no-deps) so pip's resolver sees them
 # in the environment when resolving the main package's pinned dependencies.
-/home/pi/oqlos/venv/bin/pip install -q --no-deps -e packages/oqlos-models -e packages/oqlos-core
-/home/pi/oqlos/venv/bin/pip install -q -e .
+# pip na SD potrafi paść przejściowo na file:// (I/O w trakcie deployu) —
+# retry 3x zamiast wywalać cały deploy.
+_pip_retry() {
+  local i
+  for i in 1 2 3; do
+    /home/pi/oqlos/venv/bin/pip install -q "$@" && return 0
+    echo "WARN: pip install $* — próba $i/3 nieudana, retry za 5 s" >&2
+    sleep 5
+  done
+  return 1
+}
+_pip_retry --no-deps -e packages/oqlos-models -e packages/oqlos-core
+_pip_retry -e .
 /home/pi/oqlos/venv/bin/python - <<'PY'
 import oqlos.api.main
 PY
