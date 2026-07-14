@@ -469,15 +469,15 @@ def _has_anonymous_named_goal(source: str) -> bool:
         stripped = raw.strip()
         if not stripped or stripped.startswith("#"):
             continue
-        if re.match(r"^(GOAL|CONFIG|MACRO)\b.*:\s*$", stripped, re.IGNORECASE):
-            in_goal = bool(re.match(r"^GOAL\s*:\s*$", stripped, re.IGNORECASE))
+        if re.match(r"^(GOAL|TEST|CONFIG|MACRO)\b.*:\s*$", stripped, re.IGNORECASE):
+            in_goal = bool(re.match(r"^(GOAL|TEST)\s*:\s*$", stripped, re.IGNORECASE))
             continue
         if not in_goal:
             continue
         if not raw.startswith((" ", "\t")):
             in_goal = False
             continue
-        if re.match(r"^[ \t]+SET\s+NAME\b", raw, re.IGNORECASE):
+        if re.match(r"^[ \t]+(SET\s+)?NAME\b", raw, re.IGNORECASE):
             return True
     return False
 
@@ -497,7 +497,7 @@ def is_flat_oql(source: str) -> bool:
 
     version_re = re.compile(r"^\s*VERSION\s*:\s*\d+\s*$", re.M | re.IGNORECASE)
     connectgo_re = re.compile(r"^\s*@\w+(?:\.\w+)*\s*$", re.M)
-    block_re = re.compile(r"^\s*(GOAL|CONFIG|MACRO)\s+[^\s:][^:]*:\s*$", re.M)
+    block_re = re.compile(r"^\s*(GOAL|TEST|CONFIG|MACRO)\s+[^\s:][^:]*:\s*$", re.M)
     legacy_re = re.compile(r"^\s*(GOAL|CONFIG)[ \t]*:[ \t]*\S", re.M)
     include_re = re.compile(r"^\s*INCLUDE\s+[\"']", re.M)
 

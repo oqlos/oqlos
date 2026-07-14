@@ -41,7 +41,8 @@ NUM = r"-?\d+(?:[.,]\d+)?"
 DUR_RE = re.compile(rf"^({NUM})(ms|s|m|h)?$")
 
 #: Header of a block: ``GOAL name:``, ``CONFIG name:``, ``MACRO name:``, ``FUNC name:``.
-BLOCK_RE = re.compile(r"^(GOAL|CONFIG|MACRO|FUNC)(?:\s+(.+?))?:\s*$", re.IGNORECASE)
+#: ``TEST:`` is the 2026-07 dialect spelling of a runnable block — parsed as GOAL.
+BLOCK_RE = re.compile(r"^(GOAL|TEST|CONFIG|MACRO|FUNC)(?:\s+(.+?))?:\s*$", re.IGNORECASE)
 
 #: Metadata line: ``KEY: value`` (KEY is UPPER_SNAKE).
 META_RE = re.compile(r"^([A-Z][A-Z0-9_]*)\s*:\s*(.+)$")
@@ -584,6 +585,7 @@ DISPATCHERS = {
     "GET":     parse_GET,
     "READ":    parse_GET,    # alias for readability
     "WAIT":    parse_WAIT,
+    "TIMER":   parse_WAIT,   # 2026-07 dialect spelling of WAIT/SET WAIT
     "SAVE":    parse_SAVE,
     "MIN":     parse_MIN,
     "MAX":     parse_MAX,
@@ -695,6 +697,10 @@ def _handle_block_header(
     if name.startswith("[") and name.endswith("]"):
         name = name[1:-1].strip()
     block_type = block.group(1).upper()
+    if block_type == "TEST":
+        # New-dialect spelling of a runnable block — downstream consumers
+        # (adapter, interpreters) only know GOAL, so normalize here.
+        block_type = "GOAL"
     if (
         version_info.effective >= OQL_VERSION_V4
         and block_type == "GOAL"
@@ -702,7 +708,7 @@ def _handle_block_header(
     ):
         doc.errors.append(
             f"Linia {ln}: w VERSION: {version_info.effective} "
-            f"użyj 'GOAL:' i nazwy przez 'SET NAME ...'"
+            f"użyj 'GOAL:' i nazwy przez 'NAME ...' / 'SET NAME ...'"
         )
     new_block = OqlBlock(type=block_type, name=name, line=ln)
     doc.blocks.append(new_block)
@@ -718,13 +724,24 @@ def _handle_macro_body_line(line: str, ln: int, current: "OqlBlock") -> None:
         and parts_peek[1].upper() == "NAME"
     ):
         current.name = parts_peek[2].strip("'\"")
+    elif len(parts_peek) >= 2 and parts_peek[0].upper() == "NAME":
+        # 2026-07 dialect: bare NAME instead of SET NAME.
+        current.name = " ".join(parts_peek[1:]).strip("'\"")
     current.raw_cmds.append((ln, line))
 
 
 def _handle_set_name(line: str, current: "OqlBlock") -> bool:
-    """Handle SET NAME command — updates block name. Returns True if consumed."""
+    """Handle SET NAME / bare NAME — updates block name. Returns True if consumed."""
     parts = line.split(None, 1)
-    if parts[0].upper() != "SET":
+    head = parts[0].upper()
+    if head == "NAME":
+        # 2026-07 dialect: ``NAME 'X'`` without the SET prefix.
+        tokens = tokenize(parts[1] if len(parts) > 1 else "")
+        if not tokens:
+            return False
+        current.name = " ".join(tokens).strip("'\"")
+        return True
+    if head != "SET":
         return False
     tokens = tokenize(parts[1] if len(parts) > 1 else "")
     if len(tokens) >= 2 and tokens[0].upper() == "NAME":
@@ -810,7 +827,7 @@ def _check_unnamed_goals(doc: "OqlDoc", version_info: object) -> None:
         if block.type == "GOAL" and not block.name:
             doc.errors.append(
                 f"Linia {block.line}: GOAL w VERSION: {version_info.effective} "
-                f"wymaga 'SET NAME ...' jako pierwszej komendy"
+                f"wymaga 'NAME ...' / 'SET NAME ...' jako pierwszej komendy"
             )
 
 

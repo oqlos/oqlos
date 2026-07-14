@@ -184,7 +184,7 @@ def test_parse_v4_goal_requires_set_name():
         """
     )
     doc = parse_oql(src)
-    assert any("wymaga 'SET NAME ...'" in e for e in doc.errors)
+    assert any("wymaga 'NAME ...' / 'SET NAME ...'" in e for e in doc.errors)
 
 
 def test_parse_v4_rejects_inline_goal_name():
@@ -682,7 +682,7 @@ def test_parse_version4_goal_rules_still_enforced():
     doc = parse_oql("VERSION: 4\nGOAL nazwa-inline:\n  SET x 0\n")
     assert any("użyj 'GOAL:'" in e for e in doc.errors)
     doc2 = parse_oql("VERSION: 4\nGOAL:\n  SET x 0\n")
-    assert any("wymaga 'SET NAME ...'" in e for e in doc2.errors)
+    assert any("wymaga 'NAME ...' / 'SET NAME ...'" in e for e in doc2.errors)
 
 
 def test_parse_range_with_units():
@@ -843,3 +843,75 @@ def test_adapter_fail_retry_emits_retry_action():
     assert [(a.kind, a.args) for a in actions] == [("else", "NOK"), ("retry", "2")]
     assert actions[0].raw == "FAIL 'NOK'"
     assert actions[1].raw == "RETRY 2"
+
+
+# ── 2026-07 dialect: TEST:, bare NAME, TIMER ─────────────────────
+
+
+NEW_DIALECT_SRC = textwrap.dedent(
+    """
+    VERSION: 5
+    SCENARIO: 'Motor Test'
+    GOAL:
+      NAME 'Kontrola wizualna'
+      TIMER '2 s'
+      GET 'AI01'
+      PASS 'AI01' 'w normie'
+    TEST:
+      NAME 'Test szczelności'
+      SET 'pompa' '5 l'
+      RANGE 'AI02' '4.2 mbar' .. '6.0 mbar'
+      VAL 'AI02' 'mbar'
+    """
+)
+
+
+def test_new_dialect_bare_name_sets_block_name():
+    doc = parse_oql(NEW_DIALECT_SRC)
+    assert not doc.errors
+    assert [b.name for b in doc.blocks] == ["Kontrola wizualna", "Test szczelności"]
+
+
+def test_new_dialect_test_block_normalizes_to_goal():
+    doc = parse_oql(NEW_DIALECT_SRC)
+    assert [b.type for b in doc.blocks] == ["GOAL", "GOAL"]
+
+
+def test_new_dialect_timer_is_wait_alias():
+    doc = parse_oql(NEW_DIALECT_SRC)
+    waits = [c for c in doc.blocks[0].cmds if c.cmd == "WAIT"]
+    assert len(waits) == 1
+    assert waits[0].args["ms"] == 2000
+
+
+def test_new_dialect_is_detected_as_flat_oql():
+    assert is_flat_oql(NEW_DIALECT_SRC) is True
+    # bez nagłówka VERSION nadal wykrywalny po TEST: + NAME
+    headless = "\n".join(
+        line for line in NEW_DIALECT_SRC.splitlines() if not line.startswith("VERSION")
+    )
+    assert is_flat_oql(headless) is True
+
+
+def test_new_dialect_adapter_yields_named_goals():
+    cdoc = parse_flat_oql(NEW_DIALECT_SRC)
+    assert not cdoc.errors
+    assert [g.name for g in cdoc.goals] == ["Kontrola wizualna", "Test szczelności"]
+
+
+def test_new_dialect_bare_name_in_func_block():
+    src = textwrap.dedent(
+        """
+        VERSION: 5
+        FUNC:
+          NAME 'Move Left'
+          SET 'motor2' '1000 steps/s'
+        GOAL:
+          NAME 'Test motor'
+          FUNC 'Move Left'
+        """
+    )
+    doc = parse_oql(src)
+    assert not doc.errors
+    func_blocks = [b for b in doc.blocks if b.type == "FUNC"]
+    assert func_blocks and func_blocks[0].name == "Move Left"
