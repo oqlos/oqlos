@@ -44,6 +44,12 @@ DUR_RE = re.compile(rf"^({NUM})(ms|s|m|h)?$")
 #: ``TEST:`` is the 2026-07 dialect spelling of a runnable block — parsed as GOAL.
 BLOCK_RE = re.compile(r"^(GOAL|TEST|CONFIG|MACRO|FUNC)(?:\s+(.+?))?:\s*$", re.IGNORECASE)
 
+#: Forma zgodności c2004: ``FUNC: nazwa`` (nazwa PO dwukropku, jak we frontendzie
+#: ``parseOqlToSteps._startFunc``). Rozpoznawana jako nagłówek bloku FUNC, nie
+#: jako metadane. Zawężone do FUNC — ``GOAL: Nazwa`` w dialekcie flat pozostaje
+#: błędem (v4+ wymaga nazwy przez ``NAME``).
+FUNC_INLINE_NAME_RE = re.compile(r"^FUNC\s*:\s*(.+)$", re.IGNORECASE)
+
 #: Metadata line: ``KEY: value`` (KEY is UPPER_SNAKE).
 META_RE = re.compile(r"^([A-Z][A-Z0-9_]*)\s*:\s*(.+)$")
 
@@ -349,6 +355,78 @@ def parse_CHECK(rest: str, ln: int, raw: str) -> OqlCmd:
     )
 
 
+#: Bound token: number with optional unit ('-10 mbar', '0.5 l/min', '999999').
+_BOUND_RE = re.compile(rf"^({NUM})\s*(.*)$")
+
+
+def _parse_bound(token: str) -> tuple[float | int | None, str]:
+    """'-10 mbar' → (-10, 'mbar'); non-numeric token → (None, '')."""
+    match = _BOUND_RE.match(str(token).strip())
+    if not match:
+        return None, ""
+    return to_num(match.group(1)), match.group(2).strip()
+
+
+def _parse_if_quoted_range(rest: str, ln: int, raw: str) -> OqlCmd | None:
+    """Toleruj legacy zakresy z konwersji CQL/XML:
+
+    ``IF 'param' 'min u' .. 'max u'`` — cytowane granice z jednostką,
+    ``IF 'ciśnienie' 'NC' '-10 mbar' .. 'NC' '0 mbar'`` — etykiety scalane
+    do nazwy parametru (lewa) / ignorowane (prawa),
+    ``IF 'param' '0 .. 1100 N'`` — zakres w jednym cytowanym tokenie,
+    ``IF 'timer' 'timeout' .. 999999`` — granica jako nazwa zmiennej
+    (rozwiązywana w runtime).
+    """
+    tokens = tokenize(rest.strip())
+    if ".." not in tokens:
+        for idx, tok in enumerate(tokens):
+            if ".." in tok and tok != "..":
+                left_part, _, right_part = tok.partition("..")
+                expanded = tokens[:idx]
+                if left_part.strip():
+                    expanded.append(left_part.strip())
+                expanded.append("..")
+                if right_part.strip():
+                    expanded.append(right_part.strip())
+                expanded.extend(tokens[idx + 1:])
+                tokens = expanded
+                break
+    if ".." not in tokens:
+        return None
+
+    sep = tokens.index("..")
+    left, right = tokens[:sep], tokens[sep + 1:]
+    if len(left) < 2 or not right:
+        return None
+
+    # Lewa strona: ostatni token = dolna granica, wcześniejsze = nazwa parametru.
+    sensor = " ".join(left[:-1])
+    min_val, min_unit = _parse_bound(left[-1])
+    min_spec = None if min_val is not None else left[-1]
+
+    # Prawa strona: ostatni numeryczny token = górna granica, etykiety pomijamy.
+    max_val, max_unit, max_spec = None, "", None
+    for tok in reversed(right):
+        candidate, unit = _parse_bound(tok)
+        if candidate is not None:
+            max_val, max_unit = candidate, unit
+            break
+    if max_val is None:
+        max_spec = right[-1]
+
+    args: dict = {
+        "sensor": sensor,
+        "min": min_val,
+        "max": max_val,
+        "unit": max_unit or min_unit or None,
+    }
+    if min_spec is not None:
+        args["min_var"] = min_spec
+    if max_spec is not None:
+        args["max_var"] = max_spec
+    return OqlCmd("CHECK", args, ln, raw)
+
+
 def parse_IF(rest: str, ln: int, raw: str) -> OqlCmd:
     match = IF_RE.match(rest.strip())
     if match:
@@ -363,6 +441,10 @@ def parse_IF(rest: str, ln: int, raw: str) -> OqlCmd:
             ln,
             raw,
         )
+
+    quoted_range = _parse_if_quoted_range(rest, ln, raw)
+    if quoted_range is not None:
+        return quoted_range
 
     cmp_match = IF_CMP_RE.match(rest.strip())
     if cmp_match:
@@ -527,14 +609,52 @@ def parse_RANGE(tokens: list[str], ln: int, raw: str) -> OqlCmd:
     )
 
 
+_TASK_FIELDS = {"TITLE", "VAL", "PASS", "FAIL"}
+
+
+def parse_TASK(tokens: list[str], ln: int, raw: str) -> OqlCmd:
+    """``TASK`` — instrukcja/dialog operatora (dialekt c2004).
+
+    Dwie formy generowane przez builder scenariuszy w c2004:
+
+    * ``TASK 'param' 'opis'`` — tytuł/opis zadania powiązany z parametrem,
+    * ``TASK TITLE|VAL|PASS|FAIL 'msg'`` — pole dialogu zadania.
+    """
+    _require(tokens, 2, "TASK", ln, "'param' 'opis' | TITLE|VAL|PASS|FAIL 'msg'")
+    head = tokens[0].upper()
+    if head in _TASK_FIELDS and len(tokens) == 2:
+        return OqlCmd(
+            "TASK",
+            {"field": head.lower(), "message": tokens[1]},
+            ln,
+            raw,
+        )
+    return OqlCmd(
+        "TASK",
+        {"param": tokens[0], "message": " ".join(tokens[1:])},
+        ln,
+        raw,
+    )
+
+
 def parse_PASS(tokens: list[str], ln: int, raw: str) -> OqlCmd:
-    """``PASS 'message'`` — werdykt pozytywny (v5, alias semantyczny CORRECT)."""
-    _require(tokens, 1, "PASS", ln, "'message'")
+    """``PASS 'message'`` — werdykt pozytywny (v5, alias semantyczny CORRECT).
+
+    Toleruje też dialekt c2004 ``PASS 'param' 'message'`` (dwa cytowane
+    tokeny): pierwszy to nazwa parametru, drugi to komunikat werdyktu.
+    """
+    _require(tokens, 1, "PASS", ln, "'message' | 'param' 'message'")
+    if len(tokens) == 2:
+        return OqlCmd("PASS", {"param": tokens[0], "message": tokens[1]}, ln, raw)
     return OqlCmd("PASS", {"message": " ".join(tokens)}, ln, raw)
 
 
 def parse_FAIL(tokens: list[str], ln: int, raw: str) -> OqlCmd:
-    """``FAIL 'message' [GOTO 'target' | RETRY n]`` — werdykt negatywny (v5)."""
+    """``FAIL 'message' [GOTO 'target' | RETRY n]`` — werdykt negatywny (v5).
+
+    Toleruje też dialekt c2004 ``FAIL 'param' 'message'`` (dwa cytowane
+    tokeny bez GOTO/RETRY): pierwszy to nazwa parametru, drugi komunikat.
+    """
     _require(tokens, 1, "FAIL", ln, "'message' [GOTO 'target' | RETRY n]")
     tail_idx = None
     for idx, token in enumerate(tokens[1:], start=1):
@@ -542,6 +662,10 @@ def parse_FAIL(tokens: list[str], ln: int, raw: str) -> OqlCmd:
             tail_idx = idx
             break
     if tail_idx is None:
+        if len(tokens) == 2:
+            return OqlCmd(
+                "FAIL", {"param": tokens[0], "message": tokens[1]}, ln, raw
+            )
         return OqlCmd("FAIL", {"message": " ".join(tokens)}, ln, raw)
 
     args: dict = {"message": " ".join(tokens[:tail_idx])}
@@ -578,7 +702,41 @@ def parse_REPEAT(tokens: list[str], ln: int, raw: str) -> OqlCmd:
     return OqlCmd("REPEAT", {"action": "start", "count": tokens[0]}, ln, raw)
 
 
+def parse_NOOP(tokens: list[str], ln: int, raw: str) -> OqlCmd:
+    """Terminatory bloków legacy (``ENDIF``/``FI``) — w płaskim modelu OQL
+    ``IF`` jest warunkiem inline, więc terminator nie niesie akcji (no-op)."""
+    return OqlCmd("NOOP", {}, ln, raw)
+
+
 # ── Dispatch table ───────────────────────────────────────────────
+
+def parse_TESTQL(tokens: list[str], ln: int, raw: str) -> OqlCmd:
+    """Generyczny parser komend TestQL (API/ASSERT/EXPECT/GUI/recorder).
+
+    Zachowuje surowe tokeny i nazwę komendy — semantykę nadaje adapter
+    (``_lower_testql``), kierując rodzinę komendy do handlera runtime.
+    """
+    stripped = raw.strip()
+    command = stripped.split(None, 1)[0].upper() if stripped else ""
+    return OqlCmd(
+        "TESTQL",
+        {"command": command, "tokens": tokens, "raw": raw},
+        ln,
+        raw,
+    )
+
+
+#: Komendy TestQL (API/GUI/hardware-assert) używane przez scenariusze c2004.
+#: Runtime ma handlery api/assert/expect; GUI/recorder lecą jako no-op action.
+_TESTQL_COMMANDS: tuple[str, ...] = (
+    "API", "API_GET", "API_POST", "API_PUT", "API_DELETE",
+    "ASSERT_STATUS", "ASSERT_JSON", "ASSERT_SENSOR", "ASSERT_VALVE",
+    "ASSERT_CONTAINS", "ASSERT_VISIBLE", "ASSERT_TEXT",
+    "EXPECT_DEVICE",
+    "NAVIGATE", "CLICK", "INPUT", "SELECT_DEVICE", "SELECT_INTERVAL",
+    "START_TEST", "STEP_COMPLETE", "RECORD_START", "RECORD_STOP",
+)
+
 
 DISPATCHERS = {
     "SET":     parse_SET,
@@ -587,6 +745,7 @@ DISPATCHERS = {
     "WAIT":    parse_WAIT,
     "TIMER":   parse_WAIT,   # 2026-07 dialect spelling of WAIT/SET WAIT
     "SAVE":    parse_SAVE,
+    "TASK":    parse_TASK,   # dialekt c2004: instrukcja/dialog operatora
     "MIN":     parse_MIN,
     "MAX":     parse_MAX,
     "SAMPLE":  parse_SAMPLE,
@@ -604,6 +763,9 @@ DISPATCHERS = {
     "RANGE":   parse_RANGE,   # v5: deklaratywny zakres (CHECK = alias historyczny)
     "PASS":    parse_PASS,    # v5: alias semantyczny CORRECT
     "FAIL":    parse_FAIL,    # v5: alias semantyczny ERROR (+ GOTO / RETRY)
+    "ENDIF":   parse_NOOP,    # terminator legacy bloku IF (no-op w modelu inline)
+    "FI":      parse_NOOP,    # alias ENDIF
+    **{cmd: parse_TESTQL for cmd in _TESTQL_COMMANDS},
 }
 
 #: Ordered list of canonical base commands (used by documentation tests).
@@ -675,7 +837,7 @@ def _handle_top_level_line(
         return True
 
     meta = META_RE.match(line)
-    if meta and not BLOCK_RE.match(line):
+    if meta and not BLOCK_RE.match(line) and not FUNC_INLINE_NAME_RE.match(line):
         key_raw = meta.group(1)
         doc.meta[key_raw.lower()] = meta.group(2).strip().strip("'\"")
         if key_raw not in _KNOWN_META_KEYS:
@@ -692,6 +854,13 @@ def _handle_block_header(
     """Parse a block header line. Returns the new block if matched, else None."""
     block = BLOCK_RE.match(line)
     if not block:
+        func_inline = FUNC_INLINE_NAME_RE.match(line)
+        if func_inline:
+            # ``FUNC: nazwa`` — parytet z frontendem c2004: pusty/nazwany blok FUNC.
+            name = func_inline.group(1).strip().strip("'\"")
+            new_block = OqlBlock(type="FUNC", name=name, line=ln)
+            doc.blocks.append(new_block)
+            return new_block
         return None
     name = block.group(2).strip() if block.group(2) else ""
     if name.startswith("[") and name.endswith("]"):

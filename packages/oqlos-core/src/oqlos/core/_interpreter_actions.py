@@ -211,6 +211,12 @@ def exec_action_save(interp: "CqlInterpreter", act: CqlAction) -> "StepStatus":
     interp.vars.set(act.target, val)
     interp.out.step("    💾", f"SAVE {act.target} = {val}")
     from oqlos.core.base import StepStatus
+
+    # SAVE utrwala pomiar — zadeklarowane progi oceniamy w momencie zapisu,
+    # tak jak przy VAL/GET.
+    numeric = interp._coerce_float(val)
+    if numeric is not None:
+        return _evaluate_val_thresholds(interp, act.target, float(numeric), "")
     return StepStatus.PASSED
 
 
@@ -256,30 +262,157 @@ def _do_sleep(interp: "CqlInterpreter", secs: float, label: str) -> None:
 
 
 def exec_action_min_max(interp: "CqlInterpreter", act: CqlAction) -> "StepStatus":
-    """Execute MIN/MAX action."""
-    sensor = act.target
-    op = ">=" if act.kind == "min" else "<="
-    try:
-        val = float(act.args.split()[0])
-    except (ValueError, IndexError):
-        val = 0.0
+    """Register a MIN/MAX threshold for later VAL evaluation."""
+    from oqlos.core.base import StepStatus
 
-    cond = CqlCondition(sensor=sensor, operator=op, value=val)
-    return interp._evaluate_condition(CqlAction(kind="condition", condition=cond))
+    sensor = str(act.target or "").strip()
+    if not sensor:
+        interp.out.error(f"Malformed {act.kind.upper()} without target: {act.raw}")
+        return StepStatus.ERROR
+
+    try:
+        val = float(str(act.args or "").replace(",", ".").split()[0])
+    except (ValueError, IndexError):
+        interp.out.error(f"Could not parse {act.kind.upper()} threshold for {sensor}: {act.args}")
+        return StepStatus.ERROR
+
+    thresholds = getattr(interp, "_oql_thresholds", None)
+    if thresholds is None:
+        thresholds = {}
+        setattr(interp, "_oql_thresholds", thresholds)
+    entry = thresholds.setdefault(sensor, {"min": None, "max": None, "unit": ""})
+    entry[act.kind] = val
+    unit = _extract_unit(act.args)
+    if unit:
+        entry["unit"] = unit
+
+    interp.out.step("    📏", f"{act.kind.upper()} {sensor} {val:g} {entry.get('unit') or ''}".strip())
+    return StepStatus.PASSED
+
+
+def _extract_unit(value: Any) -> str:
+    text = str(value or "").strip()
+    match = re.match(r"[-+]?\d+(?:[.,]\d+)?\s*(.*)$", text)
+    return (match.group(1).strip() if match else "") or ""
+
+
+def _resolve_live_val(interp: "CqlInterpreter", sensor: str) -> float | None:
+    if sensor in interp.sensor_values:
+        return interp._coerce_float(interp.sensor_values.get(sensor))
+
+    base_sensor = sensor[1:] if sensor.startswith("Δ") else sensor
+    if base_sensor in interp.sensor_values:
+        return interp._coerce_float(interp.sensor_values.get(base_sensor))
+
+    numeric = interp._coerce_float(interp.vars.get(sensor))
+    if numeric is not None:
+        return numeric
+    numeric = interp._coerce_float(interp.vars.get(base_sensor))
+    if numeric is not None:
+        return numeric
+
+    if interp.mode == "execute":
+        try:
+            interp._refresh_sensors_from_firmware()
+        except Exception as exc:
+            interp.out.warn(f"Could not refresh sensors before VAL {sensor}: {exc}")
+        if sensor in interp.sensor_values:
+            return interp._coerce_float(interp.sensor_values.get(sensor))
+        if base_sensor in interp.sensor_values:
+            return interp._coerce_float(interp.sensor_values.get(base_sensor))
+
+    return None
+
+
+def _evaluate_val_thresholds(interp: "CqlInterpreter", sensor: str, val: float, unit: str) -> "StepStatus":
+    from oqlos.core.base import StepStatus
+
+    thresholds = getattr(interp, "_oql_thresholds", {}) or {}
+    bounds = thresholds.get(sensor)
+    if not bounds:
+        return StepStatus.PASSED
+
+    evaluated = getattr(interp, "_oql_thresholds_evaluated", None)
+    if evaluated is not None:
+        evaluated.add(sensor)
+
+    min_val = bounds.get("min")
+    max_val = bounds.get("max")
+    if interp.mode == "dry-run" and getattr(interp._sensor_eval, "_auto_mock", False):
+        if min_val is not None and max_val is not None and not (min_val <= val <= max_val):
+            val = (float(min_val) + float(max_val)) / 2.0
+            interp.vars.set(sensor, val)
+            interp.sensor_values[sensor] = val
+        elif min_val is not None and val < min_val:
+            val = float(min_val)
+            interp.vars.set(sensor, val)
+            interp.sensor_values[sensor] = val
+        elif max_val is not None and val > max_val:
+            val = float(max_val)
+            interp.vars.set(sensor, val)
+            interp.sensor_values[sensor] = val
+
+    actual_unit = unit or bounds.get("unit") or ""
+    ok = True
+    if min_val is not None and val < min_val:
+        ok = False
+    if max_val is not None and val > max_val:
+        ok = False
+
+    if ok:
+        interp.out.step("    ✅", f"{sensor} = {val:g} {actual_unit} within [{min_val}, {max_val}]".strip())
+        return StepStatus.PASSED
+
+    message = f"{sensor} = {val:g} {actual_unit} outside [{min_val}, {max_val}]".strip()
+    interp.errors.append(message)
+    interp.out.step("    ❌", f"{message} → FAIL")
+    return StepStatus.FAILED
+
+
+def _mock_missing_val(interp: "CqlInterpreter", sensor: str) -> float:
+    """Dry-run automock dla VAL bez wartości: środek zadeklarowanych progów."""
+    bounds = (getattr(interp, "_oql_thresholds", {}) or {}).get(sensor) or {}
+    min_val = bounds.get("min")
+    max_val = bounds.get("max")
+    if min_val is not None and max_val is not None:
+        return (float(min_val) + float(max_val)) / 2.0
+    if min_val is not None:
+        return float(min_val)
+    if max_val is not None:
+        return float(max_val)
+    return 0.0
 
 
 def exec_action_val(interp: "CqlInterpreter", act: CqlAction) -> "StepStatus":
-    """Execute VAL action."""
-    sensor = act.target
-    val = interp.sensor_values.get(sensor)
-    if val is None:
-        val = interp.vars.get(sensor)
-    if val is None:
-        val = 0.0
-    interp.vars.set(sensor, val)
-    interp.out.step("    📊", f"VAL [{sensor}] = {val} {act.args}")
+    """Resolve VAL and evaluate any registered MIN/MAX thresholds."""
     from oqlos.core.base import StepStatus
-    return StepStatus.PASSED
+
+    sensor = str(act.target or "").strip()
+    val = _resolve_live_val(interp, sensor)
+    if val is None and interp.mode == "dry-run" and getattr(interp._sensor_eval, "_auto_mock", False):
+        val = _mock_missing_val(interp, sensor)
+        interp.out.step("    🎭", f"VAL [{sensor}] automock = {val:g} (dry-run)")
+    if val is None:
+        has_threshold = bool((getattr(interp, "_oql_thresholds", {}) or {}).get(sensor))
+        if has_threshold:
+            # Próg zadeklarowany, ale bez realnego odczytu = nie da się ocenić
+            # bramki → twardy błąd (gwarancja „brak fałszywego PASS").
+            message = f"VAL {sensor}: missing real sensor/variable value for threshold evaluation"
+            interp.errors.append(message)
+            interp.out.error(message)
+            return StepStatus.FAILED
+        # VAL bez progu = tylko zapis pomiaru do protokołu. Brak odczytu w
+        # execute to ostrzeżenie (nie ma bramki do oblania), nie błąd.
+        message = f"VAL {sensor}: brak odczytu (pomiar bez progu — pominięto zapis)"
+        interp.warnings.append(message)
+        interp.out.warn(message)
+        return StepStatus.PASSED
+
+    interp.vars.set(sensor, val)
+    interp.sensor_values[sensor] = float(val)
+    unit = str(act.args or "").strip()
+    interp.out.step("    📊", f"VAL [{sensor}] = {val:g} {unit}".strip())
+    return _evaluate_val_thresholds(interp, sensor, float(val), unit)
 
 
 def exec_action_log(interp: "CqlInterpreter", act: CqlAction) -> "StepStatus":

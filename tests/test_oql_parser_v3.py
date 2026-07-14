@@ -616,7 +616,7 @@ def test_adapter_lowers_legacy_commands_preserving_raw():
     assert goal.name == "Pomiar"
     actions = goal.steps[0].actions
     kinds = [a.kind for a in actions]
-    assert kinds == ["val", "if", "goto", "else"]
+    assert kinds == ["val", "condition", "goto", "else"]
     raws = [a.raw for a in actions]
     assert raws == [
         "VAL 'cn' 'mbar'",
@@ -626,6 +626,12 @@ def test_adapter_lowers_legacy_commands_preserving_raw():
     ]
     val = actions[0]
     assert val.target == "cn" and val.args == "mbar"
+    cond_act = actions[1]
+    assert cond_act.condition is not None
+    assert cond_act.condition.sensor == "cn"
+    assert cond_act.condition.operator == ">"
+    assert cond_act.condition.on_fail == "ERROR"
+    assert cond_act.args == "próg_przełączenia"
     goto = actions[2]
     assert goto.target == "Pomiar w zakresie wysokim"
     els = actions[3]
@@ -915,3 +921,23 @@ def test_new_dialect_bare_name_in_func_block():
     assert not doc.errors
     func_blocks = [b for b in doc.blocks if b.type == "FUNC"]
     assert func_blocks and func_blocks[0].name == "Move Left"
+
+
+def test_func_inline_name_after_colon_is_block_not_metadata():
+    # Parytet z frontendem c2004 (parseOqlToSteps._startFunc): `FUNC: nazwa`
+    # to nagłówek bloku FUNC, nie nieznane metadane.
+    src = textwrap.dedent(
+        """
+        SCENARIO: 'Hardware Diagnostics'
+        FUNC: 'NC ON'
+
+        GOAL:
+          NAME 'Detect'
+          LOG 'x'
+        """
+    )
+    doc = parse_oql(src)
+    assert not doc.errors
+    assert not any("nieznane metadane 'FUNC'" in w for w in doc.warnings)
+    func_blocks = [b for b in doc.blocks if b.type == "FUNC"]
+    assert func_blocks and func_blocks[0].name == "NC ON"

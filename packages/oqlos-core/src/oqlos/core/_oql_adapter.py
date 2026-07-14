@@ -216,23 +216,66 @@ _lower_min = _make_lower_minmax("min")
 _lower_max = _make_lower_minmax("max")
 
 
+#: Granice-sentinele legacy konwertera: ±999999 = strona nieograniczona.
+_UNBOUNDED_SENTINEL = 999999
+
+
 def _lower_check(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "list[CqlAction]":
+    sensor = cmd.args["sensor"]
+    min_val, max_val = cmd.args.get("min"), cmd.args.get("max")
+    min_var, max_var = cmd.args.get("min_var"), cmd.args.get("max_var")
     default_fail = (
-        f"{cmd.args['sensor']} poza zakresem "
-        f"[{cmd.args['min']}, {cmd.args['max']}] "
+        f"{sensor} poza zakresem "
+        f"[{min_var if min_val is None else min_val}, "
+        f"{max_var if max_val is None else max_val}] "
         f"{cmd.args.get('unit') or ''}".strip()
     )
-    cond = CqlCondition(
-        sensor=cmd.args["sensor"],
-        operator="∈",
-        value_min=cmd.args["min"],
-        value_max=cmd.args["max"],
-        unit=cmd.args.get("unit") or "",
-        on_fail="ERROR",
-        fail_message=cmd.args.get("error_msg") or default_fail,
-        pass_message=cmd.args.get("correct_msg") or "",
-    )
-    return [CqlAction(kind="condition", condition=cond, raw=cmd.raw)]
+    fail_message = cmd.args.get("error_msg") or default_fail
+    pass_message = cmd.args.get("correct_msg") or ""
+
+    if (
+        min_val is not None and max_val is not None
+        and not (min_var or max_var)
+        and abs(min_val) < _UNBOUNDED_SENTINEL
+        and abs(max_val) < _UNBOUNDED_SENTINEL
+    ):
+        cond = CqlCondition(
+            sensor=sensor,
+            operator="∈",
+            value_min=min_val,
+            value_max=max_val,
+            unit=cmd.args.get("unit") or "",
+            on_fail="ERROR",
+            fail_message=fail_message,
+            pass_message=pass_message,
+        )
+        return [CqlAction(kind="condition", condition=cond, raw=cmd.raw)]
+
+    # Granica-zmienna (rozwiązywana w runtime) lub sentinel ±999999:
+    # rozbij zakres na warunki porównawcze; stronę nieograniczoną pomiń.
+    actions: list[CqlAction] = []
+    lower_spec = min_var if min_val is None else str(min_val)
+    upper_spec = max_var if max_val is None else str(max_val)
+    if lower_spec is not None and not (
+        min_val is not None and min_val <= -_UNBOUNDED_SENTINEL
+    ):
+        cond = CqlCondition(
+            sensor=sensor, operator="≥", on_fail="ERROR",
+            fail_message=fail_message, pass_message=pass_message,
+        )
+        actions.append(CqlAction(kind="condition", condition=cond, args=lower_spec, raw=cmd.raw))
+    if upper_spec is not None and not (
+        max_val is not None and max_val >= _UNBOUNDED_SENTINEL
+    ):
+        cond = CqlCondition(
+            sensor=sensor, operator="≤", on_fail="ERROR",
+            fail_message=fail_message, pass_message=pass_message,
+        )
+        actions.append(CqlAction(kind="condition", condition=cond, args=upper_spec, raw=cmd.raw))
+    if not actions:
+        # Obie strony nieograniczone — warunek zawsze spełniony, zostaw log.
+        actions.append(CqlAction(kind="log", args=cmd.raw, raw=cmd.raw))
+    return actions
 
 
 def _lower_if_delta(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "list[CqlAction]":
@@ -299,16 +342,48 @@ def _lower_val_cmd(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "l
     ]
 
 
+_ELSE_CLAUSE_RE = re.compile(r"^(ERROR|INFO|WARNING)\s+'(.*)'\s*$", re.IGNORECASE)
+
+
+def _split_else_clause(clause: str | None) -> tuple[str, str]:
+    """Rozbij ogon ``ELSE ERROR|INFO 'msg'`` na (severity, message)."""
+    text = str(clause or "").strip()
+    if not text:
+        return "", ""
+    match = _ELSE_CLAUSE_RE.match(text)
+    if match:
+        return match.group(1).upper(), match.group(2)
+    return "ERROR", text.strip("'")
+
+
 def _lower_if_cmd(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "list[CqlAction]":
-    return [
-        CqlAction(
-            kind="if",
-            target=cmd.args.get("param", ""),
-            method=cmd.args.get("operator", ""),
-            args=cmd.args.get("value", ""),
-            raw=cmd.raw,
+    """IF porównawcze → natychmiastowa ewaluacja warunku (kind=condition).
+
+    Bez ELSE traktujemy niespełniony warunek jak ERROR — cichy skip dawałby
+    fałszywy PASS w execute. RHS zostaje tekstem w ``args`` (interpreter
+    rozwiązuje liczbę+jednostkę lub zmienną w runtime).
+    """
+    param = cmd.args.get("param", "")
+    operator = cmd.args.get("operator", "")
+    value = str(cmd.args.get("value", ""))
+    on_fail, fail_message = _split_else_clause(cmd.args.get("else_clause"))
+    on_fail = on_fail or "ERROR"
+
+    if cmd.args.get("or_param") is not None:
+        expression = (
+            f"'{param}' {operator} '{value}' OR "
+            f"'{cmd.args['or_param']}' {cmd.args['or_operator']} '{cmd.args['or_value']}'"
         )
-    ]
+        cond = CqlCondition(on_fail=on_fail, fail_message=fail_message or expression)
+        return [CqlAction(kind="condition", condition=cond, args=expression, raw=cmd.raw)]
+
+    cond = CqlCondition(
+        sensor=param,
+        operator=operator,
+        on_fail=on_fail,
+        fail_message=fail_message or f"{param} {operator} {value}",
+    )
+    return [CqlAction(kind="condition", condition=cond, args=value, raw=cmd.raw)]
 
 
 def _lower_else_cmd(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "list[CqlAction]":
@@ -320,6 +395,59 @@ def _lower_else_cmd(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "
             raw=cmd.raw,
         )
     ]
+
+
+def _lower_task(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "list[CqlAction]":
+    """TASK (dialekt c2004) → instrukcja operatora (kind=task).
+
+    Forma ``TASK 'param' 'opis'`` nadaje krokowi target=param; forma
+    ``TASK TITLE|VAL|PASS|FAIL 'msg'`` niesie tylko komunikat.
+    """
+    message = cmd.args.get("message", "")
+    param = cmd.args.get("param", "")
+    return [CqlAction(kind="task", target=param, args=message, raw=cmd.raw)]
+
+
+#: Komendy ASSERT obsługiwane przez runtime (_ASSERT_HANDLERS). Pozostałe
+#: ASSERT_* (GUI: CONTAINS/VISIBLE/TEXT) nie mają handlera — lecą jako no-op
+#: action, żeby nie failować scenariusza na braku obsługi w warstwie sprzętowej.
+_RUNTIME_ASSERTS = {"ASSERT_STATUS", "ASSERT_JSON", "ASSERT_SENSOR", "ASSERT_VALVE"}
+_API_COMMANDS = {"API", "API_GET", "API_POST", "API_PUT", "API_DELETE"}
+
+
+def _lower_testql(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "list[CqlAction]":
+    """TestQL (API/ASSERT/EXPECT/GUI) → właściwy kind runtime.
+
+    API_* → kind=api (mock odpowiedzi), obsługiwane ASSERT_* → kind=assert,
+    EXPECT_* → kind=expect. Komendy GUI/recorder i nieobsługiwane ASSERT_*
+    → kind=action (no-op w runtime sprzętowym).
+    """
+    command = str(cmd.args.get("command", "")).upper()
+    tokens = cmd.args.get("tokens", []) or []
+
+    if command in _API_COMMANDS:
+        # 'API GET /path' → method=API_GET; 'API_GET /path' → endpoint=tokeny.
+        if command == "API" and tokens:
+            method = f"API_{tokens[0].upper()}"
+            endpoint = " ".join(tokens[1:])
+        else:
+            method = command
+            endpoint = " ".join(tokens)
+        return [CqlAction(kind="api", method=method, args=endpoint, raw=cmd.raw)]
+
+    if command in _RUNTIME_ASSERTS:
+        return [CqlAction(kind="assert", method=command, args=cmd.raw, raw=cmd.raw)]
+
+    if command.startswith("EXPECT_"):
+        return [CqlAction(kind="expect", method=command, args=cmd.raw, raw=cmd.raw)]
+
+    # GUI/recorder i nieobsługiwane ASSERT_* — no-op w runtime sprzętowym.
+    return [CqlAction(kind="action", method=command, args=" ".join(tokens), raw=cmd.raw)]
+
+
+def _lower_noop(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "list[CqlAction]":
+    """Terminatory bloków (ENDIF/FI) — brak akcji w płaskim modelu."""
+    return []
 
 
 def _lower_goto(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "list[CqlAction]":
@@ -403,6 +531,7 @@ _CMD_LOWERERS: dict = {
     "GET": _lower_get,
     "WAIT": _lower_wait,
     "SAVE": _lower_save,
+    "TASK": _lower_task,
     "MIN": _lower_min,
     "MAX": _lower_max,
     "CHECK": _lower_check,
@@ -418,6 +547,8 @@ _CMD_LOWERERS: dict = {
     "RANGE": _lower_range,
     "PASS": _lower_pass,
     "FAIL": _lower_fail,
+    "TESTQL": _lower_testql,
+    "NOOP": _lower_noop,
 }
 
 

@@ -155,8 +155,26 @@ class CqlInterpreter(BaseInterpreter):
         if doc.intervals:
             self.out.step("⏱️ ", f"Intervals: {len(doc.intervals)}")
 
+    #: Wzorce „miękkich" błędów strukturalnych dokumentu (nie porzucają
+    #: linii poleceń) — raportujemy jako ostrzeżenia, nie twarde błędy wykonania.
+    _SOFT_DOC_ERROR_MARKERS = (
+        "wymaga 'NAME",              # GOAL bez NAME w VERSION: >=4
+        "Nieobsługiwana wersja OQL",
+        "pierwsza istotna linia musi mieć postać",
+    )
+
     def _collect_warnings(self, doc: CqlDocument, issues: list[str]) -> None:
         """Collect and emit warnings from document and validation issues."""
+        for e in doc.errors:
+            if any(marker in e for marker in self._SOFT_DOC_ERROR_MARKERS):
+                # Walidacja strukturalna — ostrzeżenie, nie porzucona linia.
+                self.warnings.append(e)
+                self.out.warn(e)
+            else:
+                # Błąd parsera = porzucona linia scenariusza. Twardy błąd
+                # wykonania, inaczej scenariusz „przechodzi" bez części kroków.
+                self.errors.append(e)
+                self.out.error(e)
         for w in doc.warnings:
             self.warnings.append(w)
             self.out.warn(w)
@@ -179,7 +197,7 @@ class CqlInterpreter(BaseInterpreter):
         all_goals: list[tuple[str, CqlGoal]],
     ) -> ScriptResult:
         """Return early result for validate mode."""
-        ok = len(issues) == 0
+        ok = len(issues) == 0 and not self.errors
         return ScriptResult(
             source=name, ok=ok, steps=self._planned_step_results(all_goals),
             variables=self.vars.all(), errors=self.errors,
@@ -203,9 +221,41 @@ class CqlInterpreter(BaseInterpreter):
         if goal.description:
             self.out.info(f"  {goal.description}")
 
+        # Progi MIN/MAX/RANGE obowiązują per GOAL (spec v5) — bez resetu
+        # deklaracje przeciekałyby między celami.
+        self._oql_thresholds: dict[str, dict] = {}
+        self._oql_thresholds_evaluated: set[str] = set()
+
         for step in goal.steps:
             result = self._execute_step(step, goal)
             self.results.append(result)
+
+        self._evaluate_pending_thresholds(goal)
+
+    def _evaluate_pending_thresholds(self, goal: CqlGoal) -> None:
+        """Próg zadeklarowany, ale nieoceniony przez VAL/GET/IF — oceniamy go
+        odroczenie na końcu GOAL-a, jak końcowe ``VAL`` na tym parametrze.
+
+        Dzięki temu wartość policzona (np. przez FUNC/SET) jest sprawdzona,
+        a brak realnego odczytu w execute daje twardy błąd zamiast fałszywego
+        PASS (w dry-run automock wypełnia wartość — patrz ``exec_action_val``).
+        """
+        registered = set(getattr(self, "_oql_thresholds", {}) or {})
+        evaluated = getattr(self, "_oql_thresholds_evaluated", set())
+        pending = sorted(registered - evaluated)
+        if not pending:
+            return
+
+        from oqlos.core._interpreter_actions import exec_action_val
+
+        for sensor in pending:
+            act = CqlAction(kind="val", target=sensor, args="", raw=f"VAL '{sensor}'")
+            status = exec_action_val(self, act)
+            if status == StepStatus.FAILED and self.results:
+                last = self.results[-1]
+                if last.status == StepStatus.PASSED:
+                    last.status = StepStatus.FAILED
+                    last.message = act.raw
 
     def _execute_all_goals(self, all_goals: list[tuple[str, CqlGoal]]) -> None:
         """Execute all collected goals."""
@@ -216,7 +266,10 @@ class CqlInterpreter(BaseInterpreter):
     def _build_script_result(self, name: str, t0: float) -> ScriptResult:
         """Build final script execution result."""
         elapsed = (time.monotonic() - t0) * 1000
-        ok = all(r.status in (StepStatus.PASSED, StepStatus.SKIPPED) for r in self.results)
+        ok = (
+            all(r.status in (StepStatus.PASSED, StepStatus.SKIPPED) for r in self.results)
+            and not self.errors
+        )
         sr = ScriptResult(
             source=name, ok=ok, steps=self.results,
             variables=self.vars.all(), errors=self.errors,
@@ -380,6 +433,14 @@ class CqlInterpreter(BaseInterpreter):
         re.IGNORECASE,
     )
 
+    def _mark_threshold_evaluated(self, sensor: str) -> None:
+        """Warunek IF/CHECK na parametrze liczy się jako ewaluacja progu."""
+        evaluated = getattr(self, "_oql_thresholds_evaluated", None)
+        if evaluated is not None and sensor:
+            evaluated.add(sensor)
+            if sensor.startswith("Δ"):
+                evaluated.add(sensor[1:])
+
     def _resolve_sensor_value(self, sensor: str) -> float:
         """Resolve a sensor or computed variable value from cache or variables."""
         base_sensor = sensor[1:] if sensor.startswith("Δ") else sensor
@@ -498,7 +559,7 @@ class CqlInterpreter(BaseInterpreter):
         fail_message: str,
     ) -> StepStatus:
         """Evaluate a single scalar condition after RHS resolution."""
-        if sensor == "Timer":
+        if sensor.lower() == "timer":
             self.out.step("    ⏱️ ", f"Timer {operator} {threshold}s → OK (simulated)")
             return StepStatus.PASSED
 
@@ -514,11 +575,24 @@ class CqlInterpreter(BaseInterpreter):
             on_fail=on_fail,
             fail_message=fail_message,
         )
+        if self.mode == "execute":
+            from oqlos.core._interpreter_actions import _resolve_live_val
+
+            resolved = _resolve_live_val(self, sensor)
+            if resolved is None:
+                message = (
+                    f"IF {sensor}: missing real sensor/variable value "
+                    f"for condition evaluation"
+                )
+                self.errors.append(message)
+                self.out.error(message)
+                return StepStatus.FAILED
         val = self._resolve_sensor_value(sensor)
 
         if self._sensor_eval._auto_mock and self.mode == "dry-run":
             val = self._sensor_eval.auto_mock_sensor(sensor, cond, val)
 
+        self._mark_threshold_evaluated(sensor)
         ok, desc = self._sensor_eval.compare_sensor(sensor, cond, val)
         if ok:
             self.out.step("    ✅", f"{desc} → PASS")
@@ -562,6 +636,7 @@ class CqlInterpreter(BaseInterpreter):
         if self._sensor_eval._auto_mock and self.mode == "dry-run":
             val = self._sensor_eval.auto_mock_sensor(sensor, cond, val)
 
+        self._mark_threshold_evaluated(sensor)
         ok, desc = self._sensor_eval.compare_sensor(sensor, cond, val)
         return ok, desc, None
 
@@ -640,7 +715,7 @@ class CqlInterpreter(BaseInterpreter):
         self, cond: "CqlCondition", sensor: str
     ) -> "StepStatus":
         """Handle range (∈) operator: read sensor, auto-mock in dry-run, compare."""
-        if sensor == "Timer":
+        if sensor.lower() == "timer":
             self.out.step("    ⏱️ ", f"Timer {cond.operator} {cond.value}s → OK (simulated)")
             return StepStatus.PASSED
 
@@ -648,6 +723,7 @@ class CqlInterpreter(BaseInterpreter):
         if self._sensor_eval._auto_mock and self.mode == "dry-run":
             val = self._sensor_eval.auto_mock_sensor(sensor, cond, val)
 
+        self._mark_threshold_evaluated(sensor)
         ok, desc = self._sensor_eval.compare_sensor(sensor, cond, val)
         if ok:
             pass_msg = f" → {cond.pass_message}" if cond.pass_message else " → PASS"
@@ -667,6 +743,12 @@ class CqlInterpreter(BaseInterpreter):
             return self._evaluate_inline_condition_expression(act.args)
         if not cond:
             return StepStatus.PASSED
+
+        if not cond.sensor and act.args:
+            # OR/AND chain lowered from flat IF — condition carries only severity
+            return self._evaluate_inline_condition_expression(
+                act.args, on_fail=cond.on_fail, fail_message=cond.fail_message
+            )
 
         sensor = cond.sensor
         if cond.operator == "∈" and cond.value_min is not None and cond.value_max is not None:
