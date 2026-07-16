@@ -1,5 +1,10 @@
 # OqlOS — Operation Query Language Runtime
 
+> **Submodule (wymagany po klonie/pullu):** `scenarios/` to submodule
+> prywatnego repo `oqlos/scenarios` (kanoniczny magazyn `.oql` współdzielony
+> z c2004). Po klonie: `git submodule update --init` (dostęp SSH do orga
+> `oqlos`). Bez tego `oqlctl run` nie znajdzie scenariuszy.
+
 
 ## AI Cost Tracking
 
