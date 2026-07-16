@@ -1,8 +1,0 @@
-VERSION: 4
-GOAL:
-  SET NAME 'Kontrola układu powietrznego'
-  TASK 'Sprawdź ciśnienie robocze'
-GOAL:
-  SET NAME 'Test alarmu'
-  TASK 'Zweryfikuj sygnał alarmowy'
-

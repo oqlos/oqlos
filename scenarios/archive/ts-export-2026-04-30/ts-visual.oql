@@ -1,5 +1,0 @@
-VERSION: 4
-GOAL:
-  SET NAME 'Test wizualny'
-  LOG 'TASK Sprawdź wizualnie maska'
-  LOG 'TASK Sprawdź uszczelki gogle'

@@ -1,4 +1,0 @@
-VERSION: 4
-SCENARIO: live
-GOAL:
-  SET WAIT '1 s'

@@ -1,8 +1,0 @@
-VERSION: 4
-GOAL:
-  SET NAME 'Test spadku ciśnienia automatu'
-  LOG 'TASK Ustaw przepływ regulator 50 l/min'
-  SET pompa_1 1
-  IF 'ciśnienie' '0.5 .. 3.5 mbar'
-    CORRECT 'ciśnienie w zakresie 0.5 .. 3.5 mbar'
-    ERROR 'ciśnienie poza zakresem 0.5 .. 3.5 mbar'
