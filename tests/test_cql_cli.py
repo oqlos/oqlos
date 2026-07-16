@@ -182,6 +182,33 @@ def test_run_subcommand_executes_scenario_file(monkeypatch, tmp_path):
     assert captured["init"]["mode"] == "dry-run"
 
 
+def test_run_subcommand_exits_nonzero_when_scenario_fails(monkeypatch, tmp_path):
+    scenario_file = tmp_path / "scenario.oql"
+    scenario_file.write_text("SCENARIO: Test\nGOAL: Demo\n  SET 'pompa 1' '0'\n", encoding="utf-8")
+
+    class FakeInterpreter(_FakeInterpreter):
+        def run_file(self, path: str):
+            return SimpleNamespace(
+                source=path,
+                ok=False,
+                passed=0,
+                failed=1,
+                steps=[],
+                duration_ms=1.0,
+                errors=["failed"],
+                warnings=[],
+                variables={},
+            )
+
+    monkeypatch.setattr(cql_cli, "CqlInterpreter", FakeInterpreter)
+    monkeypatch.setattr(sys, "argv", ["oqlctl", "run", str(scenario_file), "--mode", "dry-run"])
+
+    with pytest.raises(SystemExit) as excinfo:
+        cql_cli.main()
+
+    assert excinfo.value.code == 1
+
+
 def test_format_subcommand_prints_canonical_set_syntax(monkeypatch, tmp_path, capsys):
     scenario_file = tmp_path / "legacy.oql"
     scenario_file.write_text(

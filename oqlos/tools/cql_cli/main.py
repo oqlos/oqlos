@@ -187,6 +187,9 @@ def run_file_mode(args: argparse.Namespace) -> None:
         from oqlos.tools.cql_cli.utils import build_result_payload
         print(json.dumps(build_result_payload(result), indent=2, ensure_ascii=False))
 
+    if not result.ok:
+        sys.exit(1)
+
 
 def _create_interpreter(args: argparse.Namespace, sensors: dict[str, float]) -> CqlInterpreter:
     return CqlInterpreter(

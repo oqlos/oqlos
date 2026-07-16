@@ -394,6 +394,7 @@ GOAL:
 
         src = """VERSION: 4
 GOAL:
+  SET NAME 'Test goal'
   SET 'motor 2' 'reciprocating motion'
   SET 'motor 2' 'limit 1000 steps/s'
   SET 'motor 2' 'acceleration 100%/s'
@@ -466,6 +467,7 @@ GOAL:
 
         src = """VERSION: 4
 GOAL:
+  SET NAME 'Test goal'
   SET 'motor 2' 'reciprocating motion'
   SET 'motor 2' 'stroke 1000 steps'
   SET 'motor 2' 'volume 50 l'
@@ -509,6 +511,7 @@ GOAL:
 
         src = """VERSION: 4
 GOAL:
+  SET NAME 'Test goal'
   SET 'motor 2' 'reciprocating motion'
   SET 'motor 2' 'stroke 1000 steps'
   SET 'motor 2' 'volume 50 l'
@@ -548,6 +551,7 @@ GOAL:
 
         src = """VERSION: 4
 GOAL:
+  SET NAME 'Test goal'
   SET 'motor 2' 'direction left'
   SET 'motor 2' 'acceleration 200%/s'
   SET 'motor 2' '1000 steps/s'
@@ -569,6 +573,7 @@ GOAL:
     def test_repeat_stop_is_accepted_in_expanded_oql_repeat_blocks(self):
         src = """VERSION: 4
 GOAL:
+  SET NAME 'Test goal'
   REPEAT 3:
     SET 'loop marker' 'before stop'
     REPEAT STOP
@@ -627,6 +632,171 @@ GOAL: Test goal
         interp = CqlInterpreter(mode="dry-run", quiet=True)
         assert "AI01" in interp.sensor_values
         assert "AI02" in interp.sensor_values
+
+    def test_execute_mode_does_not_seed_default_sensor_mocks(self):
+        interp = CqlInterpreter(mode="execute", quiet=True)
+        assert "AI01" not in interp.sensor_values
+        assert "AI02" not in interp.sensor_values
+
+    def test_oql_val_evaluates_registered_min_max_thresholds(self):
+        src = """VERSION: 5
+GOAL:
+  SET NAME 'Test goal'
+  MIN 'AI01' '-11.0 mbar'
+  MAX 'AI01' '-9.0 mbar'
+  VAL 'AI01' 'mbar'
+"""
+        interp = CqlInterpreter(mode="execute", quiet=True, sensor_values={"AI01": -10.0})
+        result = interp.run(src)
+
+        assert result.ok is True
+        assert result.failed == 0
+        assert interp.vars.get("AI01") == -10.0
+
+    def test_oql_val_fails_when_registered_threshold_is_violated(self):
+        src = """VERSION: 5
+GOAL:
+  SET NAME 'Test goal'
+  MIN 'AI01' '-11.0 mbar'
+  MAX 'AI01' '-9.0 mbar'
+  VAL 'AI01' 'mbar'
+"""
+        interp = CqlInterpreter(mode="execute", quiet=True, sensor_values={"AI01": -12.0})
+        result = interp.run(src)
+
+        assert result.ok is False
+        assert result.failed >= 1
+        assert any("outside" in err for err in result.errors)
+
+    def test_oql_val_fails_without_real_execute_value(self, monkeypatch):
+        src = """VERSION: 5
+GOAL:
+  SET NAME 'Test goal'
+  MIN 'AI01' '-11.0 mbar'
+  MAX 'AI01' '-9.0 mbar'
+  VAL 'AI01' 'mbar'
+"""
+        interp = CqlInterpreter(mode="execute", quiet=True)
+        monkeypatch.setattr(interp, "_refresh_sensors_from_firmware", lambda: None)
+        result = interp.run(src)
+
+        assert result.ok is False
+        assert result.failed >= 1
+        assert any("missing real sensor/variable value" in err for err in result.errors)
+
+    def test_oql_val_without_threshold_missing_value_is_warning_not_fail(self, monkeypatch):
+        # VAL bez zarejestrowanego progu = zapis do protokołu. Brak odczytu w
+        # execute nie może oblać celu (nie ma bramki) — tylko ostrzeżenie.
+        src = """VERSION: 5
+GOAL:
+  SET NAME 'Test goal'
+  SET 'Operator' 'confirm'
+  VAL 'operator.result'
+"""
+        interp = CqlInterpreter(mode="execute", quiet=True)
+        monkeypatch.setattr(interp, "_refresh_sensors_from_firmware", lambda: None)
+        result = interp.run(src)
+
+        assert result.ok is True, result.errors
+        assert any("operator.result" in w for w in result.warnings)
+
+    def test_oql_val_dry_run_automocks_missing_named_param(self):
+        src = """VERSION: 5
+GOAL:
+  SET NAME 'Test goal'
+  RANGE 'cisnienie' '4.0 mbar' .. '6.0 mbar'
+  VAL 'cisnienie' 'mbar'
+"""
+        interp = CqlInterpreter(mode="dry-run", quiet=True)
+        result = interp.run(src)
+
+        assert result.ok is True, result.errors
+        assert float(result.variables.get("cisnienie")) == 5.0
+
+    def test_oql_if_comparative_evaluates_in_execute(self):
+        src = """VERSION: 5
+GOAL:
+  SET NAME 'Test goal'
+  IF 'cisnienie' > '1.5 bar'
+"""
+        interp = CqlInterpreter(mode="execute", quiet=True, sensor_values={"cisnienie": 2.0})
+        result = interp.run(src)
+        assert result.ok is True, result.errors
+
+        interp = CqlInterpreter(mode="execute", quiet=True, sensor_values={"cisnienie": 1.0})
+        result = interp.run(src)
+        assert result.ok is False
+        assert any("cisnienie" in err for err in result.errors)
+
+    def test_oql_if_missing_value_fails_in_execute(self, monkeypatch):
+        src = """VERSION: 5
+GOAL:
+  SET NAME 'Test goal'
+  IF 'cisnienie' > '1.5 bar'
+"""
+        interp = CqlInterpreter(mode="execute", quiet=True)
+        monkeypatch.setattr(interp, "_refresh_sensors_from_firmware", lambda: None)
+        result = interp.run(src)
+
+        assert result.ok is False
+        assert any("missing real sensor/variable value" in err for err in result.errors)
+
+    def test_oql_unevaluated_threshold_deferred_eval_execute_fails(self, monkeypatch):
+        # Próg na parametrze, którego żaden VAL nie odczytał: w execute odroczona
+        # ewaluacja na końcu GOAL-a nie znajduje realnej wartości → twardy błąd.
+        src = """VERSION: 5
+GOAL:
+  SET NAME 'Test goal'
+  RANGE 'srednia' '95 mbar' .. '105 mbar'
+  VAL 'inny_param' 'mbar'
+"""
+        interp = CqlInterpreter(mode="execute", quiet=True, sensor_values={"inny_param": 100.0})
+        monkeypatch.setattr(interp, "_refresh_sensors_from_firmware", lambda: None)
+        result = interp.run(src)
+
+        assert result.ok is False
+        assert any("srednia" in err and "missing real" in err for err in result.errors)
+
+    def test_oql_unevaluated_threshold_deferred_eval_dryrun_mocks(self):
+        # W dry-run odroczona ewaluacja automockuje brakującą wartość do środka
+        # zakresu — scenarusz deweloperski przechodzi bez sprzętu.
+        src = """VERSION: 5
+GOAL:
+  SET NAME 'Test goal'
+  RANGE 'srednia' '95 mbar' .. '105 mbar'
+  VAL 'inny_param' 'mbar'
+"""
+        interp = CqlInterpreter(mode="dry-run", quiet=True)
+        result = interp.run(src)
+
+        assert result.ok is True, result.errors
+        assert float(interp.vars.get("srednia")) == 100.0
+
+    def test_oql_thresholds_do_not_leak_between_goals(self):
+        src = """VERSION: 5
+GOAL:
+  SET NAME 'Pierwszy'
+  RANGE 'p1' '1 mbar' .. '2 mbar'
+  VAL 'p1' 'mbar'
+GOAL:
+  SET NAME 'Drugi'
+  VAL 'p1' 'mbar'
+"""
+        interp = CqlInterpreter(mode="dry-run", quiet=True)
+        result = interp.run(src)
+        assert result.ok is True, result.errors
+
+    def test_oql_parse_errors_fail_run(self):
+        src = """VERSION: 5
+GOAL:
+  SET NAME 'Test goal'
+  NIEZNANA_KOMENDA 'x'
+"""
+        interp = CqlInterpreter(mode="dry-run", quiet=True)
+        result = interp.run(src)
+
+        assert result.ok is False
+        assert any("NIEZNANA_KOMENDA" in err for err in result.errors)
 
     def test_auto_mock_range_condition_passes(self):
         src = """SCENARIO: Auto-mock test

@@ -65,8 +65,12 @@ class SensorEvaluator:
         """
         self.mode = mode
         self._auto_mock = auto_mock and mode == "dry-run"
-        # Seed with defaults, then overlay user-provided values
-        self.sensor_values: dict[str, float] = dict(self.DEFAULT_MOCK_SENSORS)
+        # Seed with defaults only outside real execution. In execute mode a
+        # missing sensor read must remain visible instead of silently becoming a
+        # mock value.
+        self.sensor_values: dict[str, float] = (
+            {} if mode == "execute" else dict(self.DEFAULT_MOCK_SENSORS)
+        )
         if sensor_values:
             self.sensor_values.update(sensor_values)
 
@@ -138,8 +142,8 @@ class SensorEvaluator:
             return ok, f"{sensor} = {val} {cond.operator} {cond.value} {cond.unit}"
         return True, f"{sensor} {cond.operator} {cond.value} {cond.unit}"
 
-    def get_sensor_value(self, sensor: str) -> float:
+    def get_sensor_value(self, sensor: str) -> float | None:
         """Get current sensor value, handling delta sensors."""
         # Delta sensors (ΔAI02) — use base sensor name for lookup
         base_sensor = sensor[1:] if sensor.startswith("Δ") else sensor
-        return self.sensor_values.get(sensor, self.sensor_values.get(base_sensor, 0.0))
+        return self.sensor_values.get(sensor, self.sensor_values.get(base_sensor))
