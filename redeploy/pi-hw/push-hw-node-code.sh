@@ -21,7 +21,7 @@ DST="~/oqlos/oqlos/"
 
 echo "==> Pushing OqlOS core to ${PIHW}:${DST}"
 rsync -az --delete \
-  --exclude '.git/' --exclude '.venv/' --exclude 'venv/' \
+  --exclude '.git' --exclude '.venv/' --exclude 'venv/' \
   --exclude '__pycache__/' --exclude '.pytest_cache/' \
   --exclude 'oql-run-logs/' --exclude 'iql-run-logs/' \
   "${SRC}" "${PIHW}:${DST}"

@@ -1308,7 +1308,8 @@ extra_steps:
     description: "Sync oqlos core na boardnet"
     src: /home/tom/github/oqlos/oqlos/
     dst: ~/oqlos/oqlos/
-    excludes: [.git/, .venv/, venv/, __pycache__/, .pytest_cache/]
+    # `.git` bez ukośnika: submodule scenarios/ ma .git jako PLIK (gitdir:) — wzorzec dir-only przepuszczałby go na Pi.
+    excludes: [.git, .venv/, venv/, __pycache__/, .pytest_cache/]
 
   - id: sync_oqlos_frontend_dist
     action: rsync
