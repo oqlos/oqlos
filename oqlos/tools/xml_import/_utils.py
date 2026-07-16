@@ -99,3 +99,29 @@ def normalize_set_value(raw_value: str, *, default_unit: str | None = None) -> s
             suffix = default_unit
         return f'{number} {suffix}'.strip()
     return raw
+
+
+# ── OQL v5 document/goal emit helpers ──
+
+OQL_V5 = 5
+BLOCK_INDENT = '  '
+
+
+def quote_oql_literal(value: str) -> str:
+    text = str(value or '')
+    return f'"{text}"' if "'" in text else f"'{text}'"
+
+
+def scenario_document_header(title: str, version: int = OQL_V5) -> list[str]:
+    name = str(title or 'scenario').strip() or 'scenario'
+    return [f'VERSION: {version}', f'SCENARIO: {name}', '']
+
+
+def goal_block_header(name: str) -> list[str]:
+    goal_name = str(name or 'GOAL').strip() or 'GOAL'
+    return ['GOAL:', f'{BLOCK_INDENT}NAME {quote_oql_literal(goal_name)}']
+
+
+def goal_body_line(line: str) -> str:
+    stripped = str(line or '').strip()
+    return f'{BLOCK_INDENT}{stripped}' if stripped else ''

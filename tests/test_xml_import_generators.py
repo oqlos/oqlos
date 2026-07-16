@@ -21,8 +21,9 @@ def test_generate_cql_uses_canonical_set_syntax():
 
     cql = generate_cql(report)
 
+    assert cql.startswith("VERSION: 5\n")
     assert "SET 'pompa' '5 l'" in cql
     assert "SET 'sprężarka' '120 l/min'" in cql
     assert "SET 'BO 06' '1'" in cql
-    assert "SET 'Potwierdz gotowosc' '1'" in cql
+    assert "TASK TITLE 'Potwierdz gotowosc'" in cql
     assert "SET [" not in cql

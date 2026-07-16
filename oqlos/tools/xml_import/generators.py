@@ -8,11 +8,15 @@ from typing import Any
 
 from .models import DeviceReport, Operation
 from ._utils import (
+    goal_block_header,
+    goal_body_line,
     is_compressor_output,
     is_pump_output,
     normalize_flow_value,
     normalize_output_name,
     normalize_set_value,
+    quote_oql_literal,
+    scenario_document_header,
 )
 
 
@@ -49,72 +53,102 @@ def _mode_action(mode: str) -> str:
     return "PASS"
 
 
-# ── Shared CQL helpers (used by generate_cql and _generate_cql_for_goal) ──
+# ── Shared OQL v5 helpers (used by generate_cql and _generate_cql_for_goal) ──
 
 
-def _quote_oql(value: Any) -> str:
-    """Quote an OQL token with the canonical single-quoted SET syntax."""
-    text = str(value or "").strip()
-    return "'" + text.replace("\\", "\\\\").replace("'", "\\'") + "'"
-
-
-def _emit_set(a: callable, target: str, value: Any, *, indent: str = "  ") -> None:
-    a(f"{indent}SET {_quote_oql(target)} {_quote_oql(value)}")
-
-
-def _emit_cql_output(out, a: callable) -> None:
-    """Emit CQL SET line for a single output."""
+def _append_output_lines(lines: list[str], out) -> None:
+    """Emit OQL v5 SET line(s) for a single output."""
     if is_pump_output(out.name):
         if out.value.lower() == "off":
-            _emit_set(a, "pompa", "0")
+            lines.append(goal_body_line(f"SET {quote_oql_literal('pompa')} {quote_oql_literal('0')}"))
         elif out.value.lower() == "on":
-            _emit_set(a, "pompa", "1")
+            lines.append(goal_body_line(f"SET {quote_oql_literal('pompa')} {quote_oql_literal('1')}"))
         else:
             raw_value = re.sub(r"\s+", " ", out.value.strip())
             raw_value = re.sub(r"^(\d+(?:[\.,]\d+)?)([A-Za-z%]+)$", r"\1 \2", raw_value)
-            _emit_set(a, "pompa", raw_value)
+            lines.append(goal_body_line(
+                f"SET {quote_oql_literal('pompa')} {quote_oql_literal(raw_value)}"
+            ))
     elif is_compressor_output(out.name):
-        _emit_set(a, "sprężarka", normalize_set_value(out.value, default_unit="l/min"))
+        lines.append(goal_body_line(
+            f"SET {quote_oql_literal('sprężarka')} "
+            f"{quote_oql_literal(normalize_set_value(out.value, default_unit='l/min'))}"
+        ))
     else:
-        _emit_set(a, normalize_output_name(out.name), normalize_set_value(out.value))
+        lines.append(goal_body_line(
+            f"SET {quote_oql_literal(normalize_output_name(out.name))} "
+            f"{quote_oql_literal(normalize_set_value(out.value))}"
+        ))
 
 
-def _emit_cql_param(p, a: callable, *, indent: str = "  ") -> None:
-    """Emit CQL lines for a single parameter."""
+def _append_param_lines(lines: list[str], p) -> None:
+    """Emit OQL v5 lines for a single parameter."""
     if p.mode == "Off":
         return
     if p.sensor == "operator":
-        _emit_set(a, p.description, "1", indent=indent)
+        lines.append(goal_body_line(f"TASK TITLE {quote_oql_literal(p.description)}"))
         if p.save:
-            a(f"{indent}SAVE [{p.description}]")
+            lines.append(goal_body_line(f"VAL {quote_oql_literal(p.description)}"))
         return
     if p.sensor == "timer":
-        if p.max_val is not None:
-            a(f"{indent}SET WAIT '{p.max_val} s'")
-        elif p.min_val is not None:
-            a(f"{indent}SET WAIT '{p.min_val} s'")
+        duration = p.max_val if p.max_val is not None else p.min_val
+        if duration is not None:
+            lines.append(goal_body_line(f"TIMER {quote_oql_literal(f'{duration} s')}"))
         return
-    _emit_cql_sensor_param(p, a, indent=indent)
 
-
-def _emit_cql_sensor_param(p, a: callable, *, indent: str = "  ") -> None:
-    """Emit CQL lines for a sensor (AI01, AI02, etc.) parameter."""
     unit = p.unit or "mbar"
+    sensor = p.description or p.sensor
     if p.mode == "inRangeOK" and p.min_val is not None and p.max_val is not None:
-        a(f"{indent}MIN [{p.sensor}] = [{p.min_val} {unit}]")
-        a(f"{indent}MAX [{p.sensor}] = [{p.max_val} {unit}]")
-        a(f"{indent}VAL [{p.sensor}] [{unit}]")
-        a(f'{indent}IF [{p.sensor}] [<] [{p.min_val} {unit}] ELSE ERROR "{p.description or p.sensor + " poza zakresem"}"')
+        lines.append(goal_body_line(
+            f"MIN {quote_oql_literal(sensor)} {quote_oql_literal(f'{p.min_val} {unit}')}"
+        ))
+        lines.append(goal_body_line(
+            f"MAX {quote_oql_literal(sensor)} {quote_oql_literal(f'{p.max_val} {unit}')}"
+        ))
+        lines.append(goal_body_line(f"VAL {quote_oql_literal(sensor)} {quote_oql_literal(unit)}"))
+        lines.append(goal_body_line(
+            f"IF {quote_oql_literal(sensor)} < {quote_oql_literal(f'{p.min_val} {unit}')}"
+        ))
+        lines.append(goal_body_line(
+            f"FAIL {quote_oql_literal(p.description or f'{p.sensor} poza zakresem')}"
+        ))
     elif p.mode in ("minOk", "minErr") and p.min_val is not None:
-        a(f"{indent}MIN [{p.sensor}] = [{p.min_val} {unit}]")
-        a(f"{indent}VAL [{p.sensor}] [{unit}]")
-        a(f'{indent}IF [{p.sensor}] [<] [{p.min_val} {unit}] ELSE ERROR "{p.description or p.sensor}"')
+        lines.append(goal_body_line(
+            f"MIN {quote_oql_literal(sensor)} {quote_oql_literal(f'{p.min_val} {unit}')}"
+        ))
+        lines.append(goal_body_line(f"VAL {quote_oql_literal(sensor)} {quote_oql_literal(unit)}"))
+        lines.append(goal_body_line(
+            f"IF {quote_oql_literal(sensor)} < {quote_oql_literal(f'{p.min_val} {unit}')}"
+        ))
+        lines.append(goal_body_line(f"FAIL {quote_oql_literal(p.description or p.sensor)}"))
     elif p.mode in ("maxOk", "maxErr") and p.max_val is not None:
-        a(f"{indent}MAX [{p.sensor}] = [{p.max_val} {unit}]")
-        a(f"{indent}VAL [{p.sensor}] [{unit}]")
-        a(f'{indent}IF [{p.sensor}] [>] [{p.max_val} {unit}] ELSE ERROR "{p.description or p.sensor}"')
+        lines.append(goal_body_line(
+            f"MAX {quote_oql_literal(sensor)} {quote_oql_literal(f'{p.max_val} {unit}')}"
+        ))
+        lines.append(goal_body_line(f"VAL {quote_oql_literal(sensor)} {quote_oql_literal(unit)}"))
+        lines.append(goal_body_line(
+            f"IF {quote_oql_literal(sensor)} > {quote_oql_literal(f'{p.max_val} {unit}')}"
+        ))
+        lines.append(goal_body_line(f"FAIL {quote_oql_literal(p.description or p.sensor)}"))
     if p.save:
-        a(f"{indent}SAVE [{p.sensor}]")
+        lines.append(goal_body_line(f"VAL {quote_oql_literal(sensor)}"))
+
+
+def _goal_groups_for_test_run(tr) -> dict[str, list[Operation]]:
+    goal_groups: dict[str, list[Operation]] = {}
+    for op in tr.operations:
+        parts = op.lp.split(".")
+        goal_num = parts[0] if parts else "0"
+        goal_groups.setdefault(goal_num, []).append(op)
+    return goal_groups
+
+
+def _emit_goal_operations(lines: list[str], ops: list[Operation]) -> None:
+    for op in ops:
+        for out in op.outputs:
+            _append_output_lines(lines, out)
+        for p in op.params:
+            _append_param_lines(lines, p)
 
 
 # ── DSL output/param helpers ──
@@ -137,7 +171,7 @@ def _emit_dsl_param(p, a: callable) -> None:
     if p.sensor == "operator":
         a(f'       → Operator.confirm "{p.description}"')
         if p.save:
-            a("       SAVE: operator.result")
+            a("       VAL: operator.result")
         return
     if p.sensor == "timer":
         rng = _format_range(p)
@@ -158,7 +192,7 @@ def _emit_dsl_param(p, a: callable) -> None:
     pad = " " * max(1, 30 - len(f"{p.sensor} {rng} {unit}"))
     a(f"       {p.sensor} {rng} {unit}{pad}| {action} \"{desc}\"")
     if p.save:
-        a(f"       SAVE: {p.sensor}.value")
+        a(f"       VAL: {p.sensor}.value")
 
 
 # ── JSON step/validation helpers ──
@@ -184,8 +218,12 @@ def _build_steps_from_op(op: Operation) -> list[dict[str, Any]]:
         if p.mode == "Off":
             continue
         if p.sensor == "operator":
-            steps.append({"id": f"{op.op_id}-prm-operator",
-                          "action": "OPERATOR_CONFIRM", "message": p.description})
+            steps.append({
+                "id": f"{op.op_id}-prm-operator",
+                "type": "task",
+                "function": "TITLE",
+                "object": p.description,
+            })
         elif p.sensor == "timer":
             dur_ms = int((p.max_val or 10) * 1000)
             steps.append({"id": f"{op.op_id}-prm-timer",
@@ -346,55 +384,32 @@ def _emit_dsl_metadata(report: DeviceReport, a: callable) -> None:
 
 
 def generate_cql(report: DeviceReport) -> str:
-    """Generate CQL (Connex Query Language) text from parsed report."""
-    lines: list[str] = []
-    a = lines.append
-
-    a("# CQL — Connex Query Language")
-    a(f"# Wygenerowano z: {report.report_id}")
-    if report.date:
-        a(f"# Data: {report.date}")
-    a("")
-
+    """Generate OQL v5 CQL text from parsed report."""
     title = report.df_name
     for tr in report.test_runs:
         if tr.name:
             title = f"{report.dt_name}: {tr.name}"
             break
-    a(f"SCENARIO: {title}")
-    a("")
 
+    lines: list[str] = list(scenario_document_header(title))
     for tr in report.test_runs:
-        goal_groups: dict[str, list[Operation]] = {}
-        for op in tr.operations:
-            parts = op.lp.split(".")
-            goal_num = parts[0] if parts else "0"
-            goal_groups.setdefault(goal_num, []).append(op)
+        for _, ops in sorted(
+            _goal_groups_for_test_run(tr).items(),
+            key=lambda item: int(item[0]) if item[0].isdigit() else 999,
+        ):
+            first_op = ops[0]
+            lines.extend(goal_block_header(first_op.name))
+            _emit_goal_operations(lines, ops)
+            lines.append("")
 
-        for goal_num, ops in sorted(goal_groups.items(), key=lambda x: int(x[0]) if x[0].isdigit() else 999):
-            a(f"GOAL: {ops[0].name}")
-            for op in ops:
-                for out in op.outputs:
-                    _emit_cql_output(out, a)
-                for p in op.params:
-                    _emit_cql_param(p, a)
-            a("")
-
-    return f"{chr(10).join(lines)}\n"
+    return "\n".join(lines).rstrip() + "\n"
 
 
 def _generate_cql_for_goal(ops: list[Operation]) -> str:
-    """Generate CQL code block for a single goal (used in library.goals[].code)."""
+    """Generate OQL v5 code block for a single goal (library.goals[].code)."""
     lines: list[str] = []
-    a = lines.append
-
-    for op in ops:
-        for out in op.outputs:
-            _emit_cql_output(out, a)
-        for p in op.params:
-            _emit_cql_param(p, a)
-
-    return "\n".join(lines)
+    _emit_goal_operations(lines, ops)
+    return "\n".join(line for line in lines if line.strip())
 
 
 def generate_goals_json(report: DeviceReport) -> dict:
