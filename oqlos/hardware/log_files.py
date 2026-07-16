@@ -12,6 +12,7 @@ _LOG_NAME_RE = re.compile(r"^[\w.-]+\.log(\.\d+)?$")
 _MAX_READ_BYTES = 512 * 1024
 _MAX_LINES = 500
 _DEFAULT_LOG_DIR = "~/maskservice/logs"
+_REDEPLOY_LOGS_DIR = Path(__file__).resolve().parents[2] / ".redeploy" / "logs"
 
 
 def resolve_log_dir() -> Path:
@@ -23,10 +24,17 @@ def resolve_log_dir() -> Path:
 
         log_file = str(get_settings().log_file or "").strip()
         if log_file:
-            return Path(log_file).expanduser().parent
+            parent = Path(log_file).expanduser().parent
+            if parent.is_dir():
+                return parent
     except Exception:
         pass
-    return Path(_DEFAULT_LOG_DIR).expanduser()
+    default = Path(_DEFAULT_LOG_DIR).expanduser()
+    if default.is_dir():
+        return default
+    if _REDEPLOY_LOGS_DIR.is_dir():
+        return _REDEPLOY_LOGS_DIR
+    return default
 
 
 def _is_safe_name(name: str) -> bool:
@@ -40,14 +48,24 @@ def _file_day(mtime: float) -> str:
     return datetime.fromtimestamp(mtime, tz=timezone.utc).strftime("%Y-%m-%d")
 
 
+def _journal_units_payload() -> list[dict[str, Any]]:
+    from oqlos.hardware.systemd_services import service_whitelist
+
+    return [
+        {"id": f"journal:{unit}", "name": unit, "kind": "journal"}
+        for unit in service_whitelist()
+    ]
+
+
 def list_log_files() -> dict[str, Any]:
     log_dir = resolve_log_dir()
+    journal_units = _journal_units_payload()
     if not log_dir.is_dir():
         return {
             "ok": True,
             "dir": str(log_dir),
             "groups": [],
-            "journal_units": [],
+            "journal_units": journal_units,
             "empty_reason": "log directory missing",
         }
 
@@ -73,12 +91,6 @@ def list_log_files() -> dict[str, Any]:
         groups_map.setdefault(row["day"], []).append(row)
     groups = [{"day": day, "files": groups_map[day]} for day in sorted(groups_map, reverse=True)]
 
-    from oqlos.hardware.systemd_services import service_whitelist
-
-    journal_units = [
-        {"id": f"journal:{unit}", "name": unit, "kind": "journal"}
-        for unit in service_whitelist()
-    ]
     return {
         "ok": True,
         "dir": str(log_dir),

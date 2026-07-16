@@ -46,3 +46,21 @@ def test_read_log_missing_dir(monkeypatch) -> None:
     payload = logs.list_log_files()
     assert payload["ok"] is True
     assert payload["groups"] == []
+    assert len(payload["journal_units"]) >= 1
+
+
+def test_resolve_log_dir_uses_redeploy_logs_when_default_missing(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.delenv("OQLOS_LOG_DIR", raising=False)
+    monkeypatch.delenv("MASKSERVICE_LOG_DIR", raising=False)
+    redeploy = tmp_path / ".redeploy" / "logs"
+    redeploy.mkdir(parents=True)
+    (redeploy / "dev.log").write_text("line\n", encoding="utf-8")
+    monkeypatch.setattr(logs, "_REDEPLOY_LOGS_DIR", redeploy)
+    monkeypatch.setattr(logs, "_DEFAULT_LOG_DIR", str(tmp_path / "missing" / "logs"))
+
+    assert logs.resolve_log_dir() == redeploy
+    payload = logs.list_log_files()
+    names = [row["name"] for group in payload["groups"] for row in group["files"]]
+    assert "dev.log" in names

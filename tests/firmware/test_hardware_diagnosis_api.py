@@ -111,3 +111,18 @@ def test_host_actions_filtered_motor_only_no_make():
     )
     host = _host_actions_from_report(report, still_failed=["motor-dri0050"])
     assert not any(a.get("kind") == "make_target" for a in host)
+
+
+def test_build_diagnosis_report_mock_motors_without_health():
+    identify = {
+        "mode": "mock",
+        "platform": {"modbus_topology": "separate-adapters"},
+        "diagnostics": {"health": {}},
+        "adapters": [],
+    }
+    report = build_diagnosis_report(identify)
+    payload = report_to_dict(report)
+    assert payload["environment"]["hardware_mode"] == "mock"
+    assert payload["devices"]["motor-tic249"]["status"] == "ok"
+    assert "mock" in payload["devices"]["motor-tic249"]["health_summary"].lower()
+    assert payload["devices"]["motor-tic249"]["recommended_actions"] == []

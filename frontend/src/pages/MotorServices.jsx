@@ -104,6 +104,7 @@ export default function MotorServices() {
 
   const devices = diagnosis?.devices || {};
   const motorRepairs = filterMotorRepairs(repairResult?.repairs);
+  const mockHardware = String(diagnosis?.environment?.hardware_mode || "").toLowerCase() === "mock";
 
   const topActions = (
     <div className="mapx-header" style={{ marginBottom: 12 }}>
@@ -131,6 +132,9 @@ export default function MotorServices() {
   const beforeContent = (
     <>
       {error ? <div className="mapx-error">{error}</div> : null}
+      {mockHardware ? (
+        <div className="section-desc">{t("motorServices.mockHint")}</div>
+      ) : null}
       <div className="hw-grid">
         {MOTOR_DEVICE_IDS.map((id) => (
           <DeviceCard key={id} device={devices[id]} />

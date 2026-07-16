@@ -951,6 +951,8 @@ const hardwareByLang = {
       readFailed: "Nie udało się odczytać logu",
       refreshLog: "Odśwież log",
       lines: "linii",
+      dirHint: "Katalog logów: {dir}",
+      dirMissing: "Brak plików w {dir} — dostępne są jednostki journal systemd.",
     },
   },
   en: {
@@ -989,6 +991,8 @@ const hardwareByLang = {
       readFailed: "Failed to read log",
       refreshLog: "Refresh log",
       lines: "lines",
+      dirHint: "Log directory: {dir}",
+      dirMissing: "No files in {dir} — systemd journal units are still available.",
     },
   },
   de: {
@@ -1057,6 +1061,7 @@ const motorServicesByLang = {
     ok: "OK", failed: "Błąd",
     loadFailed: "Nie udało się wczytać diagnostyki silników.",
     repairFailed: "Naprawa się nie powiodła.",
+    mockHint: "Tryb symulatora OqlOS — karty silników pokazują mock; test ręczny nadal wysyła komendy do pluginów.",
   },
   en: {
     title: "Motor Services", subtitle: "Status, sidecar restart and manual tests for Tic249 (lung) and DRI0050 (pump).",
@@ -1069,6 +1074,7 @@ const motorServicesByLang = {
     ok: "OK", failed: "Failed",
     loadFailed: "Failed to load motor diagnostics.",
     repairFailed: "Repair failed.",
+    mockHint: "OqlOS simulator mode — motor cards show mock health; manual test still targets plugins.",
   },
   de: {
     title: "Motor-Dienste", subtitle: "Status, Sidecar-Neustart und manuelle Tests für Tic249 (Lunge) und DRI0050 (Pumpe).",
@@ -1898,6 +1904,7 @@ const hardwareRtcByLang = {
     loadFailed: "Nie udało się pobrać statusu RTC.",
     commandFailed: "Komenda RTC nie powiodła się.",
     disabledHint: "RTC wyłączone — ustaw OQLOS_ENABLE_RTC=1 na RPi5 z HAT WatchDog.",
+    mockHint: "Tryb symulatora OqlOS — dane RTC są syntetyczne (bez piRTC :8125).",
     connectedYes: "tak",
     connectedNo: "nie",
     mockYes: "mock",
@@ -1938,6 +1945,7 @@ const hardwareRtcByLang = {
     loadFailed: "Failed to load RTC status.",
     commandFailed: "RTC command failed.",
     disabledHint: "RTC disabled — set OQLOS_ENABLE_RTC=1 on RPi5 with WatchDog HAT.",
+    mockHint: "OqlOS simulator mode — RTC values are synthetic (no piRTC :8125).",
     connectedYes: "yes",
     connectedNo: "no",
     mockYes: "mock",

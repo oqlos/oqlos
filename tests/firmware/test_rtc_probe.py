@@ -15,6 +15,39 @@ from oqlos.hardware.rtc_probe import (
 )
 
 
+def test_rtc_mock_mode_status(monkeypatch) -> None:
+    monkeypatch.delenv("OQLOS_ENABLE_RTC", raising=False)
+    monkeypatch.setenv("OQLOS_HARDWARE_MODE", "mock")
+
+    payload = build_rtc_peripheral_status()
+
+    assert payload["ok"] is True
+    assert payload["result"]["data"]["mock"] is True
+    assert payload["result"]["data"]["connected"] is True
+
+
+def test_rtc_mock_run_command(monkeypatch) -> None:
+    monkeypatch.delenv("OQLOS_ENABLE_RTC", raising=False)
+    monkeypatch.setenv("OQLOS_HARDWARE_MODE", "mock")
+
+    payload = run_rtc_command("read_temperature")
+
+    assert payload["ok"] is True
+    assert payload["result"]["temperature"] == 23.5
+
+
+def test_enrich_rtc_adapter_mock_mode(monkeypatch) -> None:
+    monkeypatch.delenv("OQLOS_ENABLE_RTC", raising=False)
+    monkeypatch.setenv("OQLOS_HARDWARE_MODE", "mock")
+    payload = {"adapters": [{"id": "modbus-io", "status": "ok"}], "total": 1, "detected": 1}
+
+    out = enrich_rtc_adapter(payload)
+
+    assert out["total"] == 2
+    rtc = next(a for a in out["adapters"] if a["id"] == RTC_PERIPHERAL_ID)
+    assert rtc["mock"] is True
+
+
 def test_enrich_rtc_adapter_skips_when_disabled(monkeypatch) -> None:
     monkeypatch.delenv("OQLOS_ENABLE_RTC", raising=False)
     monkeypatch.delenv("C2004_HARDWARE_ENABLE_RTC", raising=False)

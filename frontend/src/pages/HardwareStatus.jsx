@@ -437,6 +437,13 @@ export default function HardwareStatus() {
           {copyStatus ? <div className="section-desc">{copyStatus}</div> : null}
           {rebootStatus ? <div className="section-desc">{rebootStatus}</div> : null}
           {logIndexError ? <div className="mapx-error">{logIndexError}</div> : null}
+          {logIndex?.dir && !activeLogId ? (
+            <div className="section-desc">
+              {logIndex.groups?.length
+                ? t("hardware.statusLogs.dirHint", { dir: logIndex.dir })
+                : t("hardware.statusLogs.dirMissing", { dir: logIndex.dir })}
+            </div>
+          ) : null}
           {logIndexLoading && !logIndex ? (
             <div className="section-desc">{t("hardware.statusLogs.loading")}</div>
           ) : null}

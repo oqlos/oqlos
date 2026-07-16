@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
+from datetime import datetime, timezone
 from typing import Any
 
 import httpx
@@ -14,6 +15,45 @@ RTC_PERIPHERAL_ID = "rtc"
 PIRTC_DEFAULT_URL = "http://localhost:8125"
 _REQUEST_TIMEOUT_SECONDS = 2.0
 _RTC_ENABLE_TRUTHY = frozenset({"1", "true", "yes", "on"})
+
+
+def _hardware_mode() -> str:
+    for name in ("OQLOS_HARDWARE_MODE", "HARDWARE_MODE"):
+        token = os.environ.get(name, "").strip().lower()
+        if token:
+            return token
+    try:
+        from oqlos.config import get_settings
+
+        return str(get_settings().hardware_mode or "").strip().lower()
+    except Exception:
+        return ""
+
+
+def _rtc_mock_mode() -> bool:
+    """Synthetic RTC for firmware simulator / hardware UI dev (not production HAT)."""
+    if is_rtc_hardware_enabled():
+        return False
+    return _hardware_mode() == "mock"
+
+
+def _build_rtc_mock_data() -> dict[str, Any]:
+    now = datetime.now(timezone.utc)
+    return {
+        "connected": True,
+        "ready": True,
+        "enabled": True,
+        "mock": True,
+        "rtc_i2c_address": "0x68",
+        "rtc_i2c_bus": 1,
+        "watchdog_available": True,
+        "watchdog_i2c_address": "0x69",
+        "watchdog_gpio_pin": 4,
+        "watchdog_timeout": 30,
+        "time": now.strftime("%H:%M:%S"),
+        "temperature": 23.5,
+        "timestamp": now.isoformat(),
+    }
 
 
 def is_rtc_hardware_enabled() -> bool:
@@ -68,6 +108,13 @@ def _pirtc_request_sync(
 
 def build_rtc_peripheral_status() -> dict[str, Any]:
     """Return the runtime status payload for the RTC sidecar."""
+    if _rtc_mock_mode():
+        return {
+            "ok": True,
+            "peripheral_id": RTC_PERIPHERAL_ID,
+            "command": "status",
+            "result": {"data": _build_rtc_mock_data()},
+        }
     if not is_rtc_hardware_enabled():
         return {
             "ok": False,
@@ -116,6 +163,26 @@ def build_rtc_peripheral_status() -> dict[str, Any]:
 
 def run_rtc_command(command: str, args: dict[str, Any] | None = None) -> dict[str, Any]:
     """Execute a diagnostic command against the RTC sidecar."""
+    if _rtc_mock_mode():
+        data = _build_rtc_mock_data()
+        if command == "read_time":
+            result = {"time": data["time"]}
+        elif command == "read_date":
+            result = {"date": datetime.now(timezone.utc).strftime("%Y-%m-%d")}
+        elif command == "read_temperature":
+            result = {"temperature": data["temperature"]}
+        elif command == "read_watchdog":
+            result = {"available": True, "timeout": data["watchdog_timeout"]}
+        elif command in {"sync_to_system", "sync_from_system", "feed_watchdog", "reinit", "restart"}:
+            result = {"mock": True, "command": command, "args": args or {}}
+        else:
+            result = {"data": data}
+        return {
+            "ok": True,
+            "peripheral_id": RTC_PERIPHERAL_ID,
+            "command": command,
+            "result": result,
+        }
     if not is_rtc_hardware_enabled():
         return {
             "ok": False,
@@ -181,6 +248,28 @@ def build_rtc_adapter_entry() -> dict[str, Any]:
 
 
 def enrich_rtc_adapter(payload: dict[str, Any]) -> dict[str, Any]:
+    if _rtc_mock_mode():
+        if not isinstance(payload, dict):
+            return payload
+        adapters = list(payload.get("adapters") or [])
+        if any(adapter.get("id") == RTC_PERIPHERAL_ID for adapter in adapters):
+            return payload
+        adapters.append(
+            {
+                "id": RTC_PERIPHERAL_ID,
+                "name": "Waveshare RTC WatchDog HAT (DS3231)",
+                "protocol": "I2C (piRTC mock)",
+                "status": "adapter-only",
+                "mock": True,
+                "detail": {"source": "oqlos.hardware.rtc_probe"},
+                "probe": {"connected": True, "source": "oqlos.hardware.rtc_probe"},
+            }
+        )
+        payload["adapters"] = adapters
+        payload["total"] = len(adapters)
+        healthy = {"ok", "adapter-only"}
+        payload["detected"] = sum(1 for adapter in adapters if adapter.get("status") in healthy)
+        return payload
     if not is_rtc_hardware_enabled():
         return payload
     if not isinstance(payload, dict):

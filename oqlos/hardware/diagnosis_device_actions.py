@@ -137,8 +137,11 @@ def diagnose_plugin_devices(
     platform: dict[str, Any],
     topology: str,
     host_recover: str,
+    *,
+    hardware_mode: str = "",
 ) -> dict[str, DeviceDiagnosis]:
     """Build per-device diagnosis for the four monitored hardware plugins."""
+    mock_mode = str(hardware_mode or "").lower() == "mock"
     devices: dict[str, DeviceDiagnosis] = {}
     for plugin_id, display_name in (
         ("modbus-io", "Waveshare Modbus IO 8CH"),
@@ -148,6 +151,15 @@ def diagnose_plugin_devices(
     ):
         entry = health.get(plugin_id) if isinstance(health.get(plugin_id), dict) else None
         adapter = adapters.get(plugin_id)
+        if mock_mode and plugin_id.startswith("motor") and entry is None:
+            devices[plugin_id] = DeviceDiagnosis(
+                device_id=plugin_id,
+                display_name=display_name,
+                status="ok",
+                health_summary="symulator OqlOS (mock)",
+                environment={"topology": topology, "hardware_mode": "mock"},
+            )
+            continue
         status = infer_status(plugin_id, entry, present=entry is not None or adapter is not None)
         dev = DeviceDiagnosis(
             device_id=plugin_id,

@@ -110,7 +110,10 @@ def build_diagnosis_report(identify: dict[str, Any]) -> DiagnosisReport:
     host_recover = _resolve_host_recover()
     c2004_root = os.environ.get("C2004_ROOT", "/home/tom/github/maskservice/c2004")
 
-    devices = diagnose_plugin_devices(health, adapters, platform, topology, host_recover)
+    devices = diagnose_plugin_devices(
+        health, adapters, platform, topology, host_recover,
+        hardware_mode=str(identify.get("mode") or "").strip().lower(),
+    )
     devices["barcode-scanner"] = diagnose_barcode_scanner(adapters)
 
     modbus_bad = modbus_plugins_need_repair(identify)
@@ -125,6 +128,7 @@ def build_diagnosis_report(identify: dict[str, Any]) -> DiagnosisReport:
         environment={
             "generated_at": datetime.now(timezone.utc).isoformat(),
             "topology": topology,
+            "hardware_mode": str(identify.get("mode") or "").strip().lower() or None,
             "runtime_control_available": bool(host_recover),
             "host_recover_hook": host_recover or None,
             "serial_ports": serial_ports,

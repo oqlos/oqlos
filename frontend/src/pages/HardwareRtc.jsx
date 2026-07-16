@@ -76,6 +76,7 @@ export default function HardwareRtc() {
   const data = status?.result?.data || {};
   const connected = Boolean(data.connected);
   const optionalDisabled = status?.ok === false && String(status?.error || "").includes("RTC disabled");
+  const mockMode = Boolean(data.mock);
 
   const summary = useMemo(() => ({
     connected: connected ? t("hardwareRtc.connectedYes") : t("hardwareRtc.connectedNo"),
@@ -163,6 +164,9 @@ export default function HardwareRtc() {
           {error ? <div className="mapx-error">{error}</div> : null}
           {optionalDisabled ? (
             <div className="section-desc">{t("hardwareRtc.disabledHint")}</div>
+          ) : null}
+          {mockMode ? (
+            <div className="section-desc">{t("hardwareRtc.mockHint")}</div>
           ) : null}
 
           <div className="hw-grid">
