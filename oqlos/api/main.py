@@ -36,6 +36,7 @@ from oqlos.api.hardware import set_hardware_gateway
 from oqlos.api.hardware_v3 import router as hardware_v3_router
 from oqlos.api.hardware_v3 import hardware_events_ws as _hardware_events_ws_handler
 from oqlos.api.ui_prefs_routes import router as ui_prefs_router
+from oqlos.api.update_status import router as update_status_router
 from oqlos.api.oql_mqtt import router as oql_router, set_oql_controller
 from oqlos.utils import load_sample_scenarios
 from oqlos.utils.hui_scenario import register_hui_test_scenario
@@ -269,6 +270,7 @@ app.include_router(ui_prefs_router)
 app.include_router(editor_router)
 app.include_router(plugins_router.router)
 app.include_router(oql_router)
+app.include_router(update_status_router, prefix="/api/v1")
 
 # Compatibility: expose the same API under /firmware/* (frontend expects this prefix)
 app.include_router(scenarios_router, prefix="/firmware")
@@ -539,6 +541,17 @@ async def hardware_ui_spa(full_path: str = ""):
         "<h1>OqlOS hardware UI not built</h1>"
         "<p>Run <code>npm --prefix frontend install &amp;&amp; npm --prefix frontend run build</code>.</p>",
         status_code=503,
+    )
+
+
+@app.get("/update", response_class=HTMLResponse, include_in_schema=False)
+async def update_status_page():
+    from oqlos.api.update_status import UPDATE_PAGE
+
+    return serve_html_page(
+        UPDATE_PAGE,
+        missing_title="OqlOS — status wdrożenia",
+        missing_message="Brak pliku static/update/index.html.",
     )
 
 

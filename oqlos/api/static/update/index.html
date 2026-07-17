@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>OqlOS — status wdrożenia</title>
+<style>
+  :root {
+    --bg:#0b1020; --bg2:#001420; --panel:#131a2b; --border:#26324a;
+    --accent:#00e5ff; --ok:#3dd68c; --warn:#f0b429; --bad:#ff6b6b; --muted:#7f93b0; --text:#e6edf5;
+    font-size: clamp(18px, 2.2vw, 28px);
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; min-height:100vh; color:var(--text); font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: radial-gradient(120% 120% at 50% 0%, var(--bg) 0%, var(--bg2) 100%); }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 24px 20px 48px; }
+  h1 { font-size: 1.35rem; margin: 0 0 .25rem; }
+  .sub { color: var(--muted); font-size: .85rem; margin-bottom: 1.2rem; }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; }
+  .card h2 { margin: 0 0 .6rem; font-size: .95rem; color: var(--accent); text-transform: uppercase; letter-spacing: .08em; }
+  .row { display:flex; justify-content:space-between; gap:12px; padding: .35rem 0; border-bottom: 1px solid rgba(255,255,255,.06); font-size: .92rem; }
+  .row:last-child { border-bottom: 0; }
+  .label { color: var(--muted); }
+  .value { text-align: right; word-break: break-all; }
+  .pill { display:inline-block; padding: .15rem .55rem; border-radius: 999px; font-size: .78rem; font-weight: 600; }
+  .pill.ok { background: rgba(61,214,140,.15); color: var(--ok); }
+  .pill.warn { background: rgba(240,180,41,.15); color: var(--warn); }
+  .pill.bad { background: rgba(255,107,107,.15); color: var(--bad); }
+  .banner { border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; font-size: .95rem; }
+  .banner.active { background: rgba(0,229,255,.12); border: 1px solid rgba(0,229,255,.35); }
+  .banner.idle { background: rgba(61,214,140,.08); border: 1px solid rgba(61,214,140,.25); }
+  .toolbar { display:flex; flex-wrap:wrap; gap:10px; margin-bottom: 14px; }
+  .toolbar a, .toolbar button { background: transparent; color: var(--accent); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font-size: .85rem; cursor: pointer; text-decoration: none; }
+  pre { margin:0; white-space: pre-wrap; font-size: .75rem; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Status wdrożenia — BoardNet (OqlOS)</h1>
+  <p class="sub">Odświeżanie co 5 s • <span id="ts">—</span></p>
+  <div class="toolbar">
+    <button type="button" onclick="loadStatus()">Odśwież</button>
+    <a href="/ui/status">Panel statusu</a>
+    <a href="/api/v1/update/status" target="_blank" rel="noopener">JSON API</a>
+  </div>
+  <div id="banner" class="banner idle">Ładowanie…</div>
+  <section class="card" id="version-card"><h2>Wersje</h2></section>
+  <section class="card" id="deploy-card"><h2>Wdrożenie</h2></section>
+  <section class="card" id="hardware-card"><h2>Hardware</h2></section>
+  <section class="card" id="health-card"><h2>Usługi</h2></section>
+  <pre id="raw"></pre>
+</div>
+<script>
+function pill(text, kind) { return '<span class="pill ' + kind + '">' + text + '</span>'; }
+function row(label, value) { return '<div class="row"><span class="label">' + label + '</span><span class="value">' + value + '</span></div>'; }
+function kind(st) { return st === 'ok' ? 'ok' : (st === 'degraded' ? 'warn' : 'bad'); }
+function render(data) {
+  document.getElementById('ts').textContent = new Date().toLocaleString('pl-PL');
+  const banner = document.getElementById('banner');
+  if (data.deploy_in_progress) {
+    banner.className = 'banner active';
+    banner.textContent = (data.update_progress && data.update_progress.action) || 'Aktualizacja w toku';
+  } else {
+    banner.className = 'banner idle';
+    banner.textContent = 'Brak aktywnego wdrożenia';
+  }
+  document.getElementById('version-card').innerHTML = '<h2>Wersje</h2>'
+    + row('Usługa', data.service || '—')
+    + row('Wersja', data.version || '—')
+    + row('Port', data.port || '—');
+  const drift = data.git_drift || {};
+  document.getElementById('deploy-card').innerHTML = '<h2>Wdrożenie</h2>'
+    + row('Commit wdrożony', (data.deploy && data.deploy.short) || 'brak')
+    + row('Drift git', drift.status || '—')
+    + row('HEAD lokalny', drift.short_head || 'n/d');
+  const hw = data.hardware || {};
+  document.getElementById('hardware-card').innerHTML = '<h2>Hardware</h2>'
+    + row('Tryb', hw.mode || '—')
+    + row('Połączone', hw.connected != null ? hw.connected : '—')
+    + row('Błędy', hw.failed != null ? hw.failed : '—');
+  const hc = (data.health && data.health.components) || {};
+  let healthHtml = '<h2>Usługi</h2>' + row('Ogółem', pill((data.health && data.health.status) || '—', kind(data.health && data.health.status)));
+  for (const [name, item] of Object.entries(hc)) {
+    healthHtml += row(name, pill((item && item.status) || '—', kind(item && item.status)));
+  }
+  document.getElementById('health-card').innerHTML = healthHtml;
+  document.getElementById('raw').textContent = JSON.stringify(data, null, 2);
+}
+async function loadStatus() {
+  const res = await fetch('/api/v1/update/status', { cache: 'no-store' });
+  render(await res.json());
+}
+loadStatus();
+setInterval(loadStatus, 5000);
+</script>
+</body>
+</html>

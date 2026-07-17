@@ -1,0 +1,25 @@
+spec_path: redeploy/122/migration.md
+host: pi@boardnet.local
+total_steps: 20
+completed_step_ids:
+- sync_project_tree
+- mkdir_hw_remote
+- enable_linger_groups
+- sync_oqlos_core
+- sync_oqlos_frontend_dist
+- sync_pihw_config
+- sync_pimodbus
+- sync_rpi_motor_tic249
+- sync_rpi_motor_dri0050
+- sync_pirtc
+- sync_pirtc_rtc_lib
+- assert_oqlos_checksum
+- install_mosquitto
+- deploy_pololu_udev
+- deploy_hw_tic249_service
+- deploy_dri0050_motor_service
+- deploy_pirtc_sidecar
+failed_step_id: null
+failed_error: null
+started_at: '2026-07-17T06:06:25+00:00'
+updated_at: '2026-07-17T06:09:39+00:00'
