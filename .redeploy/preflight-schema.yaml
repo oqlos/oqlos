@@ -1,5 +1,5 @@
 schema_version: '1.0'
-generated_at: '2026-07-16T17:53:25.020216+00:00'
+generated_at: '2026-07-17T06:06:25.960125+00:00'
 spec:
   path: redeploy/122/migration.md
   name: oqlos boardnet deploy
@@ -189,30 +189,6 @@ checks:
     steps:
     - sync_pimodbus
   - kind: src
-    path: /home/tom/github/maskservice/pirtc/
-    resolved: /home/tom/github/maskservice/pirtc
-    exists: true
-    steps:
-    - sync_pirtc
-  - kind: src
-    path: /home/tom/github/maskservice/pirtc/RTC/python/lib/
-    resolved: /home/tom/github/maskservice/pirtc/RTC/python/lib
-    exists: true
-    steps:
-    - sync_pirtc_rtc_lib
-  - kind: src
-    path: /home/tom/github/maskservice/rpi-motor-DRI0050/
-    resolved: /home/tom/github/maskservice/rpi-motor-DRI0050
-    exists: true
-    steps:
-    - sync_rpi_motor_dri0050
-  - kind: src
-    path: /home/tom/github/maskservice/rpi-motor-tic249/
-    resolved: /home/tom/github/maskservice/rpi-motor-tic249
-    exists: true
-    steps:
-    - sync_rpi_motor_tic249
-  - kind: src
     path: /home/tom/github/oqlos/oqlos/
     resolved: /home/tom/github/oqlos/oqlos
     exists: true
@@ -230,6 +206,30 @@ checks:
     exists: true
     steps:
     - sync_pihw_config
+  - kind: src
+    path: /home/tom/github/oqlos/pirtc/
+    resolved: /home/tom/github/oqlos/pirtc
+    exists: true
+    steps:
+    - sync_pirtc
+  - kind: src
+    path: /home/tom/github/oqlos/pirtc/RTC/python/lib/
+    resolved: /home/tom/github/oqlos/pirtc/RTC/python/lib
+    exists: true
+    steps:
+    - sync_pirtc_rtc_lib
+  - kind: src
+    path: /home/tom/github/oqlos/rpi-motor-DRI0050/
+    resolved: /home/tom/github/oqlos/rpi-motor-DRI0050
+    exists: true
+    steps:
+    - sync_rpi_motor_dri0050
+  - kind: src
+    path: /home/tom/github/oqlos/rpi-motor-tic249/
+    resolved: /home/tom/github/oqlos/rpi-motor-tic249
+    exists: true
+    steps:
+    - sync_rpi_motor_tic249
   remote:
     enabled: true
     host: pi@boardnet.local
