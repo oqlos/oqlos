@@ -614,9 +614,12 @@ class PluginHardwareGateway:
         if self.last_init_summary:
             result["init_summary"] = self.last_init_summary
 
+        # Must exceed plugin RTU timeout (typically 2s) + retries; 1.0s caused false
+        # "Health check timed out" for healthy modbus-adc/io under parallel probes.
+        _health_timeout = float(os.environ.get("OQLOS_PLUGIN_HEALTH_TIMEOUT", "6.0"))
         if self._plugin_configs:
             async def _check_enabled(plugin_id: str) -> tuple[str, PluginHealth | None]:
-                health = await PluginRegistry.health_check(plugin_id, timeout=1.0)
+                health = await PluginRegistry.health_check(plugin_id, timeout=_health_timeout)
                 return plugin_id, health
 
             checks = [
@@ -626,7 +629,7 @@ class PluginHardwareGateway:
             ]
             health_results = dict(await asyncio.gather(*checks)) if checks else {}
         else:
-            health_results = await PluginRegistry.health_check_all(timeout=1.0)
+            health_results = await PluginRegistry.health_check_all(timeout=_health_timeout)
         for plugin_id, health in health_results.items():
             if health is None:
                 continue

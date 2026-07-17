@@ -30,6 +30,63 @@ def _is_unsuccessful_result(result: Any) -> bool:
     return isinstance(result, dict) and result.get("success") is False
 
 
+def _classify_unavailable_reason(
+    message: str,
+    detail: Any,
+    status_code: int | None = None,
+) -> str:
+    """Classify why OqlOS health is unavailable for user-facing preflight.
+
+    Returns one of: ``updating``, ``restarting``, ``unreachable``.
+    """
+    parts: list[str] = [str(message or "")]
+    if isinstance(detail, dict):
+        for key in ("error", "message", "last_error", "reason", "status", "detail"):
+            if detail.get(key) is not None:
+                parts.append(str(detail.get(key)))
+        body = detail.get("response")
+        if isinstance(body, dict):
+            for key in ("error", "message", "reason", "status", "mode"):
+                if body.get(key) is not None:
+                    parts.append(str(body.get(key)))
+            if body.get("updating") is True or body.get("maintenance") is True:
+                return "updating"
+    elif detail is not None:
+        parts.append(str(detail))
+    blob = " ".join(parts).lower()
+
+    update_markers = (
+        "updat",
+        "upgrade",
+        "redeploy",
+        "deploy in progress",
+        "maintenance",
+        "migrat",
+        "aktualizac",
+    )
+    if any(marker in blob for marker in update_markers):
+        return "updating"
+
+    restart_markers = (
+        "connection refused",
+        "connect call failed",
+        "errno 111",
+        "temporarily unavailable",
+        "service is not ready",
+        "restart",
+        "starting",
+        "activating",
+        "reloading",
+    )
+    if any(marker in blob for marker in restart_markers):
+        return "restarting"
+
+    # 503 without a real health body often means process up but not serving yet.
+    if status_code == 503:
+        return "restarting"
+    return "unreachable"
+
+
 class OqlosHardwareProxy:
     def __init__(
         self,
@@ -387,10 +444,12 @@ class OqlosHardwareProxy:
 
     def _unavailable_health_payload(self, exc: HardwareProxyError, path: str) -> dict[str, Any]:
         message, detail = oqlos_error_detail(exc)
-        return {
+        reason = _classify_unavailable_reason(message, detail, exc.status_code)
+        payload: dict[str, Any] = {
             "status": "unavailable",
             "ok": False,
             "mode": "unavailable",
+            "reason": reason,
             "error": message,
             "detail": detail,
             "proxy": {
@@ -399,6 +458,10 @@ class OqlosHardwareProxy:
                 "oqlos_api_candidates": self.candidate_bases(),
             },
         }
+        if reason == "updating":
+            payload["updating"] = True
+            payload["maintenance"] = True
+        return payload
 
     def _unavailable_identify_payload(self, exc: HardwareProxyError) -> dict[str, Any]:
         health = self._unavailable_health_payload(exc, "/api/v1/hardware/identify")

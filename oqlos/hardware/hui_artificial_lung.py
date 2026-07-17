@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from typing import Any
 
 from oqlos.hardware.hui_hold import _set_valve, _success
@@ -12,6 +13,55 @@ from oqlos.hardware.hui_lung_recipe import (
 )
 
 _artificial_lung_running = False
+
+# When Modbus IO is offline (timeout / no adapter), still exercise Tic249 so lab
+# HUI AL START is usable. Set HUI_AL_REQUIRE_VALVE=1 for strict production gating.
+_COMM_FAIL_MARKERS = (
+    "timeout",
+    "timed out",
+    "no response",
+    "not available",
+    "not connected",
+    "io-not-present",
+    "not-present",
+    "modbus",
+    "unreachable",
+)
+
+
+def _env_truthy(name: str, default: str = "0") -> bool:
+    return os.getenv(name, default).strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _require_valve() -> bool:
+    return _env_truthy("HUI_AL_REQUIRE_VALVE", "0")
+
+
+def _skip_valve_on_comm_failure() -> bool:
+    # Default on: allow AL motion without valves when RS485 is dead.
+    return _env_truthy("HUI_AL_SKIP_VALVE_ON_COMM_FAILURE", "1")
+
+
+def _valve_looks_like_comm_failure(valve_op: dict[str, Any]) -> bool:
+    """True when set_valve failed because IO bus/plugin is unreachable (not a logic reject)."""
+    result = valve_op.get("result")
+    # Plugin gateway returns bare False when modbus-io is missing / execute fails hard.
+    if result is False or result is None:
+        return True
+    chunks: list[str] = []
+    for key in ("error", "message"):
+        if valve_op.get(key) is not None:
+            chunks.append(str(valve_op.get(key)))
+    if isinstance(result, dict):
+        for key in ("error", "message", "detail", "status"):
+            if result.get(key) is not None:
+                chunks.append(str(result.get(key)))
+        if result.get("success") is False and not chunks:
+            return True
+    blob = " ".join(chunks).lower()
+    if not blob:
+        return True
+    return any(marker in blob for marker in _COMM_FAIL_MARKERS)
 
 
 async def _run_tic249_reciprocate(gateway: Any) -> dict[str, Any]:
@@ -47,13 +97,34 @@ async def start_hui_artificial_lung(gateway: Any) -> dict[str, Any]:
     global _artificial_lung_running
     valve_id = get_hui_lung_valve_id()
     valve = await _set_valve(gateway, valve_id, True)
+    valve_skipped = False
     if not valve["ok"]:
-        return {"ok": False, "command": "al-start", "error": "Lung valve failed", "operations": [valve]}
+        if _require_valve() or not (
+            _skip_valve_on_comm_failure() and _valve_looks_like_comm_failure(valve)
+        ):
+            return {"ok": False, "command": "al-start", "error": "Lung valve failed", "operations": [valve]}
+        valve_skipped = True
+        valve = {
+            **valve,
+            "skipped": True,
+            "warning": (
+                f"Valve {valve_id} unavailable (modbus-io); continuing AL with Tic249 only. "
+                "Fix RS485 / Waveshare IO for full circuit."
+            ),
+        }
 
     lung = await _run_tic249_reciprocate(gateway)
+    # Idempotent: already reciprocating is success for AL START.
+    if isinstance(lung, dict):
+        nested = lung.get("data") if isinstance(lung.get("data"), dict) else {}
+        err_txt = str(lung.get("error") or nested.get("error") or "").lower()
+        if "already active" in err_txt or "already running" in err_txt:
+            lung = {**lung, "success": True, "idempotent_success": True}
     ok = _success(lung)
     if not ok:
-        cleanup = await _set_valve(gateway, valve_id, False)
+        cleanup = None
+        if not valve_skipped:
+            cleanup = await _set_valve(gateway, valve_id, False)
         return {
             "ok": False,
             "command": "al-start",
@@ -63,11 +134,15 @@ async def start_hui_artificial_lung(gateway: Any) -> dict[str, Any]:
         }
 
     _artificial_lung_running = True
-    return {
+    payload: dict[str, Any] = {
         "ok": True,
         "command": "al-start",
         "operations": [valve, {"operation": "reciprocate", "ok": True, "result": lung}],
     }
+    if valve_skipped:
+        payload["warning"] = valve.get("warning")
+        payload["valve_skipped"] = True
+    return payload
 
 
 async def stop_hui_artificial_lung(gateway: Any) -> dict[str, Any]:
@@ -75,8 +150,13 @@ async def stop_hui_artificial_lung(gateway: Any) -> dict[str, Any]:
     lung_ok = await gateway.stop_lung()
     valve = await _set_valve(gateway, get_hui_lung_valve_id(), False)
     _artificial_lung_running = False
+    # Tic stop is the critical path; valve close may fail when modbus-io is offline.
+    valve_ok = bool(valve.get("ok"))
+    if not valve_ok and _skip_valve_on_comm_failure() and _valve_looks_like_comm_failure(valve):
+        valve = {**valve, "skipped": True, "warning": "Valve close skipped (modbus-io offline)"}
+        valve_ok = True
     return {
-        "ok": bool(lung_ok) and bool(valve["ok"]),
+        "ok": bool(lung_ok) and valve_ok,
         "command": "al-stop",
         "operations": [
             {"operation": "stop_lung", "ok": bool(lung_ok), "result": lung_ok},

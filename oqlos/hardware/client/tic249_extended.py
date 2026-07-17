@@ -16,8 +16,10 @@ from oqlos.hardware.client.tic249_rig_direction import RIG_LEFT_ALIASES
 from oqlos.hardware.client.tic249_sidecar_client import (
     attempt_disable_deenergize,
     attempt_reciprocate_via_sidecar,
+    direct_sidecar_deenergize,
     disable_success_response,
     sidecar_reciprocate_preferred,
+    sidecar_reports_deenergized,
 )
 
 MOTOR_TIC249_EXTENDED_COMMANDS = {
@@ -56,6 +58,9 @@ _RECIPROCATE_PLUGIN_COMMAND = "reciprocate"
 
 # Backward-compatible aliases for tests and internal callers.
 _build_reciprocate_params = build_reciprocate_params
+_direct_sidecar_deenergize = direct_sidecar_deenergize
+_sidecar_reports_deenergized = sidecar_reports_deenergized
+_attempt_reciprocate_via_sidecar = attempt_reciprocate_via_sidecar
 
 
 def _plugin_payload(command: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
