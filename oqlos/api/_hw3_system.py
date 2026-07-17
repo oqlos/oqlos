@@ -225,6 +225,8 @@ async def hardware_modbus_wizard_probe_isolated_v3(payload: dict[str, Any] = Bod
 @sub_router.post("/modbus/wizard/program-isolated")
 async def hardware_modbus_wizard_program_isolated_v3(payload: dict[str, Any] = Body(default_factory=dict)) -> dict[str, Any]:
     from oqlos.api import hardware_modbus_routes as modbus_hw
+    raw_cur = payload.get("current_baudrate")
+    current_baudrate = None if raw_cur in (None, "") else int(raw_cur)
     return await modbus_hw.hardware_modbus_wizard_program_isolated(
         serial_port=str(payload.get("serial_port") or ""),
         current_device_id=int(payload.get("current_device_id") or 1),
@@ -232,6 +234,7 @@ async def hardware_modbus_wizard_program_isolated_v3(payload: dict[str, Any] = B
         new_baudrate=int(payload.get("new_baudrate") or 9600),
         new_parity=str(payload.get("new_parity") or "N"),
         confirm_isolated=bool(payload.get("confirm_isolated")),
+        current_baudrate=current_baudrate,
     )
 
 

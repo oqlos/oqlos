@@ -7,11 +7,63 @@ import {
   runConfigureProbePhase,
   runConfigureProgramPhase,
 } from "./hardware-restart-configure.js";
+import { evaluateConfigureSkip } from "./hardware-restart-configure-skip.js";
+import { wizardStepSerialPort } from "./hardware-restart-wizard-helpers.js";
 
 export { buildWizardProbePayload, wizardStepSerialPort } from "./hardware-restart-wizard-helpers.js";
 
+/**
+ * If OqlOS already has a healthy modbus-io / modbus-adc plugin on the planned
+ * port, skip isolated probe+program (avoids RS485 port-busy failures).
+ */
+export async function trySkipConfigureIfAlreadyHealthy(ctx) {
+  const { currentStep, plan, log, apiContext } = ctx;
+  const target = currentStep?.program_target || {};
+  const role = String(target.module_role || "");
+  if (!role.startsWith("modbus-")) return null;
+
+  let healthPayload = null;
+  try {
+    healthPayload = await HardwareApi.health(apiContext);
+  } catch (err) {
+    log?.(`WARN: health preflight failed — continue configure (${err?.message || err})`);
+    return null;
+  }
+
+  const stepPort = wizardStepSerialPort(plan, currentStep);
+  const decision = evaluateConfigureSkip({
+    programTarget: target,
+    stepSerialPort: stepPort,
+    healthPayload,
+  });
+  if (!decision.skip) return null;
+
+  const d = decision.details || {};
+  log?.(
+    `SKIP: ${role} already at target UART `
+    + `(status=${d.status}, compatible=${d.compatible}, `
+    + `${d.live_baudrate || "?"}/${d.live_parity || "?"} id=${d.live_device_id ?? "?"}`
+    + `${d.live_serial_port ? ` @ ${d.live_serial_port}` : ""}) — skip isolated probe/program.`,
+  );
+  if (d.note) {
+    log?.(`INFO: ${d.note}`);
+  }
+  return {
+    ok: true,
+    skipped: true,
+    payload: {
+      step: currentStep,
+      skipped: true,
+      reason: decision.reason,
+      health: d,
+    },
+  };
+}
+
 export async function executeConfigureStep(ctx) {
   const { confirmIsolated, confirmErrorKey, t } = ctx;
+  const skipped = await trySkipConfigureIfAlreadyHealthy(ctx);
+  if (skipped) return skipped;
   if (!confirmIsolated) throw new Error(t(confirmErrorKey));
   const probePhase = await runConfigureProbePhase(ctx);
   return runConfigureProgramPhase({ ...ctx, ...probePhase });

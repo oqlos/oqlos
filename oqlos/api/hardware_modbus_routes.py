@@ -99,9 +99,11 @@ async def hardware_modbus_wizard_program_isolated(
     new_baudrate: int = Body(default=9600),
     new_parity: str = Body(default="N"),
     confirm_isolated: bool = Body(default=False),
+    current_baudrate: int | None = Body(default=None),
 ) -> dict[str, Any]:
-    """Program one isolated module (address + UART), then verify config."""
+    """Program one isolated module: open at current/baseline baud, write target UART, verify at target."""
     serial = serial_port or str(_settings.modbus_serial_port)
+    cur_baud = None if current_baudrate in (None, "") else int(current_baudrate)
     return await asyncio.to_thread(
         _modbus_wizard_program_isolated,
         serial_port=serial,
@@ -110,4 +112,5 @@ async def hardware_modbus_wizard_program_isolated(
         new_baudrate=int(new_baudrate),
         new_parity=str(new_parity).upper(),
         confirm_isolated=bool(confirm_isolated),
+        current_baudrate=cur_baud,
     )

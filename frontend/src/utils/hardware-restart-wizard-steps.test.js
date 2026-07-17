@@ -38,3 +38,16 @@ test("buildWizardProbePayload uses baseline then target baud sequence", () => {
   );
   assert.deepEqual(payload.baudrates, [9600, 115200]);
 });
+
+test("buildWizardProgramPayload opens at candidate baud then targets higher baud", async () => {
+  const { buildWizardProgramPayload } = await import("./hardware-restart-wizard-helpers.js");
+  const payload = buildWizardProgramPayload(
+    "/dev/ttyUSB0",
+    { new_device_id: 1, new_baudrate: 115200, new_parity: "N" },
+    { device_id: 1, baudrate: 9600, parity: "N" },
+    { baseline_baudrate: 9600, target_baudrate: 115200 },
+  );
+  assert.equal(payload.current_baudrate, 9600);
+  assert.equal(payload.new_baudrate, 115200);
+  assert.equal(payload.current_device_id, 1);
+});

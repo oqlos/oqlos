@@ -50,7 +50,12 @@ export async function runConfigureProgramPhase({
   currentStep,
 }) {
   const programPayload = buildWizardProgramPayload(stepPort, target, candidate, plan);
-  log(`Program module role=${role} current_id=${programPayload.current_device_id} -> new_id=${programPayload.new_device_id}, uart=${programPayload.new_baudrate}/${programPayload.new_parity}`);
+  log(
+    `Program module role=${role} `
+    + `open@${programPayload.current_baudrate || "?"} id=${programPayload.current_device_id} `
+    + `-> target id=${programPayload.new_device_id} uart=${programPayload.new_baudrate}/${programPayload.new_parity} `
+    + `(commission: baseline then raise baud)`,
+  );
   const program = await runRetry(
     "Program",
     () => HardwareApi.programModbusWizardIsolated(programPayload, apiContext),

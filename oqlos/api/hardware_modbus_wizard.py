@@ -12,6 +12,7 @@ from oqlos.api.hardware_modbus_settings import (
     MODBUS_BASELINE_BAUD,
     MODBUS_TARGET_BAUD_OPTIONS,
     build_init_baud_sequence,
+    effective_modbus_adc_target_baud,
     effective_modbus_target_baud,
     normalize_probe_baudrates,
 )
@@ -30,7 +31,10 @@ def _modbus_wizard_plan() -> dict[str, Any]:
     adc_port = ports["adc_serial_port"] or io_port
     separate = ports["topology"] == "separate-adapters"
     target_baud = effective_modbus_target_baud(_settings)
+    # ADC may use a different target baud than IO (bench often keeps ADC at 9600).
+    adc_target_baud = effective_modbus_adc_target_baud(_settings)
     target_parity = str(_settings.modbus_parity).upper()
+    adc_parity = str(getattr(_settings, "modbus_adc_parity", None) or _settings.modbus_parity).upper()
 
     configure_steps: list[dict[str, Any]] = []
     for io_id in io_ids:
@@ -69,8 +73,8 @@ def _modbus_wizard_plan() -> dict[str, Any]:
                 "module_role": "modbus-adc",
                 "serial_port": adc_port,
                 "new_device_id": adc_id,
-                "new_baudrate": target_baud,
-                "new_parity": target_parity,
+                "new_baudrate": adc_target_baud,
+                "new_parity": adc_parity,
             },
         }
     )
@@ -94,6 +98,7 @@ def _modbus_wizard_plan() -> dict[str, Any]:
         "topology": ports["topology"],
         "topology_mode": ports.get("topology_mode", "auto"),
         "target_baudrate": target_baud,
+        "target_adc_baudrate": adc_target_baud,
         "target_parity": target_parity,
         "baseline_baudrate": MODBUS_BASELINE_BAUD,
         "baud_probe_sequence": build_init_baud_sequence(target_baud),
@@ -318,7 +323,15 @@ def _modbus_wizard_program_isolated(
     new_baudrate: int,
     new_parity: str,
     confirm_isolated: bool,
+    current_baudrate: int | None = None,
 ) -> dict[str, Any]:
+    """Program isolated module: talk at current/baseline baud, then verify at target baud.
+
+    Commissioning order (Waveshare RTU):
+      1) open bus at *current* baud (probe hit or baseline 9600)
+      2) write UART registers to *new* baud / parity
+      3) re-open at *new* baud and verify device_id + UART
+    """
     if not confirm_isolated:
         return {
             "ok": False,
@@ -339,19 +352,41 @@ def _modbus_wizard_program_isolated(
         return {"ok": False, "error": f"pimodbus is not available: {exc}"}
 
     line_parity = str(new_parity).upper()
-    bus_settings = RtuBusSettings(
-        serial_port=serial_port,
-        baudrate=int(new_baudrate),
-        parity=line_parity,
-        timeout=2.0,
-    )
+    target_baud = int(new_baudrate)
+    # Prefer probe-found baud, then baseline 9600, then target (already-at-target case).
+    open_baud_candidates: list[int] = []
+    for baud in (
+        int(current_baudrate) if current_baudrate else 0,
+        MODBUS_BASELINE_BAUD,
+        target_baud,
+    ):
+        if baud > 0 and baud not in open_baud_candidates:
+            open_baud_candidates.append(baud)
 
-    verify_settings = bus_settings
+    def _bus(baud: int) -> Any:
+        return RtuBusSettings(
+            serial_port=serial_port,
+            baudrate=int(baud),
+            parity=line_parity,
+            timeout=2.0,
+        )
+
+    existing: dict[str, Any] = {}
+    bus_settings = _bus(open_baud_candidates[0])
+    open_baud_used = int(open_baud_candidates[0])
     config_read_error = ""
-    try:
-        existing = read_device_config(verify_settings, device_id=int(current_device_id)).to_dict()
-    except Exception as exc:
-        config_read_error = str(exc)
+    for baud in open_baud_candidates:
+        try:
+            bus_settings = _bus(baud)
+            existing = read_device_config(bus_settings, device_id=int(current_device_id)).to_dict()
+            open_baud_used = int(baud)
+            config_read_error = ""
+            break
+        except Exception as exc:
+            config_read_error = str(exc)
+            existing = {}
+
+    if not existing:
         if int(current_device_id) == int(new_device_id):
             return {
                 "ok": True,
@@ -361,30 +396,48 @@ def _modbus_wizard_program_isolated(
                     "set_uart": True,
                     "skipped": True,
                     "config_read_error": config_read_error,
+                    "open_baud_tried": open_baud_candidates,
                 },
                 "verify": {},
                 "target": {
                     "device_id": int(new_device_id),
-                    "baudrate": int(new_baudrate),
+                    "baudrate": target_baud,
                     "parity": line_parity,
                     "serial_port": serial_port,
                 },
-                "note": "Probe reported target slave ID; skipped provisioning writes (config registers unreadable).",
+                "note": (
+                    "Could not read config registers at baseline/current baud; "
+                    "skipped provisioning writes (module may already be at target UART)."
+                ),
             }
-        return {"ok": False, "error": config_read_error}
+        return {
+            "ok": False,
+            "error": config_read_error or "config read failed at baseline and target baud",
+            "open_baud_tried": open_baud_candidates,
+        }
 
-    already_configured = _wizard_check_already_configured(existing, new_device_id, new_baudrate, line_parity)
+    already_configured = _wizard_check_already_configured(
+        existing, new_device_id, target_baud, line_parity
+    )
 
     writes: dict[str, Any] = {
         "set_address": False,
         "set_uart": False,
         "skipped": already_configured,
+        "open_baudrate": open_baud_used,
+        "commissioning": {
+            "phase": "baseline-then-target",
+            "baseline_baud": MODBUS_BASELINE_BAUD,
+            "open_baud": open_baud_used,
+            "target_baud": target_baud,
+        },
     }
     if already_configured:
         writes["set_address"] = True
         writes["set_uart"] = True
     else:
-        uart_target = uart_register_value(int(new_baudrate), line_parity)
+        # Writes must use the baud the module is *currently* listening on.
+        uart_target = uart_register_value(target_baud, line_parity)
         cur_id = int(current_device_id)
         new_id = int(new_device_id)
 
@@ -396,16 +449,20 @@ def _modbus_wizard_program_isolated(
                 client.close()
 
         write_results = _wizard_apply_uart_write(
-            bus_settings, cur_id, new_id, uart_target, new_baudrate, line_parity,
+            bus_settings, cur_id, new_id, uart_target, target_baud, line_parity,
             write_uart_config, write_device_address, _uart_register_value,
         )
         writes["set_address"] = write_results["set_address"]
         writes["set_uart"] = write_results["set_uart"]
 
+    # After UART change, module listens at target baud — verify there.
+    verify_settings = _bus(target_baud)
     verified, verify, verify_error = _wizard_verify_config(
-        read_device_config, verify_settings, int(new_device_id), int(new_baudrate), line_parity
+        read_device_config, verify_settings, int(new_device_id), target_baud, line_parity
     )
-    return _wizard_build_result(
+    result = _wizard_build_result(
         writes, verify, verified,
-        int(new_device_id), int(new_baudrate), line_parity, serial_port, verify_error,
+        int(new_device_id), target_baud, line_parity, serial_port, verify_error,
     )
+    result["commissioning"] = writes.get("commissioning")
+    return result
