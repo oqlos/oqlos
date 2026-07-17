@@ -115,20 +115,55 @@ def _modbus_preflight_report() -> dict[str, Any]:
     return {"ok": True, "topology": "unknown", "modules": [], "issues": [], "recommended": {}}
 
 
+def _augment_no_response_modules(guidance: dict[str, Any], health: dict[str, Any]) -> dict[str, Any]:
+    """Ensure timeout/error plugins appear in no_response_modules (inline + client paths)."""
+    if not isinstance(guidance, dict):
+        return guidance
+    existing = list(guidance.get("no_response_modules") or [])
+    for plugin_id in ("modbus-io", "modbus-adc"):
+        entry = health.get(plugin_id)
+        if not isinstance(entry, dict) or entry.get("compatible") is True:
+            continue
+        message = str(entry.get("message") or "").lower()
+        if plugin_id in existing:
+            continue
+        if any(
+            marker in message
+            for marker in (
+                "no response",
+                "timed out",
+                "timeout",
+                "errno 5",
+                "input/output error",
+                "not connected",
+            )
+        ):
+            existing.append(plugin_id)
+    guidance["no_response_modules"] = existing
+    return guidance
+
+
 def _modbus_repair_guidance(health: dict[str, Any] | None = None) -> dict[str, Any]:
+    health_map = health if isinstance(health, dict) else {}
     try:
         from pimodbus.repair import build_runtime_repair_guidance
     except ImportError as exc:
-        return {
+        # Still expose no_response from live health so auto-diagnosis is not blind.
+        guidance = {
             "available": False,
             "error": f"pimodbus repair module is not available: {exc}",
+            "no_response_modules": [],
         }
+        return _augment_no_response_modules(guidance, health_map)
 
-    return build_runtime_repair_guidance(
+    guidance = build_runtime_repair_guidance(
         serial_port=_settings.modbus_serial_port,
         baudrate=_settings.modbus_baud,
         parity=_settings.modbus_parity,
         io_device_id=_settings.modbus_device_id,
         adc_device_id=_settings.modbus_adc_device_id,
-        health=health or {},
+        health=health_map,
     )
+    if not isinstance(guidance, dict):
+        return guidance
+    return _augment_no_response_modules(guidance, health_map)

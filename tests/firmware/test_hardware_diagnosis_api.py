@@ -126,3 +126,93 @@ def test_build_diagnosis_report_mock_motors_without_health():
     assert payload["devices"]["motor-tic249"]["status"] == "ok"
     assert "mock" in payload["devices"]["motor-tic249"]["health_summary"].lower()
     assert payload["devices"]["motor-tic249"]["recommended_actions"] == []
+
+
+def test_modbus_timeout_is_no_response_not_stale():
+    """RTU read timeout must not be labeled as serial_handle_stale."""
+    identify = {
+        "mode": "real",
+        "platform": {
+            "modbus_topology": "separate-adapters",
+            "modbus_io_serial_port": "/dev/ttyUSB2",
+            "modbus_adc_serial_port": "/dev/ttyUSB1",
+            "serial_ports": ["/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyUSB2"],
+        },
+        "diagnostics": {
+            "health": {
+                "modbus-io": {
+                    "status": "error",
+                    "compatible": False,
+                    "message": "Modbus RTU read_coils timed out after 2.0s",
+                },
+                "modbus-adc": {
+                    "status": "error",
+                    "compatible": False,
+                    "message": "Modbus ADC read_input_registers timed out after 2.0s",
+                },
+                "motor-tic249": {"status": "connected", "compatible": True, "message": "ok"},
+                "motor-dri0050": {"status": "connected", "compatible": True, "message": "ok"},
+            },
+        },
+        "adapters": [],
+    }
+    report = build_diagnosis_report(identify)
+    payload = report_to_dict(report)
+    assert payload["ok"] is False
+    assert payload["environment"].get("serial_handles_stale") in (False, None)
+    for pid in ("modbus-io", "modbus-adc"):
+        dev = payload["devices"][pid]
+        assert dev["status"] == "error"
+        assert dev["issues"], f"{pid} should expose operator issues"
+        assert "nie odpowiada" in dev["issues"][0].lower() or "slave" in dev["issues"][0].lower() or "modbus" in dev["issues"][0].lower()
+        codes = [a.get("code") for a in dev["recommended_actions"]]
+        assert "hw_modbus_device_no_response" in codes
+        assert "hw_modbus_serial_handle_stale" not in codes
+        assert dev["environment"].get("failure_kind") == "device_no_response"
+
+
+def test_modbus_errno19_is_stale_handle():
+    identify = {
+        "platform": {"modbus_topology": "separate-adapters"},
+        "diagnostics": {
+            "health": {
+                "modbus-io": {
+                    "status": "error",
+                    "compatible": False,
+                    "message": "[Errno 19] No such device",
+                },
+                "modbus-adc": {"status": "connected", "compatible": True, "message": "ok"},
+                "motor-tic249": {"status": "connected", "compatible": True, "message": "ok"},
+                "motor-dri0050": {"status": "connected", "compatible": True, "message": "ok"},
+            },
+        },
+        "adapters": [],
+    }
+    payload = report_to_dict(build_diagnosis_report(identify))
+    actions = payload["devices"]["modbus-io"]["recommended_actions"]
+    assert any(a.get("code") == "hw_modbus_serial_handle_stale" for a in actions)
+
+
+def test_filter_motors_recomputes_ok_and_message():
+    from oqlos.hardware.diagnosis import filter_diagnosis_dict_for_devices
+
+    payload = {
+        "ok": False,
+        "message": "Diagnostyka: wymaga uwagi — modbus-io, modbus-adc",
+        "requires_full_stack_restart": True,
+        "devices": {
+            "modbus-io": {"device_id": "modbus-io", "status": "error"},
+            "modbus-adc": {"device_id": "modbus-adc", "status": "error"},
+            "motor-tic249": {"device_id": "motor-tic249", "status": "ok"},
+            "motor-dri0050": {"device_id": "motor-dri0050", "status": "ok"},
+        },
+        "global_actions": [
+            {"id": "global-modbus-recover", "device_id": "*", "kind": "make_target"},
+        ],
+    }
+    filtered = filter_diagnosis_dict_for_devices(payload, "motors")
+    assert set(filtered["devices"]) == {"motor-tic249", "motor-dri0050"}
+    assert filtered["ok"] is True
+    assert "modbus" not in filtered["message"].lower()
+    assert filtered["requires_full_stack_restart"] is False
+    assert filtered["global_actions"] == []

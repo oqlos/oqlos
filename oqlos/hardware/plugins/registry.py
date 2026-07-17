@@ -141,20 +141,33 @@ class PluginRegistry:
             return False
 
     @classmethod
-    async def disconnect_plugin(cls, plugin_id: str) -> bool:
-        """Disconnect and remove a plugin instance."""
+    async def disconnect_plugin(cls, plugin_id: str, *, timeout: float | None = 5.0) -> bool:
+        """Disconnect and remove a plugin instance.
+
+        Always drops the registry entry so a subsequent connect is not blocked by a
+        hung bus.close() (common when an in-flight RTU call holds the serial lock).
+        """
         instance = cls.get_instance(plugin_id)
-        if instance:
-            try:
+        if not instance:
+            return False
+        ok = False
+        try:
+            if timeout is None:
                 await instance.disconnect()
-                instance._status = PluginStatus.CONFIGURED
+            else:
+                await asyncio.wait_for(instance.disconnect(), timeout=timeout)
+            instance._status = PluginStatus.CONFIGURED
+            ok = True
+            logger.info(f"Disconnected plugin: {plugin_id}")
+        except asyncio.TimeoutError:
+            logger.error("Disconnect timed out for plugin %s after %.1fs — forcing registry drop", plugin_id, timeout or 0)
+        except Exception as exc:
+            logger.error(f"Failed to disconnect plugin {plugin_id}: {exc}")
+        finally:
+            # Force-remove even on failure so reconnect can open a fresh serial handle.
+            if plugin_id in cls._instances:
                 del cls._instances[plugin_id]
-                logger.info(f"Disconnected plugin: {plugin_id}")
-                return True
-            except Exception as exc:
-                logger.error(f"Failed to disconnect plugin {plugin_id}: {exc}")
-                return False
-        return False
+        return ok
 
     @classmethod
     async def health_check(cls, plugin_id: str, *, timeout: float | None = None) -> PluginHealth | None:

@@ -14,7 +14,14 @@ def add_modbus_device_actions(
     status: str,
     msg: str,
     platform: dict[str, Any],
+    entry: dict[str, Any] | None = None,
 ) -> None:
+    from oqlos.hardware.diagnosis_plugin_health import (
+        classify_modbus_failure,
+        modbus_issue_code,
+        modbus_issue_text,
+    )
+
     port = (
         platform.get("modbus_io_serial_port")
         if plugin_id == "modbus-io"
@@ -23,19 +30,40 @@ def add_modbus_device_actions(
     dev.environment["serial_port"] = port
     if status == "ok":
         return
-    if "errno 19" in msg or "no such device" in msg:
-        dev.issues.append("Nieaktualny port USB/RS485 po re-enumeracji.")
+
+    kind = classify_modbus_failure(entry if isinstance(entry, dict) else {"message": msg, "status": status})
+    issue = modbus_issue_text(plugin_id, kind)
+    if issue not in dev.issues:
+        dev.issues.append(issue)
+    dev.environment["failure_kind"] = kind
+
+    if kind == "serial_handle_stale":
+        detail = "Martwy handle USB — reconnect w procesie OqlOS (bez restartu hosta)."
+        priority = 12
+    elif kind == "device_no_response":
+        detail = (
+            "Adapter RS485 otwarty, slave milczy. Reconnect OqlOS jest tani, ale zwykle "
+            "wymaga sprawdzenia zasilania/okablowania/slave id na module."
+        )
+        priority = 18
+    elif kind == "not_connected":
+        detail = "Brak połączenia z portem — reconnect spróbuje otworzyć serial ponownie."
+        priority = 14
+    else:
+        detail = "Bezpieczne odświeżenie połączenia w procesie OqlOS."
+        priority = 15
+
     dev.recommended_actions.append(
         DiagnosisAction(
             id=f"{plugin_id}-reconnect",
             device_id=plugin_id,
             label=f"Reconnect plugin {plugin_id} (OqlOS)",
             kind="oqlos",
-            priority=15,
+            priority=priority,
             auto_executable=True,
             scope="oqlos",
-            detail="Bezpieczne odświeżenie połączenia w procesie OqlOS.",
-            code="hw_modbus_serial_handle_stale",
+            detail=detail,
+            code=modbus_issue_code(kind),
             actuation_risk="none",
         )
     )
@@ -172,7 +200,7 @@ def diagnose_plugin_devices(
         )
         msg = message_lower(entry)
         if plugin_id.startswith("modbus"):
-            add_modbus_device_actions(dev, plugin_id, status, msg, platform)
+            add_modbus_device_actions(dev, plugin_id, status, msg, platform, entry=entry)
         elif plugin_id == "motor-tic249":
             add_tic249_device_actions(dev, status, msg, host_recover)
         elif plugin_id == "motor-dri0050":

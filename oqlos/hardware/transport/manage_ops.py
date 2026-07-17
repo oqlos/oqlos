@@ -84,8 +84,14 @@ def _resolve(verb: str) -> Callable[[dict[str, Any]], Awaitable[Any]]:
 
     parametric_map: dict[str, Callable[[dict[str, Any]], Awaitable[Any]]] = {
         "identify": lambda a: hw.hardware_identify(scan=a.get("scan", "never")),
-        "diagnosis": lambda a: hw.hardware_diagnosis_route(scan=a.get("scan", "never")),
-        "recover": lambda a: hw.hardware_recover_route(scope=a.get("scope", "safe")),
+        "diagnosis": lambda a: hw.hardware_diagnosis_route(
+            scan=a.get("scan", "never"),
+            devices=str(a.get("devices") or "all"),
+        ),
+        "recover": lambda a: hw.hardware_recover_route(
+            scope=a.get("scope", "safe"),
+            devices=str(a.get("devices") or "all"),
+        ),
         "wizard-probe": lambda a: modbus_hw.hardware_modbus_wizard_probe_isolated(
             serial_port=a.get("serial_port", ""),
             baudrates=a.get("baudrates"),

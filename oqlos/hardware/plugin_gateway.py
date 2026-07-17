@@ -614,9 +614,12 @@ class PluginHardwareGateway:
         if self.last_init_summary:
             result["init_summary"] = self.last_init_summary
 
+        # Wrapper must exceed per-plugin RTU timeout (typically 2s) so wait_for does
+        # not cancel mid-transaction and leave the RS485 bus lock orphaned (recover hang).
+        health_timeout = float(os.getenv("OQLOS_PLUGIN_HEALTH_TIMEOUT", "6.0") or 6.0)
         if self._plugin_configs:
             async def _check_enabled(plugin_id: str) -> tuple[str, PluginHealth | None]:
-                health = await PluginRegistry.health_check(plugin_id, timeout=1.0)
+                health = await PluginRegistry.health_check(plugin_id, timeout=health_timeout)
                 return plugin_id, health
 
             checks = [
@@ -626,7 +629,7 @@ class PluginHardwareGateway:
             ]
             health_results = dict(await asyncio.gather(*checks)) if checks else {}
         else:
-            health_results = await PluginRegistry.health_check_all(timeout=1.0)
+            health_results = await PluginRegistry.health_check_all(timeout=health_timeout)
         for plugin_id, health in health_results.items():
             if health is None:
                 continue

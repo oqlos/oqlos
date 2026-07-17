@@ -18,8 +18,9 @@ export default function App() {
       <Route path="/status" element={<HardwareStatus />} />
       <Route path="/hardware-status" element={<Navigate to="/status" replace />} />
       <Route path="/navigation" element={<Navigate to="/status" replace />} />
+      {/* Both names render the same HardwareRestart wizard (modbus + stack recover). */}
       <Route path="/hardware-modbus" element={<HardwareRestart />} />
-      <Route path="/hardware-restart" element={<Navigate to="/hardware-modbus" replace />} />
+      <Route path="/hardware-restart" element={<HardwareRestart />} />
       <Route path="/hardware-rtc" element={<HardwareRtc />} />
       <Route path="/hardware-demo" element={<Navigate to="/motor-services" replace />} />
       <Route path="/map-editor" element={<MapEditor />} />

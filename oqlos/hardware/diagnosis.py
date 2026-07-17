@@ -64,10 +64,23 @@ def filter_diagnosis_dict_for_devices(payload: dict[str, Any], devices: str) -> 
             or str(action.get("device_id") or "") == "*"
         )
     ]
+    error_devices = [
+        key
+        for key, value in filtered_devices.items()
+        if isinstance(value, dict) and str(value.get("status") or "") == "error"
+    ]
     return {
         **payload,
         "devices": filtered_devices,
         "global_actions": global_actions,
+        # Recompute after filter — full-report modbus errors must not poison motors view.
+        "ok": not error_devices,
+        "message": (
+            "Diagnostyka (silniki): OK."
+            if not error_devices
+            else "Diagnostyka (silniki): wymaga uwagi — " + ", ".join(error_devices)
+        ),
+        "requires_full_stack_restart": False,
     }
 
 
@@ -239,6 +252,48 @@ async def _repair_sidecar_if_needed(
     repairs.append(await ensure_sidecar(force_restart=force))
 
 
+_RECOVER_STEP_TIMEOUT_S = 8.0
+_RECOVER_HEALTH_TIMEOUT_S = 12.0
+
+
+async def _await_with_timeout(coro: Any, timeout_s: float, *, step: str) -> Any:
+    import asyncio
+
+    try:
+        return await asyncio.wait_for(coro, timeout=timeout_s)
+    except asyncio.TimeoutError as exc:
+        raise TimeoutError(f"{step} timed out after {timeout_s:.1f}s") from exc
+
+
+async def _reconnect_plugin_step(
+    gateway: Any,
+    plugin_id: str,
+) -> bool:
+    """Time-boxed in-process reconnect for one plugin."""
+    if plugin_id.startswith("modbus"):
+        # disconnect_plugin has its own short timeout and always drops the registry slot.
+        try:
+            await PluginRegistry.disconnect_plugin(plugin_id, timeout=min(4.0, _RECOVER_STEP_TIMEOUT_S))
+        except Exception:
+            pass
+        config = gateway._plugin_configs.get(plugin_id)
+        if not config:
+            return False
+        return bool(
+            await _await_with_timeout(
+                PluginRegistry.connect_plugin(plugin_id, config),
+                _RECOVER_STEP_TIMEOUT_S,
+                step=f"connect-{plugin_id}",
+            )
+        )
+    instance = await _await_with_timeout(
+        gateway._get_or_connect_plugin(plugin_id),
+        _RECOVER_STEP_TIMEOUT_S,
+        step=f"connect-{plugin_id}",
+    )
+    return instance is not None
+
+
 async def execute_safe_recover(
     gateway: Any,
     report: DiagnosisReport,
@@ -249,37 +304,65 @@ async def execute_safe_recover(
     from oqlos.hardware.sidecar_control import ensure_dri0050_sidecar, ensure_tic249_sidecar
 
     allowed = plugin_ids or _OQLOS_SAFE_PLUGINS
+    motors_only = set(allowed) <= _MOTOR_PLUGIN_IDS
     repairs: list[dict[str, Any]] = []
-    health_before = await gateway.health()
+    try:
+        health_before = await _await_with_timeout(
+            gateway.health(),
+            _RECOVER_HEALTH_TIMEOUT_S,
+            step="health-before",
+        )
+    except TimeoutError as exc:
+        return {
+            "ok": False,
+            "strategy": "oqlos-safe-timeout",
+            "repairs": [{"step": "health-before", "ok": False, "error": str(exc)}],
+            "host_actions": _host_actions_from_report(report),
+            "still_failed": list(allowed),
+        }
     targets = _recover_targets(report, health_before, plugin_ids=allowed)
     await _repair_sidecar_if_needed("motor-dri0050", ensure_dri0050_sidecar, targets, health_before, repairs)
     await _repair_sidecar_if_needed(
         "motor-tic249", ensure_tic249_sidecar, targets, health_before, repairs, extra_markers=("errno 19",)
     )
-    if not targets and report.requires_full_stack_restart:
+    # Full-stack restart flag is about modbus bus ownership — ignore for motors-only scope.
+    if not targets and report.requires_full_stack_restart and not motors_only:
         return {
             "ok": False,
             "strategy": "needs-host-hardware-up",
             "repairs": repairs,
             "host_actions": _host_actions_from_report(report),
         }
+    if not targets and motors_only:
+        return {
+            "ok": True,
+            "strategy": "oqlos-safe",
+            "repairs": repairs,
+            "host_actions": [],
+            "still_failed": [],
+        }
     for plugin_id in targets:
         step = f"reconnect-{plugin_id}"
-        ok = False
         try:
-            if plugin_id.startswith("modbus"):
-                await PluginRegistry.disconnect_plugin(plugin_id)
-                config = gateway._plugin_configs.get(plugin_id)
-                if config:
-                    ok = await PluginRegistry.connect_plugin(plugin_id, config)
-            else:
-                instance = await gateway._get_or_connect_plugin(plugin_id)
-                ok = instance is not None
+            ok = await _reconnect_plugin_step(gateway, plugin_id)
+            repairs.append({"step": step, "ok": bool(ok)})
         except Exception as exc:
             repairs.append({"step": step, "ok": False, "error": str(exc)})
             continue
-        repairs.append({"step": step, "ok": bool(ok)})
-    health_after = await gateway.health()
+    try:
+        health_after = await _await_with_timeout(
+            gateway.health(),
+            _RECOVER_HEALTH_TIMEOUT_S,
+            step="health-after",
+        )
+    except TimeoutError as exc:
+        return {
+            "ok": False,
+            "strategy": "oqlos-safe-timeout",
+            "repairs": repairs + [{"step": "health-after", "ok": False, "error": str(exc)}],
+            "host_actions": _host_actions_from_report(report, still_failed=list(targets)),
+            "still_failed": list(targets),
+        }
     still_bad = [
         pid
         for pid in allowed

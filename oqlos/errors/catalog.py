@@ -243,6 +243,51 @@ ISSUE_CATALOG: dict[str, IssueDefinition] = {
             hint="Pure in-process reconnect of the existing plugin instance — no file/config changes, nothing to commit.",
         ),
     ),
+    "hw_modbus_device_no_response": IssueDefinition(
+        code="hw_modbus_device_no_response",
+        domain="hardware",
+        default_severity="error",
+        summary=(
+            "Modbus RTU adapter is open but the slave did not answer (read timeout). "
+            "Usually module power, A/B/GND wiring, baud, or slave id — not a stale USB handle."
+        ),
+        repair=RepairTemplate(
+            id="modbus-device-physical-check",
+            scope="host",
+            auto_executable=False,
+            actuation_risk="physical",
+            hint=(
+                "Verify 7–36 V module power, RS485 A/B polarity and GND, 9600 8N1, "
+                "and slave id (IO often 2, ADC often 1). Optional: stop firmware and run pimodbus diagnose."
+            ),
+        ),
+    ),
+    "hw_modbus_not_connected": IssueDefinition(
+        code="hw_modbus_not_connected",
+        domain="hardware",
+        default_severity="error",
+        summary="Modbus RTU plugin has no open serial connection (connect returned false or port missing).",
+        repair=RepairTemplate(
+            id="modbus-plugin-reconnect",
+            scope="oqlos",
+            auto_executable=True,
+            actuation_risk="none",
+            hint="Reconnect the plugin in OqlOS; if the serial path vanished, replug USB or restart hardware-up.",
+        ),
+    ),
+    "hw_modbus_unhealthy": IssueDefinition(
+        code="hw_modbus_unhealthy",
+        domain="hardware",
+        default_severity="error",
+        summary="Modbus RTU plugin reports an unhealthy state that is not a classified timeout or stale handle.",
+        repair=RepairTemplate(
+            id="modbus-plugin-reconnect",
+            scope="oqlos",
+            auto_executable=True,
+            actuation_risk="none",
+            hint="Try in-process reconnect; inspect health message for the underlying error.",
+        ),
+    ),
     "api_oql_transport_disabled": IssueDefinition(
         code="api_oql_transport_disabled",
         domain="api",
