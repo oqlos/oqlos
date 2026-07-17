@@ -1335,28 +1335,28 @@ extra_steps:
   - id: sync_rpi_motor_tic249
     action: rsync
     description: "Sync sterownika Pololu Tic T249"
-    src: /home/tom/github/maskservice/rpi-motor-tic249/
+    src: /home/tom/github/oqlos/rpi-motor-tic249/
     dst: ~/maskservice/rpi-motor-tic249/
     excludes: [.git/, .venv/, venv/, __pycache__/]
 
   - id: sync_rpi_motor_dri0050
     action: rsync
     description: "Sync sterownika DFRobot DRI0050"
-    src: /home/tom/github/maskservice/rpi-motor-DRI0050/
+    src: /home/tom/github/oqlos/rpi-motor-DRI0050/
     dst: ~/maskservice/rpi-motor-DRI0050/
     excludes: [.git/, .venv/, venv/, __pycache__/]
 
   - id: sync_pirtc
     action: rsync
     description: "Sync piRTC sidecar"
-    src: /home/tom/github/maskservice/pirtc/
+    src: /home/tom/github/oqlos/pirtc/
     dst: ~/maskservice/pirtc/
     excludes: [.git/, .venv/, venv/, __pycache__/]
 
   - id: sync_pirtc_rtc_lib
     action: rsync
     description: "Sync sterownika Waveshare DS3231 dla piRTC (pirtc/.gitignore ignoruje lib/)"
-    src: /home/tom/github/maskservice/pirtc/RTC/python/lib/
+    src: /home/tom/github/oqlos/pirtc/RTC/python/lib/
     dst: ~/maskservice/pirtc/RTC/python/lib/
     excludes: [__pycache__/]
 
