@@ -2,6 +2,7 @@ import {
   CONNECT_HARDWARE_PATHS,
   connectCqrsEventsPath,
   connectDiagnosticCommandPath,
+  connectMappingLayerPath,
   connectPeripheralStatusPath,
 } from "@semcod/hardware-client/paths.js";
 import {
@@ -11,6 +12,10 @@ import {
 } from "./hardware-api-log.js";
 import { extractDiagnosticFailure } from "./hardware-diagnostic-failure.js";
 import { describeDetail, formatHardwareApiError, tryParseJson } from "./hardware-api-errors.js";
+import {
+  OQL_MAP_ACCESS_HEADERS,
+  personaFromConnectRole,
+} from "../utils/oql-map-access.policy.js";
 
 export { extractDiagnosticFailure } from "./hardware-diagnostic-failure.js";
 export { formatHardwareApiError, parseOqlError } from "./hardware-api-errors.js";
@@ -30,7 +35,21 @@ function _throwHttpError(res, text, path, message, detailMessage) {
   throw err;
 }
 
-async function request(path, { method = "GET", body, logContext } = {}) {
+/** Role/persona headers for MAP ACL (URL ?role= mirrors host top-bar). */
+function _mapAccessHeaders(extra = {}) {
+  let role = "operator";
+  try {
+    role = new URLSearchParams(globalThis.location?.search || "").get("role") || role;
+  } catch { /* silent */ }
+  const persona = personaFromConnectRole(role);
+  return {
+    [OQL_MAP_ACCESS_HEADERS.role]: role,
+    [OQL_MAP_ACCESS_HEADERS.persona]: persona,
+    ...extra,
+  };
+}
+
+async function request(path, { method = "GET", body, logContext, headers: extraHeaders } = {}) {
   const startedAt = performance.now();
   const bodySummary = summarizeHardwareApiBody(path, body);
   logHardwareApiEvent("request", path, {
@@ -41,7 +60,11 @@ async function request(path, { method = "GET", body, logContext } = {}) {
 
   const init = {
     method,
-    headers: { Accept: "application/json", "Content-Type": "application/json" },
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      ..._mapAccessHeaders(extraHeaders || {}),
+    },
   };
   if (body !== undefined) init.body = JSON.stringify(body ?? {});
 
@@ -252,8 +275,24 @@ export const HardwareApi = {
     return get(CONNECT_HARDWARE_PATHS.mappingSchema);
   },
 
+  async getMappingAccessPolicy() {
+    return get(CONNECT_HARDWARE_PATHS.mappingAccessPolicy);
+  },
+
   async replaceMapping(payload) {
     return put(CONNECT_HARDWARE_PATHS.mapping, payload);
+  },
+
+  /**
+   * Role-scoped MAP merge (preferred over full replace).
+   * @param {string} persona system|administrator|operator
+   * @param {{ sections: object, persist?: boolean, persona?: string, role?: string }} payload
+   */
+  async patchMappingLayer(persona, payload) {
+    return request(connectMappingLayerPath(persona), {
+      method: "PATCH",
+      body: payload ?? {},
+    });
   },
 
   async importMapping(payload) {

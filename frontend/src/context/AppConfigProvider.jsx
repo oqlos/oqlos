@@ -8,6 +8,11 @@ import {
   isReadOnlyConnectRole,
   normalizeConnectRole,
 } from "../utils/rbac.policy.js";
+import {
+  canEditOqlMapSection,
+  canEditOqlMapTab,
+  personaFromConnectRole,
+} from "../utils/oql-map-access.policy.js";
 
 const AppConfigContext = createContext(null);
 
@@ -20,17 +25,22 @@ export function AppConfigProvider({ children }) {
 
   useParentEncoderNavigation(config.iframeChild);
 
-  const value = useMemo(
-    () => ({
+  const value = useMemo(() => {
+    const role = normalizeConnectRole(config.role);
+    const oqlPersona = personaFromConnectRole(role);
+    const readOnly = isReadOnlyConnectRole(role);
+    return {
       ...config,
-      role: normalizeConnectRole(config.role),
-      isAdmin: isAdminConnectRole(config.role),
-      isOperator: isOperatorConnectRole(config.role),
-      isReadOnly: isReadOnlyConnectRole(config.role),
+      role,
+      isAdmin: isAdminConnectRole(role),
+      isOperator: isOperatorConnectRole(role),
+      isReadOnly: readOnly,
+      oqlPersona,
+      canEditOqlMapTab: (tab) => !readOnly && canEditOqlMapTab(role, tab),
+      canEditOqlMapSection: (section) => !readOnly && canEditOqlMapSection(role, section),
       patch,
-    }),
-    [config, patch],
-  );
+    };
+  }, [config, patch]);
 
   return <AppConfigContext.Provider value={value}>{children}</AppConfigContext.Provider>;
 }

@@ -10,7 +10,13 @@ MAPPING_CONTRACT_VERSION = "hardware-map-v1"
 
 MAP_SCHEMA: dict[str, Any] = {
     "type": "object",
+    "description": (
+        "OQL hardware MAP — system(runtimeConfig,actions), "
+        "administrator(objectActionMap,funcImplementations), "
+        "operator(paramSensorMap,operatorVariables)."
+    ),
     "properties": {
+        "meta": {"type": "object"},
         "runtimeConfig": {
             "type": "object",
             "properties": {
@@ -35,6 +41,7 @@ MAP_SCHEMA: dict[str, Any] = {
         "paramSensorMap": {"type": "object"},
         "actions": {"type": "object"},
         "funcImplementations": {"type": "object"},
+        "operatorVariables": {"type": "object"},
     },
 }
 
@@ -51,7 +58,15 @@ def _validate_motor2(motor2_raw: Any, issues: list[str]) -> None:
 
 def validate_mapping_contract(mapping: dict[str, Any]) -> None:
     issues: list[str] = []
-    for section in ("runtimeConfig", "objectActionMap", "paramSensorMap", "actions", "funcImplementations"):
+    for section in (
+        "runtimeConfig",
+        "objectActionMap",
+        "paramSensorMap",
+        "actions",
+        "funcImplementations",
+        "operatorVariables",
+        "meta",
+    ):
         value = mapping.get(section)
         if value is not None and not isinstance(value, dict):
             issues.append(f"{section} must be an object")

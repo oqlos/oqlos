@@ -11,6 +11,7 @@ export const CONNECT_HARDWARE_PATHS = {
   runtimePythonResolveFunc: `${CONNECT_HARDWARE_V3}/runtime-python/resolve-func`,
   mapping: `${CONNECT_HARDWARE_V3}/mapping`,
   mappingSchema: `${CONNECT_HARDWARE_V3}/mapping/schema`,
+  mappingAccessPolicy: `${CONNECT_HARDWARE_V3}/mapping/access-policy`,
   mappingImport: `${CONNECT_HARDWARE_V3}/mapping/import`,
   mappingExport: `${CONNECT_HARDWARE_V3}/mapping/export`,
   mappingReset: `${CONNECT_HARDWARE_V3}/mapping/reset`,
@@ -31,6 +32,12 @@ export function connectPeripheralStatusPath(peripheralId: string): string {
 
 export function connectDiagnosticCommandPath(): string {
   return CONNECT_HARDWARE_PATHS.diagnosticCommand;
+}
+
+/** Role-scoped MAP layer patch: system | administrator | operator */
+export function connectMappingLayerPath(persona: string): string {
+  const layer = encodeURIComponent(String(persona || "operator").trim().toLowerCase() || "operator");
+  return `${CONNECT_HARDWARE_V3}/mapping/layer/${layer}`;
 }
 
 export function connectCqrsEventsPath(limit = 50): string {

@@ -63,7 +63,15 @@ function _setBodyField(target, actionName, field, value, type) {
 }
 
 export default function MapEditor() {
-  const { isReadOnly, isAdmin, isOperator } = useAppConfig();
+  const {
+    isReadOnly,
+    isAdmin,
+    isOperator,
+    role,
+    oqlPersona,
+    canEditOqlMapTab,
+    canEditOqlMapSection,
+  } = useAppConfig();
   const { t } = useI18n();
   const wsOnline = useWsStatus(true);
 
@@ -96,10 +104,15 @@ export default function MapEditor() {
   const [eventsStorePath, setEventsStorePath] = useState("");
   const canClearServerEvents = isOperator;
   const canClearPersistentEvents = isAdmin;
+  const tabEditable = typeof canEditOqlMapTab === "function"
+    ? canEditOqlMapTab(activeTab)
+    : !isReadOnly;
+  const canMutateMap = !isReadOnly && tabEditable;
 
   const isDirty = jsonText !== originalJson && !jsonError;
 
   const onJsonChange = useCallback((value) => {
+    if (!canEditOqlMapTab?.("json")) return;
     setJsonText(value);
     try {
       const parsed = JSON.parse(value);
@@ -111,10 +124,14 @@ export default function MapEditor() {
     } catch (err) {
       setJsonError(err?.message || "Invalid JSON");
     }
-  }, [t]);
+  }, [t, canEditOqlMapTab]);
 
-  const applyMapMutation = useCallback((mutator) => {
+  const applyMapMutation = useCallback((mutator, requiredSection = null) => {
     if (isReadOnly) return;
+    if (requiredSection && canEditOqlMapSection && !canEditOqlMapSection(requiredSection)) return;
+    if (!requiredSection && activeTab !== "json" && canEditOqlMapTab && !canEditOqlMapTab(activeTab)) {
+      return;
+    }
     setMapData((prev) => {
       const next = ensureMapShape(structuredClone(prev));
       mutator(next);
@@ -123,7 +140,7 @@ export default function MapEditor() {
       setJsonError("");
       return next;
     });
-  }, [isReadOnly]);
+  }, [isReadOnly, activeTab, canEditOqlMapTab, canEditOqlMapSection]);
 
   const addObject = useCallback(() => {
     const name = prompt(t("mapEditor.prompts.objectName"));
@@ -287,7 +304,7 @@ export default function MapEditor() {
     const currentValue = Array.isArray(current) ? current.join(", ") : current ?? "";
     const value = prompt(`${actionName}.body.${field}:`, currentValue);
     if (value === null) return;
-    applyMapMutation((next) => _setBodyField(next, actionName, field, value, type));
+    applyMapMutation((next) => _setBodyField(next, actionName, field, value, type), "actions");
   }, [applyMapMutation, mapData]);
 
   const editMotorRuntimeConfig = useCallback((field, type = "number") => {
@@ -306,11 +323,11 @@ export default function MapEditor() {
       } else {
         next.runtimeConfig.motor2[field] = value.trim();
       }
-    });
+    }, "runtimeConfig");
   }, [applyMapMutation, mapData]);
 
   const saveMap = useCallback(async () => {
-    if (isReadOnly || jsonError) return;
+    if (isReadOnly || jsonError || !canMutateMap) return;
     setSaveState("saving");
     setSaveError("");
     try {
@@ -318,8 +335,46 @@ export default function MapEditor() {
       if (!isPlainObject(parsedJson)) {
         throw new Error(t("mapEditor.mapMustBeObject"));
       }
-      const mappingPayload = parsedJson;
-      const response = await HardwareApi.replaceMapping({ mapping: mappingPayload, persist: true });
+      const mappingPayload = ensureMapShape(parsedJson);
+      let originalMap = {};
+      try {
+        originalMap = ensureMapShape(JSON.parse(originalJson || "{}"));
+      } catch {
+        originalMap = ensureMapShape({});
+      }
+      const { diffChangedMapSections, sectionsWritableBy: writableBy } = await import(
+        "../utils/oql-map-access.policy.js"
+      );
+      const changed = diffChangedMapSections(originalMap, mappingPayload);
+      const changedKeys = Object.keys(changed);
+      const persona = oqlPersona || "operator";
+      const writable = new Set(writableBy(persona));
+      const forbidden = changedKeys.filter((k) => !writable.has(k));
+      if (forbidden.length) {
+        throw new Error(
+          t("mapEditor.saveForbiddenSections", `Cannot save sections: ${forbidden.join(", ")}`)
+            .replace("{sections}", forbidden.join(", ")),
+        );
+      }
+
+      let response;
+      if (activeTab === "json" && (persona === "system" || persona === "administrator")) {
+        response = await HardwareApi.replaceMapping({
+          mapping: mappingPayload,
+          persist: true,
+          persona,
+        });
+      } else if (changedKeys.length === 0) {
+        response = { mapping: mappingPayload };
+      } else {
+        // Prefer layer PATCH for role-scoped OQL config edits.
+        response = await HardwareApi.patchMappingLayer(persona, {
+          sections: changed,
+          persist: true,
+          persona,
+          role,
+        });
+      }
       const savedMap = ensureRequiredDefaultMappings(ensureMapShape(response?.mapping || mappingPayload));
       const pretty = toPrettyJson(savedMap);
       setOriginalJson(pretty);
@@ -332,16 +387,20 @@ export default function MapEditor() {
       setSaveError(formatHardwareApiError(err, t("mapEditor.saveError")));
       setSaveState("error");
     }
-  }, [isReadOnly, jsonError, jsonText, t]);
+  }, [isReadOnly, canMutateMap, jsonError, jsonText, originalJson, activeTab, oqlPersona, role, t]);
 
   const restoreDefaultMap = useCallback(async () => {
-    if (isReadOnly) return;
+    if (isReadOnly || !canEditOqlMapTab?.("json")) return;
     if (!confirm(t("mapEditor.restoreDefaultsConfirm"))) return;
     setSaveState("saving");
     setSaveError("");
     try {
       const seeded = ensureRequiredDefaultMappings(cloneDefaultMap());
-      const response = await HardwareApi.replaceMapping({ mapping: seeded, persist: true });
+      const response = await HardwareApi.replaceMapping({
+        mapping: seeded,
+        persist: true,
+        persona: "system",
+      });
       const restored = ensureRequiredDefaultMappings(ensureMapShape(response?.mapping || seeded));
       const pretty = toPrettyJson(restored);
       setMapData(restored);
@@ -354,7 +413,7 @@ export default function MapEditor() {
       setSaveError(formatHardwareApiError(err, t("mapEditor.restoreDefaultsError")));
       setSaveState("error");
     }
-  }, [isReadOnly, t]);
+  }, [isReadOnly, canEditOqlMapTab, t]);
 
   const reloadCurrent = useCallback(async () => {
     try {
@@ -667,16 +726,21 @@ export default function MapEditor() {
           </button>
         </div>
         <nav className="mapx-def-tabs mapx-tabs mapx-tabs--toolbar" aria-label={t("mapEditor.title")}>
-          {MAP_EDITOR_TABS.map((tab) => (
-            <button
-              key={tab}
-              type="button"
-              className={`mapx-tab ${activeTab === tab ? "active" : ""}`}
-              onClick={() => setTabAndUrl(tab)}
-            >
-              {t(`mapEditor.tabs.${tab}`)}
-            </button>
-          ))}
+          {MAP_EDITOR_TABS.map((tab) => {
+            const editable = typeof canEditOqlMapTab === "function" ? canEditOqlMapTab(tab) : !isReadOnly;
+            return (
+              <button
+                key={tab}
+                type="button"
+                className={`mapx-tab ${activeTab === tab ? "active" : ""}${editable ? "" : " mapx-tab--locked"}`}
+                onClick={() => setTabAndUrl(tab)}
+                title={editable ? undefined : t("mapEditor.tabLocked", "Read-only for your role")}
+              >
+                {t(`mapEditor.tabs.${tab}`)}
+                {!editable ? " 🔒" : ""}
+              </button>
+            );
+          })}
         </nav>
 
         {activeTab === "json" && (
@@ -742,10 +806,21 @@ export default function MapEditor() {
               <p className="section-desc">{t("mapEditor.subtitle")}</p>
             </div>
             <div className="mapx-header-actions">
-              <button onClick={saveMap} disabled={!isDirty || isReadOnly || saveState === "saving"} className="run-btn role-force">
+              <button
+                onClick={saveMap}
+                disabled={!isDirty || !canMutateMap || saveState === "saving"}
+                className="run-btn role-force"
+                title={oqlPersona ? `OQL persona: ${oqlPersona}` : undefined}
+              >
                 {saveState === "saving" ? "…" : t("mapEditor.save")}
               </button>
-              <button type="button" onClick={restoreDefaultMap} className="clear-btn" disabled={isReadOnly || saveState === "saving"}>
+              <button
+                type="button"
+                onClick={restoreDefaultMap}
+                className="clear-btn"
+                disabled={!canEditOqlMapTab?.("json") || saveState === "saving"}
+                title={t("mapEditor.restoreDefaultsSystemOnly", "Restore defaults requires system/admin")}
+              >
                 {t("mapEditor.restoreDefaults")}
               </button>
               <button type="button" onClick={reloadCurrent} className="clear-btn">{t("mapEditor.reload")}</button>

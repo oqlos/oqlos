@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+from oqlos.api.hardware_mapping_access import MAP_BODY_SECTIONS, merge_mapping_sections
 from oqlos.api.hardware_mapping_contract import MappingContractError, validate_mapping_contract
 from oqlos.hardware.client.tic249_arg_contract import (
     MOTOR2_RUNTIME_ALIASES,
@@ -29,11 +30,13 @@ def _default_path() -> Path:
 
 def empty_mapping() -> dict[str, Any]:
     return {
+        "meta": {"access": {"model": "hierarchical-system-admin-operator"}},
         "runtimeConfig": {},
         "objectActionMap": {},
         "paramSensorMap": {},
         "actions": {},
         "funcImplementations": {},
+        "operatorVariables": {},
     }
 
 
@@ -57,6 +60,7 @@ def normalize_mapping(value: Any) -> dict[str, Any]:
     runtime_config = src.get("runtimeConfig") if isinstance(src.get("runtimeConfig"), dict) else {}
     runtime_config = _normalize_motor2_runtime_config(runtime_config)
     mapping = {
+        "meta": src.get("meta") if isinstance(src.get("meta"), dict) else {},
         "runtimeConfig": runtime_config,
         "objectActionMap": src.get("objectActionMap") if isinstance(src.get("objectActionMap"), dict) else {},
         "paramSensorMap": src.get("paramSensorMap") if isinstance(src.get("paramSensorMap"), dict) else {},
@@ -64,7 +68,12 @@ def normalize_mapping(value: Any) -> dict[str, Any]:
         "funcImplementations": src.get("funcImplementations")
         if isinstance(src.get("funcImplementations"), dict)
         else {},
+        "operatorVariables": src.get("operatorVariables")
+        if isinstance(src.get("operatorVariables"), dict)
+        else {},
     }
+    for section in MAP_BODY_SECTIONS:
+        mapping.setdefault(section, {})
     validate_mapping_contract(mapping)
     return mapping
 
@@ -103,21 +112,33 @@ class MappingStore:
             payload = yaml.safe_dump(self._mapping, sort_keys=False, allow_unicode=True)
         self._path.write_text(payload, encoding="utf-8")
 
-    def get(self) -> dict[str, Any]:
-        self._load_from_disk()
+    def get(self, *, refresh: bool = True) -> dict[str, Any]:
+        if refresh:
+            self._load_from_disk()
         return deepcopy(self._mapping)
 
     def replace(self, mapping: dict[str, Any], *, persist: bool = True) -> dict[str, Any]:
         self._mapping = normalize_mapping(mapping)
         if persist:
             self.save()
-        return self.get()
+        return deepcopy(self._mapping)
+
+    def merge_sections(
+        self,
+        patch: dict[str, Any],
+        *,
+        sections: list[str] | tuple[str, ...] | None = None,
+        persist: bool = True,
+    ) -> dict[str, Any]:
+        current = self.get(refresh=True)
+        merged = merge_mapping_sections(current, patch, sections=sections)
+        return self.replace(merged, persist=persist)
 
     def reset(self, *, persist: bool = True) -> dict[str, Any]:
         self._mapping = empty_mapping()
         if persist:
             self.save()
-        return self.get()
+        return self.get(refresh=False)
 
     @staticmethod
     def parse_text(content: str, fmt: str) -> dict[str, Any]:
