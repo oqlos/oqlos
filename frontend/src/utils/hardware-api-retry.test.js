@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { runApiWithRetry } from "../utils/hardware-api-retry.js";
+import { runApiWithRetry } from "@semcod/frontend-services/hardware-api-retry.js";
 
 test("runApiWithRetry returns action result on first success", async () => {
   const result = await runApiWithRetry("Probe", async () => ({ ok: true }));

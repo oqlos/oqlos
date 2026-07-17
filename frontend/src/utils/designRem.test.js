@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
-import { rem, remVar } from "./designRem.js";
+import { rem, remVar } from "@semcod/frontend-services/designRem.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const globalCss = readFileSync(join(__dirname, "../styles/global.css"), "utf8");

@@ -7,7 +7,7 @@ import {
   isOperatorConnectRole,
   isReadOnlyConnectRole,
   normalizeConnectRole,
-} from "../utils/rbac.policy.js";
+} from "@semcod/ts-utils/rbac.policy";
 
 const AppConfigContext = createContext(null);
 

@@ -4,7 +4,7 @@ import SharedNav from "../components/SharedNav";
 import { HardwareApi, formatHardwareApiError } from "../api/hardwareApi";
 import SidebarList from "../components/SidebarList";
 import HardwareActivityLog from "../components/HardwareActivityLog";
-import { rem } from "../utils/designRem.js";
+import { rem } from "@semcod/frontend-services/designRem.js";
 import { createHardwareActivityLogEntry, prependHardwareActivityLogEntry, usePageOpenedLog } from "../utils/hardware-activity-log.js";
 import { probeDemoDevices } from "../utils/hardware-demo-identify.js";
 

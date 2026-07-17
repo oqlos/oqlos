@@ -1,4 +1,4 @@
-import { normalizeConnectRole } from "./rbac.policy.js";
+import { normalizeConnectRole } from "@semcod/ts-utils/rbac.policy";
 import { MODBUS_PROFILE_IDS } from "./modbus-profiles.js";
 import { RTC_MENU_IDS } from "./rtc-menu.js";
 import {

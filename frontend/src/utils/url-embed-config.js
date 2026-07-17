@@ -1,4 +1,4 @@
-import { CONNECT_CONTEXT_QUERY_KEYS, CONNECT_SUPPORTED_ROLES, normalizeConnectRole } from "./rbac.policy.js";
+import { CONNECT_CONTEXT_QUERY_KEYS, CONNECT_SUPPORTED_ROLES, normalizeConnectRole } from "@semcod/ts-utils/rbac.policy";
 import { isValidShellHuiKey, SHELL_HUI_KEY_PARAM } from "./hui-shell-key.js";
 
 // Canonical iframe-embed params when hosted inside maskservice /connect-scenario.

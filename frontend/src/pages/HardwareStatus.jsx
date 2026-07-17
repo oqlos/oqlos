@@ -16,7 +16,7 @@ import {
   hardwareStatusSummary,
   listHardwareAdapters,
 } from "../utils/hardwareStatusModel.js";
-import { copyTextToClipboard } from "../utils/clipboard.js";
+import { tryCopyTextToClipboard } from "@semcod/frontend-services/clipboard.js";
 import { persistUiUrlArgsToCookie } from "../utils/ui-url-args-cookie.js";
 import { readModbusProfileFromSearch } from "../utils/modbus-profiles.js";
 import {
@@ -211,7 +211,7 @@ export default function HardwareStatus() {
       null,
       2,
     );
-    if (await copyTextToClipboard(payload)) {
+    if (await tryCopyTextToClipboard(payload)) {
       setCopyStatus(t("hardware.copyAllOk"));
     } else {
       downloadJson(`oqlos-hardware-status-${Date.now()}.json`, payload);

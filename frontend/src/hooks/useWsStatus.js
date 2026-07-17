@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getWsClient } from "../api/wsClient";
+import { getWsClient } from "@semcod/frontend-services/wsClient.js";
 
 /**
  * Returns the current WebSocket connection status and triggers initial connect.

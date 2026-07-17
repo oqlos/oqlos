@@ -22,7 +22,7 @@ import {
   defaultNewScenarioContent,
   normalizeScenarioFilePath,
 } from "../utils/panelScenarioCreate.js";
-import { rem } from "../utils/designRem.js";
+import { rem } from "@semcod/frontend-services/designRem.js";
 
 const VALVE_IDS = [
   "valve-1", "valve-2", "valve-3", "valve-4",

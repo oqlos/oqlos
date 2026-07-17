@@ -18,6 +18,26 @@ export default defineConfig({
         find: '@semcod/hardware-client',
         replacement: fileURLToPath(new URL('./vendor/hardware-client/index.ts', import.meta.url)),
       },
+      // Monorepo SSOT (c2004/packages/*). Build OqlOS UI from the c2004 tree so
+      // this resolves; BoardNet deploy ships built dist only.
+      {
+        find: '@semcod/frontend-services',
+        replacement: fileURLToPath(
+          new URL('../../../packages/frontend-services/src', import.meta.url),
+        ),
+      },
+      {
+        find: '@semcod/ts-utils/rbac.policy',
+        replacement: fileURLToPath(
+          new URL('../../../packages/ts-utils/src/rbac.policy.ts', import.meta.url),
+        ),
+      },
+      {
+        find: '@semcod/ts-utils',
+        replacement: fileURLToPath(
+          new URL('../../../packages/ts-utils/src', import.meta.url),
+        ),
+      },
     ],
   },
   build: {

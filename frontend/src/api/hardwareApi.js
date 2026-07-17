@@ -8,12 +8,19 @@ import {
   logHardwareApiEvent,
   summarizeHardwareApiBody,
   summarizeHardwareApiResponse,
-} from "./hardware-api-log.js";
+} from "@semcod/frontend-services/hardware-api-log.js";
 import { extractDiagnosticFailure } from "./hardware-diagnostic-failure.js";
-import { describeDetail, formatHardwareApiError, tryParseJson } from "./hardware-api-errors.js";
+import {
+  describeDetail,
+  formatHardwareApiError,
+  tryParseJson,
+} from "@semcod/frontend-services/hardware-api-errors.js";
 
 export { extractDiagnosticFailure } from "./hardware-diagnostic-failure.js";
-export { formatHardwareApiError, parseOqlError } from "./hardware-api-errors.js";
+export {
+  formatHardwareApiError,
+  parseOqlError,
+} from "@semcod/frontend-services/hardware-api-errors.js";
 
 const API_BASE = (import.meta.env?.VITE_API_BASE || "").replace(/\/$/, "");
 

@@ -1,7 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { describeDetail, formatHardwareApiError, parseOqlError } from "./hardware-api-errors.js";
+import {
+  describeDetail,
+  formatHardwareApiError,
+  parseOqlError,
+} from "@semcod/frontend-services/hardware-api-errors.js";
 
 test("parseOqlError recognizes the standard OqlIssue shape", () => {
   const payload = {

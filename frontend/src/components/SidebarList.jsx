@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { rem } from "../utils/designRem.js";
+import { rem } from "@semcod/frontend-services/designRem.js";
 import { useSelectionCollapsePanel } from "../utils/useSelectionCollapsePanel.js";
 import { useI18n } from "../i18n/I18nProvider";
 

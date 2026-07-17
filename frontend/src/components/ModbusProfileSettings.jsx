@@ -1,5 +1,5 @@
 import { useI18n } from "../i18n/I18nProvider";
-import { rem } from "../utils/designRem.js";
+import { rem } from "@semcod/frontend-services/designRem.js";
 import { MODBUS_PROFILE_DESC_KEYS, probeSequenceLabel } from "../utils/modbus-profiles.js";
 
 export default function ModbusProfileSettings({

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { canConnectRoleAccessPath } from "../utils/rbac.policy.js";
+import { canConnectRoleAccessPath } from "@semcod/ts-utils/rbac.policy";
 import { useAppConfig } from "../context/AppConfigProvider";
 import { useI18n } from "../i18n/I18nProvider";
 import { preserveUiNavSearchParams } from "../utils/ui-url-args-cookie.js";

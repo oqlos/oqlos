@@ -7,7 +7,7 @@ import ModbusProfileSettings from "../components/ModbusProfileSettings";
 import ModbusChannelInspector from "../components/ModbusChannelInspector";
 import { HardwareApi, formatHardwareApiError } from "../api/hardwareApi";
 import { useI18n } from "../i18n/I18nProvider";
-import { rem } from "../utils/designRem.js";
+import { rem } from "@semcod/frontend-services/designRem.js";
 import {
   MODBUS_BAUD_OPTIONS,
   MODBUS_DEFAULT_BAUD,
@@ -24,8 +24,8 @@ import { isOptionalWizardStep, isSkippablePumpOffWizardStep } from "../utils/har
 import { runWizardStep, resolveStepAdvance, buildStepError } from "../utils/hardware-restart-step-runner.js";
 import { hardwareRestartDocsUrl } from "../utils/hardware-restart-docs.js";
 import { extractWizardPlan, isOqlosUnreachableError } from "../utils/hardware-wizard-plan.js";
-import { runApiWithRetry } from "../utils/hardware-api-retry.js";
-import { copyTextToClipboard } from "../utils/clipboard.js";
+import { runApiWithRetry } from "@semcod/frontend-services/hardware-api-retry.js";
+import { tryCopyTextToClipboard } from "@semcod/frontend-services/clipboard.js";
 
 function timestamp() {
   return new Date().toISOString();
@@ -374,7 +374,7 @@ export default function HardwareRestart() {
   const stepRunning = stepLog.ok === null && Boolean(stepLog.step) && busy;
 
   const copyLogsToClipboard = useCallback(async () => {
-    if (await copyTextToClipboard(exportText)) {
+    if (await tryCopyTextToClipboard(exportText)) {
       setCopyStatus(t("hardwareRestart.logsCopied"));
     } else {
       setCopyStatus(t("hardwareRestart.logsCopyFailed"));

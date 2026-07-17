@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { bridgeSearchToParent } from "../utils/parentUrlBridge.js";
+import { bridgeSearchToParent } from "@semcod/frontend-services/parentUrlBridge.js";
 import {
   applyUrlEmbedPatch,
   buildEmbedConfigUrlPatch,
