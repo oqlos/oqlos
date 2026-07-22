@@ -87,3 +87,29 @@ def test_read_sensor_values_uses_single_adc_read_all_for_batch(monkeypatch):
     assert _BatchAdcGateway.read_sensor_calls == 0
     assert sensors["ai01"]["value"] == 7901.0
     assert sensors["ai03"]["ok"] is True
+
+
+def test_read_sensor_values_prefers_usb_adc_stack_over_unavailable_modbus(monkeypatch):
+    async def _usb_values(sensor_ids):
+        return {
+            sensor_id: {
+                "sensor_id": sensor_id,
+                "value": index / 10,
+                "unit": "V",
+                "source": "usb-adc-stack",
+                "ok": True,
+            }
+            for index, sensor_id in enumerate(sensor_ids, start=1)
+        }
+
+    monkeypatch.setattr(runtime, "read_usb_adc_sensor_values", _usb_values)
+    sensors = asyncio.run(
+        runtime.read_sensor_values(
+            ["ai01", "ai02", "ai03"],
+            health={"mode": "real", "modbus-adc": {"compatible": False}},
+        )
+    )
+
+    assert sensors["ai01"]["value"] == 0.1
+    assert sensors["ai03"]["unit"] == "V"
+    assert sensors["ai03"]["source"] == "usb-adc-stack"

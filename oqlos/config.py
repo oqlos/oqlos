@@ -141,6 +141,21 @@ class Settings(BaseSettings):
         default="http://localhost:8205",
         validation_alias=AliasChoices("OQLOS_LUNG_MOTOR_URL", "LUNG_MOTOR_URL"),
     )
+    usb_adc_stack_url: str = Field(
+        default="http://127.0.0.1:8214",
+        validation_alias=AliasChoices("OQLOS_USB_ADC_STACK_URL", "USB_ADC_STACK_URL"),
+    )
+    adc_source: str = Field(
+        default="auto",
+        validation_alias=AliasChoices("OQLOS_ADC_SOURCE", "ADC_SOURCE"),
+        description="Analog input source: auto, usb-adc-stack, or modbus-adc",
+    )
+    usb_adc_timeout_seconds: float = Field(
+        default=0.8,
+        validation_alias=AliasChoices("OQLOS_USB_ADC_TIMEOUT_SECONDS", "USB_ADC_TIMEOUT_SECONDS"),
+        ge=0.05,
+        le=10.0,
+    )
     
     # Pump Calibration
     pump_flow_full_scale_lpm: float = Field(

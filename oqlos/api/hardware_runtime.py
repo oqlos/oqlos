@@ -10,13 +10,21 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Query
 
 from oqlos.api.hardware_gateway import get_hardware_gateway
+from oqlos.config import get_settings
 from oqlos.hardware.client.adc import adc_sensor_alias
+from oqlos.hardware.usb_adc_stack import UsbAdcStackError, read_usb_adc_channels
 
 router = APIRouter(tags=["hardware-runtime"])
 
 DEFAULT_BATCH_SENSOR_IDS = ("ai01", "ai02", "ai03")
 BATCH_HEALTH_TTL_SEC = 3.0
 _BATCH_HEALTH_CACHE: dict[str, Any] = {"expires_at": 0.0, "payload": None}
+USB_ADC_FAILURE_TTL_SEC = 3.0
+_USB_ADC_STATUS: dict[str, Any] = {
+    "available": None,
+    "error": None,
+    "retry_after": 0.0,
+}
 
 
 def read_cpu_temperature() -> dict[str, Any]:
@@ -109,6 +117,48 @@ def _sensor_entry_from_channel(sensor_id: str, channel: Any) -> dict[str, Any]:
     }
 
 
+def _configured_adc_source() -> str:
+    source = str(get_settings().adc_source or "auto").strip().lower()
+    return source if source in {"auto", "usb-adc-stack", "modbus-adc"} else "auto"
+
+
+async def read_usb_adc_sensor_values(
+    sensor_ids: list[str],
+) -> dict[str, dict[str, Any]] | None:
+    """Read requested AI channels from the sidecar, with a short failure backoff."""
+    if _configured_adc_source() == "modbus-adc":
+        return None
+
+    now = time.monotonic()
+    if (
+        _USB_ADC_STATUS.get("available") is False
+        and now < float(_USB_ADC_STATUS.get("retry_after", 0.0))
+    ):
+        return None
+
+    settings = get_settings()
+    try:
+        channels = await read_usb_adc_channels(
+            settings.usb_adc_stack_url,
+            timeout_seconds=settings.usb_adc_timeout_seconds,
+        )
+    except UsbAdcStackError as exc:
+        _USB_ADC_STATUS.update(
+            available=False,
+            error=str(exc),
+            retry_after=now + USB_ADC_FAILURE_TTL_SEC,
+        )
+        return None
+
+    _USB_ADC_STATUS.update(available=True, error=None, retry_after=0.0)
+    requested: dict[str, dict[str, Any]] = {}
+    for sensor_id in sensor_ids:
+        channel = channels.get(_adc_channel_key(sensor_id))
+        if channel is not None:
+            requested[sensor_id] = {**channel, "sensor_id": sensor_id}
+    return requested if len(requested) == len(sensor_ids) else None
+
+
 async def cached_gateway_health(*, force: bool = False) -> dict[str, Any]:
     """Short-lived health cache so polling endpoints do not probe every plugin each tick."""
     now = time.monotonic()
@@ -131,6 +181,10 @@ async def read_sensor_values(
     *,
     health: dict[str, Any] | None = None,
 ) -> dict[str, dict[str, Any]]:
+    usb_sensors = await read_usb_adc_sensor_values(sensor_ids)
+    if usb_sensors is not None:
+        return usb_sensors
+
     gateway_health = health if health is not None else await cached_gateway_health()
     modbus_unavailable, modbus_adc_health = modbus_adc_unavailable(gateway_health)
 
@@ -174,6 +228,10 @@ async def read_sensor_values(
 @router.get("/sensor/{sensor_id}")
 async def read_sensor(sensor_id: str):
     """Read a sensor value directly from hardware."""
+    usb_sensors = await read_usb_adc_sensor_values([sensor_id])
+    if usb_sensors is not None:
+        return usb_sensors[sensor_id]
+
     health = await get_hardware_gateway().health()
     modbus_unavailable, modbus_adc_health = modbus_adc_unavailable(health)
     if modbus_unavailable:
@@ -224,6 +282,15 @@ async def read_sensors_batch(
         "sensors": sensors,
         "diagnostics": {
             "mode": health.get("mode"),
+            "adc_source": (
+                "usb-adc-stack"
+                if _USB_ADC_STATUS.get("available") is True
+                else "modbus-adc"
+            ),
+            "usb_adc_stack": {
+                "available": _USB_ADC_STATUS.get("available"),
+                "error": _USB_ADC_STATUS.get("error"),
+            },
             **({"modbus_adc": modbus_adc_health} if modbus_unavailable else {}),
         },
     }
