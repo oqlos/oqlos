@@ -127,6 +127,26 @@ def test_event_blocks_are_preserved_without_test_section():
     ]
 
 
+def test_hardware_block_preserves_system_aliases():
+    src = textwrap.dedent(
+        """
+        VERSION: 5
+        HARDWARE:
+          ALIAS 'zawor_wc' USING 'modbus-io' TARGET 'valve-wc' KIND 'valve'
+        CONFIG:
+          API_POST 'hardware.command' '/api/v3/hardware/diagnostic-command'
+        EVENT 'frontend.hui.wc-press':
+          RUN 'hardware.command' PAYLOAD '{"peripheral_id":"$hardware.zawor_wc.adapter"}'
+        """
+    )
+    doc = parse_oql(src)
+    assert not doc.errors
+    assert [block.type for block in doc.hardware()] == ["HARDWARE"]
+    alias = doc.hardware()[0].cmds[0]
+    assert alias.cmd == "TESTQL"
+    assert alias.args["command"] == "ALIAS"
+
+
 def test_parse_metadata():
     src = textwrap.dedent(
         """

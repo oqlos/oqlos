@@ -40,9 +40,9 @@ NUM = r"-?\d+(?:[.,]\d+)?"
 #: Duration: number optionally glued to a time unit (``3s``, ``500ms``, ``3000``).
 DUR_RE = re.compile(rf"^({NUM})(ms|s|m|h)?$")
 
-#: Header of a block: ``GOAL name:``, ``CONFIG name:``, ``EVENT name:``, ``MACRO name:``, ``FUNC name:``.
+#: Header of a block: ``GOAL name:``, ``CONFIG name:``, ``HARDWARE:``, ``EVENT name:``, ``MACRO name:``, ``FUNC name:``.
 #: ``TEST:`` is the 2026-07 dialect spelling of a runnable block — parsed as GOAL.
-BLOCK_RE = re.compile(r"^(GOAL|TEST|CONFIG|EVENT|MACRO|FUNC)(?:\s+(.+?))?:\s*$", re.IGNORECASE)
+BLOCK_RE = re.compile(r"^(GOAL|TEST|CONFIG|HARDWARE|EVENT|MACRO|FUNC)(?:\s+(.+?))?:\s*$", re.IGNORECASE)
 
 #: Forma zgodności c2004: ``FUNC: nazwa`` (nazwa PO dwukropku, jak we frontendzie
 #: ``parseOqlToSteps._startFunc``). Rozpoznawana jako nagłówek bloku FUNC, nie
@@ -164,6 +164,9 @@ class OqlDoc:
 
     def events(self) -> list[OqlBlock]:
         return [b for b in self.blocks if b.type == "EVENT"]
+
+    def hardware(self) -> list[OqlBlock]:
+        return [b for b in self.blocks if b.type == "HARDWARE"]
 
 
 # ── Conversion helpers ───────────────────────────────────────────
@@ -751,7 +754,7 @@ _TESTQL_COMMANDS: tuple[str, ...] = (
     # Declarative browser HUI runtime. OqlOS preserves these as TESTQL no-op
     # commands; @semcod/oqlts compiles and executes them in connect-test.
     "HUI_POLL", "HUI_BUTTON", "HUI_HOLD",
-    "RUN", "EMIT", "APPEND_EVENT",
+    "ALIAS", "RUN", "EMIT", "APPEND_EVENT",
 )
 
 
