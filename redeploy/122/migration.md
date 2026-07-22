@@ -517,12 +517,11 @@ fi
 systemctl --user stop oqlos-hardware-api.service 2>/dev/null || true
 sleep 2
 
-# --- Autodetect Modbus serial ports (role-based probe) ---
-# The two Waveshare modules can sit behind cloned FT232R adapters that share one USB
-# serial number, so /dev/serial/by-id is ambiguous — probe every free RS485 adapter
-# and assign roles by Modbus response: read_coils answers => IO 8CH module,
-# read_input_registers answers => Analog Input 8CH module. Stable /dev/serial/by-path
-# names (physical USB port) are written to the config instead of by-id.
+# --- Autodetect the remaining Modbus valve controller (read-only probe) ---
+# Analog inputs no longer use Modbus: MCP2221A (USB) provides AI01 and DFR1184
+# (Raspberry Pi UART) provides AI02/AI03 through usb-adc-stack. Exclude both the
+# MCP2221 CDC interface and the CH340 DRI0050 pump adapter before probing, so a
+# generic serial interface can never be misclassified as a Modbus module.
 MB_DETECT=$(timeout 120 /home/pi/oqlos/venv/bin/python - << 'PY' 2>/dev/null || true
 import glob
 import os
@@ -530,45 +529,57 @@ import os
 from pymodbus.client import ModbusSerialClient
 
 
-def by_id_name(real: str) -> str:
-    for link in glob.glob("/dev/serial/by-id/*"):
-        if os.path.realpath(link) == real:
-            return os.path.basename(link)
-    return ""
+def by_id_names(real: str) -> list[str]:
+    return [
+        os.path.basename(link)
+        for link in glob.glob("/dev/serial/by-id/*")
+        if os.path.realpath(link) == real
+    ]
 
 
-candidates = []
+def reserved_for_non_modbus(real: str) -> bool:
+    names = by_id_names(real)
+    return any(
+        name.startswith("usb-1a86_USB2.0-Serial") or "MCP2221" in name
+        for name in names
+    )
+
+
+candidates: list[str] = []
 seen = set()
-for link in sorted(glob.glob("/dev/serial/by-path/platform-*")):
+links = sorted(glob.glob("/dev/serial/by-path/platform-*"))
+if not links:
+    links = sorted(glob.glob("/dev/ttyACM*") + glob.glob("/dev/ttyUSB*"))
+for link in links:
     real = os.path.realpath(link)
     if real in seen:
         continue
     seen.add(real)
-    if by_id_name(real).startswith("usb-1a86_USB2.0-Serial"):
-        continue  # DRI0050 pump adapter (CH340) — not an RS485 bus
+    if reserved_for_non_modbus(real):
+        continue
     candidates.append(link)
-if not candidates:
-    candidates = sorted(glob.glob("/dev/ttyACM*")) + sorted(glob.glob("/dev/ttyUSB*"))
 
-io_dev = io_id = adc_dev = adc_id = None
+io_dev = io_id = None
 for port in candidates:
-    if io_dev and adc_dev:
+    if io_dev:
         break
     for device_id in range(1, 9):
-        if io_dev and adc_dev:
-            break
-        cli = ModbusSerialClient(port=port, baudrate=9600, parity="N", stopbits=1, bytesize=8, timeout=0.35)
+        cli = ModbusSerialClient(
+            port=port,
+            baudrate=9600,
+            parity="N",
+            stopbits=1,
+            bytesize=8,
+            timeout=0.35,
+            retries=0,
+        )
         try:
             if not cli.connect():
                 break  # busy or unopenable — skip this port
-            if not io_dev:
-                resp = cli.read_coils(address=0, count=1, device_id=device_id)
-                if resp is not None and not resp.isError():
-                    io_dev, io_id = port, device_id
-            if not adc_dev:
-                resp = cli.read_input_registers(address=0, count=1, device_id=device_id)
-                if resp is not None and not resp.isError():
-                    adc_dev, adc_id = port, device_id
+            resp = cli.read_coils(address=0, count=1, device_id=device_id)
+            if resp is not None and not resp.isError():
+                io_dev, io_id = port, device_id
+                break
         except Exception:
             pass
         finally:
@@ -576,7 +587,7 @@ for port in candidates:
                 cli.close()
             except Exception:
                 pass
-print(f"MB_IO_DEV='{io_dev or ''}' MB_IO_ID='{io_id or ''}' MB_ADC_DEV='{adc_dev or ''}' MB_ADC_ID='{adc_id or ''}'")
+print(f"MB_IO_DEV='{io_dev or ''}' MB_IO_ID='{io_id or ''}'")
 PY
 )
 eval "${MB_DETECT:-}"
@@ -588,13 +599,10 @@ if [ -z "$IO_DEV" ]; then
   IO_ENABLED=false
   IO_DEV=/dev/serial/by-id/io-not-present
 fi
-ADC_ENABLED=true
-ADC_SERIAL_FOR_CONFIG="${MB_ADC_DEV:-}"
-ADC_DEVICE_ID="${MB_ADC_ID:-2}"
-if [ -z "$ADC_SERIAL_FOR_CONFIG" ]; then
-  ADC_ENABLED=false
-  ADC_SERIAL_FOR_CONFIG=/dev/serial/by-id/adc-not-present
-fi
+# Legacy Modbus ADC is intentionally disabled. usb-adc-stack owns AI01..AI03.
+ADC_ENABLED=false
+ADC_SERIAL_FOR_CONFIG=/dev/serial/by-id/adc-not-present
+ADC_DEVICE_ID=2
 DRI_ENABLED=false
 if curl -sf --max-time 3 http://127.0.0.1:8203/api/status >/dev/null 2>&1; then
   DRI_ENABLED=true
@@ -643,6 +651,8 @@ Environment=OQLOS_MODBUS_ADC_SERIAL_PORT=${ADC_SERIAL_FOR_CONFIG}
 Environment=OQLOS_MODBUS_ADC_BAUD=9600
 Environment=OQLOS_MODBUS_ADC_PARITY=N
 Environment=OQLOS_MODBUS_ADC_DEVICE_ID=${ADC_DEVICE_ID}
+Environment=OQLOS_ADC_SOURCE=usb-adc-stack
+Environment=OQLOS_USB_ADC_STACK_URL=http://127.0.0.1:8214
 Environment=OQLOS_MOTOR_URL=http://127.0.0.1:8203
 Environment=OQLOS_LUNG_MOTOR_URL=http://127.0.0.1:8205
 Environment=OQLOS_ENABLE_RTC=1

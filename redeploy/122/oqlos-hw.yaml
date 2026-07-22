@@ -9,12 +9,15 @@
 # Motor sidecars run on THIS Pi at loopback (127.0.0.1), never host.docker.internal.
 
 plugins:
-  # Waveshare Modbus RTU Analog Input 8CH — pressure/analog sensors
+  # Legacy Waveshare Modbus ADC. Pressure inputs now use usb-adc-stack:
+  # MCP2221A over USB (AI01) and DFR1184 over Raspberry Pi UART (AI02/AI03).
+  # Keep the schema entry for compatibility, but never let deploy autodetection
+  # claim the MCP2221 CDC interface as a Modbus RTU device.
   modbus-adc:
-    enabled: true
+    enabled: false
     connection_type: modbus-rtu
     connection_params:
-      serial_port: /dev/ttyUSB0          # autodetected at deploy
+      serial_port: /dev/serial/by-id/adc-not-present
       baudrate: 9600
       parity: N
       device_id: 2

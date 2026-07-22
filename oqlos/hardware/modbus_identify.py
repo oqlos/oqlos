@@ -41,6 +41,15 @@ def _is_modbus_candidate(device: "dict[str, Any]") -> bool:
     blob = _usb_blob(device)
     if not blob:
         return False
+    # On BoardNet this exact CH340 identity belongs to the DFRobot DRI0050
+    # motor sidecar. Treating every 1a86:7523 converter as RS485 made the
+    # Modbus wizard offer the pump UART as a valve-controller candidate.
+    if (
+        str(device.get("vendor_id") or "").lower() == "1a86"
+        and str(device.get("product_id") or "").lower() == "7523"
+        and "usb2.0-serial" in blob
+    ):
+        return False
     if any(token in blob for token in _MODBUS_SERIAL_EXCLUDE):
         return False
     return any(token in blob for token in _MODBUS_SERIAL_HINTS)
@@ -58,7 +67,9 @@ def _device_to_candidate(device: "dict[str, Any]") -> "dict[str, str]":
     }
 
 
-def collect_modbus_serial_candidates(diagnostics: dict[str, Any] | None) -> list[dict[str, str]]:
+def collect_modbus_serial_candidates(
+    diagnostics: dict[str, Any] | None,
+) -> list[dict[str, str]]:
     if not isinstance(diagnostics, dict):
         return []
     raw_devices = diagnostics.get("usb_devices")
@@ -72,7 +83,11 @@ def collect_modbus_serial_candidates(diagnostics: dict[str, Any] | None) -> list
 
 
 def _infer_modbus_serial_port(platform: dict[str, Any]) -> str:
-    for key in ("modbus_io_serial_port", "modbus_bus_serial_port", "modbus_adc_serial_port"):
+    for key in (
+        "modbus_io_serial_port",
+        "modbus_bus_serial_port",
+        "modbus_adc_serial_port",
+    ):
         value = str(platform.get(key) or "").strip()
         if value:
             return value
@@ -105,7 +120,11 @@ def enrich_platform_modbus_ports(payload: dict[str, Any]) -> dict[str, Any]:
 
 
 def enrich_modbus_serial_hints(payload: dict[str, Any]) -> dict[str, Any]:
-    diagnostics = payload.get("diagnostics") if isinstance(payload.get("diagnostics"), dict) else None
+    diagnostics = (
+        payload.get("diagnostics")
+        if isinstance(payload.get("diagnostics"), dict)
+        else None
+    )
     candidates = collect_modbus_serial_candidates(diagnostics)
     if not candidates:
         return payload

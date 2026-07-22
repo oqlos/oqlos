@@ -1,6 +1,6 @@
 # OqlOS BoardNet — aktualny stan
 
-Ostatnio sprawdzono: 2026-07-07 Europe/Warsaw.
+Ostatnio sprawdzono: 2026-07-22 Europe/Warsaw.
 
 ## UI BoardNet (kanoniczne URL)
 
@@ -99,21 +99,34 @@ curl -s http://192.168.188.122:8203/health
   `systemctl --user --failed` był pusty.
 - USB widoczne na BoardNet:
   - Pololu Tic T249: `1ffb:00c9`
-  - CH340 USB Single Serial: `/dev/ttyACM0`
-  - CH340 USB2.0-Serial: `/dev/ttyUSB0`
+  - MCP2221A USB-I2C/UART: `/dev/ttyACM0` (AI01 przez usb-adc-stack)
+  - CH340 USB2.0-Serial: `/dev/ttyUSB0` (DRI0050)
+  - FTDI FT232R: `/dev/ttyUSB1` (adapter widoczny, brak odpowiedzi RTU)
+  - DFR1184 używa UART Raspberry Pi `/dev/serial0` (AI02/AI03), nie USB.
 - Tic249 raportuje `connected=true`, `energized=false`.
 - DRI0050 raportuje zdrowy stan na `:8203`.
-- Modbus-IO w `/api/v1/hardware/health` może raportować `status=error` (timeout
-  RS485) mimo wcześniejszej naprawy slave ID — wtedy HUI hold/al zwraca
-  `ok=false` przy poprawnym katalogu kluczy.
+- Modbus-IO jest obecnie wyłączony, ponieważ read-only skan FTDI nie znalazł
+  odpowiedzi RTU dla 9600/19200/38400/115200, N/E/O i slave ID 1–8. HUI hold/al
+  nie może sterować zaworami do czasu podłączenia/zasilenia adaptera i modułu IO.
 - OqlOS działa w `mode=real`; `overall_ok` może być `false` przy degraded Modbus/Tic.
 - HTTP HUI: `GET /api/v1/hardware/hui/actions` zwraca katalog hold/AL;
   bezpieczne `POST /api/v1/hardware/hui/al/stop` i `shutdown` weryfikuje
   `assert_hw_node_healthy` w `redeploy/122/migration.md`.
 - `modbus-adc` jest świadomie wyłączony (`enabled=false`, `status=disabled`),
-  ponieważ adapter ADC nie jest obecny.
+  ponieważ AI01–AI03 obsługuje usb-adc-stack (MCP2221A + DFR1184).
 
-## Ostatnia naprawa
+## Migracja wejść analogowych 2026-07-22
+
+- `ai01` odpowiada przez `usb-adc-mcp2221`, fizycznie `MCP2221A.G1`.
+- `ai02` i `ai03` odpowiadają przez `usb-adc-dfr1184`, odpowiednio
+  `DFR1184.AIN1` i `DFR1184.AIN2`, transport UART `/dev/serial0`.
+- Publiczny proxy DisplayNet `/firmware/api/v1/hardware/sensors/batch` zwraca
+  wszystkie kanały z `ok=true`; ostatni odczyt bez podanego sygnału wynosił
+  `0.0 V`.
+- Autodetekcja Modbus pomija MCP2221 i port pompy DRI0050. Nie próbuje już
+  uruchamiać starego `modbus-adc` ani raportować go jako źródła analogowego.
+
+## Ostatnia historyczna naprawa Modbus-IO (2026-07-07)
 
 - Read-only `pimodbus.provision_cli diagnose` znalazł Waveshare Modbus-IO na:
   `/dev/serial/by-id/usb-1a86_USB_Single_Serial_5958006895-if00`,

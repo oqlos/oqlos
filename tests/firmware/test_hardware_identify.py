@@ -28,6 +28,7 @@ def _patch_probe(monkeypatch, name, value):
 
 def _patch_platform(monkeypatch, name, value):
     from oqlos.api import hardware_platform as hw_platform
+
     monkeypatch.setattr(hw_platform, name, value)
     if hasattr(hw, name):
         monkeypatch.setattr(hw, name, value)
@@ -87,7 +88,11 @@ def test_collect_hardware_diagnostics_exposes_ports(monkeypatch):
             }
         ],
     )
-    monkeypatch.setattr(hw_probe.glob, "glob", lambda pattern: ["/dev/i2c-0"] if pattern == "/dev/i2c-*" else [])
+    monkeypatch.setattr(
+        hw_probe.glob,
+        "glob",
+        lambda pattern: ["/dev/i2c-0"] if pattern == "/dev/i2c-*" else [],
+    )
 
     diagnostics = hw._collect_hardware_diagnostics()
 
@@ -97,6 +102,7 @@ def test_collect_hardware_diagnostics_exposes_ports(monkeypatch):
 
 
 def test_platform_reports_modbus_adc_as_analog_input(monkeypatch):
+    monkeypatch.setenv("OQLOS_ADC_SOURCE", "modbus-adc")
     monkeypatch.setenv("OQLOS_MODBUS_ADC_SERIAL_PORT", "/dev/modbus-adc")
 
     platform = hw._detect_runtime_platform()
@@ -105,6 +111,18 @@ def test_platform_reports_modbus_adc_as_analog_input(monkeypatch):
     assert platform["modbus_adc_driver_role"] == "modbus-rtu"
     assert platform["modbus_adc_serial_port"] == "/dev/modbus-adc"
     assert platform["piadc_driver_role"] == "replaced-by-modbus-adc"
+
+
+def test_platform_reports_usb_adc_stack_without_legacy_modbus_probe(monkeypatch):
+    monkeypatch.setenv("OQLOS_ADC_SOURCE", "usb-adc-stack")
+
+    platform = hw._detect_runtime_platform()
+
+    assert platform["analog_input_driver_role"] == "usb-adc-stack"
+    assert platform["modbus_adc_selected"] == "disabled"
+    assert platform["modbus_adc_driver_role"] == "disabled"
+    assert platform["modbus_adc_local_probe_allowed"] is False
+    assert platform["piadc_driver_role"] == "replaced-by-usb-adc-stack"
 
 
 def test_hardware_identify_includes_diagnostics(monkeypatch):
@@ -136,7 +154,9 @@ def test_hardware_identify_includes_diagnostics(monkeypatch):
     assert statuses["motor-dri0050"] == "ok"
     assert statuses["modbus-io"] in {"offline", "no-access", "adapter-only"}
     assert statuses["modbus-adc"] in {"offline", "no-access", "adapter-only"}
-    assert result["detected"] == sum(1 for status in statuses.values() if status in {"ok", "adapter-only"})
+    assert result["detected"] == sum(
+        1 for status in statuses.values() if status in {"ok", "adapter-only"}
+    )
     assert result["total"] == len(result["adapters"])
     assert result["diagnostics"]["health"]["motor"] == "ok"
     assert result["diagnostics"]["serial_ports"][0]["device"] == "/dev/ttyUSB0"
@@ -223,13 +243,17 @@ def test_hardware_identify_reports_modbus_timeout_as_adapter_only(monkeypatch):
     _patch_gateway(monkeypatch, _ModbusTimeoutGateway())
 
     def _unexpected_live_probe(*_args):
-        raise AssertionError("modbus timeout should use plugin health, not a second serial probe")
+        raise AssertionError(
+            "modbus timeout should use plugin health, not a second serial probe"
+        )
 
     _patch_probe(monkeypatch, "_probe_all_hardware", _unexpected_live_probe)
     _patch_probe(monkeypatch, "_collect_hardware_diagnostics", lambda: {})
 
     result = asyncio.run(hw.hardware_identify())
-    modbus = next(adapter for adapter in result["adapters"] if adapter["id"] == "modbus-io")
+    modbus = next(
+        adapter for adapter in result["adapters"] if adapter["id"] == "modbus-io"
+    )
 
     assert modbus["status"] == "adapter-only"
     assert "did not answer" in modbus["probe"]["diagnosis"]
