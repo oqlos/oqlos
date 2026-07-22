@@ -755,6 +755,12 @@ _TESTQL_COMMANDS: tuple[str, ...] = (
     # commands; @semcod/oqlts compiles and executes them in connect-test.
     "HUI_POLL", "HUI_BUTTON", "HUI_HOLD",
     "ALIAS", "RUN", "EMIT", "APPEND_EVENT",
+    # Stable process URIs (c2004://<domain>/<resource>/<kind>/<verb>). Same
+    # class as RUN/HUI_POLL above — the browser runtime resolves and executes
+    # them — but they were left out when the process layer landed, so a
+    # scenario using RUN_URI parsed in oqlts and failed here with
+    # "nieznana komenda".
+    "RUN_URI", "HUI_POLL_URI",
 )
 
 

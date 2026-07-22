@@ -1002,3 +1002,34 @@ def test_func_inline_name_after_colon_is_block_not_metadata():
     assert not any("nieznane metadane 'FUNC'" in w for w in doc.warnings)
     func_blocks = [b for b in doc.blocks if b.type == "FUNC"]
     assert func_blocks and func_blocks[0].name == "NC ON"
+
+
+def test_process_uri_commands_are_preserved_as_testql_noops():
+    """RUN_URI / HUI_POLL_URI belong to the browser HUI runtime, like RUN.
+
+    They were left out of _TESTQL_COMMANDS when the process-URI layer landed, so
+    a scenario using them parsed in @semcod/oqlts and failed here with
+    "nieznana komenda" — the same file accepted by one runtime and rejected by
+    the other.
+    """
+    src = textwrap.dedent(
+        """
+        VERSION: 5
+        CONFIG:
+          HUI_POLL_URI 'c2004://boardnet/adc/query/read' EVERY '500 ms' EMIT 'adc.updated'
+        EVENT 'frontend.hui.wc-press':
+          RUN_URI 'c2004://boardnet/hardware/command/dispatch' MODE 'execute'
+        """
+    )
+    doc = parse_oql(src)
+    assert not doc.errors
+
+    commands = [cmd.args.get("command") for block in doc.blocks for cmd in block.cmds]
+    assert "RUN_URI" in commands
+    assert "HUI_POLL_URI" in commands
+
+
+def test_unknown_command_is_still_rejected():
+    """The no-op list must not become a catch-all that hides typos."""
+    doc = parse_oql("VERSION: 5\nGOAL:\n  NAME 'x'\n  RUN_URIX 'c2004://a/b/c/d'\n")
+    assert any("RUN_URIX" in str(err) for err in doc.errors)
