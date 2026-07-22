@@ -103,6 +103,30 @@ def test_inline_access_grants_are_accepted_by_execution_parser():
     assert [command.cmd for command in doc.goals()[0].cmds] == ["SET"]
 
 
+def test_event_blocks_are_preserved_without_test_section():
+    src = textwrap.dedent(
+        """
+        VERSION: 5
+        CONFIG:
+          API_POST 'valve.press' '/api/v3/hardware/hui/valve/wc-press'
+          HUI_BUTTON 'wc-press' EMIT 'frontend.hui.wc-press'
+        EVENT 'frontend.hui.wc-press':
+          RUN 'valve.press'
+          APPEND_EVENT 'hui.demo' TYPE 'hardware.valve.commanded' PAYLOAD '{"control":"wc-press"}'
+          EMIT 'frontend.hui.completed' PAYLOAD '{"ok":true}'
+        """
+    )
+    doc = parse_oql(src)
+    assert not doc.errors
+    assert not doc.goals()
+    assert [event.name for event in doc.events()] == ["frontend.hui.wc-press"]
+    assert [command.args["command"] for command in doc.events()[0].cmds] == [
+        "RUN",
+        "APPEND_EVENT",
+        "EMIT",
+    ]
+
+
 def test_parse_metadata():
     src = textwrap.dedent(
         """
