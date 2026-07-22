@@ -86,6 +86,23 @@ def test_parse_minimal_goal():
     assert [c.cmd for c in goal.cmds] == ["SET", "WAIT"]
 
 
+def test_inline_access_grants_are_accepted_by_execution_parser():
+    src = textwrap.dedent(
+        """
+        VERSION: 5
+        ALLOW role:administrator UPDATE *
+        ALLOW role:operator UPDATE SET 'Operator'
+        DENY role:operator UPDATE API_POST *
+        TEST:
+          NAME 'Controlled test'
+          SET 'Operator' 'confirm'
+        """
+    )
+    doc = parse_oql(src)
+    assert not doc.errors
+    assert [command.cmd for command in doc.goals()[0].cmds] == ["SET"]
+
+
 def test_parse_metadata():
     src = textwrap.dedent(
         """

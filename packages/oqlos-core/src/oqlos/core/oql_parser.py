@@ -53,6 +53,16 @@ FUNC_INLINE_NAME_RE = re.compile(r"^FUNC\s*:\s*(.+)$", re.IGNORECASE)
 #: Metadata line: ``KEY: value`` (KEY is UPPER_SNAKE).
 META_RE = re.compile(r"^([A-Z][A-Z0-9_]*)\s*:\s*(.+)$")
 
+#: Inline access grants are interpreted by the editor/store policy layer.  The
+#: execution parser deliberately ignores them, just like comments/metadata, so
+#: the same OQL source remains valid in the Python and browser runtimes.
+GRANT_RE = re.compile(
+    r"^(ALLOW|DENY)\s+(role|persona):[A-Za-z0-9_-]+\s+"
+    r"(READ|CREATE|UPDATE|DELETE)\s+(\*|[A-Za-z_][A-Za-z0-9_]*)"
+    r"(?:\s+(?:'[^']*'|\"[^\"]*\"|\*))?\s*$",
+    re.IGNORECASE,
+)
+
 #: ``CHECK`` clause: ``min <= sensor <= max unit``.
 CHECK_RE = re.compile(
     rf"^({NUM})\s*<=\s*(\S+)\s*<=\s*({NUM})(?:\s+(\S+))?$"
@@ -735,6 +745,9 @@ _TESTQL_COMMANDS: tuple[str, ...] = (
     "EXPECT_DEVICE",
     "NAVIGATE", "CLICK", "INPUT", "SELECT_DEVICE", "SELECT_INTERVAL",
     "START_TEST", "STEP_COMPLETE", "RECORD_START", "RECORD_STOP",
+    # Declarative browser HUI runtime. OqlOS preserves these as TESTQL no-op
+    # commands; @semcod/oqlts compiles and executes them in connect-test.
+    "HUI_POLL", "HUI_BUTTON", "HUI_HOLD",
 )
 
 
@@ -1022,6 +1035,9 @@ def parse_oql(text: str, filename: str = "<string>") -> OqlDoc:
     for ln, raw in enumerate(_expand_repeat_blocks(text), 1):
         line = raw.strip()
         if not line or line.startswith("#"):
+            continue
+
+        if GRANT_RE.match(line):
             continue
 
         if current is None and _handle_top_level_line(doc, raw, line, ln):

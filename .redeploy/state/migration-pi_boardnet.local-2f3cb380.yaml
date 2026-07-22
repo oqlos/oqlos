@@ -1,0 +1,14 @@
+spec_path: redeploy/122/migration.md
+host: pi@boardnet.local
+total_steps: 20
+completed_step_ids: []
+failed_step_id: sync_project_tree
+failed_error: '[sync_project_tree] rsync failed: stderr:
+
+  ssh: Could not resolve hostname boardnet.local: Name or service not known
+
+  rsync: connection unexpectedly closed (0 bytes received so far) [sender]
+
+  rsync error: unexplained error (code 255) at io.c(232) [sender=3.4.1]'
+started_at: '2026-07-22T06:28:33+00:00'
+updated_at: '2026-07-22T06:28:43+00:00'
