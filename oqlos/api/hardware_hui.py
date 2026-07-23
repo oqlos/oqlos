@@ -22,7 +22,7 @@ router = APIRouter(tags=["hardware-hui"])
 
 def raise_if_hui_failed(payload: dict[str, Any]) -> None:
     if not payload.get("ok"):
-        raise HTTPException(status_code=400, detail=payload)
+        raise HTTPException(status_code=int(payload.get("status_code") or 400), detail=payload)
 
 
 async def start_hui_action(action: Any, *args: Any) -> dict[str, Any]:

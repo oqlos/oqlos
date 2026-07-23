@@ -24,6 +24,18 @@ def test_raise_if_hui_failed_raises_on_error_payload():
     assert exc.value.status_code == 400
 
 
+def test_raise_if_hui_failed_preserves_hardware_unavailable_status():
+    with pytest.raises(HTTPException) as exc:
+        hui.raise_if_hui_failed(
+            {
+                "ok": False,
+                "error": "Required hardware unavailable: modbus-io",
+                "status_code": 503,
+            }
+        )
+    assert exc.value.status_code == 503
+
+
 class _FakeGateway:
   async def hold(self, key: str):
       return {"ok": True, "key": key}

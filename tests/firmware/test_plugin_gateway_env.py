@@ -171,6 +171,60 @@ def test_plugin_gateway_allow_list_plugins_env(monkeypatch):
     assert gateway._plugin_configs["motor-dri0050"].enabled is False
 
 
+def test_plugin_readiness_reports_disabled_without_connection_attempt(monkeypatch):
+    gateway = PluginHardwareGateway(mode="mock")
+    gateway.mode = "real"
+    gateway._init_done = True
+    gateway._plugin_configs = {
+        "modbus-io": PluginConfig(plugin_id="modbus-io", enabled=False),
+    }
+
+    async def _unexpected_connection(_plugin_id):
+        raise AssertionError("disabled plugin must not attempt a connection")
+
+    monkeypatch.setattr(gateway, "_get_or_connect_plugin", _unexpected_connection)
+
+    result = asyncio.run(gateway.plugin_readiness("modbus-io"))
+
+    assert result == {
+        "ok": False,
+        "plugin_id": "modbus-io",
+        "status": "disabled",
+        "message": "Plugin modbus-io is disabled in OqlOS configuration",
+    }
+
+
+def test_plugin_readiness_returns_normalized_health_status(monkeypatch):
+    class HealthyPlugin:
+        async def health_check(self):
+            return PluginHealth(
+                status=PluginStatus.CONNECTED,
+                message="Motor is healthy",
+                compatible=True,
+            )
+
+    gateway = PluginHardwareGateway(mode="mock")
+    gateway.mode = "real"
+    gateway._init_done = True
+    gateway._plugin_configs = {
+        "motor-dri0050": PluginConfig(plugin_id="motor-dri0050", enabled=True),
+    }
+
+    async def _plugin(_plugin_id):
+        return HealthyPlugin()
+
+    monkeypatch.setattr(gateway, "_get_or_connect_plugin", _plugin)
+
+    result = asyncio.run(gateway.plugin_readiness("motor-dri0050"))
+
+    assert result == {
+        "ok": True,
+        "plugin_id": "motor-dri0050",
+        "status": "connected",
+        "message": "Motor is healthy",
+    }
+
+
 def test_health_reports_configured_disabled_plugins(monkeypatch):
     async def _empty_health_result(cls, plugin_id, timeout=None):
         return None

@@ -5,6 +5,8 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
+from oqlos.hardware.hui_readiness import required_plugins_failure
+
 HUI_HOLD_PROFILES: dict[str, dict[str, Any]] = {
     "head-inflate": {"valves_on": ("valve-5", "valve-2"), "pump_pct": 70.0},
     "head-deflate": {"valves_on": ("valve-3", "valve-6"), "pump_pct": 0.0},
@@ -214,6 +216,18 @@ async def start_hui_hold(gateway: Any, key: str) -> dict[str, Any]:
     profile = get_hui_hold_profiles().get(hold_key)
     if profile is None:
         return {"ok": False, "command": "hold_start", "key": hold_key, "error": "Unknown HUI hold key"}
+
+    required_plugins = ["modbus-io"]
+    if float(profile["pump_pct"]):
+        required_plugins.append("motor-dri0050")
+    readiness_failure = await required_plugins_failure(
+        gateway,
+        required_plugins,
+        command="hold_start",
+        key=hold_key,
+    )
+    if readiness_failure is not None:
+        return readiness_failure
 
     operations: list[dict[str, Any]] = []
     shutdown = await shutdown_all_hui_hardware(gateway)

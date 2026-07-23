@@ -405,6 +405,61 @@ class PluginHardwareGateway:
     def is_real(self) -> bool:
         return self.mode == "real"
 
+    async def plugin_readiness(self, plugin_id: str) -> dict[str, Any]:
+        """Resolve a configured plugin and expose a stable HUI preflight result."""
+        if not self.is_real:
+            return {
+                "ok": True,
+                "plugin_id": plugin_id,
+                "status": "mock",
+                "message": "Hardware runtime is in mock mode",
+            }
+
+        config = self._plugin_configs.get(plugin_id)
+        if config is None:
+            return {
+                "ok": False,
+                "plugin_id": plugin_id,
+                "status": "not_configured",
+                "message": f"Plugin {plugin_id} is not configured",
+            }
+        if not config.enabled:
+            return {
+                "ok": False,
+                "plugin_id": plugin_id,
+                "status": "disabled",
+                "message": f"Plugin {plugin_id} is disabled in OqlOS configuration",
+            }
+
+        plugin = await self._get_or_connect_plugin(plugin_id)
+        if plugin is None:
+            return {
+                "ok": False,
+                "plugin_id": plugin_id,
+                "status": "unavailable",
+                "message": f"Plugin {plugin_id} could not connect",
+            }
+
+        try:
+            health = await plugin.health_check()
+        except Exception as exc:
+            return {
+                "ok": False,
+                "plugin_id": plugin_id,
+                "status": "error",
+                "message": f"Plugin {plugin_id} health check failed: {exc}",
+            }
+
+        compatible = bool(getattr(health, "compatible", False))
+        health_status = getattr(health, "status", "ok" if compatible else "error")
+        status = getattr(health_status, "value", health_status)
+        return {
+            "ok": compatible,
+            "plugin_id": plugin_id,
+            "status": str(status),
+            "message": str(getattr(health, "message", "") or ""),
+        }
+
     async def set_valve(self, valve_id: str, value: bool) -> bool:
         """Set valve state using modbus plugin."""
         if not self.is_real:

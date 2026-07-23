@@ -13,9 +13,16 @@ def run(coro):
 
 
 class FakeGateway:
-    def __init__(self, *, real: bool = False, plugin: Any | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        real: bool = False,
+        plugin: Any | None = None,
+        readiness: dict[str, dict[str, Any]] | None = None,
+    ) -> None:
         self.is_real = real
         self.plugin = plugin
+        self.readiness = readiness
         self.calls: list[tuple[Any, ...]] = []
 
     async def set_valve(self, valve_id: str, value: bool) -> bool:
@@ -37,6 +44,15 @@ class FakeGateway:
     async def _get_or_connect_plugin(self, plugin_id: str) -> Any:
         self.calls.append(("plugin", plugin_id))
         return self.plugin
+
+    async def plugin_readiness(self, plugin_id: str) -> dict[str, Any]:
+        self.calls.append(("readiness", plugin_id))
+        if self.readiness is None:
+            return {"ok": True, "plugin_id": plugin_id, "status": "ok", "message": ""}
+        return self.readiness.get(
+            plugin_id,
+            {"ok": False, "plugin_id": plugin_id, "status": "not_configured", "message": ""},
+        )
 
 
 class FakeTic249Plugin:
@@ -60,6 +76,36 @@ def test_hui_hold_profile_runs_inside_oqlos(monkeypatch) -> None:
         ("valve", "valve-2", True),
         ("pump", 70.0),
     ]
+
+
+def test_hui_hold_fails_before_shutdown_when_required_plugin_is_disabled(monkeypatch) -> None:
+    monkeypatch.setattr(hui_hold, "_VALVE_STAGGER_SECONDS", 0)
+    gateway = FakeGateway(
+        real=True,
+        readiness={
+            "modbus-io": {
+                "ok": False,
+                "plugin_id": "modbus-io",
+                "status": "disabled",
+                "message": "Plugin modbus-io is disabled in OqlOS configuration",
+            },
+            "motor-dri0050": {
+                "ok": True,
+                "plugin_id": "motor-dri0050",
+                "status": "ok",
+                "message": "",
+            },
+        },
+    )
+
+    payload = run(hui_actions.start_hui_hold(gateway, "lp-pwm-plus10"))
+
+    assert payload["ok"] is False
+    assert payload["status_code"] == 503
+    assert payload["error_code"] == "C2004-HW-0012"
+    assert payload["required_hardware"] == ["modbus-io", "motor-dri0050"]
+    assert payload["operations"] == []
+    assert not any(call[0] in {"pump", "valve"} for call in gateway.calls)
 
 
 def test_hui_hold_profile_can_be_overridden_from_hardware_map(monkeypatch) -> None:
