@@ -2,10 +2,11 @@
 # OqlOS BoardNet (.122) hardware test / diagnose / fix procedure.
 #
 # Selective by design: it probes every peripheral INDIVIDUALLY, so one dead
-# device never blocks the rest. When a Modbus peripheral (valves modbus-io /
-# analog modbus-adc) is unhealthy it drops to a per-port, per-address bus scan
-# to find what actually answers, and can auto-fix the OqlOS config for a device
-# it locates (e.g. enable modbus-adc on the port/slave-id where an ADC replies).
+# device never blocks the rest. When the required Modbus valve controller
+# (modbus-io) is unhealthy it drops to a per-port, per-address bus scan to find
+# what actually answers and can auto-fix the OqlOS config for the located
+# controller. The legacy modbus-adc remains disabled because AI01..AI03 are
+# provided by usb-adc-stack (MCP2221A over USB and DFR1184 over UART).
 #
 # Modes:
 #   test      (default) read-only per-peripheral health — non-invasive
@@ -41,15 +42,31 @@ FAILED_MODBUS=0
 phase_test(){
   hdr "PHASE 1 — per-peripheral health"
 
-  # Plugins exposed by OqlOS core (valves + analog live on the RS485 bus).
+  # Plugins exposed by OqlOS core. Only modbus-io is required; modbus-adc is a
+  # retained compatibility entry and must stay disabled after the USB ADC
+  # migration.
   for pid in modbus-io modbus-adc; do
     body="$(_get "$API/api/v1/plugins/$pid/health")"
     st="$(_field "$body" status)"
     msg="$(_field "$body" message)"
     case "$st" in
       ok|connected) ok "$pid: $st" ;;
-      disabled)     warn "$pid: disabled in config — $msg"; [ "$pid" = modbus-adc ] && FAILED_MODBUS=1 ;;
-      *)            bad "$pid: ${st:-no-response} — $msg"; FAILED_MODBUS=1 ;;
+      disabled)
+        if [ "$pid" = modbus-adc ]; then
+          ok "$pid: disabled as expected (usb-adc-stack owns AI01..AI03)"
+        else
+          bad "$pid: disabled in config — $msg"
+          FAILED_MODBUS=1
+        fi
+        ;;
+      *)
+        if [ "$pid" = modbus-adc ]; then
+          warn "$pid: ${st:-no-response} — ignored; usb-adc-stack owns AI01..AI03"
+        else
+          bad "$pid: ${st:-no-response} — $msg"
+          FAILED_MODBUS=1
+        fi
+        ;;
     esac
   done
 
@@ -140,28 +157,7 @@ phase_fix(){
     warn "nothing located on the bus — no safe auto-fix; fix wiring/power then re-run 'diagnose'"
     return 0
   fi
-  # Pick the first ADC responder to enable modbus-adc.
-  local adc_line; adc_line="$(grep -P '\tadc$' <<<"$results" | head -1)"
-  if [ -n "$adc_line" ]; then
-    local port dev; port="$(cut -f1 <<<"$adc_line")"; dev="$(cut -f2 <<<"$adc_line")"
-    ok "ADC found at $port slave=$dev — enabling modbus-adc"
-    "$VENV" - "$CFG" "$port" "$dev" <<'PY'
-import re, sys
-from pathlib import Path
-cfg, port, dev = Path(sys.argv[1]), sys.argv[2], sys.argv[3]
-t = cfg.read_text(encoding="utf-8")
-t = re.sub(r"(  modbus-adc:\n(?:.*\n)*?      serial_port: )[^\n]+", rf"\1{port}", t, count=1)
-t = re.sub(r"(  modbus-adc:\n(?:.*\n)*?      device_id: )[0-9]+", rf"\g<1>{dev}", t, count=1)
-t = re.sub(r"(  modbus-adc:\n(?:.*\n)*?    enabled: )(true|false)", r"\g<1>true", t, count=1)
-cfg.write_text(t, encoding="utf-8")
-print(f"  config: modbus-adc enabled=true serial_port={port} device_id={dev}")
-PY
-    sed -i "s|^Environment=OQLOS_MODBUS_ADC_SERIAL_PORT=.*|Environment=OQLOS_MODBUS_ADC_SERIAL_PORT=${port}|" "$UNIT" 2>/dev/null
-    sed -i "s|^Environment=OQLOS_MODBUS_ADC_DEVICE_ID=.*|Environment=OQLOS_MODBUS_ADC_DEVICE_ID=${dev}|" "$UNIT" 2>/dev/null
-  else
-    warn "no ADC responder located — leaving modbus-adc disabled"
-  fi
-  # Fix modbus-io slave id if it answers at a different address than configured.
+  # Fix and re-enable modbus-io when the read-only scan locates it.
   local io_line; io_line="$(grep -P '\tio$' <<<"$results" | head -1)"
   if [ -n "$io_line" ]; then
     local iport idev; iport="$(cut -f1 <<<"$io_line")"; idev="$(cut -f2 <<<"$io_line")"
@@ -171,10 +167,11 @@ import re, sys
 from pathlib import Path
 cfg, port, dev = Path(sys.argv[1]), sys.argv[2], sys.argv[3]
 t = cfg.read_text(encoding="utf-8")
+t = re.sub(r"(  modbus-io:\n(?:.*\n)*?    enabled: )(true|false)", r"\g<1>true", t, count=1)
 t = re.sub(r"(  modbus-io:\n(?:.*\n)*?      serial_port: )[^\n]+", rf"\1{port}", t, count=1)
 t = re.sub(r"(  modbus-io:\n(?:.*\n)*?      device_id: )[0-9]+", rf"\g<1>{dev}", t, count=1)
 cfg.write_text(t, encoding="utf-8")
-print(f"  config: modbus-io serial_port={port} device_id={dev}")
+print(f"  config: modbus-io enabled=true serial_port={port} device_id={dev}")
 PY
     sed -i "s|^Environment=OQLOS_MODBUS_SERIAL_PORT=.*|Environment=OQLOS_MODBUS_SERIAL_PORT=${iport}|" "$UNIT" 2>/dev/null
     sed -i "s|^Environment=OQLOS_MODBUS_DEVICE_ID=.*|Environment=OQLOS_MODBUS_DEVICE_ID=${idev}|" "$UNIT" 2>/dev/null

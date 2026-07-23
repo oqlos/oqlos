@@ -151,6 +151,28 @@ def diagnose_plugin_devices(
     ):
         entry = health.get(plugin_id) if isinstance(health.get(plugin_id), dict) else None
         adapter = adapters.get(plugin_id)
+        analog_driver = str(platform.get("analog_input_driver_role") or "").strip().lower()
+        modbus_adc_driver = str(platform.get("modbus_adc_driver_role") or "").strip().lower()
+        if plugin_id == "modbus-adc" and (
+            (analog_driver and analog_driver != "modbus-adc")
+            or modbus_adc_driver in {"disabled", "replaced"}
+        ):
+            devices[plugin_id] = DeviceDiagnosis(
+                device_id=plugin_id,
+                display_name=display_name,
+                status="ok",
+                health_summary=(
+                    f"Disabled as expected; {analog_driver} owns analog inputs"
+                    if analog_driver
+                    else "Disabled as expected; replacement ADC stack is active"
+                ),
+                environment={
+                    "topology": topology,
+                    "driver_role": modbus_adc_driver or "disabled",
+                    "replaced_by": analog_driver or None,
+                },
+            )
+            continue
         if mock_mode and plugin_id.startswith("motor") and entry is None:
             devices[plugin_id] = DeviceDiagnosis(
                 device_id=plugin_id,

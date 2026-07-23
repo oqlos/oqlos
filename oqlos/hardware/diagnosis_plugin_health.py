@@ -60,8 +60,21 @@ def plugin_needs_repair(plugin_id: str, entry: dict[str, Any] | None) -> bool:
 
 
 def modbus_plugins_need_repair(identify: dict[str, Any] | None) -> bool:
-    health = health_map(identify or {})
-    for key in ("modbus-io", "modbus-adc"):
+    payload = identify or {}
+    health = health_map(payload)
+    platform = payload.get("platform") if isinstance(payload.get("platform"), dict) else {}
+    analog_driver = str(platform.get("analog_input_driver_role") or "").strip().lower()
+    modbus_adc_driver = str(platform.get("modbus_adc_driver_role") or "").strip().lower()
+    required_plugins = ["modbus-io"]
+    # The disabled compatibility entry is healthy-by-design when another ADC
+    # stack owns the analog inputs. Keep the legacy behavior if older identify
+    # payloads do not expose driver-role metadata.
+    if not (
+        (analog_driver and analog_driver != "modbus-adc")
+        or modbus_adc_driver in {"disabled", "replaced"}
+    ):
+        required_plugins.append("modbus-adc")
+    for key in required_plugins:
         if plugin_needs_repair(key, health.get(key) if isinstance(health.get(key), dict) else {}):
             return True
     return False

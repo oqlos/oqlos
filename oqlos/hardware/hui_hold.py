@@ -33,6 +33,7 @@ HUI_ALL_VALVE_IDS = (
 
 _VALVE_STAGGER_SECONDS = 0.1
 _active_hold_key: str | None = None
+_HUI_OPERATION_LOCK = asyncio.Lock()
 
 
 def _normalize_hui_profile_key(key: Any) -> str:
@@ -135,7 +136,9 @@ async def _set_pump_best_effort(gateway: Any, power_pct: float) -> dict[str, Any
         return _operation("set_pump", False, power_pct=power_pct, error=str(exc), best_effort=True)
 
 
-async def shutdown_all_hui_hardware(gateway: Any) -> dict[str, Any]:
+async def _shutdown_all_hui_hardware_unlocked(gateway: Any) -> dict[str, Any]:
+    global _active_hold_key
+    _active_hold_key = None
     operations: list[dict[str, Any]] = [await _set_pump_best_effort(gateway, 0.0)]
     for valve_id in HUI_ALL_VALVE_IDS:
         try:
@@ -147,6 +150,11 @@ async def shutdown_all_hui_hardware(gateway: Any) -> dict[str, Any]:
         "command": "shutdown",
         "operations": operations,
     }
+
+
+async def shutdown_all_hui_hardware(gateway: Any) -> dict[str, Any]:
+    async with _HUI_OPERATION_LOCK:
+        return await _shutdown_all_hui_hardware_unlocked(gateway)
 
 
 def _hold_start_failure(
@@ -177,7 +185,7 @@ async def _engage_hold_valves(
         operation = await _set_valve(gateway, str(valve_id), True)
         operations.append(operation)
         if not operation["ok"]:
-            cleanup = await shutdown_all_hui_hardware(gateway)
+            cleanup = await _shutdown_all_hui_hardware_unlocked(gateway)
             return _hold_start_failure(
                 hold_key,
                 error=f"Valve {valve_id} failed",
@@ -201,7 +209,7 @@ async def _engage_hold_pump_if_needed(
     operations.append(operation)
     if operation["ok"]:
         return None
-    cleanup = await shutdown_all_hui_hardware(gateway)
+    cleanup = await _shutdown_all_hui_hardware_unlocked(gateway)
     return _hold_start_failure(
         hold_key,
         error="Pump command failed",
@@ -210,7 +218,7 @@ async def _engage_hold_pump_if_needed(
     )
 
 
-async def start_hui_hold(gateway: Any, key: str) -> dict[str, Any]:
+async def _start_hui_hold_unlocked(gateway: Any, key: str) -> dict[str, Any]:
     global _active_hold_key
     hold_key = str(key or "").strip().lower()
     profile = get_hui_hold_profiles().get(hold_key)
@@ -230,7 +238,7 @@ async def start_hui_hold(gateway: Any, key: str) -> dict[str, Any]:
         return readiness_failure
 
     operations: list[dict[str, Any]] = []
-    shutdown = await shutdown_all_hui_hardware(gateway)
+    shutdown = await _shutdown_all_hui_hardware_unlocked(gateway)
     operations.append({"operation": "shutdown", "ok": bool(shutdown.get("ok")), "result": shutdown})
 
     valve_failure = await _engage_hold_valves(
@@ -255,12 +263,16 @@ async def start_hui_hold(gateway: Any, key: str) -> dict[str, Any]:
     return {"ok": True, "command": "hold_start", "key": hold_key, "operations": operations}
 
 
-async def stop_hui_hold(gateway: Any, key: str | None = None) -> dict[str, Any]:
+async def start_hui_hold(gateway: Any, key: str) -> dict[str, Any]:
+    async with _HUI_OPERATION_LOCK:
+        return await _start_hui_hold_unlocked(gateway, key)
+
+
+async def _stop_hui_hold_unlocked(gateway: Any, key: str | None = None) -> dict[str, Any]:
     global _active_hold_key
     requested_key = str(key or _active_hold_key or "").strip().lower()
-    shutdown = await shutdown_all_hui_hardware(gateway)
     stopped_key = _active_hold_key
-    _active_hold_key = None
+    shutdown = await _shutdown_all_hui_hardware_unlocked(gateway)
     return {
         "ok": bool(shutdown.get("ok")),
         "command": "hold_stop",
@@ -268,3 +280,8 @@ async def stop_hui_hold(gateway: Any, key: str | None = None) -> dict[str, Any]:
         "stopped_key": stopped_key,
         "shutdown": shutdown,
     }
+
+
+async def stop_hui_hold(gateway: Any, key: str | None = None) -> dict[str, Any]:
+    async with _HUI_OPERATION_LOCK:
+        return await _stop_hui_hold_unlocked(gateway, key)

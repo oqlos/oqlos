@@ -108,6 +108,19 @@ def test_hui_hold_fails_before_shutdown_when_required_plugin_is_disabled(monkeyp
     assert not any(call[0] in {"pump", "valve"} for call in gateway.calls)
 
 
+def test_hui_hold_stop_reports_the_hold_that_was_started(monkeypatch) -> None:
+    monkeypatch.setattr(hui_hold, "_VALVE_STAGGER_SECONDS", 0)
+    gateway = FakeGateway()
+
+    started = run(hui_actions.start_hui_hold(gateway, "lp-pwm-plus10"))
+    stopped = run(hui_actions.stop_hui_hold(gateway, "lp-pwm-plus10"))
+
+    assert started["key"] == "lp-pwm-plus10"
+    assert stopped["key"] == "lp-pwm-plus10"
+    assert stopped["stopped_key"] == "lp-pwm-plus10"
+    assert stopped["ok"] is True
+
+
 def test_hui_hold_profile_can_be_overridden_from_hardware_map(monkeypatch) -> None:
     monkeypatch.setattr(hui_hold, "_VALVE_STAGGER_SECONDS", 0)
     monkeypatch.setattr(

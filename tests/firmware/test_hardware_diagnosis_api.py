@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
-
 from oqlos.hardware.diagnosis import build_diagnosis_report, report_to_dict
 
 
@@ -126,3 +124,40 @@ def test_build_diagnosis_report_mock_motors_without_health():
     assert payload["devices"]["motor-tic249"]["status"] == "ok"
     assert "mock" in payload["devices"]["motor-tic249"]["health_summary"].lower()
     assert payload["devices"]["motor-tic249"]["recommended_actions"] == []
+
+
+def test_build_diagnosis_report_accepts_replaced_modbus_adc():
+    identify = {
+        "mode": "real",
+        "platform": {
+            "modbus_topology": "separate-adapters",
+            "analog_input_driver_role": "usb-adc-stack",
+            "modbus_adc_driver_role": "disabled",
+        },
+        "diagnostics": {
+            "health": {
+                "modbus-io": {
+                    "status": "connected",
+                    "compatible": True,
+                    "message": "Modbus RTU is healthy",
+                },
+                "modbus-adc": {
+                    "status": "disabled",
+                    "compatible": False,
+                    "message": "Plugin is disabled in OqlOS configuration",
+                },
+                "motor-tic249": {"status": "connected", "compatible": True, "message": "ok"},
+                "motor-dri0050": {"status": "connected", "compatible": True, "message": "ok"},
+            },
+        },
+        "adapters": [],
+    }
+
+    payload = report_to_dict(build_diagnosis_report(identify))
+
+    assert payload["ok"] is True
+    assert payload["requires_full_stack_restart"] is False
+    assert payload["global_actions"] == []
+    assert payload["devices"]["modbus-adc"]["status"] == "ok"
+    assert payload["devices"]["modbus-adc"]["environment"]["replaced_by"] == "usb-adc-stack"
+    assert payload["devices"]["modbus-adc"]["recommended_actions"] == []
