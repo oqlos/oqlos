@@ -250,7 +250,7 @@ class PluginHardwareGateway:
                         "code": "pimodbus_unavailable",
                         "message": f"pimodbus library is not available: {exc}",
                         "modules": ["modbus-io", "modbus-adc"],
-                        "repair": {"install": "/home/tom/github/maskservice/pimodbus"},
+                        "repair": {"install": "/home/tom/github/oqlos/pimodbus"},
                     }
                 ],
                 "recommended": {},
@@ -633,11 +633,14 @@ class PluginHardwareGateway:
         for plugin_id, health in health_results.items():
             if health is None:
                 continue
+            config = self._plugin_configs.get(plugin_id)
             result[plugin_id] = {
                 "status": health.status.value,
                 "message": health.message,
                 "compatible": health.compatible,
             }
+            if config and config.metadata.get("required") is True:
+                result[plugin_id]["required"] = True
         for plugin_id, config in self._plugin_configs.items():
             if plugin_id in result:
                 continue
@@ -653,5 +656,7 @@ class PluginHardwareGateway:
                     "message": "Plugin is configured but no active instance is connected",
                     "compatible": False,
                 }
+            if config.metadata.get("required") is True:
+                result[plugin_id]["required"] = True
 
         return result

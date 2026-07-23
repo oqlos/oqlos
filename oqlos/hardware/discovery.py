@@ -1,6 +1,6 @@
 """Compatibility wrappers for shared Modbus discovery helpers.
 
-The actual Waveshare Modbus RTU probing lives in the maskservice/pimodbus
+The actual Waveshare Modbus RTU probing lives in the oqlos/pimodbus
 library so firmware, diagnostics and c2004 use one implementation.
 """
 
@@ -21,12 +21,12 @@ def _ensure_local_pimodbus_on_path() -> None:
         pass
 
     # /home/tom/github/oqlos/oqlos/oqlos/hardware/discovery.py
-    # -> /home/tom/github + maskservice/pimodbus
+    # -> /home/tom/github + oqlos/pimodbus
     try:
         github_root = pathlib.Path(__file__).resolve().parents[4]
     except IndexError:
         return
-    candidate = github_root / "maskservice" / "pimodbus"
+    candidate = github_root / "oqlos" / "pimodbus"
     if candidate.exists() and str(candidate) not in sys.path:
         sys.path.insert(0, str(candidate))
 

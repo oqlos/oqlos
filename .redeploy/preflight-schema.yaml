@@ -1,13 +1,13 @@
 schema_version: '1.0'
-generated_at: '2026-07-17T06:06:25.960125+00:00'
+generated_at: '2026-07-23T06:06:50.232875+00:00'
 spec:
   path: redeploy/122/migration.md
   name: oqlos boardnet deploy
   source_strategy: systemd
   target_strategy: systemd
-  host: pi@boardnet.local
+  host: pi@192.168.188.122
 plan:
-  steps_total: 20
+  steps_total: 21
   risk: low
   estimated_downtime: rolling (no downtime)
   steps:
@@ -34,6 +34,12 @@ plan:
   - id: sync_oqlos_frontend_dist
     action: rsync
     description: Sync zbudowanego OqlOS hardware UI (frontend/dist)
+    has_command_ref: false
+    insert_before: null
+  - id: sync_oql_scenario
+    action: rsync
+    description: Sync kanonicznego magazynu scenariuszy i konfiguracji systemowych
+      OQL
     has_command_ref: false
     insert_before: null
   - id: sync_pihw_config
@@ -183,11 +189,11 @@ checks:
     mode: markpact_ref
   local_artifacts:
   - kind: src
-    path: /home/tom/github/maskservice/pimodbus/
-    resolved: /home/tom/github/maskservice/pimodbus
+    path: /home/tom/github/oqlos/oql-scenario/
+    resolved: /home/tom/github/oqlos/oql-scenario
     exists: true
     steps:
-    - sync_pimodbus
+    - sync_oql_scenario
   - kind: src
     path: /home/tom/github/oqlos/oqlos/
     resolved: /home/tom/github/oqlos/oqlos
@@ -206,6 +212,12 @@ checks:
     exists: true
     steps:
     - sync_pihw_config
+  - kind: src
+    path: /home/tom/github/oqlos/pimodbus/
+    resolved: /home/tom/github/oqlos/pimodbus
+    exists: true
+    steps:
+    - sync_pimodbus
   - kind: src
     path: /home/tom/github/oqlos/pirtc/
     resolved: /home/tom/github/oqlos/pirtc
@@ -232,7 +244,7 @@ checks:
     - sync_rpi_motor_tic249
   remote:
     enabled: true
-    host: pi@boardnet.local
+    host: pi@192.168.188.122
     reachable: true
     checks: []
 blockers: []

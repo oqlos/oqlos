@@ -74,13 +74,21 @@ async def hardware_modbus_wizard_probe_isolated(
     module_role: str = Body(default=""),
 ) -> dict[str, Any]:
     """Probe one isolated module before writing address/UART settings."""
+    from oqlos.api.hardware_modbus_wizard import normalize_modbus_module_role
+
     serial = serial_port or str(_settings.modbus_serial_port)
     target = effective_modbus_target_baud(_settings)
     scan_bauds = normalize_probe_baudrates(baudrates, target)
     scan_parities = [str(value).upper() for value in (parities or ["N", "E", "O"])]
     scan_ids = device_ids or [1, 2, 3, 4, 5, 8, 16, 32, 64, 128, 247]
-    role = str(module_role or "").strip()
-    required_roles = [role] if role in {"modbus-io", "modbus-adc"} else None
+    raw_role = str(module_role or "").strip()
+    role = normalize_modbus_module_role(raw_role)
+    if raw_role and not role:
+        return {
+            "ok": False,
+            "error": "module_role must be io, adc, modbus-io or modbus-adc",
+        }
+    required_roles = [role] if role else None
     return await asyncio.to_thread(
         _modbus_wizard_probe_isolated,
         serial,

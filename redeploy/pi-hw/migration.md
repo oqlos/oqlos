@@ -579,7 +579,7 @@ extra_steps:
   - id: sync_pimodbus
     action: rsync
     description: "Sync pimodbus (adaptery Modbus)"
-    src: /home/tom/github/maskservice/pimodbus/
+    src: /home/tom/github/oqlos/pimodbus/
     dst: ~/maskservice/pimodbus/
     excludes: [.git/, .venv/, venv/, __pycache__/, .pytest_cache/]
 

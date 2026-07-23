@@ -30,6 +30,39 @@ def _patch_diagnose_matrix(monkeypatch, fake_matrix):
     monkeypatch.setattr(waveshare, "_diagnose_shared_bus_matrix", fake_matrix)
 
 
+def test_modbus_wizard_normalizes_short_module_roles():
+    assert wizard.normalize_modbus_module_role("io") == "modbus-io"
+    assert wizard.normalize_modbus_module_role("ADC") == "modbus-adc"
+    assert wizard.normalize_modbus_module_role("modbus-io") == "modbus-io"
+    assert wizard.normalize_modbus_module_role("unknown") == ""
+
+
+def test_modbus_wizard_probe_uses_bounded_timeout_and_required_role(monkeypatch):
+    captured: dict[str, object] = {}
+
+    class _Report:
+        def to_dict(self):
+            return {"ok": False, "hits": [], "issues": []}
+
+    def fake_diagnose(**kwargs):
+        captured.update(kwargs)
+        return _Report()
+
+    monkeypatch.setattr("pimodbus.repair.diagnose_shared_bus", fake_diagnose)
+
+    result = wizard._modbus_wizard_probe_isolated(
+        "/dev/ttyTEST",
+        [9600],
+        ["N"],
+        [1],
+        ["modbus-io"],
+    )
+
+    assert result["ok"] is False
+    assert captured["timeout"] == wizard.MODBUS_ISOLATED_PROBE_TIMEOUT
+    assert captured["required_roles"] == ["modbus-io"]
+
+
 def test_modbus_wizard_program_writes_uart_before_address_change(monkeypatch):
     from pimodbus import provisioning as pim_prov
 

@@ -7,7 +7,7 @@ name = "oqlos"
 version = "0.1.35"
 description = "OqlOS — Operation Query Language runtime for hardware testing"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11,<3.14"
 dependencies = [
     "oqlos-models==0.2.0",
     "oqlos-core==0.2.2",
@@ -26,7 +26,7 @@ dependencies = [
     "pluggy>=1.4",
     "pytest-asyncio>=0.23",
     "PyYAML>=6.0",
-    "testql>=0.2.0",
+    "testql>=1.2.63",
 ]
 
 [project.license]
@@ -53,6 +53,10 @@ hardware-services = ["dri0050>=1.0.0", "piADC>=1.0.0", "piRTC>=1.0.0"]
 [tool.setuptools.packages.find]
 include = ["oqlos*"]
 exclude = ["oqlos.models*", "oqlos.shared.event_store"]
+
+[tool.uv.sources]
+oqlos-core = { path = "packages/oqlos-core" }
+oqlos-models = { path = "packages/oqlos-models" }
 
 [tool.pfix]
 # Self-healing Python configuration

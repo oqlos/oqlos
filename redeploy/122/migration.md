@@ -68,6 +68,7 @@ RUNBOOK can run them manually over ssh if the automation needs adjusting.
 #!/bin/bash
 set -euo pipefail
 mkdir -p /home/pi/oqlos/oqlos \
+         /home/pi/oqlos/oql-scenario \
          /home/pi/maskservice/config \
          /home/pi/maskservice/logs \
          /home/pi/maskservice/mosquitto \
@@ -642,6 +643,7 @@ EnvironmentFile=-/home/pi/maskservice/config/oql-mqtt.env
 Environment=HARDWARE_MODE=real
 Environment=OQLOS_HARDWARE_MODE=real
 Environment=OQLOS_CONFIG_PATH=/home/pi/maskservice/config/oqlos-real.yaml
+Environment=OQLOS_SCENARIOS_DIR=/home/pi/oqlos/oql-scenario
 Environment=PYTHONPATH=/home/pi/maskservice/pimodbus
 Environment=OQLOS_MODBUS_SERIAL_PORT=${IO_DEV}
 Environment=OQLOS_MODBUS_BAUD=${IO_BAUD}
@@ -852,6 +854,42 @@ for page in hardware-status hardware-demo map-editor scenario-files func-editor;
     _warn_or_fail "OqlOS legacy /${page} nie odpowiada (sprawdz recznie /ui/${page})"
   fi
 done
+
+UNIT_ENV=$(systemctl --user show oqlos-hardware-api.service --property=Environment --value)
+if grep -Fq 'OQLOS_SCENARIOS_DIR=/home/pi/oqlos/oql-scenario' <<<"$UNIT_ENV"; then
+  _pass "OqlOS używa kanonicznego magazynu /home/pi/oqlos/oql-scenario"
+else
+  _fail "OqlOS nie ma ustawionego kanonicznego OQLOS_SCENARIOS_DIR"
+fi
+
+if _curl_get http://127.0.0.1:8202/api/v1/editor/files "$TMPDIR/oqlos-editor-files.json" 8; then
+  if python3 - "$TMPDIR/oqlos-editor-files.json" <<'PY'
+import json, sys
+data = json.load(open(sys.argv[1], encoding="utf-8"))
+files = data.get("files") or []
+names = {entry.get("name") for entry in files}
+required = {"system.oql", "layers"}
+missing = sorted(required - names)
+oql_count = sum(
+    1 for entry in files
+    if not entry.get("is_directory") and str(entry.get("name", "")).endswith(".oql")
+)
+if missing:
+    print(f"Brak wymaganych pozycji: {', '.join(missing)}", file=sys.stderr)
+    raise SystemExit(1)
+if oql_count < 20:
+    print(f"Za mało głównych plików OQL: {oql_count}", file=sys.stderr)
+    raise SystemExit(1)
+print(f"Kanoniczny magazyn zawiera system.oql, layers i {oql_count} głównych plików OQL")
+PY
+  then
+    _pass "OqlOS /api/v1/editor/files udostępnia scenariusze i konfiguracje systemowe"
+  else
+    _fail "OqlOS editor nie udostępnia kompletnego kanonicznego magazynu OQL"
+  fi
+else
+  _fail "OqlOS /api/v1/editor/files nie odpowiada"
+fi
 
 if _curl_get http://127.0.0.1:8202/api/v3/hardware/mapping/schema "$TMPDIR/oqlos-map-schema.json" 8; then
   if python3 - "$TMPDIR/oqlos-map-schema.json" <<'PY'
@@ -1288,14 +1326,14 @@ fi
 
 ```yaml markpact:config
 name: "oqlos boardnet deploy"
-description: "OqlOS hardware node + mosquitto na pi@boardnet.local — systemd --user, OQL-over-MQTT agent"
+description: "OqlOS hardware node + mosquitto na pi@192.168.188.122 — systemd --user, OQL-over-MQTT agent"
 source:
   strategy: systemd
-  host: pi@boardnet.local
+  host: pi@192.168.188.122
   remote_dir: ~/oqlos
 target:
   strategy: systemd
-  host: pi@boardnet.local
+  host: pi@192.168.188.122
   remote_dir: ~/oqlos
   verify_url: http://192.168.188.122:8202/health
 ```
@@ -1328,6 +1366,13 @@ extra_steps:
     dst: ~/oqlos/oqlos/frontend/dist/
     excludes: []
 
+  - id: sync_oql_scenario
+    action: rsync
+    description: "Sync kanonicznego magazynu scenariuszy i konfiguracji systemowych OQL"
+    src: /home/tom/github/oqlos/oql-scenario/
+    dst: ~/oqlos/oql-scenario/
+    excludes: [.git, .venv/, venv/, __pycache__/, .pytest_cache/]
+
   - id: sync_pihw_config
     action: rsync
     description: "Sync konfiguracji węzła boardnet (mosquitto.conf, oqlos-hw.yaml, .env.hw)"
@@ -1338,7 +1383,7 @@ extra_steps:
   - id: sync_pimodbus
     action: rsync
     description: "Sync pimodbus (adaptery Modbus)"
-    src: /home/tom/github/maskservice/pimodbus/
+    src: /home/tom/github/oqlos/pimodbus/
     dst: ~/maskservice/pimodbus/
     excludes: [.git/, .venv/, venv/, __pycache__/, .pytest_cache/]
 

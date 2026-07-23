@@ -17,6 +17,19 @@ def test_hardware_health_overall_ok_ignores_disabled_plugins():
     assert hw._hardware_health_overall_ok(payload) is True
 
 
+def test_hardware_health_overall_ok_rejects_disabled_required_plugin():
+    payload = {
+        "mode": "real",
+        "modbus-io": {
+            "status": "disabled",
+            "compatible": False,
+            "required": True,
+            "message": "off",
+        },
+    }
+    assert hw._hardware_health_overall_ok(payload) is False
+
+
 def test_hardware_health_overall_ok_ignores_init_summary():
     payload = {
         "mode": "real",

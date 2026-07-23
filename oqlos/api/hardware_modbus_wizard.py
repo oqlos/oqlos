@@ -19,6 +19,20 @@ from oqlos.api.hardware_modbus_settings import (
 
 _settings = get_settings()
 
+MODBUS_ISOLATED_PROBE_TIMEOUT = 0.2
+_MODBUS_ROLE_ALIASES = {
+    "io": "modbus-io",
+    "modbus-io": "modbus-io",
+    "adc": "modbus-adc",
+    "modbus-adc": "modbus-adc",
+}
+
+
+def normalize_modbus_module_role(value: str) -> str:
+    """Return the canonical role used by the probe, or an empty value."""
+    return _MODBUS_ROLE_ALIASES.get(str(value or "").strip().lower(), "")
+
+
 def _modbus_wizard_target_ids() -> list[int]:
     return sorted(set([*topology._modbus_io_device_ids(), int(_settings.modbus_adc_device_id)]))
 
@@ -155,7 +169,7 @@ def _modbus_wizard_probe_isolated(
             baudrates=scan_bauds,
             parities=parities,
             device_ids=device_ids,
-            timeout=1.0,
+            timeout=MODBUS_ISOLATED_PROBE_TIMEOUT,
             scan_all_ports=False,
             required_roles=required_roles,
         )

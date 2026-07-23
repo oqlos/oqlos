@@ -45,6 +45,8 @@ plugins:
   # Waveshare Modbus RTU IO 8CH — valve controller
   modbus-io:
     enabled: true
+    metadata:
+      required: true
     connection_type: modbus-rtu
     connection_params:
       serial_port: /dev/ttyACM0          # autodetected at deploy

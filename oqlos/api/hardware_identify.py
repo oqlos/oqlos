@@ -30,7 +30,7 @@ def _hardware_health_overall_ok(payload: dict[str, Any]) -> bool:
     for key, entry in payload.items():
         if key in skip_keys or not isinstance(entry, dict):
             continue
-        if entry.get("status") == "disabled":
+        if entry.get("status") == "disabled" and entry.get("required") is not True:
             continue
         if entry.get("compatible") is not True:
             return False
@@ -167,4 +167,3 @@ async def hardware_identify(
         },
     }
     return enrich_identify_payload(payload)
-
