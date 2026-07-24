@@ -86,6 +86,25 @@ def test_parse_minimal_goal():
     assert [c.cmd for c in goal.cmds] == ["SET", "WAIT"]
 
 
+def test_set_timeout_remains_a_variable_while_set_wait_is_legacy_delay():
+    src = textwrap.dedent(
+        """
+        GOAL timing:
+          SET 'timeout' '20 s'
+          SET WAIT '500 ms'
+        """
+    )
+
+    doc = parse_oql(src)
+
+    assert not doc.errors
+    variable, delay = doc.blocks[0].cmds
+    assert variable.cmd == "SET"
+    assert variable.args == {"target": "timeout", "value": "20 s", "unit": None}
+    assert delay.cmd == "WAIT"
+    assert delay.args["ms"] == 500
+
+
 def test_inline_access_grants_are_accepted_by_execution_parser():
     src = textwrap.dedent(
         """

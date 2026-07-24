@@ -281,10 +281,21 @@ def _split_set_value_unit(tokens: list[str]) -> tuple[float | int | str, Optiona
         return " ".join(tokens), None
 
 
+# Legacy zapis opóźnienia. `SET WAIT '300 ms'` jest w corpusie żywy (m.in.
+# impulsy zaworów w smoke testach sprzętu), więc alias zostaje.
+#
+# `TIMEOUT` został z niego usunięty: corpus używa `timeout` jako zwykłej
+# zmiennej (`SET 'timeout' '20 s'` + `IF 'timer' > 'timeout'`), a alias zjadał
+# tę deklarację i wstawiał w jej miejsce pauzę 3–20 s. Ta sama zmiana jest
+# w oqlts (packages/oqlts/src/parser.ts, parseSET) — obie strony muszą
+# klasyfikować SET identycznie, inaczej parytet corpusu jest czerwony.
+_SET_DELAY_ALIASES = {"WAIT", "DELAY", "PAUSE"}
+
+
 def parse_SET(tokens: list[str], ln: int, raw: str) -> OqlCmd:
     _require(tokens, 2, "SET", ln, "target value [unit]")
     target = tokens[0]
-    if str(target or "").strip().upper() in {"WAIT", "DELAY", "PAUSE", "TIMEOUT"}:
+    if str(target or "").strip().upper() in _SET_DELAY_ALIASES:
         return parse_WAIT(tokens[1:], ln, raw)
     value, unit = _split_set_value_unit(tokens[1:])
     return OqlCmd("SET", {"target": target, "value": value, "unit": unit}, ln, raw)
