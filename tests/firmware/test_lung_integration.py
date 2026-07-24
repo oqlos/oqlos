@@ -22,6 +22,7 @@ from oqlos.core._dsl_helpers import (
 from oqlos.core.parser import parse_dsl_to_goal
 from oqlos.hardware.firmware_adapter import FirmwareAdapter, _PERIPHERAL_MAP
 from oqlos.hardware.gateway import HardwareGateway
+from oqlos.hardware.peripheral_mapping import resolve_target_to_plugin
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -30,7 +31,10 @@ from oqlos.hardware.gateway import HardwareGateway
 
 
 class TestLungDslHelpers:
-    @pytest.mark.parametrize("obj", ["lung", "płuco", "pluco", "respirator", "Lung motor"])
+    @pytest.mark.parametrize(
+        "obj",
+        ["lung", "lung-main", "płuco", "pluco", "respirator", "Lung motor", "sztuczne_pluco"],
+    )
     def test_looks_like_lung_object(self, obj):
         assert _looks_like_lung_object(obj) is True
 
@@ -43,6 +47,14 @@ class TestLungDslHelpers:
         assert _map_peripheral("płuco") == "lung-main"
         assert _map_peripheral("pluco") == "lung-main"
         assert _map_peripheral("respirator") == "lung-main"
+        assert _map_peripheral("sztuczne_pluco") == "lung-main"
+
+    @pytest.mark.parametrize(
+        "target",
+        ["lung-main", "lung", "płuco", "pluco", "sztuczne_pluco", "sztuczne pluco"],
+    )
+    def test_lung_targets_use_tic249_plugin(self, target):
+        assert resolve_target_to_plugin(target) == "motor-tic249"
 
     def test_map_lung_action_start(self):
         action, value, _, _ = _map_lung_action("włącz", "lung 10", "włącz lung 10")

@@ -13,7 +13,10 @@ _OPEN_ACTIONS = {'włącz', 'wlacz', 'on', 'open', 'otwórz', 'otworz', 'start'}
 _CLOSE_ACTIONS = {'wyłącz', 'wylacz', 'off', 'close', 'zamknij', 'stop'}
 _WAIT_ACTIONS = {'czekaj', 'wait', 'delay', 'pauza', 'pause', 'timeout'}
 _PUMP_OBJECT_RE = re.compile(r'\b(pump|pompa|sprężarka|sprezarka|compressor)\b', re.IGNORECASE)
-_LUNG_OBJECT_RE = re.compile(r'\b(lung|płuco|pluco|respirator)\b', re.IGNORECASE)
+_LUNG_OBJECT_RE = re.compile(
+    r'\b(lung(?:-main)?|płuco|pluco|respirator|sztuczne[_ -]?(?:płuco|pluco))\b',
+    re.IGNORECASE,
+)
 _SENSOR_OBJECT_RE = re.compile(r'\b(czujnik|sensor)\b', re.IGNORECASE)
 _DOUBLE_QUOTED_LITERAL_RE = re.compile(r'"([^"\r\n]*)"')
 

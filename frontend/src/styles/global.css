@@ -1477,6 +1477,41 @@ html[data-iframe-child="1"] #root {
   overflow: auto;
 }
 
+/*
+ * Embedded hardware pages must always keep their sidebar and dashboard in one
+ * row. Responsive standalone rules stack .mapx-shell on narrower viewports;
+ * inside the Connect iframe that puts the dashboard directly below a
+ * viewport-tall sidebar, while the iframe root deliberately clips overflow.
+ */
+:root[data-iframe-child="1"] .mapx-shell {
+  flex-direction: row;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+:root[data-iframe-child="1"] .sidebar-list-panel {
+  height: 100%;
+  min-height: 0;
+}
+
+:root[data-iframe-child="1"] .mapx-main-dashboard {
+  height: 100%;
+  min-height: 0;
+  overflow: auto;
+}
+
+/*
+ * HardwareCoilTest renders SharedNav and a long main page directly in #root,
+ * outside the mapx shell. The embedded root normally clips overflow, so make
+ * that route's root the vertical scroll owner.
+ */
+:root[data-iframe-child="1"] #root:has(.coil-test-page) {
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+
 .mapx-page {
   max-width: var(--viewport-size);
 }
@@ -3231,4 +3266,3 @@ html[data-iframe-child="1"] #root {
   color: var(--accent-amber) !important;
   border-color: var(--accent-amber) !important;
 }
-

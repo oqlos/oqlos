@@ -67,6 +67,9 @@ _PERIPHERAL_TO_PLUGIN_MAP = {
     "lung-main": "motor-tic249",
     "płuco": "motor-tic249",
     "pluco": "motor-tic249",
+    "sztuczne_pluco": "motor-tic249",
+    "sztuczne pluco": "motor-tic249",
+    "sztuczne płuco": "motor-tic249",
 
     # Sensor targets
     "nc-sensor": "modbus-adc",

@@ -87,6 +87,9 @@ _PERIPHERAL_MAP["lung"] = "lung-main"
 _PERIPHERAL_MAP["lung-main"] = "lung-main"
 _PERIPHERAL_MAP["płuco"] = "lung-main"
 _PERIPHERAL_MAP["pluco"] = "lung-main"
+_PERIPHERAL_MAP["sztuczne_pluco"] = "lung-main"
+_PERIPHERAL_MAP["sztuczne pluco"] = "lung-main"
+_PERIPHERAL_MAP["sztuczne płuco"] = "lung-main"
 
 # CQL sensor names (AI01, AI02, etc.) → firmware peripheral IDs
 _SENSOR_MAP = {

@@ -27,6 +27,27 @@ _HEALTH_KEYS_BY_ADAPTER = {
     "modbus-io": ("modbus-io", "modbus"),
 }
 
+# Adaptery, które mogą obsłużyć wejścia analogowe. `resolve_required_adapter`
+# zwraca stałą `modbus-adc`, bo nie zna aliasów OQL, ale ten moduł jest w
+# deploymencie .122 celowo wyłączony i zastąpiony przez usb-adc-stack
+# (MCP2221A + DFR1184). Bez tego preflight blokował wykonanie na peryferium,
+# którego nikt już nie używa, mimo sprawnego odczytu czujników.
+_ANALOG_INPUT_ADAPTERS = ("modbus-adc", "piadc")
+
+
+def _analog_input_role(platform: dict | None) -> str:
+    if not isinstance(platform, dict):
+        return ""
+    return str(platform.get("analog_input_driver_role") or "").strip()
+
+
+def analog_input_available(required_adapter: str | None, health: dict | None) -> bool:
+    """Czy wejścia analogowe obsługuje inny, sprawny sterownik niż żądany."""
+    if required_adapter not in _ANALOG_INPUT_ADAPTERS:
+        return False
+    role = _analog_input_role((health or {}).get("platform"))
+    return bool(role) and role != required_adapter and role != "disabled"
+
 
 def ensure_firmware_running(firmware_url: str, *, quiet: bool, yaml_output: bool = False) -> bool:
     """Attempt to start firmware service if it's not available."""
@@ -130,7 +151,8 @@ def check_required_adapter(
     command: str,
     adapters: list[dict],
     yaml_output: bool,
-    quiet: bool
+    quiet: bool,
+    health: dict | None = None,
 ) -> tuple[bool, str | None, str | None]:
     """
     Check if the required adapter for a command is available.
@@ -139,6 +161,15 @@ def check_required_adapter(
     required_adapter, target = resolve_required_adapter(command)
     if not required_adapter:
         return True, None, None
+
+    if analog_input_available(required_adapter, health):
+        role = _analog_input_role((health or {}).get("platform"))
+        if not quiet and not yaml_output:
+            click.echo(
+                f"[OK] Wejścia analogowe obsługuje {role!r} zamiast {required_adapter!r}",
+                err=True,
+            )
+        return True, required_adapter, "ok"
 
     adapter_status = None
     if not isinstance(adapters, list):
@@ -291,12 +322,14 @@ def preflight_hardware(
     # Check if required adapter is available
     adapters = identify.get("adapters", [])
     adapter_ok, required_adapter, adapter_status = check_required_adapter(
-        command, adapters, yaml_output, quiet
+        command, adapters, yaml_output, quiet, health=health
     )
     if not adapter_ok:
         return False
 
-    if not check_required_adapter_health(required_adapter, health, yaml_output, quiet):
+    if not analog_input_available(required_adapter, health) and not check_required_adapter_health(
+        required_adapter, health, yaml_output, quiet
+    ):
         return False
 
     # Emit success output

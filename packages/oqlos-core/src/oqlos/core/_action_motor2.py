@@ -49,6 +49,23 @@ def _parse_motor2_speed_steps(value: str) -> int | None:
     return _parse_motor2_positive_int(normalized)
 
 
+def _parse_motor2_relative_move(value: str) -> dict[str, int] | None:
+    """Parse an explicit distance and speed without conflating both values."""
+    normalized = re.sub(r"\s+", " ", str(value or "").strip().lower())
+    match = re.fullmatch(
+        r"(?:move|ruch)\s+(\d+)\s+(?:steps|krok(?:i|ów|ow)?)\s+"
+        r"(?:at|z\s+prędkością|z\s+predkoscia)\s+(\d+)\s+"
+        r"(?:steps|krok(?:i|ów|ow)?)/s",
+        normalized,
+    )
+    if not match:
+        return None
+    return {
+        "steps": max(1, int(match.group(1))),
+        "speed": max(1, int(match.group(2))),
+    }
+
+
 def _parse_motor2_positive_int(value: str) -> int | None:
     normalized = str(value or "").strip().lower()
     match = re.search(r"([-+]?\d+(?:\.\d+)?)", normalized)
@@ -432,6 +449,41 @@ def _try_exec_motor2_set(interp: "CqlInterpreter", target_lower: str, value: str
     reciprocating_setting = _parse_motor2_reciprocating_setting(value)
     if reciprocating_setting is not None:
         return _handle_motor2_reciprocating_setting(interp, reciprocating_setting)
+
+    relative_move = _parse_motor2_relative_move(value)
+    if relative_move is not None:
+        direction = str(interp.vars.get("__motor2_direction") or "right")
+        acceleration_percent = interp.vars.get("__motor2_acceleration_percent")
+        try:
+            acceleration_percent = int(acceleration_percent) if acceleration_percent is not None else None
+        except (TypeError, ValueError):
+            acceleration_percent = None
+        requested_speed = int(relative_move["speed"])
+        effective_speed = _motor2_effective_steps_per_second(requested_speed)
+        if interp.mode == "execute":
+            try:
+                _call_motor2_transport(
+                    "_post_motor2_move_relative",
+                    _post_motor2_move_relative,
+                    direction,
+                    int(relative_move["steps"]),
+                    _motor2_speed_raw(effective_speed),
+                    _motor2_acceleration_raw(effective_speed, acceleration_percent),
+                )
+            except Exception as exc:
+                interp.out.error(f"MOTOR2 {direction.upper()} failed: {exc}")
+                return StepStatus.ERROR
+        speed_label = (
+            f"{requested_speed}/s → {effective_speed}/s clamped"
+            if requested_speed != effective_speed
+            else f"{effective_speed}/s"
+        )
+        suffix = " ✓" if interp.mode == "execute" else " (simulated)"
+        interp.out.step(
+            "    →",
+            f"MOTOR2 {direction.upper()} {relative_move['steps']} steps @ {speed_label}{suffix}",
+        )
+        return StepStatus.PASSED
 
     direction = _parse_motor2_direction(value)
     if direction:

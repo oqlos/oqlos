@@ -420,6 +420,38 @@ GOAL:
         ]
         assert stop_calls == [True]
 
+    def test_motor2_explicit_relative_move_keeps_steps_and_speed_separate(self, monkeypatch):
+        calls: list[dict[str, object]] = []
+
+        def fake_move_relative(direction, steps, speed_raw, acceleration_raw):
+            calls.append(
+                {
+                    "direction": direction,
+                    "steps": steps,
+                    "speed_raw": speed_raw,
+                    "acceleration_raw": acceleration_raw,
+                }
+            )
+
+        monkeypatch.setattr(interpreter_actions, "_post_motor2_move_relative", fake_move_relative)
+
+        src = """VERSION: 5
+GOAL:
+  SET NAME 'Short motor jog'
+  SET 'motor2' 'direction left'
+  SET 'motor2' 'move 240 steps at 80 steps/s'
+"""
+
+        result = CqlInterpreter(mode="execute", quiet=True).run(src)
+
+        assert result.ok is True
+        assert calls == [{
+            "direction": "left",
+            "steps": 240,
+            "speed_raw": 800_000,
+            "acceleration_raw": None,
+        }]
+
     def test_motor2_runtime_config_builds_volume_duration_plan(self):
         cfg = normalize_motor2_runtime_config(
             {
