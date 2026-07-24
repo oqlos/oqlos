@@ -16,7 +16,8 @@ PYTHON ?= python
 .DEFAULT_GOAL := help
 
 .PHONY: help install-dev test test-hw smoke checksums verify-rpi sync-rpi restart \
-        redeploy deploy 122 pi-hw serve panel-url
+        redeploy deploy 122 pi-hw serve panel-url \
+        predeploy-mock mock-up mock-down mock-build-ui
 
 install-dev: ## Editable install: oqlos-models + oqlos-core + oqlos (monorepo)
 	pip install -e packages/oqlos-models -e packages/oqlos-core -e .
@@ -87,3 +88,23 @@ serve: ## Uruchom serwer OqlOS lokalnie na :$(PORT) (panel pod /panel)
 
 panel-url: ## Wypisz URL panelu sprzętowego
 	@echo "http://localhost:$(PORT)/panel"
+
+predeploy-mock: ## Fast pre-deploy mock UI+CLI checks (:8202, no RS485)
+	@bash scripts/predeploy-mock-smoke.sh
+
+mock-up: ## Start user unit oqlos-mock + MQTT (loopback OQL)
+	@mkdir -p /tmp/oql-stack
+	@docker compose -f docker/docker-compose.dev.yml up -d mqtt >/tmp/oql-stack/mqtt-up.log 2>&1 || true
+	@systemctl --user start oqlos-mock.service
+	@for i in 1 2 3 4 5 6 7 8 9 10; do curl -sf --max-time 1 http://127.0.0.1:$(PORT)/health >/dev/null && break; sleep 0.3; done
+	@curl -sf --max-time 2 http://127.0.0.1:$(PORT)/health; echo
+	@echo "UI http://127.0.0.1:$(PORT)/ui/status  CLI: oql health | oql shell"
+
+mock-down: ## Stop oqlos-mock user unit
+	@systemctl --user stop oqlos-mock.service 2>/dev/null || true
+	@echo "oqlos-mock stopped"
+
+mock-build-ui: ## Rebuild SPA (frontend/dist) and restart local mock if running
+	@cd frontend && npm run build
+	@systemctl --user try-restart oqlos-mock.service 2>/dev/null || true
+	@echo "SPA ready → http://127.0.0.1:$(PORT)/ui/hardware-coils"
