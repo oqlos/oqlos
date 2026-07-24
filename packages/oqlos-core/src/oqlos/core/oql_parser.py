@@ -761,6 +761,10 @@ _TESTQL_COMMANDS: tuple[str, ...] = (
     # scenario using RUN_URI parsed in oqlts and failed here with
     # "nieznana komenda".
     "RUN_URI", "HUI_POLL_URI",
+    # Declarative report projection. The browser runtime validates the safe
+    # table/key allow-list and persists the immutable protocol JSON artifact;
+    # OqlOS preserves the commands so the same file has parser parity.
+    "REPORT_TEMPLATE", "REPORT_SOURCE",
 )
 
 

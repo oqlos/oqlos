@@ -71,6 +71,28 @@ export function formatHardwareApiError(err, fallback = "Hardware API request fai
   if (!err) {
     return fallback;
   }
+  if (err.errorCode || err.correlationId || err.hint || err.component) {
+    const message = String(err.message || fallback);
+    const firstLine = err.errorCode && !message.includes(err.errorCode)
+      ? `${err.errorCode} · ${message}`
+      : message;
+    const context = [
+      err.component ? `komponent: ${err.component}` : "",
+      err.stage ? `etap: ${err.stage}` : "",
+      err.runId ? `run: ${err.runId}` : "",
+      err.correlationId ? `korelacja: ${err.correlationId}` : "",
+    ].filter(Boolean).join(" · ");
+    const causes = [
+      ...(Array.isArray(err.failureCodes) ? err.failureCodes : []),
+      ...(Array.isArray(err.issues) ? err.issues : []),
+    ];
+    return [
+      firstLine,
+      context,
+      causes.length ? `przyczyny: ${causes.join("; ")}` : "",
+      err.hint ? `zalecenie: ${err.hint}` : "",
+    ].filter(Boolean).join("\n");
+  }
   const payload = extractErrorPayload(err);
   const oqlError = parseOqlError(payload);
   if (oqlError) {

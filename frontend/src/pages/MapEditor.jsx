@@ -358,22 +358,19 @@ export default function MapEditor() {
       }
 
       let response;
-      if (activeTab === "json" && (persona === "system" || persona === "administrator")) {
-        response = await HardwareApi.replaceMapping({
-          mapping: mappingPayload,
-          persist: true,
-          persona,
-        });
-      } else if (changedKeys.length === 0) {
+      if (changedKeys.length === 0) {
         response = { mapping: mappingPayload };
       } else {
-        // Prefer layer PATCH for role-scoped OQL config edits.
-        response = await HardwareApi.patchMappingLayer(persona, {
+        const processPayload = {
           sections: changed,
           persist: true,
-          persona,
-          role,
-        });
+        };
+        // The editor emits the events declared by
+        // layers/system/hardware-map-processes.oql. The Connect host resolves
+        // them to Process URI using its authenticated session; standalone
+        // OqlOS uses the same role-scoped process endpoints.
+        await HardwareApi.validateMappingProcess({ sections: changed });
+        response = await HardwareApi.updateMappingProcess(processPayload);
       }
       const savedMap = ensureRequiredDefaultMappings(ensureMapShape(response?.mapping || mappingPayload));
       const pretty = toPrettyJson(savedMap);
@@ -387,7 +384,7 @@ export default function MapEditor() {
       setSaveError(formatHardwareApiError(err, t("mapEditor.saveError")));
       setSaveState("error");
     }
-  }, [isReadOnly, canMutateMap, jsonError, jsonText, originalJson, activeTab, oqlPersona, role, t]);
+  }, [isReadOnly, canMutateMap, jsonError, jsonText, originalJson, oqlPersona, t]);
 
   const restoreDefaultMap = useCallback(async () => {
     if (isReadOnly || !canEditOqlMapTab?.("json")) return;
@@ -396,10 +393,9 @@ export default function MapEditor() {
     setSaveError("");
     try {
       const seeded = ensureRequiredDefaultMappings(cloneDefaultMap());
-      const response = await HardwareApi.replaceMapping({
-        mapping: seeded,
+      const response = await HardwareApi.updateMappingProcess({
+        sections: seeded,
         persist: true,
-        persona: "system",
       });
       const restored = ensureRequiredDefaultMappings(ensureMapShape(response?.mapping || seeded));
       const pretty = toPrettyJson(restored);
@@ -422,7 +418,8 @@ export default function MapEditor() {
       const shouldSeedBackend = isMapEmpty(parsed);
       const shaped = ensureRequiredDefaultMappings(shouldSeedBackend ? cloneDefaultMap() : parsed);
       if (shouldSeedBackend && !isReadOnly) {
-        await HardwareApi.replaceMapping({ mapping: shaped, persist: true });
+        await HardwareApi.validateMappingProcess({ sections: shaped });
+        await HardwareApi.updateMappingProcess({ sections: shaped, persist: true });
       }
       const pretty = toPrettyJson(shaped);
       setMapData(shaped);

@@ -16,6 +16,7 @@ import {
   OQL_MAP_ACCESS_HEADERS,
   personaFromConnectRole,
 } from "../utils/oql-map-access.policy.js";
+import { requestParentOqlEvent } from "../utils/parentOqlEventBridge.js";
 
 export { extractDiagnosticFailure } from "./hardware-diagnostic-failure.js";
 export { formatHardwareApiError, parseOqlError } from "./hardware-api-errors.js";
@@ -293,6 +294,24 @@ export const HardwareApi = {
       method: "PATCH",
       body: payload ?? {},
     });
+  },
+
+  async validateMappingProcess(payload) {
+    const bridged = await requestParentOqlEvent(
+      "system.hardware-map.validate.requested",
+      payload ?? {},
+    );
+    if (bridged !== null) return bridged;
+    return post(CONNECT_HARDWARE_PATHS.mappingProcessValidate, payload ?? {});
+  },
+
+  async updateMappingProcess(payload) {
+    const bridged = await requestParentOqlEvent(
+      "system.hardware-map.update.requested",
+      payload ?? {},
+    );
+    if (bridged !== null) return bridged;
+    return post(CONNECT_HARDWARE_PATHS.mappingProcessUpdate, payload ?? {});
   },
 
   async importMapping(payload) {

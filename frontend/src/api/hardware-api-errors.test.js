@@ -72,6 +72,26 @@ test("formatHardwareApiError falls back to err.message when nothing else matches
   assert.equal(formatHardwareApiError(err), "network down");
 });
 
+test("formatHardwareApiError includes structured OQL process diagnostics", () => {
+  const err = new Error("Required hardware unavailable: modbus-io");
+  err.errorCode = "C2004-HW-0012";
+  err.statusCode = 503;
+  err.correlationId = "corr-map-1";
+  err.runId = "run-map-1";
+  err.stage = "adapter.execute";
+  err.component = "modbus-io";
+  err.failureCodes = ["modbus-io_not_found"];
+  err.hint = "Sprawdź zasilanie oraz przewody A/B/GND.";
+
+  const output = formatHardwareApiError(err);
+
+  assert.match(output, /C2004-HW-0012/);
+  assert.match(output, /komponent: modbus-io/);
+  assert.match(output, /korelacja: corr-map-1/);
+  assert.match(output, /przyczyny: modbus-io_not_found/);
+  assert.match(output, /zalecenie: Sprawdź zasilanie/);
+});
+
 test("describeDetail still works standalone for plain strings and objects", () => {
   assert.equal(describeDetail("plain"), "plain");
   assert.equal(describeDetail({ message: "boom" }), "boom");
