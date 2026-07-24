@@ -42,6 +42,14 @@ import { MapEditorMotorRuntimePanel } from "./MapEditorMotorRuntimePanel.jsx";
 import { MapEditorObjectActionPanel } from "./MapEditorObjectActionPanel.jsx";
 import { MapEditorParamConversionPanel } from "./MapEditorParamConversionPanel.jsx";
 import { normalizeParamConversionPatch } from "../utils/mapEditorParamConversion.js";
+import { MapEditorOqlCanonicalBanner } from "../components/MapEditorOqlCanonicalBanner.jsx";
+import {
+  OQL_CANONICAL_MOTOR2,
+  canMutateMapEditorTab,
+  canonicalInfoForTab,
+  filterForbiddenCanonicalSections,
+  isMapEditorLegacyEditEnabled,
+} from "../utils/mapEditorOqlCanonical.js";
 
 function _parseFieldValue(value, type) {
   if (type === "number") {
@@ -104,10 +112,14 @@ export default function MapEditor() {
   const [eventsStorePath, setEventsStorePath] = useState("");
   const canClearServerEvents = isOperator;
   const canClearPersistentEvents = isAdmin;
-  const tabEditable = typeof canEditOqlMapTab === "function"
+  const tabEditableBase = typeof canEditOqlMapTab === "function"
     ? canEditOqlMapTab(activeTab)
     : !isReadOnly;
+  // Slice 3: OQL-canonical tabs are read-only unless ?legacy_edit=1 + system/admin
+  const tabEditable = canMutateMapEditorTab(activeTab, role || oqlPersona, tabEditableBase);
   const canMutateMap = !isReadOnly && tabEditable;
+  const canonicalInfo = canonicalInfoForTab(activeTab);
+  const legacyUnlocked = isMapEditorLegacyEditEnabled() && tabEditable;
 
   const isDirty = jsonText !== originalJson && !jsonError;
 
@@ -132,6 +144,13 @@ export default function MapEditor() {
     if (!requiredSection && activeTab !== "json" && canEditOqlMapTab && !canEditOqlMapTab(activeTab)) {
       return;
     }
+    // Slice 3: block OQL-canonical sections unless legacy_edit=1
+    if (requiredSection && filterForbiddenCanonicalSections([requiredSection], role || oqlPersona).length) {
+      return;
+    }
+    if (!requiredSection && activeTab !== "json" && !canMutateMapEditorTab(activeTab, role || oqlPersona, true)) {
+      return;
+    }
     setMapData((prev) => {
       const next = ensureMapShape(structuredClone(prev));
       mutator(next);
@@ -140,7 +159,7 @@ export default function MapEditor() {
       setJsonError("");
       return next;
     });
-  }, [isReadOnly, activeTab, canEditOqlMapTab, canEditOqlMapSection]);
+  }, [isReadOnly, activeTab, canEditOqlMapTab, canEditOqlMapSection, role, oqlPersona]);
 
   const addObject = useCallback(() => {
     const name = prompt(t("mapEditor.prompts.objectName"));
@@ -308,6 +327,10 @@ export default function MapEditor() {
   }, [applyMapMutation, mapData]);
 
   const editMotorRuntimeConfig = useCallback((field, type = "number") => {
+    // Slice 3 / 2d: motor2 defaults live in OQL motor2-runtime.oql
+    if (!isMapEditorLegacyEditEnabled()) return;
+    const persona = oqlPersona || role || "operator";
+    if (filterForbiddenCanonicalSections(["runtimeConfig"], persona).length) return;
     const current = mapData.runtimeConfig?.motor2?.[field];
     const value = prompt(`motor2.${field}:`, current ?? "");
     if (value === null) return;
@@ -347,13 +370,17 @@ export default function MapEditor() {
       );
       const changed = diffChangedMapSections(originalMap, mappingPayload);
       const changedKeys = Object.keys(changed);
-      const persona = oqlPersona || "operator";
+      const persona = oqlPersona || role || "operator";
       const writable = new Set(writableBy(persona));
-      const forbidden = changedKeys.filter((k) => !writable.has(k));
+      const roleForbidden = changedKeys.filter((k) => !writable.has(k));
+      const oqlForbidden = filterForbiddenCanonicalSections(changedKeys, persona);
+      const forbidden = [...new Set([...roleForbidden, ...oqlForbidden])];
       if (forbidden.length) {
         throw new Error(
-          t("mapEditor.saveForbiddenSections", `Cannot save sections: ${forbidden.join(", ")}`)
-            .replace("{sections}", forbidden.join(", ")),
+          t(
+            "mapEditor.saveForbiddenSections",
+            `Cannot save sections: ${forbidden.join(", ")} (OQL-canonical or role-locked)`,
+          ).replace("{sections}", forbidden.join(", ")),
         );
       }
 
@@ -826,6 +853,23 @@ export default function MapEditor() {
           {saveError && <div className="mapx-error">{saveError}</div>}
 
           <main className="mapx-main mapx-main--editor mapx-main-panel">
+            {canonicalInfo && (
+              <MapEditorOqlCanonicalBanner
+                t={t}
+                info={canonicalInfo}
+                legacyUnlocked={legacyUnlocked}
+              />
+            )}
+            {activeTab === "json" && (
+              <MapEditorOqlCanonicalBanner
+                t={t}
+                info={{
+                  fileId: "layers/system/map-func-catalog",
+                  slice: "3",
+                }}
+                legacyUnlocked={isMapEditorLegacyEditEnabled()}
+              />
+            )}
             {activeTab === "json" && (
               <div className="mapx-json-wrap">
                 <div className="mapx-section-head">
@@ -860,7 +904,7 @@ export default function MapEditor() {
               <>
                 <div className="mapx-section-head">
                   <span>{t(`mapEditor.${SECTION_DESC_KEY[activeTab]}`)}</span>
-                  <button type="button" className="mapx-btn" onClick={runAddForTab} disabled={isReadOnly}>
+                  <button type="button" className="mapx-btn" onClick={runAddForTab} disabled={!canMutateMap}>
                     + {t("mapEditor.add")}
                   </button>
                 </div>
@@ -875,13 +919,13 @@ export default function MapEditor() {
                     <div className="mapx-card-head">
                       <strong>{selectedEntryKey}</strong>
                       <span>
-                        <button type="button" className="mapx-btn" onClick={() => renameKey("objectActionMap", selectedEntryKey)} disabled={isReadOnly}>✎</button>
-                        <button type="button" className="mapx-btn" onClick={() => deleteKey("objectActionMap", selectedEntryKey)} disabled={isReadOnly}>🗑</button>
+                        <button type="button" className="mapx-btn" onClick={() => renameKey("objectActionMap", selectedEntryKey)} disabled={!canMutateMap}>✎</button>
+                        <button type="button" className="mapx-btn" onClick={() => deleteKey("objectActionMap", selectedEntryKey)} disabled={!canMutateMap}>🗑</button>
                       </span>
                     </div>
                     <MapEditorObjectActionPanel
                       objectCfg={detailCfg}
-                      isReadOnly={isReadOnly}
+                      isReadOnly={!canMutateMap}
                       onEditArg={(actionName, argName, type) =>
                         editObjectActionArg(selectedEntryKey, actionName, argName, type)
                       }
@@ -890,19 +934,26 @@ export default function MapEditor() {
                       }
                     />
                     {selectedEntryKey === "motor2" && (
-                      <MapEditorMotorRuntimePanel
-                        motorConfig={mapData.runtimeConfig?.motor2}
-                        isReadOnly={isReadOnly}
-                        onEditField={editMotorRuntimeConfig}
-                        t={t}
-                      />
+                      <>
+                        <MapEditorOqlCanonicalBanner
+                          t={t}
+                          info={OQL_CANONICAL_MOTOR2}
+                          legacyUnlocked={isMapEditorLegacyEditEnabled()}
+                        />
+                        <MapEditorMotorRuntimePanel
+                          motorConfig={mapData.runtimeConfig?.motor2}
+                          isReadOnly={isReadOnly || !isMapEditorLegacyEditEnabled()}
+                          onEditField={editMotorRuntimeConfig}
+                          t={t}
+                        />
+                      </>
                     )}
                     <pre>{JSON.stringify(detailCfg, null, 2)}</pre>
                     <MapEditorIntegrationMetaPanel
                       detailCfg={detailCfg}
                       integrationMeta={integrationMeta}
                       onEditField={updateIntegrationMeta}
-                      isReadOnly={isReadOnly}
+                      isReadOnly={isReadOnly || !canMutateMap}
                       t={t}
                     />
                   </div>
@@ -911,9 +962,9 @@ export default function MapEditor() {
                     <div className="mapx-card-head">
                       <strong>{selectedEntryKey}</strong>
                       <span>
-                        <button type="button" className="mapx-btn" onClick={() => editJsonField("paramSensorMap", selectedEntryKey, "sensor")} disabled={isReadOnly}>sensor</button>
-                        <button type="button" className="mapx-btn" onClick={() => renameKey("paramSensorMap", selectedEntryKey)} disabled={isReadOnly}>✎</button>
-                        <button type="button" className="mapx-btn" onClick={() => deleteKey("paramSensorMap", selectedEntryKey)} disabled={isReadOnly}>🗑</button>
+                        <button type="button" className="mapx-btn" onClick={() => editJsonField("paramSensorMap", selectedEntryKey, "sensor")} disabled={!canMutateMap}>sensor</button>
+                        <button type="button" className="mapx-btn" onClick={() => renameKey("paramSensorMap", selectedEntryKey)} disabled={!canMutateMap}>✎</button>
+                        <button type="button" className="mapx-btn" onClick={() => deleteKey("paramSensorMap", selectedEntryKey)} disabled={!canMutateMap}>🗑</button>
                       </span>
                     </div>
                     <pre>{JSON.stringify(detailCfg, null, 2)}</pre>
@@ -935,9 +986,9 @@ export default function MapEditor() {
                     <div className="mapx-card-head">
                       <strong>{selectedEntryKey}</strong>
                       <span>
-                        <button type="button" className="mapx-btn" onClick={() => editJsonField("actions", selectedEntryKey, "url")} disabled={isReadOnly}>url</button>
-                        <button type="button" className="mapx-btn" onClick={() => renameKey("actions", selectedEntryKey)} disabled={isReadOnly}>✎</button>
-                        <button type="button" className="mapx-btn" onClick={() => deleteKey("actions", selectedEntryKey)} disabled={isReadOnly}>🗑</button>
+                        <button type="button" className="mapx-btn" onClick={() => editJsonField("actions", selectedEntryKey, "url")} disabled={!canMutateMap}>url</button>
+                        <button type="button" className="mapx-btn" onClick={() => renameKey("actions", selectedEntryKey)} disabled={!canMutateMap}>✎</button>
+                        <button type="button" className="mapx-btn" onClick={() => deleteKey("actions", selectedEntryKey)} disabled={!canMutateMap}>🗑</button>
                       </span>
                     </div>
                     <pre>{JSON.stringify(detailCfg, null, 2)}</pre>
@@ -952,7 +1003,7 @@ export default function MapEditor() {
                               type="button"
                               className="mapx-btn"
                               onClick={() => editActionBodyField(selectedEntryKey, "valves_on", "list")}
-                              disabled={isReadOnly}
+                              disabled={!canMutateMap}
                             >
                               {t("mapEditor.editMeta")}
                             </button>
@@ -964,7 +1015,7 @@ export default function MapEditor() {
                               type="button"
                               className="mapx-btn"
                               onClick={() => editActionBodyField(selectedEntryKey, "pump_pct", "number")}
-                              disabled={isReadOnly}
+                              disabled={!canMutateMap}
                             >
                               {t("mapEditor.editMeta")}
                             </button>
@@ -995,7 +1046,7 @@ export default function MapEditor() {
                                 type="button"
                                 className="mapx-btn"
                                 onClick={() => editActionBodyField(selectedEntryKey, field, type)}
-                                disabled={isReadOnly}
+                                disabled={!canMutateMap}
                               >
                                 {t("mapEditor.editMeta")}
                               </button>
@@ -1021,7 +1072,7 @@ export default function MapEditor() {
                                 type="button"
                                 className="mapx-btn"
                                 onClick={() => editActionBodyField(selectedEntryKey, field, type)}
-                                disabled={isReadOnly}
+                                disabled={!canMutateMap}
                               >
                                 {t("mapEditor.editMeta")}
                               </button>
@@ -1043,8 +1094,8 @@ export default function MapEditor() {
                     <div className="mapx-card-head">
                       <strong>{selectedEntryKey}</strong>
                       <span>
-                        <button type="button" className="mapx-btn" onClick={() => renameKey("funcImplementations", selectedEntryKey)} disabled={isReadOnly}>✎</button>
-                        <button type="button" className="mapx-btn" onClick={() => deleteKey("funcImplementations", selectedEntryKey)} disabled={isReadOnly}>🗑</button>
+                        <button type="button" className="mapx-btn" onClick={() => renameKey("funcImplementations", selectedEntryKey)} disabled={!canMutateMap}>✎</button>
+                        <button type="button" className="mapx-btn" onClick={() => deleteKey("funcImplementations", selectedEntryKey)} disabled={!canMutateMap}>🗑</button>
                       </span>
                     </div>
                     <pre>{JSON.stringify(detailCfg, null, 2)}</pre>

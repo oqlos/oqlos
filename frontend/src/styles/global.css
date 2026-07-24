@@ -3266,6 +3266,50 @@ html[data-iframe-child="1"] #root {
   color: var(--accent-amber) !important;
   border-color: var(--accent-amber) !important;
 }
+/* MAP → OQL slice 3: map-editor canonical banner */
+.mapx-oql-canonical-banner {
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--accent-amber, #f59e0b) 55%, var(--border, #333));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent-amber, #f59e0b) 12%, var(--bg-card, #1a1a1a));
+  display: grid;
+  gap: 8px;
+}
+.mapx-oql-canonical-banner__title {
+  font-weight: 600;
+  color: var(--text-primary, #eee);
+}
+.mapx-oql-canonical-banner__slice {
+  font-weight: 500;
+  color: var(--text-secondary, #aaa);
+  font-size: 0.9em;
+}
+.mapx-oql-canonical-banner__body,
+.mapx-oql-canonical-banner__hint,
+.mapx-oql-canonical-banner__warn {
+  margin: 0;
+  color: var(--text-secondary, #bbb);
+  font-size: var(--font-rem-sm, 0.9rem);
+}
+.mapx-oql-canonical-banner__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.mapx-oql-canonical-banner__link {
+  text-decoration: none;
+}
+.mapx-oql-canonical-banner__file {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.85em;
+  color: var(--text-muted, #999);
+}
+.mapx-oql-canonical-banner__warn {
+  color: var(--accent-amber, #f59e0b);
+}
+
 /* BoardNet one-coil-at-a-time wiring test */
 .coil-test-page { max-width: 1500px; margin: 0 auto; padding: 24px; display: grid; gap: 16px; }
 .coil-test-header, .coil-test-sequence-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
