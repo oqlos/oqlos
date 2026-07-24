@@ -115,7 +115,16 @@ class MappingStore:
     def get(self, *, refresh: bool = True) -> dict[str, Any]:
         if refresh:
             self._load_from_disk()
-        return deepcopy(self._mapping)
+        mapping = deepcopy(self._mapping)
+        # Slice 2d: OQL motor2-runtime.oql overlays MAP runtimeConfig.motor2
+        try:
+            from oqlos.hardware.motor2_runtime_oql import apply_oql_motor2_to_mapping
+
+            apply_oql_motor2_to_mapping(mapping)
+        except Exception:
+            # Never break mapping API if OQL layer is missing / unreadable
+            pass
+        return mapping
 
     def replace(self, mapping: dict[str, Any], *, persist: bool = True) -> dict[str, Any]:
         self._mapping = normalize_mapping(mapping)
