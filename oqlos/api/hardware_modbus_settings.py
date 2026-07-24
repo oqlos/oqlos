@@ -89,7 +89,9 @@ def _runtime_serial_ports() -> dict[str, Any]:
 def _default_active_profile(ports: dict[str, Any]) -> str:
     if ports.get("topology") == "shared-bus":
         return "shared-bus"
-    return "modbus-adc"
+    # Prefer IO on multi-adapter stands (valves/HUI). ADC-only was a misleading
+    # default that left the wizard on the wrong profile after first visit.
+    return "modbus-io"
 
 
 def _profile_default_serial_port(profile_id: str, ports: dict[str, Any], settings: Any) -> str:
@@ -147,6 +149,16 @@ def _merge_profile_config(profile_id: str, settings: Any, ports: dict[str, Any])
         default=_profile_default_baud(profile_id, settings),
     )
     serial_override = str(persisted.get("serial_port") or "").strip()
+    # Drop stale overrides that point at missing devices (e.g. unplugged FTDI
+    # by-id, or historical by-path that now maps to the motor CH340).
+    if serial_override:
+        try:
+            from pathlib import Path
+
+            if not Path(serial_override).exists():
+                serial_override = ""
+        except Exception:
+            pass
     serial_port = serial_override or _profile_default_serial_port(profile_id, ports, settings)
     parity = str(persisted.get("target_parity") or getattr(settings, "modbus_parity", "N")).upper()
     return {

@@ -49,7 +49,8 @@ async def hui_hold_start(key: str) -> dict[str, Any]:
 
 @router.post("/hui/hold/{key}/stop", summary="Stop a named HUI hold action and return hardware to a safe state")
 async def hui_hold_stop(key: str) -> dict[str, Any]:
-    return await stop_hui_hold(get_hardware_gateway(), key)
+    # Same fail-fast HTTP mapping as start (503 + C2004-HW-0012 when plugins down).
+    return await start_hui_action(stop_hui_hold, key)
 
 
 @router.post("/hui/valve/{key}", summary="Run a named HUI valve toggle (WC press/bleed)")

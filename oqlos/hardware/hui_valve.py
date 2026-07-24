@@ -52,6 +52,7 @@ def _spec_from_map_action(binding: Any) -> dict[str, Any] | None:
 
 
 def _mapped_hui_valve_specs() -> dict[str, dict[str, Any]]:
+    """Legacy MAP JSON/YAML actions (kind=hui-valve)."""
     try:
         from oqlos.api.hardware_mapping_store import mapping_store
 
@@ -69,9 +70,21 @@ def _mapped_hui_valve_specs() -> dict[str, dict[str, Any]]:
     return specs
 
 
+def _oql_hui_valve_specs() -> dict[str, dict[str, Any]]:
+    """OQL SET specs from layers/hardware/hui-profiles.oql (preferred)."""
+    try:
+        from oqlos.hardware.hui_profiles_oql import load_oql_hui_valve_specs
+
+        return load_oql_hui_valve_specs()
+    except Exception:
+        return {}
+
+
 def get_hui_valve_specs() -> dict[str, dict[str, Any]]:
+    # Migration order: code defaults < MAP YAML/JSON < OQL file (source of truth).
     specs = {key: dict(value) for key, value in HUI_VALVE_DEFAULTS.items()}
     specs.update(_mapped_hui_valve_specs())
+    specs.update(_oql_hui_valve_specs())
     return specs
 
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
-from fastapi import APIRouter, Body
+from fastapi import APIRouter, Body, Header, HTTPException
 
 from oqlos.api.hardware_gateway import snapshot_via_health
 from oqlos.api.hardware_modbus_waveshare import _build_waveshare_diagnose_report
@@ -25,6 +25,18 @@ from oqlos.config import get_settings
 
 _settings = get_settings()
 router = APIRouter(tags=["hardware-modbus"])
+_COIL_TEST_ROLES = {"system", "administrator", "admin"}
+
+
+def require_coil_test_role(role: str | None) -> str:
+    """Reject physical pulse requests outside the privileged TEST personas."""
+    normalized = str(role or "").strip().lower()
+    if normalized not in _COIL_TEST_ROLES:
+        raise HTTPException(
+            status_code=403,
+            detail="Coil pulse requires the system or administrator role",
+        )
+    return normalized
 
 
 @router.get("/modbus/settings")
@@ -57,6 +69,31 @@ async def hardware_modbus_channel_value_put(payload: dict[str, Any] = Body(defau
     from oqlos.api.hardware_modbus_channels import write_modbus_channel_value
 
     return await write_modbus_channel_value(payload)
+
+
+@router.get("/modbus/coil-test/plan")
+async def hardware_modbus_coil_test_plan_get() -> dict[str, Any]:
+    from oqlos.api.hardware_modbus_coil_test import build_coil_test_plan
+
+    return await build_coil_test_plan()
+
+
+@router.post("/modbus/coil-test/pulse")
+async def hardware_modbus_coil_test_pulse_post(
+    payload: dict[str, Any] = Body(default_factory=dict),
+    x_connect_role: str | None = Header(default=None, alias="X-Connect-Role"),
+) -> dict[str, Any]:
+    from oqlos.api.hardware_modbus_coil_test import pulse_coil
+
+    require_coil_test_role(x_connect_role)
+    return await pulse_coil(payload)
+
+
+@router.post("/modbus/coil-test/stop")
+async def hardware_modbus_coil_test_stop_post() -> dict[str, Any]:
+    from oqlos.api.hardware_modbus_coil_test import stop_all_coils
+
+    return await stop_all_coils()
 
 
 @router.get("/modbus/wizard/plan")

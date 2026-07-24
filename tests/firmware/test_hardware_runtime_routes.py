@@ -113,3 +113,56 @@ def test_read_sensor_values_prefers_usb_adc_stack_over_unavailable_modbus(monkey
     assert sensors["ai01"]["value"] == 0.1
     assert sensors["ai03"]["unit"] == "V"
     assert sensors["ai03"]["source"] == "usb-adc-stack"
+
+
+def test_read_sensor_values_preserves_partial_usb_batch(monkeypatch):
+    async def _usb_values(_sensor_ids):
+        return {
+            "ai02": {
+                "sensor_id": "ai02",
+                "value": 2.4,
+                "unit": "V",
+                "source": "usb-adc-stack",
+                "ok": True,
+            },
+            "ai03": {
+                "sensor_id": "ai03",
+                "value": 7.1,
+                "unit": "V",
+                "source": "usb-adc-stack",
+                "ok": True,
+            },
+        }
+
+    monkeypatch.setattr(runtime, "read_usb_adc_sensor_values", _usb_values)
+    sensors = asyncio.run(
+        runtime.read_sensor_values(
+            ["ai01", "ai02", "ai03"],
+            health={"mode": "real", "modbus-adc": {"compatible": False}},
+        )
+    )
+
+    assert sensors["ai01"]["ok"] is False
+    assert sensors["ai02"]["value"] == 2.4
+    assert sensors["ai03"]["value"] == 7.1
+
+
+def test_batch_marks_partial_usb_reading_as_usable_and_degraded(monkeypatch):
+    async def _health(*, force=False):
+        return {"mode": "real", "modbus-adc": {"compatible": False}}
+
+    async def _sensor_values(_sensor_ids, *, health=None):
+        return {
+            "ai01": {"sensor_id": "ai01", "value": None, "ok": False},
+            "ai02": {"sensor_id": "ai02", "value": 2.4, "ok": True},
+            "ai03": {"sensor_id": "ai03", "value": 7.1, "ok": True},
+        }
+
+    monkeypatch.setattr(runtime, "cached_gateway_health", _health)
+    monkeypatch.setattr(runtime, "read_sensor_values", _sensor_values)
+
+    result = asyncio.run(runtime.read_sensors_batch("ai01,ai02,ai03"))
+
+    assert result["ok"] is True
+    assert result["complete"] is False
+    assert result["degraded"] is True

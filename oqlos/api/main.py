@@ -73,6 +73,11 @@ NAVIGATION_PAGES = [
         "description": "Modbus autodetect wizard, adapter configuration and IO/ADC bring-up.",
     },
     {
+        "path": "/ui/hardware-coils",
+        "label": "Coil TEST",
+        "description": "Guarded, sequential DO1-DO8 wiring verification and detailed Modbus configuration.",
+    },
+    {
         "path": "/ui/hardware-rtc",
         "label": "Hardware RTC",
         "description": "Waveshare DS3231 RTC and watchdog diagnostics via piRTC sidecar.",
@@ -128,6 +133,7 @@ NAVIGATION_ALIASES = [
     {"path": "/hardware-restart", "target": "/ui/hardware-modbus"},
     {"path": "/modbus", "target": "/ui/hardware-modbus"},
     {"path": "/hardware-modbus", "target": "/ui/hardware-modbus"},
+    {"path": "/hardware-coils", "target": "/ui/hardware-coils"},
     {"path": "/hardware-rtc", "target": "/ui/hardware-rtc"},
     {"path": "/rtc", "target": "/ui/hardware-rtc"},
     {"path": "/demo", "target": "/ui/motor-services"},
@@ -432,6 +438,11 @@ async def hardware_restart_alias(request: Request):
 @app.get("/hardware-modbus")
 async def hardware_modbus_alias(request: Request):
     return RedirectResponse(_with_query("/ui/hardware-modbus", request))
+
+
+@app.get("/hardware-coils")
+async def hardware_coils_alias(request: Request):
+    return RedirectResponse(_with_query("/ui/hardware-coils", request))
 
 
 @app.get("/hardware-rtc")

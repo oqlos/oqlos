@@ -8,6 +8,7 @@ import { preserveUiNavSearchParams } from "../utils/ui-url-args-cookie.js";
 const navItems = [
   { path: "/status", labelKey: "nav.hardware" },
   { path: "/hardware-modbus", labelKey: "nav.modbus" },
+  { path: "/hardware-coils", labelKey: "nav.coilTest" },
   { path: "/hardware-rtc", labelKey: "nav.rtc" },
   { path: "/motor-services", labelKey: "nav.motorServices" },
   { path: "/scenario-files", labelKey: "nav.scenarioFiles" },

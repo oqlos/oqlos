@@ -264,12 +264,12 @@ const libraryFull = {
 };
 
 const navByLang = {
-  pl: { devices: "Urządzenia", scenarios: "Scenariusze", hardware: "Status", restart: "Restart", modbus: "Modbus", rtc: "RTC", demo: "Demo", scenarioFiles: "Scenariusze", map: "MAP", func: "Funkcje", motorServices: "Silniki", panel: "OQL", navigation: "Nawigacja", apiDocs: "API" },
-  en: { devices: "Devices", scenarios: "Scenarios", hardware: "Status", restart: "Restart", modbus: "Modbus", rtc: "RTC", demo: "Demo", scenarioFiles: "Scenarios", map: "Map", func: "Func", motorServices: "Motors", panel: "OQL", navigation: "Navigation", apiDocs: "API" },
-  de: { devices: "Geräte", scenarios: "Szenarien", hardware: "Status", restart: "Restart", modbus: "Modbus", rtc: "RTC", demo: "Demo", scenarioFiles: "Szenarien", map: "MAP", func: "Func", motorServices: "Motoren", panel: "OQL", navigation: "Navigation", apiDocs: "API" },
-  ru: { devices: "Устройства", scenarios: "Сценарии", hardware: "Статус", restart: "Restart", modbus: "Modbus", rtc: "RTC", demo: "Demo", scenarioFiles: "Сценарии", map: "MAP", func: "Func", motorServices: "Моторы", panel: "OQL", navigation: "Навигация", apiDocs: "API" },
-  ua: { devices: "Пристрої", scenarios: "Сценарії", hardware: "Статус", restart: "Restart", modbus: "Modbus", rtc: "RTC", demo: "Demo", scenarioFiles: "Сценарії", map: "MAP", func: "Func", motorServices: "Мотори", panel: "OQL", navigation: "Навігація", apiDocs: "API" },
-  cs: { devices: "Zařízení", scenarios: "Scénáře", hardware: "Status", restart: "Restart", modbus: "Modbus", rtc: "RTC", demo: "Demo", scenarioFiles: "Scénáře", map: "MAP", func: "Func", motorServices: "Motory", panel: "OQL", navigation: "Navigace", apiDocs: "API" },
+  pl: { devices: "Urządzenia", scenarios: "Scenariusze", hardware: "Status", restart: "Restart", modbus: "Modbus", coilTest: "TEST cewek", rtc: "RTC", demo: "Demo", scenarioFiles: "Scenariusze", map: "MAP", func: "Funkcje", motorServices: "Silniki", panel: "OQL", navigation: "Nawigacja", apiDocs: "API" },
+  en: { devices: "Devices", scenarios: "Scenarios", hardware: "Status", restart: "Restart", modbus: "Modbus", coilTest: "Coil TEST", rtc: "RTC", demo: "Demo", scenarioFiles: "Scenarios", map: "Map", func: "Func", motorServices: "Motors", panel: "OQL", navigation: "Navigation", apiDocs: "API" },
+  de: { devices: "Geräte", scenarios: "Szenarien", hardware: "Status", restart: "Restart", modbus: "Modbus", coilTest: "Spulentest", rtc: "RTC", demo: "Demo", scenarioFiles: "Szenarien", map: "MAP", func: "Func", motorServices: "Motoren", panel: "OQL", navigation: "Navigation", apiDocs: "API" },
+  ru: { devices: "Устройства", scenarios: "Сценарии", hardware: "Статус", restart: "Restart", modbus: "Modbus", coilTest: "Тест катушек", rtc: "RTC", demo: "Demo", scenarioFiles: "Сценарии", map: "MAP", func: "Func", motorServices: "Моторы", panel: "OQL", navigation: "Навигация", apiDocs: "API" },
+  ua: { devices: "Пристрої", scenarios: "Сценарії", hardware: "Статус", restart: "Restart", modbus: "Modbus", coilTest: "Тест котушок", rtc: "RTC", demo: "Demo", scenarioFiles: "Сценарії", map: "MAP", func: "Func", motorServices: "Мотори", panel: "OQL", navigation: "Навігація", apiDocs: "API" },
+  cs: { devices: "Zařízení", scenarios: "Scénáře", hardware: "Status", restart: "Restart", modbus: "Modbus", coilTest: "Test cívek", rtc: "RTC", demo: "Demo", scenarioFiles: "Scénáře", map: "MAP", func: "Func", motorServices: "Motory", panel: "OQL", navigation: "Navigace", apiDocs: "API" },
 };
 
 const navigationIndexByLang = {

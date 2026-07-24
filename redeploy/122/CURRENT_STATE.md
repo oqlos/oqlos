@@ -1,6 +1,21 @@
 # OqlOS BoardNet — aktualny stan
 
-Ostatnio sprawdzono: 2026-07-22 Europe/Warsaw.
+Ostatnio sprawdzono: 2026-07-24 Europe/Warsaw.
+
+## Aktualizacja 2026-07-24
+
+- Ostatni deploy z `redeploy` 0.2.80 ponownie przeszedł **25/25**, checksumy
+  **206/206** i firmware smoke **1/1**; brak failed units.
+- Kanoniczny deploy `redeploy/122/migration.md`: **25/25** kroków.
+- Manifest integralności: **206** zweryfikowanych sum SHA-256.
+- Firmware smoke TestQL: **1/1**.
+- Health: `mode=real`, `overall_ok=true`, `degraded=false`;
+  podłączone `motor-dri0050`, `motor-tic249`, `modbus-io`, zero failed.
+- `modbus-adc` pozostaje świadomie wyłączony, ponieważ wejścia analogowe
+  obsługuje `usb-adc-stack`.
+- `dri0050`, `tic249`, `pirtc`, OqlOS i MQTT są aktywne; brak failed units.
+- Po końcowym audycie DRI0050 został zatrzymany i trzy odczyty potwierdziły
+  `enabled=false`, `duty=0`.
 
 ## UI BoardNet (kanoniczne URL)
 
@@ -105,10 +120,10 @@ curl -s http://192.168.188.122:8203/health
   - DFR1184 używa UART Raspberry Pi `/dev/serial0` (AI02/AI03), nie USB.
 - Tic249 raportuje `connected=true`, `energized=false`.
 - DRI0050 raportuje zdrowy stan na `:8203`.
-- Modbus-IO jest obecnie wyłączony, ponieważ read-only skan FTDI nie znalazł
-  odpowiedzi RTU dla 9600/19200/38400/115200, N/E/O i slave ID 1–8. HUI hold/al
-  nie może sterować zaworami do czasu podłączenia/zasilenia adaptera i modułu IO.
-- OqlOS działa w `mode=real`; `overall_ok` może być `false` przy degraded Modbus/Tic.
+- Modbus-IO jest podłączony na slave ID `2` i raportuje `status=connected`,
+  `compatible=true`.
+- OqlOS działa w `mode=real`; ostatni health ma `overall_ok=true`,
+  `degraded=false`, trzy podłączone pluginy i zero failed.
 - HTTP HUI: `GET /api/v1/hardware/hui/actions` zwraca katalog hold/AL;
   bezpieczne `POST /api/v1/hardware/hui/al/stop` i `shutdown` weryfikuje
   `assert_hw_node_healthy` w `redeploy/122/migration.md`.

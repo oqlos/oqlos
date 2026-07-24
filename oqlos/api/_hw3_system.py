@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, Body, HTTPException
+from fastapi import APIRouter, Body, Header, HTTPException
 
 from oqlos.api._hw3_models import _hardware_v1_call, _runtime_control_skipped
 
@@ -99,6 +99,27 @@ async def hardware_modbus_profile_channels_v3(profile: str = "modbus-adc") -> di
 async def hardware_modbus_channel_value_v3(payload: dict[str, Any] = Body(default_factory=dict)) -> dict[str, Any]:
     from oqlos.api import hardware_modbus_routes as modbus_hw
     return await modbus_hw.hardware_modbus_channel_value_put(payload)
+
+
+@sub_router.get("/modbus/coil-test/plan")
+async def hardware_modbus_coil_test_plan_v3() -> dict[str, Any]:
+    from oqlos.api import hardware_modbus_routes as modbus_hw
+    return await modbus_hw.hardware_modbus_coil_test_plan_get()
+
+
+@sub_router.post("/modbus/coil-test/pulse")
+async def hardware_modbus_coil_test_pulse_v3(
+    payload: dict[str, Any] = Body(default_factory=dict),
+    x_connect_role: str | None = Header(default=None, alias="X-Connect-Role"),
+) -> dict[str, Any]:
+    from oqlos.api import hardware_modbus_routes as modbus_hw
+    return await modbus_hw.hardware_modbus_coil_test_pulse_post(payload, x_connect_role)
+
+
+@sub_router.post("/modbus/coil-test/stop")
+async def hardware_modbus_coil_test_stop_v3() -> dict[str, Any]:
+    from oqlos.api import hardware_modbus_routes as modbus_hw
+    return await modbus_hw.hardware_modbus_coil_test_stop_post()
 
 
 @sub_router.get("/rtc/status")

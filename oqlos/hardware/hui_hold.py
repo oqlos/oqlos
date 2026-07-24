@@ -78,6 +78,7 @@ def _profile_from_map_action(binding: Any) -> dict[str, Any] | None:
 
 
 def _mapped_hui_hold_profiles() -> dict[str, dict[str, Any]]:
+    """Legacy MAP JSON/YAML actions (kind=hui-hold)."""
     try:
         from oqlos.api.hardware_mapping_store import mapping_store
 
@@ -95,12 +96,24 @@ def _mapped_hui_hold_profiles() -> dict[str, dict[str, Any]]:
     return profiles
 
 
+def _oql_hui_hold_profiles() -> dict[str, dict[str, Any]]:
+    """OQL SET profiles from layers/hardware/hui-profiles.oql (preferred)."""
+    try:
+        from oqlos.hardware.hui_profiles_oql import load_oql_hui_hold_profiles
+
+        return load_oql_hui_hold_profiles()
+    except Exception:
+        return {}
+
+
 def get_hui_hold_profiles() -> dict[str, dict[str, Any]]:
+    # Migration order: code defaults < MAP YAML/JSON < OQL file (source of truth).
     profiles = {
         key: {"valves_on": tuple(profile["valves_on"]), "pump_pct": float(profile["pump_pct"])}
         for key, profile in HUI_HOLD_PROFILES.items()
     }
     profiles.update(_mapped_hui_hold_profiles())
+    profiles.update(_oql_hui_hold_profiles())
     return profiles
 
 
@@ -269,8 +282,29 @@ async def start_hui_hold(gateway: Any, key: str) -> dict[str, Any]:
 
 
 async def _stop_hui_hold_unlocked(gateway: Any, key: str | None = None) -> dict[str, Any]:
+    """Stop a hold and return hardware to a safe state.
+
+    Fail-fast on unavailable required plugins (same contract as start) so a
+    silent Modbus slave cannot hang the HTTP request until the C2004 proxy
+    maps the stall to C2004-NET-0003 / 504.
+    """
     global _active_hold_key
     requested_key = str(key or _active_hold_key or "").strip().lower()
+
+    # Valve shutdown needs modbus-io; pump stop is already best-effort.
+    readiness_failure = await required_plugins_failure(
+        gateway,
+        ["modbus-io"],
+        command="hold_stop",
+        key=requested_key or None,
+    )
+    if readiness_failure is not None:
+        stopped_key = _active_hold_key
+        _active_hold_key = None
+        readiness_failure["stopped_key"] = stopped_key
+        readiness_failure["key"] = requested_key or stopped_key
+        return readiness_failure
+
     stopped_key = _active_hold_key
     shutdown = await _shutdown_all_hui_hardware_unlocked(gateway)
     return {

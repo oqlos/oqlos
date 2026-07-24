@@ -3266,3 +3266,33 @@ html[data-iframe-child="1"] #root {
   color: var(--accent-amber) !important;
   border-color: var(--accent-amber) !important;
 }
+/* BoardNet one-coil-at-a-time wiring test */
+.coil-test-page { max-width: 1500px; margin: 0 auto; padding: 24px; display: grid; gap: 16px; }
+.coil-test-header, .coil-test-sequence-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+.coil-test-header h1, .coil-test-card h2 { margin: 0; }
+.coil-test-header p, .coil-test-sequence-head p { color: var(--text-secondary); margin-top: 4px; }
+.coil-test-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.coil-test-actions button, .coil-test-table button {
+  border: 1px solid var(--border-input); border-radius: 6px; padding: 7px 10px;
+  background: var(--bg-card-hover); color: var(--text-primary); cursor: pointer;
+}
+.coil-test-actions button:disabled, .coil-test-table button:disabled { opacity: .45; cursor: not-allowed; }
+.coil-test-actions button.danger { border-color: var(--accent-red); color: var(--accent-red); }
+.coil-test-alert { display: flex; gap: 12px; flex-wrap: wrap; padding: 12px 14px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-card); }
+.coil-test-alert.ok { border-color: var(--accent-green); }
+.coil-test-alert.warn { border-color: var(--accent-amber); }
+.coil-test-alert.danger { border-color: var(--accent-red); color: var(--accent-red); }
+.coil-test-card { border: 1px solid var(--border); border-radius: 10px; padding: 18px; background: var(--bg-card); min-width: 0; }
+.coil-test-config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin-top: 12px; }
+.coil-test-config-grid > div { display: flex; flex-direction: column; gap: 3px; padding: 10px; border: 1px solid var(--border); border-radius: 7px; background: var(--bg-input); }
+.coil-test-config-grid small { color: var(--text-muted); }
+.coil-test-config-grid code, .coil-test-table code { font-family: var(--font-mono); overflow-wrap: anywhere; }
+.coil-test-confirm { display: flex; gap: 10px; align-items: flex-start; margin: 14px 0; padding: 12px; border: 1px solid var(--accent-amber); border-radius: 8px; }
+.coil-test-confirm input { margin-top: 4px; }
+.coil-test-table-wrap { overflow: auto; }
+.coil-test-table { width: 100%; border-collapse: collapse; margin-top: 10px; min-width: 980px; }
+.coil-test-table th, .coil-test-table td { padding: 10px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+.coil-test-table th { color: var(--text-secondary); font-size: var(--font-rem-sm); }
+.coil-test-table tr.is-next { background: color-mix(in srgb, var(--accent-blue) 9%, transparent); }
+.coil-test-result-buttons { display: flex; gap: 5px; flex-wrap: wrap; }
+.coil-test-result-buttons button.active { border-color: var(--accent-green); color: var(--accent-green); }

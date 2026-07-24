@@ -6,7 +6,8 @@ physical devices (Modbus IO/ADC, Pololu Tic T249, DFRobot DRI0050, RTC HAT) and 
 OQL-over-MQTT **agent/controller** pair for local and remote OQL requests. It also exposes
 the OqlOS hardware UI/API on LAN at `:8202`, so a human can open
 `http://boardnet.local:8202/ui/hardware-status`, `/ui/hardware-demo`, `/ui/map-editor`,
-`/ui/scenario-files`, and `/ui/func-editor` directly (legacy paths without `/ui` redirect).
+`/ui/scenario-files`, `/ui/func-editor`, and `/ui/hardware-coils` directly
+(legacy paths without `/ui` redirect).
 
 Aktualny stan BoardNet/DisplayNet i ostatniej diagnostyki hardware:
 `redeploy/122/CURRENT_STATE.md`.
@@ -440,6 +441,43 @@ else
 fi
 ```
 
+```bash markpact:ref deploy-usb-adc-stack
+#!/bin/bash
+set -euo pipefail
+ROOT=/home/pi/oqlos-adapters
+MCP_DIR="$ROOT/usb-adc-mcp2221"
+DFR_DIR="$ROOT/usb-adc-dfr1184"
+mkdir -p "$ROOT" /home/pi/.config/systemd/user
+[ -f "$MCP_DIR/pyproject.toml" ] || { echo "FAIL: brak $MCP_DIR — uruchom sync_usb_adc_mcp2221"; exit 1; }
+[ -f "$DFR_DIR/pyproject.toml" ] || { echo "FAIL: brak $DFR_DIR — uruchom sync_usb_adc_dfr1184"; exit 1; }
+
+if [ ! -x "$ROOT/.venv/bin/python" ]; then
+  python3 -m venv "$ROOT/.venv"
+fi
+"$ROOT/.venv/bin/pip" install -q --upgrade pip
+"$ROOT/.venv/bin/pip" install -q -e "$MCP_DIR" -e "$DFR_DIR[api]"
+install -m 0644 "$DFR_DIR/deploy/systemd/usb-adc-stack.service" \
+  /home/pi/.config/systemd/user/usb-adc-stack.service
+
+systemctl --user daemon-reload
+systemctl --user enable usb-adc-stack.service
+systemctl --user restart usb-adc-stack.service
+for attempt in $(seq 1 30); do
+  if curl -sf --max-time 3 http://127.0.0.1:8214/health >/dev/null; then
+    echo "PASS: usb-adc-stack aktywny na loopback :8214 (próba $attempt/30)"
+    exit 0
+  fi
+  if ! systemctl --user is-active usb-adc-stack.service >/dev/null 2>&1; then
+    systemctl --user status usb-adc-stack.service --no-pager || true
+    exit 1
+  fi
+  sleep 1
+done
+echo "FAIL: usb-adc-stack nie odpowiada na /health po 30 próbach" >&2
+systemctl --user status usb-adc-stack.service --no-pager || true
+exit 1
+```
+
 ```bash markpact:ref deploy-oqlos-hw-api
 #!/bin/bash
 set -euo pipefail
@@ -633,8 +671,8 @@ PY
 cat > /home/pi/.config/systemd/user/oqlos-hardware-api.service << EOF
 [Unit]
 Description=OqlOS hardware node + UI + OQL-over-MQTT bridge (boardnet)
-After=network-online.target mosquitto.service pirtc-api.service dri0050-motor-api.service hw-tic249.service
-Wants=mosquitto.service
+After=network-online.target mosquitto.service pirtc-api.service dri0050-motor-api.service hw-tic249.service usb-adc-stack.service
+Wants=mosquitto.service usb-adc-stack.service
 
 [Service]
 Type=simple
@@ -841,7 +879,7 @@ else
   _fail "OqlOS HTTP/UI :8202 nie slucha na 0.0.0.0"
 fi
 
-for page in hardware-status hardware-demo map-editor scenario-files func-editor; do
+for page in hardware-status hardware-demo map-editor scenario-files func-editor hardware-coils; do
   if _wait_get "http://127.0.0.1:8202/ui/${page}" "$TMPDIR/oqlos-ui-${page}.html" 30 8; then
     _pass "OqlOS UI /ui/${page} OK"
   else
@@ -1359,6 +1397,13 @@ extra_steps:
     # `.git` bez ukośnika: submodule scenarios/ ma .git jako PLIK (gitdir:) — wzorzec dir-only przepuszczałby go na Pi.
     excludes: [.git, .venv/, venv/, __pycache__/, .pytest_cache/]
 
+  - id: sync_backend_shared_policy
+    action: rsync
+    description: "Sync kanonicznej wspólnej polityki mapowania z c2004/backend-shared-py"
+    src: /home/tom/github/maskservice/c2004/packages/backend-shared-py/
+    dst: ~/oqlos/oqlos/packages/backend-shared-py/
+    excludes: [.git, .venv/, venv/, __pycache__/, .pytest_cache/]
+
   - id: sync_oqlos_frontend_dist
     action: rsync
     description: "Sync zbudowanego OqlOS hardware UI (frontend/dist)"
@@ -1400,6 +1445,20 @@ extra_steps:
     src: /home/tom/github/oqlos/rpi-motor-DRI0050/
     dst: ~/maskservice/rpi-motor-DRI0050/
     excludes: [.git/, .venv/, venv/, __pycache__/]
+
+  - id: sync_usb_adc_mcp2221
+    action: rsync
+    description: "Sync adaptera MCP2221A (AI01)"
+    src: /home/tom/github/oqlos/usb-adc-mcp2221/
+    dst: ~/oqlos-adapters/usb-adc-mcp2221/
+    excludes: [.git/, .venv/, venv/, __pycache__/, .pytest_cache/]
+
+  - id: sync_usb_adc_dfr1184
+    action: rsync
+    description: "Sync adaptera DFR1184 i wspólnego usb-adc-stack (AI01-AI03)"
+    src: /home/tom/github/oqlos/usb-adc-dfr1184/
+    dst: ~/oqlos-adapters/usb-adc-dfr1184/
+    excludes: [.git/, .venv/, venv/, __pycache__/, .pytest_cache/]
 
   - id: sync_pirtc
     action: rsync
@@ -1447,6 +1506,12 @@ extra_steps:
     description: "Sidecar piRTC (:8125)"
     command_ref: deploy-pirtc-sidecar
     timeout: 120
+
+  - id: deploy_usb_adc_stack
+    action: inline_script
+    description: "Wspólny stos ADC MCP2221A + DFR1184 (:8214 loopback)"
+    command_ref: deploy-usb-adc-stack
+    timeout: 180
 
   - id: deploy_oqlos_hw_api
     action: inline_script

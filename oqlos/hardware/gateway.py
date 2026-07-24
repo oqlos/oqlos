@@ -40,6 +40,7 @@ from oqlos.hardware.discovery import (
 )
 from oqlos.hardware.gateway_http import TIMEOUT as _TIMEOUT, get_json, post_json
 from oqlos.hardware.tic249_units import TIC249_DEFAULT_TARGET_VELOCITY
+from oqlos.hardware.modbus_io_catalog import VALVE_COIL_MAP
 
 logger = logging.getLogger(__name__)
 
@@ -74,12 +75,7 @@ _SENSOR_CHANNEL_MAP: dict[str, int] = {
 }
 
 # Valve → DO channel mapping (Waveshare Modbus RTU IO 8CH: DO1–DO8 = coil 0–7)
-_VALVE_COIL_MAP: dict[str, int] = {
-    **{f"valve-{i}": i - 1 for i in range(1, 9)},  # valve-1→DO1(0) … valve-8→DO8(7)
-    "valve-nc": 0,   # NC valve on DO1
-    "valve-sc": 1,   # SC valve on DO2
-    "valve-wc": 2,   # WC valve on DO3
-}
+_VALVE_COIL_MAP: dict[str, int] = VALVE_COIL_MAP
 
 
 class _PiAdcAdapter:

@@ -121,8 +121,41 @@ def test_hui_hold_stop_reports_the_hold_that_was_started(monkeypatch) -> None:
     assert stopped["ok"] is True
 
 
+def test_hui_hold_stop_fails_fast_when_modbus_io_is_unavailable(monkeypatch) -> None:
+    """Regression: stop must not hang on valve shutdown when modbus-io is dead."""
+    monkeypatch.setattr(hui_hold, "_VALVE_STAGGER_SECONDS", 0)
+    gateway = FakeGateway(
+        real=True,
+        readiness={
+            "modbus-io": {
+                "ok": False,
+                "plugin_id": "modbus-io",
+                "status": "error",
+                "message": "Modbus RTU read_coils timed out after 2.0s",
+            },
+        },
+    )
+    # Pretend a hold was active so stop must clear it without touching hardware.
+    hui_hold._active_hold_key = "head-inflate"  # noqa: SLF001 — test clears session state
+
+    payload = run(hui_actions.stop_hui_hold(gateway, "head-inflate"))
+
+    assert payload["ok"] is False
+    assert payload["command"] == "hold_stop"
+    assert payload["status_code"] == 503
+    assert payload["error_code"] == "C2004-HW-0012"
+    assert payload["required_hardware"] == ["modbus-io"]
+    assert payload["key"] == "head-inflate"
+    assert payload["stopped_key"] == "head-inflate"
+    assert hui_hold._active_hold_key is None  # noqa: SLF001
+    assert not any(call[0] in {"pump", "valve"} for call in gateway.calls)
+    assert ("readiness", "modbus-io") in gateway.calls
+
+
 def test_hui_hold_profile_can_be_overridden_from_hardware_map(monkeypatch) -> None:
     monkeypatch.setattr(hui_hold, "_VALVE_STAGGER_SECONDS", 0)
+    # Isolate from on-disk OQL profiles so MAP override is the top layer.
+    monkeypatch.setattr(hui_hold, "_oql_hui_hold_profiles", lambda: {})
     monkeypatch.setattr(
         hui_hold,
         "_mapped_hui_hold_profiles",
@@ -140,6 +173,7 @@ def test_hui_hold_profile_can_be_overridden_from_hardware_map(monkeypatch) -> No
 
 
 def test_hui_actions_list_uses_mapped_profiles(monkeypatch) -> None:
+    monkeypatch.setattr(hui_hold, "_oql_hui_hold_profiles", lambda: {})
     monkeypatch.setattr(
         hui_hold,
         "_mapped_hui_hold_profiles",
@@ -249,6 +283,7 @@ def test_hui_artificial_lung_start_failure_cleans_up_same_valve_it_opened(monkey
 
 
 def test_hui_valve_key_can_be_overridden_from_hardware_map(monkeypatch) -> None:
+    monkeypatch.setattr(hui_valve, "_oql_hui_valve_specs", lambda: {})
     monkeypatch.setattr(
         hui_valve,
         "_mapped_hui_valve_specs",

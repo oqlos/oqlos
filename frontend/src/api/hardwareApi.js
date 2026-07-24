@@ -205,6 +205,18 @@ export const HardwareApi = {
     return put("/api/v3/hardware/modbus/channel-value", payload || {}, options);
   },
 
+  async getCoilTestPlan(options) {
+    return get("/api/v3/hardware/modbus/coil-test/plan", options);
+  },
+
+  async pulseCoil(payload, options) {
+    return post("/api/v3/hardware/modbus/coil-test/pulse", payload || {}, options);
+  },
+
+  async stopAllCoils(options) {
+    return post("/api/v3/hardware/modbus/coil-test/stop", {}, options);
+  },
+
   async getRtcStatus(options) {
     return get("/api/v3/hardware/rtc/status", options);
   },

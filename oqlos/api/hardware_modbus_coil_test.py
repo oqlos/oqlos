@@ -1,0 +1,154 @@
+"""Guarded, one-coil-at-a-time BoardNet wiring test."""
+
+from __future__ import annotations
+
+import asyncio
+from typing import Any
+
+from oqlos.api.hardware_gateway import get_hardware_gateway
+from oqlos.api.hardware_modbus_channels import read_modbus_profile_channels
+from oqlos.config import get_settings
+from oqlos.hardware.modbus_io_catalog import MODBUS_IO_COIL_COUNT, build_coil_catalog
+
+_settings = get_settings()
+_coil_test_lock = asyncio.Lock()
+MIN_PULSE_MS = 100
+MAX_PULSE_MS = 1000
+
+
+def _digital_output_states(module: dict[str, Any]) -> list[bool]:
+    rows = [
+        row for row in module.get("channels") or [] if row.get("kind") == "digital_output"
+    ]
+    rows.sort(key=lambda row: int(row.get("address", 0)))
+    return [bool(row.get("value")) for row in rows[:MODBUS_IO_COIL_COUNT]]
+
+
+async def build_coil_test_plan() -> dict[str, Any]:
+    snapshot = await read_modbus_profile_channels("modbus-io")
+    module = (snapshot.get("modules") or [{}])[0]
+    states = _digital_output_states(module)
+    reasons: list[str] = []
+    if not module.get("ok"):
+        reasons.append(str(module.get("message") or "modbus-io is unavailable"))
+    if module.get("ok") and len(states) != MODBUS_IO_COIL_COUNT:
+        reasons.append(
+            f"Expected {MODBUS_IO_COIL_COUNT} coil states, received {len(states)}"
+        )
+    energized = [f"DO{index + 1}" for index, value in enumerate(states) if value]
+    if energized:
+        reasons.append(f"Outputs already energized: {', '.join(energized)}")
+
+    ready = not reasons
+    return {
+        "ok": bool(module.get("ok")),
+        "ready": ready,
+        "mode": str(getattr(_settings, "hardware_mode", "unknown")),
+        "safety": {
+            "one_coil_at_a_time": True,
+            "automatic_off": True,
+            "max_pulse_ms": MAX_PULSE_MS,
+            "requires_confirmation": True,
+            "blocked_reasons": reasons,
+        },
+        "module": {
+            "role": module.get("module_role", "modbus-io"),
+            "device_id": module.get("device_id"),
+            "serial_port": module.get("serial_port"),
+            "message": module.get("message"),
+            "config_registers": module.get("config_registers") or [],
+        },
+        "coils": build_coil_catalog(states),
+    }
+
+
+async def _plugin() -> Any:
+    plugin = await get_hardware_gateway()._get_or_connect_plugin("modbus-io")
+    if plugin is None:
+        raise RuntimeError("modbus-io plugin unavailable")
+    return plugin
+
+
+async def _write_coil(plugin: Any, address: int, value: bool) -> dict[str, Any]:
+    result = await plugin.execute_command("set_coil", {"coil": address, "value": value})
+    if not result.get("success"):
+        raise RuntimeError(str(result.get("error") or f"DO{address + 1} write failed"))
+    return result.get("data") or {"coil": address, "value": value}
+
+
+async def pulse_coil(payload: dict[str, Any]) -> dict[str, Any]:
+    address = int(payload.get("address", -1))
+    if not 0 <= address < MODBUS_IO_COIL_COUNT:
+        return {"ok": False, "error": "address must be between 0 and 7"}
+    duration_ms = int(payload.get("duration_ms", 300))
+    if not MIN_PULSE_MS <= duration_ms <= MAX_PULSE_MS:
+        return {
+            "ok": False,
+            "error": f"duration_ms must be between {MIN_PULSE_MS} and {MAX_PULSE_MS}",
+        }
+    expected_confirmation = f"PULSE_DO{address + 1}"
+    if str(payload.get("confirm") or "") != expected_confirmation:
+        return {"ok": False, "error": f"confirm must equal {expected_confirmation}"}
+
+    if _coil_test_lock.locked():
+        return {"ok": False, "error": "another coil test is already running"}
+
+    async with _coil_test_lock:
+        plan = await build_coil_test_plan()
+        if not plan.get("ready"):
+            reasons = plan.get("safety", {}).get("blocked_reasons") or []
+            return {
+                "ok": False,
+                "error": "coil test preflight failed",
+                "blocked_reasons": reasons,
+                "plan": plan,
+            }
+
+        plugin = await _plugin()
+        on_result: dict[str, Any] | None = None
+        off_result: dict[str, Any] | None = None
+        error: str | None = None
+        try:
+            on_result = await _write_coil(plugin, address, True)
+            await asyncio.sleep(duration_ms / 1000)
+        except Exception as exc:  # OFF must still be attempted.
+            error = str(exc)
+        finally:
+            try:
+                off_result = await _write_coil(plugin, address, False)
+            except Exception as exc:
+                error = f"{error}; OFF failed: {exc}" if error else f"OFF failed: {exc}"
+
+        after = await build_coil_test_plan()
+        return {
+            "ok": error is None and bool(after.get("ready")),
+            "coil": f"DO{address + 1}",
+            "address": address,
+            "duration_ms": duration_ms,
+            "on": on_result,
+            "off": off_result,
+            "error": error,
+            "after": after,
+        }
+
+
+async def stop_all_coils() -> dict[str, Any]:
+    """Best-effort emergency de-energize; safe even when preflight cannot read."""
+    # Waiting on the same lock lets an in-flight pulse finish its mandatory OFF
+    # without introducing a second RTU writer or a release/reacquire race.
+    async with _coil_test_lock:
+        try:
+            plugin = await _plugin()
+        except Exception as exc:
+            return {"ok": False, "error": str(exc), "operations": []}
+        operations: list[dict[str, Any]] = []
+        for address in range(MODBUS_IO_COIL_COUNT):
+            try:
+                result = await _write_coil(plugin, address, False)
+                operations.append({"coil": f"DO{address + 1}", "ok": True, "result": result})
+            except Exception as exc:
+                operations.append({"coil": f"DO{address + 1}", "ok": False, "error": str(exc)})
+        return {
+            "ok": all(operation["ok"] for operation in operations),
+            "operations": operations,
+        }

@@ -255,15 +255,12 @@ class ModbusPlugin(HardwarePlugin):
 
     async def _execute_set_valve(self, params: dict[str, Any]) -> dict[str, Any]:
         """Map valve_id to coil address and delegate to set_coil."""
+        from oqlos.hardware.modbus_io_catalog import resolve_valve_coil
+
         valve_id = params.get("valve_id")
         if not valve_id:
             return {"success": False, "error": "valve_id is required"}
-        valve_coil_map = {
-            "valve-1": 0, "valve-2": 1, "valve-3": 2, "valve-4": 3,
-            "valve-5": 4, "valve-6": 5, "valve-7": 6, "valve-8": 7,
-            "valve-nc": 0, "valve-sc": 1, "valve-wc": 2,
-        }
-        coil = valve_coil_map.get(valve_id)
+        coil = resolve_valve_coil(str(valve_id))
         if coil is None:
             return {"success": False, "error": f"Unknown valve_id: {valve_id}"}
         return await self.execute_command("set_coil", {"coil": coil, "value": params.get("value", False)})
@@ -360,14 +357,12 @@ class ModbusPlugin(HardwarePlugin):
     @classmethod
     def get_capabilities(cls) -> dict[str, Any]:
         """Return modbus plugin capabilities."""
+        from oqlos.hardware.modbus_io_catalog import VALVE_COIL_MAP
+
         capabilities = super().get_capabilities()
         capabilities.update({
             "supported_commands": ["set_coil", "set_valve", "read_io_snapshot", "write_holding_register"],
-            "valve_mapping": {
-                "valve-1": 0, "valve-2": 1, "valve-3": 2, "valve-4": 3,
-                "valve-5": 4, "valve-6": 5, "valve-7": 6, "valve-8": 7,
-                "valve-nc": 0, "valve-sc": 1, "valve-wc": 2,
-            },
+            "valve_mapping": dict(VALVE_COIL_MAP),
             "configuration_schema": {
                 "connection_type": {
                     "type": "string",

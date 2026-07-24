@@ -156,7 +156,7 @@ async def read_usb_adc_sensor_values(
         channel = channels.get(_adc_channel_key(sensor_id))
         if channel is not None:
             requested[sensor_id] = {**channel, "sensor_id": sensor_id}
-    return requested if len(requested) == len(sensor_ids) else None
+    return requested or None
 
 
 async def cached_gateway_health(*, force: bool = False) -> dict[str, Any]:
@@ -183,7 +183,15 @@ async def read_sensor_values(
 ) -> dict[str, dict[str, Any]]:
     usb_sensors = await read_usb_adc_sensor_values(sensor_ids)
     if usb_sensors is not None:
-        return usb_sensors
+        if len(usb_sensors) == len(sensor_ids):
+            return usb_sensors
+        gateway_health = health if health is not None else await cached_gateway_health()
+        _, modbus_adc_health = modbus_adc_unavailable(gateway_health)
+        return {
+            sensor_id: usb_sensors.get(sensor_id)
+            or unavailable_sensor_entry(sensor_id, modbus_adc_health)
+            for sensor_id in sensor_ids
+        }
 
     gateway_health = health if health is not None else await cached_gateway_health()
     modbus_unavailable, modbus_adc_health = modbus_adc_unavailable(gateway_health)
@@ -276,9 +284,16 @@ async def read_sensors_batch(
     health = await cached_gateway_health()
     modbus_unavailable, modbus_adc_health = modbus_adc_unavailable(health)
     sensors = await read_sensor_values(ids, health=health)
+    successful = sum(1 for sensor in sensors.values() if sensor.get("ok"))
+    complete = bool(sensors) and successful == len(sensors)
 
     return {
-        "ok": all(sensor.get("ok") for sensor in sensors.values()) if sensors else False,
+        # A telemetry batch is usable when at least one independent sensor
+        # transport responded. Individual channel failures stay explicit in
+        # the payload instead of failing the entire HUI process.
+        "ok": successful > 0,
+        "complete": complete,
+        "degraded": successful > 0 and not complete,
         "sensors": sensors,
         "diagnostics": {
             "mode": health.get("mode"),

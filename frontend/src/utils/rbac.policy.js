@@ -1,6 +1,7 @@
 export const CONNECT_CONTEXT_QUERY_KEYS = ["font", "theme", "role", "lang", "size", "sidebar"];
 
 export const CONNECT_SUPPORTED_ROLES = [
+  "system",
   "admin",
   "manager",
   "technician",
@@ -10,6 +11,9 @@ export const CONNECT_SUPPORTED_ROLES = [
 ];
 
 const ROLE_ALIASES = {
+  system: "system",
+  root: "system",
+  sys: "system",
   admin: "admin",
   administrator: "admin",
   manager: "manager",
@@ -43,11 +47,12 @@ export function isReadOnlyConnectRole(raw) {
 
 export function isOperatorConnectRole(raw) {
   const role = normalizeConnectRole(raw, "viewer");
-  return role === "admin" || role === "manager" || role === "technician" || role === "operator";
+  return role === "system" || role === "admin" || role === "manager" || role === "technician" || role === "operator";
 }
 
 export function isAdminConnectRole(raw) {
-  return normalizeConnectRole(raw, "viewer") === "admin";
+  const role = normalizeConnectRole(raw, "viewer");
+  return role === "system" || role === "admin";
 }
 
 const VIEW_ROLE_BINDINGS = [
@@ -68,6 +73,7 @@ const VIEW_ROLE_BINDINGS = [
   { pattern: "/status*", roles: ["admin", "manager", "technician", "operator", "viewer"] },
   { pattern: "/hardware-status*", roles: ["admin", "manager", "technician", "operator", "viewer"] },
   { pattern: "/hardware-modbus*", roles: ["admin", "manager", "technician", "operator", "viewer"] },
+  { pattern: "/hardware-coils*", roles: ["admin", "manager", "technician", "operator", "viewer"] },
   { pattern: "/hardware-rtc*", roles: ["admin", "manager", "technician", "operator", "viewer"] },
   { pattern: "/ui/hardware-modbus*", roles: ["admin", "manager", "technician", "operator", "viewer"] },
   { pattern: "/ui/hardware-rtc*", roles: ["admin", "manager", "technician", "operator", "viewer"] },
@@ -118,12 +124,14 @@ export function resolveAllowedRolesForPath(path) {
 }
 
 export function canConnectRoleAccessPath(path, role) {
+  if (normalizeConnectRole(role) === "system") return true;
   const allowed = resolveAllowedRolesForPath(path);
   if (!allowed) return true;
   return allowed.includes(normalizeConnectRole(role));
 }
 
 export function canHostRoleAccessPath(path, role) {
+  if (normalizeConnectRole(role) === "system") return true;
   const allowed = resolveAllowedRolesForPath(path);
   if (!allowed) return true;
   return allowed.includes(normalizeHostRole(role));
