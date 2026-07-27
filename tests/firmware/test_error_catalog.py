@@ -18,6 +18,7 @@ _CODE_SOURCE_PATHS = [
     _REPO_ROOT / "oqlos" / "hardware" / "diagnosis_device_actions.py",
     _REPO_ROOT / "oqlos" / "api" / "oql_mqtt.py",
     _REPO_ROOT / "oqlos" / "api" / "hardware_diagnosis_routes.py",
+    _REPO_ROOT / "oqlos" / "api" / "hardware_modbus_channels.py",
     _REPO_ROOT / "oqlos" / "api" / "hardware_modbus_routes.py",
     _REPO_ROOT / "oqlos" / "api" / "hardware_modbus_waveshare.py",
     _REPO_ROOT / "oqlos" / "api" / "hardware_peripherals_routes.py",

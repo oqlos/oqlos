@@ -7,6 +7,7 @@ from typing import Any
 from oqlos.api.hardware_gateway import get_hardware_gateway, is_plugin_compatible
 from oqlos.api.hardware_modbus_settings import MODBUS_PROFILE_IDS, read_modbus_baud_settings
 from oqlos.config import get_settings
+from oqlos.errors import OqlosError
 
 _settings = get_settings()
 
@@ -217,14 +218,29 @@ async def write_modbus_channel_value(payload: dict[str, Any]) -> dict[str, Any]:
     module_role = str(payload.get("module_role") or "").strip()
     write_type = str(payload.get("write_type") or "").strip()
     if module_role not in {"modbus-io", "modbus-adc"}:
-        return {"ok": False, "error": "module_role must be modbus-io or modbus-adc"}
+        raise OqlosError(
+            code="api_modbus_wizard_invalid_request",
+            status_code=422,
+            message="module_role must be modbus-io or modbus-adc",
+            detail={"payload": payload},
+        )
     if write_type not in {"coil", "holding_register"}:
-        return {"ok": False, "error": "write_type must be coil or holding_register"}
+        raise OqlosError(
+            code="api_modbus_wizard_invalid_request",
+            status_code=422,
+            message="write_type must be coil or holding_register",
+            detail={"payload": payload},
+        )
 
     gateway = get_hardware_gateway()
     plugin = await gateway._get_or_connect_plugin(module_role)
     if plugin is None:
-        return {"ok": False, "error": f"{module_role} plugin unavailable"}
+        raise OqlosError(
+            code="hw_modbus_no_response",
+            status_code=503,
+            message=f"{module_role} plugin unavailable",
+            detail={"module_role": module_role, "write_type": write_type},
+        )
 
     if write_type == "coil":
         address = int(payload.get("address"))
@@ -238,5 +254,14 @@ async def write_modbus_channel_value(payload: dict[str, Any]) -> dict[str, Any]:
         )
 
     if not result.get("success"):
-        return {"ok": False, "error": str(result.get("error") or "write failed")}
+        raise OqlosError(
+            code="hw_modbus_no_response",
+            status_code=503,
+            message=str(result.get("error") or "write failed"),
+            detail={
+                "module_role": module_role,
+                "write_type": write_type,
+                "result": result,
+            },
+        )
     return {"ok": True, "result": result.get("data") or {}}

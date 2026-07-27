@@ -1,4 +1,16 @@
-from oqlos.api.hardware_modbus_channels import _adc_channel_rows, _io_channel_rows
+from __future__ import annotations
+
+import asyncio
+
+import pytest
+
+from oqlos.api import hardware_modbus_channels as channels
+from oqlos.api.hardware_modbus_channels import (
+    _adc_channel_rows,
+    _io_channel_rows,
+    write_modbus_channel_value,
+)
+from oqlos.errors import OqlosError
 
 
 def test_io_channel_rows_include_do_di_and_output_modes():
@@ -32,3 +44,36 @@ def test_adc_channel_rows_include_scaled_values():
     assert rows[0]["value"] == 100
     assert rows[0]["value_scaled"] == 1.23
     assert rows[0]["writable"] is False
+
+
+def test_write_modbus_channel_value_rejects_invalid_role():
+    with pytest.raises(OqlosError) as caught:
+        asyncio.run(
+            write_modbus_channel_value(
+                {"module_role": "other", "write_type": "coil", "address": 0, "value": True}
+            )
+        )
+    assert caught.value.public_code == "C2004-DATA-0002"
+    assert caught.value.issue_code == "api_modbus_wizard_invalid_request"
+
+
+def test_write_modbus_channel_value_raises_when_plugin_missing(monkeypatch):
+    class _Gateway:
+        async def _get_or_connect_plugin(self, plugin_id: str):
+            return None
+
+    monkeypatch.setattr(channels, "get_hardware_gateway", lambda: _Gateway())
+
+    with pytest.raises(OqlosError) as caught:
+        asyncio.run(
+            write_modbus_channel_value(
+                {
+                    "module_role": "modbus-io",
+                    "write_type": "coil",
+                    "address": 0,
+                    "value": True,
+                }
+            )
+        )
+    assert caught.value.public_code == "C2004-HW-0012"
+    assert caught.value.issue_code == "hw_modbus_no_response"
