@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+import time
+from types import SimpleNamespace
 
 import pytest
 
@@ -129,6 +131,105 @@ def test_read_sensor_values_prefers_usb_adc_stack_over_unavailable_modbus(monkey
     assert sensors["ai03"]["source"] == "usb-adc-stack"
 
 
+def test_usb_adc_sample_cache_serves_fresh_sample_without_second_sidecar_read(monkeypatch):
+    calls = 0
+    runtime._USB_ADC_SAMPLE_CACHE.update(
+        channels=None,
+        sampled_at=0.0,
+        refresh_task=None,
+        sampler_task=None,
+        active_until=0.0,
+    )
+    runtime._USB_ADC_STATUS.update(available=None, error=None, retry_after=0.0)
+
+    async def _channels(_url, *, timeout_seconds):
+        nonlocal calls
+        calls += 1
+        return {
+            "ai01": {"sensor_id": "ai01", "value": 1.25, "ok": True},
+        }
+
+    monkeypatch.setattr(runtime, "read_usb_adc_channels", _channels)
+
+    async def _run():
+        first = await runtime.read_usb_adc_sensor_values(["ai01"])
+        second = await runtime.read_usb_adc_sensor_values(["ai01"])
+        return first, second
+
+    first, second = asyncio.run(_run())
+
+    assert first == second
+    assert first["ai01"]["value"] == 1.25
+    assert calls == 1
+    assert runtime._USB_ADC_STATUS["cached"] is True
+
+
+def test_usb_adc_stale_sample_is_returned_while_single_refresh_runs(monkeypatch):
+    calls = 0
+    runtime._USB_ADC_SAMPLE_CACHE.update(
+        channels={"ai01": {"sensor_id": "ai01", "value": 1.0, "ok": True}},
+        sampled_at=runtime.time.monotonic() - 0.2,
+        refresh_task=None,
+        sampler_task=None,
+        active_until=0.0,
+    )
+    runtime._USB_ADC_STATUS.update(available=True, error=None, retry_after=0.0)
+
+    async def _channels(_url, *, timeout_seconds):
+        nonlocal calls
+        calls += 1
+        await asyncio.sleep(0)
+        return {
+            "ai01": {"sensor_id": "ai01", "value": 2.0, "ok": True},
+        }
+
+    monkeypatch.setattr(runtime, "read_usb_adc_channels", _channels)
+
+    async def _run():
+        stale = await runtime.read_usb_adc_sensor_values(["ai01"])
+        same_stale = await runtime.read_usb_adc_sensor_values(["ai01"])
+        await asyncio.sleep(0.01)
+        fresh = await runtime.read_usb_adc_sensor_values(["ai01"])
+        sampler_task = runtime._USB_ADC_SAMPLE_CACHE["sampler_task"]
+        sampler_task.cancel()
+        return stale, same_stale, fresh
+
+    stale, same_stale, fresh = asyncio.run(_run())
+
+    assert stale["ai01"]["value"] == 1.0
+    assert same_stale["ai01"]["value"] == 1.0
+    assert fresh["ai01"]["value"] == 2.0
+    assert calls == 1
+
+
+def test_usb_adc_sampler_does_not_add_interval_after_slow_physical_read(monkeypatch):
+    starts: list[float] = []
+    runtime._USB_ADC_SAMPLE_CACHE.update(
+        channels={"ai01": {"sensor_id": "ai01", "value": 1.0, "ok": True}},
+        sampled_at=time.monotonic(),
+        sampler_task=None,
+        active_until=time.monotonic() + 0.12,
+    )
+    runtime._USB_ADC_STATUS.update(available=True, retry_after=0.0)
+    monkeypatch.setattr(
+        runtime,
+        "get_settings",
+        lambda: SimpleNamespace(usb_adc_sample_interval_seconds=0.01),
+    )
+
+    async def _slow_refresh():
+        starts.append(time.monotonic())
+        await asyncio.sleep(0.03)
+
+    monkeypatch.setattr(runtime, "_refresh_usb_adc_sample", _slow_refresh)
+
+    asyncio.run(runtime._run_usb_adc_sampler())
+
+    gaps = [later - earlier for earlier, later in zip(starts, starts[1:])]
+    assert len(starts) >= 3
+    assert gaps and max(gaps) < 0.04
+
+
 def test_read_sensor_values_preserves_partial_usb_batch(monkeypatch):
     async def _usb_values(_sensor_ids):
         return {
@@ -245,6 +346,20 @@ def test_diagnose_raises_typed_error_when_gateway_health_fails(monkeypatch):
         asyncio.run(runtime.hardware_diagnose())
     assert caught.value.public_code == "C2004-HW-0012"
     assert caught.value.issue_code == "config_unavailable"
+
+
+def test_temperature_unavailable_stays_soft_with_diagnostics(monkeypatch):
+    monkeypatch.setattr(
+        runtime,
+        "read_cpu_temperature",
+        lambda: {"cpu_temp_celsius": None, "source": None, "available": False},
+    )
+
+    result = asyncio.run(runtime.hardware_temperature())
+    assert result["ok"] is False
+    assert result["error"] == "Temperature sensor not available"
+    assert result["diagnostics"]["issue_code"] == "config_unavailable"
+    assert result["code"] == result["error_code"] == "C2004-HW-0012"
 
 
 def test_read_sensor_raises_typed_error_when_modbus_adc_unavailable(monkeypatch):
