@@ -5,11 +5,14 @@ from __future__ import annotations
 import asyncio
 import time
 
+import pytest
+
 from oqlos.api import hardware as hw
 from oqlos.api import hardware_modbus_routes as routes
 from oqlos.api import hardware_modbus_topology as topology
 from oqlos.api import hardware_modbus_waveshare as waveshare
 from oqlos.api import hardware_modbus_wizard as wizard
+from oqlos.errors import OqlosError
 
 
 def _patch_modbus_ports(monkeypatch, ports: dict):
@@ -385,6 +388,48 @@ def test_build_waveshare_serial_stale_skips_matrix(monkeypatch):
     assert result.get("serial_handles_stale") is True
     assert result["waveshare_scan"]["scan_skipped"] is True
     assert result["per_slave"]["modbus-io-2"]["status"] == "serial-stale"
+
+
+def test_build_waveshare_raises_when_pimodbus_missing(monkeypatch):
+    import builtins
+
+    real_import = builtins.__import__
+
+    def _blocked_import(name, *args, **kwargs):
+        if name.startswith("pimodbus"):
+            raise ModuleNotFoundError("No module named 'pimodbus'")
+        return real_import(name, *args, **kwargs)
+
+    _patch_modbus_ports(monkeypatch, {
+        "io_serial_port": "/dev/ttyIO",
+        "adc_serial_port": "/dev/ttyADC",
+        "topology": "separate-adapters",
+    })
+    _patch_modbus_io_ids(monkeypatch, [1])
+    _patch_modbus_settings(
+        monkeypatch,
+        type(
+            "S",
+            (),
+            {
+                "modbus_serial_port": "/dev/ttyIO",
+                "modbus_adc_serial_port": "/dev/ttyADC",
+                "modbus_baud": 4800,
+                "modbus_parity": "N",
+                "modbus_device_id": 1,
+                "modbus_adc_device_id": 2,
+            },
+        )(),
+    )
+    monkeypatch.setattr(builtins, "__import__", _blocked_import)
+
+    with pytest.raises(OqlosError) as caught:
+        hw._build_waveshare_diagnose_report({"modbus-io": {"compatible": False}})
+
+    assert caught.value.issue_code == "pimodbus_unavailable"
+    assert caught.value.public_code == "C2004-HW-0012"
+    assert caught.value.status_code == 503
+    assert caught.value.detail["operation"] == "modbus.waveshare.diagnose"
 
 
 def test_modbus_runtime_ports_auto_detects_separate_adapters(monkeypatch):

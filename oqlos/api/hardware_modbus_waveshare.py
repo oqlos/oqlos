@@ -12,6 +12,7 @@ from oqlos.api.hardware_modbus_settings import (
     effective_modbus_target_baud,
 )
 from oqlos.api.hardware_gateway import is_plugin_compatible as _is_plugin_compatible
+from oqlos.errors import OqlosError
 
 _settings = get_settings()
 
@@ -600,14 +601,18 @@ def _build_waveshare_diagnose_report(health: dict[str, Any] | None = None) -> di
         import pimodbus.config  # noqa: F401
         import pimodbus.provisioning  # noqa: F401
     except Exception as exc:
-        return {
-            "ok": False,
-            "error": f"pimodbus is not available: {exc}",
-            "baud_sequence": baud_sequence,
-            "io_device_ids": io_ids,
-            "adc_device_id": adc_id,
-            "topology": ports["topology"],
-        }
+        raise OqlosError(
+            code="pimodbus_unavailable",
+            status_code=503,
+            message=f"pimodbus is not available: {exc}",
+            detail={
+                "operation": "modbus.waveshare.diagnose",
+                "baud_sequence": baud_sequence,
+                "io_device_ids": io_ids,
+                "adc_device_id": adc_id,
+                "topology": ports["topology"],
+            },
+        ) from exc
 
     if separate:
         report_dict, report_ok = _probe_waveshare_separate(
