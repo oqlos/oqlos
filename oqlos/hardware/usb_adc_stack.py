@@ -22,26 +22,39 @@ def normalize_usb_adc_channels(payload: Any) -> dict[str, dict[str, Any]]:
         if not isinstance(item, dict):
             continue
         sensor_id = str(item.get("logical_name") or "").strip().lower()
-        reading = item.get("reading")
-        if not sensor_id.startswith("ai") or not isinstance(reading, dict):
-            continue
-        try:
-            volts = float(reading["volts"])
-        except (KeyError, TypeError, ValueError):
-            continue
-        if not math.isfinite(volts):
+        if not sensor_id.startswith("ai"):
             continue
 
-        channels[sensor_id] = {
-            "sensor_id": sensor_id,
-            "value": volts,
-            "ok": True,
-            "unit": "V",
-            "source": "usb-adc-stack",
-            "adapter": item.get("adapter"),
-            "physical_input": item.get("physical_input"),
-            "details": reading,
-        }
+        reading = item.get("reading")
+        if isinstance(reading, dict):
+            try:
+                volts = float(reading["volts"])
+            except (KeyError, TypeError, ValueError):
+                volts = None
+            if volts is not None and math.isfinite(volts):
+                channels[sensor_id] = {
+                    "sensor_id": sensor_id,
+                    "value": volts,
+                    "ok": True,
+                    "unit": "V",
+                    "source": "usb-adc-stack",
+                    "adapter": item.get("adapter"),
+                    "physical_input": item.get("physical_input"),
+                    "details": reading,
+                }
+                continue
+
+        error = item.get("error")
+        if item.get("ok") is False or error:
+            channels[sensor_id] = {
+                "sensor_id": sensor_id,
+                "value": None,
+                "ok": False,
+                "error": str(error or "USB ADC channel unavailable"),
+                "source": "usb-adc-stack",
+                "adapter": item.get("adapter"),
+                "physical_input": item.get("physical_input"),
+            }
 
     if not channels:
         raise UsbAdcStackError("usb-adc-stack returned no usable ADC channels")

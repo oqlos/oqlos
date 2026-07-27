@@ -29,6 +29,37 @@ def test_normalize_usb_adc_channels_preserves_voltage_and_source_metadata():
     assert channels["ai02"]["adapter"] == "usb-adc-dfr1184"
 
 
+def test_normalize_usb_adc_channels_keeps_failed_sidecar_channels():
+    channels = normalize_usb_adc_channels(
+        [
+            {
+                "logical_name": "ai01",
+                "adapter": "usb-adc-mcp2221",
+                "physical_input": "MCP2221A.G1",
+                "reading": {"volts": 1.25},
+            },
+            {
+                "logical_name": "ai02",
+                "adapter": "usb-adc-dfr1184",
+                "physical_input": "DFR1184.AIN1",
+                "ok": False,
+                "error": "usb-adc-dfr1184 read timed out after 2.5s",
+            },
+        ]
+    )
+
+    assert channels["ai01"]["ok"] is True
+    assert channels["ai02"] == {
+        "sensor_id": "ai02",
+        "value": None,
+        "ok": False,
+        "error": "usb-adc-dfr1184 read timed out after 2.5s",
+        "source": "usb-adc-stack",
+        "adapter": "usb-adc-dfr1184",
+        "physical_input": "DFR1184.AIN1",
+    }
+
+
 def test_normalize_usb_adc_channels_rejects_payload_without_readings():
     with pytest.raises(UsbAdcStackError, match="no usable ADC channels"):
         normalize_usb_adc_channels([{"logical_name": "ai01", "reading": {}}])

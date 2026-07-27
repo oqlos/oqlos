@@ -96,6 +96,17 @@ def unavailable_sensor_entry(sensor_id: str, modbus_adc_health: Any) -> dict[str
     }
 
 
+def unavailable_usb_sensor_entry(sensor_id: str) -> dict[str, Any]:
+    """Missing channel while USB ADC is the active telemetry source."""
+    return {
+        "sensor_id": sensor_id,
+        "value": None,
+        "ok": False,
+        "error": "USB ADC channel unavailable",
+        "source": "usb-adc-stack",
+    }
+
+
 def _adc_channel_key(sensor_id: str) -> str:
     _, oqlos_sensor_id = adc_sensor_alias(sensor_id)
     return oqlos_sensor_id
@@ -196,11 +207,10 @@ async def read_sensor_values(
     if usb_sensors is not None:
         if len(usb_sensors) == len(sensor_ids):
             return usb_sensors
-        gateway_health = health if health is not None else await cached_gateway_health()
-        _, modbus_adc_health = modbus_adc_unavailable(gateway_health)
+        # USB stack is active for this batch — do not blame the disabled Modbus ADC
+        # plugin for channels the sidecar omitted or reported as failed.
         return {
-            sensor_id: usb_sensors.get(sensor_id)
-            or unavailable_sensor_entry(sensor_id, modbus_adc_health)
+            sensor_id: usb_sensors.get(sensor_id) or unavailable_usb_sensor_entry(sensor_id)
             for sensor_id in sensor_ids
         }
 

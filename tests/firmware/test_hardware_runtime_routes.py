@@ -143,6 +143,9 @@ def test_read_sensor_values_preserves_partial_usb_batch(monkeypatch):
     )
 
     assert sensors["ai01"]["ok"] is False
+    assert sensors["ai01"]["error"] == "USB ADC channel unavailable"
+    assert sensors["ai01"]["source"] == "usb-adc-stack"
+    assert "Modbus ADC" not in str(sensors["ai01"].get("error"))
     assert sensors["ai02"]["value"] == 2.4
     assert sensors["ai03"]["value"] == 7.1
 
