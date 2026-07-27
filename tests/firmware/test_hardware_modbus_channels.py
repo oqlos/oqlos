@@ -77,3 +77,30 @@ def test_write_modbus_channel_value_raises_when_plugin_missing(monkeypatch):
         )
     assert caught.value.public_code == "C2004-HW-0012"
     assert caught.value.issue_code == "hw_modbus_no_response"
+
+
+def test_read_modbus_profile_channels_raises_when_all_modules_fail(monkeypatch):
+    async def _fail_module(role, profile_cfg, health):
+        return {"module_role": role, "ok": False, "message": "down", "channels": []}
+
+    class _Gateway:
+        async def health(self):
+            return {"mode": "real"}
+
+    monkeypatch.setattr(channels, "get_hardware_gateway", lambda: _Gateway())
+    monkeypatch.setattr(channels, "_read_module_channels", _fail_module)
+    monkeypatch.setattr(
+        channels,
+        "read_modbus_baud_settings",
+        lambda _settings: {
+            "profiles": {
+                "modbus-io": {"module_roles": ["modbus-io"], "serial_port": "/dev/null"},
+            }
+        },
+    )
+    monkeypatch.setattr(channels, "MODBUS_PROFILE_IDS", {"modbus-io", "modbus-adc"})
+
+    with pytest.raises(OqlosError) as caught:
+        asyncio.run(channels.read_modbus_profile_channels("modbus-io"))
+    assert caught.value.public_code == "C2004-HW-0012"
+    assert caught.value.issue_code == "hw_modbus_no_response"

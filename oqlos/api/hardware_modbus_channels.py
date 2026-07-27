@@ -207,8 +207,16 @@ async def read_modbus_profile_channels(profile_id: str) -> dict[str, Any]:
     modules = []
     for role in profile_cfg.get("module_roles") or []:
         modules.append(await _read_module_channels(role, profile_cfg, health))
+    successful = sum(1 for module in modules if module.get("ok"))
+    if modules and successful == 0:
+        raise OqlosError(
+            code="hw_modbus_no_response",
+            status_code=503,
+            message="No Modbus profile modules responded",
+            detail={"profile_id": profile_id, "modules": modules},
+        )
     return {
-        "ok": all(module.get("ok") for module in modules) if modules else False,
+        "ok": successful == len(modules) if modules else False,
         "profile_id": profile_id,
         "modules": modules,
     }
