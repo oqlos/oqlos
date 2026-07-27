@@ -19,6 +19,7 @@ from oqlos.api.hardware_probe_devices import (
 )
 from oqlos.api.hardware_registry import HARDWARE_REGISTRY
 from oqlos.config import get_settings
+from oqlos.errors.c2004_catalog_generated import c2004_code_for_issue
 from oqlos.hardware.discovery import list_serial_ports
 
 _settings = get_settings()
@@ -97,6 +98,7 @@ def _modbus_preflight_report() -> dict[str, Any]:
             if isinstance(report, dict):
                 return report
         except Exception as exc:
+            issue_code = "modbus_preflight_exception"
             return {
                 "ok": False,
                 "topology": "unknown",
@@ -104,13 +106,18 @@ def _modbus_preflight_report() -> dict[str, Any]:
                 "issues": [
                     {
                         "severity": "error",
-                        "code": "modbus_preflight_exception",
+                        "code": issue_code,
+                        "public_code": c2004_code_for_issue(issue_code),
                         "message": str(exc),
                         "modules": ["modbus-io", "modbus-adc"],
                         "repair": {},
                     }
                 ],
                 "recommended": {},
+                "diagnostics": {
+                    "issue_code": issue_code,
+                    "code": c2004_code_for_issue(issue_code),
+                },
             }
     return {"ok": True, "topology": "unknown", "modules": [], "issues": [], "recommended": {}}
 
