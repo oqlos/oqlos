@@ -5,6 +5,8 @@ from __future__ import annotations
 import asyncio
 from typing import Any, Callable
 
+from oqlos.errors import OqlosError
+
 _gateway: Any | None = None
 
 
@@ -15,7 +17,11 @@ def set_hardware_gateway(gw: Any) -> None:
 
 def get_hardware_gateway() -> Any:
     if _gateway is None:
-        raise RuntimeError("HardwareGateway not initialised")
+        raise OqlosError(
+            code="config_unavailable",
+            status_code=503,
+            message="HardwareGateway not initialised",
+        )
     return _gateway
 
 
