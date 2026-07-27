@@ -290,6 +290,19 @@ ISSUE_CATALOG: dict[str, IssueDefinition] = {
             hint="systemd-run the dri0050-motor-api sidecar (same as make hardware-up), without restarting the full stack.",
         ),
     ),
+    "hw_usb_adc_sidecar_unreachable": IssueDefinition(
+        code="hw_usb_adc_sidecar_unreachable",
+        domain="hardware",
+        default_severity="error",
+        summary="usb-adc-stack sidecar (:8214, MCP2221A/DFR1184) is unreachable or returned no channels.",
+        repair=RepairTemplate(
+            id="usb-adc-ensure-sidecar",
+            scope="oqlos",
+            auto_executable=True,
+            actuation_risk="config",
+            hint="Restart usb-adc-stack-api, verify DFR1184_SERIAL_PORT points at the correct by-id UART, then retry GET /api/v1/adc.",
+        ),
+    ),
     "hw_modbus_serial_handle_stale": IssueDefinition(
         code="hw_modbus_serial_handle_stale",
         domain="hardware",
@@ -381,7 +394,18 @@ CODE_PATTERNS: list[CodePattern] = [
 
 
 def get_issue_definition(code: str) -> IssueDefinition | None:
-    return ISSUE_CATALOG.get(code)
+    definition = ISSUE_CATALOG.get(code)
+    if definition is not None:
+        return definition
+    for pattern in CODE_PATTERNS:
+        if pattern.matches(code):
+            return IssueDefinition(
+                code=code,
+                domain=pattern.domain,
+                default_severity=pattern.default_severity,
+                summary=pattern.summary,
+            )
+    return None
 
 
 def matches_known_pattern(code: str) -> bool:

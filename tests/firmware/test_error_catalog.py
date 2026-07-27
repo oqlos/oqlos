@@ -21,6 +21,8 @@ _CODE_SOURCE_PATHS = [
     _REPO_ROOT / "oqlos" / "api" / "hardware_modbus_routes.py",
     _REPO_ROOT / "oqlos" / "api" / "hardware_modbus_waveshare.py",
     _REPO_ROOT / "oqlos" / "api" / "hardware_probe.py",
+    _REPO_ROOT / "oqlos" / "api" / "hardware_runtime.py",
+    _REPO_ROOT / "oqlos" / "api" / "plugins.py",
     _REPO_ROOT / "oqlos" / "hardware" / "plugin_gateway.py",
     _REPO_ROOT / "oqlos" / "hardware" / "usb_diagnostics.py",
 ]
@@ -53,6 +55,16 @@ def test_every_doctor_fstring_code_matches_a_registered_pattern():
             f"f-string code template {template!r} (e.g. {example!r}) has no matching "
             "CodePattern in oqlos/errors/catalog.py"
         )
+
+
+def test_dynamic_plugin_health_issue_has_hardware_definition():
+    from oqlos.errors.catalog import get_issue_definition
+
+    definition = get_issue_definition("adapter_modbus-io_health_not_ok")
+
+    assert definition is not None
+    assert definition.domain == "hardware"
+    assert definition.default_severity == "warning"
 
 
 def test_every_source_code_is_registered_in_catalog():

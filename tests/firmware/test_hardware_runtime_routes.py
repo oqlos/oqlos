@@ -4,16 +4,30 @@ from __future__ import annotations
 
 import asyncio
 
+import pytest
+
 from oqlos.api import hardware as hw
 from oqlos.api import hardware_runtime as runtime
+from oqlos.errors import OqlosError
 
 
 def test_hardware_router_includes_runtime_paths():
-    paths = {route.path for route in hw.router.routes}
-    assert "/api/v1/hardware/sensor/{sensor_id}" in paths
-    assert "/api/v1/hardware/temperature" in paths
-    assert "/api/v1/hardware/sensors/batch" in paths
-    assert "/api/v1/hardware/diagnose" in paths
+    paths: set[str] = set()
+    for route in hw.router.routes:
+        path = getattr(route, "path", None)
+        if isinstance(path, str):
+            paths.add(path)
+            continue
+        nested = getattr(route, "original_router", None)
+        for child in getattr(nested, "routes", []) or []:
+            child_path = getattr(child, "path", None)
+            if isinstance(child_path, str):
+                paths.add(child_path)
+    # Nested routers expose relative paths; prefix lives on include_context.
+    assert "/sensor/{sensor_id}" in paths
+    assert "/temperature" in paths
+    assert "/sensors/batch" in paths
+    assert "/diagnose" in paths
 
 
 def test_modbus_adc_unavailable_detects_incompatible_adc():
@@ -169,6 +183,28 @@ def test_batch_marks_partial_usb_reading_as_usable_and_degraded(monkeypatch):
     assert result["ok"] is True
     assert result["complete"] is False
     assert result["degraded"] is True
+
+
+def test_batch_raises_typed_error_when_usb_transport_is_down(monkeypatch):
+    runtime._USB_ADC_STATUS.update(available=False, error="connection refused")
+
+    async def _sensor_values(_sensor_ids, *, health=None):
+        return {
+            "ai01": {"sensor_id": "ai01", "value": None, "ok": False},
+            "ai02": {"sensor_id": "ai02", "value": None, "ok": False},
+            "ai03": {"sensor_id": "ai03", "value": None, "ok": False},
+        }
+
+    monkeypatch.setattr(runtime, "read_sensor_values", _sensor_values)
+    monkeypatch.setattr(runtime, "fresh_gateway_health", lambda: {"mode": "real"})
+
+    try:
+        with pytest.raises(OqlosError) as caught:
+            asyncio.run(runtime.read_sensors_batch("ai01,ai02,ai03"))
+        assert caught.value.public_code == "C2004-HW-0012"
+        assert caught.value.issue_code == "hw_usb_adc_sidecar_unreachable"
+    finally:
+        runtime._USB_ADC_STATUS.update(available=None, error=None, retry_after=0.0)
 
 
 def test_batch_does_not_probe_gateway_health_before_complete_usb_read(monkeypatch):

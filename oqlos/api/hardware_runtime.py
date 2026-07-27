@@ -11,6 +11,7 @@ from fastapi import APIRouter, HTTPException, Query
 
 from oqlos.api.hardware_gateway import get_hardware_gateway
 from oqlos.config import get_settings
+from oqlos.errors import OqlosError
 from oqlos.hardware.client.adc import adc_sensor_alias
 from oqlos.hardware.usb_adc_stack import UsbAdcStackError, read_usb_adc_channels
 
@@ -313,6 +314,41 @@ async def read_sensors_batch(
     modbus_unavailable, modbus_adc_health = modbus_adc_unavailable(health)
     successful = sum(1 for sensor in sensors.values() if sensor.get("ok"))
     complete = bool(sensors) and successful == len(sensors)
+    diagnostics = {
+        "mode": health.get("mode"),
+        "adc_source": (
+            "usb-adc-stack"
+            if _USB_ADC_STATUS.get("available") is True
+            else "modbus-adc"
+        ),
+        "usb_adc_stack": {
+            "available": _USB_ADC_STATUS.get("available"),
+            "error": _USB_ADC_STATUS.get("error"),
+        },
+        **({"modbus_adc": modbus_adc_health} if modbus_unavailable else {}),
+    }
+
+    # Complete transport loss → typed Problem Details. Partial channel failures
+    # (sidecar up, some AI channels timed out) stay in the 200 payload.
+    if ids and successful == 0 and (
+        _USB_ADC_STATUS.get("available") is False or modbus_unavailable
+    ):
+        usb_down = _USB_ADC_STATUS.get("available") is False
+        if usb_down:
+            raise OqlosError(
+                code="hw_usb_adc_sidecar_unreachable",
+                status_code=503,
+                message=str(
+                    _USB_ADC_STATUS.get("error") or "USB ADC sidecar unavailable"
+                ),
+                detail={"sensors": sensors, "diagnostics": diagnostics},
+            )
+        raise OqlosError(
+            code="modbus_adc_not_detected",
+            status_code=503,
+            message="Modbus ADC is not available for real sensor readings",
+            detail={"sensors": sensors, "diagnostics": diagnostics},
+        )
 
     return {
         # A telemetry batch is usable when at least one independent sensor
@@ -322,19 +358,7 @@ async def read_sensors_batch(
         "complete": complete,
         "degraded": successful > 0 and not complete,
         "sensors": sensors,
-        "diagnostics": {
-            "mode": health.get("mode"),
-            "adc_source": (
-                "usb-adc-stack"
-                if _USB_ADC_STATUS.get("available") is True
-                else "modbus-adc"
-            ),
-            "usb_adc_stack": {
-                "available": _USB_ADC_STATUS.get("available"),
-                "error": _USB_ADC_STATUS.get("error"),
-            },
-            **({"modbus_adc": modbus_adc_health} if modbus_unavailable else {}),
-        },
+        "diagnostics": diagnostics,
     }
 
 
