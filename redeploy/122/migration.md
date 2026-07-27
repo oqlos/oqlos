@@ -814,7 +814,10 @@ Environment=OQLOS_OQL_NODE_ID=boardnet
 Environment=OQLOS_OQL_TOPIC_PREFIX=oqlos/c2004
 Environment=OQLOS_OQL_MQTT_HOST=127.0.0.1
 Environment=OQLOS_OQL_MQTT_PORT=1883
-ExecStartPre=/home/pi/maskservice/scripts/verify-boardnet-modbus.sh
+# Verify and log the exact identity/RTU contract before startup, but keep the
+# diagnostics API online in degraded mode. Hardware commands remain fail-closed
+# in plugin readiness and return 503 while this verification fails.
+ExecStartPre=/bin/bash -lc '/home/pi/maskservice/scripts/verify-boardnet-modbus.sh || { echo "WARN: BoardNet Modbus preflight failed; starting diagnostics-only degraded runtime" >&2; exit 0; }'
 ExecStartPre=/bin/bash -lc 'if /home/pi/maskservice/scripts/wait-hw-tic249-ready.sh; then exit 0; fi; [ "${PIHW_ALLOW_MISSING_HARDWARE:-1}" = "1" ] && exit 0; exit 1'
 ExecStartPre=/home/pi/maskservice/scripts/tic249-deenergize-best-effort.sh
 ExecStart=/home/pi/oqlos/venv/bin/oqlos-server --host 0.0.0.0 --port 8202

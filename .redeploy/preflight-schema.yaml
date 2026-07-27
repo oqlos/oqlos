@@ -1,5 +1,5 @@
 schema_version: '1.0'
-generated_at: '2026-07-27T12:27:32.867376+00:00'
+generated_at: '2026-07-27T12:42:06.211738+00:00'
 spec:
   path: redeploy/122/migration.md
   name: oqlos boardnet deploy
@@ -43,8 +43,7 @@ plan:
     insert_before: null
   - id: sync_oql_scenario
     action: rsync
-    description: Sync kanonicznego magazynu scenariuszy i konfiguracji systemowych
-      OQL
+    description: Sync przypiętego magazynu OQL używanego przez ten sam release C2004
     has_command_ref: false
     insert_before: null
   - id: sync_pihw_config
@@ -215,17 +214,17 @@ checks:
     mode: markpact_ref
   local_artifacts:
   - kind: src
+    path: /home/tom/github/maskservice/c2004/extern/scenarios/
+    resolved: /home/tom/github/maskservice/c2004/extern/scenarios
+    exists: true
+    steps:
+    - sync_oql_scenario
+  - kind: src
     path: /home/tom/github/maskservice/c2004/packages/backend-shared-py/
     resolved: /home/tom/github/maskservice/c2004/packages/backend-shared-py
     exists: true
     steps:
     - sync_backend_shared_policy
-  - kind: src
-    path: /home/tom/github/oqlos/oql-scenario/
-    resolved: /home/tom/github/oqlos/oql-scenario
-    exists: true
-    steps:
-    - sync_oql_scenario
   - kind: src
     path: /home/tom/github/oqlos/oqlos/
     resolved: /home/tom/github/oqlos/oqlos

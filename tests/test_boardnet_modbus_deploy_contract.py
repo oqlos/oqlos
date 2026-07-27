@@ -36,7 +36,8 @@ def test_boardnet_modbus_is_verified_read_only_on_every_service_start() -> None:
     assert "write_coil" not in verifier
     assert "write_register" not in verifier
     assert ") from None" in verifier
-    assert "ExecStartPre=/home/pi/maskservice/scripts/verify-boardnet-modbus.sh" in unit
+    assert "verify-boardnet-modbus.sh" in unit
+    assert "diagnostics-only degraded runtime" in unit
     assert "RestartSec=10" in unit
     assert "rm -f /home/pi/.config/systemd/user/oqlos-hardware-api.service.d/99-modbus-port.conf" in migration
 
