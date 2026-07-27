@@ -1,5 +1,5 @@
 schema_version: '1.0'
-generated_at: '2026-07-27T11:13:13.292957+00:00'
+generated_at: '2026-07-27T12:27:32.867376+00:00'
 spec:
   path: redeploy/122/migration.md
   name: oqlos boardnet deploy
@@ -289,14 +289,11 @@ checks:
   remote:
     enabled: true
     host: pi@192.168.188.122
-    reachable: false
-    checks:
-    - type: ssh_reachability
-      ok: false
-      message: 'Cannot reach host via SSH: pi@192.168.188.122'
+    reachable: true
+    checks: []
 blockers: []
 summary:
   blockers: 0
   local_missing: 0
   refs_missing: 0
-  remote_failed_checks: 1
+  remote_failed_checks: 0

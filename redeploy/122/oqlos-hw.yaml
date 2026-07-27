@@ -1,10 +1,9 @@
 # OqlOS hardware-node plugin config (boardnet / 192.168.188.122).
 #
 # This is the base config copied to /home/pi/maskservice/config/oqlos-real.yaml by
-# the `apply-oqlos-hw-config` deploy step, which then AUTODETECTS and rewrites the
-# Modbus serial_port / baudrate / device_id in place. Do NOT hardcode-trust the
-# serial-by-id strings below — they are placeholders; the USB adapters on boardnet may
-# enumerate differently than on pi109.
+# the `apply-oqlos-hw-config` deploy step. BoardNet identities are pinned to
+# stable serial-by-id names and verified read-only at every service start. Raw
+# ttyACM/ttyUSB enumeration numbers are never an authoritative configuration.
 #
 # Motor sidecars run on THIS Pi at loopback (127.0.0.1), never host.docker.internal.
 
@@ -52,9 +51,9 @@ plugins:
     connection_type: modbus-rtu
     connection_params:
       serial_port: /dev/serial/by-id/usb-1a86_USB_Single_Serial_5958006895-if00
-      baudrate: 4800
+      baudrate: 9600
       parity: N
-      device_id: 2
+      device_id: 1
     timeout: 2.0
     retry_count: 3
     peripherals:

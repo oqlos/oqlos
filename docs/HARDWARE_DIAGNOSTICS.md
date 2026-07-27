@@ -376,7 +376,7 @@ BoardNet (`192.168.188.122`) — aktualny przypadek po naprawie z 2026-06-30:
 - `mode=real`, `overall_ok=true`,
 - Tic249 i DRI0050 są zdrowe,
 - Tic249 pozostaje `energized=false` gdy nie wykonuje ruchu,
-- `modbus-io` jest zdrowy na `9600/N`, slave ID `2`,
+- `modbus-io` jest zdrowy na `9600/N`, slave ID `1`,
 - `modbus-adc` jest wyłączony, bo adapter ADC nie jest obecny.
 
 Bezpieczna diagnostyka read-only na BoardNet:

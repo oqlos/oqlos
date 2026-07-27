@@ -21,6 +21,10 @@ TIC249_STATUS_URL = _TIC249_BASE_URL + "/api/status"
 TIC249_CONNECT_URL = _TIC249_BASE_URL + "/api/connect"
 
 
+class SerialIdentityAmbiguousError(RuntimeError):
+    """Raised when a hardware role cannot be assigned to exactly one USB TTY."""
+
+
 def _modbus_serial_candidates() -> set[str]:
     """Ports already used by Modbus plugins — do not assign to DRI0050 pump."""
     out: set[str] = set()
@@ -46,35 +50,55 @@ def _modbus_serial_candidates() -> set[str]:
 
 
 def resolve_dri0050_serial(configured: str = "") -> str:
-    """Pick pump USB-serial: env, stable by-id, then ttyUSB not used by Modbus."""
+    """Resolve exactly one pump TTY without depending on ttyUSB enumeration order.
+
+    Stable ``/dev/serial/by-id`` paths win.  A raw tty fallback is accepted only
+    when there is exactly one unclaimed candidate.  Multiple candidates fail
+    closed instead of assigning an arbitrary serial adapter to the motor.
+    """
     configured = (configured or "").strip()
+    modbus_ports = _modbus_serial_candidates()
     if configured and Path(configured).exists():
+        configured_real = os.path.realpath(configured)
+        if configured in modbus_ports or configured_real in modbus_ports:
+            raise SerialIdentityAmbiguousError(
+                f"DRI0050 port {configured} is already reserved by a Modbus plugin"
+            )
         return configured
 
-    modbus_ports = _modbus_serial_candidates()
+    def unique_unclaimed(paths: list[str], *, source: str) -> str:
+        candidates: dict[str, str] = {}
+        for path in paths:
+            try:
+                real = os.path.realpath(path)
+            except OSError:
+                real = path
+            if path in modbus_ports or real in modbus_ports or not Path(path).exists():
+                continue
+            candidates.setdefault(real, path)
+        if len(candidates) > 1:
+            listed = ", ".join(sorted(candidates.values()))
+            raise SerialIdentityAmbiguousError(
+                f"DRI0050 serial identity is ambiguous ({source}): {listed}"
+            )
+        return next(iter(candidates.values()), "")
+
     by_id_patterns = (
         "/dev/serial/by-id/usb-1a86_USB2.0-Serial*",
         "/dev/serial/by-id/usb-1a86_*Serial*",
         "/dev/serial/by-id/*USB2.0-Serial*",
     )
+    by_id_paths: list[str] = []
     for pattern in by_id_patterns:
-        for path in sorted(glob.glob(pattern)):
-            try:
-                if os.path.realpath(path) in modbus_ports:
-                    continue
-            except OSError:
-                pass
-            if Path(path).exists():
-                return path
+        by_id_paths.extend(glob.glob(pattern))
+    resolved = unique_unclaimed(by_id_paths, source="by-id")
+    if resolved:
+        return resolved
 
-    for tty in sorted(glob.glob("/dev/ttyUSB*")) + sorted(glob.glob("/dev/ttyACM*")):
-        try:
-            if os.path.realpath(tty) in modbus_ports:
-                continue
-        except OSError:
-            pass
-        if Path(tty).exists():
-            return tty
+    tty_paths = sorted(glob.glob("/dev/ttyUSB*")) + sorted(glob.glob("/dev/ttyACM*"))
+    resolved = unique_unclaimed(tty_paths, source="raw tty fallback")
+    if resolved:
+        return resolved
 
     return configured
 
@@ -168,7 +192,19 @@ async def _free_api_port(port: int = _DRI0050_API_PORT) -> None:
 
 async def ensure_dri0050_sidecar(*, force_restart: bool = False) -> dict[str, Any]:
     """Start or restart dri0050-motor-api via systemd-run (same as make hardware-up)."""
-    repo_root, python, serial, freq = _dri0050_paths()
+    try:
+        repo_root, python, serial, freq = _dri0050_paths()
+    except SerialIdentityAmbiguousError as exc:
+        return {
+            "ok": False,
+            "step": "ensure-dri0050-sidecar",
+            "error": str(exc),
+            "error_code": "serial_identity_ambiguous",
+            "hint": (
+                "Odłącz nadmiarowe adaptery CH340 albo skonfiguruj trwały "
+                "DRI0050_PORT wskazujący jedno urządzenie /dev/serial/by-id."
+            ),
+        }
     if not python.is_file():
         return {
             "ok": False,

@@ -1,4 +1,4 @@
-"""BoardNet deployment must probe the physical Waveshare IO at 4800/N/8/1."""
+"""BoardNet deployment must probe the physical Waveshare IO at 9600/N/8/1."""
 
 from pathlib import Path
 
@@ -13,10 +13,51 @@ def test_boardnet_modbus_detection_uses_stable_port_and_machine_baud() -> None:
     detection = migration.split("MB_DETECT=", 1)[1].split("ADC_ENABLED=false", 1)[0]
 
     assert 'glob.glob("/dev/serial/by-id/*")' in detection
-    assert "baudrate=4800" in detection
-    assert "baudrate=9600" not in detection
-    assert "IO_BAUD=4800" in detection
-    assert 'IO_DEVICE_ID="${MB_IO_ID:-2}"' in detection
+    assert "baudrate=9600" in detection
+    assert "IO_BAUD=9600" in detection
+    assert "device_id=1" in detection
+    assert "range(1, 9)" not in detection
+    assert "IO_DEVICE_ID=1" in detection
+    assert "IO_ENABLED=false" not in detection
+    assert "io-not-present" not in detection
+    assert "MB_IO_AMBIGUOUS" in detection
+    assert '"$MB_IO_DEV" != "$EXPECTED_IO_DEV"' in detection
+
+
+def test_boardnet_modbus_is_verified_read_only_on_every_service_start() -> None:
+    migration = (ROOT / "redeploy/122/migration.md").read_text(encoding="utf-8")
+    verifier = migration.split("verify-boardnet-modbus.sh << 'SH'", 1)[1].split("\nSH\n", 1)[0]
+    unit = migration.split("Description=OqlOS hardware node", 1)[1].split("\nEOF", 1)[0]
+
+    assert "ID_SERIAL_SHORT=${EXPECTED_SERIAL}" in verifier
+    assert 'BAUD" != "9600"' in verifier
+    assert 'DEVICE_ID" != "1"' in verifier
+    assert "read_coils" in verifier
+    assert "write_coil" not in verifier
+    assert "write_register" not in verifier
+    assert ") from None" in verifier
+    assert "ExecStartPre=/home/pi/maskservice/scripts/verify-boardnet-modbus.sh" in unit
+    assert "RestartSec=10" in unit
+    assert "rm -f /home/pi/.config/systemd/user/oqlos-hardware-api.service.d/99-modbus-port.conf" in migration
+
+
+def test_dri0050_startup_fails_closed_when_usb_identity_is_ambiguous() -> None:
+    migration = (ROOT / "redeploy/122/migration.md").read_text(encoding="utf-8")
+    script = migration.split("start-dri0050-motor-api.sh << 'SH'", 1)[1].split("\nSH\n", 1)[0]
+
+    assert "ID_VENDOR_ID=1a86" in script
+    assert "ID_MODEL=(USB2" in script
+    assert '"${#DRI_CANDIDATES[@]}" -gt 1' in script
+    assert "nie wybieram pierwszego ttyUSB" in script
+    assert "for _p in /dev/ttyUSB*" in script
+
+
+def test_boardnet_deploy_uses_the_c2004_pinned_oql_store() -> None:
+    migration = (ROOT / "redeploy/122/migration.md").read_text(encoding="utf-8")
+    step = migration.split("- id: sync_oql_scenario", 1)[1].split("\n  - id:", 1)[0]
+
+    assert "src: /home/tom/github/maskservice/c2004/extern/scenarios/" in step
+    assert "src: /home/tom/github/oqlos/oql-scenario/" not in step
 
 
 def test_boardnet_base_config_matches_machine_modbus_contract() -> None:
@@ -27,7 +68,7 @@ def test_boardnet_base_config_matches_machine_modbus_contract() -> None:
 
     assert params == {
         "serial_port": "/dev/serial/by-id/usb-1a86_USB_Single_Serial_5958006895-if00",
-        "baudrate": 4800,
+        "baudrate": 9600,
         "parity": "N",
-        "device_id": 2,
+        "device_id": 1,
     }

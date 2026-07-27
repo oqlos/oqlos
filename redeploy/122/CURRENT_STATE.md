@@ -48,7 +48,8 @@ Katalog: `GET http://192.168.188.122:8202/api/v1/hardware/hui/actions`
 bywa **degraded**: `modbus-io` timeout → `POST .../hold/lp-pwm-minus10/start`
 zwraca `Valve valve-6 failed`; `al/stop` kończy `stop_lung` OK, ale
 `set_valve valve-4` może być `ok=false`. Mapowanie logiczne jest poprawne;
-naprawa wymaga stabilnego RS485 (slave ID 2, patrz sekcja „Ostatnia naprawa”).
+naprawa wymaga stabilnego RS485 (aktualnie slave ID 1; patrz sekcja
+„Ostatnia weryfikacja Modbus-IO”).
 
 DisplayNet (`:8100`) używa tego samego API przez proxy:
 `/api/v3/hardware/hui/*` → `http://192.168.188.122:8202/api/v1/hardware/hui/*`.
@@ -117,7 +118,7 @@ curl -s http://192.168.188.122:8203/health
   - DFR1184 używa UART Raspberry Pi `/dev/serial0` (AI02/AI03), nie USB.
 - Tic249 raportuje `connected=true`, `energized=false`.
 - DRI0050 raportuje zdrowy stan na `:8203`.
-- Modbus-IO jest podłączony na slave ID `2` i raportuje `status=connected`,
+- Modbus-IO jest podłączony na slave ID `1` i raportuje `status=connected`,
   `compatible=true`.
 - OqlOS działa w `mode=real`; ostatni health ma `overall_ok=true`,
   `degraded=false`, trzy podłączone pluginy i zero failed.
@@ -138,24 +139,24 @@ curl -s http://192.168.188.122:8203/health
 - Autodetekcja Modbus pomija MCP2221 i port pompy DRI0050. Nie próbuje już
   uruchamiać starego `modbus-adc` ani raportować go jako źródła analogowego.
 
-## Ostatnia historyczna naprawa Modbus-IO (2026-07-07)
+## Ostatnia weryfikacja Modbus-IO (2026-07-27)
 
 - Aktualna polityka runtime dla Waveshare Modbus-IO to
   `/dev/serial/by-id/usb-1a86_USB_Single_Serial_5958006895-if00`,
-  `4800/N/8/1`, slave ID `2`.
+  `9600/N/8/1`, slave ID `1`.
 - Nie programowano modułu i nie wykonywano `repair --yes`.
-- Poprawiono konfigurację runtime na `modbus-io.device_id=2` oraz
-  `OQLOS_MODBUS_DEVICE_ID=2`.
-- `redeploy/122/migration.md` wykrywa teraz slave ID dla `modbus-io`, więc
-  ponowny deploy nie powinien cofnąć ustawienia do ID `1`.
+- Konfiguracja runtime używa `modbus-io.device_id=1` oraz
+  `OQLOS_MODBUS_DEVICE_ID=1`.
+- `redeploy/122/migration.md` przypina stabilną tożsamość USB i sprawdza
+  kontrakt odczytem `read_coils`, bez zapisu do cewek lub rejestrów.
 
 ## Wykonana diagnostyka read-only
 
 - Zatrzymano tylko `oqlos-hardware-api.service`, sidecary zostawiono aktywne,
   potem firmware został ponownie uruchomiony.
-- Krótki skan targetowany powinien używać (`4800`, parity `N`, IDs `1,2`)
+- Krótki skan targetowany powinien używać (`9600`, parity `N`, IDs `1,2`)
   i oczekiwać odpowiedzi
-  `read_coils` dla ID `2`.
+  `read_coils` dla ID `1`.
 - Po restarcie OqlOS: `modbus-io` jest healthy, Tic249 nadal
   `energized=false`.
 - Po reboot BoardNet: Tic249 nadal `energized=false`.

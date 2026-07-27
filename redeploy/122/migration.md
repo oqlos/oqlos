@@ -285,18 +285,41 @@ cat > /home/pi/maskservice/scripts/start-dri0050-motor-api.sh << 'SH'
 #!/bin/bash
 set -euo pipefail
 cd /home/pi/maskservice/rpi-motor-DRI0050
+DRI_PORT=""
 for _ in $(seq 1 30); do
-  DRI_PORT=$(ls -1 /dev/serial/by-id/usb-1a86_USB2.0-Serial-if00-port0 2>/dev/null | head -1 || true)
-  if [ -z "${DRI_PORT:-}" ]; then
-    for _p in /dev/ttyUSB*; do [ -e "$_p" ] && DRI_PORT="$_p" && break; done
+  mapfile -t DRI_CANDIDATES < <(
+    for _p in /dev/ttyUSB* /dev/ttyACM*; do
+      [ -e "$_p" ] || continue
+      _props=$(udevadm info --query=property --name="$_p" 2>/dev/null || true)
+      grep -q '^ID_VENDOR_ID=1a86$' <<<"$_props" || continue
+      grep -Eq '^ID_MODEL=(USB2\.0-Serial|USB2\.0_Serial)$' <<<"$_props" || continue
+      printf '%s\n' "$_p"
+    done
+  )
+  if [ "${#DRI_CANDIDATES[@]}" -gt 1 ]; then
+    echo "ERROR: niejednoznaczna tożsamość DRI0050: ${DRI_CANDIDATES[*]}" >&2
+    echo "ERROR: skonfiguruj unikalny adapter/serial; nie wybieram pierwszego ttyUSB" >&2
+    exit 1
+  fi
+  if [ "${#DRI_CANDIDATES[@]}" -eq 1 ]; then
+    DRI_REAL=$(readlink -f "${DRI_CANDIDATES[0]}")
+    for _link in /dev/serial/by-id/usb-1a86_USB2.0-Serial*; do
+      [ -e "$_link" ] || continue
+      if [ "$(readlink -f "$_link")" = "$DRI_REAL" ]; then
+        DRI_PORT="$_link"
+        break
+      fi
+    done
+    DRI_PORT="${DRI_PORT:-${DRI_CANDIDATES[0]}}"
   fi
   [ -n "${DRI_PORT:-}" ] && [ -e "$DRI_PORT" ] && break
   sleep 1
 done
 if [ -z "${DRI_PORT:-}" ] || [ ! -e "$DRI_PORT" ]; then
-  DRI_PORT=/dev/serial/by-id/usb-1a86_USB2.0-Serial-if00-port0
-  echo "WARN: DRI0050 USB serial port not found after boot wait; starting on $DRI_PORT" >&2
+  echo "ERROR: nie znaleziono jednoznacznego adaptera DRI0050 po 30 s" >&2
+  exit 1
 fi
+echo "INFO: DRI0050 identity resolved to $DRI_PORT -> $(readlink -f "$DRI_PORT")"
 export DRI0050_PORT="$DRI_PORT"
 export DRI0050_FREQ="${DRI0050_FREQ:-1000}"
 exec /home/pi/maskservice/rpi-motor-DRI0050/.venv/bin/python web_api.py
@@ -597,6 +620,8 @@ if not links:
     links = sorted(glob.glob("/dev/serial/by-path/platform-*"))
 if not links:
     links = sorted(glob.glob("/dev/ttyACM*") + glob.glob("/dev/ttyUSB*"))
+expected_io = "/dev/serial/by-id/usb-1a86_USB_Single_Serial_5958006895-if00"
+links.sort(key=lambda link: (link != expected_io, link))
 for link in links:
     real = os.path.realpath(link)
     if real in seen:
@@ -606,45 +631,58 @@ for link in links:
         continue
     candidates.append(link)
 
-io_dev = io_id = None
+matches = []
 for port in candidates:
-    if io_dev:
-        break
-    for device_id in range(1, 9):
-        cli = ModbusSerialClient(
-            port=port,
-            baudrate=4800,
-            parity="N",
-            stopbits=1,
-            bytesize=8,
-            timeout=0.35,
-            retries=0,
-        )
+    cli = ModbusSerialClient(
+        port=port,
+        baudrate=9600,
+        parity="N",
+        stopbits=1,
+        bytesize=8,
+        timeout=0.35,
+        retries=0,
+    )
+    try:
+        if not cli.connect():
+            continue
+        # Machine contract is fixed: Waveshare IO must be slave 1.  Scanning
+        # and silently adopting another address would hide a wiring/config fault.
+        resp = cli.read_coils(address=0, count=1, device_id=1)
+        if resp is not None and not resp.isError():
+            matches.append(port)
+    except Exception:
+        pass
+    finally:
         try:
-            if not cli.connect():
-                break  # busy or unopenable — skip this port
-            resp = cli.read_coils(address=0, count=1, device_id=device_id)
-            if resp is not None and not resp.isError():
-                io_dev, io_id = port, device_id
-                break
+            cli.close()
         except Exception:
             pass
-        finally:
-            try:
-                cli.close()
-            except Exception:
-                pass
-print(f"MB_IO_DEV='{io_dev or ''}' MB_IO_ID='{io_id or ''}'")
+if len(matches) == 1:
+    print(f"MB_IO_DEV='{matches[0]}' MB_IO_AMBIGUOUS='' ")
+elif len(matches) > 1:
+    print(f"MB_IO_DEV='' MB_IO_AMBIGUOUS='{','.join(matches)}'")
+else:
+    print("MB_IO_DEV='' MB_IO_AMBIGUOUS=''")
 PY
 )
 eval "${MB_DETECT:-}"
-IO_BAUD=4800
+EXPECTED_IO_DEV=/dev/serial/by-id/usb-1a86_USB_Single_Serial_5958006895-if00
+IO_BAUD=9600
 IO_ENABLED=true
-IO_DEV="${MB_IO_DEV:-}"
-IO_DEVICE_ID="${MB_IO_ID:-2}"
-if [ -z "$IO_DEV" ]; then
-  IO_ENABLED=false
-  IO_DEV=/dev/serial/by-id/io-not-present
+IO_DEV="${MB_IO_DEV:-$EXPECTED_IO_DEV}"
+IO_DEVICE_ID=1
+if [ -n "${MB_IO_AMBIGUOUS:-}" ]; then
+  echo "ERROR: więcej niż jeden adapter odpowiada jako Waveshare slave 1: $MB_IO_AMBIGUOUS" >&2
+  exit 1
+fi
+if [ -n "${MB_IO_DEV:-}" ] && [ "$MB_IO_DEV" != "$EXPECTED_IO_DEV" ]; then
+  echo "ERROR: slave 1 odpowiedział na niezatwierdzonym adapterze $MB_IO_DEV" >&2
+  echo "ERROR: oczekiwany adapter maszyny to $EXPECTED_IO_DEV; wymagana jawna zmiana konfiguracji" >&2
+  exit 1
+fi
+if [ -z "${MB_IO_DEV:-}" ]; then
+  echo "WARN: Waveshare slave 1 nie odpowiedział podczas deployu; zachowuję stabilną tożsamość $EXPECTED_IO_DEV" >&2
+  echo "WARN: preflight przy każdym starcie nie dopuści OqlOS do pracy, dopóki właściwy sprzęt nie odpowie" >&2
 fi
 # Legacy Modbus ADC is intentionally disabled. usb-adc-stack owns AI01..AI03.
 ADC_ENABLED=false
@@ -675,6 +713,69 @@ path.write_text(text, encoding="utf-8")
 print(f"PASS: {path} (motor-dri0050={dri_enabled}, modbus-io={io_dev}@{io_baud} enabled={io_enabled}, id={io_device_id}, modbus-adc={adc_dev} enabled={adc_enabled}, id={adc_device_id})")
 PY
 
+# Read-only boot gate.  It verifies USB identity and the exact machine RTU
+# contract on every service start; it never writes a coil/register.
+cat > /home/pi/maskservice/scripts/verify-boardnet-modbus.sh << 'SH'
+#!/bin/bash
+set -euo pipefail
+PORT="${OQLOS_MODBUS_SERIAL_PORT:?missing OQLOS_MODBUS_SERIAL_PORT}"
+BAUD="${OQLOS_MODBUS_BAUD:-9600}"
+PARITY="${OQLOS_MODBUS_PARITY:-N}"
+DEVICE_ID="${OQLOS_MODBUS_DEVICE_ID:-1}"
+EXPECTED_SERIAL="${OQLOS_MODBUS_EXPECTED_SERIAL:-5958006895}"
+
+if [ "$BAUD" != "9600" ] || [ "$PARITY" != "N" ] || [ "$DEVICE_ID" != "1" ]; then
+  echo "ERROR: invalid BoardNet Modbus contract: $PORT@$BAUD 8${PARITY}1 slave=$DEVICE_ID" >&2
+  exit 1
+fi
+if [ ! -e "$PORT" ]; then
+  echo "ERROR: expected Modbus adapter is missing: $PORT" >&2
+  exit 1
+fi
+PROPS=$(udevadm info --query=property --name="$(readlink -f "$PORT")" 2>/dev/null || true)
+if ! grep -q "^ID_SERIAL_SHORT=${EXPECTED_SERIAL}$" <<<"$PROPS"; then
+  echo "ERROR: $PORT is not the expected CH343 serial $EXPECTED_SERIAL" >&2
+  exit 1
+fi
+
+/home/pi/oqlos/venv/bin/python - "$PORT" "$BAUD" "$PARITY" "$DEVICE_ID" << 'PY'
+import sys
+from pymodbus.client import ModbusSerialClient
+
+port, baud, parity, device_id = sys.argv[1], int(sys.argv[2]), sys.argv[3], int(sys.argv[4])
+client = ModbusSerialClient(
+    port=port,
+    baudrate=baud,
+    parity=parity,
+    stopbits=1,
+    bytesize=8,
+    timeout=0.8,
+    retries=0,
+)
+try:
+    if not client.connect():
+        raise SystemExit(f"ERROR: cannot open {port}")
+    response = client.read_coils(address=0, count=1, device_id=device_id)
+    if response is None or response.isError():
+        raise SystemExit(f"ERROR: Waveshare slave {device_id} did not answer read_coils: {response}")
+except SystemExit:
+    raise
+except Exception as exc:
+    raise SystemExit(
+        f"ERROR: Waveshare slave {device_id} read_coils failed on {port}: {exc}"
+    ) from None
+finally:
+    client.close()
+print(f"PASS: verified CH343 {port}@{baud} 8{parity}1 slave={device_id} (read-only)")
+PY
+SH
+chmod +x /home/pi/maskservice/scripts/verify-boardnet-modbus.sh
+
+# Remove the legacy emergency override. The generated unit now carries the
+# verified 9600/slave 1 machine contract directly, so no higher-precedence
+# drop-in is required.
+rm -f /home/pi/.config/systemd/user/oqlos-hardware-api.service.d/99-modbus-port.conf
+
 # --- systemd unit: oqlos-server with the OQL-over-MQTT agent/controller enabled ---
 cat > /home/pi/.config/systemd/user/oqlos-hardware-api.service << EOF
 [Unit]
@@ -695,6 +796,7 @@ Environment=OQLOS_MODBUS_SERIAL_PORT=${IO_DEV}
 Environment=OQLOS_MODBUS_BAUD=${IO_BAUD}
 Environment=OQLOS_MODBUS_PARITY=N
 Environment=OQLOS_MODBUS_DEVICE_ID=${IO_DEVICE_ID}
+Environment=OQLOS_MODBUS_EXPECTED_SERIAL=5958006895
 Environment=OQLOS_MODBUS_ADC_SERIAL_PORT=${ADC_SERIAL_FOR_CONFIG}
 Environment=OQLOS_MODBUS_ADC_BAUD=9600
 Environment=OQLOS_MODBUS_ADC_PARITY=N
@@ -712,13 +814,14 @@ Environment=OQLOS_OQL_NODE_ID=boardnet
 Environment=OQLOS_OQL_TOPIC_PREFIX=oqlos/c2004
 Environment=OQLOS_OQL_MQTT_HOST=127.0.0.1
 Environment=OQLOS_OQL_MQTT_PORT=1883
+ExecStartPre=/home/pi/maskservice/scripts/verify-boardnet-modbus.sh
 ExecStartPre=/bin/bash -lc 'if /home/pi/maskservice/scripts/wait-hw-tic249-ready.sh; then exit 0; fi; [ "${PIHW_ALLOW_MISSING_HARDWARE:-1}" = "1" ] && exit 0; exit 1'
 ExecStartPre=/home/pi/maskservice/scripts/tic249-deenergize-best-effort.sh
 ExecStart=/home/pi/oqlos/venv/bin/oqlos-server --host 0.0.0.0 --port 8202
 ExecStop=/home/pi/maskservice/scripts/tic249-deenergize-best-effort.sh
 ExecStopPost=/home/pi/maskservice/scripts/tic249-deenergize-best-effort.sh
 Restart=always
-RestartSec=3
+RestartSec=10
 KillSignal=SIGINT
 TimeoutStopSec=25
 StandardOutput=append:/home/pi/maskservice/logs/oqlos-hardware-api.log
@@ -1420,8 +1523,10 @@ extra_steps:
 
   - id: sync_oql_scenario
     action: rsync
-    description: "Sync kanonicznego magazynu scenariuszy i konfiguracji systemowych OQL"
-    src: /home/tom/github/oqlos/oql-scenario/
+    description: "Sync przypiętego magazynu OQL używanego przez ten sam release C2004"
+    # One SSOT: deploy the exact gitlink consumed by the frontend/backend.  A
+    # sibling checkout can be on another commit and must never feed BoardNet.
+    src: /home/tom/github/maskservice/c2004/extern/scenarios/
     dst: ~/oqlos/oql-scenario/
     excludes: [.git, .venv/, venv/, __pycache__/, .pytest_cache/]
 
