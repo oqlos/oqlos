@@ -14,6 +14,13 @@ Najnowszy bezpieczny odczyt live wykazał zmianę względem wcześniejszego stan
   pól świeżości (`observed_at`, `age_ms`, `source`, `stale`);
 - nie wykonano impulsów, programowania ani automatycznej naprawy sprzętu.
 
+Późniejsza diagnostyka ustaliła sekwencję awarii: preflight `read_coils` na
+`4800/N`, slave `1`, nie otrzymał odpowiedzi, ale stary `connect()` uznał samo
+otwarcie portu za stan `connected`. HUI zwracało wtedy 503. Następny preflight
+otrzymał odpowiedź, a po ponownym starcie health oraz read-only plan DO1–DO8
+były poprawne. Kernel nie zarejestrował odłączenia USB. Kod został utwardzony,
+aby `connected` wymagało rzeczywistej odpowiedzi slave.
+
 Poniższe punkty `overall_ok=true` opisują wcześniejszy snapshot z tego samego
 dnia, a nie gwarancję bieżącego stanu.
 

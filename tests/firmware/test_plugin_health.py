@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import asyncio
+import sys
 import time
+from types import ModuleType
 
 from oqlos.hardware.plugins.base import PluginConfig, PluginStatus
 from oqlos.hardware.plugins.lung import LungPlugin
@@ -93,6 +95,44 @@ class _CapturingAsyncModbusBus(_CapturingModbusClient):
 
     async def write_coil(self, **kwargs):
         return super().write_coil(**kwargs)
+
+
+class _ConnectProbeBus:
+    def __init__(self, result):
+        self.result = result
+        self.closed = False
+        self.read_kwargs = None
+
+    async def connect(self):
+        return True
+
+    async def read_coils(self, **kwargs):
+        self.read_kwargs = kwargs
+        return self.result
+
+    async def close(self):
+        self.closed = True
+
+
+class _ErrorModbusResult:
+    def isError(self):
+        return True
+
+
+def _install_fake_pimodbus(monkeypatch, bus):
+    package = ModuleType("pimodbus")
+    client = ModuleType("pimodbus.client")
+    config = ModuleType("pimodbus.config")
+
+    class _RtuBusSettings:
+        def __init__(self, **kwargs):
+            self.kwargs = kwargs
+
+    client.get_rtu_bus = lambda _settings: bus
+    config.RtuBusSettings = _RtuBusSettings
+    monkeypatch.setitem(sys.modules, "pimodbus", package)
+    monkeypatch.setitem(sys.modules, "pimodbus.client", client)
+    monkeypatch.setitem(sys.modules, "pimodbus.config", config)
 
 
 class _CapturingModbusAdcClient:
@@ -208,6 +248,50 @@ def test_modbus_rtu_health_timeout_does_not_block_event_loop():
     assert elapsed < 0.15
     assert health.status == PluginStatus.ERROR
     assert "timed out" in health.message
+
+
+def test_modbus_rtu_connect_requires_slave_read_probe(monkeypatch):
+    bus = _ConnectProbeBus(_ErrorModbusResult())
+    _install_fake_pimodbus(monkeypatch, bus)
+    plugin = ModbusPlugin(
+        PluginConfig(
+            plugin_id="modbus-io",
+            enabled=True,
+            connection_type="modbus-rtu",
+            connection_params={"serial_port": "/dev/ttyACM0", "device_id": 1},
+            timeout=0.1,
+        )
+    )
+
+    connected = asyncio.run(plugin.connect())
+
+    assert connected is False
+    assert plugin.status == PluginStatus.ERROR
+    assert plugin._bus is None
+    assert bus.closed is True
+    assert bus.read_kwargs == {"timeout": 0.1, "address": 0, "count": 1, "device_id": 1}
+
+
+def test_modbus_rtu_connect_marks_verified_slave_connected(monkeypatch):
+    bus = _ConnectProbeBus(_OkModbusResult())
+    _install_fake_pimodbus(monkeypatch, bus)
+    plugin = ModbusPlugin(
+        PluginConfig(
+            plugin_id="modbus-io",
+            enabled=True,
+            connection_type="modbus-rtu",
+            connection_params={"serial_port": "/dev/ttyACM0", "device_id": 7},
+            timeout=0.1,
+        )
+    )
+
+    connected = asyncio.run(plugin.connect())
+
+    assert connected is True
+    assert plugin.status == PluginStatus.CONNECTED
+    assert plugin._bus is bus
+    assert bus.closed is False
+    assert bus.read_kwargs == {"timeout": 0.1, "address": 0, "count": 1, "device_id": 7}
 
 
 def test_modbus_adc_health_reads_input_registers():

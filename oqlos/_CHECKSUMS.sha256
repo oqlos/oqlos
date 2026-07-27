@@ -129,7 +129,7 @@ bcbd61efa44090e5862fa5f401b38096e16ef8fc112d0d7b820539689bb041d3  ./hardware/plu
 0b6add24bd0f990b6d594cef318e62f9e7f263a1a56bd7df631dbdae9a82d894  ./hardware/plugins/_shared.py
 eba274734bd202b5e368d4445c64c941dc48d250db5ea71af136078a2c240594  ./hardware/plugins/base.py
 3cc6a212dd0e5f40710d09f2e435101a6f8d0b19b290ddab63d6eeb956082fbc  ./hardware/plugins/lung.py
-39a805374da13d8e4948f7343c6f52d02a89b3f57f221d070cb34a1e2276010e  ./hardware/plugins/modbus.py
+ff7096bcd0c72fc133caa2ad93a05cb2cfeeffb6d93d34e6fbf1a8b465f76e8e  ./hardware/plugins/modbus.py
 21ba6a0bec02ea41ff5edca2ca5473ed9f00479473fe3fb4d938136d64a9366a  ./hardware/plugins/modbus_adc.py
 68aba5887c10c69529bfa480eb544c4a182846ce4c7e25d1103b11aabfd1163f  ./hardware/plugins/motor.py
 d60649177efaff3adaf5a56972b1d4e998830b91af30a50726c63f48334ac253  ./hardware/plugins/motor_http_handlers.py

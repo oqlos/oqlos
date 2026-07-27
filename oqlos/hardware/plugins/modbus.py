@@ -51,7 +51,7 @@ class ModbusPlugin(HardwarePlugin):
         parity = params.get("parity", "N")
         if parity not in ["N", "E", "O"]:
             errors.append("parity must be N, E, or O")
-        device_id = params.get("device_id", 2)
+        device_id = params.get("device_id", 1)
         if not isinstance(device_id, int) or device_id <= 0:
             errors.append("device_id must be a positive integer")
 
@@ -99,15 +99,31 @@ class ModbusPlugin(HardwarePlugin):
                     timeout=self.config.timeout,
                 )
                 self._bus = get_rtu_bus(settings)
-                if await self._bus.connect():
-                    self._mode = "rtu"
-                    self._status = PluginStatus.CONNECTED
-                    logger.info(f"Connected to modbus-rtu at {serial_port}@{baudrate} 8{parity}1")
-                    return True
-                else:
+                if not await self._bus.connect():
                     self._status = PluginStatus.ERROR
-                    logger.error("Failed to connect to modbus-rtu")
+                    logger.error("Failed to open modbus-rtu serial port")
                     return False
+                self._mode = "rtu"
+                health = await self._health_check_rtu()
+                if health.compatible:
+                    self._status = PluginStatus.CONNECTED
+                    logger.info(
+                        "Connected to modbus-rtu device at %s@%s 8%s1 slave=%s",
+                        serial_port,
+                        baudrate,
+                        parity,
+                        self._device_id(),
+                    )
+                    return True
+                logger.error(
+                    "Modbus RTU port opened but slave %s did not pass read probe: %s",
+                    self._device_id(),
+                    health.message,
+                )
+                await self._bus.close()
+                self._bus = None
+                self._status = PluginStatus.ERROR
+                return False
             elif self.config.connection_type == "modbus-tcp":
                 try:
                     from pymodbus.client import AsyncModbusTcpClient
@@ -129,6 +145,12 @@ class ModbusPlugin(HardwarePlugin):
                 self._status = PluginStatus.ERROR
                 return False
         except Exception as exc:
+            if self._bus is not None:
+                try:
+                    await self._bus.close()
+                except Exception:
+                    logger.debug("Failed to close Modbus RTU bus after connect error", exc_info=True)
+                self._bus = None
             self._status = PluginStatus.ERROR
             logger.error(f"Failed to connect to modbus: {exc}")
             return False

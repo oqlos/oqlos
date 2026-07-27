@@ -130,3 +130,15 @@ Wniosek operatorski: odczyty OQL i host są dostępne, ale Modbus-IO jest obecni
 degraded. Nie wolno przedstawiać nieznanych stanów cewek jako wyłączonych ani
 wykonywać testu impulsowego, dopóki bieżący health i safety gate nie są zdrowe.
 
+### Ustalona przyczyna fałszywego `connected`
+
+Log z BoardNet pokazał, że niezależny preflight `read_coils` nie otrzymał
+odpowiedzi od slave `1` przy poprawnym kontrakcie `4800/N`, lecz runtime mimo to
+oznaczył plugin jako `connected`, ponieważ `connect()` sprawdzał tylko otwarcie
+portu szeregowego. Następne komendy HUI kończyły się 503. Kolejny preflight
+otrzymał odpowiedź, a po restarcie te same operacje wróciły do HTTP 200.
+
+Naprawa kontraktu: plugin RTU może wejść w `connected` dopiero po bezpiecznym
+odczycie `read_coils`. Nieudana próba zamyka uchwyt i pozostawia plugin poza
+aktywnym gatewayem, dzięki czemu readiness może ponowić połączenie po powrocie
+urządzenia. Samo otwarcie `/dev/ttyACM0` nie jest dowodem obecności slave.
