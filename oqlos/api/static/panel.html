@@ -109,7 +109,6 @@
     <a href="/ui/status">Status</a>
     <a href="/ui/hardware-modbus">Modbus</a>
     <a href="/ui/hardware-rtc">RTC</a>
-    <a href="/ui/map-editor">MAP</a>
     <a href="/ui/scenario-files">Scenarios</a>
     <a href="/ui/func-editor">Functions</a>
     <a href="/ui/motor-services">Motors</a>
@@ -256,12 +255,12 @@ function actionBodyArgs(action){
 function lungPresetArgs(key){
   return {...(LUNG_PANEL_PRESETS[key]||LUNG_PANEL_PRESETS["lung-pz-500x5"])};
 }
-async function loadHardwareMapLungPresets(){
+async function loadHardwareConfigurationLungPresets(){
   try{
-    const r=await fetch('/api/v3/hardware/mapping?ts='+Date.now(), {cache:'no-store'});
+    const r=await fetch('/api/v3/hardware/configuration?ts='+Date.now(), {cache:'no-store'});
     if(!r.ok) return;
     const data=await r.json();
-    const actions=(data.mapping&&data.mapping.actions&&typeof data.mapping.actions==='object')?data.mapping.actions:{};
+    const actions=(data.effective&&data.effective.actions&&typeof data.effective.actions==='object')?data.effective.actions:{};
     for(const key of Object.keys(LUNG_PANEL_PRESETS)){
       if(actions[key]){
         LUNG_PANEL_PRESETS[key]=normalizeLungPresetArgs(actionBodyArgs(actions[key]), LUNG_PANEL_PRESETS[key]);
@@ -912,7 +911,7 @@ document.addEventListener('keydown', e=>{
 });
 
 renderGroups();
-loadHardwareMapLungPresets();
+loadHardwareConfigurationLungPresets();
 renderSnippets();
 rebuildScenarios();
 if(!$('#editor').value.trim()) $('#editor').value=DEFAULT_EDITOR_OQL;

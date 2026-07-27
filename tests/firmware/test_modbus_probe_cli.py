@@ -29,11 +29,12 @@ def _install_fake_pymodbus(monkeypatch):
     class FakeClient:
         instances = []
 
-        def __init__(self, port, baudrate, stopbits, bytesize, parity, timeout):
+        def __init__(self, port, baudrate, stopbits, bytesize, parity, timeout, retries=0):
             self.port = port
             self.baudrate = baudrate
             self.parity = parity
             self.timeout = timeout
+            self.retries = retries
             self.read_kwargs = None
             self.closed = False
             FakeClient.instances.append(self)
@@ -79,6 +80,7 @@ def test_run_modbus_probe_returns_successful_read(monkeypatch):
     assert result["results"][0]["function"] == "read_holding_registers"
     assert result["results"][0]["response"] == "ok-response"
     assert fake_client.instances[0].read_kwargs == {"address": 12, "count": 2, "device_id": 7}
+    assert fake_client.instances[0].retries == 0
     assert fake_client.instances[0].closed is True
 
 

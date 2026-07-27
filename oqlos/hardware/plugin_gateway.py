@@ -74,18 +74,18 @@ class PluginHardwareGateway:
         """Load unified plugin config from YAML (connection + peripherals)."""
         try:
             selected_path = resolve_oqlos_config_path(config_path)
-            loaded = PluginRegistry.load_configs_from_yaml(selected_path)
+            loaded = PluginRegistry.load_configs(selected_path)
             self._plugin_configs.update(loaded)
             self._apply_env_overrides()
             logger.info(
-                "Loaded unified plugin config from %s (%d plugins)",
+                "Loaded unified hardware configuration from %s (%d plugins)",
                 selected_path,
                 len(loaded),
             )
             if not loaded:
                 raise RuntimeError(f"No plugins defined in config: {selected_path}")
         except Exception as exc:
-            raise RuntimeError(f"Failed to load oqlos.yaml configuration: {exc}") from exc
+            raise RuntimeError(f"Failed to load OqlOS hardware configuration: {exc}") from exc
 
     def _parse_plugin_configs(self, plugins_data: dict[str, dict[str, Any]]) -> None:
         """Parse plugin configurations from dictionary (Pydantic handles nesting)."""
@@ -637,7 +637,7 @@ class PluginHardwareGateway:
         except Exception as exc:
             return {"success": False, "error": str(exc)}
         try:
-            new_configs = PluginRegistry.load_configs_from_yaml(path)
+            new_configs = PluginRegistry.load_configs(path)
         except Exception as exc:
             logger.error("reload_configs failed: %s", exc)
             return {"success": False, "error": str(exc)}

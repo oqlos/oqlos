@@ -65,4 +65,4 @@ async def hui_al_start() -> dict[str, Any]:
 
 @router.post("/hui/al/stop", summary="Stop the HUI artificial-lung action")
 async def hui_al_stop() -> dict[str, Any]:
-    return await stop_hui_artificial_lung(get_hardware_gateway())
+    return await start_hui_action(stop_hui_artificial_lung)

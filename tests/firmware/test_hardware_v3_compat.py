@@ -4,55 +4,13 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from oqlos.api import hardware_v3
-from oqlos.api import _hw3_mapping, _hw3_models
-from oqlos.api.hardware_mapping_store import MappingStore
+from oqlos.api import _hw3_models
 
 
 def _client() -> TestClient:
     app = FastAPI()
     app.include_router(hardware_v3.router)
     return TestClient(app)
-
-
-def test_hardware_v3_mapping_round_trip(monkeypatch, tmp_path):
-    store = MappingStore(tmp_path / "hardware-map.yaml")
-    monkeypatch.setattr(_hw3_mapping, "mapping_store", store)
-    client = _client()
-
-    schema = client.get("/api/v3/hardware/mapping/schema")
-    assert schema.status_code == 200
-    assert schema.json()["contract"] == "hardware-map-v1"
-
-    mapping = {
-        "runtimeConfig": {"motor_tic249": {"max_steps_per_second": 800}},
-        "objectActionMap": {"motor2": {}},
-        "paramSensorMap": {},
-        "actions": {},
-        "funcImplementations": {},
-    }
-    put = client.put("/api/v3/hardware/mapping", json={"mapping": mapping, "persist": True})
-    assert put.status_code == 200
-    body = put.json()
-    assert body["ok"] is True
-    assert body["mapping"]["runtimeConfig"]["motor2"]["maxStepsPerSecond"] == 800
-
-    get = client.get("/api/v3/hardware/mapping")
-    assert get.status_code == 200
-    assert get.json()["mapping"]["runtimeConfig"]["motor2"]["maxStepsPerSecond"] == 800
-    assert get.json()["store_path"].endswith("hardware-map.yaml")
-
-
-def test_hardware_v3_mapping_rejects_invalid_contract(monkeypatch, tmp_path):
-    monkeypatch.setattr(_hw3_mapping, "mapping_store", MappingStore(tmp_path / "hardware-map.yaml"))
-    client = _client()
-
-    response = client.put(
-        "/api/v3/hardware/mapping",
-        json={"mapping": {"runtimeConfig": {"motor2": {"strokeSteps": 0}}}},
-    )
-
-    assert response.status_code == 400
-    assert "runtimeConfig.motor2.strokeSteps must be an integer >= 1" in response.text
 
 
 def test_hardware_v3_cqrs_events_record_diagnostic_failure(monkeypatch):
@@ -112,8 +70,7 @@ def test_hardware_ui_aliases_and_status_page_are_served():
     assert rtc.headers["location"] == "/ui/hardware-rtc?lang=pl"
 
     editor = client.get("/map-editor", follow_redirects=False)
-    assert editor.status_code in {302, 307}
-    assert editor.headers["location"] == "/ui/map-editor"
+    assert editor.status_code == 404
 
     scenario_files = client.get("/scenario-files?scenario=demo.oql", follow_redirects=False)
     assert scenario_files.status_code in {302, 307}
@@ -165,7 +122,6 @@ def test_navigation_index_and_short_aliases():
         "/hardware-rtc": "/ui/hardware-rtc",
         "/rtc": "/ui/hardware-rtc",
         "/demo": "/ui/motor-services",
-        "/map": "/ui/map-editor",
         "/files": "/ui/scenario-files",
         "/functions": "/ui/func-editor",
         "/oql": "/ui/panel",
@@ -176,3 +132,5 @@ def test_navigation_index_and_short_aliases():
         redirected = client.get(path, follow_redirects=False)
         assert redirected.status_code in {302, 307}
         assert redirected.headers["location"] == target
+
+    assert client.get("/map", follow_redirects=False).status_code == 404

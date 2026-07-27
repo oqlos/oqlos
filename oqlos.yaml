@@ -1,6 +1,8 @@
 # OqlOS unified hardware plugin configuration
 # External config file (outside Python package)
 
+schemaVersion: hardware-configuration-v1
+
 plugins:
   # -----------------------------------------------------------------------
   # Waveshare Modbus RTU Analog Input 8CH — pressure/analog sensors
@@ -111,9 +113,9 @@ plugins:
     connection_type: modbus-rtu
     connection_params:
       serial_port: /dev/serial/by-id/usb-1a86_USB_Single_Serial_5958006895-if00
-      baudrate: 9600
+      baudrate: 4800
       parity: N
-      device_id: 1
+      device_id: 2
     timeout: 0.6
     retry_count: 1
     metadata:

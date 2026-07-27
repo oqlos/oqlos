@@ -10,8 +10,8 @@ Prefer importing directly from ``oqlos.hardware.plugins.base``::
 This module is kept for backward compatibility.  It re-exports the
 canonical Pydantic models from ``plugins.base`` and provides helper
 functions (``get_hardware_config``, ``register_hardware_config``,
-``load_config_from_yaml``) that delegate to the unified YAML-driven
-plugin system.
+``load_config_from_yaml``) that delegate to the versioned format-neutral
+plugin configuration.
 """
 
 from __future__ import annotations
@@ -77,10 +77,10 @@ class UnitType(Enum):
 # ---------------------------------------------------------------------------
 
 def get_hardware_config(device_id: str) -> PluginConfig | None:
-    """Return the PluginConfig for *device_id* (loaded from unified YAML).
+    """Return the PluginConfig for *device_id* from the versioned configuration.
 
     .. deprecated::
-        Use ``PluginRegistry.load_configs_from_yaml()`` and access
+        Use ``PluginRegistry.load_configs()`` and access
         ``PluginConfig.peripherals`` directly.
     """
     warnings.warn(
@@ -92,19 +92,18 @@ def get_hardware_config(device_id: str) -> PluginConfig | None:
         config_path = resolve_oqlos_config_path()
     except FileNotFoundError:
         return None
-    configs = PluginRegistry.load_configs_from_yaml(config_path)
+    configs = PluginRegistry.load_configs(config_path)
     return configs.get(device_id)
 
 
 def register_hardware_config(config: PluginConfig) -> None:
-    """No-op shim — configs live in the unified YAML now.
+    """No-op shim — configs live in the active versioned document.
 
     .. deprecated::
-        Edit ``oqlos.yaml`` and call
-        ``PluginRegistry.load_configs_from_yaml()`` instead.
+        Edit ``oqlos.{oql,yaml,json}`` and call ``PluginRegistry.load_configs()``.
     """
     warnings.warn(
-        "register_hardware_config() is deprecated — edit oqlos.yaml",
+        "register_hardware_config() is deprecated — edit the active OqlOS config",
         DeprecationWarning,
         stacklevel=2,
     )
@@ -116,25 +115,25 @@ def load_config_from_yaml(
     """Load plugin configs from the **unified** YAML format.
 
     .. deprecated::
-        Use ``PluginRegistry.load_configs_from_yaml()`` directly.
+        Use ``PluginRegistry.load_configs()`` directly.
     """
     warnings.warn(
-        "load_config_from_yaml() is deprecated — use PluginRegistry.load_configs_from_yaml()",
+        "load_config_from_yaml() is deprecated — use PluginRegistry.load_configs()",
         DeprecationWarning,
         stacklevel=2,
     )
-    return PluginRegistry.load_configs_from_yaml(config_path)
+    return PluginRegistry.load_configs(config_path)
 
 
 def build_dynamic_schema_models(
     config_path: str | Path | None = None,
 ) -> dict[str, dict[str, type[BaseModel]]]:
-    """Build runtime Pydantic schema models from ``oqlos.yaml``.
+    """Build runtime Pydantic schema models from the active hardware configuration.
 
     Returns mapping ``plugin_id -> {peripheral_name -> model_class}``.
     """
     resolved_path = resolve_oqlos_config_path(config_path)
-    configs = PluginRegistry.load_configs_from_yaml(resolved_path)
+    configs = PluginRegistry.load_configs(resolved_path)
     return {
         plugin_id: dynamic_plugin_schema_models(plugin_config)
         for plugin_id, plugin_config in configs.items()

@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.28",
   "type": "module",
-  "description": "OqlOS hardware and file tooling UI (hardware-status, hardware-demo, map-editor, scenario-files, func-editor) moved from c2004 connect-scenario",
+  "description": "OqlOS hardware diagnostics and OQL file tooling UI",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

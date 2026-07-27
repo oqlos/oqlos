@@ -31,7 +31,7 @@ def usb_serial_only(devices: list[UsbDevice]) -> list[UsbDevice]:
 def load_config_summary(config_path: str | Path | None) -> dict[str, Any]:
     try:
         resolved = resolve_oqlos_config_path(config_path)
-        configs = PluginRegistry.load_configs_from_yaml(resolved)
+        configs = PluginRegistry.load_configs(resolved)
     except Exception as exc:
         return {"ok": False, "error": str(exc), "path": str(config_path or "")}
 

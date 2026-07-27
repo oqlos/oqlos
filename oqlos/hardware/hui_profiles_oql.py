@@ -1,4 +1,4 @@
-"""Load HUI hold/valve recipes from OQL SET keys (MAP → OQL migration).
+"""Load HUI hold/valve recipes from OQL SET keys.
 
 Source file (default): ``layers/hardware/hui-profiles.oql`` under
 ``OQLOS_SCENARIOS_DIR`` (or paths listed in ``OQLOS_HUI_PROFILES_OQL``).

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Iterable
 from typing import Any
 
@@ -22,7 +23,10 @@ async def required_plugins_failure(
     if not callable(readiness):
         return None
 
-    checks = [await readiness(plugin_id) for plugin_id in required]
+    # Hardware health probes may each consume their transport timeout. Run the
+    # independent checks together so a 5 s Process URI does not turn two clear
+    # device failures into an opaque gateway timeout.
+    checks = list(await asyncio.gather(*(readiness(plugin_id) for plugin_id in required)))
     unavailable = [check for check in checks if not check.get("ok")]
     if not unavailable:
         return None

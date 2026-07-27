@@ -7,13 +7,13 @@ from pathlib import Path
 
 
 def resolve_oqlos_config_path(config_path: str | Path | None = None) -> Path:
-    """Resolve the canonical ``oqlos.yaml`` path.
+    """Resolve the canonical OqlOS hardware configuration path.
 
     Resolution order:
     1) explicit ``config_path`` argument
     2) ``OQLOS_CONFIG_PATH`` env var
-    3) current working directory ``./oqlos.yaml``
-    4) repository root ``<repo>/oqlos.yaml``
+    3) current working directory ``./oqlos.{oql,yaml,json}``
+    4) repository root ``<repo>/oqlos.{oql,yaml,json}``
 
     Raises:
         FileNotFoundError: when no existing file can be resolved.
@@ -29,13 +29,13 @@ def resolve_oqlos_config_path(config_path: str | Path | None = None) -> Path:
     if env_path:
         candidates.append(Path(env_path))
 
-    candidates.append(Path.cwd() / "oqlos.yaml")
-    candidates.append(Path(__file__).resolve().parents[2] / "oqlos.yaml")
+    for root in (Path.cwd(), Path(__file__).resolve().parents[2]):
+        candidates.extend(root / name for name in ("oqlos.oql", "oqlos.yaml", "oqlos.yml", "oqlos.json"))
 
     for candidate in candidates:
         if candidate.exists():
             return candidate
 
     raise FileNotFoundError(
-        "oqlos.yaml not found (checked OQLOS_CONFIG_PATH, cwd, and repo root)"
+        "OqlOS configuration not found (checked OQLOS_CONFIG_PATH, cwd, and repo root for OQL/YAML/JSON)"
     )

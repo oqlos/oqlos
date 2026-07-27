@@ -1,7 +1,11 @@
 export const MODBUS_PROFILE_IDS = ["modbus-adc", "modbus-io", "shared-bus"];
 export const MODBUS_PROFILE_URL_PARAM = "submenu";
 export const MODBUS_BAUD_OPTIONS = [4800, 9600, 19200, 38400, 57600, 115200];
-export const MODBUS_DEFAULT_BAUD = 9600;
+export const MODBUS_DEFAULT_BAUD = 4800;
+
+function defaultBaudForProfile(profileId) {
+  return profileId === "modbus-adc" ? 9600 : MODBUS_DEFAULT_BAUD;
+}
 
 export const MODBUS_PROFILE_LABEL_KEYS = {
   "modbus-adc": "hardwareRestart.profileAdc",
@@ -46,11 +50,11 @@ export function profileFromPlan(profileId, plan) {
       profile_id: profileId,
       topology: profileTopology(profileId),
       serial_port: "",
-      target_baudrate: 9600,
+      target_baudrate: defaultBaudForProfile(profileId),
       target_parity: "N",
       device_ids: [],
-      baseline_baudrate: 9600,
-      baud_probe_sequence: [9600],
+      baseline_baudrate: defaultBaudForProfile(profileId),
+      baud_probe_sequence: [defaultBaudForProfile(profileId)],
     };
   }
   const ioPort = plan.io_serial_port || plan.serial_port || "";
@@ -66,7 +70,8 @@ export function profileFromPlan(profileId, plan) {
     : profileId === "modbus-io"
       ? deviceIds.filter((id) => id === 1 || deviceIds.length === 1)
       : deviceIds;
-  const targetBaud = Number(plan.target_baudrate) || 9600;
+  const fallbackBaud = defaultBaudForProfile(profileId);
+  const targetBaud = Number(plan.target_baudrate) || fallbackBaud;
   return {
     profile_id: profileId,
     topology: profileTopology(profileId),
@@ -74,10 +79,10 @@ export function profileFromPlan(profileId, plan) {
     target_baudrate: targetBaud,
     target_parity: plan.target_parity || "N",
     device_ids: filteredIds.length ? filteredIds : deviceIds,
-    baseline_baudrate: plan.baseline_baudrate || 9600,
+    baseline_baudrate: plan.baseline_baudrate || fallbackBaud,
     baud_probe_sequence: Array.isArray(plan.baud_probe_sequence)
       ? plan.baud_probe_sequence
-      : [9600, targetBaud].filter((v, i, a) => a.indexOf(v) === i),
+      : [fallbackBaud, targetBaud].filter((v, i, a) => a.indexOf(v) === i),
   };
 }
 
@@ -111,10 +116,11 @@ export function probeSequenceLabel(profile) {
     return seq.join(" → ");
   }
   const target = profile?.target_baudrate;
-  if (target && target !== 9600) {
-    return `9600 → ${target}`;
+  const baseline = profile?.baseline_baudrate || MODBUS_DEFAULT_BAUD;
+  if (target && target !== baseline) {
+    return `${baseline} → ${target}`;
   }
-  return "9600";
+  return String(baseline);
 }
 
 export function filterWizardStepsByProfile(steps, profileId) {

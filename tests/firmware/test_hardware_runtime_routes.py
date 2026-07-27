@@ -166,3 +166,31 @@ def test_batch_marks_partial_usb_reading_as_usable_and_degraded(monkeypatch):
     assert result["ok"] is True
     assert result["complete"] is False
     assert result["degraded"] is True
+
+
+def test_batch_does_not_probe_gateway_health_before_complete_usb_read(monkeypatch):
+    runtime._BATCH_HEALTH_CACHE["expires_at"] = 0.0
+    runtime._BATCH_HEALTH_CACHE["payload"] = None
+    health_calls = 0
+
+    async def _health(*, force=False):
+        nonlocal health_calls
+        health_calls += 1
+        raise AssertionError("complete USB telemetry must not wait for plugin health")
+
+    async def _sensor_values(_sensor_ids, *, health=None):
+        assert health is None
+        return {
+            "ai01": {"sensor_id": "ai01", "value": 1.1, "ok": True},
+            "ai02": {"sensor_id": "ai02", "value": 2.2, "ok": True},
+            "ai03": {"sensor_id": "ai03", "value": 3.3, "ok": True},
+        }
+
+    monkeypatch.setattr(runtime, "cached_gateway_health", _health)
+    monkeypatch.setattr(runtime, "read_sensor_values", _sensor_values)
+
+    result = asyncio.run(runtime.read_sensors_batch("ai01,ai02,ai03"))
+
+    assert result["ok"] is True
+    assert result["complete"] is True
+    assert health_calls == 0

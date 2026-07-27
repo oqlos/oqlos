@@ -1,5 +1,5 @@
 schema_version: '1.0'
-generated_at: '2026-07-24T11:25:18.086015+00:00'
+generated_at: '2026-07-27T11:13:13.292957+00:00'
 spec:
   path: redeploy/122/migration.md
   name: oqlos boardnet deploy
@@ -149,49 +149,49 @@ checks:
   command_refs:
   - step_id: mkdir_hw_remote
     command_ref: mkdir-hw-remote
-    file: /home/tom/github/maskservice/c2004/extern/oqlos/redeploy/122/migration.md
+    file: /home/tom/github/oqlos/oqlos/redeploy/122/migration.md
     ref: mkdir-hw-remote
     resolved: true
     mode: markpact_ref
   - step_id: enable_linger_groups
     command_ref: enable-linger-groups
-    file: /home/tom/github/maskservice/c2004/extern/oqlos/redeploy/122/migration.md
+    file: /home/tom/github/oqlos/oqlos/redeploy/122/migration.md
     ref: enable-linger-groups
     resolved: true
     mode: markpact_ref
   - step_id: assert_oqlos_checksum
     command_ref: assert-oqlos-checksum
-    file: /home/tom/github/maskservice/c2004/extern/oqlos/redeploy/122/migration.md
+    file: /home/tom/github/oqlos/oqlos/redeploy/122/migration.md
     ref: assert-oqlos-checksum
     resolved: true
     mode: markpact_ref
   - step_id: install_mosquitto
     command_ref: install-mosquitto
-    file: /home/tom/github/maskservice/c2004/extern/oqlos/redeploy/122/migration.md
+    file: /home/tom/github/oqlos/oqlos/redeploy/122/migration.md
     ref: install-mosquitto
     resolved: true
     mode: markpact_ref
   - step_id: deploy_pololu_udev
     command_ref: deploy-pololu-udev
-    file: /home/tom/github/maskservice/c2004/extern/oqlos/redeploy/122/migration.md
+    file: /home/tom/github/oqlos/oqlos/redeploy/122/migration.md
     ref: deploy-pololu-udev
     resolved: true
     mode: markpact_ref
   - step_id: deploy_hw_tic249_service
     command_ref: deploy-hw-tic249-service
-    file: /home/tom/github/maskservice/c2004/extern/oqlos/redeploy/122/migration.md
+    file: /home/tom/github/oqlos/oqlos/redeploy/122/migration.md
     ref: deploy-hw-tic249-service
     resolved: true
     mode: markpact_ref
   - step_id: deploy_dri0050_motor_service
     command_ref: deploy-dri0050-motor-service
-    file: /home/tom/github/maskservice/c2004/extern/oqlos/redeploy/122/migration.md
+    file: /home/tom/github/oqlos/oqlos/redeploy/122/migration.md
     ref: deploy-dri0050-motor-service
     resolved: true
     mode: markpact_ref
   - step_id: deploy_pirtc_sidecar
     command_ref: deploy-pirtc-sidecar
-    file: /home/tom/github/maskservice/c2004/extern/oqlos/redeploy/122/migration.md
+    file: /home/tom/github/oqlos/oqlos/redeploy/122/migration.md
     ref: deploy-pirtc-sidecar
     resolved: true
     mode: markpact_ref
@@ -203,22 +203,17 @@ checks:
     mode: markpact_ref
   - step_id: deploy_oqlos_hw_api
     command_ref: deploy-oqlos-hw-api
-    file: /home/tom/github/maskservice/c2004/extern/oqlos/redeploy/122/migration.md
+    file: /home/tom/github/oqlos/oqlos/redeploy/122/migration.md
     ref: deploy-oqlos-hw-api
     resolved: true
     mode: markpact_ref
   - step_id: assert_hw_node_healthy
     command_ref: assert-hw-node-healthy
-    file: /home/tom/github/maskservice/c2004/extern/oqlos/redeploy/122/migration.md
+    file: /home/tom/github/oqlos/oqlos/redeploy/122/migration.md
     ref: assert-hw-node-healthy
     resolved: true
     mode: markpact_ref
   local_artifacts:
-  - kind: env_file
-    path: .env
-    resolved: /home/tom/github/oqlos/oqlos/.env
-    exists: true
-    steps: []
   - kind: src
     path: /home/tom/github/maskservice/c2004/packages/backend-shared-py/
     resolved: /home/tom/github/maskservice/c2004/packages/backend-shared-py
@@ -294,11 +289,14 @@ checks:
   remote:
     enabled: true
     host: pi@192.168.188.122
-    reachable: true
-    checks: []
+    reachable: false
+    checks:
+    - type: ssh_reachability
+      ok: false
+      message: 'Cannot reach host via SSH: pi@192.168.188.122'
 blockers: []
 summary:
   blockers: 0
   local_missing: 0
   refs_missing: 0
-  remote_failed_checks: 0
+  remote_failed_checks: 1

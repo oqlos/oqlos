@@ -11,7 +11,6 @@ Primary human entrypoints:
 | `http://192.168.188.122:8202/ui/hardware-modbus` | Modbus autodetect wizard and adapter configuration |
 | `http://192.168.188.122:8202/ui/hardware-rtc` | Waveshare DS3231 RTC and watchdog diagnostics (piRTC sidecar) |
 | `http://192.168.188.122:8202/ui/motor-services` | Motor diagnostics and manual PWM/stepper tests (Tic249, DRI0050) |
-| `http://192.168.188.122:8202/ui/map-editor` | MAP and hardware binding editor |
 | `http://192.168.188.122:8202/ui/scenario-files` | OQL scenario editor |
 | `http://192.168.188.122:8202/ui/func-editor` | Function editor |
 | `http://192.168.188.122:8202/ui/panel` | Direct OQL/manage test panel |
@@ -35,7 +34,6 @@ Short aliases (also redirect to `/ui/*`):
 | `/rtc` | `/ui/hardware-rtc` |
 | `/demo` | `/ui/motor-services` |
 | `/hardware-demo` | `/ui/motor-services` |
-| `/map` | `/ui/map-editor` |
 | `/files` | `/ui/scenario-files` |
 | `/functions` | `/ui/func-editor` |
 | `/oql` | `/ui/panel` |
@@ -43,6 +41,9 @@ Short aliases (also redirect to `/ui/*`):
 | `/panel` | `/ui/panel` |
 
 Legacy UI paths `/ui/navigation` and `/ui/hardware-status` redirect to `/ui/status`.
+Retired MAP paths `/map`, `/map-editor` and `/ui/map-editor` return 404. Hardware
+configuration is edited through c2004 `connect-oql-system` using the versioned
+`hardware-configuration-v1` API with equivalent OQL/YAML/JSON codecs.
 
 Module-specific API examples (Modbus channels, RTC, motor-only diagnosis) are documented in
 [hardware-ui-modules.md](hardware-ui-modules.md).

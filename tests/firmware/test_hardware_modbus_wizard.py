@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import asyncio
 import time
 
 from oqlos.api import hardware as hw
+from oqlos.api import hardware_modbus_routes as routes
 from oqlos.api import hardware_modbus_topology as topology
 from oqlos.api import hardware_modbus_waveshare as waveshare
 from oqlos.api import hardware_modbus_wizard as wizard
@@ -384,3 +386,15 @@ def test_modbus_wizard_plan_exposes_per_adapter_ports(monkeypatch):
     adc_step = next(step for step in plan["steps"] if step["step"] == "configure-modbus-adc-2")
     assert io_step["serial_port"] == "/dev/ttyIO"
     assert adc_step["serial_port"] == "/dev/ttyADC"
+
+
+def test_modbus_wizard_plan_route_does_not_depend_on_thread_pool(monkeypatch):
+    expected = {"ok": True, "steps": []}
+    monkeypatch.setattr(routes, "_modbus_wizard_plan", lambda: expected)
+
+    async def forbidden_to_thread(*_args, **_kwargs):
+        raise AssertionError("configuration-only plan must not use the hardware thread pool")
+
+    monkeypatch.setattr(routes.asyncio, "to_thread", forbidden_to_thread)
+
+    assert asyncio.run(routes.hardware_modbus_wizard_plan()) == expected

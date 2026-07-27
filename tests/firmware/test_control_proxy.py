@@ -46,23 +46,20 @@ def proxy_with_client(client):
     )
 
 
-def test_health_falls_back_to_alternate_oqlos_port():
+def test_health_does_not_invent_an_alternate_oqlos_port(monkeypatch):
+    monkeypatch.setenv("OQLOS_TRANSIENT_RETRIES", "0")
     calls = []
 
     class FakeClient:
         async def request(self, method, target, params=None, json=None, timeout=None):
             calls.append(target)
-            if target.endswith(":8202/api/v1/hardware/health"):
-                raise httpx.ConnectError("connection refused")
-            return FakeOqlosResponse({"mode": "real", "status": "ok"})
+            raise httpx.ConnectError("connection refused")
 
     payload = run(proxy_with_client(FakeClient()).health())
 
-    assert payload["status"] == "ok"
-    assert calls == [
-        "http://host.docker.internal:8202/api/v1/hardware/health",
-        "http://host.docker.internal:8200/api/v1/hardware/health",
-    ]
+    assert payload["status"] == "unavailable"
+    assert calls == ["http://host.docker.internal:8202/api/v1/hardware/health"]
+    assert payload["detail"]["attempted_targets"] == calls
 
 
 def test_identify_returns_unavailable_payload_after_connection_failures():

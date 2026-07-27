@@ -2,7 +2,6 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import HardwareStatus from "./pages/HardwareStatus";
 import HardwareRestart from "./pages/HardwareRestart";
 import HardwareRtc from "./pages/HardwareRtc";
-import MapEditor from "./pages/MapEditor";
 import ScenarioFiles from "./pages/ScenarioFiles";
 import MotorServices from "./pages/MotorServices";
 import Panel from "./pages/Panel";
@@ -24,7 +23,6 @@ export default function App() {
       <Route path="/hardware-restart" element={<Navigate to="/hardware-modbus" replace />} />
       <Route path="/hardware-rtc" element={<HardwareRtc />} />
       <Route path="/hardware-demo" element={<Navigate to="/motor-services" replace />} />
-      <Route path="/map-editor" element={<MapEditor />} />
       <Route path="/scenario-files" element={<ScenarioFiles />} />
       <Route path="/func-editor" element={<ScenarioFiles />} />
       <Route path="/motor-services" element={<MotorServices />} />

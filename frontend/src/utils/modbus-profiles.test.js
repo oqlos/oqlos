@@ -16,9 +16,9 @@ import {
   resolveProfile,
 } from "./modbus-profiles.js";
 
-test("MODBUS_BAUD_OPTIONS spans 4800 to 115200 with 9600 default", () => {
+test("MODBUS_BAUD_OPTIONS spans 4800 to 115200 with 4800 IO default", () => {
   assert.deepEqual(MODBUS_BAUD_OPTIONS, [4800, 9600, 19200, 38400, 57600, 115200]);
-  assert.equal(MODBUS_DEFAULT_BAUD, 9600);
+  assert.equal(MODBUS_DEFAULT_BAUD, 4800);
 });
 
 test("resolveModbusProfileId falls back for unknown ids", () => {
@@ -69,6 +69,7 @@ test("filterWizardStepsByProfile keeps io-only steps", () => {
 test("probeSequenceLabel joins baud steps", () => {
   assert.equal(probeSequenceLabel({ baud_probe_sequence: [9600, 115200] }), "9600 → 115200");
   assert.equal(probeSequenceLabel(profileFromPlan("modbus-adc", null)), "9600");
+  assert.equal(probeSequenceLabel(profileFromPlan("modbus-io", null)), "4800");
 });
 
 test("readModbusProfileFromSearch reads submenu query param", () => {

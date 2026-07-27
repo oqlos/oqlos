@@ -60,39 +60,25 @@ def _coerce_float(value: Any) -> float | None:
         return None
 
 
-def _profile_from_map_action(binding: Any) -> dict[str, Any] | None:
-    if not isinstance(binding, dict):
-        return None
-    body = binding.get("body") if isinstance(binding.get("body"), dict) else binding
-    kind = str(binding.get("kind") or body.get("kind") or "").strip().lower()
-    command = str(body.get("command") or "").strip().lower()
-    has_profile_fields = any(field in body for field in ("valves_on", "valvesOn", "pump_pct", "pumpPct"))
-    if kind not in {"hui-hold", "hui_hold"} and command not in {"hui_hold", "hold_profile"} and not has_profile_fields:
-        return None
-
-    valves = _coerce_valve_ids(body.get("valves_on", body.get("valvesOn")))
-    pump_pct = _coerce_float(body.get("pump_pct", body.get("pumpPct", body.get("power_pct"))))
-    if valves is None or pump_pct is None:
-        return None
-    return {"valves_on": valves, "pump_pct": pump_pct}
-
-
-def _mapped_hui_hold_profiles() -> dict[str, dict[str, Any]]:
-    """Legacy MAP JSON/YAML actions (kind=hui-hold)."""
+def _configured_hui_hold_profiles() -> dict[str, dict[str, Any]]:
+    """Profiles from the format-neutral HardwareConfiguration document."""
     try:
-        from oqlos.api.hardware_mapping_store import mapping_store
+        from oqlos.hardware.configuration import load_effective_hardware_configuration
 
-        mapping = mapping_store.get()
+        config, _ = load_effective_hardware_configuration()
     except Exception:
         return {}
-
-    actions = mapping.get("actions") if isinstance(mapping.get("actions"), dict) else {}
+    hui = config.profiles.get("hui") if isinstance(config.profiles.get("hui"), dict) else {}
+    holds = hui.get("holds") if isinstance(hui.get("holds"), dict) else {}
     profiles: dict[str, dict[str, Any]] = {}
-    for key, binding in actions.items():
+    for key, body in holds.items():
+        if not isinstance(body, dict):
+            continue
         normalized_key = _normalize_hui_profile_key(key)
-        profile = _profile_from_map_action(binding)
-        if normalized_key and profile is not None:
-            profiles[normalized_key] = profile
+        valves = _coerce_valve_ids(body.get("valves_on", body.get("valvesOn")))
+        pump_pct = _coerce_float(body.get("pump_pct", body.get("pumpPct")))
+        if normalized_key and valves is not None and pump_pct is not None:
+            profiles[normalized_key] = {"valves_on": valves, "pump_pct": pump_pct}
     return profiles
 
 
@@ -107,12 +93,12 @@ def _oql_hui_hold_profiles() -> dict[str, dict[str, Any]]:
 
 
 def get_hui_hold_profiles() -> dict[str, dict[str, Any]]:
-    # Migration order: code defaults < MAP YAML/JSON < OQL file (source of truth).
+    # One normalized config model plus OQL scenario-layer overrides.
     profiles = {
         key: {"valves_on": tuple(profile["valves_on"]), "pump_pct": float(profile["pump_pct"])}
         for key, profile in HUI_HOLD_PROFILES.items()
     }
-    profiles.update(_mapped_hui_hold_profiles())
+    profiles.update(_configured_hui_hold_profiles())
     profiles.update(_oql_hui_hold_profiles())
     return profiles
 

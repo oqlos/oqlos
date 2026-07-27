@@ -772,6 +772,10 @@ _TESTQL_COMMANDS: tuple[str, ...] = (
     # scenario using RUN_URI parsed in oqlts and failed here with
     # "nieznana komenda".
     "RUN_URI", "HUI_POLL_URI",
+    # Named process catalog consumed by connect-oql-system/connect-test. These
+    # declarations carry routing metadata and must remain side-effect free in
+    # the Python interpreter, just like HUI_POLL_URI.
+    "PROCESS", "PROCESS_OUTPUT", "HUI_POLL_PROCESS",
     # Declarative report projection. The browser runtime validates the safe
     # table/key allow-list and persists the immutable protocol JSON artifact;
     # OqlOS preserves the commands so the same file has parser parity.

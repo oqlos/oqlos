@@ -47,7 +47,7 @@ async def hardware_modbus_settings_get() -> dict[str, Any]:
 
 @router.put("/modbus/settings")
 async def hardware_modbus_settings_put(payload: dict[str, Any] = Body(default_factory=dict)) -> dict[str, Any]:
-    """Persist operator-selected target Modbus baud (init still probes 9600 first)."""
+    """Persist operator-selected target Modbus baud (machine baseline is 4800)."""
     return write_modbus_baud_settings(_settings, payload)
 
 
@@ -99,7 +99,10 @@ async def hardware_modbus_coil_test_stop_post() -> dict[str, Any]:
 @router.get("/modbus/wizard/plan")
 async def hardware_modbus_wizard_plan() -> dict[str, Any]:
     """Return guided step-by-step Modbus configuration plan."""
-    return await asyncio.to_thread(_modbus_wizard_plan)
+    # This helper only projects in-memory/env configuration. Sending it through
+    # the shared executor lets slow hardware polls starve an otherwise instant
+    # UI request when Modbus is unavailable.
+    return _modbus_wizard_plan()
 
 
 @router.post("/modbus/wizard/probe-isolated")
@@ -141,7 +144,7 @@ async def hardware_modbus_wizard_program_isolated(
     serial_port: str = Body(default=""),
     current_device_id: int = Body(default=1),
     new_device_id: int = Body(default=1),
-    new_baudrate: int = Body(default=9600),
+    new_baudrate: int = Body(default=4800),
     new_parity: str = Body(default="N"),
     confirm_isolated: bool = Body(default=False),
     current_baudrate: int | None = Body(default=None),

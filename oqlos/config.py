@@ -53,7 +53,7 @@ class Settings(BaseSettings):
         ),
     )
     modbus_baud: int = Field(
-        default=9600,
+        default=4800,
         validation_alias=AliasChoices(
             "OQLOS_MODBUS_BAUD",
             "MODBUS_BAUD",
@@ -72,7 +72,7 @@ class Settings(BaseSettings):
         ),
     )
     modbus_device_id: int = Field(
-        default=1,
+        default=2,
         validation_alias=AliasChoices("OQLOS_MODBUS_DEVICE_ID", "MODBUS_DEVICE_ID"),
     )
 
@@ -151,7 +151,7 @@ class Settings(BaseSettings):
         description="Analog input source: auto, usb-adc-stack, or modbus-adc",
     )
     usb_adc_timeout_seconds: float = Field(
-        default=0.8,
+        default=3.0,
         validation_alias=AliasChoices("OQLOS_USB_ADC_TIMEOUT_SECONDS", "USB_ADC_TIMEOUT_SECONDS"),
         ge=0.05,
         le=10.0,

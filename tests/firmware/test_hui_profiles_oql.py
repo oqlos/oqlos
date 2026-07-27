@@ -38,7 +38,7 @@ def test_parse_and_build_valve_specs() -> None:
     assert specs["wc-press"] == {"valve_id": "valve-99", "value": True}
 
 
-def test_oql_profiles_override_map_and_defaults(tmp_path: Path, monkeypatch) -> None:
+def test_oql_profiles_override_normalized_config_and_defaults(tmp_path: Path, monkeypatch) -> None:
     oql_file = tmp_path / "hui-profiles.oql"
     oql_file.write_text(SAMPLE, encoding="utf-8")
     monkeypatch.setenv("OQLOS_HUI_PROFILES_OQL", str(oql_file))
@@ -46,7 +46,7 @@ def test_oql_profiles_override_map_and_defaults(tmp_path: Path, monkeypatch) -> 
 
     monkeypatch.setattr(
         hui_hold,
-        "_mapped_hui_hold_profiles",
+        "_configured_hui_hold_profiles",
         lambda: {"head-inflate": {"valves_on": ("valve-5", "valve-2"), "pump_pct": 70.0}},
     )
     profiles = hui_hold.get_hui_hold_profiles()
@@ -55,7 +55,7 @@ def test_oql_profiles_override_map_and_defaults(tmp_path: Path, monkeypatch) -> 
 
     monkeypatch.setattr(
         hui_valve,
-        "_mapped_hui_valve_specs",
+        "_configured_hui_valve_specs",
         lambda: {"wc-press": {"valve_id": "valve-wc", "value": True}},
     )
     specs = hui_valve.get_hui_valve_specs()

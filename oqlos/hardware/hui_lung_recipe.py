@@ -43,24 +43,16 @@ DEFAULT_HUI_LUNG_RECIPROCATE_ARGS: dict[str, Any] = build_hui_lung_reciprocate_a
 HUI_LUNG_RECIPROCATE_ARGS: dict[str, Any] = dict(DEFAULT_HUI_LUNG_RECIPROCATE_ARGS)
 
 
-def _mapped_hui_lung_action_body() -> dict[str, Any]:
+def _configured_hui_lung_profile() -> dict[str, Any]:
     try:
-        from oqlos.api.hardware_mapping_store import mapping_store
+        from oqlos.hardware.configuration import load_effective_hardware_configuration
 
-        mapping = mapping_store.get()
+        config, _ = load_effective_hardware_configuration()
     except Exception:
         return {}
-
-    actions = mapping.get("actions") if isinstance(mapping.get("actions"), dict) else {}
-    for key, binding in actions.items():
-        normalized = str(key or "").strip().lower().replace("_", "-").replace(" ", "-")
-        if normalized not in {"hui-al-start", "hui.al.start", "hui-al"}:
-            continue
-        if not isinstance(binding, dict):
-            return {}
-        body = binding.get("body") if isinstance(binding.get("body"), dict) else binding
-        return body if isinstance(body, dict) else {}
-    return {}
+    hui = config.profiles.get("hui") if isinstance(config.profiles.get("hui"), dict) else {}
+    lung = hui.get("lung")
+    return dict(lung) if isinstance(lung, dict) else {}
 
 
 def _int_from_body(body: dict[str, Any], *keys: str, fallback: int) -> int:
@@ -94,13 +86,13 @@ def _text_from_body(body: dict[str, Any], *keys: str, fallback: str) -> str:
 
 
 def get_hui_lung_valve_id() -> str:
-    body = _mapped_hui_lung_action_body()
+    body = _configured_hui_lung_profile()
     return _text_from_body(body, "valve_id", "valveId", fallback=HUI_AL_LUNG_VALVE_ID)
 
 
 def get_hui_lung_reciprocate_args() -> dict[str, Any]:
     defaults = dict(DEFAULT_HUI_LUNG_RECIPROCATE_ARGS)
-    body = _mapped_hui_lung_action_body()
+    body = _configured_hui_lung_profile()
     args = body.get("reciprocate_args") or body.get("reciprocateArgs") or body.get("args")
     if isinstance(args, dict):
         body = {**body, **args}

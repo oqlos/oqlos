@@ -7,6 +7,7 @@ import { HardwareApi, formatHardwareApiError } from "../api/hardwareApi";
 import { useI18n } from "../i18n/I18nProvider";
 import { persistUiUrlArgsToCookie } from "../utils/ui-url-args-cookie.js";
 import { readModbusProfileFromSearch } from "../utils/modbus-profiles.js";
+import { formatRtcSummaryValue } from "../utils/rtc-summary.js";
 import {
   buildRtcSidebarItems,
   patchRtcMenuSearchParams,
@@ -81,8 +82,8 @@ export default function HardwareRtc() {
   const summary = useMemo(() => ({
     connected: connected ? t("hardwareRtc.connectedYes") : t("hardwareRtc.connectedNo"),
     mock: data.mock ? t("hardwareRtc.mockYes") : t("hardwareRtc.mockNo"),
-    time: data.time?.time || data.time || "—",
-    temperature: data.temperature?.temperature ?? data.temperature ?? "—",
+    time: formatRtcSummaryValue(data.time),
+    temperature: formatRtcSummaryValue(data.temperature),
     watchdog: data.watchdog_available ? t("hardwareRtc.connectedYes") : t("hardwareRtc.connectedNo"),
     i2c: data.rtc_i2c_address ? `bus ${data.rtc_i2c_bus ?? "?"} @ ${data.rtc_i2c_address}` : "—",
   }), [connected, data, t]);

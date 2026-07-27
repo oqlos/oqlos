@@ -40,55 +40,11 @@ def _default_config_path() -> str:
 
 
 def _load_config_file(path: str) -> dict[str, PluginConfig]:
-    """Load plugin configurations from a YAML or JSON file."""
+    """Load plugin configurations from OQL, YAML, or JSON."""
     config_path = Path(path)
     if not config_path.exists():
         raise FileNotFoundError(f"Config file not found: {path}")
-
-    if config_path.suffix in [".yaml", ".yml"]:
-        return PluginRegistry.load_configs_from_yaml(config_path)
-
-    with open(config_path) as f:
-        data = json.load(f)
-
-    configs = {}
-    for plugin_id, config_data in data.get("plugins", {}).items():
-        configs[plugin_id] = PluginConfig(
-            plugin_id=plugin_id,
-            enabled=config_data.get("enabled", True),
-            connection_type=config_data.get("connection_type", "http"),
-            connection_params=config_data.get("connection_params", {}),
-            timeout=config_data.get("timeout", 5.0),
-            retry_count=config_data.get("retry_count", 3),
-            metadata=config_data.get("metadata", {}),
-            peripherals=config_data.get("peripherals", {}),
-        )
-    return configs
-
-
-def _save_config_file(path: str, configs: dict[str, PluginConfig]) -> None:
-    """Save plugin configurations to a YAML file (unified format)."""
-    data = {
-        "plugins": {
-            plugin_id: {
-                "enabled": config.enabled,
-                "connection_type": config.connection_type,
-                "connection_params": config.connection_params,
-                "timeout": config.timeout,
-                "retry_count": config.retry_count,
-                "metadata": config.metadata,
-                "peripherals": {
-                    pname: pcfg.model_dump()
-                    for pname, pcfg in config.peripherals.items()
-                },
-            }
-            for plugin_id, config in configs.items()
-        }
-    }
-
-    config_path = Path(path)
-    with open(config_path, "w") as f:
-        yaml.dump(data, f, default_flow_style=False, sort_keys=False)
+    return PluginRegistry.load_configs(config_path)
 
 
 async def cmd_list(args: argparse.Namespace) -> None:
@@ -212,10 +168,10 @@ async def cmd_execute(args: argparse.Namespace) -> None:
 
 
 async def cmd_reload(args: argparse.Namespace) -> None:
-    """Reload plugin configurations from YAML file."""
+    """Reload plugin configurations from the selected supported format."""
     config_path = args.config or _default_config_path()
     try:
-        configs = PluginRegistry.load_configs_from_yaml(config_path)
+        configs = PluginRegistry.load_configs(config_path)
         print(f"Reloaded {len(configs)} plugin config(s) from {config_path}")
         for plugin_id, cfg in configs.items():
             periphs = list(cfg.peripherals.keys())
@@ -229,7 +185,7 @@ async def cmd_peripherals(args: argparse.Namespace) -> None:
     """Show peripheral definitions for a plugin (from loaded config)."""
     config_path = _default_config_path()
     try:
-        configs = PluginRegistry.load_configs_from_yaml(config_path)
+        configs = PluginRegistry.load_configs(config_path)
     except Exception as exc:
         print(f"Failed to load config: {exc}", file=sys.stderr)
         sys.exit(1)

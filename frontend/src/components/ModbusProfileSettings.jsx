@@ -17,6 +17,7 @@ export default function ModbusProfileSettings({
 }) {
   const { t } = useI18n();
   const deviceIds = Array.isArray(profile?.device_ids) ? profile.device_ids.join(", ") : "—";
+  const baseline = profile?.baseline_baudrate || baselineBaud;
 
   return (
     <div className="hw-card" style={{ marginBottom: "12px" }}>
@@ -50,7 +51,7 @@ export default function ModbusProfileSettings({
       </div>
       <div className="hw-kv">
         <span>{t("hardwareRestart.baselineBaud")}</span>
-        <strong>{profile?.baseline_baudrate || baselineBaud}</strong>
+        <strong>{baseline}</strong>
       </div>
       <div className="hw-kv">
         <span>{t("hardwareRestart.probeSequence")}</span>
@@ -74,7 +75,7 @@ export default function ModbusProfileSettings({
           >
             {baudOptions.map((baud) => (
               <option key={baud} value={String(baud)}>
-                {baud}{baud === 9600 ? ` (${t("hardwareRestart.baudDefault")})` : ""}
+                {baud}{baud === baseline ? ` (${t("hardwareRestart.baudDefault")})` : ""}
               </option>
             ))}
           </select>
@@ -84,7 +85,7 @@ export default function ModbusProfileSettings({
         </button>
       </div>
       <p style={{ margin: "8px 0 0", color: "var(--text-secondary)", fontSize: rem.sm }}>
-        {t("hardwareRestart.baudInitHint")}
+        {t("hardwareRestart.baudInitHint", { baud: baseline })}
       </p>
       {settingsStatus ? (
         <p style={{ margin: "8px 0 0", color: "var(--text-muted)", fontSize: rem.sm }}>{settingsStatus}</p>

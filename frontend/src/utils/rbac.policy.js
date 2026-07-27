@@ -79,7 +79,6 @@ const VIEW_ROLE_BINDINGS = [
   { pattern: "/ui/hardware-rtc*", roles: ["admin", "manager", "technician", "operator", "viewer"] },
   { pattern: "/hardware-restart*", roles: ["admin", "manager", "technician", "operator", "viewer"] },
   { pattern: "/hardware-demo*", roles: ["admin", "manager", "technician", "operator", "viewer"] },
-  { pattern: "/map-editor*", roles: ["admin", "manager", "technician", "operator", "viewer"] },
   { pattern: "/func-editor*", roles: ["admin", "manager", "technician", "operator", "viewer"] },
   { pattern: "/motor-services*", roles: ["admin", "manager", "technician", "operator", "viewer"] },
   { pattern: "/panel*", roles: ["admin", "manager", "technician", "operator", "viewer"] },

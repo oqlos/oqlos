@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import asyncio
 import os
 from typing import Any
 
 from oqlos.hardware.hui_hold import _set_valve, _success
+from oqlos.hardware.hui_readiness import required_plugins_failure
 from oqlos.hardware.hui_lung_recipe import (
     HUI_LUNG_STROKE_STEPS,
     get_hui_lung_reciprocate_args,
@@ -14,8 +16,8 @@ from oqlos.hardware.hui_lung_recipe import (
 
 _artificial_lung_running = False
 
-# When Modbus IO is offline (timeout / no adapter), still exercise Tic249 so lab
-# HUI AL START is usable. Set HUI_AL_REQUIRE_VALVE=1 for strict production gating.
+# A lab may explicitly opt into motor-only operation, but production defaults
+# must never move Tic249 while the pneumatic valve path is unavailable.
 _COMM_FAIL_MARKERS = (
     "timeout",
     "timed out",
@@ -34,12 +36,11 @@ def _env_truthy(name: str, default: str = "0") -> bool:
 
 
 def _require_valve() -> bool:
-    return _env_truthy("HUI_AL_REQUIRE_VALVE", "0")
+    return _env_truthy("HUI_AL_REQUIRE_VALVE", "1")
 
 
 def _skip_valve_on_comm_failure() -> bool:
-    # Default on: allow AL motion without valves when RS485 is dead.
-    return _env_truthy("HUI_AL_SKIP_VALVE_ON_COMM_FAILURE", "1")
+    return _env_truthy("HUI_AL_SKIP_VALVE_ON_COMM_FAILURE", "0")
 
 
 def _valve_looks_like_comm_failure(valve_op: dict[str, Any]) -> bool:
@@ -95,6 +96,15 @@ async def _run_tic249_reciprocate(gateway: Any) -> dict[str, Any]:
 
 async def start_hui_artificial_lung(gateway: Any) -> dict[str, Any]:
     global _artificial_lung_running
+    readiness_failure = await required_plugins_failure(
+        gateway,
+        ("modbus-io", "motor-tic249"),
+        command="al-start",
+        key="al-start",
+    )
+    if readiness_failure is not None:
+        return readiness_failure
+
     valve_id = get_hui_lung_valve_id()
     valve = await _set_valve(gateway, valve_id, True)
     valve_skipped = False
@@ -147,19 +157,32 @@ async def start_hui_artificial_lung(gateway: Any) -> dict[str, Any]:
 
 async def stop_hui_artificial_lung(gateway: Any) -> dict[str, Any]:
     global _artificial_lung_running
-    lung_ok = await gateway.stop_lung()
-    valve = await _set_valve(gateway, get_hui_lung_valve_id(), False)
+    # STOP must attempt both independent safe-state operations even when one
+    # device is unavailable, and it must fit inside the 5 s process timeout.
+    lung_ok, valve = await asyncio.gather(
+        gateway.stop_lung(),
+        _set_valve(gateway, get_hui_lung_valve_id(), False),
+    )
     _artificial_lung_running = False
     # Tic stop is the critical path; valve close may fail when modbus-io is offline.
     valve_ok = bool(valve.get("ok"))
     if not valve_ok and _skip_valve_on_comm_failure() and _valve_looks_like_comm_failure(valve):
         valve = {**valve, "skipped": True, "warning": "Valve close skipped (modbus-io offline)"}
         valve_ok = True
-    return {
-        "ok": bool(lung_ok) and valve_ok,
+    ok = bool(lung_ok) and valve_ok
+    payload: dict[str, Any] = {
+        "ok": ok,
         "command": "al-stop",
         "operations": [
             {"operation": "stop_lung", "ok": bool(lung_ok), "result": lung_ok},
             valve,
         ],
     }
+    if not ok:
+        payload.update({
+            "error": "Required hardware unavailable while stopping artificial lung",
+            "error_code": "C2004-HW-0012",
+            "status_code": 503,
+            "safe_to_retry": True,
+        })
+    return payload

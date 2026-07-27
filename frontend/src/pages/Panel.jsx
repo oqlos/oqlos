@@ -805,12 +805,12 @@ export default function Panel() {
   };
 
   // Import preset groups
-  const loadHardwareMapLungPresets = useCallback(async () => {
+  const loadHardwareConfigurationLungPresets = useCallback(async () => {
     try {
-      const r = await fetch("/api/v3/hardware/mapping?ts=" + Date.now(), { cache: "no-store" });
+      const r = await fetch("/api/v3/hardware/configuration?ts=" + Date.now(), { cache: "no-store" });
       if (!r.ok) return;
       const data = await r.json();
-      const actions = data.mapping && data.mapping.actions && typeof data.mapping.actions === "object" ? data.mapping.actions : {};
+      const actions = data.effective?.actions && typeof data.effective.actions === "object" ? data.effective.actions : {};
       for (const key of Object.keys(LUNG_PANEL_PRESETS)) {
         if (actions[key]) {
           LUNG_PANEL_PRESETS[key] = normalizeLungPresetArgs(actionBodyArgs(actions[key]), LUNG_PANEL_PRESETS[key]);
@@ -820,8 +820,8 @@ export default function Panel() {
   }, []);
 
   useEffect(() => {
-    loadHardwareMapLungPresets();
-  }, [loadHardwareMapLungPresets]);
+    loadHardwareConfigurationLungPresets();
+  }, [loadHardwareConfigurationLungPresets]);
 
   // Insert Snippet at Editor Cursor
   const insertSnippet = (snippetText) => {

@@ -152,13 +152,13 @@ def test_hui_hold_stop_fails_fast_when_modbus_io_is_unavailable(monkeypatch) -> 
     assert ("readiness", "modbus-io") in gateway.calls
 
 
-def test_hui_hold_profile_can_be_overridden_from_hardware_map(monkeypatch) -> None:
+def test_hui_hold_profile_can_be_overridden_from_hardware_configuration(monkeypatch) -> None:
     monkeypatch.setattr(hui_hold, "_VALVE_STAGGER_SECONDS", 0)
-    # Isolate from on-disk OQL profiles so MAP override is the top layer.
+    # Isolate from on-disk OQL profiles so the common config is the top layer.
     monkeypatch.setattr(hui_hold, "_oql_hui_hold_profiles", lambda: {})
     monkeypatch.setattr(
         hui_hold,
-        "_mapped_hui_hold_profiles",
+        "_configured_hui_hold_profiles",
         lambda: {"head-inflate": {"valves_on": ("valve-8",), "pump_pct": 12.5}},
     )
     gateway = FakeGateway()
@@ -172,11 +172,11 @@ def test_hui_hold_profile_can_be_overridden_from_hardware_map(monkeypatch) -> No
     ]
 
 
-def test_hui_actions_list_uses_mapped_profiles(monkeypatch) -> None:
+def test_hui_actions_list_uses_configured_profiles(monkeypatch) -> None:
     monkeypatch.setattr(hui_hold, "_oql_hui_hold_profiles", lambda: {})
     monkeypatch.setattr(
         hui_hold,
-        "_mapped_hui_hold_profiles",
+        "_configured_hui_hold_profiles",
         lambda: {"head-inflate": {"valves_on": ("valve-8",), "pump_pct": 12.5}},
     )
 
@@ -193,7 +193,11 @@ def test_hui_artificial_lung_uses_tic249_plugin_recipe() -> None:
     payload = run(hui_actions.start_hui_artificial_lung(gateway))
 
     assert payload["ok"] is True
-    assert gateway.calls[0] == ("valve", "valve-4", True)
+    valve_open = ("valve", "valve-4", True)
+    motor_connect = ("plugin", "motor-tic249")
+    assert valve_open in gateway.calls
+    assert motor_connect in gateway.calls
+    assert gateway.calls.index(valve_open) < gateway.calls.index(motor_connect)
     assert plugin.commands[0][0] == "reciprocate"
     args = plugin.commands[0][1]
     assert args["direction"] == "right"
@@ -205,10 +209,41 @@ def test_hui_artificial_lung_uses_tic249_plugin_recipe() -> None:
     assert args["acceleration"] == 200_000_000
 
 
-def test_hui_artificial_lung_recipe_can_be_overridden_from_hardware_map(monkeypatch) -> None:
+def test_hui_artificial_lung_fails_fast_before_motion_when_valve_is_unavailable() -> None:
+    plugin = FakeTic249Plugin()
+    gateway = FakeGateway(
+        real=True,
+        plugin=plugin,
+        readiness={
+            "modbus-io": {
+                "ok": False,
+                "plugin_id": "modbus-io",
+                "status": "error",
+                "message": "Modbus RTU read_coils timed out after 2.0s",
+            },
+            "motor-tic249": {
+                "ok": True,
+                "plugin_id": "motor-tic249",
+                "status": "ok",
+                "message": "",
+            },
+        },
+    )
+
+    payload = run(hui_actions.start_hui_artificial_lung(gateway))
+
+    assert payload["ok"] is False
+    assert payload["error_code"] == "C2004-HW-0012"
+    assert payload["status_code"] == 503
+    assert payload["unavailable_hardware"][0]["plugin_id"] == "modbus-io"
+    assert plugin.commands == []
+    assert not any(call[0] == "valve" for call in gateway.calls)
+
+
+def test_hui_artificial_lung_recipe_can_be_overridden_from_hardware_configuration(monkeypatch) -> None:
     monkeypatch.setattr(
         hui_lung_recipe,
-        "_mapped_hui_lung_action_body",
+        "_configured_hui_lung_profile",
         lambda: {
             "valve_id": "valve-8",
             "steps": 2000,
@@ -225,7 +260,11 @@ def test_hui_artificial_lung_recipe_can_be_overridden_from_hardware_map(monkeypa
     payload = run(hui_actions.start_hui_artificial_lung(gateway))
 
     assert payload["ok"] is True
-    assert gateway.calls[0] == ("valve", "valve-8", True)
+    valve_open = ("valve", "valve-8", True)
+    motor_connect = ("plugin", "motor-tic249")
+    assert valve_open in gateway.calls
+    assert motor_connect in gateway.calls
+    assert gateway.calls.index(valve_open) < gateway.calls.index(motor_connect)
     args = plugin.commands[0][1]
     assert args["steps"] == 2000
     assert args["speed"] == 30_000_000
@@ -250,7 +289,7 @@ def test_stop_hui_artificial_lung_uses_overridden_valve(monkeypatch) -> None:
     """Regression: stop must close whichever valve start would have opened, not the hardcoded default."""
     monkeypatch.setattr(
         hui_lung_recipe,
-        "_mapped_hui_lung_action_body",
+        "_configured_hui_lung_profile",
         lambda: {"valve_id": "valve-8"},
     )
     gateway = FakeGateway()
@@ -261,11 +300,28 @@ def test_stop_hui_artificial_lung_uses_overridden_valve(monkeypatch) -> None:
     assert ("valve", "valve-8", False) in gateway.calls
 
 
+def test_stop_hui_artificial_lung_exposes_structured_hardware_failure() -> None:
+    class StopFailingGateway(FakeGateway):
+        async def stop_lung(self) -> bool:
+            self.calls.append(("stop_lung",))
+            return False
+
+    gateway = StopFailingGateway()
+
+    payload = run(hui_actions.stop_hui_artificial_lung(gateway))
+
+    assert payload["ok"] is False
+    assert payload["error_code"] == "C2004-HW-0012"
+    assert payload["status_code"] == 503
+    assert payload["safe_to_retry"] is True
+    assert ("valve", "valve-4", False) in gateway.calls
+
+
 def test_hui_artificial_lung_start_failure_cleans_up_same_valve_it_opened(monkeypatch) -> None:
     """Regression: cleanup-on-failure must close the same (possibly overridden) valve it opened."""
     monkeypatch.setattr(
         hui_lung_recipe,
-        "_mapped_hui_lung_action_body",
+        "_configured_hui_lung_profile",
         lambda: {"valve_id": "valve-8"},
     )
 
@@ -278,15 +334,18 @@ def test_hui_artificial_lung_start_failure_cleans_up_same_valve_it_opened(monkey
     payload = run(hui_actions.start_hui_artificial_lung(gateway))
 
     assert payload["ok"] is False
-    assert gateway.calls[0] == ("valve", "valve-8", True)
-    assert gateway.calls[-1] == ("valve", "valve-8", False)
+    valve_open = ("valve", "valve-8", True)
+    valve_close = ("valve", "valve-8", False)
+    assert valve_open in gateway.calls
+    assert valve_close in gateway.calls
+    assert gateway.calls.index(valve_open) < gateway.calls.index(valve_close)
 
 
-def test_hui_valve_key_can_be_overridden_from_hardware_map(monkeypatch) -> None:
+def test_hui_valve_key_can_be_overridden_from_hardware_configuration(monkeypatch) -> None:
     monkeypatch.setattr(hui_valve, "_oql_hui_valve_specs", lambda: {})
     monkeypatch.setattr(
         hui_valve,
-        "_mapped_hui_valve_specs",
+        "_configured_hui_valve_specs",
         lambda: {"wc-press": {"valve_id": "valve-8", "value": True}},
     )
     gateway = FakeGateway()
@@ -300,7 +359,7 @@ def test_hui_valve_key_can_be_overridden_from_hardware_map(monkeypatch) -> None:
 def test_hui_actions_list_includes_valve_specs(monkeypatch) -> None:
     monkeypatch.setattr(
         hui_valve,
-        "_mapped_hui_valve_specs",
+        "_configured_hui_valve_specs",
         lambda: {"wc-bleed": {"valve_id": "valve-wc", "value": False}},
     )
 

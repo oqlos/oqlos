@@ -152,6 +152,7 @@ class OqlosHardwareProxy:
         retry_delay = max(0.0, float_from_env(os.environ, "OQLOS_TRANSIENT_RETRY_DELAY", 0.25))
         sweeps = retries + 1
         last_error: httpx.HTTPError | None = None
+        last_target: str | None = None
         attempt = 0
         for attempt in range(1, sweeps + 1):
             for target in targets:
@@ -174,16 +175,27 @@ class OqlosHardwareProxy:
                     ) from exc
                 except httpx.HTTPError as exc:
                     last_error = exc
+                    last_target = target
             if attempt < sweeps and retry_delay > 0:
                 await asyncio.sleep(retry_delay)
         raise HardwareProxyError(
             502,
             {
                 "error": f"Cannot reach OqlOS API for {normalized_path}",
+                "message": (
+                    f"{type(last_error).__name__} while calling {last_target}: {last_error}"
+                    if last_error and last_target
+                    else f"OqlOS transport failed for {normalized_path}"
+                ),
+                "error_code": "C2004-NET-0001",
+                "component": "oqlos-hardware-api",
+                "stage": "oqlos.proxy.connect",
                 "attempts": attempt,
                 "attempted_targets": targets,
+                "last_target": last_target,
                 "last_error": str(last_error) if last_error else "unknown error",
                 "timeout_seconds": timeout if timeout is not None else self.config.timeout_seconds,
+                "hint": "Check BoardNet power, host reachability and the OqlOS service on ports 8202/8200.",
             },
         )
 

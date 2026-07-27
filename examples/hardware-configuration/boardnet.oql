@@ -1,0 +1,21 @@
+VERSION: 5
+SCENARIO: OqlOS hardware configuration
+CATEGORY: hardware-configuration
+DESCRIPTION: Versioned portable hardware configuration; generated deterministically.
+
+CONFIG:
+  NAME 'OqlOS hardware configuration'
+  SET 'hardware.configuration.schemaVersion' "\"hardware-configuration-v1\""
+  SET 'hardware.configuration.metadata' "{\"description\":\"Complete semantic-parity fixture for BoardNet\",\"node\":\"boardnet\"}"
+  SET 'hardware.configuration.devices' "{\"waveshare-io\":{\"model\":\"Modbus RTU IO 8CH\",\"vendor\":\"Waveshare\"}}"
+  SET 'hardware.configuration.plugins' "{\"modbus-io\":{\"connection_params\":{\"baudrate\":4800,\"device_id\":2,\"parity\":\"N\",\"serial_port\":\"/dev/serial/by-id/usb-boardnet-io\",\"stop_bits\":1},\"connection_type\":\"modbus-rtu\",\"enabled\":true,\"metadata\":{},\"peripherals\":{\"state\":{\"conversion\":{\"lookup\":{},\"offset\":0.0,\"scale\":1.0,\"type\":\"none\"},\"name\":\"Digital outputs\",\"properties\":{},\"raster\":[0.0,1.0],\"scale\":{\"default\":0.0,\"max\":1.0,\"min\":0.0,\"unit\":\"\"},\"type\":\"valve\"}},\"plugin_id\":\"modbus-io\",\"retry_count\":3,\"timeout\":2.0},\"motor-dri0050\":{\"connection_params\":{\"base_url\":\"http://127.0.0.1:8203\"},\"connection_type\":\"http\",\"enabled\":true,\"metadata\":{},\"peripherals\":{\"power\":{\"conversion\":{\"lookup\":{},\"offset\":0.0,\"scale\":0.02,\"type\":\"linear\"},\"name\":\"Pump power\",\"properties\":{},\"scale\":{\"default\":0.0,\"max\":100.0,\"min\":0.0,\"unit\":\"%\"},\"type\":\"pump\"}},\"plugin_id\":\"motor-dri0050\",\"retry_count\":3,\"timeout\":2.0}}"
+  SET 'hardware.configuration.aliases' "{\"cisnienie_nc\":{\"conversion\":{\"adc_per_volt\":3950,\"input_unit\":\"V\",\"offset\":0,\"scale\":34,\"type\":\"linear\",\"zero_point\":2},\"kind\":\"sensor\",\"metadata\":{},\"plugin\":\"usb-adc-mcp2221\",\"target\":\"MCP2221A.G1\",\"unit\":\"mbar\"},\"zawor_nc\":{\"conversion\":{},\"kind\":\"valve\",\"metadata\":{},\"plugin\":\"modbus-io\",\"target\":\"valve-nc\"}}"
+  SET 'hardware.configuration.sensors' "{\"PI1\":{\"alias\":\"cisnienie_nc\",\"channel\":\"AI01\",\"unit\":\"mbar\"}}"
+  SET 'hardware.configuration.processes' "{\"measurement.sensors.read\":{\"emit\":\"adc.updated\",\"mode\":\"execute\",\"outputs\":{\"PI1\":\"sensors.ai01\"},\"poll_interval_ms\":500,\"retry_count\":3,\"timeout_ms\":8000,\"uri\":\"c2004://measurement/sensors/query/read\"}}"
+  SET 'hardware.configuration.actions' "{\"pump.off\":{\"alias\":\"pompa_glowna\",\"value\":0},\"valve.nc.on\":{\"alias\":\"zawor_nc\",\"value\":true}}"
+  SET 'hardware.configuration.functions' "{\"sensors-adc\":{\"oql\":\"lib/diagnostics/sensors-adc\",\"status\":\"migrated\"}}"
+  SET 'hardware.configuration.profiles' "{\"hui\":{\"holds\":{\"head-inflate\":{\"pump_pct\":70,\"valves_on\":[\"valve-5\",\"valve-2\"]}},\"lung\":{\"limit_mode\":\"reverse_on_limit\",\"start_direction\":\"right\",\"valve_id\":\"valve-4\"},\"valves\":{\"wc-press\":{\"value\":true,\"valve_id\":\"valve-wc\"}}}}"
+  SET 'hardware.configuration.runtime' "{\"motor2\":{\"defaultSpeedStepsPerSecond\":1000,\"maxStepsPerSecond\":1000,\"peripheralId\":\"motor-tic249\",\"startDirection\":\"right\",\"strokeSteps\":1000}}"
+  SET 'hardware.configuration.variables' "{\"pressureBand\":\"low\"}"
+  SET 'hardware.configuration.policies' "{\"availability\":{\"degraded_mode\":\"read-only\",\"required_plugins\":[\"modbus-io\"]},\"retries\":{\"backoff\":\"exponential\",\"maximum_ms\":30000}}"
+  SET 'hardware.configuration.secretRefs' "{\"mqttPassword\":{\"key\":\"OQLOS_OQL_MQTT_PASSWORD\",\"optional\":false,\"provider\":\"env\"}}"

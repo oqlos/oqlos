@@ -27,6 +27,9 @@ __pycache__/
 # Distribution / packaging
 .Python
 build/
+
+# Local redeploy checkpoints (machine/runtime state)
+.redeploy/state/
 develop-eggs/
 dist/
 downloads/
@@ -230,4 +233,3 @@ __pycache__/
 *.egg-info/
 dist/
 build/
-

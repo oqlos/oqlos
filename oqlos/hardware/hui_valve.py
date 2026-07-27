@@ -1,4 +1,4 @@
-"""HUI momentary valve actions (WC press/bleed) with MAP overrides."""
+"""HUI momentary valve actions (WC press/bleed) with configuration overrides."""
 
 from __future__ import annotations
 
@@ -31,42 +31,24 @@ def _coerce_bool(value: Any) -> bool | None:
     return None
 
 
-def _spec_from_map_action(binding: Any) -> dict[str, Any] | None:
-    if not isinstance(binding, dict):
-        return None
-    body = binding.get("body") if isinstance(binding.get("body"), dict) else binding
-    kind = str(binding.get("kind") or body.get("kind") or "").strip().lower()
-    command = str(body.get("command") or "").strip().lower()
-    valve_id = str(body.get("valve_id") or body.get("valveId") or "").strip()
-    value = _coerce_bool(body.get("value", body.get("on", body.get("open"))))
-    if value is None and command in {"valve_on", "valve-on"}:
-        value = True
-    if value is None and command in {"valve_off", "valve-off"}:
-        value = False
-    if kind not in {"hui-valve", "hui_valve"} and command not in {"hui_valve", "valve_toggle"}:
-        if not valve_id or value is None:
-            return None
-    if not valve_id or value is None:
-        return None
-    return {"valve_id": valve_id, "value": value}
-
-
-def _mapped_hui_valve_specs() -> dict[str, dict[str, Any]]:
-    """Legacy MAP JSON/YAML actions (kind=hui-valve)."""
+def _configured_hui_valve_specs() -> dict[str, dict[str, Any]]:
     try:
-        from oqlos.api.hardware_mapping_store import mapping_store
+        from oqlos.hardware.configuration import load_effective_hardware_configuration
 
-        mapping = mapping_store.get()
+        config, _ = load_effective_hardware_configuration()
     except Exception:
         return {}
-
-    actions = mapping.get("actions") if isinstance(mapping.get("actions"), dict) else {}
+    hui = config.profiles.get("hui") if isinstance(config.profiles.get("hui"), dict) else {}
+    valves = hui.get("valves") if isinstance(hui.get("valves"), dict) else {}
     specs: dict[str, dict[str, Any]] = {}
-    for key, binding in actions.items():
+    for key, body in valves.items():
+        if not isinstance(body, dict):
+            continue
         normalized_key = _normalize_hui_valve_key(key)
-        spec = _spec_from_map_action(binding)
-        if normalized_key and spec is not None:
-            specs[normalized_key] = spec
+        valve_id = str(body.get("valve_id") or body.get("valveId") or "").strip()
+        value = _coerce_bool(body.get("value"))
+        if normalized_key and valve_id and value is not None:
+            specs[normalized_key] = {"valve_id": valve_id, "value": value}
     return specs
 
 
@@ -81,9 +63,9 @@ def _oql_hui_valve_specs() -> dict[str, dict[str, Any]]:
 
 
 def get_hui_valve_specs() -> dict[str, dict[str, Any]]:
-    # Migration order: code defaults < MAP YAML/JSON < OQL file (source of truth).
+    # One normalized config model plus OQL scenario-layer overrides.
     specs = {key: dict(value) for key, value in HUI_VALVE_DEFAULTS.items()}
-    specs.update(_mapped_hui_valve_specs())
+    specs.update(_configured_hui_valve_specs())
     specs.update(_oql_hui_valve_specs())
     return specs
 

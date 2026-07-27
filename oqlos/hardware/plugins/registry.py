@@ -9,11 +9,8 @@ import logging
 from pathlib import Path
 from typing import Any, Type
 
-import yaml
-
 from .base import (
     HardwarePlugin,
-    OqlosConfigDocument,
     PluginConfig,
     PluginHealth,
     PluginStatus,
@@ -290,41 +287,22 @@ class PluginRegistry:
         return discovered
 
     # ------------------------------------------------------------------
-    # YAML configuration reload
+    # Versioned format-neutral configuration reload
     # ------------------------------------------------------------------
 
     @classmethod
     def load_configs_from_yaml(
         cls, config_path: str | Path
     ) -> dict[str, PluginConfig]:
-        """
-        Load (or reload) plugin configurations from a unified YAML file.
+        """Deprecated compatibility alias; use :meth:`load_configs`."""
+        return cls.load_configs(config_path)
 
-        The YAML format is::
+    @classmethod
+    def load_configs(cls, config_path: str | Path) -> dict[str, PluginConfig]:
+        """Load plugin configurations from hardware-configuration-v1."""
+        from oqlos.hardware.configuration import load_hardware_configuration
 
-            plugins:
-              motor-dri0050:
-                enabled: true
-                connection_type: http
-                connection_params:
-                  base_url: http://localhost:49055
-                peripherals:
-                  speed:
-                    name: speed
-                    type: pump
-                    scale: {min: 0, max: 100, unit: "l/min"}
-                    conversion: {type: linear, scale: 0.1}
-
-        Returns dict mapping plugin_id -> PluginConfig.
-        """
-        path = Path(config_path)
-        if not path.exists():
-            raise FileNotFoundError(f"Config file not found: {path}")
-
-        with open(path) as fh:
-            data = yaml.safe_load(fh) or {}
-
-        document = OqlosConfigDocument.model_validate(data)
+        document = load_hardware_configuration(config_path, allow_legacy=True)
         configs: dict[str, PluginConfig] = {}
         for plugin_id, plugin_config in document.plugins.items():
             configs[plugin_id] = plugin_config.model_copy(update={"plugin_id": plugin_id})

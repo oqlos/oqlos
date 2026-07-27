@@ -8,6 +8,8 @@
 #
 # Motor sidecars run on THIS Pi at loopback (127.0.0.1), never host.docker.internal.
 
+schemaVersion: hardware-configuration-v1
+
 plugins:
   # Waveshare Modbus RTU Analog Input 8CH — pressure/analog sensors
   modbus-adc:

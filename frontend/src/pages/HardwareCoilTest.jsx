@@ -29,7 +29,7 @@ const COPY = {
     no_response: "brak reakcji",
     notTested: "nie testowano",
     pulse: "Impuls",
-    uses: "Użycie w HUI / MAP",
+    uses: "Użycie w HUI / konfiguracji",
     aliases: "Aliasy",
     state: "Stan",
     roleBlocked: "Impulsy są dostępne wyłącznie dla roli system/admin.",
@@ -53,7 +53,7 @@ const COPY = {
     no_response: "no response",
     notTested: "not tested",
     pulse: "Pulse",
-    uses: "HUI / MAP use",
+    uses: "HUI / configuration use",
     aliases: "Aliases",
     state: "State",
     roleBlocked: "Pulses are available only to system/admin.",
@@ -262,4 +262,3 @@ export default function HardwareCoilTest() {
     </>
   );
 }
-

@@ -20,7 +20,7 @@ Current UI ownership after the c2004 split:
 - OqlOS serves hardware/file tooling directly: **`/ui/status`** (navigation + diagnostics),
   **`/ui/hardware-modbus`** (Modbus wizard; legacy `/hardware-restart` redirects here),
   **`/ui/hardware-rtc`** (DS3231 / piRTC), **`/ui/motor-services`** (Tic249 + DRI0050),
-  `/map-editor`, `/scenario-files`, `/func-editor`, `/panel`.
+  `/scenario-files`, `/func-editor`, `/panel`.
   Legacy `/hardware-status`, `/navigation`, `/hardware-demo` redirect to canonical `/ui/*` pages.
 - Operator module guide: [hardware-ui-modules.md](hardware-ui-modules.md).
 - On boardnet/RPi3 the public firmware/controller origin is
@@ -33,6 +33,9 @@ Current UI ownership after the c2004 split:
   OqlOS via `OQLOS_PUBLIC_URL`.
 - `/scenario-files` and `/func-editor` currently route to the OqlOS static
   editor entry `/editor`, backed by `/api/v1/editor/*`.
+- Legacy `/map`, `/map-editor` and `/ui/map-editor` return 404. Portable hardware
+  configuration uses `hardware-configuration-v1`; OQL, YAML and JSON are
+  equivalent codecs exposed by `/api/v3/hardware/configuration`.
 
 Before running scenarios in `execute` mode, use the hardware doctor:
 

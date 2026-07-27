@@ -176,6 +176,17 @@ async def cached_gateway_health(*, force: bool = False) -> dict[str, Any]:
     return payload
 
 
+def fresh_gateway_health() -> dict[str, Any] | None:
+    """Return cached health without triggering plugin probes."""
+    cached = _BATCH_HEALTH_CACHE.get("payload")
+    if (
+        isinstance(cached, dict)
+        and time.monotonic() < float(_BATCH_HEALTH_CACHE.get("expires_at", 0))
+    ):
+        return cached
+    return None
+
+
 async def read_sensor_values(
     sensor_ids: list[str],
     *,
@@ -281,9 +292,15 @@ async def read_sensors_batch(
 ) -> dict[str, Any]:
     """Read multiple sensors without making HUI fall back to repeated failing requests."""
     ids = [sensor_id.strip() for sensor_id in sensor_ids.split(",") if sensor_id.strip()]
-    health = await cached_gateway_health()
-    modbus_unavailable, modbus_adc_health = modbus_adc_unavailable(health)
+    # The preferred USB ADC sidecar is independent of plugin health.  Probing
+    # every plugin before each 500 ms telemetry read caused periodic multi-
+    # second stalls whenever the 3 s health cache expired.  Pass only a fresh
+    # cached value; read_sensor_values obtains live health itself if it needs
+    # to fall back to Modbus or fill a partial USB batch.
+    health = fresh_gateway_health()
     sensors = await read_sensor_values(ids, health=health)
+    health = fresh_gateway_health() or {"mode": get_settings().hardware_mode}
+    modbus_unavailable, modbus_adc_health = modbus_adc_unavailable(health)
     successful = sum(1 for sensor in sensors.values() if sensor.get("ok"))
     complete = bool(sensors) and successful == len(sensors)
 

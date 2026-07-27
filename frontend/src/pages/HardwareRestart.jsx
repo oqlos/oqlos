@@ -487,7 +487,7 @@ export default function HardwareRestart() {
           onSave={saveTargetBaud}
           busy={busy}
           settingsStatus={settingsStatus}
-          baselineBaud={modbusSettings?.baseline_baudrate || plan?.baseline_baudrate || 9600}
+          baselineBaud={modbusSettings?.baseline_baudrate || plan?.baseline_baudrate || 4800}
         />
 
         <ModbusChannelInspector

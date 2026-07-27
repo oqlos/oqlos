@@ -115,6 +115,28 @@ def test_service_logs_rejects_non_whitelisted():
     assert result["ok"] is False
 
 
+def test_service_logs_falls_back_to_whitelisted_append_file(monkeypatch):
+    from oqlos.hardware import log_files
+
+    monkeypatch.setattr(
+        subprocess,
+        "run",
+        lambda cmd, **kwargs: subprocess.CompletedProcess(cmd, 0, stdout="-- No entries --\n", stderr=""),
+    )
+    monkeypatch.setattr(
+        log_files,
+        "read_log",
+        lambda log_id, lines: {"ok": True, "text": "hardware line", "lines": lines},
+    )
+
+    result = svc.service_logs("oqlos-hardware-api", lines=20)
+
+    assert result["ok"] is True
+    assert result["source"] == "file"
+    assert result["log_file"] == "oqlos-hardware-api.log"
+    assert result["log"] == "hardware line"
+
+
 def test_parse_show_extracts_properties():
     out = "Id=mosquitto.service\nActiveState=active\nSubState=running\nMainPID=1234\n"
     props = svc._parse_show(out)

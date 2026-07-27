@@ -2,13 +2,11 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Literal
+from typing import Any
 
 from pydantic import BaseModel
 
 from oqlos.api.hardware_events import publish_hardware_command_event
-from oqlos.api.hardware_mapping_contract import MappingContractError
-from oqlos.api.hardware_mapping_store import normalize_mapping
 from oqlos.hardware.transport.manage_ops import run_manage_verb
 
 _PERIPHERAL_ALIASES: dict[str, str] = {
@@ -34,33 +32,6 @@ class DiagnosticCommandRequest(BaseModel):
     peripheral_id: str
     command: str
     args: dict[str, Any] = {}
-
-
-class MappingReplaceRequest(BaseModel):
-    mapping: dict[str, Any]
-    persist: bool = True
-
-
-class MappingImportRequest(BaseModel):
-    content: str
-    format: Literal["json", "yaml"] = "yaml"
-    persist: bool = True
-
-
-class MappingExportRequest(BaseModel):
-    format: Literal["json", "yaml"] = "yaml"
-
-
-class MappingResetRequest(BaseModel):
-    persist: bool = True
-
-
-class RuntimeFuncResolveRequest(BaseModel):
-    hardware_map: dict[str, Any]
-    func_name: str
-    environment: str | None = None
-    usage_mode: str | None = None
-    usageMode: str | None = None
 
 
 class CqrsCommandRequest(BaseModel):
@@ -143,50 +114,6 @@ async def _run_diagnostic(peripheral_id: str, command: str, args: dict[str, Any]
     result.setdefault("transport", "direct-oqlos")
     await publish_hardware_command_event({"payload": payload}, result, context={"source": "diagnostic-command"})
     return result
-
-
-def _resolve_func_steps(
-    hardware_map: dict[str, Any],
-    func_name: str,
-    environment: str | None,
-    usage_mode: str | None,
-) -> dict[str, Any]:
-    funcs = hardware_map.get("funcImplementations") if isinstance(hardware_map, dict) else None
-    if not isinstance(funcs, dict):
-        return {"ok": False, "error": "hardware_map.funcImplementations must be an object"}
-    func = funcs.get(func_name)
-    if not isinstance(func, dict):
-        return {"ok": False, "error": f"FUNC '{func_name}' not found"}
-
-    object_map = hardware_map.get("objectActionMap") if isinstance(hardware_map.get("objectActionMap"), dict) else {}
-    actions = hardware_map.get("actions") if isinstance(hardware_map.get("actions"), dict) else {}
-    resolved_steps: list[dict[str, Any]] = []
-    for step in func.get("steps") or []:
-        if not isinstance(step, dict):
-            continue
-        object_name = step.get("object")
-        action_name = step.get("action")
-        binding = None
-        if object_name and isinstance(object_map.get(object_name), dict):
-            binding = object_map[object_name].get(action_name)
-        if binding is None and action_name:
-            binding = actions.get(action_name)
-        resolved_steps.append(
-            {
-                "step": step,
-                "binding": binding if isinstance(binding, dict) else None,
-                "resolved": isinstance(binding, dict),
-            }
-        )
-
-    return {
-        "ok": True,
-        "func_name": func_name,
-        "environment": environment,
-        "usage_mode": usage_mode,
-        "implementation": func,
-        "steps": resolved_steps,
-    }
 
 
 async def _hardware_v1_call(name: str, *args: Any, **kwargs: Any) -> dict[str, Any]:

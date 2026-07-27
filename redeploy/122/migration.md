@@ -5,7 +5,7 @@ a dedicated Raspberry Pi 3 (`pi@boardnet.local`, `192.168.188.122`). This Pi own
 physical devices (Modbus IO/ADC, Pololu Tic T249, DFRobot DRI0050, RTC HAT) and runs the
 OQL-over-MQTT **agent/controller** pair for local and remote OQL requests. It also exposes
 the OqlOS hardware UI/API on LAN at `:8202`, so a human can open
-`http://boardnet.local:8202/ui/hardware-status`, `/ui/hardware-demo`, `/ui/map-editor`,
+`http://boardnet.local:8202/ui/status`, `/ui/motor-services`,
 `/ui/scenario-files`, `/ui/func-editor`, and `/ui/hardware-coils` directly
 (legacy paths without `/ui` redirect).
 
@@ -54,13 +54,13 @@ RUNBOOK can run them manually over ssh if the automation needs adjusting.
   `oqlos/_CHECKSUMS.sha256` (wygenerowanego na źródle przez `scripts/gen-checksums.sh` i
   dowiezionego przez `sync_oqlos_core`). Brak manifestu = FAIL z instrukcją. Manifest jest
   artefaktem deployu — w `.gitignore`, regeneruj przed każdym `redeploy run`.
-- Stan z 2026-07-07: BoardNet odpowiada na `:8202` (`mode=real`, wersja firmware w
+- Historyczny stan z 2026-07-07: BoardNet odpowiadał na `:8202` (`mode=real`, wersja firmware w
   `/health`). HTTP HUI katalog (`/api/v1/hardware/hui/actions`) zawiera 7 hold +
   AL (`reverse_on_limit`). Bench może być **degraded**: `modbus-io` timeout RS485
   → `hold/*/start` i `al/stop` zwracają `ok=false` mimo poprawnego mapowania
-  kluczy (np. `lp-pwm-minus10` → `valve-6` + pump 100%). UI SPA:
-  `/ui/scenario-files` (lista `.oql` po lewej) i `/ui/map-editor` (drzewo MAP po
-  lewej) — ten sam pasek nawigacji górnego (Status, Scenariusze, MAP, …).
+  kluczy (np. `lp-pwm-minus10` → `valve-6` + pump 100%). UI SPA udostępnia
+  `/ui/scenario-files`; konfiguracja urządzeń ma jeden kontrakt
+  `hardware-configuration-v1`, a legacy MAP editor zwraca 404.
   Szczegóły: `redeploy/122/CURRENT_STATE.md`, `docs/boardnet-navigation.md`.
 
 ## Scripts
@@ -168,9 +168,12 @@ echo "PASS: udev dla Pololu Tic wdrozony (+ alias maskservice-tic249)"
 set -euo pipefail
 mkdir -p /home/pi/.config/systemd/user /home/pi/maskservice/logs /home/pi/maskservice/scripts
 cd /home/pi/maskservice/rpi-motor-tic249
-python3 -m venv .venv
-.venv/bin/pip install -q --upgrade pip
-.venv/bin/pip install -q ticlib pyusb flask python-dotenv
+if [ ! -x .venv/bin/python ]; then
+  python3 -m venv .venv
+fi
+if ! .venv/bin/python -c 'import flask, usb, ticlib, dotenv' >/dev/null 2>&1; then
+  .venv/bin/pip install -q ticlib pyusb flask python-dotenv
+fi
 sed -i '/^USB_SERIAL_NUMBER=/d' .env 2>/dev/null || true
 
 cat > /home/pi/maskservice/scripts/wait-hw-tic249-ready.sh << 'SCRIPT'
@@ -586,7 +589,12 @@ def reserved_for_non_modbus(real: str) -> bool:
 
 candidates: list[str] = []
 seen = set()
-links = sorted(glob.glob("/dev/serial/by-path/platform-*"))
+# Stable by-id names are authoritative. The C2004 IO adapter is the CH343
+# ``USB_Single_Serial`` device; ttyACM belongs to MCP2221 and ttyUSB numbering
+# changes whenever USB devices are reconnected.
+links = sorted(glob.glob("/dev/serial/by-id/*"))
+if not links:
+    links = sorted(glob.glob("/dev/serial/by-path/platform-*"))
 if not links:
     links = sorted(glob.glob("/dev/ttyACM*") + glob.glob("/dev/ttyUSB*"))
 for link in links:
@@ -605,7 +613,7 @@ for port in candidates:
     for device_id in range(1, 9):
         cli = ModbusSerialClient(
             port=port,
-            baudrate=9600,
+            baudrate=4800,
             parity="N",
             stopbits=1,
             bytesize=8,
@@ -630,10 +638,10 @@ print(f"MB_IO_DEV='{io_dev or ''}' MB_IO_ID='{io_id or ''}'")
 PY
 )
 eval "${MB_DETECT:-}"
-IO_BAUD=9600
+IO_BAUD=4800
 IO_ENABLED=true
 IO_DEV="${MB_IO_DEV:-}"
-IO_DEVICE_ID="${MB_IO_ID:-1}"
+IO_DEVICE_ID="${MB_IO_ID:-2}"
 if [ -z "$IO_DEV" ]; then
   IO_ENABLED=false
   IO_DEV=/dev/serial/by-id/io-not-present
@@ -698,7 +706,6 @@ Environment=OQLOS_LUNG_MOTOR_URL=http://127.0.0.1:8205
 Environment=OQLOS_ENABLE_RTC=1
 Environment=PIRTC_API_URL=http://127.0.0.1:8125
 Environment=RTC_MOCK=false
-Environment=OQLOS_HARDWARE_MAP_FILE=/home/pi/oqlos/hardware-map.yaml
 Environment=OQLOS_HARDWARE_EVENTS_FILE=/home/pi/oqlos/hardware-events.jsonl
 Environment=OQLOS_OQL_TRANSPORT_ROLE=both
 Environment=OQLOS_OQL_NODE_ID=boardnet
@@ -929,19 +936,19 @@ else
   _fail "OqlOS /api/v1/editor/files nie odpowiada"
 fi
 
-if _curl_get http://127.0.0.1:8202/api/v3/hardware/mapping/schema "$TMPDIR/oqlos-map-schema.json" 8; then
-  if python3 - "$TMPDIR/oqlos-map-schema.json" <<'PY'
+if _curl_get http://127.0.0.1:8202/api/v3/hardware/configuration/schema "$TMPDIR/oqlos-config-schema.json" 8; then
+  if python3 - "$TMPDIR/oqlos-config-schema.json" <<'PY'
 import json, sys
 data = json.load(open(sys.argv[1], encoding="utf-8"))
-raise SystemExit(0 if data.get("contract") == "hardware-map-v1" else 1)
+raise SystemExit(0 if data.get("contract") == "hardware-configuration-v1" else 1)
 PY
   then
-    _pass "OqlOS /api/v3/hardware/mapping/schema OK"
+    _pass "OqlOS /api/v3/hardware/configuration/schema OK"
   else
-    _fail "OqlOS mapping schema nie zwrocil hardware-map-v1"
+    _fail "OqlOS configuration schema nie zwrocil hardware-configuration-v1"
   fi
 else
-  _fail "OqlOS /api/v3/hardware/mapping/schema nie odpowiada"
+  _fail "OqlOS /api/v3/hardware/configuration/schema nie odpowiada"
 fi
 
 if _curl_get http://127.0.0.1:8202/api/v1/hardware/health "$TMPDIR/oqlos-hardware-health.json" 12; then
@@ -1395,7 +1402,7 @@ extra_steps:
     src: /home/tom/github/oqlos/oqlos/
     dst: ~/oqlos/oqlos/
     # `.git` bez ukośnika: submodule scenarios/ ma .git jako PLIK (gitdir:) — wzorzec dir-only przepuszczałby go na Pi.
-    excludes: [.git, .venv/, venv/, __pycache__/, .pytest_cache/]
+    excludes: [.git, .venv/, venv/, __pycache__/, .pytest_cache/, .ruff_cache/, project/]
 
   - id: sync_backend_shared_policy
     action: rsync
@@ -1493,7 +1500,7 @@ extra_steps:
     action: inline_script
     description: "Sidecar Pololu Tic T249 (:8205)"
     command_ref: deploy-hw-tic249-service
-    timeout: 180
+    timeout: 300
 
   - id: deploy_dri0050_motor_service
     action: inline_script

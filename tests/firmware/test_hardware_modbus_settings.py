@@ -40,30 +40,30 @@ def _clear_user_settings(tmp_path, monkeypatch):
 
 
 def test_build_init_baud_sequence_starts_at_baseline():
-    assert settings.build_init_baud_sequence(9600) == [9600]
-    assert settings.build_init_baud_sequence(115200) == [9600, 115200]
-    assert settings.build_init_baud_sequence(4800) == [9600, 4800]
+    assert settings.build_init_baud_sequence(4800) == [4800]
+    assert settings.build_init_baud_sequence(115200) == [4800, 115200]
+    assert settings.build_init_baud_sequence(9600) == [4800, 9600]
 
 
 def test_normalize_target_baud_accepts_4800_through_115200():
     assert settings.normalize_target_baud(4800) == 4800
     assert settings.normalize_target_baud(9600) == 9600
     assert settings.normalize_target_baud(115200) == 115200
-    assert settings.normalize_target_baud(2400, default=9600) == 9600
+    assert settings.normalize_target_baud(2400, default=4800) == 4800
 
 
 def test_normalize_probe_baudrates_keeps_baseline_first():
-    assert settings.normalize_probe_baudrates([115200, 9600], 115200) == [9600, 115200]
+    assert settings.normalize_probe_baudrates([115200, 9600], 115200) == [4800, 115200, 9600]
 
 
 def test_write_and_read_modbus_baud_settings(tmp_path):
-    cfg = SimpleNamespace(modbus_baud=9600, modbus_adc_baud=9600, modbus_parity="N", modbus_adc_device_id=2)
+    cfg = SimpleNamespace(modbus_baud=4800, modbus_adc_baud=9600, modbus_parity="N", modbus_adc_device_id=2)
     saved = settings.write_modbus_baud_settings(
         cfg,
         {"target_baudrate": 57600, "profile_id": "modbus-io", "active_profile": "modbus-io"},
     )
     assert saved["target_baudrate"] == 57600
-    assert saved["baud_probe_sequence"] == [9600, 57600]
+    assert saved["baud_probe_sequence"] == [4800, 57600]
     assert saved["profiles"]["modbus-io"]["target_baudrate"] == 57600
 
     loaded = settings.read_modbus_baud_settings(cfg)
@@ -73,7 +73,7 @@ def test_write_and_read_modbus_baud_settings(tmp_path):
 
 def test_profiles_are_independent(tmp_path):
     cfg = SimpleNamespace(
-        modbus_baud=9600,
+        modbus_baud=4800,
         modbus_adc_baud=9600,
         modbus_parity="N",
         modbus_device_id=1,

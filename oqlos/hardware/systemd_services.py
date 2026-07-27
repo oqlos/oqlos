@@ -56,6 +56,13 @@ _SHOW_TIMEOUT = 8
 _CONTROL_TIMEOUT = 20
 _LOG_TIMEOUT = 8
 _MAX_LOG_LINES = 500
+_SERVICE_LOG_FILES: dict[str, str] = {
+    "oqlos-hardware-api.service": "oqlos-hardware-api.log",
+    "hw-tic249.service": "hw-tic249.log",
+    "dri0050-motor-api.service": "dri0050-motor-api.log",
+    "pirtc-api.service": "pirtc-api.log",
+    "mosquitto.service": "mosquitto.log",
+}
 
 _SHOW_PROPERTIES = (
     "Id",
@@ -265,7 +272,7 @@ def control_service(unit: str, action: str) -> dict[str, Any]:
 
 
 def service_logs(unit: str, lines: int = 100) -> dict[str, Any]:
-    """Return the last ``lines`` journal entries for a whitelisted unit."""
+    """Return service logs, falling back to its configured append-only file."""
     normalized_unit = normalize_unit(unit)
     if not is_whitelisted(normalized_unit):
         return {
@@ -287,6 +294,33 @@ def service_logs(unit: str, lines: int = 100) -> dict[str, Any]:
         )
     except (OSError, subprocess.TimeoutExpired) as exc:
         return {"ok": False, "unit": normalized_unit, "error": str(exc)}
+    journal = result.stdout.strip()
+    if result.returncode == 0 and journal and journal != "-- No entries --":
+        return {
+            "ok": True,
+            "unit": normalized_unit,
+            "lines": count,
+            "log": journal,
+            "source": "journal",
+        }
+
+    # BoardNet services use systemd StandardOutput=append: files, so an empty
+    # user journal is expected. Expose only fixed, whitelisted filenames.
+    filename = _SERVICE_LOG_FILES.get(normalized_unit)
+    if filename:
+        from oqlos.hardware.log_files import read_log
+
+        file_result = read_log(f"file:{filename}", lines=count)
+        if file_result.get("ok"):
+            return {
+                "ok": True,
+                "unit": normalized_unit,
+                "lines": count,
+                "log": str(file_result.get("text") or ""),
+                "source": "file",
+                "log_file": filename,
+            }
+
     if result.returncode != 0:
         return {
             "ok": False,
@@ -297,7 +331,8 @@ def service_logs(unit: str, lines: int = 100) -> dict[str, Any]:
         "ok": True,
         "unit": normalized_unit,
         "lines": count,
-        "log": result.stdout.strip(),
+        "log": journal,
+        "source": "journal",
     }
 
 

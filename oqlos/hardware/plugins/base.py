@@ -82,6 +82,7 @@ def get_pluggy_manager() -> pluggy.PluginManager:
 
 class ScaleConfig(BaseModel):
     """Scale / range definition for a peripheral parameter."""
+    model_config = ConfigDict(extra="forbid")
     min: float = 0
     max: float = 100
     default: float | None = None
@@ -98,6 +99,7 @@ class ScaleConfig(BaseModel):
 
 class ConversionConfig(BaseModel):
     """Describes how to convert a logical value to a hardware value."""
+    model_config = ConfigDict(extra="forbid")
     type: str = "none"              # none | linear | lookup
     scale: float = 1.0
     offset: float = 0.0
@@ -110,6 +112,8 @@ class PeripheralConfig(BaseModel):
 
     Loaded from the ``peripherals:`` section of the plugin YAML config.
     """
+    model_config = ConfigDict(extra="forbid")
+
     name: str
     type: str = ""                  # pump, valve, sensor, …
     scale: ScaleConfig = Field(default_factory=ScaleConfig)
@@ -140,12 +144,14 @@ class PeripheralConfig(BaseModel):
 
 class PluginConfig(BaseModel):
     """Standardized configuration schema for hardware plugins."""
-    plugin_id: str
+    model_config = ConfigDict(extra="forbid")
+
+    plugin_id: str = Field(min_length=1)
     enabled: bool = True
     connection_type: str = "http"   # http, serial, gpio, i2c, spi, etc.
     connection_params: dict[str, Any] = Field(default_factory=dict)
-    timeout: float = 5.0
-    retry_count: int = 3
+    timeout: float = Field(default=5.0, gt=0)
+    retry_count: int = Field(default=3, ge=0)
     metadata: dict[str, Any] = Field(default_factory=dict)
     peripherals: dict[str, PeripheralConfig] = Field(default_factory=dict)
 
@@ -166,7 +172,7 @@ class PluginConfig(BaseModel):
 
 
 class OqlosConfigDocument(BaseModel):
-    """Top-level ``oqlos.yaml`` schema.
+    """Deprecated plugin-only document bridge.
 
     Keeps plugin map dynamic (`dict[str, PluginConfig]`) and allows extra
     top-level sections for forward-compatible evolution.

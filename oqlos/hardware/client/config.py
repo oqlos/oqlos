@@ -28,17 +28,15 @@ def _value_from_env(env: Mapping[str, str], key: str, default, caster):
 
 
 def candidate_oqlos_bases(api_base: str) -> list[str]:
+    """Return the explicitly configured OqlOS base URL.
+
+    Port 8202 is the hardware API contract.  Older versions silently retried
+    the same host on port 8200 (and vice versa), which could route a production
+    BoardNet request to an unrelated local service.  Runtime failover must be
+    expressed as explicit runtime URLs by the caller instead.
+    """
     configured = (api_base or DEFAULT_OQLOS_API_BASE).rstrip("/")
-    candidates = [configured]
-    if configured.endswith(":8202"):
-        candidates.append(configured[:-5] + ":8200")
-    elif configured.endswith(":8200"):
-        candidates.append(configured[:-5] + ":8202")
-    deduped: list[str] = []
-    for item in candidates:
-        if item not in deduped:
-            deduped.append(item)
-    return deduped
+    return [configured]
 
 
 @dataclass(frozen=True)

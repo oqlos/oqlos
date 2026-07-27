@@ -20,13 +20,13 @@ test("wizardStepSerialPort uses adc_serial_port for modbus-adc role", () => {
 
 test("buildWizardProbePayload dedupes baudrates and device ids", () => {
   const payload = buildWizardProbePayload(
-    { target_baudrate: 9600, target_parity: "N", target_ids: [2] },
+    { target_baudrate: 4800, target_parity: "N", target_ids: [2] },
     "/dev/ttyUSB0",
     "modbus-io",
   );
   assert.equal(payload.serial_port, "/dev/ttyUSB0");
   assert.equal(payload.module_role, "modbus-io");
-  assert.deepEqual(payload.baudrates, [9600]);
+  assert.deepEqual(payload.baudrates, [4800]);
   assert.deepEqual(payload.device_ids, [2, 1, 3]);
 });
 
@@ -39,15 +39,24 @@ test("buildWizardProbePayload uses baseline then target baud sequence", () => {
   assert.deepEqual(payload.baudrates, [9600, 115200]);
 });
 
+test("buildWizardProbePayload keeps IO baseline at 4800 before higher target", () => {
+  const payload = buildWizardProbePayload(
+    { target_baudrate: 115200, target_parity: "N", target_ids: [2] },
+    "/dev/ttyUSB0",
+    "modbus-io",
+  );
+  assert.deepEqual(payload.baudrates, [4800, 115200]);
+});
+
 test("buildWizardProgramPayload opens at candidate baud then targets higher baud", async () => {
   const { buildWizardProgramPayload } = await import("./hardware-restart-wizard-helpers.js");
   const payload = buildWizardProgramPayload(
     "/dev/ttyUSB0",
     { new_device_id: 1, new_baudrate: 115200, new_parity: "N" },
-    { device_id: 1, baudrate: 9600, parity: "N" },
-    { baseline_baudrate: 9600, target_baudrate: 115200 },
+    { device_id: 1, baudrate: 4800, parity: "N" },
+    { baseline_baudrate: 4800, target_baudrate: 115200, module_role: "modbus-io" },
   );
-  assert.equal(payload.current_baudrate, 9600);
+  assert.equal(payload.current_baudrate, 4800);
   assert.equal(payload.new_baudrate, 115200);
   assert.equal(payload.current_device_id, 1);
 });

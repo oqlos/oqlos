@@ -1,4 +1,4 @@
-# OqlOS BoardNet — aktualny stan
+# OqlOS BoardNet — zapis stanu i aktualna architektura
 
 Ostatnio sprawdzono: 2026-07-24 Europe/Warsaw.
 
@@ -21,14 +21,11 @@ Ostatnio sprawdzono: 2026-07-24 Europe/Warsaw.
 
 | URL | Lewy panel | Górne menu |
 | --- | --- | --- |
-| `http://192.168.188.122:8202/ui/scenario-files` | Lista plików `.oql` + wyszukiwarka | OqlOS, Status, Restart, Demo, Scenariusze, MAP, Funkcje, Silniki, OQL, Nawigacja, API |
-| `http://192.168.188.122:8202/ui/map-editor` | Drzewo definicji MAP (FUNC / Obiekty / Parametry / Akcje / JSON) + filtr mapowań | Ten sam pasek nawigacji |
+| `http://192.168.188.122:8202/ui/scenario-files` | Lista plików `.oql` + wyszukiwarka | OqlOS, Status, Restart, Demo, Scenariusze, Funkcje, Silniki, OQL, Nawigacja, API |
+| `http://localhost:8100/connect-oql-system` | Edytor `hardware-configuration-v1` w OQL/YAML/JSON | Konfiguracja, walidacja, konwersja i zapis bez aktywacji wyjść |
 
-`/ui/map-editor` to **właściwa** strona edytora MAP (nie mylić z `/ui/scenario-files`).
-Oba widoki używają tego samego shell SPA; różni się **zawartość lewego panelu**
-(scenariusze vs mapowania sprzętowe), nie brak menu.
-
-Skróty legacy (`/map-editor`, `/scenario-files`) przekierowują na `/ui/*`.
+Legacy `/map`, `/map-editor` i `/ui/map-editor` są wycofane i zwracają 404.
+`/scenario-files` nadal przekierowuje na kanoniczny widok `/ui/scenario-files`.
 Pełna tabela: `docs/boardnet-navigation.md`.
 
 ## HUI Ctrl+Alt+1…9 (mapowanie)

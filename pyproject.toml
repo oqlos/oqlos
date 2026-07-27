@@ -37,6 +37,7 @@ oqlos-server = "oqlos.api.main:run"
 oqlctl = "oqlos.tools.cql_cli:main"
 oqlos-events = "oqlos.shared.event_server:main"
 oqlos-modbus-probe = "oqlos.tools.hardware_diagnose.modbus_probe:main"
+oqlos-hardware-config = "oqlos.tools.hardware_config:main"
 
 [project.optional-dependencies]
 rpi = ["RPi.GPIO>=0.7", "smbus2>=0.4"]

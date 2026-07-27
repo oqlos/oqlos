@@ -12,7 +12,6 @@ const navItems = [
   { path: "/hardware-rtc", labelKey: "nav.rtc" },
   { path: "/motor-services", labelKey: "nav.motorServices" },
   { path: "/scenario-files", labelKey: "nav.scenarioFiles" },
-  { path: "/map-editor", labelKey: "nav.map" },
   { path: "/func-editor", labelKey: "nav.func" },
   { path: "/panel", labelKey: "nav.panel" },
   { path: "/api-docs", labelKey: "nav.apiDocs" },

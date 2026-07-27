@@ -22,7 +22,7 @@ class ModbusPlugin(HardwarePlugin):
         connection_type: "modbus-rtu" or "modbus-tcp"
         connection_params:
             serial_port: e.g., "/dev/ttyACM0" (for RTU)
-            baudrate: e.g., 9600 (for RTU)
+            baudrate: 4800 for the C2004 machine (RTU)
             parity: e.g., "N" (for RTU)
             host: e.g., "localhost" (for TCP)
             port: e.g., 502 (for TCP)
@@ -45,13 +45,13 @@ class ModbusPlugin(HardwarePlugin):
         params = self.config.connection_params
         if not params.get("serial_port"):
             errors.append("serial_port is required in connection_params for modbus-rtu")
-        baudrate = params.get("baudrate", 9600)
+        baudrate = params.get("baudrate", 4800)
         if not isinstance(baudrate, int) or baudrate <= 0:
             errors.append("baudrate must be a positive integer")
         parity = params.get("parity", "N")
         if parity not in ["N", "E", "O"]:
             errors.append("parity must be N, E, or O")
-        device_id = params.get("device_id", 1)
+        device_id = params.get("device_id", 2)
         if not isinstance(device_id, int) or device_id <= 0:
             errors.append("device_id must be a positive integer")
 
@@ -90,7 +90,7 @@ class ModbusPlugin(HardwarePlugin):
                     return False
 
                 serial_port = self.config.connection_params.get("serial_port", "/dev/ttyACM0")
-                baudrate = self.config.connection_params.get("baudrate", 9600)
+                baudrate = self.config.connection_params.get("baudrate", 4800)
                 parity = self.config.connection_params.get("parity", "N")
                 settings = RtuBusSettings(
                     serial_port=serial_port,
@@ -373,9 +373,9 @@ class ModbusPlugin(HardwarePlugin):
                     "type": "object",
                     "properties": {
                         "serial_port": {"type": "string"},
-                        "baudrate": {"type": "integer", "default": 9600},
+                        "baudrate": {"type": "integer", "default": 4800},
                         "parity": {"type": "string", "enum": ["N", "E", "O"], "default": "N"},
-                        "device_id": {"type": "integer", "default": 1, "minimum": 1},
+                        "device_id": {"type": "integer", "default": 2, "minimum": 1},
                         "host": {"type": "string"},
                         "port": {"type": "integer", "default": 502},
                     },

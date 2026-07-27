@@ -1,4 +1,4 @@
-"""Recent hardware command events for the moved MAP editor."""
+"""Recent hardware command events for diagnostics and CQRS observers."""
 
 from __future__ import annotations
 

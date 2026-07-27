@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 import uvicorn
 
@@ -88,11 +88,6 @@ NAVIGATION_PAGES = [
         "description": "Motor diagnostics, manual PWM/stepper tests, repair and sidecar status (Tic249, DRI0050).",
     },
     {
-        "path": "/ui/map-editor",
-        "label": "MAP editor",
-        "description": "Hardware map and function-to-hardware bindings.",
-    },
-    {
         "path": "/ui/scenario-files",
         "label": "Scenario files",
         "description": "OQL scenario editor served directly by OqlOS.",
@@ -138,8 +133,6 @@ NAVIGATION_ALIASES = [
     {"path": "/rtc", "target": "/ui/hardware-rtc"},
     {"path": "/demo", "target": "/ui/motor-services"},
     {"path": "/hardware-demo", "target": "/ui/motor-services"},
-    {"path": "/map", "target": "/ui/map-editor"},
-    {"path": "/map-editor", "target": "/ui/map-editor"},
     {"path": "/files", "target": "/ui/scenario-files"},
     {"path": "/scenario-files", "target": "/ui/scenario-files"},
     {"path": "/functions", "target": "/ui/func-editor"},
@@ -185,13 +178,8 @@ NAVIGATION_API_ENDPOINTS = [
     },
     {
         "method": "GET",
-        "path": "/api/v3/hardware/mapping",
-        "description": "Current firmware hardware map.",
-    },
-    {
-        "method": "PUT",
-        "path": "/api/v3/hardware/mapping",
-        "description": "Update/persist the firmware hardware map.",
+        "path": "/api/v3/hardware/configuration",
+        "description": "Canonical effective hardware configuration (OQL/YAML/JSON).",
     },
     {
         "method": "WS",
@@ -404,7 +392,7 @@ async def ui_legacy_navigation_page():
     )
 
 # ---- Hardware/file UI moved in from c2004 connect-scenario (hardware-status,
-# hardware-demo, hardware-restart, map-editor, scenario-files, func-editor).
+# hardware-demo, hardware-restart, scenario-files, func-editor).
 # The React hardware UI is built with Vite (base=/ui/).
 # Hardware actuation flows through the OqlOS-owned /api/v3/hardware/* compatibility
 # router, backed by the same gateway/plugin runtime as /api/v1/hardware/*.
@@ -455,9 +443,10 @@ async def rtc_alias(request: Request):
     return RedirectResponse(_with_query("/ui/hardware-rtc", request))
 
 
-@app.get("/map-editor")
-async def map_editor_alias(request: Request):
-    return RedirectResponse(_with_query("/ui/map-editor", request))
+@app.get("/map-editor", include_in_schema=False)
+@app.get("/map", include_in_schema=False)
+async def retired_map_editor_alias() -> Response:
+    return Response(status_code=404)
 
 
 @app.get("/scenario-files")
@@ -502,11 +491,6 @@ async def demo_alias(request: Request):
     return _redirect_with_query("/ui/motor-services", request)
 
 
-@app.get("/map")
-async def map_alias(request: Request):
-    return _redirect_with_query("/ui/map-editor", request)
-
-
 @app.get("/files")
 async def files_alias(request: Request):
     return _redirect_with_query("/ui/scenario-files", request)
@@ -535,6 +519,11 @@ if (_UI_DIST / "assets").is_dir():
 @app.get("/ui/hardware-status")
 async def ui_legacy_status_routes(request: Request):
     return _redirect_with_query("/ui/status", request)
+
+
+@app.get("/ui/map-editor", include_in_schema=False)
+async def retired_ui_map_editor() -> Response:
+    return Response(status_code=404)
 
 
 @app.get("/ui", response_class=HTMLResponse)

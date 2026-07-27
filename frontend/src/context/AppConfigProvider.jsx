@@ -8,11 +8,6 @@ import {
   isReadOnlyConnectRole,
   normalizeConnectRole,
 } from "../utils/rbac.policy.js";
-import {
-  canEditOqlMapSection,
-  canEditOqlMapTab,
-  personaFromConnectRole,
-} from "../utils/oql-map-access.policy.js";
 
 const AppConfigContext = createContext(null);
 
@@ -27,7 +22,6 @@ export function AppConfigProvider({ children }) {
 
   const value = useMemo(() => {
     const role = normalizeConnectRole(config.role);
-    const oqlPersona = personaFromConnectRole(role);
     const readOnly = isReadOnlyConnectRole(role);
     return {
       ...config,
@@ -35,9 +29,6 @@ export function AppConfigProvider({ children }) {
       isAdmin: isAdminConnectRole(role),
       isOperator: isOperatorConnectRole(role),
       isReadOnly: readOnly,
-      oqlPersona,
-      canEditOqlMapTab: (tab) => !readOnly && canEditOqlMapTab(role, tab),
-      canEditOqlMapSection: (section) => !readOnly && canEditOqlMapSection(role, section),
       patch,
     };
   }, [config, patch]);

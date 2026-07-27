@@ -39,7 +39,7 @@ def _append_use(uses: dict[int, list[dict[str, Any]]], valve_id: str, use: dict[
 
 
 def runtime_coil_uses() -> dict[int, list[dict[str, Any]]]:
-    """Collect current HUI hold/button uses, including MAP overrides."""
+    """Collect current HUI hold/button uses from effective configuration."""
     from oqlos.hardware.hui_hold import get_hui_hold_profiles
     from oqlos.hardware.hui_valve import get_hui_valve_specs
 
@@ -88,4 +88,3 @@ def build_coil_catalog(states: list[bool] | None = None) -> list[dict[str, Any]]
         }
         for address in range(MODBUS_IO_COIL_COUNT)
     ]
-

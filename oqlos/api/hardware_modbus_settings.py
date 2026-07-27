@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-MODBUS_BASELINE_BAUD = 9600
+MODBUS_BASELINE_BAUD = 4800
 MODBUS_TARGET_BAUD_OPTIONS = (4800, 9600, 19200, 38400, 57600, 115200)
 MODBUS_PROFILE_IDS = ("modbus-adc", "modbus-io", "shared-bus")
 
@@ -35,7 +35,7 @@ def normalize_target_baud(value: int | str | None, *, default: int = MODBUS_BASE
 
 
 def build_init_baud_sequence(target_baud: int | None) -> list[int]:
-    """Commissioning order: always probe baseline 9600, then target max speed."""
+    """Commissioning order: always probe baseline 4800, then target max speed."""
     target = normalize_target_baud(target_baud)
     if target == MODBUS_BASELINE_BAUD:
         return [MODBUS_BASELINE_BAUD]
@@ -235,7 +235,7 @@ def read_modbus_baud_settings(settings: Any) -> dict[str, Any]:
         "target_parity": active_cfg["target_parity"],
         "baudrate_options": list(MODBUS_TARGET_BAUD_OPTIONS),
         "baud_probe_sequence": active_cfg["baud_probe_sequence"],
-        "note": "Init probes start at 9600 baud, then switch to the selected target speed.",
+        "note": "Init probes start at the machine baseline 4800 baud, then switch to the selected target speed.",
         "persisted": bool(_load_user_settings()),
         "settings_path": str(_settings_file()),
     }

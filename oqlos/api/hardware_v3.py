@@ -8,7 +8,8 @@ Split into sub-modules:
   _hw3_models.py     — request models, constants, shared helpers
   _hw3_peripheral.py — /peripheral-status, /diagnostic-command, /scanner/*
   _hw3_system.py     — /hui/*, /modbus/*, /diagnosis/*, /runtime/*, /stack/*
-  _hw3_mapping.py    — /mapping/*, /cqrs/*, /oql-mapped-exec, events WS
+  _hw3_cqrs.py       — /cqrs/* audit endpoints and events WS
+  hardware_configuration_routes.py — versioned OQL/YAML/JSON configuration
 """
 
 from __future__ import annotations
@@ -17,10 +18,11 @@ from typing import Any
 
 from fastapi import APIRouter
 
-from oqlos.api._hw3_mapping import hardware_events_ws  # re-exported for main.py
-from oqlos.api._hw3_mapping import sub_router as _mapping_router
+from oqlos.api._hw3_cqrs import hardware_events_ws  # re-exported for main.py
+from oqlos.api._hw3_cqrs import router as _cqrs_router
 from oqlos.api._hw3_peripheral import sub_router as _peripheral_router
 from oqlos.api._hw3_system import sub_router as _system_router
+from oqlos.api.hardware_configuration_routes import router as _configuration_router
 
 router = APIRouter(prefix="/api/v3/hardware", tags=["hardware-v3-compat"])
 
@@ -55,6 +57,7 @@ async def hardware_proxy_info_v3() -> dict[str, Any]:
 
 router.include_router(_peripheral_router)
 router.include_router(_system_router)
-router.include_router(_mapping_router)
+router.include_router(_cqrs_router)
+router.include_router(_configuration_router)
 
 __all__ = ["router", "hardware_events_ws"]

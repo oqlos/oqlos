@@ -1024,7 +1024,7 @@ def test_func_inline_name_after_colon_is_block_not_metadata():
 
 
 def test_process_uri_commands_are_preserved_as_testql_noops():
-    """RUN_URI / HUI_POLL_URI belong to the browser HUI runtime, like RUN.
+    """Process declarations belong to the browser HUI runtime, like RUN.
 
     They were left out of _TESTQL_COMMANDS when the process-URI layer landed, so
     a scenario using them parsed in @semcod/oqlts and failed here with
@@ -1036,6 +1036,9 @@ def test_process_uri_commands_are_preserved_as_testql_noops():
         VERSION: 5
         CONFIG:
           HUI_POLL_URI 'c2004://boardnet/adc/query/read' EVERY '500 ms' EMIT 'adc.updated'
+          PROCESS 'measurement.sensors.read' URI 'c2004://measurement/sensors/query/read' MODE 'execute'
+          PROCESS_OUTPUT 'measurement.sensors.read' RESOURCE 'PI1' PATH 'sensors.ai01'
+          HUI_POLL_PROCESS 'measurement.sensors.read' EVERY '500 ms' EMIT 'adc.updated'
         EVENT 'frontend.hui.wc-press':
           RUN_URI 'c2004://boardnet/hardware/command/dispatch' MODE 'execute'
         """
@@ -1046,6 +1049,9 @@ def test_process_uri_commands_are_preserved_as_testql_noops():
     commands = [cmd.args.get("command") for block in doc.blocks for cmd in block.cmds]
     assert "RUN_URI" in commands
     assert "HUI_POLL_URI" in commands
+    assert "PROCESS" in commands
+    assert "PROCESS_OUTPUT" in commands
+    assert "HUI_POLL_PROCESS" in commands
 
 
 def test_unknown_command_is_still_rejected():

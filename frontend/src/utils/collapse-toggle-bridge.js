@@ -8,7 +8,6 @@ export const COLLAPSE_DELAY_MS = 3000;
 export const COLLAPSE_TOGGLE_IDS = Object.freeze({
   scenariosList: "scenarios-list",
   funcEditorList: "func-editor-list",
-  mapEditorDefinitions: "map-editor-definitions",
   oqlProtocolNav: "oql-protocol-nav",
   scenarioTerminal: "scenario-terminal",
   scenarioExecutionStatus: "scenario-execution-status",

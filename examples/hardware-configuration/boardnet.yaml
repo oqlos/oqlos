@@ -1,0 +1,84 @@
+schemaVersion: hardware-configuration-v1
+metadata:
+  node: boardnet
+  description: Complete semantic-parity fixture for BoardNet
+devices:
+  waveshare-io:
+    vendor: Waveshare
+    model: Modbus RTU IO 8CH
+plugins:
+  modbus-io:
+    enabled: true
+    connection_type: modbus-rtu
+    connection_params:
+      serial_port: /dev/serial/by-id/usb-boardnet-io
+      baudrate: 4800
+      parity: N
+      stop_bits: 1
+      device_id: 2
+    timeout: 2
+    retry_count: 3
+    peripherals:
+      state:
+        name: Digital outputs
+        type: valve
+        scale: {min: 0, max: 1, default: 0, unit: ""}
+        raster: [0, 1]
+        conversion: {type: none}
+  motor-dri0050:
+    enabled: true
+    connection_type: http
+    connection_params: {base_url: "http://127.0.0.1:8203"}
+    timeout: 2
+    retry_count: 3
+    peripherals:
+      power:
+        name: Pump power
+        type: pump
+        scale: {min: 0, max: 100, default: 0, unit: "%"}
+        conversion: {type: linear, scale: 0.02, offset: 0}
+aliases:
+  zawor_nc: {plugin: modbus-io, target: valve-nc, kind: valve}
+  cisnienie_nc:
+    plugin: usb-adc-mcp2221
+    target: MCP2221A.G1
+    kind: sensor
+    unit: mbar
+    conversion: {type: linear, input_unit: V, zero_point: 2, scale: 34, offset: 0, adc_per_volt: 3950}
+sensors:
+  PI1: {alias: cisnienie_nc, channel: AI01, unit: mbar}
+processes:
+  measurement.sensors.read:
+    uri: c2004://measurement/sensors/query/read
+    mode: execute
+    outputs: {PI1: sensors.ai01}
+    poll_interval_ms: 500
+    emit: adc.updated
+    timeout_ms: 8000
+    retry_count: 3
+actions:
+  pump.off: {alias: pompa_glowna, value: 0}
+  valve.nc.on: {alias: zawor_nc, value: true}
+functions:
+  sensors-adc: {oql: lib/diagnostics/sensors-adc, status: migrated}
+profiles:
+  hui:
+    holds:
+      head-inflate: {valves_on: [valve-5, valve-2], pump_pct: 70}
+    valves:
+      wc-press: {valve_id: valve-wc, value: true}
+    lung: {valve_id: valve-4, start_direction: right, limit_mode: reverse_on_limit}
+runtime:
+  motor2:
+    peripheralId: motor-tic249
+    strokeSteps: 1000
+    maxStepsPerSecond: 1000
+    defaultSpeedStepsPerSecond: 1000
+    startDirection: right
+variables:
+  pressureBand: low
+policies:
+  availability: {required_plugins: [modbus-io], degraded_mode: read-only}
+  retries: {backoff: exponential, maximum_ms: 30000}
+secretRefs:
+  mqttPassword: {provider: env, key: OQLOS_OQL_MQTT_PASSWORD}
