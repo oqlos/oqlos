@@ -7,6 +7,7 @@ from typing import Any
 from fastapi import APIRouter, Body, HTTPException
 
 from oqlos.api.hardware_gateway import get_hardware_gateway
+from oqlos.errors import OqlosError
 from oqlos.hardware.artificial_lung import execute_command as execute_artificial_lung_command
 from oqlos.hardware.artificial_lung import get_peripheral_status as get_artificial_lung_status
 from oqlos.hardware.tic249_units import TIC249_DEFAULT_TARGET_VELOCITY
@@ -26,9 +27,20 @@ def command_payload(payload: dict[str, Any]) -> tuple[str, dict[str, Any]]:
     return command, args
 
 
+def _raise_tic249_failure(status: str, *, error: str | None = None, detail: dict[str, Any] | None = None) -> None:
+    raise OqlosError(
+        code="hw_tic249_sidecar_unreachable",
+        status_code=503,
+        message=error or f"Lung motor command failed ({status})",
+        detail=detail or {"status": status},
+    )
+
+
 async def lung_state_response(action: Any, status: str) -> dict[str, Any]:
     ok = await action()
-    return {"ok": ok, "status": status}
+    if not ok:
+        _raise_tic249_failure(status)
+    return {"ok": True, "status": status}
 
 
 @router.post("/lung")
@@ -46,7 +58,12 @@ async def set_lung(steps: int = 500, speed: int = TIC249_DEFAULT_TARGET_VELOCITY
 
     if detailed_result is None:
         ok = await gateway.set_lung(steps=steps, speed=speed, cycles=cycles, pause=pause)
-        return {"steps": steps, "speed": speed, "cycles": cycles, "pause": pause, "ok": ok}
+        if not ok:
+            _raise_tic249_failure(
+                "start",
+                detail={"steps": steps, "speed": speed, "cycles": cycles, "pause": pause},
+            )
+        return {"steps": steps, "speed": speed, "cycles": cycles, "pause": pause, "ok": True}
 
     payload: dict[str, Any] = {
         "steps": steps,
@@ -59,6 +76,12 @@ async def set_lung(steps: int = 500, speed: int = TIC249_DEFAULT_TARGET_VELOCITY
         payload["error"] = detailed_result.get("error")
     if detailed_result.get("data") is not None:
         payload["data"] = detailed_result.get("data")
+    if not payload["ok"]:
+        _raise_tic249_failure(
+            "start",
+            error=str(detailed_result.get("error") or "Lung motor command failed"),
+            detail=payload,
+        )
     return payload
 
 
