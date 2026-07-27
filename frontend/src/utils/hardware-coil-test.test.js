@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   buildCoilTestReport,
+  coilPulseRequestOptions,
   nextUntestedCoil,
   pulseConfirmation,
 } from "./hardware-coil-test.js";
@@ -36,4 +37,18 @@ test("system role remains system and can access the guarded test", () => {
   assert.equal(normalizeConnectRole("system"), "system");
   assert.equal(isAdminConnectRole("system"), true);
   assert.equal(canConnectRoleAccessPath("/hardware-coils", "system"), true);
+});
+
+test("coil pulse request forwards only an accepted privileged role", () => {
+  assert.deepEqual(coilPulseRequestOptions("admin", "coil-test-DO1"), {
+    logContext: "coil-test-DO1",
+    headers: { "X-Connect-Role": "admin" },
+  });
+  assert.deepEqual(coilPulseRequestOptions("administrator", "coil-test-DO1"), {
+    logContext: "coil-test-DO1",
+    headers: { "X-Connect-Role": "admin" },
+  });
+  assert.deepEqual(coilPulseRequestOptions("operator", "coil-test-DO1"), {
+    logContext: "coil-test-DO1",
+  });
 });

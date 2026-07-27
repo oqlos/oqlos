@@ -6,6 +6,7 @@ import { useAppConfig } from "../context/AppConfigProvider";
 import { useI18n } from "../i18n/I18nProvider";
 import {
   buildCoilTestReport,
+  coilPulseRequestOptions,
   nextUntestedCoil,
   pulseConfirmation,
 } from "../utils/hardware-coil-test.js";
@@ -68,7 +69,7 @@ function valueText(value) {
 }
 
 export default function HardwareCoilTest() {
-  const { isAdmin } = useAppConfig();
+  const { isAdmin, role } = useAppConfig();
   const { lang } = useI18n();
   const text = COPY[lang] || COPY.en;
   const [plan, setPlan] = useState(null);
@@ -107,7 +108,7 @@ export default function HardwareCoilTest() {
         address: coil.address,
         duration_ms: 300,
         confirm: pulseConfirmation(coil),
-      }, { logContext: `coil-test-${coil.id}` });
+      }, coilPulseRequestOptions(role, `coil-test-${coil.id}`));
       setPulses((current) => ({ ...current, [String(coil.address)]: response }));
       if (response.after) setPlan(response.after);
       if (!response.ok) {
@@ -118,7 +119,7 @@ export default function HardwareCoilTest() {
     } finally {
       setBusy("");
     }
-  }, [canPulse]);
+  }, [canPulse, role]);
 
   const stop = useCallback(async () => {
     setBusy("stop");

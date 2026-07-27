@@ -1,3 +1,5 @@
+import { parseConnectRole } from "./rbac.policy.js";
+
 export const COIL_RESULT_OPTIONS = ["correct", "wrong", "no_response"];
 
 export function nextUntestedCoil(coils = [], results = {}) {
@@ -25,3 +27,16 @@ export function pulseConfirmation(coil) {
   return `PULSE_DO${Number(coil?.address) + 1}`;
 }
 
+/**
+ * Pass the already-normalized Connect UI role to the guarded pulse endpoint.
+ * This does not grant a role: the endpoint still rejects every value outside
+ * system/admin and keeps confirmation, preflight, locking and automatic OFF.
+ */
+export function coilPulseRequestOptions(role, logContext) {
+  const normalized = parseConnectRole(role);
+  const privileged = normalized === "system" || normalized === "admin";
+  return {
+    ...(logContext ? { logContext } : {}),
+    ...(privileged ? { headers: { "X-Connect-Role": normalized } } : {}),
+  };
+}
