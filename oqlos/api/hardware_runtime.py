@@ -7,7 +7,7 @@ import subprocess
 import time
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Query
 
 from oqlos.api.hardware_gateway import get_hardware_gateway
 from oqlos.config import get_settings
@@ -265,13 +265,11 @@ async def read_sensor(sensor_id: str):
     health = await get_hardware_gateway().health()
     modbus_unavailable, modbus_adc_health = modbus_adc_unavailable(health)
     if modbus_unavailable:
-        raise HTTPException(
+        raise OqlosError(
+            code="modbus_adc_not_detected",
             status_code=503,
-            detail={
-                "message": "Modbus ADC is not available for real sensor readings",
-                "sensor_id": sensor_id,
-                "modbus_adc": modbus_adc_health,
-            },
+            message="Modbus ADC is not available for real sensor readings",
+            detail={"sensor_id": sensor_id, "modbus_adc": modbus_adc_health},
         )
 
     value = await get_hardware_gateway().read_sensor(sensor_id)

@@ -245,3 +245,23 @@ def test_diagnose_raises_typed_error_when_gateway_health_fails(monkeypatch):
         asyncio.run(runtime.hardware_diagnose())
     assert caught.value.public_code == "C2004-HW-0012"
     assert caught.value.issue_code == "config_unavailable"
+
+
+def test_read_sensor_raises_typed_error_when_modbus_adc_unavailable(monkeypatch):
+    async def _usb(_sensor_ids):
+        return None
+
+    class _Gateway:
+        async def health(self):
+            return {"mode": "real", "modbus-adc": {"compatible": False, "status": "disabled"}}
+
+        async def read_sensor(self, sensor_id: str):
+            raise AssertionError(sensor_id)
+
+    monkeypatch.setattr(runtime, "read_usb_adc_sensor_values", _usb)
+    monkeypatch.setattr(runtime, "get_hardware_gateway", lambda: _Gateway())
+
+    with pytest.raises(OqlosError) as caught:
+        asyncio.run(runtime.read_sensor("ai01"))
+    assert caught.value.public_code == "C2004-HW-0012"
+    assert caught.value.issue_code == "modbus_adc_not_detected"
