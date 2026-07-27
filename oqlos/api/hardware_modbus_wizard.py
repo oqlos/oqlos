@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import glob
-import os
 from typing import Any
 
 from oqlos.config import get_settings
@@ -16,6 +15,7 @@ from oqlos.api.hardware_modbus_settings import (
     effective_modbus_target_baud,
     normalize_probe_baudrates,
 )
+from oqlos.errors import OqlosError
 
 _settings = get_settings()
 
@@ -45,7 +45,7 @@ def _modbus_wizard_plan() -> dict[str, Any]:
     adc_port = ports["adc_serial_port"] or io_port
     separate = ports["topology"] == "separate-adapters"
     target_baud = effective_modbus_target_baud(_settings)
-    # ADC may use a different target baud than IO (bench often keeps ADC at 9600).
+    # ADC may use a different explicit override, but the C2004 bench baseline is 4800.
     adc_target_baud = effective_modbus_adc_target_baud(_settings)
     target_parity = str(_settings.modbus_parity).upper()
     adc_parity = str(getattr(_settings, "modbus_adc_parity", None) or _settings.modbus_parity).upper()
@@ -150,7 +150,12 @@ def _modbus_wizard_probe_isolated(
     try:
         from pimodbus.repair import diagnose_shared_bus
     except Exception as exc:
-        return {"ok": False, "error": f"pimodbus is not available: {exc}"}
+        raise OqlosError(
+            code="pimodbus_unavailable",
+            status_code=503,
+            message=f"pimodbus is not available: {exc}",
+            detail={"operation": "modbus.wizard.probe_isolated"},
+        ) from exc
 
     serial_candidates = _collect_wizard_serial_candidates(serial_port)
     target_max = effective_modbus_target_baud(_settings)
@@ -378,7 +383,12 @@ def _modbus_wizard_program_isolated(
             _read_holding_register,
         )
     except Exception as exc:
-        return {"ok": False, "error": f"pimodbus is not available: {exc}"}
+        raise OqlosError(
+            code="pimodbus_unavailable",
+            status_code=503,
+            message=f"pimodbus is not available: {exc}",
+            detail={"operation": "modbus.wizard.program_isolated"},
+        ) from exc
 
     line_parity = str(new_parity).upper()
     target_baud = int(new_baudrate)

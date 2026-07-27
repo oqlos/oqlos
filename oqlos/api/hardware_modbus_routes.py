@@ -232,6 +232,11 @@ async def hardware_modbus_wizard_program_isolated(
             confirm_isolated=bool(confirm_isolated),
             current_baudrate=cur_baud,
         )
+    except OqlosError as exc:
+        if paused_plugin_ids and gateway is not None:
+            runtime_apply = await gateway.apply_modbus_user_settings(paused_plugin_ids)
+            exc.detail = {**(exc.detail or {}), "runtime_apply": runtime_apply}
+        raise
     except Exception as exc:
         result = {
             "ok": False,

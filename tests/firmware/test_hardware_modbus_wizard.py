@@ -393,6 +393,23 @@ def test_build_waveshare_serial_stale_skips_matrix(monkeypatch):
     assert result["waveshare_scan"]["issues"][0]["public_code"] == "C2004-HW-0012"
 
 
+def test_modbus_wizard_probe_raises_when_pimodbus_missing(monkeypatch):
+    import builtins
+
+    real_import = builtins.__import__
+
+    def _blocked_import(name, *args, **kwargs):
+        if name.startswith("pimodbus"):
+            raise ModuleNotFoundError("No module named 'pimodbus'")
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", _blocked_import)
+    with pytest.raises(OqlosError) as caught:
+        wizard._modbus_wizard_probe_isolated("/dev/ttyTEST", [4800], ["N"], [1])
+    assert caught.value.issue_code == "pimodbus_unavailable"
+    assert caught.value.public_code == "C2004-HW-0012"
+
+
 def test_build_waveshare_raises_when_pimodbus_missing(monkeypatch):
     import builtins
 
