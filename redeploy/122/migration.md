@@ -635,7 +635,7 @@ matches = []
 for port in candidates:
     cli = ModbusSerialClient(
         port=port,
-        baudrate=9600,
+        baudrate=4800,
         parity="N",
         stopbits=1,
         bytesize=8,
@@ -667,7 +667,7 @@ PY
 )
 eval "${MB_DETECT:-}"
 EXPECTED_IO_DEV=/dev/serial/by-id/usb-1a86_USB_Single_Serial_5958006895-if00
-IO_BAUD=9600
+IO_BAUD=4800
 IO_ENABLED=true
 IO_DEV="${MB_IO_DEV:-$EXPECTED_IO_DEV}"
 IO_DEVICE_ID=1
@@ -715,16 +715,19 @@ PY
 
 # Read-only boot gate.  It verifies USB identity and the exact machine RTU
 # contract on every service start; it never writes a coil/register.
+# Older deployments created this helper as root.  Replace the inode first so
+# the unprivileged deploy user can install the canonical version idempotently.
+rm -f /home/pi/maskservice/scripts/verify-boardnet-modbus.sh
 cat > /home/pi/maskservice/scripts/verify-boardnet-modbus.sh << 'SH'
 #!/bin/bash
 set -euo pipefail
 PORT="${OQLOS_MODBUS_SERIAL_PORT:?missing OQLOS_MODBUS_SERIAL_PORT}"
-BAUD="${OQLOS_MODBUS_BAUD:-9600}"
+BAUD="${OQLOS_MODBUS_BAUD:-4800}"
 PARITY="${OQLOS_MODBUS_PARITY:-N}"
 DEVICE_ID="${OQLOS_MODBUS_DEVICE_ID:-1}"
 EXPECTED_SERIAL="${OQLOS_MODBUS_EXPECTED_SERIAL:-5958006895}"
 
-if [ "$BAUD" != "9600" ] || [ "$PARITY" != "N" ] || [ "$DEVICE_ID" != "1" ]; then
+if [ "$BAUD" != "4800" ] || [ "$PARITY" != "N" ] || [ "$DEVICE_ID" != "1" ]; then
   echo "ERROR: invalid BoardNet Modbus contract: $PORT@$BAUD 8${PARITY}1 slave=$DEVICE_ID" >&2
   exit 1
 fi
@@ -772,9 +775,10 @@ SH
 chmod +x /home/pi/maskservice/scripts/verify-boardnet-modbus.sh
 
 # Remove the legacy emergency override. The generated unit now carries the
-# verified 9600/slave 1 machine contract directly, so no higher-precedence
+# verified 4800/slave 1 machine contract directly, so no higher-precedence
 # drop-in is required.
 rm -f /home/pi/.config/systemd/user/oqlos-hardware-api.service.d/99-modbus-port.conf
+rm -f /home/pi/.config/systemd/user/oqlos-hardware-api.service.d/90-modbus-device-id.conf
 
 # --- systemd unit: oqlos-server with the OQL-over-MQTT agent/controller enabled ---
 cat > /home/pi/.config/systemd/user/oqlos-hardware-api.service << EOF
@@ -817,7 +821,7 @@ Environment=OQLOS_OQL_MQTT_PORT=1883
 # Verify and log the exact identity/RTU contract before startup, but keep the
 # diagnostics API online in degraded mode. Hardware commands remain fail-closed
 # in plugin readiness and return 503 while this verification fails.
-ExecStartPre=/bin/bash -lc '/home/pi/maskservice/scripts/verify-boardnet-modbus.sh || { echo "WARN: BoardNet Modbus preflight failed; starting diagnostics-only degraded runtime" >&2; exit 0; }'
+ExecStartPre=/bin/bash -lc '/bin/bash /home/pi/maskservice/scripts/verify-boardnet-modbus.sh || { echo "WARN: BoardNet Modbus preflight failed; starting diagnostics-only degraded runtime" >&2; exit 0; }'
 ExecStartPre=/bin/bash -lc 'if /home/pi/maskservice/scripts/wait-hw-tic249-ready.sh; then exit 0; fi; [ "${PIHW_ALLOW_MISSING_HARDWARE:-1}" = "1" ] && exit 0; exit 1'
 ExecStartPre=/home/pi/maskservice/scripts/tic249-deenergize-best-effort.sh
 ExecStart=/home/pi/oqlos/venv/bin/oqlos-server --host 0.0.0.0 --port 8202
@@ -993,8 +997,13 @@ else
 fi
 
 for page in hardware-status hardware-demo map-editor scenario-files func-editor hardware-coils; do
-  if _wait_get "http://127.0.0.1:8202/ui/${page}" "$TMPDIR/oqlos-ui-${page}.html" 30 8; then
+  page_attempts=30
+  [ "$page" = "map-editor" ] && page_attempts=1
+  if _wait_get "http://127.0.0.1:8202/ui/${page}" "$TMPDIR/oqlos-ui-${page}.html" "$page_attempts" 8; then
     _pass "OqlOS UI /ui/${page} OK"
+  elif [ "$page" = "map-editor" ]; then
+    echo "WARN: opcjonalny OqlOS UI /ui/${page} nie jest zbudowany; nie wycofuję sprawnego runtime sprzętowego"
+    warnings=$((warnings + 1))
   else
     _fail "OqlOS UI /ui/${page} nie odpowiada"
   fi

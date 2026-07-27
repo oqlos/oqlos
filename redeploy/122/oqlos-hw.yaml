@@ -51,7 +51,7 @@ plugins:
     connection_type: modbus-rtu
     connection_params:
       serial_port: /dev/serial/by-id/usb-1a86_USB_Single_Serial_5958006895-if00
-      baudrate: 9600
+      baudrate: 4800
       parity: N
       device_id: 1
     timeout: 2.0

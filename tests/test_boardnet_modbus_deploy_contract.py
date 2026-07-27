@@ -1,4 +1,4 @@
-"""BoardNet deployment must probe the physical Waveshare IO at 9600/N/8/1."""
+"""BoardNet deployment must probe the physical Waveshare IO at 4800/N/8/1, slave 1."""
 
 from pathlib import Path
 
@@ -13,8 +13,8 @@ def test_boardnet_modbus_detection_uses_stable_port_and_machine_baud() -> None:
     detection = migration.split("MB_DETECT=", 1)[1].split("ADC_ENABLED=false", 1)[0]
 
     assert 'glob.glob("/dev/serial/by-id/*")' in detection
-    assert "baudrate=9600" in detection
-    assert "IO_BAUD=9600" in detection
+    assert "baudrate=4800" in detection
+    assert "IO_BAUD=4800" in detection
     assert "device_id=1" in detection
     assert "range(1, 9)" not in detection
     assert "IO_DEVICE_ID=1" in detection
@@ -29,17 +29,20 @@ def test_boardnet_modbus_is_verified_read_only_on_every_service_start() -> None:
     verifier = migration.split("verify-boardnet-modbus.sh << 'SH'", 1)[1].split("\nSH\n", 1)[0]
     unit = migration.split("Description=OqlOS hardware node", 1)[1].split("\nEOF", 1)[0]
 
+    assert "rm -f /home/pi/maskservice/scripts/verify-boardnet-modbus.sh" in migration
     assert "ID_SERIAL_SHORT=${EXPECTED_SERIAL}" in verifier
-    assert 'BAUD" != "9600"' in verifier
+    assert 'BAUD" != "4800"' in verifier
     assert 'DEVICE_ID" != "1"' in verifier
     assert "read_coils" in verifier
     assert "write_coil" not in verifier
     assert "write_register" not in verifier
     assert ") from None" in verifier
     assert "verify-boardnet-modbus.sh" in unit
+    assert "/bin/bash /home/pi/maskservice/scripts/verify-boardnet-modbus.sh" in unit
     assert "diagnostics-only degraded runtime" in unit
     assert "RestartSec=10" in unit
     assert "rm -f /home/pi/.config/systemd/user/oqlos-hardware-api.service.d/99-modbus-port.conf" in migration
+    assert "rm -f /home/pi/.config/systemd/user/oqlos-hardware-api.service.d/90-modbus-device-id.conf" in migration
 
 
 def test_dri0050_startup_fails_closed_when_usb_identity_is_ambiguous() -> None:
@@ -69,7 +72,15 @@ def test_boardnet_base_config_matches_machine_modbus_contract() -> None:
 
     assert params == {
         "serial_port": "/dev/serial/by-id/usb-1a86_USB_Single_Serial_5958006895-if00",
-        "baudrate": 9600,
+        "baudrate": 4800,
         "parity": "N",
         "device_id": 1,
     }
+
+
+def test_optional_map_editor_cannot_roll_back_healthy_hardware_runtime() -> None:
+    migration = (ROOT / "redeploy/122/migration.md").read_text(encoding="utf-8")
+    smoke = migration.split("markpact:ref assert-hw-node-healthy", 1)[1]
+
+    assert 'elif [ "$page" = "map-editor" ]' in smoke
+    assert "nie wycofuję sprawnego runtime sprzętowego" in smoke
