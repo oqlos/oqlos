@@ -59,6 +59,7 @@ class PluginHardwareGateway:
 
         self._init_done = False
         self._init_lock = asyncio.Lock()
+        self._reconfigure_lock = asyncio.Lock()
         self._runtime_loop: asyncio.AbstractEventLoop | None = None
         self.last_init_summary: dict[str, Any] = {}
         if self.mode == "real":
@@ -77,6 +78,8 @@ class PluginHardwareGateway:
             loaded = PluginRegistry.load_configs(selected_path)
             self._plugin_configs.update(loaded)
             self._apply_env_overrides()
+            self._apply_persisted_modbus_settings()
+            self._log_modbus_preflight()
             logger.info(
                 "Loaded unified hardware configuration from %s (%d plugins)",
                 selected_path,
@@ -138,7 +141,50 @@ class PluginHardwareGateway:
                 "read_count": ("OQLOS_MODBUS_ADC_READ_COUNT", "MODBUS_ADC_READ_COUNT"),
             },
         )
-        self._log_modbus_preflight()
+    def _apply_persisted_modbus_settings(self) -> dict[str, dict[str, Any]]:
+        """Make the operator profile authoritative for live Modbus plugins."""
+        from oqlos.api.hardware_modbus_settings import apply_modbus_runtime_settings
+
+        applied = apply_modbus_runtime_settings(get_settings(), self._plugin_configs)
+        for plugin_id, values in applied.items():
+            logger.info(
+                "Applied Modbus runtime profile to %s: port=%s baud=%s parity=%s device_id=%s",
+                plugin_id,
+                values.get("serial_port"),
+                values.get("baudrate"),
+                values.get("parity"),
+                values.get("device_id"),
+            )
+        return applied
+
+    async def apply_modbus_user_settings(
+        self,
+        plugin_ids: set[str] | None = None,
+    ) -> dict[str, Any]:
+        """Apply persisted settings immediately and reconnect RTU plugins without actuation."""
+        await self.ensure_initialized()
+        async with self._reconfigure_lock:
+            applied = self._apply_persisted_modbus_settings()
+            reconnects: list[dict[str, Any]] = []
+            for plugin_id in ("modbus-io", "modbus-adc"):
+                if plugin_ids is not None and plugin_id not in plugin_ids:
+                    continue
+                config = self._plugin_configs.get(plugin_id)
+                if config is None or not config.enabled or plugin_id not in applied:
+                    continue
+                self._plugins.pop(plugin_id, None)
+                await PluginRegistry.disconnect_plugin(plugin_id)
+                ok = await PluginRegistry.connect_plugin(plugin_id, config)
+                instance = PluginRegistry.get_instance(plugin_id)
+                if ok and instance is not None:
+                    self._plugins[plugin_id] = instance
+                reconnects.append({"plugin_id": plugin_id, "ok": bool(ok)})
+            return {
+                "ok": all(item["ok"] for item in reconnects),
+                "applied": applied,
+                "reconnects": reconnects,
+                "actuation": False,
+            }
 
     def _apply_plugin_enable_env_overrides(self) -> None:
         """Disable optional plugins on benches (motors/piadc) to avoid extra serial/USB churn."""
@@ -651,6 +697,10 @@ class PluginHardwareGateway:
                 updated.append(plugin_id)
                 logger.info("Hot-reloaded config for %s (%d peripherals)",
                             plugin_id, len(new_cfg.peripherals))
+
+        self._apply_env_overrides()
+        self._apply_persisted_modbus_settings()
+        self._log_modbus_preflight()
 
         return {
             "success": True,

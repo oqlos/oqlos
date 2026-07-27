@@ -161,3 +161,53 @@ def test_build_diagnosis_report_accepts_replaced_modbus_adc():
     assert payload["devices"]["modbus-adc"]["status"] == "ok"
     assert payload["devices"]["modbus-adc"]["environment"]["replaced_by"] == "usb-adc-stack"
     assert payload["devices"]["modbus-adc"]["recommended_actions"] == []
+
+
+def test_modbus_io_timeout_recommends_physical_not_stale_reconnect():
+    identify = {
+        "platform": {
+            "modbus_topology": "separate-adapters",
+            "modbus_io_serial_port": "/dev/serial/by-id/usb-io",
+        },
+        "diagnostics": {
+            "health": {
+                "modbus-io": {
+                    "status": "error",
+                    "compatible": False,
+                    "message": "Modbus RTU read_coils timed out after 2.0s",
+                },
+                "modbus-adc": {"status": "connected", "compatible": True, "message": "ok"},
+                "motor-tic249": {"status": "connected", "compatible": True, "message": "ok"},
+                "motor-dri0050": {"status": "connected", "compatible": True, "message": "ok"},
+            },
+        },
+        "adapters": [],
+    }
+    payload = report_to_dict(build_diagnosis_report(identify))
+    actions = payload["devices"]["modbus-io"]["recommended_actions"]
+    assert any(a["id"] == "modbus-io-physical" and a["code"] == "hw_modbus_no_response" for a in actions)
+    assert not any(a["id"] == "modbus-io-reconnect" for a in actions)
+    assert any("nie odpowiada" in i.lower() for i in payload["devices"]["modbus-io"]["issues"])
+
+
+def test_modbus_io_stale_handle_still_recommends_reconnect():
+    identify = {
+        "platform": {"modbus_topology": "separate-adapters"},
+        "diagnostics": {
+            "health": {
+                "modbus-io": {
+                    "status": "error",
+                    "compatible": False,
+                    "message": "[Errno 19] No such device",
+                },
+                "modbus-adc": {"status": "connected", "compatible": True, "message": "ok"},
+                "motor-tic249": {"status": "connected", "compatible": True, "message": "ok"},
+                "motor-dri0050": {"status": "connected", "compatible": True, "message": "ok"},
+            },
+        },
+        "adapters": [],
+    }
+    payload = report_to_dict(build_diagnosis_report(identify))
+    actions = payload["devices"]["modbus-io"]["recommended_actions"]
+    assert any(a["id"] == "modbus-io-reconnect" and a["code"] == "hw_modbus_serial_handle_stale" for a in actions)
+    assert not any(a["id"] == "modbus-io-physical" for a in actions)

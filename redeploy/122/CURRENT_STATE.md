@@ -140,9 +140,9 @@ curl -s http://192.168.188.122:8203/health
 
 ## Ostatnia historyczna naprawa Modbus-IO (2026-07-07)
 
-- Read-only `pimodbus.provision_cli diagnose` znalazł Waveshare Modbus-IO na:
+- Aktualna polityka runtime dla Waveshare Modbus-IO to
   `/dev/serial/by-id/usb-1a86_USB_Single_Serial_5958006895-if00`,
-  `9600/N`, slave ID `2`.
+  `4800/N/8/1`, slave ID `2`.
 - Nie programowano modułu i nie wykonywano `repair --yes`.
 - Poprawiono konfigurację runtime na `modbus-io.device_id=2` oraz
   `OQLOS_MODBUS_DEVICE_ID=2`.
@@ -153,7 +153,8 @@ curl -s http://192.168.188.122:8203/health
 
 - Zatrzymano tylko `oqlos-hardware-api.service`, sidecary zostawiono aktywne,
   potem firmware został ponownie uruchomiony.
-- Krótki skan targetowany (`9600`, parity `N`, IDs `1,2`) wykrył odpowiedź
+- Krótki skan targetowany powinien używać (`4800`, parity `N`, IDs `1,2`)
+  i oczekiwać odpowiedzi
   `read_coils` dla ID `2`.
 - Po restarcie OqlOS: `modbus-io` jest healthy, Tic249 nadal
   `energized=false`.

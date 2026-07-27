@@ -76,7 +76,7 @@ def enrich_modbus_adapter(
     else:
         probe["diagnosis"] = (
             f"USB-RS485 adapter visible{f' at {serial_hint}' if serial_hint else ''}; "
-            "Modbus module not answering — verify 24V, A/B wiring, slave ID=2, baud 9600 8N1. "
+            "Modbus module not answering — verify 24V, A/B wiring, slave ID=2, baud 4800 8N1. "
             "If OqlOS holds the port, retry after Refresh or: make hardware-modbus-probe"
         )
         adapter["status"] = "adapter-only"

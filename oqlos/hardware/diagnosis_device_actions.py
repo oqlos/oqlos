@@ -25,6 +25,29 @@ def add_modbus_device_actions(
         return
     if "errno 19" in msg or "no such device" in msg:
         dev.issues.append("Nieaktualny port USB/RS485 po re-enumeracji.")
+    timed_out = "timed out" in msg or "timeout" in msg or "no response" in msg
+    if timed_out:
+        dev.issues.append(
+            "Moduł Modbus nie odpowiada na RTU — zasilanie, A/B, GND, slave ID, baud 4800."
+        )
+        dev.recommended_actions.append(
+            DiagnosisAction(
+                id=f"{plugin_id}-physical",
+                device_id=plugin_id,
+                label="Sprawdź zasilanie / RS485 / slave ID (baud 4800)",
+                kind="manual",
+                priority=20,
+                auto_executable=False,
+                scope="host",
+                detail=(
+                    "Sonda baud/parity/ID bez odpowiedzi. Reconnect OqlOS nie pomoże — "
+                    "sprawdź 12/24V, A/B, wspólne GND i DIP slave (plan: ID=2, 4800 8N1)."
+                ),
+                code="hw_modbus_no_response",
+                actuation_risk="none",
+            )
+        )
+        return
     dev.recommended_actions.append(
         DiagnosisAction(
             id=f"{plugin_id}-reconnect",

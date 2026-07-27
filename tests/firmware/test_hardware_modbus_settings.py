@@ -92,3 +92,37 @@ def test_profiles_are_independent(tmp_path):
     assert loaded["profiles"]["modbus-io"]["target_baudrate"] == 38400
     assert loaded["active_profile"] == "modbus-adc"
     assert settings.effective_modbus_target_baud(cfg) == 115200
+
+
+def test_runtime_plugin_overrides_use_persisted_io_profile(monkeypatch):
+    cfg = SimpleNamespace(
+        modbus_baud=4800,
+        modbus_adc_baud=9600,
+        modbus_parity="N",
+        modbus_adc_parity="E",
+        modbus_device_id=2,
+        modbus_adc_device_id=1,
+        modbus_serial_port="/dev/ttyUSB0",
+        modbus_adc_serial_port="/dev/ttyUSB1",
+    )
+    monkeypatch.setattr(settings, "_profile_device_ids", lambda pid, _cfg: [2] if pid == "modbus-io" else [1])
+    settings.write_modbus_baud_settings(
+        cfg,
+        {
+            "profile_id": "modbus-io",
+            "active_profile": "modbus-io",
+            "target_baudrate": 4800,
+            "target_parity": "N",
+        },
+    )
+    plugin = SimpleNamespace(
+        connection_type="modbus-rtu",
+        connection_params={"serial_port": "/dev/ttyACM0", "baudrate": 9600, "device_id": 1},
+    )
+
+    applied = settings.apply_modbus_runtime_settings(cfg, {"modbus-io": plugin})
+
+    assert applied["modbus-io"]["baudrate"] == 4800
+    assert applied["modbus-io"]["device_id"] == 2
+    assert plugin.connection_params["serial_port"] == "/dev/ttyUSB0"
+    assert plugin.connection_params["baudrate"] == 4800

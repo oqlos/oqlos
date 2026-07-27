@@ -35,7 +35,7 @@ def normalize_target_baud(value: int | str | None, *, default: int = MODBUS_BASE
 
 
 def build_init_baud_sequence(target_baud: int | None) -> list[int]:
-    """Commissioning order: always probe baseline 4800, then target max speed."""
+    """Commissioning order: always probe baseline 4800, then target speed."""
     target = normalize_target_baud(target_baud)
     if target == MODBUS_BASELINE_BAUD:
         return [MODBUS_BASELINE_BAUD]
@@ -111,6 +111,12 @@ def _profile_default_baud(profile_id: str, settings: Any) -> int:
     return normalize_target_baud(getattr(settings, "modbus_baud", MODBUS_BASELINE_BAUD))
 
 
+def _profile_default_parity(profile_id: str, settings: Any) -> str:
+    attribute = "modbus_adc_parity" if profile_id == "modbus-adc" else "modbus_parity"
+    parity = str(getattr(settings, attribute, "N") or "N").upper()
+    return parity if parity in {"N", "E", "O"} else "N"
+
+
 def _profile_device_ids(profile_id: str, settings: Any) -> list[int]:
     topology = _topology_module()
     io_ids = topology._modbus_io_device_ids()
@@ -160,7 +166,7 @@ def _merge_profile_config(profile_id: str, settings: Any, ports: dict[str, Any])
         except Exception:
             pass
     serial_port = serial_override or _profile_default_serial_port(profile_id, ports, settings)
-    parity = str(persisted.get("target_parity") or getattr(settings, "modbus_parity", "N")).upper()
+    parity = str(persisted.get("target_parity") or _profile_default_parity(profile_id, settings)).upper()
     return {
         "profile_id": profile_id,
         "topology": _profile_topology(profile_id),
@@ -274,3 +280,37 @@ def write_modbus_baud_settings(settings: Any, payload: dict[str, Any]) -> dict[s
 def clear_modbus_baud_user_settings_cache() -> None:
     global _USER_SETTINGS
     _USER_SETTINGS = None
+
+
+def runtime_modbus_plugin_overrides(settings: Any, plugin_id: str) -> dict[str, Any]:
+    """Resolve one plugin's effective RTU settings from the persisted operator profile."""
+    if plugin_id not in {"modbus-io", "modbus-adc"}:
+        return {}
+    active = active_modbus_profile_id(settings)
+    profile_id = "shared-bus" if active == "shared-bus" else plugin_id
+    profile = _merge_profile_config(profile_id, settings, _runtime_serial_ports())
+    device_ids = _profile_device_ids(plugin_id, settings)
+    overrides: dict[str, Any] = {
+        "serial_port": profile["serial_port"],
+        "baudrate": profile["target_baudrate"],
+        "parity": profile["target_parity"],
+    }
+    if device_ids:
+        overrides["device_id"] = device_ids[0]
+    return {key: value for key, value in overrides.items() if value not in (None, "")}
+
+
+def apply_modbus_runtime_settings(
+    settings: Any,
+    plugin_configs: dict[str, Any],
+) -> dict[str, dict[str, Any]]:
+    """Apply persisted Modbus profiles to gateway configs and report effective values."""
+    applied: dict[str, dict[str, Any]] = {}
+    for plugin_id in ("modbus-io", "modbus-adc"):
+        config = plugin_configs.get(plugin_id)
+        if config is None or getattr(config, "connection_type", "") != "modbus-rtu":
+            continue
+        overrides = runtime_modbus_plugin_overrides(settings, plugin_id)
+        config.connection_params.update(overrides)
+        applied[plugin_id] = dict(overrides)
+    return applied

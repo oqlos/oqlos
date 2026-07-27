@@ -243,6 +243,19 @@ ISSUE_CATALOG: dict[str, IssueDefinition] = {
             hint="Pure in-process reconnect of the existing plugin instance — no file/config changes, nothing to commit.",
         ),
     ),
+    "hw_modbus_no_response": IssueDefinition(
+        code="hw_modbus_no_response",
+        domain="hardware",
+        default_severity="error",
+        summary="Modbus RTU slave did not answer (read timed out / no response) on the configured serial path.",
+        repair=RepairTemplate(
+            id="modbus-physical-check",
+            scope="host",
+            auto_executable=False,
+            actuation_risk="none",
+            hint="Verify module power, RS485 A/B polarity, common GND, slave ID (plan: 2) and baud 4800 8N1; software reconnect will not help.",
+        ),
+    ),
     "api_oql_transport_disabled": IssueDefinition(
         code="api_oql_transport_disabled",
         domain="api",

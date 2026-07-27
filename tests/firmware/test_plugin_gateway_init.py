@@ -43,7 +43,7 @@ def test_initialize_plugins_records_summary(monkeypatch) -> None:
             plugin_id="modbus-io",
             enabled=True,
             connection_type="modbus-rtu",
-            connection_params={"serial_port": "/dev/ttyTEST", "baudrate": 9600, "device_id": 2},
+            connection_params={"serial_port": "/dev/ttyTEST", "baudrate": 4800, "device_id": 2},
         ),
     }
 
@@ -64,3 +64,53 @@ def test_initialize_plugins_records_summary(monkeypatch) -> None:
     assert gateway._init_done is True
     assert "modbus-io" in gateway.last_init_summary.get("connected", [])
     assert gateway._plugins.get("modbus-io") is not None
+
+
+def test_apply_modbus_user_settings_reconnects_selected_plugin(monkeypatch) -> None:
+    gateway = PluginHardwareGateway(mode="mock")
+    gateway.mode = "real"
+    gateway._init_done = True
+    gateway._plugin_configs = {
+        "modbus-io": PluginConfig(
+            plugin_id="modbus-io",
+            enabled=True,
+            connection_type="modbus-rtu",
+            connection_params={"serial_port": "/dev/ttyACM0", "baudrate": 9600, "device_id": 1},
+        ),
+    }
+    gateway._plugins["modbus-io"] = object()
+    monkeypatch.setattr(
+        gateway,
+        "_apply_persisted_modbus_settings",
+        lambda: {
+            "modbus-io": {
+                "serial_port": "/dev/ttyUSB0",
+                "baudrate": 4800,
+                "parity": "N",
+                "device_id": 2,
+            }
+        },
+    )
+    disconnect = AsyncMock(return_value=True)
+    connect = AsyncMock(return_value=True)
+    instance = object()
+    monkeypatch.setattr(
+        "oqlos.hardware.plugins.registry.PluginRegistry.disconnect_plugin",
+        disconnect,
+    )
+    monkeypatch.setattr(
+        "oqlos.hardware.plugins.registry.PluginRegistry.connect_plugin",
+        connect,
+    )
+    monkeypatch.setattr(
+        "oqlos.hardware.plugins.registry.PluginRegistry.get_instance",
+        lambda _plugin_id: instance,
+    )
+
+    result = asyncio.run(gateway.apply_modbus_user_settings({"modbus-io"}))
+
+    assert result["ok"] is True
+    assert result["actuation"] is False
+    disconnect.assert_awaited_once_with("modbus-io")
+    connect.assert_awaited_once()
+    assert gateway._plugins["modbus-io"] is instance

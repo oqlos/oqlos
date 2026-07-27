@@ -7,7 +7,7 @@ from typing import Any
 
 from fastapi import APIRouter, Body, Header, HTTPException
 
-from oqlos.api.hardware_gateway import snapshot_via_health
+from oqlos.api.hardware_gateway import snapshot_via_health, try_get_hardware_gateway
 from oqlos.api.hardware_modbus_waveshare import _build_waveshare_diagnose_report
 from oqlos.api.hardware_modbus_wizard import (
     _modbus_wizard_plan,
@@ -47,8 +47,18 @@ async def hardware_modbus_settings_get() -> dict[str, Any]:
 
 @router.put("/modbus/settings")
 async def hardware_modbus_settings_put(payload: dict[str, Any] = Body(default_factory=dict)) -> dict[str, Any]:
-    """Persist operator-selected target Modbus baud (machine baseline is 4800)."""
-    return write_modbus_baud_settings(_settings, payload)
+    """Persist and apply Modbus runtime settings (machine baseline is 4800)."""
+    result = write_modbus_baud_settings(_settings, payload)
+    gateway = try_get_hardware_gateway()
+    if gateway is not None and hasattr(gateway, "apply_modbus_user_settings"):
+        profile_id = str(payload.get("active_profile") or payload.get("profile_id") or result["active_profile"])
+        plugin_ids = (
+            {"modbus-io", "modbus-adc"}
+            if profile_id == "shared-bus"
+            else {profile_id}
+        )
+        result["runtime_apply"] = await gateway.apply_modbus_user_settings(plugin_ids)
+    return result
 
 
 @router.get("/modbus/waveshare-diagnose")

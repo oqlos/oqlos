@@ -18,17 +18,43 @@ def test_list_usb_devices_structure_and_no_hang():
     assert time.time() - t < 5.0, "list_usb_devices must not hang"
     assert isinstance(devices, list)
     for d in devices:
-        assert {"vendor_id", "product_id", "port_path", "tty", "serial_by_id"} <= set(d)
+        assert {"vendor_id", "product_id", "port_path", "tty", "drivers", "serial_by_id"} <= set(d)
         assert isinstance(d["tty"], list)
+        assert isinstance(d["drivers"], list)
         assert isinstance(d["serial_by_id"], list)
 
 
 def test_pi_system_diagnostics_has_expected_keys():
     r = u.pi_system_diagnostics()
-    for k in ("ok", "model", "cpu_temp_c", "memory", "serial_ports", "i2c_buses", "usb_device_count"):
+    for k in (
+        "ok", "model", "boot_id", "kernel_release", "cpu_temp_c", "memory",
+        "serial_ports", "i2c_buses", "usb_device_count", "kernel_event_counts", "kernel_events",
+    ):
         assert k in r
     assert isinstance(r["serial_ports"], list)
     assert isinstance(r["usb_device_count"], int)
+
+
+def test_kernel_event_snapshot_is_bounded_and_categorized(monkeypatch):
+    class Result:
+        returncode = 0
+        stderr = ""
+        stdout = "\n".join([
+            "[boot] cdc_acm 1-1.4:1.0: ttyACM0: USB ACM device",
+            "[power] hwmon: Undervoltage detected!",
+            "[usb] WARN::dwc_otg_hcd_urb_dequeue: Timed out waiting for FSM NP transfer",
+            "[power] hwmon: Voltage normalised",
+        ])
+
+    monkeypatch.setattr(u.subprocess, "run", lambda *_args, **_kwargs: Result())
+
+    snapshot = u._kernel_event_snapshot(limit=2)
+
+    assert snapshot["available"] is True
+    assert snapshot["counts"]["undervoltage"] == 1
+    assert snapshot["counts"]["usb_host_timeout"] == 1
+    assert len(snapshot["events"]) == 2
+    assert snapshot["events"][-1]["kind"] == "voltage_normalized"
 
 
 def test_reset_usb_device_not_found_is_clean_failure():

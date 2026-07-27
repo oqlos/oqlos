@@ -16,11 +16,41 @@ import {
   resolveRtcMenuId,
 } from "../utils/rtc-menu.js";
 
+function formatValue(value) {
+  if (value === null || value === undefined) return "—";
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+    return String(value);
+  }
+
+  if (value instanceof Date) return value.toISOString();
+
+  if (Array.isArray(value)) {
+    return value.join(", ");
+  }
+
+  if (typeof value === "object") {
+    const candidateKeys = ["hour", "minute", "second"];
+    const hasTimeFields = candidateKeys.every((key) => key in value);
+    if (hasTimeFields) {
+      const pad = (part) => String(part ?? 0).padStart(2, "0");
+      return `${pad(value.hour)}:${pad(value.minute)}:${pad(value.second)}${value.mock ? " (mock)" : ""}`;
+    }
+    if (typeof value.time === "string") {
+      return value.time;
+    }
+    return JSON.stringify(value);
+  }
+
+  return String(value);
+}
+
 function SummaryRow({ label, value }) {
+  const displayValue = formatValue(value);
+
   return (
     <div className="hw-kv-row">
       <span className="hw-kv-label">{label}</span>
-      <strong>{value ?? "—"}</strong>
+      <strong>{displayValue}</strong>
     </div>
   );
 }

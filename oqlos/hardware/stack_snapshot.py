@@ -48,7 +48,7 @@ def _build_recommended_actions(stale: bool, health_payload: dict[str, Any]) -> l
         if "timed out" in message or "no response" in message:
             actions.append({
                 "code": "check_modbus_physical",
-                "message": f"{plugin_id}: verify power, RS485 A/B/GND, slave ID and baud 9600.",
+                "message": f"{plugin_id}: verify power, RS485 A/B/GND, slave ID and baud 4800.",
                 "command_hint": "make hardware-modbus-probe",
             })
     return actions

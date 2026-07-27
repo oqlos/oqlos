@@ -1,5 +1,7 @@
 """Regression tests for extracted Modbus HTTP routes."""
 
+import asyncio
+
 import pytest
 from fastapi import HTTPException
 
@@ -25,3 +27,28 @@ def test_coil_pulse_role_is_enforced_server_side() -> None:
     with pytest.raises(HTTPException) as exc:
         modbus_hw.require_coil_test_role("operator")
     assert exc.value.status_code == 403
+
+
+def test_settings_put_applies_only_selected_runtime_profile(monkeypatch) -> None:
+    calls: list[set[str]] = []
+
+    class _Gateway:
+        async def apply_modbus_user_settings(self, plugin_ids: set[str]):
+            calls.append(plugin_ids)
+            return {"ok": True, "actuation": False}
+
+    monkeypatch.setattr(
+        modbus_hw,
+        "write_modbus_baud_settings",
+        lambda _settings, _payload: {"active_profile": "modbus-io"},
+    )
+    monkeypatch.setattr(modbus_hw, "try_get_hardware_gateway", lambda: _Gateway())
+
+    result = asyncio.run(
+        modbus_hw.hardware_modbus_settings_put(
+            {"profile_id": "modbus-io", "target_baudrate": 4800}
+        )
+    )
+
+    assert calls == [{"modbus-io"}]
+    assert result["runtime_apply"]["actuation"] is False

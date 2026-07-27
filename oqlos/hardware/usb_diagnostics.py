@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import glob
 import os
+import re
 import subprocess
 from typing import Any
 
@@ -53,6 +54,19 @@ def _find_tty(dev_dir: str) -> list[str]:
             name = os.path.basename(ttypath)
             if name.startswith(("ttyUSB", "ttyACM")) and os.path.exists(f"/dev/{name}"):
                 found.add(f"/dev/{name}")
+    return sorted(found)
+
+
+def _find_drivers(dev_dir: str) -> list[str]:
+    """Return kernel drivers bound to this USB device's interfaces."""
+    found: set[str] = set()
+    for iface in glob.glob(os.path.join(dev_dir, "*:*")):
+        driver = os.path.join(iface, "driver")
+        try:
+            if os.path.islink(driver):
+                found.add(os.path.basename(os.path.realpath(driver)))
+        except OSError:
+            continue
     return sorted(found)
 
 
@@ -96,6 +110,7 @@ def list_usb_devices() -> list[dict[str, Any]]:
             "speed_mbps": _read(os.path.join(d, "speed")),
             "dev_node": dev_node,
             "tty": tty,
+            "drivers": _find_drivers(d),
             "serial_by_id": sorted(
                 {link for t in tty for link in byid.get(os.path.realpath(t), [])}
             ),
@@ -104,10 +119,78 @@ def list_usb_devices() -> list[dict[str, Any]]:
     return devices
 
 
+_KERNEL_EVENT_RULES: tuple[tuple[str, str, re.Pattern[str]], ...] = (
+    ("undervoltage", "error", re.compile(r"under.?voltage detected", re.I)),
+    ("voltage_normalized", "info", re.compile(r"voltage normali[sz]ed", re.I)),
+    (
+        "usb_host_timeout",
+        "error",
+        re.compile(r"dwc_otg_hcd_urb_dequeue|timed out waiting for FSM .*transfer", re.I),
+    ),
+    ("usb_disconnect", "error", re.compile(r"usb\s+[\w.:-]+:.*disconnect", re.I)),
+    ("usb_reset", "warn", re.compile(r"usb\s+[\w.:-]+:.*reset (?:full|high|super)-speed", re.I)),
+    (
+        "serial_driver",
+        "info",
+        re.compile(r"tty(?:ACM|USB)\d+|cdc_acm|ch34[13]|ch343", re.I),
+    ),
+)
+
+
+def _kernel_event_snapshot(limit: int = 60) -> dict[str, Any]:
+    """Return a bounded, categorized kernel log view relevant to BoardNet I/O.
+
+    The endpoint deliberately does not expose arbitrary dmesg output.  It keeps
+    only power, USB-host and serial-driver lines needed to diagnose hardware
+    availability from the browser.
+    """
+    try:
+        result = subprocess.run(
+            ["dmesg", "--ctime", "--color=never"],
+            capture_output=True,
+            text=True,
+            timeout=4,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return {"available": False, "error": str(exc), "counts": {}, "events": []}
+
+    if result.returncode != 0:
+        return {
+            "available": False,
+            "error": result.stderr.strip() or f"dmesg exited {result.returncode}",
+            "counts": {},
+            "events": [],
+        }
+
+    counts = {kind: 0 for kind, _level, _pattern in _KERNEL_EVENT_RULES}
+    events: list[dict[str, str]] = []
+    for raw_line in result.stdout.splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        for kind, level, pattern in _KERNEL_EVENT_RULES:
+            if not pattern.search(line):
+                continue
+            counts[kind] += 1
+            events.append({"kind": kind, "level": level, "message": line})
+            break
+
+    bounded = max(1, min(int(limit), 200))
+    return {
+        "available": True,
+        "error": None,
+        "counts": counts,
+        "events": events[-bounded:],
+    }
+
+
 def pi_system_diagnostics() -> dict[str, Any]:
     """Raspberry Pi health snapshot: model, temp, throttling, memory, uptime, ports."""
     out: dict[str, Any] = {"ok": True}
     out["model"] = (_read("/proc/device-tree/model") or "").replace("\x00", "") or None
+    out["boot_id"] = _read("/proc/sys/kernel/random/boot_id")
+    out["kernel_release"] = os.uname().release if hasattr(os, "uname") else None
 
     temp = _read("/sys/class/thermal/thermal_zone0/temp")
     out["cpu_temp_c"] = round(int(temp) / 1000, 1) if temp and temp.lstrip("-").isdigit() else None
@@ -135,6 +218,11 @@ def pi_system_diagnostics() -> dict[str, Any]:
     out["serial_ports"] = sorted(glob.glob("/dev/ttyUSB*") + glob.glob("/dev/ttyACM*"))
     out["i2c_buses"] = sorted(glob.glob("/dev/i2c-*"))
     out["usb_device_count"] = len(list_usb_devices())
+    kernel = _kernel_event_snapshot()
+    out["kernel_events_available"] = kernel["available"]
+    out["kernel_events_error"] = kernel["error"]
+    out["kernel_event_counts"] = kernel["counts"]
+    out["kernel_events"] = kernel["events"]
     return out
 
 

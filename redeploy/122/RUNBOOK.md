@@ -93,7 +93,7 @@ Do not expose these ports outside the trusted lab LAN.
 
 As of 2026-06-30 22:02 CEST, BoardNet is up after reboot in `mode=real` with
 `overall_ok=true`. Tic249 and DRI0050 are healthy, Tic249 is de-energized when
-idle, Modbus-IO is healthy on `9600/N`, slave ID `2`, and piRTC reports
+idle, Modbus-IO is configured for `4800/N/8/1`, slave ID `2`, and piRTC reports
 `rtc.available=true`, `watchdog.available=true`, `mock=false` on `:8125`.
 `modbus-adc` is disabled because the ADC adapter is not present.
 
