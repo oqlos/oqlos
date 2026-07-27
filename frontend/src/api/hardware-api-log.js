@@ -69,16 +69,40 @@ export function summarizeHardwareApiResponse(path, payload) {
   return undefined;
 }
 
+export function formatHardwareApiDiagnostic(event, path, meta = {}) {
+  const status = Number(meta.status || 0);
+  const action = event === "request"
+    ? "HTTP_REQUEST_START"
+    : event === "response" && status < 400
+      ? "HTTP_REQUEST"
+      : status > 0
+        ? "HTTP_ERROR"
+        : "NETWORK_ERROR";
+  const result = event === "request"
+    ? "PENDING"
+    : event === "response" && status < 400
+      ? "OK"
+      : status > 0
+        ? "ERROR"
+        : "UNAVAILABLE";
+  const params = {
+    architecture: "SOA",
+    transport: "http",
+    ...meta,
+  };
+  return `${action} ${JSON.stringify(String(path || "unknown"))} ${JSON.stringify(params)} -> ${result}`;
+}
+
 export function logHardwareApiEvent(event, path, meta = {}) {
-  const record = { event, path, ...meta };
   const isFailure = event === "error" || (event === "response" && Number(meta.status) >= 400);
+  const message = formatHardwareApiDiagnostic(event, path, meta);
 
   if (isFailure) {
-    console.error(HARDWARE_API_LOG_TAG, event, record);
+    console.error(message);
     return;
   }
 
-  if (import.meta.env.DEV || isHardwareWizardPath(path)) {
-    console.debug(HARDWARE_API_LOG_TAG, event, record);
+  if (import.meta.env?.DEV || isHardwareWizardPath(path)) {
+    console.debug(message);
   }
 }
