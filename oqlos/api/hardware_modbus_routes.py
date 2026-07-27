@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import os
 from typing import Any
 
 from fastapi import APIRouter, Body, Header, HTTPException
@@ -26,6 +27,34 @@ from oqlos.config import get_settings
 _settings = get_settings()
 router = APIRouter(tags=["hardware-modbus"])
 _COIL_TEST_ROLES = {"system", "administrator", "admin"}
+
+
+async def _pause_modbus_plugins_on_serial(serial_port: str) -> tuple[Any | None, set[str]]:
+    """Release an RTU adapter while the isolated commissioning wizard owns it."""
+    gateway = try_get_hardware_gateway()
+    if gateway is None:
+        return None, set()
+    await gateway.ensure_initialized()
+
+    requested = os.path.realpath(str(serial_port or ""))
+    plugin_ids: set[str] = set()
+    for plugin_id in ("modbus-io", "modbus-adc"):
+        config = gateway._plugin_configs.get(plugin_id)
+        if config is None or not config.enabled:
+            continue
+        configured = os.path.realpath(
+            str((config.connection_params or {}).get("serial_port") or "")
+        )
+        if requested and configured == requested:
+            plugin_ids.add(plugin_id)
+
+    if plugin_ids:
+        from oqlos.hardware.plugins.registry import PluginRegistry
+
+        for plugin_id in plugin_ids:
+            gateway._plugins.pop(plugin_id, None)
+            await PluginRegistry.disconnect_plugin(plugin_id)
+    return gateway, plugin_ids
 
 
 def require_coil_test_role(role: str | None) -> str:
@@ -166,13 +195,40 @@ async def hardware_modbus_wizard_program_isolated(
     """Program one isolated module: open at current/baseline baud, write target UART, verify at target."""
     serial = serial_port or str(_settings.modbus_serial_port)
     cur_baud = None if current_baudrate in (None, "") else int(current_baudrate)
-    return await asyncio.to_thread(
-        _modbus_wizard_program_isolated,
-        serial_port=serial,
-        current_device_id=int(current_device_id),
-        new_device_id=int(new_device_id),
-        new_baudrate=int(new_baudrate),
-        new_parity=str(new_parity).upper(),
-        confirm_isolated=bool(confirm_isolated),
-        current_baudrate=cur_baud,
-    )
+    # Reject incomplete safety confirmation before touching the live plugin or
+    # acquiring its serial adapter.  The worker repeats this check as defence in
+    # depth for non-HTTP callers.
+    if not confirm_isolated:
+        return await asyncio.to_thread(
+            _modbus_wizard_program_isolated,
+            serial_port=serial,
+            current_device_id=int(current_device_id),
+            new_device_id=int(new_device_id),
+            new_baudrate=int(new_baudrate),
+            new_parity=str(new_parity).upper(),
+            confirm_isolated=False,
+            current_baudrate=cur_baud,
+        )
+    gateway, paused_plugin_ids = await _pause_modbus_plugins_on_serial(serial)
+    try:
+        result = await asyncio.to_thread(
+            _modbus_wizard_program_isolated,
+            serial_port=serial,
+            current_device_id=int(current_device_id),
+            new_device_id=int(new_device_id),
+            new_baudrate=int(new_baudrate),
+            new_parity=str(new_parity).upper(),
+            confirm_isolated=bool(confirm_isolated),
+            current_baudrate=cur_baud,
+        )
+    except Exception as exc:
+        result = {
+            "ok": False,
+            "verified": False,
+            "error": f"Modbus isolated programming failed: {exc}",
+            "error_type": type(exc).__name__,
+        }
+
+    if paused_plugin_ids and gateway is not None:
+        result["runtime_apply"] = await gateway.apply_modbus_user_settings(paused_plugin_ids)
+    return result

@@ -220,7 +220,7 @@ def _build_waveshare_serial_stale_report(
             "issues": [
                 {
                     "severity": "error",
-                    "code": "serial_handle_stale",
+                    "code": "hw_modbus_serial_handle_stale",
                     "message": skip_reason,
                     "roles": ["modbus-io", "modbus-adc"],
                 }

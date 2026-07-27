@@ -25,7 +25,13 @@ def _get_modbus_preflight(gateway: Any) -> dict[str, Any]:
             "ok": False,
             "topology": "unknown",
             "modules": [],
-            "issues": [{"severity": "error", "code": "preflight_exception", "message": str(exc)}],
+            "issues": [
+                {
+                    "severity": "error",
+                    "code": "modbus_preflight_exception",
+                    "message": str(exc),
+                }
+            ],
             "recommended": {},
         }
 

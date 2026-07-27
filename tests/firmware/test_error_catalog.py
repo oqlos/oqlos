@@ -18,15 +18,20 @@ _CODE_SOURCE_PATHS = [
     _REPO_ROOT / "oqlos" / "hardware" / "diagnosis_device_actions.py",
     _REPO_ROOT / "oqlos" / "api" / "oql_mqtt.py",
     _REPO_ROOT / "oqlos" / "api" / "hardware_diagnosis_routes.py",
+    _REPO_ROOT / "oqlos" / "api" / "hardware_modbus_waveshare.py",
+    _REPO_ROOT / "oqlos" / "api" / "hardware_probe.py",
+    _REPO_ROOT / "oqlos" / "hardware" / "plugin_gateway.py",
 ]
 _CODE_LITERAL = re.compile(r'code\s*=\s*"([a-z0-9_]+)"')
 _CODE_FSTRING = re.compile(r'code\s*=\s*f"([a-z0-9_{}]+)"')
+_CODE_DICT_LITERAL = re.compile(r'"code"\s*:\s*"([a-z0-9_]+)"')
 
 
 def _codes_used_in_source() -> set[str]:
     codes: set[str] = set()
     for path in _CODE_SOURCE_PATHS:
         codes.update(_CODE_LITERAL.findall(path.read_text()))
+        codes.update(_CODE_DICT_LITERAL.findall(path.read_text()))
     return codes
 
 

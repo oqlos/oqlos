@@ -54,3 +54,30 @@ def test_settings_put_applies_only_selected_runtime_profile(monkeypatch) -> None
 
     assert calls == [{"modbus-io"}]
     assert result["runtime_apply"]["actuation"] is False
+
+
+def test_wizard_rejects_missing_confirmation_before_pausing_plugin(monkeypatch) -> None:
+    async def _unexpected_pause(_serial_port: str):
+        raise AssertionError("plugin must not be paused before safety confirmation")
+
+    monkeypatch.setattr(modbus_hw, "_pause_modbus_plugins_on_serial", _unexpected_pause)
+    monkeypatch.setattr(
+        modbus_hw,
+        "_modbus_wizard_program_isolated",
+        lambda **_kwargs: {"ok": False, "verified": False, "error": "confirmation required"},
+    )
+
+    result = asyncio.run(
+        modbus_hw.hardware_modbus_wizard_program_isolated(
+            serial_port="/dev/ttyTEST",
+            current_device_id=1,
+            new_device_id=1,
+            new_baudrate=4800,
+            new_parity="N",
+            confirm_isolated=False,
+            current_baudrate=4800,
+        )
+    )
+
+    assert result["ok"] is False
+    assert result["error"] == "confirmation required"

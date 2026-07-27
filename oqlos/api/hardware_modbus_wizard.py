@@ -311,7 +311,11 @@ def _wizard_build_result(
     verify_error: str,
 ) -> dict:
     """Build the response dict for _modbus_wizard_program_isolated."""
-    ok = bool(verified or (writes["set_address"] and writes["set_uart"]))
+    # A UART write can take effect before the device manages to echo its reply.
+    # Conversely, optimistic write return values do not prove that the module is
+    # listening with the requested settings.  Only a target-baud readback is a
+    # successful commissioning result.
+    ok = bool(verified)
     result: dict[str, Any] = {
         "ok": ok,
         "writes": writes,
@@ -329,6 +333,17 @@ def _wizard_build_result(
     return result
 
 
+def _wizard_config_is_readable(config: dict[str, Any]) -> bool:
+    """Reject empty/partial Modbus replies masquerading as device config."""
+    try:
+        device_id = int(config.get("device_id"))
+        baudrate = int(config.get("baudrate"))
+    except (TypeError, ValueError):
+        return False
+    parity = str(config.get("parity") or "").upper()
+    return 1 <= device_id <= 255 and baudrate > 0 and parity in {"N", "E", "O"}
+
+
 def _modbus_wizard_program_isolated(
     *,
     serial_port: str,
@@ -342,7 +357,7 @@ def _modbus_wizard_program_isolated(
     """Program isolated module: talk at current/baseline baud, then verify at target baud.
 
     Commissioning order (Waveshare RTU):
-      1) open bus at *current* baud (probe hit or baseline 9600)
+      1) open bus at *current* baud (probe hit or machine baseline 4800)
       2) write UART registers to *new* baud / parity
       3) re-open at *new* baud and verify device_id + UART
     """
@@ -367,7 +382,8 @@ def _modbus_wizard_program_isolated(
 
     line_parity = str(new_parity).upper()
     target_baud = int(new_baudrate)
-    # Prefer probe-found baud, then baseline 9600, then target (already-at-target case).
+    # Prefer probe-found baud, then machine baseline 4800, then target
+    # (already-at-target case).
     open_baud_candidates: list[int] = []
     for baud in (
         int(current_baudrate) if current_baudrate else 0,
@@ -392,7 +408,14 @@ def _modbus_wizard_program_isolated(
     for baud in open_baud_candidates:
         try:
             bus_settings = _bus(baud)
-            existing = read_device_config(bus_settings, device_id=int(current_device_id)).to_dict()
+            candidate = read_device_config(
+                bus_settings, device_id=int(current_device_id)
+            ).to_dict()
+            if not _wizard_config_is_readable(candidate):
+                raise RuntimeError(
+                    f"Invalid or empty Modbus configuration reply at {int(baud)} baud"
+                )
+            existing = candidate
             open_baud_used = int(baud)
             config_read_error = ""
             break
@@ -401,33 +424,17 @@ def _modbus_wizard_program_isolated(
             existing = {}
 
     if not existing:
-        if int(current_device_id) == int(new_device_id):
-            return {
-                "ok": True,
-                "verified": False,
-                "writes": {
-                    "set_address": True,
-                    "set_uart": True,
-                    "skipped": True,
-                    "config_read_error": config_read_error,
-                    "open_baud_tried": open_baud_candidates,
-                },
-                "verify": {},
-                "target": {
-                    "device_id": int(new_device_id),
-                    "baudrate": target_baud,
-                    "parity": line_parity,
-                    "serial_port": serial_port,
-                },
-                "note": (
-                    "Could not read config registers at baseline/current baud; "
-                    "skipped provisioning writes (module may already be at target UART)."
-                ),
-            }
         return {
             "ok": False,
+            "verified": False,
             "error": config_read_error or "config read failed at baseline and target baud",
             "open_baud_tried": open_baud_candidates,
+            "target": {
+                "device_id": int(new_device_id),
+                "baudrate": target_baud,
+                "parity": line_parity,
+                "serial_port": serial_port,
+            },
         }
 
     already_configured = _wizard_check_already_configured(

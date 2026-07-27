@@ -97,7 +97,7 @@ def _resolve(verb: str) -> Callable[[dict[str, Any]], Awaitable[Any]]:
             serial_port=a.get("serial_port", ""),
             current_device_id=int(a.get("current_device_id", 1)),
             new_device_id=int(a.get("new_device_id", 1)),
-            new_baudrate=int(a.get("new_baudrate", 9600)),
+            new_baudrate=int(a.get("new_baudrate", 4800)),
             new_parity=a.get("new_parity", "N"),
             confirm_isolated=bool(a.get("confirm_isolated", False)),
         ),

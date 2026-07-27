@@ -52,7 +52,7 @@ def _augment_no_response_from_health(no_response: list[str], health: dict[str, A
 
 
 def _build_diagnose_cmd(target: dict[str, Any], io_port: str, adc_port: str, *, separate: bool) -> str:
-    baud = target.get("baudrate", 9600)
+    baud = target.get("baudrate", 4800)
     parity = target.get("parity", "N")
     io_id = target.get("io_device_id", 1)
     adc_id = target.get("adc_device_id", 2)
@@ -82,9 +82,9 @@ def _build_safety_hints(
 ) -> tuple[list[str], str | None]:
     safety = list(existing_safety)
     operator_hint = (
-        "Probe should start at the baseline Modbus speed (9600 baud). Only raise "
+        "Probe should start at the machine baseline Modbus speed (4800 baud). Only change "
         "baud later after every module is stable and each device has been explicitly "
-        "reconfigured. If no module answers at 9600, verify module power and RS485 "
+        "reconfigured. If no module answers at 4800, verify module power and RS485 "
         "wiring (A/B/GND) before rerunning identify."
     )
     stale_hint = (

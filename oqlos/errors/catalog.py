@@ -133,6 +133,25 @@ ISSUE_CATALOG: dict[str, IssueDefinition] = {
             hint="Update plugins.modbus-io.connection_params in oqlos.yaml to match the detected device, then restart the service.",
         ),
     ),
+    "modbus_preflight_exception": IssueDefinition(
+        code="modbus_preflight_exception",
+        domain="hardware",
+        default_severity="error",
+        summary="The Modbus topology preflight failed before a valid report could be produced.",
+    ),
+    "pimodbus_unavailable": IssueDefinition(
+        code="pimodbus_unavailable",
+        domain="config",
+        default_severity="error",
+        summary="The shared pimodbus runtime library is unavailable to OqlOS.",
+        repair=RepairTemplate(
+            id="install_pimodbus_runtime",
+            scope="host",
+            auto_executable=False,
+            actuation_risk="config",
+            hint="Install the pinned pimodbus package into the OqlOS runtime environment and restart OqlOS.",
+        ),
+    ),
     "serial_port_busy": IssueDefinition(
         code="serial_port_busy",
         domain="hardware",

@@ -33,6 +33,7 @@ own:
 | `modbus_adc_disabled_but_present` | warning | Modbus ADC device responds on the serial bus, but modbus-adc is disabled in oqlos.yaml. | `enable_modbus_adc_config` (scope=host, auto, risk=config) |
 | `modbus_config_mismatch` | error | oqlos.yaml Modbus (modbus-io) settings do not match the responding device. | `update_modbus_config` (scope=host, auto, risk=config) |
 | `modbus_config_missing` | error | oqlos.yaml does not define the modbus-io plugin. | — |
+| `pimodbus_unavailable` | error | The shared pimodbus runtime library is unavailable to OqlOS. | `install_pimodbus_runtime` (scope=host, manual, risk=config) |
 
 ## firmware
 
@@ -49,12 +50,14 @@ own:
 | Code | Severity | Summary | Repair |
 |------|----------|---------|--------|
 | `hw_dri0050_sidecar_unreachable` | error | dri0050-motor-api sidecar (:8203, pump) is unreachable or unhealthy. | `dri0050-ensure-sidecar` (scope=oqlos, auto, risk=config) |
+| `hw_modbus_no_response` | error | Modbus RTU slave did not answer (read timed out / no response) on the configured serial path. | `modbus-physical-check` (scope=host, manual, risk=none) |
 | `hw_modbus_serial_handle_stale` | warning | A Modbus RTU plugin (modbus-io/modbus-adc) has a stale USB/RS485 serial handle after device re-enumeration (errno 19). | `modbus-plugin-reconnect` (scope=oqlos, auto, risk=none) |
 | `hw_tic249_sidecar_unreachable` | error | hw-tic249 sidecar (:8205, lung motor) is unreachable or not connected to the Pololu Tic USB device. | `tic249-ensure-sidecar` (scope=oqlos, auto, risk=config) |
 | `modbus_adapter_only` | warning | USB serial adapter is visible, but the device did not answer. Check RS485 wiring, power, slave address and baudrate. | — |
 | `modbus_adc_adapter_only` | warning | USB serial adapter is visible, but the device did not answer. Check RS485 wiring, power, slave address and baudrate. | — |
 | `modbus_adc_not_detected` | warning | Modbus ADC device was not detected on any probed serial port. | — |
 | `modbus_not_detected` | error | Modbus RTU (modbus-io) device was not detected on any probed serial port. | — |
+| `modbus_preflight_exception` | error | The Modbus topology preflight failed before a valid report could be produced. | — |
 | `serial_port_busy` | warning | The configured Modbus serial port is already open by another process. | `release_serial_port` (scope=host, manual, risk=none) |
 
 ## Dynamic code families

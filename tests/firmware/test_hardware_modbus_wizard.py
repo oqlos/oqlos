@@ -145,6 +145,53 @@ def test_modbus_wizard_program_skips_when_already_at_target(monkeypatch):
     assert result["writes"]["skipped"] is True
 
 
+def test_modbus_wizard_never_reports_success_without_verified_readback():
+    result = wizard._wizard_build_result(
+        {"set_address": True, "set_uart": True},
+        {},
+        False,
+        1,
+        4800,
+        "N",
+        "/dev/ttyTEST",
+        "verification timed out",
+    )
+
+    assert result["ok"] is False
+    assert result["verified"] is False
+    assert result["error"] == "verification timed out"
+
+
+def test_modbus_wizard_rejects_empty_config_instead_of_skipping(monkeypatch):
+    from pimodbus import provisioning as pim_prov
+
+    class _EmptyConfig:
+        def to_dict(self):
+            return {
+                "device_id": None,
+                "baudrate": None,
+                "parity": None,
+                "software_version": None,
+            }
+
+    monkeypatch.setattr(pim_prov, "read_device_config", lambda *_a, **_k: _EmptyConfig())
+
+    result = wizard._modbus_wizard_program_isolated(
+        serial_port="/dev/ttyTEST",
+        current_device_id=1,
+        new_device_id=1,
+        new_baudrate=4800,
+        new_parity="N",
+        confirm_isolated=True,
+        current_baudrate=9600,
+    )
+
+    assert result["ok"] is False
+    assert result["verified"] is False
+    assert result["open_baud_tried"] == [9600, 4800]
+    assert "Invalid or empty" in result["error"]
+
+
 def test_build_waveshare_diagnose_uses_target_baud_fast_path(monkeypatch):
     calls: list[dict[str, object]] = []
 
