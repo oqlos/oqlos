@@ -233,3 +233,15 @@ def test_batch_does_not_probe_gateway_health_before_complete_usb_read(monkeypatc
     assert result["ok"] is True
     assert result["complete"] is True
     assert health_calls == 0
+
+
+def test_diagnose_raises_typed_error_when_gateway_health_fails(monkeypatch):
+    async def _health(*, force=False):
+        raise RuntimeError("gateway probe failed")
+
+    monkeypatch.setattr(runtime, "cached_gateway_health", _health)
+
+    with pytest.raises(OqlosError) as caught:
+        asyncio.run(runtime.hardware_diagnose())
+    assert caught.value.public_code == "C2004-HW-0012"
+    assert caught.value.issue_code == "config_unavailable"

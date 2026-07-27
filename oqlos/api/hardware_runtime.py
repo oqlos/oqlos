@@ -368,7 +368,12 @@ async def hardware_diagnose() -> dict[str, Any]:
     try:
         health = await cached_gateway_health(force=True)
     except Exception as exc:
-        return {"ok": False, "error": str(exc)}
+        raise OqlosError(
+            code="config_unavailable",
+            status_code=503,
+            message=f"Hardware gateway health unavailable: {exc}",
+            detail={"error": str(exc)},
+        ) from exc
 
     sensors = await read_sensor_values(list(DEFAULT_BATCH_SENSOR_IDS), health=health)
     return {
