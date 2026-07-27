@@ -22,7 +22,14 @@ def _pump_success(result: Any) -> bool:
 async def set_valve(valve_id: str, value: bool):
     """Directly set a valve (for manual testing)."""
     ok = await get_hardware_gateway().set_valve(valve_id, value)
-    return {"valve_id": valve_id, "value": value, "ok": ok}
+    if not ok:
+        raise OqlosError(
+            code="hw_modbus_no_response",
+            status_code=503,
+            message=f"Valve '{valve_id}' command failed (modbus-io unavailable or no response)",
+            detail={"valve_id": valve_id, "value": value},
+        )
+    return {"valve_id": valve_id, "value": value, "ok": True}
 
 
 @router.post("/pump")

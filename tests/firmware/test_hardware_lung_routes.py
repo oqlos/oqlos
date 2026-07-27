@@ -56,6 +56,19 @@ def test_set_pump_raises_typed_error_when_dri0050_unavailable(monkeypatch):
     assert caught.value.issue_code == "hw_dri0050_sidecar_unreachable"
 
 
+def test_set_valve_raises_typed_error_when_modbus_io_unavailable(monkeypatch):
+    class _Gateway:
+        async def set_valve(self, valve_id: str, value: bool):
+            return False
+
+    monkeypatch.setattr(actuators, "get_hardware_gateway", lambda: _Gateway())
+
+    with pytest.raises(OqlosError) as caught:
+        asyncio.run(actuators.set_valve("DO1", True))
+    assert caught.value.public_code == "C2004-HW-0012"
+    assert caught.value.issue_code == "hw_modbus_no_response"
+
+
 def test_lung_stop_raises_typed_error_when_tic249_unavailable(monkeypatch):
     class _Gateway:
         async def stop_lung(self):
