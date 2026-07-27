@@ -13,6 +13,7 @@ from oqlos.api.hardware_modbus_settings import (
 )
 from oqlos.api.hardware_gateway import is_plugin_compatible as _is_plugin_compatible
 from oqlos.errors import OqlosError
+from oqlos.errors.c2004_catalog_generated import c2004_code_for_issue
 
 _settings = get_settings()
 
@@ -186,6 +187,8 @@ def _build_waveshare_serial_stale_report(
     baud_sequence: list[int],
 ) -> dict[str, Any]:
     """Do not run matrix scan on stale handles — restart OqlOS to reopen tty/by-id."""
+    issue_code = "hw_modbus_serial_handle_stale"
+    public_code = c2004_code_for_issue(issue_code)
     io_port = ports["io_serial_port"] or str(_settings.modbus_serial_port)
     adc_port = ports["adc_serial_port"] or io_port
     skip_reason = "Modbus serial handle stale (USB re-enumeration); restart OqlOS"
@@ -214,6 +217,9 @@ def _build_waveshare_serial_stale_report(
         "topology": ports["topology"],
         "io_serial_port": io_port,
         "adc_serial_port": adc_port,
+        "code": public_code,
+        "error_code": public_code,
+        "diagnostics": {"issue_code": issue_code, "code": public_code},
         "waveshare_scan": {
             "ok": False,
             "scan_skipped": True,
@@ -221,7 +227,8 @@ def _build_waveshare_serial_stale_report(
             "issues": [
                 {
                     "severity": "error",
-                    "code": "hw_modbus_serial_handle_stale",
+                    "code": issue_code,
+                    "public_code": public_code,
                     "message": skip_reason,
                     "roles": ["modbus-io", "modbus-adc"],
                 }

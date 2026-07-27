@@ -388,6 +388,9 @@ def test_build_waveshare_serial_stale_skips_matrix(monkeypatch):
     assert result.get("serial_handles_stale") is True
     assert result["waveshare_scan"]["scan_skipped"] is True
     assert result["per_slave"]["modbus-io-2"]["status"] == "serial-stale"
+    assert result["code"] == result["error_code"] == "C2004-HW-0012"
+    assert result["diagnostics"]["issue_code"] == "hw_modbus_serial_handle_stale"
+    assert result["waveshare_scan"]["issues"][0]["public_code"] == "C2004-HW-0012"
 
 
 def test_build_waveshare_raises_when_pimodbus_missing(monkeypatch):
