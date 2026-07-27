@@ -130,3 +130,25 @@ def test_pulse_rejects_out_of_range_duration() -> None:
     assert caught.value.public_code == "C2004-DATA-0002"
     assert "duration_ms" in caught.value.message
 
+
+def test_pulse_raises_when_preflight_blocks(monkeypatch) -> None:
+    async def fake_plan():
+        return {
+            "ok": False,
+            "ready": False,
+            "safety": {"blocked_reasons": ["modbus-io is unavailable"]},
+            "coils": [],
+        }
+
+    monkeypatch.setattr(coil_test, "build_coil_test_plan", fake_plan)
+
+    with pytest.raises(OqlosError) as caught:
+        asyncio.run(coil_test.pulse_coil({
+            "address": 0,
+            "duration_ms": 300,
+            "confirm": "PULSE_DO1",
+        }))
+    assert caught.value.public_code == "C2004-HW-0012"
+    assert caught.value.issue_code == "hw_modbus_no_response"
+    assert "preflight" in caught.value.message
+

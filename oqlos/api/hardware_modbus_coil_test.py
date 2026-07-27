@@ -66,14 +66,23 @@ async def build_coil_test_plan() -> dict[str, Any]:
 async def _plugin() -> Any:
     plugin = await get_hardware_gateway()._get_or_connect_plugin("modbus-io")
     if plugin is None:
-        raise RuntimeError("modbus-io plugin unavailable")
+        raise OqlosError(
+            code="hw_modbus_no_response",
+            status_code=503,
+            message="modbus-io plugin unavailable",
+        )
     return plugin
 
 
 async def _write_coil(plugin: Any, address: int, value: bool) -> dict[str, Any]:
     result = await plugin.execute_command("set_coil", {"coil": address, "value": value})
     if not result.get("success"):
-        raise RuntimeError(str(result.get("error") or f"DO{address + 1} write failed"))
+        raise OqlosError(
+            code="hw_modbus_no_response",
+            status_code=503,
+            message=str(result.get("error") or f"DO{address + 1} write failed"),
+            detail={"coil": address, "value": value, "result": result},
+        )
     return result.get("data") or {"coil": address, "value": value}
 
 
@@ -115,12 +124,12 @@ async def pulse_coil(payload: dict[str, Any]) -> dict[str, Any]:
         plan = await build_coil_test_plan()
         if not plan.get("ready"):
             reasons = plan.get("safety", {}).get("blocked_reasons") or []
-            return {
-                "ok": False,
-                "error": "coil test preflight failed",
-                "blocked_reasons": reasons,
-                "plan": plan,
-            }
+            raise OqlosError(
+                code="hw_modbus_no_response",
+                status_code=503,
+                message="coil test preflight failed",
+                detail={"blocked_reasons": reasons, "plan": plan},
+            )
 
         plugin = await _plugin()
         on_result: dict[str, Any] | None = None
@@ -138,7 +147,7 @@ async def pulse_coil(payload: dict[str, Any]) -> dict[str, Any]:
                 error = f"{error}; OFF failed: {exc}" if error else f"OFF failed: {exc}"
 
         after = await build_coil_test_plan()
-        return {
+        payload = {
             "ok": error is None and bool(after.get("ready")),
             "coil": f"DO{address + 1}",
             "address": address,
@@ -148,6 +157,14 @@ async def pulse_coil(payload: dict[str, Any]) -> dict[str, Any]:
             "error": error,
             "after": after,
         }
+        if not payload["ok"]:
+            raise OqlosError(
+                code="hw_modbus_no_response",
+                status_code=503,
+                message=str(error or "coil test did not leave outputs safe"),
+                detail=payload,
+            )
+        return payload
 
 
 async def stop_all_coils() -> dict[str, Any]:
@@ -157,8 +174,15 @@ async def stop_all_coils() -> dict[str, Any]:
     async with _coil_test_lock:
         try:
             plugin = await _plugin()
+        except OqlosError:
+            raise
         except Exception as exc:
-            return {"ok": False, "error": str(exc), "operations": []}
+            raise OqlosError(
+                code="hw_modbus_no_response",
+                status_code=503,
+                message=str(exc),
+                detail={"operations": []},
+            ) from exc
         operations: list[dict[str, Any]] = []
         for address in range(MODBUS_IO_COIL_COUNT):
             try:
@@ -166,7 +190,14 @@ async def stop_all_coils() -> dict[str, Any]:
                 operations.append({"coil": f"DO{address + 1}", "ok": True, "result": result})
             except Exception as exc:
                 operations.append({"coil": f"DO{address + 1}", "ok": False, "error": str(exc)})
+        if not all(operation["ok"] for operation in operations):
+            raise OqlosError(
+                code="hw_modbus_no_response",
+                status_code=503,
+                message="Failed to de-energize one or more coils",
+                detail={"operations": operations},
+            )
         return {
-            "ok": all(operation["ok"] for operation in operations),
+            "ok": True,
             "operations": operations,
         }
