@@ -8,6 +8,7 @@ from typing import Any
 from oqlos.api.hardware_gateway import get_hardware_gateway
 from oqlos.api.hardware_modbus_channels import read_modbus_profile_channels
 from oqlos.config import get_settings
+from oqlos.errors import OqlosError
 from oqlos.hardware.modbus_io_catalog import MODBUS_IO_COIL_COUNT, build_coil_catalog
 
 _settings = get_settings()
@@ -79,19 +80,36 @@ async def _write_coil(plugin: Any, address: int, value: bool) -> dict[str, Any]:
 async def pulse_coil(payload: dict[str, Any]) -> dict[str, Any]:
     address = int(payload.get("address", -1))
     if not 0 <= address < MODBUS_IO_COIL_COUNT:
-        return {"ok": False, "error": "address must be between 0 and 7"}
+        raise OqlosError(
+            code="api_modbus_wizard_invalid_request",
+            status_code=422,
+            message="address must be between 0 and 7",
+            detail={"payload": payload},
+        )
     duration_ms = int(payload.get("duration_ms", 300))
     if not MIN_PULSE_MS <= duration_ms <= MAX_PULSE_MS:
-        return {
-            "ok": False,
-            "error": f"duration_ms must be between {MIN_PULSE_MS} and {MAX_PULSE_MS}",
-        }
+        raise OqlosError(
+            code="api_modbus_wizard_invalid_request",
+            status_code=422,
+            message=f"duration_ms must be between {MIN_PULSE_MS} and {MAX_PULSE_MS}",
+            detail={"payload": payload},
+        )
     expected_confirmation = f"PULSE_DO{address + 1}"
     if str(payload.get("confirm") or "") != expected_confirmation:
-        return {"ok": False, "error": f"confirm must equal {expected_confirmation}"}
+        raise OqlosError(
+            code="api_modbus_wizard_invalid_request",
+            status_code=422,
+            message=f"confirm must equal {expected_confirmation}",
+            detail={"payload": payload, "expected_confirmation": expected_confirmation},
+        )
 
     if _coil_test_lock.locked():
-        return {"ok": False, "error": "another coil test is already running"}
+        raise OqlosError(
+            code="api_modbus_wizard_invalid_request",
+            status_code=422,
+            message="another coil test is already running",
+            detail={"payload": payload},
+        )
 
     async with _coil_test_lock:
         plan = await build_coil_test_plan()
