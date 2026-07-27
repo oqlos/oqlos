@@ -6,8 +6,50 @@ from typing import Any
 from fastapi import APIRouter, Body, Header, HTTPException
 
 from oqlos.api._hw3_models import _hardware_v1_call, _runtime_control_skipped
+from oqlos.errors import OqlosError
 
 sub_router = APIRouter()
+
+
+def _wizard_integer(
+    payload: dict[str, Any],
+    field: str,
+    default: int | None,
+) -> int | None:
+    """Parse a wizard integer without leaking ``ValueError`` as HTTP 500."""
+    raw_value = payload.get(field)
+    if raw_value in (None, ""):
+        return default
+    if isinstance(raw_value, bool):
+        value: int | None = None
+    else:
+        try:
+            value = int(raw_value)
+        except (TypeError, ValueError):
+            value = None
+    if value is None:
+        raise OqlosError(
+            code="api_modbus_wizard_invalid_request",
+            status_code=422,
+            message=f"{field} must be an integer",
+            detail={"field": field, "value": raw_value, "expected": "integer"},
+        )
+    return value
+
+
+def _wizard_boolean(payload: dict[str, Any], field: str, default: bool) -> bool:
+    """Require a JSON boolean for safety-sensitive wizard confirmations."""
+    if field not in payload:
+        return default
+    raw_value = payload[field]
+    if isinstance(raw_value, bool):
+        return raw_value
+    raise OqlosError(
+        code="api_modbus_wizard_invalid_request",
+        status_code=422,
+        message=f"{field} must be a boolean",
+        detail={"field": field, "value": raw_value, "expected": "boolean"},
+    )
 
 
 @sub_router.get("/hui/actions")
@@ -246,15 +288,14 @@ async def hardware_modbus_wizard_probe_isolated_v3(payload: dict[str, Any] = Bod
 @sub_router.post("/modbus/wizard/program-isolated")
 async def hardware_modbus_wizard_program_isolated_v3(payload: dict[str, Any] = Body(default_factory=dict)) -> dict[str, Any]:
     from oqlos.api import hardware_modbus_routes as modbus_hw
-    raw_cur = payload.get("current_baudrate")
-    current_baudrate = None if raw_cur in (None, "") else int(raw_cur)
+    current_baudrate = _wizard_integer(payload, "current_baudrate", None)
     return await modbus_hw.hardware_modbus_wizard_program_isolated(
         serial_port=str(payload.get("serial_port") or ""),
-        current_device_id=int(payload.get("current_device_id") or 1),
-        new_device_id=int(payload.get("new_device_id") or 1),
-        new_baudrate=int(payload.get("new_baudrate") or 4800),
+        current_device_id=_wizard_integer(payload, "current_device_id", 1),
+        new_device_id=_wizard_integer(payload, "new_device_id", 1),
+        new_baudrate=_wizard_integer(payload, "new_baudrate", 4800),
         new_parity=str(payload.get("new_parity") or "N"),
-        confirm_isolated=bool(payload.get("confirm_isolated")),
+        confirm_isolated=_wizard_boolean(payload, "confirm_isolated", False),
         current_baudrate=current_baudrate,
     )
 
