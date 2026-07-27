@@ -15,10 +15,15 @@ from oqlos.api._hw3_models import (
     normalize_peripheral_id,
 )
 from oqlos.api.hardware_events import publish_hardware_command_event
+from oqlos.errors import OqlosError
 
 sub_router = APIRouter()
 
 _scanner_last: dict[str, Any] | None = None
+_DIAGNOSTIC_ISSUE_BY_PERIPHERAL = {
+    "motor-tic249": "hw_tic249_sidecar_unreachable",
+    "motor-dri0050": "hw_dri0050_sidecar_unreachable",
+}
 
 
 @sub_router.get("/peripheral-status/{peripheral_id}")
@@ -79,6 +84,8 @@ async def hardware_diagnostic_command_v3(req: DiagnosticCommandRequest) -> dict[
         return await _run_diagnostic(req.peripheral_id, req.command, req.args)
     except HTTPException:
         raise
+    except OqlosError:
+        raise
     except Exception as exc:
         payload = {
             "peripheral_id": normalize_peripheral_id(req.peripheral_id),
@@ -93,8 +100,17 @@ async def hardware_diagnostic_command_v3(req: DiagnosticCommandRequest) -> dict[
             "command": req.command,
             "transport": "direct-oqlos",
         }
-        await publish_hardware_command_event({"payload": payload}, result, context={"source": "diagnostic-command"})
-        return result
+        await publish_hardware_command_event(
+            {"payload": payload}, result, context={"source": "diagnostic-command"}
+        )
+        raise OqlosError(
+            code=_DIAGNOSTIC_ISSUE_BY_PERIPHERAL.get(
+                payload["peripheral_id"], "config_unavailable"
+            ),
+            status_code=503,
+            message=str(exc),
+            detail=result,
+        ) from exc
 
 
 @sub_router.get("/scanner/status")
