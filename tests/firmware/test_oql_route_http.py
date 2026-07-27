@@ -38,7 +38,8 @@ def test_execute_returns_503_when_transport_disabled(client):
     set_oql_controller(None)
     resp = client.post("/api/v1/oql/execute", json={"oql": "SET 'VALVE-NC' 'open'"})
     assert resp.status_code == 503
-    assert resp.json()["code"] == "api_oql_transport_disabled"
+    assert resp.json()["code"] == "C2004-HW-0012"
+    assert resp.json()["metadata"]["diagnostics"]["issue_code"] == "api_oql_transport_disabled"
 
 
 def test_execute_dispatches_to_controller(client):
@@ -99,7 +100,7 @@ def test_manage_returns_503_when_transport_disabled(client):
     set_oql_controller(None)
     resp = client.post("/api/v1/oql/manage", json={"verb": "usb-list"})
     assert resp.status_code == 503
-    assert resp.json()["code"] == "api_oql_transport_disabled"
+    assert resp.json()["code"] == "C2004-HW-0012"
 
 
 def test_manage_dispatches_verb_and_args(client):

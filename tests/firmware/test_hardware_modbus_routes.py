@@ -6,6 +6,7 @@ import pytest
 from fastapi import HTTPException
 
 from oqlos.api import hardware_modbus_routes as modbus_hw
+from oqlos.errors import OqlosError
 
 
 def test_hardware_modbus_router_includes_channel_and_wizard_paths():
@@ -67,17 +68,19 @@ def test_wizard_rejects_missing_confirmation_before_pausing_plugin(monkeypatch) 
         lambda **_kwargs: {"ok": False, "verified": False, "error": "confirmation required"},
     )
 
-    result = asyncio.run(
-        modbus_hw.hardware_modbus_wizard_program_isolated(
-            serial_port="/dev/ttyTEST",
-            current_device_id=1,
-            new_device_id=1,
-            new_baudrate=4800,
-            new_parity="N",
-            confirm_isolated=False,
-            current_baudrate=4800,
+    with pytest.raises(OqlosError) as exc:
+        asyncio.run(
+            modbus_hw.hardware_modbus_wizard_program_isolated(
+                serial_port="/dev/ttyTEST",
+                current_device_id=1,
+                new_device_id=1,
+                new_baudrate=4800,
+                new_parity="N",
+                confirm_isolated=False,
+                current_baudrate=4800,
+            )
         )
-    )
 
-    assert result["ok"] is False
-    assert result["error"] == "confirmation required"
+    assert exc.value.status_code == 422
+    assert exc.value.public_code == "C2004-DATA-0002"
+    assert exc.value.issue_code == "api_modbus_wizard_invalid_request"

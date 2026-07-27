@@ -294,6 +294,12 @@ ISSUE_CATALOG: dict[str, IssueDefinition] = {
         default_severity="warning",
         summary="POST /api/v1/hardware/recover was called with an unsupported `scope` query param.",
     ),
+    "api_modbus_wizard_invalid_request": IssueDefinition(
+        code="api_modbus_wizard_invalid_request",
+        domain="api",
+        default_severity="warning",
+        summary="The isolated Modbus wizard request is incomplete or unsafe.",
+    ),
 }
 
 

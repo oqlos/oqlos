@@ -37,5 +37,9 @@ def test_hardware_recover_rejects_unknown_scope(monkeypatch):
   response = client.post("/api/v1/hardware/recover?scope=full")
   assert response.status_code == 400
   body = response.json()
-  assert body["code"] == "api_invalid_recover_scope"
-  assert body["detail"] == {"scope": "full"}
+  assert body["code"] == "C2004-DATA-0002"
+  assert (
+      body["metadata"]["diagnostics"]["issue_code"]
+      == "api_invalid_recover_scope"
+  )
+  assert body["metadata"]["context"] == {"scope": "full"}

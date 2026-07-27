@@ -23,6 +23,7 @@ from oqlos.api.hardware_modbus_settings import (
     write_modbus_baud_settings,
 )
 from oqlos.config import get_settings
+from oqlos.errors import OqlosError
 
 _settings = get_settings()
 router = APIRouter(tags=["hardware-modbus"])
@@ -167,10 +168,16 @@ async def hardware_modbus_wizard_probe_isolated(
     raw_role = str(module_role or "").strip()
     role = normalize_modbus_module_role(raw_role)
     if raw_role and not role:
-        return {
-            "ok": False,
-            "error": "module_role must be io, adc, modbus-io or modbus-adc",
-        }
+        raise OqlosError(
+            code="api_modbus_wizard_invalid_request",
+            status_code=422,
+            message="module_role must be io, adc, modbus-io or modbus-adc",
+            detail={
+                "field": "module_role",
+                "value": raw_role,
+                "allowed": ["io", "adc", "modbus-io", "modbus-adc"],
+            },
+        )
     required_roles = [role] if role else None
     return await asyncio.to_thread(
         _modbus_wizard_probe_isolated,
@@ -199,15 +206,19 @@ async def hardware_modbus_wizard_program_isolated(
     # acquiring its serial adapter.  The worker repeats this check as defence in
     # depth for non-HTTP callers.
     if not confirm_isolated:
-        return await asyncio.to_thread(
-            _modbus_wizard_program_isolated,
-            serial_port=serial,
-            current_device_id=int(current_device_id),
-            new_device_id=int(new_device_id),
-            new_baudrate=int(new_baudrate),
-            new_parity=str(new_parity).upper(),
-            confirm_isolated=False,
-            current_baudrate=cur_baud,
+        raise OqlosError(
+            code="api_modbus_wizard_invalid_request",
+            status_code=422,
+            message=(
+                "Refusing to write Modbus configuration without "
+                "confirm_isolated=true"
+            ),
+            detail={
+                "field": "confirm_isolated",
+                "value": False,
+                "expected": True,
+                "actuation": "configuration-write",
+            },
         )
     gateway, paused_plugin_ids = await _pause_modbus_plugins_on_serial(serial)
     try:
@@ -231,4 +242,34 @@ async def hardware_modbus_wizard_program_isolated(
 
     if paused_plugin_ids and gateway is not None:
         result["runtime_apply"] = await gateway.apply_modbus_user_settings(paused_plugin_ids)
+    if not bool(result.get("ok")) or not bool(result.get("verified")):
+        error_message = str(result.get("error") or "Modbus configuration verification failed")
+        normalized_error = error_message.lower()
+        if "pimodbus" in normalized_error:
+            issue_code = "pimodbus_unavailable"
+            status_code = 503
+        elif any(
+            marker in normalized_error
+            for marker in ("port is busy", "resource busy", "could not exclusively lock", "already open")
+        ):
+            issue_code = "serial_port_busy"
+            status_code = 409
+        elif result.get("error_type"):
+            issue_code = "modbus_preflight_exception"
+            status_code = 503
+        else:
+            issue_code = "hw_modbus_no_response"
+            status_code = 503
+        raise OqlosError(
+            issue_code,
+            status_code=status_code,
+            message=error_message,
+            detail={
+                "operation": "modbus.wizard.program_isolated",
+                "serial_port": serial,
+                "target": result.get("target"),
+                "verified": bool(result.get("verified")),
+                "runtime_apply": result.get("runtime_apply"),
+            },
+        )
     return result
