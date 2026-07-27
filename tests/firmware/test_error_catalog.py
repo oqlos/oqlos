@@ -20,6 +20,7 @@ _CODE_SOURCE_PATHS = [
     _REPO_ROOT / "oqlos" / "api" / "hardware_diagnosis_routes.py",
     _REPO_ROOT / "oqlos" / "api" / "_hw3_cqrs.py",
     _REPO_ROOT / "oqlos" / "api" / "_hw3_peripheral.py",
+    _REPO_ROOT / "oqlos" / "api" / "_hw3_system.py",
     _REPO_ROOT / "oqlos" / "api" / "hardware_gateway.py",
     _REPO_ROOT / "oqlos" / "api" / "hardware_modbus_channels.py",
     _REPO_ROOT / "oqlos" / "api" / "hardware_modbus_coil_test.py",

@@ -302,8 +302,9 @@ async def hardware_modbus_wizard_program_isolated_v3(payload: dict[str, Any] = B
 
 @sub_router.post("/runtime-python")
 async def hardware_runtime_python_v3(payload: dict[str, Any] = Body(default_factory=dict)) -> dict[str, Any]:
-    return {
-        "ok": False,
-        "error": "runtime-python execution moved out of c2004 is not enabled in OqlOS",
-        "received": payload,
-    }
+    raise OqlosError(
+        code="api_oql_transport_disabled",
+        status_code=503,
+        message="runtime-python execution moved out of c2004 is not enabled in OqlOS",
+        detail={"received": payload},
+    )
