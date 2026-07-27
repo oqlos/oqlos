@@ -34,7 +34,11 @@ def require_coil_test_role(role: str | None) -> str:
     if normalized not in _COIL_TEST_ROLES:
         raise HTTPException(
             status_code=403,
-            detail="Coil pulse requires the system or administrator role",
+            detail={
+                "error": "Coil pulse requires the system or administrator role",
+                "error_code": "C2004-AUTH-0002",
+                "c2004_code": "C2004-AUTH-0002",
+            },
         )
     return normalized
 

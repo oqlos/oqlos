@@ -27,6 +27,8 @@ def test_coil_pulse_role_is_enforced_server_side() -> None:
     with pytest.raises(HTTPException) as exc:
         modbus_hw.require_coil_test_role("operator")
     assert exc.value.status_code == 403
+    assert exc.value.detail["error_code"] == "C2004-AUTH-0002"
+    assert exc.value.detail["c2004_code"] == "C2004-AUTH-0002"
 
 
 def test_settings_put_applies_only_selected_runtime_profile(monkeypatch) -> None:

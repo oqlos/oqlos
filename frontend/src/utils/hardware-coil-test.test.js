@@ -3,7 +3,11 @@ import test from "node:test";
 
 import {
   buildCoilTestReport,
+  coilCommandErrorCodes,
+  coilCommandResultUrlArgs,
+  coilPulseIntentUrlArgs,
   coilPulseRequestOptions,
+  coilStopIntentUrlArgs,
   nextUntestedCoil,
   pulseConfirmation,
 } from "./hardware-coil-test.js";
@@ -51,4 +55,43 @@ test("coil pulse request forwards only an accepted privileged role", () => {
   assert.deepEqual(coilPulseRequestOptions("operator", "coil-test-DO1"), {
     logContext: "coil-test-DO1",
   });
+});
+
+test("coil command URL args preserve request intent and successful response", () => {
+  const intent = coilPulseIntentUrlArgs({ id: "DO1", address: 0 }, "system");
+  assert.deepEqual(intent, {
+    COMMAND: "coil-test-pulse",
+    COIL: "DO1",
+    ADDRESS: "0",
+    DURATION_MS: "300",
+    CONFIRM: "PULSE_DO1",
+    REQUEST_ROLE: "system",
+  });
+  assert.deepEqual(coilCommandResultUrlArgs(intent, "OK"), {
+    ...intent,
+    RESULT: "OK",
+    HTTP_STATUS: "200",
+    ERRORS: "NONE",
+  });
+  assert.deepEqual(coilStopIntentUrlArgs("administrator"), {
+    COMMAND: "coil-test-stop",
+    COILS: "DO1-DO8",
+    REQUEST_ROLE: "admin",
+  });
+});
+
+test("coil command URL args expose normalized backend failures", () => {
+  const error = Object.assign(new Error("Coil pulse requires the system or administrator role"), {
+    status: 403,
+    payload: { detail: { error_code: "C2004-AUTH-0002" } },
+  });
+  assert.deepEqual(coilCommandErrorCodes(error), [
+    "C2004-AUTH-0002",
+    "HTTP_403",
+    "COIL_PULSE_ROLE_REQUIRED",
+  ]);
+  assert.equal(
+    coilCommandResultUrlArgs({ COMMAND: "coil-test-pulse" }, "ERROR", error).ERRORS,
+    "C2004-AUTH-0002,HTTP_403,COIL_PULSE_ROLE_REQUIRED",
+  );
 });

@@ -6,10 +6,15 @@ import { useAppConfig } from "../context/AppConfigProvider";
 import { useI18n } from "../i18n/I18nProvider";
 import {
   buildCoilTestReport,
+  coilCommandResultUrlArgs,
+  coilPulseIntentUrlArgs,
   coilPulseRequestOptions,
+  coilStopIntentUrlArgs,
+  COIL_PULSE_DURATION_MS,
   nextUntestedCoil,
   pulseConfirmation,
 } from "../utils/hardware-coil-test.js";
+import { recordCommandUrlState } from "../utils/command-url-state.js";
 
 const COPY = {
   pl: {
@@ -101,20 +106,26 @@ export default function HardwareCoilTest() {
 
   const pulse = useCallback(async (coil) => {
     if (!coil || !canPulse) return;
+    const intent = coilPulseIntentUrlArgs(coil, role);
+    recordCommandUrlState(coilCommandResultUrlArgs(intent, "PENDING"));
     setBusy(`pulse-${coil.address}`);
     setError("");
     try {
       const response = await HardwareApi.pulseCoil({
         address: coil.address,
-        duration_ms: 300,
+        duration_ms: COIL_PULSE_DURATION_MS,
         confirm: pulseConfirmation(coil),
       }, coilPulseRequestOptions(role, `coil-test-${coil.id}`));
       setPulses((current) => ({ ...current, [String(coil.address)]: response }));
       if (response.after) setPlan(response.after);
       if (!response.ok) {
-        throw new Error(response.error || (response.blocked_reasons || []).join("; ") || "Pulse failed");
+        const responseError = new Error(response.error || (response.blocked_reasons || []).join("; ") || "Pulse failed");
+        responseError.payload = response;
+        throw responseError;
       }
+      recordCommandUrlState(coilCommandResultUrlArgs(intent, "OK"));
     } catch (err) {
+      recordCommandUrlState(coilCommandResultUrlArgs(intent, "ERROR", err));
       setError(formatHardwareApiError(err, "Coil pulse failed"));
     } finally {
       setBusy("");
@@ -122,17 +133,25 @@ export default function HardwareCoilTest() {
   }, [canPulse, role]);
 
   const stop = useCallback(async () => {
+    const intent = coilStopIntentUrlArgs(role);
+    recordCommandUrlState(coilCommandResultUrlArgs(intent, "PENDING"));
     setBusy("stop");
     setError("");
     try {
       const response = await HardwareApi.stopAllCoils({ logContext: "coil-test-stop" });
-      if (!response.ok) throw new Error(response.error || "Not every coil could be switched OFF");
+      if (!response.ok) {
+        const responseError = new Error(response.error || "Not every coil could be switched OFF");
+        responseError.payload = response;
+        throw responseError;
+      }
+      recordCommandUrlState(coilCommandResultUrlArgs(intent, "OK"));
       await refresh();
     } catch (err) {
+      recordCommandUrlState(coilCommandResultUrlArgs(intent, "ERROR", err));
       setError(formatHardwareApiError(err, "Emergency OFF failed"));
       setBusy("");
     }
-  }, [refresh]);
+  }, [refresh, role]);
 
   const copyReport = useCallback(async () => {
     const report = buildCoilTestReport(plan, results, pulses);
