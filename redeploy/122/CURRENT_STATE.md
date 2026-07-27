@@ -4,7 +4,21 @@ Ostatnio sprawdzono: 2026-07-27 Europe/Warsaw.
 
 ## Aktualizacja 2026-07-27
 
-- OqlOS firmware: **493/493** testów; frontend: **142/142** testów i poprawny build.
+Najnowszy bezpieczny odczyt live wykazał zmianę względem wcześniejszego stanu:
+
+- host i API BoardNet odpowiadają, ale `/api/v1/hardware/health` raportuje
+  `overall_ok=false`, `degraded=true` z timeoutem `modbus-io`;
+- plan testu cewek zwraca wszystkie stany DO1–DO8 jako `unknown` (`null`), więc
+  nie wolno traktować ich jako potwierdzone `OFF`;
+- cache startup diagnostics nadal może pokazywać poprzedni stan `OK` i wymaga
+  pól świeżości (`observed_at`, `age_ms`, `source`, `stale`);
+- nie wykonano impulsów, programowania ani automatycznej naprawy sprzętu.
+
+Poniższe punkty `overall_ok=true` opisują wcześniejszy snapshot z tego samego
+dnia, a nie gwarancję bieżącego stanu.
+
+- OqlOS firmware: **495/495** testów; frontend: **142/142** testów i poprawny
+  build.
 - Manifest pakietu zawiera **207** haszy; porównanie lokalne ↔ BoardNet wykazało
   zero różnic, braków i nadmiarowych plików objętych kontrolą.
 - Health DisplayNet, OQL Store i BoardNet przeszedł po **10/10** prób bez błędu.

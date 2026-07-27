@@ -37,6 +37,7 @@ from oqlos.api.hardware_v3 import router as hardware_v3_router
 from oqlos.api.hardware_v3 import hardware_events_ws as _hardware_events_ws_handler
 from oqlos.api.ui_prefs_routes import router as ui_prefs_router
 from oqlos.api.update_status import router as update_status_router
+from oqlos.api.oql_mqtt import oql_ws as _oql_ws_handler
 from oqlos.api.oql_mqtt import router as oql_router, set_oql_controller
 from oqlos.utils import load_sample_scenarios
 from oqlos.utils.hui_scenario import register_hui_test_scenario

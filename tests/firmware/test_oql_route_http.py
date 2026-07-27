@@ -138,3 +138,19 @@ def test_manage_surfaces_remote_error(client):
         assert "timed out" in body["error"]
     finally:
         set_oql_controller(None)
+
+
+def test_websocket_returns_structured_error_when_transport_disabled(client):
+    set_oql_controller(None)
+
+    with client.websocket_connect("/api/v1/oql/ws") as websocket:
+        assert websocket.receive_json() == {
+            "error": "OQL MQTT transport is disabled (role=off)"
+        }
+
+
+def test_main_websocket_alias_has_a_bound_handler():
+    from oqlos.api import main
+    from oqlos.api.oql_mqtt import oql_ws
+
+    assert main._oql_ws_handler is oql_ws

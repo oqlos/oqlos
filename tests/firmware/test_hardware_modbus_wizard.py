@@ -275,7 +275,6 @@ def test_build_waveshare_diagnose_scans_separate_adapters(monkeypatch):
         "topology": "separate-adapters",
     })
     _patch_diagnose_matrix(monkeypatch, _fake_matrix)
-    from pimodbus import provisioning as pim_prov
 
     class _Cfg:
         def to_dict(self):

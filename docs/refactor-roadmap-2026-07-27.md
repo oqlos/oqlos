@@ -5,15 +5,16 @@ C2004/DisplayNet.
 
 ## Zweryfikowany punkt startowy
 
-- OqlOS firmware: 493 testy przechodzą.
+- OqlOS firmware: 495 testów przechodzi.
 - OqlOS frontend: 142 testy przechodzą, build Vite poprawny.
 - Mapowanie katalogu błędów C2004/OqlOS: 3 testy kontraktowe przechodzą.
-- BoardNet: `mode=real`, `overall_ok=true`, `degraded=false`.
-- Modbus-IO: `9600/N/8/1`, slave ID `1`, DO1–DO8 pozostają OFF po testach
-  odrzucanych requestów.
+- BoardNet odpowiada, lecz bieżący health jest `degraded`: Modbus-IO zgłasza
+  timeout. Stany DO1–DO8 są obecnie `unknown`, nie `OFF`.
 - `get_throttled=0x0`; brak aktywnego undervoltage podczas weryfikacji.
 - DisplayNet → BoardNet: `up`; BoardNet → DisplayNet: jeszcze `unknown`.
 - W buforze replikacji diagnostyki pozostaje backlog.
+- Szczegółowe metryki wejściowe i wykryte niespójności opisuje
+  [audyt standaryzacji](STANDARDIZATION_AUDIT_2026-07-27.md).
 
 ## Docelowe zasady architektury
 
@@ -160,13 +161,66 @@ Zakres:
 Acceptance: ten sam commit daje identyczny pakiet na clean checkout i BoardNet;
 nie ma ręcznie zmienionych plików runtime poza katalogami state/config.
 
+### RF-09 — Kanoniczny rejestr zmiennych środowiskowych
+
+Priorytet: P1. Zależności: można prowadzić równolegle.
+
+Zakres:
+
+- dodać wszystkie używane `OQLOS_*` do `contracts/environment/variables.json`;
+- każdej zmiennej przypisać typ, jednostkę, scope, ownera i klasyfikację secret;
+- zamknąć odczyty env w typowanej warstwie settings;
+- zinwentaryzować 58 nazw legacy, dodać aliasy i terminy usunięcia;
+- dodać CI wykrywające użycie zmiennej spoza rejestru.
+
+Acceptance: statyczna różnica kod ↔ rejestr wynosi zero, a zła wartość kończy
+się kontrolowanym błędem konfiguracji przed startem adaptera.
+
+### RF-10 — Typowane odpowiedzi i spójny OpenAPI
+
+Priorytet: P1. Zależności: RF-02 i RF-03.
+
+Zakres:
+
+- zastąpić odpowiedzi generyczne modelami success/problem;
+- ujednolicić `ok` i wycofać nowe użycia `success`;
+- wyeliminować błędy pojedynczej komendy zwracane jako HTTP 200;
+- ujednolicić politykę v1/v3 i oznaczyć deprecated aliasy;
+- dodać świeżość diagnostyki: `observed_at`, `age_ms`, `source`, `stale`;
+- naprawić zgodność slug/severity dla Modbus, ADC, motorów i power.
+
+Punkt startowy: 305 operacji HTTP, 131 bez schematu odpowiedzi i 163 ze
+schematem generycznego obiektu.
+
+Acceptance: każda publiczna operacja ma model odpowiedzi, udokumentowane kody
+HTTP i test zgodności OpenAPI; bieżący błąd nie jest maskowany cachem startupu.
+
+### RF-11 — Hermetyczne testy i kontrolowany lint
+
+Priorytet: P1. Zależności: RF-08.
+
+Zakres:
+
+- uruchamiać CI z clean checkout i wheel/editable install;
+- dodać asercję źródła importowanego pakietu;
+- usunąć zależność wyniku testów od lokalnego `PYTHONPATH`;
+- wdrożyć Ruff z baseline i stopniowym zejściem do zera;
+- opisać fasady przez `__all__`, zamiast usuwać publiczne re-eksporty;
+- blokować niezwiązane zmiany OpenAPI i checksum w jednym quality gate.
+
+Punkt startowy Ruff: 87 pozostałych naruszeń po usunięciu błędu runtime
+`F821` i duplikatu `F811` (76 nieużywanych importów, 9 `E402`, 2 `F541`).
+
+Acceptance: ten sam zestaw testów ładuje ten sam commit lokalnie, w CI i na
+BoardNet; `ruff --select F821,F811` jest obowiązkowy, a baseline stale maleje.
+
 ## Etapy wdrożeniowe
 
 | Etap | Zakres | Warunek przejścia |
 | --- | --- | --- |
 | A | RF-01–RF-03 | safety gate i pełna macierz błędów |
-| B | RF-04–RF-06 | wspólny trace, oba heartbeat-y, parity formatów |
-| C | RF-07–RF-08 | spełnione SLO i powtarzalny deploy |
+| B | RF-04–RF-06, RF-09–RF-10 | wspólny trace, oba heartbeat-y, parity i kontrakty |
+| C | RF-07–RF-08, RF-11 | spełnione SLO, hermetyczne testy i powtarzalny deploy |
 
 ## Definition of done dla każdego ticketu
 
