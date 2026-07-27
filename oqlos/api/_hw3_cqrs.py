@@ -20,6 +20,7 @@ from oqlos.api.hardware_events import (
     subscribe_hardware_command_events,
     unsubscribe_hardware_command_events,
 )
+from oqlos.errors import OqlosError
 
 router = APIRouter()
 
@@ -31,11 +32,22 @@ async def hardware_cqrs_command_v3(req: CqrsCommandRequest) -> dict[str, Any]:
     peripheral_id = normalize_peripheral_id(str(payload.get("peripheral_id") or payload.get("peripheralId") or ""))
     command_name = str(payload.get("command") or payload.get("command_name") or "").strip()
     args = payload.get("args") if isinstance(payload.get("args"), dict) else {}
-    if peripheral_id and command_name:
-        result = await _run_diagnostic(peripheral_id, command_name, args)
-    else:
-        result = {"ok": False, "error": "CQRS command requires peripheral_id and command", "command": command}
-        await publish_hardware_command_event(command, result, context={"source": "hardware-cqrs-command-endpoint"})
+    if not peripheral_id or not command_name:
+        result = {
+            "ok": False,
+            "error": "CQRS command requires peripheral_id and command",
+            "command": command,
+        }
+        await publish_hardware_command_event(
+            command, result, context={"source": "hardware-cqrs-command-endpoint"}
+        )
+        raise OqlosError(
+            code="api_modbus_wizard_invalid_request",
+            status_code=422,
+            message="CQRS command requires peripheral_id and command",
+            detail={"command": command},
+        )
+    result = await _run_diagnostic(peripheral_id, command_name, args)
     return {"ok": True, "command": command, "result": result}
 
 
