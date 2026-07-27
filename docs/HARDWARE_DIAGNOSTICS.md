@@ -90,8 +90,9 @@ Zmiany runtime są celowo ręczne: `doctor --fix` nie przełącza firmware z
 `/dev/ttyUSB*`. W raporcie pojawią się jako `Unapplied repairs` z konkretną
 wskazówką, co trzeba zmienić w uruchomieniu firmware.
 
-Domyślne oczekiwane parametry Waveshare Modbus RTU IO 8CH w tej konfiguracji
-to `19200 8N1`. W `oqlos.yaml` preferuj stabilną ścieżkę
+Aktualny profil produkcyjny BoardNet dla Waveshare Modbus RTU IO 8CH to
+`9600 8N1`, slave ID `1`. Domyślna wartość biblioteki może być inna i nie jest
+źródłem prawdy dla wdrożonego stanowiska. W `oqlos.yaml` preferuj stabilną ścieżkę
 `/dev/serial/by-id/...`; numeracja `/dev/ttyACM*` może zmienić się po restarcie
 USB. `doctor` kanonizuje symlinki i pokaże realny port zajęty przez proces,
 np. `/dev/ttyACM0`.
@@ -247,6 +248,11 @@ python -m oqlos.tools.hardware_diagnose --benchmark 10 --json | jq '.rps, .laten
 
 ## Raportowanie błędów
 
+Publiczne odpowiedzi HTTP używają kodów `C2004-*` i RFC 9457, natomiast
+lokalny `issue_code` OqlOS pozostaje w `metadata.diagnostics`. Szczegółowy
+kontrakt, zasady mapowania i ślad komendy w URL opisuje
+[Standard błędów i diagnostyki](ERROR_STANDARDIZATION.md).
+
 Automatyczne zapisywanie pełnego raportu diagnostycznego:
 
 ```bash
@@ -287,7 +293,8 @@ Widoczne urządzenia:
 
 Mapowanie:
 - `ttyACM0` → Potencjalnie debug/tty
-- `ttyACM1` → Modbus RTU (Waveshare 8CH IO, 19200 8N1)
+- `ttyACM1` → historyczna/zmienna numeracja Modbus RTU; w produkcji używaj
+  ścieżki `by-id`, `9600 8N1`, slave ID `1`
 - `ttyUSB0` → Dodatkowy serial (opcjonalny)
 
 ## Tryby pracy
@@ -378,6 +385,24 @@ BoardNet (`192.168.188.122`) — aktualny przypadek po naprawie z 2026-06-30:
 - Tic249 pozostaje `energized=false` gdy nie wykonuje ruchu,
 - `modbus-io` jest zdrowy na `9600/N`, slave ID `1`,
 - `modbus-adc` jest wyłączony, bo adapter ADC nie jest obecny.
+
+### Zasilanie, throttling i pobór mocy
+
+Bezpieczny odczyt stanu Raspberry Pi:
+
+```bash
+ssh pi@192.168.188.122 'vcgencmd get_throttled; vcgencmd measure_volts core'
+```
+
+`throttled=0x0` oznacza brak aktywnych i historycznych flag. Aktywny bit 0
+oznacza undervoltage i powinien być raportowany jako krytyczny
+`C2004-HW-0014`. Bit 16 bez bitu 0 oznacza zdarzenie historyczne i nie powinien
+blokować pracy jako aktywny ERROR.
+
+`measure_volts core` nie mierzy wejścia 5 V ani poboru mocy. Pomiar prądu i
+mocy wymaga dodatkowego sensora (np. INA219/INA260) lub miernika USB. Pełna
+polityka i aktualna luka implementacyjna są opisane w
+[ERROR_STANDARDIZATION.md](ERROR_STANDARDIZATION.md).
 
 Bezpieczna diagnostyka read-only na BoardNet:
 

@@ -1,6 +1,21 @@
 # OqlOS BoardNet — zapis stanu i aktualna architektura
 
-Ostatnio sprawdzono: 2026-07-24 Europe/Warsaw.
+Ostatnio sprawdzono: 2026-07-27 Europe/Warsaw.
+
+## Aktualizacja 2026-07-27
+
+- OqlOS firmware: **493/493** testów; frontend: **142/142** testów i poprawny build.
+- Manifest pakietu zawiera **207** haszy; porównanie lokalne ↔ BoardNet wykazało
+  zero różnic, braków i nadmiarowych plików objętych kontrolą.
+- Health DisplayNet, OQL Store i BoardNet przeszedł po **10/10** prób bez błędu.
+- `mode=real`, `overall_ok=true`, `degraded=false`; `modbus-io`, Tic249 i
+  DRI0050 są zdrowe.
+- Modbus-IO pozostaje na `9600/N/8/1`, slave ID `1`; testy błędnych requestów
+  nie wykonały programowania ani impulsu, a DO1–DO8 pozostały OFF.
+- `vcgencmd get_throttled` zwrócił `0x0`. `measure_volts core` zwrócił około
+  `1.2813 V`; jest to napięcie rdzenia, nie pomiar wejścia 5 V ani poboru mocy.
+- DisplayNet → BoardNet raportuje `up`; kierunek BoardNet → DisplayNet wymaga
+  jeszcze uruchomienia/ustabilizowania watchera i flush backlogu.
 
 ## Aktualizacja 2026-07-24
 

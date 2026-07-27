@@ -96,7 +96,7 @@ oqlctl detect
 
 # Direct Modbus RTU probe outside the running gateway
 oqlos-modbus-probe --serial /dev/serial/by-id/usb-1a86_USB_Single_Serial_5958006895-if00 \
-  --baud 19200 --parity N --device-id 1 --function read_coils --address 0 --count 1 --timeout 2.5
+  --baud 9600 --parity N --device-id 1 --function read_coils --address 0 --count 1 --timeout 2.5
 
 # Backward-compatible aliases
 oqlctl --status
@@ -114,8 +114,8 @@ and `scenarios`, activate this repository virtualenv or call `.venv/bin/oqlctl`
 directly. The smart `detect`/`doctor` and hardware preflight paths live in the
 current repository CLI.
 
-Current expected Modbus RTU defaults for the Waveshare 8CH IO controller are
-`19200 8N1`; prefer a stable `/dev/serial/by-id/...` path in `oqlos.yaml`
+The current production BoardNet profile for the Waveshare 8CH IO controller is
+`9600 8N1`, slave ID `1`; prefer a stable `/dev/serial/by-id/...` path in `oqlos.yaml`
 instead of relying on changing `/dev/ttyACM*` numbering. `doctor` resolves
 those symlinks, so it can still report the real busy device, e.g.
 `/dev/ttyACM0`, when another process owns the configured `by-id` path. If the
@@ -192,7 +192,7 @@ Override hosta/węzła: `make test-hw PI=pi@inny.local`, `make deploy NODE=122`.
 
 **Co realnie działa:** BoardNet odpowiada w `mode=real`, Tic249 jest
 `connected=true` i `energized=false`, DRI0050 jest healthy, Modbus-IO jest
-healthy na slave ID `2`, a broker/agent MQTT działają. `modbus-adc` jest
+healthy na slave ID `1` (`9600/N`), a broker/agent MQTT działają. `modbus-adc` jest
 wyłączony, bo adapter ADC nie jest obecny.
 
 **Integralność (suma kontrolna).** `rsync` porównuje rozmiar+mtime, więc nie
@@ -611,7 +611,7 @@ Notes:
 
 ## Supported Hardware
 
-- **Valves**: valve-1 through valve-14, valve-nc, valve-sc, valve-wc (Modbus RTU via `/dev/serial/by-id/...` or `/dev/ttyACM*` @ 19200 8N1)
+- **Valves**: valve-1 through valve-14, valve-nc, valve-sc, valve-wc (production BoardNet: Modbus RTU via `/dev/serial/by-id/...` @ 9600 8N1, slave ID 1)
 - **Pump**: pump-main (DRI0050 PWM motor driver via HTTP :49055)
 - **Artificial lung**: lung-main (Tic T249 stepper via HTTP :8205)
 - **Sensors**: AI01 (NC), AI02 (SC), AI03 (WC) (piADC ADS1115 via HTTP :8204; raw ADC voltage)
@@ -678,7 +678,7 @@ Expected behavior for blocked hardware cases:
 | `OQLOS_LUNG_MOTOR_URL` | `http://localhost:8205` | Tic T249 lung service |
 | `OQLOS_PIADC_URL` | `http://localhost:8080` | piADC sensor service |
 | `OQLOS_MODBUS_SERIAL_PORT` | `/dev/ttyACM1` | Modbus RTU serial port |
-| `OQLOS_MODBUS_BAUD` | `19200` | Modbus baud rate |
+| `OQLOS_MODBUS_BAUD` | `4800` | Library default; production BoardNet overrides it to `9600` |
 | `OQLOS_PUMP_FLOW_FULL_SCALE_LPM` | `10` | Flow rate that maps to 100% PWM for `pompa 1` |
 
 Notes:

@@ -10,6 +10,8 @@
 - **[Hardware UI modules — status](hardware-ui-modules.md)**
   — co działa (status, Modbus, RTC, silniki), API v3, testy i otwarte zadania.
 - [Hardware Diagnostics](HARDWARE_DIAGNOSTICS.md)
+- [Standard błędów i diagnostyki](ERROR_STANDARDIZATION.md)
+- [Plan refaktoryzacji 2026-07-27](refactor-roadmap-2026-07-27.md)
 - [OQL v4 Migration Manual](OQL_V4_MIGRATION_MANUAL.md)
 - [OQL spec](oql-spec.md) · [CQL spec](cql-spec.md) · [CQL examples](cql-examples.md)
 
@@ -64,8 +66,8 @@ activate `.venv` or call `.venv/bin/oqlctl` explicitly.
 
 Safe automatic repair is intentionally narrow: `oqlctl doctor --fix` updates
 only detected Modbus connection parameters in `oqlos.yaml` and writes
-`oqlos.yaml.bak` first. The current default hardware profile expects
-`19200 8N1` for Waveshare Modbus RTU IO 8CH; prefer stable
+`oqlos.yaml.bak` first. The current production BoardNet profile expects
+`9600 8N1`, slave ID `1`, for Waveshare Modbus RTU IO 8CH; prefer stable
 `/dev/serial/by-id/...` paths over volatile `/dev/ttyACM*` numbering.
 Runtime repairs such as enabling real firmware mode, restarting containers, or
 mounting `/dev/ttyACM*`/`/dev/ttyUSB*` remain manual and are reported as
