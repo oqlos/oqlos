@@ -21,6 +21,13 @@ otrzymał odpowiedź, a po ponownym starcie health oraz read-only plan DO1–DO8
 były poprawne. Kernel nie zarejestrował odłączenia USB. Kod został utwardzony,
 aby `connected` wymagało rzeczywistej odpowiedzi slave.
 
+Poprawka z commita `5d72a10` została umieszczona na dysku BoardNet i objęta
+manifestem 207 checksum. Nie restartowano usługi po synchronizacji, ponieważ
+zewnętrzny klient stanowiska automatycznie wysyłał komendy HUI po poprzednich
+restartach. Aktywacja wymaga kontrolowanego okna serwisowego. Po synchronizacji
+wykonano pięć read-only health probe: wszystkie `overall_ok=true`, Modbus
+`connected`; plan cewek potwierdził osiem stanów `false`.
+
 Poniższe punkty `overall_ok=true` opisują wcześniejszy snapshot z tego samego
 dnia, a nie gwarancję bieżącego stanu.
 
