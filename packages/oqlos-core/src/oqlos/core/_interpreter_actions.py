@@ -1,5 +1,5 @@
 """
-Action handlers for CQL Interpreter.
+Action handlers for the OQL interpreter.
 
 Extracted from interpreter.py to reduce god module complexity.
 Each handler is a focused function with CC<10.

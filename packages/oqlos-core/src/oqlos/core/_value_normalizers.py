@@ -1,5 +1,5 @@
 """
-Value normalization utilities for CQL interpreter.
+Value normalization utilities for the OQL interpreter.
 
 Handles conversion of DSL command values to normalized hardware values.
 """

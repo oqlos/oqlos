@@ -1,5 +1,5 @@
 """
-Firmware and plugin gateway execution for CQL interpreter.
+Firmware and plugin gateway execution for the OQL interpreter.
 
 Handles hardware action execution via plugin gateway or legacy firmware adapter.
 """

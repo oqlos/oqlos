@@ -638,7 +638,7 @@ def is_flat_oql(source: str) -> bool:
     - top-level ``INCLUDE "..."`` directives.
 
     For ambiguous ``GOAL:`` inputs without explicit version markers, this
-    detector falls back to legacy behavior to avoid hijacking old CQL.
+    detector falls back to compatibility behavior for historical source shapes.
     """
 
     version_re = re.compile(r"^\s*VERSION\s*:\s*\d+\s*$", re.M | re.IGNORECASE)

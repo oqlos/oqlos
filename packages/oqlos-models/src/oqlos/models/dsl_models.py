@@ -1,7 +1,7 @@
-"""
-CQL AST node dataclasses.
+"""Runtime AST dataclasses for parsed OQL documents.
 
-Represents the parsed structure of a .cql scenario file.
+The ``Cql*`` class names remain compatibility symbols. New integrations should
+use the ``Oql*`` aliases exported at the end of this module.
 """
 
 from __future__ import annotations
@@ -76,7 +76,7 @@ class CqlScenario:
 
 @dataclass
 class CqlDocument:
-    """Root AST node for a .cql file."""
+    """Internal runtime AST node for an OQL document."""
     filename: str = ""
     metadata: CqlMetadata = field(default_factory=CqlMetadata)
     intervals: list[CqlInterval] = field(default_factory=list)
@@ -85,3 +85,14 @@ class CqlDocument:
     goals: list[CqlGoal] = field(default_factory=list)
     errors: list[str] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
+
+
+# Canonical public names; legacy class names remain ABI-compatible aliases.
+OqlMetadata = CqlMetadata
+OqlInterval = CqlInterval
+OqlCondition = CqlCondition
+OqlAction = CqlAction
+OqlStep = CqlStep
+OqlGoal = CqlGoal
+OqlScenario = CqlScenario
+OqlDocument = CqlDocument

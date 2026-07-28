@@ -1,11 +1,10 @@
 # oqlos-core
 
-Parser, interpreter runtime, and event store for OQL. Historical Python symbol
-names such as `parse_cql` and `CqlInterpreter` are compatibility adapters, not
-names of a supported public scenario language.
+Parser, interpreter runtime, and event store for OQL. Historical Python symbols
+remain compatibility adapters, not names of a supported public language.
 
 ```python
-from oqlos.core.cql_parser import parse_cql, validate_cql
+from oqlos.core.oql_document import parse_oql_document, validate_oql_document
 from oqlos.core.interpreter import OqlInterpreter
 from oqlos.shared.event_store import EventStore
 ```

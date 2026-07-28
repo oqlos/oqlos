@@ -1,6 +1,6 @@
 """Event-sourced sensor telemetry: an audit trail for real hardware readings.
 
-Unlike PeripheralAggregate/ExecutionAggregate, this is *additive* — CqlInterpreter's
+Unlike PeripheralAggregate/ExecutionAggregate, this is *additive* — OqlInterpreter's
 in-memory `sensor_values` dict remains the authoritative value for a running
 script (it's local execution state, not shared domain state; see the module
 docstring discussion that led to this design). This module only records what

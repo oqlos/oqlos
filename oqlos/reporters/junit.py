@@ -28,7 +28,7 @@ class JUnitReporter:
         """Serialise *result* to JUnit XML string.
 
         Args:
-            result:     Completed ScriptResult (from CqlInterpreter.execute).
+            result:     Completed ScriptResult (from OqlInterpreter.execute).
             suite_name: Override testsuite name (defaults to result.source).
 
         Returns:

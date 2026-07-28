@@ -1,5 +1,5 @@
 """
-Sensor evaluation and condition checking for CQL interpreter.
+Sensor evaluation and condition checking for the OQL interpreter.
 
 Handles sensor value comparison, auto-mocking, and condition evaluation.
 """

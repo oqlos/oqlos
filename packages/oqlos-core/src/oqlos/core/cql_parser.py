@@ -1,8 +1,8 @@
 """
-CQL Parser — parses .cql source into AST nodes + validates structure.
+Legacy parser implementation used by the canonical OQL runtime facade.
 
-Supports two CQL dialects:
-  1. Simple CQL:   GOAL:, TASK:, SAVE, WAIT, IF...ELSE, MIN, MAX, VAL
+Supports two historical input shapes:
+  1. Compatibility syntax: GOAL:, TASK:, SAVE, WAIT, IF...ELSE, MIN, MAX, VAL
   2. ConnectGo:    @Namespace.Name, → Action, AI02 ∈ [min, max], SAVE: var
 """
 
@@ -412,10 +412,10 @@ class _ParseState:
 
 
 def parse_cql(source: str, filename: str = "<string>") -> CqlDocument:
-    """Parse CQL source into AST.
+    """Compatibility implementation for parsing OQL source into runtime AST.
 
     When the source uses the flat OQL grammar (v3/v4), dispatch to the OQL
-    parser via the OQL→CQL adapter. Legacy quoted-string CQL sources fall
+    parser via the OQL-to-runtime-AST adapter. Historical quoted-string sources fall
     through to the original state-based parser.
     """
     # Local import avoids a circular dependency at module load time.
@@ -450,7 +450,7 @@ def _validate_intervals(doc: CqlDocument) -> list[str]:
 
 
 def validate_cql(doc: CqlDocument) -> list[str]:
-    """Validate a parsed CQL document. Returns list of issues."""
+    """Compatibility implementation for validating an OQL runtime document."""
     issues: list[str] = []
 
     all_goals = _collect_all_goals(doc)

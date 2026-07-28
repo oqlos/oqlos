@@ -1,4 +1,4 @@
-"""CQL tree builder — structure parsers for metadata, scenarios, goals, steps, actions."""
+"""Compatibility tree builder for OQL runtime metadata, tasks, steps, and actions."""
 
 from __future__ import annotations
 
@@ -71,7 +71,7 @@ def _parse_scenario_attrs(line: str, current_scenario: CqlScenario) -> bool:
 def _parse_goal_line(
     stripped: str, line: str, indent: int, current_scenario: CqlScenario | None
 ) -> CqlGoal | None:
-    """Parse GOAL: (simple CQL) or named goal (ConnectGo 2-space indent)."""
+    """Parse a historical GOAL block or named task (ConnectGo 2-space indent)."""
     # CONFIG: blocks are treated as special configuration goals
     m = RE_CONFIG_SIMPLE.match(stripped)
     if m:

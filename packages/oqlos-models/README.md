@@ -6,5 +6,5 @@ Installed as `oqlos.models` so existing imports stay stable:
 
 ```python
 from oqlos.models.scenario import Scenario, Goal, Step
-from oqlos.models.dsl_models import CqlDocument
+from oqlos.models.dsl_models import OqlDocument
 ```

@@ -11,7 +11,7 @@ Two sides share one envelope:
 * :class:`OqlMqttController` — runs on the app node. ``execute(oql)`` publishes a
   request and ``await``\\ s the correlated response (or a synthetic timeout).
 * :class:`OqlMqttAgent` — runs on the hardware Pi. Subscribes to requests, runs the
-  OQL via the existing CQL interpreter against an injected, already-initialized
+  OQL via the runtime interpreter against an injected, already-initialized
   :class:`~oqlos.hardware.plugin_gateway.PluginHardwareGateway`, and replies.
 
 Why a dedicated paho client instead of :class:`oqlos.hardware.drivers.mqtt.MqttDriver`:
@@ -404,8 +404,7 @@ class OqlMqttAgent(_PahoAsyncClient):
                     node_id=self._node_id,
                 )
 
-            from oqlos.tools.cql_cli.commands import run_single_command, run_source
-            from oqlos.tools.cql_cli.utils import build_result_payload
+            from oqlos.tools.oql_cli import build_result_payload, run_single_command, run_source
 
             common = dict(
                 mode=req.mode,

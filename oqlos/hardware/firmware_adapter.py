@@ -1,7 +1,7 @@
 """
-dsl/interpreter/firmware_adapter.py — HTTP bridge: CQL → Firmware Simulator (:8202)
+dsl/interpreter/firmware_adapter.py — HTTP bridge: OQL → Firmware Simulator (:8202)
 
-Translates CQL actions into firmware API calls:
+Translates OQL actions into firmware API calls:
   → Pump.off         →  PUT /api/v1/peripherals/pump-main  {"currentValue": 0}
   → Pump.set 5       →  PUT /api/v1/peripherals/pump-main  {"currentValue": 5}
   → Valve.open        →  PUT /api/v1/peripherals/valve-inlet {"currentValue": 1}
@@ -24,7 +24,7 @@ from oqlos.hardware.tic249_units import TIC249_DEFAULT_TARGET_VELOCITY
 
 
 # ── Peripheral name mapping ──────────────────────────────────────────────────
-# CQL target names → firmware peripheral IDs
+# OQL target names → firmware peripheral IDs
 _PERIPHERAL_MAP = {
     "pump": "pump-main",
     "pump-main": "pump-main",
@@ -91,7 +91,7 @@ _PERIPHERAL_MAP["sztuczne_pluco"] = "lung-main"
 _PERIPHERAL_MAP["sztuczne pluco"] = "lung-main"
 _PERIPHERAL_MAP["sztuczne płuco"] = "lung-main"
 
-# CQL sensor names (AI01, AI02, etc.) → firmware peripheral IDs
+# OQL sensor names (AI01, AI02, etc.) → firmware peripheral IDs
 _SENSOR_MAP = {
     "AI01": "nc-sensor",
     "ciśnienie-nc": "nc-sensor",
@@ -135,7 +135,7 @@ def _extract_failure_message(data: dict) -> Any:
 
 
 class FirmwareAdapter:
-    """HTTP bridge between CQL interpreter and firmware simulator."""
+    """HTTP bridge between the OQL interpreter and firmware simulator."""
 
     def __init__(self, base_url: str = "http://localhost:8202", timeout: float = 5.0, mock: bool = False):
         self.base_url = base_url.rstrip("/")
@@ -178,7 +178,7 @@ class FirmwareAdapter:
     # ── Peripheral control ───────────────────────────────────────────────────
 
     def _resolve_peripheral(self, target: str) -> str:
-        """Resolve CQL target name to firmware peripheral ID."""
+        """Resolve an OQL target name to a firmware peripheral ID."""
         key = target.lower().replace(" ", "-")
         return _PERIPHERAL_MAP.get(key, key)
 
@@ -337,7 +337,7 @@ class FirmwareAdapter:
         return r.json()
 
     def read_sensor(self, sensor_name: str) -> float:
-        """Read a sensor value by CQL name (AI01, AI02, etc.)."""
+        """Read a sensor value by OQL name (AI01, AI02, etc.)."""
         pid = _SENSOR_MAP.get(sensor_name, sensor_name.lower())
         try:
             r = self._get_client().get(f"/api/v1/hardware/sensor/{pid}")
@@ -365,7 +365,7 @@ class FirmwareAdapter:
                 result[cql_name] = 0.0
         return result
 
-    # ── CQL action keywords ─────────────────────────────────────────────────
+    # ── OQL action keywords ─────────────────────────────────────────────────
 
     _ACTION_KEYWORDS = {
         "off", "on", "set", "open", "close", "start", "stop", "reset",
@@ -374,7 +374,7 @@ class FirmwareAdapter:
         "zmierz", "sprawdź", "sprawdz", "odczytaj", "wyzeruj",
     }
 
-    # ── CQL action dispatch ──────────────────────────────────────────────────
+    # ── OQL action dispatch ──────────────────────────────────────────────────
 
     def _resolve_dispatch_target(self, target: str, method: str, args: str) -> tuple[str, str, str]:
         """Resolve peripheral_id, effective method, and remaining args.
@@ -461,7 +461,7 @@ class FirmwareAdapter:
             return {"ok": False, "detail": f"Unknown method or error: {target}.{method_lower} ({e})", "data": {}}
 
     def dispatch_action(self, target: str, method: str, args: str = "") -> dict:
-        """Dispatch a CQL action (→ Target.method args) to firmware.
+        """Dispatch an OQL action (→ Target.method args) to firmware.
 
         Handles patterns like:
           → Pump.off           target=Pump, method=off
@@ -480,7 +480,7 @@ class FirmwareAdapter:
 
 
 def _parse_numeric(s: str) -> float:
-    """Parse numeric value from CQL args like '5l', '7.0 mbar', '100%'."""
+    """Parse numeric value from OQL args like '5l', '7.0 mbar', '100%'."""
     import re
     m = re.search(r"[-+]?\d*\.?\d+", s)
     return float(m.group()) if m else 0.0

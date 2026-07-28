@@ -629,28 +629,6 @@ html[data-iframe-child="1"] #root {
   opacity: 0.55;
 }
 
-/* Live connection indicator */
-.cql-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: var(--font-rem-sm);
-  color: var(--text-muted);
-  padding: 2px 8px;
-  border-radius: 10px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-}
-.cql-status::before {
-  content: "";
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--accent-red);
-}
-.cql-status.cql-status--online { color: var(--accent-green); }
-.cql-status.cql-status--online::before { background: var(--accent-green); }
-
 .section-label {
   font-size: var(--font-rem-xs);
   font-weight: 700;

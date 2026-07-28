@@ -1,5 +1,5 @@
 """
-Motor2 (TIC-249 stepper motor) action handlers for CQL Interpreter.
+Motor2 (TIC-249 stepper motor) action handlers for the OQL interpreter.
 
 Extracted from _interpreter_actions.py to reduce module size.
 """

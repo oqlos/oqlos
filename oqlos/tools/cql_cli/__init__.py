@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from oqlos.core.interpreter import CqlInterpreter
+from oqlos.core.interpreter import OqlInterpreter
 from oqlos.tools.hardware_diagnose.health import check_firmware_health, check_firmware_identify
 
 from . import commands as _commands_module
@@ -26,27 +26,53 @@ from .utils import (
 )
 
 
-def _sync_compat_symbols() -> None:
+def _sync_compat_symbols() -> dict[tuple[object, str], object]:
+  """Inject legacy monkeypatch hooks for one CLI invocation only."""
+  originals = {
+    (_preflight_module, "check_firmware_health"): _preflight_module.check_firmware_health,
+    (_preflight_module, "check_firmware_identify"): _preflight_module.check_firmware_identify,
+    (_preflight_module, "ensure_firmware_running"): _preflight_module.ensure_firmware_running,
+    (_commands_module, "OqlInterpreter"): _commands_module.OqlInterpreter,
+    (_commands_module, "check_firmware_identify"): _commands_module.check_firmware_identify,
+    (_main_module, "OqlInterpreter"): _main_module.OqlInterpreter,
+    (_main_module, "run_single_command"): _main_module.run_single_command,
+    (_main_module, "preflight_hardware"): _main_module.preflight_hardware,
+    (_main_module, "validate_directory"): _main_module.validate_directory,
+  }
   _preflight_module.check_firmware_health = check_firmware_health
   _preflight_module.check_firmware_identify = check_firmware_identify
   _preflight_module.ensure_firmware_running = _ensure_firmware_running
 
-  _commands_module.CqlInterpreter = CqlInterpreter
+  _commands_module.OqlInterpreter = CqlInterpreter
   _commands_module.check_firmware_identify = check_firmware_identify
 
-  _main_module.CqlInterpreter = CqlInterpreter
+  _main_module.OqlInterpreter = CqlInterpreter
   _main_module.run_single_command = _run_single_command
   _main_module.preflight_hardware = _preflight_hardware
   _main_module.validate_directory = _validate_directory
+  return originals
+
+
+def _restore_compat_symbols(originals: dict[tuple[object, str], object]) -> None:
+  for (module, name), value in originals.items():
+    setattr(module, name, value)
 
 
 def main() -> None:
-  _sync_compat_symbols()
-  _main_module.main()
+  originals = _sync_compat_symbols()
+  try:
+    _main_module.main()
+  finally:
+    _restore_compat_symbols(originals)
+
+
+# Legacy import name retained for callers that have not migrated yet.
+CqlInterpreter = OqlInterpreter
 
 
 __all__ = [
   "main",
+  "OqlInterpreter",
   "CqlInterpreter",
   "DEFAULT_FIRMWARE_URL",
   "default_firmware_url",

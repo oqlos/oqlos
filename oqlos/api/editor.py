@@ -169,7 +169,7 @@ def _sensor_telemetry_recorder():
 
     Best-effort: returns None when no StateManager is initialised (e.g. CLI
     or test contexts), so real-hardware runs get an audit trail without
-    forcing every CqlInterpreter caller to depend on oqlos.core.cqrs.
+    forcing every OqlInterpreter caller to depend on oqlos.core.cqrs.
     """
     from oqlos.api.utils import execution_ctrl as _ctrl
     from oqlos.core.cqrs.telemetry import record_sensor_readings
@@ -208,9 +208,9 @@ async def execute_scenario(request: ExecutionRequest) -> dict[str, Any]:
                 response=response,
             )
 
-        from oqlos.core.interpreter import CqlInterpreter
+        from oqlos.core.interpreter import OqlInterpreter
 
-        interpreter = CqlInterpreter(
+        interpreter = OqlInterpreter(
             mode=oql_mode,
             quiet=False,
             skip_waits=skip_waits,

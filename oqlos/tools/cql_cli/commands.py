@@ -13,7 +13,7 @@ import signal
 import asyncio
 import time
 
-from oqlos.core.interpreter import CqlInterpreter
+from oqlos.core.interpreter import OqlInterpreter
 from oqlos.tools.cql_cli.utils import build_single_command_scenario, build_result_payload, output_yaml
 from oqlos.tools.hardware_diagnose.health import check_firmware_identify
 
@@ -48,7 +48,7 @@ def run_source(
     ``gateway`` lets a caller (e.g. the OQL-over-MQTT agent) inject an
     already-initialized PluginHardwareGateway so serial ports are not reopened.
     """
-    interp = CqlInterpreter(
+    interp = OqlInterpreter(
         mode=mode,
         quiet=quiet,
         sensor_values=sensors,

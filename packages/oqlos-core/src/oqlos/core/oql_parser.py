@@ -403,7 +403,7 @@ def _parse_bound(token: str) -> tuple[float | int | None, str]:
 
 
 def _parse_if_quoted_range(rest: str, ln: int, raw: str) -> OqlCmd | None:
-    """Toleruj legacy zakresy z konwersji CQL/XML:
+    """Toleruj historyczne zakresy z wcześniejszych konwersji XML:
 
     ``IF 'param' 'min u' .. 'max u'`` — cytowane granice z jednostką,
     ``IF 'ciśnienie' 'NC' '-10 mbar' .. 'NC' '0 mbar'`` — etykiety scalane

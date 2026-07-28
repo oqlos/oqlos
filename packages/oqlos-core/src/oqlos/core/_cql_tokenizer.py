@@ -1,4 +1,4 @@
-"""CQL tokenizer — regex patterns and individual action parsers."""
+"""Compatibility tokenizer for OQL runtime actions and declarations."""
 
 from __future__ import annotations
 

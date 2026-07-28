@@ -1,5 +1,5 @@
 """
-dsl/interpreter/base.py — Shared base classes for CQL and IQL interpreters.
+dsl/interpreter/base.py — Shared base classes for OQL runtime interpreters.
 """
 
 from __future__ import annotations

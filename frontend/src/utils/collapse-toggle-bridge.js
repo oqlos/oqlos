@@ -4,7 +4,7 @@ import { queueUiPrefPersist } from "./ui-prefs-client.js";
 
 export const COLLAPSE_DELAY_MS = 3000;
 
-/** Stable ids for `child.collapse-toggle.register` (scoped as `cql:<id>` in parent iframe). */
+/** Stable ids for `child.collapse-toggle.register` (scoped as `oql:<id>` in parent iframe). */
 export const COLLAPSE_TOGGLE_IDS = Object.freeze({
   scenariosList: "scenarios-list",
   funcEditorList: "func-editor-list",

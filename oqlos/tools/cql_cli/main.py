@@ -11,7 +11,7 @@ import json
 import sys
 from pathlib import Path
 
-from oqlos.core.interpreter import CqlInterpreter
+from oqlos.core.interpreter import OqlInterpreter
 from oqlos.tools.cql_cli.utils import (
     parse_sensor_overrides,
     validate_directory,
@@ -24,6 +24,18 @@ from oqlos.tools.cql_cli.commands import (
 )
 from oqlos.tools.cql_cli.formatting import canonicalize_oql_text
 from oqlos.tools.cql_cli.preflight import preflight_hardware
+
+
+_DEFAULT_OQL_INTERPRETER = OqlInterpreter
+# Historical patch point retained for third-party integrations and old tests.
+CqlInterpreter = OqlInterpreter
+
+
+def _interpreter_class():
+    legacy_override = CqlInterpreter
+    if legacy_override is not _DEFAULT_OQL_INTERPRETER:
+        return legacy_override
+    return OqlInterpreter
 
 
 class ScenarioFetchError(RuntimeError):
@@ -168,7 +180,7 @@ def run_file_mode(args: argparse.Namespace) -> None:
 
     # Validate directory mode
     if args.validate_dir:
-        validate_directory(Path(args.validate_dir), CqlInterpreter)
+        validate_directory(Path(args.validate_dir), _interpreter_class())
         return
 
     if not args.file:
@@ -191,8 +203,8 @@ def run_file_mode(args: argparse.Namespace) -> None:
         sys.exit(1)
 
 
-def _create_interpreter(args: argparse.Namespace, sensors: dict[str, float]) -> CqlInterpreter:
-    return CqlInterpreter(
+def _create_interpreter(args: argparse.Namespace, sensors: dict[str, float]) -> OqlInterpreter:
+    return _interpreter_class()(
         mode=args.mode,
         quiet=args.quiet,
         sensor_values=sensors,
@@ -202,7 +214,7 @@ def _create_interpreter(args: argparse.Namespace, sensors: dict[str, float]) -> 
     )
 
 
-def _run_interpreter_target(interp: CqlInterpreter, target: str):
+def _run_interpreter_target(interp: OqlInterpreter, target: str):
     """Run a local file or HTTP(S) scenario target."""
     if target.startswith(("http://", "https://")):
         source = _fetch_scenario_source(target)

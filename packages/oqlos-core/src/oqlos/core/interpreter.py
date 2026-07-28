@@ -1,5 +1,5 @@
 """
-CQL Interpreter — executes parsed CQL scenarios.
+OQL Interpreter — executes parsed OQL scenarios.
 
 Modes:
   - validate: parse + check structure (no execution)
@@ -26,7 +26,7 @@ from oqlos.core.base import (
     StepStatus,
 )
 from oqlos.models.dsl_models import CqlAction, CqlCondition, CqlDocument, CqlGoal, CqlStep
-from oqlos.core.cql_parser import parse_cql, validate_cql
+from oqlos.core.oql_document import parse_oql_document, validate_oql_document
 from oqlos.core._value_normalizers import ValueNormalizer
 from oqlos.core._sensor_evaluator import SensorEvaluator
 from oqlos.core._firmware_executor import FirmwareExecutor
@@ -34,7 +34,7 @@ from oqlos.core._firmware_executor import FirmwareExecutor
 
 class CqlInterpreter(BaseInterpreter):
     """
-    CQL interpreter with three modes:
+    OQL interpreter with three modes (legacy class name retained for ABI compatibility):
       - validate: parse + check structure
       - dry-run:  simulate execution with mock sensor values
       - execute:  connect to firmware simulator (:8202) and run real test
@@ -138,14 +138,14 @@ class CqlInterpreter(BaseInterpreter):
 
     def parse(self, source: str, filename: str = "<string>") -> CqlDocument:
         # Use the OQL parser for flat OQL files; some .oql examples contain
-        # ConnectGo/CQL syntax and must stay on the CQL parser path.
+        # Compatibility syntax must stay on the runtime document parser path.
         if filename.endswith('.oql'):
             from oqlos.core._oql_adapter import is_flat_oql, oql_doc_to_cql
             from oqlos.core.oql_parser import parse_oql
             if is_flat_oql(source):
                 oql_doc = parse_oql(source, filename)
                 return oql_doc_to_cql(oql_doc)
-        return parse_cql(source, filename)
+        return parse_oql_document(source, filename)
 
     def _print_header(self, doc: CqlDocument, name: str) -> None:
         """Print execution header with metadata."""
@@ -280,14 +280,14 @@ class CqlInterpreter(BaseInterpreter):
         return sr
 
     def execute(self, parsed: CqlDocument) -> ScriptResult:
-        """Execute CQL document through all phases: header, validate, execute, result."""
+        """Execute an OQL document through all phases: header, validate, execute, result."""
         doc = parsed
         t0 = time.monotonic()
         name = doc.metadata.scenario_name or doc.filename
 
         self._print_header(doc, name)
 
-        issues = validate_cql(doc)
+        issues = validate_oql_document(doc)
         self._collect_warnings(doc, issues)
 
         all_goals = self._collect_all_goals(doc)

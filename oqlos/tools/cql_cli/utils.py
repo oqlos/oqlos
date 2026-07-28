@@ -11,7 +11,7 @@ from pathlib import Path
 
 import yaml
 
-from oqlos.core.cql_parser import parse_cql
+from oqlos.core.oql_document import parse_oql_document
 from oqlos.hardware.firmware_adapter import _PERIPHERAL_MAP
 
 _PERIPHERAL_ADAPTERS = {
@@ -84,7 +84,7 @@ def build_single_command_scenario(command: str) -> str:
 def _extract_first_action(command: str):
     """Parse a one-line command and return its first action, if any."""
     try:
-        doc = parse_cql(build_single_command_scenario(command), "<cmd>")
+        doc = parse_oql_document(build_single_command_scenario(command), "<cmd>")
     except Exception:
         return None
 
