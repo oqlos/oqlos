@@ -15,7 +15,7 @@ CONFIG:
   SET 'hardware.configuration.actions' "{\"pump.off\":{\"alias\":\"pompa_glowna\",\"value\":0},\"valve.nc.on\":{\"alias\":\"zawor_nc\",\"value\":true}}"
   SET 'hardware.configuration.functions' "{\"sensors-adc\":{\"oql\":\"lib/diagnostics/sensors-adc\",\"status\":\"migrated\"}}"
   SET 'hardware.configuration.profiles' "{\"hui\":{\"holds\":{\"head-inflate\":{\"pump_pct\":70,\"valves_on\":[\"valve-5\",\"valve-2\"]}},\"lung\":{\"limit_mode\":\"reverse_on_limit\",\"start_direction\":\"right\",\"valve_id\":\"valve-4\"},\"valves\":{\"wc-press\":{\"value\":true,\"valve_id\":\"valve-wc\"}}}}"
-  SET 'hardware.configuration.runtime' "{\"motor2\":{\"defaultSpeedStepsPerSecond\":1000,\"maxStepsPerSecond\":1000,\"peripheralId\":\"motor-tic249\",\"startDirection\":\"right\",\"strokeSteps\":1000}}"
+  SET 'hardware.configuration.runtime' "{\"motor2\":{\"deenergizeOnStartup\":true,\"deenergizeOnStop\":true,\"defaultSpeedStepsPerSecond\":1000,\"idleState\":\"deenergized\",\"maxStepsPerSecond\":1000,\"peripheralId\":\"motor-tic249\",\"startDirection\":\"right\",\"strokeSteps\":1000}}"
   SET 'hardware.configuration.variables' "{\"pressureBand\":\"low\"}"
   SET 'hardware.configuration.policies' "{\"availability\":{\"degraded_mode\":\"read-only\",\"required_plugins\":[\"modbus-io\"]},\"retries\":{\"backoff\":\"exponential\",\"maximum_ms\":30000}}"
   SET 'hardware.configuration.secretRefs' "{\"mqttPassword\":{\"key\":\"OQLOS_OQL_MQTT_PASSWORD\",\"optional\":false,\"provider\":\"env\"}}"

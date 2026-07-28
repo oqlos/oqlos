@@ -341,12 +341,13 @@ class HardwareGateway:
             return False
 
     async def stop_lung(self) -> bool:
-        """Emergency stop the artificial lung motor."""
+        """Stop the artificial lung motor and release its coils."""
         if not self.is_real:
             logger.info("[HW mock] STOP_LUNG")
             return True
         try:
             await self._lung.stop()
+            await self._lung.energize(False)
             return True
         except Exception as exc:
             logger.error("HardwareGateway.stop_lung error: %s", exc)

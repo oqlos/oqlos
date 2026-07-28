@@ -204,6 +204,13 @@ class HardwareConfiguration(BaseModel):
             raise ValueError(
                 "runtime.motor2.limitMode must be stop_on_limit or reverse_on_limit"
             )
+        if motor2.get("idleState") not in {None, "deenergized", "holding"}:
+            raise ValueError(
+                "runtime.motor2.idleState must be deenergized or holding"
+            )
+        for field in ("deenergizeOnStop", "deenergizeOnStartup"):
+            if motor2.get(field) is not None and not isinstance(motor2[field], bool):
+                raise ValueError(f"runtime.motor2.{field} must be a boolean")
         return self
 
     def canonical_dict(self) -> dict[str, Any]:

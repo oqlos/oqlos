@@ -436,8 +436,8 @@ GOAL:
         monkeypatch.setattr(interpreter_actions, "_post_motor2_move_relative", fake_move_relative)
 
         src = """VERSION: 5
-GOAL:
-  SET NAME 'Short motor jog'
+TASK:
+  NAME 'Short motor jog'
   SET 'motor2' 'direction left'
   SET 'motor2' 'move 240 steps at 80 steps/s'
 """
@@ -462,6 +462,9 @@ GOAL:
                 "accelerationPercentPerSecond": 300,
                 "limitMode": "reverse on limit",
                 "startDirection": "left",
+                "idleState": "deenergized",
+                "deenergizeOnStop": True,
+                "deenergizeOnStartup": True,
             }
         )
 
@@ -478,6 +481,9 @@ GOAL:
         assert plan.acceleration_percent_per_second == 300
         assert plan.limit_mode == "reverse_on_limit"
         assert plan.direction == "left"
+        assert cfg.idle_state == "deenergized"
+        assert cfg.deenergize_on_stop is True
+        assert cfg.deenergize_on_startup is True
 
     def test_motor2_volume_duration_reciprocating_calculates_cycles_and_speed(self, monkeypatch):
         reciprocate_calls: list[dict[str, object]] = []
@@ -672,8 +678,8 @@ GOAL: Test goal
 
     def test_oql_val_evaluates_registered_min_max_thresholds(self):
         src = """VERSION: 5
-GOAL:
-  SET NAME 'Test goal'
+TASK:
+  NAME 'Test goal'
   MIN 'AI01' '-11.0 mbar'
   MAX 'AI01' '-9.0 mbar'
   VAL 'AI01' 'mbar'
@@ -687,8 +693,8 @@ GOAL:
 
     def test_oql_val_fails_when_registered_threshold_is_violated(self):
         src = """VERSION: 5
-GOAL:
-  SET NAME 'Test goal'
+TASK:
+  NAME 'Test goal'
   MIN 'AI01' '-11.0 mbar'
   MAX 'AI01' '-9.0 mbar'
   VAL 'AI01' 'mbar'
@@ -702,8 +708,8 @@ GOAL:
 
     def test_oql_val_fails_without_real_execute_value(self, monkeypatch):
         src = """VERSION: 5
-GOAL:
-  SET NAME 'Test goal'
+TASK:
+  NAME 'Test goal'
   MIN 'AI01' '-11.0 mbar'
   MAX 'AI01' '-9.0 mbar'
   VAL 'AI01' 'mbar'
@@ -720,8 +726,8 @@ GOAL:
         # VAL bez zarejestrowanego progu = zapis do protokołu. Brak odczytu w
         # execute nie może oblać celu (nie ma bramki) — tylko ostrzeżenie.
         src = """VERSION: 5
-GOAL:
-  SET NAME 'Test goal'
+TASK:
+  NAME 'Test goal'
   SET 'Operator' 'confirm'
   VAL 'operator.result'
 """
@@ -734,8 +740,8 @@ GOAL:
 
     def test_oql_val_dry_run_automocks_missing_named_param(self):
         src = """VERSION: 5
-GOAL:
-  SET NAME 'Test goal'
+TASK:
+  NAME 'Test goal'
   RANGE 'cisnienie' '4.0 mbar' .. '6.0 mbar'
   VAL 'cisnienie' 'mbar'
 """
@@ -747,8 +753,8 @@ GOAL:
 
     def test_oql_if_comparative_evaluates_in_execute(self):
         src = """VERSION: 5
-GOAL:
-  SET NAME 'Test goal'
+TASK:
+  NAME 'Test goal'
   IF 'cisnienie' > '1.5 bar'
 """
         interp = CqlInterpreter(mode="execute", quiet=True, sensor_values={"cisnienie": 2.0})
@@ -762,8 +768,8 @@ GOAL:
 
     def test_oql_if_missing_value_fails_in_execute(self, monkeypatch):
         src = """VERSION: 5
-GOAL:
-  SET NAME 'Test goal'
+TASK:
+  NAME 'Test goal'
   IF 'cisnienie' > '1.5 bar'
 """
         interp = CqlInterpreter(mode="execute", quiet=True)
@@ -777,8 +783,8 @@ GOAL:
         # Próg na parametrze, którego żaden VAL nie odczytał: w execute odroczona
         # ewaluacja na końcu GOAL-a nie znajduje realnej wartości → twardy błąd.
         src = """VERSION: 5
-GOAL:
-  SET NAME 'Test goal'
+TASK:
+  NAME 'Test goal'
   RANGE 'srednia' '95 mbar' .. '105 mbar'
   VAL 'inny_param' 'mbar'
 """
@@ -793,8 +799,8 @@ GOAL:
         # W dry-run odroczona ewaluacja automockuje brakującą wartość do środka
         # zakresu — scenarusz deweloperski przechodzi bez sprzętu.
         src = """VERSION: 5
-GOAL:
-  SET NAME 'Test goal'
+TASK:
+  NAME 'Test goal'
   RANGE 'srednia' '95 mbar' .. '105 mbar'
   VAL 'inny_param' 'mbar'
 """
@@ -806,12 +812,12 @@ GOAL:
 
     def test_oql_thresholds_do_not_leak_between_goals(self):
         src = """VERSION: 5
-GOAL:
-  SET NAME 'Pierwszy'
+TASK:
+  NAME 'Pierwszy'
   RANGE 'p1' '1 mbar' .. '2 mbar'
   VAL 'p1' 'mbar'
-GOAL:
-  SET NAME 'Drugi'
+TASK:
+  NAME 'Drugi'
   VAL 'p1' 'mbar'
 """
         interp = CqlInterpreter(mode="dry-run", quiet=True)
@@ -820,8 +826,8 @@ GOAL:
 
     def test_oql_parse_errors_fail_run(self):
         src = """VERSION: 5
-GOAL:
-  SET NAME 'Test goal'
+TASK:
+  NAME 'Test goal'
   NIEZNANA_KOMENDA 'x'
 """
         interp = CqlInterpreter(mode="dry-run", quiet=True)

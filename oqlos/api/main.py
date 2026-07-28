@@ -208,6 +208,12 @@ async def _app_lifespan(_: FastAPI):
                 summary.get("failed"),
                 summary.get("disabled"),
             )
+        if hasattr(hardware, "enforce_motor2_startup_idle_state"):
+            idle_ok = await hardware.enforce_motor2_startup_idle_state()
+            if idle_ok:
+                logger.info("Tic249 startup idle policy applied: deenergized")
+            else:
+                logger.error("Tic249 startup idle policy failed: motor may remain energized")
         try:
             from oqlos.hardware.startup_diagnostics import run_startup_diagnostics_and_repair
 

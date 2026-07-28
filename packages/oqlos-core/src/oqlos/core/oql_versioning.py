@@ -13,10 +13,16 @@ import re
 OQL_VERSION_LEGACY = 3
 #: First version with flat named-goal rules (``GOAL:`` + ``SET NAME``).
 OQL_VERSION_V4 = 4
-OQL_VERSION_CURRENT = 5
+#: First canonical dialect using ``TASK:``, bare ``NAME``, ``TIMER`` and
+#: ``PROMPT`` while retaining a single runnable-block role.
+OQL_VERSION_V5 = 5
+#: First dialect separating operational ``TASK:`` blocks from reportable
+#: validation ``TEST_STEP:`` blocks.
+OQL_VERSION_CURRENT = 6
 SUPPORTED_OQL_VERSIONS: tuple[int, ...] = (
     OQL_VERSION_LEGACY,
     OQL_VERSION_V4,
+    OQL_VERSION_V5,
     OQL_VERSION_CURRENT,
 )
 

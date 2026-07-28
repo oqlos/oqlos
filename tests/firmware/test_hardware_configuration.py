@@ -74,6 +74,19 @@ def test_motor2_runtime_constraints_are_identical_in_every_format(format: str) -
         parse_hardware_configuration(content, format)
 
 
+def test_motor2_idle_policy_is_explicit_and_type_checked() -> None:
+    config = load_hardware_configuration(FIXTURES / "boardnet.oql", allow_legacy=False)
+
+    assert config.runtime["motor2"]["idleState"] == "deenergized"
+    assert config.runtime["motor2"]["deenergizeOnStop"] is True
+    assert config.runtime["motor2"]["deenergizeOnStartup"] is True
+
+    invalid = config.canonical_dict()
+    invalid["runtime"]["motor2"]["deenergizeOnStop"] = "true"
+    with pytest.raises(HardwareConfigurationError, match="deenergizeOnStop must be a boolean"):
+        parse_hardware_configuration(json.dumps(invalid), "json")
+
+
 def test_inline_secret_is_rejected_but_reference_is_allowed() -> None:
     with pytest.raises(HardwareConfigurationError, match="inline secret"):
         parse_hardware_configuration(

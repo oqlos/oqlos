@@ -56,6 +56,7 @@ class PluginHardwareGateway:
         self.mode = mode or settings.hardware_mode.lower()
         self._plugins: dict[str, Any] = {}
         self._plugin_configs: dict[str, PluginConfig] = {}
+        self._motor2_runtime: dict[str, Any] = {}
 
         self._init_done = False
         self._init_lock = asyncio.Lock()
@@ -75,6 +76,11 @@ class PluginHardwareGateway:
         """Load unified plugin config from YAML (connection + peripherals)."""
         try:
             selected_path = resolve_oqlos_config_path(config_path)
+            from oqlos.hardware.configuration import load_hardware_configuration
+
+            document = load_hardware_configuration(selected_path, allow_legacy=True)
+            motor2 = document.runtime.get("motor2")
+            self._motor2_runtime = dict(motor2) if isinstance(motor2, dict) else {}
             loaded = PluginRegistry.load_configs(selected_path)
             self._plugin_configs.update(loaded)
             self._apply_env_overrides()
@@ -652,13 +658,19 @@ class PluginHardwareGateway:
             return False
 
     async def stop_lung(self) -> bool:
-        """Emergency stop the artificial lung motor using lung plugin."""
-        return await self._execute_lung_bool_command(
+        """Stop motion and release Tic249 coils according to the motor2 idle policy."""
+        stopped = await self._execute_lung_bool_command(
             "stop",
             {},
             mock_label="STOP_LUNG",
             error_context="stop_lung",
         )
+        if not self.motor2_deenergize_on_stop:
+            return stopped
+        # Always attempt coil release, even when STOP itself reports failure.
+        # Cutting holding current is the safer final state for this mechanism.
+        deenergized = await self.disable_lung()
+        return stopped and deenergized
 
     async def disable_lung(self) -> bool:
         """De-energize the artificial lung motor (release coils) using lung plugin."""
@@ -668,6 +680,36 @@ class PluginHardwareGateway:
             mock_label="DISABLE_LUNG",
             error_context="disable_lung",
         )
+
+    @staticmethod
+    def _runtime_bool(value: Any, default: bool) -> bool:
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, str):
+            normalized = value.strip().lower()
+            if normalized in {"1", "true", "yes", "on"}:
+                return True
+            if normalized in {"0", "false", "no", "off"}:
+                return False
+        return default
+
+    @property
+    def motor2_deenergize_on_stop(self) -> bool:
+        idle_state = str(self._motor2_runtime.get("idleState") or "deenergized").strip().lower()
+        default = idle_state == "deenergized"
+        return self._runtime_bool(self._motor2_runtime.get("deenergizeOnStop"), default)
+
+    @property
+    def motor2_deenergize_on_startup(self) -> bool:
+        idle_state = str(self._motor2_runtime.get("idleState") or "deenergized").strip().lower()
+        default = idle_state == "deenergized"
+        return self._runtime_bool(self._motor2_runtime.get("deenergizeOnStartup"), default)
+
+    async def enforce_motor2_startup_idle_state(self) -> bool:
+        """Release Tic249 coils at runtime startup when configured for deenergized idle."""
+        if not self.motor2_deenergize_on_startup:
+            return True
+        return await self.disable_lung()
 
     async def reload_configs(self, config_path: str | None = None) -> dict[str, Any]:
         """
@@ -683,6 +725,11 @@ class PluginHardwareGateway:
         except Exception as exc:
             return {"success": False, "error": str(exc)}
         try:
+            from oqlos.hardware.configuration import load_hardware_configuration
+
+            document = load_hardware_configuration(path, allow_legacy=True)
+            motor2 = document.runtime.get("motor2")
+            self._motor2_runtime = dict(motor2) if isinstance(motor2, dict) else {}
             new_configs = PluginRegistry.load_configs(path)
         except Exception as exc:
             logger.error("reload_configs failed: %s", exc)

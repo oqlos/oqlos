@@ -28,6 +28,22 @@ rejected. `runtime.motor2`, for example, enforces positive stroke/speed values,
 default speed not exceeding maximum speed, valid direction/limit mode and
 bounded acceleration.
 
+For the Tic249 artificial-lung drive, idle behavior is explicit:
+
+```yaml
+runtime:
+  motor2:
+    idleState: deenergized
+    deenergizeOnStop: true
+    deenergizeOnStartup: true
+```
+
+`deenergized` is the normal policy for a motor mechanism that does not require
+holding torque. A STOP first halts motion and then sends `energize=false`; OqlOS
+also releases the coils during startup. Use `idleState: holding` with both
+flags disabled only for a mechanism whose safety analysis explicitly requires
+holding torque while stationary.
+
 ## Files and precedence
 
 OqlOS resolves `OQLOS_CONFIG_PATH` first and otherwise searches the supported

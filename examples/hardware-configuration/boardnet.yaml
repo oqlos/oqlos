@@ -75,6 +75,9 @@ runtime:
     maxStepsPerSecond: 1000
     defaultSpeedStepsPerSecond: 1000
     startDirection: right
+    idleState: deenergized
+    deenergizeOnStop: true
+    deenergizeOnStartup: true
 variables:
   pressureBand: low
 policies:

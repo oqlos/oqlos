@@ -20,6 +20,9 @@ class Motor2RuntimeConfig:
     acceleration_unit: str = "%/s"
     limit_mode: str = "reverse_on_limit"
     start_direction: str = "left"
+    idle_state: str = "deenergized"
+    deenergize_on_stop: bool = True
+    deenergize_on_startup: bool = True
 
 
 @dataclass(frozen=True)
@@ -68,6 +71,17 @@ def _pick(source: dict[str, Any], *keys: str) -> Any:
     return None
 
 
+def _coerce_bool(value: Any, default: bool) -> bool:
+    if isinstance(value, bool):
+        return value
+    normalized = str(value or "").strip().lower()
+    if normalized in {"1", "true", "yes", "on"}:
+        return True
+    if normalized in {"0", "false", "no", "off"}:
+        return False
+    return default
+
+
 def motor2_max_steps_per_second(default: int = 1000) -> int:
     raw = os.getenv("OQLOS_TIC249_MAX_STEPS_PER_SECOND") or os.getenv("TIC249_MAX_STEPS_PER_SECOND")
     return _coerce_int(raw, default, minimum=1)
@@ -95,6 +109,10 @@ def normalize_motor2_runtime_config(source: dict[str, Any] | None = None) -> Mot
     limit_mode = str(_pick(src, "limitMode", "limit_mode") or "reverse_on_limit").strip().lower()
     if limit_mode in {"reverse on limit", "reverse-at-limit", "reverse at limit"}:
         limit_mode = "reverse_on_limit"
+    idle_state = str(_pick(src, "idleState", "idle_state") or "deenergized").strip().lower()
+    if idle_state not in {"deenergized", "holding"}:
+        idle_state = "deenergized"
+    idle_default = idle_state == "deenergized"
     return Motor2RuntimeConfig(
         peripheral_id=str(_pick(src, "peripheralId", "peripheral_id") or "motor-tic249"),
         stroke_steps=_coerce_int(_pick(src, "strokeSteps", "stroke_steps"), 1000),
@@ -106,6 +124,13 @@ def normalize_motor2_runtime_config(source: dict[str, Any] | None = None) -> Mot
         acceleration_unit=str(_pick(src, "accelerationUnit", "acceleration_unit") or "%/s"),
         limit_mode=limit_mode,
         start_direction=start_direction,
+        idle_state=idle_state,
+        deenergize_on_stop=_coerce_bool(
+            _pick(src, "deenergizeOnStop", "deenergize_on_stop"), idle_default
+        ),
+        deenergize_on_startup=_coerce_bool(
+            _pick(src, "deenergizeOnStartup", "deenergize_on_startup"), idle_default
+        ),
     )
 
 

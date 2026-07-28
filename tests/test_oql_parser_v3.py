@@ -721,15 +721,21 @@ def test_adapter_lowers_legacy_commands_preserving_raw():
 # ── OQL v5: RANGE / PASS / FAIL + wersjonowanie ───────────────────
 
 
-def test_version_constants_v5():
+def test_version_constants_v6():
     from oqlos.core.oql_versioning import (
         OQL_VERSION_LEGACY,
         OQL_VERSION_V4,
+        OQL_VERSION_V5,
         SUPPORTED_OQL_VERSIONS,
     )
 
-    assert OQL_VERSION_CURRENT == 5
-    assert SUPPORTED_OQL_VERSIONS == (OQL_VERSION_LEGACY, OQL_VERSION_V4, OQL_VERSION_CURRENT)
+    assert OQL_VERSION_CURRENT == 6
+    assert SUPPORTED_OQL_VERSIONS == (
+        OQL_VERSION_LEGACY,
+        OQL_VERSION_V4,
+        OQL_VERSION_V5,
+        OQL_VERSION_CURRENT,
+    )
 
 
 def test_parse_version5_accepted():
@@ -1223,3 +1229,84 @@ def test_semantic_checks_accept_balanced_sample_and_initialized_func():
         for warning in doc.warnings
         for marker in ("START bez STOP", "przed inicjalizacją", "±999999")
     )
+
+
+# ── OQL v6: TASK operations vs TEST_STEP validation ─────────────
+
+
+V6_TEST_STEP_SRC = textwrap.dedent(
+    """
+    VERSION: 6
+    TEST_STEP:
+      NAME 'Próba szczelności'
+      TIMER '60 s'
+      MIN 'PI1' '-10.1 mbar'
+      MAX 'PI1' '-10.1 mbar'
+      VAL 'PI1' 'mbar'
+      PASS 'PI1' 'Po 60 sekundach ciśnienie nie przekracza -9.0 mbar'
+      FAIL 'PI1' 'Po 60 sekundach ciśnienie przekracza -9.0 mbar'
+    """
+)
+
+
+def test_v6_test_step_is_runnable_and_preserves_source_role():
+    doc = parse_oql(V6_TEST_STEP_SRC)
+
+    assert not doc.errors
+    assert doc.oql_version == 6
+    assert doc.goals()[0].type == "GOAL"
+    assert doc.goals()[0].source_type == "TEST_STEP"
+    assert is_flat_oql(V6_TEST_STEP_SRC)
+    assert not parse_flat_oql(V6_TEST_STEP_SRC).errors
+
+
+def test_v6_task_remains_for_operations_without_expectations():
+    doc = parse_oql(
+        "VERSION: 6\nTASK:\n  NAME 'Przygotowanie'\n  SET 'pump' 1\n  TIMER '1 s'\n"
+    )
+
+    assert not doc.errors
+    assert doc.goals()[0].source_type == "TASK"
+
+
+def test_v6_task_with_validation_commands_requires_test_step():
+    doc = parse_oql(
+        "VERSION: 6\nTASK:\n  NAME 'Pomiar'\n  MAX 'PI1' '-9 mbar'\n"
+    )
+
+    assert any("użyj TEST_STEP" in error for error in doc.errors)
+
+
+def test_v5_task_with_validation_commands_remains_compatible():
+    doc = parse_oql(
+        "VERSION: 5\nTASK:\n  NAME 'Pomiar'\n  MAX 'PI1' '-9 mbar'\n"
+    )
+
+    assert not doc.errors
+
+
+def test_v6_legacy_test_header_is_forbidden():
+    doc = parse_oql("VERSION: 6\nTEST:\n  NAME 'Pomiar'\n")
+
+    assert any("TEST w VERSION: 6 jest składnią legacy" in error for error in doc.errors)
+    assert any("TEST_STEP" in error for error in doc.errors)
+
+
+def test_v6_test_step_requires_name_criteria_observation_and_verdict_pair():
+    doc = parse_oql("VERSION: 6\nTEST_STEP:\n  PASS 'OK'\n")
+
+    errors = "\n".join(doc.errors)
+    assert "TEST_STEP w VERSION: 6 wymaga 'NAME ...'" in errors
+    assert "TEST_STEP wymaga kryterium" in errors
+    assert "TEST_STEP wymaga odczytu VAL lub GET" in errors
+    assert "TEST_STEP wymaga pary werdyktów PASS i FAIL" in errors
+
+
+def test_v6_test_step_rejects_wildcard_val_unit():
+    doc = parse_oql(
+        "VERSION: 6\nTEST_STEP:\n  NAME 'Pomiar'\n"
+        "  MAX 'PI1' '-9 mbar'\n  VAL 'PI1' '* mbar'\n"
+        "  PASS 'OK'\n  FAIL 'NOK'\n"
+    )
+
+    assert any("nie '*'" in error for error in doc.errors)

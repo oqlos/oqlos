@@ -102,3 +102,6 @@ runtime:
     accelerationUnit: "%/s"
     limitMode: reverse_on_limit
     startDirection: right
+    idleState: deenergized
+    deenergizeOnStop: true
+    deenergizeOnStartup: true

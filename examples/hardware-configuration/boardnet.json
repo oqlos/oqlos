@@ -170,7 +170,10 @@
   },
   "runtime": {
     "motor2": {
+      "deenergizeOnStartup": true,
+      "deenergizeOnStop": true,
       "defaultSpeedStepsPerSecond": 1000,
+      "idleState": "deenergized",
       "maxStepsPerSecond": 1000,
       "peripheralId": "motor-tic249",
       "startDirection": "right",

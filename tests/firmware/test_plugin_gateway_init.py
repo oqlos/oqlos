@@ -114,3 +114,60 @@ def test_apply_modbus_user_settings_reconnects_selected_plugin(monkeypatch) -> N
     disconnect.assert_awaited_once_with("modbus-io")
     connect.assert_awaited_once()
     assert gateway._plugins["modbus-io"] is instance
+
+
+def test_stop_lung_releases_coils_for_deenergized_idle(monkeypatch) -> None:
+    gateway = PluginHardwareGateway(mode="mock")
+    gateway.mode = "real"
+    gateway._motor2_runtime = {
+        "idleState": "deenergized",
+        "deenergizeOnStop": True,
+    }
+    calls: list[tuple[str, dict]] = []
+
+    async def _execute(command: str, params: dict, **_kwargs) -> bool:
+        calls.append((command, params))
+        return True
+
+    monkeypatch.setattr(gateway, "_execute_lung_bool_command", _execute)
+
+    result = asyncio.run(gateway.stop_lung())
+
+    assert result is True
+    assert calls == [("stop", {}), ("energize", {"enable": False})]
+
+
+def test_stop_lung_can_preserve_holding_current_when_explicitly_configured(monkeypatch) -> None:
+    gateway = PluginHardwareGateway(mode="mock")
+    gateway.mode = "real"
+    gateway._motor2_runtime = {
+        "idleState": "holding",
+        "deenergizeOnStop": False,
+    }
+    calls: list[tuple[str, dict]] = []
+
+    async def _execute(command: str, params: dict, **_kwargs) -> bool:
+        calls.append((command, params))
+        return True
+
+    monkeypatch.setattr(gateway, "_execute_lung_bool_command", _execute)
+
+    result = asyncio.run(gateway.stop_lung())
+
+    assert result is True
+    assert calls == [("stop", {})]
+
+
+def test_startup_idle_policy_deenergizes_tic249(monkeypatch) -> None:
+    gateway = PluginHardwareGateway(mode="mock")
+    gateway._motor2_runtime = {
+        "idleState": "deenergized",
+        "deenergizeOnStartup": True,
+    }
+    disable = AsyncMock(return_value=True)
+    monkeypatch.setattr(gateway, "disable_lung", disable)
+
+    result = asyncio.run(gateway.enforce_motor2_startup_idle_state())
+
+    assert result is True
+    disable.assert_awaited_once_with()

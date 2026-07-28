@@ -1,6 +1,45 @@
-# OQL Language Specification (v3–v5)
+# OQL Language Specification (v3–v6)
 
-## Kanoniczna składnia OQL v5
+## Kanoniczna składnia OQL v6
+
+Wersja 6 rozdziela operacje procedury od mierzonej, raportowanej walidacji:
+
+- `TASK:` służy do przygotowania, sterowania urządzeniem i innych operacji,
+  które same nie tworzą wyniku PASS/FAIL.
+- `TEST_STEP:` służy do walidacji. Zawiera `NAME`, kryterium
+  (`MIN`/`MAX`/`RANGE`/`CHECK`/`IF`), odczyt (`VAL` lub `GET`) oraz oba
+  komunikaty `PASS` i `FAIL`.
+- `TEST:` jest składnią legacy i nie jest dozwolony w `VERSION: 6`.
+- `VAL` podaje rzeczywistą jednostkę, np. `VAL 'PI1' 'mbar'`; zapis
+  `VAL 'PI1' '* mbar'` jest błędem.
+
+```oql
+VERSION: 6
+SCENARIO: Test szczelności maski
+
+TASK:
+  NAME 'Przygotowanie stanowiska'
+  SET 'PUMP' 'off'
+  SET 'zawór 2' '1'
+
+TEST_STEP:
+  NAME 'Szczelność po 60 sekundach'
+  TIMER '60 s'
+  MAX 'PI1' '-9.0 mbar'
+  VAL 'PI1' 'mbar'
+  PASS 'PI1' 'Po 60 sekundach ciśnienie nie przekracza -9.0 mbar'
+  FAIL 'PI1' 'Po 60 sekundach ciśnienie przekracza -9.0 mbar'
+```
+
+Wewnętrzny AST Pythona nadal normalizuje oba wykonywalne nagłówki do `GOAL`,
+aby zachować kompatybilność runtime, lecz pole `source_type` zachowuje rolę
+`TASK` albo `TEST_STEP`. AST TypeScript zachowuje tę rolę w polu `type`.
+
+Dokumenty `VERSION: 5` pozostają zgodne wstecznie: ich blok `TASK:` może nadal
+łączyć operacje i walidację. Migrator v5→v6 zmienia na `TEST_STEP:` tylko bloki
+zawierające oczekiwania lub werdykty.
+
+## Kanoniczna składnia OQL v5 (zgodność wsteczna)
 
 Wersja 5 porządkuje słowa o nakładających się znaczeniach. Nowe pliki muszą
 używać poniższego modelu:
@@ -294,8 +333,7 @@ scenariuszy. Pliki v1/v2 działają na starej ścieżce parsera (deprecated).
 
 ## Dodatek: OQL v4 — komendy zgodności legacy-CQL (2026-07-10)
 
-`OQL_VERSION_CURRENT = 4` (`oqlos/core/oql_versioning.py`). Od 2026-07-10
-gramatyka flat OQL zawiera komendy zgodności wprowadzone przy konwersji
+OQL v4 od 2026-07-10 zawiera komendy zgodności wprowadzone przy konwersji
 scenariuszy legacy CQL z c2004 (commit 8895cbe; testy `tests/test_oql_parser_v3.py`):
 
 | Komenda | Składnia | Uwagi |
@@ -320,9 +358,9 @@ w c2004: `docs/GLOSSARY.md`.
 
 ## OQL v5 — deklaratywne warunki (2026-07-10)
 
-`OQL_VERSION_CURRENT = 5` (`oqlos/core/oql_versioning.py`);
-obsługiwane wersje: 3 (legacy), 4, 5. Dokumenty `VERSION: 4` parsują dalej
-bez zmian zachowania (co najwyżej raportowane jako „nie-current").
+OQL v5 pozostaje obsługiwaną wersją zgodności. Aktualnie obsługiwane są wersje:
+3 (legacy), 4, 5 i 6. Dokumenty `VERSION: 4` oraz `VERSION: 5` parsują dalej
+bez zmian zachowania.
 
 ### Filozofia
 

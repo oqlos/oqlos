@@ -1,11 +1,12 @@
 """
-OQL parser (v3 + v4 + v5 compatibility) — flat, quote-free syntax.
+OQL parser (v3–v6 compatibility) — flat, quote-free syntax.
 
 Design (see docs/oql-spec.md):
   * 12 base commands:
       SET, GET (alias READ), WAIT, SAVE, CHECK, MIN, MAX,
       SAMPLE, LOG, ERROR, CALL, INCLUDE
-  * Canonical v5 block headers: ``TASK:``, ``CONFIG:``, ``MACRO:``
+  * Canonical v6 runnable block headers: ``TASK:`` and ``TEST_STEP:``.
+    Canonical v5 block headers remain ``TASK:``, ``CONFIG:``, ``MACRO:``
     (``GOAL`` remains a v3/v4 compatibility spelling).
   * Metadata header lines: ``SCENARIO: ...``, ``DEVICE: ...``, ``DESCRIPTION: ...``
     (uppercase key before colon, free text after).
@@ -29,6 +30,7 @@ from typing import Optional
 from .oql_versioning import (
     OQL_VERSION_LEGACY,
     OQL_VERSION_V4,
+    OQL_VERSION_V5,
     OQL_VERSION_CURRENT,
     SUPPORTED_OQL_VERSIONS,
     resolve_oql_version,
@@ -42,10 +44,10 @@ NUM = r"-?\d+(?:[.,]\d+)?"
 #: Duration: number optionally glued to a time unit (``3s``, ``500ms``, ``3000``).
 DUR_RE = re.compile(rf"^({NUM})(ms|s|m|h)?$")
 
-#: Header of a block. ``TASK:`` is the canonical v5 runnable block;
-#: ``GOAL`` and ``TEST`` are accepted compatibility spellings and runnable
-#: blocks are normalized to the internal GOAL representation.
-BLOCK_RE = re.compile(r"^(GOAL|TASK|TEST|CONFIG|HARDWARE|EVENT|MACRO|FUNC)(?:\s+(.+?))?:\s*$", re.IGNORECASE)
+#: Header of a block. ``TASK:`` and ``TEST_STEP:`` are the canonical v6
+#: runnable blocks; all runnable blocks are normalized to the internal GOAL
+#: representation retained by adapters and interpreters.
+BLOCK_RE = re.compile(r"^(GOAL|TASK|TEST|TEST_STEP|CONFIG|HARDWARE|EVENT|MACRO|FUNC)(?:\s+(.+?))?:\s*$", re.IGNORECASE)
 
 #: Forma zgodności c2004: ``FUNC: nazwa`` (nazwa PO dwukropku, jak we frontendzie
 #: ``parseOqlToSteps._startFunc``). Rozpoznawana jako nagłówek bloku FUNC, nie
@@ -124,7 +126,7 @@ class OqlCmd:
 
 @dataclass
 class OqlBlock:
-    """A named block: runnable ``TASK`` (internal ``GOAL``), ``CONFIG``, or ``MACRO``.
+    """A named block: runnable block (internal ``GOAL``), ``CONFIG``, or ``MACRO``.
 
     MACRO blocks store their body as raw command lines in
     :pyattr:`raw_cmds` because the body may reference ``$1``…``$N``
@@ -136,6 +138,9 @@ class OqlBlock:
     cmds: list[OqlCmd] = field(default_factory=list)
     raw_cmds: list[tuple[int, str]] = field(default_factory=list)
     line: int = 0
+    # Original source spelling. Runtime-facing ``type`` intentionally remains
+    # GOAL for TASK/TEST/TEST_STEP backward compatibility.
+    source_type: str = ""
 
 
 @dataclass
@@ -900,7 +905,7 @@ def _handle_top_level_line(
         key_raw = meta.group(1)
         key = key_raw.upper()
         doc.meta[key_raw.lower()] = meta.group(2).strip().strip("'\"")
-        if doc.oql_version >= OQL_VERSION_CURRENT and key_raw != key:
+        if doc.oql_version >= OQL_VERSION_V5 and key_raw != key:
             doc.errors.append(
                 f"Linia {ln}: metadane {key_raw!r} w VERSION: {doc.oql_version} "
                 f"wymagają wielkich liter; użyj '{key}:'"
@@ -923,7 +928,7 @@ def _handle_block_header(
         if func_inline:
             # ``FUNC: nazwa`` — parytet z frontendem c2004: pusty/nazwany blok FUNC.
             name = func_inline.group(1).strip().strip("'\"")
-            new_block = OqlBlock(type="FUNC", name=name, line=ln)
+            new_block = OqlBlock(type="FUNC", name=name, line=ln, source_type="FUNC")
             doc.blocks.append(new_block)
             return new_block
         return None
@@ -939,28 +944,37 @@ def _handle_block_header(
                 f"Linia {ln}: EVENT wymaga nazwy, np. EVENT 'frontend.ready':"
             )
     if (
-        version_info.effective >= OQL_VERSION_CURRENT
+        version_info.effective >= OQL_VERSION_V5
         and source_block_type in {"GOAL", "TEST"}
     ):
+        if version_info.effective >= OQL_VERSION_CURRENT:
+            replacement = "TASK: albo TEST_STEP:"
+        else:
+            replacement = "TASK:"
         suffix = " i nazwę przez NAME '...'" if name else ""
         doc.errors.append(
             f"Linia {ln}: {source_block_type} w VERSION: {version_info.effective} jest składnią legacy; "
-            f"użyj TASK:{suffix}"
+            f"użyj {replacement}{suffix}"
         )
     elif (
         version_info.effective >= OQL_VERSION_V4
-        and source_block_type in {"GOAL", "TASK", "TEST"}
+        and source_block_type in {"GOAL", "TASK", "TEST", "TEST_STEP"}
         and name
     ):
         doc.errors.append(
             f"Linia {ln}: w VERSION: {version_info.effective} "
             f"użyj '{source_block_type}:' i nazwy przez 'NAME ...'"
         )
-    if source_block_type in {"TASK", "TEST"}:
-        # Runnable v5 blocks share the legacy GOAL representation expected by
+    if source_block_type in {"TASK", "TEST", "TEST_STEP"}:
+        # Runnable blocks share the legacy GOAL representation expected by
         # adapters and interpreters.
         block_type = "GOAL"
-    new_block = OqlBlock(type=block_type, name=name, line=ln)
+    new_block = OqlBlock(
+        type=block_type,
+        name=name,
+        line=ln,
+        source_type=source_block_type,
+    )
     doc.blocks.append(new_block)
     return new_block
 
@@ -1003,7 +1017,7 @@ def _handle_set_name(line: str, current: "OqlBlock") -> bool:
 def _validate_canonical_name_syntax(doc: "OqlDoc", line: str, ln: int) -> None:
     """Require bare NAME in v5 while retaining the v3/v4 parser alias."""
     match = re.match(r"^SET\s+NAME(?:\s+(.*))?$", line, re.IGNORECASE)
-    if doc.oql_version < OQL_VERSION_CURRENT or not match:
+    if doc.oql_version < OQL_VERSION_V5 or not match:
         return
     value = (match.group(1) or "'<nazwa>'").strip()
     doc.errors.append(
@@ -1044,7 +1058,7 @@ def _parse_and_append_command(
             and bool(tokens)
             and tokens[0].strip().upper() in _SET_DELAY_ALIASES
         )
-        if doc.oql_version >= OQL_VERSION_CURRENT and is_legacy_delay:
+        if doc.oql_version >= OQL_VERSION_V5 and is_legacy_delay:
             duration = " ".join(tokens[1:] if cmd == "SET" else tokens)
             suggestion = f"TIMER '{duration}'" if duration else "TIMER '<czas>'"
             legacy_spelling = (
@@ -1055,7 +1069,7 @@ def _parse_and_append_command(
                 f"użyj {suggestion}"
             )
         if (
-            doc.oql_version >= OQL_VERSION_CURRENT
+            doc.oql_version >= OQL_VERSION_V5
             and cmd == "TASK"
             and bool(tokens)
             and tokens[0].strip().upper() == "TITLE"
@@ -1118,9 +1132,10 @@ def _check_unnamed_goals(doc: "OqlDoc", version_info: object) -> None:
         return
     for block in doc.blocks:
         if block.type == "GOAL" and not block.name:
-            if version_info.effective >= OQL_VERSION_CURRENT:
+            if version_info.effective >= OQL_VERSION_V5:
+                source_type = block.source_type or "TASK"
                 doc.errors.append(
-                    f"Linia {block.line}: TASK w VERSION: {version_info.effective} "
+                    f"Linia {block.line}: {source_type} w VERSION: {version_info.effective} "
                     "wymaga 'NAME ...' jako pierwszej komendy"
                 )
             else:
@@ -1178,7 +1193,51 @@ def _constraint_numbers(cmd: OqlCmd) -> list[float]:
 
 
 def _validate_semantics(doc: OqlDoc) -> None:
-    """Add non-fatal warnings for flow errors that are valid syntax."""
+    """Validate v6 runnable roles and add non-fatal flow warnings."""
+    if doc.oql_version >= OQL_VERSION_CURRENT:
+        expectation_cmds = {
+            "MIN", "MAX", "RANGE", "CHECK", "IF", "IF_DELTA", "PASS", "FAIL"
+        }
+        criterion_cmds = {"MIN", "MAX", "RANGE", "CHECK", "IF", "IF_DELTA"}
+        observation_cmds = {"VAL", "GET"}
+
+        for block in doc.goals():
+            source_type = block.source_type or "TASK"
+            command_names = {cmd.cmd for cmd in block.cmds}
+            if source_type == "TASK" and command_names & expectation_cmds:
+                first = next(
+                    cmd for cmd in block.cmds if cmd.cmd in expectation_cmds
+                )
+                doc.errors.append(
+                    f"Linia {first.line}: TASK w VERSION: {doc.oql_version} zawiera oczekiwanie "
+                    f"{first.cmd}; użyj TEST_STEP: dla mierzonej, raportowanej walidacji"
+                )
+                continue
+            if source_type != "TEST_STEP":
+                continue
+
+            is_manual = "PROMPT" in command_names
+            if not (command_names & criterion_cmds) and not is_manual:
+                doc.errors.append(
+                    f"Linia {block.line}: TEST_STEP wymaga kryterium MIN/MAX/RANGE/CHECK/IF "
+                    "albo PROMPT dla oceny operatora"
+                )
+            if not (command_names & observation_cmds) and not is_manual:
+                doc.errors.append(
+                    f"Linia {block.line}: TEST_STEP wymaga odczytu VAL lub GET"
+                )
+            if "PASS" not in command_names or "FAIL" not in command_names:
+                doc.errors.append(
+                    f"Linia {block.line}: TEST_STEP wymaga pary werdyktów PASS i FAIL"
+                )
+            for cmd in block.cmds:
+                unit = str(cmd.args.get("unit") or "").strip()
+                if cmd.cmd == "VAL" and unit.startswith("*"):
+                    doc.errors.append(
+                        f"Linia {cmd.line}: VAL w VERSION: {doc.oql_version} wymaga rzeczywistej "
+                        "jednostki (np. 'mbar'), nie '*'"
+                    )
+
     commands = [cmd for block in doc.goals() for cmd in block.cmds]
     declared = {value for cmd in commands if (value := _produced_param(cmd))}
     produced: set[str] = set()
