@@ -157,26 +157,27 @@ GOAL: Demo
 
 
 class TestFlatOqlRuntime:
-    """Flat OQL (v3/v4/v5) parsed through the canonical parser (parse_cql)."""
+    """Flat OQL parsed through the canonical parser (parse_cql)."""
 
-    def test_flat_v5_goal_with_range_pass_fail(self):
-        dsl = """VERSION: 5
+    def test_flat_v6_test_step_with_range_pass_fail(self):
+        dsl = """VERSION: 6
 SCENARIO: Smoke
 
-GOAL:
-  SET NAME 'Test ciśnienia'
+TEST_STEP:
+  NAME 'Test ciśnienia'
   SET 'zawór 2' '1'
-  WAIT 500ms
+  TIMER 500ms
+  VAL 'ciśnienie NC' 'bar'
   RANGE 'ciśnienie NC' '0.5 bar' .. '2.0 bar'
   PASS 'Ciśnienie OK'
   FAIL 'Ciśnienie poza zakresem'
 """
 
-        goal, issues = parse_dsl_to_goal_with_issues(dsl, 'flat-v5')
+        goal, issues = parse_dsl_to_goal_with_issues(dsl, 'flat-v6')
 
         assert goal is not None
         assert goal.name == 'Test ciśnienia'
-        assert goal.id == 'goal-runtime-flat-v5'
+        assert goal.id == 'goal-runtime-flat-v6'
         assert issues == []
         assert [step.action for step in goal.steps] == [
             'SET_VALVE', 'WAIT', 'VALIDATE', 'VALIDATE',
@@ -206,13 +207,13 @@ GOAL test-zaworu:
         assert goal.steps[1].condition == 'nc-sensor.currentValue >= 0.3'
 
     def test_flat_multiple_goals_returns_first_with_issue(self):
-        dsl = """VERSION: 5
-GOAL:
-  SET NAME 'Pierwszy'
+        dsl = """VERSION: 6
+TASK:
+  NAME 'Pierwszy'
   SET 'zawór 2' '1'
 
-GOAL:
-  SET NAME 'Drugi'
+TASK:
+  NAME 'Drugi'
   SET 'zawór 2' '0'
 """
 
@@ -222,7 +223,7 @@ GOAL:
         assert goal.name == 'Pierwszy'
         assert len(goal.steps) == 1
         assert len(issues) == 1
-        assert '2 GOAL blocks' in issues[0]
+        assert '2 runnable blocks' in issues[0]
 
     def test_legacy_dialect_not_hijacked_by_flat_detector(self):
         dsl = """SCENARIO: Legacy guard

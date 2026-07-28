@@ -13,7 +13,11 @@ from ._line_parsers import (
     _parse_set_line,
     _parse_task_part,
 )
-from ._func_resolver import MAX_FUNC_DEPTH, _collect_function_definitions, _parse_func_call
+from ._func_resolver import (
+    MAX_FUNC_DEPTH as MAX_FUNC_DEPTH,
+    _collect_function_definitions,
+    _parse_func_call,
+)
 
 
 _REGEX_DISPATCH: list[tuple[re.Pattern[str], str]] = [
@@ -258,7 +262,7 @@ def _parse_flat_oql_to_goal(dsl: str, scenario_id: str) -> tuple[Goal | None, li
 
     if len(goals) > 1:
         issues.append(
-            f"flat OQL: {len(goals)} GOAL blocks; only the first "
+            f"flat OQL: {len(goals)} runnable blocks; only the first "
             f"('{goals[0].name}') was converted to a runtime goal"
         )
 
@@ -276,7 +280,7 @@ def parse_dsl_to_goal_with_issues(dsl: str, scenario_id: str) -> tuple[Goal | No
     if is_flat_oql(dsl):
         return _parse_flat_oql_to_goal(dsl, scenario_id)
 
-    raw_lines = [str(l).rstrip() for l in dsl.split('\n') if str(l).strip()]
+    raw_lines = [str(line).rstrip() for line in dsl.split('\n') if str(line).strip()]
     if not raw_lines:
         return None, []
 

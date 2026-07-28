@@ -1612,8 +1612,8 @@ requires-dist = [
     { name = "httpx", specifier = ">=0.25" },
     { name = "httpx", marker = "extra == 'dev'" },
     { name = "nfo", specifier = ">=0.2.3" },
-    { name = "oqlos-core", directory = "packages/oqlos-core" },
-    { name = "oqlos-models", directory = "packages/oqlos-models" },
+    { name = "oqlos-core", editable = "packages/oqlos-core" },
+    { name = "oqlos-models", editable = "packages/oqlos-models" },
     { name = "paho-mqtt", specifier = ">=1.6.1" },
     { name = "paho-mqtt", marker = "extra == 'dev'", specifier = ">=1.6.1" },
     { name = "pfix", specifier = ">=0.1.60" },
@@ -1641,7 +1641,7 @@ provides-extras = ["rpi", "server", "dev", "hardware-services"]
 [[package]]
 name = "oqlos-core"
 version = "0.2.2"
-source = { directory = "packages/oqlos-core" }
+source = { editable = "packages/oqlos-core" }
 dependencies = [
     { name = "httpx" },
     { name = "oqlos-models" },
@@ -1662,7 +1662,7 @@ provides-extras = ["firmware"]
 [[package]]
 name = "oqlos-models"
 version = "0.2.0"
-source = { directory = "packages/oqlos-models" }
+source = { editable = "packages/oqlos-models" }
 dependencies = [
     { name = "pydantic" },
 ]
