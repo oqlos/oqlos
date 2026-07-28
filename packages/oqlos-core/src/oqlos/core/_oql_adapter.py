@@ -17,6 +17,7 @@ The adapter also performs two lightweight transformations:
 
 from __future__ import annotations
 
+import os
 import re
 from pathlib import Path
 
@@ -51,12 +52,15 @@ def _fmt_value(value, unit) -> str:
 
 def _scenarios_root() -> Path:
     """Default search root for ``INCLUDE`` directives."""
+    override = os.environ.get("OQLOS_SCENARIOS_DIR")
+    if override:
+        return Path(override)
     here = Path(__file__).resolve()
     for parent in here.parents:
-        candidate = parent / "oql-scenario"
-        if candidate.is_dir():
-            return candidate
-    return here.parents[2] / "oql-scenario"
+        for candidate in (parent / "oql-scenario", parent.parent / "oql-scenario"):
+            if candidate.is_dir():
+                return candidate
+    return Path.home() / "oqlos" / "oql-scenario"
 
 
 def _resolve_include(path: str, base: Path | None) -> Path | None:

@@ -27,13 +27,13 @@ def _default_scenarios_dir() -> pathlib.Path:
     """Locate the repository ``oql-scenario/`` directory.
 
     Honours the ``OQLOS_SCENARIOS_DIR`` env var so deployments can point
-    at an external library, and falls back to ``<repo>/oql-scenario`` (one
-    level above the ``oqlos`` Python package).
+    at an external library, and falls back to the sibling
+    ``../oql-scenario`` checkout used in development.
     """
     override = os.environ.get("OQLOS_SCENARIOS_DIR")
     if override:
         return pathlib.Path(override)
-    return pathlib.Path(__file__).resolve().parents[2] / "oql-scenario"
+    return pathlib.Path(__file__).resolve().parents[3] / "oql-scenario"
 
 
 SCENARIOS_DIR = _default_scenarios_dir()

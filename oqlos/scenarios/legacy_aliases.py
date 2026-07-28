@@ -3,11 +3,15 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 
 def _repo_scenarios_dir() -> Path:
-    return Path(__file__).resolve().parents[2] / "oql-scenario"
+    override = os.environ.get("OQLOS_SCENARIOS_DIR")
+    if override:
+        return Path(override)
+    return Path(__file__).resolve().parents[3] / "oql-scenario"
 
 
 def _load_legacy_aliases() -> dict[str, str]:

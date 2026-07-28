@@ -1,11 +1,9 @@
 # OqlOS — Operation Query Language Runtime
 
-> **Submodule (wymagany po klonie/pullu):** `oql-scenario/` to submodule
-> prywatnego repo `oqlos/oql-scenario` (kanoniczny magazyn `.oql` współdzielony
-> z c2004). Po klonie: `git submodule update --init` (dostęp SSH do orga
-> `oqlos`). Bez tego `oqlctl run` nie znajdzie scenariuszy.
-> Deployments mogą zamiast checkoutu wskazać zewnętrzny clone przez
-> `OQLOS_SCENARIOS_DIR` albo konsumować magazyn przez jego REST API.
+> **Scenariusze:** jedynym źródłem `.oql` jest osobne repozytorium
+> `/home/tom/github/oqlos/oql-scenario`. Lokalnie OqlOS wykrywa ten katalog
+> jako repozytorium siostrzane. Deploy musi ustawić `OQLOS_SCENARIOS_DIR` albo
+> konsumować OQL Store przez REST API; OqlOS nie zawiera kopii korpusu.
 
 
 ## AI Cost Tracking
