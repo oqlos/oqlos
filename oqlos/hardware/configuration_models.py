@@ -1,15 +1,16 @@
-"""Canonical models and validation rules for hardware configuration."""
+"""Canonical models and validation rules for hardware-configuration-v1."""
 
 from __future__ import annotations
 
 import re
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 
 from oqlos.hardware.plugins.base import PluginConfig
 
 HARDWARE_CONFIGURATION_VERSION = "hardware-configuration-v1"
+SUPPORTED_HARDWARE_CONFIGURATION_FORMATS = ("oql", "yaml", "json")
 
 
 class HardwareConfigurationError(ValueError):
@@ -61,14 +62,7 @@ class HardwareProcess(BaseModel):
     retry_count: int = Field(default=0, ge=0)
 
 
-_SECRET_KEY = re.compile(
-    r"(?:^|_)(?:password|passwd|token|api_key|secret)(?:$|_)", re.I
-)
-_POSITIVE_INTEGER_FIELDS = (
-    "strokeSteps",
-    "maxStepsPerSecond",
-    "defaultSpeedStepsPerSecond",
-)
+_SECRET_KEY = re.compile(r"(?:^|_)(?:password|passwd|token|api_key|secret)(?:$|_)", re.I)
 
 
 def _reject_inline_secrets(value: Any, path: tuple[str, ...] = ()) -> None:
@@ -76,81 +70,76 @@ def _reject_inline_secrets(value: Any, path: tuple[str, ...] = ()) -> None:
         for key, child in value.items():
             child_path = (*path, str(key))
             if _SECRET_KEY.search(str(key)) and child not in (None, "", {}):
-                raise ValueError(
-                    f"inline secret at {'.'.join(child_path)}; use secretRefs instead"
-                )
+                raise ValueError(f"inline secret at {'.'.join(child_path)}; use secretRefs instead")
             _reject_inline_secrets(child, child_path)
     elif isinstance(value, list):
         for index, child in enumerate(value):
             _reject_inline_secrets(child, (*path, str(index)))
 
 
-def _validate_positive_integer(motor2: dict[str, Any], field: str) -> None:
+def _optional_positive_integer(motor2: dict[str, Any], field: str) -> int | None:
     value = motor2.get(field)
-    if value is not None and (
-        not isinstance(value, int) or isinstance(value, bool) or value < 1
-    ):
+    if value is None:
+        return None
+    if not isinstance(value, int) or isinstance(value, bool) or value < 1:
         raise ValueError(f"runtime.motor2.{field} must be an integer >= 1")
+    return value
 
 
-def _validate_speed_range(motor2: dict[str, Any]) -> None:
-    maximum = motor2.get("maxStepsPerSecond")
-    default = motor2.get("defaultSpeedStepsPerSecond")
-    if isinstance(maximum, int) and isinstance(default, int) and default > maximum:
-        raise ValueError(
-            "runtime.motor2.defaultSpeedStepsPerSecond must be <= maxStepsPerSecond"
-        )
+def _validate_motor2_speed(motor2: dict[str, Any]) -> None:
+    _optional_positive_integer(motor2, "strokeSteps")
+    maximum = _optional_positive_integer(motor2, "maxStepsPerSecond")
+    default = _optional_positive_integer(motor2, "defaultSpeedStepsPerSecond")
+    if maximum is not None and default is not None and default > maximum:
+        raise ValueError("runtime.motor2.defaultSpeedStepsPerSecond must be <= maxStepsPerSecond")
 
 
-def _validate_peripheral_id(motor2: dict[str, Any]) -> None:
-    value = motor2.get("peripheralId")
-    if value is not None and (not isinstance(value, str) or not value.strip()):
+def _validate_motor2_identity(motor2: dict[str, Any]) -> None:
+    peripheral_id = motor2.get("peripheralId")
+    if peripheral_id is not None and (
+        not isinstance(peripheral_id, str) or not peripheral_id.strip()
+    ):
         raise ValueError("runtime.motor2.peripheralId must be a non-empty string")
 
 
 def _validate_positive_number(motor2: dict[str, Any], field: str) -> None:
     value = motor2.get(field)
-    if value is not None and (
-        isinstance(value, bool) or not isinstance(value, (int, float)) or value <= 0
-    ):
+    if value is None:
+        return
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or value <= 0:
         raise ValueError(f"runtime.motor2.{field} must be a number > 0")
 
 
-def _validate_percentage(motor2: dict[str, Any], field: str) -> None:
-    value = motor2.get(field)
-    if value is not None and (
-        isinstance(value, bool)
-        or not isinstance(value, (int, float))
-        or not 0 < value <= 100
-    ):
-        raise ValueError(f"runtime.motor2.{field} must be in range (0, 100]")
+def _validate_motor2_acceleration(motor2: dict[str, Any]) -> None:
+    value = motor2.get("accelerationPercentPerSecond")
+    if value is None:
+        return
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or not 0 < value <= 100:
+        raise ValueError("runtime.motor2.accelerationPercentPerSecond must be in range (0, 100]")
 
 
-def _validate_choice(
-    motor2: dict[str, Any], field: str, choices: tuple[str, ...]
-) -> None:
-    if motor2.get(field) not in {None, *choices}:
-        rendered_choices = " or ".join(choices)
-        raise ValueError(f"runtime.motor2.{field} must be {rendered_choices}")
+def _validate_motor2_choices(motor2: dict[str, Any]) -> None:
+    if motor2.get("startDirection") not in {None, "left", "right"}:
+        raise ValueError("runtime.motor2.startDirection must be left or right")
+    if motor2.get("limitMode") not in {None, "stop_on_limit", "reverse_on_limit"}:
+        raise ValueError("runtime.motor2.limitMode must be stop_on_limit or reverse_on_limit")
+    if motor2.get("idleState") not in {None, "deenergized", "holding"}:
+        raise ValueError("runtime.motor2.idleState must be deenergized or holding")
+    for field in ("deenergizeOnStop", "deenergizeOnStartup"):
+        if motor2.get(field) is not None and not isinstance(motor2[field], bool):
+            raise ValueError(f"runtime.motor2.{field} must be a boolean")
 
 
-def _validate_boolean(motor2: dict[str, Any], field: str) -> None:
-    if motor2.get(field) is not None and not isinstance(motor2[field], bool):
-        raise ValueError(f"runtime.motor2.{field} must be a boolean")
-
-
-def _validate_motor2_runtime(motor2: dict[str, Any]) -> None:
-    for field in _POSITIVE_INTEGER_FIELDS:
-        _validate_positive_integer(motor2, field)
-    _validate_speed_range(motor2)
-    _validate_peripheral_id(motor2)
-    _validate_positive_number(motor2, "cycleVolumeLiters")
-    _validate_percentage(motor2, "accelerationPercentPerSecond")
-    _validate_choice(motor2, "startDirection", ("left", "right"))
-    _validate_choice(motor2, "limitMode", ("stop_on_limit", "reverse_on_limit"))
-    _validate_choice(motor2, "idleState", ("deenergized", "holding"))
-    _validate_boolean(motor2, "deenergizeOnStop")
-    _validate_boolean(motor2, "deenergizeOnStartup")
+def _validate_motor2_runtime(value: Any) -> None:
+    if value is None:
+        return
+    if not isinstance(value, dict):
+        raise ValueError("runtime.motor2 must be an object")
+    _validate_motor2_speed(value)
+    _validate_motor2_identity(value)
+    _validate_positive_number(value, "cycleVolumeLiters")
+    _validate_motor2_acceleration(value)
+    _validate_motor2_choices(value)
 
 
 class HardwareConfiguration(BaseModel):
@@ -174,9 +163,7 @@ class HardwareConfiguration(BaseModel):
     runtime: dict[str, Any] = Field(default_factory=dict)
     variables: dict[str, Any] = Field(default_factory=dict)
     policies: dict[str, Any] = Field(default_factory=dict)
-    secret_refs: dict[str, SecretReference] = Field(
-        default_factory=dict, alias="secretRefs"
-    )
+    secret_refs: dict[str, SecretReference] = Field(default_factory=dict, alias="secretRefs")
 
     @field_validator("plugins", mode="before")
     @classmethod
@@ -186,11 +173,7 @@ class HardwareConfiguration(BaseModel):
         if not isinstance(value, dict):
             return value
         return {
-            str(plugin_id): (
-                {"plugin_id": str(plugin_id), **data}
-                if isinstance(data, dict)
-                else data
-            )
+            str(plugin_id): ({"plugin_id": str(plugin_id), **data} if isinstance(data, dict) else data)
             for plugin_id, data in value.items()
         }
 
@@ -202,13 +185,19 @@ class HardwareConfiguration(BaseModel):
 
     @model_validator(mode="after")
     def _validate_runtime_contracts(self) -> "HardwareConfiguration":
-        motor2 = self.runtime.get("motor2")
-        if motor2 is None:
-            return self
-        if not isinstance(motor2, dict):
-            raise ValueError("runtime.motor2 must be an object")
-        _validate_motor2_runtime(motor2)
+        _validate_motor2_runtime(self.runtime.get("motor2"))
         return self
 
     def canonical_dict(self) -> dict[str, Any]:
         return self.model_dump(mode="json", by_alias=True, exclude_none=True)
+
+
+def validation_issues(exc: ValidationError) -> list[dict[str, Any]]:
+    return [
+        {
+            "field": ".".join(str(part) for part in error.get("loc", ())),
+            "message": error.get("msg", "invalid value"),
+            "type": error.get("type", "validation_error"),
+        }
+        for error in exc.errors(include_url=False)
+    ]

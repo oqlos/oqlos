@@ -25,11 +25,17 @@ def test_hardware_router_includes_runtime_paths():
             child_path = getattr(child, "path", None)
             if isinstance(child_path, str):
                 paths.add(child_path)
-    # Nested routers expose relative paths; prefix lives on include_context.
-    assert "/sensor/{sensor_id}" in paths
-    assert "/temperature" in paths
-    assert "/sensors/batch" in paths
-    assert "/diagnose" in paths
+    # FastAPI may flatten included routers into fully-prefixed routes. Compare
+    # their hardware-relative form so the assertion covers both representations.
+    hardware_prefix = "/api/v1/hardware"
+    relative_paths = {
+        path[len(hardware_prefix):] if path.startswith(hardware_prefix) else path
+        for path in paths
+    }
+    assert "/sensor/{sensor_id}" in relative_paths
+    assert "/temperature" in relative_paths
+    assert "/sensors/batch" in relative_paths
+    assert "/diagnose" in relative_paths
 
 
 def test_modbus_adc_unavailable_detects_incompatible_adc():

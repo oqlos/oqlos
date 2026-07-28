@@ -87,7 +87,7 @@ class Settings(BaseSettings):
         ),
     )
     modbus_adc_baud: int = Field(
-        default=9600,
+        default=4800,
         validation_alias=AliasChoices(
             "OQLOS_MODBUS_ADC_BAUD",
             "MODBUS_ADC_BAUD",
@@ -155,6 +155,26 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("OQLOS_USB_ADC_TIMEOUT_SECONDS", "USB_ADC_TIMEOUT_SECONDS"),
         ge=0.05,
         le=10.0,
+    )
+    usb_adc_sample_interval_seconds: float = Field(
+        default=0.1,
+        validation_alias=AliasChoices(
+            "OQLOS_USB_ADC_SAMPLE_INTERVAL_SECONDS",
+            "USB_ADC_SAMPLE_INTERVAL_SECONDS",
+        ),
+        ge=0.05,
+        le=5.0,
+        description="Target interval for refreshing the USB ADC sample cache",
+    )
+    usb_adc_max_stale_seconds: float = Field(
+        default=1.0,
+        validation_alias=AliasChoices(
+            "OQLOS_USB_ADC_MAX_STALE_SECONDS",
+            "USB_ADC_MAX_STALE_SECONDS",
+        ),
+        ge=0.1,
+        le=30.0,
+        description="Maximum age of a USB ADC sample that may be served during refresh",
     )
     
     # Pump Calibration

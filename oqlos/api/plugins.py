@@ -40,9 +40,12 @@ def ensure_plugins_initialized() -> None:
     PluginRegistry.discover_entry_point_plugins()
     _PLUGINS_INITIALIZED = True
 
+
 router = APIRouter(prefix="/api/v1/plugins", tags=["plugins"])
 
-_HEALTH_HTTP_OK = frozenset({PluginStatus.CONNECTED.value, PluginStatus.CONFIGURED.value})
+_HEALTH_HTTP_OK = frozenset(
+    {PluginStatus.CONNECTED.value, PluginStatus.CONFIGURED.value}
+)
 
 
 def _plugin_health_http_status(health: PluginHealth) -> int:

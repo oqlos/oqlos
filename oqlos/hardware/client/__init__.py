@@ -22,7 +22,12 @@ from oqlos.hardware.client.constants import (
     PERIPHERAL_STATUS_PLUGIN_ALIASES,
     TIC249_DEFAULT_TARGET_VELOCITY,
 )
-from oqlos.hardware.client.errors import HardwareProxyError, is_oqlos_unavailable, oqlos_error_detail
+from oqlos.hardware.client.errors import (
+    HardwareProxyError,
+    diagnostic_issue_for_peripheral,
+    is_oqlos_unavailable,
+    oqlos_error_detail,
+)
 from oqlos.hardware.client.identify_enrich import enrich_hardware_identify
 from oqlos.hardware.client.modbus_repair import rewrite_modbus_repair
 from oqlos.hardware.client.proxy import OqlosHardwareProxy
@@ -73,6 +78,7 @@ __all__ = [
     "canonicalize_motor2_runtime_key",
     "candidate_oqlos_bases",
     "enrich_hardware_identify",
+    "diagnostic_issue_for_peripheral",
     "extract_command_failure",
     "float_from_env",
     "is_oqlos_unavailable",

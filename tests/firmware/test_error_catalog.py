@@ -32,10 +32,12 @@ _CODE_SOURCE_PATHS = [
     _REPO_ROOT / "oqlos" / "api" / "plugins.py",
     _REPO_ROOT / "oqlos" / "hardware" / "plugin_gateway.py",
     _REPO_ROOT / "oqlos" / "hardware" / "usb_diagnostics.py",
+    _REPO_ROOT / "oqlos" / "hardware" / "hui_readiness.py",
 ]
 _CODE_LITERAL = re.compile(r'code\s*=\s*"([a-z0-9_]+)"')
 _CODE_FSTRING = re.compile(r'code\s*=\s*f"([a-z0-9_{}]+)"')
-_CODE_DICT_LITERAL = re.compile(r'"(?:code|issue_code)"\s*:\s*"([a-z0-9_]+)"')
+_CODE_DICT_LITERAL = re.compile(r'"code"\s*:\s*"([a-z0-9_]+)"')
+_ISSUE_CODE_DICT_LITERAL = re.compile(r'"issue_code"\s*:\s*"([a-z0-9_]+)"')
 
 
 def _codes_used_in_source() -> set[str]:
@@ -43,6 +45,7 @@ def _codes_used_in_source() -> set[str]:
     for path in _CODE_SOURCE_PATHS:
         codes.update(_CODE_LITERAL.findall(path.read_text()))
         codes.update(_CODE_DICT_LITERAL.findall(path.read_text()))
+        codes.update(_ISSUE_CODE_DICT_LITERAL.findall(path.read_text()))
     return codes
 
 

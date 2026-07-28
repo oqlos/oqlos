@@ -19,7 +19,7 @@ plugins:
     connection_type: modbus-rtu
     connection_params:
       serial_port: /dev/serial/by-id/adc-not-present
-      baudrate: 9600
+      baudrate: 4800
       parity: N
       device_id: 2
       read_address: 0

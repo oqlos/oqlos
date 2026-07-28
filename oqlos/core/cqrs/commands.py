@@ -23,8 +23,8 @@ C = TypeVar("C", bound=Command)
 Handler = Callable[[C], list[Event]]
 
 
-class CommandBus:
-    """Dispatches a command to its registered handler and persists the resulting events."""
+class EventSourcedCommandBus:
+    """Synchronously dispatch a command and persist its resulting events."""
 
     def __init__(self, store: EventStore) -> None:
         self._store = store
@@ -38,3 +38,7 @@ class CommandBus:
         if handler is None:
             raise LookupError(f"No handler registered for {type(command).__name__}")
         return self._store.append_many(handler(command))
+
+
+# Backward-compatible name used by existing OqlOS integrations.
+CommandBus = EventSourcedCommandBus

@@ -28,9 +28,11 @@ class ErrorCode(str, Enum):
     C2004_SYS_0001 = 'C2004-SYS-0001'
     C2004_AUTH_0001 = 'C2004-AUTH-0001'
     C2004_AUTH_0002 = 'C2004-AUTH-0002'
+    C2004_AUTH_0003 = 'C2004-AUTH-0003'
     C2004_DATA_0001 = 'C2004-DATA-0001'
     C2004_DATA_0002 = 'C2004-DATA-0002'
     C2004_DATA_0003 = 'C2004-DATA-0003'
+    C2004_DATA_0004 = 'C2004-DATA-0004'
     C2004_CFG_0001 = 'C2004-CFG-0001'
     C2004_CFG_0002 = 'C2004-CFG-0002'
     C2004_NET_0001 = 'C2004-NET-0001'
@@ -41,6 +43,7 @@ class ErrorCode(str, Enum):
     C2004_OPS_0001 = 'C2004-OPS-0001'
     C2004_OPS_0002 = 'C2004-OPS-0002'
     C2004_OPS_0003 = 'C2004-OPS-0003'
+    C2004_OPS_0004 = 'C2004-OPS-0004'
     C2004_HW_0011 = 'C2004-HW-0011'
     C2004_HW_0012 = 'C2004-HW-0012'
     C2004_HW_0013 = 'C2004-HW-0013'
@@ -80,6 +83,14 @@ CATALOG: dict[str, ErrorEntry] = {
         message='Permission denied', message_i18n=None,
         remediation="Verify the user's role and READ/WRITE permission for the requested resource.", auto_repair={'enabled': False, 'risk': 'high'},
     ),
+    'C2004-AUTH-0003': ErrorEntry(
+        code='C2004-AUTH-0003', slug='auth.login_rate_limited', domain='auth',
+        http_status=429, severity='warning',
+        classification='security', confidentiality='restricted',
+        retryable=True, owner='owner://domain/auth', title='Too many login attempts',
+        message='Too many login attempts. Try again later.', message_i18n=None,
+        remediation='Wait for the Retry-After interval before trying to sign in again; investigate repeated failures if they were not expected.', auto_repair={'enabled': False, 'risk': 'high'},
+    ),
     'C2004-DATA-0001': ErrorEntry(
         code='C2004-DATA-0001', slug='data.not_found', domain='data',
         http_status=404, severity='warning',
@@ -103,6 +114,14 @@ CATALOG: dict[str, ErrorEntry] = {
         retryable=False, owner='owner://domain/data', title='State conflict',
         message='The requested change conflicts with the current state', message_i18n=None,
         remediation='Refresh the resource, verify uniqueness/version constraints, and retry with current data.', auto_repair={'enabled': False, 'risk': 'medium'},
+    ),
+    'C2004-DATA-0004': ErrorEntry(
+        code='C2004-DATA-0004', slug='data.invalid_request', domain='data',
+        http_status=400, severity='warning',
+        classification='operational', confidentiality='internal',
+        retryable=False, owner='owner://domain/data', title='Invalid request',
+        message='The request is invalid', message_i18n=None,
+        remediation='Correct the request syntax or unsupported value described in metadata.context and submit it again.', auto_repair={'enabled': False, 'risk': 'low'},
     ),
     'C2004-CFG-0001': ErrorEntry(
         code='C2004-CFG-0001', slug='config.route_render_timeout', domain='config',
@@ -184,6 +203,14 @@ CATALOG: dict[str, ErrorEntry] = {
         message='The DisplayNet update status endpoint is unavailable', message_i18n=None,
         remediation='Check /api/v3/update/status and the DisplayNet backend service, then retry.', auto_repair={'enabled': False, 'risk': 'low'},
     ),
+    'C2004-OPS-0004': ErrorEntry(
+        code='C2004-OPS-0004', slug='operations.deploy.verification_failed', domain='operations',
+        http_status=500, severity='error',
+        classification='operational', confidentiality='internal',
+        retryable=False, owner='owner://domain/infrastructure', title='Deployment verification failed',
+        message='A deployment step or its post-deploy verification failed', message_i18n=None,
+        remediation='Use the correlation id and deploy step id to inspect the structured deploy event, correct the reported issue, and resume from the failed idempotent step.', auto_repair={'enabled': False, 'risk': 'high'},
+    ),
     'C2004-HW-0011': ErrorEntry(
         code='C2004-HW-0011', slug='hardware.oqlos.unreachable', domain='hardware',
         http_status=502, severity='error',
@@ -220,9 +247,14 @@ CATALOG: dict[str, ErrorEntry] = {
 
 
 C2004_CODE_BY_ISSUE: dict[str, str] = {
+    'api_diagnostic_command_invalid': 'C2004-DATA-0002',
     'api_invalid_recover_scope': 'C2004-DATA-0002',
     'api_modbus_wizard_invalid_request': 'C2004-DATA-0002',
     'api_oql_transport_disabled': 'C2004-HW-0012',
+    'boardnet_power_condition_active': 'C2004-HW-0014',
+    'boardnet_power_condition_historical': 'C2004-HW-0014',
+    'boardnet_power_telemetry_unavailable': 'C2004-HW-0012',
+    'boardnet_undervoltage_active': 'C2004-HW-0014',
     'config_unavailable': 'C2004-HW-0012',
     'firmware_no_serial_access': 'C2004-HW-0012',
     'firmware_not_real': 'C2004-HW-0012',

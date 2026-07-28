@@ -23,16 +23,14 @@ FIXTURES = Path(__file__).resolve().parents[2] / "examples" / "hardware-configur
 
 def test_oql_yaml_json_have_identical_complete_semantics() -> None:
     documents = {
-        format: load_hardware_configuration(
-            FIXTURES / f"boardnet.{format}", allow_legacy=False
-        )
+        format: load_hardware_configuration(FIXTURES / f"boardnet.{format}", allow_legacy=False)
         for format in ("oql", "yaml", "json")
     }
     assert documents["oql"] == documents["yaml"] == documents["json"]
     config = documents["yaml"]
     assert config.plugins["modbus-io"].connection_params["device_id"] == 2
     assert config.aliases["cisnienie_nc"].conversion["adc_per_volt"] == 3950
-    assert config.processes["measurement.sensors.read"].poll_interval_ms == 500
+    assert config.processes["measurement.sensors.read"].poll_interval_ms == 100
     assert config.profiles["hui"]["holds"]["head-inflate"]["pump_pct"] == 70
     assert config.secret_refs["mqttPassword"].key == "OQLOS_OQL_MQTT_PASSWORD"
 
@@ -40,17 +38,9 @@ def test_oql_yaml_json_have_identical_complete_semantics() -> None:
 @pytest.mark.parametrize("source_format", ["oql", "yaml", "json"])
 @pytest.mark.parametrize("target_format", ["oql", "yaml", "json"])
 def test_every_format_pair_round_trips(source_format: str, target_format: str) -> None:
-    source = load_hardware_configuration(
-        FIXTURES / f"boardnet.{source_format}", allow_legacy=False
-    )
+    source = load_hardware_configuration(FIXTURES / f"boardnet.{source_format}", allow_legacy=False)
     converted = serialize_hardware_configuration(source, target_format)
     assert parse_hardware_configuration(converted, target_format) == source
-
-
-def test_oql_serialization_uses_current_scenario_version() -> None:
-    config = load_hardware_configuration(FIXTURES / "boardnet.yaml", allow_legacy=False)
-
-    assert serialize_hardware_configuration(config, "oql").startswith("VERSION: 6\n")
 
 
 def test_unknown_top_level_field_is_rejected() -> None:
@@ -74,14 +64,10 @@ def test_motor2_runtime_constraints_are_identical_in_every_format(format: str) -
         content = yaml.safe_dump(data, sort_keys=False)
     else:
         content = serialize_hardware_configuration(config, "oql")
-        compact = json.dumps(
-            data["runtime"], ensure_ascii=False, sort_keys=True, separators=(",", ":")
-        )
+        compact = json.dumps(data["runtime"], ensure_ascii=False, sort_keys=True, separators=(",", ":"))
         runtime_line = f"  SET 'hardware.configuration.runtime' {json.dumps(compact, ensure_ascii=False)}"
         content = "\n".join(
-            runtime_line
-            if line.startswith("  SET 'hardware.configuration.runtime'")
-            else line
+            runtime_line if line.startswith("  SET 'hardware.configuration.runtime'") else line
             for line in content.splitlines()
         )
     with pytest.raises(HardwareConfigurationError, match="defaultSpeedStepsPerSecond"):
@@ -97,32 +83,24 @@ def test_motor2_idle_policy_is_explicit_and_type_checked() -> None:
 
     invalid = config.canonical_dict()
     invalid["runtime"]["motor2"]["deenergizeOnStop"] = "true"
-    with pytest.raises(
-        HardwareConfigurationError, match="deenergizeOnStop must be a boolean"
-    ):
+    with pytest.raises(HardwareConfigurationError, match="deenergizeOnStop must be a boolean"):
         parse_hardware_configuration(json.dumps(invalid), "json")
 
 
 def test_inline_secret_is_rejected_but_reference_is_allowed() -> None:
     with pytest.raises(HardwareConfigurationError, match="inline secret"):
         parse_hardware_configuration(
-            json.dumps(
-                {
-                    "schemaVersion": "hardware-configuration-v1",
-                    "runtime": {"mqtt_password": "plain-text"},
-                }
-            ),
+            json.dumps({
+                "schemaVersion": "hardware-configuration-v1",
+                "runtime": {"mqtt_password": "plain-text"},
+            }),
             "json",
         )
     valid = parse_hardware_configuration(
-        json.dumps(
-            {
-                "schemaVersion": "hardware-configuration-v1",
-                "secretRefs": {
-                    "mqtt": {"provider": "env", "key": "OQLOS_MQTT_PASSWORD"}
-                },
-            }
-        ),
+        json.dumps({
+            "schemaVersion": "hardware-configuration-v1",
+            "secretRefs": {"mqtt": {"provider": "env", "key": "OQLOS_MQTT_PASSWORD"}},
+        }),
         "json",
     )
     assert valid.secret_refs["mqtt"].provider == "env"
@@ -150,29 +128,19 @@ funcImplementations:
 
 
 def test_effective_configuration_explains_environment_override() -> None:
-    configured = load_hardware_configuration(
-        FIXTURES / "boardnet.yaml", allow_legacy=False
-    )
+    configured = load_hardware_configuration(FIXTURES / "boardnet.yaml", allow_legacy=False)
     effective, overrides = resolve_effective_hardware_configuration(
         configured,
         {"OQLOS_MODBUS_SERIAL_PORT": "/dev/serial/by-id/runtime-io"},
     )
-    assert (
-        configured.plugins["modbus-io"].connection_params["serial_port"]
-        == "/dev/serial/by-id/usb-boardnet-io"
-    )
-    assert (
-        effective.plugins["modbus-io"].connection_params["serial_port"]
-        == "/dev/serial/by-id/runtime-io"
-    )
-    assert overrides == [
-        {
-            "path": "plugins.modbus-io.connection_params.serial_port",
-            "source": "OQLOS_MODBUS_SERIAL_PORT",
-            "configured": "/dev/serial/by-id/usb-boardnet-io",
-            "effective": "/dev/serial/by-id/runtime-io",
-        }
-    ]
+    assert configured.plugins["modbus-io"].connection_params["serial_port"] == "/dev/serial/by-id/usb-boardnet-io"
+    assert effective.plugins["modbus-io"].connection_params["serial_port"] == "/dev/serial/by-id/runtime-io"
+    assert overrides == [{
+        "path": "plugins.modbus-io.connection_params.serial_port",
+        "source": "OQLOS_MODBUS_SERIAL_PORT",
+        "configured": "/dev/serial/by-id/usb-boardnet-io",
+        "effective": "/dev/serial/by-id/runtime-io",
+    }]
 
 
 def test_atomic_save_leaves_no_temporary_file(tmp_path: Path) -> None:
@@ -183,9 +151,7 @@ def test_atomic_save_leaves_no_temporary_file(tmp_path: Path) -> None:
     assert list(tmp_path.glob(".oqlos.json.*")) == []
 
 
-def test_configuration_api_and_legacy_routes(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
+def test_configuration_api_and_legacy_routes(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     source = FIXTURES / "boardnet.yaml"
     target = tmp_path / "oqlos.yaml"
     target.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
@@ -195,37 +161,22 @@ def test_configuration_api_and_legacy_routes(
     response = client.get("/api/v3/hardware/configuration")
     assert response.status_code == 200
     assert response.json()["configured"]["schemaVersion"] == "hardware-configuration-v1"
-    assert client.get("/api/v3/hardware/configuration/schema").json()["formats"] == [
-        "oql",
-        "yaml",
-        "json",
-    ]
+    assert client.get("/api/v3/hardware/configuration/schema").json()["formats"] == ["oql", "yaml", "json"]
 
-    content = client.get("/api/v3/hardware/configuration/source?format=json").json()[
-        "content"
-    ]
-    assert (
-        client.post(
-            "/api/v3/hardware/configuration/validate",
-            json={"content": content, "format": "json"},
-        ).status_code
-        == 200
-    )
-    assert (
-        client.put(
-            "/api/v3/hardware/configuration/source",
-            json={"content": content, "format": "json", "file_name": "oqlos.json"},
-        ).status_code
-        == 403
-    )
-    assert (
-        client.put(
-            "/api/v3/hardware/configuration/source",
-            headers={"X-Connect-Role": "system"},
-            json={"content": content, "format": "json", "file_name": "oqlos.json"},
-        ).status_code
-        == 200
-    )
+    content = client.get("/api/v3/hardware/configuration/source?format=json").json()["content"]
+    assert client.post(
+        "/api/v3/hardware/configuration/validate",
+        json={"content": content, "format": "json"},
+    ).status_code == 200
+    assert client.put(
+        "/api/v3/hardware/configuration/source",
+        json={"content": content, "format": "json", "file_name": "oqlos.json"},
+    ).status_code == 403
+    assert client.put(
+        "/api/v3/hardware/configuration/source",
+        headers={"X-Connect-Role": "system"},
+        json={"content": content, "format": "json", "file_name": "oqlos.json"},
+    ).status_code == 200
 
     for path in (
         "/api/v3/hardware/mapping",

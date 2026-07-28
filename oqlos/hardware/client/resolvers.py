@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import Any
+from urllib.parse import quote
 
 from oqlos.hardware.client.adc import adc_sensor_alias
 from oqlos.hardware.client.constants import (
@@ -76,6 +77,14 @@ def resolve_rtc_target(command: str, args: dict[str, Any]) -> tuple[str, str, di
 
 
 def resolve_diagnostic_target(peripheral: str, command: str, args: dict[str, Any]) -> tuple[str, str, dict[str, Any] | None]:
+    # A common, read-only diagnostic that never needs a device-specific
+    # command mapping and never actuates the peripheral.
+    if command == "status":
+        return (
+            "GET",
+            f"/api/v3/hardware/peripheral-status/{quote(peripheral, safe='')}",
+            None,
+        )
     if peripheral in ARTIFICIAL_LUNG_IDS:
         return resolve_artificial_lung_target(command, args)
     resolvers = {
@@ -124,5 +133,18 @@ def extract_command_failure(result: Any) -> str | None:
                 result.get("detail"),
             )
             or "Command failed (motor driver returned success=false with no error detail)"
+        )
+    nested_data = result.get("data")
+    if isinstance(nested_data, dict) and nested_data.get("success") is False:
+        return (
+            _coalesce_error_message(
+                nested_data.get("error"),
+                nested_data.get("message"),
+                nested_data.get("detail"),
+                result.get("error"),
+                result.get("message"),
+                result.get("detail"),
+            )
+            or "Command failed (nested data.success=false)"
         )
     return None

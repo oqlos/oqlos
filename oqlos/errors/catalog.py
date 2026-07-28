@@ -348,6 +348,12 @@ ISSUE_CATALOG: dict[str, IssueDefinition] = {
         default_severity="warning",
         summary="POST /api/v1/hardware/recover was called with an unsupported `scope` query param.",
     ),
+    "api_diagnostic_command_invalid": IssueDefinition(
+        code="api_diagnostic_command_invalid",
+        domain="api",
+        default_severity="warning",
+        summary="The hardware diagnostic command or its arguments are invalid.",
+    ),
     "api_modbus_wizard_invalid_request": IssueDefinition(
         code="api_modbus_wizard_invalid_request",
         domain="api",

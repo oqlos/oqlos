@@ -20,6 +20,7 @@ def test_plugin_health_returns_503_when_plugin_reports_error(monkeypatch):
         message="Modbus RTU read_coils timed out",
         compatible=False,
     )
+
     async def _check(_plugin_id: str):
         return health
 
@@ -55,6 +56,7 @@ def test_plugin_health_returns_200_when_plugin_connected(monkeypatch):
         message="Modbus RTU is healthy",
         compatible=True,
     )
+
     async def _check(_plugin_id: str):
         return health
 

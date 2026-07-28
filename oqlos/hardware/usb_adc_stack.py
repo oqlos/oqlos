@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import math
 from typing import Any
 
@@ -10,6 +11,42 @@ import httpx
 
 class UsbAdcStackError(RuntimeError):
     """Raised when the ADC sidecar cannot provide a valid channel payload."""
+
+
+_USB_ADC_HTTP_CLIENT: dict[str, Any] = {
+    "loop": None,
+    "base_url": None,
+    "timeout_seconds": None,
+    "client": None,
+}
+
+
+def _usb_adc_http_client(base_url: str, timeout_seconds: float) -> httpx.AsyncClient:
+    """Reuse the loopback connection for high-frequency telemetry reads."""
+    loop = asyncio.get_running_loop()
+    normalized_base_url = base_url.rstrip("/")
+    client = _USB_ADC_HTTP_CLIENT.get("client")
+    if (
+        isinstance(client, httpx.AsyncClient)
+        and not client.is_closed
+        and _USB_ADC_HTTP_CLIENT.get("loop") is loop
+        and _USB_ADC_HTTP_CLIENT.get("base_url") == normalized_base_url
+        and _USB_ADC_HTTP_CLIENT.get("timeout_seconds") == timeout_seconds
+    ):
+        return client
+
+    client = httpx.AsyncClient(
+        base_url=normalized_base_url,
+        timeout=timeout_seconds,
+        limits=httpx.Limits(max_connections=2, max_keepalive_connections=1),
+    )
+    _USB_ADC_HTTP_CLIENT.update(
+        loop=loop,
+        base_url=normalized_base_url,
+        timeout_seconds=timeout_seconds,
+        client=client,
+    )
+    return client
 
 
 def normalize_usb_adc_channels(payload: Any) -> dict[str, dict[str, Any]]:
@@ -67,12 +104,11 @@ async def read_usb_adc_channels(
     timeout_seconds: float = 0.8,
 ) -> dict[str, dict[str, Any]]:
     """Read all logical ADC inputs exposed by the local sidecar."""
-    url = f"{base_url.rstrip('/')}/api/v1/adc"
+    client = _usb_adc_http_client(base_url, timeout_seconds)
     try:
-        async with httpx.AsyncClient(timeout=timeout_seconds) as client:
-            response = await client.get(url)
-            response.raise_for_status()
-            return normalize_usb_adc_channels(response.json())
+        response = await client.get("/api/v1/adc")
+        response.raise_for_status()
+        return normalize_usb_adc_channels(response.json())
     except UsbAdcStackError:
         raise
     except (httpx.HTTPError, ValueError) as exc:

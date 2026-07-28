@@ -39,7 +39,7 @@ up_broker(){
 up_agent(){
   say "agent oqlos (real) na $PI:8202"
   remote "mkdir -p $RLOG; ss -ltn 'sport = :8202' 2>/dev/null | grep -q ':8202' && exit 0; \
-          cd ~/oqlos/oqlos && OQLOS_HARDWARE_MODE=real OQLOS_MODBUS_SERIAL_PORT=$SERIAL OQLOS_MODBUS_BAUD=9600 \
+          cd ~/oqlos/oqlos && OQLOS_HARDWARE_MODE=real OQLOS_MODBUS_SERIAL_PORT=$SERIAL OQLOS_MODBUS_BAUD=4800 \
           OQLOS_OQL_TRANSPORT_ROLE=agent OQLOS_OQL_NODE_ID=$NODE OQLOS_OQL_TOPIC_PREFIX=$PREFIX \
           OQLOS_OQL_MQTT_HOST=127.0.0.1 OQLOS_OQL_MQTT_PORT=1883 \
           nohup ~/oqlos/venv/bin/oqlos-server --host 0.0.0.0 --port 8202 >$RLOG/oqlos-agent.log 2>&1 </dev/null & disown; sleep 1"

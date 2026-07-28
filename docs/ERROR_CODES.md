@@ -20,6 +20,7 @@ own:
 
 | Code | Severity | Summary | Repair |
 |------|----------|---------|--------|
+| `api_diagnostic_command_invalid` | warning | The hardware diagnostic command or its arguments are invalid. | — |
 | `api_invalid_recover_scope` | warning | POST /api/v1/hardware/recover was called with an unsupported `scope` query param. | — |
 | `api_modbus_wizard_invalid_request` | warning | The isolated Modbus wizard request is incomplete or unsafe. | — |
 | `api_oql_transport_disabled` | error | OQL-over-MQTT transport is disabled (OQLOS_OQL_TRANSPORT_ROLE=off); /api/v1/oql/execute and /manage cannot run. | `enable_oql_mqtt_transport` (scope=host, manual, risk=config) |

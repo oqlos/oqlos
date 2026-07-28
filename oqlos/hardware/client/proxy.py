@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+from urllib.parse import quote
 from typing import Any
 
 import httpx
@@ -21,7 +22,12 @@ from oqlos.hardware.client.constants import (
     PERIPHERAL_STATUS_COMMANDS,
     PERIPHERAL_STATUS_PLUGIN_ALIASES,
 )
-from oqlos.hardware.client.errors import HardwareProxyError, is_oqlos_unavailable, oqlos_error_detail
+from oqlos.hardware.client.errors import (
+    HardwareProxyError,
+    diagnostic_issue_for_peripheral,
+    is_oqlos_unavailable,
+    oqlos_error_detail,
+)
 from oqlos.hardware.client.http_helpers import response_error_message, safe_response_payload
 from oqlos.hardware.client.resolvers import extract_command_failure, resolve_diagnostic_target
 
@@ -253,19 +259,21 @@ class OqlosHardwareProxy:
     async def peripheral_status(self, peripheral_id: str) -> dict[str, Any]:
         peripheral = peripheral_id.strip().lower()
         if peripheral not in PERIPHERAL_STATUS_COMMANDS:
-            return {
-                "ok": False,
-                "peripheral_id": peripheral,
-                "error": "Runtime status is not available for this peripheral",
-            }
+            return await self._proxy_oqlos_request(
+                "GET",
+                f"/api/v3/hardware/peripheral-status/{quote(peripheral, safe='')}",
+            )
         command = PERIPHERAL_STATUS_COMMANDS[peripheral]
-        try:
-            command, result, ok = await self._load_peripheral_status(peripheral)
-        except HardwareProxyError as exc:
-            return self._unavailable_peripheral_payload(peripheral, command, exc)
+        command, result, ok = await self._load_peripheral_status(peripheral)
+        if not ok:
+            # Older component endpoints may still encode failure in a 200
+            # payload. Ask the canonical OqlOS status boundary to classify it
+            # and return/raise a standardized response.
+            return await self._proxy_oqlos_request(
+                "GET",
+                f"/api/v3/hardware/peripheral-status/{quote(peripheral, safe='')}",
+            )
         response: dict[str, Any] = {"ok": ok, "peripheral_id": peripheral, "command": command, "result": result}
-        if not ok and isinstance(result, dict) and result.get("error"):
-            response["error"] = result.get("error")
         return response
 
     async def diagnostic_command(
@@ -277,24 +285,65 @@ class OqlosHardwareProxy:
         peripheral = peripheral_id.strip().lower()
         command = command_name.strip().lower()
         command_args = args or {}
-        method, path, params = resolve_diagnostic_target(peripheral, command, command_args)
+        try:
+            method, path, params = resolve_diagnostic_target(
+                peripheral, command, command_args
+            )
+        except HardwareProxyError as exc:
+            if exc.status_code != 400:
+                raise
+            message, detail = oqlos_error_detail(exc)
+            raise HardwareProxyError(
+                400,
+                {
+                    "error": message,
+                    "error_code": "C2004-DATA-0002",
+                    "issue_code": "api_diagnostic_command_invalid",
+                    "peripheral_id": peripheral,
+                    "command": command,
+                    "detail": detail,
+                },
+            ) from exc
         try:
             method, path, params, result = await self._execute_diagnostic_command(
                 peripheral, command, method, path, params
             )
         except HardwareProxyError as exc:
-            if is_oqlos_unavailable(exc):
-                return self._unavailable_command_payload(peripheral, command, method, path, params, exc)
-            raise
+            if exc.status_code != 404:
+                raise
+            message, detail = oqlos_error_detail(exc)
+            raise HardwareProxyError(
+                503,
+                {
+                    "error": message,
+                    "error_code": "C2004-HW-0012",
+                    "issue_code": diagnostic_issue_for_peripheral(peripheral),
+                    "peripheral_id": peripheral,
+                    "command": command,
+                    "detail": detail,
+                },
+            ) from exc
         failure = extract_command_failure(result)
         if failure and peripheral == "motor-dri0050" and command in {"pump_off", "pump_set"}:
             failure = await self._enrich_motor_dri0050_failure(failure)
+        if failure:
+            raise HardwareProxyError(
+                503,
+                {
+                    "error": failure,
+                    "error_code": "C2004-HW-0012",
+                    "issue_code": diagnostic_issue_for_peripheral(peripheral),
+                    "peripheral_id": peripheral,
+                    "command": command,
+                    "target": {"method": method, "path": path, "params": params or {}},
+                    "result": result,
+                },
+            )
         return {
-            "ok": failure is None,
+            "ok": True,
             "peripheral_id": peripheral,
             "command": command,
             "target": {"method": method, "path": path, "params": params or {}},
-            **({"error": failure} if failure else {}),
             "result": result,
         }
 
@@ -521,25 +570,6 @@ class OqlosHardwareProxy:
             "ok": False,
             "peripheral_id": peripheral,
             "command": command,
-            "error": message,
-            "result": {"success": False, "error": message, "detail": detail},
-        }
-
-    def _unavailable_command_payload(
-        self,
-        peripheral: str,
-        command: str,
-        method: str,
-        path: str,
-        params: dict[str, Any] | None,
-        exc: HardwareProxyError,
-    ) -> dict[str, Any]:
-        message, detail = oqlos_error_detail(exc)
-        return {
-            "ok": False,
-            "peripheral_id": peripheral,
-            "command": command,
-            "target": {"method": method, "path": path, "params": params or {}},
             "error": message,
             "result": {"success": False, "error": message, "detail": detail},
         }

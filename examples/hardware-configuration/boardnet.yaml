@@ -52,7 +52,7 @@ processes:
     uri: c2004://measurement/sensors/query/read
     mode: execute
     outputs: {PI1: sensors.ai01}
-    poll_interval_ms: 500
+    poll_interval_ms: 100
     emit: adc.updated
     timeout_ms: 8000
     retry_count: 3

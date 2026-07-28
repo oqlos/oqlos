@@ -2,7 +2,12 @@ from __future__ import annotations
 
 import pytest
 
-from oqlos.hardware.usb_adc_stack import UsbAdcStackError, normalize_usb_adc_channels
+from oqlos.hardware.usb_adc_stack import (
+    UsbAdcStackError,
+    _USB_ADC_HTTP_CLIENT,
+    _usb_adc_http_client,
+    normalize_usb_adc_channels,
+)
 
 
 def test_normalize_usb_adc_channels_preserves_voltage_and_source_metadata():
@@ -63,3 +68,19 @@ def test_normalize_usb_adc_channels_keeps_failed_sidecar_channels():
 def test_normalize_usb_adc_channels_rejects_payload_without_readings():
     with pytest.raises(UsbAdcStackError, match="no usable ADC channels"):
         normalize_usb_adc_channels([{"logical_name": "ai01", "reading": {}}])
+
+
+@pytest.mark.asyncio
+async def test_usb_adc_http_client_reuses_same_loopback_pool():
+    _USB_ADC_HTTP_CLIENT.update(
+        loop=None,
+        base_url=None,
+        timeout_seconds=None,
+        client=None,
+    )
+
+    first = _usb_adc_http_client("http://127.0.0.1:8214/", 0.8)
+    second = _usb_adc_http_client("http://127.0.0.1:8214", 0.8)
+
+    assert first is second
+    await first.aclose()

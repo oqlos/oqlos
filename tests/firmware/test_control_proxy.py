@@ -51,7 +51,7 @@ def test_health_does_not_invent_an_alternate_oqlos_port(monkeypatch):
     calls = []
 
     class FakeClient:
-        async def request(self, method, target, params=None, json=None, timeout=None):
+        async def request(self, method, target, params=None, json=None, timeout=None, headers=None):
             calls.append(target)
             raise httpx.ConnectError("connection refused")
 
@@ -64,7 +64,7 @@ def test_health_does_not_invent_an_alternate_oqlos_port(monkeypatch):
 
 def test_identify_returns_unavailable_payload_after_connection_failures():
     class FakeClient:
-        async def request(self, method, target, params=None, json=None, timeout=None):
+        async def request(self, method, target, params=None, json=None, timeout=None, headers=None):
             raise httpx.ConnectError(f"connection refused: {target}")
 
     payload = run(proxy_with_client(FakeClient()).identify())
@@ -76,25 +76,28 @@ def test_identify_returns_unavailable_payload_after_connection_failures():
     assert payload["diagnostics"]["health"]["detail"]["timeout_seconds"] == 15
 
 
-def test_diagnostic_command_returns_structured_failure_payload():
+def test_diagnostic_command_raises_typed_failure_instead_of_ok_false():
     calls = []
 
     class FakeClient:
-        async def request(self, method, target, params=None, json=None, timeout=None):
+        async def request(self, method, target, params=None, json=None, timeout=None, headers=None):
             calls.append((method, target, params, json))
             return FakeOqlosResponse({"valve_id": "valve-1", "value": True, "ok": False, "error": "Valve refused"})
 
-    payload = run(
-        proxy_with_client(FakeClient()).diagnostic_command(
-            "modbus-io",
-            "valve_on",
-            {"valve_id": "valve-1"},
+    with pytest.raises(HardwareProxyError) as caught:
+        run(
+            proxy_with_client(FakeClient()).diagnostic_command(
+                "modbus-io",
+                "valve_on",
+                {"valve_id": "valve-1"},
+            )
         )
-    )
 
-    assert payload["ok"] is False
-    assert payload["error"] == "Valve refused"
-    assert payload["target"] == {
+    assert caught.value.status_code == 503
+    assert caught.value.detail["error"] == "Valve refused"
+    assert caught.value.detail["error_code"] == "C2004-HW-0012"
+    assert caught.value.detail["issue_code"] == "hw_modbus_no_response"
+    assert caught.value.detail["target"] == {
         "method": "POST",
         "path": "/api/v1/hardware/valve/valve-1",
         "params": {"value": True},
@@ -106,7 +109,7 @@ def test_peripheral_status_proxies_plugin_health():
     calls = []
 
     class FakeClient:
-        async def request(self, method, target, params=None, json=None, timeout=None):
+        async def request(self, method, target, params=None, json=None, timeout=None, headers=None):
             calls.append((method, target, params, json))
             return FakeOqlosResponse({"status": "connected", "compatible": True})
 
@@ -123,7 +126,7 @@ def test_peripheral_status_artificial_lung_uses_logical_lung_api():
     calls = []
 
     class FakeClient:
-        async def request(self, method, target, params=None, json=None, timeout=None):
+        async def request(self, method, target, params=None, json=None, timeout=None, headers=None):
             calls.append((method, target, params, json))
             return FakeOqlosResponse({"success": True, "data": {"connected": True}})
 
@@ -144,11 +147,19 @@ def test_artificial_lung_diagnostic_resolves_to_logical_lung_api():
     assert params == {"command": "lung_stop", "args": {}}
 
 
+def test_status_diagnostic_resolves_to_read_only_canonical_status_api():
+    method, path, params = resolve_diagnostic_target("motor-dri0050", "status", {})
+
+    assert method == "GET"
+    assert path == "/api/v3/hardware/peripheral-status/motor-dri0050"
+    assert params is None
+
+
 def test_peripheral_status_rtc_uses_hardware_rtc_status():
     calls = []
 
     class FakeClient:
-        async def request(self, method, target, params=None, json=None, timeout=None):
+        async def request(self, method, target, params=None, json=None, timeout=None, headers=None):
             calls.append((method, target, params, json))
             return FakeOqlosResponse({"ok": True, "peripheral_id": "rtc", "result": {"data": {"connected": True}}})
 
@@ -164,7 +175,7 @@ def test_rtc_diagnostic_uses_hardware_rtc_command():
     calls = []
 
     class FakeClient:
-        async def request(self, method, target, params=None, json=None, timeout=None):
+        async def request(self, method, target, params=None, json=None, timeout=None, headers=None):
             calls.append((method, target, params, json))
             return FakeOqlosResponse({"ok": True, "peripheral_id": "rtc", "command": "sync_to_system"})
 
@@ -177,19 +188,17 @@ def test_rtc_diagnostic_uses_hardware_rtc_command():
     assert calls[0][3] == {"command": "sync_to_system", "args": {"force": True}}
 
 
-def test_peripheral_status_returns_structured_payload_for_plugin_500():
+def test_peripheral_status_preserves_plugin_http_failure():
     class FakeClient:
-        async def request(self, method, target, params=None, json=None, timeout=None):
+        async def request(self, method, target, params=None, json=None, timeout=None, headers=None):
             return FakeOqlosResponse({"detail": "All connection attempts failed"}, status_code=500)
 
-    payload = run(proxy_with_client(FakeClient()).peripheral_status("motor-dri0050"))
+    with pytest.raises(HardwareProxyError) as caught:
+        run(proxy_with_client(FakeClient()).peripheral_status("motor-dri0050"))
 
-    assert payload["ok"] is False
-    assert payload["peripheral_id"] == "motor-dri0050"
-    assert payload["command"] == "status"
-    assert payload["error"] == "All connection attempts failed"
-    assert payload["result"]["detail"]["status_code"] == 500
-    assert payload["result"]["detail"]["path"] == "/api/v1/plugins/motor-dri0050/execute"
+    assert caught.value.status_code == 500
+    assert caught.value.detail["error"] == "All connection attempts failed"
+    assert caught.value.detail["path"] == "/api/v1/plugins/motor-dri0050/execute"
 
 
 def test_resolve_diagnostic_target_rejects_invalid_modbus_valve_id():

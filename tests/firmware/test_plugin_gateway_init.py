@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import asyncio
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 from oqlos.hardware.plugin_gateway import PluginHardwareGateway
-from oqlos.hardware.plugins import PluginConfig, PluginHealth, PluginStatus
+from oqlos.hardware.plugins import PluginConfig
 
 
 def test_health_awaits_ensure_initialized_before_checks(monkeypatch) -> None:
@@ -43,7 +43,11 @@ def test_initialize_plugins_records_summary(monkeypatch) -> None:
             plugin_id="modbus-io",
             enabled=True,
             connection_type="modbus-rtu",
-            connection_params={"serial_port": "/dev/ttyTEST", "baudrate": 4800, "device_id": 2},
+            connection_params={
+                "serial_port": "/dev/ttyTEST",
+                "baudrate": 4800,
+                "device_id": 2,
+            },
         ),
     }
 
@@ -75,7 +79,11 @@ def test_apply_modbus_user_settings_reconnects_selected_plugin(monkeypatch) -> N
             plugin_id="modbus-io",
             enabled=True,
             connection_type="modbus-rtu",
-            connection_params={"serial_port": "/dev/ttyACM0", "baudrate": 9600, "device_id": 1},
+            connection_params={
+                "serial_port": "/dev/ttyACM0",
+                "baudrate": 9600,
+                "device_id": 1,
+            },
         ),
     }
     gateway._plugins["modbus-io"] = object()
@@ -119,10 +127,7 @@ def test_apply_modbus_user_settings_reconnects_selected_plugin(monkeypatch) -> N
 def test_stop_lung_releases_coils_for_deenergized_idle(monkeypatch) -> None:
     gateway = PluginHardwareGateway(mode="mock")
     gateway.mode = "real"
-    gateway._motor2_runtime = {
-        "idleState": "deenergized",
-        "deenergizeOnStop": True,
-    }
+    gateway._motor2_runtime = {"idleState": "deenergized", "deenergizeOnStop": True}
     calls: list[tuple[str, dict]] = []
 
     async def _execute(command: str, params: dict, **_kwargs) -> bool:
@@ -130,20 +135,14 @@ def test_stop_lung_releases_coils_for_deenergized_idle(monkeypatch) -> None:
         return True
 
     monkeypatch.setattr(gateway, "_execute_lung_bool_command", _execute)
-
-    result = asyncio.run(gateway.stop_lung())
-
-    assert result is True
+    assert asyncio.run(gateway.stop_lung()) is True
     assert calls == [("stop", {}), ("energize", {"enable": False})]
 
 
-def test_stop_lung_can_preserve_holding_current_when_explicitly_configured(monkeypatch) -> None:
+def test_stop_lung_can_preserve_explicit_holding_current(monkeypatch) -> None:
     gateway = PluginHardwareGateway(mode="mock")
     gateway.mode = "real"
-    gateway._motor2_runtime = {
-        "idleState": "holding",
-        "deenergizeOnStop": False,
-    }
+    gateway._motor2_runtime = {"idleState": "holding", "deenergizeOnStop": False}
     calls: list[tuple[str, dict]] = []
 
     async def _execute(command: str, params: dict, **_kwargs) -> bool:
@@ -151,23 +150,66 @@ def test_stop_lung_can_preserve_holding_current_when_explicitly_configured(monke
         return True
 
     monkeypatch.setattr(gateway, "_execute_lung_bool_command", _execute)
-
-    result = asyncio.run(gateway.stop_lung())
-
-    assert result is True
+    assert asyncio.run(gateway.stop_lung()) is True
     assert calls == [("stop", {})]
 
 
 def test_startup_idle_policy_deenergizes_tic249(monkeypatch) -> None:
     gateway = PluginHardwareGateway(mode="mock")
-    gateway._motor2_runtime = {
-        "idleState": "deenergized",
-        "deenergizeOnStartup": True,
-    }
+    gateway._motor2_runtime = {"idleState": "deenergized", "deenergizeOnStartup": True}
     disable = AsyncMock(return_value=True)
     monkeypatch.setattr(gateway, "disable_lung", disable)
 
-    result = asyncio.run(gateway.enforce_motor2_startup_idle_state())
-
-    assert result is True
+    assert asyncio.run(gateway.enforce_motor2_startup_idle_state()) is True
     disable.assert_awaited_once_with()
+
+
+def test_suspended_plugin_cannot_reconnect_until_resumed(monkeypatch) -> None:
+    gateway = PluginHardwareGateway(mode="mock")
+    gateway.mode = "real"
+    gateway._init_done = True
+    gateway._plugin_configs = {
+        "modbus-io": PluginConfig(
+            plugin_id="modbus-io",
+            enabled=True,
+            connection_type="modbus-rtu",
+            connection_params={"serial_port": "/dev/ttyACM0", "baudrate": 4800},
+        ),
+    }
+    gateway._plugins["modbus-io"] = object()
+    disconnect = AsyncMock(return_value=True)
+    connect = AsyncMock(return_value=True)
+    instance = object()
+    monkeypatch.setattr(
+        "oqlos.hardware.plugins.registry.PluginRegistry.disconnect_plugin",
+        disconnect,
+    )
+    monkeypatch.setattr(
+        "oqlos.hardware.plugins.registry.PluginRegistry.connect_plugin",
+        connect,
+    )
+    monkeypatch.setattr(
+        "oqlos.hardware.plugins.registry.PluginRegistry.get_instance",
+        lambda _plugin_id: instance,
+    )
+    monkeypatch.setattr(
+        gateway,
+        "_apply_persisted_modbus_settings",
+        lambda: {"modbus-io": {"baudrate": 4800}},
+    )
+
+    async def _exercise() -> tuple[object | None, dict[str, object]]:
+        suspended = await gateway.suspend_plugins({"modbus-io"})
+        assert suspended == {"modbus-io"}
+        blocked = await gateway._get_or_connect_plugin("modbus-io")
+        resumed = await gateway.resume_modbus_plugins({"modbus-io"})
+        return blocked, resumed
+
+    blocked, resumed = asyncio.run(_exercise())
+
+    assert blocked is None
+    assert resumed["ok"] is True
+    assert resumed["actuation"] is False
+    assert "modbus-io" not in gateway._suspended_plugins
+    connect.assert_awaited_once()
+    assert gateway._plugins["modbus-io"] is instance

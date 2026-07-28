@@ -8,7 +8,7 @@ turns validated intent into Events.
 """
 
 from .aggregate import Aggregate
-from .commands import Command, CommandBus
+from .commands import Command, CommandBus, EventSourcedCommandBus
 from .events import Event, EventStore
 from .projection import Projection
 
@@ -16,6 +16,7 @@ __all__ = [
     "Aggregate",
     "Command",
     "CommandBus",
+    "EventSourcedCommandBus",
     "Event",
     "EventStore",
     "Projection",
@@ -23,12 +24,12 @@ __all__ = [
 ]
 
 
-def build_command_bus(store: EventStore) -> CommandBus:
+def build_command_bus(store: EventStore) -> EventSourcedCommandBus:
     """Construct a CommandBus with every domain handler in this package registered."""
     from . import execution as _execution
     from . import peripheral as _peripheral
 
-    bus = CommandBus(store)
+    bus = EventSourcedCommandBus(store)
     for command_type, handler in _peripheral.PERIPHERAL_HANDLERS.items():
         bus.register(command_type, handler)
     for command_type, handler in _execution.EXECUTION_HANDLERS.items():

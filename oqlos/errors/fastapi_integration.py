@@ -182,6 +182,22 @@ def install_oqlos_error_handler(app: FastAPI) -> None:
         request: Request, exc: StarletteHTTPException
     ) -> JSONResponse:
         detail = exc.detail
+        if isinstance(detail, dict):
+            upstream = detail.get("response")
+            if (
+                isinstance(upstream, dict)
+                and str(upstream.get("code") or "").startswith("C2004-")
+            ):
+                correlation_id = str(upstream.get("correlation_id") or "")
+                response_headers = dict(exc.headers or {})
+                if correlation_id:
+                    response_headers["X-Correlation-ID"] = correlation_id
+                return JSONResponse(
+                    status_code=exc.status_code,
+                    content=jsonable_encoder(upstream),
+                    headers=response_headers,
+                    media_type="application/problem+json",
+                )
         context: Any = detail if isinstance(detail, (dict, list)) else None
         public_code = ""
         message = str(detail)

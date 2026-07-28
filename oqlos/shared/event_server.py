@@ -20,8 +20,7 @@ import random
 import sys
 import time
 from datetime import datetime, timezone
-from pathlib import Path
-from typing import Any, Dict
+from typing import Dict
 
 try:
     import websockets
@@ -34,8 +33,13 @@ from oqlos.shared.event_store import EventStore
 
 # ── Connection Manager ──────────────────────────────────────────────────────
 
-class ConnectionManager:
-    """Tracks connected WebSocket clients and broadcasts messages."""
+class EventServerConnectionManager:
+    """Tracks clients connected to the standalone OqlOS event server.
+
+    This contract intentionally differs from
+    ``shared.websocket_manager.ConnectionManager``: disconnect is awaitable
+    and statistics use the event-server ``connections`` schema.
+    """
 
     def __init__(self) -> None:
         self.active: set[ServerConnection] = set()
@@ -67,6 +71,10 @@ class ConnectionManager:
                 for info in self.client_info.values()
             ],
         }
+
+
+# Backward-compatible import used by older event-server integrations.
+ConnectionManager = EventServerConnectionManager
 
 
 # ── Event Server ────────────────────────────────────────────────────────────

@@ -61,6 +61,7 @@ class PluginHardwareGateway:
         self._init_done = False
         self._init_lock = asyncio.Lock()
         self._reconfigure_lock = asyncio.Lock()
+        self._suspended_plugins: set[str] = set()
         self._runtime_loop: asyncio.AbstractEventLoop | None = None
         self.last_init_summary: dict[str, Any] = {}
         if self.mode == "real":
@@ -94,7 +95,9 @@ class PluginHardwareGateway:
             if not loaded:
                 raise RuntimeError(f"No plugins defined in config: {selected_path}")
         except Exception as exc:
-            raise RuntimeError(f"Failed to load OqlOS hardware configuration: {exc}") from exc
+            raise RuntimeError(
+                f"Failed to load OqlOS hardware configuration: {exc}"
+            ) from exc
 
     def _parse_plugin_configs(self, plugins_data: dict[str, dict[str, Any]]) -> None:
         """Parse plugin configurations from dictionary (Pydantic handles nesting)."""
@@ -119,10 +122,14 @@ class PluginHardwareGateway:
             "motor-tic249": ("OQLOS_LUNG_MOTOR_URL", "LUNG_MOTOR_URL"),
         }
         for plugin_id, env_names in url_overrides.items():
-            value = next((os.getenv(name) for name in env_names if os.getenv(name)), None)
+            value = next(
+                (os.getenv(name) for name in env_names if os.getenv(name)), None
+            )
             if not value or plugin_id not in self._plugin_configs:
                 continue
-            self._plugin_configs[plugin_id].connection_params["base_url"] = value.rstrip("/")
+            self._plugin_configs[plugin_id].connection_params["base_url"] = (
+                value.rstrip("/")
+            )
             logger.info("Hardware plugin %s base_url overridden by env", plugin_id)
 
         self._apply_plugin_enable_env_overrides()
@@ -139,14 +146,25 @@ class PluginHardwareGateway:
         self._apply_modbus_env_overrides(
             "modbus-adc",
             {
-                "serial_port": ("OQLOS_MODBUS_ADC_SERIAL_PORT", "MODBUS_ADC_SERIAL_PORT"),
-                "baudrate": ("OQLOS_MODBUS_ADC_BAUD", "MODBUS_ADC_BAUD", "MODBUS_ADC_BAUD_RATE"),
+                "serial_port": (
+                    "OQLOS_MODBUS_ADC_SERIAL_PORT",
+                    "MODBUS_ADC_SERIAL_PORT",
+                ),
+                "baudrate": (
+                    "OQLOS_MODBUS_ADC_BAUD",
+                    "MODBUS_ADC_BAUD",
+                    "MODBUS_ADC_BAUD_RATE",
+                ),
                 "parity": ("OQLOS_MODBUS_ADC_PARITY", "MODBUS_ADC_PARITY"),
                 "device_id": ("OQLOS_MODBUS_ADC_DEVICE_ID", "MODBUS_ADC_DEVICE_ID"),
-                "read_address": ("OQLOS_MODBUS_ADC_READ_ADDRESS", "MODBUS_ADC_READ_ADDRESS"),
+                "read_address": (
+                    "OQLOS_MODBUS_ADC_READ_ADDRESS",
+                    "MODBUS_ADC_READ_ADDRESS",
+                ),
                 "read_count": ("OQLOS_MODBUS_ADC_READ_COUNT", "MODBUS_ADC_READ_COUNT"),
             },
         )
+
     def _apply_persisted_modbus_settings(self) -> dict[str, dict[str, Any]]:
         """Make the operator profile authoritative for live Modbus plugins."""
         from oqlos.api.hardware_modbus_settings import apply_modbus_runtime_settings
@@ -185,6 +203,52 @@ class PluginHardwareGateway:
                 if ok and instance is not None:
                     self._plugins[plugin_id] = instance
                 reconnects.append({"plugin_id": plugin_id, "ok": bool(ok)})
+            return {
+                "ok": all(item["ok"] for item in reconnects),
+                "applied": applied,
+                "reconnects": reconnects,
+                "actuation": False,
+            }
+
+    async def suspend_plugins(self, plugin_ids: set[str]) -> set[str]:
+        """Temporarily prevent on-demand reconnect while a service tool owns a port."""
+        await self.ensure_initialized()
+        selected = {
+            plugin_id
+            for plugin_id in plugin_ids
+            if plugin_id in self._plugin_configs
+            and self._plugin_configs[plugin_id].enabled
+        }
+        if not selected:
+            return set()
+        async with self._reconfigure_lock:
+            self._suspended_plugins.update(selected)
+            for plugin_id in selected:
+                self._plugins.pop(plugin_id, None)
+                await PluginRegistry.disconnect_plugin(plugin_id)
+        return selected
+
+    async def resume_modbus_plugins(self, plugin_ids: set[str]) -> dict[str, Any]:
+        """Reconnect suspended RTU plugins from persisted settings, without actuation."""
+        await self.ensure_initialized()
+        selected = set(plugin_ids)
+        async with self._reconfigure_lock:
+            applied = self._apply_persisted_modbus_settings()
+            reconnects: list[dict[str, Any]] = []
+            try:
+                for plugin_id in selected:
+                    config = self._plugin_configs.get(plugin_id)
+                    if config is None or not config.enabled or plugin_id not in applied:
+                        continue
+                    self._plugins.pop(plugin_id, None)
+                    await PluginRegistry.disconnect_plugin(plugin_id)
+                    ok = await PluginRegistry.connect_plugin(plugin_id, config)
+                    instance = PluginRegistry.get_instance(plugin_id)
+                    if ok and instance is not None:
+                        self._plugins[plugin_id] = instance
+                    reconnects.append({"plugin_id": plugin_id, "ok": bool(ok)})
+            finally:
+                self._suspended_plugins.difference_update(selected)
             return {
                 "ok": all(item["ok"] for item in reconnects),
                 "applied": applied,
@@ -231,26 +295,43 @@ class PluginHardwareGateway:
 
     def _apply_shared_modbus_bus_env_overrides(self) -> None:
         """Apply one-bus RS485 aliases before per-plugin overrides."""
-        shared_serial = next((
-            os.getenv(name)
-            for name in (
-                "OQLOS_MODBUS_BUS_SERIAL_PORT",
-                "MODBUS_BUS_SERIAL_PORT",
-                "OQLOS_MODBUS_SHARED_SERIAL_PORT",
-                "MODBUS_SHARED_SERIAL_PORT",
-            )
-            if os.getenv(name)
-        ), None)
-        shared_baud = next((
-            os.getenv(name)
-            for name in ("OQLOS_MODBUS_BUS_BAUD", "MODBUS_BUS_BAUD", "MODBUS_SHARED_BAUD")
-            if os.getenv(name)
-        ), None)
-        shared_parity = next((
-            os.getenv(name)
-            for name in ("OQLOS_MODBUS_BUS_PARITY", "MODBUS_BUS_PARITY", "MODBUS_SHARED_PARITY")
-            if os.getenv(name)
-        ), None)
+        shared_serial = next(
+            (
+                os.getenv(name)
+                for name in (
+                    "OQLOS_MODBUS_BUS_SERIAL_PORT",
+                    "MODBUS_BUS_SERIAL_PORT",
+                    "OQLOS_MODBUS_SHARED_SERIAL_PORT",
+                    "MODBUS_SHARED_SERIAL_PORT",
+                )
+                if os.getenv(name)
+            ),
+            None,
+        )
+        shared_baud = next(
+            (
+                os.getenv(name)
+                for name in (
+                    "OQLOS_MODBUS_BUS_BAUD",
+                    "MODBUS_BUS_BAUD",
+                    "MODBUS_SHARED_BAUD",
+                )
+                if os.getenv(name)
+            ),
+            None,
+        )
+        shared_parity = next(
+            (
+                os.getenv(name)
+                for name in (
+                    "OQLOS_MODBUS_BUS_PARITY",
+                    "MODBUS_BUS_PARITY",
+                    "MODBUS_SHARED_PARITY",
+                )
+                if os.getenv(name)
+            ),
+            None,
+        )
 
         for plugin_id in ("modbus-io", "modbus-adc"):
             plugin_config = self._plugin_configs.get(plugin_id)
@@ -262,7 +343,9 @@ class PluginHardwareGateway:
                 try:
                     plugin_config.connection_params["baudrate"] = int(shared_baud)
                 except ValueError:
-                    logger.warning("Ignoring invalid shared Modbus baud override: %s", shared_baud)
+                    logger.warning(
+                        "Ignoring invalid shared Modbus baud override: %s", shared_baud
+                    )
             if shared_parity:
                 plugin_config.connection_params["parity"] = shared_parity.upper()
 
@@ -276,14 +359,21 @@ class PluginHardwareGateway:
             return
 
         for param_name, env_names in overrides.items():
-            value = next((os.getenv(name) for name in env_names if os.getenv(name)), None)
+            value = next(
+                (os.getenv(name) for name in env_names if os.getenv(name)), None
+            )
             if value is None:
                 continue
             if param_name in {"baudrate", "device_id", "read_address", "read_count"}:
                 try:
                     plugin_config.connection_params[param_name] = int(value)
                 except ValueError:
-                    logger.warning("Ignoring invalid %s %s override: %s", plugin_id, param_name, value)
+                    logger.warning(
+                        "Ignoring invalid %s %s override: %s",
+                        plugin_id,
+                        param_name,
+                        value,
+                    )
             else:
                 plugin_config.connection_params[param_name] = value
 
@@ -333,6 +423,10 @@ class PluginHardwareGateway:
         """Return a connected plugin, retrying plugins that were unavailable at startup."""
         await self.ensure_initialized()
 
+        if plugin_id in self._suspended_plugins:
+            logger.info("Plugin %s is temporarily suspended for service", plugin_id)
+            return None
+
         plugin = self._plugins.get(plugin_id)
         if plugin:
             return plugin
@@ -343,13 +437,23 @@ class PluginHardwareGateway:
                 health = await instance.health_check()
                 if health.compatible:
                     self._plugins[plugin_id] = instance
-                    logger.info("Plugin %s recovered after startup and is now connected", plugin_id)
+                    logger.info(
+                        "Plugin %s recovered after startup and is now connected",
+                        plugin_id,
+                    )
                     return instance
             except Exception as exc:
-                logger.debug("Health check before reconnect failed for plugin %s: %s", plugin_id, exc)
+                logger.debug(
+                    "Health check before reconnect failed for plugin %s: %s",
+                    plugin_id,
+                    exc,
+                )
 
         config = self._plugin_configs.get(plugin_id)
         if not config or not config.enabled:
+            return None
+
+        if plugin_id in self._suspended_plugins:
             return None
 
         try:
@@ -400,16 +504,24 @@ class PluginHardwareGateway:
                     if success:
                         self._plugins[plugin_id] = instance
                         summary["connected"].append(plugin_id)
-                        logger.info("Plugin %s connected%s", plugin_id, f" ({port_hint})" if port_hint else "")
+                        logger.info(
+                            "Plugin %s connected%s",
+                            plugin_id,
+                            f" ({port_hint})" if port_hint else "",
+                        )
                     else:
-                        summary["failed"].append({"plugin_id": plugin_id, "reason": "connect returned false"})
+                        summary["failed"].append(
+                            {"plugin_id": plugin_id, "reason": "connect returned false"}
+                        )
                         logger.error(
                             "Plugin %s connect() returned false%s",
                             plugin_id,
                             f" ({port_hint})" if port_hint else "",
                         )
                 except Exception as exc:
-                    summary["failed"].append({"plugin_id": plugin_id, "reason": str(exc)})
+                    summary["failed"].append(
+                        {"plugin_id": plugin_id, "reason": str(exc)}
+                    )
                     logger.error(
                         "Failed to initialize plugin %s: %s",
                         plugin_id,
@@ -430,7 +542,9 @@ class PluginHardwareGateway:
             ]
 
             if other_plugins:
-                await asyncio.gather(*[_connect_one(pid, cfg) for pid, cfg in other_plugins])
+                await asyncio.gather(
+                    *[_connect_one(pid, cfg) for pid, cfg in other_plugins]
+                )
             # Shared RS485 bus: connect Modbus plugins sequentially to avoid port races.
             for pid, cfg in modbus_plugins:
                 if cfg.enabled:
@@ -524,7 +638,9 @@ class PluginHardwareGateway:
             return False
 
         try:
-            result = await plugin.execute_command("set_valve", {"valve_id": valve_id, "value": value})
+            result = await plugin.execute_command(
+                "set_valve", {"valve_id": valve_id, "value": value}
+            )
             return result.get("success", False)
         except Exception as exc:
             logger.error("PluginHardwareGateway.set_valve error: %s", exc)
@@ -560,7 +676,9 @@ class PluginHardwareGateway:
             return None
 
         try:
-            result = await plugin.execute_command("read_sensor", {"sensor_id": sensor_id})
+            result = await plugin.execute_command(
+                "read_sensor", {"sensor_id": sensor_id}
+            )
             if result.get("success"):
                 return result.get("data")
             return None
@@ -597,7 +715,13 @@ class PluginHardwareGateway:
     ) -> dict[str, Any]:
         """Start artificial lung reciprocating motion and return detailed plugin result."""
         if not self.is_real:
-            logger.info("[HW mock] SET_LUNG steps=%d speed=%d cycles=%d pause=%.1f", steps, speed, cycles, pause)
+            logger.info(
+                "[HW mock] SET_LUNG steps=%d speed=%d cycles=%d pause=%.1f",
+                steps,
+                speed,
+                cycles,
+                pause,
+            )
             return {
                 "success": True,
                 "data": {
@@ -616,20 +740,35 @@ class PluginHardwareGateway:
             return {"success": False, "error": "Lung plugin not available"}
 
         try:
-            result = await plugin.execute_command("reciprocate", {
-                "steps": steps,
-                "speed": speed,
-                "cycles": cycles,
-                "pause": pause,
-            })
-            return result if isinstance(result, dict) else {"success": False, "error": "Invalid plugin response"}
+            result = await plugin.execute_command(
+                "reciprocate",
+                {
+                    "steps": steps,
+                    "speed": speed,
+                    "cycles": cycles,
+                    "pause": pause,
+                },
+            )
+            return (
+                result
+                if isinstance(result, dict)
+                else {"success": False, "error": "Invalid plugin response"}
+            )
         except Exception as exc:
             logger.error("PluginHardwareGateway.set_lung error: %s", exc)
             return {"success": False, "error": str(exc)}
 
-    async def set_lung(self, steps: int = 500, speed: int = TIC249_DEFAULT_TARGET_VELOCITY, cycles: int = 5, pause: float = 0.5) -> bool:
+    async def set_lung(
+        self,
+        steps: int = 500,
+        speed: int = TIC249_DEFAULT_TARGET_VELOCITY,
+        cycles: int = 5,
+        pause: float = 0.5,
+    ) -> bool:
         """Compatibility bool API for scenario executor paths."""
-        result = await self.set_lung_result(steps=steps, speed=speed, cycles=cycles, pause=pause)
+        result = await self.set_lung_result(
+            steps=steps, speed=speed, cycles=cycles, pause=pause
+        )
         return bool(result.get("success", False))
 
     async def _execute_lung_bool_command(
@@ -667,8 +806,6 @@ class PluginHardwareGateway:
         )
         if not self.motor2_deenergize_on_stop:
             return stopped
-        # Always attempt coil release, even when STOP itself reports failure.
-        # Cutting holding current is the safer final state for this mechanism.
         deenergized = await self.disable_lung()
         return stopped and deenergized
 
@@ -696,17 +833,21 @@ class PluginHardwareGateway:
     @property
     def motor2_deenergize_on_stop(self) -> bool:
         idle_state = str(self._motor2_runtime.get("idleState") or "deenergized").strip().lower()
-        default = idle_state == "deenergized"
-        return self._runtime_bool(self._motor2_runtime.get("deenergizeOnStop"), default)
+        return self._runtime_bool(
+            self._motor2_runtime.get("deenergizeOnStop"),
+            idle_state == "deenergized",
+        )
 
     @property
     def motor2_deenergize_on_startup(self) -> bool:
         idle_state = str(self._motor2_runtime.get("idleState") or "deenergized").strip().lower()
-        default = idle_state == "deenergized"
-        return self._runtime_bool(self._motor2_runtime.get("deenergizeOnStartup"), default)
+        return self._runtime_bool(
+            self._motor2_runtime.get("deenergizeOnStartup"),
+            idle_state == "deenergized",
+        )
 
     async def enforce_motor2_startup_idle_state(self) -> bool:
-        """Release Tic249 coils at runtime startup when configured for deenergized idle."""
+        """Release Tic249 coils at startup when configured for deenergized idle."""
         if not self.motor2_deenergize_on_startup:
             return True
         return await self.disable_lung()
@@ -742,8 +883,11 @@ class PluginHardwareGateway:
             if instance:
                 instance.config = new_cfg
                 updated.append(plugin_id)
-                logger.info("Hot-reloaded config for %s (%d peripherals)",
-                            plugin_id, len(new_cfg.peripherals))
+                logger.info(
+                    "Hot-reloaded config for %s (%d peripherals)",
+                    plugin_id,
+                    len(new_cfg.peripherals),
+                )
 
         self._apply_env_overrides()
         self._apply_persisted_modbus_settings()
@@ -770,8 +914,11 @@ class PluginHardwareGateway:
         # "Health check timed out" for healthy modbus-adc/io under parallel probes.
         _health_timeout = float(os.environ.get("OQLOS_PLUGIN_HEALTH_TIMEOUT", "6.0"))
         if self._plugin_configs:
+
             async def _check_enabled(plugin_id: str) -> tuple[str, PluginHealth | None]:
-                health = await PluginRegistry.health_check(plugin_id, timeout=_health_timeout)
+                health = await PluginRegistry.health_check(
+                    plugin_id, timeout=_health_timeout
+                )
                 return plugin_id, health
 
             checks = [
@@ -781,7 +928,9 @@ class PluginHardwareGateway:
             ]
             health_results = dict(await asyncio.gather(*checks)) if checks else {}
         else:
-            health_results = await PluginRegistry.health_check_all(timeout=_health_timeout)
+            health_results = await PluginRegistry.health_check_all(
+                timeout=_health_timeout
+            )
         for plugin_id, health in health_results.items():
             if health is None:
                 continue

@@ -23,7 +23,7 @@ HARDWARE_REGISTRY: list[dict[str, Any]] = [
             "7": "AI08 spare",
         },
         "interface": "RS485 via USB serial adapter",
-        "default_config": "9600 baud, N-8-1, slave address 1, input registers 0x0000-0x0007",
+        "default_config": "4800 baud, N-8-1, slave address 1, input registers 0x0000-0x0007",
         "wiki": "https://www.waveshare.com/wiki/Modbus_RTU_Analog_Input_8CH",
     },
     {
