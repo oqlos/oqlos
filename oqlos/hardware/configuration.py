@@ -14,15 +14,48 @@ from pathlib import Path
 import re
 import shlex
 import tempfile
-from typing import Any, Literal
+from typing import Any
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
+from pydantic import ValidationError
 
-from oqlos.hardware.plugins.base import PluginConfig
+from oqlos.core.oql_versioning import OQL_VERSION_CURRENT
+from oqlos.hardware.configuration_models import (
+    HARDWARE_CONFIGURATION_VERSION,
+    HardwareAlias as HardwareAlias,
+    HardwareConfiguration,
+    HardwareConfigurationError,
+    HardwareProcess as HardwareProcess,
+    SecretReference as SecretReference,
+)
 
-HARDWARE_CONFIGURATION_VERSION = "hardware-configuration-v1"
 SUPPORTED_HARDWARE_CONFIGURATION_FORMATS = ("oql", "yaml", "json")
+
+_CANONICAL_CONFIGURATION_FIELDS = {
+    "metadata",
+    "devices",
+    "plugins",
+    "aliases",
+    "sensors",
+    "processes",
+    "actions",
+    "functions",
+    "profiles",
+    "runtime",
+    "variables",
+    "policies",
+    "secretRefs",
+    "secret_refs",
+}
+_LEGACY_CONFIGURATION_FIELDS = {
+    "runtimeConfig",
+    "objectActionMap",
+    "paramSensorMap",
+    "actions",
+    "funcImplementations",
+    "operatorVariables",
+    "meta",
+}
 
 
 class _HardwareYamlLoader(yaml.SafeLoader):
@@ -44,188 +77,51 @@ _HardwareYamlLoader.add_implicit_resolver(
 )
 
 
-class HardwareConfigurationError(ValueError):
-    """A configuration error with source/format context suitable for an API."""
-
-    def __init__(
-        self,
-        message: str,
-        *,
-        format: str | None = None,
-        source: str | None = None,
-        issues: list[dict[str, Any]] | None = None,
-    ) -> None:
-        self.format = format
-        self.source = source
-        self.issues = issues or []
-        context = ", ".join(part for part in (format, source) if part)
-        super().__init__(f"{message}{f' ({context})' if context else ''}")
-
-
-class SecretReference(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    provider: Literal["env", "file", "systemd", "secret-store"] = "env"
-    key: str = Field(min_length=1)
-    optional: bool = False
-
-
-class HardwareAlias(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    plugin: str = Field(min_length=1)
-    target: str = Field(min_length=1)
-    kind: str = Field(min_length=1)
-    unit: str | None = None
-    conversion: dict[str, Any] = Field(default_factory=dict)
-    metadata: dict[str, Any] = Field(default_factory=dict)
-
-
-class HardwareProcess(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    uri: str = Field(min_length=1)
-    mode: Literal["execute", "query", "read", "write"] = "execute"
-    outputs: dict[str, str] = Field(default_factory=dict)
-    poll_interval_ms: int | None = Field(default=None, ge=50)
-    emit: str | None = None
-    timeout_ms: int | None = Field(default=None, ge=1)
-    retry_count: int = Field(default=0, ge=0)
-
-
-class HardwareConfiguration(BaseModel):
-    """Canonical portable configuration shared by OQL, YAML, and JSON.
-
-    The top-level vocabulary is strict.  Extension-shaped hardware payloads
-    live inside named dictionaries, so adding a driver does not require a new
-    serialization path while misspelled top-level sections are still rejected.
-    """
-
-    model_config = ConfigDict(extra="forbid", populate_by_name=True)
-
-    schema_version: Literal[HARDWARE_CONFIGURATION_VERSION] = Field(
-        default=HARDWARE_CONFIGURATION_VERSION,
-        alias="schemaVersion",
-    )
-    metadata: dict[str, Any] = Field(default_factory=dict)
-    devices: dict[str, dict[str, Any]] = Field(default_factory=dict)
-    plugins: dict[str, PluginConfig] = Field(default_factory=dict)
-    aliases: dict[str, HardwareAlias] = Field(default_factory=dict)
-    sensors: dict[str, dict[str, Any]] = Field(default_factory=dict)
-    processes: dict[str, HardwareProcess] = Field(default_factory=dict)
-    actions: dict[str, Any] = Field(default_factory=dict)
-    functions: dict[str, Any] = Field(default_factory=dict)
-    profiles: dict[str, Any] = Field(default_factory=dict)
-    runtime: dict[str, Any] = Field(default_factory=dict)
-    variables: dict[str, Any] = Field(default_factory=dict)
-    policies: dict[str, Any] = Field(default_factory=dict)
-    secret_refs: dict[str, SecretReference] = Field(default_factory=dict, alias="secretRefs")
-
-    @field_validator("plugins", mode="before")
-    @classmethod
-    def _inject_plugin_ids(cls, value: Any) -> Any:
-        if value is None:
-            return {}
-        if not isinstance(value, dict):
-            return value
-        return {
-            str(plugin_id): ({"plugin_id": str(plugin_id), **data} if isinstance(data, dict) else data)
-            for plugin_id, data in value.items()
-        }
-
-    @model_validator(mode="after")
-    def _reject_inline_secrets(self) -> "HardwareConfiguration":
-        secret_key = re.compile(r"(?:^|_)(?:password|passwd|token|api_key|secret)(?:$|_)", re.I)
-
-        def walk(value: Any, path: tuple[str, ...]) -> None:
-            if isinstance(value, dict):
-                for key, child in value.items():
-                    child_path = (*path, str(key))
-                    if secret_key.search(str(key)) and child not in (None, "", {}):
-                        raise ValueError(
-                            f"inline secret at {'.'.join(child_path)}; use secretRefs instead"
-                        )
-                    walk(child, child_path)
-            elif isinstance(value, list):
-                for index, child in enumerate(value):
-                    walk(child, (*path, str(index)))
-
-        portable = self.model_dump(by_alias=True, exclude={"secret_refs"})
-        walk(portable, ())
-        return self
-
-    @model_validator(mode="after")
-    def _validate_runtime_contracts(self) -> "HardwareConfiguration":
-        motor2 = self.runtime.get("motor2")
-        if motor2 is None:
-            return self
-        if not isinstance(motor2, dict):
-            raise ValueError("runtime.motor2 must be an object")
-
-        def positive_integer(field: str) -> None:
-            value = motor2.get(field)
-            if value is not None and (
-                not isinstance(value, int) or isinstance(value, bool) or value < 1
-            ):
-                raise ValueError(f"runtime.motor2.{field} must be an integer >= 1")
-
-        for field in ("strokeSteps", "maxStepsPerSecond", "defaultSpeedStepsPerSecond"):
-            positive_integer(field)
-        maximum = motor2.get("maxStepsPerSecond")
-        default = motor2.get("defaultSpeedStepsPerSecond")
-        if isinstance(maximum, int) and isinstance(default, int) and default > maximum:
-            raise ValueError(
-                "runtime.motor2.defaultSpeedStepsPerSecond must be <= maxStepsPerSecond"
-            )
-        peripheral_id = motor2.get("peripheralId")
-        if peripheral_id is not None and (
-            not isinstance(peripheral_id, str) or not peripheral_id.strip()
-        ):
-            raise ValueError("runtime.motor2.peripheralId must be a non-empty string")
-        cycle_volume = motor2.get("cycleVolumeLiters")
-        if cycle_volume is not None and (
-            isinstance(cycle_volume, bool)
-            or not isinstance(cycle_volume, (int, float))
-            or cycle_volume <= 0
-        ):
-            raise ValueError("runtime.motor2.cycleVolumeLiters must be a number > 0")
-        acceleration = motor2.get("accelerationPercentPerSecond")
-        if acceleration is not None and (
-            isinstance(acceleration, bool)
-            or not isinstance(acceleration, (int, float))
-            or not 0 < acceleration <= 100
-        ):
-            raise ValueError(
-                "runtime.motor2.accelerationPercentPerSecond must be in range (0, 100]"
-            )
-        if motor2.get("startDirection") not in {None, "left", "right"}:
-            raise ValueError("runtime.motor2.startDirection must be left or right")
-        if motor2.get("limitMode") not in {None, "stop_on_limit", "reverse_on_limit"}:
-            raise ValueError(
-                "runtime.motor2.limitMode must be stop_on_limit or reverse_on_limit"
-            )
-        if motor2.get("idleState") not in {None, "deenergized", "holding"}:
-            raise ValueError(
-                "runtime.motor2.idleState must be deenergized or holding"
-            )
-        for field in ("deenergizeOnStop", "deenergizeOnStartup"):
-            if motor2.get(field) is not None and not isinstance(motor2[field], bool):
-                raise ValueError(f"runtime.motor2.{field} must be a boolean")
-        return self
-
-    def canonical_dict(self) -> dict[str, Any]:
-        return self.model_dump(mode="json", by_alias=True, exclude_none=True)
-
-
 def _validation_issues(exc: ValidationError) -> list[dict[str, Any]]:
     issues: list[dict[str, Any]] = []
     for error in exc.errors(include_url=False):
-        issues.append({
-            "field": ".".join(str(part) for part in error.get("loc", ())),
-            "message": error.get("msg", "invalid value"),
-            "type": error.get("type", "validation_error"),
-        })
+        issues.append(
+            {
+                "field": ".".join(str(part) for part in error.get("loc", ())),
+                "message": error.get("msg", "invalid value"),
+                "type": error.get("type", "validation_error"),
+            }
+        )
     return issues
+
+
+def _copy_first_nonempty(document: dict[str, Any], *fields: str) -> Any:
+    for field in fields:
+        value = document.get(field)
+        if value:
+            return deepcopy(value)
+    return {}
+
+
+def _merge_legacy_mapping(
+    migrated: dict[str, Any],
+    document: dict[str, Any],
+    *,
+    source_field: str,
+    target_section: str,
+    target_field: str,
+) -> None:
+    legacy_value = document.get(source_field)
+    if legacy_value:
+        migrated[target_section] = {
+            **migrated[target_section],
+            target_field: deepcopy(legacy_value),
+        }
+
+
+def _mark_legacy_migration(migrated: dict[str, Any]) -> None:
+    migrated["metadata"].setdefault("migration", {})
+    migrated["metadata"]["migration"].update(
+        {
+            "source": "legacy-hardware-configuration",
+            "contract": HARDWARE_CONFIGURATION_VERSION,
+        }
+    )
 
 
 def migrate_legacy_hardware_document(value: Any) -> dict[str, Any]:
@@ -240,53 +136,48 @@ def migrate_legacy_hardware_document(value: Any) -> dict[str, Any]:
     if value.get("schemaVersion") or value.get("schema_version"):
         return dict(value)
 
-    known_new = {
-        "metadata", "devices", "plugins", "aliases", "sensors", "processes",
-        "actions", "functions", "profiles", "runtime", "variables", "policies",
-        "secretRefs", "secret_refs",
-    }
-    legacy_map = {
-        "runtimeConfig", "objectActionMap", "paramSensorMap", "actions",
-        "funcImplementations", "operatorVariables", "meta",
-    }
-    unknown = set(value) - known_new - legacy_map
+    unknown = (
+        set(value) - _CANONICAL_CONFIGURATION_FIELDS - _LEGACY_CONFIGURATION_FIELDS
+    )
     if unknown:
         raise HardwareConfigurationError(
             "unknown top-level fields in legacy configuration",
-            issues=[{"field": key, "message": "unknown field"} for key in sorted(unknown)],
+            issues=[
+                {"field": key, "message": "unknown field"} for key in sorted(unknown)
+            ],
         )
 
     migrated: dict[str, Any] = {
         "schemaVersion": HARDWARE_CONFIGURATION_VERSION,
-        "metadata": deepcopy(value.get("metadata") or value.get("meta") or {}),
-        "devices": deepcopy(value.get("devices") or {}),
-        "plugins": deepcopy(value.get("plugins") or {}),
-        "aliases": deepcopy(value.get("aliases") or {}),
-        "sensors": deepcopy(value.get("sensors") or {}),
-        "processes": deepcopy(value.get("processes") or {}),
-        "actions": deepcopy(value.get("actions") or {}),
-        "functions": deepcopy(value.get("functions") or value.get("funcImplementations") or {}),
-        "profiles": deepcopy(value.get("profiles") or {}),
-        "runtime": deepcopy(value.get("runtime") or value.get("runtimeConfig") or {}),
-        "variables": deepcopy(value.get("variables") or value.get("operatorVariables") or {}),
-        "policies": deepcopy(value.get("policies") or {}),
-        "secretRefs": deepcopy(value.get("secretRefs") or value.get("secret_refs") or {}),
+        "metadata": _copy_first_nonempty(value, "metadata", "meta"),
+        "devices": _copy_first_nonempty(value, "devices"),
+        "plugins": _copy_first_nonempty(value, "plugins"),
+        "aliases": _copy_first_nonempty(value, "aliases"),
+        "sensors": _copy_first_nonempty(value, "sensors"),
+        "processes": _copy_first_nonempty(value, "processes"),
+        "actions": _copy_first_nonempty(value, "actions"),
+        "functions": _copy_first_nonempty(value, "functions", "funcImplementations"),
+        "profiles": _copy_first_nonempty(value, "profiles"),
+        "runtime": _copy_first_nonempty(value, "runtime", "runtimeConfig"),
+        "variables": _copy_first_nonempty(value, "variables", "operatorVariables"),
+        "policies": _copy_first_nonempty(value, "policies"),
+        "secretRefs": _copy_first_nonempty(value, "secretRefs", "secret_refs"),
     }
-    if value.get("objectActionMap"):
-        migrated["actions"] = {
-            **migrated["actions"],
-            "objects": deepcopy(value["objectActionMap"]),
-        }
-    if value.get("paramSensorMap"):
-        migrated["sensors"] = {
-            **migrated["sensors"],
-            "bindings": deepcopy(value["paramSensorMap"]),
-        }
-    migrated["metadata"].setdefault("migration", {})
-    migrated["metadata"]["migration"].update({
-        "source": "legacy-hardware-configuration",
-        "contract": HARDWARE_CONFIGURATION_VERSION,
-    })
+    _merge_legacy_mapping(
+        migrated,
+        value,
+        source_field="objectActionMap",
+        target_section="actions",
+        target_field="objects",
+    )
+    _merge_legacy_mapping(
+        migrated,
+        value,
+        source_field="paramSensorMap",
+        target_section="sensors",
+        target_field="bindings",
+    )
+    _mark_legacy_migration(migrated)
     return migrated
 
 
@@ -303,11 +194,17 @@ def _parse_oql(text: str, source: str | None) -> dict[str, Any]:
             tokens = shlex.split(stripped, comments=True, posix=True)
         except ValueError as exc:
             raise HardwareConfigurationError(
-                f"invalid OQL SET at line {line_number}: {exc}", format="oql", source=source
+                f"invalid OQL SET at line {line_number}: {exc}",
+                format="oql",
+                source=source,
             ) from exc
-        if len(tokens) != 3 or tokens[0].upper() != "SET" or not tokens[1].startswith(_OQL_KEY_PREFIX):
+        if (
+            len(tokens) != 3
+            or tokens[0].upper() != "SET"
+            or not tokens[1].startswith(_OQL_KEY_PREFIX)
+        ):
             continue
-        field = tokens[1][len(_OQL_KEY_PREFIX):]
+        field = tokens[1][len(_OQL_KEY_PREFIX) :]
         try:
             document[field] = json.loads(tokens[2])
         except json.JSONDecodeError as exc:
@@ -325,7 +222,7 @@ def _parse_oql(text: str, source: str | None) -> dict[str, Any]:
 
 def _dump_oql(config: HardwareConfiguration) -> str:
     lines = [
-        "VERSION: 5",
+        f"VERSION: {OQL_VERSION_CURRENT}",
         "SCENARIO: OqlOS hardware configuration",
         "CATEGORY: hardware-configuration",
         "DESCRIPTION: Versioned portable hardware configuration; generated deterministically.",
@@ -334,7 +231,9 @@ def _dump_oql(config: HardwareConfiguration) -> str:
         "  NAME 'OqlOS hardware configuration'",
     ]
     for field, value in config.canonical_dict().items():
-        compact = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+        compact = json.dumps(
+            value, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+        )
         quoted = json.dumps(compact, ensure_ascii=False)
         lines.append(f"  SET '{_OQL_KEY_PREFIX}{field}' {quoted}")
     return "\n".join(lines) + "\n"
@@ -394,7 +293,9 @@ def parse_hardware_configuration(
             value = _parse_oql(content, source)
         else:
             raise HardwareConfigurationError(
-                "unsupported format; expected oql, yaml, or json", format=mode, source=source
+                "unsupported format; expected oql, yaml, or json",
+                format=mode,
+                source=source,
             )
     except HardwareConfigurationError:
         raise
@@ -417,7 +318,9 @@ def serialize_hardware_configuration(config: HardwareConfiguration, format: str)
         return yaml.safe_dump(data, allow_unicode=True, sort_keys=True)
     if mode == "oql":
         return _dump_oql(config)
-    raise HardwareConfigurationError("unsupported format; expected oql, yaml, or json", format=mode)
+    raise HardwareConfigurationError(
+        "unsupported format; expected oql, yaml, or json", format=mode
+    )
 
 
 def load_hardware_configuration(
@@ -448,7 +351,9 @@ def save_hardware_configuration(
     mode = format or detect_hardware_configuration_format(target)
     payload = serialize_hardware_configuration(config, mode)
     target.parent.mkdir(parents=True, exist_ok=True)
-    fd, temporary_name = tempfile.mkstemp(prefix=f".{target.name}.", dir=str(target.parent))
+    fd, temporary_name = tempfile.mkstemp(
+        prefix=f".{target.name}.", dir=str(target.parent)
+    )
     temporary = Path(temporary_name)
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as handle:
@@ -466,14 +371,29 @@ _ENV_OVERRIDES: tuple[tuple[str, str, tuple[str, ...], str], ...] = (
     ("motor-dri0050", "base_url", ("OQLOS_MOTOR_URL", "MOTOR_URL"), "text"),
     ("motor-tic249", "base_url", ("OQLOS_LUNG_MOTOR_URL", "LUNG_MOTOR_URL"), "text"),
     ("piadc", "base_url", ("OQLOS_PIADC_URL", "PIADC_URL"), "text"),
-    ("modbus-io", "serial_port", ("OQLOS_MODBUS_SERIAL_PORT", "MODBUS_SERIAL_PORT"), "text"),
+    (
+        "modbus-io",
+        "serial_port",
+        ("OQLOS_MODBUS_SERIAL_PORT", "MODBUS_SERIAL_PORT"),
+        "text",
+    ),
     ("modbus-io", "baudrate", ("OQLOS_MODBUS_BAUD", "MODBUS_BAUD"), "int"),
     ("modbus-io", "parity", ("OQLOS_MODBUS_PARITY", "MODBUS_PARITY"), "text"),
     ("modbus-io", "device_id", ("OQLOS_MODBUS_DEVICE_ID", "MODBUS_DEVICE_ID"), "int"),
-    ("modbus-adc", "serial_port", ("OQLOS_MODBUS_ADC_SERIAL_PORT", "MODBUS_ADC_SERIAL_PORT"), "text"),
+    (
+        "modbus-adc",
+        "serial_port",
+        ("OQLOS_MODBUS_ADC_SERIAL_PORT", "MODBUS_ADC_SERIAL_PORT"),
+        "text",
+    ),
     ("modbus-adc", "baudrate", ("OQLOS_MODBUS_ADC_BAUD", "MODBUS_ADC_BAUD"), "int"),
     ("modbus-adc", "parity", ("OQLOS_MODBUS_ADC_PARITY", "MODBUS_ADC_PARITY"), "text"),
-    ("modbus-adc", "device_id", ("OQLOS_MODBUS_ADC_DEVICE_ID", "MODBUS_ADC_DEVICE_ID"), "int"),
+    (
+        "modbus-adc",
+        "device_id",
+        ("OQLOS_MODBUS_ADC_DEVICE_ID", "MODBUS_ADC_DEVICE_ID"),
+        "int",
+    ),
 )
 
 
@@ -489,12 +409,20 @@ def resolve_effective_hardware_configuration(
         plugin = effective.plugins.get(plugin_id)
         if plugin is None:
             continue
-        env_name = next((name for name in names if str(env.get(name, "")).strip()), None)
+        env_name = next(
+            (name for name in names if str(env.get(name, "")).strip()), None
+        )
         if env_name is None:
             continue
         raw = str(env[env_name]).strip()
         try:
-            value: Any = int(raw) if kind == "int" else raw.rstrip("/") if parameter == "base_url" else raw
+            value: Any = (
+                int(raw)
+                if kind == "int"
+                else raw.rstrip("/")
+                if parameter == "base_url"
+                else raw
+            )
         except ValueError as exc:
             raise HardwareConfigurationError(
                 f"invalid environment override {env_name}={raw!r}",
@@ -503,12 +431,14 @@ def resolve_effective_hardware_configuration(
             ) from exc
         previous = plugin.connection_params.get(parameter)
         plugin.connection_params[parameter] = value
-        overrides.append({
-            "path": f"plugins.{plugin_id}.connection_params.{parameter}",
-            "source": env_name,
-            "configured": previous,
-            "effective": value,
-        })
+        overrides.append(
+            {
+                "path": f"plugins.{plugin_id}.connection_params.{parameter}",
+                "source": env_name,
+                "configured": previous,
+                "effective": value,
+            }
+        )
     return effective, overrides
 
 
@@ -525,7 +455,9 @@ def semantic_configuration_diff(
                 walk(left.get(key), right.get(key), (*path, str(key)))
             return
         if left != right:
-            differences.append({"path": ".".join(path), "configured": left, "effective": right})
+            differences.append(
+                {"path": ".".join(path), "configured": left, "effective": right}
+            )
 
     walk(configured.canonical_dict(), effective.canonical_dict(), ())
     return differences

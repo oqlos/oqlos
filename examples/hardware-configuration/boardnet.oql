@@ -1,4 +1,4 @@
-VERSION: 5
+VERSION: 6
 SCENARIO: OqlOS hardware configuration
 CATEGORY: hardware-configuration
 DESCRIPTION: Versioned portable hardware configuration; generated deterministically.
