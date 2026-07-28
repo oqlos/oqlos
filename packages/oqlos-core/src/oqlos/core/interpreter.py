@@ -140,11 +140,11 @@ class OqlInterpreter(BaseInterpreter):
         # Use the OQL parser for flat OQL files; some .oql examples contain
         # Compatibility syntax must stay on the runtime document parser path.
         if filename.endswith('.oql'):
-            from oqlos.core._oql_adapter import is_flat_oql, oql_doc_to_cql
+            from oqlos.core._oql_adapter import is_flat_oql, oql_doc_to_runtime_document
             from oqlos.core.oql_parser import parse_oql
             if is_flat_oql(source):
                 oql_doc = parse_oql(source, filename)
-                return oql_doc_to_cql(oql_doc)
+                return oql_doc_to_runtime_document(oql_doc)
         return parse_oql_document(source, filename)
 
     def _print_header(self, doc: OqlDocument, name: str) -> None:

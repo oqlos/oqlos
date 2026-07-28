@@ -252,9 +252,9 @@ def _parse_flat_oql_to_goal(dsl: str, scenario_id: str) -> tuple[Goal | None, li
     defines several GOAL blocks, the first one is returned and a note is
     appended to the issues list.
     """
-    from .cql_parser import parse_cql
+    from .oql_document import parse_oql_document
 
-    doc = parse_cql(dsl)
+    doc = parse_oql_document(dsl)
     issues: list[str] = list(doc.errors)
     goals = [g for g in doc.goals if not g.name.startswith('[CONFIG]')]
     if not goals:

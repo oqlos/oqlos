@@ -411,8 +411,8 @@ class _ParseState:
         return self._handle_action_dispatch(act, indent)
 
 
-def parse_cql(source: str, filename: str = "<string>") -> CqlDocument:
-    """Compatibility implementation for parsing OQL source into runtime AST.
+def parse_oql_runtime_document(source: str, filename: str = "<string>") -> CqlDocument:
+    """Parse OQL source into the runtime document AST.
 
     When the source uses the flat OQL grammar (v3/v4), dispatch to the OQL
     parser via the OQL-to-runtime-AST adapter. Historical quoted-string sources fall
@@ -449,8 +449,8 @@ def _validate_intervals(doc: CqlDocument) -> list[str]:
     return issues
 
 
-def validate_cql(doc: CqlDocument) -> list[str]:
-    """Compatibility implementation for validating an OQL runtime document."""
+def validate_oql_runtime_document(doc: CqlDocument) -> list[str]:
+    """Validate an OQL runtime document."""
     issues: list[str] = []
 
     all_goals = _collect_all_goals(doc)
@@ -465,3 +465,8 @@ def validate_cql(doc: CqlDocument) -> list[str]:
     issues.extend(_validate_intervals(doc))
 
     return issues
+
+
+# Historical function names retained as import-compatible aliases.
+parse_cql = parse_oql_runtime_document
+validate_cql = validate_oql_runtime_document

@@ -661,8 +661,8 @@ def is_flat_oql(source: str) -> bool:
     return has_new and not has_legacy
 
 
-def oql_doc_to_cql(doc: OqlDoc) -> CqlDocument:
-    """Convert a parsed :class:`OqlDoc` into a :class:`CqlDocument`."""
+def oql_doc_to_runtime_document(doc: OqlDoc) -> CqlDocument:
+    """Convert a syntax-level :class:`OqlDoc` into the runtime document model."""
 
     base = Path(doc.filename).resolve() if doc.filename and doc.filename != "<string>" else None
     macros = _MacroRegistry()
@@ -736,5 +736,9 @@ def _split_device_field(device: str, index: int) -> str:
 
 
 def parse_flat_oql(source: str, filename: str = "<string>") -> CqlDocument:
-    """Convenience: parse flat OQL directly to a :class:`CqlDocument`."""
-    return oql_doc_to_cql(parse_oql(source, filename))
+    """Parse flat OQL directly into the runtime document model."""
+    return oql_doc_to_runtime_document(parse_oql(source, filename))
+
+
+# Historical function name retained as an import-compatible alias.
+oql_doc_to_cql = oql_doc_to_runtime_document

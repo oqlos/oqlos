@@ -4,17 +4,17 @@ from __future__ import annotations
 
 from oqlos.models.dsl_models import OqlDocument
 
-from .cql_parser import parse_cql, validate_cql
+from .cql_parser import parse_oql_runtime_document, validate_oql_runtime_document
 
 
 def parse_oql_document(source: str, filename: str = "<string>") -> OqlDocument:
     """Parse OQL source into the runtime document AST."""
-    return parse_cql(source, filename)
+    return parse_oql_runtime_document(source, filename)
 
 
 def validate_oql_document(document: OqlDocument) -> list[str]:
     """Validate a parsed OQL runtime document."""
-    return validate_cql(document)
+    return validate_oql_runtime_document(document)
 
 
 __all__ = ["parse_oql_document", "validate_oql_document"]
