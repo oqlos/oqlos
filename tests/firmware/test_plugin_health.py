@@ -61,6 +61,26 @@ class _LungClient:
         return _JsonResponse(404, {})
 
 
+class _UnavailableLungClient:
+    async def get(self, url):
+        if url.endswith("/health"):
+            return _JsonResponse(404, {})
+        if url.endswith("/api/settings"):
+            return _JsonResponse(200, {"version": "0.1.13"})
+        if url.endswith("/api/status"):
+            return _JsonResponse(
+                503,
+                {
+                    "success": False,
+                    "connected": False,
+                    "error": "No such device (it may have been disconnected)",
+                    "error_code": "C2004-HW-0012",
+                    "legacy_error_code": "TIC249-USB-UNAVAILABLE",
+                },
+            )
+        return _JsonResponse(404, {})
+
+
 class _BlockingModbusClient:
     def read_coils(self, **kwargs):
         time.sleep(0.2)
@@ -223,6 +243,26 @@ def test_lung_health_rejects_uninitialized_runtime():
     assert health.status == PluginStatus.ERROR
     assert health.compatible is False
     assert health.message == "Motor not initialized"
+
+
+def test_lung_health_rejects_reachable_sidecar_with_detached_usb() -> None:
+    plugin = LungPlugin(
+        PluginConfig(
+            plugin_id="motor-tic249",
+            enabled=True,
+            connection_type="http",
+            connection_params={"base_url": "http://localhost:8205"},
+        )
+    )
+    plugin._client = _UnavailableLungClient()
+
+    health = asyncio.run(plugin.health_check())
+
+    assert health.status == PluginStatus.ERROR
+    assert health.compatible is False
+    assert health.message == "No such device (it may have been disconnected)"
+    assert health.details["runtime_status"]["error_code"] == "C2004-HW-0012"
+    assert health.details["runtime_status"]["legacy_error_code"] == "TIC249-USB-UNAVAILABLE"
 
 
 def test_modbus_rtu_health_timeout_does_not_block_event_loop():

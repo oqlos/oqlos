@@ -80,12 +80,12 @@ def test_dri0050_startup_fails_closed_when_usb_identity_is_ambiguous() -> None:
     assert "for _p in /dev/ttyUSB*" in script
 
 
-def test_boardnet_deploy_uses_the_c2004_pinned_oql_store() -> None:
+def test_boardnet_deploy_uses_the_canonical_oql_scenario_store() -> None:
     migration = (ROOT / "redeploy/122/migration.md").read_text(encoding="utf-8")
     step = migration.split("- id: sync_oql_scenario", 1)[1].split("\n  - id:", 1)[0]
 
-    assert "src: /home/tom/github/maskservice/c2004/extern/scenarios/" in step
-    assert "src: /home/tom/github/oqlos/oql-scenario/" not in step
+    assert "src: /home/tom/github/oqlos/oql-scenario/" in step
+    assert "src: /home/tom/github/maskservice/c2004/extern/scenarios/" not in step
 
 
 def test_boardnet_base_config_matches_machine_modbus_contract() -> None:

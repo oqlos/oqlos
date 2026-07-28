@@ -1,5 +1,5 @@
 schema_version: '1.0'
-generated_at: '2026-07-27T16:49:47.234904+00:00'
+generated_at: '2026-07-28T08:28:41.154659+00:00'
 spec:
   path: redeploy/122/migration.md
   name: oqlos boardnet deploy
@@ -43,7 +43,7 @@ plan:
     insert_before: null
   - id: sync_oql_scenario
     action: rsync
-    description: Sync przypiętego magazynu OQL używanego przez ten sam release C2004
+    description: Sync kanonicznego magazynu OQL współdzielonego przez całą flotę
     has_command_ref: false
     insert_before: null
   - id: sync_pihw_config
@@ -214,17 +214,17 @@ checks:
     mode: markpact_ref
   local_artifacts:
   - kind: src
-    path: /home/tom/github/maskservice/c2004/extern/scenarios/
-    resolved: /home/tom/github/maskservice/c2004/extern/scenarios
-    exists: true
-    steps:
-    - sync_oql_scenario
-  - kind: src
     path: /home/tom/github/maskservice/c2004/packages/backend-shared-py/
     resolved: /home/tom/github/maskservice/c2004/packages/backend-shared-py
     exists: true
     steps:
     - sync_backend_shared_policy
+  - kind: src
+    path: /home/tom/github/oqlos/oql-scenario/
+    resolved: /home/tom/github/oqlos/oql-scenario
+    exists: true
+    steps:
+    - sync_oql_scenario
   - kind: src
     path: /home/tom/github/oqlos/oqlos/
     resolved: /home/tom/github/oqlos/oqlos
@@ -288,11 +288,14 @@ checks:
   remote:
     enabled: true
     host: pi@192.168.188.122
-    reachable: true
-    checks: []
+    reachable: false
+    checks:
+    - type: ssh_reachability
+      ok: false
+      message: 'Cannot reach host via SSH: pi@192.168.188.122'
 blockers: []
 summary:
   blockers: 0
   local_missing: 0
   refs_missing: 0
-  remote_failed_checks: 0
+  remote_failed_checks: 1

@@ -1,6 +1,57 @@
 # OqlOS BoardNet — zapis stanu i aktualna architektura
 
-Ostatnio sprawdzono: 2026-07-27 Europe/Warsaw.
+Ostatnio sprawdzono: 2026-07-28 Europe/Warsaw.
+
+## Aktualizacja 2026-07-28 10:39 — checkpoint 22/25, BoardNet offline
+
+- Kontrola końcowa: 0/6 odpowiedzi ICMP, trzy nieudane próby portu 8202 oraz
+  SSH `No route to host`. Nie uruchomiono ponownie migracji w tym stanie;
+  checkpoint pozostaje nienaruszony.
+- DisplayNet zwraca dla tego stanu `502 C2004-HW-0011` oraz
+  `metadata.diagnostics.issue_code=firmware_unreachable`.
+
+## Aktualizacja 2026-07-28 10:29 — checkpoint 22/25, niestabilny LAN/zasilanie
+
+- Wznowienie ukończyło `deploy_pirtc_sidecar` i `deploy_usb_adc_stack`;
+  checkpoint ma obecnie 22/25 kroków i zatrzymuje się na
+  `deploy_oqlos_hw_api`.
+- W krótkim oknie dostępności OqlOS health zwrócił `overall_ok=true`,
+  `degraded=false`; Tic249, DRI0050 i Modbus IO były połączone. Raport zasilania
+  zawierał historyczne `undervoltage` i `throttled` (`0x50000`).
+- Kolejne sesje SSH/LAN zostały zerwane. Jedna próba pip nie mogła osiągnąć
+  `piwheels.org`; następnie cały host znów przestał odpowiadać na ping.
+- Rutynowy deploy istniejącego venv nie używa już build isolation ani resolvera
+  zależności z internetu. Lokalne editable install OqlOS/pimodbus używa
+  `--no-build-isolation --no-deps`; bootstrap nowego venv zachowuje pełną
+  instalację zależności.
+- Rozszerzona regresja deployu, discovery, CLI i plugin health: 45/45; lint
+  `redeploy/122/migration.md` przechodzi. Po ustabilizowaniu zasilania/LAN
+  wznowić tym samym poleceniem i wykonać bramki 23–25 oraz realny DO1–DO8
+  smoke.
+
+## Aktualizacja 2026-07-28 — BoardNet offline po over-current USB
+
+- O 09:53 kernel zarejestrował wielokrotne `over-current change` oraz
+  rozłączenie i ponowną enumerację Tic249, Modbus-IO i MCP2221A.
+- Sidecar Tic249 zachował nieaktualny uchwyt i zwrócił
+  `503 C2004-HW-0012`, `TIC249-USB-UNAVAILABLE`. Po kontrolowanym restarcie
+  wrócił jako `connected=true`, `energized=false`, `velocity=0`.
+- Naprawiono health pluginu: odpowiedź `/api/status` ≥300 nie może już zostać
+  zamieniona na `None` i fałszywe `Lung motor is healthy`. Test regresyjny
+  przechodzi 13/13, a zestaw z kontraktem deployu 20/20.
+- Migracja używa teraz wyłącznie kanonicznego
+  `/home/tom/github/oqlos/oql-scenario`; usunięta ścieżka
+  `c2004/extern/scenarios` nie jest fallbackiem.
+- Pierwsza próba deployu poprawki wykonała 20/25 kroków. Przy `deploy_pirtc_sidecar` host
+  przestał odpowiadać na SSH i ping. Checkpoint:
+  `.redeploy/state/migration-pi_192.168.188.122-104d7718.yaml`.
+- Po przywróceniu stabilnego zasilania/huba wznowić poleceniem
+  `redeploy run redeploy/122/migration.md --resume`, a następnie potwierdzić
+  pełne 25/25 oraz bezpieczny stan wszystkich wyjść i silników.
+
+DisplayNet pozostaje zdrowy. Podczas niedostępności `.122` jego proxy zwraca
+standaryzowane `502 C2004-HW-0011` z
+`metadata.diagnostics.issue_code=firmware_unreachable`.
 
 ## Aktualizacja 2026-07-27
 
@@ -38,7 +89,7 @@ dnia, a nie gwarancję bieżącego stanu.
 - Health DisplayNet, OQL Store i BoardNet przeszedł po **10/10** prób bez błędu.
 - `mode=real`, `overall_ok=true`, `degraded=false`; `modbus-io`, Tic249 i
   DRI0050 są zdrowe.
-- Modbus-IO pozostaje na `9600/N/8/1`, slave ID `1`; testy błędnych requestów
+- Modbus-IO pozostaje na `4800/N/8/1`, slave ID `1`; testy błędnych requestów
   nie wykonały programowania ani impulsu, a DO1–DO8 pozostały OFF.
 - `vcgencmd get_throttled` zwrócił `0x0`. `measure_volts core` zwrócił około
   `1.2813 V`; jest to napięcie rdzenia, nie pomiar wejścia 5 V ani poboru mocy.
@@ -186,7 +237,7 @@ curl -s http://192.168.188.122:8203/health
 
 - Aktualna polityka runtime dla Waveshare Modbus-IO to
   `/dev/serial/by-id/usb-1a86_USB_Single_Serial_5958006895-if00`,
-  `9600/N/8/1`, slave ID `1`.
+  `4800/N/8/1`, slave ID `1`.
 - Nie programowano modułu i nie wykonywano `repair --yes`.
 - Konfiguracja runtime używa `modbus-io.device_id=1` oraz
   `OQLOS_MODBUS_DEVICE_ID=1`.
@@ -197,7 +248,7 @@ curl -s http://192.168.188.122:8203/health
 
 - Zatrzymano tylko `oqlos-hardware-api.service`, sidecary zostawiono aktywne,
   potem firmware został ponownie uruchomiony.
-- Krótki skan targetowany powinien używać (`9600`, parity `N`, IDs `1,2`)
+- Krótki skan targetowany powinien używać (`4800`, parity `N`, ID `1`)
   i oczekiwać odpowiedzi
   `read_coils` dla ID `1`.
 - Po restarcie OqlOS: `modbus-io` jest healthy, Tic249 nadal

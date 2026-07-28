@@ -54,8 +54,7 @@ HARDWARE_REGISTRY: list[dict[str, Any]] = [
         "digital_outputs": "DO1-DO8 (5-40V, open-drain, 500mA/ch)",
         "digital_inputs": "DI1-DI8 (5-36V, optocoupler isolated)",
         "interface": "RS485 via USB serial adapter",
-        "default_config": "9600 baud, N-8-1, slave address 1",
+        "default_config": "4800 baud, N-8-1, slave address 1",
         "wiki": "https://www.waveshare.com/wiki/Modbus_RTU_IO_8CH",
     },
 ]
-

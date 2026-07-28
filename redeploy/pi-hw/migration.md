@@ -357,14 +357,20 @@ fi
 
 # Install/refresh the oqlos venv.
 cd /home/pi/oqlos/oqlos
+_new_venv=0
 if [ ! -x /home/pi/oqlos/venv/bin/oqlos-server ]; then
   python3 -m venv /home/pi/oqlos/venv
   /home/pi/oqlos/venv/bin/pip install -q --upgrade pip
-  /home/pi/oqlos/venv/bin/pip install -q --no-deps -e packages/oqlos-models -e packages/oqlos-core
-  /home/pi/oqlos/venv/bin/pip install -q -e .
+  _new_venv=1
   echo "PASS: utworzono /home/pi/oqlos/venv"
 else
   echo "INFO: uzywam istniejacego /home/pi/oqlos/venv"
+fi
+/home/pi/oqlos/venv/bin/pip install -q --no-build-isolation --no-deps -e packages/oqlos-models -e packages/oqlos-core
+if [ "$_new_venv" = "1" ]; then
+  /home/pi/oqlos/venv/bin/pip install -q --no-build-isolation -e .
+else
+  /home/pi/oqlos/venv/bin/pip install -q --no-build-isolation --no-deps -e .
 fi
 
 # Base config from the hardware-node yaml (loopback motor URLs already applied).
@@ -386,7 +392,7 @@ ADC_DEV=$(ls -1 /dev/serial/by-id/usb-FTDI_FT232R_USB_UART_*-if00-port0 2>/dev/n
 [ -n "${ADC_DEV:-}" ] && [ -e "$ADC_DEV" ] || ADC_DEV=$(ls -1 /dev/serial/by-id/usb-1a86_USB2.0-Serial-if00-port0 2>/dev/null | head -1 || true)
 [ -n "${ADC_DEV:-}" ] && [ -e "$ADC_DEV" ] || { for _p in /dev/ttyUSB*; do [ -e "$_p" ] && ADC_DEV="$_p" && break; done; }
 [ -n "${ADC_DEV:-}" ] && [ -e "$ADC_DEV" ] || ADC_DEV=/dev/ttyUSB0
-IO_BAUD=9600
+IO_BAUD=4800
 
 ADC_ENABLED=true
 ADC_DEVICE_ID=2
@@ -396,7 +402,7 @@ from pymodbus.client import ModbusSerialClient
 import sys
 port = sys.argv[1]
 for device_id in (2, 1):
-    cli = ModbusSerialClient(port=port, baudrate=9600, parity="N", stopbits=1, bytesize=8, timeout=0.35)
+    cli = ModbusSerialClient(port=port, baudrate=4800, parity="N", stopbits=1, bytesize=8, timeout=0.35)
     try:
         if not cli.connect():
             continue
@@ -455,7 +461,7 @@ Environment=OQLOS_MODBUS_BAUD=${IO_BAUD}
 Environment=OQLOS_MODBUS_PARITY=N
 Environment=OQLOS_MODBUS_DEVICE_ID=1
 Environment=OQLOS_MODBUS_ADC_SERIAL_PORT=${ADC_SERIAL_FOR_CONFIG}
-Environment=OQLOS_MODBUS_ADC_BAUD=9600
+Environment=OQLOS_MODBUS_ADC_BAUD=4800
 Environment=OQLOS_MODBUS_ADC_PARITY=N
 Environment=OQLOS_MODBUS_ADC_DEVICE_ID=${ADC_DEVICE_ID}
 Environment=OQLOS_MOTOR_URL=http://127.0.0.1:8203

@@ -17,7 +17,7 @@ plugins:
     connection_type: modbus-rtu
     connection_params:
       serial_port: /dev/ttyUSB0          # autodetected at deploy
-      baudrate: 9600
+      baudrate: 4800
       parity: N
       device_id: 2
       read_address: 0
@@ -47,7 +47,7 @@ plugins:
     connection_type: modbus-rtu
     connection_params:
       serial_port: /dev/ttyACM0          # autodetected at deploy
-      baudrate: 9600
+      baudrate: 4800
       parity: N
       device_id: 1
     timeout: 2.0

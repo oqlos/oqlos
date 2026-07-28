@@ -121,7 +121,7 @@ def probe_options_from_args(args: argparse.Namespace) -> dict[str, Any]:
         "serials": _arg_str_list(getattr(args, "serials", None), _serials_from_env()),
         "baudrates": _arg_int_list(
             getattr(args, "baudrates", None),
-            _env_int_list("MODBUS_BAUDS", [_env_int("MODBUS_BAUD", 9600)]),
+            _env_int_list("MODBUS_BAUDS", [_env_int("MODBUS_BAUD", 4800)]),
         ),
         "parities": _arg_str_list(
             getattr(args, "parities", None),
@@ -160,7 +160,7 @@ def run_modbus_probe_from_env() -> dict[str, Any]:
     """Run the direct Modbus probe using the legacy MODBUS_* environment contract."""
     return run_modbus_probe(
         serials=_serials_from_env(),
-        baudrates=_env_int_list("MODBUS_BAUDS", [_env_int("MODBUS_BAUD", 9600)]),
+        baudrates=_env_int_list("MODBUS_BAUDS", [_env_int("MODBUS_BAUD", 4800)]),
         parities=_env_str_list("MODBUS_PARITIES", [os.environ.get("MODBUS_PARITY", "N")]),
         device_ids=_env_int_list("MODBUS_DEVICE_IDS", [_env_int("MODBUS_DEVICE_ID", 1)]),
         functions=_env_str_list("MODBUS_FUNCTIONS", ["read_coils"]),

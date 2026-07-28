@@ -158,13 +158,23 @@ class LungPlugin(HardwarePlugin):
             resp = await self._client.get(f"{self._base_url}/api/status")
         except Exception:
             return None
-        if resp.status_code >= 300:
-            return None
         try:
             data = resp.json()
         except Exception:
-            return None
-        return data if isinstance(data, dict) else None
+            data = None
+        if not isinstance(data, dict):
+            data = {}
+        if resp.status_code >= 300:
+            # A reachable sidecar can still have a detached USB device.  Do
+            # not turn its Problem Details response into ``None`` because the
+            # caller treats missing optional runtime data as healthy.
+            data.setdefault("success", False)
+            data.setdefault("status_code", resp.status_code)
+            data.setdefault(
+                "error",
+                data.get("detail") or f"Lung motor status returned HTTP {resp.status_code}",
+            )
+        return data
 
     @staticmethod
     def _runtime_block_reason(status: dict[str, Any] | None) -> str | None:

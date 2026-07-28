@@ -526,9 +526,11 @@ fi
 
 # Install/refresh the oqlos venv.
 cd /home/pi/oqlos/oqlos
+_new_venv=0
 if [ ! -x /home/pi/oqlos/venv/bin/oqlos-server ]; then
   python3 -m venv /home/pi/oqlos/venv
   /home/pi/oqlos/venv/bin/pip install -q --upgrade pip
+  _new_venv=1
   echo "PASS: utworzono /home/pi/oqlos/venv"
 else
   echo "INFO: odswiezam istniejace /home/pi/oqlos/venv"
@@ -546,8 +548,15 @@ _pip_retry() {
   done
   return 1
 }
-_pip_retry --no-deps -e packages/oqlos-models -e packages/oqlos-core
-_pip_retry -e .
+# Routine fleet updates must not need PyPI/piwheels. Editable local packages
+# use the already-provisioned runtime dependencies and disable PEP 517 build
+# isolation (which otherwise downloads setuptools even for a local source).
+_pip_retry --no-build-isolation --no-deps -e packages/oqlos-models -e packages/oqlos-core
+if [ "$_new_venv" = "1" ]; then
+  _pip_retry --no-build-isolation -e .
+else
+  _pip_retry --no-build-isolation --no-deps -e .
+fi
 /home/pi/oqlos/venv/bin/python - <<'PY'
 import oqlos.api.main
 PY
@@ -559,7 +568,7 @@ fi
 # The hardware REST contract is bundled in OqlOS as oqlos.hardware.client.
 # Only the external Modbus driver layer remains optional/editable on the Pi.
 [ -f /home/pi/maskservice/pimodbus/pyproject.toml ] && \
-  /home/pi/oqlos/venv/bin/pip install -q -e /home/pi/maskservice/pimodbus && \
+  /home/pi/oqlos/venv/bin/pip install -q --no-build-isolation --no-deps -e /home/pi/maskservice/pimodbus && \
   echo "PASS: pimodbus zainstalowany" || echo "INFO: pimodbus przez PYTHONPATH"
 
 # Base config from the hardware-node yaml (loopback motor URLs already applied).
@@ -1541,10 +1550,11 @@ extra_steps:
 
   - id: sync_oql_scenario
     action: rsync
-    description: "Sync przypiętego magazynu OQL używanego przez ten sam release C2004"
-    # One SSOT: deploy the exact gitlink consumed by the frontend/backend.  A
-    # sibling checkout can be on another commit and must never feed BoardNet.
-    src: /home/tom/github/maskservice/c2004/extern/scenarios/
+    description: "Sync kanonicznego magazynu OQL współdzielonego przez całą flotę"
+    # One SSOT: OQL scenarios live only in the dedicated oql-scenario repo.
+    # Historical c2004/extern/scenarios was removed and must not return as a
+    # deployment fallback.
+    src: /home/tom/github/oqlos/oql-scenario/
     dst: ~/oqlos/oql-scenario/
     excludes: [.git, .venv/, venv/, __pycache__/, .pytest_cache/]
 

@@ -85,7 +85,7 @@ def test_probe_waveshare_modbus_reports_adapter_only_when_no_response(monkeypatc
     assert result["connected"] is True
     assert result["modbus_device_responds"] is False
     assert result["serial_port"] == "/dev/ttyACM1"
-    assert result["baudrate"] == 9600
+    assert result["baudrate"] == 4800
     assert result["parity"] == "N"
     assert "No Modbus RTU response" in result["note"]
 

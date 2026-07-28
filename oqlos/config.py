@@ -72,7 +72,7 @@ class Settings(BaseSettings):
         ),
     )
     modbus_device_id: int = Field(
-        default=2,
+        default=1,
         validation_alias=AliasChoices("OQLOS_MODBUS_DEVICE_ID", "MODBUS_DEVICE_ID"),
     )
 
