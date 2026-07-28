@@ -25,16 +25,16 @@ from oqlos.core.base import (
     StepResult,
     StepStatus,
 )
-from oqlos.models.dsl_models import CqlAction, CqlCondition, CqlDocument, CqlGoal, CqlStep
+from oqlos.models.dsl_models import OqlAction, OqlCondition, OqlDocument, OqlGoal, OqlStep
 from oqlos.core.oql_document import parse_oql_document, validate_oql_document
 from oqlos.core._value_normalizers import ValueNormalizer
 from oqlos.core._sensor_evaluator import SensorEvaluator
 from oqlos.core._firmware_executor import FirmwareExecutor
 
 
-class CqlInterpreter(BaseInterpreter):
+class OqlInterpreter(BaseInterpreter):
     """
-    OQL interpreter with three modes (legacy class name retained for ABI compatibility):
+    OQL interpreter with three execution modes:
       - validate: parse + check structure
       - dry-run:  simulate execution with mock sensor values
       - execute:  connect to firmware simulator (:8202) and run real test
@@ -136,7 +136,7 @@ class CqlInterpreter(BaseInterpreter):
         """Delegate to ValueNormalizer."""
         return self._normalizer.normalize_lung_value(raw_value)
 
-    def parse(self, source: str, filename: str = "<string>") -> CqlDocument:
+    def parse(self, source: str, filename: str = "<string>") -> OqlDocument:
         # Use the OQL parser for flat OQL files; some .oql examples contain
         # Compatibility syntax must stay on the runtime document parser path.
         if filename.endswith('.oql'):
@@ -147,7 +147,7 @@ class CqlInterpreter(BaseInterpreter):
                 return oql_doc_to_cql(oql_doc)
         return parse_oql_document(source, filename)
 
-    def _print_header(self, doc: CqlDocument, name: str) -> None:
+    def _print_header(self, doc: OqlDocument, name: str) -> None:
         """Print execution header with metadata."""
         self.out.step("📋", f"OQL: {name}")
         if doc.metadata.device_type:
@@ -163,7 +163,7 @@ class CqlInterpreter(BaseInterpreter):
         "pierwsza istotna linia musi mieć postać",
     )
 
-    def _collect_warnings(self, doc: CqlDocument, issues: list[str]) -> None:
+    def _collect_warnings(self, doc: OqlDocument, issues: list[str]) -> None:
         """Collect and emit warnings from document and validation issues."""
         for e in doc.errors:
             if any(marker in e for marker in self._SOFT_DOC_ERROR_MARKERS):
@@ -182,7 +182,7 @@ class CqlInterpreter(BaseInterpreter):
             self.warnings.append(issue)
             self.out.warn(issue)
 
-    def _planned_step_results(self, all_goals: list[tuple[str, CqlGoal]]) -> list[StepResult]:
+    def _planned_step_results(self, all_goals: list[tuple[str, OqlGoal]]) -> list[StepResult]:
         planned: list[StepResult] = []
         for _sc_name, goal in all_goals:
             for step in goal.steps:
@@ -194,7 +194,7 @@ class CqlInterpreter(BaseInterpreter):
         name: str,
         issues: list[str],
         t0: float,
-        all_goals: list[tuple[str, CqlGoal]],
+        all_goals: list[tuple[str, OqlGoal]],
     ) -> ScriptResult:
         """Return early result for validate mode."""
         ok = len(issues) == 0 and not self.errors
@@ -204,9 +204,9 @@ class CqlInterpreter(BaseInterpreter):
             warnings=self.warnings, duration_ms=(time.monotonic() - t0) * 1000,
         )
 
-    def _collect_all_goals(self, doc: CqlDocument) -> list[tuple[str, CqlGoal]]:
+    def _collect_all_goals(self, doc: OqlDocument) -> list[tuple[str, OqlGoal]]:
         """Collect all goals from document and scenarios."""
-        all_goals: list[tuple[str, CqlGoal]] = []
+        all_goals: list[tuple[str, OqlGoal]] = []
         for g in doc.goals:
             all_goals.append(("", g))
         for sc in doc.scenarios:
@@ -214,7 +214,7 @@ class CqlInterpreter(BaseInterpreter):
                 all_goals.append((sc.name, g))
         return all_goals
 
-    def _execute_single_goal(self, sc_name: str, goal: CqlGoal) -> None:
+    def _execute_single_goal(self, sc_name: str, goal: OqlGoal) -> None:
         """Execute all steps in a single goal."""
         prefix = f"{sc_name}/" if sc_name else ""
         self.out.step("🎯", f"GOAL: {prefix}{goal.name}")
@@ -232,7 +232,7 @@ class CqlInterpreter(BaseInterpreter):
 
         self._evaluate_pending_thresholds(goal)
 
-    def _evaluate_pending_thresholds(self, goal: CqlGoal) -> None:
+    def _evaluate_pending_thresholds(self, goal: OqlGoal) -> None:
         """Próg zadeklarowany, ale nieoceniony przez VAL/GET/IF — oceniamy go
         odroczenie na końcu GOAL-a, jak końcowe ``VAL`` na tym parametrze.
 
@@ -249,7 +249,7 @@ class CqlInterpreter(BaseInterpreter):
         from oqlos.core._interpreter_actions import exec_action_val
 
         for sensor in pending:
-            act = CqlAction(kind="val", target=sensor, args="", raw=f"VAL '{sensor}'")
+            act = OqlAction(kind="val", target=sensor, args="", raw=f"VAL '{sensor}'")
             status = exec_action_val(self, act)
             if status == StepStatus.FAILED and self.results:
                 last = self.results[-1]
@@ -257,7 +257,7 @@ class CqlInterpreter(BaseInterpreter):
                     last.status = StepStatus.FAILED
                     last.message = act.raw
 
-    def _execute_all_goals(self, all_goals: list[tuple[str, CqlGoal]]) -> None:
+    def _execute_all_goals(self, all_goals: list[tuple[str, OqlGoal]]) -> None:
         """Execute all collected goals."""
         for sc_name, goal in all_goals:
             self._goal_skipped = False # Reset for each goal
@@ -279,7 +279,7 @@ class CqlInterpreter(BaseInterpreter):
         self.out.emit(sr.summary())
         return sr
 
-    def execute(self, parsed: CqlDocument) -> ScriptResult:
+    def execute(self, parsed: OqlDocument) -> ScriptResult:
         """Execute an OQL document through all phases: header, validate, execute, result."""
         doc = parsed
         t0 = time.monotonic()
@@ -302,7 +302,7 @@ class CqlInterpreter(BaseInterpreter):
 
         return self._build_script_result(name, t0)
 
-    def _execute_step(self, step: CqlStep, goal: CqlGoal) -> StepResult:
+    def _execute_step(self, step: OqlStep, goal: OqlGoal) -> StepResult:
         t0 = time.monotonic()
         self.out.step("  📌", f"Step {step.number}: {step.name}")
         status = StepStatus.PASSED
@@ -334,7 +334,7 @@ class CqlInterpreter(BaseInterpreter):
 
     # ── Action Handlers (delegated to _interpreter_actions module) ──
 
-    def _execute_action(self, act: CqlAction) -> StepStatus:
+    def _execute_action(self, act: OqlAction) -> StepStatus:
         """Dispatch action to specific handler based on kind."""
         if self._goal_skipped:
             return StepStatus.SKIPPED
@@ -352,7 +352,7 @@ class CqlInterpreter(BaseInterpreter):
         self.out.warn(f"Unknown action kind: {act.kind}")
         return StepStatus.ERROR
 
-    def _exec_flat_action(self, act: CqlAction) -> StepStatus:
+    def _exec_flat_action(self, act: OqlAction) -> StepStatus:
         """Handle actions without arrows (SET 'PUMP' 'off', etc)."""
         from oqlos.core._interpreter_actions import (
             exec_action_set, exec_action_val, exec_action_save,
@@ -385,7 +385,7 @@ class CqlInterpreter(BaseInterpreter):
         """Delegate to ValueNormalizer."""
         return self._normalizer.coerce_generic_peripheral_value(value)
 
-    def _exec_set_peripheral(self, act: CqlAction, value: str) -> StepStatus | None:
+    def _exec_set_peripheral(self, act: OqlAction, value: str) -> StepStatus | None:
         """Execute SET for a peripheral while preserving legacy monkeypatch points."""
         fw = self._get_firmware()
         resolved = self._resolve_peripheral_id(act.target or "")
@@ -401,15 +401,15 @@ class CqlInterpreter(BaseInterpreter):
         """Delegate to FirmwareExecutor."""
         return self._fw_exec._get_firmware()
 
-    def _execute_firmware_action(self, act: CqlAction, args: str | None = None) -> StepStatus:
+    def _execute_firmware_action(self, act: OqlAction, args: str | None = None) -> StepStatus:
         """Delegate to FirmwareExecutor."""
         return self._fw_exec.execute_firmware_action(act, args)
 
-    def _execute_plugin_action(self, act: CqlAction, args: str | None = None) -> StepStatus:
+    def _execute_plugin_action(self, act: OqlAction, args: str | None = None) -> StepStatus:
         """Delegate to FirmwareExecutor."""
         return self._fw_exec._execute_plugin_action(act, args)
 
-    def _execute_legacy_firmware_action(self, act: CqlAction, args: str | None = None) -> StepStatus:
+    def _execute_legacy_firmware_action(self, act: OqlAction, args: str | None = None) -> StepStatus:
         """Delegate to FirmwareExecutor."""
         return self._fw_exec._execute_legacy_firmware_action(act, args)
 
@@ -567,7 +567,7 @@ class CqlInterpreter(BaseInterpreter):
             self.out.warn(f"Could not resolve condition value for {sensor} {operator}")
             return StepStatus.ERROR
 
-        cond = CqlCondition(
+        cond = OqlCondition(
             sensor=sensor,
             operator=operator,
             value=threshold,
@@ -630,7 +630,7 @@ class CqlInterpreter(BaseInterpreter):
             self.out.warn(f"Could not resolve IF expression value: {raw_value}")
             return None, "", StepStatus.ERROR
 
-        cond = CqlCondition(sensor=sensor, operator=operator, value=threshold, unit=unit)
+        cond = OqlCondition(sensor=sensor, operator=operator, value=threshold, unit=unit)
         val = self._resolve_sensor_value(sensor)
 
         if self._sensor_eval._auto_mock and self.mode == "dry-run":
@@ -712,7 +712,7 @@ class CqlInterpreter(BaseInterpreter):
         return StepStatus.WARNING
 
     def _evaluate_range_condition(
-        self, cond: "CqlCondition", sensor: str
+        self, cond: "OqlCondition", sensor: str
     ) -> "StepStatus":
         """Handle range (∈) operator: read sensor, auto-mock in dry-run, compare."""
         if sensor.lower() == "timer":
@@ -736,7 +736,7 @@ class CqlInterpreter(BaseInterpreter):
             return StepStatus.FAILED
         return StepStatus.WARNING
 
-    def _evaluate_condition(self, act: CqlAction) -> StepStatus:
+    def _evaluate_condition(self, act: OqlAction) -> StepStatus:
         """Evaluate a condition using the sensor evaluator."""
         cond = act.condition
         if not cond and act.args:
@@ -774,6 +774,5 @@ class CqlInterpreter(BaseInterpreter):
         )
 
 
-# Canonical public name. ``CqlInterpreter`` remains available as an internal
-# compatibility symbol for existing integrations during the package migration.
-OqlInterpreter = CqlInterpreter
+# Historical import name retained as an ABI-compatible alias.
+CqlInterpreter = OqlInterpreter

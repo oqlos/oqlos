@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import Any, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from oqlos.models.dsl_models import CqlAction, CqlCondition, CqlDocument
+    from oqlos.models.dsl_models import OqlAction, OqlCondition, OqlDocument
     from oqlos.core.base import StepStatus
 
 
@@ -76,7 +76,7 @@ class SensorEvaluator:
 
     @staticmethod
     def collect_sensor_constraints(
-        doc: "CqlDocument",
+        doc: "OqlDocument",
     ) -> dict[str, list[tuple[str, float | None, float | None]]]:
         """Walk AST and collect per-sensor condition constraints."""
         all_goals = list(doc.goals)
@@ -98,7 +98,7 @@ class SensorEvaluator:
                     ))
         return sensor_ranges
 
-    def seed_sensors_from_conditions(self, doc: "CqlDocument") -> None:
+    def seed_sensors_from_conditions(self, doc: "OqlDocument") -> None:
         """Analyze conditions in document and seed mid-range sensor values for dry-run."""
         sensor_ranges = self.collect_sensor_constraints(doc)
 
@@ -114,7 +114,7 @@ class SensorEvaluator:
                     self.sensor_values[sensor] = seed_fn(vmin)
                     break
 
-    def auto_mock_sensor(self, sensor: str, cond: "CqlCondition", val: float) -> float:
+    def auto_mock_sensor(self, sensor: str, cond: "OqlCondition", val: float) -> float:
         """In dry-run auto-mock, nudge sensor value to satisfy condition."""
         if cond.operator == "∈" and cond.value_min is not None and cond.value_max is not None:
             val = (cond.value_min + cond.value_max) / 2.0
@@ -129,7 +129,7 @@ class SensorEvaluator:
     def compare_sensor(
         self,
         sensor: str,
-        cond: "CqlCondition",
+        cond: "OqlCondition",
         val: float,
     ) -> tuple[bool, str]:
         """Compare sensor value against condition. Returns (ok, description)."""

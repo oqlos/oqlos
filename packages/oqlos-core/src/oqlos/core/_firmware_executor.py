@@ -13,6 +13,7 @@ from typing import Any, Callable, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from oqlos.hardware.plugin_gateway import PluginHardwareGateway
+    from oqlos.models.dsl_models import OqlAction
 
 
 def _load_peripheral_map():
@@ -169,7 +170,7 @@ class FirmwareExecutor:
 
     def execute_firmware_action(
         self,
-        act: "CqlAction",
+        act: "OqlAction",
         args: str | None = None,
     ) -> "StepStatus":
         """Execute action using plugin gateway when available, otherwise legacy firmware."""
@@ -180,7 +181,7 @@ class FirmwareExecutor:
 
     def _execute_plugin_action(
         self,
-        act: "CqlAction",
+        act: "OqlAction",
         args: str | None = None,
     ) -> "StepStatus":
         """Execute action using the new plugin gateway system."""
@@ -252,7 +253,7 @@ class FirmwareExecutor:
 
     def _execute_legacy_firmware_action(
         self,
-        act: "CqlAction",
+        act: "OqlAction",
         args: str | None = None,
     ) -> "StepStatus":
         """Execute action on real/simulated firmware (legacy fallback)."""
@@ -267,7 +268,7 @@ class FirmwareExecutor:
             self.out.error(f"{act.target}.{act.method} FAILED: {res.get('detail')}")
             return StepStatus.FAILED
 
-    def exec_set_peripheral(self, act: "CqlAction", value: str) -> "StepStatus | None":
+    def exec_set_peripheral(self, act: "OqlAction", value: str) -> "StepStatus | None":
         """Execute SET action for a peripheral."""
         from oqlos.core.base import StepStatus
 

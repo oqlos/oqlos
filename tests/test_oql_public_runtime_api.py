@@ -18,6 +18,8 @@ def test_canonical_oql_runtime_symbols_parse_and_execute() -> None:
     document = parse_oql_document(source, "public-api.oql")
 
     assert isinstance(document, OqlDocument)
+    assert OqlDocument.__name__ == "OqlDocument"
+    assert OqlInterpreter.__name__ == "OqlInterpreter"
     assert validate_oql_document(document) == []
     assert OqlInterpreter(mode="dry-run", quiet=True).run(source).ok is True
 

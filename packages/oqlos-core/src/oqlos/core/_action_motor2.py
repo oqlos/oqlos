@@ -23,7 +23,7 @@ from oqlos.core.motor2_runtime import (
 )
 
 if TYPE_CHECKING:
-    from oqlos.core.interpreter import CqlInterpreter
+    from oqlos.core.interpreter import OqlInterpreter
     from oqlos.core.base import StepStatus
     from oqlos.core.motor2_runtime import Motor2ReciprocatingPlan
 
@@ -273,7 +273,7 @@ def _call_motor2_transport(name: str, fallback: "Any", *args: "Any") -> "Any":
     return fallback(*args)
 
 
-def _motor2_reciprocating_state(interp: "CqlInterpreter") -> dict[str, Any]:
+def _motor2_reciprocating_state(interp: "OqlInterpreter") -> dict[str, Any]:
     state = interp.vars.get("__motor2_reciprocating")
     if not isinstance(state, dict):
         state = {}
@@ -281,7 +281,7 @@ def _motor2_reciprocating_state(interp: "CqlInterpreter") -> dict[str, Any]:
     return state
 
 
-def _motor2_set_state_value(interp: "CqlInterpreter", state: "dict[str, Any]", key: str, value: Any, label: str) -> "StepStatus":
+def _motor2_set_state_value(interp: "OqlInterpreter", state: "dict[str, Any]", key: str, value: Any, label: str) -> "StepStatus":
     from oqlos.core.base import StepStatus
 
     state[key] = value
@@ -294,14 +294,14 @@ def _motor2_state_handler(
     value_fn: "Any",
     label_fn: "Any",
 ) -> "Any":
-    def _handler(interp: "CqlInterpreter", setting: "dict[str, Any]", state: "dict[str, Any]") -> "StepStatus":
+    def _handler(interp: "OqlInterpreter", setting: "dict[str, Any]", state: "dict[str, Any]") -> "StepStatus":
         value = value_fn(setting)
         return _motor2_set_state_value(interp, state, key, value, label_fn(value))
 
     return _handler
 
 
-def _motor2_do_stop(interp: "CqlInterpreter", setting: "dict[str, Any]", state: "dict[str, Any]") -> "StepStatus":
+def _motor2_do_stop(interp: "OqlInterpreter", setting: "dict[str, Any]", state: "dict[str, Any]") -> "StepStatus":
     from oqlos.core.base import StepStatus
     if interp.mode == "execute":
         try:
@@ -316,7 +316,7 @@ def _motor2_do_stop(interp: "CqlInterpreter", setting: "dict[str, Any]", state: 
 
 
 def _motor2_build_plan(
-    interp: "CqlInterpreter", setting: "dict[str, Any]", state: "dict[str, Any]"
+    interp: "OqlInterpreter", setting: "dict[str, Any]", state: "dict[str, Any]"
 ) -> "Motor2ReciprocatingPlan":
     """Build the reciprocating motion plan from interpreter state and setting."""
     direction = str(setting.get("direction") or interp.vars.get("__motor2_direction") or "right")
@@ -356,7 +356,7 @@ def _motor2_step_label(plan: "Motor2ReciprocatingPlan", mode: str) -> str:
     return f"MOTOR2 RECIPROCATING {plan.direction.upper()} {plan.steps} @ {speed_label}{acc_label}{suffix}"
 
 
-def _motor2_do_start(interp: "CqlInterpreter", setting: "dict[str, Any]", state: "dict[str, Any]") -> "StepStatus":
+def _motor2_do_start(interp: "OqlInterpreter", setting: "dict[str, Any]", state: "dict[str, Any]") -> "StepStatus":
     from oqlos.core.base import StepStatus
 
     plan = _motor2_build_plan(interp, setting, state)
@@ -432,7 +432,7 @@ _MOTOR2_RECIPROCATING_HANDLERS: dict = {
 
 
 def _handle_motor2_reciprocating_setting(
-    interp: "CqlInterpreter",
+    interp: "OqlInterpreter",
     setting: "dict[str, Any]",
 ) -> "StepStatus":
     from oqlos.core.base import StepStatus
@@ -445,7 +445,7 @@ def _handle_motor2_reciprocating_setting(
     return StepStatus.PASSED
 
 
-def _try_exec_motor2_set(interp: "CqlInterpreter", target_lower: str, value: str) -> "StepStatus | None":
+def _try_exec_motor2_set(interp: "OqlInterpreter", target_lower: str, value: str) -> "StepStatus | None":
     if not _normalize_motor2_target(target_lower):
         return None
 

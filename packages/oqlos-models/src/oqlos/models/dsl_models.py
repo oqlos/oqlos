@@ -1,7 +1,7 @@
 """Runtime AST dataclasses for parsed OQL documents.
 
-The ``Cql*`` class names remain compatibility symbols. New integrations should
-use the ``Oql*`` aliases exported at the end of this module.
+The ``Oql*`` classes are canonical. Historical ``Cql*`` names remain aliases
+only for binary/import compatibility with older integrations.
 """
 
 from __future__ import annotations
@@ -10,20 +10,20 @@ from dataclasses import dataclass, field
 
 
 @dataclass
-class CqlMetadata:
+class OqlMetadata:
     scenario_name: str = ""
     device_type: str = ""
     device_model: str = ""
     manufacturer: str = ""
 
 @dataclass
-class CqlInterval:
+class OqlInterval:
     code: str          # e.g. "tt#000"
     label: str         # e.g. "Po użyciu [M]"
     period_months: int = 0
 
 @dataclass
-class CqlCondition:
+class OqlCondition:
     """Sensor condition: AI01 ∈ [min, max] unit | ACTION 'msg'"""
     sensor: str = ""
     operator: str = ""       # ∈, ≤, ≥, <, >, =
@@ -36,63 +36,63 @@ class CqlCondition:
     pass_message: str = ""     # Message shown when CHECK passes
 
 @dataclass
-class CqlAction:
+class OqlAction:
     """An action within a step: → Target.method args, TASK, SET, WAIT, or PUMP."""
     kind: str = "action"     # action, task, set, pump, save, wait, condition, min, max, val, if_else
     target: str = ""
     method: str = ""
     args: str = ""
-    condition: CqlCondition | None = None
+    condition: OqlCondition | None = None
     raw: str = ""
-    then_actions: list[CqlAction] = field(default_factory=list)
-    else_actions: list[CqlAction] = field(default_factory=list)
-    loop_actions: list[CqlAction] = field(default_factory=list)
+    then_actions: list[OqlAction] = field(default_factory=list)
+    else_actions: list[OqlAction] = field(default_factory=list)
+    loop_actions: list[OqlAction] = field(default_factory=list)
 
 @dataclass
-class CqlStep:
+class OqlStep:
     """A numbered step within a goal: 1. Step name:"""
     number: str = ""         # "1", "1.1", "2"
     name: str = ""
     description: str = ""
-    actions: list[CqlAction] = field(default_factory=list)
+    actions: list[OqlAction] = field(default_factory=list)
 
 @dataclass
-class CqlGoal:
+class OqlGoal:
     """A test goal within a scenario."""
     name: str = ""
     description: str = ""
     editable: bool = False
     alarm: str = ""
-    steps: list[CqlStep] = field(default_factory=list)
+    steps: list[OqlStep] = field(default_factory=list)
 
 @dataclass
-class CqlScenario:
+class OqlScenario:
     """A named scenario block: @Namespace.Name"""
     namespace: str = ""
     name: str = ""
     description: str = ""
     intervals: list[str] = field(default_factory=list)
-    goals: list[CqlGoal] = field(default_factory=list)
+    goals: list[OqlGoal] = field(default_factory=list)
 
 @dataclass
-class CqlDocument:
+class OqlDocument:
     """Internal runtime AST node for an OQL document."""
     filename: str = ""
-    metadata: CqlMetadata = field(default_factory=CqlMetadata)
-    intervals: list[CqlInterval] = field(default_factory=list)
-    scenarios: list[CqlScenario] = field(default_factory=list)
+    metadata: OqlMetadata = field(default_factory=OqlMetadata)
+    intervals: list[OqlInterval] = field(default_factory=list)
+    scenarios: list[OqlScenario] = field(default_factory=list)
     # Simple-format goals (GOAL: blocks without @Scenario wrapper)
-    goals: list[CqlGoal] = field(default_factory=list)
+    goals: list[OqlGoal] = field(default_factory=list)
     errors: list[str] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
 
 
-# Canonical public names; legacy class names remain ABI-compatible aliases.
-OqlMetadata = CqlMetadata
-OqlInterval = CqlInterval
-OqlCondition = CqlCondition
-OqlAction = CqlAction
-OqlStep = CqlStep
-OqlGoal = CqlGoal
-OqlScenario = CqlScenario
-OqlDocument = CqlDocument
+# Historical import names retained as ABI-compatible aliases.
+CqlMetadata = OqlMetadata
+CqlInterval = OqlInterval
+CqlCondition = OqlCondition
+CqlAction = OqlAction
+CqlStep = OqlStep
+CqlGoal = OqlGoal
+CqlScenario = OqlScenario
+CqlDocument = OqlDocument
