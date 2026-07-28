@@ -112,7 +112,10 @@ def _load_includes(
 ) -> None:
     """Recursively inline INCLUDE directives and register their macros."""
 
-    pending: list[OqlCmd] = list(doc.includes)
+    # IMPORT composes authorization/scenario layers in the store/editor. It is
+    # preserved by the parser as a dependency edge, but only INCLUDE inlines
+    # executable macro files in the Python runtime.
+    pending: list[OqlCmd] = [cmd for cmd in doc.includes if cmd.cmd == "INCLUDE"]
     for block in doc.blocks:
         for cmd in block.cmds:
             if cmd.cmd == "INCLUDE":

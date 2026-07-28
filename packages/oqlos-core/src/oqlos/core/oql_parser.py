@@ -900,6 +900,11 @@ def _handle_top_level_line(
             doc.errors.append(str(exc))
         return True
 
+    if line.upper().startswith("IMPORT "):
+        path = line.split(None, 1)[1].strip().strip("'\"")
+        doc.includes.append(OqlCmd("IMPORT", {"path": path}, ln, line))
+        return True
+
     meta = META_RE.match(line)
     if meta and not BLOCK_RE.match(line) and not FUNC_INLINE_NAME_RE.match(line):
         key_raw = meta.group(1)

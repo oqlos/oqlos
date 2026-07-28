@@ -1310,3 +1310,16 @@ def test_v6_test_step_rejects_wildcard_val_unit():
     )
 
     assert any("nie '*'" in error for error in doc.errors)
+
+
+def test_top_level_import_is_preserved_as_non_executable_dependency():
+    doc = parse_oql(
+        "VERSION: 6\nIMPORT system/map.oql\nIMPORT administrator/*.oql\n"
+        "TASK:\n  NAME 'Przygotowanie'\n  SET 'pump' 0\n"
+    )
+
+    assert not doc.errors
+    assert [(cmd.cmd, cmd.args["path"]) for cmd in doc.includes] == [
+        ("IMPORT", "system/map.oql"),
+        ("IMPORT", "administrator/*.oql"),
+    ]
