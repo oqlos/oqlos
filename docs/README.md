@@ -11,8 +11,10 @@
   — co działa (status, Modbus, RTC, silniki), API v3, testy i otwarte zadania.
 - [Hardware Diagnostics](HARDWARE_DIAGNOSTICS.md)
 - [Standard błędów i diagnostyki](ERROR_STANDARDIZATION.md)
+- **[Kanoniczny plan dalszej standaryzacji i refaktoryzacji](refactor-roadmap.md)**
+  — bieżący backlog, zależności, kolejność, bramki testowe i Definition of Done.
 - [Audyt standaryzacji 2026-07-27](STANDARDIZATION_AUDIT_2026-07-27.md)
-- [Plan refaktoryzacji 2026-07-27](refactor-roadmap-2026-07-27.md)
+- [Historyczny plan refaktoryzacji 2026-07-27](refactor-roadmap-2026-07-27.md)
 - [OQL v4 Migration Manual](OQL_V4_MIGRATION_MANUAL.md)
 - [OQL spec](oql-spec.md) · [OQL examples](oql-examples.md) · [OQL v3 examples](oql-v3-examples.md)
 

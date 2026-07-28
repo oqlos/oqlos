@@ -1,5 +1,8 @@
 # Plan dalszej refaktoryzacji OqlOS/C2004
 
+> Snapshot historyczny. Bieżący status i kolejność prac są utrzymywane w
+> [kanonicznym planie](refactor-roadmap.md).
+
 Data bazowa: 2026-07-27. Plan obejmuje OqlOS na BoardNet oraz integrację z
 C2004/DisplayNet.
 

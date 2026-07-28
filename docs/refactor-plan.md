@@ -1,8 +1,9 @@
 # Plan refaktoryzacji OqlOS
 
-> Aktualny plan operacyjny po testach BoardNet/DisplayNet z 2026-07-27:
-> [refactor-roadmap-2026-07-27.md](refactor-roadmap-2026-07-27.md). Ten dokument
-> zachowuje historię zakończonych faz strukturalnych 0–8.
+> Aktualny plan operacyjny:
+> [refactor-roadmap.md](refactor-roadmap.md). Datowany
+> [plan z 2026-07-27](refactor-roadmap-2026-07-27.md) jest snapshotem. Ten
+> dokument zachowuje historię zakończonych faz strukturalnych 0–8.
 
 Źródło metryk: `project/analysis.toon.yaml`, `project/project.toon.yaml`, `project/planfile-tickets.yaml` (2026-06-30).
 

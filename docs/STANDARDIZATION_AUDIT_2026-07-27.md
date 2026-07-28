@@ -1,5 +1,8 @@
 # Audyt standaryzacji OqlOS/C2004
 
+> Snapshot pomiarów z 2026-07-27. Bieżący backlog i nowe wyniki testów są w
+> [kanonicznym planie refaktoryzacji](refactor-roadmap.md).
+
 Stan zweryfikowany: 2026-07-27. Audyt obejmuje kod OqlOS, kontrakt środowiska
 C2004, OpenAPI, testy firmware/frontendu oraz bezpieczne odczyty live. Nie
 wykonywano impulsów cewek, programowania Modbus ani ruchu silników.
