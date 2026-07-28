@@ -29,7 +29,10 @@ def test_boardnet_modbus_is_verified_read_only_on_every_service_start() -> None:
     verifier = migration.split("verify-boardnet-modbus.sh << 'SH'", 1)[1].split("\nSH\n", 1)[0]
     unit = migration.split("Description=OqlOS hardware node", 1)[1].split("\nEOF", 1)[0]
 
-    assert "rm -f /home/pi/maskservice/scripts/verify-boardnet-modbus.sh" in migration
+    assert (
+        "rm -f /home/${BOARDNET_SSH_USER}/maskservice/scripts/"
+        "verify-boardnet-modbus.sh"
+    ) in migration
     assert "ID_SERIAL_SHORT=${EXPECTED_SERIAL}" in verifier
     assert 'BAUD" != "4800"' in verifier
     assert 'DEVICE_ID" != "1"' in verifier
@@ -38,18 +41,31 @@ def test_boardnet_modbus_is_verified_read_only_on_every_service_start() -> None:
     assert "write_register" not in verifier
     assert ") from None" in verifier
     assert "verify-boardnet-modbus.sh" in unit
-    assert "/bin/bash /home/pi/maskservice/scripts/verify-boardnet-modbus.sh" in unit
+    assert (
+        "/bin/bash /home/${BOARDNET_SSH_USER}/maskservice/scripts/"
+        "verify-boardnet-modbus.sh"
+    ) in unit
     assert "diagnostics-only degraded runtime" in unit
     assert "RestartSec=10" in unit
-    assert "rm -f /home/pi/.config/systemd/user/oqlos-hardware-api.service.d/99-modbus-port.conf" in migration
-    assert "rm -f /home/pi/.config/systemd/user/oqlos-hardware-api.service.d/90-modbus-device-id.conf" in migration
+    assert (
+        "rm -f /home/${BOARDNET_SSH_USER}/.config/systemd/user/"
+        "oqlos-hardware-api.service.d/99-modbus-port.conf"
+    ) in migration
+    assert (
+        "rm -f /home/${BOARDNET_SSH_USER}/.config/systemd/user/"
+        "oqlos-hardware-api.service.d/90-modbus-device-id.conf"
+    ) in migration
 
 
 def test_boardnet_oqlos_logging_is_bounded_and_has_one_file_writer() -> None:
     migration = (ROOT / "redeploy/122/migration.md").read_text(encoding="utf-8")
     unit = migration.split("Description=OqlOS hardware node", 1)[1].split("\nEOF", 1)[0]
 
-    assert "Environment=OQLOS_LOG_FILE=/home/pi/maskservice/logs/oqlos-hardware-api.log" in unit
+    log_environment = (
+        "Environment=OQLOS_LOG_FILE=/home/${BOARDNET_SSH_USER}/"
+        "maskservice/logs/oqlos-hardware-api.log"
+    )
+    assert log_environment in unit
     assert "Environment=OQLOS_LOG_MAX_BYTES=10000000" in unit
     assert "Environment=OQLOS_LOG_BACKUP_COUNT=5" in unit
     assert "Environment=OQLOS_HTTP_CLIENT_LOG_LEVEL=WARNING" in unit
@@ -58,8 +74,11 @@ def test_boardnet_oqlos_logging_is_bounded_and_has_one_file_writer() -> None:
     assert "StandardOutput=append:" not in unit
 
     drop_in = (ROOT / "redeploy/122/oqlos-logging.conf").read_text(encoding="utf-8")
+    assert (
+        "Environment=OQLOS_LOG_FILE=/home/pi/maskservice/logs/"
+        "oqlos-hardware-api.log"
+    ) in drop_in
     for expected in (
-        "Environment=OQLOS_LOG_FILE=/home/pi/maskservice/logs/oqlos-hardware-api.log",
         "Environment=OQLOS_LOG_MAX_BYTES=10000000",
         "Environment=OQLOS_LOG_BACKUP_COUNT=5",
         "Environment=OQLOS_HTTP_CLIENT_LOG_LEVEL=WARNING",
@@ -84,7 +103,7 @@ def test_boardnet_deploy_uses_the_canonical_oql_scenario_store() -> None:
     migration = (ROOT / "redeploy/122/migration.md").read_text(encoding="utf-8")
     step = migration.split("- id: sync_oql_scenario", 1)[1].split("\n  - id:", 1)[0]
 
-    assert "src: /home/tom/github/oqlos/oql-scenario/" in step
+    assert "src: ${OQL_SCENARIOS_DIR}/" in step
     assert "src: /home/tom/github/maskservice/c2004/extern/scenarios/" not in step
 
 

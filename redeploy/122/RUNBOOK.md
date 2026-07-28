@@ -1,9 +1,8 @@
-# boardnet (122) provisioning runbook (192.168.188.122)
+# BoardNet provisioning runbook
 
 One-time bare-metal setup for the dedicated OqlOS hardware Raspberry Pi 3. Run these
-**before** the first `redeploy run redeploy/122/migration.md`. After provisioning, all
-software bring-up is handled by `migration.md` (the `markpact:ref` scripts are also
-runnable standalone over ssh if you prefer manual control).
+**before** the first real c2004 `deploy-fleet.sh --only 122` run. After
+provisioning, all software bring-up is handled by the canonical migration.
 
 Aktualny stan BoardNet/DisplayNet i ostatniej diagnostyki hardware:
 `redeploy/122/CURRENT_STATE.md`.
@@ -12,29 +11,41 @@ Aktualny stan BoardNet/DisplayNet i ostatniej diagnostyki hardware:
 - Flash **Raspberry Pi OS Lite (64-bit)** to the SD card.
 - Hostname `boardnet`; user `pi`.
 - Wired **ethernet** (Modbus-over-network latency: avoid Wi-Fi).
-- Reserve **192.168.188.122** for the Pi's MAC in the router DHCP table (static lease).
+- Reserve the `BOARDNET_IP` configured in c2004
+  `env.d/21-boardnet-redeploy.env` for the Pi's MAC in the router DHCP table.
+
+Load that profile once in the shell used for the commands below:
+
+```bash
+cd /home/tom/github/maskservice/c2004
+cp -n env.d/21-boardnet-redeploy.env.example env.d/21-boardnet-redeploy.env
+chmod 600 env.d/21-boardnet-redeploy.env
+set -a; . env.d/21-boardnet-redeploy.env; set +a
+BOARDNET_HOST="${BOARDNET_SSH_USER}@${BOARDNET_IP}"
+BOARDNET_SSH=(ssh -p "$BOARDNET_SSH_PORT" -i "$BOARDNET_SSH_KEY")
+```
 
 ## 2. SSH access
 ```bash
-ssh-copy-id pi@boardnet.local          # from the laptop/pi109 that runs redeploy
-ssh pi@boardnet.local true             # verify key-only login works
+ssh-copy-id -p "$BOARDNET_SSH_PORT" -i "${BOARDNET_SSH_KEY}.pub" "$BOARDNET_HOST"
+"${BOARDNET_SSH[@]}" "$BOARDNET_HOST" true
 ```
 
 ## 3. Base packages
 ```bash
-ssh pi@boardnet.local 'sudo apt-get update && \
+"${BOARDNET_SSH[@]}" "$BOARDNET_HOST" 'sudo apt-get update && \
   sudo apt-get install -y python3-venv python3-pip mosquitto mosquitto-clients i2c-tools'
 ```
 If the RTC HAT is fitted, enable I2C. The migration repeats this idempotently,
 but a reboot may be required after the first enable:
 ```bash
-ssh pi@boardnet.local 'sudo raspi-config nonint do_i2c 0'
+"${BOARDNET_SSH[@]}" "$BOARDNET_HOST" 'sudo raspi-config nonint do_i2c 0'
 ```
 
 ## 4. systemd --user + device groups
 ```bash
-ssh pi@boardnet.local 'sudo loginctl enable-linger pi && \
-  sudo usermod -aG dialout,plugdev,i2c,gpio pi'
+"${BOARDNET_SSH[@]}" "$BOARDNET_HOST" "sudo loginctl enable-linger '$BOARDNET_SSH_USER' && \
+  sudo usermod -aG dialout,plugdev,i2c,gpio '$BOARDNET_SSH_USER'"
 ```
 (The `enable-linger-groups` deploy step repeats this idempotently.)
 
@@ -42,7 +53,7 @@ ssh pi@boardnet.local 'sudo loginctl enable-linger pi && \
 The broker requires auth (`allow_anonymous false`). Choose a token and set it on the Pi
 **before** deploying — `install-mosquitto` reads it to create `mosquitto.passwd`:
 ```bash
-ssh pi@boardnet.local 'mkdir -p ~/maskservice/config && \
+"${BOARDNET_SSH[@]}" "$BOARDNET_HOST" 'mkdir -p ~/maskservice/config && \
   printf "OQLOS_OQL_MQTT_PASSWORD=%s\n" "<your-token>" >> ~/maskservice/config/oql-mqtt.env'
 ```
 Use the **same token** on pi109 (see `redeploy/pi109/migration.md` → `point_oqlos_at_remote`).
@@ -54,16 +65,16 @@ move **off pi109** onto this Pi.
 
 ## 7. Deploy
 ```bash
-# From the oqlos repo on the laptop/pi109:
-redeploy run redeploy/122/migration.md
+# From the c2004 repository:
+scripts/redeploy/deploy-fleet.sh --only 122
 # Bench mode (devices not all present yet):
-PIHW_ALLOW_MISSING_HARDWARE=1 redeploy run redeploy/122/migration.md
+PIHW_ALLOW_MISSING_HARDWARE=1 scripts/redeploy/deploy-fleet.sh --only 122
 ```
 
 ## 8. Verify
 ```bash
-ssh pi@boardnet.local 'systemctl --user is-active mosquitto oqlos-hardware-api hw-tic249 dri0050-motor-api pirtc-api'
-ssh pi@boardnet.local 'mosquitto_sub -u oqlos -P "<token>" -t "\$SYS/broker/uptime" -C 1'
+"${BOARDNET_SSH[@]}" "$BOARDNET_HOST" 'systemctl --user is-active mosquitto oqlos-hardware-api hw-tic249 dri0050-motor-api pirtc-api'
+"${BOARDNET_SSH[@]}" "$BOARDNET_HOST" 'mosquitto_sub -u oqlos -P "<token>" -t "\$SYS/broker/uptime" -C 1'
 # From pi109, confirm the OQL agent answers a ping over MQTT (assert-hw-node-healthy does this).
 ```
 
@@ -71,11 +82,10 @@ ssh pi@boardnet.local 'mosquitto_sub -u oqlos -P "<token>" -t "\$SYS/broker/upti
 Provision/verify here first, then deploy c2004 DisplayNet/pi109 with the current
 split configuration:
 ```bash
-cd /home/tom/github/maskservice/c2004
-redeploy run redeploy/pi109/migration.md
+scripts/redeploy/deploy-pi109.sh
 ```
 That stops/skips DisplayNet local hardware services and points c2004 backend/proxy
-at `OQLOS_API_URL=http://192.168.188.122:8202`. See the **Hardware Separation**
+at `OQLOS_API_URL=http://${BOARDNET_IP}:${BOARDNET_OQLOS_PORT}`. See the **Hardware Separation**
 section of `/home/tom/github/maskservice/c2004/redeploy/pi109/migration.md`.
 
 ## Ports on boardnet

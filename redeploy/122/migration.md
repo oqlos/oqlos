@@ -1,7 +1,7 @@
-# OqlOS hardware node — boardnet (192.168.188.122) deploy
+# OqlOS hardware node — BoardNet deploy (adres z profilu .env)
 
 Deploys the OqlOS **hardware runtime**, the moved hardware UI, and an **MQTT broker** onto
-a dedicated Raspberry Pi 3 (`pi@boardnet.local`, `192.168.188.122`). This Pi owns all
+a dedicated Raspberry Pi 3 (`${BOARDNET_SSH_USER}@${BOARDNET_IP}`). This Pi owns all
 physical devices (Modbus IO/ADC, Pololu Tic T249, DFRobot DRI0050, RTC HAT) and runs the
 OQL-over-MQTT **agent/controller** pair for local and remote OQL requests. It also exposes
 the OqlOS hardware UI/API on LAN at `:8202`, so a human can open
@@ -13,20 +13,24 @@ Aktualny stan BoardNet/DisplayNet i ostatniej diagnostyki hardware:
 `redeploy/122/CURRENT_STATE.md`.
 
 See `RUNBOOK.md` for the one-time bare-metal provisioning (OS, ssh keys, apt, linger) that
-must happen **before** the first `redeploy run`.
+must happen **before** the first real `deploy-fleet.sh --only 122` run.
 
 ## Uruchomienie
 
 ```bash
-# From the oqlos repo root, after provisioning per RUNBOOK.md:
-scripts/gen-checksums.sh                 # manifest sha256 pakietu (krok assert_oqlos_checksum go weryfikuje)
-redeploy run redeploy/122/migration.md
+# From the c2004 repository, after provisioning per RUNBOOK.md:
+cp -n env.d/21-boardnet-redeploy.env.example env.d/21-boardnet-redeploy.env
+chmod 600 env.d/21-boardnet-redeploy.env
+scripts/redeploy/deploy-fleet.sh --only 122
 
 # Allow the node to come up even if some USB devices are missing (bench mode):
-PIHW_ALLOW_MISSING_HARDWARE=1 redeploy run redeploy/122/migration.md
+PIHW_ALLOW_MISSING_HARDWARE=1 scripts/redeploy/deploy-fleet.sh --only 122
+
+# Render and validate the plan without contacting BoardNet:
+scripts/redeploy/deploy-fleet.sh --only 122 --plan-only
 
 # Niezależna weryfikacja src↔Pi po deployu (bez pre-generowania manifestu):
-scripts/verify-rpi-checksum.sh pi@boardnet.local
+scripts/verify-rpi-checksum.sh ${BOARDNET_SSH_USER}@${BOARDNET_IP}
 ```
 
 Each step below is also a standalone bash script (the `markpact:ref` blocks), so the
@@ -39,7 +43,7 @@ RUNBOOK can run them manually over ssh if the automation needs adjusting.
 - OqlOS hardware API/UI listens on `0.0.0.0:8202` for LAN access. This intentionally exposes
   hardware controls on the local network; do not publish this port outside the trusted LAN.
 - Aktualna ścieżka GUI c2004/DisplayNet używa bezpośredniego HTTP:
-  `OQLOS_API_URL=http://192.168.188.122:8202`. MQTT zostaje używany dla OQL-over-MQTT
+  `OQLOS_API_URL=http://${BOARDNET_IP}:${BOARDNET_OQLOS_PORT}`. MQTT zostaje używany dla OQL-over-MQTT
   i lokalnego agenta/controllera na BoardNet.
 - `PIHW_ALLOW_MISSING_HARDWARE` (default `1`) turns missing-device failures into warnings so
   the node still boots for bench testing.
@@ -68,21 +72,21 @@ RUNBOOK can run them manually over ssh if the automation needs adjusting.
 ```bash markpact:ref mkdir-hw-remote
 #!/bin/bash
 set -euo pipefail
-mkdir -p /home/pi/oqlos/oqlos \
-         /home/pi/oqlos/oql-scenario \
-         /home/pi/maskservice/config \
-         /home/pi/maskservice/logs \
-         /home/pi/maskservice/mosquitto \
-         /home/pi/maskservice/scripts \
-         /home/pi/.config/systemd/user
+mkdir -p /home/${BOARDNET_SSH_USER}/oqlos/oqlos \
+         /home/${BOARDNET_SSH_USER}/oqlos/oql-scenario \
+         /home/${BOARDNET_SSH_USER}/maskservice/config \
+         /home/${BOARDNET_SSH_USER}/maskservice/logs \
+         /home/${BOARDNET_SSH_USER}/maskservice/mosquitto \
+         /home/${BOARDNET_SSH_USER}/maskservice/scripts \
+         /home/${BOARDNET_SSH_USER}/.config/systemd/user
 echo "PASS: katalogi boardnet utworzone"
 ```
 
 ```bash markpact:ref enable-linger-groups
 #!/bin/bash
 set -euo pipefail
-sudo loginctl enable-linger pi 2>/dev/null || true
-sudo usermod -aG dialout,plugdev,i2c,gpio pi 2>/dev/null || true
+sudo loginctl enable-linger ${BOARDNET_SSH_USER} 2>/dev/null || true
+sudo usermod -aG dialout,plugdev,i2c,gpio ${BOARDNET_SSH_USER} 2>/dev/null || true
 sudo timedatectl set-timezone Europe/Warsaw 2>/dev/null || true
 if command -v raspi-config >/dev/null 2>&1; then
   sudo raspi-config nonint do_i2c 0 >/dev/null 2>&1 || true
@@ -98,7 +102,7 @@ echo "PASS: linger + grupy (dialout,plugdev,i2c,gpio), timezone Europe/Warsaw; I
 ```bash markpact:ref install-mosquitto
 #!/bin/bash
 set -euo pipefail
-mkdir -p /home/pi/maskservice/config /home/pi/maskservice/mosquitto /home/pi/maskservice/logs
+mkdir -p /home/${BOARDNET_SSH_USER}/maskservice/config /home/${BOARDNET_SSH_USER}/maskservice/mosquitto /home/${BOARDNET_SSH_USER}/maskservice/logs
 if ! command -v mosquitto >/dev/null 2>&1; then
   sudo apt-get update -qq
   sudo apt-get install -y git python3-venv mosquitto mosquitto-clients
@@ -106,29 +110,29 @@ fi
 # Disable the system-wide mosquitto; we run it rootless as systemd --user.
 sudo systemctl disable --now mosquitto 2>/dev/null || true
 
-cp /home/pi/maskservice/boardnet-config/mosquitto.conf /home/pi/maskservice/config/mosquitto.conf
+cp /home/${BOARDNET_SSH_USER}/maskservice/boardnet-config/mosquitto.conf /home/${BOARDNET_SSH_USER}/maskservice/config/mosquitto.conf
 
-if [ ! -f /home/pi/maskservice/config/mosquitto.passwd ]; then
+if [ ! -f /home/${BOARDNET_SSH_USER}/maskservice/config/mosquitto.passwd ]; then
   PW="${OQLOS_OQL_MQTT_PASSWORD:-}"
-  if [ -z "$PW" ] && [ -f /home/pi/maskservice/config/oql-mqtt.env ]; then
-    PW=$(grep -E '^OQLOS_OQL_MQTT_PASSWORD=' /home/pi/maskservice/config/oql-mqtt.env | head -1 | cut -d= -f2-)
+  if [ -z "$PW" ] && [ -f /home/${BOARDNET_SSH_USER}/maskservice/config/oql-mqtt.env ]; then
+    PW=$(grep -E '^OQLOS_OQL_MQTT_PASSWORD=' /home/${BOARDNET_SSH_USER}/maskservice/config/oql-mqtt.env | head -1 | cut -d= -f2-)
   fi
   if [ -z "$PW" ] || [ "$PW" = "CHANGE_ME_ON_PI" ]; then
     echo "FAIL: ustaw OQLOS_OQL_MQTT_PASSWORD w ~/maskservice/config/oql-mqtt.env przed deployem brokera" >&2
     exit 1
   fi
-  mosquitto_passwd -b -c /home/pi/maskservice/config/mosquitto.passwd oqlos "$PW"
+  mosquitto_passwd -b -c /home/${BOARDNET_SSH_USER}/maskservice/config/mosquitto.passwd oqlos "$PW"
   echo "INFO: utworzono mosquitto.passwd dla uzytkownika 'oqlos'"
 fi
 
-cat > /home/pi/.config/systemd/user/mosquitto.service << 'UNIT'
+cat > /home/${BOARDNET_SSH_USER}/.config/systemd/user/mosquitto.service << 'UNIT'
 [Unit]
 Description=Mosquitto MQTT broker (OqlOS hardware node)
 After=network-online.target
 
 [Service]
 Type=simple
-ExecStart=/usr/sbin/mosquitto -c /home/pi/maskservice/config/mosquitto.conf
+ExecStart=/usr/sbin/mosquitto -c /home/${BOARDNET_SSH_USER}/maskservice/config/mosquitto.conf
 Restart=always
 RestartSec=3
 
@@ -166,8 +170,8 @@ echo "PASS: udev dla Pololu Tic wdrozony (+ alias maskservice-tic249)"
 ```bash markpact:ref deploy-hw-tic249-service
 #!/bin/bash
 set -euo pipefail
-mkdir -p /home/pi/.config/systemd/user /home/pi/maskservice/logs /home/pi/maskservice/scripts
-cd /home/pi/maskservice/rpi-motor-tic249
+mkdir -p /home/${BOARDNET_SSH_USER}/.config/systemd/user /home/${BOARDNET_SSH_USER}/maskservice/logs /home/${BOARDNET_SSH_USER}/maskservice/scripts
+cd /home/${BOARDNET_SSH_USER}/maskservice/rpi-motor-tic249
 if [ ! -x .venv/bin/python ]; then
   python3 -m venv .venv
 fi
@@ -176,7 +180,7 @@ if ! .venv/bin/python -c 'import flask, usb, ticlib, dotenv' >/dev/null 2>&1; th
 fi
 sed -i '/^USB_SERIAL_NUMBER=/d' .env 2>/dev/null || true
 
-cat > /home/pi/maskservice/scripts/wait-hw-tic249-ready.sh << 'SCRIPT'
+cat > /home/${BOARDNET_SSH_USER}/maskservice/scripts/wait-hw-tic249-ready.sh << 'SCRIPT'
 #!/bin/bash
 set -euo pipefail
 for i in {1..45}; do
@@ -190,9 +194,9 @@ done
 echo 'FAIL: hw-tic249 brak connected=true po retry' >&2
 exit 1
 SCRIPT
-chmod +x /home/pi/maskservice/scripts/wait-hw-tic249-ready.sh
+chmod +x /home/${BOARDNET_SSH_USER}/maskservice/scripts/wait-hw-tic249-ready.sh
 
-cat > /home/pi/maskservice/scripts/tic249-deenergize-best-effort.sh << 'SCRIPT'
+cat > /home/${BOARDNET_SSH_USER}/maskservice/scripts/tic249-deenergize-best-effort.sh << 'SCRIPT'
 #!/bin/bash
 set +e
 for url in http://127.0.0.1:8205 http://127.0.0.1:5000; do
@@ -202,36 +206,36 @@ done
 if command -v ticcmd >/dev/null 2>&1; then
   ticcmd --deenergize >/dev/null 2>&1 || true
 fi
-if [ -x /home/pi/maskservice/rpi-motor-tic249/pololu-tic-1.8.1-linux-rpi/ticcmd ]; then
-  /home/pi/maskservice/rpi-motor-tic249/pololu-tic-1.8.1-linux-rpi/ticcmd --deenergize >/dev/null 2>&1 || true
+if [ -x /home/${BOARDNET_SSH_USER}/maskservice/rpi-motor-tic249/pololu-tic-1.8.1-linux-rpi/ticcmd ]; then
+  /home/${BOARDNET_SSH_USER}/maskservice/rpi-motor-tic249/pololu-tic-1.8.1-linux-rpi/ticcmd --deenergize >/dev/null 2>&1 || true
 fi
 exit 0
 SCRIPT
-chmod +x /home/pi/maskservice/scripts/tic249-deenergize-best-effort.sh
+chmod +x /home/${BOARDNET_SSH_USER}/maskservice/scripts/tic249-deenergize-best-effort.sh
 
-cat > /home/pi/.config/systemd/user/hw-tic249.service << 'UNIT'
+cat > /home/${BOARDNET_SSH_USER}/.config/systemd/user/hw-tic249.service << 'UNIT'
 [Unit]
 Description=Maskservice Pololu Tic T249 hardware adapter
 After=network-online.target
 
 [Service]
 Type=simple
-WorkingDirectory=/home/pi/maskservice/rpi-motor-tic249
-Environment=PATH=/home/pi/maskservice/rpi-motor-tic249/.venv/bin:/usr/local/bin:/usr/bin:/bin
+WorkingDirectory=/home/${BOARDNET_SSH_USER}/maskservice/rpi-motor-tic249
+Environment=PATH=/home/${BOARDNET_SSH_USER}/maskservice/rpi-motor-tic249/.venv/bin:/usr/local/bin:/usr/bin:/bin
 Environment=FLASK_HOST=0.0.0.0
 Environment=FLASK_PORT=8205
 Environment=USB_PRODUCT_ID=0x00c9
 Environment=LOG_LEVEL=INFO
-ExecStartPre=/home/pi/maskservice/scripts/tic249-deenergize-best-effort.sh
-ExecStart=/home/pi/maskservice/rpi-motor-tic249/.venv/bin/python web_panel.py
-ExecStop=/home/pi/maskservice/scripts/tic249-deenergize-best-effort.sh
-ExecStopPost=/home/pi/maskservice/scripts/tic249-deenergize-best-effort.sh
+ExecStartPre=/home/${BOARDNET_SSH_USER}/maskservice/scripts/tic249-deenergize-best-effort.sh
+ExecStart=/home/${BOARDNET_SSH_USER}/maskservice/rpi-motor-tic249/.venv/bin/python web_panel.py
+ExecStop=/home/${BOARDNET_SSH_USER}/maskservice/scripts/tic249-deenergize-best-effort.sh
+ExecStopPost=/home/${BOARDNET_SSH_USER}/maskservice/scripts/tic249-deenergize-best-effort.sh
 Restart=always
 RestartSec=3
 KillSignal=SIGINT
 TimeoutStopSec=20
-StandardOutput=append:/home/pi/maskservice/logs/hw-tic249.log
-StandardError=append:/home/pi/maskservice/logs/hw-tic249.log
+StandardOutput=append:/home/${BOARDNET_SSH_USER}/maskservice/logs/hw-tic249.log
+StandardError=append:/home/${BOARDNET_SSH_USER}/maskservice/logs/hw-tic249.log
 
 [Install]
 WantedBy=default.target
@@ -241,9 +245,9 @@ systemctl --user daemon-reload
 systemctl --user enable --now hw-tic249.service
 sleep 3
 systemctl --user is-active hw-tic249.service
-if /home/pi/maskservice/scripts/wait-hw-tic249-ready.sh; then
+if /home/${BOARDNET_SSH_USER}/maskservice/scripts/wait-hw-tic249-ready.sh; then
   echo "PASS: hw-tic249 aktywny i widzi Pololu Tic"
-  /home/pi/maskservice/scripts/tic249-deenergize-best-effort.sh
+  /home/${BOARDNET_SSH_USER}/maskservice/scripts/tic249-deenergize-best-effort.sh
   if curl -sf http://localhost:8205/api/status | grep -Eq '"energized"[[:space:]]*:[[:space:]]*false'; then
     echo "PASS: hw-tic249 po starcie jest de-energized"
   elif [ "${PIHW_ALLOW_MISSING_HARDWARE:-1}" = "1" ]; then
@@ -264,7 +268,7 @@ fi
 ```bash markpact:ref deploy-dri0050-motor-service
 #!/bin/bash
 set -euo pipefail
-mkdir -p /home/pi/.config/systemd/user /home/pi/maskservice/logs /home/pi/maskservice/scripts
+mkdir -p /home/${BOARDNET_SSH_USER}/.config/systemd/user /home/${BOARDNET_SSH_USER}/maskservice/logs /home/${BOARDNET_SSH_USER}/maskservice/scripts
 cat > /tmp/99-dri0050-usb-serial.rules << 'RULES'
 SUBSYSTEM=="tty", ATTRS{idVendor}=="1a86", MODE="0666", GROUP="dialout"
 SUBSYSTEM=="usb", ATTR{idVendor}=="1a86", MODE="0666", GROUP="dialout"
@@ -274,17 +278,17 @@ sudo udevadm control --reload-rules || true
 sudo udevadm trigger -s tty || true
 sudo udevadm trigger -s usb || true
 
-cd /home/pi/maskservice/rpi-motor-DRI0050
+cd /home/${BOARDNET_SSH_USER}/maskservice/rpi-motor-DRI0050
 python3 -m venv .venv
 .venv/bin/pip install -q --upgrade pip
 .venv/bin/pip install -q -r requirements.txt
 .venv/bin/pip install -q fastapi uvicorn
 .venv/bin/pip install -q -e .
 
-cat > /home/pi/maskservice/scripts/start-dri0050-motor-api.sh << 'SH'
+cat > /home/${BOARDNET_SSH_USER}/maskservice/scripts/start-dri0050-motor-api.sh << 'SH'
 #!/bin/bash
 set -euo pipefail
-cd /home/pi/maskservice/rpi-motor-DRI0050
+cd /home/${BOARDNET_SSH_USER}/maskservice/rpi-motor-DRI0050
 DRI_PORT=""
 for _ in $(seq 1 30); do
   mapfile -t DRI_CANDIDATES < <(
@@ -322,11 +326,11 @@ fi
 echo "INFO: DRI0050 identity resolved to $DRI_PORT -> $(readlink -f "$DRI_PORT")"
 export DRI0050_PORT="$DRI_PORT"
 export DRI0050_FREQ="${DRI0050_FREQ:-1000}"
-exec /home/pi/maskservice/rpi-motor-DRI0050/.venv/bin/python web_api.py
+exec /home/${BOARDNET_SSH_USER}/maskservice/rpi-motor-DRI0050/.venv/bin/python web_api.py
 SH
-chmod +x /home/pi/maskservice/scripts/start-dri0050-motor-api.sh
+chmod +x /home/${BOARDNET_SSH_USER}/maskservice/scripts/start-dri0050-motor-api.sh
 
-cat > /home/pi/.config/systemd/user/dri0050-motor-api.service << 'UNIT'
+cat > /home/${BOARDNET_SSH_USER}/.config/systemd/user/dri0050-motor-api.service << 'UNIT'
 [Unit]
 Description=DFRobot DRI0050 pump motor API
 After=network-online.target
@@ -334,15 +338,15 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-WorkingDirectory=/home/pi/maskservice/rpi-motor-DRI0050
-Environment=PATH=/home/pi/maskservice/rpi-motor-DRI0050/.venv/bin:/usr/local/bin:/usr/bin:/bin
+WorkingDirectory=/home/${BOARDNET_SSH_USER}/maskservice/rpi-motor-DRI0050
+Environment=PATH=/home/${BOARDNET_SSH_USER}/maskservice/rpi-motor-DRI0050/.venv/bin:/usr/local/bin:/usr/bin:/bin
 Environment=API_PORT=8203
 Environment=DRI0050_FREQ=1000
-ExecStart=/home/pi/maskservice/scripts/start-dri0050-motor-api.sh
+ExecStart=/home/${BOARDNET_SSH_USER}/maskservice/scripts/start-dri0050-motor-api.sh
 Restart=always
 RestartSec=3
-StandardOutput=append:/home/pi/maskservice/logs/dri0050-motor-api.log
-StandardError=append:/home/pi/maskservice/logs/dri0050-motor-api.log
+StandardOutput=append:/home/${BOARDNET_SSH_USER}/maskservice/logs/dri0050-motor-api.log
+StandardError=append:/home/${BOARDNET_SSH_USER}/maskservice/logs/dri0050-motor-api.log
 
 [Install]
 WantedBy=default.target
@@ -375,8 +379,8 @@ fi
 ```bash markpact:ref deploy-pirtc-sidecar
 #!/bin/bash
 set -euo pipefail
-mkdir -p /home/pi/.config/systemd/user /home/pi/maskservice/logs
-PIRTC_DIR=/home/pi/maskservice/pirtc
+mkdir -p /home/${BOARDNET_SSH_USER}/.config/systemd/user /home/${BOARDNET_SSH_USER}/maskservice/logs
+PIRTC_DIR=/home/${BOARDNET_SSH_USER}/maskservice/pirtc
 [ -f "$PIRTC_DIR/pyproject.toml" ] || { echo "FAIL: brak $PIRTC_DIR — uruchom sync_pirtc"; exit 1; }
 [ -d "$PIRTC_DIR/RTC/python/lib/waveshare_DS3231" ] || { echo "FAIL: brak sterownika $PIRTC_DIR/RTC/python/lib/waveshare_DS3231 — uruchom sync_pirtc_rtc_lib"; exit 1; }
 if ! command -v i2cdetect >/dev/null 2>&1; then
@@ -399,16 +403,16 @@ python3 -m venv .venv
 .venv/bin/pip install -q --upgrade pip
 .venv/bin/pip install -q -e .
 
-cat > /home/pi/.config/systemd/user/pirtc-api.service << 'UNIT'
+cat > /home/${BOARDNET_SSH_USER}/.config/systemd/user/pirtc-api.service << 'UNIT'
 [Unit]
 Description=piRTC sidecar (Waveshare RTC WatchDog HAT) on :8125
 After=network-online.target
 
 [Service]
 Type=simple
-WorkingDirectory=/home/pi/maskservice/pirtc
-Environment=PATH=/home/pi/maskservice/pirtc/.venv/bin:/usr/local/bin:/usr/bin:/bin
-Environment=PYTHONPATH=/home/pi/maskservice/pirtc:/home/pi/maskservice/pirtc/RTC/python/lib
+WorkingDirectory=/home/${BOARDNET_SSH_USER}/maskservice/pirtc
+Environment=PATH=/home/${BOARDNET_SSH_USER}/maskservice/pirtc/.venv/bin:/usr/local/bin:/usr/bin:/bin
+Environment=PYTHONPATH=/home/${BOARDNET_SSH_USER}/maskservice/pirtc:/home/${BOARDNET_SSH_USER}/maskservice/pirtc/RTC/python/lib
 Environment=API_HOST=0.0.0.0
 Environment=API_PORT=8125
 Environment=RTC_MOCK=false
@@ -418,11 +422,11 @@ Environment=RTC_I2C_BUS=1
 Environment=WATCHDOG_I2C_ADDRESS=0x67
 Environment=WATCHDOG_GPIO_PIN=4
 Environment=LOG_LEVEL=INFO
-ExecStart=/home/pi/maskservice/pirtc/.venv/bin/pirtc-server
+ExecStart=/home/${BOARDNET_SSH_USER}/maskservice/pirtc/.venv/bin/pirtc-server
 Restart=always
 RestartSec=3
-StandardOutput=append:/home/pi/maskservice/logs/pirtc-api.log
-StandardError=append:/home/pi/maskservice/logs/pirtc-api.log
+StandardOutput=append:/home/${BOARDNET_SSH_USER}/maskservice/logs/pirtc-api.log
+StandardError=append:/home/${BOARDNET_SSH_USER}/maskservice/logs/pirtc-api.log
 
 [Install]
 WantedBy=default.target
@@ -470,10 +474,10 @@ fi
 ```bash markpact:ref deploy-usb-adc-stack
 #!/bin/bash
 set -euo pipefail
-ROOT=/home/pi/oqlos-adapters
+ROOT=/home/${BOARDNET_SSH_USER}/oqlos-adapters
 MCP_DIR="$ROOT/usb-adc-mcp2221"
 DFR_DIR="$ROOT/usb-adc-dfr1184"
-mkdir -p "$ROOT" /home/pi/.config/systemd/user
+mkdir -p "$ROOT" /home/${BOARDNET_SSH_USER}/.config/systemd/user
 [ -f "$MCP_DIR/pyproject.toml" ] || { echo "FAIL: brak $MCP_DIR — uruchom sync_usb_adc_mcp2221"; exit 1; }
 [ -f "$DFR_DIR/pyproject.toml" ] || { echo "FAIL: brak $DFR_DIR — uruchom sync_usb_adc_dfr1184"; exit 1; }
 
@@ -483,7 +487,7 @@ fi
 "$ROOT/.venv/bin/pip" install -q --upgrade pip
 "$ROOT/.venv/bin/pip" install -q -e "$MCP_DIR" -e "$DFR_DIR[api]"
 install -m 0644 "$DFR_DIR/deploy/systemd/usb-adc-stack.service" \
-  /home/pi/.config/systemd/user/usb-adc-stack.service
+  /home/${BOARDNET_SSH_USER}/.config/systemd/user/usb-adc-stack.service
 
 systemctl --user daemon-reload
 systemctl --user enable usb-adc-stack.service
@@ -507,7 +511,7 @@ exit 1
 ```bash markpact:ref deploy-oqlos-hw-api
 #!/bin/bash
 set -euo pipefail
-mkdir -p /home/pi/.config/systemd/user /home/pi/maskservice/config /home/pi/maskservice/logs
+mkdir -p /home/${BOARDNET_SSH_USER}/.config/systemd/user /home/${BOARDNET_SSH_USER}/maskservice/config /home/${BOARDNET_SSH_USER}/maskservice/logs
 
 _has_modbus_usb() {
   compgen -G '/dev/ttyACM*' >/dev/null \
@@ -525,15 +529,15 @@ if ! _has_modbus_usb; then
 fi
 
 # Install/refresh the oqlos venv.
-cd /home/pi/oqlos/oqlos
+cd /home/${BOARDNET_SSH_USER}/oqlos/oqlos
 _new_venv=0
-if [ ! -x /home/pi/oqlos/venv/bin/oqlos-server ]; then
-  python3 -m venv /home/pi/oqlos/venv
-  /home/pi/oqlos/venv/bin/pip install -q --upgrade pip
+if [ ! -x /home/${BOARDNET_SSH_USER}/oqlos/venv/bin/oqlos-server ]; then
+  python3 -m venv /home/${BOARDNET_SSH_USER}/oqlos/venv
+  /home/${BOARDNET_SSH_USER}/oqlos/venv/bin/pip install -q --upgrade pip
   _new_venv=1
-  echo "PASS: utworzono /home/pi/oqlos/venv"
+  echo "PASS: utworzono /home/${BOARDNET_SSH_USER}/oqlos/venv"
 else
-  echo "INFO: odswiezam istniejace /home/pi/oqlos/venv"
+  echo "INFO: odswiezam istniejace /home/${BOARDNET_SSH_USER}/oqlos/venv"
 fi
 # Install namespace sub-packages first (--no-deps) so pip's resolver sees them
 # in the environment when resolving the main package's pinned dependencies.
@@ -542,7 +546,7 @@ fi
 _pip_retry() {
   local i
   for i in 1 2 3; do
-    /home/pi/oqlos/venv/bin/pip install -q "$@" && return 0
+    /home/${BOARDNET_SSH_USER}/oqlos/venv/bin/pip install -q "$@" && return 0
     echo "WARN: pip install $* — próba $i/3 nieudana, retry za 5 s" >&2
     sleep 5
   done
@@ -557,25 +561,25 @@ if [ "$_new_venv" = "1" ]; then
 else
   _pip_retry --no-build-isolation --no-deps -e .
 fi
-/home/pi/oqlos/venv/bin/python - <<'PY'
+/home/${BOARDNET_SSH_USER}/oqlos/venv/bin/python - <<'PY'
 import oqlos.api.main
 PY
 echo "PASS: oqlos editable install OK"
-if [ ! -f /home/pi/oqlos/oqlos/frontend/dist/index.html ]; then
-  echo "FAIL: brak /home/pi/oqlos/oqlos/frontend/dist/index.html — zbuduj frontend i uruchom sync_oqlos_frontend_dist" >&2
+if [ ! -f /home/${BOARDNET_SSH_USER}/oqlos/oqlos/frontend/dist/index.html ]; then
+  echo "FAIL: brak /home/${BOARDNET_SSH_USER}/oqlos/oqlos/frontend/dist/index.html — zbuduj frontend i uruchom sync_oqlos_frontend_dist" >&2
   exit 1
 fi
 # The hardware REST contract is bundled in OqlOS as oqlos.hardware.client.
 # Only the external Modbus driver layer remains optional/editable on the Pi.
-[ -f /home/pi/maskservice/pimodbus/pyproject.toml ] && \
-  /home/pi/oqlos/venv/bin/pip install -q --no-build-isolation --no-deps -e /home/pi/maskservice/pimodbus && \
+[ -f /home/${BOARDNET_SSH_USER}/maskservice/pimodbus/pyproject.toml ] && \
+  /home/${BOARDNET_SSH_USER}/oqlos/venv/bin/pip install -q --no-build-isolation --no-deps -e /home/${BOARDNET_SSH_USER}/maskservice/pimodbus && \
   echo "PASS: pimodbus zainstalowany" || echo "INFO: pimodbus przez PYTHONPATH"
 
 # Base config from the hardware-node yaml (loopback motor URLs already applied).
-cp /home/pi/maskservice/boardnet-config/oqlos-hw.yaml /home/pi/maskservice/config/oqlos-real.yaml
-ENVF=/home/pi/maskservice/config/oql-mqtt.env
+cp /home/${BOARDNET_SSH_USER}/maskservice/boardnet-config/oqlos-hw.yaml /home/${BOARDNET_SSH_USER}/maskservice/config/oqlos-real.yaml
+ENVF=/home/${BOARDNET_SSH_USER}/maskservice/config/oql-mqtt.env
 if [ ! -f "$ENVF" ]; then
-  cp /home/pi/maskservice/boardnet-config/.env.hw "$ENVF"
+  cp /home/${BOARDNET_SSH_USER}/maskservice/boardnet-config/.env.hw "$ENVF"
 fi
 PW=$(grep -E '^OQLOS_OQL_MQTT_PASSWORD=' "$ENVF" 2>/dev/null | head -1 | cut -d= -f2- || true)
 if [ -z "$PW" ] || [ "$PW" = "CHANGE_ME_ON_PI" ]; then
@@ -596,7 +600,7 @@ sleep 2
 # (Raspberry Pi UART) provides AI02/AI03 through usb-adc-stack. Exclude both the
 # MCP2221 CDC interface and the CH340 DRI0050 pump adapter before probing, so a
 # generic serial interface can never be misclassified as a Modbus module.
-MB_DETECT=$(timeout 120 /home/pi/oqlos/venv/bin/python - << 'PY' 2>/dev/null || true
+MB_DETECT=$(timeout 120 /home/${BOARDNET_SSH_USER}/oqlos/venv/bin/python - << 'PY' 2>/dev/null || true
 import glob
 import os
 
@@ -703,7 +707,7 @@ if curl -sf --max-time 3 http://127.0.0.1:8203/api/status >/dev/null 2>&1; then
 fi
 echo "INFO: modbus-io=$IO_DEV enabled=$IO_ENABLED @$IO_BAUD id=$IO_DEVICE_ID  modbus-adc=$ADC_SERIAL_FOR_CONFIG enabled=$ADC_ENABLED id=$ADC_DEVICE_ID  motor-dri0050=$DRI_ENABLED"
 
-CFG=/home/pi/maskservice/config/oqlos-real.yaml
+CFG=/home/${BOARDNET_SSH_USER}/maskservice/config/oqlos-real.yaml
 python3 - "$CFG" "$IO_DEV" "$ADC_SERIAL_FOR_CONFIG" "$IO_BAUD" "$IO_ENABLED" "$IO_DEVICE_ID" "$ADC_ENABLED" "$ADC_DEVICE_ID" "$DRI_ENABLED" << 'PY'
 import re, sys
 from pathlib import Path
@@ -726,8 +730,8 @@ PY
 # contract on every service start; it never writes a coil/register.
 # Older deployments created this helper as root.  Replace the inode first so
 # the unprivileged deploy user can install the canonical version idempotently.
-rm -f /home/pi/maskservice/scripts/verify-boardnet-modbus.sh
-cat > /home/pi/maskservice/scripts/verify-boardnet-modbus.sh << 'SH'
+rm -f /home/${BOARDNET_SSH_USER}/maskservice/scripts/verify-boardnet-modbus.sh
+cat > /home/${BOARDNET_SSH_USER}/maskservice/scripts/verify-boardnet-modbus.sh << 'SH'
 #!/bin/bash
 set -euo pipefail
 PORT="${OQLOS_MODBUS_SERIAL_PORT:?missing OQLOS_MODBUS_SERIAL_PORT}"
@@ -750,7 +754,7 @@ if ! grep -q "^ID_SERIAL_SHORT=${EXPECTED_SERIAL}$" <<<"$PROPS"; then
   exit 1
 fi
 
-/home/pi/oqlos/venv/bin/python - "$PORT" "$BAUD" "$PARITY" "$DEVICE_ID" << 'PY'
+/home/${BOARDNET_SSH_USER}/oqlos/venv/bin/python - "$PORT" "$BAUD" "$PARITY" "$DEVICE_ID" << 'PY'
 import sys
 from pymodbus.client import ModbusSerialClient
 
@@ -781,16 +785,16 @@ finally:
 print(f"PASS: verified CH343 {port}@{baud} 8{parity}1 slave={device_id} (read-only)")
 PY
 SH
-chmod +x /home/pi/maskservice/scripts/verify-boardnet-modbus.sh
+chmod +x /home/${BOARDNET_SSH_USER}/maskservice/scripts/verify-boardnet-modbus.sh
 
 # Remove the legacy emergency override. The generated unit now carries the
 # verified 4800/slave 1 machine contract directly, so no higher-precedence
 # drop-in is required.
-rm -f /home/pi/.config/systemd/user/oqlos-hardware-api.service.d/99-modbus-port.conf
-rm -f /home/pi/.config/systemd/user/oqlos-hardware-api.service.d/90-modbus-device-id.conf
+rm -f /home/${BOARDNET_SSH_USER}/.config/systemd/user/oqlos-hardware-api.service.d/99-modbus-port.conf
+rm -f /home/${BOARDNET_SSH_USER}/.config/systemd/user/oqlos-hardware-api.service.d/90-modbus-device-id.conf
 
 # --- systemd unit: oqlos-server with the OQL-over-MQTT agent/controller enabled ---
-cat > /home/pi/.config/systemd/user/oqlos-hardware-api.service << EOF
+cat > /home/${BOARDNET_SSH_USER}/.config/systemd/user/oqlos-hardware-api.service << EOF
 [Unit]
 Description=OqlOS hardware node + UI + OQL-over-MQTT bridge (boardnet)
 After=network-online.target mosquitto.service pirtc-api.service dri0050-motor-api.service hw-tic249.service usb-adc-stack.service
@@ -798,20 +802,20 @@ Wants=mosquitto.service usb-adc-stack.service
 
 [Service]
 Type=simple
-WorkingDirectory=/home/pi/oqlos/oqlos
-EnvironmentFile=-/home/pi/maskservice/config/oql-mqtt.env
+WorkingDirectory=/home/${BOARDNET_SSH_USER}/oqlos/oqlos
+EnvironmentFile=-/home/${BOARDNET_SSH_USER}/maskservice/config/oql-mqtt.env
 Environment=HARDWARE_MODE=real
 Environment=OQLOS_HARDWARE_MODE=real
-Environment=OQLOS_CONFIG_PATH=/home/pi/maskservice/config/oqlos-real.yaml
-Environment=OQLOS_SCENARIOS_DIR=/home/pi/oqlos/oql-scenario
-Environment=PYTHONPATH=/home/pi/maskservice/pimodbus
+Environment=OQLOS_CONFIG_PATH=/home/${BOARDNET_SSH_USER}/maskservice/config/oqlos-real.yaml
+Environment=OQLOS_SCENARIOS_DIR=/home/${BOARDNET_SSH_USER}/oqlos/oql-scenario
+Environment=PYTHONPATH=/home/${BOARDNET_SSH_USER}/maskservice/pimodbus
 Environment=OQLOS_MODBUS_SERIAL_PORT=${IO_DEV}
 Environment=OQLOS_MODBUS_BAUD=${IO_BAUD}
 Environment=OQLOS_MODBUS_PARITY=N
 Environment=OQLOS_MODBUS_DEVICE_ID=${IO_DEVICE_ID}
 Environment=OQLOS_MODBUS_EXPECTED_SERIAL=5958006895
 Environment=OQLOS_MODBUS_ADC_SERIAL_PORT=${ADC_SERIAL_FOR_CONFIG}
-Environment=OQLOS_MODBUS_ADC_BAUD=9600
+Environment=OQLOS_MODBUS_ADC_BAUD=4800
 Environment=OQLOS_MODBUS_ADC_PARITY=N
 Environment=OQLOS_MODBUS_ADC_DEVICE_ID=${ADC_DEVICE_ID}
 Environment=OQLOS_ADC_SOURCE=usb-adc-stack
@@ -821,8 +825,8 @@ Environment=OQLOS_LUNG_MOTOR_URL=http://127.0.0.1:8205
 Environment=OQLOS_ENABLE_RTC=1
 Environment=PIRTC_API_URL=http://127.0.0.1:8125
 Environment=RTC_MOCK=false
-Environment=OQLOS_HARDWARE_EVENTS_FILE=/home/pi/oqlos/hardware-events.jsonl
-Environment=OQLOS_LOG_FILE=/home/pi/maskservice/logs/oqlos-hardware-api.log
+Environment=OQLOS_HARDWARE_EVENTS_FILE=/home/${BOARDNET_SSH_USER}/oqlos/hardware-events.jsonl
+Environment=OQLOS_LOG_FILE=/home/${BOARDNET_SSH_USER}/maskservice/logs/oqlos-hardware-api.log
 Environment=OQLOS_LOG_MAX_BYTES=10000000
 Environment=OQLOS_LOG_BACKUP_COUNT=5
 Environment=OQLOS_HTTP_CLIENT_LOG_LEVEL=WARNING
@@ -834,12 +838,12 @@ Environment=OQLOS_OQL_MQTT_PORT=1883
 # Verify and log the exact identity/RTU contract before startup, but keep the
 # diagnostics API online in degraded mode. Hardware commands remain fail-closed
 # in plugin readiness and return 503 while this verification fails.
-ExecStartPre=/bin/bash -lc '/bin/bash /home/pi/maskservice/scripts/verify-boardnet-modbus.sh || { echo "WARN: BoardNet Modbus preflight failed; starting diagnostics-only degraded runtime" >&2; exit 0; }'
-ExecStartPre=/bin/bash -lc 'if /home/pi/maskservice/scripts/wait-hw-tic249-ready.sh; then exit 0; fi; [ "${PIHW_ALLOW_MISSING_HARDWARE:-1}" = "1" ] && exit 0; exit 1'
-ExecStartPre=/home/pi/maskservice/scripts/tic249-deenergize-best-effort.sh
-ExecStart=/home/pi/oqlos/venv/bin/oqlos-server --host 0.0.0.0 --port 8202
-ExecStop=/home/pi/maskservice/scripts/tic249-deenergize-best-effort.sh
-ExecStopPost=/home/pi/maskservice/scripts/tic249-deenergize-best-effort.sh
+ExecStartPre=/bin/bash -lc '/bin/bash /home/${BOARDNET_SSH_USER}/maskservice/scripts/verify-boardnet-modbus.sh || { echo "WARN: BoardNet Modbus preflight failed; starting diagnostics-only degraded runtime" >&2; exit 0; }'
+ExecStartPre=/bin/bash -lc 'if /home/${BOARDNET_SSH_USER}/maskservice/scripts/wait-hw-tic249-ready.sh; then exit 0; fi; [ "${PIHW_ALLOW_MISSING_HARDWARE:-1}" = "1" ] && exit 0; exit 1'
+ExecStartPre=/home/${BOARDNET_SSH_USER}/maskservice/scripts/tic249-deenergize-best-effort.sh
+ExecStart=/home/${BOARDNET_SSH_USER}/oqlos/venv/bin/oqlos-server --host 0.0.0.0 --port 8202
+ExecStop=/home/${BOARDNET_SSH_USER}/maskservice/scripts/tic249-deenergize-best-effort.sh
+ExecStopPost=/home/${BOARDNET_SSH_USER}/maskservice/scripts/tic249-deenergize-best-effort.sh
 Restart=always
 RestartSec=10
 KillSignal=SIGINT
@@ -1031,8 +1035,8 @@ for page in hardware-status hardware-demo map-editor scenario-files func-editor 
 done
 
 UNIT_ENV=$(systemctl --user show oqlos-hardware-api.service --property=Environment --value)
-if grep -Fq 'OQLOS_SCENARIOS_DIR=/home/pi/oqlos/oql-scenario' <<<"$UNIT_ENV"; then
-  _pass "OqlOS używa kanonicznego magazynu /home/pi/oqlos/oql-scenario"
+if grep -Fq 'OQLOS_SCENARIOS_DIR=/home/${BOARDNET_SSH_USER}/oqlos/oql-scenario' <<<"$UNIT_ENV"; then
+  _pass "OqlOS używa kanonicznego magazynu /home/${BOARDNET_SSH_USER}/oqlos/oql-scenario"
 else
   _fail "OqlOS nie ma ustawionego kanonicznego OQLOS_SCENARIOS_DIR"
 fi
@@ -1284,11 +1288,11 @@ else
 fi
 
 # OQL-over-MQTT agent round-trips: ping, health, usb-list, pi-diagnostics, lung-disable.
-PW=$(grep -E '^OQLOS_OQL_MQTT_PASSWORD=' /home/pi/maskservice/config/oql-mqtt.env 2>/dev/null | head -1 | cut -d= -f2- || true)
+PW=$(grep -E '^OQLOS_OQL_MQTT_PASSWORD=' /home/${BOARDNET_SSH_USER}/maskservice/config/oql-mqtt.env 2>/dev/null | head -1 | cut -d= -f2- || true)
 NODE="${OQLOS_OQL_NODE_ID:-boardnet}"
 PREFIX="${OQLOS_OQL_TOPIC_PREFIX:-oqlos/c2004}"
 if [ -z "$PW" ] || [ "$PW" = "CHANGE_ME_ON_PI" ]; then
-  _fail "brak poprawnego OQLOS_OQL_MQTT_PASSWORD w /home/pi/maskservice/config/oql-mqtt.env"
+  _fail "brak poprawnego OQLOS_OQL_MQTT_PASSWORD w /home/${BOARDNET_SSH_USER}/maskservice/config/oql-mqtt.env"
 else
   _mqtt_rpc() {
     local kind="$1"
@@ -1479,7 +1483,7 @@ echo "PASS: pelny smoke-test osprzetu zakonczony (warnings=$warnings, PIHW_ALLOW
 # co policzono na źródle. Manifest oqlos/_CHECKSUMS.sha256 generuje `scripts/gen-checksums.sh`
 # na kontrolerze PRZED deployem; krok sync_oqlos_core dowozi go razem z kodem.
 set -euo pipefail
-PKG=/home/pi/oqlos/oqlos/oqlos
+PKG=/home/${BOARDNET_SSH_USER}/oqlos/oqlos/oqlos
 MANIFEST="$PKG/_CHECKSUMS.sha256"
 
 if [ ! -f "$MANIFEST" ]; then
@@ -1501,16 +1505,16 @@ fi
 
 ```yaml markpact:config
 name: "oqlos boardnet deploy"
-description: "OqlOS hardware node + mosquitto na pi@192.168.188.122 — systemd --user, OQL-over-MQTT agent"
+description: "OqlOS hardware node + mosquitto na ${BOARDNET_SSH_USER}@${BOARDNET_IP} — systemd --user, OQL-over-MQTT agent"
 source:
   strategy: systemd
-  host: pi@192.168.188.122
+  host: "${BOARDNET_SSH_USER}@${BOARDNET_IP}"
   remote_dir: ~/oqlos
 target:
   strategy: systemd
-  host: pi@192.168.188.122
+  host: "${BOARDNET_SSH_USER}@${BOARDNET_IP}"
   remote_dir: ~/oqlos
-  verify_url: http://192.168.188.122:8202/health
+  verify_url: "http://${BOARDNET_IP}:${BOARDNET_OQLOS_PORT}/health"
 ```
 
 ```yaml markpact:steps
@@ -1523,13 +1527,16 @@ extra_steps:
 
   - id: enable_linger_groups
     action: inline_script
-    description: "Linger + grupy urządzeń dla użytkownika pi"
+    description: "Linger + grupy urządzeń dla użytkownika ${BOARDNET_SSH_USER}"
     command_ref: enable-linger-groups
 
   - id: sync_oqlos_core
     action: rsync
     description: "Sync oqlos core na boardnet"
-    src: /home/tom/github/oqlos/oqlos/
+    # `deploy-fleet.sh` starts redeploy from the explicitly selected OqlOS
+    # repository. Keep core paths relative so the validated source is exactly
+    # the source transferred to BoardNet.
+    src: ./
     dst: ~/oqlos/oqlos/
     # `.git` bez ukośnika: submodule oql-scenario/ ma .git jako PLIK (gitdir:) — wzorzec dir-only przepuszczałby go na Pi.
     excludes: [.git, .venv/, venv/, __pycache__/, .pytest_cache/, .ruff_cache/, project/]
@@ -1537,14 +1544,14 @@ extra_steps:
   - id: sync_backend_shared_policy
     action: rsync
     description: "Sync kanonicznej wspólnej polityki mapowania z c2004/backend-shared-py"
-    src: /home/tom/github/maskservice/c2004/packages/backend-shared-py/
+    src: ${C2004_ROOT}/packages/backend-shared-py/
     dst: ~/oqlos/oqlos/packages/backend-shared-py/
     excludes: [.git, .venv/, venv/, __pycache__/, .pytest_cache/]
 
   - id: sync_oqlos_frontend_dist
     action: rsync
     description: "Sync zbudowanego OqlOS hardware UI (frontend/dist)"
-    src: /home/tom/github/oqlos/oqlos/frontend/dist/
+    src: ./frontend/dist/
     dst: ~/oqlos/oqlos/frontend/dist/
     excludes: []
 
@@ -1554,63 +1561,63 @@ extra_steps:
     # One SSOT: OQL scenarios live only in the dedicated oql-scenario repo.
     # Historical c2004/extern/scenarios was removed and must not return as a
     # deployment fallback.
-    src: /home/tom/github/oqlos/oql-scenario/
+    src: ${OQL_SCENARIOS_DIR}/
     dst: ~/oqlos/oql-scenario/
     excludes: [.git, .venv/, venv/, __pycache__/, .pytest_cache/]
 
   - id: sync_pihw_config
     action: rsync
     description: "Sync konfiguracji węzła boardnet (mosquitto.conf, oqlos-hw.yaml, .env.hw)"
-    src: /home/tom/github/oqlos/oqlos/redeploy/122/
+    src: ./redeploy/122/
     dst: ~/maskservice/boardnet-config/
     excludes: [.git/]
 
   - id: sync_pimodbus
     action: rsync
     description: "Sync pimodbus (adaptery Modbus)"
-    src: /home/tom/github/oqlos/pimodbus/
+    src: ${OQLOS_WORKSPACE_ROOT}/pimodbus/
     dst: ~/maskservice/pimodbus/
     excludes: [.git/, .venv/, venv/, __pycache__/, .pytest_cache/]
 
   - id: sync_rpi_motor_tic249
     action: rsync
     description: "Sync sterownika Pololu Tic T249"
-    src: /home/tom/github/oqlos/rpi-motor-tic249/
+    src: ${OQLOS_WORKSPACE_ROOT}/rpi-motor-tic249/
     dst: ~/maskservice/rpi-motor-tic249/
     excludes: [.git/, .venv/, venv/, __pycache__/]
 
   - id: sync_rpi_motor_dri0050
     action: rsync
     description: "Sync sterownika DFRobot DRI0050"
-    src: /home/tom/github/oqlos/rpi-motor-DRI0050/
+    src: ${OQLOS_WORKSPACE_ROOT}/rpi-motor-DRI0050/
     dst: ~/maskservice/rpi-motor-DRI0050/
     excludes: [.git/, .venv/, venv/, __pycache__/]
 
   - id: sync_usb_adc_mcp2221
     action: rsync
     description: "Sync adaptera MCP2221A (AI01)"
-    src: /home/tom/github/oqlos/usb-adc-mcp2221/
+    src: ${OQLOS_WORKSPACE_ROOT}/usb-adc-mcp2221/
     dst: ~/oqlos-adapters/usb-adc-mcp2221/
     excludes: [.git/, .venv/, venv/, __pycache__/, .pytest_cache/]
 
   - id: sync_usb_adc_dfr1184
     action: rsync
     description: "Sync adaptera DFR1184 i wspólnego usb-adc-stack (AI01-AI03)"
-    src: /home/tom/github/oqlos/usb-adc-dfr1184/
+    src: ${OQLOS_WORKSPACE_ROOT}/usb-adc-dfr1184/
     dst: ~/oqlos-adapters/usb-adc-dfr1184/
     excludes: [.git/, .venv/, venv/, __pycache__/, .pytest_cache/]
 
   - id: sync_pirtc
     action: rsync
     description: "Sync piRTC sidecar"
-    src: /home/tom/github/oqlos/pirtc/
+    src: ${OQLOS_WORKSPACE_ROOT}/pirtc/
     dst: ~/maskservice/pirtc/
     excludes: [.git/, .venv/, venv/, __pycache__/]
 
   - id: sync_pirtc_rtc_lib
     action: rsync
     description: "Sync sterownika Waveshare DS3231 dla piRTC (pirtc/.gitignore ignoruje lib/)"
-    src: /home/tom/github/oqlos/pirtc/RTC/python/lib/
+    src: ${OQLOS_WORKSPACE_ROOT}/pirtc/RTC/python/lib/
     dst: ~/maskservice/pirtc/RTC/python/lib/
     excludes: [__pycache__/]
 

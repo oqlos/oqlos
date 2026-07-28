@@ -17,7 +17,7 @@ Non-whitelisted units return **403**. Unknown actions return **400**.
 
 ## Whitelist
 
-Default (the pi-hw `--user` units, see `redeploy/pi-hw/migration.md`):
+Default (the BoardNet `--user` units, see `redeploy/122/migration.md`):
 
 ```
 oqlos-hardware-api.service  hw-tic249.service  dri0050-motor-api.service
@@ -77,8 +77,8 @@ and served at `/api/v3/hardware/startup-diagnostics`. Never blocks boot.
 
 ```bash
 # fast, code-only (editable install → rsync + restart):
-redeploy/pi-hw/push-hw-node-code.sh pi@192.168.188.110
+redeploy/pi-hw/push-hw-node-code.sh
 
-# or full provisioning:
-redeploy run redeploy/pi-hw/migration.md
+# or full provisioning from c2004:
+scripts/redeploy/deploy-fleet.sh --only 122
 ```

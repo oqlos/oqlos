@@ -9,13 +9,16 @@ def test_boardnet_routine_oqlos_install_does_not_require_package_index() -> None
 
     assert "--no-build-isolation --no-deps -e packages/oqlos-models" in source
     assert "--no-build-isolation --no-deps -e ." in source
-    assert "--no-build-isolation --no-deps -e /home/pi/maskservice/pimodbus" in source
+    assert (
+        "--no-build-isolation --no-deps -e "
+        "/home/${BOARDNET_SSH_USER}/maskservice/pimodbus"
+    ) in source
     assert 'if [ "$_new_venv" = "1" ]' in source
 
 
-def test_generic_pi_hardware_profile_keeps_canonical_modbus_baud() -> None:
-    source = (ROOT / "redeploy/pi-hw/migration.md").read_text(encoding="utf-8")
-    profile = (ROOT / "redeploy/pi-hw/oqlos-hw.yaml").read_text(encoding="utf-8")
+def test_boardnet_hardware_profile_keeps_canonical_modbus_baud() -> None:
+    source = (ROOT / "redeploy/122/migration.md").read_text(encoding="utf-8")
+    profile = (ROOT / "redeploy/122/oqlos-hw.yaml").read_text(encoding="utf-8")
 
     assert "IO_BAUD=4800" in source
     assert "baudrate=4800" in source
@@ -36,3 +39,22 @@ def test_modbus_io_runtime_defaults_are_4800_n_8_1_slave_1() -> None:
     assert 'DEFAULT_MODBUS_BAUD = int(os.getenv("MODBUS_BAUD") or os.getenv("MODBUS_BUS_BAUD") or "4800")' in discovery
     assert '"default_config": "4800 baud, N-8-1, slave address 1"' in registry
     assert "Modbus-IO is configured for `4800/N/8/1`, slave ID `1`" in runbook
+
+
+def test_active_boardnet_deploy_entrypoints_use_c2004_profile() -> None:
+    active_paths = (
+        ROOT / "Makefile",
+        ROOT / "README.md",
+        ROOT / "redeploy/122/RUNBOOK.md",
+        ROOT / "redeploy/pi-hw/RUNBOOK.md",
+        ROOT / "redeploy/pi-hw/push-hw-node-code.sh",
+        ROOT / "docs/SYSTEMD-CONTROL.md",
+    )
+    combined = "\n".join(path.read_text(encoding="utf-8") for path in active_paths)
+
+    assert not (ROOT / "redeploy/pi-hw/migration.md").exists()
+    assert "192.168.188.110" not in combined
+    assert "192.168.188.122" not in combined
+    assert "redeploy run redeploy/122/migration.md" not in combined
+    assert "scripts/redeploy/deploy-fleet.sh --only 122" in combined
+    assert "env.d/21-boardnet-redeploy.env" in combined

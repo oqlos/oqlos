@@ -146,11 +146,10 @@ defaults are still respected when flags are omitted.
 
 ### Hardware node (Raspberry Pi) — deploy, test, run
 
-The physical rig runs on a dedicated Raspberry Pi (`pi@boardnet.local`,
-192.168.188.122). The Pi owns all devices and runs the **OQL-over-MQTT agent**;
-a controller can use MQTT for OQL-over-MQTT flows. The current c2004 GUI path
-from DisplayNet/pi109 uses direct HTTP to `http://192.168.188.122:8202`. What is
-deployed and running on the node:
+The physical rig runs on the dedicated BoardNet Raspberry Pi selected by c2004
+`env.d/21-boardnet-redeploy.env`. The Pi owns all devices and runs the
+**OQL-over-MQTT agent**; DisplayNet uses the HTTP endpoint rendered from the same
+profile. What is deployed and running on the node:
 
 | Usługa (systemd `--user`) | Port | Rola |
 |---|---|---|
@@ -164,7 +163,8 @@ The runtime code lives at `~/oqlos/oqlos/oqlos` (deployed package, **no git** �
 synced from this repo). Current BoardNet/DisplayNet status and hardware diagnosis:
 `redeploy/122/CURRENT_STATE.md`.
 
-Everything is driven through the **Makefile** (`make help` for the full list):
+Maintenance helpers are available through the **Makefile** (`make help` for the
+full list). Full deployment always delegates to the c2004 profile wrapper:
 
 ```bash
 make help          # lista celów (PI/NODE/PORT konfigurowalne)
@@ -178,15 +178,16 @@ make verify-rpi    # czy wdrożony pakiet oqlos/ == lokalny (sha256)
 make checksums     # manifest sha256 pakietu (oqlos/_CHECKSUMS.sha256)
 make sync-rpi      # rsync pakietu na Pi + weryfikacja sha256 (bez restartu)
 make restart       # restart agenta oqlos-hardware-api na Pi + health
-make 122           # pełny redeploy węzła boardnet (redeploy run migration.md)
-make pi-hw         # pełny redeploy węzła pi-hw (192.168.188.110)
+make deploy        # pełny deploy BoardNet przez c2004 deploy-fleet.sh
+make 122           # alias zgodności dla make deploy
 
 # Lokalnie:
 make serve         # serwer OqlOS na :8202 (panel pod /panel)
 make test          # testy jednostkowe (pytest)
 ```
 
-Override hosta/węzła: `make test-hw PI=pi@inny.local`, `make deploy NODE=122`.
+Override hosta dla maintenance: `make test-hw PI=pi@inny.local`. Tożsamość
+pełnego wdrożenia pochodzi wyłącznie z profilu c2004.
 
 **Co realnie działa:** BoardNet odpowiada w `mode=real`, Tic249 jest
 `connected=true` i `energized=false`, DRI0050 jest healthy, Modbus-IO jest
@@ -752,9 +753,10 @@ It does **not** emulate the production Raspberry Pi 3 topology:
 - no real Modbus / Tic249 / DRI0050 / RTC devices (mock only).
 
 For the real distributed deployment onto a dedicated RPi3 hardware node
-(mosquitto `:1883` + agent on loopback `:8202` + sidecars), use the redeploy
-runbooks: `redeploy/122/migration.md` (boardnet, 192.168.188.122) or
-`redeploy/pi-hw/migration.md` (192.168.188.110). See **Ports** in those RUNBOOKs.
+(mosquitto `:1883` + OqlOS `:8202` + sidecars), use the single canonical
+BoardNet migration `redeploy/122/migration.md`. Its current IP, SSH user and
+credentials are supplied by c2004 `env.d/21-boardnet-redeploy.env`; they are
+not duplicated in another per-address migration.
 
 ## Testing
 

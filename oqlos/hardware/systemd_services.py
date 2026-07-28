@@ -6,7 +6,7 @@ arbitrary systemd units — so the web surface cannot start/stop unrelated
 system services.
 
 On pi-hw the OqlOS services are ``systemctl --user`` units owned by the
-``pi`` user (see redeploy/pi-hw/migration.md), so control needs **no sudo** —
+``pi`` user (see redeploy/122/migration.md), so control needs **no sudo** —
 a user manages their own user units. Set ``OQLOS_SYSTEMD_SCOPE=system`` to
 target system units instead, in which case control uses ``sudo -n systemctl``
 (and passwordless sudo must be granted, like ``host_power``).
@@ -24,7 +24,7 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
-# Known C2004/OqlOS --user units on the hardware node (redeploy/pi-hw/migration.md).
+# Known C2004/OqlOS --user units on the hardware node (redeploy/122/migration.md).
 _DEFAULT_WHITELIST: tuple[str, ...] = (
     "oqlos-hardware-api.service",  # OqlOS hardware runtime (:8202) — owns RS485/Modbus
     "hw-tic249.service",           # artificial-lung stepper (tic249)

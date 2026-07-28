@@ -2,16 +2,16 @@
 #
 # Cele lokalne (dev) i obsługa zdalnego węzła sprzętowego (Raspberry Pi, OQL-over-MQTT).
 # Konfiguracja przez zmienne:
-#   PI=pi@boardnet.local   host ssh węzła sprzętowego
-#   NODE=122               id węzła w redeploy/ (122 = boardnet, pi-hw = 110)
+#   PI=pi@boardnet.local   host ssh węzła sprzętowego (maintenance only)
+#   C2004_ROOT=../..        c2004 repo containing the deployment profile
 #   PORT=8202              port lokalnego serwera (cel `serve`)
 #
 # Szybki start:  make help
 
 PI   ?= pi@boardnet.local
-NODE ?= 122
 PORT ?= 8202
 PYTHON ?= python
+C2004_ROOT ?= $(abspath ../..)
 
 .DEFAULT_GOAL := help
 
@@ -23,7 +23,7 @@ install-dev: ## Editable install: oqlos-models + oqlos-core + oqlos (monorepo)
 	pip install -e packages/oqlos-models -e packages/oqlos-core -e .
 
 help: ## Pokaż dostępne cele
-	@echo "OqlOS — cele make (PI=$(PI) NODE=$(NODE))"
+	@echo "OqlOS — cele make (PI=$(PI))"
 	@echo
 	@grep -hE '^[a-zA-Z0-9_-]+:.*?## ' $(MAKEFILE_LIST) \
 	  | awk -F':.*?## ' '{printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
@@ -67,20 +67,23 @@ restart: ## Zrestartuj agenta sprzętowego (oqlos-hardware-api) na $(PI) i spraw
 	  echo "FAIL: agent nie podniosl /health w 20s" >&2; exit 1'
 
 # --- deploy (redeploy framework) ------------------------------------------
-deploy: checksums ## Pełny redeploy węzła NODE=$(NODE) (gen-checksums + redeploy run)
-	redeploy run redeploy/$(NODE)/migration.md
+deploy: ## Pełny deploy BoardNet przez profil c2004
+	@test -x "$(C2004_ROOT)/scripts/redeploy/deploy-fleet.sh" || \
+	  { echo "FAIL: ustaw C2004_ROOT na repozytorium c2004" >&2; exit 2; }
+	cd "$(C2004_ROOT)" && scripts/redeploy/deploy-fleet.sh --only 122
 
-redeploy: ## (pomoc) jak wdrożyć węzeł — użyj `make 122`, `make pi-hw` lub `make deploy NODE=...`
+redeploy: ## (pomoc) wdrożenie BoardNet przez kanoniczny profil c2004
 	@echo "Wdrożenie węzła sprzętowego:"
-	@echo "  make 122                 # boardnet (192.168.188.122)"
-	@echo "  make pi-hw               # pi-hw    (192.168.188.110)"
-	@echo "  make deploy NODE=122     # dowolny węzeł z redeploy/<NODE>/migration.md"
+	@echo "  make deploy              # BoardNet z env.d/21-boardnet-redeploy.env"
+	@echo "  make 122                 # alias zgodności"
+	@echo "  make pi-hw               # przestarzały alias zgodności"
 
-122: ## Redeploy węzła boardnet (192.168.188.122)
-	@$(MAKE) deploy NODE=122
+122: ## Alias pełnego deployu BoardNet
+	@$(MAKE) deploy
 
-pi-hw: ## Redeploy węzła pi-hw (192.168.188.110)
-	@$(MAKE) deploy NODE=pi-hw PI=pi@192.168.188.110
+pi-hw: ## Przestarzały alias pełnego deployu BoardNet
+	@echo "WARN: make pi-hw jest aliasem; użyj make deploy"
+	@$(MAKE) deploy
 
 # --- uruchamianie lokalnie -------------------------------------------------
 serve: ## Uruchom serwer OqlOS lokalnie na :$(PORT) (panel pod /panel)
