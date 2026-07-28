@@ -31,10 +31,10 @@ def _route_paths() -> set[str]:
 
 def test_hardware_router_includes_actuator_and_lung_paths():
     paths = _route_paths()
-    assert "/valve/{valve_id}" in paths
-    assert "/pump" in paths
-    assert "/lung" in paths
-    assert "/artificial-lung/status" in paths
+    assert "/api/v1/hardware/valve/{valve_id}" in paths
+    assert "/api/v1/hardware/pump" in paths
+    assert "/api/v1/hardware/lung" in paths
+    assert "/api/v1/hardware/artificial-lung/status" in paths
 
 
 def test_command_payload_requires_command_name():

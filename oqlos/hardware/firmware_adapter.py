@@ -283,12 +283,10 @@ class FirmwareAdapter:
                 r.raise_for_status()
                 data = r.json()
                 self._raise_if_rejected(data, f"{target} ({pid})")
-                deenergize = direct.post("/api/energize", json={"enable": False})
-                deenergize.raise_for_status()
-                self._raise_if_rejected(
-                    deenergize.json(),
-                    f"{target} ({pid}) deenergize",
-                )
+                # The OqlOS lung endpoint applies the canonical
+                # deenergizeOnStop policy in PluginHardwareGateway.  A second
+                # direct request here would bypass that policy and previously
+                # referenced an uninitialised fallback client.
                 return data
             except httpx.HTTPStatusError as exc:
                 if exc.response.status_code != 404:

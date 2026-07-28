@@ -4,10 +4,13 @@ from __future__ import annotations
 
 import asyncio
 
+import pytest
+
 from oqlos.api import hardware as hw
 from oqlos.api import hardware_identify as hw_identify
 from oqlos.api import hardware_probe as hw_probe
 from oqlos.api import hardware_runtime as hw_runtime
+from oqlos.errors import OqlosError
 
 
 from oqlos.api import hardware_peripherals_routes as hw_peripherals
@@ -179,15 +182,15 @@ def test_hardware_identify_default_skips_live_probe(monkeypatch):
     assert result["diagnostics"]["scan_performed"] is False
 
 
-def test_read_sensors_batch_reports_unavailable_modbus_without_503(monkeypatch):
+def test_read_sensors_batch_raises_typed_error_when_all_adc_transports_are_down(monkeypatch):
     _patch_gateway(monkeypatch, _UnavailableAdcGateway())
 
-    result = asyncio.run(hw.read_sensors_batch(sensor_ids="ai01,ai02,ai03"))
-
-    assert result["ok"] is False
-    assert result["sensors"]["ai01"]["ok"] is False
-    assert result["sensors"]["ai01"]["value"] is None
-    assert "modbus_adc" in result["diagnostics"]
+    with pytest.raises(OqlosError) as caught:
+        asyncio.run(hw.read_sensors_batch(sensor_ids="ai01,ai02,ai03"))
+    assert caught.value.status_code == 503
+    assert caught.value.public_code == "C2004-HW-0012"
+    assert caught.value.issue_code == "hw_usb_adc_sidecar_unreachable"
+    assert "diagnostics" in caught.value.detail
 
 
 def test_hardware_temperature_returns_compatible_payload(monkeypatch):
@@ -214,14 +217,15 @@ def test_hardware_diagnose_keeps_sensor_errors_in_payload(monkeypatch):
     assert result["sensors"]["ai01"]["ok"] is False
 
 
-def test_modbus_adc_raw_reports_unavailable_health_without_404(monkeypatch):
+def test_modbus_adc_raw_raises_typed_error_when_profile_is_unavailable(monkeypatch):
     _patch_gateway(monkeypatch, _UnavailableAdcGateway())
 
-    result = asyncio.run(hw.read_modbus_adc_raw())
-
-    assert result["ok"] is False
-    assert result["error"] == "modbus-adc not compatible"
-    assert result["modbus_adc_health"]["compatible"] is False
+    with pytest.raises(OqlosError) as caught:
+        asyncio.run(hw.read_modbus_adc_raw())
+    assert caught.value.status_code == 503
+    assert caught.value.public_code == "C2004-HW-0012"
+    assert caught.value.issue_code == "modbus_adc_not_detected"
+    assert caught.value.detail["modbus_adc_health"]["compatible"] is False
 
 
 class _ModbusTimeoutGateway:

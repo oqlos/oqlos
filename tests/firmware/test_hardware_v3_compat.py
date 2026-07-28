@@ -5,10 +5,12 @@ from fastapi.testclient import TestClient
 
 from oqlos.api import hardware_v3
 from oqlos.api import _hw3_models
+from oqlos.errors.fastapi_integration import install_oqlos_error_handler
 
 
 def _client() -> TestClient:
     app = FastAPI()
+    install_oqlos_error_handler(app)
     app.include_router(hardware_v3.router)
     return TestClient(app)
 
@@ -25,8 +27,12 @@ def test_hardware_v3_cqrs_events_record_diagnostic_failure(monkeypatch):
         "/api/v3/hardware/diagnostic-command",
         json={"peripheral_id": "motor-dri0050", "command": "pump_off", "args": {}},
     )
-    assert response.status_code == 200
-    assert response.json()["ok"] is False
+    assert response.status_code == 503
+    assert response.headers["content-type"].startswith("application/problem+json")
+    assert response.json()["code"] == "C2004-HW-0012"
+    assert response.json()["metadata"]["diagnostics"]["issue_code"] == (
+        "hw_dri0050_sidecar_unreachable"
+    )
 
     events = client.get("/api/v3/hardware/cqrs/events?limit=5")
     assert events.status_code == 200
