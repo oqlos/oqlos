@@ -17,10 +17,10 @@ from oqlos.core._action_motor2 import (
     _post_motor2_stop,
     _try_exec_motor2_set,
 )
-from oqlos.models.dsl_models import CqlAction, CqlCondition
+from oqlos.models.dsl_models import OqlAction, OqlCondition
 
 if TYPE_CHECKING:
-    from oqlos.core.interpreter import CqlInterpreter
+    from oqlos.core.interpreter import OqlInterpreter
     from oqlos.core.base import StepStatus
 
 
@@ -35,7 +35,7 @@ def _extract_action_tokens(text: str) -> list[str]:
     return tokens
 
 
-def _drop_command_token(act: CqlAction) -> list[str]:
+def _drop_command_token(act: OqlAction) -> list[str]:
     """Return action tokens without the leading command name."""
     tokens = _extract_action_tokens(act.args or act.raw)
     command = str(act.method or "").strip().upper()
@@ -123,7 +123,7 @@ def _get_nested_value(payload: Any, path: str) -> Any:
     return current
 
 
-def _record_failure(interp: "CqlInterpreter", key: str, message: str) -> "StepStatus":
+def _record_failure(interp: "OqlInterpreter", key: str, message: str) -> "StepStatus":
     """Record a failing diagnostic/assertion in interpreter state."""
     interp.vars.set(f"failure:{key}", True)
     interp.errors.append(message)
@@ -132,7 +132,7 @@ def _record_failure(interp: "CqlInterpreter", key: str, message: str) -> "StepSt
     return StepStatus.FAILED
 
 
-def _mark_success(interp: "CqlInterpreter", key: str) -> None:
+def _mark_success(interp: "OqlInterpreter", key: str) -> None:
     """Mark a diagnostic target as passing."""
     interp.vars.set(f"failure:{key}", False)
 
@@ -149,7 +149,7 @@ def _normalize_bool(value: Any) -> bool | None:
     return None
 
 
-def _lookup_peripheral_state(interp: "CqlInterpreter", target: str) -> Any:
+def _lookup_peripheral_state(interp: "OqlInterpreter", target: str) -> Any:
     """Resolve a peripheral or valve state from stored variables."""
     direct = interp.vars.get(target)
     if direct is not None:
@@ -164,7 +164,7 @@ def _lookup_peripheral_state(interp: "CqlInterpreter", target: str) -> Any:
     return None
 
 
-def _mock_api_response(interp: "CqlInterpreter", endpoint: str) -> dict[str, Any]:
+def _mock_api_response(interp: "OqlInterpreter", endpoint: str) -> dict[str, Any]:
     """Return deterministic API payloads for dry-run diagnostics."""
     normalized = str(endpoint or "").strip()
     if normalized == "/api/v1/hardware/health":
@@ -193,7 +193,7 @@ def _mock_api_response(interp: "CqlInterpreter", endpoint: str) -> dict[str, Any
     return {"ok": True, "path": normalized}
 
 
-def exec_action_task(interp: "CqlInterpreter", act: CqlAction) -> "StepStatus":
+def exec_action_task(interp: "OqlInterpreter", act: OqlAction) -> "StepStatus":
     """Execute TASK action."""
     args_interpolated = interp.vars.interpolate(act.args)
     interp.out.step("    🔨", args_interpolated)
@@ -201,7 +201,7 @@ def exec_action_task(interp: "CqlInterpreter", act: CqlAction) -> "StepStatus":
     return StepStatus.PASSED
 
 
-def exec_action_save(interp: "CqlInterpreter", act: CqlAction) -> "StepStatus":
+def exec_action_save(interp: "OqlInterpreter", act: OqlAction) -> "StepStatus":
     """Execute SAVE action."""
     val = interp.vars.get(act.target)
     if val is None:
@@ -233,7 +233,7 @@ def parse_wait_secs(raw: str) -> float:
     return num / 1000.0
 
 
-def exec_action_wait(interp: "CqlInterpreter", act: CqlAction) -> "StepStatus":
+def exec_action_wait(interp: "OqlInterpreter", act: OqlAction) -> "StepStatus":
     """Execute WAIT action."""
     secs = parse_wait_secs(act.args)
     if interp.mode == "dry-run":
@@ -246,7 +246,7 @@ def exec_action_wait(interp: "CqlInterpreter", act: CqlAction) -> "StepStatus":
     return StepStatus.PASSED
 
 
-def _do_sleep(interp: "CqlInterpreter", secs: float, label: str) -> None:
+def _do_sleep(interp: "OqlInterpreter", secs: float, label: str) -> None:
     """Perform sleep operation."""
     import asyncio
     try:
@@ -261,7 +261,7 @@ def _do_sleep(interp: "CqlInterpreter", secs: float, label: str) -> None:
         interp.out.step("    ⏳", label)
 
 
-def exec_action_min_max(interp: "CqlInterpreter", act: CqlAction) -> "StepStatus":
+def exec_action_min_max(interp: "OqlInterpreter", act: OqlAction) -> "StepStatus":
     """Register a MIN/MAX threshold for later VAL evaluation."""
     from oqlos.core.base import StepStatus
 
@@ -296,7 +296,7 @@ def _extract_unit(value: Any) -> str:
     return (match.group(1).strip() if match else "") or ""
 
 
-def _resolve_live_val(interp: "CqlInterpreter", sensor: str) -> float | None:
+def _resolve_live_val(interp: "OqlInterpreter", sensor: str) -> float | None:
     if sensor in interp.sensor_values:
         return interp._coerce_float(interp.sensor_values.get(sensor))
 
@@ -324,7 +324,7 @@ def _resolve_live_val(interp: "CqlInterpreter", sensor: str) -> float | None:
     return None
 
 
-def _evaluate_val_thresholds(interp: "CqlInterpreter", sensor: str, val: float, unit: str) -> "StepStatus":
+def _evaluate_val_thresholds(interp: "OqlInterpreter", sensor: str, val: float, unit: str) -> "StepStatus":
     from oqlos.core.base import StepStatus
 
     thresholds = getattr(interp, "_oql_thresholds", {}) or {}
@@ -369,7 +369,7 @@ def _evaluate_val_thresholds(interp: "CqlInterpreter", sensor: str, val: float, 
     return StepStatus.FAILED
 
 
-def _mock_missing_val(interp: "CqlInterpreter", sensor: str) -> float:
+def _mock_missing_val(interp: "OqlInterpreter", sensor: str) -> float:
     """Dry-run automock dla VAL bez wartości: środek zadeklarowanych progów."""
     bounds = (getattr(interp, "_oql_thresholds", {}) or {}).get(sensor) or {}
     min_val = bounds.get("min")
@@ -383,7 +383,7 @@ def _mock_missing_val(interp: "CqlInterpreter", sensor: str) -> float:
     return 0.0
 
 
-def exec_action_val(interp: "CqlInterpreter", act: CqlAction) -> "StepStatus":
+def exec_action_val(interp: "OqlInterpreter", act: OqlAction) -> "StepStatus":
     """Resolve VAL and evaluate any registered MIN/MAX thresholds."""
     from oqlos.core.base import StepStatus
 
@@ -415,14 +415,14 @@ def exec_action_val(interp: "CqlInterpreter", act: CqlAction) -> "StepStatus":
     return _evaluate_val_thresholds(interp, sensor, float(val), unit)
 
 
-def exec_action_log(interp: "CqlInterpreter", act: CqlAction) -> "StepStatus":
+def exec_action_log(interp: "OqlInterpreter", act: OqlAction) -> "StepStatus":
     """Execute LOG action."""
     interp.out.info(interp.vars.interpolate(act.args or act.raw))
     from oqlos.core.base import StepStatus
     return StepStatus.PASSED
 
 
-def exec_action_error(interp: "CqlInterpreter", act: CqlAction) -> "StepStatus":
+def exec_action_error(interp: "OqlInterpreter", act: OqlAction) -> "StepStatus":
     """Execute ERROR action."""
     message = interp.vars.interpolate(act.args or act.raw)
     interp.errors.append(message)
@@ -431,11 +431,11 @@ def exec_action_error(interp: "CqlInterpreter", act: CqlAction) -> "StepStatus":
     return StepStatus.FAILED
 
 
-def exec_action_else(interp: "CqlInterpreter", act: CqlAction) -> "StepStatus":
+def exec_action_else(interp: "OqlInterpreter", act: OqlAction) -> "StepStatus":
     """Execute inline ELSE ERROR/INFO/WARNING action."""
     from oqlos.core.base import StepStatus
 
-    cond = act.condition or CqlCondition()
+    cond = act.condition or OqlCondition()
     severity = (cond.on_fail or "INFO").upper()
     message = interp.vars.interpolate(cond.fail_message or act.args or act.raw)
 
@@ -452,7 +452,7 @@ def exec_action_else(interp: "CqlInterpreter", act: CqlAction) -> "StepStatus":
     return StepStatus.PASSED
 
 
-def exec_action_sample(interp: "CqlInterpreter", act: CqlAction) -> "StepStatus":
+def exec_action_sample(interp: "OqlInterpreter", act: OqlAction) -> "StepStatus":
     """Execute SAMPLE action as dry-run sampling metadata."""
     state = (act.method or "").strip().upper() or (act.args.split()[0].upper() if act.args else "START")
     current = interp.sensor_values.get(act.target)
@@ -465,7 +465,7 @@ def exec_action_sample(interp: "CqlInterpreter", act: CqlAction) -> "StepStatus"
     return StepStatus.PASSED
 
 
-def _resolve_numeric_token(interp: "CqlInterpreter", token: str) -> float:
+def _resolve_numeric_token(interp: "OqlInterpreter", token: str) -> float:
     """Resolve a FUNC argument as a numeric literal, variable, or sampled sensor."""
     key = str(token or "").strip()
     if not key:
@@ -506,7 +506,7 @@ def _func_sub(values: list[float]) -> float:
     return values[0] - sum(values[1:]) if values else 0.0
 
 
-def _func_div(values: list[float], interp: "CqlInterpreter", target: str) -> float:
+def _func_div(values: list[float], interp: "OqlInterpreter", target: str) -> float:
     """Divide values sequentially with zero check."""
     if not values:
         return 0.0
@@ -543,7 +543,7 @@ _FUNC_HANDLERS: dict[str, callable] = {
 }
 
 
-def exec_action_func(interp: "CqlInterpreter", act: CqlAction) -> "StepStatus":
+def exec_action_func(interp: "OqlInterpreter", act: OqlAction) -> "StepStatus":
     """Execute FUNC action using simple arithmetic over literals and variables."""
     from oqlos.core.base import StepStatus
 
@@ -571,7 +571,7 @@ def exec_action_func(interp: "CqlInterpreter", act: CqlAction) -> "StepStatus":
     return StepStatus.PASSED
 
 
-def exec_action_goto(interp: "CqlInterpreter", act: CqlAction) -> "StepStatus":
+def exec_action_goto(interp: "OqlInterpreter", act: OqlAction) -> "StepStatus":
     """Execute GOTO action by skipping the rest of the current goal."""
     interp.vars.set("last_goto", act.target)
     interp.out.step("    ↪", f"GOTO {act.target}")
@@ -580,7 +580,7 @@ def exec_action_goto(interp: "CqlInterpreter", act: CqlAction) -> "StepStatus":
     return StepStatus.PASSED
 
 
-def exec_action_api(interp: "CqlInterpreter", act: CqlAction) -> "StepStatus":
+def exec_action_api(interp: "OqlInterpreter", act: OqlAction) -> "StepStatus":
     """Execute API_* action with deterministic dry-run responses."""
     endpoint = interp.vars.interpolate(act.args or "")
     method = str(act.method or "API_GET").upper()
@@ -594,7 +594,7 @@ def exec_action_api(interp: "CqlInterpreter", act: CqlAction) -> "StepStatus":
     return StepStatus.PASSED
 
 
-def exec_action_expect(interp: "CqlInterpreter", act: CqlAction) -> "StepStatus":
+def exec_action_expect(interp: "OqlInterpreter", act: OqlAction) -> "StepStatus":
     """Execute EXPECT_* diagnostics as dry-run discovery checks."""
     tokens = _drop_command_token(act)
     label = tokens[0] if tokens else (act.method or "expect")
@@ -604,7 +604,7 @@ def exec_action_expect(interp: "CqlInterpreter", act: CqlAction) -> "StepStatus"
     return StepStatus.PASSED
 
 
-def _assert_status(interp: "CqlInterpreter", act: CqlAction, tokens: list[str]) -> "StepStatus":
+def _assert_status(interp: "OqlInterpreter", act: OqlAction, tokens: list[str]) -> "StepStatus":
     """Handle ASSERT_STATUS: verify HTTP status code."""
     from oqlos.core.base import StepStatus
     expected = int(_coerce_expected_value(tokens[0] if tokens else 200) or 200)
@@ -615,7 +615,7 @@ def _assert_status(interp: "CqlInterpreter", act: CqlAction, tokens: list[str]) 
     return StepStatus.PASSED
 
 
-def _assert_json(interp: "CqlInterpreter", act: CqlAction, tokens: list[str]) -> "StepStatus":
+def _assert_json(interp: "OqlInterpreter", act: OqlAction, tokens: list[str]) -> "StepStatus":
     """Handle ASSERT_JSON: verify JSON path value."""
     from oqlos.core.base import StepStatus
     if len(tokens) < 2:
@@ -634,7 +634,7 @@ def _assert_json(interp: "CqlInterpreter", act: CqlAction, tokens: list[str]) ->
     return StepStatus.PASSED
 
 
-def _assert_sensor(interp: "CqlInterpreter", act: CqlAction, tokens: list[str]) -> "StepStatus":
+def _assert_sensor(interp: "OqlInterpreter", act: OqlAction, tokens: list[str]) -> "StepStatus":
     """Handle ASSERT_SENSOR: verify sensor condition."""
     from oqlos.core.base import StepStatus
     if len(tokens) < 3:
@@ -642,7 +642,7 @@ def _assert_sensor(interp: "CqlInterpreter", act: CqlAction, tokens: list[str]) 
     sensor, operator, raw_value = tokens[:3]
     unit = tokens[3] if len(tokens) > 3 else ""
     numeric = interp._coerce_float(raw_value)
-    cond = CqlCondition(
+    cond = OqlCondition(
         sensor=sensor,
         operator=operator,
         value=numeric,
@@ -650,7 +650,7 @@ def _assert_sensor(interp: "CqlInterpreter", act: CqlAction, tokens: list[str]) 
         on_fail="ERROR",
         fail_message=f"ASSERT_SENSOR failed: {sensor} {operator} {raw_value}",
     )
-    status = interp._evaluate_condition(CqlAction(kind="condition", condition=cond, args=raw_value))
+    status = interp._evaluate_condition(OqlAction(kind="condition", condition=cond, args=raw_value))
     if status == StepStatus.PASSED:
         _mark_success(interp, sensor)
     else:
@@ -658,7 +658,7 @@ def _assert_sensor(interp: "CqlInterpreter", act: CqlAction, tokens: list[str]) 
     return status
 
 
-def _assert_valve(interp: "CqlInterpreter", act: CqlAction, tokens: list[str]) -> "StepStatus":
+def _assert_valve(interp: "OqlInterpreter", act: OqlAction, tokens: list[str]) -> "StepStatus":
     """Handle ASSERT_VALVE: verify valve state."""
     from oqlos.core.base import StepStatus
     if len(tokens) < 2:
@@ -687,7 +687,7 @@ _ASSERT_HANDLERS: dict[str, callable] = {
 }
 
 
-def exec_action_assert(interp: "CqlInterpreter", act: CqlAction) -> "StepStatus":
+def exec_action_assert(interp: "OqlInterpreter", act: OqlAction) -> "StepStatus":
     """Execute ASSERT_* actions for dry-run diagnostics and API checks."""
     from oqlos.core.base import StepStatus
 
@@ -701,7 +701,7 @@ def exec_action_assert(interp: "CqlInterpreter", act: CqlAction) -> "StepStatus"
     return _record_failure(interp, method.lower(), f"Unsupported assert action: {act.raw}")
 
 
-def exec_action_shell(interp: "CqlInterpreter", act: CqlAction) -> "StepStatus":
+def exec_action_shell(interp: "OqlInterpreter", act: OqlAction) -> "StepStatus":
     """Execute shell/export helpers in dry-run mode."""
     tokens = _drop_command_token(act)
     method = str(act.method or "").upper()
@@ -741,7 +741,7 @@ def exec_action_shell(interp: "CqlInterpreter", act: CqlAction) -> "StepStatus":
     return _record_failure(interp, method.lower(), f"Unsupported shell action: {act.raw}")
 
 
-def exec_action_var_set(interp: "CqlInterpreter", act: CqlAction) -> "StepStatus":
+def exec_action_var_set(interp: "OqlInterpreter", act: OqlAction) -> "StepStatus":
     """Execute VAR assignment action."""
     val = interp.vars.interpolate(act.args)
     interp.vars.set(act.target, val)
@@ -750,14 +750,14 @@ def exec_action_var_set(interp: "CqlInterpreter", act: CqlAction) -> "StepStatus
     return StepStatus.PASSED
 
 
-def exec_action_condition(interp: "CqlInterpreter", act: CqlAction) -> "StepStatus":
+def exec_action_condition(interp: "OqlInterpreter", act: OqlAction) -> "StepStatus":
     """Execute condition action."""
     if interp.mode == "execute":
         interp._refresh_sensors_from_firmware()
     return interp._evaluate_condition(act)
 
 
-def exec_action_if_fail_block(interp: "CqlInterpreter", act: CqlAction) -> "StepStatus":
+def exec_action_if_fail_block(interp: "OqlInterpreter", act: OqlAction) -> "StepStatus":
     """Execute IF_FAIL block when a tracked diagnostic target has failed."""
     from oqlos.core.base import StepStatus
 
@@ -771,7 +771,7 @@ def exec_action_if_fail_block(interp: "CqlInterpreter", act: CqlAction) -> "Step
     return StepStatus.PASSED
 
 
-def exec_action_if_block(interp: "CqlInterpreter", act: CqlAction) -> "StepStatus":
+def exec_action_if_block(interp: "OqlInterpreter", act: OqlAction) -> "StepStatus":
     """Execute IF block action."""
     from oqlos.core.base import StepStatus
 
@@ -794,7 +794,7 @@ def exec_action_if_block(interp: "CqlInterpreter", act: CqlAction) -> "StepStatu
     return StepStatus.PASSED
 
 
-def exec_action_loop_block(interp: "CqlInterpreter", act: CqlAction) -> "StepStatus":
+def exec_action_loop_block(interp: "OqlInterpreter", act: OqlAction) -> "StepStatus":
     """Execute LOOP block action."""
     from oqlos.core.base import StepStatus, VariableStore
 
@@ -844,7 +844,7 @@ def exec_action_loop_block(interp: "CqlInterpreter", act: CqlAction) -> "StepSta
     return StepStatus.PASSED
 
 
-def exec_action_endloop(interp: "CqlInterpreter", act: CqlAction) -> "StepStatus":
+def exec_action_endloop(interp: "OqlInterpreter", act: OqlAction) -> "StepStatus":
     """Execute REPEAT STOP as a break for the current loop."""
     from oqlos.core.base import StepStatus
 
@@ -853,7 +853,7 @@ def exec_action_endloop(interp: "CqlInterpreter", act: CqlAction) -> "StepStatus
     return StepStatus.PASSED
 
 
-def exec_action_set(interp: "CqlInterpreter", act: CqlAction) -> "StepStatus":
+def exec_action_set(interp: "OqlInterpreter", act: OqlAction) -> "StepStatus":
     """Execute SET action with intelligent dispatch."""
     from oqlos.core.base import StepStatus
 
@@ -878,7 +878,7 @@ def exec_action_set(interp: "CqlInterpreter", act: CqlAction) -> "StepStatus":
 
 
 
-def _exec_set_wait(interp: "CqlInterpreter", act: CqlAction, value: str) -> "StepStatus":
+def _exec_set_wait(interp: "OqlInterpreter", act: OqlAction, value: str) -> "StepStatus":
     """Handle SET wait/delay/pause/timeout."""
     from oqlos.core.base import StepStatus
 
@@ -892,7 +892,7 @@ def _exec_set_wait(interp: "CqlInterpreter", act: CqlAction, value: str) -> "Ste
     return StepStatus.PASSED
 
 
-def exec_action_action(interp: "CqlInterpreter", act: CqlAction) -> "StepStatus":
+def exec_action_action(interp: "OqlInterpreter", act: OqlAction) -> "StepStatus":
     """Execute generic ACTION."""
     from oqlos.core.base import StepStatus
 

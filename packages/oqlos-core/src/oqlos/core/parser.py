@@ -2,7 +2,7 @@
 
 import re
 
-from oqlos.models.dsl_models import CqlAction, CqlGoal
+from oqlos.models.dsl_models import OqlAction, OqlGoal
 from oqlos.models.scenario import Goal, Step, ValidationRule
 from ._dsl_helpers import _normalize_quote_syntax
 from ._line_parsers import (
@@ -118,8 +118,8 @@ def _parse_runtime_line(
 
 # ── Flat OQL (v3/v4/v5) → runtime Goal ───────────────────────────────
 #
-# Flat OQL sources are parsed by the canonical parser (``parse_cql``
-# dispatches to the OQL adapter) and the resulting CqlActions are lowered
+# Flat OQL sources are parsed by the canonical document parser and the
+# resulting OqlActions are lowered
 # onto the same runtime ``Step`` builders used by the legacy dialect, so
 # both paths produce identical step structures.
 
@@ -131,7 +131,7 @@ _FLAT_NON_RUNTIME_KINDS = {
 }
 
 
-def _flat_condition_lines(action: CqlAction) -> list[str]:
+def _flat_condition_lines(action: OqlAction) -> list[str]:
     """Render a kind=condition action (CHECK/IF_DELTA) as synthetic IF lines."""
     cond = action.condition
     if cond is None:
@@ -146,7 +146,7 @@ def _flat_condition_lines(action: CqlAction) -> list[str]:
     return lines
 
 
-def _flat_action_synthetic_lines(action: CqlAction) -> list[str] | None:
+def _flat_action_synthetic_lines(action: OqlAction) -> list[str] | None:
     """Map one flat-OQL action to synthetic legacy lines, or None if unmapped."""
     kind = action.kind
     if kind == 'set':
@@ -174,12 +174,12 @@ def _flat_repeat_count(args: str) -> int:
 
 
 def _flat_actions_to_steps(
-    actions: list[CqlAction],
+    actions: list[OqlAction],
     steps: list[Step],
     invalid_lines: list[str],
     goal_meta: dict,
 ) -> None:
-    """Lower flat-OQL CqlActions onto runtime Steps via the legacy builders."""
+    """Lower flat-OQL actions onto runtime steps via compatibility builders."""
     def record_invalid(raw: str) -> None:
         candidate = str(raw or '').strip()
         if candidate and candidate not in invalid_lines:
@@ -196,7 +196,7 @@ def _flat_actions_to_steps(
             goal_meta['fail_messages'].append(action.args)
             continue
         if kind == 'loop_block':
-            inner: list[CqlAction] = list(action.loop_actions)
+            inner: list[OqlAction] = list(action.loop_actions)
             for _ in range(_flat_repeat_count(action.args)):
                 _flat_actions_to_steps(inner, steps, invalid_lines, goal_meta)
             continue
@@ -219,8 +219,8 @@ def _flat_actions_to_steps(
                 record_invalid(action.raw)
 
 
-def _flat_goal_to_runtime(goal: CqlGoal, scenario_id: str) -> tuple[Goal, list[str]]:
-    """Convert one flat-OQL CqlGoal into the legacy runtime Goal structure."""
+def _flat_goal_to_runtime(goal: OqlGoal, scenario_id: str) -> tuple[Goal, list[str]]:
+    """Convert one flat-OQL task projection into the runtime goal structure."""
     steps: list[Step] = []
     invalid_lines: list[str] = []
     goal_meta: dict = {'pass_message': '', 'fail_messages': []}

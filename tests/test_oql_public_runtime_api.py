@@ -63,3 +63,36 @@ def test_application_entrypoints_use_canonical_oql_modules() -> None:
     assert "oqlos.tools.cql_cli" not in application_manifest
     assert "OqlInterpreter" in setup_script
     assert "CqlInterpreter" not in setup_script
+
+
+def test_legacy_names_are_confined_to_compatibility_modules() -> None:
+    root = Path(__file__).resolve().parents[1]
+    source_roots = (
+        root / "oqlos",
+        root / "packages" / "oqlos-core" / "src",
+        root / "packages" / "oqlos-models" / "src",
+    )
+    compatibility_files = {
+        "oqlos/tools/oql_cli.py",
+        "packages/oqlos-core/src/oqlos/core/_cql_tokenizer.py",
+        "packages/oqlos-core/src/oqlos/core/_cql_tree_builder.py",
+        "packages/oqlos-core/src/oqlos/core/_oql_adapter.py",
+        "packages/oqlos-core/src/oqlos/core/cql_parser.py",
+        "packages/oqlos-core/src/oqlos/core/interpreter.py",
+        "packages/oqlos-models/src/oqlos/models/dsl_models.py",
+    }
+    forbidden_imports = (
+        "from oqlos.core.cql_parser",
+        "from oqlos.core.interpreter import CqlInterpreter",
+        "from oqlos.models.dsl_models import Cql",
+        "oqlos.tools.cql_cli",
+    )
+
+    for source_root in source_roots:
+        for path in source_root.rglob("*.py"):
+            relative = path.relative_to(root).as_posix()
+            if relative in compatibility_files or relative.startswith("oqlos/tools/cql_cli/"):
+                continue
+            text = path.read_text(encoding="utf-8")
+            for legacy_import in forbidden_imports:
+                assert legacy_import not in text, f"{relative} imports {legacy_import}"
