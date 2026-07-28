@@ -1,4 +1,36 @@
-# OQL Language Specification v3.0 (Flat Syntax)
+# OQL Language Specification (v3–v5)
+
+## Kanoniczna składnia OQL v5
+
+Wersja 5 porządkuje słowa o nakładających się znaczeniach. Nowe pliki muszą
+używać poniższego modelu:
+
+```oql
+VERSION: 5
+SCENARIO: Test sztucznego płuca Tic249
+DESCRIPTION: Kontrolowany test ruchu mechanizmu
+
+TASK:
+  NAME 'Test sztucznego płuca Tic249'
+  PROMPT 'Potwierdź bezpieczny stan stanowiska'
+  TIMER '1 s'
+```
+
+| Znaczenie | OQL v5 | Składnia legacy v3/v4 |
+|---|---|---|
+| blok procedury | `TASK:` | `GOAL:` / `TEST:` |
+| nazwa bloku | `NAME '...'` | `SET NAME '...'` |
+| instrukcja operatora | `PROMPT '...'` | `TASK TITLE '...'` |
+| opóźnienie | `TIMER '1 s'` | `WAIT '1 s'` / `SET WAIT '1 s'` |
+| opis dokumentu | `DESCRIPTION: ...` | warianty wielkości liter |
+
+Parser zachowuje stare formy dla importu dokumentów v3/v4. W dokumencie z
+`VERSION: 5` alias legacy jest błędem walidacji z gotową sugestią migracji.
+`TASK:` nie jest instrukcją operatora: jest nagłówkiem bloku. `PROMPT` nie
+uruchamia urządzenia; runtime obniża je do kroku operatorskiego `kind=task`.
+
+Pozostała część dokumentu opisuje również historyczny dialekt v3, ponieważ
+jest nadal potrzebny podczas importu starych scenariuszy.
 
 ## 1. Filozofia
 

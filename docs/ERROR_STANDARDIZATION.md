@@ -47,6 +47,46 @@ logu serwera pod tym samym `correlation_id`.
 
 `ERROR_CODES.md` jest generowany i nie należy edytować go ręcznie.
 
+## Granice SOA i POA
+
+Pole `architecture` opisuje warstwę, która utworzyła zdarzenie, a nie transport:
+
+- `SOA` — usługa lub adapter wykonujący operację HTTP/USB/Modbus. Odpowiedź
+  zawiera co najmniej `error_code`, `status`, `component`, `stage` i
+  `correlation_id`;
+- `POA` — proces OQL identyfikowany przez stabilne `c2004://...`. Warstwa POA
+  zachowuje kod błędu SOA i dodaje `process_uri`, `run_id` oraz etap procesu;
+- frontend emituje `HTTP_REQUEST` dla granicy SOA oraz `OQL_ACTION_START` /
+  `OQL_ACTION` dla granicy POA. Nie tworzy alternatywnych kodów dla tego samego
+  błędu.
+
+Przepływ komendy jest jednokierunkowy:
+
+```text
+UI -> POA RUN_URI (c2004://...) -> SOA OqlOS -> SOA adapter sprzętowy
+```
+
+### Macierz odpowiedzialności warstw
+
+| Granica | `architecture` | `layer` | Wymagany kontekst |
+| --- | --- | --- | --- |
+| frontend → API | `SOA` | `frontend` | metoda, URL, status, czas, `correlation_id` |
+| frontend → proces OQL | `POA` | `frontend` | event, `process_uri`, tryb, czas, rezultat |
+| C2004 process runtime | `POA` | `process-runtime` | `process_uri`, `run_id`, komponent i etap adaptera |
+| OqlOS API/plugin gateway | `SOA` | `oqlos` | plugin/komponent, etap API lub adaptera |
+| sidecar Tic/DRI/Modbus | `SOA` | `firmware` | fizyczny komponent, etap walidacji/wykonania |
+| OQL over MQTT agent | `SOA` | `firmware` | komponent agenta, etap MQTT, publiczny kod |
+
+Każda granica zachowuje przychodzący `X-Correlation-ID` (alternatywnie
+`X-Request-ID`) i zwraca go w nagłówku oraz body. Wygenerowanie nowego ID jest
+dozwolone tylko na pierwszej granicy, gdy klient nie dostarczył poprawnego
+identyfikatora. Błąd ma `Content-Type: application/problem+json`.
+
+Przy propagacji odpowiedzi nie wolno zamieniać domenowego błędu na ogólne
+`HTTP 503`, zwracać `200` z `success=false` ani nadpisywać
+`C2004-HW-0012`/`C2004-DATA-0002` kodem `C2004-NET-0001`. Granice mogą
+dodawać kontekst, lecz `error_code` oraz `correlation_id` pozostają spójne.
+
 ## Zasady mapowania
 
 | Sytuacja | HTTP | Kod publiczny | Przykład issue OqlOS |
@@ -56,7 +96,7 @@ logu serwera pod tym samym `correlation_id`.
 | Brak roli do aktuacji | 403 | `C2004-AUTH-0002` | kontekst endpointu |
 | Wymagany sprzęt niedostępny | 503 | `C2004-HW-0012` | np. `hw_modbus_no_response` |
 | Port RS485 zajęty | 409 | `C2004-HW-0013` | `serial_port_busy` |
-| Aktywne undervoltage BoardNet | 503 | `C2004-HW-0014` | docelowo `boardnet_undervoltage_active` |
+| Aktywne undervoltage BoardNet | 503 | `C2004-HW-0014` | `boardnet_undervoltage_active` |
 | Nieznany błąd programu | 500 | `C2004-SYS-0000` | typ wyjątku tylko w diagnostyce serwera |
 
 `C2004-SYS-0000` jest ostatnią granicą bezpieczeństwa, a nie docelowym kodem
@@ -91,10 +131,29 @@ wymaga zewnętrznego sensora, np. INA219/INA260, miernika USB lub telemetrii
 zasilacza. Takie źródło powinno publikować co najmniej `voltage_v`, `current_a`,
 `power_w`, `sampled_at` i stan kalibracji.
 
-Aktualna luka: `C2004-HW-0014` istnieje w katalogu, a
-`pi_system_diagnostics()` zbiera surowe `throttled` i `core_volt`, lecz aktywny
-bit nie jest jeszcze automatycznie zamieniany na zdarzenie ERROR ani safety
-gate. Realizacja znajduje się w planie refaktoryzacji.
+`pi_system_diagnostics()` zachowuje kompatybilne pola surowe `throttled` i
+`core_volt`, a dodatkowo zwraca typowane `power`: `status`, `mask_hex`,
+`active_flags`, `historical_flags`, `errors`, `warnings` i `observed_at`.
+Aktywny bit 0 jest automatycznie mapowany na `C2004-HW-0014`; historyczny bit
+16 pozostaje ostrzeżeniem. Następnym etapem RF-01 jest użycie tego samego stanu
+jako wspólnego safety gate przed każdą klasą aktuacji.
+
+## Standard logowania procesu
+
+- poziom aplikacji: `OQLOS_LOG_LEVEL` (domyślnie `INFO`);
+- szczegóły klienta HTTP: `OQLOS_HTTP_CLIENT_LOG_LEVEL` (domyślnie `WARNING`),
+  aby polling ADC nie zalewał logu wpisami `httpx INFO`;
+- plik: `OQLOS_LOG_FILE`;
+- rotacja: `OQLOS_LOG_MAX_BYTES` (domyślnie 10 MB) oraz
+  `OQLOS_LOG_BACKUP_COUNT` (domyślnie 5);
+- systemd wysyła stdout/stderr do journalu i nie dopisuje równolegle do pliku
+  zarządzanego przez `RotatingFileHandler`.
+
+Każdy spodziewany błąd domenowy powinien zawierać `error_code`, `issue_code`,
+`severity`, `architecture`, `component`, `stage`, komunikat i identyfikator
+korelacji na granicy HTTP. Odczyt
+diagnostyczny może mieć `ok=false` przy HTTP 200 tylko jako raport zbiorczy z
+jawnym `overall_status`.
 
 ## Ślad komendy w URL
 
@@ -137,3 +196,25 @@ Każdy endpoint wykonujący operację sprzętową musi testować:
 5. stabilny publiczny kod `C2004-*` i lokalny `issue_code`,
 6. brak sekretów i tracebacka w odpowiedzi,
 7. stan bezpieczny urządzenia po odrzuconym requestcie.
+
+Nieznane pole requestu musi być odrzucone przed użyciem wartości domyślnych.
+Jest to wymóg bezpieczeństwa, nie tylko walidacja stylistyczna: literówka w
+parametrze ruchu nie może uruchomić komendy z domyślną liczbą kroków, prędkością
+ani liczbą cykli. FastAPI używa `extra="forbid"`, a niezależne sidecary Flask
+równoważnej jawnej listy dozwolonych pól.
+
+## Weryfikacja wielowarstwowa live
+
+Po wdrożeniu 2026-07-27 ten sam `cor-layer-fixed` został zachowany przez
+odpowiedzi C2004 POA, OqlOS SOA oraz firmware Tic/DRI. Bezpieczne przypadki
+negatywne zwróciły:
+
+| Warstwa | HTTP | Kod | `architecture/layer` |
+| --- | ---: | --- | --- |
+| C2004 nieznany `process_uri` | 404 | `C2004-DATA-0001` | `POA/process-runtime` |
+| OqlOS brak pluginu | 503 | `C2004-HW-0012` | `SOA/oqlos` |
+| Tic nieznane pole komendy | 422 | `C2004-DATA-0002` | `SOA/firmware` |
+| DRI nieznane pole komendy | 422 | `C2004-DATA-0002` | `SOA/firmware` |
+
+Po testach Tic miał `energized=false`, `velocity=0`, a DRI `enabled=false`,
+`duty=0`.

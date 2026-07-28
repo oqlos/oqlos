@@ -50,6 +50,10 @@ own:
 
 | Code | Severity | Summary | Repair |
 |------|----------|---------|--------|
+| `boardnet_power_condition_active` | warning | BoardNet reports an active power, throttling or thermal condition. | — |
+| `boardnet_power_condition_historical` | warning | BoardNet reports a power, throttling or thermal condition since boot. | — |
+| `boardnet_power_telemetry_unavailable` | warning | Raspberry Pi power telemetry is unavailable on BoardNet. | `restore_boardnet_power_telemetry` (scope=host, manual, risk=none) |
+| `boardnet_undervoltage_active` | critical | BoardNet reports active Raspberry Pi supply undervoltage. | `restore_boardnet_power` (scope=host, manual, risk=physical) |
 | `hw_dri0050_sidecar_unreachable` | error | dri0050-motor-api sidecar (:8203, pump) is unreachable or unhealthy. | `dri0050-ensure-sidecar` (scope=oqlos, auto, risk=config) |
 | `hw_modbus_no_response` | error | Modbus RTU slave did not answer (read timed out / no response) on the configured serial path. | `modbus-physical-check` (scope=host, manual, risk=none) |
 | `hw_modbus_serial_handle_stale` | warning | A Modbus RTU plugin (modbus-io/modbus-adc) has a stale USB/RS485 serial handle after device re-enumeration (errno 19). | `modbus-plugin-reconnect` (scope=oqlos, auto, risk=none) |

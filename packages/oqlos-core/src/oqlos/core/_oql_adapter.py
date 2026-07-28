@@ -400,12 +400,18 @@ def _lower_else_cmd(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "
 def _lower_task(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "list[CqlAction]":
     """TASK (dialekt c2004) → instrukcja operatora (kind=task).
 
-    Forma ``TASK 'param' 'opis'`` nadaje krokowi target=param; forma
-    ``TASK TITLE|VAL|PASS|FAIL 'msg'`` niesie tylko komunikat.
+    Forma ``TASK 'param' 'opis'`` nadaje krokowi target=param. Pola
+    ``TASK TITLE|VAL|PASS|FAIL`` są składnią zgodności; kanoniczna instrukcja
+    operatora w OQL v5 używa ``PROMPT 'msg'``.
     """
     message = cmd.args.get("message", "")
     param = cmd.args.get("param", "")
     return [CqlAction(kind="task", target=param, args=message, raw=cmd.raw)]
+
+
+def _lower_prompt(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "list[CqlAction]":
+    """PROMPT → instrukcja operatora bez targetu sprzętowego."""
+    return [CqlAction(kind="task", args=cmd.args.get("message", ""), raw=cmd.raw)]
 
 
 #: Komendy ASSERT obsługiwane przez runtime (_ASSERT_HANDLERS). Pozostałe
@@ -547,6 +553,7 @@ _CMD_LOWERERS: dict = {
     "RANGE": _lower_range,
     "PASS": _lower_pass,
     "FAIL": _lower_fail,
+    "PROMPT": _lower_prompt,
     "TESTQL": _lower_testql,
     "NOOP": _lower_noop,
 }
@@ -600,8 +607,8 @@ def _has_anonymous_named_goal(source: str) -> bool:
         stripped = raw.strip()
         if not stripped or stripped.startswith("#"):
             continue
-        if re.match(r"^(GOAL|TEST|CONFIG|MACRO)\b.*:\s*$", stripped, re.IGNORECASE):
-            in_goal = bool(re.match(r"^(GOAL|TEST)\s*:\s*$", stripped, re.IGNORECASE))
+        if re.match(r"^(GOAL|TASK|TEST|CONFIG|MACRO)\b.*:\s*$", stripped, re.IGNORECASE):
+            in_goal = bool(re.match(r"^(GOAL|TASK|TEST)\s*:\s*$", stripped, re.IGNORECASE))
             continue
         if not in_goal:
             continue
@@ -614,11 +621,12 @@ def _has_anonymous_named_goal(source: str) -> bool:
 
 
 def is_flat_oql(source: str) -> bool:
-    """Heuristic: detect flat OQL source (v3/v4).
+    """Heuristic: detect flat OQL source (v3/v4/v5).
 
     Returns ``True`` when the text clearly uses OQL syntax, including:
-    - explicit ``VERSION: 4`` header,
-    - anonymous ``GOAL:`` blocks named by an indented ``SET NAME`` line,
+    - explicit ``VERSION`` header,
+    - canonical anonymous ``TASK:`` blocks named by an indented ``NAME`` line,
+    - anonymous legacy ``GOAL:`` blocks named by an indented ``SET NAME`` line,
     - ``GOAL name:`` / ``CONFIG name:`` / ``MACRO name:`` style blocks,
     - top-level ``INCLUDE "..."`` directives.
 
@@ -628,7 +636,7 @@ def is_flat_oql(source: str) -> bool:
 
     version_re = re.compile(r"^\s*VERSION\s*:\s*\d+\s*$", re.M | re.IGNORECASE)
     connectgo_re = re.compile(r"^\s*@\w+(?:\.\w+)*\s*$", re.M)
-    block_re = re.compile(r"^\s*(GOAL|TEST|CONFIG|MACRO)\s+[^\s:][^:]*:\s*$", re.M)
+    block_re = re.compile(r"^\s*(GOAL|TASK|TEST|CONFIG|MACRO)\s+[^\s:][^:]*:\s*$", re.M)
     legacy_re = re.compile(r"^\s*(GOAL|CONFIG)[ \t]*:[ \t]*\S", re.M)
     include_re = re.compile(r"^\s*INCLUDE\s+[\"']", re.M)
 

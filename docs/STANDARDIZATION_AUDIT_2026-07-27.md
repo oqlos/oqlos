@@ -20,7 +20,7 @@ endpointów, mieszanej semantyki odpowiedzi i diagnostyki bez informacji o
 | OpenAPI | 305 operacji; 131 bez jawnego schematu odpowiedzi; 163 z generycznym obiektem | typowane modele odpowiedzi i jawne kody 2xx/4xx/5xx |
 | Odpowiedzi | mieszane pola `ok` i `success`; błędy sprzętowe bywają zwracane jako HTTP 200 | jedna koperta i jedna semantyka statusu HTTP |
 | Walidacja OQL | 11 warstw przechodzi osobno bez błędów; naiwne sklejenie dokumentów daje fałszywe błędy nagłówków | walidator świadomy warstw i `INCLUDE`, nie konkatenacja dokumentów |
-| Testy | firmware 495/495, frontend 142/142 + build; część testów zależy od `PYTHONPATH` | clean checkout, jawne źródło importu, lint i OpenAPI diff w CI |
+| Testy | firmware OqlOS 517/517, frontend 142/142 + build; część testów zależy od `PYTHONPATH` | clean checkout, jawne źródło importu, lint i OpenAPI diff w CI |
 
 ## 1. Zmienne i konfiguracja
 

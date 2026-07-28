@@ -86,7 +86,7 @@ def _append_param_lines(lines: list[str], p) -> None:
     if p.mode == "Off":
         return
     if p.sensor == "operator":
-        lines.append(goal_body_line(f"TASK TITLE {quote_oql_literal(p.description)}"))
+        lines.append(goal_body_line(f"PROMPT {quote_oql_literal(p.description)}"))
         if p.save:
             lines.append(goal_body_line(f"VAL {quote_oql_literal(p.description)}"))
         return

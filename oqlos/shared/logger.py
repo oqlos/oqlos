@@ -19,6 +19,23 @@ except ImportError:
 
 _CONFIGURED = False
 _LOG_FORMAT = "%(asctime)s %(levelname)s [%(name)s] %(message)s"
+_DEFAULT_LOG_MAX_BYTES = 10_000_000
+_DEFAULT_LOG_BACKUP_COUNT = 5
+
+
+def _bounded_env_int(name: str, default: int, *, minimum: int, maximum: int) -> int:
+    """Read an integer logging limit without making a bad env break startup."""
+    raw = os.getenv(name, "").strip()
+    if not raw:
+        return default
+    try:
+        return max(minimum, min(int(raw), maximum))
+    except ValueError:
+        return default
+
+
+def _logging_level(name: str | None, default: int) -> int:
+    return getattr(logging, str(name or "").strip().upper(), default)
 
 
 def configure_oqlos_logging(*, force: bool = False) -> None:
@@ -26,7 +43,10 @@ def configure_oqlos_logging(*, force: bool = False) -> None:
     Configure root logging for oqlos-server.
 
     - Default: INFO to stderr (systemd journal when run as oqlos-hardware-api.service).
-    - Optional file: set OQLOS_LOG_FILE=/path/to/oqlos-hardware-api.log
+    - Optional rotating file: set OQLOS_LOG_FILE=/path/to/oqlos-hardware-api.log
+    - Rotation: OQLOS_LOG_MAX_BYTES (10 MB), OQLOS_LOG_BACKUP_COUNT (5)
+    - Noisy HTTP client loggers default to WARNING; override with
+      OQLOS_HTTP_CLIENT_LOG_LEVEL when debugging transport details.
     - Level: OQLOS_LOG_LEVEL=DEBUG
     """
     global _CONFIGURED
@@ -41,7 +61,19 @@ def configure_oqlos_logging(*, force: bool = False) -> None:
         or os.getenv("LOG_LEVEL")
         or str(settings.log_level or "INFO")
     ).upper()
-    level = getattr(logging, level_name, logging.INFO)
+    level = _logging_level(level_name, logging.INFO)
+    max_bytes = _bounded_env_int(
+        "OQLOS_LOG_MAX_BYTES",
+        int(settings.log_max_bytes or _DEFAULT_LOG_MAX_BYTES),
+        minimum=100_000,
+        maximum=1_000_000_000,
+    )
+    backup_count = _bounded_env_int(
+        "OQLOS_LOG_BACKUP_COUNT",
+        int(settings.log_backup_count or _DEFAULT_LOG_BACKUP_COUNT),
+        minimum=1,
+        maximum=50,
+    )
 
     handlers: list[logging.Handler] = [logging.StreamHandler(sys.stderr)]
     log_file = (
@@ -55,8 +87,8 @@ def configure_oqlos_logging(*, force: bool = False) -> None:
         handlers.append(
             RotatingFileHandler(
                 path,
-                maxBytes=2_000_000,
-                backupCount=3,
+                maxBytes=max_bytes,
+                backupCount=backup_count,
                 encoding="utf-8",
             )
         )
@@ -67,6 +99,13 @@ def configure_oqlos_logging(*, force: bool = False) -> None:
         handlers=handlers,
         force=True,
     )
+    http_client_level = _logging_level(
+        os.getenv("OQLOS_HTTP_CLIENT_LOG_LEVEL")
+        or str(settings.http_client_log_level or "WARNING"),
+        logging.WARNING,
+    )
+    for logger_name in ("httpx", "httpcore"):
+        logging.getLogger(logger_name).setLevel(http_client_level)
     _CONFIGURED = True
     root = logging.getLogger("oqlos")
     root.info(
@@ -75,7 +114,12 @@ def configure_oqlos_logging(*, force: bool = False) -> None:
         [type(handler).__name__ for handler in handlers],
     )
     if log_file:
-        root.info("OqlOS log file: %s", Path(log_file).expanduser())
+        root.info(
+            "OqlOS rotating log file=%s max_bytes=%s backup_count=%s",
+            Path(log_file).expanduser(),
+            max_bytes,
+            backup_count,
+        )
 
 
 def get_logger(name: str | None = None) -> logging.Logger:

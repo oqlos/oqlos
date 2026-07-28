@@ -209,6 +209,10 @@ test-hw` przerwie z błędem, gdy wdrożony kod rozjedzie się ze źródłem.
 
 ### Run a Scenario (OQL v3 — flat syntax)
 
+> **OQL v5:** używaj wyłącznie `TIMER '500 ms'`. Pokazane niżej
+> `SET WAIT` jest składnią legacy v3/v4; walidator dokumentu `VERSION: 5`
+> zgłasza ją jako błąd i wskazuje zamianę na `TIMER`.
+
 ```python
 from oqlos.core.interpreter import CqlInterpreter
 

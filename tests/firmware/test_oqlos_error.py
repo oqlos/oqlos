@@ -72,6 +72,10 @@ def test_oqlos_error_fastapi_handler_returns_standard_body():
     assert diagnostics["issue_code"] == "serial_port_busy"
     assert diagnostics["repair"]["id"] == "release_serial_port"
     assert body["correlation_id"] == resp.headers["x-correlation-id"]
+    assert body["architecture"] == "SOA"
+    assert body["layer"] == "oqlos"
+    assert body["component"] == "oqlos-api"
+    assert body["stage"] == "api.error"
 
 
 def test_oqlos_error_handler_can_be_installed_on_router_only_test_app():

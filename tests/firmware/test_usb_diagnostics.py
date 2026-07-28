@@ -29,10 +29,82 @@ def test_pi_system_diagnostics_has_expected_keys():
     for k in (
         "ok", "model", "boot_id", "kernel_release", "cpu_temp_c", "memory",
         "serial_ports", "i2c_buses", "usb_device_count", "kernel_event_counts", "kernel_events",
+        "power", "overall_status", "errors", "warnings",
     ):
         assert k in r
     assert isinstance(r["serial_ports"], list)
     assert isinstance(r["usb_device_count"], int)
+
+
+@pytest.mark.parametrize(
+    ("raw", "status", "active", "historical", "error_codes"),
+    [
+        ("throttled=0x0", "ok", [], [], []),
+        (
+            "throttled=0x1",
+            "critical",
+            ["undervoltage"],
+            [],
+            ["C2004-HW-0014"],
+        ),
+        (
+            "throttled=0x10000",
+            "warning",
+            [],
+            ["undervoltage"],
+            [],
+        ),
+        (
+            "throttled=0x10001",
+            "critical",
+            ["undervoltage"],
+            ["undervoltage"],
+            ["C2004-HW-0014"],
+        ),
+    ],
+)
+def test_decode_throttled_contract(raw, status, active, historical, error_codes):
+    result = u.decode_throttled(raw)
+
+    assert result["available"] is True
+    assert result["status"] == status
+    assert result["active_flags"] == active
+    assert result["historical_flags"] == historical
+    assert [item["error_code"] for item in result["errors"]] == error_codes
+
+
+def test_decode_throttled_does_not_confuse_throttling_with_undervoltage():
+    result = u.decode_throttled("throttled=0x40004")
+
+    assert result["status"] == "warning"
+    assert result["active_flags"] == ["throttled"]
+    assert result["historical_flags"] == ["throttled"]
+    assert result["errors"] == []
+
+
+def test_active_undervoltage_error_uses_shared_soa_contract():
+    error = u.decode_throttled("throttled=0x1")["errors"][0]
+
+    assert error == {
+        "error_code": "C2004-HW-0014",
+        "issue_code": "boardnet_undervoltage_active",
+        "domain": "hardware",
+        "severity": "critical",
+        "retryable": False,
+        "architecture": "SOA",
+        "component": "boardnet-power",
+        "stage": "adapter.health",
+        "message": "BoardNet reports active Raspberry Pi supply undervoltage",
+    }
+
+
+def test_decode_throttled_unavailable_is_explicit():
+    result = u.decode_throttled(None)
+
+    assert result["available"] is False
+    assert result["status"] == "unknown"
+    assert result["errors"] == []
+    assert result["warnings"][0]["issue_code"] == "boardnet_power_telemetry_unavailable"
 
 
 def test_kernel_event_snapshot_is_bounded_and_categorized(monkeypatch):

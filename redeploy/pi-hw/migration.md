@@ -463,6 +463,10 @@ Environment=OQLOS_LUNG_MOTOR_URL=http://127.0.0.1:8205
 Environment=OQLOS_ENABLE_RTC=1
 Environment=PIRTC_API_URL=http://127.0.0.1:8125
 Environment=RTC_MOCK=false
+Environment=OQLOS_LOG_FILE=/home/pi/maskservice/logs/oqlos-hardware-api.log
+Environment=OQLOS_LOG_MAX_BYTES=10000000
+Environment=OQLOS_LOG_BACKUP_COUNT=5
+Environment=OQLOS_HTTP_CLIENT_LOG_LEVEL=WARNING
 Environment=OQLOS_OQL_TRANSPORT_ROLE=agent
 Environment=OQLOS_OQL_NODE_ID=pi-hw
 Environment=OQLOS_OQL_TOPIC_PREFIX=oqlos/c2004
@@ -472,8 +476,8 @@ ExecStartPre=/bin/bash -lc 'if /home/pi/maskservice/scripts/wait-hw-tic249-ready
 ExecStart=/home/pi/oqlos/venv/bin/oqlos-server --host 127.0.0.1 --port 8202
 Restart=always
 RestartSec=3
-StandardOutput=append:/home/pi/maskservice/logs/oqlos-hardware-api.log
-StandardError=append:/home/pi/maskservice/logs/oqlos-hardware-api.log
+StandardOutput=journal
+StandardError=journal
 
 [Install]
 WantedBy=default.target

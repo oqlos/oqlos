@@ -12,6 +12,7 @@ Env flags:
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
 import time
@@ -48,6 +49,17 @@ def _report_is_degraded(report: dict[str, Any]) -> bool:
     return False
 
 
+def _power_from_identify(payload: dict[str, Any]) -> dict[str, Any] | None:
+    diagnostics = payload.get("diagnostics")
+    if not isinstance(diagnostics, dict):
+        return None
+    health = diagnostics.get("health")
+    if not isinstance(health, dict):
+        return None
+    power = health.get("power")
+    return power if isinstance(power, dict) else None
+
+
 async def run_startup_diagnostics_and_repair() -> dict[str, Any]:
     """Diagnose hardware at startup and optionally attempt a safe repair.
 
@@ -71,15 +83,31 @@ async def run_startup_diagnostics_and_repair() -> dict[str, Any]:
             execute_safe_recover,
             report_to_dict,
         )
+        from oqlos.hardware.usb_diagnostics import pi_power_diagnostics
 
         identify_payload = await hardware_identify(scan="never")
+        power = _power_from_identify(identify_payload)
+        if power is None:
+            power = await asyncio.to_thread(pi_power_diagnostics)
+        if power is not None:
+            summary["power"] = power
         report = build_diagnosis_report(identify_payload)
         report_dict = report_to_dict(report)
         summary["diagnosis"] = report_dict
-        degraded = _report_is_degraded(report_dict)
+        power_blocked = bool(power and power.get("errors"))
+        degraded = _report_is_degraded(report_dict) or power_blocked
         summary["degraded"] = degraded
 
-        if degraded and _flag("OQLOS_STARTUP_AUTO_REPAIR", True):
+        if power_blocked:
+            logger.critical(
+                "Startup diagnostics: active BoardNet power safety error; auto-repair skipped"
+            )
+            summary["repair"] = {
+                "ok": False,
+                "skipped": "active BoardNet power safety error",
+                "error_code": "C2004-HW-0014",
+            }
+        elif degraded and _flag("OQLOS_STARTUP_AUTO_REPAIR", True):
             logger.warning("Startup diagnostics: hardware degraded — attempting safe auto-repair")
             try:
                 execution = await execute_safe_recover(get_hardware_gateway(), report)

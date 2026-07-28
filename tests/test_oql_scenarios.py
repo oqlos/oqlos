@@ -65,9 +65,12 @@ def test_oql_example_dryrun(path: str) -> None:
     ids=[os.path.basename(p) for p in OQL_SCENARIOS],
 )
 def test_oql_scenario_validate(path: str) -> None:
-    """Each OQL scenario must parse/validate cleanly (warnings are acceptable)."""
+    """Each active OQL scenario must parse and validate without warnings."""
     interp = CqlInterpreter(mode="validate", quiet=True)
     result = interp.run_file(path)
     assert not result.errors, (
         f"{os.path.basename(path)}: validation errors: {result.errors}"
+    )
+    assert not result.warnings, (
+        f"{os.path.basename(path)}: semantic warnings: {result.warnings}"
     )

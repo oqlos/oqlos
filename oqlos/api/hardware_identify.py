@@ -12,6 +12,7 @@ from oqlos.api import hardware_probe as hw_probe
 from oqlos.api.hardware_gateway import get_hardware_gateway
 from oqlos.api.hardware_registry import HARDWARE_REGISTRY
 from oqlos.hardware.identify_enrichment import enrich_identify_payload
+from oqlos.hardware.usb_diagnostics import pi_power_diagnostics
 
 router = APIRouter(tags=["hardware-identify"])
 
@@ -26,6 +27,8 @@ def _hardware_health_overall_ok(payload: dict[str, Any]) -> bool:
         "overall_ok",
         "degraded",
         "init_summary",
+        "power",
+        "errors",
     }
     for key, entry in payload.items():
         if key in skip_keys or not isinstance(entry, dict):
@@ -113,9 +116,13 @@ async def hardware_health():
     """Return connectivity status for all hardware services."""
     payload = await get_hardware_gateway().health()
     if isinstance(payload, dict):
+        power = await asyncio.to_thread(pi_power_diagnostics)
+        payload["power"] = power
+        if power.get("errors"):
+            payload["errors"] = list(power["errors"])
         payload["platform"] = platform._detect_runtime_platform()
         if payload.get("mode") == "real":
-            overall_ok = _hardware_health_overall_ok(payload)
+            overall_ok = _hardware_health_overall_ok(payload) and not bool(power.get("errors"))
             payload["overall_ok"] = overall_ok
             payload["degraded"] = not overall_ok
             if not overall_ok:

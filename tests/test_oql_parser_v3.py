@@ -13,7 +13,7 @@ from oqlos.core.oql_parser import (
     duration_to_ms,
     tokenize,
 )
-from oqlos.core.oql_versioning import OQL_VERSION_CURRENT
+from oqlos.core.oql_versioning import OQL_VERSION_CURRENT, OQL_VERSION_V4
 
 
 # ── tokenize ─────────────────────────────────────────────────────
@@ -112,7 +112,7 @@ def test_inline_access_grants_are_accepted_by_execution_parser():
         ALLOW role:administrator UPDATE *
         ALLOW role:operator UPDATE SET 'Operator'
         DENY role:operator UPDATE API_POST *
-        TEST:
+        TASK:
           NAME 'Controlled test'
           SET 'Operator' 'confirm'
         """
@@ -258,7 +258,7 @@ def test_parse_rejects_unknown_command():
 def test_parse_v4_goal_requires_set_name():
     src = textwrap.dedent(
         f"""
-        VERSION: {OQL_VERSION_CURRENT}
+        VERSION: {OQL_VERSION_V4}
         GOAL:
           SET WAIT '500 ms'
         """
@@ -270,7 +270,7 @@ def test_parse_v4_goal_requires_set_name():
 def test_parse_v4_rejects_inline_goal_name():
     src = textwrap.dedent(
         f"""
-        VERSION: {OQL_VERSION_CURRENT}
+        VERSION: {OQL_VERSION_V4}
         GOAL test:
           SET WAIT '500 ms'
         """
@@ -282,10 +282,10 @@ def test_parse_v4_rejects_inline_goal_name():
 def test_parse_v4_goal_name_from_set_name():
     src = textwrap.dedent(
         f"""
-        VERSION: {OQL_VERSION_CURRENT}
+        VERSION: {OQL_VERSION_V4}
         GOAL:
           SET NAME 'Test ciśnienia'
-          SET WAIT '500 ms'
+          TIMER '500 ms'
         """
     )
     doc = parse_oql(src)
@@ -356,7 +356,7 @@ def test_adapter_config_prefix():
 def test_version4_set_accepts_textual_hardware_values():
     src = textwrap.dedent(
         f"""
-        VERSION: {OQL_VERSION_CURRENT}
+        VERSION: {OQL_VERSION_V4}
         GOAL:
           SET NAME 'Hardware smoke'
           SET 'zawor 3' 'ON'
@@ -381,7 +381,7 @@ def test_version4_set_accepts_textual_hardware_values():
 def test_version4_repeat_count_expands_indented_block():
     src = textwrap.dedent(
         f"""
-        VERSION: {OQL_VERSION_CURRENT}
+        VERSION: {OQL_VERSION_V4}
         GOAL:
           REPEAT 2:
             SET NAME 'Test spadku cisnienia automatu'
@@ -736,9 +736,9 @@ def test_parse_version5_accepted():
     src = textwrap.dedent(
         """
         VERSION: 5
-        GOAL:
-          SET NAME 'Test v5'
-          SET WAIT '500 ms'
+        TASK:
+          NAME 'Test v5'
+          TIMER '500 ms'
         """
     )
     doc = parse_oql(src)
@@ -858,8 +858,8 @@ def test_adapter_range_lowers_to_min_max_with_synthetic_raw():
     src = textwrap.dedent(
         """
         VERSION: 5
-        GOAL:
-          SET NAME 'Zakres'
+        TASK:
+          NAME 'Zakres'
           RANGE 'ciśnienie NC' '4.2 mbar' .. '6.0 mbar'
         """
     )
@@ -877,8 +877,8 @@ def test_adapter_pass_and_fail_lowering():
     src = textwrap.dedent(
         """
         VERSION: 5
-        GOAL:
-          SET NAME 'Werdykt'
+        TASK:
+          NAME 'Werdykt'
           PASS 'OK'
           FAIL 'NOK'
         """
@@ -898,8 +898,8 @@ def test_adapter_fail_goto_emits_goto_action():
     src = textwrap.dedent(
         """
         VERSION: 5
-        GOAL:
-          SET NAME 'Skok'
+        TASK:
+          NAME 'Skok'
           FAIL 'NOK' GOTO 'Pomiar w zakresie wysokim'
         """
     )
@@ -918,8 +918,8 @@ def test_adapter_fail_retry_emits_retry_action():
     src = textwrap.dedent(
         """
         VERSION: 5
-        GOAL:
-          SET NAME 'Powtórka'
+        TASK:
+          NAME 'Powtórka'
           FAIL 'NOK' RETRY 2
         """
     )
@@ -931,19 +931,19 @@ def test_adapter_fail_retry_emits_retry_action():
     assert actions[1].raw == "RETRY 2"
 
 
-# ── 2026-07 dialect: TEST:, bare NAME, TIMER ─────────────────────
+# ── OQL v5: TASK:, bare NAME, PROMPT, TIMER ──────────────────────
 
 
 NEW_DIALECT_SRC = textwrap.dedent(
     """
     VERSION: 5
     SCENARIO: 'Motor Test'
-    GOAL:
+    TASK:
       NAME 'Kontrola wizualna'
       TIMER '2 s'
       GET 'AI01'
       PASS 'AI01' 'w normie'
-    TEST:
+    TASK:
       NAME 'Test szczelności'
       SET 'pompa' '5 l'
       RANGE 'AI02' '4.2 mbar' .. '6.0 mbar'
@@ -958,6 +958,71 @@ def test_new_dialect_bare_name_sets_block_name():
     assert [b.name for b in doc.blocks] == ["Kontrola wizualna", "Test szczelności"]
 
 
+def test_v5_rejects_legacy_set_name_and_suggests_bare_name():
+    doc = parse_oql(
+        "VERSION: 5\nTASK:\n  SET NAME 'Test płuca'\n  TIMER '1 s'\n"
+    )
+
+    assert len(doc.errors) == 1
+    assert "użyj NAME 'Test płuca'" in doc.errors[0]
+    assert doc.goals()[0].name == "Test płuca"
+
+
+def test_v5_rejects_legacy_goal_and_suggests_task_block():
+    doc = parse_oql("VERSION: 5\nGOAL:\n  NAME 'Test płuca'\n")
+
+    assert len(doc.errors) == 1
+    assert "użyj TASK:" in doc.errors[0]
+    assert doc.goals()[0].name == "Test płuca"
+
+
+def test_v5_rejects_legacy_test_and_suggests_task_block():
+    doc = parse_oql("VERSION: 5\nTEST:\n  NAME 'Test płuca'\n")
+
+    assert len(doc.errors) == 1
+    assert "użyj TASK:" in doc.errors[0]
+    assert doc.goals()[0].name == "Test płuca"
+
+
+def test_v5_task_block_is_runnable():
+    doc = parse_oql("VERSION: 5\nTASK:\n  NAME 'Test płuca'\n  TIMER '1 s'\n")
+
+    assert not doc.errors
+    assert doc.goals()[0].name == "Test płuca"
+
+
+def test_v5_unnamed_runnable_block_reports_canonical_task_name():
+    doc = parse_oql("VERSION: 5\nTASK:\n  TIMER '1 s'\n")
+
+    assert len(doc.errors) == 1
+    assert "TASK w VERSION: 5 wymaga 'NAME ...'" in doc.errors[0]
+    assert "SET NAME" not in doc.errors[0]
+
+
+def test_v5_description_metadata_requires_uppercase_and_remains_available():
+    canonical = parse_oql(
+        "VERSION: 5\nDESCRIPTION: Opis testu\nTASK:\n  NAME 'x'\n  LOG 'ok'\n"
+    )
+    assert not canonical.errors
+    assert canonical.meta["description"] == "Opis testu"
+
+    mixed_case = parse_oql(
+        "VERSION: 5\nDescription: Opis testu\nTASK:\n  NAME 'x'\n  LOG 'ok'\n"
+    )
+    assert len(mixed_case.errors) == 1
+    assert "użyj 'DESCRIPTION:'" in mixed_case.errors[0]
+    assert mixed_case.meta["description"] == "Opis testu"
+
+
+def test_v4_keeps_legacy_set_name_compatibility():
+    doc = parse_oql(
+        "VERSION: 4\nGOAL:\n  SET NAME 'Legacy name'\n  SET WAIT '200 ms'\n"
+    )
+
+    assert not doc.errors
+    assert doc.goals()[0].name == "Legacy name"
+
+
 def test_new_dialect_test_block_normalizes_to_goal():
     doc = parse_oql(NEW_DIALECT_SRC)
     assert [b.type for b in doc.blocks] == ["GOAL", "GOAL"]
@@ -970,9 +1035,67 @@ def test_new_dialect_timer_is_wait_alias():
     assert waits[0].args["ms"] == 2000
 
 
+def test_v5_prompt_is_canonical_operator_instruction():
+    src = (
+        "VERSION: 5\nTASK:\n  NAME 'Test operatora'\n"
+        "  PROMPT 'Potwierdź bezpieczny stan stanowiska'\n"
+    )
+    doc = parse_oql(src)
+    assert not doc.errors
+    prompt = doc.goals()[0].cmds[0]
+    assert prompt.cmd == "PROMPT"
+    assert prompt.args == {"message": "Potwierdź bezpieczny stan stanowiska"}
+
+    flat = parse_flat_oql(src)
+    assert not flat.errors
+    action = flat.goals[0].steps[0].actions[0]
+    assert action.kind == "task"
+    assert action.target == ""
+    assert action.args == "Potwierdź bezpieczny stan stanowiska"
+
+
+def test_v5_rejects_legacy_task_title_with_prompt_hint():
+    doc = parse_oql(
+        "VERSION: 5\nTASK:\n  NAME 'Test operatora'\n"
+        "  TASK TITLE 'Potwierdź bezpieczny stan stanowiska'\n"
+    )
+    assert any(
+        "użyj PROMPT 'Potwierdź bezpieczny stan stanowiska'" in error
+        for error in doc.errors
+    )
+
+
+def test_v5_rejects_legacy_wait_spellings_and_suggests_timer():
+    doc = parse_oql(
+        textwrap.dedent(
+            """
+            VERSION: 5
+            TASK:
+              NAME 'Canonical timer'
+              SET WAIT '200 ms'
+              WAIT '1 s'
+            """
+        )
+    )
+
+    assert len(doc.errors) == 2
+    assert "użyj TIMER '200 ms'" in doc.errors[0]
+    assert "użyj TIMER '1 s'" in doc.errors[1]
+    assert [command.cmd for command in doc.goals()[0].cmds] == ["WAIT", "WAIT"]
+
+
+def test_v4_keeps_legacy_set_wait_compatibility():
+    doc = parse_oql(
+        "VERSION: 4\nGOAL:\n  SET NAME 'Legacy wait'\n  SET WAIT '200 ms'\n"
+    )
+
+    assert not doc.errors
+    assert doc.goals()[0].cmds[0].cmd == "WAIT"
+
+
 def test_new_dialect_is_detected_as_flat_oql():
     assert is_flat_oql(NEW_DIALECT_SRC) is True
-    # bez nagłówka VERSION nadal wykrywalny po TEST: + NAME
+    # bez nagłówka VERSION nadal wykrywalny po TASK: + NAME
     headless = "\n".join(
         line for line in NEW_DIALECT_SRC.splitlines() if not line.startswith("VERSION")
     )
@@ -992,7 +1115,7 @@ def test_new_dialect_bare_name_in_func_block():
         FUNC:
           NAME 'Move Left'
           SET 'motor2' '1000 steps/s'
-        GOAL:
+        TASK:
           NAME 'Test motor'
           FUNC 'Move Left'
         """
@@ -1058,3 +1181,45 @@ def test_unknown_command_is_still_rejected():
     """The no-op list must not become a catch-all that hides typos."""
     doc = parse_oql("VERSION: 5\nGOAL:\n  NAME 'x'\n  RUN_URIX 'c2004://a/b/c/d'\n")
     assert any("RUN_URIX" in str(err) for err in doc.errors)
+
+
+def test_semantic_warning_for_sample_without_stop():
+    doc = parse_oql(
+        "VERSION: 5\nTASK:\n  NAME 'sample'\n  SAMPLE 'AI01' START '100 ms'\n"
+    )
+    assert not doc.errors
+    assert any("START bez STOP" in warning for warning in doc.warnings)
+
+
+def test_semantic_warning_for_self_referential_func_before_initialization():
+    doc = parse_oql(
+        "VERSION: 5\nTASK:\n  NAME 'counter'\n"
+        "  FUNC 'counter' = 'SUM' 'counter,1'\n"
+    )
+    assert not doc.errors
+    assert any("przed inicjalizacją" in warning for warning in doc.warnings)
+
+
+def test_semantic_warning_for_sentinel_constraint():
+    doc = parse_oql(
+        "VERSION: 5\nTASK:\n  NAME 'range'\n"
+        "  RANGE 'PI1' '1 mbar' .. '999999 mbar'\n"
+    )
+    assert not doc.errors
+    assert any("±999999" in warning for warning in doc.warnings)
+
+
+def test_semantic_checks_accept_balanced_sample_and_initialized_func():
+    doc = parse_oql(
+        "VERSION: 5\nTASK:\n  NAME 'ok'\n"
+        "  SET 'counter' 0\n"
+        "  SAMPLE 'AI01' START '100 ms'\n"
+        "  SAMPLE 'AI01' STOP\n"
+        "  FUNC 'counter' = 'SUM' 'counter,1'\n"
+    )
+    assert not doc.errors
+    assert not any(
+        marker in warning
+        for warning in doc.warnings
+        for marker in ("START bez STOP", "przed inicjalizacją", "±999999")
+    )

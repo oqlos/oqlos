@@ -71,3 +71,35 @@ def test_hardware_health_endpoint_returns_200_when_degraded(monkeypatch):
     assert payload.get("degraded") is True
     assert payload.get("overall_ok") is False
     assert payload.get("status") == "degraded"
+
+
+def test_hardware_health_exposes_active_undervoltage_as_coded_degraded_state(monkeypatch):
+    class HealthyGateway:
+        async def health(self):
+            return {
+                "mode": "real",
+                "modbus-io": {"status": "connected", "compatible": True},
+            }
+
+    monkeypatch.setattr(hw_identify, "get_hardware_gateway", lambda: HealthyGateway())
+    monkeypatch.setattr(hw_identify.platform, "_detect_runtime_platform", lambda: {})
+    monkeypatch.setattr(
+        hw_identify,
+        "pi_power_diagnostics",
+        lambda: {
+            "status": "critical",
+            "errors": [
+                {
+                    "error_code": "C2004-HW-0014",
+                    "issue_code": "boardnet_undervoltage_active",
+                }
+            ],
+        },
+    )
+
+    payload = asyncio.run(hw.hardware_health())
+
+    assert payload["overall_ok"] is False
+    assert payload["degraded"] is True
+    assert payload["status"] == "degraded"
+    assert payload["errors"][0]["error_code"] == "C2004-HW-0014"

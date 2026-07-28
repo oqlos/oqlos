@@ -141,6 +141,11 @@ class OqlResponse(_JsonEnvelopeMixin):
     result: dict[str, Any] | None = None
     error: str | None = None
     node_id: str = ""
+    error_code: str | None = None
+    architecture: str = "SOA"
+    layer: str = "firmware"
+    component: str = "oql-mqtt-agent"
+    stage: str | None = None
 
     @classmethod
     def from_json(cls, raw: str | bytes) -> "OqlResponse":
@@ -151,7 +156,45 @@ class OqlResponse(_JsonEnvelopeMixin):
             result=data.get("result"),
             error=data.get("error"),
             node_id=str(data.get("node_id", "")),
+            error_code=data.get("error_code"),
+            architecture=str(data.get("architecture", "SOA")),
+            layer=str(data.get("layer", "firmware")),
+            component=str(data.get("component", "oql-mqtt-agent")),
+            stage=data.get("stage"),
         )
+
+
+def _mqtt_error_response(
+    correlation_id: str,
+    exc: Exception,
+    *,
+    node_id: str,
+    stage: str,
+) -> OqlResponse:
+    """Map an agent failure to the same C2004 envelope as the HTTP boundary."""
+    try:
+        from oqlos.errors import OqlosError
+    except Exception:  # pragma: no cover - import guard for minimal agents
+        OqlosError = ()  # type: ignore[assignment,misc]
+    if OqlosError and isinstance(exc, OqlosError):
+        code = exc.public_code
+    elif isinstance(exc, TimeoutError):
+        code = "C2004-NET-0003"
+    elif isinstance(exc, ValueError):
+        code = "C2004-DATA-0002"
+    elif isinstance(exc, OSError) or "serial port" in str(exc).lower():
+        code = "C2004-HW-0012"
+    else:
+        code = "C2004-SYS-0001"
+    return OqlResponse(
+        correlation_id,
+        ok=False,
+        result=None,
+        error=str(exc),
+        node_id=node_id,
+        error_code=code,
+        stage=stage,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -448,7 +491,18 @@ class OqlMqttAgent(_PahoAsyncClient):
         # Mirror the result onto the events stream for live observers.
         self._publish(
             self.topics.events,
-            json.dumps({"correlation_id": req.correlation_id, "ok": payload.ok, "node_id": self._node_id}),
+            json.dumps(
+                {
+                    "correlation_id": req.correlation_id,
+                    "ok": payload.ok,
+                    "node_id": self._node_id,
+                    "error_code": payload.error_code,
+                    "architecture": payload.architecture,
+                    "layer": payload.layer,
+                    "component": payload.component,
+                    "stage": payload.stage,
+                }
+            ),
             qos=0,
         )
 
@@ -462,7 +516,12 @@ class OqlMqttAgent(_PahoAsyncClient):
             return OqlResponse(req.correlation_id, ok=ok, result=result, node_id=self._node_id)
         except Exception as exc:  # never crash the agent loop
             logger.exception("OQL agent manage verb failed")
-            return OqlResponse(req.correlation_id, ok=False, result=None, error=str(exc), node_id=self._node_id)
+            return _mqtt_error_response(
+                req.correlation_id,
+                exc,
+                node_id=self._node_id,
+                stage="mqtt.manage",
+            )
 
     def _run_oql(self, req: OqlRequest) -> OqlResponse:
         """Execute OQL synchronously (called inside a worker thread)."""
@@ -490,4 +549,9 @@ class OqlMqttAgent(_PahoAsyncClient):
             return OqlResponse(req.correlation_id, ok=bool(payload.get("ok")), result=payload, node_id=self._node_id)
         except Exception as exc:  # never crash the agent loop
             logger.exception("OQL agent execution failed")
-            return OqlResponse(req.correlation_id, ok=False, result=None, error=str(exc), node_id=self._node_id)
+            return _mqtt_error_response(
+                req.correlation_id,
+                exc,
+                node_id=self._node_id,
+                stage="mqtt.execute",
+            )

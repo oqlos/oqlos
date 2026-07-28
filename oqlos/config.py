@@ -173,6 +173,25 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("OQLOS_LOG_FILE", "OQLOS_HARDWARE_LOG_FILE"),
         description="Optional log file path (e.g. ~/maskservice/logs/oqlos-hardware-api.log)",
     )
+    log_max_bytes: int = Field(
+        default=10_000_000,
+        validation_alias="OQLOS_LOG_MAX_BYTES",
+        ge=100_000,
+        le=1_000_000_000,
+        description="Maximum size of one OqlOS rotating log file in bytes",
+    )
+    log_backup_count: int = Field(
+        default=5,
+        validation_alias="OQLOS_LOG_BACKUP_COUNT",
+        ge=1,
+        le=50,
+        description="Number of rotated OqlOS log files retained",
+    )
+    http_client_log_level: str = Field(
+        default="WARNING",
+        validation_alias="OQLOS_HTTP_CLIENT_LOG_LEVEL",
+        description="Log level for noisy httpx/httpcore transport loggers",
+    )
     
     # CORS Settings
     cors_origins: str = Field(

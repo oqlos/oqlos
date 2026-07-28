@@ -19,9 +19,124 @@ import glob
 import os
 import re
 import subprocess
+from datetime import datetime, timezone
 from typing import Any
 
 SYS_USB = "/sys/bus/usb/devices"
+
+_THROTTLE_FLAGS: dict[int, str] = {
+    0: "undervoltage",
+    1: "frequency_capped",
+    2: "throttled",
+    3: "soft_temperature_limit",
+}
+
+
+def decode_throttled(raw: str | None) -> dict[str, Any]:
+    """Decode ``vcgencmd get_throttled`` into the public power contract.
+
+    Raspberry Pi uses bits 0..3 for conditions active now and bits 16..19 for
+    conditions observed since boot.  Only current undervoltage is the safety
+    error C2004-HW-0014; historical flags remain warnings and never pretend
+    that an alarm is active.
+    """
+    observed_at = datetime.now(timezone.utc).isoformat()
+    match = re.search(r"(?:throttled=)?(0x[0-9a-f]+|[0-9]+)", raw or "", re.I)
+    if not match:
+        return {
+            "available": False,
+            "status": "unknown",
+            "observed_at": observed_at,
+            "raw": raw,
+            "mask": None,
+            "active_flags": [],
+            "historical_flags": [],
+            "errors": [],
+            "warnings": [
+                {
+                    "issue_code": "boardnet_power_telemetry_unavailable",
+                    "severity": "warning",
+                    "message": "Raspberry Pi power telemetry is unavailable",
+                }
+            ],
+        }
+
+    token = match.group(1)
+    mask = int(token, 16 if token.lower().startswith("0x") else 10)
+    active = [name for bit, name in _THROTTLE_FLAGS.items() if mask & (1 << bit)]
+    historical = [
+        name for bit, name in _THROTTLE_FLAGS.items() if mask & (1 << (bit + 16))
+    ]
+    errors: list[dict[str, Any]] = []
+    warnings: list[dict[str, Any]] = []
+
+    if "undervoltage" in active:
+        errors.append(
+            {
+                "error_code": "C2004-HW-0014",
+                "issue_code": "boardnet_undervoltage_active",
+                "domain": "hardware",
+                "severity": "critical",
+                "retryable": False,
+                "architecture": "SOA",
+                "component": "boardnet-power",
+                "stage": "adapter.health",
+                "message": "BoardNet reports active Raspberry Pi supply undervoltage",
+            }
+        )
+    for flag in active:
+        if flag == "undervoltage":
+            continue
+        warnings.append(
+            {
+                "issue_code": "boardnet_power_condition_active",
+                "condition": flag,
+                "severity": "warning",
+                "message": f"Raspberry Pi reports active {flag.replace('_', ' ')}",
+            }
+        )
+    for flag in historical:
+        warnings.append(
+            {
+                "issue_code": "boardnet_power_condition_historical",
+                "condition": flag,
+                "severity": "warning",
+                "message": f"Raspberry Pi reported {flag.replace('_', ' ')} since boot",
+            }
+        )
+
+    status = "critical" if errors else "warning" if warnings else "ok"
+    return {
+        "available": True,
+        "status": status,
+        "observed_at": observed_at,
+        "raw": raw,
+        "mask": mask,
+        "mask_hex": f"0x{mask:x}",
+        "active_flags": active,
+        "historical_flags": historical,
+        "errors": errors,
+        "warnings": warnings,
+    }
+
+
+def _vcgencmd(arg: str) -> str | None:
+    try:
+        result = subprocess.run(
+            ["vcgencmd", arg], capture_output=True, text=True, timeout=3, check=False
+        )
+        return result.stdout.strip() or None
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+
+
+def pi_power_diagnostics() -> dict[str, Any]:
+    """Return the standardized Raspberry Pi power snapshot."""
+    result = decode_throttled(_vcgencmd("get_throttled"))
+    # This is SoC core voltage, not the 5 V input and not a power measurement.
+    result["core_voltage_raw"] = _vcgencmd("measure_volts")
+    result["input_power_measurement_available"] = False
+    return result
 
 
 def _read(path: str) -> str | None:
@@ -195,15 +310,15 @@ def pi_system_diagnostics() -> dict[str, Any]:
     temp = _read("/sys/class/thermal/thermal_zone0/temp")
     out["cpu_temp_c"] = round(int(temp) / 1000, 1) if temp and temp.lstrip("-").isdigit() else None
 
-    def _vcgencmd(arg: str) -> str | None:
-        try:
-            r = subprocess.run(["vcgencmd", arg], capture_output=True, text=True, timeout=3)
-            return r.stdout.strip() or None
-        except Exception:
-            return None
-
     out["throttled"] = _vcgencmd("get_throttled")
     out["core_volt"] = _vcgencmd("measure_volts")
+    out["power"] = decode_throttled(out["throttled"])
+    out["power"]["core_voltage_raw"] = out["core_volt"]
+    out["power"]["input_power_measurement_available"] = False
+    out["overall_status"] = out["power"]["status"]
+    out["errors"] = list(out["power"]["errors"])
+    out["warnings"] = list(out["power"]["warnings"])
+    out["ok"] = not bool(out["errors"])
 
     mem: dict[str, str] = {}
     for line in (_read("/proc/meminfo") or "").splitlines():

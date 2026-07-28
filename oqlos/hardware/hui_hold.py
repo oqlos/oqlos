@@ -283,6 +283,7 @@ async def _stop_hui_hold_unlocked(gateway: Any, key: str | None = None) -> dict[
         ["modbus-io"],
         command="hold_stop",
         key=requested_key or None,
+        check_power=False,
     )
     if readiness_failure is not None:
         stopped_key = _active_hold_key

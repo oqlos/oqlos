@@ -76,6 +76,33 @@ def test_ready_false_does_not_block_reciprocate_start():
     ]
 
 
+def test_active_limits_return_a_canonical_hardware_error_before_post():
+    client = _ReadyFalseClient()
+
+    async def blocked_status(_url):
+        return _JsonResponse(
+            200,
+            {
+                "connected": True,
+                "forward_limit_active": True,
+                "reverse_limit_active": True,
+            },
+        )
+
+    client.get = blocked_status
+    plugin = _plugin_with_client(client)
+
+    result = asyncio.run(plugin.execute_command("reciprocate", {"steps": 500}))
+
+    assert result["success"] is False
+    assert result["error_code"] == "C2004-HW-0012"
+    assert result["status_code"] == 503
+    assert result["architecture"] == "SOA"
+    assert result["component"] == "motor-tic249"
+    assert result["stage"] == "adapter.preflight"
+    assert client.posts == []
+
+
 def test_tic249_extended_reciprocate_normalizes_ramp_time_alias():
     params = _build_reciprocate_params(
         {

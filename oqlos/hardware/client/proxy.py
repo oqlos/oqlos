@@ -136,6 +136,7 @@ class OqlosHardwareProxy:
         params: dict[str, Any] | None = None,
         payload: dict[str, Any] | None = None,
         timeout: float | None = None,
+        headers: dict[str, str] | None = None,
     ) -> dict[str, Any]:
         normalized_path = path if path.startswith("/") else f"/{path}"
         req_timeout = httpx.Timeout(
@@ -157,7 +158,16 @@ class OqlosHardwareProxy:
         for attempt in range(1, sweeps + 1):
             for target in targets:
                 try:
-                    res = await client.request(method, target, params=params, json=payload, timeout=req_timeout)
+                    request_kwargs: dict[str, Any] = {
+                        "params": params,
+                        "json": payload,
+                        "timeout": req_timeout,
+                    }
+                    # Keep lightweight/mock clients compatible and avoid
+                    # changing the request surface when there are no headers.
+                    if headers is not None:
+                        request_kwargs["headers"] = headers
+                    res = await client.request(method, target, **request_kwargs)
                     res.raise_for_status()
                     return res.json()
                 except httpx.HTTPStatusError as exc:

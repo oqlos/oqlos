@@ -59,6 +59,10 @@ exclude = ["oqlos.models*", "oqlos.shared.event_store"]
 oqlos-core = { path = "packages/oqlos-core" }
 oqlos-models = { path = "packages/oqlos-models" }
 
+[tool.pytest.ini_options]
+# Test the workspace sources, not an older wheel left in site-packages.
+pythonpath = ["packages/oqlos-core/src", "packages/oqlos-models/src", "."]
+
 [tool.pfix]
 # Self-healing Python configuration
 model = "openrouter/qwen/qwen3-coder-next"

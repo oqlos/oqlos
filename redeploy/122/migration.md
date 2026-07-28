@@ -813,6 +813,10 @@ Environment=OQLOS_ENABLE_RTC=1
 Environment=PIRTC_API_URL=http://127.0.0.1:8125
 Environment=RTC_MOCK=false
 Environment=OQLOS_HARDWARE_EVENTS_FILE=/home/pi/oqlos/hardware-events.jsonl
+Environment=OQLOS_LOG_FILE=/home/pi/maskservice/logs/oqlos-hardware-api.log
+Environment=OQLOS_LOG_MAX_BYTES=10000000
+Environment=OQLOS_LOG_BACKUP_COUNT=5
+Environment=OQLOS_HTTP_CLIENT_LOG_LEVEL=WARNING
 Environment=OQLOS_OQL_TRANSPORT_ROLE=both
 Environment=OQLOS_OQL_NODE_ID=boardnet
 Environment=OQLOS_OQL_TOPIC_PREFIX=oqlos/c2004
@@ -831,8 +835,10 @@ Restart=always
 RestartSec=10
 KillSignal=SIGINT
 TimeoutStopSec=25
-StandardOutput=append:/home/pi/maskservice/logs/oqlos-hardware-api.log
-StandardError=append:/home/pi/maskservice/logs/oqlos-hardware-api.log
+# Application logs use OqlOS RotatingFileHandler. Keeping stdout/stderr in the
+# journal avoids two writers racing on the same rotated file.
+StandardOutput=journal
+StandardError=journal
 
 [Install]
 WantedBy=default.target

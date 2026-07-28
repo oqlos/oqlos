@@ -25,5 +25,7 @@ def test_generate_cql_uses_canonical_set_syntax():
     assert "SET 'pompa' '5 l'" in cql
     assert "SET 'sprężarka' '120 l/min'" in cql
     assert "SET 'BO 06' '1'" in cql
-    assert "TASK TITLE 'Potwierdz gotowosc'" in cql
+    assert "TASK:\n  NAME 'Sterowanie'" in cql
+    assert "PROMPT 'Potwierdz gotowosc'" in cql
+    assert "TASK TITLE" not in cql
     assert "SET [" not in cql

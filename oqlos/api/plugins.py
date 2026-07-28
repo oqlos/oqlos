@@ -9,6 +9,8 @@ from typing import Any
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 
+from oqlos.errors import OqlosError
+
 from oqlos.hardware.plugins import (
     PluginConfig,
     PluginHealth,
@@ -58,6 +60,29 @@ def _plugin_health_body(health: PluginHealth) -> dict[str, Any]:
     }
 
 
+def _plugin_health_issue_code(
+    plugin_id: str, body: dict[str, Any] | None = None
+) -> str:
+    normalized = str(plugin_id or "unknown").strip().lower() or "unknown"
+    message = str((body or {}).get("message") or "").lower()
+    if normalized in {"modbus-io", "modbus-adc"} and any(
+        marker in message
+        for marker in ("timed out", "timeout", "no response", "did not answer")
+    ):
+        return "hw_modbus_no_response"
+    return f"adapter_{normalized}_health_not_ok"
+
+
+def _raise_unhealthy_plugin(plugin_id: str, body: dict[str, Any]) -> None:
+    message = str(body.get("message") or f"Plugin '{plugin_id}' is unavailable")
+    raise OqlosError(
+        code=_plugin_health_issue_code(plugin_id, body),
+        status_code=503,
+        message=message,
+        detail={"plugin_id": plugin_id, "health": body},
+    )
+
+
 @router.get("/")
 async def list_plugins():
     """List all registered hardware plugins."""
@@ -91,9 +116,11 @@ async def get_plugin_health(plugin_id: str):
             "version": "unknown",
             "details": {},
         }
-        return JSONResponse(content=body, status_code=503)
+        _raise_unhealthy_plugin(plugin_id, body)
     body = _plugin_health_body(health)
-    return JSONResponse(content=body, status_code=_plugin_health_http_status(health))
+    if _plugin_health_http_status(health) != 200:
+        _raise_unhealthy_plugin(plugin_id, body)
+    return JSONResponse(content=body, status_code=200)
 
 
 @router.post("/{plugin_id}/connect")
@@ -114,7 +141,14 @@ async def connect_plugin(plugin_id: str, config: dict[str, Any]):
     if success:
         return {"status": "connected", "plugin_id": plugin_id}
     else:
-        raise HTTPException(status_code=500, detail=f"Failed to connect to plugin '{plugin_id}'")
+        _raise_unhealthy_plugin(
+            plugin_id,
+            {
+                "status": "error",
+                "message": f"Failed to connect to plugin '{plugin_id}'",
+                "compatible": False,
+            },
+        )
 
 
 @router.post("/{plugin_id}/disconnect")
@@ -124,7 +158,14 @@ async def disconnect_plugin(plugin_id: str):
     if success:
         return {"status": "disconnected", "plugin_id": plugin_id}
     else:
-        raise HTTPException(status_code=500, detail=f"Failed to disconnect from plugin '{plugin_id}'")
+        _raise_unhealthy_plugin(
+            plugin_id,
+            {
+                "status": "error",
+                "message": f"Failed to disconnect from plugin '{plugin_id}'",
+                "compatible": False,
+            },
+        )
 
 
 async def _resolve_plugin_instance(plugin_id: str) -> Any | None:
@@ -147,15 +188,39 @@ async def execute_plugin_command(plugin_id: str, command: dict[str, Any]):
     """Execute a command on a hardware plugin."""
     instance = await _resolve_plugin_instance(plugin_id)
     if not instance:
-        raise HTTPException(status_code=404, detail=f"No active instance for plugin '{plugin_id}'")
+        _raise_unhealthy_plugin(
+            plugin_id,
+            {
+                "status": "error",
+                "message": f"No active instance for plugin '{plugin_id}'",
+                "compatible": False,
+            },
+        )
 
     command_name = command.get("command")
     params = command.get("params", {})
 
     result = await instance.execute_command(command_name, params)
     if isinstance(result, dict):
+        if result.get("success") is False:
+            status_code = int(result.get("status_code") or result.get("status") or 503)
+            headers = {}
+            if result.get("correlation_id"):
+                headers["X-Correlation-ID"] = str(result["correlation_id"])
+            media_type = "application/problem+json" if result.get("error_code") else "application/json"
+            return JSONResponse(
+                content=result,
+                status_code=status_code,
+                headers=headers,
+                media_type=media_type,
+            )
         return result
-    return {"success": False, "error": "Invalid plugin response", "result": result}
+    raise OqlosError(
+        code=f"adapter_{plugin_id}_health_not_ok",
+        status_code=503,
+        message="Invalid plugin response",
+        detail={"plugin_id": plugin_id, "result_type": type(result).__name__},
+    )
 
 
 @router.post("/validate")

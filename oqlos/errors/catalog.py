@@ -49,6 +49,47 @@ _MODBUS_ADAPTER_ONLY_HINT = (
 )
 
 ISSUE_CATALOG: dict[str, IssueDefinition] = {
+    "boardnet_undervoltage_active": IssueDefinition(
+        code="boardnet_undervoltage_active",
+        domain="hardware",
+        default_severity="critical",
+        summary="BoardNet reports active Raspberry Pi supply undervoltage.",
+        repair=RepairTemplate(
+            id="restore_boardnet_power",
+            scope="host",
+            auto_executable=False,
+            actuation_risk="physical",
+            hint=(
+                "Stop safety-critical hardware operations, check the 5 V supply, "
+                "cable and USB load, then require vcgencmd get_throttled bit 0 to clear."
+            ),
+        ),
+    ),
+    "boardnet_power_telemetry_unavailable": IssueDefinition(
+        code="boardnet_power_telemetry_unavailable",
+        domain="hardware",
+        default_severity="warning",
+        summary="Raspberry Pi power telemetry is unavailable on BoardNet.",
+        repair=RepairTemplate(
+            id="restore_boardnet_power_telemetry",
+            scope="host",
+            auto_executable=False,
+            actuation_risk="none",
+            hint="Install/restore vcgencmd and verify the OqlOS user can execute it.",
+        ),
+    ),
+    "boardnet_power_condition_active": IssueDefinition(
+        code="boardnet_power_condition_active",
+        domain="hardware",
+        default_severity="warning",
+        summary="BoardNet reports an active power, throttling or thermal condition.",
+    ),
+    "boardnet_power_condition_historical": IssueDefinition(
+        code="boardnet_power_condition_historical",
+        domain="hardware",
+        default_severity="warning",
+        summary="BoardNet reports a power, throttling or thermal condition since boot.",
+    ),
     "modbus_adc_adapter_only": IssueDefinition(
         code="modbus_adc_adapter_only",
         domain="hardware",

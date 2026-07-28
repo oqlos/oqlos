@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
-from oqlos.hardware import hui_actions, hui_hold, hui_lung_recipe, hui_valve
+from oqlos.hardware import hui_actions, hui_hold, hui_lung_recipe, hui_readiness, hui_valve
 
 
 def run(coro):
@@ -106,6 +106,33 @@ def test_hui_hold_fails_before_shutdown_when_required_plugin_is_disabled(monkeyp
     assert payload["required_hardware"] == ["modbus-io", "motor-dri0050"]
     assert payload["operations"] == []
     assert not any(call[0] in {"pump", "valve"} for call in gateway.calls)
+
+
+def test_hui_hold_active_undervoltage_fails_before_adapter_calls(monkeypatch) -> None:
+    monkeypatch.setattr(hui_hold, "_VALVE_STAGGER_SECONDS", 0)
+    monkeypatch.setattr(
+        hui_readiness,
+        "pi_power_diagnostics",
+        lambda: {
+            "status": "critical",
+            "errors": [
+                {
+                    "error_code": "C2004-HW-0014",
+                    "issue_code": "boardnet_undervoltage_active",
+                }
+            ],
+        },
+    )
+    gateway = FakeGateway(real=True)
+
+    payload = run(hui_actions.start_hui_hold(gateway, "lp-pwm-plus10"))
+
+    assert payload["ok"] is False
+    assert payload["status_code"] == 503
+    assert payload["error_code"] == "C2004-HW-0014"
+    assert payload["issue_code"] == "boardnet_undervoltage_active"
+    assert payload["operations"] == []
+    assert gateway.calls == []
 
 
 def test_hui_hold_stop_reports_the_hold_that_was_started(monkeypatch) -> None:

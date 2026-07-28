@@ -253,5 +253,10 @@ async def test_agent_run_oql_handles_execution_errors(broker, monkeypatch):
         assert resp.correlation_id == "x"
         assert resp.ok is False
         assert "serial port busy" in (resp.error or "")
+        assert resp.error_code == "C2004-HW-0012"
+        assert resp.architecture == "SOA"
+        assert resp.layer == "firmware"
+        assert resp.component == "oql-mqtt-agent"
+        assert resp.stage == "mqtt.execute"
     finally:
         await agent.stop()

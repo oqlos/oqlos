@@ -5,11 +5,11 @@ C2004/DisplayNet.
 
 ## Zweryfikowany punkt startowy
 
-- OqlOS firmware: 495 testów przechodzi.
+- OqlOS firmware: 515 testów przechodzi.
 - OqlOS frontend: 142 testy przechodzą, build Vite poprawny.
 - Mapowanie katalogu błędów C2004/OqlOS: 3 testy kontraktowe przechodzą.
-- BoardNet odpowiada, lecz bieżący health jest `degraded`: Modbus-IO zgłasza
-  timeout. Stany DO1–DO8 są obecnie `unknown`, nie `OFF`.
+- BoardNet odpowiada, bieżący health ma `overall_ok=true`; Modbus-IO raportuje
+  `connected`. Ocena fizycznej kolejności DO1–DO8 nadal wymaga testu operatora.
 - `get_throttled=0x0`; brak aktywnego undervoltage podczas weryfikacji.
 - DisplayNet → BoardNet: `up`; BoardNet → DisplayNet: jeszcze `unknown`.
 - W buforze replikacji diagnostyki pozostaje backlog.
@@ -36,11 +36,13 @@ Priorytet: P0. Zależności: brak.
 
 Zakres:
 
-- wydzielić parser maski `get_throttled` z polami active/historical;
-- emitować `C2004-HW-0014` tylko dla aktywnego bitu undervoltage;
-- historyczny undervoltage raportować jako WARN;
-- dołączyć stan power do health, startup diagnostics i event streamu;
-- przed aktuacją sprawdzać wspólny power gate;
+- [x] wydzielić parser maski `get_throttled` z polami active/historical;
+- [x] emitować `C2004-HW-0014` tylko dla aktywnego bitu undervoltage;
+- [x] historyczny undervoltage raportować jako WARN;
+- [x] dołączyć stan power do health i startup diagnostics;
+- dołączyć zmianę stanu power do event streamu;
+- [x] przed aktuacją HUI sprawdzać wspólny power gate (STOP zawsze dozwolony);
+- rozszerzyć ten sam gate na bezpośrednie endpointy serwisowe i MQTT manage;
 - zaprojektować opcjonalny provider INA219/INA260 dla `voltage_v/current_a/power_w`.
 
 Testy i acceptance:
@@ -176,7 +178,26 @@ Zakres:
 Acceptance: statyczna różnica kod ↔ rejestr wynosi zero, a zła wartość kończy
 się kontrolowanym błędem konfiguracji przed startem adaptera.
 
-### RF-10 — Typowane odpowiedzi i spójny OpenAPI
+### RF-10 — Jedna gramatyka OQL v5 i kontrola driftu generatorów
+
+Priorytet: P0. Zależności: RF-08 dla finalnego usunięcia vendored kopii.
+
+Zakres:
+
+- [x] ustalić kanon `TASK:` + `NAME` + `PROMPT` + `TIMER`;
+- [x] dodać `PROMPT` do parsera i adaptera Python;
+- [x] przełączyć generatory XML oraz konwertery C2004 na `PROMPT`;
+- [x] odrzucać `TASK TITLE` w jawnym `VERSION: 5` z sugestią migracji;
+- [x] zachować wejście legacy dla v3/v4;
+- dodać test corpus/parity wykonywany równocześnie przez TypeScript i Python;
+- generować referencję HELP wyłącznie z kanonicznej tabeli składni;
+- usunąć kopię implementacji po przejściu C2004 na przypięty pakiet OqlOS.
+
+Acceptance: wszystkie generatory v5 emitują identyczny model, `rg` nie znajduje
+`TASK TITLE` poza testami kompatybilności i komunikatami migratora, a corpus
+ma identyczny AST i plan wykonania w obu runtime'ach.
+
+### RF-11 — Typowane odpowiedzi i spójny OpenAPI
 
 Priorytet: P1. Zależności: RF-02 i RF-03.
 
@@ -195,7 +216,7 @@ schematem generycznego obiektu.
 Acceptance: każda publiczna operacja ma model odpowiedzi, udokumentowane kody
 HTTP i test zgodności OpenAPI; bieżący błąd nie jest maskowany cachem startupu.
 
-### RF-11 — Hermetyczne testy i kontrolowany lint
+### RF-12 — Hermetyczne testy i kontrolowany lint
 
 Priorytet: P1. Zależności: RF-08.
 

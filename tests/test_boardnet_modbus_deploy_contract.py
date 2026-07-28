@@ -45,6 +45,30 @@ def test_boardnet_modbus_is_verified_read_only_on_every_service_start() -> None:
     assert "rm -f /home/pi/.config/systemd/user/oqlos-hardware-api.service.d/90-modbus-device-id.conf" in migration
 
 
+def test_boardnet_oqlos_logging_is_bounded_and_has_one_file_writer() -> None:
+    migration = (ROOT / "redeploy/122/migration.md").read_text(encoding="utf-8")
+    unit = migration.split("Description=OqlOS hardware node", 1)[1].split("\nEOF", 1)[0]
+
+    assert "Environment=OQLOS_LOG_FILE=/home/pi/maskservice/logs/oqlos-hardware-api.log" in unit
+    assert "Environment=OQLOS_LOG_MAX_BYTES=10000000" in unit
+    assert "Environment=OQLOS_LOG_BACKUP_COUNT=5" in unit
+    assert "Environment=OQLOS_HTTP_CLIENT_LOG_LEVEL=WARNING" in unit
+    assert "StandardOutput=journal" in unit
+    assert "StandardError=journal" in unit
+    assert "StandardOutput=append:" not in unit
+
+    drop_in = (ROOT / "redeploy/122/oqlos-logging.conf").read_text(encoding="utf-8")
+    for expected in (
+        "Environment=OQLOS_LOG_FILE=/home/pi/maskservice/logs/oqlos-hardware-api.log",
+        "Environment=OQLOS_LOG_MAX_BYTES=10000000",
+        "Environment=OQLOS_LOG_BACKUP_COUNT=5",
+        "Environment=OQLOS_HTTP_CLIENT_LOG_LEVEL=WARNING",
+        "StandardOutput=journal",
+        "StandardError=journal",
+    ):
+        assert expected in drop_in
+
+
 def test_dri0050_startup_fails_closed_when_usb_identity_is_ambiguous() -> None:
     migration = (ROOT / "redeploy/122/migration.md").read_text(encoding="utf-8")
     script = migration.split("start-dri0050-motor-api.sh << 'SH'", 1)[1].split("\nSH\n", 1)[0]

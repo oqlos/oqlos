@@ -221,6 +221,12 @@ class LungPlugin(HardwarePlugin):
             return {
                 "success": False,
                 "error": blocked_reason,
+                "code": "C2004-HW-0012",
+                "error_code": "C2004-HW-0012",
+                "status_code": 503,
+                "architecture": "SOA",
+                "component": "motor-tic249",
+                "stage": "adapter.preflight",
                 "data": {"runtime_status": runtime},
             }
 

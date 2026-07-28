@@ -75,6 +75,35 @@ def _problem_response(
         "docs": f"/api/v3/errors/catalog/{public_code}",
         "remediation": entry.remediation,
     }
+    context_dict = context if isinstance(context, dict) else {}
+    diagnostics_dict = diagnostics if isinstance(diagnostics, dict) else {}
+    architecture = str(
+        diagnostics_dict.get("architecture")
+        or context_dict.get("architecture")
+        or "SOA"
+    )
+    layer = str(
+        diagnostics_dict.get("layer")
+        or context_dict.get("layer")
+        or "oqlos"
+    )
+    component = str(
+        diagnostics_dict.get("component")
+        or context_dict.get("component")
+        or context_dict.get("plugin_id")
+        or "oqlos-api"
+    )
+    stage = str(
+        diagnostics_dict.get("stage")
+        or context_dict.get("stage")
+        or "api.error"
+    )
+    metadata.update(
+        architecture=architecture,
+        layer=layer,
+        component=component,
+        stage=stage,
+    )
     if context not in (None, {}, []):
         metadata["context"] = jsonable_encoder(context)
     if diagnostics:
@@ -94,6 +123,10 @@ def _problem_response(
         "confidentiality": entry.confidentiality,
         "retryable": entry.retryable,
         "owner": entry.owner,
+        "architecture": architecture,
+        "layer": layer,
+        "component": component,
+        "stage": stage,
         "correlation_id": correlation_id,
         "error_code": public_code,
         "success": False,
