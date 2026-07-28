@@ -7,5 +7,6 @@ def test_register_hui_test_scenario_adds_ts_c20_once():
     register_hui_test_scenario(state)
     assert "ts-c20" in state.scenarios
     first = state.scenarios["ts-c20"]
+    assert first.protocol == "oql"
     register_hui_test_scenario(state)
     assert state.scenarios["ts-c20"] is first

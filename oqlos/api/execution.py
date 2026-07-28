@@ -175,7 +175,7 @@ def _register_dsl_scenario(scenario_id: str, dsl_content: str):
             name=f"Runtime Scenario {scenario_id}",
             description="Dynamically loaded from frontend DSL",
             device="runtime-simulator",
-            protocol="cql",
+            protocol="oql",
             code=dsl_content,
             slug=scenario_id,
             goals=[goal]

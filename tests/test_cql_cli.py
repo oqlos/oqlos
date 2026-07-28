@@ -1,4 +1,4 @@
-"""Tests for the OQL/CQL CLI."""
+"""Tests for the public OQL CLI."""
 
 from __future__ import annotations
 
@@ -9,6 +9,12 @@ from types import SimpleNamespace
 import pytest
 
 from oqlos.tools import cql_cli
+
+
+def test_public_oql_cli_entrypoint_is_available():
+    from oqlos.tools.oql_cli import main
+
+    assert callable(main)
 
 
 class _FakeInterpreter:
@@ -301,7 +307,7 @@ def test_run_subcommand_reports_url_fetch_error(monkeypatch, capsys):
         pass
 
     def fake_fetch(url: str):
-        raise main_module.ScenarioFetchError("URL returned HTML, not OQL/CQL source")
+        raise main_module.ScenarioFetchError("URL returned HTML, not OQL source")
 
     monkeypatch.setattr(main_module, "CqlInterpreter", FakeInterpreter)
     monkeypatch.setattr(main_module, "_fetch_scenario_source", fake_fetch)
@@ -318,7 +324,7 @@ def test_run_subcommand_reports_url_fetch_error(monkeypatch, capsys):
     payload = json.loads(capsys.readouterr().out)
     assert excinfo.value.code == 1
     assert payload["status"] == "error"
-    assert "not OQL/CQL source" in payload["message"]
+    assert "not OQL source" in payload["message"]
 
 
 def test_cmd_execute_mock_mode_error_suggests_dry_run_and_doctor(monkeypatch, capsys):

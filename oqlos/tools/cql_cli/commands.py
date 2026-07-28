@@ -1,7 +1,7 @@
 """
-Command execution helpers for CQL CLI.
+Command execution helpers for the OQL CLI.
 
-Functions for running CQL commands and scenarios.
+Functions for running OQL commands and scenarios.
 """
 
 from __future__ import annotations
@@ -43,7 +43,7 @@ def run_source(
     yaml_output: bool = False,
     gateway: object | None = None,
 ) -> object:
-    """Execute a CQL source string with a configured interpreter.
+    """Execute an OQL source string with a configured interpreter.
 
     ``gateway`` lets a caller (e.g. the OQL-over-MQTT agent) inject an
     already-initialized PluginHardwareGateway so serial ports are not reopened.

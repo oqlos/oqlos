@@ -149,7 +149,7 @@ class CqlInterpreter(BaseInterpreter):
 
     def _print_header(self, doc: CqlDocument, name: str) -> None:
         """Print execution header with metadata."""
-        self.out.step("📋", f"CQL: {name}")
+        self.out.step("📋", f"OQL: {name}")
         if doc.metadata.device_type:
             self.out.step("🔧", f"Device: {doc.metadata.device_type} / {doc.metadata.device_model}")
         if doc.intervals:
@@ -772,3 +772,8 @@ class CqlInterpreter(BaseInterpreter):
             on_fail=cond.on_fail,
             fail_message=cond.fail_message,
         )
+
+
+# Canonical public name. ``CqlInterpreter`` remains available as an internal
+# compatibility symbol for existing integrations during the package migration.
+OqlInterpreter = CqlInterpreter

@@ -63,7 +63,7 @@ python -m pip install -e .
 oqlctl --help
 
 # 4) If PATH still does not see scripts, use module form directly
-python -m oqlos.tools.cql_cli.main --help
+python -m oqlos.tools.oql_cli --help
 ```
 
 Main commands provided by this project:
@@ -212,7 +212,7 @@ test-hw` przerwie z błędem, gdy wdrożony kod rozjedzie się ze źródłem.
 > zgłasza ją jako błąd i wskazuje zamianę na `TIMER`.
 
 ```python
-from oqlos.core.interpreter import CqlInterpreter
+from oqlos.core.interpreter import OqlInterpreter
 
 source = """
 SCENARIO: Test
@@ -229,7 +229,7 @@ GOAL:
   SAVE high-voltage
 """
 
-interp = CqlInterpreter(mode="dry-run")
+interp = OqlInterpreter(mode="dry-run")
 result = interp.run(source, "test.oql")
 print(result.ok)  # True if successful
 ```
@@ -316,7 +316,7 @@ OQL_ACTUATE=1 bash examples/curl-quickstart.sh   # also actuate (mock-safe)
 ```
 oqlos/
 ├── core/
-│   ├── interpreter.py   # CqlInterpreter — main execution engine
+│   ├── interpreter.py   # OqlInterpreter — main execution engine
 │   ├── oql_parser.py    # OQL v3 flat parser (12 base commands)
 │   ├── _oql_adapter.py  # v3 AST → legacy CqlDocument bridge (+ INCLUDE/MACRO)
 │   ├── cql_parser.py    # Legacy v1/v2 parser (dispatches to v3 on detection)
@@ -333,15 +333,15 @@ oqlos/
 
 ## Core Components
 
-### CqlInterpreter
+### OqlInterpreter
 
 The main execution engine for OQL scenarios:
 
 ```python
-from oqlos.core.interpreter import CqlInterpreter
+from oqlos.core.interpreter import OqlInterpreter
 
 # Modes: "dry-run", "execute", "validate"
-interp = CqlInterpreter(
+interp = OqlInterpreter(
     mode="dry-run",
     firmware_url="http://localhost:8202",
     quiet=False
@@ -505,7 +505,7 @@ oqlctl cmd "SET pompa-1 0" --mode dry-run --json -q
 oqlctl --validate-dir scenarios
 ```
 
-For URL runs, the response must be raw OQL/CQL text or JSON with one of
+For URL runs, the response must be raw OQL text or JSON with one of
 `code`, `dsl`, `source`, or `content`. Editor/browser routes such as
 `http://localhost:8096/scenarios?scenario=...` return HTML and are rejected.
 
@@ -598,7 +598,7 @@ Notes:
 #### CLI Output Example
 
 ```
-📋 CQL: Konfiguracja Peryferii
+📋 OQL: Konfiguracja Peryferii
 🔧 Device: BA / PSS 7000
 🎯 GOAL: [CONFIG] init-pompa
   ⚙️ SET 'pump-main' '0'

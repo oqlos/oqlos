@@ -1,5 +1,5 @@
 """
-Hardware preflight checks for CQL CLI.
+Hardware preflight checks for the OQL CLI.
 
 Extracted from cql_cli.py to reduce complexity. Original CC=28.
 Refactored into smaller, focused functions with CC<10 each.

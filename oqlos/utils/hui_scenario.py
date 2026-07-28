@@ -20,7 +20,7 @@ def register_hui_test_scenario(state_manager: StateManager) -> None:
         name="HUI Test Scenario",
         description="Minimal scenario for HUI test page manual actions",
         device="hui-test-device",
-        protocol="cql",
+        protocol="oql",
         goals=[
             Goal(
                 id="goal-hui",

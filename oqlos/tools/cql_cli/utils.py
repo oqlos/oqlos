@@ -1,5 +1,5 @@
 """
-Utility functions for CQL CLI.
+Utility functions for the OQL CLI (legacy module path).
 
 Low-complexity helper functions extracted from the monolithic cql_cli.py
 """
@@ -131,10 +131,10 @@ def resolve_required_adapter(command: str) -> tuple[str | None, str | None]:
 
 
 def validate_directory(d: Path, interpreter_class) -> None:
-    """Validate all .cql and .oql files in a directory tree."""
-    files = sorted(list(d.rglob("*.cql")) + list(d.rglob("*.oql")))
+    """Validate all canonical .oql files in a directory tree."""
+    files = sorted(d.rglob("*.oql"))
     if not files:
-        print(f"No .cql/.oql files found in {d}")
+        print(f"No .oql files found in {d}")
         return
 
     total_issues = 0

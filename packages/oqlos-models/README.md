@@ -1,6 +1,6 @@
 # oqlos-models
 
-Pydantic and dataclass models for OqlOS scenarios, peripherals, execution envelopes, and CQL AST nodes.
+Pydantic and dataclass models for OQL scenarios, peripherals, execution envelopes, and the compatibility AST.
 
 Installed as `oqlos.models` so existing imports stay stable:
 

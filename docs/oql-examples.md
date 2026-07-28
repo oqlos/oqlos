@@ -18,7 +18,7 @@ This document contains practical examples of the DSL Event Sourcing system with 
 
 ### OqlOS Hardware Doctor
 
-For hardware-backed OQL/CQL scenarios, run doctor before execute mode:
+For hardware-backed OQL scenarios, run doctor before execute mode:
 
 ```bash
 # Detect local USB/serial/I2C/Modbus and compare with oqlos.yaml + firmware
@@ -90,7 +90,7 @@ commands. When firmware reports `mock`, preflight blocks `execute`; add
 `--mode dry-run` for simulation or run `oqlctl doctor` before enabling real
 hardware.
 
-`oqlctl run URL` expects raw OQL/CQL text or JSON containing `code`, `dsl`,
+`oqlctl run URL` expects raw OQL text or JSON containing `code`, `dsl`,
 `source`, or `content`. Editor routes like
 `http://localhost:8096/scenarios?scenario=...` return HTML and are rejected
 instead of producing a misleading zero-step PASS.

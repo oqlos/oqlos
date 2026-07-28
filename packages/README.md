@@ -5,7 +5,7 @@ Split distributions installed under the shared `oqlos.*` namespace:
 | Package | PyPI name | Contents |
 |---------|-----------|----------|
 | `oqlos-models/` | `oqlos-models` | `oqlos.models.*` — scenario/peripheral/DSL pydantic models |
-| `oqlos-core/` | `oqlos-core` | `oqlos.core.*` — CQL/OQL parser, adapter, safe_eval (no hardware) |
+| `oqlos-core/` | `oqlos-core` | `oqlos.core.*` — OQL parser, legacy AST adapter, safe_eval (no hardware) |
 
 Main package `oqlos` (repo root) keeps runtime + hardware: `interpreter`, `executor`, `api`, `hardware`.
 

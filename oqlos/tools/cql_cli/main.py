@@ -1,5 +1,5 @@
 """
-CQL CLI main entry point.
+OQL CLI main entry point.
 
 Refactored from monolithic cql_cli.py (CC=26, 533L) into focused functions.
 """
@@ -27,14 +27,14 @@ from oqlos.tools.cql_cli.preflight import preflight_hardware
 
 
 class ScenarioFetchError(RuntimeError):
-    """Raised when an HTTP scenario target is not runnable OQL/CQL source."""
+    """Raised when an HTTP scenario target is not runnable OQL source."""
 
 
 def create_file_parser(
     *,
     prog: str = "oqlctl",
-    description: str = "OQL/CQL Interpreter — Operation Query Language CLI",
-    file_help: str = "CQL/OQL file to process",
+    description: str = "OQL Interpreter — Operation Query Language CLI",
+    file_help: str = "OQL file to process",
 ) -> argparse.ArgumentParser:
     """Create argument parser for file-based execution."""
     firmware_url_default = default_firmware_url()
@@ -72,7 +72,7 @@ def create_file_parser(
     parser.add_argument(
         "--bridge", help="Event Server URL (e.g. ws://localhost:8104/cli)"
     )
-    parser.add_argument("--validate-dir", help="Validate all .cql/.oql files in directory")
+    parser.add_argument("--validate-dir", help="Validate all .oql files in directory")
     return parser
 
 
@@ -80,8 +80,8 @@ def create_run_parser() -> argparse.ArgumentParser:
     """Create parser for explicit `oqlctl run` scenario execution."""
     return create_file_parser(
         prog="oqlctl run",
-        description="Run an OQL/CQL scenario from a file or URL",
-        file_help="CQL/OQL file or URL to process",
+        description="Run an OQL scenario from a file or URL",
+        file_help="OQL file or URL to process",
     )
 
 
@@ -107,9 +107,9 @@ def create_format_parser() -> argparse.ArgumentParser:
     """Create parser for `oqlctl format`."""
     parser = argparse.ArgumentParser(
         prog="oqlctl format",
-        description="Format an OQL/CQL file to canonical OQL syntax.",
+        description="Format an OQL file to canonical OQL syntax.",
     )
-    parser.add_argument("file", help="CQL/OQL file to format")
+    parser.add_argument("file", help="OQL file to format")
     parser.add_argument("--write", "-w", action="store_true", help="Write changes back to the file")
     return parser
 
@@ -159,7 +159,7 @@ def create_cmd_parser() -> argparse.ArgumentParser:
 
 
 def run_file_mode(args: argparse.Namespace) -> None:
-    """Execute file-based CQL/OQL processing."""
+    """Execute file-based OQL processing."""
     if _run_hardware_flags(args):
         return
 
@@ -211,7 +211,7 @@ def _run_interpreter_target(interp: CqlInterpreter, target: str):
 
 
 def _fetch_scenario_source(url: str) -> str:
-    """Fetch OQL/CQL source from raw text or JSON scenario endpoints."""
+    """Fetch OQL source from raw text or JSON scenario endpoints."""
     import httpx
 
     try:
@@ -225,8 +225,8 @@ def _fetch_scenario_source(url: str) -> str:
     if "json" not in content_type.lower():
         if _looks_like_html(text, content_type):
             raise ScenarioFetchError(
-                f"URL returned HTML, not OQL/CQL source: {url}. "
-                "Use an API endpoint that returns raw OQL/CQL or JSON with "
+                f"URL returned HTML, not OQL source: {url}. "
+                "Use an API endpoint that returns raw OQL or JSON with "
                 "code/dsl/source/content, or run an exported .oql file."
             )
         if not text.strip():
@@ -241,11 +241,11 @@ def _fetch_scenario_source(url: str) -> str:
     source = _extract_scenario_source(data)
     if source:
         return source
-    raise ScenarioFetchError(f"URL did not return OQL/CQL source: {url}")
+    raise ScenarioFetchError(f"URL did not return OQL source: {url}")
 
 
 def _extract_scenario_source(data: object) -> str | None:
-    """Extract OQL/CQL source from supported JSON response shapes."""
+    """Extract OQL source from supported JSON response shapes."""
     if not isinstance(data, dict):
         return None
 
@@ -361,7 +361,7 @@ def run_cmd_mode(argv: list[str]) -> None:
 
 
 def run_format_mode(argv: list[str]) -> None:
-    """Format a local OQL/CQL file."""
+    """Format a local OQL file."""
     args = create_format_parser().parse_args(argv)
     path = Path(args.file)
     source = path.read_text(encoding="utf-8")

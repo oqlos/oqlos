@@ -1,4 +1,4 @@
-"""Canonical shared DSL schema for CQL/OQL editor clients."""
+"""Canonical shared OQL schema for editor clients."""
 
 from __future__ import annotations
 
@@ -125,14 +125,9 @@ def get_default_dsl_schema() -> DslSchema:
 
     dialects = [
         DslDialect(
-            id="cql",
-            name="CQL",
-            description="Connex Query Language for test scenario authoring in c2004.",
-        ),
-        DslDialect(
             id="oql",
             name="OQL",
-            description="Operation Query Language for OqlOS hardware workflows.",
+            description="Operation Query Language for all OqlOS scenarios and hardware workflows.",
         ),
     ]
 
@@ -140,7 +135,7 @@ def get_default_dsl_schema() -> DslSchema:
         DslItem(
             id="pump",
             name="pompa",
-            dialects=["cql", "oql"],
+            dialects=["oql"],
             category="hardware",
             description="Sterowanie pompą lub regulatorem przepływu.",
             type="actuator",
@@ -149,7 +144,7 @@ def get_default_dsl_schema() -> DslSchema:
         DslItem(
             id="valve",
             name="zawór",
-            dialects=["cql", "oql"],
+            dialects=["oql"],
             category="hardware",
             description="Sterowanie zaworami i ich weryfikacja.",
             type="actuator",
@@ -158,7 +153,7 @@ def get_default_dsl_schema() -> DslSchema:
         DslItem(
             id="sensor",
             name="sensor",
-            dialects=["cql", "oql"],
+            dialects=["oql"],
             category="hardware",
             description="Pomiary z czujników ciśnienia, temperatury i wilgotności.",
             type="measurement",
@@ -185,7 +180,7 @@ def get_default_dsl_schema() -> DslSchema:
         DslItem(
             id="scenario",
             name="scenario",
-            dialects=["cql", "oql"],
+            dialects=["oql"],
             category="control",
             description="Sterowanie przepływem scenariusza i logowanie.",
             type="control",
@@ -203,18 +198,18 @@ def get_default_dsl_schema() -> DslSchema:
     ]
 
     functions = [
-        DslItem(id="set", name="SET", dialects=["cql", "oql"], category="action", description="Ustaw wartość wyjścia lub zmiennej."),
-        DslItem(id="wait", name="WAIT", dialects=["cql", "oql"], category="control", description="Wstrzymaj wykonanie na zadany czas."),
-        DslItem(id="val", name="VAL", dialects=["cql", "oql"], category="measurement", description="Odczytaj wartość parametru lub sensora."),
-        DslItem(id="save", name="SAVE", dialects=["cql", "oql"], category="data", description="Zapisz wartość do wyniku lub kontekstu."),
-        DslItem(id="min", name="MIN", dialects=["cql", "oql"], category="assertion", description="Sprawdź minimalny próg parametru."),
-        DslItem(id="max", name="MAX", dialects=["cql", "oql"], category="assertion", description="Sprawdź maksymalny próg parametru."),
-        DslItem(id="func", name="FUNC", dialects=["cql", "oql"], category="compute", description="Oblicz wartość pochodną (AVG, SUM, SUB, DIV, MIN)."),
-        DslItem(id="sample", name="SAMPLE", dialects=["cql", "oql"], category="measurement", description="Uruchom lub zatrzymaj próbkowanie sygnału."),
-        DslItem(id="goto", name="GOTO", dialects=["cql", "oql"], category="control", description="Skocz do innego GOAL lub kroku."),
-        DslItem(id="log", name="LOG", dialects=["cql", "oql"], category="reporting", description="Dodaj wpis do logu scenariusza."),
-        DslItem(id="error", name="ERROR", dialects=["cql", "oql"], category="reporting", description="Zakończ lub oznacz błąd wykonania."),
-        DslItem(id="info", name="INFO", dialects=["cql", "oql"], category="reporting", description="Pokaż informację dla operatora."),
+        DslItem(id="set", name="SET", dialects=["oql"], category="action", description="Ustaw wartość wyjścia lub zmiennej."),
+        DslItem(id="wait", name="WAIT", dialects=["oql"], category="control", description="Wstrzymaj wykonanie na zadany czas."),
+        DslItem(id="val", name="VAL", dialects=["oql"], category="measurement", description="Odczytaj wartość parametru lub sensora."),
+        DslItem(id="save", name="SAVE", dialects=["oql"], category="data", description="Zapisz wartość do wyniku lub kontekstu."),
+        DslItem(id="min", name="MIN", dialects=["oql"], category="assertion", description="Sprawdź minimalny próg parametru."),
+        DslItem(id="max", name="MAX", dialects=["oql"], category="assertion", description="Sprawdź maksymalny próg parametru."),
+        DslItem(id="func", name="FUNC", dialects=["oql"], category="compute", description="Oblicz wartość pochodną (AVG, SUM, SUB, DIV, MIN)."),
+        DslItem(id="sample", name="SAMPLE", dialects=["oql"], category="measurement", description="Uruchom lub zatrzymaj próbkowanie sygnału."),
+        DslItem(id="goto", name="GOTO", dialects=["oql"], category="control", description="Skocz do innego GOAL lub kroku."),
+        DslItem(id="log", name="LOG", dialects=["oql"], category="reporting", description="Dodaj wpis do logu scenariusza."),
+        DslItem(id="error", name="ERROR", dialects=["oql"], category="reporting", description="Zakończ lub oznacz błąd wykonania."),
+        DslItem(id="info", name="INFO", dialects=["oql"], category="reporting", description="Pokaż informację dla operatora."),
         DslItem(id="api-get", name="API_GET", dialects=["oql"], category="integration", description="Wykonaj żądanie GET."),
         DslItem(id="api-post", name="API_POST", dialects=["oql"], category="integration", description="Wykonaj żądanie POST."),
         DslItem(id="assert-status", name="ASSERT_STATUS", dialects=["oql"], category="assertion", description="Sprawdź kod odpowiedzi HTTP."),
@@ -230,24 +225,24 @@ def get_default_dsl_schema() -> DslSchema:
     ]
 
     params = [
-        DslItem(id="pressure", name="ciśnienie", dialects=["cql", "oql"], category="measurement", description="Parametr ciśnienia.", type="float", units=["mbar", "bar"]),
-        DslItem(id="temperature", name="temperatura", dialects=["cql", "oql"], category="measurement", description="Parametr temperatury.", type="float", units=["°C"]),
-        DslItem(id="humidity", name="wilgotność", dialects=["cql", "oql"], category="measurement", description="Parametr wilgotności.", type="float", units=["%"]),
-        DslItem(id="flow", name="przepływ", dialects=["cql", "oql"], category="measurement", description="Przepływ medium lub powietrza.", type="float", units=["l/min"]),
-        DslItem(id="time", name="czas", dialects=["cql", "oql"], category="control", description="Czas trwania lub timeout.", type="duration", units=["ms", "s", "min"]),
+        DslItem(id="pressure", name="ciśnienie", dialects=["oql"], category="measurement", description="Parametr ciśnienia.", type="float", units=["mbar", "bar"]),
+        DslItem(id="temperature", name="temperatura", dialects=["oql"], category="measurement", description="Parametr temperatury.", type="float", units=["°C"]),
+        DslItem(id="humidity", name="wilgotność", dialects=["oql"], category="measurement", description="Parametr wilgotności.", type="float", units=["%"]),
+        DslItem(id="flow", name="przepływ", dialects=["oql"], category="measurement", description="Przepływ medium lub powietrza.", type="float", units=["l/min"]),
+        DslItem(id="time", name="czas", dialects=["oql"], category="control", description="Czas trwania lub timeout.", type="duration", units=["ms", "s", "min"]),
         DslItem(id="status", name="status", dialects=["oql"], category="integration", description="Stan wywołania lub urządzenia.", type="string", units=["bool", "json"]),
         DslItem(id="voltage", name="napięcie", dialects=["oql"], category="measurement", description="Parametr napięcia elektrycznego.", type="float", units=["mV", "V"]),
     ]
 
     units = [
-        DslItem(id="mbar", name="mbar", symbol="mbar", dialects=["cql", "oql"], category="pressure"),
-        DslItem(id="bar", name="bar", symbol="bar", dialects=["cql", "oql"], category="pressure"),
-        DslItem(id="ms", name="ms", symbol="ms", dialects=["cql", "oql"], category="time"),
-        DslItem(id="s", name="s", symbol="s", dialects=["cql", "oql"], category="time"),
-        DslItem(id="min", name="min", symbol="min", dialects=["cql", "oql"], category="time"),
-        DslItem(id="lmin", name="l/min", symbol="l/min", dialects=["cql", "oql"], category="flow"),
-        DslItem(id="degc", name="°C", symbol="°C", dialects=["cql", "oql"], category="temperature"),
-        DslItem(id="percent", name="%", symbol="%", dialects=["cql", "oql"], category="ratio"),
+        DslItem(id="mbar", name="mbar", symbol="mbar", dialects=["oql"], category="pressure"),
+        DslItem(id="bar", name="bar", symbol="bar", dialects=["oql"], category="pressure"),
+        DslItem(id="ms", name="ms", symbol="ms", dialects=["oql"], category="time"),
+        DslItem(id="s", name="s", symbol="s", dialects=["oql"], category="time"),
+        DslItem(id="min", name="min", symbol="min", dialects=["oql"], category="time"),
+        DslItem(id="lmin", name="l/min", symbol="l/min", dialects=["oql"], category="flow"),
+        DslItem(id="degc", name="°C", symbol="°C", dialects=["oql"], category="temperature"),
+        DslItem(id="percent", name="%", symbol="%", dialects=["oql"], category="ratio"),
         DslItem(id="mv", name="mV", symbol="mV", dialects=["oql"], category="voltage"),
         DslItem(id="v", name="V", symbol="V", dialects=["oql"], category="voltage"),
         DslItem(id="bool", name="bool", symbol="bool", dialects=["oql"], category="state"),
@@ -256,9 +251,9 @@ def get_default_dsl_schema() -> DslSchema:
 
     variables = [
         DslItem(id="runtime-mode", name="runtime.mode", dialects=["oql"], category="state", description="Aktualny tryb uruchomienia interpretera.", type="string"),
-        DslItem(id="scenario-id", name="scenario.id", dialects=["cql", "oql"], category="state", description="Identyfikator aktualnego scenariusza.", type="string"),
+        DslItem(id="scenario-id", name="scenario.id", dialects=["oql"], category="state", description="Identyfikator aktualnego scenariusza.", type="string"),
         DslItem(id="firmware-url", name="firmware.url", dialects=["oql"], category="state", description="Adres firmware API.", type="string"),
-        DslItem(id="report-status", name="report.status", dialects=["cql", "oql"], category="reporting", description="Końcowy status raportu.", type="string"),
+        DslItem(id="report-status", name="report.status", dialects=["oql"], category="reporting", description="Końcowy status raportu.", type="string"),
     ]
 
     explicit_object_function_map = {

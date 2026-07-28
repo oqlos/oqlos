@@ -1144,7 +1144,7 @@ const editorsByLang = {
     funcEditorDesc: "Definicje funkcji wielokrotnego użytku współdzielone między scenariuszami.",
     libraryEditorDesc: "Szablony scenariuszy i biblioteki per-urządzenie.",
     scenarioEditorDesc: "Pełny wizualny edytor scenariusza (cele + kroki + asercje).",
-    templatesDesc: "Wielokrotnego użytku szablony scenariuszy ze współdzielonymi fragmentami CQL.",
+    templatesDesc: "Wielokrotnego użytku szablony scenariuszy ze współdzielonymi fragmentami OQL.",
     operatorParametersDesc: "Edycja parametrów scenariusza dostępnych dla operatora testu.",
   },
   en: {
@@ -1155,7 +1155,7 @@ const editorsByLang = {
     funcEditorDesc: "Reusable function definitions shared between scenarios.",
     libraryEditorDesc: "Scenario templates and per-device libraries.",
     scenarioEditorDesc: "Full visual scenario editor (goals + steps + asserts).",
-    templatesDesc: "Reusable scenario templates with shared CQL fragments.",
+    templatesDesc: "Reusable scenario templates with shared OQL fragments.",
     operatorParametersDesc: "Edit scenario parameters exposed to the test operator.",
   },
   de: {
@@ -1166,7 +1166,7 @@ const editorsByLang = {
     funcEditorDesc: "Wiederverwendbare Funktionsdefinitionen zwischen Szenarien.",
     libraryEditorDesc: "Szenariovorlagen und gerätespezifische Bibliotheken.",
     scenarioEditorDesc: "Vollständiger visueller Szenario-Editor (Ziele + Schritte + Assertions).",
-    templatesDesc: "Wiederverwendbare Szenario-Vorlagen mit gemeinsamen CQL-Fragmenten.",
+    templatesDesc: "Wiederverwendbare Szenario-Vorlagen mit gemeinsamen OQL-Fragmenten.",
     operatorParametersDesc: "Bearbeitung von Szenarioparametern für den Testoperator.",
   },
   ru: {
@@ -1177,7 +1177,7 @@ const editorsByLang = {
     funcEditorDesc: "Многоразовые определения функций для сценариев.",
     libraryEditorDesc: "Шаблоны сценариев и библиотеки по устройствам.",
     scenarioEditorDesc: "Полный визуальный редактор сценария (цели + шаги + проверки).",
-    templatesDesc: "Многоразовые шаблоны сценариев с общими фрагментами CQL.",
+    templatesDesc: "Многоразовые шаблоны сценариев с общими фрагментами OQL.",
     operatorParametersDesc: "Редактирование параметров сценария для оператора теста.",
   },
   ua: {
@@ -1188,7 +1188,7 @@ const editorsByLang = {
     funcEditorDesc: "Багаторазові визначення функцій для сценаріїв.",
     libraryEditorDesc: "Шаблони сценаріїв і бібліотеки по пристроях.",
     scenarioEditorDesc: "Повний візуальний редактор сценарію (цілі + кроки + перевірки).",
-    templatesDesc: "Багаторазові шаблони сценаріїв із спільними фрагментами CQL.",
+    templatesDesc: "Багаторазові шаблони сценаріїв із спільними фрагментами OQL.",
     operatorParametersDesc: "Редагування параметрів сценарію для оператора тесту.",
   },
   cs: {
@@ -1199,7 +1199,7 @@ const editorsByLang = {
     funcEditorDesc: "Opakovaně použitelné definice funkcí mezi scénáři.",
     libraryEditorDesc: "Šablony scénářů a knihovny pro jednotlivá zařízení.",
     scenarioEditorDesc: "Kompletní vizuální editor scénáře (cíle + kroky + asserce).",
-    templatesDesc: "Opakovaně použitelné šablony scénářů se sdílenými CQL fragmenty.",
+    templatesDesc: "Opakovaně použitelné šablony scénářů se sdílenými OQL fragmenty.",
     operatorParametersDesc: "Úprava parametrů scénáře pro operátora testu.",
   },
 };

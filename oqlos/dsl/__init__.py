@@ -1,4 +1,4 @@
-"""Shared DSL schema models and catalogs for CQL/OQL tooling."""
+"""Shared DSL schema models and catalogs for OQL tooling."""
 
 from .schema import (
     DslDialect,

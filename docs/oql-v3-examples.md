@@ -1,4 +1,4 @@
-# Hardware Testing Examples (OQL v3 Flat Syntax)
+# OQL v3 Hardware Testing Examples (Flat Syntax)
 
 Practical examples of the v3 flat OQL used for medical device
 diagnostics.  Identifiers are bare; range assertions replace `IF/ENDIF`.

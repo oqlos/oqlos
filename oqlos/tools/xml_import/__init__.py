@@ -1,8 +1,8 @@
-"""XML import tools — convert c10 XML test reports to DSL/CQL/JSON."""
+"""XML import tools — convert c10 XML test reports to OQL and JSON."""
 
 from .models import DeviceReport, Operation, Output, SensorParam, TestRun
 from .parser import parse_xml
-from .generators import generate_cql, generate_dsl, generate_goals_json
+from .generators import generate_cql, generate_dsl, generate_goals_json, generate_oql
 from ._utils import (
     FALLBACK_SORT_ORDINAL,
     OQL_V5,
@@ -25,6 +25,7 @@ __all__ = [
     "SensorParam",
     "TestRun",
     "parse_xml",
+    "generate_oql",
     "generate_cql",
     "generate_dsl",
     "generate_goals_json",

@@ -34,7 +34,7 @@ text = "Apache-2.0"
 
 [project.scripts]
 oqlos-server = "oqlos.api.main:run"
-oqlctl = "oqlos.tools.cql_cli:main"
+oqlctl = "oqlos.tools.oql_cli:main"
 oqlos-events = "oqlos.shared.event_server:main"
 oqlos-modbus-probe = "oqlos.tools.hardware_diagnose.modbus_probe:main"
 oqlos-hardware-config = "oqlos.tools.hardware_config:main"

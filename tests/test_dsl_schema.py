@@ -1,12 +1,14 @@
 from oqlos.dsl import get_default_dsl_schema
 
 
-def test_default_schema_exposes_cql_and_oql_dialects():
+def test_default_schema_exposes_only_the_oql_dialect():
     schema = get_default_dsl_schema()
 
     dialect_ids = {dialect.id for dialect in schema.dialects}
 
-    assert {"cql", "oql"}.issubset(dialect_ids)
+    assert dialect_ids == {"oql"}
+    assert all(item.dialects == ["oql"] for item in schema.objects)
+    assert all(item.dialects == ["oql"] for item in schema.functions)
     assert schema.objects
     assert schema.functions
 

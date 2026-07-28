@@ -1,4 +1,4 @@
-"""Backward-compatible package facade for the modular CQL CLI."""
+"""Backward-compatible module path for the modular OQL CLI."""
 
 from __future__ import annotations
 

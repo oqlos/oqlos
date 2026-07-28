@@ -13,7 +13,7 @@ from types import SimpleNamespace
 import oqlos.config as oql_config
 import oqlos.core._interpreter_actions as interpreter_actions
 from oqlos.core.base import VariableStore, StepStatus
-from oqlos.core.interpreter import CqlInterpreter
+from oqlos.core.interpreter import CqlInterpreter, OqlInterpreter
 from oqlos.core.motor2_runtime import build_motor2_reciprocating_plan, normalize_motor2_runtime_config
 from oqlos.core.cql_parser import parse_cql, validate_cql
 from oqlos.hardware.firmware_adapter import FirmwareAdapter, _parse_numeric, _PERIPHERAL_MAP, _SENSOR_MAP
@@ -238,6 +238,18 @@ class TestCqlValidator:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 class TestCqlInterpreter:
+    def test_public_oql_interpreter_alias(self):
+        assert OqlInterpreter is CqlInterpreter
+
+    def test_public_execution_header_uses_oql_name(self, capsys):
+        interp = CqlInterpreter(mode="dry-run", quiet=False)
+
+        interp.run(CQL_SIMPLE)
+
+        output = capsys.readouterr().out
+        assert "OQL:" in output
+        assert "CQL:" not in output
+
     def test_dry_run_simple(self):
         interp = CqlInterpreter(mode="dry-run", quiet=True)
         result = interp.run(CQL_SIMPLE)

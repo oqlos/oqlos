@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""DSL, CQL, and JSON generators from parsed DeviceReport."""
+"""OQL, compatibility DSL, and JSON generators from parsed DeviceReport."""
 
 from __future__ import annotations
 
@@ -53,7 +53,7 @@ def _mode_action(mode: str) -> str:
     return "PASS"
 
 
-# ── Shared OQL v5 helpers (used by generate_cql and _generate_cql_for_goal) ──
+# ── Shared OQL v5 helpers ───────────────────────────────────────────────────
 
 
 def _append_output_lines(lines: list[str], out) -> None:
@@ -383,8 +383,8 @@ def _emit_dsl_metadata(report: DeviceReport, a: callable) -> None:
     a(f'  result: "{report.result}"')
 
 
-def generate_cql(report: DeviceReport) -> str:
-    """Generate OQL v5 CQL text from parsed report."""
+def generate_oql(report: DeviceReport) -> str:
+    """Generate canonical OQL v5 text from a parsed report."""
     title = report.df_name
     for tr in report.test_runs:
         if tr.name:
@@ -405,11 +405,21 @@ def generate_cql(report: DeviceReport) -> str:
     return "\n".join(lines).rstrip() + "\n"
 
 
-def _generate_cql_for_goal(ops: list[Operation]) -> str:
+def generate_cql(report: DeviceReport) -> str:
+    """Compatibility alias for :func:`generate_oql`."""
+    return generate_oql(report)
+
+
+def _generate_oql_for_goal(ops: list[Operation]) -> str:
     """Generate OQL v5 code block for a single goal (library.goals[].code)."""
     lines: list[str] = []
     _emit_goal_operations(lines, ops)
     return "\n".join(line for line in lines if line.strip())
+
+
+def _generate_cql_for_goal(ops: list[Operation]) -> str:
+    """Compatibility alias for integrations not yet updated to the OQL name."""
+    return _generate_oql_for_goal(ops)
 
 
 def generate_goals_json(report: DeviceReport) -> dict:
@@ -432,12 +442,12 @@ def generate_goals_json(report: DeviceReport) -> dict:
                 steps.extend(_build_steps_from_op(op))
 
             validation_criteria = _build_validation_criteria(ops)
-            cql_code = _generate_cql_for_goal(ops)
+            oql_code = _generate_oql_for_goal(ops)
 
             goal: dict[str, Any] = {
                 "id": goal_id,
                 "name": first_op.name,
-                "code": cql_code,
+                "code": oql_code,
                 "description": f"{first_op.display_l1} {first_op.display_l2}" if first_op.display_l2 else first_op.display_l1,
                 "steps": steps,
                 "expectedResult": f"Wynik: {first_op.result}" if first_op.result else "",

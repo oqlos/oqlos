@@ -540,7 +540,7 @@ oqlos/
 - **`CqlStep`** — A numbered step within a goal: 1. Step name:
 - **`CqlGoal`** — A test goal within a scenario.
 - **`CqlScenario`** — A named scenario block: @Namespace.Name
-- **`CqlDocument`** — Root AST node for a .cql file.
+- **`CqlDocument`** — Internal compatibility AST for an OQL document.
 - **`Step`** — —
 - **`ValidationRule`** — —
 - **`Goal`** — —
@@ -608,7 +608,7 @@ oqlos/
 - **`Operation`** — Single test operation (step).
 - **`TestRun`** — A test run (scenario) within a device type.
 - **`DeviceReport`** — Parsed device test report.
-- **`ScenarioFetchError`** — Raised when an HTTP scenario target is not runnable OQL/CQL source.
+- **`ScenarioFetchError`** — Raised when an HTTP scenario target is not runnable OQL source.
 - **`OqlosError`** — —
 - **`RepairTemplate`** — —
 - **`IssueDefinition`** — —
@@ -1572,16 +1572,16 @@ oqlos/
 - `normalize_target_name(target)` — Normalize a target name for consistent lookup.
 - `build_single_command_scenario(command)` — Wrap a single OQL command line in a minimal scenario document.
 - `resolve_required_adapter(command)` — Infer the hardware adapter required by a single command, if any.
-- `validate_directory(d, interpreter_class)` — Validate all .cql and .oql files in a directory tree.
+- `validate_directory(d, interpreter_class)` — Validate all .oql files in a directory tree.
 - `create_file_parser()` — Create argument parser for file-based execution.
 - `create_run_parser()` — Create parser for explicit `oqlctl run` scenario execution.
 - `create_hardware_parser(action)` — Create parser for oqlctl hardware utility subcommands.
 - `create_format_parser()` — Create parser for `oqlctl format`.
 - `create_cmd_parser()` — Create argument parser for single command execution.
-- `run_file_mode(args)` — Execute file-based CQL/OQL processing.
+- `run_file_mode(args)` — Execute file-based OQL processing.
 - `run_hardware_mode(action, argv)` — Run oqlctl status/identify/detect/doctor subcommands.
 - `run_cmd_mode(argv)` — Execute single command mode.
-- `run_format_mode(argv)` — Format a local OQL/CQL file.
+- `run_format_mode(argv)` — Format a local OQL file.
 - `main()` — Main entry point - delegates to dispatcher.
 - `ensure_firmware_running(firmware_url)` — Attempt to start firmware service if it's not available.
 - `check_firmware_state(firmware_url, yaml_output, quiet)` — Check firmware health and identify state.
@@ -2017,8 +2017,8 @@ oqlos/
 📄 `docs.OQL_V4_MIGRATION_MANUAL`
 📄 `docs.README`
 📄 `docs.boardnet-navigation`
-📄 `docs.cql-examples`
-📄 `docs.cql-spec`
+📄 `docs.oql-examples`
+📄 `docs.oql-v3-examples`
 📄 `docs.oql-spec`
 📄 `docs.oql_v2_llm_validator.schema`
 📄 `docs.oql_v4_llm_validator.schema`
