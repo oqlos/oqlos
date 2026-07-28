@@ -212,7 +212,7 @@ def run_oql_scenario(
     firmware_url: Optional[str] = None,
 ) -> int:
     """Run OQL scenario with loaded configuration."""
-    from oqlos.core.interpreter import CqlInterpreter
+    from oqlos.core.interpreter import OqlInterpreter
     
     # Get firmware URL from env or parameter
     if firmware_url is None:
@@ -232,7 +232,7 @@ def run_oql_scenario(
     source = scenario_path.read_text(encoding="utf-8")
     
     # Create interpreter
-    interpreter = CqlInterpreter(
+    interpreter = OqlInterpreter(
         mode=mode,
         firmware_url=firmware_url,
     )

@@ -1,9 +1,10 @@
-from oqlos.models.dsl_models import CqlDocument, CqlGoal
+from oqlos.models.dsl_models import OqlDocument, OqlGoal
 from oqlos.models.scenario import Goal, Scenario, Step
 
 
 def test_models_importable():
-    assert CqlDocument().goals == []
+    assert OqlDocument().goals == []
+    assert OqlGoal.__name__ == "OqlGoal"
     assert Step(id="s1", action="noop", label=None).id == "s1"
     assert Goal(
         id="g1",

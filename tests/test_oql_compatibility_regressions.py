@@ -1,9 +1,9 @@
-"""Regression tests for flat CQL control flow and helper actions."""
+"""Regression tests for historical OQL control-flow compatibility."""
 
 from __future__ import annotations
 
 from oqlos.core.base import StepStatus
-from oqlos.core.interpreter import CqlInterpreter
+from oqlos.core.interpreter import OqlInterpreter
 
 
 def test_flat_if_with_variable_threshold_and_goto_skips_rest_of_goal() -> None:
@@ -17,7 +17,7 @@ GOAL: High range
   SET 'done' '1'
 """
 
-    interp = CqlInterpreter(mode="dry-run", quiet=True)
+    interp = OqlInterpreter(mode="dry-run", quiet=True)
     result = interp.run(src)
 
     assert result.ok is True
@@ -34,7 +34,7 @@ GOAL: Demo
   SET 'done' '1'
 """
 
-    interp = CqlInterpreter(mode="dry-run", quiet=True)
+    interp = OqlInterpreter(mode="dry-run", quiet=True)
     result = interp.run(src)
 
     assert result.ok is True
@@ -50,7 +50,7 @@ GOAL: Demo
   SET 'done' '1'
 """
 
-    interp = CqlInterpreter(mode="dry-run", quiet=True)
+    interp = OqlInterpreter(mode="dry-run", quiet=True)
     result = interp.run(src)
 
     assert result.ok is True
@@ -66,7 +66,7 @@ GOAL: Demo
   MAX 'ratio' '6'
 """
 
-    interp = CqlInterpreter(mode="dry-run", quiet=True)
+    interp = OqlInterpreter(mode="dry-run", quiet=True)
     result = interp.run(src)
 
     assert result.ok is True

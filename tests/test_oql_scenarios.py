@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from oqlos.core.interpreter import CqlInterpreter
+from oqlos.core.interpreter import OqlInterpreter
 
 SCENARIOS_DIR = Path(
     os.environ.get(
@@ -40,7 +40,7 @@ OQL_EXAMPLES = _collect(EXAMPLES_DIR)
 )
 def test_oql_scenario_dryrun(path: str) -> None:
     """Each OQL scenario must dry-run without failures."""
-    interp = CqlInterpreter(mode="dry-run", quiet=True)
+    interp = OqlInterpreter(mode="dry-run", quiet=True)
     result = interp.run_file(path)
     assert result.ok, (
         f"{os.path.basename(path)}: {result.failed} failed, "
@@ -56,7 +56,7 @@ def test_oql_scenario_dryrun(path: str) -> None:
 )
 def test_oql_example_dryrun(path: str) -> None:
     """Each OQL config example must dry-run without failures."""
-    interp = CqlInterpreter(mode="dry-run", quiet=True)
+    interp = OqlInterpreter(mode="dry-run", quiet=True)
     result = interp.run_file(path)
     assert result.ok, (
         f"{os.path.basename(path)}: {result.failed} failed, "
@@ -71,7 +71,7 @@ def test_oql_example_dryrun(path: str) -> None:
 )
 def test_oql_scenario_validate(path: str) -> None:
     """Each active OQL scenario must parse and validate without warnings."""
-    interp = CqlInterpreter(mode="validate", quiet=True)
+    interp = OqlInterpreter(mode="validate", quiet=True)
     result = interp.run_file(path)
     assert not result.errors, (
         f"{os.path.basename(path)}: validation errors: {result.errors}"

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from oqlos.core.cql_parser import parse_cql
-from oqlos.core.interpreter import CqlInterpreter
+from oqlos.core.interpreter import OqlInterpreter
+from oqlos.core.oql_document import parse_oql_document
 
 
 def test_block_if_else_error_attaches_to_else_branch() -> None:
@@ -11,7 +11,7 @@ def test_block_if_else_error_attaches_to_else_branch() -> None:
   ENDIF
 """
 
-    doc = parse_cql(src)
+    doc = parse_oql_document(src)
     action = doc.goals[0].steps[0].actions[0]
 
     assert action.kind == "if_block"
@@ -26,7 +26,7 @@ def test_comment_only_if_block_does_not_capture_endif() -> None:
   ENDIF
 """
 
-    doc = parse_cql(src)
+    doc = parse_oql_document(src)
     action = doc.goals[0].steps[0].actions[0]
 
     assert action.kind == "if_block"
@@ -53,7 +53,7 @@ GOAL: Report
   SHELL_EXPORT "HARDWARE_OK" "true"
 """
 
-    interp = CqlInterpreter(mode="dry-run", quiet=True)
+    interp = OqlInterpreter(mode="dry-run", quiet=True)
     result = interp.run(src)
 
     assert result.ok is True

@@ -52,3 +52,14 @@ def test_public_documentation_uses_only_oql_naming() -> None:
         text = path.read_text(encoding="utf-8")
         for legacy_name in ("CQL", ".cql", "CqlInterpreter", "parse_cql", "validate_cql"):
             assert legacy_name not in text, f"{path} exposes legacy name {legacy_name}"
+
+
+def test_application_entrypoints_use_canonical_oql_modules() -> None:
+    root = Path(__file__).resolve().parents[1]
+    application_manifest = (root / "app.doql.less").read_text(encoding="utf-8")
+    setup_script = (root / "setup_hardware_and_run_oql.py").read_text(encoding="utf-8")
+
+    assert "entry: oqlos.tools.oql_cli:main;" in application_manifest
+    assert "oqlos.tools.cql_cli" not in application_manifest
+    assert "OqlInterpreter" in setup_script
+    assert "CqlInterpreter" not in setup_script
