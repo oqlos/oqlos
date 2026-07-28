@@ -616,7 +616,7 @@ def main() -> int:
     parser.add_argument("--write-url", help="Write endpoint template, e.g. http://localhost:8101/api/v1/data/test_scenarios/{id}")
     parser.add_argument("--write-method", default="PATCH", help="HTTP method for write endpoint")
     parser.add_argument("--apply", action="store_true", help="Actually send updates to write endpoint")
-    parser.add_argument("--prefer-local", action="store_true", help="Prefer local scenarios/<id>.oql when available")
+    parser.add_argument("--prefer-local", action="store_true", help="Prefer local oql-scenario/<id>.oql when available")
     parser.add_argument("--pretty", action="store_true", help="Pretty-print JSON report")
     args = parser.parse_args()
 
@@ -630,7 +630,7 @@ def main() -> int:
     rows = _filter_rows(rows, args.scenario)
 
     base_dir = Path(__file__).resolve().parent.parent
-    scenario_dir = base_dir / "scenarios"
+    scenario_dir = base_dir / "oql-scenario"
 
     results: list[MigrationResult] = []
     updates_preview: list[dict[str, Any]] = []

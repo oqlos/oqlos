@@ -71,4 +71,4 @@ req POST "$BASE/api/v1/hardware/lung/disable" "/api/v1/hardware/lung/disable   #
 
 echo
 echo "Done. For the OQL language itself (.oql files), run:"
-echo "  oqlctl -m dry-run oqlos/scenarios/test-pompy.oql"
+echo "  oqlctl -m dry-run oqlos/oql-scenario/test-pompy.oql"

@@ -8,7 +8,7 @@ set -euo pipefail
 
 FIRMWARE_URL="${FIRMWARE_URL:-http://localhost:8202}"
 CONFIG_PATH="${CONFIG_PATH:-oqlos.yaml}"
-SCENARIO="${SCENARIO:-oqlos/scenarios/hardware-diagnostics.oql}"
+SCENARIO="${SCENARIO:-oqlos/oql-scenario/hardware-diagnostics.oql}"
 if [[ -z "${OQLCTL:-}" ]]; then
   if [[ -x ".venv/bin/oqlctl" ]]; then
     OQLCTL=".venv/bin/oqlctl"

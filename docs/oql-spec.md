@@ -214,7 +214,7 @@ GOAL ramp:
 
 1. ścieżki absolutnej,
 2. katalogu pliku wywołującego,
-3. `scenarios/` (korzeń).
+3. `oql-scenario/` (korzeń).
 
 Makra z włączonych plików stają się dostępne w aktualnym dokumencie.
 Definicje lokalne mają pierwszeństwo.
@@ -284,8 +284,8 @@ scenariuszy. Pliki v1/v2 działają na starej ścieżce parsera (deprecated).
 ## 10. Referencje
 
 - Anatomia tokenów: `docs/oql-grammar-anatomy.html`
-- Biblioteki makr: `scenarios/lib/README.md`
-- Cheatsheet: `scenarios/OQL-CHEATSHEET.md`
+- Biblioteki makr: `oql-scenario/lib/README.md`
+- Cheatsheet: `oql-scenario/OQL-CHEATSHEET.md`
 - Parser: `oqlos/core/oql_parser.py`
 - Adapter: `oqlos/core/_oql_adapter.py`
 

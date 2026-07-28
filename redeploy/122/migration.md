@@ -1522,7 +1522,7 @@ extra_steps:
     description: "Sync oqlos core na boardnet"
     src: /home/tom/github/oqlos/oqlos/
     dst: ~/oqlos/oqlos/
-    # `.git` bez ukośnika: submodule scenarios/ ma .git jako PLIK (gitdir:) — wzorzec dir-only przepuszczałby go na Pi.
+    # `.git` bez ukośnika: submodule oql-scenario/ ma .git jako PLIK (gitdir:) — wzorzec dir-only przepuszczałby go na Pi.
     excludes: [.git, .venv/, venv/, __pycache__/, .pytest_cache/, .ruff_cache/, project/]
 
   - id: sync_backend_shared_policy

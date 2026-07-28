@@ -28,7 +28,7 @@ def needs_migration(text: str) -> bool:
 
 def main():
     parser = argparse.ArgumentParser(description="Convert v2 bracket syntax to v4 in local .oql files")
-    parser.add_argument("--root", default="scenarios/", help="Root directory to search for .oql files")
+    parser.add_argument("--root", default="oql-scenario/", help="Root directory to search for .oql files")
     parser.add_argument("--dry-run", action="store_true", help="Show what would change without writing")
     args = parser.parse_args()
 

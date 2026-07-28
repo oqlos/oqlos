@@ -1,4 +1,4 @@
-"""Map legacy connect-data scenario ids/filenames to canonical ``scenarios/`` files."""
+"""Map legacy connect-data scenario ids/filenames to canonical ``oql-scenario/`` files."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from pathlib import Path
 
 
 def _repo_scenarios_dir() -> Path:
-    return Path(__file__).resolve().parents[2] / "scenarios"
+    return Path(__file__).resolve().parents[2] / "oql-scenario"
 
 
 def _load_legacy_aliases() -> dict[str, str]:

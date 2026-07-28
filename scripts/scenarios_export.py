@@ -269,7 +269,7 @@ def main(argv: list[str] | None = None) -> int:
     group.add_argument("--all", action="store_true", help="Export all scenarios to a ZIP archive")
     group.add_argument("--scenario", help="Scenario id or UI URL with ?scenario=<id>")
     group.add_argument("--import", action="store_true", dest="import_mode", help="Import .oql files from --dir")
-    parser.add_argument("--dir", type=Path, default=Path("./scenarios"), help="Directory for import (default ./scenarios)")
+    parser.add_argument("--dir", type=Path, default=Path("./oql-scenario"), help="Directory for import (default ./oql-scenario)")
     parser.add_argument("--no-validate", action="store_true", help="Skip OQL v4 validation during import")
     parser.add_argument("--out", help="Output path (zip for --all, .oql.bash for --scenario)")
     args = parser.parse_args(argv)

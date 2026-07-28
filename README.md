@@ -1,6 +1,6 @@
 # OqlOS — Operation Query Language Runtime
 
-> **Submodule (wymagany po klonie/pullu):** `scenarios/` to submodule
+> **Submodule (wymagany po klonie/pullu):** `oql-scenario/` to submodule
 > prywatnego repo `oqlos/oql-scenario` (kanoniczny magazyn `.oql` współdzielony
 > z c2004). Po klonie: `git submodule update --init` (dostęp SSH do orga
 > `oqlos`). Bez tego `oqlctl run` nie znajdzie scenariuszy.
@@ -239,7 +239,7 @@ print(result.ok)  # True if successful
 OQL v3 is a flat, quote-free syntax with 12 base commands
 (`SET`, `GET`, `WAIT`, `SAVE`, `CHECK`, `MIN`, `MAX`, `SAMPLE`, `LOG`,
 `ERROR`, `CALL`, `INCLUDE`).  See `docs/oql-spec.md` for the full
-specification and `scenarios/OQL-CHEATSHEET.md` for a quick
+specification and `oql-scenario/OQL-CHEATSHEET.md` for a quick
 reference.  The interpreter still parses legacy v1/v2 scripts with
 quoted identifiers for backward compatibility.
 
@@ -272,8 +272,8 @@ Notes (verified):
   hardware. **`execute`** sends real HTTP to the motor sidecars — if they are
   down you get `[Errno 111] Connection refused`; physical actuation also needs
   USB access to the device (udev rule / device-group membership on the Pi).
-- Shipped examples: `scenarios/test-pompy.oql` (pump),
-  `scenarios/hardware-lung-smoke.oql` (lung).
+- Shipped examples: `oql-scenario/test-pompy.oql` (pump),
+  `oql-scenario/hardware-lung-smoke.oql` (lung).
 
 ### API examples (curl)
 
@@ -327,7 +327,7 @@ oqlos/
 ├── hardware/            # Hardware abstraction (Modbus, HTTP adapters, …)
 ├── api/                 # FastAPI REST server and routes
 ├── executor/            # Scenario execution helpers
-├── scenarios/           # Scenario files (.oql) — all in v3 flat syntax
+├── oql-scenario/        # Scenario files (.oql) — all in v3 flat syntax
 │   ├── lib/             # Macro libraries (hardware.oql, peripherals.oql)
 │   └── examples/        # Didactic examples
 └── shared/              # Utilities (logger, config, version)
@@ -456,7 +456,7 @@ GOAL:
 
 ### Macros and INCLUDE
 
-Reusable sequences live in `scenarios/lib/` and are pulled in with
+Reusable sequences live in `oql-scenario/lib/` and are pulled in with
 `INCLUDE`.  Positional arguments use `$1`, `$2`, … placeholders:
 
 ```oql
@@ -478,15 +478,15 @@ GOAL:
 
 ```bash
 # Dry-run (validate and simulate)
-oqlctl scenarios/config-peripherals.oql --mode dry-run
-oqlctl run scenarios/config-peripherals.oql --mode dry-run
+oqlctl oql-scenario/config-peripherals.oql --mode dry-run
+oqlctl run oql-scenario/config-peripherals.oql --mode dry-run
 
 # Execute on real hardware
-oqlctl scenarios/config-peripherals.oql --mode execute
-oqlctl run scenarios/config-peripherals.oql --mode execute
+oqlctl oql-scenario/config-peripherals.oql --mode execute
+oqlctl run oql-scenario/config-peripherals.oql --mode execute
 
 # Execute with custom firmware URL
-oqlctl scenarios/config-peripherals.oql \
+oqlctl oql-scenario/config-peripherals.oql \
   --firmware-url http://localhost:8202 \
   --mode execute
 
@@ -593,7 +593,7 @@ python3 scripts/oql_v2_to_v4_migrate_db.py \
 
 Notes:
 
-- `--prefer-local` reads local files from `scenarios/<id>.oql`.
+- `--prefer-local` reads local files from `oql-scenario/<id>.oql`.
 - DB row `id` must match local filename (without `.oql`).
 - Run without `--apply` first to verify changes and runtime validation output.
 
@@ -649,7 +649,7 @@ status, and a diagnostics block with:
 - Best-effort bridge health snapshot for `piadc`, `motor`, `lung`, and `modbus`
 
 The current valve calibration flow uses raw `piADC` voltage windows in the test scenario
-`scenarios/test-zaworu.oql`, while `hardware-valves-smoke.oql` only verifies
+`oql-scenario/test-zaworu.oql`, while `hardware-valves-smoke.oql` only verifies
 basic open/close actuation.
 
 ### Recent Fixes (2026-05-05)
@@ -767,7 +767,7 @@ pytest --cov=oqlos
 pytest tests/test_interpreter.py -v
 
 # Run OQL scenarios (dry-run)
-python -m oqlos.core.interpreter scenarios/test-pompy.oql --mode dry-run
+python -m oqlos.core.interpreter oql-scenario/test-pompy.oql --mode dry-run
 ```
 
 **Status:** current local verification: `356 passed`.

@@ -13,7 +13,7 @@ import pytest
 
 from oqlos.core.interpreter import CqlInterpreter
 
-SCENARIOS_DIR = Path(__file__).resolve().parents[1] / "scenarios"
+SCENARIOS_DIR = Path(__file__).resolve().parents[1] / "oql-scenario"
 EXAMPLES_DIR = SCENARIOS_DIR / "examples"
 
 

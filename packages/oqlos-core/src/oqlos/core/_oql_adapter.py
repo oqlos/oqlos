@@ -9,7 +9,7 @@ The adapter also performs two lightweight transformations:
 
 * ``INCLUDE "file.oql"`` — inlines macro libraries from adjacent files
   (search order: absolute path, path relative to the including file,
-  path relative to ``oqlos/scenarios``).
+  path relative to ``oqlos/oql-scenario``).
 * ``CALL name [args]`` — expands registered ``MACRO`` bodies; extra
   positional tokens after the name are substituted as ``$1``, ``$2``…
   inside the macro body (string replacement on the raw argument text).
@@ -53,10 +53,10 @@ def _scenarios_root() -> Path:
     """Default search root for ``INCLUDE`` directives."""
     here = Path(__file__).resolve()
     for parent in here.parents:
-        candidate = parent / "scenarios"
+        candidate = parent / "oql-scenario"
         if candidate.is_dir():
             return candidate
-    return here.parents[2] / "scenarios"
+    return here.parents[2] / "oql-scenario"
 
 
 def _resolve_include(path: str, base: Path | None) -> Path | None:

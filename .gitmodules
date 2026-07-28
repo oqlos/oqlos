@@ -1,5 +1,5 @@
-[submodule "scenarios"]
-	path = scenarios
+[submodule "oql-scenario"]
+	path = oql-scenario
 	url = git@github.com:oqlos/oql-scenario.git
 [submodule "packages/backend-shared-py"]
 	path = packages/backend-shared-py
