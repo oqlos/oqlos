@@ -78,14 +78,14 @@ oraz (opcjonalnie cały katalog):
 ```bash
 python3 - <<'PY'
 import os
-from oqlos.core.interpreter import CqlInterpreter
+from oqlos.core.interpreter import OqlInterpreter
 root = 'scenarios'
 ok = fail = 0
 for d, _, fs in os.walk(root):
     for f in fs:
         if f.endswith('.oql'):
             p = os.path.join(d, f)
-            r = CqlInterpreter(mode='dry-run', quiet=True).run(open(p, encoding='utf-8').read(), p)
+            r = OqlInterpreter(mode='dry-run', quiet=True).run(open(p, encoding='utf-8').read(), p)
             if r.ok:
                 ok += 1
             else:
@@ -143,7 +143,7 @@ LLM powinien produkować:
 
 - Walidator (`scripts/oql_v4_validator.py`) uruchamia:
   1. walidację reguł strukturalnych,
-  2. test runtime (`CqlInterpreter`, `dry-run`).
+  2. test runtime (`OqlInterpreter`, `dry-run`).
 - Jeśli `valid=false`, LLM nie powinien kończyć procesu bez poprawek.
 - Przy pracy masowej: walidować każdy plik osobno i raportować listę błędów.
 

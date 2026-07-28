@@ -331,10 +331,10 @@ scenariuszy. Pliki v1/v2 działają na starej ścieżce parsera (deprecated).
 
 ---
 
-## Dodatek: OQL v4 — komendy zgodności legacy-CQL (2026-07-10)
+## Dodatek: OQL v4 — historyczne komendy zgodności (2026-07-10)
 
-OQL v4 od 2026-07-10 zawiera komendy zgodności wprowadzone przy konwersji
-scenariuszy legacy CQL z c2004 (commit 8895cbe; testy `tests/test_oql_parser_v3.py`):
+OQL v4 od 2026-07-10 zawiera komendy zgodności wprowadzone przy migracji
+historycznych scenariuszy z c2004 (commit 8895cbe; testy `tests/test_oql_parser_v3.py`):
 
 | Komenda | Składnia | Uwagi |
 |---|---|---|
@@ -344,9 +344,9 @@ scenariuszy legacy CQL z c2004 (commit 8895cbe; testy `tests/test_oql_parser_v3.
 | `GOTO` | `GOTO 'target'` | skok do celu/etykiety |
 | `MIN`/`MAX` (rozszerzenie) | `MIN 'sensor' '15 °C'` | akceptują cytowany token wartość+jednostka |
 
-Te komendy przechodzą przez adapter OQL→CQL (`core/_oql_adapter.py`) z
+Te komendy przechodzą przez adapter OQL→runtime AST (`core/_oql_adapter.py`) z
 zachowaniem surowej linii (`raw`), na której bazuje generator goals JSON
-w c2004 (`goals_from_cql`). Kanoniczna definicja zachowania = parser + testy;
+w c2004 (`goals_from_oql`). Kanoniczna definicja zachowania = parser + testy;
 przy rozbieżności z tym dokumentem obowiązuje kod.
 
 Powiązane dokumenty: `OQL_V4_MIGRATION_MANUAL.md` (proces migracji),
@@ -385,11 +385,11 @@ v5 rezygnuje z imperatywnego przepływu sterowania na rzecz deklaracji:
 | `FAIL … GOTO` | `FAIL 'message' GOTO 'target'` | Przy niepowodzeniu skok do celu/etykiety (dodatkowa akcja `goto`). |
 | `FAIL … RETRY` | `FAIL 'message' RETRY n` | Przy niepowodzeniu powtórz cel maksymalnie *n* razy. **Semantyka runtime** — adapter emituje akcję `retry` (args = n, `raw` zachowany); na dziś brak konsumenta w c2004 (goals JSON pomija ogon RETRY, zachowując komunikat). |
 
-Lowering (adapter OQL→CQL, `core/_oql_adapter.py`):
+Lowering (adapter OQL→runtime AST, `core/_oql_adapter.py`):
 
-- `RANGE` → **dwie** akcje CQL: `kind=min` + `kind=max`. Pole `raw` obu akcji
+- `RANGE` → **dwie** akcje runtime: `kind=min` + `kind=max`. Pole `raw` obu akcji
   jest syntetyczne: `MIN 'param' 'min unit'` / `MAX 'param' 'max unit'` —
-  generator goals JSON w c2004 (`goals_from_cql`) liczy się z linii `raw`,
+  generator goals JSON w c2004 (`goals_from_oql`) liczy się z linii `raw`,
   więc konsumenci działają bez zmian.
 - `PASS` → komunikat pozytywny (jak `CORRECT`; w c2004: krok
   `{type: else, action: INFO}`).
@@ -422,7 +422,7 @@ Deklaracja `RANGE` obowiązuje dla wszystkich późniejszych odczytów
 | `CHECK min <= sensor <= max unit` | `RANGE 'sensor' 'min unit' .. 'max unit'` | `CHECK` = alias historyczny `RANGE`, nadal obsługiwany |
 | `CORRECT 'msg'` | `PASS 'msg'` | alias historyczny |
 | `ERROR 'msg'` | `FAIL 'msg'` | alias historyczny |
-| `IF` / `ELSE` | deklaracje `MIN`/`MAX`/`RANGE` + `PASS`/`FAIL` | **wyłącznie warstwa zgodności legacy** (import starych CQL) |
+| `IF` / `ELSE` | deklaracje `MIN`/`MAX`/`RANGE` + `PASS`/`FAIL` | **wyłącznie warstwa zgodności** (import historycznych źródeł) |
 
 Zasada nadrzędna: **przy rozbieżności spec vs kod obowiązuje parser + testy**
 (`packages/oqlos-core/src/oqlos/core/oql_parser.py`,

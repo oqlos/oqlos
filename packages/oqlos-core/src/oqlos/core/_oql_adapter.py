@@ -471,7 +471,7 @@ def _lower_range(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "lis
     """RANGE 'p' 'min u' .. 'max u' → dwie akcje min/max.
 
     ``raw`` obu akcji jest SYNTETYCZNE (``MIN 'p' 'min u'`` / ``MAX 'p' 'max u'``),
-    bo generator goals JSON w c2004 (``goals_from_cql``) odtwarza kroki z linii
+    bo generator goals JSON w c2004 (``goals_from_oql``) odtwarza kroki z linii
     ``raw`` — dzięki temu RANGE działa tam bez zmian po stronie konsumenta.
     """
     sensor = cmd.args["sensor"]

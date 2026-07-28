@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from oqlos.core.interpreter import OqlInterpreter
 from oqlos.core.oql_document import parse_oql_document, validate_oql_document
 from oqlos.models.dsl_models import OqlDocument
@@ -31,3 +33,20 @@ def test_public_oql_cli_executes_without_legacy_imports() -> None:
     )
 
     assert result.ok is True
+
+
+def test_public_documentation_uses_only_oql_naming() -> None:
+    root = Path(__file__).resolve().parents[1]
+    public_docs = (
+        root / "README.md",
+        root / "docs" / "README.md",
+        root / "docs" / "oql-spec.md",
+        root / "docs" / "OQL_V4_MIGRATION_MANUAL.md",
+        root / "packages" / "oqlos-core" / "README.md",
+        root / "packages" / "oqlos-models" / "README.md",
+    )
+
+    for path in public_docs:
+        text = path.read_text(encoding="utf-8")
+        for legacy_name in ("CQL", ".cql", "CqlInterpreter", "parse_cql", "validate_cql"):
+            assert legacy_name not in text, f"{path} exposes legacy name {legacy_name}"

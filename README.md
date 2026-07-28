@@ -318,8 +318,9 @@ oqlos/
 ├── core/
 │   ├── interpreter.py   # OqlInterpreter — main execution engine
 │   ├── oql_parser.py    # OQL v3 flat parser (12 base commands)
-│   ├── _oql_adapter.py  # v3 AST → legacy CqlDocument bridge (+ INCLUDE/MACRO)
-│   ├── cql_parser.py    # Legacy v1/v2 parser (dispatches to v3 on detection)
+│   ├── oql_document.py  # Canonical parse/validate facade for runtime documents
+│   ├── _oql_adapter.py  # OQL AST → runtime document bridge (+ INCLUDE/MACRO)
+│   ├── cql_parser.py    # Private compatibility implementation behind the facade
 │   └── …
 ├── models/              # Data models (dsl_models, scenario, execution, peripheral)
 ├── hardware/            # Hardware abstraction (Modbus, HTTP adapters, …)
@@ -357,20 +358,22 @@ result = interp.run(source_code, filename)
 
 Auto-detecting parser pipeline:
 
-1. `parse_cql(source, filename)` first checks the source with
+1. `parse_oql_document(source, filename)` first checks the source with
    `is_flat_oql()`.
 2. If the source uses v3 flat grammar (`GOAL:` + `SET NAME`, no quotes,
    `INCLUDE "..."`), it dispatches to `parse_flat_oql()` which returns a
-   legacy `CqlDocument` via `oqlos/core/_oql_adapter.py`
+   runtime `OqlDocument` via `oqlos/core/_oql_adapter.py`
    (`INCLUDE` + `MACRO`/`CALL` expansion happens here).
-3. Otherwise the legacy state-machine parser handles it.
+3. Otherwise the compatibility state-machine parser handles the historical
+   source shape behind the same public OQL API.
 
 ```python
-from oqlos.core.cql_parser import parse_cql
+from oqlos.core.oql_document import parse_oql_document, validate_oql_document
 from oqlos.core.oql_parser import parse_oql
 
-doc = parse_cql(source, "test.oql")      # either path
-raw = parse_oql(source, "test.oql")      # just the v3 AST (OqlDoc)
+doc = parse_oql_document(source, "test.oql")
+issues = validate_oql_document(doc)
+raw = parse_oql(source, "test.oql")      # low-level OQL syntax AST
 ```
 
 ## API Endpoints

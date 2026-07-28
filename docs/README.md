@@ -14,7 +14,7 @@
 - [Audyt standaryzacji 2026-07-27](STANDARDIZATION_AUDIT_2026-07-27.md)
 - [Plan refaktoryzacji 2026-07-27](refactor-roadmap-2026-07-27.md)
 - [OQL v4 Migration Manual](OQL_V4_MIGRATION_MANUAL.md)
-- [OQL spec](oql-spec.md) · [CQL spec](cql-spec.md) · [CQL examples](cql-examples.md)
+- [OQL spec](oql-spec.md) · [OQL examples](oql-examples.md) · [OQL v3 examples](oql-v3-examples.md)
 
 ## Hardware Operator Entry Points
 
@@ -361,11 +361,7 @@ oqlos/
             ├── generators
             ├── models
             ├── commands
-        ├── cql_cli/
-            ├── formatting
-            ├── utils
-            ├── main
-            ├── preflight
+        ├── oql_cli
         ├── exceptions
         ├── catalog
         ├── fastapi_integration
@@ -533,14 +529,14 @@ oqlos/
 - **`ExecutionRequest`** — —
 - **`ExecutionStatus`** — Event-sourced: only oqlos.core.cqrs.execution may produce a new instance
 - **`CommandEnvelope`** — —
-- **`CqlMetadata`** — —
-- **`CqlInterval`** — —
-- **`CqlCondition`** — Sensor condition: AI01 ∈ [min, max] unit | ACTION 'msg'
-- **`CqlAction`** — An action within a step: → Target.method args, TASK, SET, WAIT, or PUMP.
-- **`CqlStep`** — A numbered step within a goal: 1. Step name:
-- **`CqlGoal`** — A test goal within a scenario.
-- **`CqlScenario`** — A named scenario block: @Namespace.Name
-- **`CqlDocument`** — Internal compatibility AST for an OQL document.
+- **`OqlMetadata`** — OQL runtime metadata.
+- **`OqlInterval`** — OQL runtime interval.
+- **`OqlCondition`** — Sensor condition: AI01 ∈ [min, max] unit | ACTION 'msg'.
+- **`OqlAction`** — An action within a task step: RUN, SET, TIMER, LOG, or hardware action.
+- **`OqlStep`** — A step within an OQL task.
+- **`OqlGoal`** — Compatibility projection of an OQL task.
+- **`OqlScenario`** — A named OQL scenario block.
+- **`OqlDocument`** — Runtime AST for an OQL document.
 - **`Step`** — —
 - **`ValidationRule`** — —
 - **`Goal`** — —
@@ -563,7 +559,7 @@ oqlos/
 - **`Motor2RuntimeConfig`** — —
 - **`Motor2ReciprocatingPlan`** — —
 - **`OqlVersionInfo`** — Resolved OQL version metadata for a source document.
-- **`CqlInterpreter`** — CQL interpreter with three modes:
+- **`OqlInterpreter`** — OQL interpreter with validate, dry-run, and execute modes.
 - **`SafeEvalError`** — Raised when an expression cannot be safely evaluated.
 - **`FirmwareExecutor`** — Executes hardware actions via plugin gateway or legacy firmware.
 - **`ValueNormalizer`** — Normalizes DSL values to hardware-compatible formats.
@@ -623,7 +619,7 @@ oqlos/
 - **`DeviceDiagnosis`** — —
 - **`DiagnosisReport`** — —
 - **`PluginHardwareGateway`** — Simplified hardware gateway using plugin architecture.
-- **`FirmwareAdapter`** — HTTP bridge between CQL interpreter and firmware simulator.
+- **`FirmwareAdapter`** — HTTP bridge between the OQL interpreter and firmware runtime.
 - **`Topics`** — Resolved topic strings for one node.
 - **`OqlRequest`** — A request to execute on a remote node.
 - **`OqlResponse`** — The result of executing OQL on a remote node.
@@ -740,15 +736,14 @@ oqlos/
 - `parse_dsl_to_goal_with_issues(dsl, scenario_id)` — Parse DSL and return a runtime goal plus invalid runtime lines.
 - `parse_dsl_to_goal(dsl, scenario_id)` — Parse DSL string to a runtime Goal with Steps.
 - `is_flat_oql(source)` — Heuristic: detect flat OQL source (v3/v4).
-- `oql_doc_to_cql(doc)` — Convert a parsed :class:`OqlDoc` into a :class:`CqlDocument`.
-- `parse_flat_oql(source, filename)` — Convenience: parse flat OQL directly to a :class:`CqlDocument`.
+- `parse_flat_oql(source, filename)` — Parse flat OQL directly into the runtime document model.
 - `lung_motor_url()` — —
 - `pump_flow_full_scale_lpm(default)` — —
 - `safe_eval(expr, context)` — Evaluate a simple expression safely without using eval().
 - `resolve_compare(left, op, right)` — Evaluate a single comparison: left op right.
 - `resolve_compare_chain(node, resolve_value)` — Evaluate a chained comparison using the caller's node resolver.
-- `parse_cql(source, filename)` — Parse CQL source into AST.
-- `validate_cql(doc)` — Validate a parsed CQL document. Returns list of issues.
+- `parse_oql_document(source, filename)` — Parse OQL source into the runtime document AST.
+- `validate_oql_document(doc)` — Validate a parsed OQL document and return issues.
 - `LocalizedApp()` — —
 - `useWsStatus()` — —
 - `client()` — —
@@ -1556,10 +1551,10 @@ oqlos/
 - `normalize_set_value(raw_value)` — Normalize set value to standard format.
 - `parse_xml(xml_path)` — Parse c10 XML report file into DeviceReport.
 - `generate_dsl(report)` — Generate human-readable DSL text from parsed report.
-- `generate_cql(report)` — Generate CQL (Connex Query Language) text from parsed report.
+- `generate_oql(report)` — Generate canonical OQL text from a parsed report.
 - `generate_goals_json(report)` — Generate JSON goals structure for REST API.
 - `default_firmware_url()` — Return the CLI default firmware URL, allowing deployment env overrides.
-- `run_source(source, filename)` — Execute a CQL source string with a configured interpreter.
+- `run_source(source, filename)` — Execute OQL source with a configured interpreter.
 - `run_single_command(command)` — Execute one OQL command line by wrapping it in a minimal scenario.
 - `handle_list_command(argv)` — Handle the 'cmd list' subcommand.
 - `execute_command_with_cleanup(args, result, yaml_output, quiet)` — Execute command with continuous mode and cleanup handling.
@@ -2174,7 +2169,7 @@ oqlos/
 📄 `oqlos.core._line_parsers` (10 functions)
 📄 `oqlos.core._sensor_evaluator` (6 functions, 1 classes)
 📄 `oqlos.core.base` (29 functions, 7 classes)
-📄 `oqlos.core.cql_parser` (30 functions, 1 classes)
+📄 `oqlos.core.oql_document` — canonical OQL runtime document facade.
 📦 `oqlos.core.cqrs` (1 functions)
 📄 `oqlos.core.cqrs.aggregate` (4 functions, 1 classes)
 📄 `oqlos.core.cqrs.commands` (3 functions, 2 classes)
@@ -2287,12 +2282,7 @@ oqlos/
 📄 `oqlos.shared.logs_query` (5 functions, 1 classes)
 📄 `oqlos.shared.release_version` (7 functions)
 📄 `oqlos.shared.version_endpoint` (2 functions)
-📦 `oqlos.tools.cql_cli` (2 functions)
-📄 `oqlos.tools.cql_cli.commands` (6 functions)
-📄 `oqlos.tools.cql_cli.formatting` (3 functions)
-📄 `oqlos.tools.cql_cli.main` (18 functions, 1 classes)
-📄 `oqlos.tools.cql_cli.preflight` (11 functions)
-📄 `oqlos.tools.cql_cli.utils` (10 functions)
+📄 `oqlos.tools.oql_cli` — canonical OQL command-line and runtime facade.
 📄 `oqlos.tools.gen_error_docs` (3 functions)
 📦 `oqlos.tools.hardware_diagnose` (1 functions)
 📄 `oqlos.tools.hardware_diagnose.__main__` (11 functions)
