@@ -81,55 +81,84 @@ def _append_output_lines(lines: list[str], out) -> None:
         ))
 
 
+def _append_operator_param_lines(lines: list[str], p) -> None:
+    if p.sensor == "operator":
+        lines.append(goal_body_line(f"PROMPT {quote_oql_literal(p.description)}"))
+        if p.save:
+            lines.append(goal_body_line(f"VAL {quote_oql_literal(p.description)}"))
+
+
+def _append_timer_param_lines(lines: list[str], p) -> None:
+    duration = p.max_val if p.max_val is not None else p.min_val
+    if duration is not None:
+        lines.append(goal_body_line(f"TIMER {quote_oql_literal(f'{duration} s')}"))
+
+
+def _append_measurement(lines: list[str], sensor: str, unit: str) -> None:
+    lines.append(goal_body_line(f"VAL {quote_oql_literal(sensor)} {quote_oql_literal(unit)}"))
+
+
+def _append_range_constraint(lines: list[str], p, sensor: str, unit: str) -> None:
+    lines.append(goal_body_line(
+        f"MIN {quote_oql_literal(sensor)} {quote_oql_literal(f'{p.min_val} {unit}')}"
+    ))
+    lines.append(goal_body_line(
+        f"MAX {quote_oql_literal(sensor)} {quote_oql_literal(f'{p.max_val} {unit}')}"
+    ))
+    _append_measurement(lines, sensor, unit)
+    lines.append(goal_body_line(
+        f"IF {quote_oql_literal(sensor)} < {quote_oql_literal(f'{p.min_val} {unit}')}"
+    ))
+    lines.append(goal_body_line(
+        f"FAIL {quote_oql_literal(p.description or f'{p.sensor} poza zakresem')}"
+    ))
+
+
+def _append_min_constraint(lines: list[str], p, sensor: str, unit: str) -> None:
+    lines.append(goal_body_line(
+        f"MIN {quote_oql_literal(sensor)} {quote_oql_literal(f'{p.min_val} {unit}')}"
+    ))
+    _append_measurement(lines, sensor, unit)
+    lines.append(goal_body_line(
+        f"IF {quote_oql_literal(sensor)} < {quote_oql_literal(f'{p.min_val} {unit}')}"
+    ))
+    lines.append(goal_body_line(f"FAIL {quote_oql_literal(p.description or p.sensor)}"))
+
+
+def _append_max_constraint(lines: list[str], p, sensor: str, unit: str) -> None:
+    lines.append(goal_body_line(
+        f"MAX {quote_oql_literal(sensor)} {quote_oql_literal(f'{p.max_val} {unit}')}"
+    ))
+    _append_measurement(lines, sensor, unit)
+    lines.append(goal_body_line(
+        f"IF {quote_oql_literal(sensor)} > {quote_oql_literal(f'{p.max_val} {unit}')}"
+    ))
+    lines.append(goal_body_line(f"FAIL {quote_oql_literal(p.description or p.sensor)}"))
+
+
+def _append_threshold_constraint(lines: list[str], p, sensor: str, unit: str) -> None:
+    if p.mode == "inRangeOK" and p.min_val is not None and p.max_val is not None:
+        _append_range_constraint(lines, p, sensor, unit)
+    elif p.mode in ("minOk", "minErr") and p.min_val is not None:
+        _append_min_constraint(lines, p, sensor, unit)
+    elif p.mode in ("maxOk", "maxErr") and p.max_val is not None:
+        _append_max_constraint(lines, p, sensor, unit)
+
+
 def _append_param_lines(lines: list[str], p) -> None:
     """Emit OQL v5 lines for a single parameter."""
     if p.mode == "Off":
         return
     if p.sensor == "operator":
-        lines.append(goal_body_line(f"PROMPT {quote_oql_literal(p.description)}"))
-        if p.save:
-            lines.append(goal_body_line(f"VAL {quote_oql_literal(p.description)}"))
+        _append_operator_param_lines(lines, p)
         return
     if p.sensor == "timer":
-        duration = p.max_val if p.max_val is not None else p.min_val
-        if duration is not None:
-            lines.append(goal_body_line(f"TIMER {quote_oql_literal(f'{duration} s')}"))
+        _append_timer_param_lines(lines, p)
         return
 
     unit = p.unit or "mbar"
     sensor = p.description or p.sensor
-    if p.mode == "inRangeOK" and p.min_val is not None and p.max_val is not None:
-        lines.append(goal_body_line(
-            f"MIN {quote_oql_literal(sensor)} {quote_oql_literal(f'{p.min_val} {unit}')}"
-        ))
-        lines.append(goal_body_line(
-            f"MAX {quote_oql_literal(sensor)} {quote_oql_literal(f'{p.max_val} {unit}')}"
-        ))
-        lines.append(goal_body_line(f"VAL {quote_oql_literal(sensor)} {quote_oql_literal(unit)}"))
-        lines.append(goal_body_line(
-            f"IF {quote_oql_literal(sensor)} < {quote_oql_literal(f'{p.min_val} {unit}')}"
-        ))
-        lines.append(goal_body_line(
-            f"FAIL {quote_oql_literal(p.description or f'{p.sensor} poza zakresem')}"
-        ))
-    elif p.mode in ("minOk", "minErr") and p.min_val is not None:
-        lines.append(goal_body_line(
-            f"MIN {quote_oql_literal(sensor)} {quote_oql_literal(f'{p.min_val} {unit}')}"
-        ))
-        lines.append(goal_body_line(f"VAL {quote_oql_literal(sensor)} {quote_oql_literal(unit)}"))
-        lines.append(goal_body_line(
-            f"IF {quote_oql_literal(sensor)} < {quote_oql_literal(f'{p.min_val} {unit}')}"
-        ))
-        lines.append(goal_body_line(f"FAIL {quote_oql_literal(p.description or p.sensor)}"))
-    elif p.mode in ("maxOk", "maxErr") and p.max_val is not None:
-        lines.append(goal_body_line(
-            f"MAX {quote_oql_literal(sensor)} {quote_oql_literal(f'{p.max_val} {unit}')}"
-        ))
-        lines.append(goal_body_line(f"VAL {quote_oql_literal(sensor)} {quote_oql_literal(unit)}"))
-        lines.append(goal_body_line(
-            f"IF {quote_oql_literal(sensor)} > {quote_oql_literal(f'{p.max_val} {unit}')}"
-        ))
-        lines.append(goal_body_line(f"FAIL {quote_oql_literal(p.description or p.sensor)}"))
+    _append_threshold_constraint(lines, p, sensor, unit)
     if p.save:
         lines.append(goal_body_line(f"VAL {quote_oql_literal(sensor)}"))
 

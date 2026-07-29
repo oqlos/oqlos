@@ -7,6 +7,13 @@ from typing import Any
 from oqlos.hardware.diagnosis_plugin_health import infer_status, message_lower
 from oqlos.hardware.diagnosis_types import DeviceDiagnosis, DiagnosisAction
 
+_MONITORED_PLUGINS = (
+    ("modbus-io", "Waveshare Modbus IO 8CH"),
+    ("modbus-adc", "Waveshare Modbus ADC 8CH"),
+    ("motor-tic249", "Pololu Tic T249"),
+    ("motor-dri0050", "DFRobot DRI0050"),
+)
+
 
 def add_modbus_device_actions(
     dev: DeviceDiagnosis,
@@ -154,75 +161,89 @@ def add_dri0050_device_actions(
     )
 
 
-def diagnose_plugin_devices(
-    health: dict[str, Any],
-    adapters: dict[str, Any],
-    platform: dict[str, Any],
-    topology: str,
+def _replaced_adc_diagnosis(
+    plugin_id: str, display_name: str, platform: dict[str, Any], topology: str,
+) -> DeviceDiagnosis | None:
+    if plugin_id != "modbus-adc":
+        return None
+    analog_driver = str(platform.get("analog_input_driver_role") or "").strip().lower()
+    driver_role = str(platform.get("modbus_adc_driver_role") or "").strip().lower()
+    if not ((analog_driver and analog_driver != "modbus-adc") or driver_role in {"disabled", "replaced"}):
+        return None
+    return DeviceDiagnosis(
+        device_id=plugin_id,
+        display_name=display_name,
+        status="ok",
+        health_summary=(
+            f"Disabled as expected; {analog_driver} owns analog inputs"
+            if analog_driver
+            else "Disabled as expected; replacement ADC stack is active"
+        ),
+        environment={
+            "topology": topology,
+            "driver_role": driver_role or "disabled",
+            "replaced_by": analog_driver or None,
+        },
+    )
+
+
+def _mock_motor_diagnosis(
+    plugin_id: str, display_name: str, entry: dict[str, Any] | None, topology: str,
+    hardware_mode: str,
+) -> DeviceDiagnosis | None:
+    if str(hardware_mode or "").lower() != "mock" or not plugin_id.startswith("motor") or entry is not None:
+        return None
+    return DeviceDiagnosis(
+        device_id=plugin_id,
+        display_name=display_name,
+        status="ok",
+        health_summary="symulator OqlOS (mock)",
+        environment={"topology": topology, "hardware_mode": "mock"},
+    )
+
+
+def _add_plugin_actions(
+    dev: DeviceDiagnosis, plugin_id: str, status: str, message: str,
+    platform: dict[str, Any], host_recover: str,
+) -> None:
+    if plugin_id.startswith("modbus"):
+        add_modbus_device_actions(dev, plugin_id, status, message, platform)
+    elif plugin_id == "motor-tic249":
+        add_tic249_device_actions(dev, status, message, host_recover)
+    elif plugin_id == "motor-dri0050":
+        add_dri0050_device_actions(dev, status, message, host_recover)
+
+
+def _standard_plugin_diagnosis(
+    plugin_id: str, display_name: str, entry: dict[str, Any] | None,
+    adapter: dict[str, Any] | None, platform: dict[str, Any], topology: str,
     host_recover: str,
-    *,
-    hardware_mode: str = "",
+) -> DeviceDiagnosis:
+    status = infer_status(plugin_id, entry, present=entry is not None or adapter is not None)
+    dev = DeviceDiagnosis(
+        device_id=plugin_id,
+        display_name=display_name,
+        status=status,
+        health_summary=str((entry or {}).get("message") or (adapter or {}).get("status") or "brak danych"),
+        environment={"topology": topology},
+    )
+    _add_plugin_actions(dev, plugin_id, status, message_lower(entry), platform, host_recover)
+    return dev
+
+
+def diagnose_plugin_devices(
+    health: dict[str, Any], adapters: dict[str, Any], platform: dict[str, Any],
+    topology: str, host_recover: str, *, hardware_mode: str = "",
 ) -> dict[str, DeviceDiagnosis]:
     """Build per-device diagnosis for the four monitored hardware plugins."""
-    mock_mode = str(hardware_mode or "").lower() == "mock"
     devices: dict[str, DeviceDiagnosis] = {}
-    for plugin_id, display_name in (
-        ("modbus-io", "Waveshare Modbus IO 8CH"),
-        ("modbus-adc", "Waveshare Modbus ADC 8CH"),
-        ("motor-tic249", "Pololu Tic T249"),
-        ("motor-dri0050", "DFRobot DRI0050"),
-    ):
+    for plugin_id, display_name in _MONITORED_PLUGINS:
         entry = health.get(plugin_id) if isinstance(health.get(plugin_id), dict) else None
-        adapter = adapters.get(plugin_id)
-        analog_driver = str(platform.get("analog_input_driver_role") or "").strip().lower()
-        modbus_adc_driver = str(platform.get("modbus_adc_driver_role") or "").strip().lower()
-        if plugin_id == "modbus-adc" and (
-            (analog_driver and analog_driver != "modbus-adc")
-            or modbus_adc_driver in {"disabled", "replaced"}
-        ):
-            devices[plugin_id] = DeviceDiagnosis(
-                device_id=plugin_id,
-                display_name=display_name,
-                status="ok",
-                health_summary=(
-                    f"Disabled as expected; {analog_driver} owns analog inputs"
-                    if analog_driver
-                    else "Disabled as expected; replacement ADC stack is active"
-                ),
-                environment={
-                    "topology": topology,
-                    "driver_role": modbus_adc_driver or "disabled",
-                    "replaced_by": analog_driver or None,
-                },
-            )
-            continue
-        if mock_mode and plugin_id.startswith("motor") and entry is None:
-            devices[plugin_id] = DeviceDiagnosis(
-                device_id=plugin_id,
-                display_name=display_name,
-                status="ok",
-                health_summary="symulator OqlOS (mock)",
-                environment={"topology": topology, "hardware_mode": "mock"},
-            )
-            continue
-        status = infer_status(plugin_id, entry, present=entry is not None or adapter is not None)
-        dev = DeviceDiagnosis(
-            device_id=plugin_id,
-            display_name=display_name,
-            status=status,
-            health_summary=str(
-                (entry or {}).get("message") or (adapter or {}).get("status") or "brak danych"
-            ),
-            environment={"topology": topology},
+        special = _replaced_adc_diagnosis(plugin_id, display_name, platform, topology)
+        special = special or _mock_motor_diagnosis(plugin_id, display_name, entry, topology, hardware_mode)
+        devices[plugin_id] = special or _standard_plugin_diagnosis(
+            plugin_id, display_name, entry, adapters.get(plugin_id), platform, topology, host_recover,
         )
-        msg = message_lower(entry)
-        if plugin_id.startswith("modbus"):
-            add_modbus_device_actions(dev, plugin_id, status, msg, platform)
-        elif plugin_id == "motor-tic249":
-            add_tic249_device_actions(dev, status, msg, host_recover)
-        elif plugin_id == "motor-dri0050":
-            add_dri0050_device_actions(dev, status, msg, host_recover)
-        devices[plugin_id] = dev
     return devices
 
 

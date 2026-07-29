@@ -46,6 +46,18 @@ def resolve_recover_plugin_ids(devices: str) -> tuple[str, ...]:
     return _OQLOS_SAFE_PLUGINS
 
 
+def _is_motor_global_action(action: object) -> bool:
+    if not isinstance(action, dict):
+        return False
+    action_id = str(action.get("id") or "")
+    device_id = str(action.get("device_id") or "")
+    return (
+        not action_id.startswith("global-modbus")
+        and not device_id.startswith("modbus")
+        and (device_id in _MOTOR_PLUGIN_IDS or device_id == "*")
+    )
+
+
 def filter_diagnosis_dict_for_devices(payload: dict[str, Any], devices: str) -> dict[str, Any]:
     if str(devices or "").strip().lower() != "motors":
         return payload
@@ -56,13 +68,7 @@ def filter_diagnosis_dict_for_devices(payload: dict[str, Any], devices: str) -> 
     global_actions = [
         action
         for action in (payload.get("global_actions") or [])
-        if isinstance(action, dict)
-        and not str(action.get("id") or "").startswith("global-modbus")
-        and not str(action.get("device_id") or "").startswith("modbus")
-        and (
-            str(action.get("device_id") or "") in _MOTOR_PLUGIN_IDS
-            or str(action.get("device_id") or "") == "*"
-        )
+        if _is_motor_global_action(action)
     ]
     return {
         **payload,
@@ -100,49 +106,72 @@ def _resolve_host_recover() -> str:
     )
 
 
-def build_diagnosis_report(identify: dict[str, Any]) -> DiagnosisReport:
-    """Build per-device diagnosis from an identify payload (same shape as GET /identify)."""
-    platform = identify.get("platform") if isinstance(identify.get("platform"), dict) else {}
-    health = health_map(identify)
-    adapters = _adapter_index(identify)
-    topology = str(platform.get("modbus_topology") or platform.get("modbus_topology_mode") or "").strip()
-    serial_ports = [str(p) for p in (platform.get("serial_ports") or []) if p]
-    host_recover = _resolve_host_recover()
-    c2004_root = os.environ.get("C2004_ROOT", "/home/tom/github/maskservice/c2004")
+def _diagnosis_platform(identify: dict[str, Any]) -> dict[str, Any]:
+    platform = identify.get("platform")
+    return platform if isinstance(platform, dict) else {}
 
+
+def _diagnosis_topology(platform: dict[str, Any]) -> str:
+    return str(platform.get("modbus_topology") or platform.get("modbus_topology_mode") or "").strip()
+
+
+def _diagnosis_devices(
+    identify: dict[str, Any], health: dict[str, Any], adapters: dict[str, Any],
+    platform: dict[str, Any], topology: str, host_recover: str,
+) -> dict[str, DeviceDiagnosis]:
     devices = diagnose_plugin_devices(
         health, adapters, platform, topology, host_recover,
         hardware_mode=str(identify.get("mode") or "").strip().lower(),
     )
     devices["barcode-scanner"] = diagnose_barcode_scanner(adapters)
+    return devices
+
+
+def _diagnosis_environment(
+    identify: dict[str, Any], platform: dict[str, Any], topology: str,
+    host_recover: str, snapshot: dict[str, Any],
+) -> dict[str, Any]:
+    return {
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "topology": topology,
+        "hardware_mode": str(identify.get("mode") or "").strip().lower() or None,
+        "runtime_control_available": bool(host_recover),
+        "host_recover_hook": host_recover or None,
+        "serial_ports": [str(port) for port in (platform.get("serial_ports") or []) if port],
+        "stack_snapshot_ok": snapshot.get("ok"),
+        "serial_handles_stale": snapshot.get("serial_handles_stale"),
+    }
+
+
+def _diagnosis_message(error_devices: list[str]) -> str:
+    if not error_devices:
+        return "Diagnostyka: wszystkie monitorowane urządzenia OK."
+    return "Diagnostyka: wymaga uwagi — " + ", ".join(error_devices)
+
+
+def build_diagnosis_report(identify: dict[str, Any]) -> DiagnosisReport:
+    """Build per-device diagnosis from an identify payload (same shape as GET /identify)."""
+    platform = _diagnosis_platform(identify)
+    health = health_map(identify)
+    adapters = _adapter_index(identify)
+    topology = _diagnosis_topology(platform)
+    host_recover = _resolve_host_recover()
+    c2004_root = os.environ.get("C2004_ROOT", "/home/tom/github/maskservice/c2004")
+    devices = _diagnosis_devices(identify, health, adapters, platform, topology, host_recover)
 
     modbus_bad = modbus_plugins_need_repair(identify)
     motors_bad = any(devices[d].status == "error" for d in ("motor-tic249", "motor-dri0050"))
     global_actions = build_report_global_actions(modbus_bad, motors_bad, c2004_root, host_recover)
-
     error_devices = [d.device_id for d in devices.values() if d.status == "error"]
     requires_full = modbus_bad or modbus_plugins_need_repair(identify)
     snapshot = _build_stack_snapshot(health)
 
     return DiagnosisReport(
-        environment={
-            "generated_at": datetime.now(timezone.utc).isoformat(),
-            "topology": topology,
-            "hardware_mode": str(identify.get("mode") or "").strip().lower() or None,
-            "runtime_control_available": bool(host_recover),
-            "host_recover_hook": host_recover or None,
-            "serial_ports": serial_ports,
-            "stack_snapshot_ok": snapshot.get("ok"),
-            "serial_handles_stale": snapshot.get("serial_handles_stale"),
-        },
+        environment=_diagnosis_environment(identify, platform, topology, host_recover, snapshot),
         devices=devices,
         global_actions=global_actions,
         ok=not error_devices,
-        message=(
-            "Diagnostyka: wszystkie monitorowane urządzenia OK."
-            if not error_devices
-            else "Diagnostyka: wymaga uwagi — " + ", ".join(error_devices)
-        ),
+        message=_diagnosis_message(error_devices),
         requires_full_stack_restart=requires_full,
     )
 
