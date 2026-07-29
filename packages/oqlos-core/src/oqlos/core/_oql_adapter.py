@@ -231,58 +231,62 @@ def _lower_check(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "lis
     sensor = cmd.args["sensor"]
     min_val, max_val = cmd.args.get("min"), cmd.args.get("max")
     min_var, max_var = cmd.args.get("min_var"), cmd.args.get("max_var")
-    default_fail = (
+    fail_message = _check_fail_message(cmd, sensor, min_val, max_val, min_var, max_var)
+    pass_message = cmd.args.get("correct_msg") or ""
+    if _has_bounded_range(min_val, max_val, min_var, max_var):
+        return [_bounded_check_action(cmd, sensor, min_val, max_val, fail_message, pass_message)]
+    return _open_check_actions(
+        cmd, sensor, min_val, max_val, min_var, max_var, fail_message, pass_message
+    )
+
+
+def _check_fail_message(cmd, sensor, min_val, max_val, min_var, max_var) -> str:
+    default = (
         f"{sensor} poza zakresem "
         f"[{min_var if min_val is None else min_val}, "
         f"{max_var if max_val is None else max_val}] "
-        f"{cmd.args.get('unit') or ''}".strip()
-    )
-    fail_message = cmd.args.get("error_msg") or default_fail
-    pass_message = cmd.args.get("correct_msg") or ""
+        f"{cmd.args.get('unit') or ''}"
+    ).strip()
+    return cmd.args.get("error_msg") or default
 
-    if (
+
+def _has_bounded_range(min_val, max_val, min_var, max_var) -> bool:
+    return (
         min_val is not None and max_val is not None
         and not (min_var or max_var)
         and abs(min_val) < _UNBOUNDED_SENTINEL
         and abs(max_val) < _UNBOUNDED_SENTINEL
-    ):
-        cond = CqlCondition(
-            sensor=sensor,
-            operator="∈",
-            value_min=min_val,
-            value_max=max_val,
-            unit=cmd.args.get("unit") or "",
-            on_fail="ERROR",
-            fail_message=fail_message,
-            pass_message=pass_message,
-        )
-        return [CqlAction(kind="condition", condition=cond, raw=cmd.raw)]
+    )
 
-    # Granica-zmienna (rozwiązywana w runtime) lub sentinel ±999999:
-    # rozbij zakres na warunki porównawcze; stronę nieograniczoną pomiń.
+
+def _bounded_check_action(cmd, sensor, min_val, max_val, fail_message, pass_message):
+    condition = CqlCondition(
+        sensor=sensor, operator="∈", value_min=min_val, value_max=max_val,
+        unit=cmd.args.get("unit") or "", on_fail="ERROR",
+        fail_message=fail_message, pass_message=pass_message,
+    )
+    return CqlAction(kind="condition", condition=condition, raw=cmd.raw)
+
+
+def _open_check_actions(
+    cmd, sensor, min_val, max_val, min_var, max_var, fail_message, pass_message
+):
     actions: list[CqlAction] = []
     lower_spec = min_var if min_val is None else str(min_val)
     upper_spec = max_var if max_val is None else str(max_val)
-    if lower_spec is not None and not (
-        min_val is not None and min_val <= -_UNBOUNDED_SENTINEL
-    ):
-        cond = CqlCondition(
-            sensor=sensor, operator="≥", on_fail="ERROR",
-            fail_message=fail_message, pass_message=pass_message,
-        )
-        actions.append(CqlAction(kind="condition", condition=cond, args=lower_spec, raw=cmd.raw))
-    if upper_spec is not None and not (
-        max_val is not None and max_val >= _UNBOUNDED_SENTINEL
-    ):
-        cond = CqlCondition(
-            sensor=sensor, operator="≤", on_fail="ERROR",
-            fail_message=fail_message, pass_message=pass_message,
-        )
-        actions.append(CqlAction(kind="condition", condition=cond, args=upper_spec, raw=cmd.raw))
-    if not actions:
-        # Obie strony nieograniczone — warunek zawsze spełniony, zostaw log.
-        actions.append(CqlAction(kind="log", args=cmd.raw, raw=cmd.raw))
-    return actions
+    if lower_spec is not None and not (min_val is not None and min_val <= -_UNBOUNDED_SENTINEL):
+        actions.append(_comparison_action(cmd, sensor, "≥", lower_spec, fail_message, pass_message))
+    if upper_spec is not None and not (max_val is not None and max_val >= _UNBOUNDED_SENTINEL):
+        actions.append(_comparison_action(cmd, sensor, "≤", upper_spec, fail_message, pass_message))
+    return actions or [CqlAction(kind="log", args=cmd.raw, raw=cmd.raw)]
+
+
+def _comparison_action(cmd, sensor, operator, spec, fail_message, pass_message):
+    condition = CqlCondition(
+        sensor=sensor, operator=operator, on_fail="ERROR",
+        fail_message=fail_message, pass_message=pass_message,
+    )
+    return CqlAction(kind="condition", condition=condition, args=spec, raw=cmd.raw)
 
 
 def _lower_if_delta(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "list[CqlAction]":

@@ -412,20 +412,7 @@ def _parse_if_quoted_range(rest: str, ln: int, raw: str) -> OqlCmd | None:
     ``IF 'timer' 'timeout' .. 999999`` — granica jako nazwa zmiennej
     (rozwiązywana w runtime).
     """
-    tokens = tokenize(rest.strip())
-    if ".." not in tokens:
-        for idx, tok in enumerate(tokens):
-            if ".." in tok and tok != "..":
-                left_part, _, right_part = tok.partition("..")
-                expanded = tokens[:idx]
-                if left_part.strip():
-                    expanded.append(left_part.strip())
-                expanded.append("..")
-                if right_part.strip():
-                    expanded.append(right_part.strip())
-                expanded.extend(tokens[idx + 1:])
-                tokens = expanded
-                break
+    tokens = _expand_range_separator(tokenize(rest.strip()))
     if ".." not in tokens:
         return None
 
@@ -434,20 +421,10 @@ def _parse_if_quoted_range(rest: str, ln: int, raw: str) -> OqlCmd | None:
     if len(left) < 2 or not right:
         return None
 
-    # Lewa strona: ostatni token = dolna granica, wcześniejsze = nazwa parametru.
     sensor = " ".join(left[:-1])
     min_val, min_unit = _parse_bound(left[-1])
     min_spec = None if min_val is not None else left[-1]
-
-    # Prawa strona: ostatni numeryczny token = górna granica, etykiety pomijamy.
-    max_val, max_unit, max_spec = None, "", None
-    for tok in reversed(right):
-        candidate, unit = _parse_bound(tok)
-        if candidate is not None:
-            max_val, max_unit = candidate, unit
-            break
-    if max_val is None:
-        max_spec = right[-1]
+    max_val, max_unit, max_spec = _parse_range_upper_bound(right)
 
     args: dict = {
         "sensor": sensor,
@@ -460,6 +437,32 @@ def _parse_if_quoted_range(rest: str, ln: int, raw: str) -> OqlCmd | None:
     if max_spec is not None:
         args["max_var"] = max_spec
     return OqlCmd("CHECK", args, ln, raw)
+
+
+def _expand_range_separator(tokens: list[str]) -> list[str]:
+    if ".." in tokens:
+        return tokens
+    for idx, token in enumerate(tokens):
+        if ".." not in token or token == "..":
+            continue
+        left, _, right = token.partition("..")
+        expanded = tokens[:idx]
+        if left.strip():
+            expanded.append(left.strip())
+        expanded.append("..")
+        if right.strip():
+            expanded.append(right.strip())
+        expanded.extend(tokens[idx + 1:])
+        return expanded
+    return tokens
+
+
+def _parse_range_upper_bound(tokens: list[str]) -> tuple[float | int | None, str, str | None]:
+    for token in reversed(tokens):
+        value, unit = _parse_bound(token)
+        if value is not None:
+            return value, unit, None
+    return None, "", tokens[-1]
 
 
 def parse_IF(rest: str, ln: int, raw: str) -> OqlCmd:
@@ -929,60 +932,61 @@ def _handle_block_header(
     """Parse a block header line. Returns the new block if matched, else None."""
     block = BLOCK_RE.match(line)
     if not block:
-        func_inline = FUNC_INLINE_NAME_RE.match(line)
-        if func_inline:
-            # ``FUNC: nazwa`` — parytet z frontendem c2004: pusty/nazwany blok FUNC.
-            name = func_inline.group(1).strip().strip("'\"")
-            new_block = OqlBlock(type="FUNC", name=name, line=ln, source_type="FUNC")
-            doc.blocks.append(new_block)
-            return new_block
-        return None
-    name = block.group(2).strip() if block.group(2) else ""
-    if name.startswith("[") and name.endswith("]"):
-        name = name[1:-1].strip()
-    source_block_type = block.group(1).upper()
-    block_type = source_block_type
-    if source_block_type == "EVENT":
+        return _inline_func_block(doc, line, ln)
+    source_type, name = _block_header_values(block)
+    if source_type == "EVENT":
         name = name.strip("'\"")
-        if not name:
-            doc.errors.append(
-                f"Linia {ln}: EVENT wymaga nazwy, np. EVENT 'frontend.ready':"
-            )
-    if (
-        version_info.effective >= OQL_VERSION_V5
-        and source_block_type in {"GOAL", "TEST"}
-    ):
-        if version_info.effective >= OQL_VERSION_CURRENT:
-            replacement = "TASK: albo TEST_STEP:"
-        else:
-            replacement = "TASK:"
-        suffix = " i nazwę przez NAME '...'" if name else ""
-        doc.errors.append(
-            f"Linia {ln}: {source_block_type} w VERSION: {version_info.effective} jest składnią legacy; "
-            f"użyj {replacement}{suffix}"
-        )
-    elif (
-        version_info.effective >= OQL_VERSION_V4
-        and source_block_type in {"GOAL", "TASK", "TEST", "TEST_STEP"}
-        and name
-    ):
-        doc.errors.append(
-            f"Linia {ln}: w VERSION: {version_info.effective} "
-            f"użyj '{source_block_type}:' i nazwy przez 'NAME ...'"
-        )
-    if source_block_type in {"TASK", "TEST", "TEST_STEP"}:
-        # Runnable blocks share the legacy GOAL representation expected by
-        # adapters and interpreters.
-        block_type = "GOAL"
+    _validate_block_header(doc, source_type, name, ln, version_info)
+    block_type = "GOAL" if source_type in {"TASK", "TEST", "TEST_STEP"} else source_type
     new_block = OqlBlock(
-        type=block_type,
-        name=name,
-        line=ln,
-        source_type=source_block_type,
+        type=block_type, name=name, line=ln, source_type=source_type
     )
     doc.blocks.append(new_block)
     return new_block
 
+
+def _inline_func_block(doc: OqlDoc, line: str, ln: int) -> OqlBlock | None:
+    func_inline = FUNC_INLINE_NAME_RE.match(line)
+    if not func_inline:
+        return None
+    name = func_inline.group(1).strip(chr(39) + chr(34))
+    new_block = OqlBlock(type="FUNC", name=name, line=ln, source_type="FUNC")
+    doc.blocks.append(new_block)
+    return new_block
+
+
+def _block_header_values(block) -> tuple[str, str]:
+    name = block.group(2).strip() if block.group(2) else ""
+    if name.startswith("[") and name.endswith("]"):
+        name = name[1:-1].strip()
+    return block.group(1).upper(), name
+
+
+def _validate_block_header(
+    doc: OqlDoc, source_type: str, name: str, ln: int, version_info: object,
+) -> None:
+    if source_type == "EVENT":
+        name = name.strip(chr(39) + chr(34))
+        if not name:
+            doc.errors.append(
+                f"Linia {ln}: EVENT wymaga nazwy, np. EVENT 'frontend.ready':"
+            )
+    if version_info.effective >= OQL_VERSION_V5 and source_type in {"GOAL", "TEST"}:
+        replacement = "TASK: albo TEST_STEP:" if version_info.effective >= OQL_VERSION_CURRENT else "TASK:"
+        suffix = " i nazwę przez NAME '...'" if name else ""
+        doc.errors.append(
+            f"Linia {ln}: {source_type} w VERSION: {version_info.effective} jest składnią legacy; "
+            f"użyj {replacement}{suffix}"
+        )
+    elif (
+        version_info.effective >= OQL_VERSION_V4
+        and source_type in {"GOAL", "TASK", "TEST", "TEST_STEP"}
+        and name
+    ):
+        doc.errors.append(
+            f"Linia {ln}: w VERSION: {version_info.effective} "
+            f"użyj '{source_type}:' i nazwy przez 'NAME ...'"
+        )
 
 def _handle_macro_body_line(line: str, ln: int, current: "OqlBlock") -> None:
     """Append a deferred line to a MACRO/FUNC block body."""
@@ -1058,51 +1062,49 @@ def _parse_and_append_command(
     """Parse a regular command and append it to the current block."""
     try:
         tokens = tokenize(rest)
-        is_legacy_delay = cmd == "WAIT" or (
-            cmd == "SET"
-            and bool(tokens)
-            and tokens[0].strip().upper() in _SET_DELAY_ALIASES
-        )
-        if doc.oql_version >= OQL_VERSION_V5 and is_legacy_delay:
-            duration = " ".join(tokens[1:] if cmd == "SET" else tokens)
-            suggestion = f"TIMER '{duration}'" if duration else "TIMER '<czas>'"
-            legacy_spelling = (
-                f"SET {tokens[0].strip().upper()}" if cmd == "SET" else cmd
-            )
-            doc.errors.append(
-                f"Linia {ln}: {legacy_spelling} w VERSION: {doc.oql_version} jest składnią legacy; "
-                f"użyj {suggestion}"
-            )
-        if (
-            doc.oql_version >= OQL_VERSION_V5
-            and cmd == "TASK"
-            and bool(tokens)
-            and tokens[0].strip().upper() == "TITLE"
-        ):
-            message_text = " ".join(tokens[1:])
-            message = (
-                "'" + message_text.replace("'", "\\'") + "'"
-                if message_text
-                else "'<instrukcja>'"
-            )
-            doc.errors.append(
-                f"Linia {ln}: TASK TITLE w VERSION: {doc.oql_version} jest składnią legacy; "
-                f"użyj PROMPT {message}"
-            )
-        if cmd == "CHECK":
-            parsed = parse_CHECK(rest, ln, line)
-        elif cmd == "IF":
-            parsed = parse_IF(rest, ln, line)
-        else:
-            handler = DISPATCHERS.get(cmd)
-            if handler is None:
-                doc.errors.append(f"Linia {ln}: nieznana komenda {cmd!r}")
-                return
-            parsed = handler(tokens, ln, line)
+        _validate_legacy_command(doc, cmd, tokens, ln)
+        parsed = _parse_command(cmd, rest, tokens, ln, line, doc)
     except ValueError as exc:
         doc.errors.append(str(exc))
         return
+    if parsed is None:
+        return
     current.cmds.append(parsed)
+
+
+def _validate_legacy_command(doc: OqlDoc, cmd: str, tokens: list[str], ln: int) -> None:
+    is_legacy_delay = cmd == "WAIT" or (
+        cmd == "SET" and bool(tokens) and tokens[0].strip().upper() in _SET_DELAY_ALIASES
+    )
+    if doc.oql_version >= OQL_VERSION_V5 and is_legacy_delay:
+        duration = " ".join(tokens[1:] if cmd == "SET" else tokens)
+        suggestion = f"TIMER '{duration}'" if duration else "TIMER '<czas>'"
+        spelling = f"SET {tokens[0].strip().upper()}" if cmd == "SET" else cmd
+        doc.errors.append(
+            f"Linia {ln}: {spelling} w VERSION: {doc.oql_version} jest składnią legacy; "
+            f"użyj {suggestion}"
+        )
+    if doc.oql_version >= OQL_VERSION_V5 and cmd == "TASK" and tokens and tokens[0].strip().upper() == "TITLE":
+        message_text = " ".join(tokens[1:])
+        message = "'" + message_text.replace("'", "\\'") + "'" if message_text else "'<instrukcja>'"
+        doc.errors.append(
+            f"Linia {ln}: TASK TITLE w VERSION: {doc.oql_version} jest składnią legacy; "
+            f"użyj PROMPT {message}"
+        )
+
+
+def _parse_command(
+    cmd: str, rest: str, tokens: list[str], ln: int, line: str, doc: OqlDoc
+) -> OqlCmd | None:
+    if cmd == "CHECK":
+        return parse_CHECK(rest, ln, line)
+    if cmd == "IF":
+        return parse_IF(rest, ln, line)
+    handler = DISPATCHERS.get(cmd)
+    if handler is None:
+        doc.errors.append(f"Linia {ln}: nieznana komenda {cmd!r}")
+        return None
+    return handler(tokens, ln, line)
 
 
 def _validate_oql_version(doc: "OqlDoc", version_info: object) -> None:
@@ -1152,19 +1154,16 @@ def _check_unnamed_goals(doc: "OqlDoc", version_info: object) -> None:
 
 def _produced_param(cmd: OqlCmd) -> str | None:
     """Return the value name made available by a command, if any."""
-    if cmd.cmd == "SET":
-        return str(cmd.args.get("target") or "").strip() or None
-    if cmd.cmd == "GET":
-        return str(cmd.args.get("sensor") or "").strip() or None
-    if cmd.cmd == "VAL":
-        return str(cmd.args.get("param") or "").strip() or None
-    if cmd.cmd == "SAMPLE" and cmd.args.get("direction") == "START":
-        return str(cmd.args.get("sensor") or "").strip() or None
     if cmd.cmd == "FUNC":
-        tokens = [str(cmd.args.get("name") or ""), *map(str, cmd.args.get("args") or [])]
-        if len(tokens) >= 3 and tokens[1] == "=":
-            return tokens[0].strip() or None
-    return None
+        assignment = _func_assignment(cmd)
+        return assignment[0] if assignment else None
+    fields = {"SET": "target", "GET": "sensor", "VAL": "param"}
+    field = fields.get(cmd.cmd)
+    if cmd.cmd == "SAMPLE" and cmd.args.get("direction") == "START":
+        field = "sensor"
+    if field is None:
+        return None
+    return str(cmd.args.get(field) or "").strip() or None
 
 
 def _func_assignment(cmd: OqlCmd) -> tuple[str, list[str]] | None:
@@ -1200,91 +1199,80 @@ def _constraint_numbers(cmd: OqlCmd) -> list[float]:
 def _validate_semantics(doc: OqlDoc) -> None:
     """Validate v6 runnable roles and add non-fatal flow warnings."""
     if doc.oql_version >= OQL_VERSION_CURRENT:
-        expectation_cmds = {
-            "MIN", "MAX", "RANGE", "CHECK", "IF", "IF_DELTA", "PASS", "FAIL"
-        }
-        criterion_cmds = {"MIN", "MAX", "RANGE", "CHECK", "IF", "IF_DELTA"}
-        observation_cmds = {"VAL", "GET"}
+        _validate_v6_roles(doc)
+    _validate_flow(doc)
 
-        for block in doc.goals():
-            source_type = block.source_type or "TASK"
-            command_names = {cmd.cmd for cmd in block.cmds}
-            if source_type == "TASK" and command_names & expectation_cmds:
-                first = next(
-                    cmd for cmd in block.cmds if cmd.cmd in expectation_cmds
-                )
-                doc.errors.append(
-                    f"Linia {first.line}: TASK w VERSION: {doc.oql_version} zawiera oczekiwanie "
-                    f"{first.cmd}; użyj TEST_STEP: dla mierzonej, raportowanej walidacji"
-                )
-                continue
-            if source_type != "TEST_STEP":
-                continue
 
-            is_manual = "PROMPT" in command_names
-            if not (command_names & criterion_cmds) and not is_manual:
-                doc.errors.append(
-                    f"Linia {block.line}: TEST_STEP wymaga kryterium MIN/MAX/RANGE/CHECK/IF "
-                    "albo PROMPT dla oceny operatora"
-                )
-            if not (command_names & observation_cmds) and not is_manual:
-                doc.errors.append(
-                    f"Linia {block.line}: TEST_STEP wymaga odczytu VAL lub GET"
-                )
-            if "PASS" not in command_names or "FAIL" not in command_names:
-                doc.errors.append(
-                    f"Linia {block.line}: TEST_STEP wymaga pary werdyktów PASS i FAIL"
-                )
-            for cmd in block.cmds:
-                unit = str(cmd.args.get("unit") or "").strip()
-                if cmd.cmd == "VAL" and unit.startswith("*"):
-                    doc.errors.append(
-                        f"Linia {cmd.line}: VAL w VERSION: {doc.oql_version} wymaga rzeczywistej "
-                        "jednostki (np. 'mbar'), nie '*'"
-                    )
+def _validate_v6_roles(doc: OqlDoc) -> None:
+    expectation_cmds = {
+        "MIN", "MAX", "RANGE", "CHECK", "IF", "IF_DELTA", "PASS", "FAIL"
+    }
+    criterion_cmds = {"MIN", "MAX", "RANGE", "CHECK", "IF", "IF_DELTA"}
+    observation_cmds = {"VAL", "GET"}
+    for block in doc.goals():
+        _validate_v6_block(
+            doc, block, expectation_cmds, criterion_cmds, observation_cmds
+        )
 
+
+def _validate_v6_block(
+    doc: OqlDoc, block: OqlBlock, expectation_cmds: set[str],
+    criterion_cmds: set[str], observation_cmds: set[str],
+) -> None:
+    source_type = block.source_type or "TASK"
+    command_names = {cmd.cmd for cmd in block.cmds}
+    if source_type == "TASK" and command_names & expectation_cmds:
+        first = next(cmd for cmd in block.cmds if cmd.cmd in expectation_cmds)
+        doc.errors.append(
+            f"Linia {first.line}: TASK w VERSION: {doc.oql_version} zawiera oczekiwanie "
+            f"{first.cmd}; użyj TEST_STEP: dla mierzonej, raportowanej walidacji"
+        )
+        return
+    if source_type != "TEST_STEP":
+        return
+
+    is_manual = "PROMPT" in command_names
+    _validate_test_step_requirements(
+        doc, block, command_names, is_manual, criterion_cmds, observation_cmds
+    )
+    _validate_test_step_units(doc, block)
+
+
+def _validate_test_step_requirements(
+    doc: OqlDoc, block: OqlBlock, command_names: set[str], is_manual: bool,
+    criterion_cmds: set[str], observation_cmds: set[str],
+) -> None:
+    if not (command_names & criterion_cmds) and not is_manual:
+        doc.errors.append(
+            f"Linia {block.line}: TEST_STEP wymaga kryterium MIN/MAX/RANGE/CHECK/IF "
+            "albo PROMPT dla oceny operatora"
+        )
+    if not (command_names & observation_cmds) and not is_manual:
+        doc.errors.append(f"Linia {block.line}: TEST_STEP wymaga odczytu VAL lub GET")
+    if "PASS" not in command_names or "FAIL" not in command_names:
+        doc.errors.append(
+            f"Linia {block.line}: TEST_STEP wymaga pary werdyktów PASS i FAIL"
+        )
+
+
+def _validate_test_step_units(doc: OqlDoc, block: OqlBlock) -> None:
+    for cmd in block.cmds:
+        unit = str(cmd.args.get("unit") or "").strip()
+        if cmd.cmd == "VAL" and unit.startswith("*"):
+            doc.errors.append(
+                f"Linia {cmd.line}: VAL w VERSION: {doc.oql_version} wymaga rzeczywistej "
+                "jednostki (np. 'mbar'), nie '*'"
+            )
+
+
+def _validate_flow(doc: OqlDoc) -> None:
     commands = [cmd for block in doc.goals() for cmd in block.cmds]
     declared = {value for cmd in commands if (value := _produced_param(cmd))}
     produced: set[str] = set()
     samples: dict[str, int] = {}
 
     for cmd in commands:
-        assignment = _func_assignment(cmd)
-        if assignment:
-            result, inputs = assignment
-            for input_name in inputs:
-                try:
-                    float(input_name.replace(",", "."))
-                    continue
-                except ValueError:
-                    pass
-                if input_name not in produced and (
-                    input_name == result or input_name not in declared
-                ):
-                    doc.warnings.append(
-                        f"Linia {cmd.line}: FUNC {result!r} używa {input_name!r} "
-                        "przed inicjalizacją"
-                    )
-
-        if any(abs(value) >= 999999 for value in _constraint_numbers(cmd)):
-            doc.warnings.append(
-                f"Linia {cmd.line}: {cmd.cmd} używa atrapy granicy ±999999"
-            )
-
-        if cmd.cmd == "SAMPLE":
-            sensor = str(cmd.args.get("sensor") or "").strip()
-            direction = str(cmd.args.get("direction") or "").upper()
-            if direction == "START":
-                if sensor in samples:
-                    doc.warnings.append(
-                        f"Linia {cmd.line}: SAMPLE {sensor!r} uruchomiono ponownie bez STOP"
-                    )
-                else:
-                    samples[sensor] = cmd.line
-            elif direction == "STOP" and samples.pop(sensor, None) is None:
-                doc.warnings.append(
-                    f"Linia {cmd.line}: SAMPLE {sensor!r} STOP bez wcześniejszego START"
-                )
+        _validate_flow_command(doc, cmd, declared, produced, samples)
 
         if output := _produced_param(cmd):
             produced.add(output)
@@ -1293,6 +1281,96 @@ def _validate_semantics(doc: OqlDoc) -> None:
         doc.warnings.append(
             f"Linia {line}: SAMPLE {sensor!r} START bez STOP przed końcem scenariusza"
         )
+
+
+def _validate_flow_command(
+    doc: OqlDoc, cmd: OqlCmd, declared: set[str], produced: set[str],
+    samples: dict[str, int],
+) -> None:
+    assignment = _func_assignment(cmd)
+    if assignment:
+        result, inputs = assignment
+        for input_name in inputs:
+            if _is_uninitialized_input(input_name, result, declared, produced):
+                doc.warnings.append(
+                    f"Linia {cmd.line}: FUNC {result!r} używa {input_name!r} "
+                    "przed inicjalizacją"
+                )
+    if any(abs(value) >= 999999 for value in _constraint_numbers(cmd)):
+        doc.warnings.append(f"Linia {cmd.line}: {cmd.cmd} używa atrapy granicy ±999999")
+    _track_sample(doc, cmd, samples)
+
+
+def _is_uninitialized_input(
+    input_name: str, result: str, declared: set[str], produced: set[str],
+) -> bool:
+    try:
+        float(input_name.replace(",", "."))
+    except ValueError:
+        return input_name not in produced and (input_name == result or input_name not in declared)
+    return False
+
+
+def _track_sample(doc: OqlDoc, cmd: OqlCmd, samples: dict[str, int]) -> None:
+    if cmd.cmd != "SAMPLE":
+        return
+    sensor = str(cmd.args.get("sensor") or "").strip()
+    direction = str(cmd.args.get("direction") or "").upper()
+    if direction == "START":
+        if sensor in samples:
+            doc.warnings.append(
+                f"Linia {cmd.line}: SAMPLE {sensor!r} uruchomiono ponownie bez STOP"
+            )
+        else:
+            samples[sensor] = cmd.line
+    elif direction == "STOP" and samples.pop(sensor, None) is None:
+        doc.warnings.append(
+            f"Linia {cmd.line}: SAMPLE {sensor!r} STOP bez wcześniejszego START"
+        )
+
+
+def _parse_block_command(
+    doc: OqlDoc, line: str, ln: int, current: OqlBlock,
+) -> None:
+    _validate_canonical_name_syntax(doc, line, ln)
+    if current.type in ("MACRO", "FUNC"):
+        _handle_macro_body_line(line, ln, current)
+        return
+    parts = line.split(None, 1)
+    cmd = parts[0].upper()
+    rest = parts[1] if len(parts) > 1 else ""
+    if _handle_set_name(line, current):
+        return
+    if _handle_modifier_cmd(doc, line, ln, cmd, rest, current):
+        return
+    _parse_and_append_command(doc, line, ln, cmd, rest, current)
+
+
+def _parse_source_line(
+    doc: OqlDoc, raw: str, line: str, ln: int, current: OqlBlock | None,
+    version_info: object,
+) -> OqlBlock | None:
+    if not line or line.startswith("#") or GRANT_RE.match(line):
+        return current
+    if current is None and _handle_top_level_line(doc, raw, line, ln):
+        return None
+    new_block = _handle_block_header(doc, line, ln, version_info)
+    if new_block is not None:
+        return new_block
+    if current is None:
+        doc.errors.append(f"Linia {ln}: komenda poza blokiem: {line!r}")
+        return None
+    if not (raw.startswith(" ") or raw.startswith("\t")):
+        doc.errors.append(f"Linia {ln}: komenda musi być wcięta: {line!r}")
+        return current
+    _parse_block_command(doc, line, ln, current)
+    return current
+
+
+def _parse_document_body(doc: OqlDoc, text: str, version_info: object) -> None:
+    current: OqlBlock | None = None
+    for ln, raw in enumerate(_expand_repeat_blocks(text), 1):
+        current = _parse_source_line(doc, raw, raw.strip(), ln, current, version_info)
 
 
 def parse_oql(text: str, filename: str = "<string>") -> OqlDoc:
@@ -1312,48 +1390,7 @@ def parse_oql(text: str, filename: str = "<string>") -> OqlDoc:
 
     _validate_oql_version(doc, version_info)
 
-    current: OqlBlock | None = None
-
-    for ln, raw in enumerate(_expand_repeat_blocks(text), 1):
-        line = raw.strip()
-        if not line or line.startswith("#"):
-            continue
-
-        if GRANT_RE.match(line):
-            continue
-
-        if current is None and _handle_top_level_line(doc, raw, line, ln):
-            continue
-
-        new_block = _handle_block_header(doc, line, ln, version_info)
-        if new_block is not None:
-            current = new_block
-            continue
-
-        if current is None:
-            doc.errors.append(f"Linia {ln}: komenda poza blokiem: {line!r}")
-            continue
-        if not (raw.startswith(" ") or raw.startswith("\t")):
-            doc.errors.append(f"Linia {ln}: komenda musi być wcięta: {line!r}")
-            continue
-
-        _validate_canonical_name_syntax(doc, line, ln)
-
-        if current.type in ("MACRO", "FUNC"):
-            _handle_macro_body_line(line, ln, current)
-            continue
-
-        parts = line.split(None, 1)
-        cmd = parts[0].upper()
-        rest = parts[1] if len(parts) > 1 else ""
-
-        if _handle_set_name(line, current):
-            continue
-
-        if _handle_modifier_cmd(doc, line, ln, cmd, rest, current):
-            continue
-
-        _parse_and_append_command(doc, line, ln, cmd, rest, current)
+    _parse_document_body(doc, text, version_info)
 
     _check_unnamed_goals(doc, version_info)
     _validate_semantics(doc)

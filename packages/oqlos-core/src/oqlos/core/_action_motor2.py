@@ -450,88 +450,92 @@ def _try_exec_motor2_set(interp: "OqlInterpreter", target_lower: str, value: str
         return None
 
     from oqlos.core.base import StepStatus
-
     reciprocating_setting = _parse_motor2_reciprocating_setting(value)
     if reciprocating_setting is not None:
         return _handle_motor2_reciprocating_setting(interp, reciprocating_setting)
-
     relative_move = _parse_motor2_relative_move(value)
     if relative_move is not None:
-        direction = str(interp.vars.get("__motor2_direction") or "right")
-        acceleration_percent = interp.vars.get("__motor2_acceleration_percent")
-        try:
-            acceleration_percent = int(acceleration_percent) if acceleration_percent is not None else None
-        except (TypeError, ValueError):
-            acceleration_percent = None
-        requested_speed = int(relative_move["speed"])
-        effective_speed = _motor2_effective_steps_per_second(requested_speed)
-        if interp.mode == "execute":
-            try:
-                _call_motor2_transport(
-                    "_post_motor2_move_relative",
-                    _post_motor2_move_relative,
-                    direction,
-                    int(relative_move["steps"]),
-                    _motor2_speed_raw(effective_speed),
-                    _motor2_acceleration_raw(effective_speed, acceleration_percent),
-                )
-            except Exception as exc:
-                interp.out.error(f"MOTOR2 {direction.upper()} failed: {exc}")
-                return StepStatus.ERROR
-        speed_label = (
-            f"{requested_speed}/s → {effective_speed}/s clamped"
-            if requested_speed != effective_speed
-            else f"{effective_speed}/s"
-        )
-        suffix = " ✓" if interp.mode == "execute" else " (simulated)"
-        interp.out.step(
-            "    →",
-            f"MOTOR2 {direction.upper()} {relative_move['steps']} steps @ {speed_label}{suffix}",
-        )
-        return StepStatus.PASSED
-
+        return _exec_motor2_relative_move(interp, relative_move)
     direction = _parse_motor2_direction(value)
     if direction:
-        interp.vars.set("__motor2_direction", direction)
-        interp.out.step("    ⚙️", f"SET 'motor 2' 'direction {direction}'")
-        return StepStatus.PASSED
-
+        return _exec_motor2_direction(interp, direction)
     acceleration = _parse_motor2_acceleration(value)
     if acceleration is not None:
-        interp.vars.set("__motor2_acceleration_percent", acceleration)
-        interp.out.step("    ⚙️", f"SET 'motor 2' 'acceleration {acceleration}%/s'")
-        return StepStatus.PASSED
-
+        return _exec_motor2_acceleration(interp, acceleration)
     steps_per_second = _parse_motor2_speed_steps(value)
     if steps_per_second is None:
         return None
+    return _exec_motor2_speed(interp, steps_per_second)
 
-    direction = str(interp.vars.get("__motor2_direction") or "right")
-    acceleration_percent = interp.vars.get("__motor2_acceleration_percent")
+
+def _exec_motor2_direction(interp: "OqlInterpreter", direction: str):
+    from oqlos.core.base import StepStatus
+    interp.vars.set("__motor2_direction", direction)
+    interp.out.step("    ⚙️", f"SET 'motor 2' 'direction {direction}'")
+    return StepStatus.PASSED
+
+
+def _exec_motor2_acceleration(interp: "OqlInterpreter", acceleration: int):
+    from oqlos.core.base import StepStatus
+    interp.vars.set("__motor2_acceleration_percent", acceleration)
+    interp.out.step("    ⚙️", f"SET 'motor 2' 'acceleration {acceleration}%/s'")
+    return StepStatus.PASSED
+
+
+def _motor2_acceleration_percent(interp: "OqlInterpreter") -> int | None:
+    value = interp.vars.get("__motor2_acceleration_percent")
     try:
-        acceleration_percent = int(acceleration_percent) if acceleration_percent is not None else None
+        return int(value) if value is not None else None
     except (TypeError, ValueError):
-        acceleration_percent = None
+        return None
 
-    if interp.mode == "execute":
-        try:
-            _call_motor2_transport(
-                "_post_motor2_move_relative",
-                _post_motor2_move_relative,
-                direction,
-                steps_per_second,
-                _motor2_speed_raw(steps_per_second),
-                _motor2_acceleration_raw(steps_per_second, acceleration_percent),
-            )
-        except Exception as exc:
-            interp.out.error(f"MOTOR2 {direction.upper()} failed: {exc}")
-            return StepStatus.ERROR
 
-    effective_steps_per_second = _motor2_effective_steps_per_second(steps_per_second)
+def _exec_motor2_relative_move(interp: "OqlInterpreter", relative_move: dict):
+    from oqlos.core.base import StepStatus
+    direction = str(interp.vars.get("__motor2_direction") or "right")
+    acceleration_percent = _motor2_acceleration_percent(interp)
+    requested_speed = int(relative_move["speed"])
+    effective_speed = _motor2_effective_steps_per_second(requested_speed)
+    if not _send_motor2_move(
+        interp, direction, int(relative_move["steps"]), effective_speed, acceleration_percent
+    ):
+        return StepStatus.ERROR
+    speed_label = f"{requested_speed}/s → {effective_speed}/s clamped" if requested_speed != effective_speed else f"{effective_speed}/s"
+    suffix = " ✓" if interp.mode == "execute" else " (simulated)"
+    interp.out.step(
+        "    →",
+        f"MOTOR2 {direction.upper()} {relative_move['steps']} steps @ {speed_label}{suffix}",
+    )
+    return StepStatus.PASSED
+
+
+def _send_motor2_move(
+    interp: "OqlInterpreter", direction: str, steps: int,
+    speed: int, acceleration_percent: int | None,
+) -> bool:
+    if interp.mode != "execute":
+        return True
+    try:
+        _call_motor2_transport(
+            "_post_motor2_move_relative", _post_motor2_move_relative, direction,
+            steps, _motor2_speed_raw(speed), _motor2_acceleration_raw(speed, acceleration_percent),
+        )
+    except Exception as exc:
+        interp.out.error(f"MOTOR2 {direction.upper()} failed: {exc}")
+        return False
+    return True
+
+
+def _exec_motor2_speed(interp: "OqlInterpreter", steps_per_second: int):
+    from oqlos.core.base import StepStatus
+    direction = str(interp.vars.get("__motor2_direction") or "right")
+    acceleration_percent = _motor2_acceleration_percent(interp)
+    if not _send_motor2_move(interp, direction, steps_per_second, steps_per_second, acceleration_percent):
+        return StepStatus.ERROR
+    effective = _motor2_effective_steps_per_second(steps_per_second)
     speed_label = (
-        f"{steps_per_second} @ {effective_steps_per_second}/s clamped"
-        if effective_steps_per_second != steps_per_second
-        else f"{steps_per_second} @ {steps_per_second}/s"
+        f"{steps_per_second} @ {effective}/s clamped"
+        if effective != steps_per_second else f"{steps_per_second} @ {steps_per_second}/s"
     )
     suffix = " ✓" if interp.mode == "execute" else " (simulated)"
     interp.out.step("    →", f"MOTOR2 {direction.upper()} {speed_label}{suffix}")

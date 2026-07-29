@@ -336,37 +336,47 @@ def _evaluate_val_thresholds(interp: "OqlInterpreter", sensor: str, val: float, 
     if evaluated is not None:
         evaluated.add(sensor)
 
-    min_val = bounds.get("min")
-    max_val = bounds.get("max")
-    if interp.mode == "dry-run" and getattr(interp._sensor_eval, "_auto_mock", False):
-        if min_val is not None and max_val is not None and not (min_val <= val <= max_val):
-            val = (float(min_val) + float(max_val)) / 2.0
-            interp.vars.set(sensor, val)
-            interp.sensor_values[sensor] = val
-        elif min_val is not None and val < min_val:
-            val = float(min_val)
-            interp.vars.set(sensor, val)
-            interp.sensor_values[sensor] = val
-        elif max_val is not None and val > max_val:
-            val = float(max_val)
-            interp.vars.set(sensor, val)
-            interp.sensor_values[sensor] = val
-
+    min_val, max_val = bounds.get("min"), bounds.get("max")
+    val = _auto_mock_threshold_value(interp, sensor, val, min_val, max_val)
     actual_unit = unit or bounds.get("unit") or ""
-    ok = True
-    if min_val is not None and val < min_val:
-        ok = False
-    if max_val is not None and val > max_val:
-        ok = False
-
-    if ok:
-        interp.out.step("    ✅", f"{sensor} = {val:g} {actual_unit} within [{min_val}, {max_val}]".strip())
+    if _within_thresholds(val, min_val, max_val):
+        _report_threshold_pass(interp, sensor, val, actual_unit, min_val, max_val)
         return StepStatus.PASSED
 
-    message = f"{sensor} = {val:g} {actual_unit} outside [{min_val}, {max_val}]".strip()
+    message = _threshold_message(sensor, val, actual_unit, min_val, max_val)
     interp.errors.append(message)
     interp.out.step("    ❌", f"{message} → FAIL")
     return StepStatus.FAILED
+
+
+def _auto_mock_threshold_value(interp, sensor, val, min_val, max_val):
+    if interp.mode != "dry-run" or not getattr(interp._sensor_eval, "_auto_mock", False):
+        return val
+    if min_val is not None and max_val is not None and not (min_val <= val <= max_val):
+        val = (float(min_val) + float(max_val)) / 2.0
+    elif min_val is not None and val < min_val:
+        val = float(min_val)
+    elif max_val is not None and val > max_val:
+        val = float(max_val)
+    else:
+        return val
+    interp.vars.set(sensor, val)
+    interp.sensor_values[sensor] = val
+    return val
+
+
+def _within_thresholds(val, min_val, max_val) -> bool:
+    return (min_val is None or val >= min_val) and (max_val is None or val <= max_val)
+
+
+def _threshold_message(sensor, val, unit, min_val, max_val) -> str:
+    return f"{sensor} = {val:g} {unit} outside [{min_val}, {max_val}]".strip()
+
+
+def _report_threshold_pass(interp, sensor, val, unit, min_val, max_val) -> None:
+    interp.out.step(
+        "    ✅", f"{sensor} = {val:g} {unit} within [{min_val}, {max_val}]".strip()
+    )
 
 
 def _mock_missing_val(interp: "OqlInterpreter", sensor: str) -> float:
