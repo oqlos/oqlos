@@ -1,11 +1,13 @@
 # firmware/api/scenarios.py
-from typing import Any
-from fastapi import APIRouter, HTTPException
+from typing import Any, Callable
+
+from fastapi import APIRouter
 import httpx
 
-from oqlos.models.scenario import Scenario, Goal, Step
-from oqlos.shared._endpoint_helpers import make_collection_route
 from oqlos.api.utils import execution_ctrl as _ctrl
+from oqlos.errors import OqlosError
+from oqlos.models.scenario import Goal, Scenario, Step
+from oqlos.shared._endpoint_helpers import make_collection_route
 
 router = APIRouter(prefix="/api/v1/scenarios", tags=["scenarios"])
 
@@ -22,7 +24,18 @@ async def get_scenario(scenario_id: str):
     if scenario_id == 'fetch':
         return await fetch_scenarios()
     if scenario_id not in _ctrl.state_manager.scenarios:
-        raise HTTPException(status_code=404, detail="Scenario not found")
+        raise OqlosError(
+            code="api_scenario_not_found",
+            status_code=404,
+            detail={
+                "architecture": "SOA",
+                "layer": "oqlos",
+                "component": "scenario-registry",
+                "stage": "scenario.lookup",
+                "problem_source": "request",
+                "operation_id": "scenario.get",
+            },
+        )
     return _ctrl.state_manager.scenarios[scenario_id]
 
 async def _fetch_raw_from_sources(sources: list[str]) -> Any | None:
@@ -170,7 +183,20 @@ def _normalize_dsl_payload(payload: dict[str, Any]) -> list[dict]:
     if scenarios_input is None:
         scenarios_input = [payload]
     if not isinstance(scenarios_input, list):
-        raise HTTPException(status_code=400, detail="Invalid payload: 'scenarios' must be a list or provide single scenario fields")
+        raise OqlosError(
+            code="api_scenario_payload_invalid",
+            status_code=422,
+            detail={
+                "architecture": "SOA",
+                "layer": "oqlos",
+                "component": "scenario-registry",
+                "stage": "payload.validate",
+                "problem_source": "request",
+                "operation_id": "scenario.register-dsl",
+                "field": "scenarios",
+                "expected": "array",
+            },
+        )
     return [item for item in scenarios_input if isinstance(item, dict)]
 
 def _collect_dsl_strings(item: dict[str, Any]) -> list[str]:
@@ -228,6 +254,13 @@ def _register_single_dsl_scenario(item: dict[str, Any], parse_fn) -> str | None:
     _merge_goals_into_scenario(sid, item, parsed_goals)
     return sid
 
+
+def _load_dsl_parser() -> Callable[[str, str], Goal | None]:
+    """Load the parser dependency behind a testable boundary."""
+    from oqlos.core.parser import parse_dsl_to_goal
+
+    return parse_dsl_to_goal
+
 @router.post("/register-dsl")
 async def register_dsl(payload: dict[str, Any]):
     """Register one or many scenarios defined as DSL strings.
@@ -238,9 +271,20 @@ async def register_dsl(payload: dict[str, Any]):
     """
     # Import inside handler to avoid circular import at module import time
     try:
-        from oqlos.core.parser import parse_dsl_to_goal  # type: ignore
+        parse_dsl_to_goal = _load_dsl_parser()
     except Exception as ex:
-        raise HTTPException(status_code=500, detail=f"Parser unavailable: {ex}")
+        raise OqlosError(
+            code="api_scenario_parser_unavailable",
+            status_code=503,
+            detail={
+                "architecture": "SOA",
+                "layer": "oqlos",
+                "component": "scenario-parser",
+                "stage": "dependency.load",
+                "problem_source": "runtime-dependency",
+                "operation_id": "scenario.register-dsl",
+            },
+        ) from ex
 
     items = _normalize_dsl_payload(payload)
     registered = []

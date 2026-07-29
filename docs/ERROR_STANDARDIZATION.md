@@ -121,6 +121,9 @@ domenowym. Powtarzalny błąd zakończony `SYS-0000` wymaga dodania jawnego
 | zapis konfiguracji bez roli systemowej | 403 | `C2004-AUTH-0002` | `SOA/oqlos` | `hardware-configuration` / `role.authorize` | rola wejściowa nie jest publikowana |
 | impuls cewki bez roli systemowej | 403 | `C2004-AUTH-0002` | `SOA/firmware` | `modbus-coil-test` / `role.authorize` | rola i payload nie są publikowane |
 | ścieżka edytora poza katalogiem scenariuszy | 403 | `C2004-AUTH-0002` | `SOA/oqlos` | `scenario-editor` / `path.authorize` | ścieżka i root systemu plików nie są publikowane |
+| brak scenariusza w rejestrze | 404 | `C2004-DATA-0001` | `SOA/oqlos` | `scenario-registry` / `scenario.lookup` | identyfikator wejściowy nie jest publikowany |
+| błędny payload rejestracji DSL | 422 | `C2004-DATA-0002` | `SOA/oqlos` | `scenario-registry` / `payload.validate` | publikowane jest tylko pole i oczekiwany typ |
+| niedostępny parser scenariuszy | 503 | `C2004-NET-0002` | `SOA/oqlos` | `scenario-parser` / `dependency.load` | tekst wyjątku importu nie jest publikowany |
 | błąd wykonania systemd | 503 | `C2004-HW-0012` | `SOA/host` | `systemd-control` / `action.execute` | whitelisted unit |
 | zdalne wykonanie scenariusza w editorze | status kodu agenta | zachowany kod MQTT | `SOA/firmware` | agent / etap MQTT | `mqtt-node://<node>/oql` |
 | nieotypowany `HTTPException` 5xx | status katalogu | kod wynikający ze statusu | `SOA/oqlos` | `oqlos-api` / `http.exception` | granica API |

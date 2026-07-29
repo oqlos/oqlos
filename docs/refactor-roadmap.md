@@ -181,7 +181,7 @@ Kolejna partia zastąpiła pięć surowych `HTTPException` w HUI,
 artificial-lung i sterowaniu systemd typowanymi błędami. Błędne komendy kończą
 się przed sprzętem jako 422/`C2004-DATA-0002`; awaria wykonania HUI/systemd nie
 wraca już jako HTTP 200 i nie ujawnia surowego komunikatu. Bieżąca metryka
-OqlOS: 124 surowe wyjątki (baseline 137), 0 literalnych negatywnych envelope
+OqlOS: 121 surowych wyjątków (baseline 137), 0 literalnych negatywnych envelope
 przy HTTP 200.
 
 Następna partia zastąpiła dwa pozostałe surowe 403 w trasach sterowania i
@@ -199,13 +199,19 @@ Cztery odmowy ścieżek w API edytora używają teraz
 ścieżki lub rootu systemu plików. Kontrola sandboxa porównuje relację ścieżek,
 więc odrzuca także katalog sąsiedni o wspólnym prefiksie.
 
+Trzy przewidywalne błędy API scenariuszy mają teraz jawne kontrakty: brak
+scenariusza to 404/`C2004-DATA-0001`, błędne pole `scenarios` to
+422/`C2004-DATA-0002`, a niedostępny parser DSL to
+503/`C2004-NET-0002`. Identyfikator, payload i tekst wyjątku parsera nie są
+publikowane.
+
 Granica nieotypowanych `HTTPException` 5xx sanitizuje teraz komunikat i kontekst
 według katalogu. Zdalne wykonanie `/api/v1/editor/execute` propaguje
 `correlation_id` do MQTT, zwraca go w sukcesie, a negatywnej odpowiedzi agenta
 nie opakowuje już w HTTP 200. Timeout scenariusza daje ten sam
 504/`C2004-NET-0003` co `/api/v1/oql/execute`.
 
-Pozostały zakres: sklasyfikować 124 surowe wyjątki i 241 szerokich handlerów
+Pozostały zakres: sklasyfikować 121 surowych wyjątków i 241 szerokich handlerów
 OqlOS, rozdzielić pozostałe klasy host/proxy/plugin oraz wykonać analogiczną
 inwentaryzację i kontrakty po stronie C2004/POA.
 

@@ -27,6 +27,9 @@ own:
 | `api_modbus_coil_pulse_forbidden` | warning | The caller is not permitted to pulse a Modbus coil. | — |
 | `api_modbus_wizard_invalid_request` | warning | The isolated Modbus wizard request is incomplete or unsafe. | — |
 | `api_oql_transport_disabled` | error | OQL-over-MQTT transport is disabled (OQLOS_OQL_TRANSPORT_ROLE=off); /api/v1/oql/execute and /manage cannot run. | `enable_oql_mqtt_transport` (scope=host, manual, risk=config) |
+| `api_scenario_not_found` | warning | The requested scenario does not exist. | — |
+| `api_scenario_parser_unavailable` | error | The scenario DSL parser is unavailable. | — |
+| `api_scenario_payload_invalid` | warning | The scenario registration payload is invalid. | — |
 | `api_systemd_unit_forbidden` | warning | The requested system service is not permitted for this operation. | — |
 
 ## config

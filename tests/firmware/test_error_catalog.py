@@ -39,6 +39,7 @@ _CODE_SOURCE_PATHS = [
     _REPO_ROOT / "oqlos" / "api" / "hardware_probe.py",
     _REPO_ROOT / "oqlos" / "api" / "hardware_runtime.py",
     _REPO_ROOT / "oqlos" / "api" / "plugins.py",
+    _REPO_ROOT / "oqlos" / "api" / "scenarios.py",
     _REPO_ROOT / "oqlos" / "hardware" / "plugin_gateway.py",
     _REPO_ROOT / "oqlos" / "hardware" / "usb_diagnostics.py",
     _REPO_ROOT / "oqlos" / "hardware" / "hui_readiness.py",

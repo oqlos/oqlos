@@ -393,6 +393,24 @@ ISSUE_CATALOG: dict[str, IssueDefinition] = {
         default_severity="warning",
         summary="The isolated Modbus wizard request is incomplete or unsafe.",
     ),
+    "api_scenario_not_found": IssueDefinition(
+        code="api_scenario_not_found",
+        domain="api",
+        default_severity="warning",
+        summary="The requested scenario does not exist.",
+    ),
+    "api_scenario_parser_unavailable": IssueDefinition(
+        code="api_scenario_parser_unavailable",
+        domain="api",
+        default_severity="error",
+        summary="The scenario DSL parser is unavailable.",
+    ),
+    "api_scenario_payload_invalid": IssueDefinition(
+        code="api_scenario_payload_invalid",
+        domain="api",
+        default_severity="warning",
+        summary="The scenario registration payload is invalid.",
+    ),
 }
 
 

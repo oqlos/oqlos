@@ -35,7 +35,7 @@ de854679e1957ebbc2e29c6fa9c205b4f17ecd666faf6a5cfec9e982a91335e7  ./api/index.ht
 4642454be2bf4914f738559f1f8fe5511700df412e3e8be5ff36536440475654  ./api/oql_mqtt.py
 1baabbac1a2f9a0eab6cf082e007ff7f73c608f70e0bff85196d8e30ff698636  ./api/peripherals.py
 014cc6131cd14df3fa37941e07f021cf9932079ee145bcc1552d1b29ed8f0f17  ./api/plugins.py
-f2ed0b6f110c58fa8014801cbaa86fc06ffa0a0c90fa786c79d542854b46dd19  ./api/scenarios.py
+7baf8b6049c207e019f2eb844dfe18c143d3e3b5a890f010ea77e08bfa1e2b0d  ./api/scenarios.py
 e9c0f4590ce957ea72c21e9a0a7340a66b2b7f49b1216ae76f9317e662c274a0  ./api/state.py
 fc1875ce2c6c77655831fd0049bbb53014a588444d32f24cdb0a8db71bfb83ad  ./api/static/editor.html
 d5c38cb5a76a8984a670f52b1318c9ff637bfe7d1dbd83f42c3aae602520d708  ./api/static/hardware-status.html
@@ -64,8 +64,8 @@ e30d874a60c86b80cc1ae0733443fd231d98319f990cd290f42edb335e5c17d7  ./core/cqrs/pe
 bf70e4db36df5cd500b125b5442d739d78b6a396414d680f9f71eed88f08e218  ./dsl/__init__.py
 a8771d1964d7e5554014a29201da045a23afd9a7578a9cfb71f60ef4eafcf515  ./dsl/schema.py
 d90b572434be5d6793438fd7d253cfaae7f990edaf0fdfa9fe6ca2729eaf257e  ./errors/__init__.py
-c5c1ae0069a6f48762fe462d82be3ad2e2c39a854368418c90a0d6f9ee84db61  ./errors/c2004_catalog_generated.py
-1a42640c1dae6b9cca172239dcee4dad43dc0965350e88b6a4dfb18425d24cd1  ./errors/catalog.py
+2c8d99d7623cf668c58b1f833a5260fcd2b5cbd482962daf4ee5ab40646f68ac  ./errors/c2004_catalog_generated.py
+590188f24340e3c70f3b915d49a52433a771a17f70eebbfe873a22416f55d627  ./errors/catalog.py
 19aff6afa83ad0678e8001aa3edd0bb4634bccb9fcffc2f47e6f033f21f5389c  ./errors/exceptions.py
 ca91d2220c7c0d8807acc4dd5259916ba85146fce21157f0250e571a46d35453  ./errors/fastapi_integration.py
 8b9761452b0176fa955a5aa1c9c24de0f68adf2e12bb7d334738d4df256d1346  ./errors/repair_commit.py
