@@ -217,7 +217,7 @@ CATALOG: dict[str, ErrorEntry] = {
         classification='safety', confidentiality='restricted',
         retryable=False, owner='owner://domain/hardware', title='OqlOS hardware runtime unreachable',
         message='Cannot reach the OqlOS hardware runtime', message_i18n='pressure.firmware-offline',
-        remediation='OqlOS on boardnet .122:8202 is down or unreachable; start it and re-check /api/v1/hardware/health.', auto_repair={'enabled': True, 'runbook': 'hardware.restart_oqlos', 'risk': 'medium'},
+        remediation='OqlOS at the BoardNet runtime configured for this device is down or unreachable; start it and re-check /api/v1/hardware/health.', auto_repair={'enabled': True, 'runbook': 'hardware.restart_oqlos', 'risk': 'medium'},
     ),
     'C2004-HW-0012': ErrorEntry(
         code='C2004-HW-0012', slug='hardware.adc_telemetry.unavailable', domain='hardware',
@@ -225,7 +225,7 @@ CATALOG: dict[str, ErrorEntry] = {
         classification='safety', confidentiality='restricted',
         retryable=False, owner='owner://domain/hardware', title='Required hardware unavailable',
         message='A required hardware plugin or sensor path is not available for real operation', message_i18n='pressure.no-communication',
-        remediation='Identify the unavailable device from the error (e.g. modbus-io, motor-dri0050, usb-adc-*). For Modbus IO: GET /api/v1/plugins/modbus-io/health, compare the configured port with the USB inventory and /dev/serial/by-id on boardnet .122, then check RS485 power/A-B/GND, baud rate and slave ID. For ADC telemetry: GET /api/v1/hardware/sensors/batch and verify MCP2221A/DFR1184 providers, device paths and permissions.', auto_repair={'enabled': True, 'runbook': 'hardware.restore_adc_telemetry', 'risk': 'medium'},
+        remediation='Identify the unavailable device from the error (e.g. modbus-io, motor-dri0050, usb-adc-*). For Modbus IO: GET /api/v1/plugins/modbus-io/health, compare the configured port with the USB inventory and /dev/serial/by-id on the configured BoardNet host, then check RS485 power/A-B/GND, baud rate and slave ID. For ADC telemetry: GET /api/v1/hardware/sensors/batch and verify MCP2221A/DFR1184 providers, device paths and permissions.', auto_repair={'enabled': True, 'runbook': 'hardware.restore_adc_telemetry', 'risk': 'medium'},
     ),
     'C2004-HW-0013': ErrorEntry(
         code='C2004-HW-0013', slug='hardware.rs485.port_held', domain='hardware',
