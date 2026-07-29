@@ -404,7 +404,10 @@ if ! compgen -G '/dev/i2c-*' >/dev/null; then
   echo "WARN: /dev/i2c-* nie istnieje — I2C wlaczone w config.txt, wymagany reboot BoardNet"
 fi
 cd "$PIRTC_DIR"
-python3 -m venv .venv
+# Raspberry Pi OS 13 ships the Python 3.13-compatible GPIO backend as the
+# system package python3-rpi-lgpio. Expose it to the venv instead of rebuilding
+# legacy RPi.GPIO from PyPI.
+python3 -m venv --system-site-packages .venv
 .venv/bin/pip install -q --upgrade pip
 .venv/bin/pip install -q -e .
 

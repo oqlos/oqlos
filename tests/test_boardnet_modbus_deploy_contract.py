@@ -114,6 +114,15 @@ def test_tic249_reuses_readiness_helper_after_every_service_start() -> None:
     assert "systemctl --user restart hw-tic249.service" in migration
 
 
+def test_pirtc_reuses_raspberry_pi_os_gpio_backend() -> None:
+    migration = (ROOT / "redeploy/122/migration.md").read_text(encoding="utf-8")
+    pirtc = migration.split("markpact:ref deploy-pirtc-sidecar", 1)[1].split(
+        "```", 1
+    )[0]
+
+    assert "python3 -m venv --system-site-packages .venv" in pirtc
+
+
 def test_boardnet_deploy_uses_the_canonical_oql_scenario_store() -> None:
     migration = (ROOT / "redeploy/122/migration.md").read_text(encoding="utf-8")
     step = migration.split("- id: sync_oql_scenario", 1)[1].split("\n  - id:", 1)[0]
