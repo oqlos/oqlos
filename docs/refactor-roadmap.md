@@ -28,11 +28,11 @@ Pomiary bazowe wykonano 2026-07-28. Wyniki `NEXT-01` i `NEXT-02` odświeżono
 
 | Kontrola | Wynik |
 | --- | --- |
-| OqlOS | `main`; `NEXT-01` zapisane w `8d4e396`, `NEXT-03` w `fa2490a`, snapshot analizy z `86935a0`; zewnętrzny przebieg CI oczekuje na push |
+| OqlOS | `main`; `NEXT-01` zapisane w `8d4e396`, `NEXT-03` w `fa2490a`, snapshot analizy z `86935a0`; pełny workflow `Test` jest zielony dla `1609da5`, a Pages ma status `built` |
 | Nazwa języka | publiczne API, CLI i dokumentacja używają OQL; właściwe klasy i funkcje mają nazwy `Oql*`/`*_oql` |
 | Zgodność wsteczna | wewnętrzne aliasy i ścieżki `cql_*` nadal istnieją w ograniczonej warstwie kompatybilności |
-| Domyślny `pytest -q` | **PASS: 919 testów** w 10,55 s; jawny tryb `prepend`, unikalne nazwy modułów i kontrola pochodzenia importów |
-| Test z wheel | **PASS: 904 testy** w 76,96 s z `/tmp`, bez źródeł workspace w `pythonpath`; wheel zawiera statyczne UI i zbudowany frontend |
+| Domyślny `pytest -q` | **PASS CI: 947 testów** w 6,79 s; jawny tryb `prepend`, unikalne nazwy modułów i kontrola pochodzenia importów |
+| Test z wheel | **PASS CI: 947 testów** w 6,64 s z `/tmp`, bez źródeł workspace w `pythonpath`; wheel zawiera statyczne UI i zbudowany frontend |
 | Frontend | 145 testów przechodzi; build Vite przechodzi |
 | Frontend bundle | ostrzeżenie: główny chunk 538,68 kB po minifikacji; potrzebny podział kodu |
 | OQL Scenario | `main`, commit `7b4f939`, worktree czysty; 58 testów przechodzi |
@@ -70,9 +70,9 @@ samą obecność kontrolowanego aliasu kompatybilności.
 
 **Priorytet:** P0. **Repo:** OqlOS. **Zależności:** brak.
 
-**Status 2026-07-29:** implementacja i weryfikacja lokalna zakończone w
-`8d4e396`; zamknięcie operacyjne wymaga zielonego przebiegu dodanych jobów
-GitHub Actions po pushu.
+**Status 2026-07-29:** zakończone operacyjnie. Implementację zapisano w
+`8d4e396`; workflow `Test` dla `1609da5` potwierdził zielone joby `pytest`,
+`pytest-wheel`, `frontend-unit` i `static-analysis` po czystym checkoutcie.
 
 - [x] nadać unikalne nazwy dwóm testom `test_motor2_idle_policy.py` albo zapewnić
   jednoznaczne pakiety testowe;
@@ -82,8 +82,8 @@ GitHub Actions po pushu.
 - [x] uruchamiać pełny suite z clean checkout oraz z wheel/editable install;
 - [x] wdrożyć Ruff najpierw dla `F821,F811`, potem zmniejszać kontrolowany baseline.
 
-Dowód lokalny: bieżący `pytest -q` — 908/908; izolowany wheel z bramki
-`NEXT-01` — 904/904 (cztery późniejsze testy dotyczą generatora audytu);
+Dowód: CI `pytest -q` — 947/947; izolowany wheel z bramki `NEXT-01` —
+947/947; lokalny bieżący checkout z rozpoczętym refaktorem również 947/947;
 `ruff check oqlos tests packages/oqlos-core packages/oqlos-models --select
 F821,F811` — zero błędów; frontend — 145/145 i poprawny build Vite. GitHub
 Actions buduje frontend, instaluje jawne pakiety workspace i wykonuje osobny
@@ -96,10 +96,10 @@ zależy od kolejności kolekcji ani zewnętrznego checkoutu.
 
 **Priorytet:** P0. **Repo:** OqlOS + C2004. **Zależności:** NEXT-01.
 
-**Status 2026-07-29:** lokalnie zakończone. OqlOS zmierzono na czystym
+**Status 2026-07-29:** zakończone operacyjnie. OqlOS zmierzono na czystym
 `86935a0`, C2004 na czystym detached clone `4af234f6`; wyniki i ograniczenia są
-w [audycie 2026-07-29](refactor-audit-2026-07-29.md). Zamknięcie operacyjne
-wymaga pierwszego zielonego przebiegu joba `static-analysis` po pushu.
+w [audycie 2026-07-29](refactor-audit-2026-07-29.md). Job `static-analysis`
+przeszedł w workflow dla `1609da5` i opublikował odtwarzalny artefakt.
 
 - [x] wygenerować ponownie `project/analysis.toon.yaml` i mapę zależności;
 - [x] ponownie policzyć publiczne trasy z `dict[str, Any]`, generyczne odpowiedzi
@@ -120,9 +120,9 @@ commita, a raport można odtworzyć jedną komendą CI.
 
 **Priorytet:** P0. **Repo:** OqlOS. **Zależności:** NEXT-01.
 
-**Status 2026-07-29:** implementacja i lokalna weryfikacja zakończone w
-`fa2490a`. Pierwszy przebieg CI i weryfikacja na fizycznym BoardNet pozostają
-bramkami operacyjnymi przed deployem.
+**Status 2026-07-29:** implementacja zakończona w `fa2490a`, a pełny przebieg
+CI jest zielony. Weryfikacja na fizycznym BoardNet pozostaje bramką operacyjną
+przed deployem.
 
 - [x] emitować zmianę `get_throttled` do event streamu;
 - [x] objąć wspólną bramką zasilania bezpośrednie endpointy serwisowe i MQTT
@@ -190,7 +190,7 @@ według katalogu. Zdalne wykonanie `/api/v1/editor/execute` propaguje
 nie opakowuje już w HTTP 200. Timeout scenariusza daje ten sam
 504/`C2004-NET-0003` co `/api/v1/oql/execute`.
 
-Pozostały zakres: sklasyfikować 137 surowych wyjątków i 241 szerokich handlerów
+Pozostały zakres: sklasyfikować 132 surowe wyjątki i 241 szerokich handlerów
 OqlOS, rozdzielić pozostałe klasy host/proxy/plugin oraz wykonać analogiczną
 inwentaryzację i kontrakty po stronie C2004/POA.
 
@@ -378,8 +378,10 @@ Praktyczne fale wdrożeniowe:
 4. **Fala 3 — obserwowalność:** NEXT-08, NEXT-09, NEXT-10.
 5. **Fala 4 — produkcja:** NEXT-11, NEXT-12, NEXT-13.
 
-Stan 2026-07-29: Fala 0 i implementacja `NEXT-03` są zakończone lokalnie.
-Następna implementacja to klasyfikacja i ujednolicenie błędów `NEXT-04`.
+Stan 2026-07-29: Fala 0 i implementacja `NEXT-03` są zakończone oraz
+potwierdzone w CI. Fizyczna weryfikacja `NEXT-03` pozostaje częścią bramki
+wdrożeniowej. Następna implementacja to klasyfikacja i ujednolicenie błędów
+`NEXT-04`.
 
 ## 6. Obowiązkowe bramki weryfikacji
 
