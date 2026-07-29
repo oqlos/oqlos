@@ -985,7 +985,10 @@ _wait_listen() {
 _curl_post() {
   local url="$1"
   local out="$2"
-  local data="${3:-{}}"
+  # `${3:-{}}` is not a literal `{}` default in Bash: when $3 is set it
+  # appends the closing brace, turning `{"enable":false}` into invalid JSON.
+  local data="${3-}"
+  [ -n "$data" ] || data='{}'
   local timeout="${4:-8}"
   curl -sf --max-time "$timeout" -H 'Content-Type: application/json' -d "$data" "$url" > "$out"
 }
@@ -1043,8 +1046,9 @@ for page in hardware-status hardware-demo map-editor scenario-files func-editor 
 done
 
 UNIT_ENV=$(systemctl --user show oqlos-hardware-api.service --property=Environment --value)
-if grep -Fq 'OQLOS_SCENARIOS_DIR=/home/${BOARDNET_SSH_USER}/oqlos/oql-scenario' <<<"$UNIT_ENV"; then
-  _pass "OqlOS używa kanonicznego magazynu /home/${BOARDNET_SSH_USER}/oqlos/oql-scenario"
+EXPECTED_SCENARIOS_DIR="${HOME}/oqlos/oql-scenario"
+if grep -Fq "OQLOS_SCENARIOS_DIR=${EXPECTED_SCENARIOS_DIR}" <<<"$UNIT_ENV"; then
+  _pass "OqlOS używa kanonicznego magazynu ${EXPECTED_SCENARIOS_DIR}"
 else
   _fail "OqlOS nie ma ustawionego kanonicznego OQLOS_SCENARIOS_DIR"
 fi

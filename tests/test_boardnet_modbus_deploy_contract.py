@@ -159,3 +159,13 @@ def test_optional_map_editor_cannot_roll_back_healthy_hardware_runtime() -> None
 
     assert 'elif [ "$page" = "map-editor" ]' in smoke
     assert "nie wycofuję sprawnego runtime sprzętowego" in smoke
+
+
+def test_hardware_smoke_posts_json_without_appending_a_brace() -> None:
+    migration = (ROOT / "redeploy/122/migration.md").read_text(encoding="utf-8")
+    smoke = migration.split("markpact:ref assert-hw-node-healthy", 1)[1]
+
+    assert 'local data="${3:-{}}"' not in smoke
+    assert 'local data="${3-}"' in smoke
+    assert "[ -n \"$data\" ] || data='{}'" in smoke
+    assert "EXPECTED_SCENARIOS_DIR=\"${HOME}/oqlos/oql-scenario\"" in smoke
