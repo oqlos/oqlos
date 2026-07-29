@@ -369,6 +369,18 @@ ISSUE_CATALOG: dict[str, IssueDefinition] = {
         default_severity="warning",
         summary="The requested editor path is outside the permitted scenario area.",
     ),
+    "api_execution_request_invalid": IssueDefinition(
+        code="api_execution_request_invalid",
+        domain="api",
+        default_severity="warning",
+        summary="The scenario execution request is invalid.",
+    ),
+    "api_execution_state_conflict": IssueDefinition(
+        code="api_execution_state_conflict",
+        domain="api",
+        default_severity="warning",
+        summary="The execution control command conflicts with the current runtime state.",
+    ),
     "api_hardware_configuration_write_forbidden": IssueDefinition(
         code="api_hardware_configuration_write_forbidden",
         domain="api",

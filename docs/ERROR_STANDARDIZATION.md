@@ -124,6 +124,9 @@ domenowym. Powtarzalny błąd zakończony `SYS-0000` wymaga dodania jawnego
 | brak scenariusza w rejestrze | 404 | `C2004-DATA-0001` | `SOA/oqlos` | `scenario-registry` / `scenario.lookup` | identyfikator wejściowy nie jest publikowany |
 | błędny payload rejestracji DSL | 422 | `C2004-DATA-0002` | `SOA/oqlos` | `scenario-registry` / `payload.validate` | publikowane jest tylko pole i oczekiwany typ |
 | niedostępny parser scenariuszy | 503 | `C2004-NET-0002` | `SOA/oqlos` | `scenario-parser` / `dependency.load` | tekst wyjątku importu nie jest publikowany |
+| niepełny lub błędny request wykonania | 422 | `C2004-DATA-0002` | `SOA/oqlos` | `scenario-execution` / walidacja źródła, DSL lub komendy | publikowany jest wyłącznie stabilny `reason` |
+| scenariusz wykonania nie istnieje | 404 | `C2004-DATA-0001` | `SOA/oqlos` | `scenario-execution` / `scenario.lookup` | identyfikator wejściowy nie jest publikowany |
+| sterowanie bez aktywnego wykonania | 409 | `C2004-DATA-0003` | `SOA/oqlos` | `scenario-execution` / `state.validate` | brak negatywnego envelope przy HTTP 200 |
 | błąd wykonania systemd | 503 | `C2004-HW-0012` | `SOA/host` | `systemd-control` / `action.execute` | whitelisted unit |
 | zdalne wykonanie scenariusza w editorze | status kodu agenta | zachowany kod MQTT | `SOA/firmware` | agent / etap MQTT | `mqtt-node://<node>/oql` |
 | nieotypowany `HTTPException` 5xx | status katalogu | kod wynikający ze statusu | `SOA/oqlos` | `oqlos-api` / `http.exception` | granica API |

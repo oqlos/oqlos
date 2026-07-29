@@ -1,6 +1,6 @@
 # firmware/api/state.py
 import logging
-from fastapi import APIRouter, BackgroundTasks, HTTPException
+from fastapi import APIRouter, BackgroundTasks
 from fastapi.responses import StreamingResponse
 import httpx
 import asyncio
@@ -10,9 +10,10 @@ from datetime import datetime, timezone
 from typing import Any
 
 from oqlos.models.execution import ExecutionRequest, CommandEnvelope
-from oqlos.models.scenario import Step, Scenario
+from oqlos.models.scenario import Scenario
 from oqlos.core.parser import parse_dsl_to_goal_with_issues
 from oqlos.api.utils import execution_ctrl as _ctrl
+from oqlos.errors import OqlosError
 
 router = APIRouter(tags=["state"])
 logger = logging.getLogger(__name__)
@@ -289,6 +290,23 @@ def _extract_inline_dsl(data: dict[str, Any]) -> str | None:
             return value
     return None
 
+
+def _execution_request_error(reason: str, *, stage: str) -> OqlosError:
+    """Build a typed request failure without reflecting command or DSL input."""
+    return OqlosError(
+        code="api_execution_request_invalid",
+        status_code=422,
+        detail={
+            "architecture": "SOA",
+            "layer": "oqlos",
+            "component": "scenario-execution",
+            "stage": stage,
+            "problem_source": "request",
+            "operation_id": "execution.command",
+            "reason": reason,
+        },
+    )
+
 async def _handle_start(env: CommandEnvelope) -> dict:
     data = env.data or {}
     scenario_id = _extract_scenario_id(data)
@@ -305,18 +323,28 @@ async def _handle_start(env: CommandEnvelope) -> dict:
     logger.debug("StartExecution request: scenario=%s, goals=%s, mode=%s", req.scenarioId, req.goals, req.mode)
 
     if not req.scenarioId:
-        raise HTTPException(status_code=400, detail='scenarioId or inline DSL is required')
+        raise _execution_request_error("source_required", stage="source.validate")
 
     parsed_goal, invalid_lines = _maybe_register_dsl_from_content(data, req.scenarioId)
     if invalid_lines:
-        joined = '; '.join(invalid_lines[:5])
-        raise HTTPException(status_code=400, detail=f'invalid runtime DSL lines: {joined}')
+        raise _execution_request_error("dsl_invalid", stage="dsl.validate")
 
     if inline_dsl and parsed_goal and not parsed_goal.steps:
-        raise HTTPException(status_code=400, detail='inline DSL contains no executable runtime steps')
+        raise _execution_request_error("dsl_empty", stage="dsl.validate")
 
     if req.scenarioId not in _ctrl.state_manager.scenarios:
-        raise HTTPException(status_code=404, detail=f'scenario {req.scenarioId} not found')
+        raise OqlosError(
+            code="api_scenario_not_found",
+            status_code=404,
+            detail={
+                "architecture": "SOA",
+                "layer": "oqlos",
+                "component": "scenario-execution",
+                "stage": "scenario.lookup",
+                "problem_source": "request",
+                "operation_id": "execution.start",
+            },
+        )
 
     execution_id = f"exec-{datetime.now(timezone.utc).timestamp()}"
 
@@ -341,7 +369,18 @@ def _make_state_handler(ctrl_fn):
     """Factory for pause/resume/stop command handlers — eliminates 3 near-identical blocks."""
     async def handler(env: CommandEnvelope) -> dict:
         if not _ctrl.orchestrator.current_execution:
-            return {"error": "No current execution", "status": "failed"}
+            raise OqlosError(
+                code="api_execution_state_conflict",
+                status_code=409,
+                detail={
+                    "architecture": "SOA",
+                    "layer": "oqlos",
+                    "component": "scenario-execution",
+                    "stage": "state.validate",
+                    "problem_source": "runtime-state",
+                    "operation_id": "execution.control",
+                },
+            )
         return ctrl_fn()
     handler.__name__ = f"_handle_{ctrl_fn.__name__}"
     return handler
@@ -366,5 +405,5 @@ async def post_commands(env: CommandEnvelope, background_tasks: BackgroundTasks)
     logger.debug("Received command: %s", cmd)
     handler = _COMMAND_HANDLERS.get(cmd)
     if not handler:
-        return {"error": f"Unknown command: {cmd}", "status": "failed"}
+        raise _execution_request_error("command_unsupported", stage="command.resolve")
     return await handler(env)
