@@ -633,15 +633,15 @@ def reserved_for_non_modbus(real: str) -> bool:
 
 candidates: list[str] = []
 seen = set()
-# Stable by-id names are authoritative. The C2004 IO adapter is the CH343
-# ``USB_Single_Serial`` device; ttyACM belongs to MCP2221 and ttyUSB numbering
-# changes whenever USB devices are reconnected.
+# Stable by-id names are authoritative. The approved machine adapter comes
+# from the BoardNet device profile; ttyACM belongs to MCP2221 and ttyUSB
+# numbering changes whenever USB devices are reconnected.
 links = sorted(glob.glob("/dev/serial/by-id/*"))
 if not links:
     links = sorted(glob.glob("/dev/serial/by-path/platform-*"))
 if not links:
     links = sorted(glob.glob("/dev/ttyACM*") + glob.glob("/dev/ttyUSB*"))
-expected_io = "/dev/serial/by-id/usb-1a86_USB_Single_Serial_5958006895-if00"
+expected_io = "${BOARDNET_MODBUS_IO_PORT}"
 links.sort(key=lambda link: (link != expected_io, link))
 for link in links:
     real = os.path.realpath(link)
@@ -687,7 +687,7 @@ else:
 PY
 )
 eval "${MB_DETECT:-}"
-EXPECTED_IO_DEV=/dev/serial/by-id/usb-1a86_USB_Single_Serial_5958006895-if00
+EXPECTED_IO_DEV=${BOARDNET_MODBUS_IO_PORT}
 IO_BAUD=4800
 IO_ENABLED=true
 IO_DEV="${MB_IO_DEV:-$EXPECTED_IO_DEV}"
@@ -746,7 +746,7 @@ PORT="${OQLOS_MODBUS_SERIAL_PORT:?missing OQLOS_MODBUS_SERIAL_PORT}"
 BAUD="${OQLOS_MODBUS_BAUD:-4800}"
 PARITY="${OQLOS_MODBUS_PARITY:-N}"
 DEVICE_ID="${OQLOS_MODBUS_DEVICE_ID:-1}"
-EXPECTED_SERIAL="${OQLOS_MODBUS_EXPECTED_SERIAL:-5958006895}"
+EXPECTED_SERIAL="${OQLOS_MODBUS_EXPECTED_SERIAL:-${BOARDNET_MODBUS_IO_SERIAL}}"
 
 if [ "$BAUD" != "4800" ] || [ "$PARITY" != "N" ] || [ "$DEVICE_ID" != "1" ]; then
   echo "ERROR: invalid BoardNet Modbus contract: $PORT@$BAUD 8${PARITY}1 slave=$DEVICE_ID" >&2
@@ -758,7 +758,7 @@ if [ ! -e "$PORT" ]; then
 fi
 PROPS=$(udevadm info --query=property --name="$(readlink -f "$PORT")" 2>/dev/null || true)
 if ! grep -q "^ID_SERIAL_SHORT=${EXPECTED_SERIAL}$" <<<"$PROPS"; then
-  echo "ERROR: $PORT is not the expected CH343 serial $EXPECTED_SERIAL" >&2
+  echo "ERROR: $PORT is not the approved Modbus serial $EXPECTED_SERIAL" >&2
   exit 1
 fi
 
@@ -790,7 +790,7 @@ except Exception as exc:
     ) from None
 finally:
     client.close()
-print(f"PASS: verified CH343 {port}@{baud} 8{parity}1 slave={device_id} (read-only)")
+print(f"PASS: verified Modbus adapter {port}@{baud} 8{parity}1 slave={device_id} (read-only)")
 PY
 SH
 chmod +x /home/${BOARDNET_SSH_USER}/maskservice/scripts/verify-boardnet-modbus.sh
@@ -821,7 +821,7 @@ Environment=OQLOS_MODBUS_SERIAL_PORT=${IO_DEV}
 Environment=OQLOS_MODBUS_BAUD=${IO_BAUD}
 Environment=OQLOS_MODBUS_PARITY=N
 Environment=OQLOS_MODBUS_DEVICE_ID=${IO_DEVICE_ID}
-Environment=OQLOS_MODBUS_EXPECTED_SERIAL=5958006895
+Environment=OQLOS_MODBUS_EXPECTED_SERIAL=${BOARDNET_MODBUS_IO_SERIAL}
 Environment=OQLOS_MODBUS_ADC_SERIAL_PORT=${ADC_SERIAL_FOR_CONFIG}
 Environment=OQLOS_MODBUS_ADC_BAUD=4800
 Environment=OQLOS_MODBUS_ADC_PARITY=N

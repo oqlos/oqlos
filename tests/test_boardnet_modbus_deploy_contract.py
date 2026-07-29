@@ -24,6 +24,14 @@ def test_boardnet_modbus_detection_uses_stable_port_and_machine_baud() -> None:
     assert '"$MB_IO_DEV" != "$EXPECTED_IO_DEV"' in detection
 
 
+def test_boardnet_modbus_identity_comes_from_device_profile() -> None:
+    migration = (ROOT / "redeploy/122/migration.md").read_text(encoding="utf-8")
+
+    assert "${BOARDNET_MODBUS_IO_PORT}" in migration
+    assert "${BOARDNET_MODBUS_IO_SERIAL}" in migration
+    assert "5958006895" not in migration
+
+
 def test_boardnet_modbus_is_verified_read_only_on_every_service_start() -> None:
     migration = (ROOT / "redeploy/122/migration.md").read_text(encoding="utf-8")
     verifier = migration.split("verify-boardnet-modbus.sh << 'SH'", 1)[1].split("\nSH\n", 1)[0]
