@@ -248,6 +248,6 @@ def test_diagnostic_command_invalid_request_uses_data_code(monkeypatch):
             )
         )
 
-    assert caught.value.status_code == 400
+    assert caught.value.status_code == 422
     assert caught.value.public_code == "C2004-DATA-0002"
     assert caught.value.issue_code == "api_diagnostic_command_invalid"

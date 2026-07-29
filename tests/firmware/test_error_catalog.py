@@ -5,10 +5,16 @@ oqlos/errors/catalog.py.
 
 from __future__ import annotations
 
+import ast
 import re
 from pathlib import Path
 
 from oqlos.errors.catalog import ISSUE_CATALOG, matches_known_pattern
+from oqlos.errors.c2004_catalog_generated import (
+    CATALOG,
+    c2004_code_for_issue,
+)
+from oqlos.errors.fastapi_integration import _STATUS_CODE_MAP
 from oqlos.tools.gen_error_docs import generate_markdown
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -103,3 +109,73 @@ def test_every_repair_template_has_a_hint_or_is_manual_only():
         if defn.repair is None:
             continue
         assert defn.repair.id, f"{defn.code}: repair.id must not be empty"
+
+
+def test_every_fixed_issue_maps_to_an_existing_public_code():
+    dynamic_public_code_issues = {"remote_oql_execution_failed"}
+    fallback = {
+        code
+        for code in ISSUE_CATALOG
+        if c2004_code_for_issue(code) == "C2004-SYS-0000"
+    }
+
+    assert fallback == dynamic_public_code_issues
+    assert all(
+        c2004_code_for_issue(code) in CATALOG
+        for code in set(ISSUE_CATALOG) - dynamic_public_code_issues
+    )
+
+
+def test_http_status_fallback_map_matches_public_catalog():
+    mismatches = {
+        status: (code, CATALOG[code].http_status)
+        for status, code in _STATUS_CODE_MAP.items()
+        if CATALOG[code].http_status != status
+    }
+
+    assert mismatches == {}
+
+
+def test_literal_oqlos_error_status_matches_public_catalog():
+    mismatches: list[str] = []
+    for path in (_REPO_ROOT / "oqlos").rglob("*.py"):
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+            call_name = (
+                node.func.id
+                if isinstance(node.func, ast.Name)
+                else node.func.attr
+                if isinstance(node.func, ast.Attribute)
+                else ""
+            )
+            if call_name != "OqlosError":
+                continue
+            code = None
+            status = None
+            public_code = None
+            if node.args and isinstance(node.args[0], ast.Constant):
+                code = node.args[0].value
+            for keyword in node.keywords:
+                if keyword.arg == "code" and isinstance(keyword.value, ast.Constant):
+                    code = keyword.value.value
+                elif keyword.arg == "status_code" and isinstance(
+                    keyword.value, ast.Constant
+                ):
+                    status = keyword.value.value
+                elif keyword.arg == "public_code" and isinstance(
+                    keyword.value, ast.Constant
+                ):
+                    public_code = keyword.value.value
+            if not isinstance(code, str) or not isinstance(status, int):
+                continue
+            resolved = public_code or c2004_code_for_issue(code)
+            entry = CATALOG.get(resolved)
+            if entry is not None and entry.http_status != status:
+                mismatches.append(
+                    f"{path.relative_to(_REPO_ROOT)}:{node.lineno}: "
+                    f"{code} -> {resolved} uses {status}, catalog={entry.http_status}"
+                )
+
+    assert mismatches == []

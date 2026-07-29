@@ -170,6 +170,13 @@ negatywne envelope: wynik OqlOS spadł z 3 kandydatów do 0; wcześniejsze trzy
 trafienia były słownikami zdarzeń poprzedzającymi typowany wyjątek. Macierz
 tej partii znajduje się w [standardzie błędów](ERROR_STANDARDIZATION.md).
 
+Druga kontrola kontraktu kodów wykryła i usunęła rozbieżność 400/422 dla
+`api_invalid_recover_scope` i `api_diagnostic_command_invalid` oraz błędne
+mapowanie ogólnego HTTP 400 na `C2004-DATA-0002` zamiast
+`C2004-DATA-0004`. Granica upstream akceptuje teraz wyłącznie kody istniejące
+w katalogu, wymusza katalogowy status i sanitizuje body oraz `correlation_id`.
+Pełna bramka po zmianie: 938/938 testów i Ruff `F821,F811` bez błędów.
+
 Pozostały zakres: sklasyfikować 137 surowych wyjątków i 241 szerokich handlerów
 OqlOS, rozdzielić pozostałe klasy host/proxy/plugin oraz wykonać analogiczną
 inwentaryzację i kontrakty po stronie C2004/POA.

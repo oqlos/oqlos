@@ -72,7 +72,7 @@ def _raise_diagnostic_command_failure(
     if invalid:
         error = OqlosError(
             code="api_diagnostic_command_invalid",
-            status_code=400,
+            status_code=422,
             detail=_diagnostic_error_context(peripheral_id, command),
         )
     else:

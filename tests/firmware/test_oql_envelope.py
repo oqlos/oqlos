@@ -4,7 +4,11 @@ from __future__ import annotations
 
 import json
 
+import pytest
+
+from oqlos.errors import OqlosError
 from oqlos.hardware.transport import OqlRequest, OqlResponse, build_topics
+from oqlos.hardware.transport.mqtt_protocol import mqtt_error_response
 from oqlos.tools.cql_cli.commands import run_single_command
 from oqlos.tools.cql_cli.utils import build_result_payload
 
@@ -48,6 +52,32 @@ def test_response_json_roundtrip():
     assert back.ok is True
     assert back.result == {"ok": True, "passed": 1}
     assert back.node_id == "pi-hw"
+
+
+@pytest.mark.parametrize(
+    ("error", "expected_code"),
+    [
+        (TimeoutError("late"), "C2004-NET-0003"),
+        (ValueError("invalid field"), "C2004-DATA-0002"),
+        (OSError("device unavailable"), "C2004-HW-0012"),
+        (RuntimeError("serial port unavailable"), "C2004-HW-0012"),
+        (RuntimeError("unexpected internal failure"), "C2004-SYS-0000"),
+        (OqlosError("serial_port_busy", status_code=409), "C2004-HW-0013"),
+    ],
+)
+def test_mqtt_error_response_detects_canonical_error_code(error, expected_code):
+    response = mqtt_error_response(
+        "cor-error-matrix",
+        error,
+        node_id="pi-hw",
+        stage="mqtt.execute",
+    )
+
+    assert response.ok is False
+    assert response.error_code == expected_code
+    assert response.correlation_id == "cor-error-matrix"
+    assert response.node_id == "pi-hw"
+    assert response.stage == "mqtt.execute"
 
 
 def test_topics_layout():

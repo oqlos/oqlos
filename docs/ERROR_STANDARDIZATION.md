@@ -92,6 +92,7 @@ dodawać kontekst, lecz `error_code` oraz `correlation_id` pozostają spójne.
 | Sytuacja | HTTP | Kod publiczny | Przykład issue OqlOS |
 | --- | ---: | --- | --- |
 | Niepoprawny payload | 422 | `C2004-DATA-0002` | `api_modbus_wizard_invalid_request` |
+| Niepoprawna składnia/żądanie HTTP | 400 | `C2004-DATA-0004` | błąd granicy HTTP |
 | Brak zasobu | 404 | `C2004-DATA-0001` | zależny od domeny |
 | Brak roli do aktuacji | 403 | `C2004-AUTH-0002` | kontekst endpointu |
 | Wymagany sprzęt niedostępny | 503 | `C2004-HW-0012` | np. `hw_modbus_no_response` |
@@ -122,6 +123,30 @@ nie jest już sukcesem HTTP. Publiczny komunikat pochodzi z katalogu C2004;
 surowy komunikat brokera, sidecara lub adaptera nie jest kopiowany do body.
 Nieznany wyjątek agenta mapuje się na `C2004-SYS-0000`, nie na bazodanowy
 `C2004-SYS-0001`.
+
+### Reguły wykrywania i walidacji kodu
+
+Kod jest ustalany w następującej kolejności:
+
+1. `OqlosError` zachowuje jawny, zarejestrowany kod publiczny przekazany przez
+   zaufaną granicę transportową; w pozostałych przypadkach używa mapowania
+   lokalnego `issue_code → C2004-*`.
+2. Agent MQTT klasyfikuje `TimeoutError` jako `C2004-NET-0003`, `ValueError`
+   jako `C2004-DATA-0002`, błąd systemowy urządzenia/portu jako
+   `C2004-HW-0012`, a nierozpoznany wyjątek jako `C2004-SYS-0000`.
+3. Zewnętrzny problem details jest uznawany wyłącznie wtedy, gdy jego kod
+   istnieje w katalogu. Kod nieznany, np. `C2004-HW-9999`, jest odrzucany i
+   zastępowany kodem wynikającym ze statusu granicy.
+4. Status HTTP jest zawsze normalizowany do `http_status` wpisu katalogowego.
+   Nie jest dozwolona odpowiedź z kodem `C2004-NET-0003` i statusem innym niż
+   504 ani `C2004-DATA-0002` ze statusem innym niż 422.
+5. Niepoprawny `correlation_id` jest zastępowany lokalnym identyfikatorem;
+   upstream nie może wstrzyknąć dowolnej wartości do nagłówka odpowiedzi.
+
+Testy katalogu blokują brak mapowania lokalnego issue, kod nieistniejący w
+katalogu, rozbieżność mapy statusów HTTP oraz literalny `OqlosError`, którego
+status nie odpowiada publicznemu kodowi. Oddzielna macierz testuje klasy
+wyjątków MQTT i sanitację problem details z upstream.
 
 ## Diagnostyka zasilania Raspberry Pi
 

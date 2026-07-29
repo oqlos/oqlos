@@ -9,6 +9,7 @@ code and keeps the granular identifier under
 from __future__ import annotations
 
 import logging
+import re
 from typing import Any
 from uuid import uuid4
 
@@ -24,25 +25,67 @@ from oqlos.errors.exceptions import OqlosError
 logger = logging.getLogger(__name__)
 
 _STATUS_CODE_MAP = {
-    400: "C2004-DATA-0002",
+    400: "C2004-DATA-0004",
     401: "C2004-AUTH-0001",
     403: "C2004-AUTH-0002",
     404: "C2004-DATA-0001",
     409: "C2004-DATA-0003",
     422: "C2004-DATA-0002",
+    429: "C2004-AUTH-0003",
     502: "C2004-NET-0001",
     503: "C2004-NET-0002",
     504: "C2004-NET-0003",
 }
+_CORRELATION_ID_PATTERN = re.compile(r"[A-Za-z0-9][A-Za-z0-9._:-]{0,127}")
+_UPSTREAM_LABEL_PATTERN = re.compile(r"[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}")
+_UPSTREAM_PATH_PATTERN = re.compile(r"/[A-Za-z0-9._~/-]{1,255}")
+
+
+def _safe_correlation_id(value: object) -> str | None:
+    candidate = str(value or "").strip()
+    return candidate if _CORRELATION_ID_PATTERN.fullmatch(candidate) else None
 
 
 def correlation_id_for_request(request: Request) -> str:
     """Resolve one correlation id at the public HTTP boundary."""
     return (
-        request.headers.get("x-correlation-id")
-        or request.headers.get("x-request-id")
+        _safe_correlation_id(request.headers.get("x-correlation-id"))
+        or _safe_correlation_id(request.headers.get("x-request-id"))
         or f"cor-{uuid4().hex[:12]}"
     )
+
+
+def _safe_upstream_context(
+    detail: dict[str, Any], upstream: dict[str, Any]
+) -> dict[str, str]:
+    metadata = upstream.get("metadata")
+    metadata = metadata if isinstance(metadata, dict) else {}
+    upstream_context = metadata.get("context")
+    upstream_context = upstream_context if isinstance(upstream_context, dict) else {}
+
+    def label(value: object, fallback: str) -> str:
+        candidate = str(value or "").strip()
+        return (
+            candidate
+            if _UPSTREAM_LABEL_PATTERN.fullmatch(candidate)
+            else fallback
+        )
+
+    path = str(detail.get("path") or "").strip()
+    target = (
+        f"oqlos-api://configured-target{path}"
+        if _UPSTREAM_PATH_PATTERN.fullmatch(path)
+        else "oqlos-api://configured-target"
+    )
+    return {
+        "architecture": label(upstream.get("architecture"), "SOA"),
+        "layer": label(upstream.get("layer"), "upstream"),
+        "component": label(upstream.get("component"), "upstream-api"),
+        "stage": label(upstream.get("stage"), "upstream.response"),
+        "problem_source": "upstream",
+        "operation_id": label(upstream_context.get("operation_id"), "upstream.request"),
+        "upstream_target": target,
+    }
 
 
 def _public_code_for_status(status_code: int) -> str:
@@ -62,7 +105,17 @@ def _problem_response(
 ) -> JSONResponse:
     entry = CATALOG.get(public_code) or CATALOG["C2004-SYS-0000"]
     public_code = entry.code
-    correlation_id = correlation_id or correlation_id_for_request(request)
+    if int(status_code) != entry.http_status:
+        logger.warning(
+            "Normalizing mismatched HTTP status for %s: received=%s catalog=%s",
+            public_code,
+            status_code,
+            entry.http_status,
+        )
+    status_code = entry.http_status
+    correlation_id = (
+        _safe_correlation_id(correlation_id) or correlation_id_for_request(request)
+    )
     occurrence_id = str(uuid4())
     base_url = str(request.base_url).rstrip("/")
     metadata: dict[str, Any] = {
@@ -186,19 +239,27 @@ def install_oqlos_error_handler(app: FastAPI) -> None:
         detail = exc.detail
         if isinstance(detail, dict):
             upstream = detail.get("response")
-            if (
-                isinstance(upstream, dict)
-                and str(upstream.get("code") or "").startswith("C2004-")
-            ):
-                correlation_id = str(upstream.get("correlation_id") or "")
-                response_headers = dict(exc.headers or {})
-                if correlation_id:
-                    response_headers["X-Correlation-ID"] = correlation_id
-                return JSONResponse(
-                    status_code=exc.status_code,
-                    content=jsonable_encoder(upstream),
-                    headers=response_headers,
-                    media_type="application/problem+json",
+            if isinstance(upstream, dict):
+                candidate = str(
+                    upstream.get("code") or upstream.get("error_code") or ""
+                )
+                public_code = (
+                    candidate
+                    if candidate in CATALOG
+                    else _public_code_for_status(exc.status_code)
+                )
+                entry = CATALOG[public_code]
+                return _problem_response(
+                    request,
+                    public_code=public_code,
+                    status_code=entry.http_status,
+                    message=entry.message,
+                    context=_safe_upstream_context(detail, upstream),
+                    headers=exc.headers,
+                    correlation_id=(
+                        _safe_correlation_id(upstream.get("correlation_id"))
+                        or correlation_id_for_request(request)
+                    ),
                 )
         context: Any = detail if isinstance(detail, (dict, list)) else None
         public_code = ""

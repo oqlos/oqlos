@@ -52,7 +52,7 @@ async def hardware_recover_route(
     if scope.strip().lower() != "safe":
         raise OqlosError(
             code="api_invalid_recover_scope",
-            status_code=400,
+            status_code=422,
             detail={"scope": scope},
         )
     identify_payload = await hardware_identify(scan="never")

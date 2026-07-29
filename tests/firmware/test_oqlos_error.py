@@ -141,6 +141,107 @@ def test_http_exception_is_wrapped_as_c2004_problem_details():
     assert resp.headers["x-correlation-id"] == "cor-test-boundary"
 
 
+def test_http_400_uses_invalid_request_code_with_matching_catalog_status():
+    app = FastAPI()
+    install_oqlos_error_handler(app)
+
+    @app.get("/invalid")
+    async def invalid():
+        raise HTTPException(status_code=400, detail="Invalid command syntax")
+
+    resp = TestClient(app, raise_server_exceptions=False).get("/invalid")
+
+    assert resp.status_code == 400
+    assert resp.json()["status"] == 400
+    assert resp.json()["code"] == "C2004-DATA-0004"
+
+
+def test_upstream_problem_code_is_validated_normalized_and_sanitized():
+    app = FastAPI()
+    install_oqlos_error_handler(app)
+
+    @app.get("/upstream")
+    async def upstream():
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "path": "/api/v1/hardware/health",
+                "response": {
+                    "code": "C2004-NET-0003",
+                    "status": 200,
+                    "detail": "password=hunter2",
+                    "correlation_id": "cor-upstream-safe",
+                    "architecture": "SOA",
+                    "layer": "firmware",
+                    "component": "hardware-agent",
+                    "stage": "health.timeout",
+                    "metadata": {
+                        "context": {"operation_id": "hardware.health"},
+                        "secret": "must-not-pass",
+                    },
+                },
+            },
+        )
+
+    resp = TestClient(app, raise_server_exceptions=False).get("/upstream")
+
+    assert resp.status_code == 504
+    body = resp.json()
+    assert body["code"] == "C2004-NET-0003"
+    assert body["status"] == 504
+    assert body["correlation_id"] == "cor-upstream-safe"
+    assert body["component"] == "hardware-agent"
+    assert body["metadata"]["context"]["operation_id"] == "hardware.health"
+    assert body["metadata"]["context"]["upstream_target"] == (
+        "oqlos-api://configured-target/api/v1/hardware/health"
+    )
+    assert "hunter2" not in resp.text
+    assert "must-not-pass" not in resp.text
+
+
+def test_unknown_upstream_code_falls_back_to_http_status_mapping():
+    app = FastAPI()
+    install_oqlos_error_handler(app)
+
+    @app.get("/upstream-invalid-code")
+    async def upstream_invalid_code():
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "response": {
+                    "code": "C2004-HW-9999",
+                    "detail": "private upstream failure",
+                }
+            },
+        )
+
+    resp = TestClient(app, raise_server_exceptions=False).get(
+        "/upstream-invalid-code"
+    )
+
+    assert resp.status_code == 503
+    assert resp.json()["code"] == "C2004-NET-0002"
+    assert "private upstream failure" not in resp.text
+
+
+def test_invalid_correlation_header_is_replaced():
+    app = FastAPI()
+    install_oqlos_error_handler(app)
+
+    @app.get("/invalid-correlation")
+    async def invalid_correlation():
+        raise HTTPException(status_code=404, detail="missing")
+
+    resp = TestClient(app, raise_server_exceptions=False).get(
+        "/invalid-correlation",
+        headers={"X-Correlation-ID": "invalid correlation with spaces"},
+    )
+
+    assert resp.status_code == 404
+    assert resp.json()["correlation_id"].startswith("cor-")
+    assert resp.headers["x-correlation-id"] == resp.json()["correlation_id"]
+
+
 def test_request_validation_is_wrapped_as_data_0002():
     app = FastAPI()
     install_oqlos_error_handler(app)
