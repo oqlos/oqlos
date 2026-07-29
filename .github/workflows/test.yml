@@ -29,7 +29,7 @@ jobs:
         with:
           python-version: "3.13"
       - name: Install pinned analyzer
-        run: pip install code2llm==0.5.168
+        run: pip install code2llm==0.5.168 psutil==7.2.2
       - name: Generate refactor analysis
         run: bash scripts/generate-refactor-analysis.sh /tmp/oqlos-refactor-analysis
       - name: Validate analysis metadata
