@@ -143,8 +143,15 @@ class _FakeController:
         self.calls.append({"oql": oql, **kwargs})
         return self._response
 
-    async def manage(self, verb, args=None, *, timeout=None):
-        self.manage_calls.append({"verb": verb, "args": args, "timeout": timeout})
+    async def manage(self, verb, args=None, *, timeout=None, correlation_id=None):
+        self.manage_calls.append(
+            {
+                "verb": verb,
+                "args": args,
+                "timeout": timeout,
+                "correlation_id": correlation_id,
+            }
+        )
         return self._response
 
 

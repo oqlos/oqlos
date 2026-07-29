@@ -3,10 +3,12 @@
 import asyncio
 
 import pytest
-from fastapi import HTTPException
+from fastapi import FastAPI, HTTPException
+from fastapi.testclient import TestClient
 
 from oqlos.api import hardware_modbus_routes as modbus_hw
 from oqlos.errors import OqlosError
+from oqlos.errors.fastapi_integration import install_oqlos_error_handler
 
 
 def test_hardware_modbus_router_includes_channel_and_wizard_paths():
@@ -84,3 +86,45 @@ def test_wizard_rejects_missing_confirmation_before_pausing_plugin(monkeypatch) 
     assert exc.value.status_code == 422
     assert exc.value.public_code == "C2004-DATA-0002"
     assert exc.value.issue_code == "api_modbus_wizard_invalid_request"
+
+
+def test_wizard_verification_failure_is_safe_problem_details(monkeypatch) -> None:
+    async def _pause(_serial_port: str):
+        return None, set()
+
+    monkeypatch.setattr(modbus_hw, "try_get_hardware_gateway", lambda: None)
+    monkeypatch.setattr(modbus_hw, "_pause_modbus_plugins_on_serial", _pause)
+    monkeypatch.setattr(
+        modbus_hw,
+        "_modbus_wizard_program_isolated",
+        lambda **_kwargs: {
+            "ok": False,
+            "verified": False,
+            "error": "password=hunter2 must not escape",
+        },
+    )
+    app = FastAPI()
+    install_oqlos_error_handler(app)
+    app.include_router(modbus_hw.router, prefix="/api/v1/hardware")
+
+    response = TestClient(app, raise_server_exceptions=False).post(
+        "/api/v1/hardware/modbus/wizard/program-isolated",
+        json={
+            "serial_port": "/dev/ttyTEST",
+            "confirm_isolated": True,
+        },
+        headers={"X-Correlation-ID": "cor-wizard-contract"},
+    )
+
+    assert response.status_code == 503
+    body = response.json()
+    assert body["code"] == "C2004-HW-0012"
+    assert body["correlation_id"] == "cor-wizard-contract"
+    assert body["component"] == "modbus-wizard"
+    assert body["stage"] == "program.verify"
+    assert body["metadata"]["context"]["problem_source"] == "upstream"
+    assert body["metadata"]["context"]["upstream_target"] == (
+        "serial-device://ttyTEST"
+    )
+    assert "hunter2" not in response.text
+    assert "traceback" not in response.text.lower()

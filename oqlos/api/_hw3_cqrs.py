@@ -44,8 +44,22 @@ async def hardware_cqrs_command_v3(req: CqrsCommandRequest) -> dict[str, Any]:
         raise OqlosError(
             code="api_modbus_wizard_invalid_request",
             status_code=422,
-            message="CQRS command requires peripheral_id and command",
-            detail={"command": command},
+            detail={
+                "architecture": "SOA",
+                "layer": "firmware",
+                "component": "hardware-cqrs",
+                "stage": "command.validate",
+                "problem_source": "request",
+                "operation_id": "hardware.cqrs.command",
+                "missing_fields": [
+                    field
+                    for field, value in (
+                        ("peripheral_id", peripheral_id),
+                        ("command", command_name),
+                    )
+                    if not value
+                ],
+            },
         )
     result = await _run_diagnostic(peripheral_id, command_name, args)
     return {"ok": True, "command": command, "result": result}

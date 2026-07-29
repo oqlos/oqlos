@@ -274,13 +274,17 @@ async def hardware_modbus_wizard_program_isolated(
         raise OqlosError(
             issue_code,
             status_code=status_code,
-            message=error_message,
             detail={
-                "operation": "modbus.wizard.program_isolated",
-                "serial_port": serial,
-                "target": result.get("target"),
+                "architecture": "SOA",
+                "layer": "firmware",
+                "component": "modbus-wizard",
+                "stage": "program.verify",
+                "problem_source": "upstream",
+                "operation_id": "modbus.wizard.program-isolated",
+                "upstream_target": (
+                    "serial-device://" + str(serial).rsplit("/", 1)[-1][:64]
+                ),
                 "verified": bool(result.get("verified")),
-                "runtime_apply": result.get("runtime_apply"),
             },
         )
     return result

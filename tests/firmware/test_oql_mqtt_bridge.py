@@ -189,9 +189,17 @@ async def test_concurrent_requests_resolve_their_own_correlation(broker):
 async def test_timeout_when_no_agent_replies(broker):
     controller, _ = await _make_pair(broker, with_agent=False)
     try:
-        resp = await controller.execute("", kind="ping", timeout=0.2)
+        resp = await controller.execute(
+            "",
+            kind="ping",
+            timeout=0.2,
+            correlation_id="cor-http-through-mqtt",
+        )
         assert resp.ok is False
+        assert resp.correlation_id == "cor-http-through-mqtt"
         assert "timed out" in (resp.error or "")
+        assert resp.error_code == "C2004-NET-0003"
+        assert resp.stage == "mqtt.response"
     finally:
         await controller.stop()
 

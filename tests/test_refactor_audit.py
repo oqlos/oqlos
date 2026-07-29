@@ -73,6 +73,39 @@ def test_settings_module_is_allowed_to_read_environment(tmp_path: Path) -> None:
     assert report["environment_reads_outside_settings"] == []
 
 
+def test_python_audit_ignores_internal_failure_dict_that_is_not_returned(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "api.py"
+    source.write_text(
+        """
+from fastapi import APIRouter
+
+router = APIRouter()
+
+@router.post('/items')
+def items() -> dict[str, Any]:
+    event = {'ok': False, 'error': 'recorded internally'}
+    raise RuntimeError(event['error'])
+""",
+        encoding="utf-8",
+    )
+    report = {
+        "parse_failures": [],
+        "public_routes": [],
+        "routes_returning_dict_any": [],
+        "routes_with_generic_response": [],
+        "routes_with_false_success_at_http_200": [],
+        "environment_reads_outside_settings": [],
+        "raw_exceptions": [],
+        "broad_exception_handlers": [],
+    }
+
+    refactor_audit._audit_python(source, tmp_path, report)
+
+    assert report["routes_with_false_success_at_http_200"] == []
+
+
 def test_source_inventory_stays_inside_repository_and_excludes_dependencies(
     tmp_path: Path,
 ) -> None:

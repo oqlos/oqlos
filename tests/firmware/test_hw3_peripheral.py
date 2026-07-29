@@ -30,7 +30,7 @@ def test_peripheral_status_rejects_ok_false_for_dri0050(monkeypatch):
     assert caught.value.status_code == 503
     assert caught.value.public_code == "C2004-HW-0012"
     assert caught.value.issue_code == "hw_dri0050_sidecar_unreachable"
-    assert caught.value.detail["ok"] is False
+    assert caught.value.detail["peripheral_id"] == "motor-dri0050"
 
 
 def test_peripheral_status_rejects_ok_false_for_tic249(monkeypatch):
@@ -195,6 +195,38 @@ def test_diagnostic_command_rejects_returned_ok_false(monkeypatch):
     assert caught.value.status_code == 503
     assert caught.value.public_code == "C2004-HW-0012"
     assert caught.value.issue_code == "hw_modbus_no_response"
+
+
+def test_diagnostic_command_http_failure_is_safe_problem_details(monkeypatch):
+    async def _refused(_peripheral_id, _command, _args):
+        return {
+            "ok": False,
+            "error": "password=hunter2 must not escape",
+        }
+
+    monkeypatch.setattr(peripheral, "_run_diagnostic", _refused)
+    app = FastAPI()
+    install_oqlos_error_handler(app)
+    app.include_router(peripheral.sub_router, prefix="/api/v3/hardware")
+
+    response = TestClient(app, raise_server_exceptions=False).post(
+        "/api/v3/hardware/diagnostic-command",
+        json={"peripheral_id": "modbus-io", "command": "status", "args": {}},
+        headers={"X-Correlation-ID": "cor-diagnostic-contract"},
+    )
+
+    assert response.status_code == 503
+    body = response.json()
+    assert body["code"] == "C2004-HW-0012"
+    assert body["correlation_id"] == "cor-diagnostic-contract"
+    assert body["component"] == "hardware-diagnostics"
+    assert body["stage"] == "diagnostic.execute"
+    assert body["metadata"]["context"]["problem_source"] == "upstream"
+    assert body["metadata"]["context"]["upstream_target"] == (
+        "hardware-peripheral://modbus-io"
+    )
+    assert "hunter2" not in response.text
+    assert "traceback" not in response.text.lower()
 
 
 def test_diagnostic_command_invalid_request_uses_data_code(monkeypatch):

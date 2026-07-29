@@ -15,7 +15,7 @@ from oqlos.errors.catalog import (
     RepairTemplate,
     get_issue_definition,
 )
-from oqlos.errors.c2004_catalog_generated import c2004_code_for_issue
+from oqlos.errors.c2004_catalog_generated import CATALOG, c2004_code_for_issue
 
 
 class OqlosError(Exception):
@@ -27,6 +27,8 @@ class OqlosError(Exception):
         detail: dict[str, Any] | None = None,
         status_code: int = 500,
         severity: IssueSeverity | None = None,
+        public_code: str | None = None,
+        correlation_id: str | None = None,
     ) -> None:
         definition = get_issue_definition(code)
         self.code = code
@@ -34,7 +36,11 @@ class OqlosError(Exception):
         # internal callers.  HTTP responses expose only this generated public
         # C2004 code; the local identifier is nested under diagnostics.
         self.issue_code = code
-        self.public_code = c2004_code_for_issue(code)
+        mapped_public_code = c2004_code_for_issue(code)
+        self.public_code = (
+            public_code if public_code in CATALOG else mapped_public_code
+        )
+        self.correlation_id = correlation_id
         self.domain = definition.domain if definition else "unknown"
         self.severity: IssueSeverity = severity or (
             definition.default_severity if definition else "error"

@@ -122,11 +122,12 @@ def _call_name(node: ast.expr | None) -> str | None:
     return None
 
 
-def _contains_false_success_dict(function: ast.AST) -> bool:
+def _returns_literal_false_success_dict(function: ast.AST) -> bool:
+    """Detect an explicit HTTP payload, not an internal failure/event dict."""
     for node in ast.walk(function):
-        if not isinstance(node, ast.Dict):
+        if not isinstance(node, ast.Return) or not isinstance(node.value, ast.Dict):
             continue
-        for key, value in zip(node.keys, node.values):
+        for key, value in zip(node.value.keys, node.value.values):
             if (
                 isinstance(key, ast.Constant)
                 and key.value in {"ok", "success"}
@@ -199,7 +200,7 @@ def _audit_python(path: Path, root: Path, report: dict[str, Any]) -> None:
                     or "Dict[" in normalized
                 ):
                     report["routes_with_generic_response"].append(entry)
-                if _contains_false_success_dict(node) and route["status_code"] in {
+                if _returns_literal_false_success_dict(node) and route["status_code"] in {
                     None,
                     "200",
                     "status.HTTP_200_OK",

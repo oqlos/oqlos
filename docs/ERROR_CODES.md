@@ -46,6 +46,7 @@ own:
 | `firmware_unreachable` | error | The firmware health endpoint is unavailable. | `start_firmware` (scope=host, manual, risk=none) |
 | `identify_unavailable` | warning | The firmware identify endpoint is unavailable. | — |
 | `remote_firmware_no_serial_access` | warning | The CLI host sees USB serial devices, but firmware runs elsewhere and cannot access them. | `align_firmware_host` (scope=host, manual, risk=none) |
+| `remote_oql_execution_failed` | error | The remote OQL agent rejected or could not complete the requested operation. | — |
 
 ## hardware
 

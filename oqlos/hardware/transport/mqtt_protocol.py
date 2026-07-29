@@ -138,7 +138,7 @@ def mqtt_error_response(
     elif isinstance(exc, OSError) or "serial port" in str(exc).lower():
         code = "C2004-HW-0012"
     else:
-        code = "C2004-SYS-0001"
+        code = "C2004-SYS-0000"
     return OqlResponse(
         correlation_id,
         ok=False,

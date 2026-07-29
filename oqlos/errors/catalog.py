@@ -342,6 +342,15 @@ ISSUE_CATALOG: dict[str, IssueDefinition] = {
             hint="Set OQLOS_OQL_TRANSPORT_ROLE to 'controller'/'agent'/'both' and restart the service.",
         ),
     ),
+    "remote_oql_execution_failed": IssueDefinition(
+        code="remote_oql_execution_failed",
+        domain="firmware",
+        default_severity="error",
+        summary=(
+            "The remote OQL agent rejected or could not complete the requested "
+            "operation."
+        ),
+    ),
     "api_invalid_recover_scope": IssueDefinition(
         code="api_invalid_recover_scope",
         domain="api",

@@ -40,6 +40,22 @@ def _diagnostic_failure_is_invalid(message: str) -> bool:
     return any(marker in lowered for marker in _INVALID_DIAGNOSTIC_MARKERS)
 
 
+def _diagnostic_error_context(peripheral_id: str, command: str) -> dict[str, str]:
+    normalized = normalize_peripheral_id(peripheral_id)[:128] or "unknown"
+    safe_command = str(command or "unknown").strip()[:128] or "unknown"
+    return {
+        "architecture": "SOA",
+        "layer": "firmware",
+        "component": "hardware-diagnostics",
+        "stage": "diagnostic.execute",
+        "problem_source": "upstream",
+        "operation_id": "hardware.diagnostic-command",
+        "peripheral_id": normalized,
+        "command": safe_command,
+        "upstream_target": f"hardware-peripheral://{normalized}",
+    }
+
+
 def _raise_diagnostic_command_failure(
     peripheral_id: str,
     command: str,
@@ -57,15 +73,13 @@ def _raise_diagnostic_command_failure(
         error = OqlosError(
             code="api_diagnostic_command_invalid",
             status_code=400,
-            message=message,
-            detail=result,
+            detail=_diagnostic_error_context(peripheral_id, command),
         )
     else:
         error = OqlosError(
             code=diagnostic_issue_for_peripheral(peripheral_id),
             status_code=503,
-            message=message,
-            detail=result,
+            detail=_diagnostic_error_context(peripheral_id, command),
         )
     if cause is not None:
         raise error from cause
@@ -78,16 +92,10 @@ def _raise_peripheral_status_failure(
     *,
     cause: Exception | None = None,
 ) -> None:
-    message = str(
-        result.get("error")
-        or result.get("message")
-        or f"Peripheral '{peripheral_id}' status is unavailable"
-    )
     error = OqlosError(
         code=diagnostic_issue_for_peripheral(peripheral_id),
         status_code=503,
-        message=message,
-        detail=result,
+        detail=_diagnostic_error_context(peripheral_id, "status"),
     )
     if cause is not None:
         raise error from cause

@@ -48,6 +48,26 @@ def test_oqlos_error_tolerates_unknown_code():
     assert "repair" not in issue
 
 
+def test_oqlos_error_accepts_valid_public_code_and_correlation_override():
+    err = OqlosError(
+        "remote_oql_execution_failed",
+        public_code="C2004-NET-0003",
+        correlation_id="cor-upstream",
+    )
+
+    assert err.public_code == "C2004-NET-0003"
+    assert err.correlation_id == "cor-upstream"
+
+
+def test_oqlos_error_rejects_unknown_public_code_override():
+    err = OqlosError(
+        "remote_oql_execution_failed",
+        public_code="C2004-NET-9999",
+    )
+
+    assert err.public_code == "C2004-SYS-0000"
+
+
 def test_oqlos_error_fastapi_handler_returns_standard_body():
     app = FastAPI()
     install_oqlos_error_handler(app)

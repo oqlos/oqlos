@@ -15,11 +15,14 @@ import json
 import logging
 from typing import Any
 
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Request, Response, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, Field
 
 from oqlos.errors import OqlosError
+from oqlos.errors.c2004_catalog_generated import CATALOG
+from oqlos.errors.fastapi_integration import correlation_id_for_request
 from oqlos.hardware.transport.mqtt_oql_bridge import OqlMqttController
+from oqlos.hardware.transport.mqtt_protocol import OqlResponse
 
 logger = logging.getLogger(__name__)
 
@@ -60,12 +63,53 @@ class OqlExecuteResponse(BaseModel):
     result: dict[str, Any] | None = None
     error: str | None = None
     node_id: str = ""
+    correlation_id: str
+
+
+def _safe_remote_label(value: object, fallback: str) -> str:
+    label = str(value or "").strip()
+    return label[:128] if label else fallback
+
+
+def _raise_remote_failure(
+    resp: OqlResponse,
+    *,
+    correlation_id: str,
+    operation_id: str,
+) -> None:
+    public_code = resp.error_code if resp.error_code in CATALOG else "C2004-SYS-0000"
+    entry = CATALOG[public_code]
+    node_id = _safe_remote_label(resp.node_id, "configured-node")
+    raise OqlosError(
+        code="remote_oql_execution_failed",
+        public_code=public_code,
+        status_code=entry.http_status,
+        message=entry.message,
+        correlation_id=correlation_id,
+        detail={
+            "architecture": _safe_remote_label(resp.architecture, "SOA"),
+            "layer": _safe_remote_label(resp.layer, "firmware"),
+            "component": _safe_remote_label(resp.component, "oql-mqtt-agent"),
+            "stage": _safe_remote_label(resp.stage, "mqtt.response"),
+            "problem_source": "upstream",
+            "operation_id": operation_id,
+            "upstream_target": f"mqtt-node://{node_id}/oql",
+            "node_id": node_id,
+        },
+    )
 
 
 @router.post("/execute", response_model=OqlExecuteResponse)
-async def execute_oql(req: OqlExecuteRequest) -> OqlExecuteResponse:
+async def execute_oql(
+    req: OqlExecuteRequest, request: Request, response: Response
+) -> OqlExecuteResponse:
+    correlation_id = correlation_id_for_request(request)
     if _controller is None:
-        raise OqlosError(code="api_oql_transport_disabled", status_code=503)
+        raise OqlosError(
+            code="api_oql_transport_disabled",
+            status_code=503,
+            correlation_id=correlation_id,
+        )
     timeout = (req.timeout_ms / 1000.0) if req.timeout_ms else None
     resp = await _controller.execute(
         req.oql,
@@ -76,23 +120,62 @@ async def execute_oql(req: OqlExecuteRequest) -> OqlExecuteResponse:
         skip_waits=req.skip_waits,
         timeout=timeout,
         source="api",
+        correlation_id=correlation_id,
     )
-    return OqlExecuteResponse(ok=resp.ok, result=resp.result, error=resp.error, node_id=resp.node_id)
+    if not resp.ok:
+        _raise_remote_failure(
+            resp,
+            correlation_id=correlation_id,
+            operation_id="oql.execute",
+        )
+    response.headers["X-Correlation-ID"] = correlation_id
+    return OqlExecuteResponse(
+        ok=True,
+        result=resp.result,
+        error=None,
+        node_id=resp.node_id,
+        correlation_id=correlation_id,
+    )
 
 
 @router.post("/manage", response_model=OqlExecuteResponse)
-async def manage_hardware(req: OqlManageRequest) -> OqlExecuteResponse:
+async def manage_hardware(
+    req: OqlManageRequest, request: Request, response: Response
+) -> OqlExecuteResponse:
     """Run a remote management/diagnostic verb over MQTT.
 
     Verbs: identify, health, diagnose, diagnosis, recover, stack-snapshot,
     waveshare-diagnose, wizard-plan, wizard-probe, wizard-program, valve, pump,
     sensor, lung, lung-stop, lung-disable, rtc-status, rtc-command, temperature.
     """
+    correlation_id = correlation_id_for_request(request)
     if _controller is None:
-        raise OqlosError(code="api_oql_transport_disabled", status_code=503)
+        raise OqlosError(
+            code="api_oql_transport_disabled",
+            status_code=503,
+            correlation_id=correlation_id,
+        )
     timeout = (req.timeout_ms / 1000.0) if req.timeout_ms else None
-    resp = await _controller.manage(req.verb, req.args, timeout=timeout)
-    return OqlExecuteResponse(ok=resp.ok, result=resp.result, error=resp.error, node_id=resp.node_id)
+    resp = await _controller.manage(
+        req.verb,
+        req.args,
+        timeout=timeout,
+        correlation_id=correlation_id,
+    )
+    if not resp.ok:
+        _raise_remote_failure(
+            resp,
+            correlation_id=correlation_id,
+            operation_id="oql.manage",
+        )
+    response.headers["X-Correlation-ID"] = correlation_id
+    return OqlExecuteResponse(
+        ok=True,
+        result=resp.result,
+        error=None,
+        node_id=resp.node_id,
+        correlation_id=correlation_id,
+    )
 
 
 @router.websocket("/ws")

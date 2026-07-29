@@ -36,7 +36,8 @@ _STATUS_CODE_MAP = {
 }
 
 
-def _correlation_id(request: Request) -> str:
+def correlation_id_for_request(request: Request) -> str:
+    """Resolve one correlation id at the public HTTP boundary."""
     return (
         request.headers.get("x-correlation-id")
         or request.headers.get("x-request-id")
@@ -61,7 +62,7 @@ def _problem_response(
 ) -> JSONResponse:
     entry = CATALOG.get(public_code) or CATALOG["C2004-SYS-0000"]
     public_code = entry.code
-    correlation_id = correlation_id or _correlation_id(request)
+    correlation_id = correlation_id or correlation_id_for_request(request)
     occurrence_id = str(uuid4())
     base_url = str(request.base_url).rstrip("/")
     metadata: dict[str, Any] = {
@@ -175,6 +176,7 @@ def install_oqlos_error_handler(app: FastAPI) -> None:
             message=exc.message,
             context=exc.detail,
             diagnostics=diagnostics,
+            correlation_id=exc.correlation_id,
         )
 
     @app.exception_handler(StarletteHTTPException)
@@ -236,7 +238,7 @@ def install_oqlos_error_handler(app: FastAPI) -> None:
 
     @app.exception_handler(Exception)
     async def _unexpected_error_handler(request: Request, exc: Exception) -> JSONResponse:
-        correlation_id = _correlation_id(request)
+        correlation_id = correlation_id_for_request(request)
         logger.exception(
             "Uncoded OqlOS API failure correlation_id=%s path=%s",
             correlation_id,

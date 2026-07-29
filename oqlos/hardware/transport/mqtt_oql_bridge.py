@@ -216,6 +216,7 @@ class OqlMqttController(_PahoAsyncClient):
         skip_waits: bool = False,
         timeout: float | None = None,
         source: str = "controller",
+        correlation_id: str | None = None,
     ) -> OqlResponse:
         """Publish a request and await its correlated response.
 
@@ -227,7 +228,7 @@ class OqlMqttController(_PahoAsyncClient):
         timeout_s = (
             timeout if timeout is not None else self._default_timeout_ms / 1000.0
         )
-        corr = uuid.uuid4().hex
+        corr = correlation_id or uuid.uuid4().hex
         req = OqlRequest(
             correlation_id=corr,
             oql=oql,
@@ -252,6 +253,8 @@ class OqlMqttController(_PahoAsyncClient):
                 result=None,
                 error=f"remote OQL execution timed out after {timeout_s:.1f}s",
                 node_id=self._node_id,
+                error_code="C2004-NET-0003",
+                stage="mqtt.response",
             )
         finally:
             self._pending.pop(corr, None)
@@ -262,10 +265,16 @@ class OqlMqttController(_PahoAsyncClient):
         args: dict[str, Any] | None = None,
         *,
         timeout: float | None = None,
+        correlation_id: str | None = None,
     ) -> OqlResponse:
         """Run a remote management/diagnostic verb (identify, health, recover, …)."""
         return await self.execute(
-            verb, kind="manage", args=args, timeout=timeout, source="manage"
+            verb,
+            kind="manage",
+            args=args,
+            timeout=timeout,
+            source="manage",
+            correlation_id=correlation_id,
         )
 
     def subscribe_events(self, maxsize: int = 256) -> asyncio.Queue:
