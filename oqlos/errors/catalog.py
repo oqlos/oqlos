@@ -369,6 +369,18 @@ ISSUE_CATALOG: dict[str, IssueDefinition] = {
         default_severity="warning",
         summary="The requested editor path is outside the permitted scenario area.",
     ),
+    "api_editor_file_not_found": IssueDefinition(
+        code="api_editor_file_not_found",
+        domain="api",
+        default_severity="warning",
+        summary="The requested editor file does not exist.",
+    ),
+    "api_editor_target_invalid": IssueDefinition(
+        code="api_editor_target_invalid",
+        domain="api",
+        default_severity="warning",
+        summary="The requested editor operation requires a file target.",
+    ),
     "api_execution_request_invalid": IssueDefinition(
         code="api_execution_request_invalid",
         domain="api",

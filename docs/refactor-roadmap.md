@@ -181,7 +181,7 @@ Kolejna partia zastąpiła pięć surowych `HTTPException` w HUI,
 artificial-lung i sterowaniu systemd typowanymi błędami. Błędne komendy kończą
 się przed sprzętem jako 422/`C2004-DATA-0002`; awaria wykonania HUI/systemd nie
 wraca już jako HTTP 200 i nie ujawnia surowego komunikatu. Bieżąca metryka
-OqlOS: 108 surowych wyjątków (baseline 137), 0 literalnych negatywnych envelope
+OqlOS: 99 surowych wyjątków (baseline 137), 0 literalnych negatywnych envelope
 przy HTTP 200.
 
 Następna partia zastąpiła dwa pozostałe surowe 403 w trasach sterowania i
@@ -222,13 +222,19 @@ kroku dają 422/`C2004-DATA-0002`, brak scenariusza lub wykonania daje
 409/`C2004-DATA-0003`. Nieznana awaria orkiestratora trafia do sanitizowanej
 granicy 500/`C2004-SYS-0000`, zamiast być błędnie opisana jako HTTP 400.
 
+`editor.py` nie używa już surowych `HTTPException` ani szerokich lokalnych
+handlerów. Brak pliku daje 404/`C2004-DATA-0001`, wskazanie katalogu zamiast
+pliku daje 422/`C2004-DATA-0002`, a naruszenie sandboxa pozostaje
+403/`C2004-AUTH-0002`. Nieoczekiwane awarie przechodzą przez sanitizowaną
+granicę 500/`C2004-SYS-0000`, bez publikowania ścieżki lub tekstu wyjątku.
+
 Granica nieotypowanych `HTTPException` 5xx sanitizuje teraz komunikat i kontekst
 według katalogu. Zdalne wykonanie `/api/v1/editor/execute` propaguje
 `correlation_id` do MQTT, zwraca go w sukcesie, a negatywnej odpowiedzi agenta
 nie opakowuje już w HTTP 200. Timeout scenariusza daje ten sam
 504/`C2004-NET-0003` co `/api/v1/oql/execute`.
 
-Pozostały zakres: sklasyfikować 108 surowych wyjątków i 241 szerokich handlerów
+Pozostały zakres: sklasyfikować 99 surowych wyjątków i 235 szerokich handlerów
 OqlOS, rozdzielić pozostałe klasy host/proxy/plugin oraz wykonać analogiczną
 inwentaryzację i kontrakty po stronie C2004/POA.
 

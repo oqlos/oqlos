@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-import logging
 import os
 import pathlib
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Request, Response
+from fastapi import APIRouter, Request, Response
 from pydantic import BaseModel
 
 from oqlos.errors import OqlosError
@@ -21,7 +20,6 @@ from oqlos.shared.file_ops import (
     write_file,
 )
 
-logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/editor", tags=["editor"])
 
 
@@ -125,18 +123,46 @@ def _editor_path_forbidden(operation_id: str) -> OqlosError:
     )
 
 
+def _editor_file_not_found(operation_id: str) -> OqlosError:
+    """Build a safe 404 without reflecting the requested file path."""
+    return OqlosError(
+        code="api_editor_file_not_found",
+        status_code=404,
+        detail={
+            "architecture": "SOA",
+            "layer": "oqlos",
+            "component": "scenario-editor",
+            "stage": "file.lookup",
+            "problem_source": "request",
+            "operation_id": operation_id,
+        },
+    )
+
+
+def _editor_target_invalid(operation_id: str) -> OqlosError:
+    """Build a safe 422 for a file operation targeting a directory."""
+    return OqlosError(
+        code="api_editor_target_invalid",
+        status_code=422,
+        detail={
+            "architecture": "SOA",
+            "layer": "oqlos",
+            "component": "scenario-editor",
+            "stage": "target.validate",
+            "problem_source": "request",
+            "operation_id": operation_id,
+        },
+    )
+
+
 @router.get("/files")
 async def list_files() -> dict[str, Any]:
     """List all entries in the scenarios directory."""
-    try:
-        entries = [
-            FileInfo(**entry)
-            for entry in iter_entries(SCENARIOS_DIR)
-        ]
-        return {"files": sorted(entries, key=lambda x: (not x.is_directory, x.name))}
-    except Exception as e:
-        logger.error("Error listing files: %s", e)
-        raise HTTPException(status_code=500, detail=str(e)) from e
+    entries = [
+        FileInfo(**entry)
+        for entry in iter_entries(SCENARIOS_DIR)
+    ]
+    return {"files": sorted(entries, key=lambda x: (not x.is_directory, x.name))}
 
 
 @router.get("/file/{file_path:path}")
@@ -146,12 +172,11 @@ async def read_file_endpoint(file_path: str) -> FileContent:
         content = read_file(SCENARIOS_DIR, file_path)
         return FileContent(path=file_path, content=content)
     except (FileNotFoundError, IsADirectoryError) as e:
-        raise HTTPException(status_code=404, detail=str(e)) from e
+        if isinstance(e, FileNotFoundError):
+            raise _editor_file_not_found("editor.file.read") from e
+        raise _editor_target_invalid("editor.file.read") from e
     except PathEscapeError as e:
         raise _editor_path_forbidden("editor.file.read") from e
-    except Exception as e:
-        logger.error("Error reading file: %s", e)
-        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post("/file/{file_path:path}")
@@ -162,9 +187,6 @@ async def write_file_endpoint(file_path: str, file_content: FileContent) -> dict
         return {"status": "success", "path": file_path}
     except PathEscapeError as e:
         raise _editor_path_forbidden("editor.file.write") from e
-    except Exception as e:
-        logger.error("Error writing file: %s", e)
-        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.delete("/file/{file_path:path}")
@@ -174,14 +196,11 @@ async def delete_file_endpoint(file_path: str) -> dict[str, str]:
         delete_file(SCENARIOS_DIR, file_path)
         return {"status": "success", "path": file_path}
     except FileNotFoundError as e:
-        raise HTTPException(status_code=404, detail=str(e)) from e
+        raise _editor_file_not_found("editor.file.delete") from e
     except IsADirectoryError as e:
-        raise HTTPException(status_code=400, detail=str(e)) from e
+        raise _editor_target_invalid("editor.file.delete") from e
     except PathEscapeError as e:
         raise _editor_path_forbidden("editor.file.delete") from e
-    except Exception as e:
-        logger.error("Error deleting file: %s", e)
-        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 def _sensor_telemetry_recorder():
@@ -207,70 +226,62 @@ async def execute_scenario(
     http_response: Response,
 ) -> dict[str, Any]:
     """Execute a scenario file using oqlos runtime."""
-    try:
-        from oqlos.api.oql_mqtt import (
-            get_oql_controller,
-            raise_remote_oql_failure,
-        )
+    from oqlos.api.oql_mqtt import (
+        get_oql_controller,
+        raise_remote_oql_failure,
+    )
 
-        correlation_id = correlation_id_for_request(http_request)
-        full_path = _safe_path(request.scenario_file)
-        if not full_path.exists():
-            raise HTTPException(status_code=404, detail="Scenario file not found")
+    correlation_id = correlation_id_for_request(http_request)
+    full_path = _safe_path(request.scenario_file)
+    if not full_path.exists():
+        raise _editor_file_not_found("editor.scenario.execute")
 
-        content = full_path.read_text(encoding="utf-8")
-        oql_mode = _normalize_oql_mode(request.mode)
-        skip_waits = request.speed > 2.0
-        controller = get_oql_controller()
-        if controller is not None:
-            response = await controller.execute(
-                content,
-                kind="script",
-                mode=oql_mode,
-                skip_waits=skip_waits,
-                timeout=max(15.0, min(300.0, 60.0 * max(request.speed, 1.0))),
-                source="editor",
-                correlation_id=correlation_id,
-            )
-            if not response.ok:
-                raise_remote_oql_failure(
-                    response,
-                    correlation_id=correlation_id,
-                    operation_id="editor.execute-scenario",
-                )
-            http_response.headers["X-Correlation-ID"] = correlation_id
-            return _editor_response_from_oql(
-                scenario_file=request.scenario_file,
-                response=response,
-                correlation_id=correlation_id,
-            )
-
-        from oqlos.core.interpreter import OqlInterpreter
-
-        interpreter = OqlInterpreter(
+    content = full_path.read_text(encoding="utf-8")
+    oql_mode = _normalize_oql_mode(request.mode)
+    skip_waits = request.speed > 2.0
+    controller = get_oql_controller()
+    if controller is not None:
+        response = await controller.execute(
+            content,
+            kind="script",
             mode=oql_mode,
-            quiet=False,
             skip_waits=skip_waits,
-            on_sensors_observed=_sensor_telemetry_recorder(),
+            timeout=max(15.0, min(300.0, 60.0 * max(request.speed, 1.0))),
+            source="editor",
+            correlation_id=correlation_id,
         )
-        doc = interpreter.parse(content, request.scenario_file)
-        result = interpreter.execute(doc)
-
+        if not response.ok:
+            raise_remote_oql_failure(
+                response,
+                correlation_id=correlation_id,
+                operation_id="editor.execute-scenario",
+            )
         http_response.headers["X-Correlation-ID"] = correlation_id
-        return {
-            "status": "success",
-            "ok": result.ok,
-            "scenario_name": doc.metadata.scenario_name or request.scenario_file,
-            "steps_executed": len(result.steps),
-            "duration_ms": result.duration_ms,
-            "errors": result.errors,
-            "warnings": result.warnings,
-            "correlation_id": correlation_id,
-        }
-    except HTTPException:
-        raise
-    except OqlosError:
-        raise
-    except Exception as e:
-        logger.error("Error executing scenario: %s", e)
-        raise HTTPException(status_code=500, detail=str(e)) from e
+        return _editor_response_from_oql(
+            scenario_file=request.scenario_file,
+            response=response,
+            correlation_id=correlation_id,
+        )
+
+    from oqlos.core.interpreter import OqlInterpreter
+
+    interpreter = OqlInterpreter(
+        mode=oql_mode,
+        quiet=False,
+        skip_waits=skip_waits,
+        on_sensors_observed=_sensor_telemetry_recorder(),
+    )
+    doc = interpreter.parse(content, request.scenario_file)
+    result = interpreter.execute(doc)
+
+    http_response.headers["X-Correlation-ID"] = correlation_id
+    return {
+        "status": "success",
+        "ok": result.ok,
+        "scenario_name": doc.metadata.scenario_name or request.scenario_file,
+        "steps_executed": len(result.steps),
+        "duration_ms": result.duration_ms,
+        "errors": result.errors,
+        "warnings": result.warnings,
+        "correlation_id": correlation_id,
+    }
