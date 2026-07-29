@@ -21,6 +21,7 @@ own:
 | Code | Severity | Summary | Repair |
 |------|----------|---------|--------|
 | `api_diagnostic_command_invalid` | warning | The hardware diagnostic command or its arguments are invalid. | — |
+| `api_editor_path_forbidden` | warning | The requested editor path is outside the permitted scenario area. | — |
 | `api_hardware_configuration_write_forbidden` | warning | The caller is not permitted to save hardware configuration. | — |
 | `api_invalid_recover_scope` | warning | POST /api/v1/hardware/recover was called with an unsupported `scope` query param. | — |
 | `api_modbus_coil_pulse_forbidden` | warning | The caller is not permitted to pulse a Modbus coil. | — |

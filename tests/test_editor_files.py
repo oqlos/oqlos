@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from fastapi.testclient import TestClient
+import pytest
 
+from oqlos.api import editor
 from oqlos.api.main import app
 from oqlos.api.oql_mqtt import set_oql_controller
 from oqlos.hardware.transport.mqtt_protocol import OqlResponse
@@ -42,6 +44,69 @@ def test_editor_file_delete_rejects_missing_file(tmp_path, monkeypatch):
     client = TestClient(app)
     resp = client.delete("/api/v1/editor/file/missing.oql")
     assert resp.status_code == 404
+
+
+@pytest.mark.parametrize(
+    ("target", "method", "path", "payload", "operation_id"),
+    [
+        (
+            "read_file",
+            "GET",
+            "/api/v1/editor/file/password=hunter2.oql",
+            None,
+            "editor.file.read",
+        ),
+        (
+            "write_file",
+            "POST",
+            "/api/v1/editor/file/password=hunter2.oql",
+            {"path": "password=hunter2.oql", "content": "secret"},
+            "editor.file.write",
+        ),
+        (
+            "delete_file",
+            "DELETE",
+            "/api/v1/editor/file/password=hunter2.oql",
+            None,
+            "editor.file.delete",
+        ),
+        (
+            "_ensure_safe_path",
+            "POST",
+            "/api/v1/editor/execute",
+            {"scenario_file": "password=hunter2.oql"},
+            "editor.scenario.execute",
+        ),
+    ],
+)
+def test_editor_path_escape_is_safe_typed_auth_error(
+    monkeypatch, target: str, method: str, path: str, payload, operation_id: str
+) -> None:
+    def _raise_path_escape(*_args, **_kwargs):
+        raise editor.PathEscapeError("password=hunter2 filesystem root")
+
+    monkeypatch.setattr(editor, target, _raise_path_escape)
+
+    response = TestClient(app, raise_server_exceptions=False).request(
+        method,
+        path,
+        json=payload,
+        headers={"X-Correlation-ID": "cor-editor-path"},
+    )
+
+    assert response.status_code == 403
+    assert response.headers["content-type"].startswith("application/problem+json")
+    body = response.json()
+    assert body["code"] == "C2004-AUTH-0002"
+    assert body["correlation_id"] == "cor-editor-path"
+    assert body["component"] == "scenario-editor"
+    assert body["stage"] == "path.authorize"
+    assert body["metadata"]["diagnostics"]["issue_code"] == (
+        "api_editor_path_forbidden"
+    )
+    assert body["metadata"]["context"]["operation_id"] == operation_id
+    assert "hunter2" not in response.text
+    assert "filesystem root" not in response.text
 
 
 def test_panel_and_rtc_routes_are_reachable():

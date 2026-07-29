@@ -23,3 +23,14 @@ def test_delete_file_rejects_directories(tmp_path):
 def test_delete_file_rejects_path_escape(tmp_path):
     with pytest.raises(PathEscapeError):
         delete_file(tmp_path, "../outside.oql")
+
+
+def test_write_file_rejects_sibling_with_shared_directory_prefix(tmp_path):
+    base = tmp_path / "scenarios"
+    base.mkdir()
+    sibling_target = tmp_path / "scenarios-private" / "leak.oql"
+
+    with pytest.raises(PathEscapeError):
+        write_file(base, "../scenarios-private/leak.oql", "password=hunter2")
+
+    assert not sibling_target.exists()

@@ -31,10 +31,12 @@ def _ensure_safe_path(base: pathlib.Path, rel: str) -> pathlib.Path:
     """
     base_resolved = base.resolve()
     full_path = (base_resolved / rel).resolve()
-    if not str(full_path).startswith(str(base_resolved)):
+    try:
+        full_path.relative_to(base_resolved)
+    except ValueError:
         raise PathEscapeError(
             f"Access denied: '{rel}' resolves outside base directory '{base_resolved}'"
-        )
+        ) from None
     return full_path
 
 

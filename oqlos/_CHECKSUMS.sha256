@@ -4,7 +4,7 @@
 81d5d5daabca5473be54b45c45742b25ea9ce2f69078e2f5fe65dedec5253e9c  ./api/_hw3_models.py
 c6e031d2428a48ef03c323c2b5937b305ab0a35fc99b039893faac30e3bc14e5  ./api/_hw3_peripheral.py
 80178360587f48fedb9e66aa3606d7fa11b696d6d0d188004a47e5220a22d713  ./api/_hw3_system.py
-b29942e372991297e4de0bd3ef9b4bb61688679c6b9d26f9d7180b9eabba7dbc  ./api/editor.py
+6649579cf620fa58480615d620f30020ba4a68cd079c651c1e909c1c15e918cb  ./api/editor.py
 732cdd95ea248aef57f4adde7a88d452186f66334700f616acc790cf93e75d20  ./api/execution.py
 330816147e1ca94a014c0fa065568d6f7306e165440907bb7df80f4253a2dd50  ./api/hardware.py
 999d904cfe88750ef4e50b417d6b5ac6cc7c8ceda3f55e8afa8eb84fdb2ac37a  ./api/hardware_actuators.py
@@ -64,8 +64,8 @@ e30d874a60c86b80cc1ae0733443fd231d98319f990cd290f42edb335e5c17d7  ./core/cqrs/pe
 bf70e4db36df5cd500b125b5442d739d78b6a396414d680f9f71eed88f08e218  ./dsl/__init__.py
 a8771d1964d7e5554014a29201da045a23afd9a7578a9cfb71f60ef4eafcf515  ./dsl/schema.py
 d90b572434be5d6793438fd7d253cfaae7f990edaf0fdfa9fe6ca2729eaf257e  ./errors/__init__.py
-0125886cbdc340c581991e20b350e4306b8ef7287fa844b82c9301cae8ca20cd  ./errors/c2004_catalog_generated.py
-7b6718d59e684c0a8001f0aacc02801b42de25786981aeb0097494a58c7ef8e5  ./errors/catalog.py
+c5c1ae0069a6f48762fe462d82be3ad2e2c39a854368418c90a0d6f9ee84db61  ./errors/c2004_catalog_generated.py
+1a42640c1dae6b9cca172239dcee4dad43dc0965350e88b6a4dfb18425d24cd1  ./errors/catalog.py
 19aff6afa83ad0678e8001aa3edd0bb4634bccb9fcffc2f47e6f033f21f5389c  ./errors/exceptions.py
 ca91d2220c7c0d8807acc4dd5259916ba85146fce21157f0250e571a46d35453  ./errors/fastapi_integration.py
 8b9761452b0176fa955a5aa1c9c24de0f68adf2e12bb7d334738d4df256d1346  ./errors/repair_commit.py
@@ -168,7 +168,7 @@ a8415eab7cae7f7950295b1e00b98bf1a3ccf1fa424b9e01ff9a6bcb4d0cde19  ./shared/__ini
 9ad9a633d533d267face45b8f20cba9f1d7bbd5f38830de2a0b2e662664e9e4d  ./shared/_endpoint_helpers.py
 510f093aafca621c918554f4a1cdb3f8912b1f4eb4758c2c04ca47a2a39da7ec  ./shared/config_factory.py
 283f7e4a7437cff75926a7b3334ee968b741c4ae620c99304f2e933fa5b93d46  ./shared/event_server.py
-ee5ad2f0f788c15584ae0faf54b44ce767c122da8396cd074d0f57fe9fd968c1  ./shared/file_ops.py
+3e5a7a9b963c22c0d8b39d75c32e11507c87d43ca22d278a59c7be060f55d73d  ./shared/file_ops.py
 0c0bb57678c4673f6469ff62d2d84c9e66de72c5c766cbe185b9c93cfedc5307  ./shared/logger.py
 76b3d213c895fa2506844f0c7d3843f03ed2568e01d02e8c8d42a16b19e793b5  ./shared/logs_query.py
 7f1af54eebee7566eb43349aded7e0e9bc470013299eacd8bf000aee7949805c  ./shared/release_version.py

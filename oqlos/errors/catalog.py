@@ -363,6 +363,12 @@ ISSUE_CATALOG: dict[str, IssueDefinition] = {
         default_severity="warning",
         summary="The hardware diagnostic command or its arguments are invalid.",
     ),
+    "api_editor_path_forbidden": IssueDefinition(
+        code="api_editor_path_forbidden",
+        domain="api",
+        default_severity="warning",
+        summary="The requested editor path is outside the permitted scenario area.",
+    ),
     "api_hardware_configuration_write_forbidden": IssueDefinition(
         code="api_hardware_configuration_write_forbidden",
         domain="api",

@@ -102,11 +102,27 @@ def _editor_response_from_oql(
 
 
 def _safe_path(file_path: str) -> pathlib.Path:
-    """Resolve file_path within SCENARIOS_DIR, raising HTTP 403 on escape."""
+    """Resolve file_path within SCENARIOS_DIR, raising a typed 403 on escape."""
     try:
         return _ensure_safe_path(SCENARIOS_DIR, file_path)
     except PathEscapeError as exc:
-        raise HTTPException(status_code=403, detail=str(exc)) from exc
+        raise _editor_path_forbidden("editor.scenario.execute") from exc
+
+
+def _editor_path_forbidden(operation_id: str) -> OqlosError:
+    """Build a safe denial without reflecting a path or filesystem root."""
+    return OqlosError(
+        code="api_editor_path_forbidden",
+        status_code=403,
+        detail={
+            "architecture": "SOA",
+            "layer": "oqlos",
+            "component": "scenario-editor",
+            "stage": "path.authorize",
+            "problem_source": "request",
+            "operation_id": operation_id,
+        },
+    )
 
 
 @router.get("/files")
@@ -132,7 +148,7 @@ async def read_file_endpoint(file_path: str) -> FileContent:
     except (FileNotFoundError, IsADirectoryError) as e:
         raise HTTPException(status_code=404, detail=str(e)) from e
     except PathEscapeError as e:
-        raise HTTPException(status_code=403, detail=str(e)) from e
+        raise _editor_path_forbidden("editor.file.read") from e
     except Exception as e:
         logger.error("Error reading file: %s", e)
         raise HTTPException(status_code=500, detail=str(e)) from e
@@ -145,7 +161,7 @@ async def write_file_endpoint(file_path: str, file_content: FileContent) -> dict
         write_file(SCENARIOS_DIR, file_path, file_content.content)
         return {"status": "success", "path": file_path}
     except PathEscapeError as e:
-        raise HTTPException(status_code=403, detail=str(e)) from e
+        raise _editor_path_forbidden("editor.file.write") from e
     except Exception as e:
         logger.error("Error writing file: %s", e)
         raise HTTPException(status_code=500, detail=str(e)) from e
@@ -162,7 +178,7 @@ async def delete_file_endpoint(file_path: str) -> dict[str, str]:
     except IsADirectoryError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
     except PathEscapeError as e:
-        raise HTTPException(status_code=403, detail=str(e)) from e
+        raise _editor_path_forbidden("editor.file.delete") from e
     except Exception as e:
         logger.error("Error deleting file: %s", e)
         raise HTTPException(status_code=500, detail=str(e)) from e
