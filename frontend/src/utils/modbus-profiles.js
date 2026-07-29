@@ -7,6 +7,43 @@ function defaultBaudForProfile(profileId) {
   return profileId === "modbus-adc" ? 9600 : MODBUS_DEFAULT_BAUD;
 }
 
+function defaultProfile(profileId) {
+  const baudrate = defaultBaudForProfile(profileId);
+  return {
+    profile_id: profileId,
+    topology: profileTopology(profileId),
+    serial_port: "",
+    target_baudrate: baudrate,
+    target_parity: "N",
+    device_ids: [],
+    baseline_baudrate: baudrate,
+    baud_probe_sequence: [baudrate],
+  };
+}
+
+function serialPortForProfile(profileId, plan) {
+  const ioPort = plan.io_serial_port || plan.serial_port || "";
+  const adcPort = plan.adc_serial_port || ioPort;
+  if (profileId === "modbus-adc") return adcPort;
+  if (profileId === "modbus-io") return ioPort;
+  return ioPort || adcPort;
+}
+
+function deviceIdsForProfile(profileId, plan) {
+  const deviceIds = Array.isArray(plan.target_ids) ? plan.target_ids : [];
+  const selectedIds = profileId === "modbus-adc"
+    ? deviceIds.filter((id) => id !== 1 || deviceIds.length === 1).slice(-1)
+    : profileId === "modbus-io"
+      ? deviceIds.filter((id) => id === 1 || deviceIds.length === 1)
+      : deviceIds;
+  return selectedIds.length ? selectedIds : deviceIds;
+}
+
+function baudProbeSequence(plan, fallbackBaud, targetBaud) {
+  if (Array.isArray(plan.baud_probe_sequence)) return plan.baud_probe_sequence;
+  return [fallbackBaud, targetBaud].filter((value, index, values) => values.indexOf(value) === index);
+}
+
 export const MODBUS_PROFILE_LABEL_KEYS = {
   "modbus-adc": "hardwareRestart.profileAdc",
   "modbus-io": "hardwareRestart.profileIo",
@@ -45,44 +82,18 @@ export function profileTopology(profileId) {
 }
 
 export function profileFromPlan(profileId, plan) {
-  if (!plan) {
-    return {
-      profile_id: profileId,
-      topology: profileTopology(profileId),
-      serial_port: "",
-      target_baudrate: defaultBaudForProfile(profileId),
-      target_parity: "N",
-      device_ids: [],
-      baseline_baudrate: defaultBaudForProfile(profileId),
-      baud_probe_sequence: [defaultBaudForProfile(profileId)],
-    };
-  }
-  const ioPort = plan.io_serial_port || plan.serial_port || "";
-  const adcPort = plan.adc_serial_port || ioPort;
-  const serialPort = profileId === "modbus-adc"
-    ? adcPort
-    : profileId === "modbus-io"
-      ? ioPort
-      : (ioPort || adcPort);
-  const deviceIds = Array.isArray(plan.target_ids) ? plan.target_ids : [];
-  const filteredIds = profileId === "modbus-adc"
-    ? deviceIds.filter((id) => id !== 1 || deviceIds.length === 1).slice(-1)
-    : profileId === "modbus-io"
-      ? deviceIds.filter((id) => id === 1 || deviceIds.length === 1)
-      : deviceIds;
+  if (!plan) return defaultProfile(profileId);
   const fallbackBaud = defaultBaudForProfile(profileId);
   const targetBaud = Number(plan.target_baudrate) || fallbackBaud;
   return {
     profile_id: profileId,
     topology: profileTopology(profileId),
-    serial_port: serialPort,
+    serial_port: serialPortForProfile(profileId, plan),
     target_baudrate: targetBaud,
     target_parity: plan.target_parity || "N",
-    device_ids: filteredIds.length ? filteredIds : deviceIds,
+    device_ids: deviceIdsForProfile(profileId, plan),
     baseline_baudrate: plan.baseline_baudrate || fallbackBaud,
-    baud_probe_sequence: Array.isArray(plan.baud_probe_sequence)
-      ? plan.baud_probe_sequence
-      : [fallbackBaud, targetBaud].filter((v, i, a) => a.indexOf(v) === i),
+    baud_probe_sequence: baudProbeSequence(plan, fallbackBaud, targetBaud),
   };
 }
 

@@ -12,6 +12,29 @@ import { wizardStepSerialPort } from "./hardware-restart-wizard-helpers.js";
 
 export { buildWizardProbePayload, wizardStepSerialPort } from "./hardware-restart-wizard-helpers.js";
 
+function configureSkipResult(currentStep, decision) {
+  return {
+    ok: true,
+    skipped: true,
+    payload: {
+      step: currentStep,
+      skipped: true,
+      reason: decision.reason,
+      health: decision.details || {},
+    },
+  };
+}
+
+function logConfigureSkip(log, role, details) {
+  log?.(
+    `SKIP: ${role} already at target UART `
+    + `(status=${details.status}, compatible=${details.compatible}, `
+    + `${details.live_baudrate || "?"}/${details.live_parity || "?"} id=${details.live_device_id ?? "?"}`
+    + `${details.live_serial_port ? ` @ ${details.live_serial_port}` : ""}) — skip isolated probe/program.`,
+  );
+  if (details.note) log?.(`INFO: ${details.note}`);
+}
+
 /**
  * If OqlOS already has a healthy modbus-io / modbus-adc plugin on the planned
  * port, skip isolated probe+program (avoids RS485 port-busy failures).
@@ -22,7 +45,7 @@ export async function trySkipConfigureIfAlreadyHealthy(ctx) {
   const role = String(target.module_role || "");
   if (!role.startsWith("modbus-")) return null;
 
-  let healthPayload = null;
+  let healthPayload;
   try {
     healthPayload = await HardwareApi.health(apiContext);
   } catch (err) {
@@ -38,26 +61,8 @@ export async function trySkipConfigureIfAlreadyHealthy(ctx) {
   });
   if (!decision.skip) return null;
 
-  const d = decision.details || {};
-  log?.(
-    `SKIP: ${role} already at target UART `
-    + `(status=${d.status}, compatible=${d.compatible}, `
-    + `${d.live_baudrate || "?"}/${d.live_parity || "?"} id=${d.live_device_id ?? "?"}`
-    + `${d.live_serial_port ? ` @ ${d.live_serial_port}` : ""}) — skip isolated probe/program.`,
-  );
-  if (d.note) {
-    log?.(`INFO: ${d.note}`);
-  }
-  return {
-    ok: true,
-    skipped: true,
-    payload: {
-      step: currentStep,
-      skipped: true,
-      reason: decision.reason,
-      health: d,
-    },
-  };
+  logConfigureSkip(log, role, decision.details || {});
+  return configureSkipResult(currentStep, decision);
 }
 
 export async function executeConfigureStep(ctx) {

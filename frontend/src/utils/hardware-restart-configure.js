@@ -50,24 +50,34 @@ export async function runConfigureProgramPhase({
   currentStep,
 }) {
   const programPayload = buildWizardProgramPayload(stepPort, target, candidate, plan);
-  log(
-    `Program module role=${role} `
-    + `open@${programPayload.current_baudrate || "?"} id=${programPayload.current_device_id} `
-    + `-> target id=${programPayload.new_device_id} uart=${programPayload.new_baudrate}/${programPayload.new_parity} `
-    + `(commission: baseline then raise baud)`,
-  );
+  logProgramStart(log, role, programPayload);
   const program = await runRetry(
     "Program",
     () => HardwareApi.programModbusWizardIsolated(programPayload, apiContext),
     { allowRetry: false },
   );
-  log(`Program result ok=${String(Boolean(program?.ok))} verified=${String(Boolean(program?.verified))} runtime=${program?.runtime_control || "-"}`);
-  if (program?.writes?.skipped) {
-    log(program?.note || "INFO: modul juz ma docelowe ID/UART — pominieto zapis provisioning.");
-  }
+  logProgramResult(log, program);
   await refreshRuntimeStatus(stepPort || serialPort);
+  return configureProgramOutcome(currentStep, probe, program);
+}
+
+function logProgramStart(log, role, payload) {
+  log(
+    `Program module role=${role} `
+    + `open@${payload.current_baudrate || "?"} id=${payload.current_device_id} `
+    + `-> target id=${payload.new_device_id} uart=${payload.new_baudrate}/${payload.new_parity} `
+    + "(commission: baseline then raise baud)",
+  );
+}
+
+function logProgramResult(log, program) {
+  log(`Program result ok=${String(Boolean(program?.ok))} verified=${String(Boolean(program?.verified))} runtime=${program?.runtime_control || "-"}`);
+  if (program?.writes?.skipped) log(program?.note || "INFO: modul juz ma docelowe ID/UART — pominieto zapis provisioning.");
+}
+
+function configureProgramOutcome(step, probe, program) {
   return {
     ok: Boolean(program?.ok) || Boolean(program?.verified),
-    payload: { step: currentStep, probe, program },
+    payload: { step, probe, program },
   };
 }

@@ -7,6 +7,56 @@
 const HEALTHY_STATUSES = new Set(["connected", "ok", "healthy"]);
 const BASELINE_BAUD = 9600;
 
+function skipDecision(reason, details) {
+  return details ? { skip: false, reason, details } : { skip: false, reason };
+}
+
+function uartDetails(entry) {
+  const details = entry.details && typeof entry.details === "object" ? entry.details : {};
+  return {
+    details,
+    livePort: String(details.serial_port || details.port || "").trim(),
+    liveId: details.device_id,
+    liveBaud: details.baudrate != null ? Number(details.baudrate) : null,
+    liveParity: String(details.parity || "N").toUpperCase(),
+  };
+}
+
+function baudRampDecision(role, liveBaud, targetBaud) {
+  const canCompare = targetBaud != null
+    && liveBaud != null
+    && Number.isFinite(targetBaud)
+    && Number.isFinite(liveBaud);
+  if (!canCompare || liveBaud === targetBaud) return null;
+  const note = liveBaud === BASELINE_BAUD && targetBaud > BASELINE_BAUD
+    ? `Module healthy at baseline ${BASELINE_BAUD}; still need raise to ${targetBaud}`
+    : `Live baud ${liveBaud} ≠ target ${targetBaud} — continue configure`;
+  return skipDecision("baud-ramp-pending", {
+    role,
+    live_baudrate: liveBaud,
+    target_baudrate: targetBaud,
+    baseline_baudrate: BASELINE_BAUD,
+    note,
+  });
+}
+
+function alreadyConfiguredDecision(role, entry, live) {
+  return {
+    skip: true,
+    reason: "already_at_target",
+    details: {
+      role,
+      status: entry.status,
+      compatible: entry.compatible,
+      live_baudrate: live.liveBaud,
+      live_parity: live.liveParity,
+      live_device_id: live.liveId,
+      live_serial_port: live.livePort,
+      note: `Plugin ${role} already at target UART ${live.liveBaud}/${live.liveParity} id=${live.liveId}`,
+    },
+  };
+}
+
 /**
  * @param {Record<string, unknown>|null|undefined} healthPayload /api/v3/hardware/health
  * @param {string} moduleRole e.g. modbus-adc | modbus-io
@@ -56,86 +106,30 @@ export function evaluateConfigureSkip({
   healthPayload = null,
 } = {}) {
   const role = String(programTarget.module_role || "").trim().toLowerCase();
-  if (!role.startsWith("modbus-")) {
-    return { skip: false, reason: "not-modbus-configure" };
-  }
+  if (!role.startsWith("modbus-")) return skipDecision("not-modbus-configure");
   const entry = pluginHealthEntry(healthPayload, role);
-  if (!isPluginHealthOk(entry)) {
-    return { skip: false, reason: "plugin-not-healthy" };
-  }
-  const details = (entry.details && typeof entry.details === "object") ? entry.details : {};
-  const livePort = String(details.serial_port || details.port || "").trim();
-  const stepPort = String(
-    stepSerialPort || programTarget.serial_port || "",
-  ).trim();
+  if (!isPluginHealthOk(entry)) return skipDecision("plugin-not-healthy");
+  const live = uartDetails(entry);
+  const stepPort = String(stepSerialPort || programTarget.serial_port || "").trim();
+  const { liveBaud, liveId, liveParity, livePort } = live;
   if (stepPort && livePort && !portsLooselyMatch(stepPort, livePort)) {
-    return {
-      skip: false,
-      reason: "port-mismatch",
-      details: { stepPort, livePort },
-    };
+    return skipDecision("port-mismatch", { stepPort, livePort });
   }
   const targetId = programTarget.new_device_id;
-  const liveId = details.device_id;
   if (targetId != null && liveId != null && Number(targetId) !== Number(liveId)) {
-    return {
-      skip: false,
-      reason: "device-id-mismatch",
-      details: { targetId, liveId },
-    };
+    return skipDecision("device-id-mismatch", { targetId, liveId });
   }
 
   const targetBaud = programTarget.new_baudrate != null
     ? Number(programTarget.new_baudrate)
     : null;
-  const liveBaud = details.baudrate != null ? Number(details.baudrate) : null;
   const targetParity = String(programTarget.new_parity || "N").toUpperCase();
-  const liveParity = String(details.parity || "N").toUpperCase();
-
   // Commissioning incomplete: healthy at baseline but plan wants higher speed.
-  if (
-    targetBaud != null
-    && liveBaud != null
-    && Number.isFinite(targetBaud)
-    && Number.isFinite(liveBaud)
-    && liveBaud !== targetBaud
-  ) {
-    return {
-      skip: false,
-      reason: "baud-ramp-pending",
-      details: {
-        role,
-        live_baudrate: liveBaud,
-        target_baudrate: targetBaud,
-        baseline_baudrate: BASELINE_BAUD,
-        note:
-          liveBaud === BASELINE_BAUD && targetBaud > BASELINE_BAUD
-            ? `Module healthy at baseline ${BASELINE_BAUD}; still need raise to ${targetBaud}`
-            : `Live baud ${liveBaud} ≠ target ${targetBaud} — continue configure`,
-      },
-    };
-  }
+  const baudDecision = baudRampDecision(role, liveBaud, targetBaud);
+  if (baudDecision) return baudDecision;
 
   if (liveParity && targetParity && liveParity !== targetParity) {
-    return {
-      skip: false,
-      reason: "parity-mismatch",
-      details: { liveParity, targetParity },
-    };
+    return skipDecision("parity-mismatch", { liveParity, targetParity });
   }
-
-  return {
-    skip: true,
-    reason: "already_at_target",
-    details: {
-      role,
-      status: entry.status,
-      compatible: entry.compatible,
-      live_baudrate: liveBaud,
-      live_parity: liveParity,
-      live_device_id: liveId,
-      live_serial_port: livePort,
-      note: `Plugin ${role} already at target UART ${liveBaud}/${liveParity} id=${liveId}`,
-    },
-  };
+  return alreadyConfiguredDecision(role, entry, live);
 }
