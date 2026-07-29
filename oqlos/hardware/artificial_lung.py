@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from oqlos.hardware.power_safety import command_power_policy, ensure_power_safe
 from oqlos.hardware.tic249_units import TIC249_DEFAULT_TARGET_VELOCITY
 
 LUNG_STATE: dict[str, Any] = {
@@ -158,5 +159,13 @@ async def execute_command(
     cmd = str(command or "").strip().lower()
     handler = _LUNG_COMMAND_HANDLERS.get(cmd)
     if handler is not None:
-        return await handler(args or {}, gateway)
+        params = args or {}
+        if gateway is not None:
+            policy = command_power_policy(cmd, params)
+            await ensure_power_safe(
+                gateway,
+                operation=f"artificial-lung.{cmd}",
+                safe_state=policy != "actuation",
+            )
+        return await handler(params, gateway)
     return _command_response(False, cmd, {}, error=f"Unknown artificial-lung command: {cmd}")

@@ -12,7 +12,7 @@ from oqlos.api import hardware_probe as hw_probe
 from oqlos.api.hardware_gateway import get_hardware_gateway
 from oqlos.api.hardware_registry import HARDWARE_REGISTRY
 from oqlos.hardware.identify_enrichment import enrich_identify_payload
-from oqlos.hardware.usb_diagnostics import pi_power_diagnostics
+from oqlos.hardware.power_safety import sample_power_telemetry
 
 router = APIRouter(tags=["hardware-identify"])
 
@@ -116,7 +116,7 @@ async def hardware_health():
     """Return connectivity status for all hardware services."""
     payload = await get_hardware_gateway().health()
     if isinstance(payload, dict):
-        power = await asyncio.to_thread(pi_power_diagnostics)
+        power = await sample_power_telemetry()
         payload["power"] = power
         if power.get("errors"):
             payload["errors"] = list(power["errors"])

@@ -16,7 +16,6 @@ from oqlos.api.hardware_modbus_wizard import (
     _modbus_wizard_program_isolated,
 )
 from oqlos.api.hardware_modbus_settings import (
-    build_init_baud_sequence,
     effective_modbus_target_baud,
     normalize_probe_baudrates,
     read_modbus_baud_settings,
@@ -24,6 +23,7 @@ from oqlos.api.hardware_modbus_settings import (
 )
 from oqlos.config import get_settings
 from oqlos.errors import OqlosError
+from oqlos.hardware.power_safety import ensure_power_safe
 
 _settings = get_settings()
 router = APIRouter(tags=["hardware-modbus"])
@@ -219,6 +219,12 @@ async def hardware_modbus_wizard_program_isolated(
                 "expected": True,
                 "actuation": "configuration-write",
             },
+        )
+    gateway_for_power = try_get_hardware_gateway()
+    if gateway_for_power is not None:
+        await ensure_power_safe(
+            gateway_for_power,
+            operation="modbus.wizard.program-isolated",
         )
     gateway, paused_plugin_ids = await _pause_modbus_plugins_on_serial(serial)
     try:

@@ -4,13 +4,77 @@ from __future__ import annotations
 
 import pytest
 
+from oqlos.api import hardware_gateway
+from oqlos.errors import OqlosError
+from oqlos.hardware import power_safety
+from oqlos.hardware.plugin_gateway import PluginHardwareGateway
 from oqlos.hardware.transport import manage_ops
+from oqlos.hardware.usb_diagnostics import decode_throttled
 
 
 @pytest.mark.asyncio
 async def test_unknown_verb_raises():
     with pytest.raises(ValueError, match="unknown manage verb"):
         await manage_ops.run_manage_verb("nope", {})
+
+
+@pytest.mark.asyncio
+async def test_mqtt_manage_actuation_is_blocked_before_adapter(monkeypatch):
+    gateway = PluginHardwareGateway(mode="mock")
+    gateway.mode = "real"
+    adapter_calls: list[tuple[str, dict]] = []
+
+    class _Plugin:
+        async def execute_command(self, command, params):
+            adapter_calls.append((command, params))
+            return {"success": True}
+
+    async def _plugin(_plugin_id):
+        return _Plugin()
+
+    async def _active_power():
+        return decode_throttled("throttled=0x1")
+
+    monkeypatch.setattr(gateway, "_get_or_connect_plugin", _plugin)
+    monkeypatch.setattr(hardware_gateway, "_gateway", gateway)
+    monkeypatch.setattr(power_safety, "sample_power_telemetry", _active_power)
+
+    with pytest.raises(OqlosError) as caught:
+        await manage_ops.run_manage_verb(
+            "valve", {"valve_id": "valve-1", "value": True}
+        )
+
+    assert caught.value.public_code == "C2004-HW-0014"
+    assert adapter_calls == []
+
+
+@pytest.mark.asyncio
+async def test_mqtt_manage_stop_and_deenergize_bypass_power_gate(monkeypatch):
+    gateway = PluginHardwareGateway(mode="mock")
+    gateway.mode = "real"
+    gateway._init_done = True
+    adapter_calls: list[tuple[str, dict]] = []
+
+    class _Plugin:
+        async def execute_command(self, command, params):
+            adapter_calls.append((command, params))
+            return {"success": True}
+
+    gateway._plugins["motor-tic249"] = _Plugin()
+
+    async def _unexpected_power():
+        raise AssertionError("STOP/deenergize must bypass the power gate")
+
+    monkeypatch.setattr(hardware_gateway, "_gateway", gateway)
+    monkeypatch.setattr(power_safety, "sample_power_telemetry", _unexpected_power)
+
+    result = await manage_ops.run_manage_verb("lung-stop")
+
+    assert result == {"ok": True, "status": "stopped"}
+    assert adapter_calls == [
+        ("stop", {}),
+        ("energize", {"enable": False}),
+    ]
 
 
 def test_hardware_facade_exposes_manage_ops_handlers():

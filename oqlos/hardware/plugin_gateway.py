@@ -25,6 +25,7 @@ from oqlos.hardware.plugins import (
     ModbusPlugin,
     LungPlugin,
 )
+from oqlos.hardware.power_safety import ensure_power_safe
 from oqlos.hardware.tic249_units import TIC249_DEFAULT_TARGET_VELOCITY
 
 logger = logging.getLogger(__name__)
@@ -632,6 +633,12 @@ class PluginHardwareGateway:
             logger.info("[HW mock] SET_VALVE %s → %s", valve_id, value)
             return True
 
+        await ensure_power_safe(
+            self,
+            operation=f"modbus-io.set_valve:{valve_id}",
+            safe_state=not value,
+        )
+
         plugin = await self._get_or_connect_plugin("modbus-io")
         if not plugin:
             logger.error("Modbus plugin not available")
@@ -651,6 +658,12 @@ class PluginHardwareGateway:
         if not self.is_real:
             logger.info("[HW mock] SET_PUMP %.1f%%", power_pct)
             return {"success": True, "data": {"power_pct": power_pct, "mock": True}}
+
+        await ensure_power_safe(
+            self,
+            operation="motor-dri0050.set_pump",
+            safe_state=power_pct <= 0,
+        )
 
         plugin = await self._get_or_connect_plugin("motor-dri0050")
         if not plugin:
@@ -732,6 +745,8 @@ class PluginHardwareGateway:
                     "mock": True,
                 },
             }
+
+        await ensure_power_safe(self, operation="motor-tic249.reciprocate")
 
         await self.ensure_initialized()
         plugin = self._plugins.get("motor-tic249")

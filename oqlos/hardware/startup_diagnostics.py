@@ -12,7 +12,6 @@ Env flags:
 
 from __future__ import annotations
 
-import asyncio
 import logging
 import os
 import time
@@ -83,12 +82,12 @@ async def run_startup_diagnostics_and_repair() -> dict[str, Any]:
             execute_safe_recover,
             report_to_dict,
         )
-        from oqlos.hardware.usb_diagnostics import pi_power_diagnostics
+        from oqlos.hardware.power_safety import sample_power_telemetry
 
         identify_payload = await hardware_identify(scan="never")
         power = _power_from_identify(identify_payload)
         if power is None:
-            power = await asyncio.to_thread(pi_power_diagnostics)
+            power = await sample_power_telemetry()
         if power is not None:
             summary["power"] = power
         report = build_diagnosis_report(identify_payload)

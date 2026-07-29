@@ -110,10 +110,17 @@ def test_hui_hold_fails_before_shutdown_when_required_plugin_is_disabled(monkeyp
 
 def test_hui_hold_active_undervoltage_fails_before_adapter_calls(monkeypatch) -> None:
     monkeypatch.setattr(hui_hold, "_VALVE_STAGGER_SECONDS", 0)
-    monkeypatch.setattr(
-        hui_readiness,
-        "pi_power_diagnostics",
-        lambda: {
+    async def _active_undervoltage(*_args, **_kwargs):
+        return {
+            "ok": False,
+            "operation": "hold_start",
+            "error": "BoardNet supply undervoltage blocks hardware actuation",
+            "error_code": "C2004-HW-0014",
+            "issue_code": "boardnet_undervoltage_active",
+            "status_code": 503,
+            "blocked_before_adapter": True,
+            "safe_to_retry": False,
+            "power": {
             "status": "critical",
             "errors": [
                 {
@@ -121,8 +128,10 @@ def test_hui_hold_active_undervoltage_fails_before_adapter_calls(monkeypatch) ->
                     "issue_code": "boardnet_undervoltage_active",
                 }
             ],
-        },
-    )
+            },
+        }
+
+    monkeypatch.setattr(hui_readiness, "power_actuation_failure", _active_undervoltage)
     gateway = FakeGateway(real=True)
 
     payload = run(hui_actions.start_hui_hold(gateway, "lp-pwm-plus10"))
@@ -131,6 +140,7 @@ def test_hui_hold_active_undervoltage_fails_before_adapter_calls(monkeypatch) ->
     assert payload["status_code"] == 503
     assert payload["error_code"] == "C2004-HW-0014"
     assert payload["issue_code"] == "boardnet_undervoltage_active"
+    assert payload["blocked_before_adapter"] is True
     assert payload["operations"] == []
     assert gateway.calls == []
 

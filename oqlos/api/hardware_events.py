@@ -87,13 +87,29 @@ async def publish_hardware_command_event(
     if command_name:
         event_payload["command_name"] = command_name
 
+    return await publish_hardware_event(
+        "hardware.command_executed",
+        event_payload,
+        source="oqlos-hardware-api",
+        aggregate_id=peripheral_id or None,
+    )
+
+
+async def publish_hardware_event(
+    event_type: str,
+    payload: dict[str, Any],
+    *,
+    source: str,
+    aggregate_id: str | None = None,
+) -> dict[str, Any]:
+    """Record and broadcast a typed hardware event."""
     event = {
         "id": uuid4().hex,
-        "source": "oqlos-hardware-api",
-        "event_type": "hardware.command_executed",
-        "aggregate_id": peripheral_id or None,
+        "source": source,
+        "event_type": event_type,
+        "aggregate_id": aggregate_id,
         "timestamp": datetime.now(timezone.utc).isoformat(),
-        "payload": event_payload,
+        "payload": payload,
     }
     _recent_events.append(event)
     _append_event_to_disk(event)

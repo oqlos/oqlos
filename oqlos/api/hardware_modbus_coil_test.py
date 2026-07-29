@@ -5,11 +5,12 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
-from oqlos.api.hardware_gateway import get_hardware_gateway
+from oqlos.api.hardware_gateway import get_hardware_gateway, try_get_hardware_gateway
 from oqlos.api.hardware_modbus_channels import read_modbus_profile_channels
 from oqlos.config import get_settings
 from oqlos.errors import OqlosError
 from oqlos.hardware.modbus_io_catalog import MODBUS_IO_COIL_COUNT, build_coil_catalog
+from oqlos.hardware.power_safety import ensure_power_safe
 
 _settings = get_settings()
 _coil_test_lock = asyncio.Lock()
@@ -120,6 +121,9 @@ async def pulse_coil(payload: dict[str, Any]) -> dict[str, Any]:
             detail={"payload": payload},
         )
 
+    gateway = try_get_hardware_gateway()
+    if gateway is not None:
+        await ensure_power_safe(gateway, operation="modbus-io.coil-test.pulse")
     async with _coil_test_lock:
         plan = await build_coil_test_plan()
         if not plan.get("ready"):

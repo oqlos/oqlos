@@ -10,6 +10,7 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 
 from oqlos.errors import OqlosError
+from oqlos.hardware.power_safety import command_power_policy, ensure_power_safe
 
 from oqlos.hardware.plugins import (
     PluginConfig,
@@ -189,6 +190,19 @@ async def _resolve_plugin_instance(plugin_id: str) -> Any | None:
 @router.post("/{plugin_id}/execute")
 async def execute_plugin_command(plugin_id: str, command: dict[str, Any]):
     """Execute a command on a hardware plugin."""
+    command_name = command.get("command")
+    params = command.get("params", {})
+    from oqlos.api.hardware_gateway import try_get_hardware_gateway
+
+    gateway = try_get_hardware_gateway()
+    if gateway is not None:
+        policy = command_power_policy(command_name, params)
+        await ensure_power_safe(
+            gateway,
+            operation=f"plugin:{plugin_id}.{command_name}",
+            safe_state=policy != "actuation",
+        )
+
     instance = await _resolve_plugin_instance(plugin_id)
     if not instance:
         _raise_unhealthy_plugin(
@@ -199,9 +213,6 @@ async def execute_plugin_command(plugin_id: str, command: dict[str, Any]):
                 "compatible": False,
             },
         )
-
-    command_name = command.get("command")
-    params = command.get("params", {})
 
     result = await instance.execute_command(command_name, params)
     if isinstance(result, dict):

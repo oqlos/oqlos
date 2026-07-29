@@ -68,8 +68,13 @@ def test_decode_throttled_contract(raw, status, active, historical, error_codes)
 
     assert result["available"] is True
     assert result["status"] == status
+    assert result["active"] == active
+    assert result["historical"] == historical
     assert result["active_flags"] == active
     assert result["historical_flags"] == historical
+    assert result["source"] == "vcgencmd.get_throttled"
+    assert result["age_ms"] == 0
+    assert result["observed_at"]
     assert [item["error_code"] for item in result["errors"]] == error_codes
 
 
@@ -103,6 +108,10 @@ def test_decode_throttled_unavailable_is_explicit():
 
     assert result["available"] is False
     assert result["status"] == "unknown"
+    assert result["active"] == []
+    assert result["historical"] == []
+    assert result["source"] == "vcgencmd.get_throttled"
+    assert result["age_ms"] == 0
     assert result["errors"] == []
     assert result["warnings"][0]["issue_code"] == "boardnet_power_telemetry_unavailable"
 

@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Iterable
 from typing import Any
 
-from oqlos.hardware.usb_diagnostics import pi_power_diagnostics
+from oqlos.hardware.power_safety import power_actuation_failure
 
 
 async def required_plugins_failure(
@@ -23,20 +23,15 @@ async def required_plugins_failure(
         return None
 
     if check_power:
-        power = await asyncio.to_thread(pi_power_diagnostics)
-        if power.get("errors"):
-            payload: dict[str, Any] = {
-                "ok": False,
-                "command": command,
-                "error": "BoardNet supply undervoltage blocks hardware actuation",
-                "error_code": "C2004-HW-0014",
-                "issue_code": "boardnet_undervoltage_active",
-                "status_code": 503,
-                "required_hardware": list(required),
-                "power": power,
-                "operations": [],
-                "safe_to_retry": False,
-            }
+        payload = await power_actuation_failure(gateway, operation=command)
+        if payload is not None:
+            payload.update(
+                {
+                    "command": command,
+                    "required_hardware": list(required),
+                    "operations": [],
+                }
+            )
             if key is not None:
                 payload["key"] = key
             return payload

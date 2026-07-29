@@ -13,6 +13,7 @@ from oqlos.hardware.hui_lung_recipe import (
     get_hui_lung_reciprocate_args,
     get_hui_lung_valve_id,
 )
+from oqlos.hardware.power_safety import ensure_power_safe
 
 _artificial_lung_running = False
 
@@ -70,6 +71,7 @@ async def _run_tic249_reciprocate(gateway: Any) -> dict[str, Any]:
     if not getattr(gateway, "is_real", False):
         return {"success": True, "data": {"mock": True, **reciprocate_args}}
 
+    await ensure_power_safe(gateway, operation="hui.motor-tic249.reciprocate")
     if hasattr(gateway, "_get_or_connect_plugin"):
         plugin = await gateway._get_or_connect_plugin("motor-tic249")
         if plugin is None:

@@ -83,10 +83,8 @@ def test_hardware_health_exposes_active_undervoltage_as_coded_degraded_state(mon
 
     monkeypatch.setattr(hw_identify, "get_hardware_gateway", lambda: HealthyGateway())
     monkeypatch.setattr(hw_identify.platform, "_detect_runtime_platform", lambda: {})
-    monkeypatch.setattr(
-        hw_identify,
-        "pi_power_diagnostics",
-        lambda: {
+    async def _active_power():
+        return {
             "status": "critical",
             "errors": [
                 {
@@ -94,8 +92,9 @@ def test_hardware_health_exposes_active_undervoltage_as_coded_degraded_state(mon
                     "issue_code": "boardnet_undervoltage_active",
                 }
             ],
-        },
-    )
+        }
+
+    monkeypatch.setattr(hw_identify, "sample_power_telemetry", _active_power)
 
     payload = asyncio.run(hw.hardware_health())
 

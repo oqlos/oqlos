@@ -8,6 +8,7 @@ from oqlos.api.hardware_gateway import get_hardware_gateway, is_plugin_compatibl
 from oqlos.api.hardware_modbus_settings import MODBUS_PROFILE_IDS, read_modbus_baud_settings
 from oqlos.config import get_settings
 from oqlos.errors import OqlosError
+from oqlos.hardware.power_safety import ensure_power_safe
 
 _settings = get_settings()
 
@@ -241,6 +242,21 @@ async def write_modbus_channel_value(payload: dict[str, Any]) -> dict[str, Any]:
         )
 
     gateway = get_hardware_gateway()
+    raw_value = payload.get("value")
+    coil_off = write_type == "coil" and raw_value not in {
+        True,
+        1,
+        "1",
+        "true",
+        "True",
+        "on",
+        "ON",
+    }
+    await ensure_power_safe(
+        gateway,
+        operation=f"{module_role}.{write_type}",
+        safe_state=coil_off,
+    )
     plugin = await gateway._get_or_connect_plugin(module_role)
     if plugin is None:
         raise OqlosError(
@@ -252,7 +268,6 @@ async def write_modbus_channel_value(payload: dict[str, Any]) -> dict[str, Any]:
 
     if write_type == "coil":
         address = int(payload.get("address"))
-        raw_value = payload.get("value")
         value = raw_value in {True, 1, "1", "true", "True", "on", "ON"}
         result = await plugin.execute_command("set_coil", {"coil": address, "value": value})
     else:
