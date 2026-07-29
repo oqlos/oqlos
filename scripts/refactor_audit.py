@@ -229,6 +229,17 @@ def _git(root: Path, *args: str) -> str:
     return result.stdout.strip()
 
 
+def _git_status(root: Path) -> list[str]:
+    result = subprocess.run(
+        ["git", "status", "--porcelain"],
+        cwd=root,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return result.stdout.splitlines()
+
+
 def _tool_version(command: str) -> dict[str, str | None]:
     executable = shutil.which(command)
     if executable is None:
@@ -252,7 +263,7 @@ def _sha256(path: Path) -> str | None:
 def generate_report(root: Path, output: Path) -> dict[str, Any]:
     root = root.resolve()
     source_files = _source_files(root)
-    git_status = _git(root, "status", "--porcelain").splitlines()
+    git_status = _git_status(root)
     generated_paths: set[str] = set()
     for artifact in (output, output.parent / "analysis.toon.yaml", output.parent / "map.toon.yaml"):
         try:

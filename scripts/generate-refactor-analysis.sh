@@ -26,6 +26,9 @@ code2llm "$repo_root" \
 
 install -m 0644 "$analysis_tmp/analysis.toon.yaml" "$output_dir/analysis.toon.yaml"
 install -m 0644 "$analysis_tmp/map.toon.yaml" "$output_dir/map.toon.yaml"
+sed -i 's/[[:space:]]\+$//' \
+  "$output_dir/analysis.toon.yaml" \
+  "$output_dir/map.toon.yaml"
 python "$repo_root/scripts/refactor_audit.py" \
   --root "$repo_root" \
   --output "$output_dir/refactor-audit.json"
