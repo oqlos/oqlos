@@ -497,6 +497,42 @@ fi
 install -m 0644 "$DFR_DIR/deploy/systemd/usb-adc-stack.service" \
   /home/${BOARDNET_SSH_USER}/.config/systemd/user/usb-adc-stack.service
 
+# Device-specific UART identity and timing come from the BoardNet profile.
+# A systemd drop-in keeps the reusable adapter unit free of fleet addresses.
+mkdir -p /home/${BOARDNET_SSH_USER}/.config/systemd/user/usb-adc-stack.service.d
+cat > /home/${BOARDNET_SSH_USER}/.config/systemd/user/usb-adc-stack.service.d/20-boardnet.conf <<'UNIT'
+[Service]
+Environment=DFR1184_SERIAL_PORT=${BOARDNET_DFR1184_PORT}
+Environment=DFR1184_BAUDRATE=${BOARDNET_DFR1184_BAUDRATE}
+Environment=DFR1184_COMMAND_DELAY=${BOARDNET_DFR1184_COMMAND_DELAY}
+UNIT
+
+# Raspberry Pi OS may retain `console=serial0,...` after a graphical/minimal OS
+# switch. The kernel would then write console frames onto the DFR1184 UART.
+# Update boot configuration idempotently; the running kernel changes only after
+# one reboot, reported below without hiding an otherwise successful deploy.
+if [ "${BOARDNET_DFR1184_DISABLE_SERIAL_CONSOLE}" = "1" ]; then
+  CMDLINE=/boot/firmware/cmdline.txt
+  BOOT_CONFIG=/boot/firmware/config.txt
+  if [ -f "$CMDLINE" ] && grep -Eq '(^|[[:space:]])console=serial0,' "$CMDLINE"; then
+    sudo cp --preserve=all "$CMDLINE" "${CMDLINE}.c2004-backup"
+    sudo sed -E -i \
+      's/(^|[[:space:]])console=serial0,[^[:space:]]+//g; s/[[:space:]]+/ /g; s/^ //; s/ $//' \
+      "$CMDLINE"
+    echo "PASS: removed kernel console from ${BOARDNET_DFR1184_PORT} boot config"
+  fi
+  if [ -f "$BOOT_CONFIG" ]; then
+    if grep -q '^enable_uart=' "$BOOT_CONFIG"; then
+      sudo sed -i 's/^enable_uart=.*/enable_uart=1/' "$BOOT_CONFIG"
+    else
+      printf '\nenable_uart=1\n' | sudo tee -a "$BOOT_CONFIG" >/dev/null
+    fi
+  fi
+  if grep -Eq '(^|[[:space:]])console=serial0,' /proc/cmdline; then
+    echo "WARN: reboot BoardNet once to release the running kernel serial console"
+  fi
+fi
+
 systemctl --user daemon-reload
 systemctl --user enable usb-adc-stack.service
 systemctl --user restart usb-adc-stack.service
