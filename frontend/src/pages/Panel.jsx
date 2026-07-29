@@ -22,6 +22,8 @@ import {
   defaultNewScenarioContent,
   normalizeScenarioFilePath,
 } from "../utils/panelScenarioCreate.js";
+import { loadFileScenarios, loadServerScenarios } from "../utils/panelScenarioLoader.js";
+import { createPanelResultLogEntry } from "../utils/panelResultLog.js";
 import { rem } from "../utils/designRem.js";
 
 const VALVE_IDS = [
@@ -272,48 +274,19 @@ export default function Panel() {
 
   // Load scenarios from DB and Files
   const loadScenarios = useCallback(async () => {
-    // 1. Files from editor
     setScenarioListStatus("Ładowanie plików z /api/v1/editor/files…");
     try {
-      const r = await fetch(`/api/v1/editor/files?ts=${Date.now()}`, { cache: "no-store" });
-      if (!r.ok) throw new Error("HTTP " + r.status);
-      const data = await r.json();
-      const files = Array.isArray(data.files) ? data.files : [];
-      const parsed = files
-        .filter((f) => f && !f.is_directory && /\.oql$/i.test(String(f.name || "")))
-        .sort((a, b) => String(a.name || "").localeCompare(String(b.name || ""), "pl", { sensitivity: "base" }))
-        .map((f) => ({
-          name: f.path && f.path !== f.name ? `${f.name} — ${f.path}` : f.name,
-          oql: null,
-          _file: true,
-          _filePath: f.path,
-          _group: "Pliki scenariuszy (/ui/scenario-files)",
-        }));
-      setFileScenarios(parsed);
-      setScenarioListStatus(`Wczytano ${parsed.length} plików .oql z /api/v1/editor/files.`);
-    } catch (e) {
+      const scenarios = await loadFileScenarios();
+      setFileScenarios(scenarios);
+      setScenarioListStatus(`Wczytano ${scenarios.length} plików .oql z /api/v1/editor/files.`);
+    } catch (error) {
       setFileScenarios([]);
-      setScenarioListStatus("Nie udało się wczytać plików .oql: " + e.message);
-      setBannerMsg("Nie udało się wczytać listy plików scenariuszy: " + e.message);
+      setScenarioListStatus("Nie udało się wczytać plików .oql: " + error.message);
+      setBannerMsg("Nie udało się wczytać listy plików scenariuszy: " + error.message);
     }
-
-    // 2. Database scenarios
     try {
-      const r = await fetch("/api/v1/scenarios/fetch");
-      if (r.ok) {
-        const list = await r.json();
-        if (Array.isArray(list)) {
-          const parsed = list
-            .map((s) => ({
-              name: s.id || s.name || "?",
-              oql: typeof s.source === "string" && s.source ? s.source : null,
-              _srv: s,
-              _group: "Serwer DB",
-            }))
-            .filter((s) => s.name && s.oql);
-          setServerScenarios(parsed);
-        }
-      }
+      const scenarios = await loadServerScenarios();
+      if (scenarios) setServerScenarios(scenarios);
     } catch {}
   }, []);
 
@@ -594,89 +567,10 @@ export default function Panel() {
 
   // Results logs management
   const appendLogEntry = useCallback((title, env, status, sent, req) => {
-    const rawClass = () => {
-      const r = env && typeof env.result === "object" && env.result ? env.result : null;
-      const innerFail = !!(r && (r.success === false || r.ok === false));
-      if (status >= 200 && status < 300 && env && env.ok && !innerFail) return "ok";
-      const blob = JSON.stringify(env || {});
-      const naPatterns =
-        /not available|all connection attempts failed|no active instance|permission denied|failed to connect|is not available|de-energized|deenergized|energized|stopped|transport off|timed out|disabled/i;
-      if (status === 503 || innerFail || naPatterns.test(blob)) return "na";
-      return "fail";
-    };
-
-    const cClass = rawClass();
-    const cLabel = cClass === "ok" ? "OK" : cClass === "na" ? "N/D" : "BŁĄD";
-    const cHint =
-      cClass === "ok"
-        ? ""
-        : cClass === "na"
-        ? "sprzęt niedostępny / brak uprawnień — nie błąd panelu"
-        : "realny błąd";
-
-    const summarize = (val) => {
-      if (!val) return "brak odpowiedzi";
-      const res = val.result;
-      if (res && typeof res === "object") {
-        if ("devices" in res) {
-          const list = (res.devices || []).map(
-            (d) =>
-              `${d.vendor_id}:${d.product_id} ${d.product || d.vendor || ""}${
-                d.tty && d.tty.length ? " [" + d.tty.join(",") + "]" : ""
-              } @${d.port_path}`
-          );
-          return `${res.count} urządzeń USB\n  · ` + list.join("\n  · ");
-        }
-        if ("cpu_temp_c" in res) {
-          return `${res.model || "Pi"} · CPU ${res.cpu_temp_c}°C · USB×${res.usb_device_count} · porty: ${(
-            res.serial_ports || []
-          ).join(", ") || "—"}`;
-        }
-        if ("passed" in res) {
-          return `kroki: ${res.passed} OK / ${res.failed} błąd (z ${res.total || "?"})${
-            res.errors && res.errors.length ? " · " + res.errors.join("; ") : ""
-          }`;
-        }
-        if ("mode" in res) {
-          return `mode=${res.mode}${res.overall_ok !== undefined ? " · overall_ok=" + res.overall_ok : ""}`;
-        }
-        if ("value" in res) {
-          return `${res.sensor_id || ""} = ${res.value}`;
-        }
-        if ("reset" in res) {
-          return res.success ? `reset OK: ${res.reset || ""}` : `błąd: ${res.error || val.error || "?"}`;
-        }
-        if ("success" in res) {
-          return res.success
-            ? res.data !== undefined
-              ? JSON.stringify(res.data)
-              : "success"
-            : `błąd: ${res.error || val.error || "?"}`;
-        }
-        return JSON.stringify(res).slice(0, 140);
-      }
-      return val.error || (val.ok ? "OK" : "błąd");
-    };
-
-    const recv = summarize(env);
-    const timeStr = new Date().toLocaleTimeString("pl-PL");
-
-    const newEntry = {
-      id: `${Date.now()}-${Math.random()}`,
-      ts: new Date().toISOString(),
-      time: timeStr,
-      title,
-      status,
-      cls: cClass,
-      label: cLabel,
-      hint: cHint,
-      sent,
-      recv,
-      raw: env,
-      req,
-    };
-
-    setResults((prev) => [newEntry, ...prev]);
+    const entry = createPanelResultLogEntry({
+      title, envelope: env, status, sent, request: req,
+    });
+    setResults((previous) => [entry, ...previous]);
   }, []);
 
   const runManage = async (verb, args, label) => {

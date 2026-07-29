@@ -47,6 +47,46 @@ function extractErrorPayload(err) {
   return tryParseJson(err.body);
 }
 
+function isProcessDiagnostic(err) {
+  return Boolean(err.errorCode || err.correlationId || err.hint || err.component);
+}
+
+function processDiagnosticContext(err) {
+  return [
+    err.component ? `komponent: ${err.component}` : "",
+    err.stage ? `etap: ${err.stage}` : "",
+    err.runId ? `run: ${err.runId}` : "",
+    err.correlationId ? `korelacja: ${err.correlationId}` : "",
+  ].filter(Boolean).join(" · ");
+}
+
+function processDiagnosticCauses(err) {
+  return [
+    ...(Array.isArray(err.failureCodes) ? err.failureCodes : []),
+    ...(Array.isArray(err.issues) ? err.issues : []),
+  ];
+}
+
+function formatProcessDiagnostic(err, fallback) {
+  const message = String(err.message || fallback);
+  const firstLine = err.errorCode && !message.includes(err.errorCode)
+    ? `${err.errorCode} · ${message}`
+    : message;
+  const causes = processDiagnosticCauses(err);
+  return [
+    firstLine,
+    processDiagnosticContext(err),
+    causes.length ? `przyczyny: ${causes.join("; ")}` : "",
+    err.hint ? `zalecenie: ${err.hint}` : "",
+  ].filter(Boolean).join("\n");
+}
+
+function formatPayloadError(payload) {
+  const oqlError = parseOqlError(payload);
+  if (oqlError) return oqlError.message;
+  return describeDetail(payload?.detail ?? payload?.error ?? payload);
+}
+
 /**
  * Parse the standard OqlIssue body (see oqlos/errors/catalog.py /
  * oqlos.errors.OqlosError) out of a backend response payload.
@@ -68,42 +108,10 @@ export function parseOqlError(payload) {
 }
 
 export function formatHardwareApiError(err, fallback = "Hardware API request failed") {
-  if (!err) {
-    return fallback;
-  }
-  if (err.errorCode || err.correlationId || err.hint || err.component) {
-    const message = String(err.message || fallback);
-    const firstLine = err.errorCode && !message.includes(err.errorCode)
-      ? `${err.errorCode} · ${message}`
-      : message;
-    const context = [
-      err.component ? `komponent: ${err.component}` : "",
-      err.stage ? `etap: ${err.stage}` : "",
-      err.runId ? `run: ${err.runId}` : "",
-      err.correlationId ? `korelacja: ${err.correlationId}` : "",
-    ].filter(Boolean).join(" · ");
-    const causes = [
-      ...(Array.isArray(err.failureCodes) ? err.failureCodes : []),
-      ...(Array.isArray(err.issues) ? err.issues : []),
-    ];
-    return [
-      firstLine,
-      context,
-      causes.length ? `przyczyny: ${causes.join("; ")}` : "",
-      err.hint ? `zalecenie: ${err.hint}` : "",
-    ].filter(Boolean).join("\n");
-  }
+  if (!err) return fallback;
+  if (isProcessDiagnostic(err)) return formatProcessDiagnostic(err, fallback);
   const payload = extractErrorPayload(err);
-  const oqlError = parseOqlError(payload);
-  if (oqlError) {
-    return oqlError.message;
-  }
-  const detail = payload?.detail ?? payload?.error ?? payload;
-  const detailMessage = describeDetail(detail);
-  if (detailMessage) {
-    return detailMessage;
-  }
-  return err.message || fallback;
+  return formatPayloadError(payload) || err.message || fallback;
 }
 
 export { tryParseJson, describeDetail };
