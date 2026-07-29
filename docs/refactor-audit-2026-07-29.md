@@ -71,6 +71,21 @@ kiosku i synchronizacji, safe-state firmware oraz odczytach sesji/template.
 Lista obejmuje między innymi `POST /test-network`, operacje `/sync/*`,
 `POST /api/v1/hardware/safe-state` i odczyty `/sessions/{session_id}`.
 
+### Weryfikacja kandydatów OqlOS po baseline
+
+Przegląd dynamiczny 2026-07-29 wykazał, że trzy trafienia OqlOS były
+fałszywymi alarmami pierwotnej heurystyki: słownik `ok=false` służył do zapisu
+zdarzenia lub normalizacji wyniku, po czym trasa rzucała `OqlosError`.
+Dodane testy HTTP potwierdzają odpowiednio 422/`C2004-DATA-0002` oraz
+503/`C2004-HW-0012`, `application/problem+json`, zachowany `correlation_id` i
+brak surowego komunikatu upstream/tracebacka.
+
+Audyt AST sprawdza teraz wyłącznie literalny negatywny słownik w instrukcji
+`return`, dzięki czemu nie klasyfikuje wewnętrznych zdarzeń jako odpowiedzi
+HTTP. Bieżący wynik OqlOS dla tej metryki wynosi 0. Tabela powyżej pozostaje
+niezmienionym snapshotem NEXT-02; różnica jest udokumentowanym wynikiem
+pierwszej partii NEXT-04, a nie retroaktywną zmianą pomiaru bazowego.
+
 ### Hotspoty rozmiaru
 
 Największe pliki OqlOS to słownik tłumaczeń (2 150 linii), `Panel.jsx`
@@ -87,9 +102,10 @@ OQL TypeScript (1 441), inicjalizator frontendu (1 250) i runtime scenariusza
 
 1. `NEXT-03` pozostaje pierwszym zadaniem wykonawczym: safety gate ma wpływ na
    fizyczną aktuację i nie może czekać na pełne porządkowanie kontraktów.
-2. `NEXT-04` i `NEXT-05` mają mierzalny zakres startowy: najpierw 3 trasy
-   OqlOS z negatywnym HTTP 200, potem 80 tras `dict[str, Any]` i jawne response
-   models. C2004 powinno równolegle sklasyfikować swoich 15 kandydatów.
+2. Pierwsza partia `NEXT-04` potwierdziła typowane błędy trzech tras OqlOS i
+   usunęła ich fałszywe alarmy z audytu. Dalszy zakres to 137 surowych wyjątków,
+   241 szerokich handlerów, 80 tras `dict[str, Any]` dla `NEXT-05` oraz 15
+   kandydatów C2004 wymagających osobnej weryfikacji.
 3. `NEXT-07` powinno wprowadzić allowlistę settings i blokować nowe odczyty env;
    154/317 trafień to inwentarz migracji, nie założenie, że każde jest błędem.
 4. Podział dużych modułów należy prowadzić po odpowiedzialnościach i pokryciu

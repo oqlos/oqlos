@@ -1,6 +1,6 @@
 # Standard błędów i diagnostyki OqlOS/C2004
 
-Stan zweryfikowany: 2026-07-27.
+Stan zweryfikowany: 2026-07-29.
 
 ## Dwa poziomy identyfikatorów
 
@@ -102,6 +102,26 @@ dodawać kontekst, lecz `error_code` oraz `correlation_id` pozostają spójne.
 `C2004-SYS-0000` jest ostatnią granicą bezpieczeństwa, a nie docelowym kodem
 domenowym. Powtarzalny błąd zakończony `SYS-0000` wymaga dodania jawnego
 `OqlosError` i testu regresyjnego.
+
+### Zweryfikowana macierz pierwszej partii NEXT-04
+
+| Operacja / awaria | HTTP | Kod | `architecture/layer` | `component` / `stage` | Bezpieczny target |
+| --- | ---: | --- | --- | --- | --- |
+| OQL MQTT wyłączony | 503 | `C2004-HW-0012` | `SOA/oqlos` | `oqlos-api` / `api.error` | brak transportu |
+| OQL MQTT timeout | 504 | `C2004-NET-0003` | `SOA/firmware` | `oql-mqtt-agent` / `mqtt.response` | `mqtt-node://<node>/oql` |
+| zdalny błąd sprzętu OQL | status katalogu | zachowany kod `C2004-HW-*` | pola odpowiedzi agenta | bezpieczne etykiety agenta | `mqtt-node://<node>/oql` |
+| brak pól komendy CQRS | 422 | `C2004-DATA-0002` | `SOA/firmware` | `hardware-cqrs` / `command.validate` | nie dotyczy |
+| nieudana komenda diagnostyczna | 503 | kod urządzenia, np. `C2004-HW-0012` | `SOA/firmware` | `hardware-diagnostics` / `diagnostic.execute` | `hardware-peripheral://<id>` |
+| Modbus wizard bez weryfikacji | 503 | `C2004-HW-0012` | `SOA/firmware` | `modbus-wizard` / `program.verify` | `serial-device://<name>` |
+| nieznany błąd agenta | 500 | `C2004-SYS-0000` | `SOA/firmware` | etykiety agenta / etap MQTT | target bez hosta i danych dostępowych |
+
+Na granicy `/api/v1/oql/execute` i `/manage` identyfikator z
+`X-Correlation-ID` lub `X-Request-ID` jest przekazywany do requestu MQTT,
+odpowiedzi MQTT, problem details oraz nagłówka odpowiedzi. Zdalne `ok=false`
+nie jest już sukcesem HTTP. Publiczny komunikat pochodzi z katalogu C2004;
+surowy komunikat brokera, sidecara lub adaptera nie jest kopiowany do body.
+Nieznany wyjątek agenta mapuje się na `C2004-SYS-0000`, nie na bazodanowy
+`C2004-SYS-0001`.
 
 ## Diagnostyka zasilania Raspberry Pi
 

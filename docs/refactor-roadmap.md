@@ -146,6 +146,7 @@ stan historyczny nie blokuje, STOP działa, a testy masek `0x0`, `0x1`,
 ### NEXT-04 — Ujednolicić błędy SOA, POA i firmware
 
 **Priorytet:** P0. **Repo:** OqlOS + C2004. **Zależności:** NEXT-01.
+**Stan:** w toku — pierwsza partia OqlOS zamknięta 2026-07-29.
 
 - zinwentaryzować `HTTPException`, `ValueError`, `RuntimeError`, szerokie
   `except` i odpowiedzi `ok=false`;
@@ -159,6 +160,19 @@ stan historyczny nie blokuje, STOP działa, a testy masek `0x0`, `0x1`,
   `C2004-SYS-0000`;
 - dodać kontraktowe testy problem details bez tracebacków, sekretów i surowego
   HTML nginx jako głównego komunikatu operatora.
+
+Zamknięta partia OqlOS: `/api/v1/oql/execute` i `/manage` propagują jeden
+`correlation_id` przez HTTP i MQTT, a zdalne błędy zwracają status i bezpieczny
+komunikat z katalogu C2004 zamiast HTTP 200. Kontrakty CQRS,
+`diagnostic-command` i Modbus wizard potwierdzają problem details bez surowego
+upstreamu. Skorygowana kontrola AST liczy wyłącznie literalnie zwrócone
+negatywne envelope: wynik OqlOS spadł z 3 kandydatów do 0; wcześniejsze trzy
+trafienia były słownikami zdarzeń poprzedzającymi typowany wyjątek. Macierz
+tej partii znajduje się w [standardzie błędów](ERROR_STANDARDIZATION.md).
+
+Pozostały zakres: sklasyfikować 137 surowych wyjątków i 241 szerokich handlerów
+OqlOS, rozdzielić pozostałe klasy host/proxy/plugin oraz wykonać analogiczną
+inwentaryzację i kontrakty po stronie C2004/POA.
 
 **Gotowe, gdy:** każda publiczna operacja ma macierz błąd → kod → warstwa →
 remediation, a ten sam przypadek daje ten sam kod w SOA, POA i firmware.
