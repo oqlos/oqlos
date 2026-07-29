@@ -405,6 +405,12 @@ ISSUE_CATALOG: dict[str, IssueDefinition] = {
         default_severity="warning",
         summary="The caller is not permitted to save hardware configuration.",
     ),
+    "api_hardware_configuration_invalid": IssueDefinition(
+        code="api_hardware_configuration_invalid",
+        domain="api",
+        default_severity="warning",
+        summary="The hardware configuration request is invalid.",
+    ),
     "api_modbus_coil_pulse_forbidden": IssueDefinition(
         code="api_modbus_coil_pulse_forbidden",
         domain="api",

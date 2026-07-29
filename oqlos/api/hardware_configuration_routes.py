@@ -11,7 +11,7 @@ from pathlib import Path
 import re
 from typing import Any, Literal
 
-from fastapi import APIRouter, Header, HTTPException, Query
+from fastapi import APIRouter, Header, Query
 from pydantic import BaseModel, Field
 
 from oqlos.errors import OqlosError
@@ -46,15 +46,63 @@ class ConfigurationSaveRequest(ConfigurationContentRequest):
     file_name: str | None = None
 
 
-def _error(exc: HardwareConfigurationError) -> HTTPException:
-    return HTTPException(
-        status_code=422,
+def _configuration_unavailable(operation_id: str, *, stage: str) -> OqlosError:
+    return OqlosError(
+        code="config_unavailable",
+        status_code=503,
         detail={
-            "error": str(exc),
-            "format": exc.format,
-            "source": exc.source,
-            "issues": exc.issues,
+            "architecture": "SOA",
+            "layer": "oqlos",
+            "component": "hardware-configuration",
+            "stage": stage,
+            "problem_source": "configuration",
+            "operation_id": operation_id,
         },
+    )
+
+
+def _configuration_invalid(
+    operation_id: str,
+    *,
+    stage: str,
+    reason: str,
+    exc: HardwareConfigurationError | None = None,
+) -> OqlosError:
+    detail: dict[str, Any] = {
+        "architecture": "SOA",
+        "layer": "oqlos",
+        "component": "hardware-configuration",
+        "stage": stage,
+        "problem_source": "request",
+        "operation_id": operation_id,
+        "reason": reason,
+    }
+    if exc is not None:
+        if exc.format in SUPPORTED_HARDWARE_CONFIGURATION_FORMATS:
+            detail["format"] = exc.format
+        if exc.issues:
+            detail["issue_count"] = len(exc.issues)
+    return OqlosError(
+        code="api_hardware_configuration_invalid",
+        status_code=422,
+        detail=detail,
+    )
+
+
+def _configuration_error(
+    exc: HardwareConfigurationError,
+    *,
+    operation_id: str,
+    stage: str,
+    configured_source: bool = False,
+) -> OqlosError:
+    if configured_source or isinstance(exc.__cause__, OSError):
+        return _configuration_unavailable(operation_id, stage=stage)
+    return _configuration_invalid(
+        operation_id,
+        stage=stage,
+        reason="configuration_invalid",
+        exc=exc,
     )
 
 
@@ -74,20 +122,28 @@ def _require_system_role(role: str | None) -> None:
         )
 
 
-def _configured_path() -> Path:
+def _configured_path(operation_id: str) -> Path:
     try:
         return resolve_oqlos_config_path()
     except FileNotFoundError as exc:
-        raise HTTPException(status_code=404, detail={"error": str(exc)}) from exc
+        raise _configuration_unavailable(operation_id, stage="config.resolve") from exc
 
 
 def _safe_target(file_name: str | None) -> Path:
-    current = _configured_path()
-    if not file_name:
+    name = None
+    if file_name:
+        name = Path(file_name).name
+        if name != file_name or not re.fullmatch(
+            r"oqlos(?:-[A-Za-z0-9_.-]+)?\.(?:oql|ya?ml|json)", name
+        ):
+            raise _configuration_invalid(
+                "hardware.configuration.save",
+                stage="target.validate",
+                reason="file_name_invalid",
+            )
+    current = _configured_path("hardware.configuration.save")
+    if name is None:
         return current
-    name = Path(file_name).name
-    if name != file_name or not re.fullmatch(r"oqlos(?:-[A-Za-z0-9_.-]+)?\.(?:oql|ya?ml|json)", name):
-        raise HTTPException(status_code=400, detail={"error": "unsafe hardware configuration file name"})
     return current.parent / name
 
 
@@ -108,11 +164,16 @@ def _configuration_payload(config: HardwareConfiguration, path: Path) -> dict[st
 
 @router.get("")
 async def get_hardware_configuration() -> dict[str, Any]:
-    path = _configured_path()
+    path = _configured_path("hardware.configuration.get")
     try:
         return _configuration_payload(load_hardware_configuration(path), path)
     except HardwareConfigurationError as exc:
-        raise _error(exc) from exc
+        raise _configuration_error(
+            exc,
+            operation_id="hardware.configuration.get",
+            stage="config.load",
+            configured_source=True,
+        ) from exc
 
 
 @router.get("/schema")
@@ -127,7 +188,7 @@ async def get_hardware_configuration_schema() -> dict[str, Any]:
 
 @router.get("/files")
 async def list_hardware_configuration_files() -> dict[str, Any]:
-    current = _configured_path()
+    current = _configured_path("hardware.configuration.files.list")
     files: list[dict[str, Any]] = []
     for candidate in sorted(current.parent.glob("oqlos*")):
         if not candidate.is_file() or candidate.suffix.lower() not in {".oql", ".yaml", ".yml", ".json"}:
@@ -137,10 +198,10 @@ async def list_hardware_configuration_files() -> dict[str, Any]:
             load_hardware_configuration(candidate)
             valid = True
             error = None
-        except HardwareConfigurationError as exc:
+        except HardwareConfigurationError:
             fmt = candidate.suffix.lower().lstrip(".").replace("yml", "yaml")
             valid = False
-            error = str(exc)
+            error = "Invalid hardware configuration"
         files.append({
             "name": candidate.name,
             "path": str(candidate),
@@ -148,6 +209,8 @@ async def list_hardware_configuration_files() -> dict[str, Any]:
             "active": candidate.resolve() == current.resolve(),
             "valid": valid,
             "error": error,
+            "error_code": None if valid else "C2004-DATA-0002",
+            "issue_code": None if valid else "api_hardware_configuration_invalid",
         })
     return {"ok": True, "count": len(files), "files": files}
 
@@ -156,7 +219,7 @@ async def list_hardware_configuration_files() -> dict[str, Any]:
 async def get_hardware_configuration_source(
     format: Literal["oql", "yaml", "json"] | None = Query(default=None),
 ) -> dict[str, Any]:
-    path = _configured_path()
+    path = _configured_path("hardware.configuration.source.get")
     try:
         config = load_hardware_configuration(path)
         output_format = format or detect_hardware_configuration_format(path)
@@ -169,7 +232,12 @@ async def get_hardware_configuration_source(
             "contract": HARDWARE_CONFIGURATION_VERSION,
         }
     except HardwareConfigurationError as exc:
-        raise _error(exc) from exc
+        raise _configuration_error(
+            exc,
+            operation_id="hardware.configuration.source.get",
+            stage="config.load",
+            configured_source=True,
+        ) from exc
 
 
 @router.post("/validate")
@@ -177,7 +245,11 @@ async def validate_hardware_configuration(payload: ConfigurationContentRequest) 
     try:
         config = parse_hardware_configuration(payload.content, payload.format)
     except HardwareConfigurationError as exc:
-        raise _error(exc) from exc
+        raise _configuration_error(
+            exc,
+            operation_id="hardware.configuration.validate",
+            stage="config.validate",
+        ) from exc
     return {"ok": True, "contract": config.schema_version, "configuration": config.canonical_dict()}
 
 
@@ -187,7 +259,11 @@ async def convert_hardware_configuration(payload: ConfigurationConvertRequest) -
         config = parse_hardware_configuration(payload.content, payload.format)
         content = serialize_hardware_configuration(config, payload.target_format)
     except HardwareConfigurationError as exc:
-        raise _error(exc) from exc
+        raise _configuration_error(
+            exc,
+            operation_id="hardware.configuration.convert",
+            stage="config.convert",
+        ) from exc
     return {
         "ok": True,
         "contract": config.schema_version,
@@ -206,16 +282,26 @@ async def save_hardware_configuration_source(
     target = _safe_target(payload.file_name)
     target_format = detect_hardware_configuration_format(target)
     if target_format != payload.format:
-        raise HTTPException(
-            status_code=422,
-            detail={"error": f"file extension expects {target_format}, request contains {payload.format}"},
+        raise _configuration_invalid(
+            "hardware.configuration.save",
+            stage="target.validate",
+            reason="format_mismatch",
         )
     try:
         config = parse_hardware_configuration(payload.content, payload.format, source=target.name)
         save_hardware_configuration(target, config, format=payload.format)
     except HardwareConfigurationError as exc:
-        raise _error(exc) from exc
-    active = target.resolve() == _configured_path().resolve()
+        raise _configuration_error(
+            exc,
+            operation_id="hardware.configuration.save",
+            stage="config.validate",
+        ) from exc
+    except OSError as exc:
+        raise _configuration_unavailable(
+            "hardware.configuration.save",
+            stage="config.persist",
+        ) from exc
+    active = target.resolve() == _configured_path("hardware.configuration.save").resolve()
     return {
         "ok": True,
         "name": target.name,

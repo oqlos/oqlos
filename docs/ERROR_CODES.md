@@ -27,6 +27,7 @@ own:
 | `api_execution_not_found` | warning | The requested execution does not exist. | — |
 | `api_execution_request_invalid` | warning | The scenario execution request is invalid. | — |
 | `api_execution_state_conflict` | warning | The execution control command conflicts with the current runtime state. | — |
+| `api_hardware_configuration_invalid` | warning | The hardware configuration request is invalid. | — |
 | `api_hardware_configuration_write_forbidden` | warning | The caller is not permitted to save hardware configuration. | — |
 | `api_invalid_recover_scope` | warning | POST /api/v1/hardware/recover was called with an unsupported `scope` query param. | — |
 | `api_modbus_coil_pulse_forbidden` | warning | The caller is not permitted to pulse a Modbus coil. | — |

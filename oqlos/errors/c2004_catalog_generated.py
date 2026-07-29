@@ -254,6 +254,7 @@ C2004_CODE_BY_ISSUE: dict[str, str] = {
     'api_execution_not_found': 'C2004-DATA-0001',
     'api_execution_request_invalid': 'C2004-DATA-0002',
     'api_execution_state_conflict': 'C2004-DATA-0003',
+    'api_hardware_configuration_invalid': 'C2004-DATA-0002',
     'api_hardware_configuration_write_forbidden': 'C2004-AUTH-0002',
     'api_invalid_recover_scope': 'C2004-DATA-0002',
     'api_modbus_coil_pulse_forbidden': 'C2004-AUTH-0002',

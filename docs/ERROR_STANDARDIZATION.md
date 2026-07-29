@@ -119,6 +119,9 @@ domenowym. Powtarzalny błąd zakończony `SYS-0000` wymaga dodania jawnego
 | niedozwolona akcja systemd | 422 | `C2004-DATA-0002` | `SOA/host` | `systemd-control` / `action.validate` | whitelisted unit |
 | jednostka systemd poza whitelistą | 403 | `C2004-AUTH-0002` | `SOA/host` | `systemd-control` / `unit.authorize` | wartość wejściowa nie jest publikowana |
 | zapis konfiguracji bez roli systemowej | 403 | `C2004-AUTH-0002` | `SOA/oqlos` | `hardware-configuration` / `role.authorize` | rola wejściowa nie jest publikowana |
+| brak, błędny lub nieczytelny aktywny hardware config | 503 | `C2004-HW-0012` | `SOA/oqlos` | `hardware-configuration` / `config.resolve` albo `config.load` | ścieżka, źródło i tekst parsera nie są publikowane |
+| błędna treść, nazwa celu lub rozszerzenie hardware config | 422 | `C2004-DATA-0002` | `SOA/oqlos` | `hardware-configuration` / `config.validate` albo `target.validate` | publikowany jest tylko stabilny `reason`, format i liczba problemów |
+| błąd zapisu hardware config | 503 | `C2004-HW-0012` | `SOA/oqlos` | `hardware-configuration` / `config.persist` | ścieżka i tekst błędu I/O nie są publikowane |
 | impuls cewki bez roli systemowej | 403 | `C2004-AUTH-0002` | `SOA/firmware` | `modbus-coil-test` / `role.authorize` | rola i payload nie są publikowane |
 | ścieżka edytora poza katalogiem scenariuszy | 403 | `C2004-AUTH-0002` | `SOA/oqlos` | `scenario-editor` / `path.authorize` | ścieżka i root systemu plików nie są publikowane |
 | brak pliku edytora lub scenariusza | 404 | `C2004-DATA-0001` | `SOA/oqlos` | `scenario-editor` / `file.lookup` | nazwa i ścieżka wejściowa nie są publikowane |
