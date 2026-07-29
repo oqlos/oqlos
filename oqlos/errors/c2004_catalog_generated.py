@@ -251,6 +251,7 @@ C2004_CODE_BY_ISSUE: dict[str, str] = {
     'api_invalid_recover_scope': 'C2004-DATA-0002',
     'api_modbus_wizard_invalid_request': 'C2004-DATA-0002',
     'api_oql_transport_disabled': 'C2004-HW-0012',
+    'api_systemd_unit_forbidden': 'C2004-AUTH-0002',
     'boardnet_power_condition_active': 'C2004-HW-0014',
     'boardnet_power_condition_historical': 'C2004-HW-0014',
     'boardnet_power_telemetry_unavailable': 'C2004-HW-0012',

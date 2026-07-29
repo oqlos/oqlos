@@ -363,6 +363,12 @@ ISSUE_CATALOG: dict[str, IssueDefinition] = {
         default_severity="warning",
         summary="The hardware diagnostic command or its arguments are invalid.",
     ),
+    "api_systemd_unit_forbidden": IssueDefinition(
+        code="api_systemd_unit_forbidden",
+        domain="api",
+        default_severity="warning",
+        summary="The requested system service is not permitted for this operation.",
+    ),
     "api_modbus_wizard_invalid_request": IssueDefinition(
         code="api_modbus_wizard_invalid_request",
         domain="api",

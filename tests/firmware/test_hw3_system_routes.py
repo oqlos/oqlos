@@ -1,5 +1,6 @@
 """Regression: v3 system routes for Modbus, RTC, and motor-scoped diagnosis."""
 
+import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
@@ -91,6 +92,46 @@ def test_systemd_control_rejects_unknown_action_with_typed_data_error() -> None:
     assert body["correlation_id"] == "cor-systemd-action"
     assert body["component"] == "systemd-control"
     assert body["stage"] == "action.validate"
+
+
+@pytest.mark.parametrize(
+    ("method", "path", "operation_id"),
+    [
+        (
+            "POST",
+            "/api/v3/hardware/systemd/services/password=hunter2.service/restart",
+            "systemd.service.control",
+        ),
+        (
+            "GET",
+            "/api/v3/hardware/systemd/services/password=hunter2.service/logs",
+            "systemd.service.logs",
+        ),
+    ],
+)
+def test_systemd_routes_reject_non_whitelisted_unit_with_typed_auth_error(
+    monkeypatch, method: str, path: str, operation_id: str
+) -> None:
+    monkeypatch.setattr(
+        "oqlos.hardware.systemd_services.is_whitelisted", lambda _unit: False
+    )
+
+    response = _client().request(
+        method,
+        path,
+        headers={"X-Correlation-ID": "cor-systemd-unit"},
+    )
+
+    assert response.status_code == 403
+    assert response.headers["content-type"].startswith("application/problem+json")
+    body = response.json()
+    assert body["code"] == "C2004-AUTH-0002"
+    assert body["correlation_id"] == "cor-systemd-unit"
+    assert body["component"] == "systemd-control"
+    assert body["stage"] == "unit.authorize"
+    assert body["metadata"]["diagnostics"]["issue_code"] == "api_systemd_unit_forbidden"
+    assert body["metadata"]["context"]["operation_id"] == operation_id
+    assert "hunter2" not in response.text
 
 
 def test_systemd_control_failure_is_not_returned_as_http_200(monkeypatch) -> None:

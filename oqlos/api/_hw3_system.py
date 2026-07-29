@@ -3,12 +3,32 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, Body, Header, HTTPException
+from fastapi import APIRouter, Body, Header
 
 from oqlos.api._hw3_models import _hardware_v1_call, _runtime_control_skipped
 from oqlos.errors import OqlosError
 
 sub_router = APIRouter()
+
+
+def _require_systemd_unit_allowed(unit: str, *, operation_id: str) -> None:
+    """Reject non-whitelisted units without reflecting user input."""
+    from oqlos.hardware.systemd_services import is_whitelisted
+
+    if is_whitelisted(unit):
+        return
+    raise OqlosError(
+        code="api_systemd_unit_forbidden",
+        status_code=403,
+        detail={
+            "architecture": "SOA",
+            "layer": "host",
+            "component": "systemd-control",
+            "stage": "unit.authorize",
+            "problem_source": "request",
+            "operation_id": operation_id,
+        },
+    )
 
 
 def _wizard_integer(
@@ -239,10 +259,9 @@ async def hardware_systemd_services_v3() -> dict[str, Any]:
 @sub_router.post("/systemd/services/{unit}/{action}")
 async def hardware_systemd_control_v3(unit: str, action: str) -> dict[str, Any]:
     """Start/stop/restart/status a whitelisted C2004/OqlOS systemd unit."""
-    from oqlos.hardware.systemd_services import control_service, is_whitelisted
+    from oqlos.hardware.systemd_services import control_service
 
-    if not is_whitelisted(unit):
-        raise HTTPException(status_code=403, detail=f"Unit not in C2004/OqlOS whitelist: {unit}")
+    _require_systemd_unit_allowed(unit, operation_id="systemd.service.control")
     result = control_service(unit, action)
     if not result.get("ok") and result.get("error", "").startswith("Unsupported action"):
         raise OqlosError(
@@ -281,10 +300,9 @@ async def hardware_systemd_control_v3(unit: str, action: str) -> dict[str, Any]:
 @sub_router.get("/systemd/services/{unit}/logs")
 async def hardware_systemd_logs_v3(unit: str, lines: int = 100) -> dict[str, Any]:
     """Recent journal logs for a whitelisted C2004/OqlOS systemd unit."""
-    from oqlos.hardware.systemd_services import is_whitelisted, service_logs
+    from oqlos.hardware.systemd_services import service_logs
 
-    if not is_whitelisted(unit):
-        raise HTTPException(status_code=403, detail=f"Unit not in C2004/OqlOS whitelist: {unit}")
+    _require_systemd_unit_allowed(unit, operation_id="systemd.service.logs")
     return service_logs(unit, lines=lines)
 
 
