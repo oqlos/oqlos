@@ -375,6 +375,12 @@ ISSUE_CATALOG: dict[str, IssueDefinition] = {
         default_severity="warning",
         summary="The scenario execution request is invalid.",
     ),
+    "api_execution_not_found": IssueDefinition(
+        code="api_execution_not_found",
+        domain="api",
+        default_severity="warning",
+        summary="The requested execution does not exist.",
+    ),
     "api_execution_state_conflict": IssueDefinition(
         code="api_execution_state_conflict",
         domain="api",

@@ -22,6 +22,7 @@ own:
 |------|----------|---------|--------|
 | `api_diagnostic_command_invalid` | warning | The hardware diagnostic command or its arguments are invalid. | — |
 | `api_editor_path_forbidden` | warning | The requested editor path is outside the permitted scenario area. | — |
+| `api_execution_not_found` | warning | The requested execution does not exist. | — |
 | `api_execution_request_invalid` | warning | The scenario execution request is invalid. | — |
 | `api_execution_state_conflict` | warning | The execution control command conflicts with the current runtime state. | — |
 | `api_hardware_configuration_write_forbidden` | warning | The caller is not permitted to save hardware configuration. | — |

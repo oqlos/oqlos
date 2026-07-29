@@ -129,6 +129,10 @@ domenowym. Powtarzalny błąd zakończony `SYS-0000` wymaga dodania jawnego
 | sterowanie bez aktywnego wykonania | 409 | `C2004-DATA-0003` | `SOA/oqlos` | `scenario-execution` / `state.validate` | brak negatywnego envelope przy HTTP 200 |
 | brak pluginu w rejestrze | 404 | `C2004-DATA-0001` | `SOA/firmware` | `plugin-registry` / `plugin.lookup` | identyfikator wejściowy nie jest publikowany |
 | brak peryferium w rejestrze | 404 | `C2004-DATA-0001` | `SOA/firmware` | `peripheral-registry` / `peripheral.lookup` | identyfikator wejściowy nie jest publikowany |
+| błędny start lub krok execution API | 422 | `C2004-DATA-0002` | `SOA/oqlos` | `scenario-execution` / `dsl.validate` albo `step.validate` | DSL i payload nie są publikowane |
+| brak execution ID | 404 | `C2004-DATA-0001` | `SOA/oqlos` | `scenario-execution` / `execution.lookup` | execution ID nie jest publikowane |
+| legacy control bez bieżącego wykonania | 409 | `C2004-DATA-0003` | `SOA/oqlos` | `scenario-execution` / `state.validate` | jawny konflikt zamiast mylącego 404 |
+| nieznany błąd orkiestratora | 500 | `C2004-SYS-0000` | `SOA/oqlos` | `oqlos-api` / `api.error` | typ wyjątku bez komunikatu i tracebacku |
 | błąd wykonania systemd | 503 | `C2004-HW-0012` | `SOA/host` | `systemd-control` / `action.execute` | whitelisted unit |
 | zdalne wykonanie scenariusza w editorze | status kodu agenta | zachowany kod MQTT | `SOA/firmware` | agent / etap MQTT | `mqtt-node://<node>/oql` |
 | nieotypowany `HTTPException` 5xx | status katalogu | kod wynikający ze statusu | `SOA/oqlos` | `oqlos-api` / `http.exception` | granica API |

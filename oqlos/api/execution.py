@@ -1,16 +1,63 @@
 # firmware/api/execution.py
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 import json
 import asyncio
 from typing import Any
+from pydantic import ValidationError
 
+from oqlos.errors import OqlosError
 from oqlos.models.execution import ExecutionRequest
 from oqlos.models.scenario import Step
-from oqlos.shared._endpoint_helpers import get_or_404
 from oqlos.api.utils import execution_ctrl as _ctrl
 
 router = APIRouter(prefix="/api/v1/execution", tags=["execution"])
+
+
+def _execution_request_error(reason: str, *, stage: str) -> OqlosError:
+    return OqlosError(
+        code="api_execution_request_invalid",
+        status_code=422,
+        detail={
+            "architecture": "SOA",
+            "layer": "oqlos",
+            "component": "scenario-execution",
+            "stage": stage,
+            "problem_source": "request",
+            "operation_id": "execution.api",
+            "reason": reason,
+        },
+    )
+
+
+def _scenario_not_found(*, operation_id: str) -> OqlosError:
+    return OqlosError(
+        code="api_scenario_not_found",
+        status_code=404,
+        detail={
+            "architecture": "SOA",
+            "layer": "oqlos",
+            "component": "scenario-execution",
+            "stage": "scenario.lookup",
+            "problem_source": "request",
+            "operation_id": operation_id,
+        },
+    )
+
+
+def _execution_not_found(*, operation_id: str) -> OqlosError:
+    return OqlosError(
+        code="api_execution_not_found",
+        status_code=404,
+        detail={
+            "architecture": "SOA",
+            "layer": "oqlos",
+            "component": "scenario-execution",
+            "stage": "execution.lookup",
+            "problem_source": "request",
+            "operation_id": operation_id,
+        },
+    )
 
 def _resolve_step_label(scenario_id: str, goal_id: str | None, step_id: str | None) -> str | None:
     """Look up the human-readable label for a step within a scenario.
@@ -90,20 +137,25 @@ def _current_projection() -> dict[str, Any]:
 @router.post("/start")
 async def start_execution(request: ExecutionRequest):
     """Start scenario execution"""
-    try:
-        # If DSL content is provided, parse and register a temporary scenario
-        if request.content and request.content.get('dsl'):
+    inline_dsl = request.content.get('dsl') if request.content else None
+    if inline_dsl:
+        try:
             _register_dsl_scenario(request.scenarioId, request.content['dsl'])
-        
-        execution_id = await _ctrl.orchestrator.execute_scenario(
-            scenario_id=request.scenarioId,
-            goals=request.goals,
-            mode=request.mode,
-            speed=request.speed
-        )
-        return {"executionId": execution_id, "status": "started"}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        except ValueError as exc:
+            raise _execution_request_error("dsl_invalid", stage="dsl.validate") from exc
+
+    if request.scenarioId not in _ctrl.state_manager.scenarios:
+        if inline_dsl:
+            raise _execution_request_error("dsl_invalid", stage="dsl.validate")
+        raise _scenario_not_found(operation_id="execution.start")
+
+    execution_id = await _ctrl.orchestrator.execute_scenario(
+        scenario_id=request.scenarioId,
+        goals=request.goals,
+        mode=request.mode,
+        speed=request.speed
+    )
+    return {"executionId": execution_id, "status": "started"}
 
 @router.post("/step")
 async def execute_step(payload: dict[str, Any]):
@@ -121,7 +173,7 @@ async def execute_step(payload: dict[str, Any]):
     execution_id = payload.get("executionId")
 
     if not scenario_id or not step_data:
-        raise HTTPException(status_code=400, detail="scenarioId and step are required")
+        raise _execution_request_error("step_fields_required", stage="step.validate")
 
     # If no active execution, start one implicitly
     if execution_id and execution_id in _ctrl.state_manager.executions:
@@ -130,26 +182,26 @@ async def execute_step(payload: dict[str, Any]):
         exec_obj = _ctrl.orchestrator.current_execution
         execution_id = exec_obj.executionId
     else:
-        try:
-            execution_id = await _ctrl.orchestrator.execute_scenario(
-                scenario_id=scenario_id,
-                goals=[],
-                mode="step",
-                speed=1.0,
-            )
-        except ValueError as exc:
-            if "not found" in str(exc).lower():
-                raise HTTPException(status_code=404, detail=str(exc)) from exc
-            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        if scenario_id not in _ctrl.state_manager.scenarios:
+            raise _scenario_not_found(operation_id="execution.step")
+        execution_id = await _ctrl.orchestrator.execute_scenario(
+            scenario_id=scenario_id,
+            goals=[],
+            mode="step",
+            speed=1.0,
+        )
         exec_obj = _ctrl.state_manager.executions.get(execution_id)
 
     # Build a Step model and delegate to orchestrator
-    step = Step(
-        id=step_data.get("id", "step-inline"),
-        action=step_data.get("action", "NOP"),
-        peripheral=step_data.get("peripheral"),
-        value=step_data.get("value"),
-    )
+    try:
+        step = Step(
+            id=step_data.get("id", "step-inline"),
+            action=step_data.get("action", "NOP"),
+            peripheral=step_data.get("peripheral"),
+            value=step_data.get("value"),
+        )
+    except ValidationError as exc:
+        raise _execution_request_error("step_invalid", stage="step.validate") from exc
     result = await _ctrl.orchestrator.execute_single_step(step) if hasattr(_ctrl.orchestrator, 'execute_single_step') else {"status": "executed", "step": step_data}
 
     return {
@@ -186,7 +238,7 @@ def _make_exec_route(ctrl_fn):
     """Factory for pause/resume/stop routes — eliminates 3 near-identical handlers."""
     async def handler(execution_id: str):
         if execution_id not in _ctrl.state_manager.executions:
-            raise HTTPException(status_code=404, detail="Execution not found")
+            raise _execution_not_found(operation_id="execution.control-by-id")
         return ctrl_fn(execution_id)
     handler.__name__ = ctrl_fn.__name__
     handler.__doc__ = f"{ctrl_fn.__name__.replace('do_', '').capitalize()} execution"
@@ -199,7 +251,10 @@ stop_execution   = router.post("/{execution_id}/stop")(_make_exec_route(_ctrl.do
 @router.get("/by-id/{execution_id}")
 async def get_execution(execution_id: str):
     """Get execution status"""
-    return get_or_404(_ctrl.state_manager.executions, execution_id, "Execution not found")
+    execution = _ctrl.state_manager.executions.get(execution_id)
+    if execution is None:
+        raise _execution_not_found(operation_id="execution.get")
+    return execution
 
 @router.get("/projection")
 async def get_execution_projection():
@@ -260,7 +315,18 @@ async def get_execution_logs():
 def _make_legacy_route(ctrl_fn):
     async def handler():
         if not _ctrl.orchestrator.current_execution:
-            raise HTTPException(status_code=404, detail="No current execution")
+            raise OqlosError(
+                code="api_execution_state_conflict",
+                status_code=409,
+                detail={
+                    "architecture": "SOA",
+                    "layer": "oqlos",
+                    "component": "scenario-execution",
+                    "stage": "state.validate",
+                    "problem_source": "runtime-state",
+                    "operation_id": "execution.control-current",
+                },
+            )
         return ctrl_fn()
     handler.__name__ = f"{ctrl_fn.__name__}_legacy"
     return handler
