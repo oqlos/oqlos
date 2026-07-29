@@ -93,6 +93,12 @@ systemd, wcześniej zwracany jako zmienna `ok=false` przy HTTP 200, daje teraz
 503/`C2004-HW-0012`; ta poprawka nie wpływa na metrykę literalnych słowników,
 ale jest objęta testem dynamicznym problem details.
 
+Kolejny test dynamiczny wykrył negatywny envelope zwracany przez zmienną w
+`/api/v1/editor/execute`, którego konserwatywna metryka literalnego `return`
+nie obejmuje. Zdalny błąd edytora korzysta teraz ze wspólnego kontraktu MQTT i
+nie zwraca HTTP 200. Nieotypowane HTTP 5xx zostały jednocześnie objęte centralną
+sanityzacją, dzięki czemu surowe wyjątki starszych tras nie trafiają do body.
+
 ### Hotspoty rozmiaru
 
 Największe pliki OqlOS to słownik tłumaczeń (2 150 linii), `Panel.jsx`

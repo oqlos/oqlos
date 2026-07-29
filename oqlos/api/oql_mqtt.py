@@ -71,7 +71,7 @@ def _safe_remote_label(value: object, fallback: str) -> str:
     return label[:128] if label else fallback
 
 
-def _raise_remote_failure(
+def raise_remote_oql_failure(
     resp: OqlResponse,
     *,
     correlation_id: str,
@@ -123,7 +123,7 @@ async def execute_oql(
         correlation_id=correlation_id,
     )
     if not resp.ok:
-        _raise_remote_failure(
+        raise_remote_oql_failure(
             resp,
             correlation_id=correlation_id,
             operation_id="oql.execute",
@@ -163,7 +163,7 @@ async def manage_hardware(
         correlation_id=correlation_id,
     )
     if not resp.ok:
-        _raise_remote_failure(
+        raise_remote_oql_failure(
             resp,
             correlation_id=correlation_id,
             operation_id="oql.manage",

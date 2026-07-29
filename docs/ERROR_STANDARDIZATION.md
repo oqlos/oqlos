@@ -118,6 +118,8 @@ domenowym. Powtarzalny błąd zakończony `SYS-0000` wymaga dodania jawnego
 | niedostępna akcja HUI | status katalogu | kod wyniku, np. `C2004-HW-0012` | `SOA/firmware` | `hardware-hui` / `action.execute` | lokalna akcja sprzętowa |
 | niedozwolona akcja systemd | 422 | `C2004-DATA-0002` | `SOA/host` | `systemd-control` / `action.validate` | whitelisted unit |
 | błąd wykonania systemd | 503 | `C2004-HW-0012` | `SOA/host` | `systemd-control` / `action.execute` | whitelisted unit |
+| zdalne wykonanie scenariusza w editorze | status kodu agenta | zachowany kod MQTT | `SOA/firmware` | agent / etap MQTT | `mqtt-node://<node>/oql` |
+| nieotypowany `HTTPException` 5xx | status katalogu | kod wynikający ze statusu | `SOA/oqlos` | `oqlos-api` / `http.exception` | granica API |
 | nieznany błąd agenta | 500 | `C2004-SYS-0000` | `SOA/firmware` | etykiety agenta / etap MQTT | target bez hosta i danych dostępowych |
 
 Na granicy `/api/v1/oql/execute` i `/manage` identyfikator z
@@ -151,6 +153,13 @@ Testy katalogu blokują brak mapowania lokalnego issue, kod nieistniejący w
 katalogu, rozbieżność mapy statusów HTTP oraz literalny `OqlosError`, którego
 status nie odpowiada publicznemu kodowi. Oddzielna macierz testuje klasy
 wyjątków MQTT i sanitację problem details z upstream.
+
+Nieotypowany `HTTPException` o statusie 5xx nigdy nie publikuje swojego
+`detail` ani kontekstu wejściowego. Granica wybiera komunikat z katalogu,
+zapisuje bezpieczny `component=oqlos-api`, `stage=http.exception` oraz zachowuje
+identyfikator korelacji. Szczegóły wyjątku mogą pozostać wyłącznie w logu
+serwera. Ta zasada obejmuje między innymi operacje plikowe edytora i awarie
+parsera DSL.
 
 ## Diagnostyka zasilania Raspberry Pi
 

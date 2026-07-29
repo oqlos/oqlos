@@ -7,9 +7,11 @@ import os
 import pathlib
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request, Response
 from pydantic import BaseModel
 
+from oqlos.errors import OqlosError
+from oqlos.errors.fastapi_integration import correlation_id_for_request
 from oqlos.shared.file_ops import (
     PathEscapeError,
     _ensure_safe_path,
@@ -76,6 +78,7 @@ def _editor_response_from_oql(
     *,
     scenario_file: str,
     response: Any,
+    correlation_id: str,
 ) -> dict[str, Any]:
     result = _result_dict(getattr(response, "result", None))
     ok = bool(getattr(response, "ok", False))
@@ -94,6 +97,7 @@ def _editor_response_from_oql(
         "warnings": list(result.get("warnings") or []),
         "node_id": getattr(response, "node_id", ""),
         "result": result or None,
+        "correlation_id": correlation_id,
     }
 
 
@@ -181,11 +185,19 @@ def _sensor_telemetry_recorder():
 
 
 @router.post("/execute")
-async def execute_scenario(request: ExecutionRequest) -> dict[str, Any]:
+async def execute_scenario(
+    request: ExecutionRequest,
+    http_request: Request,
+    http_response: Response,
+) -> dict[str, Any]:
     """Execute a scenario file using oqlos runtime."""
     try:
-        from oqlos.api.oql_mqtt import get_oql_controller
+        from oqlos.api.oql_mqtt import (
+            get_oql_controller,
+            raise_remote_oql_failure,
+        )
 
+        correlation_id = correlation_id_for_request(http_request)
         full_path = _safe_path(request.scenario_file)
         if not full_path.exists():
             raise HTTPException(status_code=404, detail="Scenario file not found")
@@ -202,10 +214,19 @@ async def execute_scenario(request: ExecutionRequest) -> dict[str, Any]:
                 skip_waits=skip_waits,
                 timeout=max(15.0, min(300.0, 60.0 * max(request.speed, 1.0))),
                 source="editor",
+                correlation_id=correlation_id,
             )
+            if not response.ok:
+                raise_remote_oql_failure(
+                    response,
+                    correlation_id=correlation_id,
+                    operation_id="editor.execute-scenario",
+                )
+            http_response.headers["X-Correlation-ID"] = correlation_id
             return _editor_response_from_oql(
                 scenario_file=request.scenario_file,
                 response=response,
+                correlation_id=correlation_id,
             )
 
         from oqlos.core.interpreter import OqlInterpreter
@@ -219,6 +240,7 @@ async def execute_scenario(request: ExecutionRequest) -> dict[str, Any]:
         doc = interpreter.parse(content, request.scenario_file)
         result = interpreter.execute(doc)
 
+        http_response.headers["X-Correlation-ID"] = correlation_id
         return {
             "status": "success",
             "ok": result.ok,
@@ -227,8 +249,11 @@ async def execute_scenario(request: ExecutionRequest) -> dict[str, Any]:
             "duration_ms": result.duration_ms,
             "errors": result.errors,
             "warnings": result.warnings,
+            "correlation_id": correlation_id,
         }
     except HTTPException:
+        raise
+    except OqlosError:
         raise
     except Exception as e:
         logger.error("Error executing scenario: %s", e)

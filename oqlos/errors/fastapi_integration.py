@@ -275,9 +275,36 @@ def install_oqlos_error_handler(app: FastAPI) -> None:
             issue_code = detail.get("issue_code")
             if issue_code:
                 diagnostics = {"issue_code": str(issue_code)}
+        resolved_public_code = public_code or _public_code_for_status(exc.status_code)
+        if exc.status_code >= 500:
+            correlation_id = correlation_id_for_request(request)
+            entry = CATALOG[resolved_public_code]
+            logger.warning(
+                "Sanitized untyped HTTP failure correlation_id=%s path=%s status=%s code=%s",
+                correlation_id,
+                request.url.path,
+                exc.status_code,
+                resolved_public_code,
+            )
+            return _problem_response(
+                request,
+                public_code=resolved_public_code,
+                status_code=entry.http_status,
+                message=entry.message,
+                context={
+                    "architecture": "SOA",
+                    "layer": "oqlos",
+                    "component": "oqlos-api",
+                    "stage": "http.exception",
+                    "problem_source": "api-boundary",
+                },
+                diagnostics=diagnostics,
+                headers=exc.headers,
+                correlation_id=correlation_id,
+            )
         return _problem_response(
             request,
-            public_code=public_code or _public_code_for_status(exc.status_code),
+            public_code=resolved_public_code,
             status_code=exc.status_code,
             message=message,
             context=context,

@@ -271,3 +271,32 @@ def test_uncoded_exception_uses_sys_0000_without_leaking_message():
     assert resp.json()["code"] == "C2004-SYS-0000"
     assert "internal secret detail" not in resp.text
     assert resp.json()["metadata"]["diagnostics"]["exception_type"] == "RuntimeError"
+
+
+def test_untyped_http_500_uses_catalog_message_without_leaking_detail():
+    app = FastAPI()
+    install_oqlos_error_handler(app)
+
+    @app.get("/raw-http-500")
+    async def raw_http_500():
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "password=hunter2",
+                "internal_path": "/private/config",
+            },
+        )
+
+    resp = TestClient(app, raise_server_exceptions=False).get(
+        "/raw-http-500",
+        headers={"X-Correlation-ID": "cor-http-500"},
+    )
+
+    assert resp.status_code == 500
+    body = resp.json()
+    assert body["code"] == "C2004-SYS-0000"
+    assert body["correlation_id"] == "cor-http-500"
+    assert body["stage"] == "http.exception"
+    assert body["metadata"]["context"]["problem_source"] == "api-boundary"
+    assert "hunter2" not in resp.text
+    assert "/private/config" not in resp.text

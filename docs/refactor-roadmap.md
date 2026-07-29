@@ -184,6 +184,12 @@ wraca już jako HTTP 200 i nie ujawnia surowego komunikatu. Bieżąca metryka
 OqlOS: 132 surowe wyjątki (baseline 137), 0 literalnych negatywnych envelope
 przy HTTP 200.
 
+Granica nieotypowanych `HTTPException` 5xx sanitizuje teraz komunikat i kontekst
+według katalogu. Zdalne wykonanie `/api/v1/editor/execute` propaguje
+`correlation_id` do MQTT, zwraca go w sukcesie, a negatywnej odpowiedzi agenta
+nie opakowuje już w HTTP 200. Timeout scenariusza daje ten sam
+504/`C2004-NET-0003` co `/api/v1/oql/execute`.
+
 Pozostały zakres: sklasyfikować 137 surowych wyjątków i 241 szerokich handlerów
 OqlOS, rozdzielić pozostałe klasy host/proxy/plugin oraz wykonać analogiczną
 inwentaryzację i kontrakty po stronie C2004/POA.

@@ -5,6 +5,8 @@ from __future__ import annotations
 from fastapi.testclient import TestClient
 
 from oqlos.api.main import app
+from oqlos.api.oql_mqtt import set_oql_controller
+from oqlos.hardware.transport.mqtt_protocol import OqlResponse
 
 
 def test_editor_file_create_read_delete_round_trip(tmp_path, monkeypatch):
@@ -50,3 +52,76 @@ def test_panel_and_rtc_routes_are_reachable():
     rtc = client.get("/rtc", follow_redirects=False)
     assert rtc.status_code in {302, 307}
     assert rtc.headers["location"].endswith("/ui/hardware-rtc")
+
+
+class _FakeEditorController:
+    def __init__(self, response: OqlResponse):
+        self.response = response
+        self.calls: list[dict] = []
+
+    async def execute(self, oql, **kwargs):
+        self.calls.append({"oql": oql, **kwargs})
+        return self.response
+
+
+def test_editor_remote_failure_is_problem_details_not_http_200(tmp_path, monkeypatch):
+    monkeypatch.setattr("oqlos.api.editor.SCENARIOS_DIR", tmp_path)
+    scenario = tmp_path / "remote.oql"
+    scenario.write_text("VERSION: 4\nSCENARIO: remote\n", encoding="utf-8")
+    controller = _FakeEditorController(
+        OqlResponse(
+            "remote-correlation",
+            ok=False,
+            error="password=hunter2",
+            node_id="pi-hw",
+            error_code="C2004-NET-0003",
+            stage="mqtt.response",
+        )
+    )
+    set_oql_controller(controller)
+    try:
+        response = TestClient(app, raise_server_exceptions=False).post(
+            "/api/v1/editor/execute",
+            json={"scenario_file": "remote.oql", "mode": "execute"},
+            headers={"X-Correlation-ID": "cor-editor-remote"},
+        )
+    finally:
+        set_oql_controller(None)
+
+    assert response.status_code == 504
+    body = response.json()
+    assert body["code"] == "C2004-NET-0003"
+    assert body["correlation_id"] == "cor-editor-remote"
+    assert body["metadata"]["context"]["operation_id"] == (
+        "editor.execute-scenario"
+    )
+    assert controller.calls[0]["correlation_id"] == "cor-editor-remote"
+    assert "hunter2" not in response.text
+
+
+def test_editor_remote_success_returns_correlation_id(tmp_path, monkeypatch):
+    monkeypatch.setattr("oqlos.api.editor.SCENARIOS_DIR", tmp_path)
+    scenario = tmp_path / "remote.oql"
+    scenario.write_text("VERSION: 4\nSCENARIO: remote\n", encoding="utf-8")
+    controller = _FakeEditorController(
+        OqlResponse(
+            "remote-correlation",
+            ok=True,
+            result={"ok": True, "total": 1, "steps": [{}]},
+            node_id="pi-hw",
+        )
+    )
+    set_oql_controller(controller)
+    try:
+        response = TestClient(app).post(
+            "/api/v1/editor/execute",
+            json={"scenario_file": "remote.oql", "mode": "execute"},
+            headers={"X-Request-ID": "cor-editor-success"},
+        )
+    finally:
+        set_oql_controller(None)
+
+    assert response.status_code == 200
+    assert response.json()["ok"] is True
+    assert response.json()["correlation_id"] == "cor-editor-success"
+    assert response.headers["x-correlation-id"] == "cor-editor-success"
