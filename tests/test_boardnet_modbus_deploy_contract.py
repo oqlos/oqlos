@@ -99,6 +99,21 @@ def test_dri0050_startup_fails_closed_when_usb_identity_is_ambiguous() -> None:
     assert "for _p in /dev/ttyUSB*" in script
 
 
+def test_tic249_reuses_readiness_helper_after_every_service_start() -> None:
+    migration = (ROOT / "redeploy/122/migration.md").read_text(encoding="utf-8")
+    unit = migration.split("Description=Maskservice Pololu Tic T249", 1)[1].split(
+        "\nUNIT", 1
+    )[0]
+
+    helper = (
+        "/home/${BOARDNET_SSH_USER}/maskservice/scripts/"
+        "wait-hw-tic249-ready.sh"
+    )
+    assert f"ExecStartPost=-{helper}" in unit
+    assert "systemctl --user enable hw-tic249.service" in migration
+    assert "systemctl --user restart hw-tic249.service" in migration
+
+
 def test_boardnet_deploy_uses_the_canonical_oql_scenario_store() -> None:
     migration = (ROOT / "redeploy/122/migration.md").read_text(encoding="utf-8")
     step = migration.split("- id: sync_oql_scenario", 1)[1].split("\n  - id:", 1)[0]

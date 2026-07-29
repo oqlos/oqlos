@@ -228,6 +228,10 @@ Environment=USB_PRODUCT_ID=0x00c9
 Environment=LOG_LEVEL=INFO
 ExecStartPre=/home/${BOARDNET_SSH_USER}/maskservice/scripts/tic249-deenergize-best-effort.sh
 ExecStart=/home/${BOARDNET_SSH_USER}/maskservice/rpi-motor-tic249/.venv/bin/python web_panel.py
+# The web panel starts disconnected even when the USB device is present. Reuse
+# the deploy readiness helper after every service start. A missing bench device
+# must not create a restart loop, so systemd ignores only the helper's failure.
+ExecStartPost=-/home/${BOARDNET_SSH_USER}/maskservice/scripts/wait-hw-tic249-ready.sh
 ExecStop=/home/${BOARDNET_SSH_USER}/maskservice/scripts/tic249-deenergize-best-effort.sh
 ExecStopPost=/home/${BOARDNET_SSH_USER}/maskservice/scripts/tic249-deenergize-best-effort.sh
 Restart=always
@@ -242,7 +246,8 @@ WantedBy=default.target
 UNIT
 
 systemctl --user daemon-reload
-systemctl --user enable --now hw-tic249.service
+systemctl --user enable hw-tic249.service
+systemctl --user restart hw-tic249.service
 sleep 3
 systemctl --user is-active hw-tic249.service
 if /home/${BOARDNET_SSH_USER}/maskservice/scripts/wait-hw-tic249-ready.sh; then
