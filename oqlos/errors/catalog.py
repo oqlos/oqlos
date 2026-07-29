@@ -405,6 +405,18 @@ ISSUE_CATALOG: dict[str, IssueDefinition] = {
         default_severity="warning",
         summary="The isolated Modbus wizard request is incomplete or unsafe.",
     ),
+    "api_peripheral_not_found": IssueDefinition(
+        code="api_peripheral_not_found",
+        domain="api",
+        default_severity="warning",
+        summary="The requested peripheral does not exist.",
+    ),
+    "api_plugin_not_found": IssueDefinition(
+        code="api_plugin_not_found",
+        domain="api",
+        default_severity="warning",
+        summary="The requested hardware plugin does not exist.",
+    ),
     "api_scenario_not_found": IssueDefinition(
         code="api_scenario_not_found",
         domain="api",

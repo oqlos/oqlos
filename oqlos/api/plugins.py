@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
 from oqlos.errors import OqlosError
@@ -104,7 +104,18 @@ async def get_plugin_info(plugin_id: str):
     """Get information about a specific plugin."""
     plugin_class = PluginRegistry.get_plugin_class(plugin_id)
     if not plugin_class:
-        raise HTTPException(status_code=404, detail=f"Plugin '{plugin_id}' not found")
+        raise OqlosError(
+            code="api_plugin_not_found",
+            status_code=404,
+            detail={
+                "architecture": "SOA",
+                "layer": "firmware",
+                "component": "plugin-registry",
+                "stage": "plugin.lookup",
+                "problem_source": "request",
+                "operation_id": "plugin.get",
+            },
+        )
     return plugin_class.get_capabilities()
 
 

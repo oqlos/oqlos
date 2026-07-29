@@ -24,6 +24,7 @@ _CODE_SOURCE_PATHS = [
     *sorted(_DOCTOR_DIR.glob("doctor_*.py")),
     _REPO_ROOT / "oqlos" / "hardware" / "diagnosis_device_actions.py",
     _REPO_ROOT / "oqlos" / "api" / "oql_mqtt.py",
+    _REPO_ROOT / "oqlos" / "api" / "peripherals.py",
     _REPO_ROOT / "oqlos" / "api" / "hardware_diagnosis_routes.py",
     _REPO_ROOT / "oqlos" / "api" / "_hw3_cqrs.py",
     _REPO_ROOT / "oqlos" / "api" / "_hw3_peripheral.py",

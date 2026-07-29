@@ -181,7 +181,7 @@ Kolejna partia zastąpiła pięć surowych `HTTPException` w HUI,
 artificial-lung i sterowaniu systemd typowanymi błędami. Błędne komendy kończą
 się przed sprzętem jako 422/`C2004-DATA-0002`; awaria wykonania HUI/systemd nie
 wraca już jako HTTP 200 i nie ujawnia surowego komunikatu. Bieżąca metryka
-OqlOS: 117 surowych wyjątków (baseline 137), 0 literalnych negatywnych envelope
+OqlOS: 114 surowych wyjątków (baseline 137), 0 literalnych negatywnych envelope
 przy HTTP 200.
 
 Następna partia zastąpiła dwa pozostałe surowe 403 w trasach sterowania i
@@ -211,13 +211,18 @@ zwraca bezpieczne 404/`C2004-DATA-0001`. Nieznana komenda nie wraca już jako
 HTTP 200 z `status=failed`; sterowanie bez aktywnego wykonania daje
 409/`C2004-DATA-0003`.
 
+Lookup informacji o pluginie oraz odczyt, zapis i ustawienie peryferium używają
+teraz typowanych 404/`C2004-DATA-0001` z lokalnymi
+`api_plugin_not_found` i `api_peripheral_not_found`. Odpowiedzi zachowują
+operację i korelację, ale nie publikują odrzuconego identyfikatora.
+
 Granica nieotypowanych `HTTPException` 5xx sanitizuje teraz komunikat i kontekst
 według katalogu. Zdalne wykonanie `/api/v1/editor/execute` propaguje
 `correlation_id` do MQTT, zwraca go w sukcesie, a negatywnej odpowiedzi agenta
 nie opakowuje już w HTTP 200. Timeout scenariusza daje ten sam
 504/`C2004-NET-0003` co `/api/v1/oql/execute`.
 
-Pozostały zakres: sklasyfikować 117 surowych wyjątków i 241 szerokich handlerów
+Pozostały zakres: sklasyfikować 114 surowych wyjątków i 241 szerokich handlerów
 OqlOS, rozdzielić pozostałe klasy host/proxy/plugin oraz wykonać analogiczną
 inwentaryzację i kontrakty po stronie C2004/POA.
 
