@@ -26,8 +26,14 @@ EXCLUDED_DIRS = {
     "__pycache__",
     "build",
     "dist",
+    "extern",
     "node_modules",
     "project",
+    "site-packages",
+    "third_party",
+    "third-party",
+    "vendor",
+    "vendors",
     "venv",
 }
 SETTINGS_FILENAMES = {
@@ -43,12 +49,17 @@ JS_ENV_PATTERN = re.compile(r"(?:import\.meta\.env|process\.env)(?:\.|\[)")
 
 
 def _relative(path: Path, root: Path) -> str:
-    return path.resolve().relative_to(root.resolve()).as_posix()
+    return path.relative_to(root).as_posix()
 
 
 def _is_excluded(path: Path, root: Path) -> bool:
-    relative = path.resolve().relative_to(root.resolve())
-    return any(part in EXCLUDED_DIRS for part in relative.parts)
+    relative = path.relative_to(root)
+    return any(
+        part in EXCLUDED_DIRS
+        or part.startswith(".venv")
+        or part.endswith(".egg-info")
+        for part in relative.parts
+    )
 
 
 def _is_test_file(path: Path, root: Path) -> bool:
@@ -61,6 +72,8 @@ def _source_files(root: Path) -> list[Path]:
         path
         for path in root.rglob("*")
         if path.is_file()
+        and not path.is_symlink()
+        and not path.name.endswith((".min.js", ".min.css"))
         and path.suffix in SOURCE_SUFFIXES
         and not _is_excluded(path, root)
         and not _is_test_file(path, root)

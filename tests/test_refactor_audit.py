@@ -69,3 +69,26 @@ def test_settings_module_is_allowed_to_read_environment(tmp_path: Path) -> None:
     refactor_audit._audit_python(source, tmp_path, report)
 
     assert report["environment_reads_outside_settings"] == []
+
+
+def test_source_inventory_stays_inside_repository_and_excludes_dependencies(
+    tmp_path: Path,
+) -> None:
+    (tmp_path / "app.py").write_text("VALUE = 1\n", encoding="utf-8")
+    (tmp_path / "bundle.min.js").write_text("process.env.SECRET\n", encoding="utf-8")
+    vendor = tmp_path / "vendor"
+    vendor.mkdir()
+    (vendor / "dependency.py").write_text("VALUE = 2\n", encoding="utf-8")
+    virtualenv = tmp_path / ".venv-ci"
+    virtualenv.mkdir()
+    (virtualenv / "dependency.py").write_text("VALUE = 3\n", encoding="utf-8")
+    outside = tmp_path.parent / f"{tmp_path.name}-outside.py"
+    outside.write_text("VALUE = 4\n", encoding="utf-8")
+    (tmp_path / "outside.py").symlink_to(outside)
+
+    try:
+        sources = refactor_audit._source_files(tmp_path)
+    finally:
+        outside.unlink()
+
+    assert [path.relative_to(tmp_path).as_posix() for path in sources] == ["app.py"]
