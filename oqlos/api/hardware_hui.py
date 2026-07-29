@@ -4,9 +4,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 
 from oqlos.api.hardware_gateway import get_hardware_gateway
+from oqlos.errors import OqlosError
+from oqlos.errors.c2004_catalog_generated import CATALOG
 from oqlos.hardware.hui_actions import (
     list_hui_actions,
     run_hui_valve_key,
@@ -20,14 +22,46 @@ from oqlos.hardware.hui_actions import (
 router = APIRouter(tags=["hardware-hui"])
 
 
-def raise_if_hui_failed(payload: dict[str, Any]) -> None:
+def raise_if_hui_failed(
+    payload: dict[str, Any], *, operation: str = "hui.action"
+) -> None:
     if not payload.get("ok"):
-        raise HTTPException(status_code=int(payload.get("status_code") or 400), detail=payload)
+        candidate = str(payload.get("error_code") or "")
+        try:
+            requested_status = int(payload.get("status_code") or 422)
+        except (TypeError, ValueError):
+            requested_status = 422
+        if candidate in CATALOG:
+            public_code = candidate
+        elif requested_status == 503:
+            public_code = "C2004-HW-0012"
+        else:
+            public_code = "C2004-DATA-0002"
+        entry = CATALOG[public_code]
+        issue_code = (
+            "api_diagnostic_command_invalid"
+            if entry.domain == "data"
+            else "config_unavailable"
+        )
+        raise OqlosError(
+            code=issue_code,
+            public_code=public_code,
+            status_code=entry.http_status,
+            detail={
+                "architecture": "SOA",
+                "layer": "firmware",
+                "component": "hardware-hui",
+                "stage": "action.execute",
+                "problem_source": "hardware-action",
+                "operation_id": operation[:128],
+                "safe_to_retry": bool(payload.get("safe_to_retry", False)),
+            },
+        )
 
 
 async def start_hui_action(action: Any, *args: Any) -> dict[str, Any]:
     payload = await action(get_hardware_gateway(), *args)
-    raise_if_hui_failed(payload)
+    raise_if_hui_failed(payload, operation=f"hui.{getattr(action, '__name__', 'action')}")
     return payload
 
 

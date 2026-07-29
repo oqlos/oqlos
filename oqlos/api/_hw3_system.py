@@ -92,7 +92,20 @@ async def hardware_hui_al_command_v3(command: str, payload: dict[str, Any] = Bod
         return await hw.hui_al_start()
     if normalized == "stop":
         return await hw.hui_al_stop()
-    raise HTTPException(status_code=400, detail=f"Unsupported HUI AL command: {command}")
+    raise OqlosError(
+        code="api_diagnostic_command_invalid",
+        status_code=422,
+        detail={
+            "architecture": "SOA",
+            "layer": "firmware",
+            "component": "hardware-hui",
+            "stage": "command.validate",
+            "problem_source": "request",
+            "operation_id": "hardware.hui.artificial-lung",
+            "field": "command",
+            "allowed": ["start", "stop"],
+        },
+    )
 
 
 @sub_router.post("/modbus/autoconfigure")
@@ -232,7 +245,36 @@ async def hardware_systemd_control_v3(unit: str, action: str) -> dict[str, Any]:
         raise HTTPException(status_code=403, detail=f"Unit not in C2004/OqlOS whitelist: {unit}")
     result = control_service(unit, action)
     if not result.get("ok") and result.get("error", "").startswith("Unsupported action"):
-        raise HTTPException(status_code=400, detail=result["error"])
+        raise OqlosError(
+            code="api_diagnostic_command_invalid",
+            status_code=422,
+            detail={
+                "architecture": "SOA",
+                "layer": "host",
+                "component": "systemd-control",
+                "stage": "action.validate",
+                "problem_source": "request",
+                "operation_id": "systemd.service.control",
+                "unit": str(result.get("unit") or unit)[:128],
+                "action": str(result.get("action") or action)[:128],
+                "allowed": result.get("allowed_actions") or [],
+            },
+        )
+    if not result.get("ok"):
+        raise OqlosError(
+            code="config_unavailable",
+            status_code=503,
+            detail={
+                "architecture": "SOA",
+                "layer": "host",
+                "component": "systemd-control",
+                "stage": "action.execute",
+                "problem_source": "host-service-manager",
+                "operation_id": "systemd.service.control",
+                "unit": str(result.get("unit") or unit)[:128],
+                "action": str(result.get("action") or action)[:128],
+            },
+        )
     return result
 
 

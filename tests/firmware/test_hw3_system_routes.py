@@ -62,3 +62,57 @@ def test_program_isolated_rejects_string_confirmation_before_hardware(monkeypatc
     body = response.json()
     assert body["code"] == "C2004-DATA-0002"
     assert body["metadata"]["context"]["field"] == "confirm_isolated"
+
+
+def test_hui_al_rejects_unknown_command_with_typed_data_error() -> None:
+    response = _client().post(
+        "/api/v3/hardware/hui/al/password=hunter2",
+        headers={"X-Correlation-ID": "cor-hui-command"},
+    )
+
+    assert response.status_code == 422
+    body = response.json()
+    assert body["code"] == "C2004-DATA-0002"
+    assert body["correlation_id"] == "cor-hui-command"
+    assert body["component"] == "hardware-hui"
+    assert body["stage"] == "command.validate"
+    assert "hunter2" not in response.text
+
+
+def test_systemd_control_rejects_unknown_action_with_typed_data_error() -> None:
+    response = _client().post(
+        "/api/v3/hardware/systemd/services/oqlos-hardware-api.service/destroy",
+        headers={"X-Correlation-ID": "cor-systemd-action"},
+    )
+
+    assert response.status_code == 422
+    body = response.json()
+    assert body["code"] == "C2004-DATA-0002"
+    assert body["correlation_id"] == "cor-systemd-action"
+    assert body["component"] == "systemd-control"
+    assert body["stage"] == "action.validate"
+
+
+def test_systemd_control_failure_is_not_returned_as_http_200(monkeypatch) -> None:
+    monkeypatch.setattr(
+        "oqlos.hardware.systemd_services.control_service",
+        lambda unit, action: {
+            "ok": False,
+            "unit": unit,
+            "action": action,
+            "error": "password=hunter2",
+        },
+    )
+
+    response = _client().post(
+        "/api/v3/hardware/systemd/services/oqlos-hardware-api.service/restart",
+        headers={"X-Correlation-ID": "cor-systemd-failure"},
+    )
+
+    assert response.status_code == 503
+    body = response.json()
+    assert body["code"] == "C2004-HW-0012"
+    assert body["correlation_id"] == "cor-systemd-failure"
+    assert body["component"] == "systemd-control"
+    assert body["stage"] == "action.execute"
+    assert "hunter2" not in response.text

@@ -86,6 +86,13 @@ HTTP. Bieżący wynik OqlOS dla tej metryki wynosi 0. Tabela powyżej pozostaje
 niezmienionym snapshotem NEXT-02; różnica jest udokumentowanym wynikiem
 pierwszej partii NEXT-04, a nie retroaktywną zmianą pomiaru bazowego.
 
+Następna partia NEXT-04 ustandaryzowała błędy komend HUI, artificial-lung i
+systemd. Usunięto pięć surowych `HTTPException`, więc bieżący pomiar OqlOS
+wynosi 132 wobec 137 w snapshotcie. Dodatkowo operacyjny błąd sterowania
+systemd, wcześniej zwracany jako zmienna `ok=false` przy HTTP 200, daje teraz
+503/`C2004-HW-0012`; ta poprawka nie wpływa na metrykę literalnych słowników,
+ale jest objęta testem dynamicznym problem details.
+
 ### Hotspoty rozmiaru
 
 Największe pliki OqlOS to słownik tłumaczeń (2 150 linii), `Panel.jsx`

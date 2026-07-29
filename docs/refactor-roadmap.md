@@ -177,6 +177,13 @@ mapowanie ogólnego HTTP 400 na `C2004-DATA-0002` zamiast
 w katalogu, wymusza katalogowy status i sanitizuje body oraz `correlation_id`.
 Pełna bramka po zmianie: 938/938 testów i Ruff `F821,F811` bez błędów.
 
+Kolejna partia zastąpiła pięć surowych `HTTPException` w HUI,
+artificial-lung i sterowaniu systemd typowanymi błędami. Błędne komendy kończą
+się przed sprzętem jako 422/`C2004-DATA-0002`; awaria wykonania HUI/systemd nie
+wraca już jako HTTP 200 i nie ujawnia surowego komunikatu. Bieżąca metryka
+OqlOS: 132 surowe wyjątki (baseline 137), 0 literalnych negatywnych envelope
+przy HTTP 200.
+
 Pozostały zakres: sklasyfikować 137 surowych wyjątków i 241 szerokich handlerów
 OqlOS, rozdzielić pozostałe klasy host/proxy/plugin oraz wykonać analogiczną
 inwentaryzację i kontrakty po stronie C2004/POA.

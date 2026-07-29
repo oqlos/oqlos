@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, Body, HTTPException
+from fastapi import APIRouter, Body
 
 from oqlos.api.hardware_gateway import get_hardware_gateway
 from oqlos.errors import OqlosError
@@ -18,12 +18,38 @@ router = APIRouter(tags=["hardware-lung"])
 def command_payload(payload: dict[str, Any]) -> tuple[str, dict[str, Any]]:
     command = str(payload.get("command") or "").strip()
     if not command:
-        raise HTTPException(status_code=400, detail="command is required")
+        raise OqlosError(
+            code="api_diagnostic_command_invalid",
+            status_code=422,
+            detail={
+                "architecture": "SOA",
+                "layer": "firmware",
+                "component": "artificial-lung",
+                "stage": "command.validate",
+                "problem_source": "request",
+                "operation_id": "artificial-lung.command",
+                "field": "command",
+                "expected": "non-empty string",
+            },
+        )
     args = payload.get("args")
     if args is None:
         args = {}
     if not isinstance(args, dict):
-        raise HTTPException(status_code=400, detail="args must be an object")
+        raise OqlosError(
+            code="api_diagnostic_command_invalid",
+            status_code=422,
+            detail={
+                "architecture": "SOA",
+                "layer": "firmware",
+                "component": "artificial-lung",
+                "stage": "command.validate",
+                "problem_source": "request",
+                "operation_id": "artificial-lung.command",
+                "field": "args",
+                "expected": "object",
+            },
+        )
     return command, args
 
 
