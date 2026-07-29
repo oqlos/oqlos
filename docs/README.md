@@ -13,6 +13,8 @@
 - [Standard błędów i diagnostyki](ERROR_STANDARDIZATION.md)
 - **[Kanoniczny plan dalszej standaryzacji i refaktoryzacji](refactor-roadmap.md)**
   — bieżący backlog, zależności, kolejność, bramki testowe i Definition of Done.
+- **[Audyt długu refaktoryzacyjnego 2026-07-29](refactor-audit-2026-07-29.md)**
+  — odtwarzalne metryki OqlOS/C2004, hotspoty i wejście do NEXT-03–NEXT-07.
 - [Audyt standaryzacji 2026-07-27](STANDARDIZATION_AUDIT_2026-07-27.md)
 - [Historyczny plan refaktoryzacji 2026-07-27](refactor-roadmap-2026-07-27.md)
 - [OQL v4 Migration Manual](OQL_V4_MIGRATION_MANUAL.md)

@@ -10,6 +10,10 @@ on:
       - "packages/oqlos-core/**"
       - "packages/oqlos-models/**"
       - "packages/backend-shared-py/**"
+      - "scripts/**"
+      - "project/**"
+      - "docs/refactor-*.md"
+      - "Taskfile.yml"
       - "pyproject.toml"
       - ".github/workflows/test.yml"
   pull_request:
@@ -20,10 +24,47 @@ on:
       - "packages/oqlos-core/**"
       - "packages/oqlos-models/**"
       - "packages/backend-shared-py/**"
+      - "scripts/**"
+      - "project/**"
+      - "docs/refactor-*.md"
+      - "Taskfile.yml"
       - "pyproject.toml"
       - ".github/workflows/test.yml"
 
 jobs:
+  static-analysis:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install pinned analyzer
+        run: pip install code2llm==0.5.168
+      - name: Generate refactor analysis
+        run: bash scripts/generate-refactor-analysis.sh /tmp/oqlos-refactor-analysis
+      - name: Validate analysis metadata
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          output = Path("/tmp/oqlos-refactor-analysis")
+          report = json.loads((output / "refactor-audit.json").read_text())
+          assert report["git_commit"] == os.environ["GITHUB_SHA"]
+          assert report["git_dirty"] is False
+          assert report["summary"]["parse_failures"] == 0
+          assert report["generator"]["code2llm"]["package_version"] == "0.5.168"
+          assert all(report["artifacts"].values())
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: refactor-analysis
+          path: /tmp/oqlos-refactor-analysis
+
   pytest:
     runs-on: ubuntu-latest
     env:

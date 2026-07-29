@@ -1,6 +1,6 @@
 # Kanoniczny plan dalszej standaryzacji i refaktoryzacji
 
-Stan planu: **2026-07-28**. Ten dokument jest bieżącym źródłem prawdy dla
+Stan planu: **2026-07-29**. Ten dokument jest bieżącym źródłem prawdy dla
 otwartych prac OqlOS/OQL. Zastępuje operacyjnie datowany
 [plan z 2026-07-27](refactor-roadmap-2026-07-27.md); datowany plan i
 [audyt standaryzacji](STANDARDIZATION_AUDIT_2026-07-27.md) pozostają
@@ -22,20 +22,21 @@ Konsumuje wersjonowany artefakt OqlOS oraz read-only API lub przypięty commit
 
 ## 2. Zweryfikowany punkt bazowy
 
-Pomiary bazowe wykonano 2026-07-28. Wyniki `NEXT-01` odświeżono 2026-07-29
-na bazie `827aa45` oraz zmian zadania w bieżącym worktree.
+Pomiary bazowe wykonano 2026-07-28. Wyniki `NEXT-01` i `NEXT-02` odświeżono
+2026-07-29; szczegóły metody i pełne wyniki zawiera
+[bieżący audyt długu](refactor-audit-2026-07-29.md).
 
 | Kontrola | Wynik |
 | --- | --- |
-| OqlOS | `main`, commit bazowy `827aa45`; implementacja `NEXT-01` oczekuje na commit i zewnętrzny przebieg CI |
+| OqlOS | `main`; `NEXT-01` zapisane w `8d4e396`, snapshot analizy z `86935a0`; zewnętrzny przebieg CI oczekuje na push |
 | Nazwa języka | publiczne API, CLI i dokumentacja używają OQL; właściwe klasy i funkcje mają nazwy `Oql*`/`*_oql` |
 | Zgodność wsteczna | wewnętrzne aliasy i ścieżki `cql_*` nadal istnieją w ograniczonej warstwie kompatybilności |
-| Domyślny `pytest -q` | **PASS: 904 testy** w 8,62 s; jawny tryb `prepend`, unikalne nazwy modułów i kontrola pochodzenia importów |
+| Domyślny `pytest -q` | **PASS: 908 testów** w 8,13 s; jawny tryb `prepend`, unikalne nazwy modułów i kontrola pochodzenia importów |
 | Test z wheel | **PASS: 904 testy** w 76,96 s z `/tmp`, bez źródeł workspace w `pythonpath`; wheel zawiera statyczne UI i zbudowany frontend |
 | Frontend | 145 testów przechodzi; build Vite przechodzi |
 | Frontend bundle | ostrzeżenie: główny chunk 538,68 kB po minifikacji; potrzebny podział kodu |
 | OQL Scenario | `main`, commit `7b4f939`, worktree czysty; 58 testów przechodzi |
-| Analiza statyczna | `project/analysis.toon.yaml` pochodzi z 2026-07-02 i jest nieaktualna; nie jest bieżącą podstawą decyzji |
+| Analiza statyczna | odświeżona 2026-07-29: OqlOS 194 tras, 80 `dict[str, Any]`, 3 kandydatów HTTP 200 z negatywnym wynikiem, 154 odczyty env i 30 dużych modułów; C2004 odpowiednio 668, 186, 15, 317 i 158 |
 | Deploy `.122`/`.109` | niezweryfikowany w tym przebiegu; wcześniejsze logi wskazywały niedostępne `.122:8202` i proxy 502 |
 
 Nie należy wpisywać wcześniejszych wartości `515`, `517` ani `858 passed` jako
@@ -69,8 +70,9 @@ samą obecność kontrolowanego aliasu kompatybilności.
 
 **Priorytet:** P0. **Repo:** OqlOS. **Zależności:** brak.
 
-**Status 2026-07-29:** implementacja i weryfikacja lokalna zakończone; zamknięcie
-operacyjne wymaga commita oraz zielonego przebiegu dodanych jobów GitHub Actions.
+**Status 2026-07-29:** implementacja i weryfikacja lokalna zakończone w
+`8d4e396`; zamknięcie operacyjne wymaga zielonego przebiegu dodanych jobów
+GitHub Actions po pushu.
 
 - [x] nadać unikalne nazwy dwóm testom `test_motor2_idle_policy.py` albo zapewnić
   jednoznaczne pakiety testowe;
@@ -80,7 +82,8 @@ operacyjne wymaga commita oraz zielonego przebiegu dodanych jobów GitHub Action
 - [x] uruchamiać pełny suite z clean checkout oraz z wheel/editable install;
 - [x] wdrożyć Ruff najpierw dla `F821,F811`, potem zmniejszać kontrolowany baseline.
 
-Dowód lokalny: `pytest -q` — 904/904; izolowany wheel — 904/904;
+Dowód lokalny: bieżący `pytest -q` — 908/908; izolowany wheel z bramki
+`NEXT-01` — 904/904 (cztery późniejsze testy dotyczą generatora audytu);
 `ruff check oqlos tests packages/oqlos-core packages/oqlos-models --select
 F821,F811` — zero błędów; frontend — 145/145 i poprawny build Vite. GitHub
 Actions buduje frontend, instaluje jawne pakiety workspace i wykonuje osobny
@@ -93,12 +96,22 @@ zależy od kolejności kolekcji ani zewnętrznego checkoutu.
 
 **Priorytet:** P0. **Repo:** OqlOS + C2004. **Zależności:** NEXT-01.
 
-- wygenerować ponownie `project/analysis.toon.yaml` i mapę zależności;
-- ponownie policzyć publiczne trasy z `dict[str, Any]`, generyczne odpowiedzi
+**Status 2026-07-29:** lokalnie zakończone. OqlOS zmierzono na czystym
+`86935a0`, C2004 na czystym detached clone `4af234f6`; wyniki i ograniczenia są
+w [audycie 2026-07-29](refactor-audit-2026-07-29.md). Zamknięcie operacyjne
+wymaga pierwszego zielonego przebiegu joba `static-analysis` po pushu.
+
+- [x] wygenerować ponownie `project/analysis.toon.yaml` i mapę zależności;
+- [x] ponownie policzyć publiczne trasy z `dict[str, Any]`, generyczne odpowiedzi
   OpenAPI, odczyty env poza settings, surowe wyjątki i `ok=false` przy HTTP 200;
-- zinwentaryzować duże moduły, szczególnie gateway pluginów, Modbus Waveshare,
+- [x] zinwentaryzować duże moduły, szczególnie gateway pluginów, Modbus Waveshare,
   główny runtime, bridge MQTT i adapter firmware;
-- zapisać datę, commit i komendę generatora przy każdej metryce.
+- [x] zapisać datę, commit i komendę generatora przy każdej metryce.
+
+Dowód lokalny: `task analysis:refresh`; 396 plików źródłowych OqlOS, 194
+trasy publiczne i zero błędów parsowania. Generator zapisuje commit, stan
+worktree, wersję narzędzia i SHA-256 map; CI używa przypiętego
+`code2llm==0.5.168`.
 
 **Gotowe, gdy:** backlog odwołuje się wyłącznie do pomiarów z aktualnego
 commita, a raport można odtworzyć jedną komendą CI.
@@ -321,6 +334,10 @@ Praktyczne fale wdrożeniowe:
 4. **Fala 3 — obserwowalność:** NEXT-08, NEXT-09, NEXT-10.
 5. **Fala 4 — produkcja:** NEXT-11, NEXT-12, NEXT-13.
 
+Stan 2026-07-29: Fala 0 jest zakończona lokalnie. Następna implementacja to
+`NEXT-03` (power telemetry i safety gate), równolegle można rozpocząć
+klasyfikację kontraktów z `NEXT-04`.
+
 ## 6. Obowiązkowe bramki weryfikacji
 
 ### OqlOS
@@ -328,6 +345,7 @@ Praktyczne fale wdrożeniowe:
 ```bash
 pytest -q
 pytest -q tests/test_oql_public_runtime_api.py
+task analysis:refresh
 cd frontend
 npm run test:unit
 npm run build

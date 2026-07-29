@@ -1,0 +1,7293 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-07-29T07:04:33+00:00",
+  "root": "/home/tom/github/oqlos/oqlos",
+  "git_commit": "86935a0c8adc33a02d4d943d1702f05bdcd2c7ec",
+  "git_dirty": false,
+  "git_dirty_including_generated_artifacts": true,
+  "git_status_excluding_generated_artifacts": [],
+  "generator": {
+    "audit_command": "python scripts/refactor_audit.py --root /home/tom/github/oqlos/oqlos --output /home/tom/github/oqlos/oqlos/project/refactor-audit.json",
+    "code2llm_command": "code2llm . -m hybrid -f toon,map --strategy standard --toon-yaml --no-png --no-cache --no-chunk -o <temp>",
+    "code2llm": {
+      "executable": "/home/tom/miniconda3/bin/code2llm",
+      "version": "code2llm unknown",
+      "package_version": "0.5.168"
+    }
+  },
+  "artifacts": {
+    "analysis.toon.yaml": "0d09a793bd80858b147e0f66eaab8441a12c7c0063506be43bf85159007abae3",
+    "map.toon.yaml": "898ecbbbe0f763f2a7eafa59fa090d28dab4b1a197fedb59e90eca30ad59db61"
+  },
+  "source_file_count": 396,
+  "public_routes": [
+    {
+      "file": "oqlos/api/_hw3_cqrs.py",
+      "line": 29,
+      "function": "hardware_cqrs_command_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/cqrs/command",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_cqrs.py",
+      "line": 55,
+      "function": "hardware_cqrs_events_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/cqrs/events",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_cqrs.py",
+      "line": 61,
+      "function": "hardware_cqrs_events_clear_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/cqrs/events/clear",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_peripheral.py",
+      "line": 98,
+      "function": "hardware_peripheral_status_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/peripheral-status/{peripheral_id}",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_peripheral.py",
+      "line": 167,
+      "function": "hardware_diagnostic_command_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/diagnostic-command",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_peripheral.py",
+      "line": 203,
+      "function": "hardware_scanner_status_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/scanner/status",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_peripheral.py",
+      "line": 221,
+      "function": "hardware_scanner_last_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/scanner/last",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_peripheral.py",
+      "line": 226,
+      "function": "hardware_scanner_ingest_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/scanner/ingest",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 56,
+      "function": "hardware_hui_actions_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/hui/actions",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 61,
+      "function": "hardware_hui_shutdown_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/hui/shutdown",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 72,
+      "function": "hardware_hui_hold_start_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/hui/hold/{key}/start",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 77,
+      "function": "hardware_hui_hold_stop_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/hui/hold/{key}/stop",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 82,
+      "function": "hardware_hui_valve_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/hui/valve/{key}",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 87,
+      "function": "hardware_hui_al_command_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/hui/al/{command}",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 99,
+      "function": "hardware_modbus_autoconfigure_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/modbus/autoconfigure",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 104,
+      "function": "hardware_diagnosis_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/diagnosis",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 112,
+      "function": "hardware_diagnosis_repair_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/diagnosis/repair",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 117,
+      "function": "hardware_modbus_settings_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/modbus/settings",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 123,
+      "function": "hardware_modbus_settings_update_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "PUT",
+      "route_path": "/modbus/settings",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 129,
+      "function": "hardware_modbus_waveshare_diagnose_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/modbus/waveshare-diagnose",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 135,
+      "function": "hardware_modbus_profile_channels_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/modbus/profile-channels",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 141,
+      "function": "hardware_modbus_channel_value_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "PUT",
+      "route_path": "/modbus/channel-value",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 147,
+      "function": "hardware_modbus_coil_test_plan_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/modbus/coil-test/plan",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 153,
+      "function": "hardware_modbus_coil_test_pulse_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/modbus/coil-test/pulse",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 162,
+      "function": "hardware_modbus_coil_test_stop_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/modbus/coil-test/stop",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 168,
+      "function": "hardware_rtc_status_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/rtc/status",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 174,
+      "function": "hardware_rtc_command_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/rtc/command",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 180,
+      "function": "hardware_modbus_wizard_plan_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/modbus/wizard/plan",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 186,
+      "function": "hardware_stack_snapshot_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/stack/snapshot",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 191,
+      "function": "hardware_runtime_status_v3",
+      "return_annotation": "dict[str, object]",
+      "method": "GET",
+      "route_path": "/runtime/status",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 196,
+      "function": "hardware_runtime_stop_v3",
+      "return_annotation": "dict[str, object]",
+      "method": "POST",
+      "route_path": "/runtime/stop",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 201,
+      "function": "hardware_runtime_start_v3",
+      "return_annotation": "dict[str, object]",
+      "method": "POST",
+      "route_path": "/runtime/start",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 206,
+      "function": "hardware_runtime_make_v3",
+      "return_annotation": "dict[str, object]",
+      "method": "POST",
+      "route_path": "/runtime/make",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 211,
+      "function": "hardware_host_reboot_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/host/reboot",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 219,
+      "function": "hardware_systemd_services_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/systemd/services",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 227,
+      "function": "hardware_systemd_control_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/systemd/services/{unit}/{action}",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 240,
+      "function": "hardware_systemd_logs_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/systemd/services/{unit}/logs",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 250,
+      "function": "hardware_logs_list_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/logs",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 258,
+      "function": "hardware_logs_read_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/logs/{log_id:path}",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 266,
+      "function": "hardware_startup_diagnostics_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/startup-diagnostics",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 277,
+      "function": "hardware_modbus_wizard_probe_isolated_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/modbus/wizard/probe-isolated",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 289,
+      "function": "hardware_modbus_wizard_program_isolated_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/modbus/wizard/program-isolated",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 304,
+      "function": "hardware_runtime_python_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/runtime-python",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/editor.py",
+      "line": 109,
+      "function": "list_files",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/files",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/editor.py",
+      "line": 123,
+      "function": "read_file_endpoint",
+      "return_annotation": "FileContent",
+      "method": "GET",
+      "route_path": "/file/{file_path:path}",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/editor.py",
+      "line": 138,
+      "function": "write_file_endpoint",
+      "return_annotation": "dict[str, str]",
+      "method": "POST",
+      "route_path": "/file/{file_path:path}",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/editor.py",
+      "line": 151,
+      "function": "delete_file_endpoint",
+      "return_annotation": "dict[str, str]",
+      "method": "DELETE",
+      "route_path": "/file/{file_path:path}",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/editor.py",
+      "line": 184,
+      "function": "execute_scenario",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/execute",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/execution.py",
+      "line": 91,
+      "function": "start_execution",
+      "return_annotation": null,
+      "method": "POST",
+      "route_path": "/start",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/execution.py",
+      "line": 109,
+      "function": "execute_step",
+      "return_annotation": null,
+      "method": "POST",
+      "route_path": "/step",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/execution.py",
+      "line": 200,
+      "function": "get_execution",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/by-id/{execution_id}",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/execution.py",
+      "line": 205,
+      "function": "get_execution_projection",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/projection",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/execution.py",
+      "line": 210,
+      "function": "get_execution_status",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/status",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/execution.py",
+      "line": 235,
+      "function": "get_execution_logs",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/logs",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/execution.py",
+      "line": 275,
+      "function": "execution_stream",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/stream",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/execution.py",
+      "line": 307,
+      "function": "execution_logs_stream",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/logs/stream",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_actuators.py",
+      "line": 22,
+      "function": "set_valve",
+      "return_annotation": null,
+      "method": "POST",
+      "route_path": "/valve/{valve_id}",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_actuators.py",
+      "line": 36,
+      "function": "set_pump",
+      "return_annotation": null,
+      "method": "POST",
+      "route_path": "/pump",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_configuration_routes.py",
+      "line": 98,
+      "function": "get_hardware_configuration",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_configuration_routes.py",
+      "line": 107,
+      "function": "get_hardware_configuration_schema",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/schema",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_configuration_routes.py",
+      "line": 117,
+      "function": "list_hardware_configuration_files",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/files",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_configuration_routes.py",
+      "line": 144,
+      "function": "get_hardware_configuration_source",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/source",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_configuration_routes.py",
+      "line": 164,
+      "function": "validate_hardware_configuration",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/validate",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_configuration_routes.py",
+      "line": 173,
+      "function": "convert_hardware_configuration",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/convert",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_configuration_routes.py",
+      "line": 189,
+      "function": "save_hardware_configuration_source",
+      "return_annotation": "dict[str, Any]",
+      "method": "PUT",
+      "route_path": "/source",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_diagnosis_routes.py",
+      "line": 17,
+      "function": "hardware_stack_snapshot",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/stack/snapshot",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_diagnosis_routes.py",
+      "line": 25,
+      "function": "hardware_diagnosis_route",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/diagnosis",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_diagnosis_routes.py",
+      "line": 39,
+      "function": "hardware_recover_route",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/recover",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_hui.py",
+      "line": 35,
+      "function": "hui_actions",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/hui/actions",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_hui.py",
+      "line": 41,
+      "function": "hui_shutdown",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/hui/shutdown",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_hui.py",
+      "line": 46,
+      "function": "hui_hold_start",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/hui/hold/{key}/start",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_hui.py",
+      "line": 51,
+      "function": "hui_hold_stop",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/hui/hold/{key}/stop",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_hui.py",
+      "line": 57,
+      "function": "hui_valve_key",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/hui/valve/{key}",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_hui.py",
+      "line": 62,
+      "function": "hui_al_start",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/hui/al/start",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_hui.py",
+      "line": 67,
+      "function": "hui_al_stop",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/hui/al/stop",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_identify.py",
+      "line": 115,
+      "function": "hardware_health",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/health",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_identify.py",
+      "line": 134,
+      "function": "hardware_identify",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/identify",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_lung.py",
+      "line": 47,
+      "function": "set_lung",
+      "return_annotation": null,
+      "method": "POST",
+      "route_path": "/lung",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_lung.py",
+      "line": 89,
+      "function": "stop_lung",
+      "return_annotation": null,
+      "method": "POST",
+      "route_path": "/lung/stop",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_lung.py",
+      "line": 94,
+      "function": "disable_lung",
+      "return_annotation": null,
+      "method": "POST",
+      "route_path": "/lung/disable",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_lung.py",
+      "line": 99,
+      "function": "artificial_lung_status",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/artificial-lung/status",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_lung.py",
+      "line": 105,
+      "function": "artificial_lung_command",
+      "return_annotation": null,
+      "method": "POST",
+      "route_path": "/artificial-lung/command",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_routes.py",
+      "line": 77,
+      "function": "hardware_modbus_settings_get",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/modbus/settings",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_routes.py",
+      "line": 83,
+      "function": "hardware_modbus_settings_put",
+      "return_annotation": "dict[str, Any]",
+      "method": "PUT",
+      "route_path": "/modbus/settings",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_routes.py",
+      "line": 99,
+      "function": "hardware_modbus_waveshare_diagnose",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/modbus/waveshare-diagnose",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_routes.py",
+      "line": 105,
+      "function": "hardware_modbus_profile_channels_get",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/modbus/profile-channels",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_routes.py",
+      "line": 112,
+      "function": "hardware_modbus_channel_value_put",
+      "return_annotation": "dict[str, Any]",
+      "method": "PUT",
+      "route_path": "/modbus/channel-value",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_routes.py",
+      "line": 119,
+      "function": "hardware_modbus_coil_test_plan_get",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/modbus/coil-test/plan",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_routes.py",
+      "line": 126,
+      "function": "hardware_modbus_coil_test_pulse_post",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/modbus/coil-test/pulse",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_routes.py",
+      "line": 137,
+      "function": "hardware_modbus_coil_test_stop_post",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/modbus/coil-test/stop",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_routes.py",
+      "line": 144,
+      "function": "hardware_modbus_wizard_plan",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/modbus/wizard/plan",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_routes.py",
+      "line": 153,
+      "function": "hardware_modbus_wizard_probe_isolated",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/modbus/wizard/probe-isolated",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_routes.py",
+      "line": 193,
+      "function": "hardware_modbus_wizard_program_isolated",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/modbus/wizard/program-isolated",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_peripherals_routes.py",
+      "line": 28,
+      "function": "read_modbus_adc_raw",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/modbus-adc/raw",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_peripherals_routes.py",
+      "line": 94,
+      "function": "rtc_status",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/rtc/status",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_peripherals_routes.py",
+      "line": 100,
+      "function": "rtc_command",
+      "return_annotation": null,
+      "method": "POST",
+      "route_path": "/rtc/command",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_runtime.py",
+      "line": 369,
+      "function": "read_sensor",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/sensor/{sensor_id}",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_runtime.py",
+      "line": 390,
+      "function": "hardware_temperature",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/temperature",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_runtime.py",
+      "line": 416,
+      "function": "read_sensors_batch",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/sensors/batch",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_runtime.py",
+      "line": 490,
+      "function": "hardware_diagnose",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/diagnose",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_v3.py",
+      "line": 31,
+      "function": "hardware_health_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/health",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_v3.py",
+      "line": 41,
+      "function": "hardware_identify_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/identify",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_v3.py",
+      "line": 47,
+      "function": "hardware_proxy_info_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/proxy-info",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/logs.py",
+      "line": 27,
+      "function": "get_logs",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/logs.py",
+      "line": 43,
+      "function": "get_log_stats",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/stats",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 364,
+      "function": "index_page",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 376,
+      "function": "editor_page",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/editor",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 380,
+      "function": "panel_alias",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/panel",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 385,
+      "function": "navigation_alias",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/navigation",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 390,
+      "function": "ui_legacy_panel_page",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/ui/legacy-panel",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 395,
+      "function": "ui_legacy_navigation_page",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/ui/legacy-navigation",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 430,
+      "function": "hardware_status_page",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/hardware-status",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 435,
+      "function": "hardware_demo_alias",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/hardware-demo",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 440,
+      "function": "hardware_restart_alias",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/hardware-restart",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 445,
+      "function": "hardware_modbus_alias",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/hardware-modbus",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 450,
+      "function": "hardware_coils_alias",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/hardware-coils",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 455,
+      "function": "hardware_rtc_alias",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/hardware-rtc",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 460,
+      "function": "rtc_alias",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/rtc",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 466,
+      "function": "retired_map_editor_alias",
+      "return_annotation": "Response",
+      "method": "GET",
+      "route_path": "/map-editor",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 466,
+      "function": "retired_map_editor_alias",
+      "return_annotation": "Response",
+      "method": "GET",
+      "route_path": "/map",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 472,
+      "function": "scenario_files_alias",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/scenario-files",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 472,
+      "function": "scenario_files_alias",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/scenario-files/{full_path:path}",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 478,
+      "function": "func_editor_alias",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/func-editor",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 478,
+      "function": "func_editor_alias",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/func-editor/{full_path:path}",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 483,
+      "function": "motor_services_alias",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/motor-services",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 488,
+      "function": "nav_alias",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/nav",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 493,
+      "function": "status_alias",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/status",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 498,
+      "function": "restart_alias",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/restart",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 503,
+      "function": "modbus_alias",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/modbus",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 508,
+      "function": "demo_alias",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/demo",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 513,
+      "function": "files_alias",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/files",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 518,
+      "function": "functions_alias",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/functions",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 523,
+      "function": "api_docs_alias",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/api-docs",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 529,
+      "function": "oql_panel_alias",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/oql",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 529,
+      "function": "oql_panel_alias",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/oql-panel",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 538,
+      "function": "ui_legacy_status_routes",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/ui/navigation",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 538,
+      "function": "ui_legacy_status_routes",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/ui/hardware-status",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 543,
+      "function": "retired_ui_map_editor",
+      "return_annotation": "Response",
+      "method": "GET",
+      "route_path": "/ui/map-editor",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 549,
+      "function": "hardware_ui_spa",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/ui",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 549,
+      "function": "hardware_ui_spa",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/ui/{full_path:path}",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 566,
+      "function": "update_status_page",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/update",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 579,
+      "function": "health_check",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/health",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 579,
+      "function": "health_check",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/api/v1/health",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 579,
+      "function": "health_check",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/firmware/api/v1/health",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 591,
+      "function": "navigation_index",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/api/v1/navigation",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 606,
+      "function": "status",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/api/status",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/oql_mqtt.py",
+      "line": 66,
+      "function": "execute_oql",
+      "return_annotation": "OqlExecuteResponse",
+      "method": "POST",
+      "route_path": "/execute",
+      "response_model": "OqlExecuteResponse",
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/oql_mqtt.py",
+      "line": 84,
+      "function": "manage_hardware",
+      "return_annotation": "OqlExecuteResponse",
+      "method": "POST",
+      "route_path": "/manage",
+      "response_model": "OqlExecuteResponse",
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/peripherals.py",
+      "line": 19,
+      "function": "get_peripheral",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/{peripheral_id}",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/peripherals.py",
+      "line": 24,
+      "function": "update_peripheral",
+      "return_annotation": null,
+      "method": "PUT",
+      "route_path": "/{peripheral_id}",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/peripherals.py",
+      "line": 54,
+      "function": "set_peripheral",
+      "return_annotation": null,
+      "method": "POST",
+      "route_path": "/{peripheral_id}/set",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/peripherals.py",
+      "line": 73,
+      "function": "reset_peripherals",
+      "return_annotation": null,
+      "method": "POST",
+      "route_path": "/reset",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/plugins.py",
+      "line": 90,
+      "function": "list_plugins",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/plugins.py",
+      "line": 96,
+      "function": "get_plugin_status",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/status",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/plugins.py",
+      "line": 102,
+      "function": "get_plugin_info",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/{plugin_id}",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/plugins.py",
+      "line": 111,
+      "function": "get_plugin_health",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/{plugin_id}/health",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/plugins.py",
+      "line": 130,
+      "function": "connect_plugin",
+      "return_annotation": null,
+      "method": "POST",
+      "route_path": "/{plugin_id}/connect",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/plugins.py",
+      "line": 158,
+      "function": "disconnect_plugin",
+      "return_annotation": null,
+      "method": "POST",
+      "route_path": "/{plugin_id}/disconnect",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/plugins.py",
+      "line": 190,
+      "function": "execute_plugin_command",
+      "return_annotation": null,
+      "method": "POST",
+      "route_path": "/{plugin_id}/execute",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/plugins.py",
+      "line": 230,
+      "function": "validate_plugin_configs",
+      "return_annotation": null,
+      "method": "POST",
+      "route_path": "/validate",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/scenarios.py",
+      "line": 19,
+      "function": "get_scenario",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/{scenario_id}",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/scenarios.py",
+      "line": 93,
+      "function": "fetch_scenarios",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/fetch",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/scenarios.py",
+      "line": 232,
+      "function": "register_dsl",
+      "return_annotation": null,
+      "method": "POST",
+      "route_path": "/register-dsl",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/state.py",
+      "line": 63,
+      "function": "get_state",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/api/v1/state",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/state.py",
+      "line": 105,
+      "function": "stream_values",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/api/v1/values/stream",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/state.py",
+      "line": 139,
+      "function": "get_current_value",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/api/v1/values/current",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/state.py",
+      "line": 159,
+      "function": "get_sim_state",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/api/v1/sim/state",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/state.py",
+      "line": 165,
+      "function": "get_variables_alias",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/api/v1/variables",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/state.py",
+      "line": 174,
+      "function": "fetch_variables",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/api/v1/variables/fetch",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/state.py",
+      "line": 201,
+      "function": "fetch_protocol_steps",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/api/v1/protocol-steps/fetch",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/state.py",
+      "line": 361,
+      "function": "post_commands",
+      "return_annotation": null,
+      "method": "POST",
+      "route_path": "/api/v1/commands",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/swagger_docs.py",
+      "line": 54,
+      "function": "swagger_ui",
+      "return_annotation": "HTMLResponse",
+      "method": "GET",
+      "route_path": "/docs",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/swagger_docs.py",
+      "line": 62,
+      "function": "swagger_ui_redirect",
+      "return_annotation": "HTMLResponse",
+      "method": "GET",
+      "route_path": "/docs/oauth2-redirect",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/ui_prefs_routes.py",
+      "line": 22,
+      "function": "get_ui_prefs",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/prefs",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/ui_prefs_routes.py",
+      "line": 31,
+      "function": "put_ui_prefs",
+      "return_annotation": "dict[str, Any]",
+      "method": "PUT",
+      "route_path": "/prefs",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/update_status.py",
+      "line": 65,
+      "function": "get_update_status",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/update/status",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/_endpoint_helpers.py",
+      "line": 22,
+      "function": "health_check",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/health",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/connect_helpers.py",
+      "line": 46,
+      "function": "health",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/health",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/cqrs/fastapi_integration.py",
+      "line": 41,
+      "function": "dispatch_command",
+      "return_annotation": "CommandResponse",
+      "method": "POST",
+      "route_path": "/command/{command_name}",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/cqrs/fastapi_integration.py",
+      "line": 58,
+      "function": "dispatch_query",
+      "return_annotation": "QueryResponse",
+      "method": "GET",
+      "route_path": "/query/{query_name}",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/cqrs/http_relay.py",
+      "line": 76,
+      "function": "receive_event",
+      "return_annotation": "dict",
+      "method": "POST",
+      "route_path": "/events",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/cqrs/http_relay.py",
+      "line": 86,
+      "function": "inbox_health",
+      "return_annotation": "dict",
+      "method": "GET",
+      "route_path": "/health",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/logs_endpoint.py",
+      "line": 35,
+      "function": "get_logs",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/logs_endpoint.py",
+      "line": 51,
+      "function": "get_log_stats",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/stats",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/module_app_factory.py",
+      "line": 51,
+      "function": "health",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/api/health",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/module_app_factory.py",
+      "line": 55,
+      "function": "get_manifest",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/module.yaml",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/module_app_factory.py",
+      "line": 61,
+      "function": "list_pages",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/api/pages",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/module_app_factory.py",
+      "line": 65,
+      "function": "serve_ui",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/ui/{filename}",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/module_app_factory.py",
+      "line": 74,
+      "function": "serve_model",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/model/{filename}",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/module_app_factory.py",
+      "line": 83,
+      "function": "list_models",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/api/models",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/module_app_factory.py",
+      "line": 115,
+      "function": "index",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/sensors_endpoint.py",
+      "line": 62,
+      "function": "get_current_sensors",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/current",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/sensors_endpoint.py",
+      "line": 83,
+      "function": "get_pressure_history",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/pressure/history",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/sensors_endpoint.py",
+      "line": 105,
+      "function": "sensors_health",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/health",
+      "response_model": null,
+      "status_code": null
+    }
+  ],
+  "routes_returning_dict_any": [
+    {
+      "file": "oqlos/api/_hw3_cqrs.py",
+      "line": 29,
+      "function": "hardware_cqrs_command_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/cqrs/command",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_cqrs.py",
+      "line": 55,
+      "function": "hardware_cqrs_events_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/cqrs/events",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_cqrs.py",
+      "line": 61,
+      "function": "hardware_cqrs_events_clear_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/cqrs/events/clear",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_peripheral.py",
+      "line": 98,
+      "function": "hardware_peripheral_status_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/peripheral-status/{peripheral_id}",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_peripheral.py",
+      "line": 167,
+      "function": "hardware_diagnostic_command_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/diagnostic-command",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_peripheral.py",
+      "line": 203,
+      "function": "hardware_scanner_status_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/scanner/status",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_peripheral.py",
+      "line": 221,
+      "function": "hardware_scanner_last_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/scanner/last",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_peripheral.py",
+      "line": 226,
+      "function": "hardware_scanner_ingest_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/scanner/ingest",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 56,
+      "function": "hardware_hui_actions_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/hui/actions",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 61,
+      "function": "hardware_hui_shutdown_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/hui/shutdown",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 72,
+      "function": "hardware_hui_hold_start_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/hui/hold/{key}/start",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 77,
+      "function": "hardware_hui_hold_stop_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/hui/hold/{key}/stop",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 82,
+      "function": "hardware_hui_valve_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/hui/valve/{key}",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 87,
+      "function": "hardware_hui_al_command_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/hui/al/{command}",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 99,
+      "function": "hardware_modbus_autoconfigure_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/modbus/autoconfigure",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 104,
+      "function": "hardware_diagnosis_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/diagnosis",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 112,
+      "function": "hardware_diagnosis_repair_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/diagnosis/repair",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 117,
+      "function": "hardware_modbus_settings_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/modbus/settings",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 123,
+      "function": "hardware_modbus_settings_update_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "PUT",
+      "route_path": "/modbus/settings",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 129,
+      "function": "hardware_modbus_waveshare_diagnose_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/modbus/waveshare-diagnose",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 135,
+      "function": "hardware_modbus_profile_channels_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/modbus/profile-channels",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 141,
+      "function": "hardware_modbus_channel_value_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "PUT",
+      "route_path": "/modbus/channel-value",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 147,
+      "function": "hardware_modbus_coil_test_plan_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/modbus/coil-test/plan",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 153,
+      "function": "hardware_modbus_coil_test_pulse_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/modbus/coil-test/pulse",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 162,
+      "function": "hardware_modbus_coil_test_stop_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/modbus/coil-test/stop",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 168,
+      "function": "hardware_rtc_status_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/rtc/status",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 174,
+      "function": "hardware_rtc_command_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/rtc/command",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 180,
+      "function": "hardware_modbus_wizard_plan_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/modbus/wizard/plan",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 186,
+      "function": "hardware_stack_snapshot_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/stack/snapshot",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 211,
+      "function": "hardware_host_reboot_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/host/reboot",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 219,
+      "function": "hardware_systemd_services_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/systemd/services",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 227,
+      "function": "hardware_systemd_control_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/systemd/services/{unit}/{action}",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 240,
+      "function": "hardware_systemd_logs_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/systemd/services/{unit}/logs",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 250,
+      "function": "hardware_logs_list_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/logs",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 258,
+      "function": "hardware_logs_read_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/logs/{log_id:path}",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 266,
+      "function": "hardware_startup_diagnostics_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/startup-diagnostics",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 277,
+      "function": "hardware_modbus_wizard_probe_isolated_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/modbus/wizard/probe-isolated",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 289,
+      "function": "hardware_modbus_wizard_program_isolated_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/modbus/wizard/program-isolated",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 304,
+      "function": "hardware_runtime_python_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/runtime-python",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/editor.py",
+      "line": 109,
+      "function": "list_files",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/files",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/editor.py",
+      "line": 184,
+      "function": "execute_scenario",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/execute",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_configuration_routes.py",
+      "line": 98,
+      "function": "get_hardware_configuration",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_configuration_routes.py",
+      "line": 107,
+      "function": "get_hardware_configuration_schema",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/schema",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_configuration_routes.py",
+      "line": 117,
+      "function": "list_hardware_configuration_files",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/files",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_configuration_routes.py",
+      "line": 144,
+      "function": "get_hardware_configuration_source",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/source",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_configuration_routes.py",
+      "line": 164,
+      "function": "validate_hardware_configuration",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/validate",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_configuration_routes.py",
+      "line": 173,
+      "function": "convert_hardware_configuration",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/convert",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_configuration_routes.py",
+      "line": 189,
+      "function": "save_hardware_configuration_source",
+      "return_annotation": "dict[str, Any]",
+      "method": "PUT",
+      "route_path": "/source",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_diagnosis_routes.py",
+      "line": 17,
+      "function": "hardware_stack_snapshot",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/stack/snapshot",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_diagnosis_routes.py",
+      "line": 25,
+      "function": "hardware_diagnosis_route",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/diagnosis",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_diagnosis_routes.py",
+      "line": 39,
+      "function": "hardware_recover_route",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/recover",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_hui.py",
+      "line": 35,
+      "function": "hui_actions",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/hui/actions",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_hui.py",
+      "line": 41,
+      "function": "hui_shutdown",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/hui/shutdown",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_hui.py",
+      "line": 46,
+      "function": "hui_hold_start",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/hui/hold/{key}/start",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_hui.py",
+      "line": 51,
+      "function": "hui_hold_stop",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/hui/hold/{key}/stop",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_hui.py",
+      "line": 57,
+      "function": "hui_valve_key",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/hui/valve/{key}",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_hui.py",
+      "line": 62,
+      "function": "hui_al_start",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/hui/al/start",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_hui.py",
+      "line": 67,
+      "function": "hui_al_stop",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/hui/al/stop",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_routes.py",
+      "line": 77,
+      "function": "hardware_modbus_settings_get",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/modbus/settings",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_routes.py",
+      "line": 83,
+      "function": "hardware_modbus_settings_put",
+      "return_annotation": "dict[str, Any]",
+      "method": "PUT",
+      "route_path": "/modbus/settings",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_routes.py",
+      "line": 99,
+      "function": "hardware_modbus_waveshare_diagnose",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/modbus/waveshare-diagnose",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_routes.py",
+      "line": 105,
+      "function": "hardware_modbus_profile_channels_get",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/modbus/profile-channels",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_routes.py",
+      "line": 112,
+      "function": "hardware_modbus_channel_value_put",
+      "return_annotation": "dict[str, Any]",
+      "method": "PUT",
+      "route_path": "/modbus/channel-value",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_routes.py",
+      "line": 119,
+      "function": "hardware_modbus_coil_test_plan_get",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/modbus/coil-test/plan",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_routes.py",
+      "line": 126,
+      "function": "hardware_modbus_coil_test_pulse_post",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/modbus/coil-test/pulse",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_routes.py",
+      "line": 137,
+      "function": "hardware_modbus_coil_test_stop_post",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/modbus/coil-test/stop",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_routes.py",
+      "line": 144,
+      "function": "hardware_modbus_wizard_plan",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/modbus/wizard/plan",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_routes.py",
+      "line": 153,
+      "function": "hardware_modbus_wizard_probe_isolated",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/modbus/wizard/probe-isolated",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_routes.py",
+      "line": 193,
+      "function": "hardware_modbus_wizard_program_isolated",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/modbus/wizard/program-isolated",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_peripherals_routes.py",
+      "line": 28,
+      "function": "read_modbus_adc_raw",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/modbus-adc/raw",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_runtime.py",
+      "line": 390,
+      "function": "hardware_temperature",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/temperature",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_runtime.py",
+      "line": 416,
+      "function": "read_sensors_batch",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/sensors/batch",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_runtime.py",
+      "line": 490,
+      "function": "hardware_diagnose",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/diagnose",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_v3.py",
+      "line": 31,
+      "function": "hardware_health_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/health",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_v3.py",
+      "line": 41,
+      "function": "hardware_identify_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/identify",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_v3.py",
+      "line": 47,
+      "function": "hardware_proxy_info_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/proxy-info",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/ui_prefs_routes.py",
+      "line": 22,
+      "function": "get_ui_prefs",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/prefs",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/ui_prefs_routes.py",
+      "line": 31,
+      "function": "put_ui_prefs",
+      "return_annotation": "dict[str, Any]",
+      "method": "PUT",
+      "route_path": "/prefs",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/update_status.py",
+      "line": 65,
+      "function": "get_update_status",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/update/status",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/connect_helpers.py",
+      "line": 46,
+      "function": "health",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/health",
+      "response_model": null,
+      "status_code": null
+    }
+  ],
+  "routes_with_generic_response": [
+    {
+      "file": "oqlos/api/_hw3_cqrs.py",
+      "line": 29,
+      "function": "hardware_cqrs_command_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/cqrs/command",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_cqrs.py",
+      "line": 55,
+      "function": "hardware_cqrs_events_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/cqrs/events",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_cqrs.py",
+      "line": 61,
+      "function": "hardware_cqrs_events_clear_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/cqrs/events/clear",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_peripheral.py",
+      "line": 98,
+      "function": "hardware_peripheral_status_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/peripheral-status/{peripheral_id}",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_peripheral.py",
+      "line": 167,
+      "function": "hardware_diagnostic_command_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/diagnostic-command",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_peripheral.py",
+      "line": 203,
+      "function": "hardware_scanner_status_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/scanner/status",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_peripheral.py",
+      "line": 221,
+      "function": "hardware_scanner_last_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/scanner/last",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_peripheral.py",
+      "line": 226,
+      "function": "hardware_scanner_ingest_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/scanner/ingest",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 56,
+      "function": "hardware_hui_actions_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/hui/actions",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 61,
+      "function": "hardware_hui_shutdown_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/hui/shutdown",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 72,
+      "function": "hardware_hui_hold_start_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/hui/hold/{key}/start",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 77,
+      "function": "hardware_hui_hold_stop_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/hui/hold/{key}/stop",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 82,
+      "function": "hardware_hui_valve_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/hui/valve/{key}",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 87,
+      "function": "hardware_hui_al_command_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/hui/al/{command}",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 99,
+      "function": "hardware_modbus_autoconfigure_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/modbus/autoconfigure",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 104,
+      "function": "hardware_diagnosis_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/diagnosis",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 112,
+      "function": "hardware_diagnosis_repair_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/diagnosis/repair",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 117,
+      "function": "hardware_modbus_settings_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/modbus/settings",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 123,
+      "function": "hardware_modbus_settings_update_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "PUT",
+      "route_path": "/modbus/settings",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 129,
+      "function": "hardware_modbus_waveshare_diagnose_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/modbus/waveshare-diagnose",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 135,
+      "function": "hardware_modbus_profile_channels_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/modbus/profile-channels",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 141,
+      "function": "hardware_modbus_channel_value_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "PUT",
+      "route_path": "/modbus/channel-value",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 147,
+      "function": "hardware_modbus_coil_test_plan_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/modbus/coil-test/plan",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 153,
+      "function": "hardware_modbus_coil_test_pulse_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/modbus/coil-test/pulse",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 162,
+      "function": "hardware_modbus_coil_test_stop_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/modbus/coil-test/stop",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 168,
+      "function": "hardware_rtc_status_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/rtc/status",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 174,
+      "function": "hardware_rtc_command_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/rtc/command",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 180,
+      "function": "hardware_modbus_wizard_plan_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/modbus/wizard/plan",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 186,
+      "function": "hardware_stack_snapshot_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/stack/snapshot",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 191,
+      "function": "hardware_runtime_status_v3",
+      "return_annotation": "dict[str, object]",
+      "method": "GET",
+      "route_path": "/runtime/status",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 196,
+      "function": "hardware_runtime_stop_v3",
+      "return_annotation": "dict[str, object]",
+      "method": "POST",
+      "route_path": "/runtime/stop",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 201,
+      "function": "hardware_runtime_start_v3",
+      "return_annotation": "dict[str, object]",
+      "method": "POST",
+      "route_path": "/runtime/start",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 206,
+      "function": "hardware_runtime_make_v3",
+      "return_annotation": "dict[str, object]",
+      "method": "POST",
+      "route_path": "/runtime/make",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 211,
+      "function": "hardware_host_reboot_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/host/reboot",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 219,
+      "function": "hardware_systemd_services_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/systemd/services",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 227,
+      "function": "hardware_systemd_control_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/systemd/services/{unit}/{action}",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 240,
+      "function": "hardware_systemd_logs_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/systemd/services/{unit}/logs",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 250,
+      "function": "hardware_logs_list_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/logs",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 258,
+      "function": "hardware_logs_read_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/logs/{log_id:path}",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 266,
+      "function": "hardware_startup_diagnostics_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/startup-diagnostics",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 277,
+      "function": "hardware_modbus_wizard_probe_isolated_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/modbus/wizard/probe-isolated",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 289,
+      "function": "hardware_modbus_wizard_program_isolated_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/modbus/wizard/program-isolated",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 304,
+      "function": "hardware_runtime_python_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/runtime-python",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/editor.py",
+      "line": 109,
+      "function": "list_files",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/files",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/editor.py",
+      "line": 138,
+      "function": "write_file_endpoint",
+      "return_annotation": "dict[str, str]",
+      "method": "POST",
+      "route_path": "/file/{file_path:path}",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/editor.py",
+      "line": 151,
+      "function": "delete_file_endpoint",
+      "return_annotation": "dict[str, str]",
+      "method": "DELETE",
+      "route_path": "/file/{file_path:path}",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/editor.py",
+      "line": 184,
+      "function": "execute_scenario",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/execute",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/execution.py",
+      "line": 91,
+      "function": "start_execution",
+      "return_annotation": null,
+      "method": "POST",
+      "route_path": "/start",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/execution.py",
+      "line": 109,
+      "function": "execute_step",
+      "return_annotation": null,
+      "method": "POST",
+      "route_path": "/step",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/execution.py",
+      "line": 200,
+      "function": "get_execution",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/by-id/{execution_id}",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/execution.py",
+      "line": 205,
+      "function": "get_execution_projection",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/projection",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/execution.py",
+      "line": 210,
+      "function": "get_execution_status",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/status",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/execution.py",
+      "line": 235,
+      "function": "get_execution_logs",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/logs",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/execution.py",
+      "line": 275,
+      "function": "execution_stream",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/stream",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/execution.py",
+      "line": 307,
+      "function": "execution_logs_stream",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/logs/stream",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_actuators.py",
+      "line": 22,
+      "function": "set_valve",
+      "return_annotation": null,
+      "method": "POST",
+      "route_path": "/valve/{valve_id}",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_actuators.py",
+      "line": 36,
+      "function": "set_pump",
+      "return_annotation": null,
+      "method": "POST",
+      "route_path": "/pump",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_configuration_routes.py",
+      "line": 98,
+      "function": "get_hardware_configuration",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_configuration_routes.py",
+      "line": 107,
+      "function": "get_hardware_configuration_schema",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/schema",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_configuration_routes.py",
+      "line": 117,
+      "function": "list_hardware_configuration_files",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/files",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_configuration_routes.py",
+      "line": 144,
+      "function": "get_hardware_configuration_source",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/source",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_configuration_routes.py",
+      "line": 164,
+      "function": "validate_hardware_configuration",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/validate",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_configuration_routes.py",
+      "line": 173,
+      "function": "convert_hardware_configuration",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/convert",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_configuration_routes.py",
+      "line": 189,
+      "function": "save_hardware_configuration_source",
+      "return_annotation": "dict[str, Any]",
+      "method": "PUT",
+      "route_path": "/source",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_diagnosis_routes.py",
+      "line": 17,
+      "function": "hardware_stack_snapshot",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/stack/snapshot",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_diagnosis_routes.py",
+      "line": 25,
+      "function": "hardware_diagnosis_route",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/diagnosis",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_diagnosis_routes.py",
+      "line": 39,
+      "function": "hardware_recover_route",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/recover",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_hui.py",
+      "line": 35,
+      "function": "hui_actions",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/hui/actions",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_hui.py",
+      "line": 41,
+      "function": "hui_shutdown",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/hui/shutdown",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_hui.py",
+      "line": 46,
+      "function": "hui_hold_start",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/hui/hold/{key}/start",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_hui.py",
+      "line": 51,
+      "function": "hui_hold_stop",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/hui/hold/{key}/stop",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_hui.py",
+      "line": 57,
+      "function": "hui_valve_key",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/hui/valve/{key}",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_hui.py",
+      "line": 62,
+      "function": "hui_al_start",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/hui/al/start",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_hui.py",
+      "line": 67,
+      "function": "hui_al_stop",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/hui/al/stop",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_identify.py",
+      "line": 115,
+      "function": "hardware_health",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/health",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_identify.py",
+      "line": 134,
+      "function": "hardware_identify",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/identify",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_lung.py",
+      "line": 47,
+      "function": "set_lung",
+      "return_annotation": null,
+      "method": "POST",
+      "route_path": "/lung",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_lung.py",
+      "line": 89,
+      "function": "stop_lung",
+      "return_annotation": null,
+      "method": "POST",
+      "route_path": "/lung/stop",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_lung.py",
+      "line": 94,
+      "function": "disable_lung",
+      "return_annotation": null,
+      "method": "POST",
+      "route_path": "/lung/disable",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_lung.py",
+      "line": 99,
+      "function": "artificial_lung_status",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/artificial-lung/status",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_lung.py",
+      "line": 105,
+      "function": "artificial_lung_command",
+      "return_annotation": null,
+      "method": "POST",
+      "route_path": "/artificial-lung/command",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_routes.py",
+      "line": 77,
+      "function": "hardware_modbus_settings_get",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/modbus/settings",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_routes.py",
+      "line": 83,
+      "function": "hardware_modbus_settings_put",
+      "return_annotation": "dict[str, Any]",
+      "method": "PUT",
+      "route_path": "/modbus/settings",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_routes.py",
+      "line": 99,
+      "function": "hardware_modbus_waveshare_diagnose",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/modbus/waveshare-diagnose",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_routes.py",
+      "line": 105,
+      "function": "hardware_modbus_profile_channels_get",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/modbus/profile-channels",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_routes.py",
+      "line": 112,
+      "function": "hardware_modbus_channel_value_put",
+      "return_annotation": "dict[str, Any]",
+      "method": "PUT",
+      "route_path": "/modbus/channel-value",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_routes.py",
+      "line": 119,
+      "function": "hardware_modbus_coil_test_plan_get",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/modbus/coil-test/plan",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_routes.py",
+      "line": 126,
+      "function": "hardware_modbus_coil_test_pulse_post",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/modbus/coil-test/pulse",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_routes.py",
+      "line": 137,
+      "function": "hardware_modbus_coil_test_stop_post",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/modbus/coil-test/stop",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_routes.py",
+      "line": 144,
+      "function": "hardware_modbus_wizard_plan",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/modbus/wizard/plan",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_routes.py",
+      "line": 153,
+      "function": "hardware_modbus_wizard_probe_isolated",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/modbus/wizard/probe-isolated",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_routes.py",
+      "line": 193,
+      "function": "hardware_modbus_wizard_program_isolated",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/modbus/wizard/program-isolated",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_peripherals_routes.py",
+      "line": 28,
+      "function": "read_modbus_adc_raw",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/modbus-adc/raw",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_peripherals_routes.py",
+      "line": 94,
+      "function": "rtc_status",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/rtc/status",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_peripherals_routes.py",
+      "line": 100,
+      "function": "rtc_command",
+      "return_annotation": null,
+      "method": "POST",
+      "route_path": "/rtc/command",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_runtime.py",
+      "line": 369,
+      "function": "read_sensor",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/sensor/{sensor_id}",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_runtime.py",
+      "line": 390,
+      "function": "hardware_temperature",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/temperature",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_runtime.py",
+      "line": 416,
+      "function": "read_sensors_batch",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/sensors/batch",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_runtime.py",
+      "line": 490,
+      "function": "hardware_diagnose",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/diagnose",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_v3.py",
+      "line": 31,
+      "function": "hardware_health_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/health",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_v3.py",
+      "line": 41,
+      "function": "hardware_identify_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/identify",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_v3.py",
+      "line": 47,
+      "function": "hardware_proxy_info_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/proxy-info",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/logs.py",
+      "line": 27,
+      "function": "get_logs",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/logs.py",
+      "line": 43,
+      "function": "get_log_stats",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/stats",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 364,
+      "function": "index_page",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 376,
+      "function": "editor_page",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/editor",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 380,
+      "function": "panel_alias",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/panel",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 385,
+      "function": "navigation_alias",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/navigation",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 390,
+      "function": "ui_legacy_panel_page",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/ui/legacy-panel",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 395,
+      "function": "ui_legacy_navigation_page",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/ui/legacy-navigation",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 430,
+      "function": "hardware_status_page",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/hardware-status",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 435,
+      "function": "hardware_demo_alias",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/hardware-demo",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 440,
+      "function": "hardware_restart_alias",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/hardware-restart",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 445,
+      "function": "hardware_modbus_alias",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/hardware-modbus",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 450,
+      "function": "hardware_coils_alias",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/hardware-coils",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 455,
+      "function": "hardware_rtc_alias",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/hardware-rtc",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 460,
+      "function": "rtc_alias",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/rtc",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 472,
+      "function": "scenario_files_alias",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/scenario-files",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 472,
+      "function": "scenario_files_alias",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/scenario-files/{full_path:path}",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 478,
+      "function": "func_editor_alias",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/func-editor",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 478,
+      "function": "func_editor_alias",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/func-editor/{full_path:path}",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 483,
+      "function": "motor_services_alias",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/motor-services",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 488,
+      "function": "nav_alias",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/nav",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 493,
+      "function": "status_alias",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/status",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 498,
+      "function": "restart_alias",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/restart",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 503,
+      "function": "modbus_alias",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/modbus",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 508,
+      "function": "demo_alias",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/demo",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 513,
+      "function": "files_alias",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/files",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 518,
+      "function": "functions_alias",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/functions",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 523,
+      "function": "api_docs_alias",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/api-docs",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 529,
+      "function": "oql_panel_alias",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/oql",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 529,
+      "function": "oql_panel_alias",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/oql-panel",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 538,
+      "function": "ui_legacy_status_routes",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/ui/navigation",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 538,
+      "function": "ui_legacy_status_routes",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/ui/hardware-status",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 549,
+      "function": "hardware_ui_spa",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/ui",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 549,
+      "function": "hardware_ui_spa",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/ui/{full_path:path}",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 566,
+      "function": "update_status_page",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/update",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 579,
+      "function": "health_check",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/health",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 579,
+      "function": "health_check",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/api/v1/health",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 579,
+      "function": "health_check",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/firmware/api/v1/health",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 591,
+      "function": "navigation_index",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/api/v1/navigation",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 606,
+      "function": "status",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/api/status",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/peripherals.py",
+      "line": 19,
+      "function": "get_peripheral",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/{peripheral_id}",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/peripherals.py",
+      "line": 24,
+      "function": "update_peripheral",
+      "return_annotation": null,
+      "method": "PUT",
+      "route_path": "/{peripheral_id}",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/peripherals.py",
+      "line": 54,
+      "function": "set_peripheral",
+      "return_annotation": null,
+      "method": "POST",
+      "route_path": "/{peripheral_id}/set",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/peripherals.py",
+      "line": 73,
+      "function": "reset_peripherals",
+      "return_annotation": null,
+      "method": "POST",
+      "route_path": "/reset",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/plugins.py",
+      "line": 90,
+      "function": "list_plugins",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/plugins.py",
+      "line": 96,
+      "function": "get_plugin_status",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/status",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/plugins.py",
+      "line": 102,
+      "function": "get_plugin_info",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/{plugin_id}",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/plugins.py",
+      "line": 111,
+      "function": "get_plugin_health",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/{plugin_id}/health",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/plugins.py",
+      "line": 130,
+      "function": "connect_plugin",
+      "return_annotation": null,
+      "method": "POST",
+      "route_path": "/{plugin_id}/connect",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/plugins.py",
+      "line": 158,
+      "function": "disconnect_plugin",
+      "return_annotation": null,
+      "method": "POST",
+      "route_path": "/{plugin_id}/disconnect",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/plugins.py",
+      "line": 190,
+      "function": "execute_plugin_command",
+      "return_annotation": null,
+      "method": "POST",
+      "route_path": "/{plugin_id}/execute",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/plugins.py",
+      "line": 230,
+      "function": "validate_plugin_configs",
+      "return_annotation": null,
+      "method": "POST",
+      "route_path": "/validate",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/scenarios.py",
+      "line": 19,
+      "function": "get_scenario",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/{scenario_id}",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/scenarios.py",
+      "line": 93,
+      "function": "fetch_scenarios",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/fetch",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/scenarios.py",
+      "line": 232,
+      "function": "register_dsl",
+      "return_annotation": null,
+      "method": "POST",
+      "route_path": "/register-dsl",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/state.py",
+      "line": 63,
+      "function": "get_state",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/api/v1/state",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/state.py",
+      "line": 105,
+      "function": "stream_values",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/api/v1/values/stream",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/state.py",
+      "line": 139,
+      "function": "get_current_value",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/api/v1/values/current",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/state.py",
+      "line": 159,
+      "function": "get_sim_state",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/api/v1/sim/state",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/state.py",
+      "line": 165,
+      "function": "get_variables_alias",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/api/v1/variables",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/state.py",
+      "line": 174,
+      "function": "fetch_variables",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/api/v1/variables/fetch",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/state.py",
+      "line": 201,
+      "function": "fetch_protocol_steps",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/api/v1/protocol-steps/fetch",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/state.py",
+      "line": 361,
+      "function": "post_commands",
+      "return_annotation": null,
+      "method": "POST",
+      "route_path": "/api/v1/commands",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/ui_prefs_routes.py",
+      "line": 22,
+      "function": "get_ui_prefs",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/prefs",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/ui_prefs_routes.py",
+      "line": 31,
+      "function": "put_ui_prefs",
+      "return_annotation": "dict[str, Any]",
+      "method": "PUT",
+      "route_path": "/prefs",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/update_status.py",
+      "line": 65,
+      "function": "get_update_status",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/update/status",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/_endpoint_helpers.py",
+      "line": 22,
+      "function": "health_check",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/health",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/connect_helpers.py",
+      "line": 46,
+      "function": "health",
+      "return_annotation": "dict[str, Any]",
+      "method": "GET",
+      "route_path": "/health",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/cqrs/http_relay.py",
+      "line": 76,
+      "function": "receive_event",
+      "return_annotation": "dict",
+      "method": "POST",
+      "route_path": "/events",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/cqrs/http_relay.py",
+      "line": 86,
+      "function": "inbox_health",
+      "return_annotation": "dict",
+      "method": "GET",
+      "route_path": "/health",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/logs_endpoint.py",
+      "line": 35,
+      "function": "get_logs",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/logs_endpoint.py",
+      "line": 51,
+      "function": "get_log_stats",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/stats",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/module_app_factory.py",
+      "line": 51,
+      "function": "health",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/api/health",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/module_app_factory.py",
+      "line": 55,
+      "function": "get_manifest",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/module.yaml",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/module_app_factory.py",
+      "line": 61,
+      "function": "list_pages",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/api/pages",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/module_app_factory.py",
+      "line": 65,
+      "function": "serve_ui",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/ui/{filename}",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/module_app_factory.py",
+      "line": 74,
+      "function": "serve_model",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/model/{filename}",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/module_app_factory.py",
+      "line": 83,
+      "function": "list_models",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/api/models",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/module_app_factory.py",
+      "line": 115,
+      "function": "index",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/sensors_endpoint.py",
+      "line": 62,
+      "function": "get_current_sensors",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/current",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/sensors_endpoint.py",
+      "line": 83,
+      "function": "get_pressure_history",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/pressure/history",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/sensors_endpoint.py",
+      "line": 105,
+      "function": "sensors_health",
+      "return_annotation": null,
+      "method": "GET",
+      "route_path": "/health",
+      "response_model": null,
+      "status_code": null
+    }
+  ],
+  "routes_with_false_success_at_http_200": [
+    {
+      "file": "oqlos/api/_hw3_cqrs.py",
+      "line": 29,
+      "function": "hardware_cqrs_command_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/cqrs/command",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/_hw3_peripheral.py",
+      "line": 167,
+      "function": "hardware_diagnostic_command_v3",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/diagnostic-command",
+      "response_model": null,
+      "status_code": null
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_routes.py",
+      "line": 193,
+      "function": "hardware_modbus_wizard_program_isolated",
+      "return_annotation": "dict[str, Any]",
+      "method": "POST",
+      "route_path": "/modbus/wizard/program-isolated",
+      "response_model": null,
+      "status_code": null
+    }
+  ],
+  "environment_reads_outside_settings": [
+    {
+      "file": "frontend/src/api/wsClient.js",
+      "line": 9
+    },
+    {
+      "file": "oqlos/api/editor.py",
+      "line": 33
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_settings.py",
+      "line": 19
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_topology.py",
+      "line": 28
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_topology.py",
+      "line": 28
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_topology.py",
+      "line": 66
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_topology.py",
+      "line": 67
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_topology.py",
+      "line": 68
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_topology.py",
+      "line": 69
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_topology.py",
+      "line": 73
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_topology.py",
+      "line": 74
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_topology.py",
+      "line": 78
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_topology.py",
+      "line": 79
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_topology.py",
+      "line": 34
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_topology.py",
+      "line": 34
+    },
+    {
+      "file": "oqlos/api/hardware_platform.py",
+      "line": 56
+    },
+    {
+      "file": "oqlos/api/hardware_platform.py",
+      "line": 57
+    },
+    {
+      "file": "oqlos/api/hardware_platform.py",
+      "line": 58
+    },
+    {
+      "file": "oqlos/api/hardware_platform.py",
+      "line": 59
+    },
+    {
+      "file": "oqlos/api/hardware_platform.py",
+      "line": 79
+    },
+    {
+      "file": "oqlos/api/hardware_platform.py",
+      "line": 80
+    },
+    {
+      "file": "oqlos/api/hardware_platform.py",
+      "line": 99
+    },
+    {
+      "file": "oqlos/api/hardware_platform.py",
+      "line": 100
+    },
+    {
+      "file": "oqlos/api/hardware_probe_devices.py",
+      "line": 108
+    },
+    {
+      "file": "oqlos/api/hardware_probe_devices.py",
+      "line": 114
+    },
+    {
+      "file": "oqlos/api/hardware_probe_devices.py",
+      "line": 94
+    },
+    {
+      "file": "oqlos/api/hardware_probe_devices.py",
+      "line": 94
+    },
+    {
+      "file": "oqlos/api/hardware_probe_devices.py",
+      "line": 24
+    },
+    {
+      "file": "oqlos/hardware/client/identify_enrich_modbus_io.py",
+      "line": 56
+    },
+    {
+      "file": "oqlos/hardware/client/identify_enrich_modbus_io.py",
+      "line": 44
+    },
+    {
+      "file": "oqlos/hardware/client/identify_enrich_modbus_io.py",
+      "line": 45
+    },
+    {
+      "file": "oqlos/hardware/client/identify_enrich_modbus_io.py",
+      "line": 56
+    },
+    {
+      "file": "oqlos/hardware/client/modbus_repair.py",
+      "line": 10
+    },
+    {
+      "file": "oqlos/hardware/client/proxy.py",
+      "line": 352
+    },
+    {
+      "file": "oqlos/hardware/client/proxy.py",
+      "line": 353
+    },
+    {
+      "file": "oqlos/hardware/client/proxy.py",
+      "line": 251
+    },
+    {
+      "file": "oqlos/hardware/client/tic249_sidecar_client.py",
+      "line": 35
+    },
+    {
+      "file": "oqlos/hardware/client/tic249_sidecar_client.py",
+      "line": 36
+    },
+    {
+      "file": "oqlos/hardware/client/tic249_sidecar_client.py",
+      "line": 37
+    },
+    {
+      "file": "oqlos/hardware/client/tic249_sidecar_client.py",
+      "line": 38
+    },
+    {
+      "file": "oqlos/hardware/client/tic249_sidecar_client.py",
+      "line": 60
+    },
+    {
+      "file": "oqlos/hardware/config_paths.py",
+      "line": 27
+    },
+    {
+      "file": "oqlos/hardware/diagnosis.py",
+      "line": 111
+    },
+    {
+      "file": "oqlos/hardware/diagnosis.py",
+      "line": 97
+    },
+    {
+      "file": "oqlos/hardware/diagnosis.py",
+      "line": 98
+    },
+    {
+      "file": "oqlos/hardware/discovery.py",
+      "line": 56
+    },
+    {
+      "file": "oqlos/hardware/discovery.py",
+      "line": 56
+    },
+    {
+      "file": "oqlos/hardware/discovery.py",
+      "line": 59
+    },
+    {
+      "file": "oqlos/hardware/discovery.py",
+      "line": 60
+    },
+    {
+      "file": "oqlos/hardware/discovery.py",
+      "line": 60
+    },
+    {
+      "file": "oqlos/hardware/discovery.py",
+      "line": 63
+    },
+    {
+      "file": "oqlos/hardware/discovery.py",
+      "line": 64
+    },
+    {
+      "file": "oqlos/hardware/discovery.py",
+      "line": 65
+    },
+    {
+      "file": "oqlos/hardware/discovery.py",
+      "line": 57
+    },
+    {
+      "file": "oqlos/hardware/discovery.py",
+      "line": 57
+    },
+    {
+      "file": "oqlos/hardware/discovery.py",
+      "line": 61
+    },
+    {
+      "file": "oqlos/hardware/discovery.py",
+      "line": 61
+    },
+    {
+      "file": "oqlos/hardware/discovery.py",
+      "line": 58
+    },
+    {
+      "file": "oqlos/hardware/discovery.py",
+      "line": 58
+    },
+    {
+      "file": "oqlos/hardware/discovery.py",
+      "line": 62
+    },
+    {
+      "file": "oqlos/hardware/discovery.py",
+      "line": 62
+    },
+    {
+      "file": "oqlos/hardware/gateway.py",
+      "line": 62
+    },
+    {
+      "file": "oqlos/hardware/gateway.py",
+      "line": 63
+    },
+    {
+      "file": "oqlos/hardware/gateway.py",
+      "line": 64
+    },
+    {
+      "file": "oqlos/hardware/gateway.py",
+      "line": 65
+    },
+    {
+      "file": "oqlos/hardware/gateway.py",
+      "line": 67
+    },
+    {
+      "file": "oqlos/hardware/gateway.py",
+      "line": 66
+    },
+    {
+      "file": "oqlos/hardware/gateway.py",
+      "line": 68
+    },
+    {
+      "file": "oqlos/hardware/gateway.py",
+      "line": 61
+    },
+    {
+      "file": "oqlos/hardware/gateway.py",
+      "line": 69
+    },
+    {
+      "file": "oqlos/hardware/hui_artificial_lung.py",
+      "line": 35
+    },
+    {
+      "file": "oqlos/hardware/hui_profiles_oql.py",
+      "line": 52
+    },
+    {
+      "file": "oqlos/hardware/hui_profiles_oql.py",
+      "line": 33
+    },
+    {
+      "file": "oqlos/hardware/hui_profiles_oql.py",
+      "line": 50
+    },
+    {
+      "file": "oqlos/hardware/log_files.py",
+      "line": 19
+    },
+    {
+      "file": "oqlos/hardware/log_files.py",
+      "line": 19
+    },
+    {
+      "file": "oqlos/hardware/plugin_gateway.py",
+      "line": 915
+    },
+    {
+      "file": "oqlos/hardware/plugin_gateway.py",
+      "line": 263
+    },
+    {
+      "file": "oqlos/hardware/plugin_gateway.py",
+      "line": 271
+    },
+    {
+      "file": "oqlos/hardware/plugin_gateway.py",
+      "line": 300
+    },
+    {
+      "file": "oqlos/hardware/plugin_gateway.py",
+      "line": 313
+    },
+    {
+      "file": "oqlos/hardware/plugin_gateway.py",
+      "line": 325
+    },
+    {
+      "file": "oqlos/hardware/plugin_gateway.py",
+      "line": 126
+    },
+    {
+      "file": "oqlos/hardware/plugin_gateway.py",
+      "line": 265
+    },
+    {
+      "file": "oqlos/hardware/plugin_gateway.py",
+      "line": 273
+    },
+    {
+      "file": "oqlos/hardware/plugin_gateway.py",
+      "line": 307
+    },
+    {
+      "file": "oqlos/hardware/plugin_gateway.py",
+      "line": 319
+    },
+    {
+      "file": "oqlos/hardware/plugin_gateway.py",
+      "line": 331
+    },
+    {
+      "file": "oqlos/hardware/plugin_gateway.py",
+      "line": 363
+    },
+    {
+      "file": "oqlos/hardware/plugin_gateway.py",
+      "line": 126
+    },
+    {
+      "file": "oqlos/hardware/plugin_gateway.py",
+      "line": 363
+    },
+    {
+      "file": "oqlos/hardware/plugins/piadc.py",
+      "line": 63
+    },
+    {
+      "file": "oqlos/hardware/rtc_probe.py",
+      "line": 68
+    },
+    {
+      "file": "oqlos/hardware/rtc_probe.py",
+      "line": 22
+    },
+    {
+      "file": "oqlos/hardware/rtc_probe.py",
+      "line": 62
+    },
+    {
+      "file": "oqlos/hardware/sidecar_control.py",
+      "line": 19
+    },
+    {
+      "file": "oqlos/hardware/sidecar_control.py",
+      "line": 15
+    },
+    {
+      "file": "oqlos/hardware/sidecar_control.py",
+      "line": 113
+    },
+    {
+      "file": "oqlos/hardware/sidecar_control.py",
+      "line": 114
+    },
+    {
+      "file": "oqlos/hardware/sidecar_control.py",
+      "line": 123
+    },
+    {
+      "file": "oqlos/hardware/sidecar_control.py",
+      "line": 123
+    },
+    {
+      "file": "oqlos/hardware/sidecar_control.py",
+      "line": 41
+    },
+    {
+      "file": "oqlos/hardware/sidecar_control.py",
+      "line": 118
+    },
+    {
+      "file": "oqlos/hardware/sidecar_control.py",
+      "line": 119
+    },
+    {
+      "file": "oqlos/hardware/sidecar_control.py",
+      "line": 108
+    },
+    {
+      "file": "oqlos/hardware/sidecar_control.py",
+      "line": 109
+    },
+    {
+      "file": "oqlos/hardware/sidecar_control.py",
+      "line": 110
+    },
+    {
+      "file": "oqlos/hardware/startup_diagnostics.py",
+      "line": 27
+    },
+    {
+      "file": "oqlos/hardware/systemd_services.py",
+      "line": 90
+    },
+    {
+      "file": "oqlos/hardware/systemd_services.py",
+      "line": 39
+    },
+    {
+      "file": "oqlos/scenarios/legacy_aliases.py",
+      "line": 11
+    },
+    {
+      "file": "oqlos/services/update_status.py",
+      "line": 15
+    },
+    {
+      "file": "oqlos/services/update_status.py",
+      "line": 22
+    },
+    {
+      "file": "oqlos/services/update_status.py",
+      "line": 40
+    },
+    {
+      "file": "oqlos/services/update_status.py",
+      "line": 52
+    },
+    {
+      "file": "oqlos/shared/config_factory.py",
+      "line": 68
+    },
+    {
+      "file": "oqlos/shared/config_factory.py",
+      "line": 69
+    },
+    {
+      "file": "oqlos/shared/config_factory.py",
+      "line": 70
+    },
+    {
+      "file": "oqlos/shared/event_server.py",
+      "line": 167
+    },
+    {
+      "file": "oqlos/shared/event_server.py",
+      "line": 169
+    },
+    {
+      "file": "oqlos/shared/event_server.py",
+      "line": 168
+    },
+    {
+      "file": "oqlos/shared/file_ops.py",
+      "line": 98
+    },
+    {
+      "file": "oqlos/shared/logger.py",
+      "line": 28
+    },
+    {
+      "file": "oqlos/shared/logger.py",
+      "line": 103
+    },
+    {
+      "file": "oqlos/shared/logger.py",
+      "line": 60
+    },
+    {
+      "file": "oqlos/shared/logger.py",
+      "line": 61
+    },
+    {
+      "file": "oqlos/shared/logger.py",
+      "line": 80
+    },
+    {
+      "file": "oqlos/shared/logger.py",
+      "line": 81
+    },
+    {
+      "file": "oqlos/shared/release_version.py",
+      "line": 113
+    },
+    {
+      "file": "oqlos/tools/cql_cli/commands.py",
+      "line": 27
+    },
+    {
+      "file": "oqlos/tools/hardware_diagnose/modbus_probe.py",
+      "line": 32
+    },
+    {
+      "file": "oqlos/tools/hardware_diagnose/modbus_probe.py",
+      "line": 41
+    },
+    {
+      "file": "oqlos/tools/hardware_diagnose/modbus_probe.py",
+      "line": 58
+    },
+    {
+      "file": "oqlos/tools/hardware_diagnose/modbus_probe.py",
+      "line": 93
+    },
+    {
+      "file": "oqlos/tools/hardware_diagnose/modbus_probe.py",
+      "line": 128
+    },
+    {
+      "file": "oqlos/tools/hardware_diagnose/modbus_probe.py",
+      "line": 164
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/connect_helpers.py",
+      "line": 112
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/db/alembic_helpers.py",
+      "line": 32
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/http_service_client.py",
+      "line": 68
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/logs_query.py",
+      "line": 33
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/logs_query.py",
+      "line": 42
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/logs_query.py",
+      "line": 36
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/nfo_config_factory.py",
+      "line": 41
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/nfo_config_factory.py",
+      "line": 79
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/nfo_config_factory.py",
+      "line": 80
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/nfo_config_factory.py",
+      "line": 81
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/release_version.py",
+      "line": 106
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/_oql_adapter.py",
+      "line": 55
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/motor2_runtime.py",
+      "line": 86
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/motor2_runtime.py",
+      "line": 86
+    },
+    {
+      "file": "setup_hardware_and_run_oql.py",
+      "line": 219
+    },
+    {
+      "file": "setup_hardware_and_run_oql.py",
+      "line": 204
+    },
+    {
+      "file": "setup_hardware_and_run_oql.py",
+      "line": 228
+    },
+    {
+      "file": "setup_hardware_and_run_oql.py",
+      "line": 221
+    }
+  ],
+  "raw_exceptions": [
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 95,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 232,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 235,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "oqlos/api/_hw3_system.py",
+      "line": 245,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "oqlos/api/editor.py",
+      "line": 105,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "oqlos/api/editor.py",
+      "line": 119,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "oqlos/api/editor.py",
+      "line": 129,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "oqlos/api/editor.py",
+      "line": 131,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "oqlos/api/editor.py",
+      "line": 134,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "oqlos/api/editor.py",
+      "line": 144,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "oqlos/api/editor.py",
+      "line": 147,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "oqlos/api/editor.py",
+      "line": 157,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "oqlos/api/editor.py",
+      "line": 159,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "oqlos/api/editor.py",
+      "line": 161,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "oqlos/api/editor.py",
+      "line": 164,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "oqlos/api/editor.py",
+      "line": 191,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "oqlos/api/editor.py",
+      "line": 235,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "oqlos/api/execution.py",
+      "line": 124,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "oqlos/api/execution.py",
+      "line": 171,
+      "exception": "ValueError"
+    },
+    {
+      "file": "oqlos/api/execution.py",
+      "line": 106,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "oqlos/api/execution.py",
+      "line": 189,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "oqlos/api/execution.py",
+      "line": 263,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "oqlos/api/execution.py",
+      "line": 143,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "oqlos/api/execution.py",
+      "line": 142,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "oqlos/api/hardware_configuration_routes.py",
+      "line": 62,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "oqlos/api/hardware_configuration_routes.py",
+      "line": 78,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "oqlos/api/hardware_configuration_routes.py",
+      "line": 197,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "oqlos/api/hardware_configuration_routes.py",
+      "line": 69,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "oqlos/api/hardware_hui.py",
+      "line": 25,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "oqlos/api/hardware_lung.py",
+      "line": 21,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "oqlos/api/hardware_lung.py",
+      "line": 26,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_routes.py",
+      "line": 65,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_wizard.py",
+      "line": 425,
+      "exception": "RuntimeError"
+    },
+    {
+      "file": "oqlos/api/peripherals.py",
+      "line": 27,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "oqlos/api/peripherals.py",
+      "line": 57,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "oqlos/api/plugins.py",
+      "line": 106,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "oqlos/api/scenarios.py",
+      "line": 25,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "oqlos/api/scenarios.py",
+      "line": 173,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "oqlos/api/scenarios.py",
+      "line": 243,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "oqlos/api/state.py",
+      "line": 308,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "oqlos/api/state.py",
+      "line": 313,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "oqlos/api/state.py",
+      "line": 316,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "oqlos/api/state.py",
+      "line": 319,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "oqlos/api/ui_prefs_store.py",
+      "line": 73,
+      "exception": "RuntimeError"
+    },
+    {
+      "file": "oqlos/api/utils/execution_ctrl.py",
+      "line": 35,
+      "exception": "RuntimeError"
+    },
+    {
+      "file": "oqlos/core/executor.py",
+      "line": 26,
+      "exception": "ValueError"
+    },
+    {
+      "file": "oqlos/core/executor.py",
+      "line": 48,
+      "exception": "ValueError"
+    },
+    {
+      "file": "oqlos/core/executor.py",
+      "line": 21,
+      "exception": "ValueError"
+    },
+    {
+      "file": "oqlos/core/executor.py",
+      "line": 65,
+      "exception": "ValueError"
+    },
+    {
+      "file": "oqlos/core/executor.py",
+      "line": 180,
+      "exception": "ValueError"
+    },
+    {
+      "file": "oqlos/hardware/configuration_models.py",
+      "line": 85,
+      "exception": "ValueError"
+    },
+    {
+      "file": "oqlos/hardware/configuration_models.py",
+      "line": 94,
+      "exception": "ValueError"
+    },
+    {
+      "file": "oqlos/hardware/configuration_models.py",
+      "line": 102,
+      "exception": "ValueError"
+    },
+    {
+      "file": "oqlos/hardware/configuration_models.py",
+      "line": 110,
+      "exception": "ValueError"
+    },
+    {
+      "file": "oqlos/hardware/configuration_models.py",
+      "line": 118,
+      "exception": "ValueError"
+    },
+    {
+      "file": "oqlos/hardware/configuration_models.py",
+      "line": 123,
+      "exception": "ValueError"
+    },
+    {
+      "file": "oqlos/hardware/configuration_models.py",
+      "line": 125,
+      "exception": "ValueError"
+    },
+    {
+      "file": "oqlos/hardware/configuration_models.py",
+      "line": 127,
+      "exception": "ValueError"
+    },
+    {
+      "file": "oqlos/hardware/configuration_models.py",
+      "line": 137,
+      "exception": "ValueError"
+    },
+    {
+      "file": "oqlos/hardware/configuration_models.py",
+      "line": 130,
+      "exception": "ValueError"
+    },
+    {
+      "file": "oqlos/hardware/configuration_models.py",
+      "line": 73,
+      "exception": "ValueError"
+    },
+    {
+      "file": "oqlos/hardware/discovery.py",
+      "line": 46,
+      "exception": "RuntimeError"
+    },
+    {
+      "file": "oqlos/hardware/drivers/gpio.py",
+      "line": 46,
+      "exception": "RuntimeError"
+    },
+    {
+      "file": "oqlos/hardware/drivers/gpio.py",
+      "line": 62,
+      "exception": "RuntimeError"
+    },
+    {
+      "file": "oqlos/hardware/drivers/gpio.py",
+      "line": 55,
+      "exception": "ValueError"
+    },
+    {
+      "file": "oqlos/hardware/drivers/gpio.py",
+      "line": 75,
+      "exception": "ValueError"
+    },
+    {
+      "file": "oqlos/hardware/firmware_adapter.py",
+      "line": 193,
+      "exception": "RuntimeError"
+    },
+    {
+      "file": "oqlos/hardware/firmware_adapter.py",
+      "line": 150,
+      "exception": "RuntimeError"
+    },
+    {
+      "file": "oqlos/hardware/plugin_gateway.py",
+      "line": 96,
+      "exception": "RuntimeError"
+    },
+    {
+      "file": "oqlos/hardware/plugin_gateway.py",
+      "line": 98,
+      "exception": "RuntimeError"
+    },
+    {
+      "file": "oqlos/hardware/plugins/modbus.py",
+      "line": 306,
+      "exception": "RuntimeError"
+    },
+    {
+      "file": "oqlos/hardware/plugins/modbus_adc.py",
+      "line": 308,
+      "exception": "RuntimeError"
+    },
+    {
+      "file": "oqlos/hardware/plugins/modbus_adc.py",
+      "line": 351,
+      "exception": "RuntimeError"
+    },
+    {
+      "file": "oqlos/hardware/plugins/modbus_adc.py",
+      "line": 354,
+      "exception": "RuntimeError"
+    },
+    {
+      "file": "oqlos/hardware/plugins/registry.py",
+      "line": 97,
+      "exception": "ValueError"
+    },
+    {
+      "file": "oqlos/hardware/plugins/registry.py",
+      "line": 102,
+      "exception": "RuntimeError"
+    },
+    {
+      "file": "oqlos/hardware/plugins/registry.py",
+      "line": 110,
+      "exception": "RuntimeError"
+    },
+    {
+      "file": "oqlos/hardware/registry.py",
+      "line": 40,
+      "exception": "ValueError"
+    },
+    {
+      "file": "oqlos/hardware/transport/manage_ops.py",
+      "line": 127,
+      "exception": "ValueError"
+    },
+    {
+      "file": "oqlos/hardware/transport/manage_ops_diagnostic.py",
+      "line": 27,
+      "exception": "ValueError"
+    },
+    {
+      "file": "oqlos/hardware/transport/manage_ops_diagnostic.py",
+      "line": 99,
+      "exception": "ValueError"
+    },
+    {
+      "file": "oqlos/hardware/transport/mqtt_oql_bridge.py",
+      "line": 226,
+      "exception": "RuntimeError"
+    },
+    {
+      "file": "oqlos/shared/_endpoint_helpers.py",
+      "line": 47,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "oqlos/tools/cql_cli/utils.py",
+      "line": 72,
+      "exception": "ValueError"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/cqrs/bus.py",
+      "line": 54,
+      "exception": "ValueError"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/cqrs/event_store_contracts/commands.py",
+      "line": 32,
+      "exception": "ValueError"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/cqrs/event_store_contracts/commands.py",
+      "line": 34,
+      "exception": "ValueError"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/cqrs/event_store_contracts/commands.py",
+      "line": 62,
+      "exception": "ValueError"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/cqrs/event_store_contracts/commands.py",
+      "line": 37,
+      "exception": "ValueError"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/cqrs/event_store_contracts/queries.py",
+      "line": 27,
+      "exception": "ValueError"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/cqrs/fastapi_integration.py",
+      "line": 44,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/cqrs/fastapi_integration.py",
+      "line": 59,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/cqrs/http_relay.py",
+      "line": 80,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/db/alembic_helpers.py",
+      "line": 34,
+      "exception": "RuntimeError"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/db/query_helpers.py",
+      "line": 34,
+      "exception": "ValueError"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/identification_models.py",
+      "line": 39,
+      "exception": "ValueError"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/identification_service.py",
+      "line": 54,
+      "exception": "ValueError"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/module_app_factory.py",
+      "line": 57,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/module_app_factory.py",
+      "line": 69,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/module_app_factory.py",
+      "line": 78,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/nfo_postgres_sink.py",
+      "line": 42,
+      "exception": "RuntimeError"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/sensors_endpoint.py",
+      "line": 80,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/sensors_endpoint.py",
+      "line": 92,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/sensors_endpoint.py",
+      "line": 102,
+      "exception": "HTTPException"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/types/base.py",
+      "line": 27,
+      "exception": "ValueError"
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/_action_motor2.py",
+      "line": 218,
+      "exception": "RuntimeError"
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/_action_motor2.py",
+      "line": 249,
+      "exception": "RuntimeError"
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/_action_motor2.py",
+      "line": 259,
+      "exception": "RuntimeError"
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/_action_motor2.py",
+      "line": 264,
+      "exception": "RuntimeError"
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/_compare.py",
+      "line": 25,
+      "exception": "ValueError"
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/_firmware_executor.py",
+      "line": 97,
+      "exception": "RuntimeError"
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/oql_parser.py",
+      "line": 499,
+      "exception": "ValueError"
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/oql_parser.py",
+      "line": 198,
+      "exception": "ValueError"
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/oql_parser.py",
+      "line": 276,
+      "exception": "ValueError"
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/oql_parser.py",
+      "line": 347,
+      "exception": "ValueError"
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/oql_parser.py",
+      "line": 377,
+      "exception": "ValueError"
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/oql_parser.py",
+      "line": 528,
+      "exception": "ValueError"
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/oql_parser.py",
+      "line": 587,
+      "exception": "ValueError"
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/oql_parser.py",
+      "line": 624,
+      "exception": "ValueError"
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/oql_parser.py",
+      "line": 633,
+      "exception": "ValueError"
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/oql_parser.py",
+      "line": 343,
+      "exception": "ValueError"
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/oql_parser.py",
+      "line": 617,
+      "exception": "ValueError"
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/oql_parser.py",
+      "line": 631,
+      "exception": "ValueError"
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/oql_parser.py",
+      "line": 721,
+      "exception": "ValueError"
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/oql_parser.py",
+      "line": 727,
+      "exception": "ValueError"
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/oql_parser.py",
+      "line": 737,
+      "exception": "ValueError"
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/oql_parser.py",
+      "line": 251,
+      "exception": "ValueError"
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/oql_parser.py",
+      "line": 258,
+      "exception": "ValueError"
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/oql_parser.py",
+      "line": 733,
+      "exception": "ValueError"
+    },
+    {
+      "file": "scripts/oql_validator_common.py",
+      "line": 83,
+      "exception": "ValueError"
+    },
+    {
+      "file": "scripts/oql_validator_common.py",
+      "line": 102,
+      "exception": "RuntimeError"
+    },
+    {
+      "file": "scripts/scenarios_export.py",
+      "line": 67,
+      "exception": "ValueError"
+    },
+    {
+      "file": "scripts/scenarios_export.py",
+      "line": 81,
+      "exception": "RuntimeError"
+    },
+    {
+      "file": "scripts/scenarios_export.py",
+      "line": 83,
+      "exception": "RuntimeError"
+    },
+    {
+      "file": "scripts/scenarios_export.py",
+      "line": 184,
+      "exception": "RuntimeError"
+    },
+    {
+      "file": "scripts/scenarios_export.py",
+      "line": 187,
+      "exception": "RuntimeError"
+    },
+    {
+      "file": "scripts/scenarios_export.py",
+      "line": 235,
+      "exception": "ValueError"
+    }
+  ],
+  "broad_exception_handlers": [
+    {
+      "file": "oqlos/api/_hw3_peripheral.py",
+      "line": 148,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/api/_hw3_peripheral.py",
+      "line": 180,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/api/editor.py",
+      "line": 117,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/api/editor.py",
+      "line": 132,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/api/editor.py",
+      "line": 145,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/api/editor.py",
+      "line": 162,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/api/editor.py",
+      "line": 233,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/api/execution.py",
+      "line": 105,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/api/hardware_lung.py",
+      "line": 56,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_routes.py",
+      "line": 240,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_settings.py",
+      "line": 166,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_waveshare.py",
+      "line": 130,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_waveshare.py",
+      "line": 149,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_waveshare.py",
+      "line": 476,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_waveshare.py",
+      "line": 535,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_waveshare.py",
+      "line": 610,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_waveshare.py",
+      "line": 154,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_wizard.py",
+      "line": 152,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_wizard.py",
+      "line": 297,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_wizard.py",
+      "line": 385,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_wizard.py",
+      "line": 432,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/api/hardware_peripherals_routes.py",
+      "line": 32,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/api/hardware_peripherals_routes.py",
+      "line": 52,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/api/hardware_probe.py",
+      "line": 100,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/api/hardware_runtime.py",
+      "line": 494,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/api/hardware_runtime.py",
+      "line": 358,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "line": 222,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/api/oql_mqtt.py",
+      "line": 151,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/api/plugins.py",
+      "line": 185,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/api/scenarios.py",
+      "line": 44,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/api/scenarios.py",
+      "line": 242,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/api/scenarios.py",
+      "line": 194,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/api/scenarios.py",
+      "line": 42,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/api/state.py",
+      "line": 170,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/api/state.py",
+      "line": 196,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/api/state.py",
+      "line": 236,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/api/state.py",
+      "line": 259,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/api/state.py",
+      "line": 333,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/api/state.py",
+      "line": 194,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/api/state.py",
+      "line": 234,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/api/ui_prefs_store.py",
+      "line": 14,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/api/ui_prefs_store.py",
+      "line": 63,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/api/update_status.py",
+      "line": 30,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/core/executor.py",
+      "line": 326,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/core/executor.py",
+      "line": 319,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/core/executor.py",
+      "line": 393,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/core/state.py",
+      "line": 143,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/artificial_lung.py",
+      "line": 47,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/client/proxy.py",
+      "line": 367,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/client/tic249_sidecar_client.py",
+      "line": 73,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/client/tic249_sidecar_client.py",
+      "line": 90,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/client/tic249_sidecar_client.py",
+      "line": 109,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/configuration.py",
+      "line": 241,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/diagnosis.py",
+      "line": 90,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/diagnosis.py",
+      "line": 278,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/drivers/mqtt.py",
+      "line": 53,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/drivers/mqtt.py",
+      "line": 68,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/drivers/mqtt.py",
+      "line": 99,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/drivers/spi.py",
+      "line": 51,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/drivers/spi.py",
+      "line": 74,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/firmware_adapter.py",
+      "line": 165,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/firmware_adapter.py",
+      "line": 175,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/firmware_adapter.py",
+      "line": 350,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/firmware_adapter.py",
+      "line": 464,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/firmware_adapter.py",
+      "line": 482,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/firmware_adapter.py",
+      "line": 368,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/gateway.py",
+      "line": 306,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/gateway.py",
+      "line": 317,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/gateway.py",
+      "line": 327,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/gateway.py",
+      "line": 339,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/gateway.py",
+      "line": 352,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/gateway.py",
+      "line": 233,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/gateway.py",
+      "line": 368,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/gateway.py",
+      "line": 240,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/hui_hold.py",
+      "line": 69,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/hui_hold.py",
+      "line": 91,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/hui_hold.py",
+      "line": 134,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/hui_hold.py",
+      "line": 145,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/hui_lung_recipe.py",
+      "line": 51,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/hui_valve.py",
+      "line": 39,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/hui_valve.py",
+      "line": 61,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/log_files.py",
+      "line": 30,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/plugin_gateway.py",
+      "line": 97,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/plugin_gateway.py",
+      "line": 463,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/plugin_gateway.py",
+      "line": 611,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/plugin_gateway.py",
+      "line": 645,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/plugin_gateway.py",
+      "line": 663,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/plugin_gateway.py",
+      "line": 685,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/plugin_gateway.py",
+      "line": 705,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/plugin_gateway.py",
+      "line": 757,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/plugin_gateway.py",
+      "line": 795,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/plugin_gateway.py",
+      "line": 866,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/plugin_gateway.py",
+      "line": 875,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/plugin_gateway.py",
+      "line": 445,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/plugin_gateway.py",
+      "line": 521,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/plugins/_rtu_serial.py",
+      "line": 31,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/plugins/lung.py",
+      "line": 80,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/plugins/lung.py",
+      "line": 150,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/plugins/lung.py",
+      "line": 159,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/plugins/lung.py",
+      "line": 163,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/plugins/lung.py",
+      "line": 345,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/plugins/lung.py",
+      "line": 104,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/plugins/modbus.py",
+      "line": 147,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/plugins/modbus.py",
+      "line": 233,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/plugins/modbus.py",
+      "line": 373,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/plugins/modbus.py",
+      "line": 151,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/plugins/modbus_adc.py",
+      "line": 184,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/plugins/modbus_adc.py",
+      "line": 231,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/plugins/modbus_adc.py",
+      "line": 287,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/plugins/motor.py",
+      "line": 141,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/plugins/motor.py",
+      "line": 194,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/plugins/motor.py",
+      "line": 380,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/plugins/motor_modbus_handlers.py",
+      "line": 126,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/plugins/motor_modbus_handlers.py",
+      "line": 156,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/plugins/motor_modbus_handlers.py",
+      "line": 193,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/plugins/piadc.py",
+      "line": 131,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/plugins/piadc.py",
+      "line": 166,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/plugins/piadc.py",
+      "line": 182,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/plugins/piadc.py",
+      "line": 226,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/plugins/plugin_http_handlers.py",
+      "line": 29,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/plugins/registry.py",
+      "line": 136,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/plugins/registry.py",
+      "line": 151,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/plugins/registry.py",
+      "line": 177,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/plugins/registry.py",
+      "line": 285,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/rtc_probe.py",
+      "line": 29,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/scanner_probe.py",
+      "line": 146,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/scanner_probe.py",
+      "line": 169,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/stack_snapshot.py",
+      "line": 23,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/startup_diagnostics.py",
+      "line": 124,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/startup_diagnostics.py",
+      "line": 116,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/transport/mqtt_oql_bridge.py",
+      "line": 123,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/transport/mqtt_oql_bridge.py",
+      "line": 190,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/transport/mqtt_oql_bridge.py",
+      "line": 200,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/transport/mqtt_oql_bridge.py",
+      "line": 326,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/transport/mqtt_oql_bridge.py",
+      "line": 335,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/transport/mqtt_oql_bridge.py",
+      "line": 387,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/transport/mqtt_oql_bridge.py",
+      "line": 429,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/transport/mqtt_protocol.py",
+      "line": 130,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/usb_diagnostics.py",
+      "line": 146,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/usb_diagnostics.py",
+      "line": 387,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/hardware/usb_diagnostics.py",
+      "line": 199,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/shared/event_server.py",
+      "line": 108,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/shared/event_server.py",
+      "line": 142,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/shared/event_server.py",
+      "line": 62,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/tools/cql_cli/commands.py",
+      "line": 123,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/tools/cql_cli/commands.py",
+      "line": 174,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/tools/cql_cli/preflight.py",
+      "line": 71,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/tools/cql_cli/preflight.py",
+      "line": 107,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/tools/cql_cli/preflight.py",
+      "line": 100,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/tools/cql_cli/utils.py",
+      "line": 88,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/tools/hardware_diagnose/benchmark.py",
+      "line": 40,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/tools/hardware_diagnose/calibration.py",
+      "line": 37,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/tools/hardware_diagnose/calibration.py",
+      "line": 55,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/tools/hardware_diagnose/calibration.py",
+      "line": 75,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/tools/hardware_diagnose/calibration.py",
+      "line": 91,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/tools/hardware_diagnose/discovery.py",
+      "line": 22,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/tools/hardware_diagnose/doctor_detection.py",
+      "line": 35,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/tools/hardware_diagnose/doctor_detection.py",
+      "line": 60,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/tools/hardware_diagnose/doctor_detection.py",
+      "line": 87,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/tools/hardware_diagnose/doctor_serial.py",
+      "line": 31,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/tools/hardware_diagnose/doctor_serial.py",
+      "line": 75,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/tools/hardware_diagnose/doctor_serial.py",
+      "line": 57,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/tools/hardware_diagnose/health.py",
+      "line": 26,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/tools/hardware_diagnose/health.py",
+      "line": 21,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/tools/plugin_cli.py",
+      "line": 179,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/tools/plugin_cli.py",
+      "line": 189,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/tools/plugin_cli.py",
+      "line": 88,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/_endpoint_helpers.py",
+      "line": 30,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/connect_helpers.py",
+      "line": 41,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/cqrs/bus.py",
+      "line": 79,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/cqrs/bus.py",
+      "line": 115,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/cqrs/bus.py",
+      "line": 209,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/cqrs/bus.py",
+      "line": 221,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/cqrs/dispatch_registry.py",
+      "line": 128,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/cqrs/event_store_contracts/read_models.py",
+      "line": 34,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/cqrs/event_store_postgres.py",
+      "line": 94,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/cqrs/event_store_postgres.py",
+      "line": 141,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/cqrs/event_store_postgres.py",
+      "line": 115,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/cqrs/event_store_postgres.py",
+      "line": 150,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/cqrs/event_store_postgres.py",
+      "line": 237,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/cqrs/http_relay.py",
+      "line": 66,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/cqrs/inter_service_events.py",
+      "line": 75,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/cqrs/setup.py",
+      "line": 32,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/logs_query.py",
+      "line": 126,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/logs_query.py",
+      "line": 158,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/logs_query.py",
+      "line": 182,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/logs_query.py",
+      "line": 203,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/logs_query.py",
+      "line": 244,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/logs_query.py",
+      "line": 252,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/logs_query.py",
+      "line": 280,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/menu_helpers.py",
+      "line": 283,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/menu_helpers.py",
+      "line": 294,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/menu_helpers.py",
+      "line": 173,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/menu_helpers.py",
+      "line": 177,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/menu_route_delete.py",
+      "line": 38,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/menu_route_delete.py",
+      "line": 42,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/nfo_config_factory.py",
+      "line": 45,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/nfo_postgres_sink.py",
+      "line": 122,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/protocol_template_dict.py",
+      "line": 119,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/sensors_endpoint.py",
+      "line": 78,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/sensors_endpoint.py",
+      "line": 100,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/service_health_factory.py",
+      "line": 44,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/websocket_manager.py",
+      "line": 71,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/backend-shared-py/src/shared/websocket_manager.py",
+      "line": 122,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/_action_motor2.py",
+      "line": 309,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/_action_motor2.py",
+      "line": 381,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/_action_motor2.py",
+      "line": 526,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/_action_motor2.py",
+      "line": 478,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/_dsl_helpers.py",
+      "line": 101,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/_firmware_executor.py",
+      "line": 169,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/_firmware_executor.py",
+      "line": 251,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/_firmware_executor.py",
+      "line": 281,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/_firmware_executor.py",
+      "line": 129,
+      "exception": "BaseException"
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/_interpreter_actions.py",
+      "line": 564,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/_interpreter_actions.py",
+      "line": 162,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/_interpreter_actions.py",
+      "line": 317,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/_line_parsers.py",
+      "line": 252,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/_runtime_settings.py",
+      "line": 30,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/_runtime_settings.py",
+      "line": 23,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/_value_normalizers.py",
+      "line": 39,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/_value_normalizers.py",
+      "line": 54,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/base.py",
+      "line": 153,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/base.py",
+      "line": 280,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/base.py",
+      "line": 306,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/base.py",
+      "line": 226,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/base.py",
+      "line": 239,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/base.py",
+      "line": 288,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/interpreter.py",
+      "line": 395,
+      "exception": "Exception"
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/shared/event_store.py",
+      "line": 76,
+      "exception": "Exception"
+    },
+    {
+      "file": "scripts/fix_brackets_to_v4.py",
+      "line": 54,
+      "exception": "Exception"
+    },
+    {
+      "file": "scripts/fix_brackets_to_v4.py",
+      "line": 88,
+      "exception": "Exception"
+    },
+    {
+      "file": "scripts/migrate_to_v4.py",
+      "line": 332,
+      "exception": "Exception"
+    },
+    {
+      "file": "scripts/migrate_to_v4.py",
+      "line": 194,
+      "exception": "Exception"
+    },
+    {
+      "file": "scripts/migrate_to_v4.py",
+      "line": 213,
+      "exception": "Exception"
+    },
+    {
+      "file": "scripts/migrate_to_v4.py",
+      "line": 303,
+      "exception": "Exception"
+    },
+    {
+      "file": "scripts/oql_v4_validator.py",
+      "line": 181,
+      "exception": "Exception"
+    },
+    {
+      "file": "scripts/oql_v4_validator.py",
+      "line": 206,
+      "exception": "Exception"
+    },
+    {
+      "file": "scripts/oql_validator_common.py",
+      "line": 120,
+      "exception": "Exception"
+    },
+    {
+      "file": "scripts/scenarios_export.py",
+      "line": 225,
+      "exception": "Exception"
+    },
+    {
+      "file": "scripts/scenarios_export.py",
+      "line": 287,
+      "exception": "Exception"
+    },
+    {
+      "file": "scripts/scenarios_export.py",
+      "line": 259,
+      "exception": "Exception"
+    },
+    {
+      "file": "setup_hardware_and_run_oql.py",
+      "line": 70,
+      "exception": "Exception"
+    }
+  ],
+  "large_modules": [
+    {
+      "file": "frontend/src/i18n/dictionaries.js",
+      "lines": 2150
+    },
+    {
+      "file": "frontend/src/pages/Panel.jsx",
+      "lines": 1519
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/oql_parser.py",
+      "lines": 1420
+    },
+    {
+      "file": "oqlos/hardware/plugin_gateway.py",
+      "lines": 963
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/_interpreter_actions.py",
+      "lines": 933
+    },
+    {
+      "file": "frontend/src/i18n/hardware-status-presets-translations.js",
+      "lines": 795
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/interpreter.py",
+      "lines": 778
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/_oql_adapter.py",
+      "lines": 744
+    },
+    {
+      "file": "oqlos/api/main.py",
+      "lines": 684
+    },
+    {
+      "file": "scripts/oql_v2_to_v4_migrate_db.py",
+      "lines": 662
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_waveshare.py",
+      "lines": 656
+    },
+    {
+      "file": "frontend/src/pages/HardwareRestart.jsx",
+      "lines": 635
+    },
+    {
+      "file": "oqlos/hardware/client/proxy.py",
+      "lines": 575
+    },
+    {
+      "file": "frontend/src/pages/HardwareDemo.jsx",
+      "lines": 571
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/_action_motor2.py",
+      "lines": 538
+    },
+    {
+      "file": "oqlos/api/hardware_runtime.py",
+      "lines": 508
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_wizard.py",
+      "lines": 499
+    },
+    {
+      "file": "oqlos/hardware/firmware_adapter.py",
+      "lines": 490
+    },
+    {
+      "file": "oqlos/tools/xml_import/generators.py",
+      "lines": 477
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/cql_parser.py",
+      "lines": 472
+    },
+    {
+      "file": "frontend/src/pages/HardwareStatus.jsx",
+      "lines": 456
+    },
+    {
+      "file": "oqlos/hardware/plugins/modbus_adc.py",
+      "lines": 439
+    },
+    {
+      "file": "oqlos/hardware/transport/mqtt_oql_bridge.py",
+      "lines": 436
+    },
+    {
+      "file": "oqlos/tools/cql_cli/main.py",
+      "lines": 430
+    },
+    {
+      "file": "oqlos/errors/catalog.py",
+      "lines": 422
+    },
+    {
+      "file": "scripts/refactor_audit.py",
+      "lines": 411
+    },
+    {
+      "file": "packages/oqlos-core/src/oqlos/core/_cql_tokenizer.py",
+      "lines": 410
+    },
+    {
+      "file": "oqlos/core/executor.py",
+      "lines": 408
+    },
+    {
+      "file": "oqlos/hardware/plugins/modbus.py",
+      "lines": 407
+    },
+    {
+      "file": "oqlos/hardware/plugins/motor.py",
+      "lines": 405
+    }
+  ],
+  "parse_failures": [],
+  "summary": {
+    "git_status_excluding_generated_artifacts": 0,
+    "public_routes": 194,
+    "routes_returning_dict_any": 80,
+    "routes_with_generic_response": 184,
+    "routes_with_false_success_at_http_200": 3,
+    "environment_reads_outside_settings": 154,
+    "raw_exceptions": 137,
+    "broad_exception_handlers": 242,
+    "large_modules": 30,
+    "parse_failures": 0
+  }
+}
