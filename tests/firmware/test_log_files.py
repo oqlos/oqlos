@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -54,6 +55,10 @@ def test_resolve_log_dir_uses_redeploy_logs_when_default_missing(
 ) -> None:
     monkeypatch.delenv("OQLOS_LOG_DIR", raising=False)
     monkeypatch.delenv("MASKSERVICE_LOG_DIR", raising=False)
+    monkeypatch.setattr(
+        "oqlos.config.get_settings",
+        lambda: SimpleNamespace(log_file=""),
+    )
     redeploy = tmp_path / ".redeploy" / "logs"
     redeploy.mkdir(parents=True)
     (redeploy / "dev.log").write_text("line\n", encoding="utf-8")

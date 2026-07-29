@@ -208,6 +208,61 @@ def test_usb_adc_stale_sample_is_returned_while_single_refresh_runs(monkeypatch)
     assert calls == 1
 
 
+def test_expired_failure_sample_does_not_block_requests_during_usb_retry(monkeypatch):
+    calls = 0
+    release = asyncio.Event()
+    runtime._USB_ADC_SAMPLE_CACHE.update(
+        channels={
+            "ai01": {
+                "sensor_id": "ai01",
+                "value": None,
+                "ok": False,
+                "error": "MCP2221A unavailable",
+            }
+        },
+        sampled_at=time.monotonic() - 2.0,
+        refresh_task=None,
+        sampler_task=None,
+        active_until=0.0,
+    )
+    runtime._USB_ADC_STATUS.update(available=True, error=None, retry_after=0.0)
+
+    async def _slow_channels(_url, *, timeout_seconds):
+        nonlocal calls
+        calls += 1
+        await release.wait()
+        return {
+            "ai01": {
+                "sensor_id": "ai01",
+                "value": None,
+                "ok": False,
+                "error": "MCP2221A unavailable",
+            }
+        }
+
+    monkeypatch.setattr(runtime, "read_usb_adc_channels", _slow_channels)
+
+    async def _run():
+        first = await asyncio.wait_for(
+            runtime.read_usb_adc_sensor_values(["ai01"]), timeout=0.05
+        )
+        second = await asyncio.wait_for(
+            runtime.read_usb_adc_sensor_values(["ai01"]), timeout=0.05
+        )
+        sampler = runtime._USB_ADC_SAMPLE_CACHE["sampler_task"]
+        sampler.cancel()
+        release.set()
+        await asyncio.gather(sampler, return_exceptions=True)
+        await runtime._USB_ADC_SAMPLE_CACHE["refresh_task"]
+        return first, second
+
+    first, second = asyncio.run(_run())
+
+    assert first == second
+    assert first["ai01"]["value"] is None
+    assert calls == 1
+
+
 def test_usb_adc_sampler_does_not_add_interval_after_slow_physical_read(monkeypatch):
     starts: list[float] = []
     runtime._USB_ADC_SAMPLE_CACHE.update(

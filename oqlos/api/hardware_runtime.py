@@ -144,6 +144,26 @@ def _configured_adc_source() -> str:
     return source if source in {"auto", "usb-adc-stack", "modbus-adc"} else "auto"
 
 
+def _sample_has_usable_value(channels: dict[str, Any]) -> bool:
+    """Return true only when a stale sample could drive a measurement."""
+    for channel in channels.values():
+        if isinstance(channel, dict):
+            if channel.get("value") is not None:
+                return True
+        elif channel is not None:
+            return True
+    return False
+
+
+def _start_usb_adc_refresh() -> asyncio.Task[None]:
+    """Start or reuse the only physical sidecar read in this event loop."""
+    refresh_task = _USB_ADC_SAMPLE_CACHE.get("refresh_task")
+    if not isinstance(refresh_task, asyncio.Task) or refresh_task.done():
+        refresh_task = asyncio.create_task(_refresh_usb_adc_sample())
+        _USB_ADC_SAMPLE_CACHE["refresh_task"] = refresh_task
+    return refresh_task
+
+
 async def read_usb_adc_sensor_values(
     sensor_ids: list[str],
 ) -> dict[str, dict[str, Any]] | None:
@@ -169,17 +189,34 @@ async def read_usb_adc_sensor_values(
         _USB_ADC_STATUS.update(cached=True, sample_age_ms=round(sample_age * 1000, 1))
         return _requested_usb_channels(sensor_ids, cached_channels)
 
+    # An expired successful value must fail closed and wait for a fresh sample.
+    # An expired *failure* contains no value that could control hardware, so it
+    # is safe to return its diagnostics immediately while one background probe
+    # retries the devices. This prevents every max-stale boundary from blocking
+    # HUI for the full USB timeout when a bench ADC is unplugged.
+    if isinstance(cached_channels, dict) and not _sample_has_usable_value(
+        cached_channels
+    ):
+        if not (
+            _USB_ADC_STATUS.get("available") is False
+            and now < float(_USB_ADC_STATUS.get("retry_after", 0.0))
+        ):
+            _start_usb_adc_refresh()
+        _ensure_usb_adc_sampler(now, max_stale)
+        _USB_ADC_STATUS.update(
+            cached=True,
+            sample_age_ms=round(sample_age * 1000, 1),
+        )
+        return _requested_usb_channels(sensor_ids, cached_channels)
+
     if (
         _USB_ADC_STATUS.get("available") is False
         and now < float(_USB_ADC_STATUS.get("retry_after", 0.0))
     ):
         return None
 
-    refresh_task = _USB_ADC_SAMPLE_CACHE.get("refresh_task")
-    if not isinstance(refresh_task, asyncio.Task) or refresh_task.done():
-        refresh_task = asyncio.create_task(_refresh_usb_adc_sample())
-        _USB_ADC_SAMPLE_CACHE["refresh_task"] = refresh_task
-    await refresh_task
+    refresh_task = _start_usb_adc_refresh()
+    await asyncio.shield(refresh_task)
     _ensure_usb_adc_sampler(time.monotonic(), max_stale)
     refreshed_channels = _USB_ADC_SAMPLE_CACHE.get("channels")
     if not isinstance(refreshed_channels, dict):
@@ -228,7 +265,7 @@ async def _run_usb_adc_sampler() -> None:
             ):
                 break
             refresh_started = time.monotonic()
-            await _refresh_usb_adc_sample()
+            await asyncio.shield(_start_usb_adc_refresh())
             refresh_duration = time.monotonic() - refresh_started
             # Cadence is start-to-start. If the hardware read itself exceeds
             # the target period, continue immediately but never overlap reads.
