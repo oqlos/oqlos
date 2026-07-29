@@ -6,6 +6,8 @@ Run: cd oqlos && python -m pytest tests/ -v
 
 from __future__ import annotations
 
+import os
+
 import pytest
 from pathlib import Path
 from types import SimpleNamespace
@@ -18,6 +20,14 @@ from oqlos.core.motor2_runtime import build_motor2_reciprocating_plan, normalize
 from oqlos.core.cql_parser import parse_cql, validate_cql
 from oqlos.hardware.firmware_adapter import FirmwareAdapter, _parse_numeric, _PERIPHERAL_MAP, _SENSOR_MAP
 from oqlos.shared.event_store import EventStore
+
+
+def _scenario_example_path(name: str) -> Path:
+    repo_root = Path(__file__).resolve().parents[1]
+    scenarios_root = Path(
+        os.environ.get("OQLOS_SCENARIOS_DIR", repo_root.parent / "oql-scenario")
+    )
+    return scenarios_root / "examples" / name
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -199,7 +209,7 @@ class TestCqlParser:
         assert c.on_fail == "ERROR"
 
     def test_connectgo_example_file(self):
-        path = Path(__file__).resolve().parents[2] / "oql-scenario" / "examples" / "pss7000.connectgo"
+        path = _scenario_example_path("pss7000.connectgo")
         doc = parse_cql(path.read_text(encoding="utf-8"), str(path))
         issues = validate_cql(doc)
 
@@ -282,7 +292,7 @@ class TestCqlInterpreter:
         assert "AI01" in result.variables
 
     def test_connectgo_oql_example_file_dry_runs(self):
-        path = Path(__file__).resolve().parents[2] / "oql-scenario" / "examples" / "mask-leak-test.oql"
+        path = _scenario_example_path("mask-leak-test.oql")
         interp = CqlInterpreter(mode="dry-run", quiet=True)
         result = interp.run_file(str(path))
 

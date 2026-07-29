@@ -17,18 +17,9 @@ from oqlos.errors.fastapi_integration import install_oqlos_error_handler
 
 
 def _route_paths() -> set[str]:
-    paths: set[str] = set()
-    for route in hw.router.routes:
-        path = getattr(route, "path", None)
-        if isinstance(path, str):
-            paths.add(path)
-            continue
-        nested = getattr(route, "original_router", None)
-        for child in getattr(nested, "routes", []) or []:
-            child_path = getattr(child, "path", None)
-            if isinstance(child_path, str):
-                paths.add(child_path)
-    return paths
+    app = FastAPI()
+    app.include_router(hw.router)
+    return set(app.openapi()["paths"])
 
 
 def test_hardware_router_includes_actuator_and_lung_paths():

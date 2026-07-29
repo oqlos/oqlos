@@ -15,7 +15,9 @@ from oqlos.errors.fastapi_integration import install_oqlos_error_handler
 
 
 def test_hardware_router_includes_hui_paths():
-    paths = {route.path for route in hw.router.routes}
+    app = FastAPI()
+    app.include_router(hw.router)
+    paths = set(app.openapi()["paths"])
     assert "/api/v1/hardware/hui/actions" in paths
     assert "/api/v1/hardware/hui/al/start" in paths
 
