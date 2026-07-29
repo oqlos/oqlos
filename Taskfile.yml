@@ -54,6 +54,11 @@ tasks:
     cmds:
       - pyqual report
 
+  analysis:refresh:
+    desc: Regenerate code2llm maps and the reproducible refactor audit
+    cmds:
+      - bash scripts/generate-refactor-analysis.sh
+
   test:
     desc: Run pytest suite
     cmds:
