@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import importlib.util
+from importlib.metadata import version
 from pathlib import Path
+import sys
 
 
 SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "refactor_audit.py"
@@ -92,3 +94,12 @@ def test_source_inventory_stays_inside_repository_and_excludes_dependencies(
         outside.unlink()
 
     assert [path.relative_to(tmp_path).as_posix() for path in sources] == ["app.py"]
+
+
+def test_distribution_version_uses_tools_own_python_environment(tmp_path: Path) -> None:
+    executable = tmp_path / "tool"
+    executable.write_text(f"#!{sys.executable}\n", encoding="utf-8")
+
+    assert refactor_audit._distribution_version(executable, "pytest") == version(
+        "pytest"
+    )

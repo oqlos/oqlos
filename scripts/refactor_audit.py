@@ -55,16 +55,18 @@ def _relative(path: Path, root: Path) -> str:
 def _is_excluded(path: Path, root: Path) -> bool:
     relative = path.relative_to(root)
     return any(
-        part in EXCLUDED_DIRS
-        or part.startswith(".venv")
-        or part.endswith(".egg-info")
+        part in EXCLUDED_DIRS or part.startswith(".venv") or part.endswith(".egg-info")
         for part in relative.parts
     )
 
 
 def _is_test_file(path: Path, root: Path) -> bool:
     relative = path.resolve().relative_to(root.resolve())
-    return "tests" in relative.parts or path.name.endswith((".test.js", ".test.ts", "_test.py")) or path.name.startswith("test_")
+    return (
+        "tests" in relative.parts
+        or path.name.endswith((".test.js", ".test.ts", "_test.py"))
+        or path.name.startswith("test_")
+    )
 
 
 def _source_files(root: Path) -> list[Path]:
@@ -91,7 +93,11 @@ def _route_decorator(node: ast.expr) -> dict[str, Any] | None:
     if method not in ROUTE_METHODS:
         return None
     route_path: str | None = None
-    if node.args and isinstance(node.args[0], ast.Constant) and isinstance(node.args[0].value, str):
+    if (
+        node.args
+        and isinstance(node.args[0], ast.Constant)
+        and isinstance(node.args[0].value, str)
+    ):
         route_path = node.args[0].value
     keywords = {keyword.arg: keyword.value for keyword in node.keywords if keyword.arg}
     if route_path is None:
@@ -200,7 +206,9 @@ def _audit_python(path: Path, root: Path, report: dict[str, Any]) -> None:
                 }:
                     report["routes_with_false_success_at_http_200"].append(entry)
         elif isinstance(node, ast.Raise):
-            exception_name = _call_name(node.exc.func if isinstance(node.exc, ast.Call) else node.exc)
+            exception_name = _call_name(
+                node.exc.func if isinstance(node.exc, ast.Call) else node.exc
+            )
             if exception_name in RAW_EXCEPTION_NAMES:
                 report["raw_exceptions"].append(
                     _location(path, root, node.lineno, exception=exception_name)
@@ -209,7 +217,9 @@ def _audit_python(path: Path, root: Path, report: dict[str, Any]) -> None:
             exception_name = _call_name(node.type)
             if node.type is None or exception_name in {"BaseException", "Exception"}:
                 report["broad_exception_handlers"].append(
-                    _location(path, root, node.lineno, exception=exception_name or "bare")
+                    _location(
+                        path, root, node.lineno, exception=exception_name or "bare"
+                    )
                 )
         if not settings_file and _uses_os_environment(node):
             report["environment_reads_outside_settings"].append(
@@ -217,8 +227,14 @@ def _audit_python(path: Path, root: Path, report: dict[str, Any]) -> None:
             )
 
 
-def _audit_javascript_environment(path: Path, root: Path, report: dict[str, Any]) -> None:
-    if path.name in SETTINGS_FILENAMES or "config" in path.stem.lower() or "env" in path.stem.lower():
+def _audit_javascript_environment(
+    path: Path, root: Path, report: dict[str, Any]
+) -> None:
+    if (
+        path.name in SETTINGS_FILENAMES
+        or "config" in path.stem.lower()
+        or "env" in path.stem.lower()
+    ):
         return
     try:
         content = path.read_text(encoding="utf-8")
@@ -253,10 +269,37 @@ def _git_status(root: Path) -> list[str]:
     return result.stdout.splitlines()
 
 
-def _tool_version(command: str) -> dict[str, str | None]:
+def _distribution_version(executable: Path, distribution: str) -> str | None:
+    try:
+        first_line = executable.read_bytes().splitlines()[0]
+        if not first_line.startswith(b"#!"):
+            return None
+        interpreter = first_line[2:].decode("utf-8").split()[0]
+    except (IndexError, OSError, UnicodeDecodeError):
+        return None
+    result = subprocess.run(
+        [
+            interpreter,
+            "-c",
+            "from importlib.metadata import version; print(version("
+            + repr(distribution)
+            + "))",
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    return result.stdout.strip() or None
+
+
+def _tool_version(
+    command: str,
+    *,
+    distribution: str | None = None,
+) -> dict[str, str | None]:
     executable = shutil.which(command)
     if executable is None:
-        return {"executable": None, "version": None}
+        return {"executable": None, "version": None, "package_version": None}
     result = subprocess.run(
         [executable, "--version"],
         check=False,
@@ -264,7 +307,16 @@ def _tool_version(command: str) -> dict[str, str | None]:
         text=True,
     )
     output = (result.stdout or result.stderr).strip()
-    return {"executable": executable, "version": output or None}
+    package_version = (
+        _distribution_version(Path(executable), distribution)
+        if distribution is not None
+        else None
+    )
+    return {
+        "executable": executable,
+        "version": output or None,
+        "package_version": package_version,
+    }
 
 
 def _sha256(path: Path) -> str | None:
@@ -278,7 +330,11 @@ def generate_report(root: Path, output: Path) -> dict[str, Any]:
     source_files = _source_files(root)
     git_status = _git_status(root)
     generated_paths: set[str] = set()
-    for artifact in (output, output.parent / "analysis.toon.yaml", output.parent / "map.toon.yaml"):
+    for artifact in (
+        output,
+        output.parent / "analysis.toon.yaml",
+        output.parent / "map.toon.yaml",
+    ):
         try:
             generated_paths.add(artifact.resolve().relative_to(root).as_posix())
         except ValueError:
@@ -299,7 +355,7 @@ def generate_report(root: Path, output: Path) -> dict[str, Any]:
         "generator": {
             "audit_command": f"python scripts/refactor_audit.py --root {root} --output {output}",
             "code2llm_command": "code2llm . -m hybrid -f toon,map --strategy standard --toon-yaml --no-png --no-cache --no-chunk -o <temp>",
-            "code2llm": _tool_version("code2llm"),
+            "code2llm": _tool_version("code2llm", distribution="code2llm"),
         },
         "artifacts": {
             "analysis.toon.yaml": _sha256(output.parent / "analysis.toon.yaml"),
@@ -330,9 +386,7 @@ def generate_report(root: Path, output: Path) -> dict[str, Any]:
 
     report["large_modules"].sort(key=lambda item: (-item["lines"], item["file"]))
     report["summary"] = {
-        key: len(value)
-        for key, value in report.items()
-        if isinstance(value, list)
+        key: len(value) for key, value in report.items() if isinstance(value, list)
     }
     return report
 
@@ -346,7 +400,9 @@ def main() -> int:
     output = args.output.resolve()
     report = generate_report(args.root, output)
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    output.write_text(
+        json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
     print(json.dumps(report["summary"], sort_keys=True))
     return 0
 
