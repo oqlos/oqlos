@@ -114,6 +114,7 @@ domenowym. Powtarzalny błąd zakończony `SYS-0000` wymaga dodania jawnego
 | brak pól komendy CQRS | 422 | `C2004-DATA-0002` | `SOA/firmware` | `hardware-cqrs` / `command.validate` | nie dotyczy |
 | nieudana komenda diagnostyczna | 503 | kod urządzenia, np. `C2004-HW-0012` | `SOA/firmware` | `hardware-diagnostics` / `diagnostic.execute` | `hardware-peripheral://<id>` |
 | Modbus wizard bez weryfikacji | 503 | `C2004-HW-0012` | `SOA/firmware` | `modbus-wizard` / `program.verify` | `serial-device://<name>` |
+| Modbus ADC raw: health, połączenie lub odczyt niedostępny | 503 | `C2004-HW-0012` | `SOA/firmware` | `modbus-adc` / `gateway.health`, `plugin.connect` albo `plugin.read` | `hardware-plugin://modbus-adc`; publikowany jest tylko stabilny `reason` |
 | błędna komenda HUI / artificial-lung | 422 | `C2004-DATA-0002` | `SOA/firmware` | komponent sprzętowy / `command.validate` | nie dotyczy |
 | niedostępna akcja HUI | status katalogu | kod wyniku, np. `C2004-HW-0012` | `SOA/firmware` | `hardware-hui` / `action.execute` | lokalna akcja sprzętowa |
 | niedozwolona akcja systemd | 422 | `C2004-DATA-0002` | `SOA/host` | `systemd-control` / `action.validate` | whitelisted unit |

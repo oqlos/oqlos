@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any
+from typing import Any, NoReturn
 
 from fastapi import APIRouter, Body
 
@@ -16,12 +16,33 @@ router = APIRouter(tags=["hardware-peripherals"])
 
 
 def _raise_modbus_adc_raw(
-    message: str,
     *,
-    detail: dict[str, Any],
+    stage: str,
+    reason: str,
     code: str = "modbus_adc_not_detected",
-) -> None:
-    raise OqlosError(code=code, status_code=503, message=message, detail=detail)
+    cause: Exception | None = None,
+    compatible: bool | None = None,
+) -> NoReturn:
+    detail: dict[str, Any] = {
+        "architecture": "SOA",
+        "layer": "firmware",
+        "component": "modbus-adc",
+        "stage": stage,
+        "problem_source": "hardware",
+        "operation_id": "hardware.modbus-adc.raw",
+        "upstream_target": "hardware-plugin://modbus-adc",
+        "reason": reason,
+    }
+    if compatible is not None:
+        detail["modbus_adc_health"] = {"compatible": compatible}
+    error = OqlosError(
+        code=code,
+        status_code=503,
+        detail=detail,
+    )
+    if cause is not None:
+        raise error from cause
+    raise error
 
 
 @router.get("/modbus-adc/raw")
@@ -30,52 +51,45 @@ async def read_modbus_adc_raw() -> dict[str, Any]:
     try:
         health = await get_hardware_gateway().health()
     except Exception as exc:
-        _raise_modbus_adc_raw(str(exc), detail={"error": str(exc)})
+        _raise_modbus_adc_raw(
+            stage="gateway.health",
+            reason="gateway_health_unavailable",
+            cause=exc,
+        )
 
     modbus_adc_health = health.get("modbus-adc")
     if not isinstance(modbus_adc_health, dict):
         _raise_modbus_adc_raw(
-            "modbus-adc health not available",
-            detail={"gateway_mode": health.get("mode"), "gateway_health": health},
+            stage="gateway.health",
+            reason="plugin_health_missing",
         )
     if not modbus_adc_health.get("compatible"):
         _raise_modbus_adc_raw(
-            "modbus-adc not compatible",
-            detail={
-                "gateway_mode": health.get("mode"),
-                "modbus_adc_health": modbus_adc_health,
-            },
+            stage="gateway.health",
+            reason="plugin_incompatible",
+            compatible=False,
         )
 
     try:
         plugin = await get_hardware_gateway()._get_or_connect_plugin("modbus-adc")
     except Exception as exc:
         _raise_modbus_adc_raw(
-            str(exc),
-            detail={
-                "gateway_mode": health.get("mode"),
-                "modbus_adc_health": modbus_adc_health,
-            },
+            stage="plugin.connect",
+            reason="plugin_connection_failed",
+            cause=exc,
         )
     if not plugin:
         _raise_modbus_adc_raw(
-            "modbus-adc plugin not available",
-            detail={
-                "gateway_mode": health.get("mode"),
-                "modbus_adc_health": modbus_adc_health,
-            },
+            stage="plugin.connect",
+            reason="plugin_unavailable",
         )
 
     result = await plugin.execute_command("read_all", {})
     if not result.get("success"):
         _raise_modbus_adc_raw(
-            str(result.get("error") or "Unknown error from modbus-adc plugin"),
             code="hw_modbus_no_response",
-            detail={
-                "gateway_mode": health.get("mode"),
-                "modbus_adc_health": modbus_adc_health,
-                "plugin_result": result,
-            },
+            stage="plugin.read",
+            reason="read_failed",
         )
 
     return {

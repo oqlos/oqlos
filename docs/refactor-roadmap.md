@@ -234,6 +234,12 @@ treść żądania, nazwa celu lub niezgodność rozszerzenia daje
 422/`C2004-DATA-0002`. Błąd zapisu również daje 503 bez publikowania ścieżki,
 źródła ani tekstu wyjątku; lista plików używa stabilnych kodów diagnostycznych.
 
+Granica `/modbus-adc/raw` klasyfikuje błędy health, połączenia pluginu i odczytu
+jako 503/`C2004-HW-0012` z lokalnym `modbus_adc_not_detected` albo
+`hw_modbus_no_response`. Dwa szerokie handlery są celowymi granicami adaptera,
+ale nie publikują już tekstu wyjątku, pełnego health ani wyniku pluginu; kontekst
+zawiera wyłącznie stabilny etap, powód, operację i target pluginu.
+
 Granica nieotypowanych `HTTPException` 5xx sanitizuje teraz komunikat i kontekst
 według katalogu. Zdalne wykonanie `/api/v1/editor/execute` propaguje
 `correlation_id` do MQTT, zwraca go w sukcesie, a negatywnej odpowiedzi agenta
