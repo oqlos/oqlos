@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 import threading
 from typing import Any
@@ -47,6 +48,24 @@ READ_ONLY_COMMANDS = frozenset(
         "status",
     }
 )
+
+
+@dataclass(frozen=True, slots=True)
+class PowerActuationFailure:
+    """Typed legacy HUI payload for a power-safety rejection."""
+
+    operation: str
+    power: dict[str, Any]
+    ok: bool = False
+    error: str = "BoardNet supply undervoltage blocks hardware actuation"
+    error_code: str = "C2004-HW-0014"
+    issue_code: str = "boardnet_undervoltage_active"
+    status_code: int = 503
+    blocked_before_adapter: bool = True
+    safe_to_retry: bool = False
+
+    def to_payload(self) -> dict[str, Any]:
+        return asdict(self)
 
 
 def _event_state(power: dict[str, Any]) -> dict[str, Any]:
@@ -169,17 +188,7 @@ async def power_actuation_failure(
     power = await sample_power_telemetry()
     if not has_active_undervoltage(power):
         return None
-    return {
-        "ok": False,
-        "operation": operation,
-        "error": "BoardNet supply undervoltage blocks hardware actuation",
-        "error_code": "C2004-HW-0014",
-        "issue_code": "boardnet_undervoltage_active",
-        "status_code": 503,
-        "power": power,
-        "blocked_before_adapter": True,
-        "safe_to_retry": False,
-    }
+    return PowerActuationFailure(operation=operation, power=power).to_payload()
 
 
 async def ensure_power_safe(
