@@ -363,6 +363,18 @@ ISSUE_CATALOG: dict[str, IssueDefinition] = {
         default_severity="warning",
         summary="The hardware diagnostic command or its arguments are invalid.",
     ),
+    "api_hardware_configuration_write_forbidden": IssueDefinition(
+        code="api_hardware_configuration_write_forbidden",
+        domain="api",
+        default_severity="warning",
+        summary="The caller is not permitted to save hardware configuration.",
+    ),
+    "api_modbus_coil_pulse_forbidden": IssueDefinition(
+        code="api_modbus_coil_pulse_forbidden",
+        domain="api",
+        default_severity="warning",
+        summary="The caller is not permitted to pulse a Modbus coil.",
+    ),
     "api_systemd_unit_forbidden": IssueDefinition(
         code="api_systemd_unit_forbidden",
         domain="api",

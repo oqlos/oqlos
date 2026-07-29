@@ -168,10 +168,26 @@ def test_configuration_api_and_legacy_routes(monkeypatch: pytest.MonkeyPatch, tm
         "/api/v3/hardware/configuration/validate",
         json={"content": content, "format": "json"},
     ).status_code == 200
-    assert client.put(
+    denied = client.put(
         "/api/v3/hardware/configuration/source",
+        headers={
+            "X-Connect-Role": "password=hunter2",
+            "X-Correlation-ID": "cor-hardware-config-role",
+        },
         json={"content": content, "format": "json", "file_name": "oqlos.json"},
-    ).status_code == 403
+    )
+    assert denied.status_code == 403
+    assert denied.headers["content-type"].startswith("application/problem+json")
+    denied_body = denied.json()
+    assert denied_body["code"] == "C2004-AUTH-0002"
+    assert denied_body["correlation_id"] == "cor-hardware-config-role"
+    assert denied_body["component"] == "hardware-configuration"
+    assert denied_body["stage"] == "role.authorize"
+    assert (
+        denied_body["metadata"]["diagnostics"]["issue_code"]
+        == "api_hardware_configuration_write_forbidden"
+    )
+    assert "hunter2" not in denied.text
     assert client.put(
         "/api/v3/hardware/configuration/source",
         headers={"X-Connect-Role": "system"},

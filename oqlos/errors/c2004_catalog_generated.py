@@ -248,7 +248,9 @@ CATALOG: dict[str, ErrorEntry] = {
 
 C2004_CODE_BY_ISSUE: dict[str, str] = {
     'api_diagnostic_command_invalid': 'C2004-DATA-0002',
+    'api_hardware_configuration_write_forbidden': 'C2004-AUTH-0002',
     'api_invalid_recover_scope': 'C2004-DATA-0002',
+    'api_modbus_coil_pulse_forbidden': 'C2004-AUTH-0002',
     'api_modbus_wizard_invalid_request': 'C2004-DATA-0002',
     'api_oql_transport_disabled': 'C2004-HW-0012',
     'api_systemd_unit_forbidden': 'C2004-AUTH-0002',

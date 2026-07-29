@@ -3,7 +3,7 @@
 import asyncio
 
 import pytest
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from oqlos.api import hardware_modbus_routes as modbus_hw
@@ -27,11 +27,38 @@ def test_hardware_modbus_router_includes_channel_and_wizard_paths():
 def test_coil_pulse_role_is_enforced_server_side() -> None:
     assert modbus_hw.require_coil_test_role("system") == "system"
     assert modbus_hw.require_coil_test_role("admin") == "admin"
-    with pytest.raises(HTTPException) as exc:
+    with pytest.raises(OqlosError) as exc:
         modbus_hw.require_coil_test_role("operator")
     assert exc.value.status_code == 403
-    assert exc.value.detail["error_code"] == "C2004-AUTH-0002"
-    assert exc.value.detail["c2004_code"] == "C2004-AUTH-0002"
+    assert exc.value.public_code == "C2004-AUTH-0002"
+    assert exc.value.issue_code == "api_modbus_coil_pulse_forbidden"
+
+
+def test_coil_pulse_role_denial_is_safe_problem_details() -> None:
+    app = FastAPI()
+    install_oqlos_error_handler(app)
+    app.include_router(modbus_hw.router, prefix="/api/v1/hardware")
+
+    response = TestClient(app, raise_server_exceptions=False).post(
+        "/api/v1/hardware/modbus/coil-test/pulse",
+        json={"coil": 1, "password": "hunter2"},
+        headers={
+            "X-Connect-Role": "password=hunter2",
+            "X-Correlation-ID": "cor-coil-role",
+        },
+    )
+
+    assert response.status_code == 403
+    assert response.headers["content-type"].startswith("application/problem+json")
+    body = response.json()
+    assert body["code"] == "C2004-AUTH-0002"
+    assert body["correlation_id"] == "cor-coil-role"
+    assert body["component"] == "modbus-coil-test"
+    assert body["stage"] == "role.authorize"
+    assert body["metadata"]["diagnostics"]["issue_code"] == (
+        "api_modbus_coil_pulse_forbidden"
+    )
+    assert "hunter2" not in response.text
 
 
 def test_settings_put_applies_only_selected_runtime_profile(monkeypatch) -> None:

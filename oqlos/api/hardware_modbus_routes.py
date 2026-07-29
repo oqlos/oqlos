@@ -6,7 +6,7 @@ import asyncio
 import os
 from typing import Any
 
-from fastapi import APIRouter, Body, Header, HTTPException
+from fastapi import APIRouter, Body, Header
 
 from oqlos.api.hardware_gateway import snapshot_via_health, try_get_hardware_gateway
 from oqlos.api.hardware_modbus_waveshare import _build_waveshare_diagnose_report
@@ -62,12 +62,16 @@ def require_coil_test_role(role: str | None) -> str:
     """Reject physical pulse requests outside the privileged TEST personas."""
     normalized = str(role or "").strip().lower()
     if normalized not in _COIL_TEST_ROLES:
-        raise HTTPException(
+        raise OqlosError(
+            code="api_modbus_coil_pulse_forbidden",
             status_code=403,
             detail={
-                "error": "Coil pulse requires the system or administrator role",
-                "error_code": "C2004-AUTH-0002",
-                "c2004_code": "C2004-AUTH-0002",
+                "architecture": "SOA",
+                "layer": "firmware",
+                "component": "modbus-coil-test",
+                "stage": "role.authorize",
+                "problem_source": "request",
+                "operation_id": "modbus.coil-test.pulse",
             },
         )
     return normalized

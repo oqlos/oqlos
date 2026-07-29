@@ -118,6 +118,8 @@ domenowym. Powtarzalny błąd zakończony `SYS-0000` wymaga dodania jawnego
 | niedostępna akcja HUI | status katalogu | kod wyniku, np. `C2004-HW-0012` | `SOA/firmware` | `hardware-hui` / `action.execute` | lokalna akcja sprzętowa |
 | niedozwolona akcja systemd | 422 | `C2004-DATA-0002` | `SOA/host` | `systemd-control` / `action.validate` | whitelisted unit |
 | jednostka systemd poza whitelistą | 403 | `C2004-AUTH-0002` | `SOA/host` | `systemd-control` / `unit.authorize` | wartość wejściowa nie jest publikowana |
+| zapis konfiguracji bez roli systemowej | 403 | `C2004-AUTH-0002` | `SOA/oqlos` | `hardware-configuration` / `role.authorize` | rola wejściowa nie jest publikowana |
+| impuls cewki bez roli systemowej | 403 | `C2004-AUTH-0002` | `SOA/firmware` | `modbus-coil-test` / `role.authorize` | rola i payload nie są publikowane |
 | błąd wykonania systemd | 503 | `C2004-HW-0012` | `SOA/host` | `systemd-control` / `action.execute` | whitelisted unit |
 | zdalne wykonanie scenariusza w editorze | status kodu agenta | zachowany kod MQTT | `SOA/firmware` | agent / etap MQTT | `mqtt-node://<node>/oql` |
 | nieotypowany `HTTPException` 5xx | status katalogu | kod wynikający ze statusu | `SOA/oqlos` | `oqlos-api` / `http.exception` | granica API |

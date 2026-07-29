@@ -14,6 +14,7 @@ from typing import Any, Literal
 from fastapi import APIRouter, Header, HTTPException, Query
 from pydantic import BaseModel, Field
 
+from oqlos.errors import OqlosError
 from oqlos.hardware.config_paths import resolve_oqlos_config_path
 from oqlos.hardware.configuration import (
     HARDWARE_CONFIGURATION_VERSION,
@@ -59,7 +60,18 @@ def _error(exc: HardwareConfigurationError) -> HTTPException:
 
 def _require_system_role(role: str | None) -> None:
     if str(role or "").strip().lower() not in {"system", "administrator", "admin"}:
-        raise HTTPException(status_code=403, detail={"error": "hardware configuration write requires system role"})
+        raise OqlosError(
+            code="api_hardware_configuration_write_forbidden",
+            status_code=403,
+            detail={
+                "architecture": "SOA",
+                "layer": "oqlos",
+                "component": "hardware-configuration",
+                "stage": "role.authorize",
+                "problem_source": "request",
+                "operation_id": "hardware.configuration.save",
+            },
+        )
 
 
 def _configured_path() -> Path:
