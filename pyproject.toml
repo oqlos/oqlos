@@ -42,7 +42,7 @@ oqlos-hardware-config = "oqlos.tools.hardware_config:main"
 [project.optional-dependencies]
 rpi = ["RPi.GPIO>=0.7", "smbus2>=0.4"]
 server = ["websockets>=13.0"]
-dev = ["pytest", "pytest-asyncio", "httpx", "websockets>=13.0",
+dev = ["pytest", "pytest-asyncio", "httpx", "websockets>=13.0", "ruff>=0.12",
     "goal>=2.1.0",
     "costs>=0.1.20",
     "pfix>=0.1.60",
@@ -55,16 +55,38 @@ hardware-services = ["dri0050>=1.0.0", "piADC>=1.0.0", "piRTC>=1.0.0"]
 include = ["oqlos*"]
 exclude = ["oqlos.models*", "oqlos.shared.event_store"]
 
+[tool.setuptools.package-data]
+"oqlos.api" = ["static/*", "static/*/*"]
+
+[tool.setuptools.data-files]
+"frontend/dist" = ["frontend/dist/index.html"]
+"frontend/dist/assets" = ["frontend/dist/assets/*"]
+
 [tool.uv.sources]
 oqlos-core = { path = "packages/oqlos-core", editable = true }
 oqlos-models = { path = "packages/oqlos-models", editable = true }
 
 [tool.pytest.ini_options]
+# Keep the default import semantics explicit. Test module basenames must remain
+# unique; importlib mode must not be used to conceal collection collisions.
+addopts = ["--import-mode=prepend"]
 # Test the workspace sources, not an older wheel left in site-packages.
 pythonpath = ["packages/oqlos-core/src", "packages/oqlos-models/src", "."]
 # backend-shared-py is an independent submodule with its own dependency extras
 # and test command; parent OqlOS tests must not collect another repository.
-norecursedirs = ["packages/backend-shared-py"]
+norecursedirs = [
+    ".git",
+    ".pytest_cache",
+    ".venv",
+    "venv",
+    "build",
+    "dist",
+    "*.egg-info",
+    "node_modules",
+    "packages/backend-shared-py",
+    "packages/oql-scenario",
+    "packages/pimodbus",
+]
 
 [tool.pfix]
 # Self-healing Python configuration

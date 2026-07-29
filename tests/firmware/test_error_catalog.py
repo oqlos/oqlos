@@ -9,9 +9,10 @@ import re
 from pathlib import Path
 
 from oqlos.errors.catalog import ISSUE_CATALOG, matches_known_pattern
-from oqlos.tools.gen_error_docs import DOC_PATH, generate_markdown
+from oqlos.tools.gen_error_docs import generate_markdown
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
+_DOC_PATH = _REPO_ROOT / "docs" / "ERROR_CODES.md"
 _DOCTOR_DIR = _REPO_ROOT / "oqlos" / "tools" / "hardware_diagnose"
 _CODE_SOURCE_PATHS = [
     *sorted(_DOCTOR_DIR.glob("doctor_*.py")),
@@ -91,8 +92,8 @@ def test_every_catalog_code_is_still_used_somewhere():
 
 
 def test_error_codes_doc_is_up_to_date():
-    assert DOC_PATH.exists(), "docs/ERROR_CODES.md missing — run `python -m oqlos.tools.gen_error_docs`"
-    assert DOC_PATH.read_text() == generate_markdown(), (
+    assert _DOC_PATH.exists(), "docs/ERROR_CODES.md missing — run `python -m oqlos.tools.gen_error_docs`"
+    assert _DOC_PATH.read_text() == generate_markdown(), (
         "docs/ERROR_CODES.md is stale — run `python -m oqlos.tools.gen_error_docs`"
     )
 

@@ -12,6 +12,7 @@ import threading
 from typing import Any, Callable, TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from oqlos.core.base import StepStatus
     from oqlos.hardware.plugin_gateway import PluginHardwareGateway
     from oqlos.models.dsl_models import OqlAction
 

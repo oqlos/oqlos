@@ -86,6 +86,11 @@ tasks:
     cmds:
       - ruff check .
 
+  lint:baseline:
+    desc: Check the mandatory Ruff F821/F811 baseline
+    cmds:
+      - ruff check oqlos tests packages/oqlos-core packages/oqlos-models --select F821,F811
+
   fmt:
     desc: Auto-format with ruff
     cmds:

@@ -22,15 +22,16 @@ Konsumuje wersjonowany artefakt OqlOS oraz read-only API lub przypięty commit
 
 ## 2. Zweryfikowany punkt bazowy
 
-Pomiary wykonano 2026-07-28 przed zmianą tego dokumentu.
+Pomiary bazowe wykonano 2026-07-28. Wyniki `NEXT-01` odświeżono 2026-07-29
+na bazie `827aa45` oraz zmian zadania w bieżącym worktree.
 
 | Kontrola | Wynik |
 | --- | --- |
-| OqlOS | `main`, commit bazowy `fdadbc8`, worktree czysty |
+| OqlOS | `main`, commit bazowy `827aa45`; implementacja `NEXT-01` oczekuje na commit i zewnętrzny przebieg CI |
 | Nazwa języka | publiczne API, CLI i dokumentacja używają OQL; właściwe klasy i funkcje mają nazwy `Oql*`/`*_oql` |
 | Zgodność wsteczna | wewnętrzne aliasy i ścieżki `cql_*` nadal istnieją w ograniczonej warstwie kompatybilności |
-| Domyślny `pytest -q` | **FAIL podczas kolekcji**: dwa moduły `test_motor2_idle_policy.py` mają tę samą nazwę |
-| `pytest -q --import-mode=importlib` | 902 testy przechodzą w 106,91 s; wynik potwierdza kolizję kolekcji, ale nie zastępuje naprawy domyślnej bramki CI |
+| Domyślny `pytest -q` | **PASS: 904 testy** w 8,62 s; jawny tryb `prepend`, unikalne nazwy modułów i kontrola pochodzenia importów |
+| Test z wheel | **PASS: 904 testy** w 76,96 s z `/tmp`, bez źródeł workspace w `pythonpath`; wheel zawiera statyczne UI i zbudowany frontend |
 | Frontend | 145 testów przechodzi; build Vite przechodzi |
 | Frontend bundle | ostrzeżenie: główny chunk 538,68 kB po minifikacji; potrzebny podział kodu |
 | OQL Scenario | `main`, commit `7b4f939`, worktree czysty; 58 testów przechodzi |
@@ -68,13 +69,22 @@ samą obecność kontrolowanego aliasu kompatybilności.
 
 **Priorytet:** P0. **Repo:** OqlOS. **Zależności:** brak.
 
-- nadać unikalne nazwy dwóm testom `test_motor2_idle_policy.py` albo zapewnić
+**Status 2026-07-29:** implementacja i weryfikacja lokalna zakończone; zamknięcie
+operacyjne wymaga commita oraz zielonego przebiegu dodanych jobów GitHub Actions.
+
+- [x] nadać unikalne nazwy dwóm testom `test_motor2_idle_policy.py` albo zapewnić
   jednoznaczne pakiety testowe;
-- ustawić jeden kanoniczny tryb importu w konfiguracji pytest, bez zależności od
+- [x] ustawić jeden kanoniczny tryb importu w konfiguracji pytest, bez zależności od
   przypadkowego `PYTHONPATH`;
-- dodać asercję, z którego checkoutu jest importowany pakiet `oqlos`;
-- uruchamiać pełny suite z clean checkout oraz z wheel/editable install;
-- wdrożyć Ruff najpierw dla `F821,F811`, potem zmniejszać kontrolowany baseline.
+- [x] dodać asercję, z którego checkoutu jest importowany pakiet `oqlos`;
+- [x] uruchamiać pełny suite z clean checkout oraz z wheel/editable install;
+- [x] wdrożyć Ruff najpierw dla `F821,F811`, potem zmniejszać kontrolowany baseline.
+
+Dowód lokalny: `pytest -q` — 904/904; izolowany wheel — 904/904;
+`ruff check oqlos tests packages/oqlos-core packages/oqlos-models --select
+F821,F811` — zero błędów; frontend — 145/145 i poprawny build Vite. GitHub
+Actions buduje frontend, instaluje jawne pakiety workspace i wykonuje osobny
+pełny job z wheel poza checkoutem.
 
 **Gotowe, gdy:** zwykłe `pytest -q` przechodzi lokalnie i w CI, a wynik nie
 zależy od kolejności kolekcji ani zewnętrznego checkoutu.

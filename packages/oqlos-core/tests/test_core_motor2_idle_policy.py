@@ -1,4 +1,4 @@
-"""Execution-level regression tests for the Tic249 idle policy."""
+"""Execution-level regression tests for the oqlos-core Tic249 idle policy."""
 
 from __future__ import annotations
 

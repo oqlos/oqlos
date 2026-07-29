@@ -7,6 +7,7 @@ from contextlib import asynccontextmanager
 import json
 import logging
 from pathlib import Path
+import sysconfig
 from typing import TYPE_CHECKING
 
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
@@ -403,7 +404,17 @@ async def ui_legacy_navigation_page():
 # The React hardware UI is built with Vite (base=/ui/).
 # Hardware actuation flows through the OqlOS-owned /api/v3/hardware/* compatibility
 # router, backed by the same gateway/plugin runtime as /api/v1/hardware/*.
-_UI_DIST = Path(__file__).resolve().parents[2] / "frontend" / "dist"
+def _resolve_ui_dist() -> Path:
+    """Resolve Vite assets in a source checkout or an installed wheel."""
+    checkout_dist = Path(__file__).resolve().parents[2] / "frontend" / "dist"
+    installed_dist = Path(sysconfig.get_path("data")) / "frontend" / "dist"
+    for candidate in (checkout_dist, installed_dist):
+        if (candidate / "index.html").is_file():
+            return candidate
+    return checkout_dist
+
+
+_UI_DIST = _resolve_ui_dist()
 
 
 def _with_query(path: str, request: Request) -> str:

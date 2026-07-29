@@ -15,21 +15,40 @@ import importlib.util
 import sys
 from pathlib import Path
 
-_CANONICAL = (
-    Path(__file__).resolve().parents[2]
-    / "packages" / "backend-shared-py" / "src" / "shared" / "logs_query.py"
-)
 
-if not _CANONICAL.is_file():  # pragma: no cover — niezainicjowany submodule
-    raise ImportError(
-        f"Brak kanonicznego logs_query ({_CANONICAL}). "
-        "Uruchom: git submodule update --init packages/backend-shared-py"
+def _load_checkout_implementation():
+    """Load the submodule fallback used by source checkouts without an install."""
+    canonical = (
+        Path(__file__).resolve().parents[2]
+        / "packages"
+        / "backend-shared-py"
+        / "src"
+        / "shared"
+        / "logs_query.py"
     )
+    if not canonical.is_file():  # pragma: no cover - invalid source checkout
+        raise ImportError(
+            "Brak pakietu c2004-backend-shared ani jego źródła "
+            f"({canonical}). Uruchom: git submodule update --init "
+            "packages/backend-shared-py"
+        )
 
-_spec = importlib.util.spec_from_file_location("oqlos.shared._logs_query_impl", _CANONICAL)
-_impl = importlib.util.module_from_spec(_spec)
-sys.modules[_spec.name] = _impl
-_spec.loader.exec_module(_impl)
+    spec = importlib.util.spec_from_file_location(
+        "oqlos.shared._logs_query_impl",
+        canonical,
+    )
+    if spec is None or spec.loader is None:  # pragma: no cover - importlib guard
+        raise ImportError(f"Nie można załadować kanonicznego logs_query: {canonical}")
+    implementation = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = implementation
+    spec.loader.exec_module(implementation)
+    return implementation
+
+
+try:
+    from shared import logs_query as _impl
+except ImportError:
+    _impl = _load_checkout_implementation()
 
 LogsQueryService = _impl.LogsQueryService
 PostgresLogsQueryService = _impl.PostgresLogsQueryService
