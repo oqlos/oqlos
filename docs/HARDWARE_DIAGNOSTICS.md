@@ -399,9 +399,22 @@ oznacza undervoltage i powinien być raportowany jako krytyczny
 `C2004-HW-0014`. Bit 16 bez bitu 0 oznacza zdarzenie historyczne i nie powinien
 blokować pracy jako aktywny ERROR.
 
+OqlOS stosuje ten stan jako wspólną bramkę przed aktuacją w runtime OQL,
+bezpośrednim REST, surowym API pluginów, narzędziach Modbus i MQTT `manage`.
+Aktywny bit 0 kończy komendę statusem 503 przed dostępem do adaptera. Stan
+historyczny nie blokuje. Operacje prowadzące do stanu bezpiecznego — STOP,
+deenergize, pump OFF, valve OFF i coil OFF — są zawsze dozwolone, także podczas
+aktywnego undervoltage.
+
+Publiczny obiekt `power` zawiera `active`, `historical`, `observed_at`,
+`age_ms`, `source`, surową maskę oraz kompatybilne `active_flags` i
+`historical_flags`. Pierwsza dostępna obserwacja i każda zmiana maski są
+publikowane w strumieniu `/api/v3/hardware/cqrs/events` i WebSocket jako
+`hardware.power_state_changed`.
+
 `measure_volts core` nie mierzy wejścia 5 V ani poboru mocy. Pomiar prądu i
 mocy wymaga dodatkowego sensora (np. INA219/INA260) lub miernika USB. Pełna
-polityka i aktualna luka implementacyjna są opisane w
+polityka i opcjonalne rozszerzenie pomiarowe są opisane w
 [ERROR_STANDARDIZATION.md](ERROR_STANDARDIZATION.md).
 
 Bezpieczna diagnostyka read-only na BoardNet:

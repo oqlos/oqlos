@@ -28,10 +28,10 @@ Pomiary bazowe wykonano 2026-07-28. Wyniki `NEXT-01` i `NEXT-02` odświeżono
 
 | Kontrola | Wynik |
 | --- | --- |
-| OqlOS | `main`; `NEXT-01` zapisane w `8d4e396`, snapshot analizy z `86935a0`; zewnętrzny przebieg CI oczekuje na push |
+| OqlOS | `main`; `NEXT-01` zapisane w `8d4e396`, `NEXT-03` w `fa2490a`, snapshot analizy z `86935a0`; zewnętrzny przebieg CI oczekuje na push |
 | Nazwa języka | publiczne API, CLI i dokumentacja używają OQL; właściwe klasy i funkcje mają nazwy `Oql*`/`*_oql` |
 | Zgodność wsteczna | wewnętrzne aliasy i ścieżki `cql_*` nadal istnieją w ograniczonej warstwie kompatybilności |
-| Domyślny `pytest -q` | **PASS: 908 testów** w 8,13 s; jawny tryb `prepend`, unikalne nazwy modułów i kontrola pochodzenia importów |
+| Domyślny `pytest -q` | **PASS: 919 testów** w 10,55 s; jawny tryb `prepend`, unikalne nazwy modułów i kontrola pochodzenia importów |
 | Test z wheel | **PASS: 904 testy** w 76,96 s z `/tmp`, bez źródeł workspace w `pythonpath`; wheel zawiera statyczne UI i zbudowany frontend |
 | Frontend | 145 testów przechodzi; build Vite przechodzi |
 | Frontend bundle | ostrzeżenie: główny chunk 538,68 kB po minifikacji; potrzebny podział kodu |
@@ -120,14 +120,24 @@ commita, a raport można odtworzyć jedną komendą CI.
 
 **Priorytet:** P0. **Repo:** OqlOS. **Zależności:** NEXT-01.
 
-- emitować zmianę `get_throttled` do event streamu;
-- objąć wspólną bramką zasilania bezpośrednie endpointy serwisowe i MQTT
+**Status 2026-07-29:** implementacja i lokalna weryfikacja zakończone w
+`fa2490a`. Pierwszy przebieg CI i weryfikacja na fizycznym BoardNet pozostają
+bramkami operacyjnymi przed deployem.
+
+- [x] emitować zmianę `get_throttled` do event streamu;
+- [x] objąć wspólną bramką zasilania bezpośrednie endpointy serwisowe i MQTT
   `manage`, nie tylko HUI;
-- zawsze zezwalać na bezpieczne `STOP`/deenergize;
-- ujednolicić pola `active`, `historical`, `observed_at`, `age_ms`, `source`;
-- opcjonalnie dodać provider INA219/INA260 dla napięcia, prądu i mocy;
-- utrzymać `C2004-HW-0014` dla aktywnego undervoltage, a historię raportować jako
+- [x] zawsze zezwalać na bezpieczne `STOP`/deenergize;
+- [x] ujednolicić pola `active`, `historical`, `observed_at`, `age_ms`, `source`;
+- [ ] opcjonalnie dodać provider INA219/INA260 dla napięcia, prądu i mocy;
+- [x] utrzymać `C2004-HW-0014` dla aktywnego undervoltage, a historię raportować jako
   warning, nie aktywną awarię.
+
+Dowód lokalny: maski `0x0`, `0x1`, `0x10000`, `0x10001` mają test kontraktowy;
+aktywny bit 0 zatrzymuje komendę przed rozwiązaniem pluginu, a `lung-stop`,
+deenergize, pump OFF, valve OFF i coil OFF omijają blokadę. Zmiana stanu trafia
+do CQRS/WS jako `hardware.power_state_changed`. Pełny `pytest -q` — 919/919;
+Ruff `F821,F811` — zero błędów.
 
 **Gotowe, gdy:** aktywny undervoltage blokuje każdą aktuację przed adapterem,
 stan historyczny nie blokuje, STOP działa, a testy masek `0x0`, `0x1`,
@@ -334,9 +344,8 @@ Praktyczne fale wdrożeniowe:
 4. **Fala 3 — obserwowalność:** NEXT-08, NEXT-09, NEXT-10.
 5. **Fala 4 — produkcja:** NEXT-11, NEXT-12, NEXT-13.
 
-Stan 2026-07-29: Fala 0 jest zakończona lokalnie. Następna implementacja to
-`NEXT-03` (power telemetry i safety gate), równolegle można rozpocząć
-klasyfikację kontraktów z `NEXT-04`.
+Stan 2026-07-29: Fala 0 i implementacja `NEXT-03` są zakończone lokalnie.
+Następna implementacja to klasyfikacja i ujednolicenie błędów `NEXT-04`.
 
 ## 6. Obowiązkowe bramki weryfikacji
 

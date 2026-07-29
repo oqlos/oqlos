@@ -133,10 +133,15 @@ zasilacza. Takie źródło powinno publikować co najmniej `voltage_v`, `current
 
 `pi_system_diagnostics()` zachowuje kompatybilne pola surowe `throttled` i
 `core_volt`, a dodatkowo zwraca typowane `power`: `status`, `mask_hex`,
-`active_flags`, `historical_flags`, `errors`, `warnings` i `observed_at`.
-Aktywny bit 0 jest automatycznie mapowany na `C2004-HW-0014`; historyczny bit
-16 pozostaje ostrzeżeniem. Następnym etapem RF-01 jest użycie tego samego stanu
-jako wspólnego safety gate przed każdą klasą aktuacji.
+`active`, `historical`, `active_flags`, `historical_flags`, `errors`,
+`warnings`, `observed_at`, `age_ms` i `source`. Aktywny bit 0 jest automatycznie
+mapowany na `C2004-HW-0014`; historyczny bit 16 pozostaje ostrzeżeniem.
+
+Wspólna bramka `oqlos.hardware.power_safety` działa przed adapterem dla runtime
+OQL, REST, MQTT `manage`, surowych komend pluginów i zapisów Modbus. Nie blokuje
+odczytów ani komend bezpiecznego STOP/deenergize/OFF. Zmiana maski jest
+publikowana jako `hardware.power_state_changed`; identyfikator eventu jest
+identyfikatorem tej samodzielnej obserwacji telemetrycznej.
 
 ## Standard logowania procesu
 
