@@ -159,12 +159,10 @@ def _merge_profile_config(profile_id: str, settings: Any, ports: dict[str, Any])
     # by-id, or historical by-path that now maps to the motor CH340).
     if serial_override:
         try:
-            from pathlib import Path
-
             if not Path(serial_override).exists():
                 serial_override = ""
-        except Exception:
-            pass
+        except OSError:
+            serial_override = ""
     serial_port = serial_override or _profile_default_serial_port(profile_id, ports, settings)
     parity = str(persisted.get("target_parity") or _profile_default_parity(profile_id, settings)).upper()
     return {

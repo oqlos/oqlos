@@ -108,6 +108,15 @@ health i jawnie publikuje `overall_status`. Bieżąca metryka OqlOS spadła z 22
 do 222 szerokich handlerów, a moduł Waveshare z 656 do 640 linii bez wzrostu
 maksymalnej złożoności CC=11.
 
+Trzecia grupa przeglądu `NEXT-04` sklasyfikowała wszystkie sześć trafień w
+`hardware_runtime.py`, `hardware_modbus_routes.py`,
+`hardware_modbus_settings.py`, `hardware_probe.py` i `hardware_lung.py`.
+Przewidywalne awarie I/O/runtime nie publikują tekstu wyjątku, a defekty
+programu nie są maskowane jako problem sprzętowy. Programowanie Modbus zawsze
+wznawia pluginy, a błąd rozszerzonego adaptera płuca nie powtarza aktuacji.
+Bieżąca metryka spadła z 222 do 216 szerokich handlerów; Modbus routes ma
+CC=14 zamiast 18, a lung CC=8 zamiast 10.
+
 ### Hotspoty rozmiaru
 
 Największe pliki OqlOS to słownik tłumaczeń (2 150 linii), `Panel.jsx`

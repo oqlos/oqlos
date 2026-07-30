@@ -241,35 +241,37 @@ async def hardware_modbus_wizard_program_isolated(
             operation="modbus.wizard.program-isolated",
         )
     gateway, paused_plugin_ids = await _pause_modbus_plugins_on_serial(serial)
+    runtime_apply: dict[str, Any] | None = None
     try:
-        result = await asyncio.to_thread(
-            _modbus_wizard_program_isolated,
-            serial_port=serial,
-            current_device_id=int(current_device_id),
-            new_device_id=int(new_device_id),
-            new_baudrate=int(new_baudrate),
-            new_parity=str(new_parity).upper(),
-            confirm_isolated=bool(confirm_isolated),
-            current_baudrate=cur_baud,
-        )
-    except OqlosError as exc:
+        try:
+            result = await asyncio.to_thread(
+                _modbus_wizard_program_isolated,
+                serial_port=serial,
+                current_device_id=int(current_device_id),
+                new_device_id=int(new_device_id),
+                new_baudrate=int(new_baudrate),
+                new_parity=str(new_parity).upper(),
+                confirm_isolated=bool(confirm_isolated),
+                current_baudrate=cur_baud,
+            )
+        except OqlosError:
+            raise
+        except (OSError, RuntimeError, ValueError) as exc:
+            _raise_modbus_wizard_failure(
+                issue_code=_modbus_wizard_issue_for_exception(exc),
+                stage="program.execute",
+                operation_id="modbus.wizard.program-isolated",
+                serial_port=serial,
+                cause=exc,
+            )
+    finally:
         if paused_plugin_ids and gateway is not None:
-            runtime_apply = await gateway.apply_modbus_user_settings(paused_plugin_ids)
-            exc.detail = {**(exc.detail or {}), "runtime_apply": runtime_apply}
-        raise
-    except Exception as exc:
-        if paused_plugin_ids and gateway is not None:
-            await gateway.apply_modbus_user_settings(paused_plugin_ids)
-        _raise_modbus_wizard_failure(
-            issue_code=_modbus_wizard_issue_for_exception(exc),
-            stage="program.execute",
-            operation_id="modbus.wizard.program-isolated",
-            serial_port=serial,
-            cause=exc,
-        )
+            runtime_apply = await gateway.apply_modbus_user_settings(
+                paused_plugin_ids
+            )
 
-    if paused_plugin_ids and gateway is not None:
-        result["runtime_apply"] = await gateway.apply_modbus_user_settings(paused_plugin_ids)
+    if runtime_apply is not None:
+        result["runtime_apply"] = runtime_apply
     if not bool(result.get("ok")) or not bool(result.get("verified")):
         issue_code = str(result.get("issue_code") or "hw_modbus_no_response")
         if issue_code not in {

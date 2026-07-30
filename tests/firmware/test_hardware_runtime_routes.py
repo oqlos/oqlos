@@ -7,10 +7,21 @@ import time
 from types import SimpleNamespace
 
 import pytest
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
 
 from oqlos.api import hardware as hw
 from oqlos.api import hardware_runtime as runtime
 from oqlos.errors import OqlosError
+from oqlos.errors.fastapi_integration import install_oqlos_error_handler
+from oqlos.hardware.usb_adc_stack import UsbAdcStackError
+
+
+def _runtime_client() -> TestClient:
+    app = FastAPI()
+    install_oqlos_error_handler(app)
+    app.include_router(runtime.router, prefix="/api/v1/hardware")
+    return TestClient(app, raise_server_exceptions=False)
 
 
 def test_hardware_router_includes_runtime_paths():
@@ -109,6 +120,52 @@ def test_read_sensor_values_uses_single_adc_read_all_for_batch(monkeypatch):
     assert _BatchAdcGateway.read_sensor_calls == 0
     assert sensors["ai01"]["value"] == 7901.0
     assert sensors["ai03"]["ok"] is True
+
+
+def test_read_sensor_values_sanitizes_expected_adapter_failure(monkeypatch):
+    async def _usb(_sensor_ids):
+        return None
+
+    class _Gateway:
+        async def read_sensor(self, _sensor_id: str):
+            raise RuntimeError("password=hunter2 /srv/private")
+
+    monkeypatch.setattr(runtime, "read_usb_adc_sensor_values", _usb)
+    monkeypatch.setattr(runtime, "get_hardware_gateway", lambda: _Gateway())
+
+    sensors = asyncio.run(
+        runtime.read_sensor_values(
+            ["ai01"],
+            health={"mode": "real", "modbus-adc": {"compatible": True}},
+        )
+    )
+
+    assert sensors["ai01"]["error"] == "sensor-read-failed"
+    assert sensors["ai01"]["diagnostics"]["issue_code"] == (
+        "hw_modbus_no_response"
+    )
+    assert "hunter2" not in str(sensors)
+    assert "/srv/private" not in str(sensors)
+
+
+def test_read_sensor_values_does_not_mask_programming_error(monkeypatch):
+    async def _usb(_sensor_ids):
+        return None
+
+    class _Gateway:
+        async def read_sensor(self, _sensor_id: str):
+            raise AttributeError("programming defect")
+
+    monkeypatch.setattr(runtime, "read_usb_adc_sensor_values", _usb)
+    monkeypatch.setattr(runtime, "get_hardware_gateway", lambda: _Gateway())
+
+    with pytest.raises(AttributeError, match="programming defect"):
+        asyncio.run(
+            runtime.read_sensor_values(
+                ["ai01"],
+                health={"mode": "real", "modbus-adc": {"compatible": True}},
+            )
+        )
 
 
 def test_read_sensor_values_prefers_usb_adc_stack_over_unavailable_modbus(monkeypatch):
@@ -348,7 +405,10 @@ def test_batch_marks_partial_usb_reading_as_usable_and_degraded(monkeypatch):
 
 
 def test_batch_raises_typed_error_when_usb_transport_is_down(monkeypatch):
-    runtime._USB_ADC_STATUS.update(available=False, error="connection refused")
+    runtime._USB_ADC_STATUS.update(
+        available=False,
+        error="connection refused password=hunter2 /srv/private",
+    )
 
     async def _sensor_values(_sensor_ids, *, health=None):
         return {
@@ -365,6 +425,9 @@ def test_batch_raises_typed_error_when_usb_transport_is_down(monkeypatch):
             asyncio.run(runtime.read_sensors_batch("ai01,ai02,ai03"))
         assert caught.value.public_code == "C2004-HW-0012"
         assert caught.value.issue_code == "hw_usb_adc_sidecar_unreachable"
+        assert caught.value.detail["reason"] == "usb-adc-stack-unavailable"
+        assert "hunter2" not in caught.value.message
+        assert "/srv/private" not in str(caught.value.detail)
     finally:
         runtime._USB_ADC_STATUS.update(available=None, error=None, retry_after=0.0)
 
@@ -407,6 +470,43 @@ def test_diagnose_raises_typed_error_when_gateway_health_fails(monkeypatch):
         asyncio.run(runtime.hardware_diagnose())
     assert caught.value.public_code == "C2004-HW-0012"
     assert caught.value.issue_code == "config_unavailable"
+
+
+def test_diagnose_gateway_failure_is_safe_problem_details(monkeypatch):
+    async def _health(*, force=False):
+        raise RuntimeError("password=hunter2 /srv/private")
+
+    monkeypatch.setattr(runtime, "cached_gateway_health", _health)
+
+    response = _runtime_client().get(
+        "/api/v1/hardware/diagnose",
+        headers={"X-Correlation-ID": "cor-runtime-diagnose"},
+    )
+
+    assert response.status_code == 503
+    body = response.json()
+    assert body["code"] == "C2004-HW-0012"
+    assert body["correlation_id"] == "cor-runtime-diagnose"
+    assert body["component"] == "hardware-gateway"
+    assert body["stage"] == "gateway.health"
+    assert body["metadata"]["context"]["upstream_target"] == (
+        "hardware-runtime://gateway"
+    )
+    assert "hunter2" not in response.text
+    assert "/srv/private" not in response.text
+
+
+def test_usb_adc_refresh_does_not_store_exception_message(monkeypatch):
+    async def _fail(_url, *, timeout_seconds):
+        raise UsbAdcStackError("password=hunter2 /srv/private")
+
+    monkeypatch.setattr(runtime, "read_usb_adc_channels", _fail)
+    runtime._USB_ADC_STATUS.update(available=None, error=None, retry_after=0.0)
+
+    asyncio.run(runtime._refresh_usb_adc_sample())
+
+    assert runtime._USB_ADC_STATUS["available"] is False
+    assert runtime._USB_ADC_STATUS["error"] == "usb-adc-stack-unavailable"
 
 
 def test_temperature_unavailable_stays_soft_with_diagnostics(monkeypatch):

@@ -1,6 +1,6 @@
 # OqlOS — lista zadań
 
-Stan: **2026-07-30**, bazowy `main` `30a6691`, z kolejną partią `NEXT-04`.
+Stan: **2026-07-30**, bazowy `main` `e14353d`, z kolejną partią `NEXT-04`.
 
 Ten plik jest operacyjną checklistą. Szczegółowe uzasadnienie, zależności i
 kryteria ukończenia znajdują się w
@@ -11,7 +11,7 @@ należy zaktualizować oba dokumenty oraz dołączyć wynik testów i commit.
 
 - 194 publiczne trasy API;
 - 83 surowe wyjątki;
-- 222 szerokie handlery `except` (w tym jawne granice storage i adapterów);
+- 216 szerokich handlerów `except` (w tym jawne granice storage i adapterów);
 - 80 tras zwracających `dict[str, Any]`;
 - 182 trasy z generyczną odpowiedzią OpenAPI;
 - 154 odczyty zmiennych środowiskowych poza typowaną warstwą settings;
@@ -41,7 +41,7 @@ negatywnych envelope przy HTTP 200.
 - [ ] Przejrzeć i sklasyfikować szerokie handlery w kolejności:
   1. [x] `_hw3_peripheral.py`, `state.py`, `scenarios.py`;
   2. [x] `hardware_modbus_waveshare.py`;
-  3. [ ] `hardware_runtime.py`, `hardware_modbus_routes.py`,
+  3. [x] `hardware_runtime.py`, `hardware_modbus_routes.py`,
      `hardware_modbus_settings.py`, `hardware_probe.py`, `hardware_lung.py`;
   4. [ ] `plugins.py`, `update_status.py`.
 
@@ -61,6 +61,16 @@ publikuje wyjątku, sekretu ani pełnej ścieżki. Raport zbiorczy zachowuje HTT
 per-slave degraduje jego `ok`. Surowe komunikaty plugin health również nie są
 kopiowane do raportu. Metryka szerokich handlerów spadła 228 → 222, a moduł
 Waveshare z 656 do 640 linii przy zachowanym CC=11. Bramka: 1037/1037 backend,
+149/149 frontend, build Vite oraz Ruff.
+
+Dowód grupy 3: sześć szerokich handlerów w runtime, trasach i ustawieniach
+Modbus, preflight oraz lung zastąpiono oczekiwanymi błędami I/O/runtime.
+Nieoczekiwany `AttributeError` trafia do bezpiecznej granicy
+500/`C2004-SYS-0000`. Awaria rozszerzonego adaptera płuca nie uruchamia już
+ponownie legacy aktuacji, a pluginy wstrzymane przez programowanie Modbus są
+wznawiane w `finally`. Błędy gateway, USB ADC, preflight i Tic249 publikują
+wyłącznie stabilny reason/kontekst. Metryka spadła 222 → 216; Modbus routes
+ma CC=14 zamiast 18, a lung CC=8 zamiast 10. Bramka: 1048/1048 backend,
 149/149 frontend, build Vite oraz Ruff.
 - [ ] Dla każdego przewidywalnego błędu ustalić:
   - lokalny `issue_code` i publiczny `C2004-*`;

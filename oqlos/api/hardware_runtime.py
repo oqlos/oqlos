@@ -22,6 +22,7 @@ DEFAULT_BATCH_SENSOR_IDS = ("ai01", "ai02", "ai03")
 BATCH_HEALTH_TTL_SEC = 3.0
 _BATCH_HEALTH_CACHE: dict[str, Any] = {"expires_at": 0.0, "payload": None}
 USB_ADC_FAILURE_TTL_SEC = 3.0
+USB_ADC_UNAVAILABLE_REASON = "usb-adc-stack-unavailable"
 _USB_ADC_STATUS: dict[str, Any] = {
     "available": None,
     "error": None,
@@ -298,10 +299,10 @@ async def _refresh_usb_adc_sample() -> None:
             settings.usb_adc_stack_url,
             timeout_seconds=settings.usb_adc_timeout_seconds,
         )
-    except UsbAdcStackError as exc:
+    except UsbAdcStackError:
         _USB_ADC_STATUS.update(
             available=False,
-            error=str(exc),
+            error=USB_ADC_UNAVAILABLE_REASON,
             retry_after=now + USB_ADC_FAILURE_TTL_SEC,
             cached=isinstance(_USB_ADC_SAMPLE_CACHE.get("channels"), dict),
         )
@@ -392,12 +393,16 @@ async def read_sensor_values(
                 "value": value,
                 "ok": value is not None,
             }
-        except Exception as exc:
+        except (OSError, RuntimeError):
             sensors[sensor_id] = {
                 "sensor_id": sensor_id,
                 "value": None,
                 "ok": False,
-                "error": str(exc),
+                "error": "sensor-read-failed",
+                "diagnostics": {
+                    "issue_code": "hw_modbus_no_response",
+                    "code": "C2004-HW-0012",
+                },
             }
     return sensors
 
@@ -499,10 +504,21 @@ async def read_sensors_batch(
             raise OqlosError(
                 code="hw_usb_adc_sidecar_unreachable",
                 status_code=503,
-                message=str(
-                    _USB_ADC_STATUS.get("error") or "USB ADC sidecar unavailable"
-                ),
-                detail={"sensors": sensors, "diagnostics": diagnostics},
+                detail={
+                    "architecture": "SOA",
+                    "layer": "firmware",
+                    "component": "usb-adc-stack",
+                    "stage": "sensor.batch-read",
+                    "problem_source": "hardware",
+                    "operation_id": "hardware.sensors.batch",
+                    "upstream_target": "hardware-sidecar://usb-adc-stack",
+                    "reason": USB_ADC_UNAVAILABLE_REASON,
+                    "diagnostics": {
+                        "issue_code": "hw_usb_adc_sidecar_unreachable",
+                        "adc_source": "usb-adc-stack",
+                        "available": False,
+                    },
+                },
             )
         raise OqlosError(
             code="modbus_adc_not_detected",
@@ -528,12 +544,20 @@ async def hardware_diagnose() -> dict[str, Any]:
     """Return HUI-friendly hardware diagnostics without failing the request."""
     try:
         health = await cached_gateway_health(force=True)
-    except Exception as exc:
+    except (OSError, RuntimeError) as exc:
         raise OqlosError(
             code="config_unavailable",
             status_code=503,
-            message=f"Hardware gateway health unavailable: {exc}",
-            detail={"error": str(exc)},
+            detail={
+                "architecture": "SOA",
+                "layer": "firmware",
+                "component": "hardware-gateway",
+                "stage": "gateway.health",
+                "problem_source": "hardware",
+                "operation_id": "hardware.diagnose",
+                "upstream_target": "hardware-runtime://gateway",
+                "reason": "gateway-health-unavailable",
+            },
         ) from exc
 
     sensors = await read_sensor_values(list(DEFAULT_BATCH_SENSOR_IDS), health=health)

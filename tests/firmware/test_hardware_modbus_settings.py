@@ -126,3 +126,60 @@ def test_runtime_plugin_overrides_use_persisted_io_profile(monkeypatch):
     assert applied["modbus-io"]["device_id"] == 2
     assert plugin.connection_params["serial_port"] == "/dev/ttyUSB0"
     assert plugin.connection_params["baudrate"] == 4800
+
+
+def _profile_settings() -> SimpleNamespace:
+    return SimpleNamespace(
+        modbus_baud=4800,
+        modbus_adc_baud=9600,
+        modbus_parity="N",
+        modbus_adc_parity="E",
+        modbus_device_id=1,
+        modbus_adc_device_id=2,
+        modbus_serial_port="/dev/ttyUSB0",
+        modbus_adc_serial_port="/dev/ttyUSB1",
+    )
+
+
+def test_profile_serial_override_treats_filesystem_error_as_stale(monkeypatch):
+    class _BrokenPath:
+        def __init__(self, _value):
+            pass
+
+        def exists(self):
+            raise OSError("password=hunter2 /srv/private")
+
+    settings._USER_SETTINGS = {
+        "profiles": {"modbus-io": {"serial_port": "/dev/password=hunter2"}}
+    }
+    monkeypatch.setattr(settings, "Path", _BrokenPath)
+
+    profile = settings._merge_profile_config(
+        "modbus-io",
+        _profile_settings(),
+        settings._runtime_serial_ports(),
+    )
+
+    assert profile["serial_port"] == "/dev/ttyUSB0"
+    assert profile["serial_port_override"] == ""
+
+
+def test_profile_serial_override_does_not_mask_programming_error(monkeypatch):
+    class _BrokenPath:
+        def __init__(self, _value):
+            pass
+
+        def exists(self):
+            raise AttributeError("programming defect")
+
+    settings._USER_SETTINGS = {
+        "profiles": {"modbus-io": {"serial_port": "/dev/ttyTEST"}}
+    }
+    monkeypatch.setattr(settings, "Path", _BrokenPath)
+
+    with pytest.raises(AttributeError, match="programming defect"):
+        settings._merge_profile_config(
+            "modbus-io",
+            _profile_settings(),
+            settings._runtime_serial_ports(),
+        )

@@ -9,12 +9,12 @@ from typing import Any
 from oqlos.api import hardware_platform as platform
 from oqlos.api.hardware_gateway import is_plugin_compatible as _is_plugin_compatible, try_get_hardware_gateway
 from oqlos.api.hardware_probe_devices import (
-    _local_ads1115_probe_allowed,
+    _local_ads1115_probe_allowed,  # noqa: F401 - compatibility re-export
     _probe_configured_waveshare_rtu,
     _probe_dri0050,
-    _probe_i2c_ads1115,
+    _probe_i2c_ads1115,  # noqa: F401 - compatibility re-export
     _probe_tic249,
-    _probe_waveshare_rtu,
+    _probe_waveshare_rtu,  # noqa: F401 - compatibility re-export
     _scan_usb_devices,
 )
 from oqlos.api.hardware_registry import HARDWARE_REGISTRY
@@ -97,7 +97,7 @@ def _modbus_preflight_report() -> dict[str, Any]:
             report = gateway.modbus_preflight_report()
             if isinstance(report, dict):
                 return report
-        except Exception as exc:
+        except (ImportError, OSError, RuntimeError, ValueError):
             issue_code = "modbus_preflight_exception"
             return {
                 "ok": False,
@@ -108,7 +108,7 @@ def _modbus_preflight_report() -> dict[str, Any]:
                         "severity": "error",
                         "code": issue_code,
                         "public_code": c2004_code_for_issue(issue_code),
-                        "message": str(exc),
+                        "message": "Modbus preflight could not produce a report",
                         "modules": ["modbus-io", "modbus-adc"],
                         "repair": {},
                     }
@@ -125,10 +125,14 @@ def _modbus_preflight_report() -> dict[str, Any]:
 def _modbus_repair_guidance(health: dict[str, Any] | None = None) -> dict[str, Any]:
     try:
         from pimodbus.repair import build_runtime_repair_guidance
-    except ImportError as exc:
+    except ImportError:
         return {
             "available": False,
-            "error": f"pimodbus repair module is not available: {exc}",
+            "error": "pimodbus-repair-unavailable",
+            "diagnostics": {
+                "issue_code": "pimodbus_unavailable",
+                "code": c2004_code_for_issue("pimodbus_unavailable"),
+            },
         }
 
     return build_runtime_repair_guidance(

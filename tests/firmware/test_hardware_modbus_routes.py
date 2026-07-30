@@ -356,3 +356,36 @@ def test_wizard_program_exception_is_sanitized(monkeypatch) -> None:
     )
     assert "hunter2" not in response.text
     assert "/srv/private" not in response.text
+
+
+def test_wizard_programming_error_is_not_masked_and_plugins_resume(monkeypatch) -> None:
+    resumed: list[set[str]] = []
+
+    class _Gateway:
+        async def apply_modbus_user_settings(self, plugin_ids: set[str]):
+            resumed.append(plugin_ids)
+            return {"ok": True, "actuation": False}
+
+    async def _pause(_serial_port: str):
+        return _Gateway(), {"modbus-io"}
+
+    def _fail(**_kwargs):
+        raise AttributeError("password=hunter2 /srv/private")
+
+    monkeypatch.setattr(modbus_hw, "try_get_hardware_gateway", lambda: None)
+    monkeypatch.setattr(modbus_hw, "_pause_modbus_plugins_on_serial", _pause)
+    monkeypatch.setattr(modbus_hw, "_modbus_wizard_program_isolated", _fail)
+
+    response = _modbus_client().post(
+        "/api/v1/hardware/modbus/wizard/program-isolated",
+        json={"serial_port": "/dev/ttyTEST", "confirm_isolated": True},
+        headers={"X-Correlation-ID": "cor-wizard-programming-error"},
+    )
+
+    assert response.status_code == 500
+    body = response.json()
+    assert body["code"] == "C2004-SYS-0000"
+    assert body["correlation_id"] == "cor-wizard-programming-error"
+    assert resumed == [{"modbus-io"}]
+    assert "hunter2" not in response.text
+    assert "/srv/private" not in response.text

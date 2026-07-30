@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, NoReturn
 
 from fastapi import APIRouter, Body
 
@@ -13,6 +13,11 @@ from oqlos.hardware.artificial_lung import get_peripheral_status as get_artifici
 from oqlos.hardware.tic249_units import TIC249_DEFAULT_TARGET_VELOCITY
 
 router = APIRouter(tags=["hardware-lung"])
+_LUNG_OPERATION_BY_STATUS = {
+    "start": "artificial-lung.start",
+    "stopped": "artificial-lung.stop",
+    "de-energized": "artificial-lung.disable",
+}
 
 
 def command_payload(payload: dict[str, Any]) -> tuple[str, dict[str, Any]]:
@@ -53,13 +58,32 @@ def command_payload(payload: dict[str, Any]) -> tuple[str, dict[str, Any]]:
     return command, args
 
 
-def _raise_tic249_failure(status: str, *, error: str | None = None, detail: dict[str, Any] | None = None) -> None:
-    raise OqlosError(
+def _raise_tic249_failure(
+    status: str,
+    *,
+    reason: str = "tic249-command-failed",
+    cause: Exception | None = None,
+) -> NoReturn:
+    error = OqlosError(
         code="hw_tic249_sidecar_unreachable",
         status_code=503,
-        message=error or f"Lung motor command failed ({status})",
-        detail=detail or {"status": status},
+        detail={
+            "architecture": "SOA",
+            "layer": "firmware",
+            "component": "artificial-lung",
+            "stage": "command.execute",
+            "problem_source": "hardware",
+            "operation_id": _LUNG_OPERATION_BY_STATUS.get(
+                status, "artificial-lung.command"
+            ),
+            "upstream_target": "hardware-plugin://motor-tic249",
+            "status": status,
+            "reason": reason,
+        },
     )
+    if cause is not None:
+        raise error from cause
+    raise error
 
 
 async def lung_state_response(action: Any, status: str) -> dict[str, Any]:
@@ -79,16 +103,15 @@ async def set_lung(steps: int = 500, speed: int = TIC249_DEFAULT_TARGET_VELOCITY
             maybe_result = await gateway.set_lung_result(steps=steps, speed=speed, cycles=cycles, pause=pause)
             if isinstance(maybe_result, dict):
                 detailed_result = maybe_result
-        except Exception:
-            detailed_result = None
+            else:
+                _raise_tic249_failure("start", reason="invalid-adapter-response")
+        except (OSError, RuntimeError) as exc:
+            _raise_tic249_failure("start", cause=exc)
 
     if detailed_result is None:
         ok = await gateway.set_lung(steps=steps, speed=speed, cycles=cycles, pause=pause)
         if not ok:
-            _raise_tic249_failure(
-                "start",
-                detail={"steps": steps, "speed": speed, "cycles": cycles, "pause": pause},
-            )
+            _raise_tic249_failure("start")
         return {"steps": steps, "speed": speed, "cycles": cycles, "pause": pause, "ok": True}
 
     payload: dict[str, Any] = {
@@ -98,16 +121,10 @@ async def set_lung(steps: int = 500, speed: int = TIC249_DEFAULT_TARGET_VELOCITY
         "pause": pause,
         "ok": bool(detailed_result.get("success", False)),
     }
-    if detailed_result.get("error"):
-        payload["error"] = detailed_result.get("error")
     if detailed_result.get("data") is not None:
         payload["data"] = detailed_result.get("data")
     if not payload["ok"]:
-        _raise_tic249_failure(
-            "start",
-            error=str(detailed_result.get("error") or "Lung motor command failed"),
-            detail=payload,
-        )
+        _raise_tic249_failure("start")
     return payload
 
 

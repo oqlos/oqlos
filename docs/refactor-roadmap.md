@@ -310,7 +310,17 @@ moduł Waveshare z 656 do 640 linii przy zachowanym CC=11. Audyt wskazuje 222
 szerokie handlery; bramka: 1037/1037 backend, 149/149 frontend, build Vite i
 Ruff.
 
-Pozostały zakres: sklasyfikować 83 surowe wyjątki i 222 szerokie handlery
+Trzecia grupa audytu usunęła sześć szerokich handlerów z runtime, tras i
+ustawień Modbus, preflight oraz lung. Oczekiwane awarie I/O/runtime mają
+stabilne kody i kontekst, a błędy programu przechodzą do centralnego
+500/`C2004-SYS-0000`. Rozszerzony adapter płuca nie powoduje już drugiej
+aktuacji przez legacy fallback, a programowanie Modbus wznawia pluginy w
+`finally` również przy defekcie programu. Modbus routes spadł z CC=18 do CC=14,
+lung z CC=10 do CC=8, a pozostałe moduły nie zwiększyły CC. Audyt wskazuje 216
+szerokich handlerów; bramka: 1048/1048 backend, 149/149 frontend, build Vite i
+Ruff.
+
+Pozostały zakres: sklasyfikować 83 surowe wyjątki i 216 szerokich handlerów
 OqlOS, rozdzielić pozostałe klasy host/proxy/plugin oraz wykonać analogiczną
 inwentaryzację i kontrakty po stronie C2004/POA.
 

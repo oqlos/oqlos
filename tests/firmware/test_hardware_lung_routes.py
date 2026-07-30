@@ -95,3 +95,58 @@ def test_lung_stop_raises_typed_error_when_tic249_unavailable(monkeypatch):
         asyncio.run(lung.stop_lung())
     assert caught.value.public_code == "C2004-HW-0012"
     assert caught.value.issue_code == "hw_tic249_sidecar_unreachable"
+
+
+def test_lung_start_adapter_failure_is_safe_and_does_not_retry_motion(monkeypatch):
+    class _Gateway:
+        legacy_calls = 0
+
+        async def set_lung_result(self, **_kwargs):
+            raise OSError("password=hunter2 /srv/private")
+
+        async def set_lung(self, **_kwargs):
+            type(self).legacy_calls += 1
+            raise AssertionError("motion must not be retried")
+
+    gateway = _Gateway()
+    monkeypatch.setattr(lung, "get_hardware_gateway", lambda: gateway)
+    app = FastAPI()
+    install_oqlos_error_handler(app)
+    app.include_router(lung.router, prefix="/api/v1/hardware")
+
+    response = TestClient(app, raise_server_exceptions=False).post(
+        "/api/v1/hardware/lung",
+        headers={"X-Correlation-ID": "cor-lung-start"},
+    )
+
+    assert response.status_code == 503
+    body = response.json()
+    assert body["code"] == "C2004-HW-0012"
+    assert body["correlation_id"] == "cor-lung-start"
+    assert body["component"] == "artificial-lung"
+    assert body["stage"] == "command.execute"
+    assert body["metadata"]["context"]["upstream_target"] == (
+        "hardware-plugin://motor-tic249"
+    )
+    assert gateway.legacy_calls == 0
+    assert "hunter2" not in response.text
+    assert "/srv/private" not in response.text
+
+
+def test_lung_start_does_not_mask_programming_error_or_retry(monkeypatch):
+    class _Gateway:
+        legacy_calls = 0
+
+        async def set_lung_result(self, **_kwargs):
+            raise AttributeError("programming defect")
+
+        async def set_lung(self, **_kwargs):
+            type(self).legacy_calls += 1
+            return True
+
+    gateway = _Gateway()
+    monkeypatch.setattr(lung, "get_hardware_gateway", lambda: gateway)
+
+    with pytest.raises(AttributeError, match="programming defect"):
+        asyncio.run(lung.set_lung())
+    assert gateway.legacy_calls == 0
