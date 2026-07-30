@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-07-30T08:09:24+00:00",
+  "generated_at": "2026-07-30T09:16:23+00:00",
   "root": "/home/tom/github/oqlos/oqlos",
-  "git_commit": "3b3d6efb2dae86d36ef5ad65173cf99fad697bc6",
+  "git_commit": "15f89acdb02c58043cf2a08e9c625b39b939a5f1",
   "git_dirty": false,
   "git_dirty_including_generated_artifacts": true,
   "git_status_excluding_generated_artifacts": [],
@@ -16,10 +16,10 @@
     }
   },
   "artifacts": {
-    "analysis.toon.yaml": "a11b3804b57238e3857e253f963d3e45c699c30c344dc452c587bf7df923a67a",
-    "map.toon.yaml": "7c15b7f9357cee2cce08087f1fa74c70e7995a241a90e1fcebee2501d6e4dae7"
+    "analysis.toon.yaml": "99b7e181ebfc60c2337af09d0af8f8f543cd9baf554a9665cece032a8f1a84ef",
+    "map.toon.yaml": "ac46adb29a208ba6932c0508aa70d04e1aef18a3f29cf53f77a2fd763bea0e37"
   },
-  "source_file_count": 404,
+  "source_file_count": 405,
   "public_routes": [
     {
       "file": "oqlos/api/_hw3_cqrs.py",
@@ -5649,36 +5649,6 @@
       "exception": "Exception"
     },
     {
-      "file": "oqlos/api/hardware_modbus_waveshare.py",
-      "line": 130,
-      "exception": "Exception"
-    },
-    {
-      "file": "oqlos/api/hardware_modbus_waveshare.py",
-      "line": 149,
-      "exception": "Exception"
-    },
-    {
-      "file": "oqlos/api/hardware_modbus_waveshare.py",
-      "line": 476,
-      "exception": "Exception"
-    },
-    {
-      "file": "oqlos/api/hardware_modbus_waveshare.py",
-      "line": 535,
-      "exception": "Exception"
-    },
-    {
-      "file": "oqlos/api/hardware_modbus_waveshare.py",
-      "line": 610,
-      "exception": "Exception"
-    },
-    {
-      "file": "oqlos/api/hardware_modbus_waveshare.py",
-      "line": 154,
-      "exception": "Exception"
-    },
-    {
       "file": "oqlos/api/hardware_modbus_wizard.py",
       "line": 156,
       "exception": "Exception"
@@ -6807,7 +6777,7 @@
     },
     {
       "file": "oqlos/api/hardware_modbus_waveshare.py",
-      "lines": 656
+      "lines": 640
     },
     {
       "file": "frontend/src/pages/HardwareRestart.jsx",
@@ -6895,7 +6865,7 @@
     "routes_with_false_success_at_http_200": 0,
     "environment_reads_outside_settings": 154,
     "raw_exceptions": 83,
-    "broad_exception_handlers": 228,
+    "broad_exception_handlers": 222,
     "large_modules": 30,
     "parse_failures": 0
   }
