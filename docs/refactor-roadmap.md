@@ -39,10 +39,10 @@ Pomiary bazowe wykonano 2026-07-28. Wyniki `NEXT-01` i `NEXT-02` odświeżono
 | Analiza statyczna | odświeżona 2026-07-29: OqlOS 194 tras, 80 `dict[str, Any]`, 3 kandydatów HTTP 200 z negatywnym wynikiem, 154 odczyty env i 30 dużych modułów; C2004 odpowiednio 668, 186, 15, 317 i 158 |
 | Deploy `.122`/`.109` | niezweryfikowany w tym przebiegu; wcześniejsze logi wskazywały niedostępne `.122:8202` i proxy 502 |
 
-Bieżący stan wykonawczy po ósmej grupie `NEXT-04`: commit `69b85fe`, 194
-trasy, 80 zwrotów `dict[str, Any]`, 182 generyczne odpowiedzi OpenAPI, 81
-surowych wyjątków, 183 szerokie handlery, 154 odczyty env, 30 dużych modułów i
-0 negatywnych odpowiedzi przy HTTP 200. Lokalna bramka: 1090/1090 backend,
+Bieżący stan wykonawczy po dziewiątej grupie `NEXT-04`: commit `ff9b245`, 194
+trasy, 80 zwrotów `dict[str, Any]`, 182 generyczne odpowiedzi OpenAPI, 78
+surowych wyjątków, 180 szerokich handlerów, 154 odczyty env, 30 dużych modułów
+i 0 negatywnych odpowiedzi przy HTTP 200. Lokalna bramka: 1098/1098 backend,
 149/149 frontend, build Vite oraz Ruff. Główny chunk ma 540,19 kB i pozostaje
 jawnym zadaniem `NEXT-10`.
 
@@ -370,7 +370,15 @@ Audyt wskazuje 183 szerokie handlery i 81 surowych wyjątków; polityka granicy
 mieści się w osobnym module 103-liniowym, a adapter ma 511 linii. Bramka:
 1090/1090 backend, 149/149 frontend, build Vite, Ruff i `uv lock --check`.
 
-Pozostały zakres: sklasyfikować 81 surowych wyjątków i 183 szerokie handlery
+Dziewiąta grupa sklasyfikowała rejestr pluginów. Lookup i konfiguracja mają
+typowane błędy, lifecycle łapie oczekiwane klasy operacyjne, a defekty programu
+pozostają widoczne. Jedyna szeroka granica jest celową izolacją importu
+zewnętrznego entry pointu i loguje tylko typ wyjątku. Health zwraca stabilny
+komunikat bez danych wyjątku. Audyt wskazuje 180 szerokich handlerów i 78
+surowych wyjątków; bramka: 1098/1098 backend, 149/149 frontend, build Vite,
+Ruff i `uv lock --check`.
+
+Pozostały zakres: sklasyfikować 78 surowych wyjątków i 180 szerokich handlerów
 OqlOS, rozdzielić pozostałe klasy host/proxy/plugin oraz wykonać analogiczną
 inwentaryzację i kontrakty po stronie C2004/POA.
 
@@ -566,8 +574,8 @@ Praktyczne fale wdrożeniowe:
 
 Stan 2026-07-30: Fala 0 i implementacja `NEXT-03` są zakończone oraz
 potwierdzone w CI. Fizyczna weryfikacja `NEXT-03` pozostaje częścią bramki
-wdrożeniowej. `NEXT-04` trwa; po ośmiu grupach następny aktywny zakres to
-rejestr i pluginy sprzętowe. Legacy `gateway.py` wymaga
+wdrożeniowej. `NEXT-04` trwa; po dziewięciu grupach następny aktywny zakres to
+pluginy sprzętowe `lung`, `modbus`, `modbus_adc` i `piadc`. Legacy `gateway.py` wymaga
 najpierw audytu konsumentów i planu deprecjacji.
 
 ## 6. Obowiązkowe bramki weryfikacji

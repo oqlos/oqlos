@@ -173,6 +173,16 @@ module 103-liniowym, a adapter ma 511 linii zamiast przejściowych 607. Bramka
 to 1090 testów backendowych, 149 frontendowych, build Vite, Ruff i
 `uv lock --check`.
 
+Dziewiąta grupa przeglądu objęła `plugins/registry.py`. Trzy surowe wyjątki
+lookup/walidacji zastąpiono typowanymi błędami, a trzy handlery lifecycle
+zawężono do oczekiwanych błędów zależności, I/O, HTTP, runtime i walidacji.
+Defekt programu przechodzi do bezpiecznej granicy 500. Jedyny szeroki handler
+pozostaje celową izolacją importu kodu zewnętrznego entry pointu i publikuje w
+logu wyłącznie typ wyjątku. Health ma stabilny komunikat i nie kopiuje sekretu,
+ścieżki ani tekstu wyjątku. Snapshot wskazuje 180 szerokich handlerów, 78
+surowych wyjątków i 0 błędów parsowania; bramka to 1098 testów backendowych,
+149 frontendowych, build Vite, Ruff i `uv lock --check`.
+
 ### Przegląd istniejących logów wykonawczych
 
 Logi w `iql-run-logs/` i `oql-run-logs/` pochodzą z 2026-04-15, więc nie są
@@ -208,9 +218,9 @@ OQL TypeScript (1 441), inicjalizator frontendu (1 250) i runtime scenariusza
 
 1. Implementacja `NEXT-03` jest zakończona; przed wdrożeniem nadal wymaga
    fizycznej walidacji zasilania i bezpiecznej aktuacji w `NEXT-12`.
-2. Osiem grup `NEXT-04` zmniejszyło bieżący zakres OqlOS do 81 surowych
-   wyjątków i 183 szerokich handlerów. Następne aktywne hotspoty to
-   rejestr i pluginy sprzętowe; legacy `gateway.py`
+2. Dziewięć grup `NEXT-04` zmniejszyło bieżący zakres OqlOS do 78 surowych
+   wyjątków i 180 szerokich handlerów. Następne aktywne hotspoty to pluginy
+   `lung`, `modbus`, `modbus_adc` i `piadc`; legacy `gateway.py`
    wymaga najpierw audytu konsumentów i planu deprecjacji.
 3. `NEXT-07` powinno wprowadzić allowlistę settings i blokować nowe odczyty env;
    154/317 trafień to inwentarz migracji, nie założenie, że każde jest błędem.

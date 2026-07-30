@@ -1,6 +1,6 @@
 # OqlOS — lista zadań
 
-Stan: **2026-07-30**, commit implementacji `69b85fe`, po ósmej grupie
+Stan: **2026-07-30**, commit implementacji `ff9b245`, po dziewiątej grupie
 `NEXT-04`.
 
 Ten plik jest operacyjną checklistą. Szczegółowe uzasadnienie, zależności i
@@ -11,8 +11,8 @@ należy zaktualizować oba dokumenty oraz dołączyć wynik testów i commit.
 ## Bieżące metryki
 
 - 194 publiczne trasy API;
-- 81 surowych wyjątków;
-- 183 szerokie handlery `except` (w tym jawne granice storage i adapterów);
+- 78 surowych wyjątków;
+- 180 szerokich handlerów `except` (w tym jawne granice storage i adapterów);
 - 80 tras zwracających `dict[str, Any]`;
 - 182 trasy z generyczną odpowiedzią OpenAPI;
 - 154 odczyty zmiennych środowiskowych poza typowaną warstwą settings;
@@ -49,7 +49,8 @@ negatywnych envelope przy HTTP 200.
      `ui_prefs_routes.py`, `ui_prefs_store.py`;
   6. [x] `plugin_gateway.py`;
   7. [x] `mqtt_oql_bridge.py`, `mqtt_protocol.py`;
-  8. [x] `firmware_adapter.py`.
+  8. [x] `firmware_adapter.py`;
+  9. [x] `plugins/registry.py`.
 
 Dowód grupy 1: oczekiwane błędy HTTP/JSON i parsera mają wąskie handlery;
 awaria programistyczna przechodzi do sanitizowanej granicy 500. Cztery
@@ -103,6 +104,15 @@ Ruff `F821,F811`, lint zmienionych plików i `uv lock --check`. Polityka granicy
 jest w osobnym, 103-liniowym module; adapter ma 511 linii zamiast 607 po
 pierwszym utwardzeniu.
 
+Dowód grupy 9: rejestr pluginów ma typowane błędy lookup i konfiguracji,
+a lifecycle łapie wyłącznie oczekiwane błędy zależności, I/O, HTTP, runtime i
+walidacji. `AttributeError` nie jest maskowany. Jedyna pozostała szeroka
+granica izoluje import kodu zewnętrznego entry pointu; test dowodzi, że loguje
+tylko typ wyjątku, bez nazwy wejścia, komunikatu, ścieżki i sekretu. Health nie
+publikuje już surowego wyjątku i aktualizuje stan instancji na `ERROR`. Metryka
+spadła 183 → 180 szerokich handlerów oraz 81 → 78 surowych wyjątków; bramka:
+1098/1098 backend, 149/149 frontend, build Vite, Ruff i `uv lock --check`.
+
 - [ ] Dla każdego przewidywalnego błędu ustalić:
   - lokalny `issue_code` i publiczny `C2004-*`;
   - właściwy HTTP status, severity, retryability i ownera;
@@ -124,7 +134,7 @@ pierwszym utwardzeniu.
   - [x] `oqlos/hardware/transport/mqtt_oql_bridge.py`;
   - `oqlos/hardware/gateway.py`;
   - [x] `oqlos/hardware/firmware_adapter.py`;
-  - `oqlos/hardware/plugins/registry.py`;
+  - [x] `oqlos/hardware/plugins/registry.py`;
   - pluginach `lung`, `modbus`, `modbus_adc` i `piadc`.
 - [ ] Oznaczyć szerokie handlery, które są celowymi granicami adaptera, i
   udowodnić testem, że publikują wyłącznie bezpieczny kontekst.
