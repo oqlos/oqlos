@@ -21,69 +21,21 @@ except ImportError:
     httpx = None  # type: ignore
 
 from oqlos.config import get_settings
+from oqlos.hardware.firmware_adapter_boundary import (
+    FIRMWARE_OPERATION_ERRORS,
+    HTTP_STATUS_ERRORS as _HTTP_STATUS_ERRORS,
+    FirmwareDependencyError,
+    FirmwareRejectedError,
+    extract_failure_message as _extract_failure_message,
+    firmware_failure as _firmware_failure,
+    parse_numeric as _parse_numeric,
+    response_mapping as _response_mapping,
+    sensor_value as _sensor_value,
+)
 from oqlos.hardware.tic249_units import TIC249_DEFAULT_TARGET_VELOCITY
 
 
 logger = logging.getLogger(__name__)
-
-
-class FirmwareAdapterError(RuntimeError):
-    """Expected failure at the legacy firmware HTTP boundary."""
-
-
-class FirmwareDependencyError(FirmwareAdapterError):
-    """The HTTP client required by the adapter is unavailable."""
-
-
-class FirmwarePayloadError(FirmwareAdapterError):
-    """A firmware endpoint returned an invalid payload."""
-
-
-class FirmwareRejectedError(FirmwareAdapterError):
-    """A firmware endpoint explicitly rejected a command."""
-
-
-_HTTP_ERRORS = (httpx.HTTPError,) if httpx is not None else ()
-_HTTP_STATUS_ERRORS = (httpx.HTTPStatusError,) if httpx is not None else ()
-FIRMWARE_OPERATION_ERRORS = (OSError, FirmwareAdapterError, *_HTTP_ERRORS)
-
-
-def _response_mapping(response: Any) -> dict[str, Any]:
-    """Decode an HTTP response without letting malformed JSON masquerade as success."""
-    try:
-        payload = response.json()
-    except (TypeError, ValueError) as exc:
-        raise FirmwarePayloadError("invalid firmware JSON response") from exc
-    if not isinstance(payload, dict):
-        raise FirmwarePayloadError("firmware response must be an object")
-    return payload
-
-
-def _sensor_value(payload: dict[str, Any], key: str) -> float:
-    try:
-        return float(payload.get(key, 0.0))
-    except (TypeError, ValueError) as exc:
-        raise FirmwarePayloadError("invalid firmware sensor value") from exc
-
-
-def _firmware_failure(reason: str) -> dict[str, Any]:
-    """Return the stable internal envelope consumed by the legacy OQL executor."""
-    return {
-        "ok": False,
-        "detail": "Required hardware is unavailable",
-        "data": {},
-        "status": 503,
-        "error_code": "C2004-HW-0012",
-        "issue_code": reason,
-        "architecture": "SOA",
-        "layer": "firmware",
-        "component": "firmware-adapter",
-        "stage": "command.execute",
-        "problem_source": "hardware-runtime://firmware-adapter",
-        "operation_id": "firmware.command.dispatch",
-        "owner": "owner://domain/hardware",
-        "retryable": False,
-    }
 
 
 # ── Peripheral name mapping ──────────────────────────────────────────────────
@@ -169,34 +121,6 @@ _SENSOR_MAP = {
 }
 
 
-def _first_nonempty(data: dict, *keys: str) -> Any:
-    """Return the first non-None, non-empty value for any of the given keys."""
-    for key in keys:
-        val = data.get(key)
-        if val:
-            return val
-    return None
-
-
-_FAILURE_STATUS_VALUES = {"error", "failed", "failure"}
-
-
-def _extract_failure_message(data: dict) -> Any:
-    """Extract a failure message from an API response dict, or None if no failure."""
-    message: Any = None
-    ok = data.get("ok")
-    if isinstance(ok, dict) and ok.get("success") is False:
-        message = _first_nonempty(ok, "error", "message", "detail")
-    elif ok is False:
-        message = _first_nonempty(data, "error", "message", "detail")
-    if data.get("success") is False:
-        message = _first_nonempty(data, "error", "message", "detail") or message
-    status = data.get("status")
-    if isinstance(status, str) and status.lower() in _FAILURE_STATUS_VALUES:
-        message = _first_nonempty(data, "error", "message", "detail") or message
-    return message
-
-
 class FirmwareAdapter:
     """HTTP bridge between the OQL interpreter and firmware simulator."""
 
@@ -265,18 +189,6 @@ class FirmwareAdapter:
         the HardwareGateway actually drives real hardware.
         Falls back to PUT /api/v1/peripherals/{pid} for unknown types.
         """
-        import re
-
-        def _parse_numeric(val):
-            """Extract numeric value from string like '5 l/min' or '10 mbar'."""
-            if val is None:
-                return 0.0
-            if isinstance(val, (int, float)):
-                return float(val)
-            # Extract first numeric value from string
-            match = re.search(r"[-+]?[0-9]*\.?[0-9]+", str(val))
-            return float(match.group()) if match else 0.0
-
         pid = self._resolve_peripheral(target)
 
         # Route to hardware-specific endpoints for real device control
@@ -597,11 +509,3 @@ class FirmwareAdapter:
                 type(exc).__name__,
             )
             return _firmware_failure("firmware-command-unavailable")
-
-
-def _parse_numeric(s: str) -> float:
-    """Parse numeric value from OQL args like '5l', '7.0 mbar', '100%'."""
-    import re
-
-    m = re.search(r"[-+]?\d*\.?\d+", s)
-    return float(m.group()) if m else 0.0
