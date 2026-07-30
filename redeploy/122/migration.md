@@ -74,6 +74,7 @@ RUNBOOK can run them manually over ssh if the automation needs adjusting.
 set -euo pipefail
 mkdir -p /home/${BOARDNET_SSH_USER}/oqlos/oqlos \
          /home/${BOARDNET_SSH_USER}/oqlos/oql-scenario \
+         /home/${BOARDNET_SSH_USER}/oqlos-adapters \
          /home/${BOARDNET_SSH_USER}/maskservice/config \
          /home/${BOARDNET_SSH_USER}/maskservice/logs \
          /home/${BOARDNET_SSH_USER}/maskservice/mosquitto \
@@ -268,6 +269,16 @@ echo "PASS: persistent journal + BCM watchdog + boardnet-watchdog-audit.timer (b
 #!/bin/bash
 set -euo pipefail
 mkdir -p /home/${BOARDNET_SSH_USER}/maskservice/config /home/${BOARDNET_SSH_USER}/maskservice/mosquitto /home/${BOARDNET_SSH_USER}/maskservice/logs
+MQTT_ENV=/home/${BOARDNET_SSH_USER}/maskservice/config/oql-mqtt.env
+if [ ! -f "$MQTT_ENV" ]; then
+  install -m 0600 /dev/null "$MQTT_ENV"
+fi
+if grep -qE '^OQLOS_OQL_MQTT_USERNAME=' "$MQTT_ENV"; then
+  sed -i 's/^OQLOS_OQL_MQTT_USERNAME=.*/OQLOS_OQL_MQTT_USERNAME=oqlos/' "$MQTT_ENV"
+else
+  printf 'OQLOS_OQL_MQTT_USERNAME=oqlos\n' >> "$MQTT_ENV"
+fi
+chmod 600 "$MQTT_ENV"
 if ! command -v mosquitto >/dev/null 2>&1; then
   sudo apt-get update -qq
   sudo apt-get install -y git python3-venv mosquitto mosquitto-clients
@@ -279,8 +290,8 @@ cp /home/${BOARDNET_SSH_USER}/maskservice/boardnet-config/mosquitto.conf /home/$
 
 if [ ! -f /home/${BOARDNET_SSH_USER}/maskservice/config/mosquitto.passwd ]; then
   PW="${OQLOS_OQL_MQTT_PASSWORD:-}"
-  if [ -z "$PW" ] && [ -f /home/${BOARDNET_SSH_USER}/maskservice/config/oql-mqtt.env ]; then
-    PW=$(grep -E '^OQLOS_OQL_MQTT_PASSWORD=' /home/${BOARDNET_SSH_USER}/maskservice/config/oql-mqtt.env | head -1 | cut -d= -f2-)
+  if [ -z "$PW" ]; then
+    PW=$(grep -E '^OQLOS_OQL_MQTT_PASSWORD=' "$MQTT_ENV" | head -1 | cut -d= -f2- || true)
   fi
   if [ -z "$PW" ] || [ "$PW" = "CHANGE_ME_ON_PI" ]; then
     echo "FAIL: ustaw OQLOS_OQL_MQTT_PASSWORD w ~/maskservice/config/oql-mqtt.env przed deployem brokera" >&2
@@ -688,6 +699,12 @@ mkdir -p "$ROOT" /home/${BOARDNET_SSH_USER}/.config/systemd/user
 [ -f "$MCP_DIR/pyproject.toml" ] || { echo "FAIL: brak $MCP_DIR — uruchom sync_usb_adc_mcp2221"; exit 1; }
 [ -f "$DFR_DIR/pyproject.toml" ] || { echo "FAIL: brak $DFR_DIR — uruchom sync_usb_adc_dfr1184"; exit 1; }
 
+PYTHON_INCLUDE=$(python3 -c 'import sysconfig; print(sysconfig.get_paths()["include"])')
+if [ ! -f "$PYTHON_INCLUDE/Python.h" ]; then
+  sudo apt-get update -qq
+  sudo apt-get install -y python3-dev
+fi
+
 if [ ! -x "$ROOT/.venv/bin/python" ]; then
   python3 -m venv "$ROOT/.venv"
 fi
@@ -776,7 +793,7 @@ cd /home/${BOARDNET_SSH_USER}/oqlos/oqlos
 _new_venv=0
 if [ ! -x /home/${BOARDNET_SSH_USER}/oqlos/venv/bin/oqlos-server ]; then
   python3 -m venv /home/${BOARDNET_SSH_USER}/oqlos/venv
-  /home/${BOARDNET_SSH_USER}/oqlos/venv/bin/pip install -q --upgrade pip
+  /home/${BOARDNET_SSH_USER}/oqlos/venv/bin/pip install -q --upgrade pip setuptools wheel
   _new_venv=1
   echo "PASS: utworzono /home/${BOARDNET_SSH_USER}/oqlos/venv"
 else
@@ -1911,25 +1928,25 @@ extra_steps:
     action: inline_script
     description: "Sidecar DFRobot DRI0050 (:8203)"
     command_ref: deploy-dri0050-motor-service
-    timeout: 180
+    timeout: 600
 
   - id: deploy_pirtc_sidecar
     action: inline_script
     description: "Sidecar piRTC (:8125)"
     command_ref: deploy-pirtc-sidecar
-    timeout: 120
+    timeout: 600
 
   - id: deploy_usb_adc_stack
     action: inline_script
     description: "Wspólny stos ADC MCP2221A + DFR1184 (:8214 loopback)"
     command_ref: deploy-usb-adc-stack
-    timeout: 180
+    timeout: 600
 
   - id: deploy_oqlos_hw_api
     action: inline_script
     description: "OqlOS hardware API/UI + OQL-over-MQTT bridge (:8202 LAN)"
     command_ref: deploy-oqlos-hw-api
-    timeout: 300
+    timeout: 1200
 
   - id: assert_hw_node_healthy
     action: inline_script
