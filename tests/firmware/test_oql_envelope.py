@@ -7,8 +7,12 @@ import json
 import pytest
 
 from oqlos.errors import OqlosError
+from oqlos.errors.c2004_catalog_generated import CATALOG
 from oqlos.hardware.transport import OqlRequest, OqlResponse, build_topics
-from oqlos.hardware.transport.mqtt_protocol import mqtt_error_response
+from oqlos.hardware.transport.mqtt_protocol import (
+    MqttEnvelopeError,
+    mqtt_error_response,
+)
 from oqlos.tools.cql_cli.commands import run_single_command
 from oqlos.tools.cql_cli.utils import build_result_payload
 
@@ -46,7 +50,9 @@ def test_request_defaults_do_not_skip_waits():
 
 
 def test_response_json_roundtrip():
-    resp = OqlResponse("c1", ok=True, result={"ok": True, "passed": 1}, error=None, node_id="pi-hw")
+    resp = OqlResponse(
+        "c1", ok=True, result={"ok": True, "passed": 1}, error=None, node_id="pi-hw"
+    )
     back = OqlResponse.from_json(resp.to_json())
     assert back.correlation_id == "c1"
     assert back.ok is True
@@ -78,6 +84,27 @@ def test_mqtt_error_response_detects_canonical_error_code(error, expected_code):
     assert response.correlation_id == "cor-error-matrix"
     assert response.node_id == "pi-hw"
     assert response.stage == "mqtt.execute"
+    assert response.error == CATALOG[expected_code].message
+    assert str(error) not in response.error
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        b"not-json",
+        b"[]",
+        b'{"v": 999, "correlation_id": "c1"}',
+        b'{"v": 1, "timeout_ms": []}',
+    ],
+)
+def test_request_rejects_malformed_or_unsupported_envelopes(payload):
+    with pytest.raises(MqttEnvelopeError):
+        OqlRequest.from_json(payload)
+
+
+def test_response_rejects_missing_correlation_id():
+    with pytest.raises(MqttEnvelopeError):
+        OqlResponse.from_json(b'{"v": 1, "ok": false}')
 
 
 def test_topics_layout():

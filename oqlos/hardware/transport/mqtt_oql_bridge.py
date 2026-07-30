@@ -38,6 +38,7 @@ from typing import Any
 import paho.mqtt.client as mqtt
 
 from oqlos.hardware.transport.mqtt_protocol import (
+    MqttEnvelopeError,
     OqlRequest,
     OqlResponse,
     Topics as Topics,
@@ -120,7 +121,7 @@ class _PahoAsyncClient:
         try:
             self._client.loop_stop()
             self._client.disconnect()
-        except Exception:  # pragma: no cover - best-effort teardown
+        except OSError:  # pragma: no cover - best-effort network teardown
             logger.debug(
                 "OQL MQTT %s teardown error", type(self).__name__, exc_info=True
             )
@@ -187,8 +188,8 @@ class OqlMqttController(_PahoAsyncClient):
     def _resolve_response(self, payload: bytes) -> None:
         try:
             resp = OqlResponse.from_json(payload)
-        except Exception:
-            logger.warning("OQL controller got malformed response", exc_info=True)
+        except MqttEnvelopeError:
+            logger.warning("OQL controller got malformed response")
             return
         fut = self._pending.get(resp.correlation_id)
         if fut is not None and not fut.done():
@@ -197,7 +198,7 @@ class OqlMqttController(_PahoAsyncClient):
     def _fan_out_event(self, payload: bytes) -> None:
         try:
             event = json.loads(payload)
-        except Exception:
+        except (json.JSONDecodeError, UnicodeDecodeError, TypeError):
             return
         for q in list(self._event_listeners):
             try:
@@ -332,7 +333,7 @@ class OqlMqttAgent(_PahoAsyncClient):
         offline = json.dumps({"node_id": self._node_id, "online": False})
         try:
             self._publish(self.topics.status, offline, qos=1, retain=True)
-        except Exception:  # pragma: no cover
+        except OSError:  # pragma: no cover - best-effort network teardown
             pass
         await super().stop()
 
@@ -341,8 +342,8 @@ class OqlMqttAgent(_PahoAsyncClient):
             return
         try:
             req = OqlRequest.from_json(payload)
-        except Exception:
-            logger.warning("OQL agent got malformed request", exc_info=True)
+        except MqttEnvelopeError:
+            logger.warning("OQL agent got malformed request")
             return
         # Schedule async handling on the loop.
         self._loop.create_task(self._handle_request(req))
@@ -394,7 +395,11 @@ class OqlMqttAgent(_PahoAsyncClient):
                 req.correlation_id, ok=ok, result=result, node_id=self._node_id
             )
         except Exception as exc:  # never crash the agent loop
-            logger.exception("OQL agent manage verb failed")
+            logger.error(
+                "OQL agent manage verb failed (correlation_id=%s, error_type=%s)",
+                req.correlation_id,
+                type(exc).__name__,
+            )
             return _mqtt_error_response(
                 req.correlation_id,
                 exc,
@@ -413,7 +418,11 @@ class OqlMqttAgent(_PahoAsyncClient):
                     node_id=self._node_id,
                 )
 
-            from oqlos.tools.oql_cli import build_result_payload, run_single_command, run_source
+            from oqlos.tools.oql_cli import (
+                build_result_payload,
+                run_single_command,
+                run_source,
+            )
 
             common = dict(
                 mode=req.mode,
@@ -436,7 +445,11 @@ class OqlMqttAgent(_PahoAsyncClient):
                 node_id=self._node_id,
             )
         except Exception as exc:  # never crash the agent loop
-            logger.exception("OQL agent execution failed")
+            logger.error(
+                "OQL agent execution failed (correlation_id=%s, error_type=%s)",
+                req.correlation_id,
+                type(exc).__name__,
+            )
             return _mqtt_error_response(
                 req.correlation_id,
                 exc,

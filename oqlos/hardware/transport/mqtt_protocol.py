@@ -6,7 +6,27 @@ import json
 from dataclasses import asdict, dataclass
 from typing import Any
 
+from oqlos.errors import OqlosError
+from oqlos.errors.c2004_catalog_generated import CATALOG
+
 ENVELOPE_VERSION = 1
+
+
+class MqttEnvelopeError(ValueError):
+    """Raised when an MQTT request/response envelope cannot be decoded safely."""
+
+
+def _decode_envelope(raw: str | bytes) -> dict[str, Any]:
+    try:
+        data = json.loads(raw)
+    except (json.JSONDecodeError, UnicodeDecodeError, TypeError) as exc:
+        raise MqttEnvelopeError("invalid JSON envelope") from exc
+    if not isinstance(data, dict):
+        raise MqttEnvelopeError("MQTT envelope must be a JSON object")
+    version = data.get("v", ENVELOPE_VERSION)
+    if version != ENVELOPE_VERSION:
+        raise MqttEnvelopeError("unsupported MQTT envelope version")
+    return data
 
 
 @dataclass(frozen=True)
@@ -70,19 +90,22 @@ class OqlRequest(_JsonEnvelopeMixin):
 
     @classmethod
     def from_json(cls, raw: str | bytes) -> "OqlRequest":
-        data = json.loads(raw)
-        return cls(
-            correlation_id=str(data["correlation_id"]),
-            oql=str(data.get("oql", "")),
-            reply_to=str(data.get("reply_to", "")),
-            kind=str(data.get("kind", "command")),
-            mode=str(data.get("mode", "execute")),
-            sensors=data.get("sensors") or None,
-            args=data.get("args") or None,
-            skip_waits=bool(data.get("skip_waits", False)),
-            timeout_ms=int(data.get("timeout_ms", 15000)),
-            source=str(data.get("source", "")),
-        )
+        data = _decode_envelope(raw)
+        try:
+            return cls(
+                correlation_id=str(data["correlation_id"]),
+                oql=str(data.get("oql", "")),
+                reply_to=str(data.get("reply_to", "")),
+                kind=str(data.get("kind", "command")),
+                mode=str(data.get("mode", "execute")),
+                sensors=data.get("sensors") or None,
+                args=data.get("args") or None,
+                skip_waits=bool(data.get("skip_waits", False)),
+                timeout_ms=int(data.get("timeout_ms", 15000)),
+                source=str(data.get("source", "")),
+            )
+        except (KeyError, TypeError, ValueError) as exc:
+            raise MqttEnvelopeError("invalid MQTT request envelope") from exc
 
 
 @dataclass
@@ -102,19 +125,22 @@ class OqlResponse(_JsonEnvelopeMixin):
 
     @classmethod
     def from_json(cls, raw: str | bytes) -> "OqlResponse":
-        data = json.loads(raw)
-        return cls(
-            correlation_id=str(data["correlation_id"]),
-            ok=bool(data.get("ok", False)),
-            result=data.get("result"),
-            error=data.get("error"),
-            node_id=str(data.get("node_id", "")),
-            error_code=data.get("error_code"),
-            architecture=str(data.get("architecture", "SOA")),
-            layer=str(data.get("layer", "firmware")),
-            component=str(data.get("component", "oql-mqtt-agent")),
-            stage=data.get("stage"),
-        )
+        data = _decode_envelope(raw)
+        try:
+            return cls(
+                correlation_id=str(data["correlation_id"]),
+                ok=bool(data.get("ok", False)),
+                result=data.get("result"),
+                error=data.get("error"),
+                node_id=str(data.get("node_id", "")),
+                error_code=data.get("error_code"),
+                architecture=str(data.get("architecture", "SOA")),
+                layer=str(data.get("layer", "firmware")),
+                component=str(data.get("component", "oql-mqtt-agent")),
+                stage=data.get("stage"),
+            )
+        except (KeyError, TypeError, ValueError) as exc:
+            raise MqttEnvelopeError("invalid MQTT response envelope") from exc
 
 
 def mqtt_error_response(
@@ -125,11 +151,7 @@ def mqtt_error_response(
     stage: str,
 ) -> OqlResponse:
     """Map an agent failure to the same C2004 envelope as the HTTP boundary."""
-    try:
-        from oqlos.errors import OqlosError
-    except Exception:  # pragma: no cover - import guard for minimal agents
-        OqlosError = ()  # type: ignore[assignment,misc]
-    if OqlosError and isinstance(exc, OqlosError):
+    if isinstance(exc, OqlosError):
         code = exc.public_code
     elif isinstance(exc, TimeoutError):
         code = "C2004-NET-0003"
@@ -139,11 +161,12 @@ def mqtt_error_response(
         code = "C2004-HW-0012"
     else:
         code = "C2004-SYS-0000"
+    entry = CATALOG.get(code) or CATALOG["C2004-SYS-0000"]
     return OqlResponse(
         correlation_id,
         ok=False,
         result=None,
-        error=str(exc),
+        error=entry.message,
         node_id=node_id,
         error_code=code,
         stage=stage,

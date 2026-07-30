@@ -8,6 +8,7 @@ an injected mock gateway.
 from __future__ import annotations
 
 import asyncio
+import logging
 
 import pytest
 
@@ -104,12 +105,16 @@ class FakeClient:
 @pytest.fixture
 def broker(monkeypatch):
     b = FakeBroker()
-    monkeypatch.setattr(mqtt_oql_bridge, "_make_client", lambda client_id="": FakeClient(b, client_id))
+    monkeypatch.setattr(
+        mqtt_oql_bridge, "_make_client", lambda client_id="": FakeClient(b, client_id)
+    )
     return b
 
 
 async def _make_pair(broker, *, with_agent=True):
-    common = dict(host="localhost", port=1883, node_id="pi-hw", topic_prefix="oqlos/c2004")
+    common = dict(
+        host="localhost", port=1883, node_id="pi-hw", topic_prefix="oqlos/c2004"
+    )
     controller = OqlMqttController(default_timeout_ms=2000, **common)
     await controller.start()
     agent = None
@@ -139,7 +144,9 @@ async def test_ping_round_trip(broker):
 async def test_command_round_trip_executes_oql(broker):
     controller, agent = await _make_pair(broker)
     try:
-        resp = await controller.execute("SET 'VALVE-NC' 'open'", mode="dry-run", timeout=2.0)
+        resp = await controller.execute(
+            "SET 'VALVE-NC' 'open'", mode="dry-run", timeout=2.0
+        )
         assert resp.ok is True
         assert resp.result is not None
         assert resp.result["passed"] == 1
@@ -210,7 +217,9 @@ async def test_manage_verb_round_trip(broker):
 
     gw = PluginHardwareGateway(mode="mock")
     set_hardware_gateway(gw)
-    common = dict(host="localhost", port=1883, node_id="pi-hw", topic_prefix="oqlos/c2004")
+    common = dict(
+        host="localhost", port=1883, node_id="pi-hw", topic_prefix="oqlos/c2004"
+    )
     controller = OqlMqttController(default_timeout_ms=2000, **common)
     await controller.start()
     agent = OqlMqttAgent(gateway=gw, **common)
@@ -231,7 +240,9 @@ async def test_manage_unknown_verb_is_ok_false(broker):
 
     gw = PluginHardwareGateway(mode="mock")
     set_hardware_gateway(gw)
-    common = dict(host="localhost", port=1883, node_id="pi-hw", topic_prefix="oqlos/c2004")
+    common = dict(
+        host="localhost", port=1883, node_id="pi-hw", topic_prefix="oqlos/c2004"
+    )
     controller = OqlMqttController(default_timeout_ms=2000, **common)
     await controller.start()
     agent = OqlMqttAgent(gateway=gw, **common)
@@ -239,7 +250,9 @@ async def test_manage_unknown_verb_is_ok_false(broker):
     try:
         resp = await controller.manage("does-not-exist", timeout=2.0)
         assert resp.ok is False
-        assert "unknown manage verb" in (resp.error or "")
+        assert resp.error == "One or more fields are invalid"
+        assert "does-not-exist" not in (resp.error or "")
+        assert resp.error_code == "C2004-DATA-0002"
     finally:
         await agent.stop()
         await controller.stop()
@@ -256,11 +269,17 @@ async def test_agent_run_oql_handles_execution_errors(broker, monkeypatch):
         monkeypatch.setattr(
             "oqlos.tools.cql_cli.commands.run_single_command", _boom, raising=True
         )
-        bad = OqlRequest(correlation_id="x", oql="SET 'VALVE-NC' 'open'", mode="dry-run")
+        bad = OqlRequest(
+            correlation_id="x", oql="SET 'VALVE-NC' 'open'", mode="dry-run"
+        )
         resp = agent._run_oql(bad)
         assert resp.correlation_id == "x"
         assert resp.ok is False
-        assert "serial port busy" in (resp.error or "")
+        assert (
+            resp.error
+            == "A required hardware plugin or sensor path is not available for real operation"
+        )
+        assert "serial port busy" not in (resp.error or "")
         assert resp.error_code == "C2004-HW-0012"
         assert resp.architecture == "SOA"
         assert resp.layer == "firmware"
@@ -268,3 +287,49 @@ async def test_agent_run_oql_handles_execution_errors(broker, monkeypatch):
         assert resp.stage == "mqtt.execute"
     finally:
         await agent.stop()
+
+
+@pytest.mark.asyncio
+async def test_agent_execution_boundary_does_not_log_exception_message(
+    broker, monkeypatch, caplog
+):
+    _, agent = await _make_pair(broker)
+    secret = "password=bridge-secret /dev/serial/private"
+    try:
+
+        def _boom(*args, **kwargs):
+            raise RuntimeError(secret)
+
+        monkeypatch.setattr(
+            "oqlos.tools.cql_cli.commands.run_single_command", _boom, raising=True
+        )
+        request = OqlRequest(
+            correlation_id="safe-correlation",
+            oql="SET 'VALVE-NC' 'open'",
+            mode="dry-run",
+        )
+
+        with caplog.at_level(logging.ERROR):
+            response = agent._run_oql(request)
+
+        assert response.error == "An unexpected error occurred"
+        assert secret not in response.to_json()
+        assert secret not in caplog.text
+        assert "safe-correlation" in caplog.text
+        assert "RuntimeError" in caplog.text
+    finally:
+        await agent.stop()
+
+
+def test_malformed_response_is_ignored_but_programming_error_propagates(
+    broker, monkeypatch
+):
+    controller = OqlMqttController(host="localhost", port=1883, node_id="pi-hw")
+    controller._resolve_response(b"not-json")
+
+    def _programming_error(payload):
+        raise AttributeError("parser defect")
+
+    monkeypatch.setattr(mqtt_oql_bridge.OqlResponse, "from_json", _programming_error)
+    with pytest.raises(AttributeError, match="parser defect"):
+        controller._resolve_response(b"{}")
