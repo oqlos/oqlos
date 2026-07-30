@@ -117,6 +117,17 @@ wznawia pluginy, a błąd rozszerzonego adaptera płuca nie powtarza aktuacji.
 Bieżąca metryka spadła z 222 do 216 szerokich handlerów; Modbus routes ma
 CC=14 zamiast 18, a lung CC=8 zamiast 10.
 
+Czwarta grupa przeglądu usunęła po jednym szerokim handlerze z
+`plugins.py` i `update_status.py`. API pluginów nie ufa już statusowi,
+komunikatowi ani `correlation_id` zwróconym przez adapter: normalizuje znany kod
+do katalogowego HTTP i problem details, a surowy wynik oraz parametry komendy
+nie trafiają do odpowiedzi. Sondy statusu aktualizacji łapią tylko oczekiwane
+błędy HTTP/JSON, zwracają stabilny kod diagnostyczny bez URL i tekstu wyjątku,
+a self-probe ignoruje nagłówek `Host`. Błędy programu pozostają widoczne dla
+centralnej sanitizowanej granicy 500. Zregenerowany snapshot workspace wskazuje
+214 szerokich handlerów, 83 surowe wyjątki, 0 negatywnych envelope przy HTTP
+200 i 0 błędów parsowania.
+
 ### Hotspoty rozmiaru
 
 Największe pliki OqlOS to słownik tłumaczeń (2 150 linii), `Panel.jsx`

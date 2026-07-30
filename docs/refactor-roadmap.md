@@ -320,7 +320,17 @@ lung z CC=10 do CC=8, a pozostałe moduły nie zwiększyły CC. Audyt wskazuje 2
 szerokich handlerów; bramka: 1048/1048 backend, 149/149 frontend, build Vite i
 Ruff.
 
-Pozostały zakres: sklasyfikować 83 surowe wyjątki i 216 szerokich handlerów
+Czwarta grupa usunęła szerokie handlery z API pluginów i statusu aktualizacji.
+Negatywna odpowiedź adaptera zachowuje wyłącznie rozpoznany kod C2004 oraz
+katalogowy status i komunikat; nie publikuje body adaptera, jego korelacji,
+parametrów komendy ani tekstu health. Oczekiwane awarie sond HTTP są
+obserwacyjnym `status=error` ze stabilną diagnostyką, natomiast defekty programu
+przechodzą do centralnej granicy 500. Self-probe używa stałego lokalnego portu,
+więc nagłówek `Host` nie może skierować go do obcego celu. Audyt wskazuje 214
+szerokich handlerów; bramka: 1053/1053 backend, 149/149 frontend, build Vite i
+Ruff.
+
+Pozostały zakres: sklasyfikować 83 surowe wyjątki i 214 szerokich handlerów
 OqlOS, rozdzielić pozostałe klasy host/proxy/plugin oraz wykonać analogiczną
 inwentaryzację i kontrakty po stronie C2004/POA.
 

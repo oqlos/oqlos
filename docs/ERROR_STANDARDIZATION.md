@@ -168,6 +168,9 @@ domenowym. Powtarzalny błąd zakończony `SYS-0000` wymaga dodania jawnego
 | nieoczekiwana awaria klienta opcjonalnego źródła | 500 | `C2004-SYS-0000` | `SOA/oqlos` | `oqlos-api` / `api.error` | odpowiedź i log zawierają korelację oraz typ wyjątku, bez jego komunikatu i tracebacku |
 | diagnostyka statusu zawodzi, ale identify potwierdza zdrowy adapter | 200 z `fallback_reason` | brak nowego błędu | `SOA/firmware` | `hardware-diagnostics` / `status.failover` | pierwotny wyjątek nie jest zwracany |
 | wyjątek diagnostycznej komendy urządzenia | 422 albo 503 | `C2004-DATA-0002` albo właściwy `C2004-HW-*` | `SOA/firmware` | `hardware-diagnostics` / `diagnostic.execute` | event pomija args, payload i komunikat wyjątku |
+| plugin odrzuca komendę ze znanym kodem | status katalogu | zachowany zarejestrowany `C2004-*` | `SOA/firmware` | `plugin-registry` / `plugin.command.execute` | body adaptera, parametry i jego `correlation_id` nie są publikowane; korelacja pochodzi z requestu |
+| plugin jest niedostępny albo zwraca błędny typ | 503 | właściwy `C2004-HW-0012` | `SOA/firmware` | `plugin-registry` / etap health, resolve lub execute | bezpieczny `hardware-plugin://<wbudowany-id>` albo `hardware-plugin://configured-plugin`; brak health i identyfikatora wejściowego |
+| sonda statusu aktualizacji nie odpowiada lub zwraca błędny JSON | 200 (raport obserwacyjny `status=error`) | `C2004-HW-0011/0012` w diagnostyce | `SOA/firmware` | komponent statusu / health probe | bez URL i tekstu wyjątku; self-probe używa `127.0.0.1` oraz skonfigurowanego portu, niezależnie od `Host` |
 
 Na granicy `/api/v1/oql/execute` i `/manage` identyfikator z
 `X-Correlation-ID` lub `X-Request-ID` jest przekazywany do requestu MQTT,
