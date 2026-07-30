@@ -15,7 +15,11 @@ from oqlos.api.hardware_modbus_settings import (
     effective_modbus_target_baud,
     normalize_probe_baudrates,
 )
-from oqlos.errors import OqlosError
+from oqlos.api.hardware_modbus_wizard_boundary import (
+    _modbus_wizard_issue_for_exception,
+    _raise_pimodbus_unavailable,
+    _wizard_config_is_readable,
+)
 
 _settings = get_settings()
 
@@ -150,12 +154,10 @@ def _modbus_wizard_probe_isolated(
     try:
         from pimodbus.repair import diagnose_shared_bus
     except Exception as exc:
-        raise OqlosError(
-            code="pimodbus_unavailable",
-            status_code=503,
-            message=f"pimodbus is not available: {exc}",
-            detail={"operation": "modbus.wizard.probe_isolated"},
-        ) from exc
+        _raise_pimodbus_unavailable(
+            operation_id="modbus.wizard.probe-isolated",
+            cause=exc,
+        )
 
     serial_candidates = _collect_wizard_serial_candidates(serial_port)
     target_max = effective_modbus_target_baud(_settings)
@@ -289,20 +291,22 @@ def _wizard_verify_config(
     new_device_id: int,
     new_baudrate: int,
     line_parity: str,
-) -> "tuple[bool, dict, str]":
-    """Read back device config after programming; return (verified, verify_dict, error_str)."""
-    verify_error = ""
+) -> "tuple[bool, dict, str, str | None]":
+    """Read back device config with a stable, non-sensitive failure reason."""
+    verify_reason = ""
+    issue_code: str | None = None
     try:
         verify = read_device_config(verify_settings, device_id=new_device_id).to_dict()
     except Exception as exc:
         verify = {}
-        verify_error = str(exc)
+        verify_reason = "readback_failed"
+        issue_code = _modbus_wizard_issue_for_exception(exc)
     verified = (
         int(verify.get("device_id") or -1) == new_device_id
         and int(verify.get("baudrate") or 0) == new_baudrate
         and str(verify.get("parity") or "").upper() == line_parity
     )
-    return verified, verify, verify_error
+    return verified, verify, verify_reason, issue_code
 
 
 def _wizard_build_result(
@@ -313,7 +317,8 @@ def _wizard_build_result(
     new_baudrate: int,
     line_parity: str,
     serial_port: str,
-    verify_error: str,
+    verify_reason: str,
+    issue_code: str | None = None,
 ) -> dict:
     """Build the response dict for _modbus_wizard_program_isolated."""
     # A UART write can take effect before the device manages to echo its reply.
@@ -333,20 +338,11 @@ def _wizard_build_result(
         },
         "verified": bool(verified),
     }
-    if verify_error and not ok:
-        result["error"] = verify_error
+    if verify_reason and not ok:
+        result["error"] = verify_reason
+    if issue_code and not ok:
+        result["issue_code"] = issue_code
     return result
-
-
-def _wizard_config_is_readable(config: dict[str, Any]) -> bool:
-    """Reject empty/partial Modbus replies masquerading as device config."""
-    try:
-        device_id = int(config.get("device_id"))
-        baudrate = int(config.get("baudrate"))
-    except (TypeError, ValueError):
-        return False
-    parity = str(config.get("parity") or "").upper()
-    return 1 <= device_id <= 255 and baudrate > 0 and parity in {"N", "E", "O"}
 
 
 def _modbus_wizard_program_isolated(
@@ -383,12 +379,10 @@ def _modbus_wizard_program_isolated(
             _read_holding_register,
         )
     except Exception as exc:
-        raise OqlosError(
-            code="pimodbus_unavailable",
-            status_code=503,
-            message=f"pimodbus is not available: {exc}",
-            detail={"operation": "modbus.wizard.program_isolated"},
-        ) from exc
+        _raise_pimodbus_unavailable(
+            operation_id="modbus.wizard.program-isolated",
+            cause=exc,
+        )
 
     line_parity = str(new_parity).upper()
     target_baud = int(new_baudrate)
@@ -414,7 +408,8 @@ def _modbus_wizard_program_isolated(
     existing: dict[str, Any] = {}
     bus_settings = _bus(open_baud_candidates[0])
     open_baud_used = int(open_baud_candidates[0])
-    config_read_error = ""
+    config_read_reason = ""
+    config_read_issue = "hw_modbus_no_response"
     for baud in open_baud_candidates:
         try:
             bus_settings = _bus(baud)
@@ -422,22 +417,25 @@ def _modbus_wizard_program_isolated(
                 bus_settings, device_id=int(current_device_id)
             ).to_dict()
             if not _wizard_config_is_readable(candidate):
-                raise RuntimeError(
-                    f"Invalid or empty Modbus configuration reply at {int(baud)} baud"
-                )
+                config_read_reason = "invalid_config_reply"
+                config_read_issue = "hw_modbus_no_response"
+                existing = {}
+                continue
             existing = candidate
             open_baud_used = int(baud)
-            config_read_error = ""
+            config_read_reason = ""
             break
         except Exception as exc:
-            config_read_error = str(exc)
+            config_read_reason = "config_read_failed"
+            config_read_issue = _modbus_wizard_issue_for_exception(exc)
             existing = {}
 
     if not existing:
         return {
             "ok": False,
             "verified": False,
-            "error": config_read_error or "config read failed at baseline and target baud",
+            "error": config_read_reason or "config_read_failed",
+            "issue_code": config_read_issue,
             "open_baud_tried": open_baud_candidates,
             "target": {
                 "device_id": int(new_device_id),
@@ -488,12 +486,13 @@ def _modbus_wizard_program_isolated(
 
     # After UART change, module listens at target baud — verify there.
     verify_settings = _bus(target_baud)
-    verified, verify, verify_error = _wizard_verify_config(
+    verified, verify, verify_reason, verify_issue = _wizard_verify_config(
         read_device_config, verify_settings, int(new_device_id), target_baud, line_parity
     )
     result = _wizard_build_result(
         writes, verify, verified,
-        int(new_device_id), target_baud, line_parity, serial_port, verify_error,
+        int(new_device_id), target_baud, line_parity, serial_port, verify_reason,
+        verify_issue,
     )
     result["commissioning"] = writes.get("commissioning")
     return result

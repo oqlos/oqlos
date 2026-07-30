@@ -113,6 +113,10 @@ domenowym. Powtarzalny błąd zakończony `SYS-0000` wymaga dodania jawnego
 | zdalny błąd sprzętu OQL | status katalogu | zachowany kod `C2004-HW-*` | pola odpowiedzi agenta | bezpieczne etykiety agenta | `mqtt-node://<node>/oql` |
 | brak pól komendy CQRS | 422 | `C2004-DATA-0002` | `SOA/firmware` | `hardware-cqrs` / `command.validate` | nie dotyczy |
 | nieudana komenda diagnostyczna | 503 | kod urządzenia, np. `C2004-HW-0012` | `SOA/firmware` | `hardware-diagnostics` / `diagnostic.execute` | `hardware-peripheral://<id>` |
+| Modbus wizard: brak odpowiedzi podczas isolated probe | 503 | `C2004-HW-0012` | `SOA/firmware` | `modbus-wizard` / `probe.scan` | sanitizowany `serial-device://<label>`; wynik nie wraca jako HTTP 200 z `ok=false` |
+| Modbus wizard: wyjątek adaptera podczas probe/program | 503 | `C2004-HW-0012` | `SOA/firmware` | `modbus-wizard` / `probe.execute` albo `program.execute` | tekst wyjątku, ścieżka i payload nie są publikowane |
+| Modbus wizard: port RS485 zajęty | 409 | `C2004-HW-0013` | `SOA/firmware` | `modbus-wizard` / etap probe lub program | klasyfikacja używa tekstu wyłącznie wewnętrznie; odpowiedź go nie publikuje |
+| Modbus wizard: brak `pimodbus` | 503 | `C2004-HW-0012` | `SOA/firmware` | `modbus-wizard` / `dependency.load` | `python-package://pimodbus`; komunikat importu nie jest publikowany |
 | Modbus wizard bez weryfikacji | 503 | `C2004-HW-0012` | `SOA/firmware` | `modbus-wizard` / `program.verify` | `serial-device://<name>` |
 | Modbus ADC raw: health, połączenie lub odczyt niedostępny | 503 | `C2004-HW-0012` | `SOA/firmware` | `modbus-adc` / `gateway.health`, `plugin.connect` albo `plugin.read` | `hardware-plugin://modbus-adc`; publikowany jest tylko stabilny `reason` |
 | błędna komenda HUI / artificial-lung | 422 | `C2004-DATA-0002` | `SOA/firmware` | komponent sprzętowy / `command.validate` | nie dotyczy |

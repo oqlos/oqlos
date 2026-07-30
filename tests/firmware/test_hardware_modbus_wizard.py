@@ -157,12 +157,48 @@ def test_modbus_wizard_never_reports_success_without_verified_readback():
         4800,
         "N",
         "/dev/ttyTEST",
-        "verification timed out",
+        "readback_failed",
+        "hw_modbus_no_response",
     )
 
     assert result["ok"] is False
     assert result["verified"] is False
-    assert result["error"] == "verification timed out"
+    assert result["error"] == "readback_failed"
+    assert result["issue_code"] == "hw_modbus_no_response"
+
+
+def test_modbus_wizard_readback_failure_uses_stable_reason() -> None:
+    def _fail(*_args, **_kwargs):
+        raise OSError("password=hunter2 /srv/private")
+
+    verified, verify, reason, issue_code = wizard._wizard_verify_config(
+        _fail,
+        object(),
+        1,
+        4800,
+        "N",
+    )
+
+    assert verified is False
+    assert verify == {}
+    assert reason == "readback_failed"
+    assert issue_code == "modbus_preflight_exception"
+    assert "hunter2" not in reason
+
+
+@pytest.mark.parametrize(
+    ("message", "issue_code"),
+    [
+        ("device did not respond", "hw_modbus_no_response"),
+        ("serial port is busy password=hunter2", "serial_port_busy"),
+        ("unexpected adapter failure", "modbus_preflight_exception"),
+    ],
+)
+def test_modbus_wizard_classifies_exception_without_publishing_message(
+    message: str,
+    issue_code: str,
+) -> None:
+    assert wizard._modbus_wizard_issue_for_exception(OSError(message)) == issue_code
 
 
 def test_modbus_wizard_rejects_empty_config_instead_of_skipping(monkeypatch):
@@ -192,7 +228,8 @@ def test_modbus_wizard_rejects_empty_config_instead_of_skipping(monkeypatch):
     assert result["ok"] is False
     assert result["verified"] is False
     assert result["open_baud_tried"] == [9600, 4800]
-    assert "Invalid or empty" in result["error"]
+    assert result["error"] == "invalid_config_reply"
+    assert result["issue_code"] == "hw_modbus_no_response"
 
 
 def test_build_waveshare_diagnose_uses_target_baud_fast_path(monkeypatch):
@@ -400,7 +437,7 @@ def test_modbus_wizard_probe_raises_when_pimodbus_missing(monkeypatch):
 
     def _blocked_import(name, *args, **kwargs):
         if name.startswith("pimodbus"):
-            raise ModuleNotFoundError("No module named 'pimodbus'")
+            raise ModuleNotFoundError("password=hunter2 /srv/private")
         return real_import(name, *args, **kwargs)
 
     monkeypatch.setattr(builtins, "__import__", _blocked_import)
@@ -408,6 +445,16 @@ def test_modbus_wizard_probe_raises_when_pimodbus_missing(monkeypatch):
         wizard._modbus_wizard_probe_isolated("/dev/ttyTEST", [4800], ["N"], [1])
     assert caught.value.issue_code == "pimodbus_unavailable"
     assert caught.value.public_code == "C2004-HW-0012"
+    assert "hunter2" not in caught.value.message
+    assert caught.value.detail == {
+        "architecture": "SOA",
+        "layer": "firmware",
+        "component": "modbus-wizard",
+        "stage": "dependency.load",
+        "problem_source": "dependency",
+        "operation_id": "modbus.wizard.probe-isolated",
+        "upstream_target": "python-package://pimodbus",
+    }
 
 
 def test_build_waveshare_raises_when_pimodbus_missing(monkeypatch):

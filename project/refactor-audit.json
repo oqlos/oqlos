@@ -1,11 +1,22 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-07-30T07:08:57+00:00",
+  "generated_at": "2026-07-30T07:25:19+00:00",
   "root": "/home/tom/github/oqlos/oqlos",
-  "git_commit": "2adbc190147ca3f5c384c157f24da83146cf8fd1",
-  "git_dirty": false,
+  "git_commit": "af2f1b6329c08175826b202a3e14c2db769727f9",
+  "git_dirty": true,
   "git_dirty_including_generated_artifacts": true,
-  "git_status_excluding_generated_artifacts": [],
+  "git_status_excluding_generated_artifacts": [
+    " M TODO.md",
+    " M docs/ERROR_STANDARDIZATION.md",
+    " M docs/refactor-roadmap.md",
+    " M oqlos/_CHECKSUMS.sha256",
+    " M oqlos/api/hardware_modbus_routes.py",
+    " M oqlos/api/hardware_modbus_wizard.py",
+    " M tests/firmware/test_error_catalog.py",
+    " M tests/firmware/test_hardware_modbus_routes.py",
+    " M tests/firmware/test_hardware_modbus_wizard.py",
+    "?? oqlos/api/hardware_modbus_wizard_boundary.py"
+  ],
   "generator": {
     "audit_command": "python scripts/refactor_audit.py --root /home/tom/github/oqlos/oqlos --output /home/tom/github/oqlos/oqlos/project/refactor-audit.json",
     "code2llm_command": "code2llm . -m hybrid -f toon,map --strategy standard --toon-yaml --no-png --no-cache --no-chunk -o <temp>",
@@ -16,10 +27,10 @@
     }
   },
   "artifacts": {
-    "analysis.toon.yaml": "7d0ccb9da1b3b274cbdc12931b405f5d99d193f8c17b91c786b03404c92193b5",
-    "map.toon.yaml": "cca08798a35a31f1e2f12632f194da1cdce44fb4bf51dd15a6adecebd79ec9ec"
+    "analysis.toon.yaml": "1770f33696232a89565ecd36f0f8b9b2adb3295d954861ccd12199da12970094",
+    "map.toon.yaml": "fb320c6f53cb5585dccef812d8bd72280c85dad1e4b9420b313014ddc0b2142b"
   },
-  "source_file_count": 400,
+  "source_file_count": 401,
   "public_routes": [
     {
       "file": "oqlos/api/_hw3_cqrs.py",
@@ -843,7 +854,7 @@
     },
     {
       "file": "oqlos/api/hardware_modbus_routes.py",
-      "line": 81,
+      "line": 86,
       "function": "hardware_modbus_settings_get",
       "return_annotation": "dict[str, Any]",
       "method": "GET",
@@ -853,7 +864,7 @@
     },
     {
       "file": "oqlos/api/hardware_modbus_routes.py",
-      "line": 87,
+      "line": 92,
       "function": "hardware_modbus_settings_put",
       "return_annotation": "dict[str, Any]",
       "method": "PUT",
@@ -863,7 +874,7 @@
     },
     {
       "file": "oqlos/api/hardware_modbus_routes.py",
-      "line": 103,
+      "line": 108,
       "function": "hardware_modbus_waveshare_diagnose",
       "return_annotation": "dict[str, Any]",
       "method": "GET",
@@ -873,7 +884,7 @@
     },
     {
       "file": "oqlos/api/hardware_modbus_routes.py",
-      "line": 109,
+      "line": 114,
       "function": "hardware_modbus_profile_channels_get",
       "return_annotation": "dict[str, Any]",
       "method": "GET",
@@ -883,7 +894,7 @@
     },
     {
       "file": "oqlos/api/hardware_modbus_routes.py",
-      "line": 116,
+      "line": 121,
       "function": "hardware_modbus_channel_value_put",
       "return_annotation": "dict[str, Any]",
       "method": "PUT",
@@ -893,7 +904,7 @@
     },
     {
       "file": "oqlos/api/hardware_modbus_routes.py",
-      "line": 123,
+      "line": 128,
       "function": "hardware_modbus_coil_test_plan_get",
       "return_annotation": "dict[str, Any]",
       "method": "GET",
@@ -903,7 +914,7 @@
     },
     {
       "file": "oqlos/api/hardware_modbus_routes.py",
-      "line": 130,
+      "line": 135,
       "function": "hardware_modbus_coil_test_pulse_post",
       "return_annotation": "dict[str, Any]",
       "method": "POST",
@@ -913,7 +924,7 @@
     },
     {
       "file": "oqlos/api/hardware_modbus_routes.py",
-      "line": 141,
+      "line": 146,
       "function": "hardware_modbus_coil_test_stop_post",
       "return_annotation": "dict[str, Any]",
       "method": "POST",
@@ -923,7 +934,7 @@
     },
     {
       "file": "oqlos/api/hardware_modbus_routes.py",
-      "line": 148,
+      "line": 153,
       "function": "hardware_modbus_wizard_plan",
       "return_annotation": "dict[str, Any]",
       "method": "GET",
@@ -933,7 +944,7 @@
     },
     {
       "file": "oqlos/api/hardware_modbus_routes.py",
-      "line": 157,
+      "line": 162,
       "function": "hardware_modbus_wizard_probe_isolated",
       "return_annotation": "dict[str, Any]",
       "method": "POST",
@@ -943,7 +954,7 @@
     },
     {
       "file": "oqlos/api/hardware_modbus_routes.py",
-      "line": 197,
+      "line": 207,
       "function": "hardware_modbus_wizard_program_isolated",
       "return_annotation": "dict[str, Any]",
       "method": "POST",
@@ -2545,7 +2556,7 @@
     },
     {
       "file": "oqlos/api/hardware_modbus_routes.py",
-      "line": 81,
+      "line": 86,
       "function": "hardware_modbus_settings_get",
       "return_annotation": "dict[str, Any]",
       "method": "GET",
@@ -2555,7 +2566,7 @@
     },
     {
       "file": "oqlos/api/hardware_modbus_routes.py",
-      "line": 87,
+      "line": 92,
       "function": "hardware_modbus_settings_put",
       "return_annotation": "dict[str, Any]",
       "method": "PUT",
@@ -2565,7 +2576,7 @@
     },
     {
       "file": "oqlos/api/hardware_modbus_routes.py",
-      "line": 103,
+      "line": 108,
       "function": "hardware_modbus_waveshare_diagnose",
       "return_annotation": "dict[str, Any]",
       "method": "GET",
@@ -2575,7 +2586,7 @@
     },
     {
       "file": "oqlos/api/hardware_modbus_routes.py",
-      "line": 109,
+      "line": 114,
       "function": "hardware_modbus_profile_channels_get",
       "return_annotation": "dict[str, Any]",
       "method": "GET",
@@ -2585,7 +2596,7 @@
     },
     {
       "file": "oqlos/api/hardware_modbus_routes.py",
-      "line": 116,
+      "line": 121,
       "function": "hardware_modbus_channel_value_put",
       "return_annotation": "dict[str, Any]",
       "method": "PUT",
@@ -2595,7 +2606,7 @@
     },
     {
       "file": "oqlos/api/hardware_modbus_routes.py",
-      "line": 123,
+      "line": 128,
       "function": "hardware_modbus_coil_test_plan_get",
       "return_annotation": "dict[str, Any]",
       "method": "GET",
@@ -2605,7 +2616,7 @@
     },
     {
       "file": "oqlos/api/hardware_modbus_routes.py",
-      "line": 130,
+      "line": 135,
       "function": "hardware_modbus_coil_test_pulse_post",
       "return_annotation": "dict[str, Any]",
       "method": "POST",
@@ -2615,7 +2626,7 @@
     },
     {
       "file": "oqlos/api/hardware_modbus_routes.py",
-      "line": 141,
+      "line": 146,
       "function": "hardware_modbus_coil_test_stop_post",
       "return_annotation": "dict[str, Any]",
       "method": "POST",
@@ -2625,7 +2636,7 @@
     },
     {
       "file": "oqlos/api/hardware_modbus_routes.py",
-      "line": 148,
+      "line": 153,
       "function": "hardware_modbus_wizard_plan",
       "return_annotation": "dict[str, Any]",
       "method": "GET",
@@ -2635,7 +2646,7 @@
     },
     {
       "file": "oqlos/api/hardware_modbus_routes.py",
-      "line": 157,
+      "line": 162,
       "function": "hardware_modbus_wizard_probe_isolated",
       "return_annotation": "dict[str, Any]",
       "method": "POST",
@@ -2645,7 +2656,7 @@
     },
     {
       "file": "oqlos/api/hardware_modbus_routes.py",
-      "line": 197,
+      "line": 207,
       "function": "hardware_modbus_wizard_program_isolated",
       "return_annotation": "dict[str, Any]",
       "method": "POST",
@@ -3577,7 +3588,7 @@
     },
     {
       "file": "oqlos/api/hardware_modbus_routes.py",
-      "line": 81,
+      "line": 86,
       "function": "hardware_modbus_settings_get",
       "return_annotation": "dict[str, Any]",
       "method": "GET",
@@ -3587,7 +3598,7 @@
     },
     {
       "file": "oqlos/api/hardware_modbus_routes.py",
-      "line": 87,
+      "line": 92,
       "function": "hardware_modbus_settings_put",
       "return_annotation": "dict[str, Any]",
       "method": "PUT",
@@ -3597,7 +3608,7 @@
     },
     {
       "file": "oqlos/api/hardware_modbus_routes.py",
-      "line": 103,
+      "line": 108,
       "function": "hardware_modbus_waveshare_diagnose",
       "return_annotation": "dict[str, Any]",
       "method": "GET",
@@ -3607,7 +3618,7 @@
     },
     {
       "file": "oqlos/api/hardware_modbus_routes.py",
-      "line": 109,
+      "line": 114,
       "function": "hardware_modbus_profile_channels_get",
       "return_annotation": "dict[str, Any]",
       "method": "GET",
@@ -3617,7 +3628,7 @@
     },
     {
       "file": "oqlos/api/hardware_modbus_routes.py",
-      "line": 116,
+      "line": 121,
       "function": "hardware_modbus_channel_value_put",
       "return_annotation": "dict[str, Any]",
       "method": "PUT",
@@ -3627,7 +3638,7 @@
     },
     {
       "file": "oqlos/api/hardware_modbus_routes.py",
-      "line": 123,
+      "line": 128,
       "function": "hardware_modbus_coil_test_plan_get",
       "return_annotation": "dict[str, Any]",
       "method": "GET",
@@ -3637,7 +3648,7 @@
     },
     {
       "file": "oqlos/api/hardware_modbus_routes.py",
-      "line": 130,
+      "line": 135,
       "function": "hardware_modbus_coil_test_pulse_post",
       "return_annotation": "dict[str, Any]",
       "method": "POST",
@@ -3647,7 +3658,7 @@
     },
     {
       "file": "oqlos/api/hardware_modbus_routes.py",
-      "line": 141,
+      "line": 146,
       "function": "hardware_modbus_coil_test_stop_post",
       "return_annotation": "dict[str, Any]",
       "method": "POST",
@@ -3657,7 +3668,7 @@
     },
     {
       "file": "oqlos/api/hardware_modbus_routes.py",
-      "line": 148,
+      "line": 153,
       "function": "hardware_modbus_wizard_plan",
       "return_annotation": "dict[str, Any]",
       "method": "GET",
@@ -3667,7 +3678,7 @@
     },
     {
       "file": "oqlos/api/hardware_modbus_routes.py",
-      "line": 157,
+      "line": 162,
       "function": "hardware_modbus_wizard_probe_isolated",
       "return_annotation": "dict[str, Any]",
       "method": "POST",
@@ -3677,7 +3688,7 @@
     },
     {
       "file": "oqlos/api/hardware_modbus_routes.py",
-      "line": 197,
+      "line": 207,
       "function": "hardware_modbus_wizard_program_isolated",
       "return_annotation": "dict[str, Any]",
       "method": "POST",
@@ -5232,11 +5243,6 @@
       "exception": "ValueError"
     },
     {
-      "file": "oqlos/api/hardware_modbus_wizard.py",
-      "line": 425,
-      "exception": "RuntimeError"
-    },
-    {
       "file": "oqlos/core/executor.py",
       "line": 26,
       "exception": "ValueError"
@@ -5715,7 +5721,7 @@
     },
     {
       "file": "oqlos/api/hardware_modbus_routes.py",
-      "line": 250,
+      "line": 260,
       "exception": "Exception"
     },
     {
@@ -5755,22 +5761,27 @@
     },
     {
       "file": "oqlos/api/hardware_modbus_wizard.py",
-      "line": 152,
+      "line": 156,
       "exception": "Exception"
     },
     {
       "file": "oqlos/api/hardware_modbus_wizard.py",
-      "line": 297,
+      "line": 300,
       "exception": "Exception"
     },
     {
       "file": "oqlos/api/hardware_modbus_wizard.py",
-      "line": 385,
+      "line": 381,
       "exception": "Exception"
     },
     {
       "file": "oqlos/api/hardware_modbus_wizard.py",
-      "line": 432,
+      "line": 428,
+      "exception": "Exception"
+    },
+    {
+      "file": "oqlos/api/hardware_modbus_wizard_boundary.py",
+      "line": 115,
       "exception": "Exception"
     },
     {
@@ -6950,7 +6961,7 @@
     },
     {
       "file": "oqlos/api/hardware_modbus_wizard.py",
-      "lines": 499
+      "lines": 498
     },
     {
       "file": "oqlos/hardware/firmware_adapter.py",
@@ -7007,14 +7018,14 @@
   ],
   "parse_failures": [],
   "summary": {
-    "git_status_excluding_generated_artifacts": 0,
+    "git_status_excluding_generated_artifacts": 10,
     "public_routes": 194,
     "routes_returning_dict_any": 80,
     "routes_with_generic_response": 184,
     "routes_with_false_success_at_http_200": 0,
     "environment_reads_outside_settings": 154,
-    "raw_exceptions": 94,
-    "broad_exception_handlers": 236,
+    "raw_exceptions": 93,
+    "broad_exception_handlers": 237,
     "large_modules": 31,
     "parse_failures": 0
   }

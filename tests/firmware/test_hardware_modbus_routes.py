@@ -11,6 +11,13 @@ from oqlos.errors import OqlosError
 from oqlos.errors.fastapi_integration import install_oqlos_error_handler
 
 
+def _modbus_client() -> TestClient:
+    app = FastAPI()
+    install_oqlos_error_handler(app)
+    app.include_router(modbus_hw.router, prefix="/api/v1/hardware")
+    return TestClient(app, raise_server_exceptions=False)
+
+
 def test_hardware_modbus_router_includes_channel_and_wizard_paths():
     paths = {route.path for route in modbus_hw.router.routes}
     assert "/modbus/waveshare-diagnose" in paths
@@ -35,11 +42,7 @@ def test_coil_pulse_role_is_enforced_server_side() -> None:
 
 
 def test_coil_pulse_role_denial_is_safe_problem_details() -> None:
-    app = FastAPI()
-    install_oqlos_error_handler(app)
-    app.include_router(modbus_hw.router, prefix="/api/v1/hardware")
-
-    response = TestClient(app, raise_server_exceptions=False).post(
+    response = _modbus_client().post(
         "/api/v1/hardware/modbus/coil-test/pulse",
         json={"coil": 1, "password": "hunter2"},
         headers={
@@ -130,11 +133,7 @@ def test_wizard_verification_failure_is_safe_problem_details(monkeypatch) -> Non
             "error": "password=hunter2 must not escape",
         },
     )
-    app = FastAPI()
-    install_oqlos_error_handler(app)
-    app.include_router(modbus_hw.router, prefix="/api/v1/hardware")
-
-    response = TestClient(app, raise_server_exceptions=False).post(
+    response = _modbus_client().post(
         "/api/v1/hardware/modbus/wizard/program-isolated",
         json={
             "serial_port": "/dev/ttyTEST",
@@ -149,9 +148,174 @@ def test_wizard_verification_failure_is_safe_problem_details(monkeypatch) -> Non
     assert body["correlation_id"] == "cor-wizard-contract"
     assert body["component"] == "modbus-wizard"
     assert body["stage"] == "program.verify"
-    assert body["metadata"]["context"]["problem_source"] == "upstream"
+    assert body["metadata"]["context"]["problem_source"] == "hardware"
     assert body["metadata"]["context"]["upstream_target"] == (
         "serial-device://ttyTEST"
     )
     assert "hunter2" not in response.text
     assert "traceback" not in response.text.lower()
+
+
+def test_wizard_probe_no_match_is_not_http_200(monkeypatch) -> None:
+    monkeypatch.setattr(
+        modbus_hw,
+        "_modbus_wizard_probe_isolated",
+        lambda *_args, **_kwargs: {
+            "ok": False,
+            "error": "password=hunter2",
+            "all_scans": [{"serial_port": "/dev/password=hunter2"}],
+        },
+    )
+
+    response = _modbus_client().post(
+        "/api/v1/hardware/modbus/wizard/probe-isolated",
+        json={"serial_port": "/dev/ttyTEST", "module_role": "io"},
+        headers={"X-Correlation-ID": "cor-wizard-probe"},
+    )
+
+    assert response.status_code == 503
+    body = response.json()
+    assert body["code"] == "C2004-HW-0012"
+    assert body["correlation_id"] == "cor-wizard-probe"
+    assert body["stage"] == "probe.scan"
+    assert body["metadata"]["diagnostics"]["issue_code"] == (
+        "hw_modbus_no_response"
+    )
+    assert body["metadata"]["context"]["upstream_target"] == (
+        "serial-device://ttyTEST"
+    )
+    assert "hunter2" not in response.text
+
+
+def test_wizard_probe_exception_is_sanitized(monkeypatch) -> None:
+    def _fail(*_args, **_kwargs):
+        raise OSError("password=hunter2 /srv/private")
+
+    monkeypatch.setattr(modbus_hw, "_modbus_wizard_probe_isolated", _fail)
+
+    response = _modbus_client().post(
+        "/api/v1/hardware/modbus/wizard/probe-isolated",
+        json={"serial_port": "/dev/password=hunter2"},
+        headers={"X-Correlation-ID": "cor-wizard-probe"},
+    )
+
+    assert response.status_code == 503
+    body = response.json()
+    assert body["code"] == "C2004-HW-0012"
+    assert body["stage"] == "probe.execute"
+    assert body["metadata"]["diagnostics"]["issue_code"] == (
+        "modbus_preflight_exception"
+    )
+    assert body["metadata"]["context"]["upstream_target"] == (
+        "serial-device://configured-adapter"
+    )
+    assert "hunter2" not in response.text
+    assert "/srv/private" not in response.text
+
+
+def test_wizard_probe_busy_port_keeps_specific_contract(monkeypatch) -> None:
+    def _fail(*_args, **_kwargs):
+        raise OSError("serial port is busy password=hunter2")
+
+    monkeypatch.setattr(modbus_hw, "_modbus_wizard_probe_isolated", _fail)
+
+    response = _modbus_client().post(
+        "/api/v1/hardware/modbus/wizard/probe-isolated",
+        json={"serial_port": "/dev/ttyTEST"},
+        headers={"X-Correlation-ID": "cor-wizard-busy"},
+    )
+
+    assert response.status_code == 409
+    body = response.json()
+    assert body["code"] == "C2004-HW-0013"
+    assert body["correlation_id"] == "cor-wizard-busy"
+    assert body["stage"] == "probe.execute"
+    assert body["metadata"]["diagnostics"]["issue_code"] == "serial_port_busy"
+    assert "hunter2" not in response.text
+
+
+def test_wizard_probe_missing_pimodbus_is_safe_problem(monkeypatch) -> None:
+    from oqlos.api.hardware_modbus_wizard_boundary import (
+        _raise_pimodbus_unavailable,
+    )
+
+    def _fail(*_args, **_kwargs):
+        _raise_pimodbus_unavailable(
+            operation_id="modbus.wizard.probe-isolated",
+            cause=ModuleNotFoundError("password=hunter2 /srv/private"),
+        )
+
+    monkeypatch.setattr(modbus_hw, "_modbus_wizard_probe_isolated", _fail)
+
+    response = _modbus_client().post(
+        "/api/v1/hardware/modbus/wizard/probe-isolated",
+        json={"serial_port": "/dev/ttyTEST"},
+        headers={"X-Correlation-ID": "cor-wizard-dependency"},
+    )
+
+    assert response.status_code == 503
+    body = response.json()
+    assert body["code"] == "C2004-HW-0012"
+    assert body["correlation_id"] == "cor-wizard-dependency"
+    assert body["stage"] == "dependency.load"
+    assert body["metadata"]["diagnostics"]["issue_code"] == (
+        "pimodbus_unavailable"
+    )
+    assert body["metadata"]["context"]["upstream_target"] == (
+        "python-package://pimodbus"
+    )
+    assert "hunter2" not in response.text
+    assert "/srv/private" not in response.text
+
+
+def test_wizard_probe_rejects_role_without_reflecting_it() -> None:
+    response = _modbus_client().post(
+        "/api/v1/hardware/modbus/wizard/probe-isolated",
+        json={"module_role": "password=hunter2"},
+        headers={"X-Correlation-ID": "cor-wizard-role"},
+    )
+
+    assert response.status_code == 422
+    body = response.json()
+    assert body["code"] == "C2004-DATA-0002"
+    assert body["correlation_id"] == "cor-wizard-role"
+    assert body["stage"] == "request.validate"
+    assert body["metadata"]["diagnostics"]["issue_code"] == (
+        "api_modbus_wizard_invalid_request"
+    )
+    assert "hunter2" not in response.text
+
+
+def test_wizard_program_exception_is_sanitized(monkeypatch) -> None:
+    async def _pause(_serial_port: str):
+        return None, set()
+
+    def _fail(**_kwargs):
+        raise OSError("password=hunter2 /srv/private")
+
+    monkeypatch.setattr(modbus_hw, "try_get_hardware_gateway", lambda: None)
+    monkeypatch.setattr(modbus_hw, "_pause_modbus_plugins_on_serial", _pause)
+    monkeypatch.setattr(modbus_hw, "_modbus_wizard_program_isolated", _fail)
+
+    response = _modbus_client().post(
+        "/api/v1/hardware/modbus/wizard/program-isolated",
+        json={
+            "serial_port": "/dev/password=hunter2",
+            "confirm_isolated": True,
+        },
+        headers={"X-Correlation-ID": "cor-wizard-program"},
+    )
+
+    assert response.status_code == 503
+    body = response.json()
+    assert body["code"] == "C2004-HW-0012"
+    assert body["correlation_id"] == "cor-wizard-program"
+    assert body["stage"] == "program.execute"
+    assert body["metadata"]["diagnostics"]["issue_code"] == (
+        "modbus_preflight_exception"
+    )
+    assert body["metadata"]["context"]["upstream_target"] == (
+        "serial-device://configured-adapter"
+    )
+    assert "hunter2" not in response.text
+    assert "/srv/private" not in response.text

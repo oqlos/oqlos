@@ -10,6 +10,11 @@ from fastapi import APIRouter, Body, Header
 
 from oqlos.api.hardware_gateway import snapshot_via_health, try_get_hardware_gateway
 from oqlos.api.hardware_modbus_waveshare import _build_waveshare_diagnose_report
+from oqlos.api.hardware_modbus_wizard_boundary import (
+    _modbus_wizard_issue_for_exception,
+    _modbus_wizard_probe_checked,
+    _raise_modbus_wizard_failure,
+)
 from oqlos.api.hardware_modbus_wizard import (
     _modbus_wizard_plan,
     _modbus_wizard_probe_isolated,
@@ -175,15 +180,20 @@ async def hardware_modbus_wizard_probe_isolated(
         raise OqlosError(
             code="api_modbus_wizard_invalid_request",
             status_code=422,
-            message="module_role must be io, adc, modbus-io or modbus-adc",
             detail={
+                "architecture": "SOA",
+                "layer": "firmware",
+                "component": "modbus-wizard",
+                "stage": "request.validate",
+                "problem_source": "request",
+                "operation_id": "modbus.wizard.probe-isolated",
                 "field": "module_role",
-                "value": raw_role,
                 "allowed": ["io", "adc", "modbus-io", "modbus-adc"],
             },
         )
     required_roles = [role] if role else None
     return await asyncio.to_thread(
+        _modbus_wizard_probe_checked,
         _modbus_wizard_probe_isolated,
         serial,
         scan_bauds,
@@ -248,47 +258,30 @@ async def hardware_modbus_wizard_program_isolated(
             exc.detail = {**(exc.detail or {}), "runtime_apply": runtime_apply}
         raise
     except Exception as exc:
-        result = {
-            "ok": False,
-            "verified": False,
-            "error": f"Modbus isolated programming failed: {exc}",
-            "error_type": type(exc).__name__,
-        }
+        if paused_plugin_ids and gateway is not None:
+            await gateway.apply_modbus_user_settings(paused_plugin_ids)
+        _raise_modbus_wizard_failure(
+            issue_code=_modbus_wizard_issue_for_exception(exc),
+            stage="program.execute",
+            operation_id="modbus.wizard.program-isolated",
+            serial_port=serial,
+            cause=exc,
+        )
 
     if paused_plugin_ids and gateway is not None:
         result["runtime_apply"] = await gateway.apply_modbus_user_settings(paused_plugin_ids)
     if not bool(result.get("ok")) or not bool(result.get("verified")):
-        error_message = str(result.get("error") or "Modbus configuration verification failed")
-        normalized_error = error_message.lower()
-        if "pimodbus" in normalized_error:
-            issue_code = "pimodbus_unavailable"
-            status_code = 503
-        elif any(
-            marker in normalized_error
-            for marker in ("port is busy", "resource busy", "could not exclusively lock", "already open")
-        ):
-            issue_code = "serial_port_busy"
-            status_code = 409
-        elif result.get("error_type"):
-            issue_code = "modbus_preflight_exception"
-            status_code = 503
-        else:
+        issue_code = str(result.get("issue_code") or "hw_modbus_no_response")
+        if issue_code not in {
+            "hw_modbus_no_response",
+            "modbus_preflight_exception",
+            "serial_port_busy",
+        }:
             issue_code = "hw_modbus_no_response"
-            status_code = 503
-        raise OqlosError(
-            issue_code,
-            status_code=status_code,
-            detail={
-                "architecture": "SOA",
-                "layer": "firmware",
-                "component": "modbus-wizard",
-                "stage": "program.verify",
-                "problem_source": "upstream",
-                "operation_id": "modbus.wizard.program-isolated",
-                "upstream_target": (
-                    "serial-device://" + str(serial).rsplit("/", 1)[-1][:64]
-                ),
-                "verified": bool(result.get("verified")),
-            },
+        _raise_modbus_wizard_failure(
+            issue_code=issue_code,
+            stage="program.verify",
+            operation_id="modbus.wizard.program-isolated",
+            serial_port=serial,
         )
     return result

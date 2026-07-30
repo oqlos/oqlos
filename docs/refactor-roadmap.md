@@ -264,7 +264,19 @@ publikuje tylko nazwę zależności z zamkniętego zbioru i bezpieczny target
 bramka tej partii: 1013/1013 testów, 149/149 testów frontendowych, build Vite
 oraz Ruff `F821,F811` bez błędów.
 
-Pozostały zakres: sklasyfikować 94 surowe wyjątki i 236 szerokich handlerów
+Modbus wizard nie publikuje już tekstu błędu importu, odczytu konfiguracji ani
+readbacku. Brak urządzenia podczas isolated probe nie wraca jako HTTP 200 z
+`ok=false`, lecz jako 503/`C2004-HW-0012`; wyjątek adaptera, zajęty port i brak
+`pimodbus` zachowują odpowiednio `modbus_preflight_exception`,
+`C2004-HW-0013` i `pimodbus_unavailable`. Odrzucona rola i dowolna ścieżka
+serial są sanitizowane. Zgodnie ze wskazanym nadrzędnym audytem workspace
+`/home/tom/github/oqlos/project/analysis.toon.yaml` granica błędów została
+wydzielona do małego modułu, dzięki czemu `hardware_modbus_wizard.py` pozostał
+poniżej 500 linii i nie powstał nowy hotspot złożoności. Pełna bramka tej
+partii: 1023/1023 testy, 149/149 testów frontendowych, build Vite oraz Ruff
+`F821,F811` bez błędów.
+
+Pozostały zakres: sklasyfikować 93 surowe wyjątki i 237 szerokich handlerów
 OqlOS, rozdzielić pozostałe klasy host/proxy/plugin oraz wykonać analogiczną
 inwentaryzację i kontrakty po stronie C2004/POA.
 
