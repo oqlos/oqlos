@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-07-30T14:59:40+00:00",
+  "generated_at": "2026-07-30T15:08:06+00:00",
   "root": "/home/tom/github/oqlos/oqlos",
-  "git_commit": "66f7ac955ea47340c4d87b3190effe8eb3d68351",
+  "git_commit": "066a2b6f3dfe292e6fbc04b3220656cbc363475c",
   "git_dirty": false,
-  "git_dirty_including_generated_artifacts": false,
+  "git_dirty_including_generated_artifacts": true,
   "git_status_excluding_generated_artifacts": [],
   "generator": {
     "audit_command": "python scripts/refactor_audit.py --root /home/tom/github/oqlos/oqlos --output /home/tom/github/oqlos/oqlos/project/refactor-audit.json",
@@ -16,8 +16,8 @@
     }
   },
   "artifacts": {
-    "analysis.toon.yaml": "77ec7a5c03ae872c799459ed3d6a8e6bd4bbabe226f5390c1b8205b05369c5ce",
-    "map.toon.yaml": "89420af402e863dd2637d6a8d37f369fdf018a676345a33e416d19e78f29a87a"
+    "analysis.toon.yaml": "7a5213a2bbca288609e54198a221eafc0ed3ab0149ba3758bdde5e4def11727d",
+    "map.toon.yaml": "c044457f1913795f1459f4cbec08ec8ae6da1afd06b360edfb21182cb779d123"
   },
   "source_file_count": 407,
   "public_routes": [
@@ -5347,21 +5347,6 @@
       "exception": "RuntimeError"
     },
     {
-      "file": "oqlos/hardware/plugins/registry.py",
-      "line": 97,
-      "exception": "ValueError"
-    },
-    {
-      "file": "oqlos/hardware/plugins/registry.py",
-      "line": 102,
-      "exception": "RuntimeError"
-    },
-    {
-      "file": "oqlos/hardware/plugins/registry.py",
-      "line": 110,
-      "exception": "RuntimeError"
-    },
-    {
       "file": "oqlos/hardware/registry.py",
       "line": 40,
       "exception": "ValueError"
@@ -5955,22 +5940,7 @@
     },
     {
       "file": "oqlos/hardware/plugins/registry.py",
-      "line": 136,
-      "exception": "Exception"
-    },
-    {
-      "file": "oqlos/hardware/plugins/registry.py",
-      "line": 151,
-      "exception": "Exception"
-    },
-    {
-      "file": "oqlos/hardware/plugins/registry.py",
-      "line": 177,
-      "exception": "Exception"
-    },
-    {
-      "file": "oqlos/hardware/plugins/registry.py",
-      "line": 285,
+      "line": 334,
       "exception": "Exception"
     },
     {
@@ -6659,8 +6629,8 @@
     "routes_with_generic_response": 182,
     "routes_with_false_success_at_http_200": 0,
     "environment_reads_outside_settings": 154,
-    "raw_exceptions": 81,
-    "broad_exception_handlers": 183,
+    "raw_exceptions": 78,
+    "broad_exception_handlers": 180,
     "large_modules": 30,
     "parse_failures": 0
   }
