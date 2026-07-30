@@ -219,6 +219,9 @@ build Vite, Ruff i spójny `uv.lock`.
   `uv lock --check`.
 - [x] Dodać `uv lock --check` do bramki CI, aby kolejna zmiana zależności nie
   pozostawiła niespójnego lockfile.
+- [x] Zaktualizować `actions/checkout` do v5 i `actions/setup-node` do v6,
+  usuwając ostrzeżenie o wycofanym runtime Node 20 bez włączania automatycznego
+  cache package managera.
 
 ## P1/P2 — deploy i fizyczna walidacja (`NEXT-11`, `NEXT-12`)
 

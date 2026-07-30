@@ -21,7 +21,7 @@ jobs:
   static-analysis:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           token: ${{ secrets.ORG_SYNC_PAT }}
           submodules: recursive
@@ -60,20 +60,20 @@ jobs:
     env:
       OQLOS_SCENARIOS_DIR: ${{ github.workspace }}/packages/oql-scenario
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           token: ${{ secrets.ORG_SYNC_PAT }}
           submodules: recursive
           persist-credentials: false
       - name: Check out the Modbus workspace dependency
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: oqlos/pimodbus
           path: packages/pimodbus
           token: ${{ secrets.ORG_SYNC_PAT }}
           persist-credentials: false
       - name: Check out the canonical OQL scenarios
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: oqlos/oql-scenario
           path: packages/oql-scenario
@@ -82,9 +82,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: "22"
+          package-manager-cache: false
       - name: Build frontend assets
         run: npm ci --prefix frontend && npm run build --prefix frontend
       - name: Install dependencies
@@ -101,20 +102,20 @@ jobs:
     env:
       OQLOS_SCENARIOS_DIR: ${{ github.workspace }}/packages/oql-scenario
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           token: ${{ secrets.ORG_SYNC_PAT }}
           submodules: recursive
           persist-credentials: false
       - name: Check out the Modbus workspace dependency
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: oqlos/pimodbus
           path: packages/pimodbus
           token: ${{ secrets.ORG_SYNC_PAT }}
           persist-credentials: false
       - name: Check out the canonical OQL scenarios
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: oqlos/oql-scenario
           path: packages/oql-scenario
@@ -123,9 +124,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: "22"
+          package-manager-cache: false
       - name: Build frontend assets
         run: npm ci --prefix frontend && npm run build --prefix frontend
       - name: Build local workspace wheels
@@ -162,10 +164,11 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v6
         with:
           node-version: "22"
+          package-manager-cache: false
       - name: Install frontend deps
         run: npm ci
       - name: Run frontend unit tests
