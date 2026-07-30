@@ -1,6 +1,6 @@
 # OqlOS — lista zadań
 
-Stan: **2026-07-30**, bazowy `main` `e14353d`, z kolejną partią `NEXT-04`.
+Stan: **2026-07-30**, bazowy `main` `82f9636`, po siódmej grupie `NEXT-04`.
 
 Ten plik jest operacyjną checklistą. Szczegółowe uzasadnienie, zależności i
 kryteria ukończenia znajdują się w
@@ -11,7 +11,7 @@ należy zaktualizować oba dokumenty oraz dołączyć wynik testów i commit.
 
 - 194 publiczne trasy API;
 - 83 surowe wyjątki;
-- 216 szerokich handlerów `except` (w tym jawne granice storage i adapterów);
+- 189 szerokich handlerów `except` (w tym jawne granice storage i adapterów);
 - 80 tras zwracających `dict[str, Any]`;
 - 182 trasy z generyczną odpowiedzią OpenAPI;
 - 154 odczyty zmiennych środowiskowych poza typowaną warstwą settings;
@@ -43,7 +43,11 @@ negatywnych envelope przy HTTP 200.
   2. [x] `hardware_modbus_waveshare.py`;
   3. [x] `hardware_runtime.py`, `hardware_modbus_routes.py`,
      `hardware_modbus_settings.py`, `hardware_probe.py`, `hardware_lung.py`;
-  4. [ ] `plugins.py`, `update_status.py`.
+  4. [x] `plugins.py`, `update_status.py`;
+  5. [x] `hardware_peripherals_routes.py`, `scenarios.py`,
+     `ui_prefs_routes.py`, `ui_prefs_store.py`;
+  6. [x] `plugin_gateway.py`;
+  7. [x] `mqtt_oql_bridge.py`, `mqtt_protocol.py`.
 
 Dowód grupy 1: oczekiwane błędy HTTP/JSON i parsera mają wąskie handlery;
 awaria programistyczna przechodzi do sanitizowanej granicy 500. Cztery
@@ -72,6 +76,21 @@ wznawiane w `finally`. Błędy gateway, USB ADC, preflight i Tic249 publikują
 wyłącznie stabilny reason/kontekst. Metryka spadła 222 → 216; Modbus routes
 ma CC=14 zamiast 18, a lung CC=8 zamiast 10. Bramka: 1048/1048 backend,
 149/149 frontend, build Vite oraz Ruff.
+
+Dowód grup 4–6: API pluginów i status aktualizacji, granice Modbus ADC/parsera/
+preferencji oraz 13 handlerów gateway pluginów łapią wyłącznie oczekiwane
+klasy. Defekty programu nie udają awarii urządzenia, a publiczne wyniki nie
+kopiują body, health, ścieżek ani tekstu wyjątku. Metryka spadła 216 → 195;
+bramka po grupie 6: 1072/1072 backend, 149/149 frontend, build Vite i Ruff.
+
+Dowód grupy 7: request i response MQTT mają typowany `MqttEnvelopeError`,
+sprawdzają wersję envelope i nie maskują `AttributeError`. Pięć przewidywalnych
+handlerów zastąpiono wąskimi granicami; dwie pozostałe granice pętli agenta są
+celowe i przetestowane pod kątem braku komunikatu wyjątku, ścieżki, sekretu i
+tracebacku w odpowiedzi lub logu. Publiczny komunikat pochodzi z katalogu
+C2004. Metryka spadła 195 → 189; bramka: 1079/1079 backend, 149/149 frontend,
+build Vite, Ruff i spójny `uv.lock`.
+
 - [ ] Dla każdego przewidywalnego błędu ustalić:
   - lokalny `issue_code` i publiczny `C2004-*`;
   - właściwy HTTP status, severity, retryability i ownera;
@@ -89,9 +108,9 @@ ma CC=14 zamiast 18, a lung CC=8 zamiast 10. Bramka: 1048/1048 backend,
 ### Runtime, pluginy i wspólne pakiety
 
 - [ ] Rozdzielić błędy hosta, proxy, pluginu, urządzenia i timeoutu w:
-  - `oqlos/hardware/plugin_gateway.py`;
+  - [x] `oqlos/hardware/plugin_gateway.py`;
+  - [x] `oqlos/hardware/transport/mqtt_oql_bridge.py`;
   - `oqlos/hardware/gateway.py`;
-  - `oqlos/hardware/transport/mqtt_oql_bridge.py`;
   - `oqlos/hardware/firmware_adapter.py`;
   - `oqlos/hardware/plugins/registry.py`;
   - pluginach `lung`, `modbus`, `modbus_adc` i `piadc`.
@@ -110,7 +129,7 @@ ma CC=14 zamiast 18, a lung CC=8 zamiast 10. Bramka: 1048/1048 backend,
 
 - [ ] Zastąpić 80 zwrotów `dict[str, Any]` ścisłymi modelami odpowiedzi.
 - [ ] Nadać każdej publicznej trasie jawny model sukcesu i problem response.
-- [ ] Zmniejszyć 184 generyczne odpowiedzi wykrywane w OpenAPI do zera.
+- [ ] Zmniejszyć 182 generyczne odpowiedzi wykrywane w OpenAPI do zera.
 - [ ] Dla komend aktuacyjnych stosować `StrictBool`, enumy, zakresy, jawne
   jednostki oraz `extra="forbid"`.
 - [ ] Ujednolicić envelope sukcesu na `ok`; nie dodawać nowych pól `success`.
@@ -187,8 +206,18 @@ ma CC=14 zamiast 18, a lung CC=8 zamiast 10. Bramka: 1048/1048 backend,
   loading.
 - [ ] Rozbić duże moduły, zaczynając od `plugin_gateway.py`, gateway sprzętu,
   bridge MQTT i `_oql_adapter.py`.
+- [ ] Zinwentaryzować zewnętrznych konsumentów legacy
+  `oqlos.hardware.gateway.HardwareGateway`; użycie wewnątrz repo ogranicza się
+  do testu integracyjnego. Po migracji testu oznaczyć moduł deprecated i usunąć
+  go dopiero po okresie kompatybilności.
 - [ ] Dodać `pytest-cov`, `.coveragerc` oraz raport coverage w CI.
-- [ ] Zbudować hardware mock server dla testów TestQL bez fizycznego urządzenia.
+- [ ] Zbudować deterministyczny hardware mock server dla testów TestQL bez
+  fizycznego urządzenia; `dry-run` nie może być przedstawiany jako live
+  acceptance, a suite z wynikiem `0/0` ma kończyć się błędem.
+- [x] Uzupełnić `uv.lock` o Ruff zadeklarowany w extra `dev` i potwierdzić
+  `uv lock --check`.
+- [x] Dodać `uv lock --check` do bramki CI, aby kolejna zmiana zależności nie
+  pozostawiła niespójnego lockfile.
 
 ## P1/P2 — deploy i fizyczna walidacja (`NEXT-11`, `NEXT-12`)
 
@@ -223,6 +252,12 @@ ma CC=14 zamiast 18, a lung CC=8 zamiast 10. Bramka: 1048/1048 backend,
 - [ ] Aktualizować runbook `.122/.109` i procedurę awarii proxy/BoardNet.
 
 ## Testy integracyjne TestQL
+
+Logi z 2026-04-15 są historyczne. Większość przebiegów była zielona, natomiast
+porażki health/auth/CRUD pochodziły z asercji na pustych odpowiedziach w trybie
+`dry-run`; nie są dowodem bieżącej awarii usług. Wymagają powtórzenia na live
+target albo deterministycznym mocku. Dwa przebiegi `test-gui-all.tql` i
+`run-all-views.tql` raportowały `0/0`, co nie może spełniać bramki akceptacyjnej.
 
 - [ ] Uruchomić przy działającym OqlOS:
   `testql run testql-scenarios/generated-api-smoke.testql.toon.yaml`.

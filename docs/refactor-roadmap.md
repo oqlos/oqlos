@@ -1,6 +1,6 @@
 # Kanoniczny plan dalszej standaryzacji i refaktoryzacji
 
-Stan planu: **2026-07-29**. Ten dokument jest bieżącym źródłem prawdy dla
+Stan planu: **2026-07-30**. Ten dokument jest bieżącym źródłem prawdy dla
 otwartych prac OqlOS/OQL. Zastępuje operacyjnie datowany
 [plan z 2026-07-27](refactor-roadmap-2026-07-27.md); datowany plan i
 [audyt standaryzacji](STANDARDIZATION_AUDIT_2026-07-27.md) pozostają
@@ -38,6 +38,13 @@ Pomiary bazowe wykonano 2026-07-28. Wyniki `NEXT-01` i `NEXT-02` odświeżono
 | OQL Scenario | `main`, commit `7b4f939`, worktree czysty; 58 testów przechodzi |
 | Analiza statyczna | odświeżona 2026-07-29: OqlOS 194 tras, 80 `dict[str, Any]`, 3 kandydatów HTTP 200 z negatywnym wynikiem, 154 odczyty env i 30 dużych modułów; C2004 odpowiednio 668, 186, 15, 317 i 158 |
 | Deploy `.122`/`.109` | niezweryfikowany w tym przebiegu; wcześniejsze logi wskazywały niedostępne `.122:8202` i proxy 502 |
+
+Bieżący stan wykonawczy po siódmej grupie `NEXT-04`: commit `82f9636`, 194
+trasy, 80 zwrotów `dict[str, Any]`, 182 generyczne odpowiedzi OpenAPI, 83
+surowe wyjątki, 189 szerokich handlerów, 154 odczyty env, 30 dużych modułów i
+0 negatywnych odpowiedzi przy HTTP 200. Lokalna bramka: 1079/1079 backend,
+149/149 frontend, build Vite oraz Ruff. Główny chunk ma 540,19 kB i pozostaje
+jawnym zadaniem `NEXT-10`.
 
 Nie należy wpisywać wcześniejszych wartości `515`, `517` ani `858 passed` jako
 aktualnego stanu bez nowego, czystego przebiegu domyślnej komendy testowej.
@@ -347,7 +354,15 @@ programu nie są maskowane. Helpery granicy trafiły do osobnego modułu
 51-liniowego, więc nie powstał nowy hotspot. Audyt wskazuje 195 szerokich
 handlerów; bramka: 1072/1072 backend, 149/149 frontend, build Vite i Ruff.
 
-Pozostały zakres: sklasyfikować 83 surowe wyjątki i 195 szerokich handlerów
+Siódma grupa zawęziła pięć z siedmiu handlerów bridge'u MQTT oraz usunęła
+szeroki import guard protokołu. Niepoprawny JSON, kształt albo wersja envelope
+mają typowany `MqttEnvelopeError`, a defekty parsera nie są maskowane. Dwie
+pozostawione szerokie granice są celową ochroną pętli agenta; odpowiedź i log
+zawierają kod katalogowy, korelację i typ wyjątku, ale nie jego komunikat,
+ścieżkę, sekret ani traceback. Audyt wskazuje 189 szerokich handlerów; bramka:
+1079/1079 backend, 149/149 frontend, build Vite, Ruff i `uv lock --check`.
+
+Pozostały zakres: sklasyfikować 83 surowe wyjątki i 189 szerokich handlerów
 OqlOS, rozdzielić pozostałe klasy host/proxy/plugin oraz wykonać analogiczną
 inwentaryzację i kontrakty po stronie C2004/POA.
 
@@ -453,7 +468,13 @@ duplikaty są odrzucane, backlog wraca do zera i nie rośnie bez limitu.
 - dodać metryki p50/p95/p99 i 30-minutowy soak;
 - przyjąć początkowo: `/health` p95 < 100 ms, hardware health p95 < 500 ms,
   cached sensor read p95 < 500 ms;
-- podzielić frontendowy chunk większy niż 500 kB przez lazy loading.
+- podzielić frontendowy chunk większy niż 500 kB przez lazy loading;
+- zinwentaryzować zewnętrzne użycie legacy `HardwareGateway`; po migracji
+  jedynego repo-lokalnego testu oznaczyć moduł deprecated i usunąć dopiero po
+  okresie kompatybilności;
+- uruchamiać acceptance TestQL na live target lub deterministycznym mocku,
+  nigdy na pustej odpowiedzi `dry-run`, oraz odrzucać suite raportujące `0/0`;
+- utrzymywać zgodność `pyproject.toml`/`uv.lock` i sprawdzać ją w bramce CI.
 
 **Gotowe, gdy:** nie ma nakładających się polli ani kolejki po wolnym ADC,
 zdrowy soak nie generuje 503/504, a UI jawnie pokazuje wiek danych.
@@ -535,10 +556,11 @@ Praktyczne fale wdrożeniowe:
 4. **Fala 3 — obserwowalność:** NEXT-08, NEXT-09, NEXT-10.
 5. **Fala 4 — produkcja:** NEXT-11, NEXT-12, NEXT-13.
 
-Stan 2026-07-29: Fala 0 i implementacja `NEXT-03` są zakończone oraz
+Stan 2026-07-30: Fala 0 i implementacja `NEXT-03` są zakończone oraz
 potwierdzone w CI. Fizyczna weryfikacja `NEXT-03` pozostaje częścią bramki
-wdrożeniowej. Następna implementacja to klasyfikacja i ujednolicenie błędów
-`NEXT-04`.
+wdrożeniowej. `NEXT-04` trwa; po siedmiu grupach następny aktywny zakres to
+`firmware_adapter.py`, rejestr i pluginy sprzętowe. Legacy `gateway.py` wymaga
+najpierw audytu konsumentów i planu deprecjacji.
 
 ## 6. Obowiązkowe bramki weryfikacji
 

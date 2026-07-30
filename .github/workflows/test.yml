@@ -15,6 +15,7 @@ on:
       - "docs/refactor-*.md"
       - "Taskfile.yml"
       - "pyproject.toml"
+      - "uv.lock"
       - ".github/workflows/test.yml"
 jobs:
   static-analysis:
@@ -28,6 +29,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
+      - name: Validate dependency lock
+        run: pip install uv==0.11.9 && uv lock --check
       - name: Install pinned analyzer
         run: pip install code2llm==0.5.168 psutil==7.2.2
       - name: Generate refactor analysis

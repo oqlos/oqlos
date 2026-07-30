@@ -151,12 +151,34 @@ Snapshot wskazuje 195 szerokich handlerów, 83 surowe wyjątki i 0 błędów
 parsowania; bramka to 1072 testy backendowe, 149 frontendowych, build Vite i
 Ruff.
 
+Siódma grupa przeglądu objęła `mqtt_oql_bridge.py` oraz `mqtt_protocol.py`.
+Pięć przewidywalnych handlerów bridge'u i szeroki import guard protokołu
+zastąpiono jawnymi błędami JSON/envelope oraz sieciowego cleanup. Envelope
+odrzuca nieobsługiwaną wersję, a defekt parsera pozostaje widoczny zamiast być
+uznany za błędne dane. Dwie szerokie granice wykonania agenta pozostają celowo:
+chronią pętlę przed awarią komendy/pluginu, lecz publikują tylko katalogowy
+komunikat C2004, korelację i typ wyjątku. Test potwierdza brak surowego
+komunikatu, ścieżki, sekretu i tracebacku także w logu. Snapshot wskazuje 189
+szerokich handlerów, 83 surowe wyjątki i 0 błędów parsowania; bramka to 1079
+testów backendowych, 149 frontendowych, build Vite, Ruff i `uv lock --check`.
+
+### Przegląd istniejących logów wykonawczych
+
+Logi w `iql-run-logs/` i `oql-run-logs/` pochodzą z 2026-04-15, więc nie są
+telemetrią bieżących usług. W 137 logach IQL jest 129 plików z zielonym
+podsumowaniem oraz 6 z porażką. Porażki dotyczą health/auth/CRUD uruchomionych
+w `dry-run`: asercje otrzymały pusty status, brak tokenu albo pustą kolekcję;
+nie potwierdzają awarii live targetu. Dwa inne przebiegi były zielone jako
+`0/0`, co wymaga nowej blokady bramki. 128 logów OQL nie zawiera `ERROR`,
+tracebacku ani znacznika porażki. Backlog `NEXT-10` obejmuje deterministyczny
+mock/live acceptance oraz odrzucanie suite bez wykonanych kroków.
+
 ### Hotspoty rozmiaru
 
 Największe pliki OqlOS to słownik tłumaczeń (2 150 linii), `Panel.jsx`
 (1 519), parser OQL (1 420), gateway pluginów (1 007), akcje interpretera (933),
 główny interpreter (778), adapter OQL (744), `oqlos/api/main.py` (684) oraz
-Waveshare Modbus (656).
+Waveshare Modbus (640).
 
 W C2004 największe są widoki connect-menu i connect-test-device (1 761 i
 1 713), `Scenarios.jsx` (1 694), konfigurator sitemap/menu (1 644), parser
@@ -165,12 +187,12 @@ OQL TypeScript (1 441), inicjalizator frontendu (1 250) i runtime scenariusza
 
 ## Wnioski dla backlogu
 
-1. `NEXT-03` pozostaje pierwszym zadaniem wykonawczym: safety gate ma wpływ na
-   fizyczną aktuację i nie może czekać na pełne porządkowanie kontraktów.
-2. Pierwsza partia `NEXT-04` potwierdziła typowane błędy trzech tras OqlOS i
-   usunęła ich fałszywe alarmy z audytu. Dalszy zakres to 137 surowych wyjątków,
-   241 szerokich handlerów, 80 tras `dict[str, Any]` dla `NEXT-05` oraz 15
-   kandydatów C2004 wymagających osobnej weryfikacji.
+1. Implementacja `NEXT-03` jest zakończona; przed wdrożeniem nadal wymaga
+   fizycznej walidacji zasilania i bezpiecznej aktuacji w `NEXT-12`.
+2. Siedem grup `NEXT-04` zmniejszyło bieżący zakres OqlOS do 83 surowych
+   wyjątków i 189 szerokich handlerów. Następne aktywne hotspoty to
+   `firmware_adapter.py`, rejestr i pluginy sprzętowe; legacy `gateway.py`
+   wymaga najpierw audytu konsumentów i planu deprecjacji.
 3. `NEXT-07` powinno wprowadzić allowlistę settings i blokować nowe odczyty env;
    154/317 trafień to inwentarz migracji, nie założenie, że każde jest błędem.
 4. Podział dużych modułów należy prowadzić po odpowiedzialnościach i pokryciu
@@ -178,6 +200,9 @@ OQL TypeScript (1 441), inicjalizator frontendu (1 250) i runtime scenariusza
    ani kodu generowanego.
 5. Wysoka liczba szerokich handlerów wymaga klasyfikacji w `NEXT-04`; nie wolno
    usuwać handlera bez sprawdzenia granicy procesu, retry i cleanup.
+6. Historyczny `dry-run` nie jest dowodem akceptacji live. Bramka musi odrzucać
+   `0/0`, a testy zależne od danych powinny używać deterministycznego mocka albo
+   jawnie wskazanego targetu i fixture.
 
 ## Ograniczenia pomiaru
 

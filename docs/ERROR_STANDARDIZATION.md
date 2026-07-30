@@ -182,6 +182,14 @@ surowy komunikat brokera, sidecara lub adaptera nie jest kopiowany do body.
 Nieznany wyjątek agenta mapuje się na `C2004-SYS-0000`, nie na bazodanowy
 `C2004-SYS-0001`.
 
+Envelope MQTT jest wersjonowany. Błędny JSON, brak wymaganej korelacji,
+nieobiektowy payload i nieobsługiwana wersja kończą się lokalnym
+`MqttEnvelopeError` oraz odrzuceniem wiadomości bez publikowania payloadu.
+`AttributeError` i inne defekty parsera nie są klasyfikowane jako dane klienta.
+Dwie szerokie granice wykonania `manage`/OQL są dozwolone wyłącznie jako ochrona
+pętli agenta: odpowiedź pobiera komunikat z `CATALOG`, a log zawiera korelację i
+nazwę klasy wyjątku bez `str(exc)` oraz tracebacku.
+
 ### Reguły wykrywania i walidacji kodu
 
 Kod jest ustalany w następującej kolejności:
