@@ -1,6 +1,6 @@
 # OqlOS — lista zadań
 
-Stan: **2026-07-30**, commit implementacji `7034c27`, po ósmej grupie
+Stan: **2026-07-30**, commit implementacji `5e3320b`, po ósmej grupie
 `NEXT-04`.
 
 Ten plik jest operacyjną checklistą. Szczegółowe uzasadnienie, zależności i
@@ -99,7 +99,9 @@ sanitizowany envelope 503/`C2004-HW-0012`; komunikat upstream, ścieżka i sekre
 nie trafiają do wyniku ani logu. `AttributeError` nie jest maskowany jako
 awaria sprzętu. Metryka spadła 189 → 183 szerokie handlery oraz 83 → 81
 surowych wyjątków; bramka: 1089/1089 backend, 149/149 frontend, build Vite,
-Ruff `F821,F811`, lint zmienionych plików i `uv lock --check`.
+Ruff `F821,F811`, lint zmienionych plików i `uv lock --check`. Polityka granicy
+jest w osobnym, 103-liniowym module; adapter ma 511 linii zamiast 607 po
+pierwszym utwardzeniu.
 
 - [ ] Dla każdego przewidywalnego błędu ustalić:
   - lokalny `issue_code` i publiczny `C2004-*`;

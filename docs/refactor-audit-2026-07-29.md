@@ -168,8 +168,10 @@ komendy. Oczekiwana awaria publikuje wyłącznie stabilny envelope
 503/`C2004-HW-0012`; testy potwierdzają brak komunikatu upstream, ścieżki i
 sekretu w wyniku oraz logu, a także przepuszczenie defektu programu do
 sanitizowanej granicy 500. Snapshot wskazuje 183 szerokie handlery, 81
-surowych wyjątków i 0 błędów parsowania; bramka to 1089 testów backendowych,
-149 frontendowych, build Vite, Ruff i `uv lock --check`.
+surowych wyjątków i 0 błędów parsowania. Polityka granicy jest w osobnym
+module 103-liniowym, a adapter ma 511 linii zamiast przejściowych 607. Bramka
+to 1089 testów backendowych, 149 frontendowych, build Vite, Ruff i
+`uv lock --check`.
 
 ### Przegląd istniejących logów wykonawczych
 
