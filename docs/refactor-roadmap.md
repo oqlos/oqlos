@@ -184,6 +184,17 @@ wraca już jako HTTP 200 i nie ujawnia surowego komunikatu. Bieżąca metryka
 OqlOS: 96 surowych wyjątków (baseline 137), 0 literalnych negatywnych envelope
 przy HTTP 200.
 
+Partia granic współdzielonych usunęła kolejne 10 surowych wyjątków z helpera
+OqlOS oraz niezależnego `backend-shared-py`. Nowy kontrakt łączy publiczny kod,
+status, severity, retryability, ownera i remediation, a handler zachowuje
+`X-Correlation-ID` i zwraca `application/problem+json`. Wartości wejściowe,
+payload zdarzenia i tekst wyjątków sensora nie trafiają do odpowiedzi. Audyt
+OqlOS wskazuje 83 surowe wyjątki, 0 negatywnych envelope przy HTTP 200 i 0
+błędów parsowania. Nowy `shared.http_errors` ma 4 metody i CC=4, więc nie
+powiększa listy hotspotów wskazanych przez analizę. Bramka: 1024/1024 testy
+OqlOS, 43/43 dostępne testy `backend-shared-py`, 149/149 frontend, build Vite
+oraz Ruff `F821,F811` bez błędów.
+
 Następna partia zastąpiła dwa pozostałe surowe 403 w trasach sterowania i
 logów systemd. Jednostka spoza whitelisty zwraca teraz
 403/`C2004-AUTH-0002` z lokalnym `api_systemd_unit_forbidden`, zachowuje

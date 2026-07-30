@@ -4,8 +4,9 @@ from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import TypeVar
 
-from fastapi import HTTPException
 from fastapi.responses import FileResponse, HTMLResponse
+
+from oqlos.errors import OqlosError
 
 T = TypeVar("T")
 
@@ -42,7 +43,18 @@ def make_collection_route(
 
 
 def get_or_404(collection: Mapping[str, T], key: str, not_found_detail: str) -> T:
-    """Look up *key* in a dict-backed state collection, or raise HTTP 404."""
+    """Look up *key* or raise a typed 404 without publishing caller data."""
     if key not in collection:
-        raise HTTPException(status_code=404, detail=not_found_detail)
+        raise OqlosError(
+            code="api_resource_not_found",
+            status_code=404,
+            detail={
+                "architecture": "SOA",
+                "layer": "oqlos",
+                "component": "endpoint-helper",
+                "stage": "resource.lookup",
+                "problem_source": "request",
+                "operation_id": "shared.resource.get",
+            },
+        )
     return collection[key]

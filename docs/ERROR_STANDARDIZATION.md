@@ -150,6 +150,12 @@ domenowym. Powtarzalny błąd zakończony `SYS-0000` wymaga dodania jawnego
 | zdalne wykonanie scenariusza w editorze | status kodu agenta | zachowany kod MQTT | `SOA/firmware` | agent / etap MQTT | `mqtt-node://<node>/oql` |
 | nieotypowany `HTTPException` 5xx | status katalogu | kod wynikający ze statusu | `SOA/oqlos` | `oqlos-api` / `http.exception` | granica API |
 | nieznany błąd agenta | 500 | `C2004-SYS-0000` | `SOA/firmware` | etykiety agenta / etap MQTT | target bez hosta i danych dostępowych |
+| wspólny helper nie znajduje zasobu | 404 | `C2004-DATA-0001` | `SOA/oqlos` | `endpoint-helper` / `resource.lookup` | klucz i opis wywołującego nie są publikowane |
+| brak manifestu, pliku UI lub modelu modułu | 404 | `C2004-DATA-0001` | `SOA/shared-backend` | `connect-module` / odpowiedni etap lookup | nazwa wejściowa i ścieżka nie są publikowane |
+| ogólna trasa CQRS nie ma powiązania command/query | 503 | `C2004-NET-0002` | `SOA/shared-backend` | router CQRS / `command.resolve` albo `query.resolve` | nazwa komendy lub query nie jest publikowana |
+| błędny envelope inter-service event | 422 | `C2004-DATA-0002` | `SOA/shared-backend` | `inter-service-inbox` / `event.validate` | payload i tekst parsera nie są publikowane |
+| limit historii sensora poza zakresem | 422 | `C2004-DATA-0002` | `SOA/shared-backend` | `sensor-service` / `pressure-history.validate` | wartość wejściowa nie jest publikowana |
+| nieznana awaria odczytu sensora | 500 | `C2004-SYS-0000` | `SOA/shared-backend` | `sensor-service` / etap odczytu | komunikat wyjątku i traceback pozostają wyłącznie w logu |
 
 Na granicy `/api/v1/oql/execute` i `/manage` identyfikator z
 `X-Correlation-ID` lub `X-Request-ID` jest przekazywany do requestu MQTT,

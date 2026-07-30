@@ -1,6 +1,6 @@
 # OqlOS — lista zadań
 
-Stan: **2026-07-30**, bazowy `main` `af2f1b6`, z kolejną partią `NEXT-04`.
+Stan: **2026-07-30**, bazowy `main` `535e0ea`, z kolejną partią `NEXT-04`.
 
 Ten plik jest operacyjną checklistą. Szczegółowe uzasadnienie, zależności i
 kryteria ukończenia znajdują się w
@@ -10,7 +10,7 @@ należy zaktualizować oba dokumenty oraz dołączyć wynik testów i commit.
 ## Bieżące metryki
 
 - 194 publiczne trasy API;
-- 93 surowe wyjątki;
+- 83 surowe wyjątki;
 - 237 szerokich handlerów `except` (w tym jawne granice storage i adapterów);
 - 80 tras zwracających `dict[str, Any]`;
 - 184 trasy z generyczną odpowiedzią OpenAPI;
@@ -25,12 +25,19 @@ należy zaktualizować oba dokumenty oraz dołączyć wynik testów i commit.
 
 - [x] Sklasyfikować wskazane surowe wyjątki w `execution.py`,
   `hardware_modbus_wizard.py`, `ui_prefs_store.py` i `execution_ctrl.py`.
-- [ ] Zastąpić surowe `HTTPException` w współdzielonych granicach:
+- [x] Zastąpić surowe `HTTPException` w współdzielonych granicach:
   - `oqlos/shared/_endpoint_helpers.py`;
   - `packages/backend-shared-py/src/shared/cqrs/fastapi_integration.py`;
   - `packages/backend-shared-py/src/shared/cqrs/http_relay.py`;
   - `packages/backend-shared-py/src/shared/module_app_factory.py`;
   - `packages/backend-shared-py/src/shared/sensors_endpoint.py`.
+
+Dowód: współdzielony `SharedHttpError` wiąże status z kodem C2004, ownerem,
+retryability i remediation, zachowuje bezpieczny `correlation_id` oraz publikuje
+RFC 9457 po instalacji handlera. CQRS, inbox, pliki modułu i sensory mają 9
+testów kontraktowych w pakiecie, a lokalny helper OqlOS osobny test 404.
+Audyt po partii: 83 surowe wyjątki (spadek o 10), 0 błędów parsowania i 0
+negatywnych envelope przy HTTP 200.
 - [ ] Przejrzeć i sklasyfikować szerokie handlery w kolejności:
   1. `_hw3_peripheral.py`, `state.py`, `scenarios.py`;
   2. `hardware_modbus_waveshare.py`;

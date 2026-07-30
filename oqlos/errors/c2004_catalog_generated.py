@@ -263,6 +263,7 @@ C2004_CODE_BY_ISSUE: dict[str, str] = {
     'api_oql_transport_disabled': 'C2004-HW-0012',
     'api_peripheral_not_found': 'C2004-DATA-0001',
     'api_plugin_not_found': 'C2004-DATA-0001',
+    'api_resource_not_found': 'C2004-DATA-0001',
     'api_scenario_not_found': 'C2004-DATA-0001',
     'api_scenario_parser_unavailable': 'C2004-NET-0002',
     'api_scenario_payload_invalid': 'C2004-DATA-0002',

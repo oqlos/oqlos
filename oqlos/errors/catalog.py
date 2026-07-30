@@ -447,6 +447,12 @@ ISSUE_CATALOG: dict[str, IssueDefinition] = {
         default_severity="warning",
         summary="The requested peripheral does not exist.",
     ),
+    "api_resource_not_found": IssueDefinition(
+        code="api_resource_not_found",
+        domain="api",
+        default_severity="warning",
+        summary="The requested resource does not exist.",
+    ),
     "api_plugin_not_found": IssueDefinition(
         code="api_plugin_not_found",
         domain="api",

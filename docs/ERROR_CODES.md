@@ -36,6 +36,7 @@ own:
 | `api_oql_transport_disabled` | error | OQL-over-MQTT transport is disabled (OQLOS_OQL_TRANSPORT_ROLE=off); /api/v1/oql/execute and /manage cannot run. | `enable_oql_mqtt_transport` (scope=host, manual, risk=config) |
 | `api_peripheral_not_found` | warning | The requested peripheral does not exist. | — |
 | `api_plugin_not_found` | warning | The requested hardware plugin does not exist. | — |
+| `api_resource_not_found` | warning | The requested resource does not exist. | — |
 | `api_scenario_not_found` | warning | The requested scenario does not exist. | — |
 | `api_scenario_parser_unavailable` | error | The scenario DSL parser is unavailable. | — |
 | `api_scenario_payload_invalid` | warning | The scenario registration payload is invalid. | — |

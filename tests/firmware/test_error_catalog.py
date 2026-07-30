@@ -49,6 +49,7 @@ _CODE_SOURCE_PATHS = [
     _REPO_ROOT / "oqlos" / "hardware" / "plugin_gateway.py",
     _REPO_ROOT / "oqlos" / "hardware" / "usb_diagnostics.py",
     _REPO_ROOT / "oqlos" / "hardware" / "hui_readiness.py",
+    _REPO_ROOT / "oqlos" / "shared" / "_endpoint_helpers.py",
 ]
 _CODE_LITERAL = re.compile(r'code\s*=\s*"([a-z0-9_]+)"')
 _CODE_FSTRING = re.compile(r'code\s*=\s*f"([a-z0-9_{}]+)"')
