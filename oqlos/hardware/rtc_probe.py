@@ -133,16 +133,25 @@ def build_rtc_peripheral_status() -> dict[str, Any]:
 
     rtc = payload.get("rtc", {}) if isinstance(payload, dict) else {}
     watchdog = payload.get("watchdog", {}) if isinstance(payload, dict) else {}
+    rtc_ready = bool(rtc.get("ready", rtc.get("available")))
     time_ok, time_payload, _ = _pirtc_request_sync("GET", "/api/rtc/time", timeout=2.0)
     temp_ok, temp_payload, _ = _pirtc_request_sync("GET", "/api/rtc/temperature", timeout=2.0)
 
     data: dict[str, Any] = {
         "connected": bool(rtc.get("available")),
-        "ready": bool(rtc.get("available")),
+        "ready": rtc_ready,
         "mock": bool(rtc.get("mock")),
+        "error_code": rtc.get("error_code"),
+        "issue_code": rtc.get("issue_code"),
+        "last_error": rtc.get("last_error"),
         "rtc_i2c_address": rtc.get("i2c_address"),
         "rtc_i2c_bus": rtc.get("i2c_bus"),
         "watchdog_available": bool(watchdog.get("available")),
+        "watchdog_ready": bool(watchdog.get("ready", watchdog.get("available"))),
+        "watchdog_enabled": bool(watchdog.get("enabled", True)),
+        "watchdog_model": watchdog.get("model"),
+        "watchdog_error_code": watchdog.get("error_code"),
+        "watchdog_issue_code": watchdog.get("issue_code"),
         "watchdog_i2c_address": watchdog.get("i2c_address"),
         "watchdog_gpio_pin": watchdog.get("gpio_pin"),
         "watchdog_timeout": watchdog.get("timeout"),
@@ -154,9 +163,10 @@ def build_rtc_peripheral_status() -> dict[str, Any]:
         data["temperature"] = temp_payload.get("temperature", temp_payload)
 
     return {
-        "ok": True,
+        "ok": rtc_ready,
         "peripheral_id": RTC_PERIPHERAL_ID,
         "command": "status",
+        "error": None if rtc_ready else (rtc.get("last_error") or "RTC hardware probe failed"),
         "result": {"data": data},
     }
 
@@ -226,8 +236,9 @@ def build_rtc_adapter_entry() -> dict[str, Any]:
     rtc = payload.get("rtc", {}) if isinstance(payload, dict) else {}
     watchdog = payload.get("watchdog", {}) if isinstance(payload, dict) else {}
     rtc_avail = bool(rtc.get("available"))
+    rtc_ready = bool(rtc.get("ready", rtc_avail))
     is_mock = bool(rtc.get("mock"))
-    status = "ok" if rtc_avail and not is_mock else ("adapter-only" if rtc_avail else "no-access")
+    status = "ok" if rtc_ready and not is_mock else ("adapter-only" if rtc_ready else "no-access")
     return {
         "id": RTC_PERIPHERAL_ID,
         "name": "Waveshare RTC WatchDog HAT (DS3231)",
@@ -238,9 +249,17 @@ def build_rtc_adapter_entry() -> dict[str, Any]:
             "rtc_i2c_address": rtc.get("i2c_address"),
             "watchdog_i2c_address": watchdog.get("i2c_address"),
             "watchdog_gpio_pin": watchdog.get("gpio_pin"),
+            "rtc_ready": rtc_ready,
+            "error_code": rtc.get("error_code"),
+            "issue_code": rtc.get("issue_code"),
+            "last_error": rtc.get("last_error"),
+            "watchdog_enabled": watchdog.get("enabled"),
+            "watchdog_ready": watchdog.get("ready"),
+            "watchdog_model": watchdog.get("model"),
+            "watchdog_error_code": watchdog.get("error_code"),
         },
         "probe": {
-            "connected": rtc_avail,
+            "connected": rtc_ready,
             "source": "oqlos.hardware.rtc_probe",
             "pirtc_url": get_pirtc_base_url(),
         },

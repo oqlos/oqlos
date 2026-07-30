@@ -131,6 +131,30 @@ def test_pirtc_reuses_raspberry_pi_os_gpio_backend() -> None:
     assert "python3 -m venv --system-site-packages .venv" in pirtc
 
 
+def test_boardnet_watchdog_has_one_safe_reset_owner_and_persistent_audit() -> None:
+    migration = (ROOT / "redeploy/122/migration.md").read_text(encoding="utf-8")
+    pirtc = migration.split("markpact:ref deploy-pirtc-sidecar", 1)[1].split(
+        "```", 1
+    )[0]
+    audit = migration.split(
+        "markpact:ref configure-boardnet-watchdog-observability", 1
+    )[1].split("```", 1)[0]
+
+    assert "Environment=WATCHDOG_ENABLED=false" in pirtc
+    assert "Environment=WATCHDOG_MODEL=disabled" in pirtc
+    assert "watchdog.get(\"ready\") is True" in pirtc
+    assert "StandardOutput=journal" in pirtc
+    assert "StandardOutput=append:" not in pirtc
+
+    assert "Storage=persistent" in audit
+    assert "RuntimeWatchdogSec=3min" in audit
+    assert "RebootWatchdogSec=5min" in audit
+    assert "boardnet-watchdog-audit.timer" in audit
+    assert "C2004-HW-0016" in audit
+    assert "C2004-HW-0017" in audit
+    assert "boot_id" in audit
+
+
 def test_boardnet_deploy_uses_the_canonical_oql_scenario_store() -> None:
     migration = (ROOT / "redeploy/122/migration.md").read_text(encoding="utf-8")
     step = migration.split("- id: sync_oql_scenario", 1)[1].split("\n  - id:", 1)[0]

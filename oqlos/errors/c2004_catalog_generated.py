@@ -48,6 +48,8 @@ class ErrorCode(str, Enum):
     C2004_HW_0012 = 'C2004-HW-0012'
     C2004_HW_0013 = 'C2004-HW-0013'
     C2004_HW_0014 = 'C2004-HW-0014'
+    C2004_HW_0016 = 'C2004-HW-0016'
+    C2004_HW_0017 = 'C2004-HW-0017'
 
 
 CATALOG: dict[str, ErrorEntry] = {
@@ -243,6 +245,22 @@ CATALOG: dict[str, ErrorEntry] = {
         message='BoardNet reports active Raspberry Pi supply undervoltage', message_i18n=None,
         remediation='Stop safety-critical hardware operations, use a stable power supply rated for the Raspberry Pi and attached USB devices, then verify that `vcgencmd get_throttled` no longer has bit 0 set. Historical bit 16 alone is a warning, not an active C2004-HW-0014 error.', auto_repair={'enabled': False, 'risk': 'high'},
     ),
+    'C2004-HW-0016': ErrorEntry(
+        code='C2004-HW-0016', slug='hardware.rtc.unavailable', domain='hardware',
+        http_status=503, severity='error',
+        classification='safety', confidentiality='restricted',
+        retryable=True, owner='owner://domain/hardware', title='BoardNet RTC unavailable',
+        message='The BoardNet real-time clock did not respond to a hardware probe', message_i18n=None,
+        remediation='Keep NTP enabled, inspect the BoardNet I2C bus and DS3231 wiring at 0x68, then reinitialize piRTC only after the device responds. Do not treat driver construction as proof that the RTC is available.', auto_repair={'enabled': False, 'risk': 'high'},
+    ),
+    'C2004-HW-0017': ErrorEntry(
+        code='C2004-HW-0017', slug='hardware.watchdog.unsafe', domain='hardware',
+        http_status=503, severity='critical',
+        classification='safety', confidentiality='restricted',
+        retryable=False, owner='owner://domain/hardware', title='BoardNet watchdog is unavailable or unsafe',
+        message='The BoardNet watchdog could not be verified, configured safely, or fed', message_i18n=None,
+        remediation='Keep the external HAT watchdog disabled, confirm whether the board uses MAX705 or CH32V003, and verify its timeout is longer than the complete boot budget before enabling feeds. The Raspberry Pi BCM watchdog may remain enabled independently.', auto_repair={'enabled': False, 'risk': 'high'},
+    ),
 }
 
 
@@ -268,7 +286,7 @@ C2004_CODE_BY_ISSUE: dict[str, str] = {
     'api_scenario_parser_unavailable': 'C2004-NET-0002',
     'api_scenario_payload_invalid': 'C2004-DATA-0002',
     'api_systemd_unit_forbidden': 'C2004-AUTH-0002',
-    'api_ui_prefs_store_unavailable': 'C2004-NET-0002',
+    'api_ui_prefs_store_unavailable': 'C2004-SYS-0001',
     'boardnet_power_condition_active': 'C2004-HW-0014',
     'boardnet_power_condition_historical': 'C2004-HW-0014',
     'boardnet_power_telemetry_unavailable': 'C2004-HW-0012',
@@ -295,7 +313,12 @@ C2004_CODE_BY_ISSUE: dict[str, str] = {
     'modbus_preflight_exception': 'C2004-HW-0012',
     'pimodbus_unavailable': 'C2004-HW-0012',
     'remote_firmware_no_serial_access': 'C2004-HW-0012',
+    'remote_oql_execution_failed': 'C2004-HW-0012',
+    'rtc_i2c_unavailable': 'C2004-HW-0016',
     'serial_port_busy': 'C2004-HW-0013',
+    'watchdog_configuration_unsafe': 'C2004-HW-0017',
+    'watchdog_feed_failed': 'C2004-HW-0017',
+    'watchdog_i2c_unavailable': 'C2004-HW-0017',
 }
 
 C2004_ISSUE_PATTERNS: tuple[tuple[str, str, str], ...] = (

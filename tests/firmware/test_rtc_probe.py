@@ -95,8 +95,22 @@ def test_build_rtc_peripheral_status_reads_sidecar(monkeypatch) -> None:
         calls.append((method, path, json_body))
         if path == "/api/status":
             return True, {
-                "rtc": {"available": True, "mock": False, "i2c_address": "0x68", "i2c_bus": 1},
-                "watchdog": {"available": True, "i2c_address": "0x69", "gpio_pin": 4, "timeout": 30},
+                "rtc": {
+                    "available": True,
+                    "ready": True,
+                    "mock": False,
+                    "i2c_address": "0x68",
+                    "i2c_bus": 1,
+                },
+                "watchdog": {
+                    "available": False,
+                    "ready": True,
+                    "enabled": False,
+                    "model": "disabled",
+                    "i2c_address": "0x67",
+                    "gpio_pin": 4,
+                    "timeout": 300,
+                },
                 "timestamp": "2026-05-19T12:00:00Z",
             }, None
         if path == "/api/rtc/time":
@@ -115,6 +129,35 @@ def test_build_rtc_peripheral_status_reads_sidecar(monkeypatch) -> None:
     assert payload["result"]["data"]["connected"] is True
     assert payload["result"]["data"]["time"] == "12:00:00"
     assert calls[0][1] == "/api/status"
+
+
+def test_build_rtc_peripheral_status_rejects_false_available(monkeypatch) -> None:
+    monkeypatch.setenv("OQLOS_ENABLE_RTC", "1")
+
+    def fake_request(method, path, *, json_body=None, timeout=2.0):
+        if path == "/api/status":
+            return True, {
+                "rtc": {
+                    "available": False,
+                    "ready": False,
+                    "mock": False,
+                    "error_code": "C2004-HW-0016",
+                    "issue_code": "rtc_i2c_unavailable",
+                    "last_error": "read_time: [Errno 121] Remote I/O error",
+                },
+                "watchdog": {"enabled": False, "ready": True, "available": False},
+            }, None
+        return False, {}, "hardware unavailable"
+
+    monkeypatch.setattr("oqlos.hardware.rtc_probe._pirtc_request_sync", fake_request)
+
+    payload = build_rtc_peripheral_status()
+
+    assert payload["ok"] is False
+    data = payload["result"]["data"]
+    assert data["ready"] is False
+    assert data["error_code"] == "C2004-HW-0016"
+    assert data["issue_code"] == "rtc_i2c_unavailable"
 
 
 def test_run_rtc_command_posts_to_sidecar(monkeypatch) -> None:

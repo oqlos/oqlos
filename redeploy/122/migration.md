@@ -99,6 +99,171 @@ fi
 echo "PASS: linger + grupy (dialout,plugdev,i2c,gpio), timezone Europe/Warsaw; I2C wlaczone w config.txt"
 ```
 
+```bash markpact:ref configure-boardnet-watchdog-observability
+#!/bin/bash
+set -euo pipefail
+
+BOOT_ID_BEFORE=$(cat /proc/sys/kernel/random/boot_id)
+
+# Keep enough history to diagnose an abrupt reset, without filling the SD card.
+sudo mkdir -p /var/log/journal /etc/systemd/journald.conf.d
+sudo tee /etc/systemd/journald.conf.d/20-boardnet-persistent.conf >/dev/null <<'CONF'
+[Journal]
+Storage=persistent
+SystemMaxUse=100M
+MaxRetentionSec=14day
+Compress=yes
+CONF
+sudo systemctl restart systemd-journald
+sudo journalctl --flush
+
+# BCM2835 watchdog is the single active reset owner. The external HAT remains
+# disabled until its exact MAX705/CH32V003 revision and timeout are verified.
+sudo mkdir -p /etc/systemd/system.conf.d
+sudo tee /etc/systemd/system.conf.d/60-boardnet-watchdog.conf >/dev/null <<'CONF'
+[Manager]
+RuntimeWatchdogSec=3min
+RebootWatchdogSec=5min
+ServiceWatchdogs=yes
+CONF
+sudo systemctl daemon-reexec
+sleep 2
+
+BOOT_ID_AFTER=$(cat /proc/sys/kernel/random/boot_id)
+if [ "$BOOT_ID_BEFORE" != "$BOOT_ID_AFTER" ]; then
+  echo "FAIL: C2004-HW-0017 watchdog_configuration_unsafe — boot ID zmienil sie podczas konfiguracji" >&2
+  exit 1
+fi
+if [ ! -e /dev/watchdog0 ] || [ "$(cat /sys/class/watchdog/watchdog0/state 2>/dev/null || true)" != "active" ]; then
+  echo "FAIL: C2004-HW-0017 watchdog_configuration_unsafe — /dev/watchdog0 nie jest aktywny" >&2
+  exit 1
+fi
+
+sudo tee /usr/local/sbin/boardnet-watchdog-audit >/dev/null <<'PY'
+#!/usr/bin/env python3
+import json
+import socket
+import subprocess
+import time
+import urllib.request
+from pathlib import Path
+
+
+def read(path, default=None):
+    try:
+        return Path(path).read_text(encoding="utf-8").strip()
+    except (OSError, ValueError):
+        return default
+
+
+def command(argv, default=None):
+    try:
+        return subprocess.run(argv, check=False, capture_output=True, text=True, timeout=4).stdout.strip() or default
+    except (OSError, subprocess.SubprocessError):
+        return default
+
+
+def pirtc_status():
+    try:
+        with urllib.request.urlopen("http://127.0.0.1:8125/api/status", timeout=4) as response:
+            return json.load(response)
+    except Exception as exc:
+        return {"request_error": f"{type(exc).__name__}: {exc}"}
+
+
+watchdog_root = "/sys/class/watchdog/watchdog0"
+internal = {
+    "device": "/dev/watchdog0",
+    "identity": read(f"{watchdog_root}/identity"),
+    "state": read(f"{watchdog_root}/state", "missing"),
+    "timeout_seconds": read(f"{watchdog_root}/timeout"),
+    "timeleft_seconds": read(f"{watchdog_root}/timeleft"),
+    "runtime_watchdog": command(["systemctl", "show", "--property=RuntimeWatchdogUSec", "--value"]),
+}
+pirtc = pirtc_status()
+rtc = pirtc.get("rtc", {}) if isinstance(pirtc, dict) else {}
+external = pirtc.get("watchdog", {}) if isinstance(pirtc, dict) else {}
+throttled_raw = command(["vcgencmd", "get_throttled"], "unavailable")
+anomalies = []
+
+if internal["state"] != "active" or not internal["timeleft_seconds"]:
+    anomalies.append({
+        "code": "C2004-HW-0017",
+        "issue_code": "watchdog_configuration_unsafe",
+        "message": "BCM watchdog is not active or has no time-left telemetry",
+    })
+if external.get("enabled") is not False or external.get("ready") is not True:
+    anomalies.append({
+        "code": "C2004-HW-0017",
+        "issue_code": external.get("issue_code") or "watchdog_configuration_unsafe",
+        "message": external.get("last_error") or "external watchdog is not in the safe disabled state",
+    })
+if rtc.get("ready") is not True:
+    anomalies.append({
+        "code": rtc.get("error_code") or "C2004-HW-0016",
+        "issue_code": rtc.get("issue_code") or "rtc_i2c_unavailable",
+        "message": rtc.get("last_error") or pirtc.get("request_error") or "RTC hardware probe failed",
+    })
+if isinstance(throttled_raw, str) and throttled_raw.startswith("throttled=0x"):
+    try:
+        if int(throttled_raw.split("0x", 1)[1], 16) & 0x1:
+            anomalies.append({
+                "code": "C2004-HW-0014",
+                "issue_code": "boardnet_undervoltage_active",
+                "message": "active Raspberry Pi supply undervoltage",
+            })
+    except ValueError:
+        pass
+
+print(json.dumps({
+    "schema": "c2004-boardnet-watchdog-audit-v1",
+    "timestamp_unix": time.time(),
+    "hostname": socket.gethostname(),
+    "boot_id": read("/proc/sys/kernel/random/boot_id"),
+    "uptime_seconds": float(read("/proc/uptime", "0").split()[0]),
+    "ok": not anomalies,
+    "internal_watchdog": internal,
+    "external_watchdog": external,
+    "rtc": rtc,
+    "throttled": throttled_raw,
+    "anomalies": anomalies,
+}, separators=(",", ":"), default=str))
+PY
+sudo chmod 0755 /usr/local/sbin/boardnet-watchdog-audit
+
+sudo tee /etc/systemd/system/boardnet-watchdog-audit.service >/dev/null <<'UNIT'
+[Unit]
+Description=BoardNet watchdog, RTC and power audit
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/boardnet-watchdog-audit
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=boardnet-watchdog-audit
+UNIT
+
+sudo tee /etc/systemd/system/boardnet-watchdog-audit.timer >/dev/null <<'UNIT'
+[Unit]
+Description=Run BoardNet watchdog audit every minute
+
+[Timer]
+OnBootSec=30s
+OnUnitActiveSec=60s
+AccuracySec=5s
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+UNIT
+
+sudo systemctl daemon-reload
+sudo systemctl enable --now boardnet-watchdog-audit.timer
+sudo systemctl start boardnet-watchdog-audit.service
+echo "PASS: persistent journal + BCM watchdog + boardnet-watchdog-audit.timer (boot_id=$BOOT_ID_AFTER)"
+```
+
 ```bash markpact:ref install-mosquitto
 #!/bin/bash
 set -euo pipefail
@@ -425,6 +590,9 @@ Environment=API_HOST=0.0.0.0
 Environment=API_PORT=8125
 Environment=RTC_MOCK=false
 Environment=WATCHDOG_MOCK=false
+Environment=WATCHDOG_ENABLED=false
+Environment=WATCHDOG_MODEL=disabled
+Environment=WATCHDOG_TIMEOUT=300
 Environment=RTC_I2C_ADDRESS=0x68
 Environment=RTC_I2C_BUS=1
 Environment=WATCHDOG_I2C_ADDRESS=0x67
@@ -433,8 +601,9 @@ Environment=LOG_LEVEL=INFO
 ExecStart=/home/${BOARDNET_SSH_USER}/maskservice/pirtc/.venv/bin/pirtc-server
 Restart=always
 RestartSec=3
-StandardOutput=append:/home/${BOARDNET_SSH_USER}/maskservice/logs/pirtc-api.log
-StandardError=append:/home/${BOARDNET_SSH_USER}/maskservice/logs/pirtc-api.log
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=pirtc-api
 
 [Install]
 WantedBy=default.target
@@ -453,6 +622,27 @@ if ! systemctl --user is-active pirtc-api.service >/dev/null 2>&1; then
   exit 1
 fi
 STATUS=$(curl -sf http://127.0.0.1:8125/api/status 2>/dev/null || true)
+if ! python3 - "$STATUS" <<'PY'
+import json
+import sys
+try:
+    data = json.loads(sys.argv[1])
+except Exception:
+    raise SystemExit(1)
+watchdog = data.get("watchdog", {}) if isinstance(data, dict) else {}
+safe = (
+    watchdog.get("enabled") is False
+    and watchdog.get("ready") is True
+    and watchdog.get("model") == "disabled"
+)
+raise SystemExit(0 if safe else 1)
+PY
+then
+  echo "FAIL: C2004-HW-0017 watchdog_configuration_unsafe — zewnetrzny watchdog nie jest bezpiecznie wylaczony" >&2
+  exit 1
+fi
+echo "PASS: external WatchDog disabled; BCM /dev/watchdog0 pozostaje jedynym reset ownerem"
+
 if python3 - "$STATUS" <<'PY'
 import json
 import sys
@@ -461,20 +651,29 @@ try:
 except Exception:
     raise SystemExit(1)
 rtc = data.get("rtc", {}) if isinstance(data, dict) else {}
-raise SystemExit(0 if rtc.get("available") is True and rtc.get("mock") is False else 1)
+raise SystemExit(0 if rtc.get("ready") is True and rtc.get("available") is True and rtc.get("mock") is False else 1)
 PY
 then
-  if curl -sf -X POST http://127.0.0.1:8125/api/rtc/sync-from-system >/dev/null 2>&1; then
+  SYNC_STATUS=$(curl -sf -X POST http://127.0.0.1:8125/api/rtc/sync-from-system 2>/dev/null || true)
+  if python3 - "$SYNC_STATUS" <<'PY'
+import json, sys
+try:
+    payload = json.loads(sys.argv[1])
+except Exception:
+    raise SystemExit(1)
+raise SystemExit(0 if payload.get("success") is True else 1)
+PY
+  then
     STATUS=$(curl -sf http://127.0.0.1:8125/api/status 2>/dev/null || true)
   else
-    echo "WARN: piRTC dostępny, ale sync-from-system nie powiódł się"
+    echo "WARN: C2004-HW-0016 rtc_i2c_unavailable — piRTC sync-from-system nie powiodl sie"
   fi
-  echo "PASS: piRTC sidecar :8125 — RTC HAT dostępny (nie mock)"
+  echo "PASS: piRTC sidecar :8125 — RTC ready=true available=true mock=false"
 elif [ "${PIHW_ALLOW_MISSING_HARDWARE:-1}" = "1" ]; then
-  echo "WARN: piRTC bez działającego RTC — PIHW_ALLOW_MISSING_HARDWARE=1"
+  echo "WARN: C2004-HW-0016 rtc_i2c_unavailable — piRTC bez dzialajacego RTC; NTP pozostaje zrodlem czasu"
   exit 0
 else
-  echo "FAIL: piRTC :8125 bez działającego RTC" >&2
+  echo "FAIL: C2004-HW-0016 rtc_i2c_unavailable — piRTC :8125 bez dzialajacego RTC" >&2
   exit 1
 fi
 ```
@@ -1223,18 +1422,30 @@ else
   _warn_or_fail "DRI0050 :8203 nie odpowiada na stop/status"
 fi
 
-# piRTC: status bez mocka, jesli HAT jest obecny.
+# piRTC: rzeczywisty probe RTC oraz bezpieczny stan zewnetrznego WatchDoga.
 if _curl_get http://127.0.0.1:8125/api/status "$TMPDIR/pirtc-status.json" 6; then
   if python3 - "$TMPDIR/pirtc-status.json" <<'PY'
 import json, sys
 data = json.load(open(sys.argv[1], encoding="utf-8"))
 rtc = data.get("rtc", {}) if isinstance(data, dict) else {}
-raise SystemExit(0 if rtc.get("available") is True and rtc.get("mock") is False else 1)
+raise SystemExit(0 if rtc.get("ready") is True and rtc.get("available") is True and rtc.get("mock") is False else 1)
 PY
   then
-    _pass "piRTC :8125 available=true mock=false"
+    _pass "piRTC :8125 ready=true available=true mock=false"
   else
-    _warn_or_fail "piRTC :8125 status nie potwierdza available=true mock=false"
+    _warn_or_fail "C2004-HW-0016 rtc_i2c_unavailable — piRTC nie potwierdza rzeczywistego probe RTC"
+  fi
+  if python3 - "$TMPDIR/pirtc-status.json" <<'PY'
+import json, sys
+data = json.load(open(sys.argv[1], encoding="utf-8"))
+watchdog = data.get("watchdog", {}) if isinstance(data, dict) else {}
+safe = watchdog.get("enabled") is False and watchdog.get("ready") is True and watchdog.get("model") == "disabled"
+raise SystemExit(0 if safe else 1)
+PY
+  then
+    _pass "external WatchDog disabled; reset owner=/dev/watchdog0"
+  else
+    _fail "C2004-HW-0017 watchdog_configuration_unsafe — external WatchDog nie jest w bezpiecznym stanie"
   fi
 else
   _warn_or_fail "piRTC :8125 nie odpowiada"
@@ -1577,6 +1788,12 @@ extra_steps:
     action: inline_script
     description: "Linger + grupy urządzeń dla użytkownika ${BOARDNET_SSH_USER}"
     command_ref: enable-linger-groups
+
+  - id: configure_boardnet_watchdog_observability
+    action: inline_script
+    description: "Persistent journal, BCM watchdog policy i audit anomalii"
+    command_ref: configure-boardnet-watchdog-observability
+    timeout: 120
 
   - id: sync_oqlos_core
     action: rsync

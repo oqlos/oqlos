@@ -90,6 +90,37 @@ ISSUE_CATALOG: dict[str, IssueDefinition] = {
         default_severity="warning",
         summary="BoardNet reports a power, throttling or thermal condition since boot.",
     ),
+    "rtc_i2c_unavailable": IssueDefinition(
+        code="rtc_i2c_unavailable",
+        domain="hardware",
+        default_severity="error",
+        summary="The BoardNet DS3231 real-time clock did not respond to an I2C probe.",
+        repair=RepairTemplate(
+            id="restore_boardnet_rtc",
+            scope="host",
+            auto_executable=False,
+            actuation_risk="physical",
+            hint="Keep NTP enabled and inspect the DS3231 wiring and I2C address 0x68.",
+        ),
+    ),
+    "watchdog_configuration_unsafe": IssueDefinition(
+        code="watchdog_configuration_unsafe",
+        domain="hardware",
+        default_severity="critical",
+        summary="The external BoardNet watchdog configuration is not safe to enable.",
+    ),
+    "watchdog_feed_failed": IssueDefinition(
+        code="watchdog_feed_failed",
+        domain="hardware",
+        default_severity="critical",
+        summary="The external BoardNet watchdog feed operation failed.",
+    ),
+    "watchdog_i2c_unavailable": IssueDefinition(
+        code="watchdog_i2c_unavailable",
+        domain="hardware",
+        default_severity="error",
+        summary="The CH32V003 BoardNet watchdog did not respond to an I2C probe.",
+    ),
     "modbus_adc_adapter_only": IssueDefinition(
         code="modbus_adc_adapter_only",
         domain="hardware",
