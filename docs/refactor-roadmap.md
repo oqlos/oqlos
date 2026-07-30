@@ -39,10 +39,10 @@ Pomiary bazowe wykonano 2026-07-28. Wyniki `NEXT-01` i `NEXT-02` odświeżono
 | Analiza statyczna | odświeżona 2026-07-29: OqlOS 194 tras, 80 `dict[str, Any]`, 3 kandydatów HTTP 200 z negatywnym wynikiem, 154 odczyty env i 30 dużych modułów; C2004 odpowiednio 668, 186, 15, 317 i 158 |
 | Deploy `.122`/`.109` | niezweryfikowany w tym przebiegu; wcześniejsze logi wskazywały niedostępne `.122:8202` i proxy 502 |
 
-Bieżący stan wykonawczy po ósmej grupie `NEXT-04`: commit `5e3320b`, 194
+Bieżący stan wykonawczy po ósmej grupie `NEXT-04`: commit `69b85fe`, 194
 trasy, 80 zwrotów `dict[str, Any]`, 182 generyczne odpowiedzi OpenAPI, 81
 surowych wyjątków, 183 szerokie handlery, 154 odczyty env, 30 dużych modułów i
-0 negatywnych odpowiedzi przy HTTP 200. Lokalna bramka: 1089/1089 backend,
+0 negatywnych odpowiedzi przy HTTP 200. Lokalna bramka: 1090/1090 backend,
 149/149 frontend, build Vite oraz Ruff. Główny chunk ma 540,19 kB i pozostaje
 jawnym zadaniem `NEXT-10`.
 
@@ -368,7 +368,7 @@ typowane klasy, a wynik komendy publikuje stabilny 503/`C2004-HW-0012` bez
 komunikatu upstream, ścieżki lub sekretu. Defekty programu nie są maskowane.
 Audyt wskazuje 183 szerokie handlery i 81 surowych wyjątków; polityka granicy
 mieści się w osobnym module 103-liniowym, a adapter ma 511 linii. Bramka:
-1089/1089 backend, 149/149 frontend, build Vite, Ruff i `uv lock --check`.
+1090/1090 backend, 149/149 frontend, build Vite, Ruff i `uv lock --check`.
 
 Pozostały zakres: sklasyfikować 81 surowych wyjątków i 183 szerokie handlery
 OqlOS, rozdzielić pozostałe klasy host/proxy/plugin oraz wykonać analogiczną
