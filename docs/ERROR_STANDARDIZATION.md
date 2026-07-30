@@ -1,6 +1,6 @@
 # Standard błędów i diagnostyki OqlOS/C2004
 
-Stan zweryfikowany: 2026-07-29.
+Stan zweryfikowany: 2026-07-30.
 
 ## Dwa poziomy identyfikatorów
 
@@ -128,6 +128,7 @@ domenowym. Powtarzalny błąd zakończony `SYS-0000` wymaga dodania jawnego
 | brak pliku edytora lub scenariusza | 404 | `C2004-DATA-0001` | `SOA/oqlos` | `scenario-editor` / `file.lookup` | nazwa i ścieżka wejściowa nie są publikowane |
 | operacja plikowa edytora wskazuje katalog | 422 | `C2004-DATA-0002` | `SOA/oqlos` | `scenario-editor` / `target.validate` | nazwa i ścieżka wejściowa nie są publikowane |
 | nieznana awaria magazynu edytora | 500 | `C2004-SYS-0000` | `SOA/oqlos` | `oqlos-api` / `api.error` | treść wyjątku i ścieżka nie są publikowane |
+| niedostępny magazyn preferencji UI | 503 | `C2004-NET-0002` | `SOA/oqlos` | `ui-prefs-store` / `preferences.load` albo `preferences.persist` | ścieżka, payload i tekst błędu I/O nie są publikowane |
 | brak scenariusza w rejestrze | 404 | `C2004-DATA-0001` | `SOA/oqlos` | `scenario-registry` / `scenario.lookup` | identyfikator wejściowy nie jest publikowany |
 | błędny payload rejestracji DSL | 422 | `C2004-DATA-0002` | `SOA/oqlos` | `scenario-registry` / `payload.validate` | publikowane jest tylko pole i oczekiwany typ |
 | niedostępny parser scenariuszy | 503 | `C2004-NET-0002` | `SOA/oqlos` | `scenario-parser` / `dependency.load` | tekst wyjątku importu nie jest publikowany |

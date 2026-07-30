@@ -423,6 +423,12 @@ ISSUE_CATALOG: dict[str, IssueDefinition] = {
         default_severity="warning",
         summary="The requested system service is not permitted for this operation.",
     ),
+    "api_ui_prefs_store_unavailable": IssueDefinition(
+        code="api_ui_prefs_store_unavailable",
+        domain="api",
+        default_severity="error",
+        summary="The UI preferences store is unavailable.",
+    ),
     "api_modbus_wizard_invalid_request": IssueDefinition(
         code="api_modbus_wizard_invalid_request",
         domain="api",

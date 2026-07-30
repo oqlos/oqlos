@@ -246,7 +246,16 @@ według katalogu. Zdalne wykonanie `/api/v1/editor/execute` propaguje
 nie opakowuje już w HTTP 200. Timeout scenariusza daje ten sam
 504/`C2004-NET-0003` co `/api/v1/oql/execute`.
 
-Pozostały zakres: sklasyfikować 96 surowych wyjątków i 235 szerokich handlerów
+Magazyn preferencji UI nie ukrywa już błędnego JSON/YAML jako pustych ustawień.
+Błąd odczytu lub zapisu daje 503/`C2004-NET-0002` z lokalnym
+`api_ui_prefs_store_unavailable`, zachowuje `correlation_id` i nie publikuje
+ścieżki pliku, payloadu ani tekstu wyjątku. Szerokie handlery tras GET/PUT są
+celową granicą storage, a zapis `merge` najpierw ładuje istniejące preferencje.
+Pełna bramka po tej zmianie: 1008/1008 testów, 149/149 testów frontendowych,
+build Vite oraz Ruff `F821,F811` bez błędów. Metryka surowych wyjątków spadła
+do 95; liczba szerokich handlerów wzrosła do 236 przez dwie jawne granice tras.
+
+Pozostały zakres: sklasyfikować 95 surowych wyjątków i 236 szerokich handlerów
 OqlOS, rozdzielić pozostałe klasy host/proxy/plugin oraz wykonać analogiczną
 inwentaryzację i kontrakty po stronie C2004/POA.
 

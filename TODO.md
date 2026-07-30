@@ -1,6 +1,6 @@
 # OqlOS — lista zadań
 
-Stan: **2026-07-29**, po `f125222` na `main`.
+Stan: **2026-07-30**, bazowy `main` `180037f`, z kolejną partią `NEXT-04`.
 
 Ten plik jest operacyjną checklistą. Szczegółowe uzasadnienie, zależności i
 kryteria ukończenia znajdują się w
@@ -10,8 +10,8 @@ należy zaktualizować oba dokumenty oraz dołączyć wynik testów i commit.
 ## Bieżące metryki
 
 - 194 publiczne trasy API;
-- 96 surowych wyjątków;
-- 235 szerokich handlerów `except`;
+- 95 surowych wyjątków;
+- 236 szerokich handlerów `except` (w tym jawna granica storage preferencji UI);
 - 80 tras zwracających `dict[str, Any]`;
 - 184 trasy z generyczną odpowiedzią OpenAPI;
 - 154 odczyty zmiennych środowiskowych poza typowaną warstwą settings;
@@ -24,9 +24,7 @@ należy zaktualizować oba dokumenty oraz dołączyć wynik testów i commit.
 ### Publiczne granice API
 
 - [ ] Sklasyfikować pozostałe surowe wyjątki w API:
-  - `oqlos/api/execution.py`;
   - `oqlos/api/hardware_modbus_wizard.py`;
-  - `oqlos/api/ui_prefs_store.py`;
   - `oqlos/api/utils/execution_ctrl.py`.
 - [ ] Zastąpić surowe `HTTPException` w współdzielonych granicach:
   - `oqlos/shared/_endpoint_helpers.py`;
@@ -39,7 +37,7 @@ należy zaktualizować oba dokumenty oraz dołączyć wynik testów i commit.
   2. `hardware_modbus_waveshare.py`, `hardware_modbus_wizard.py`;
   3. `hardware_runtime.py`, `hardware_modbus_routes.py`,
      `hardware_modbus_settings.py`, `hardware_probe.py`, `hardware_lung.py`;
-  4. `plugins.py`, `update_status.py`, `ui_prefs_store.py`.
+  4. `plugins.py`, `update_status.py`.
 - [ ] Dla każdego przewidywalnego błędu ustalić:
   - lokalny `issue_code` i publiczny `C2004-*`;
   - właściwy HTTP status, severity, retryability i ownera;

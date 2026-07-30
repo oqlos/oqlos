@@ -39,6 +39,7 @@ own:
 | `api_scenario_parser_unavailable` | error | The scenario DSL parser is unavailable. | — |
 | `api_scenario_payload_invalid` | warning | The scenario registration payload is invalid. | — |
 | `api_systemd_unit_forbidden` | warning | The requested system service is not permitted for this operation. | — |
+| `api_ui_prefs_store_unavailable` | error | The UI preferences store is unavailable. | — |
 
 ## config
 
