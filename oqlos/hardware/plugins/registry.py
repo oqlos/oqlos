@@ -9,6 +9,8 @@ import logging
 from pathlib import Path
 from typing import Any, Type
 
+import httpx
+
 from .base import (
     HardwarePlugin,
     PluginConfig,
@@ -18,6 +20,26 @@ from .base import (
 )
 
 logger = logging.getLogger(__name__)
+
+PLUGIN_REGISTRY_OPERATION_ERRORS = (
+    ImportError,
+    OSError,
+    RuntimeError,
+    ValueError,
+    httpx.HTTPError,
+)
+
+
+class PluginRegistryError(RuntimeError):
+    """Expected configuration or lookup failure in the plugin registry."""
+
+
+class PluginNotRegisteredError(PluginRegistryError):
+    """The requested plugin has no registered implementation."""
+
+
+class PluginConfigurationError(PluginRegistryError):
+    """A plugin configuration failed base or implementation validation."""
 
 
 class PluginRegistry:
@@ -84,22 +106,26 @@ class PluginRegistry:
         ]
 
     @classmethod
-    async def create_instance(cls, plugin_id: str, config: PluginConfig) -> HardwarePlugin:
+    async def create_instance(
+        cls, plugin_id: str, config: PluginConfig
+    ) -> HardwarePlugin:
         """
         Create and initialize a plugin instance.
 
         Raises:
-            ValueError: If plugin is not registered
-            RuntimeError: If configuration is invalid
+            PluginNotRegisteredError: If plugin is not registered
+            PluginConfigurationError: If configuration is invalid
         """
         plugin_class = cls.get_plugin_class(plugin_id)
         if not plugin_class:
-            raise ValueError(f"Plugin {plugin_id} is not registered")
+            raise PluginNotRegisteredError(f"Plugin {plugin_id} is not registered")
 
         # Validate configuration
         config_errors = config.validate()
         if config_errors:
-            raise RuntimeError(f"Invalid configuration: {', '.join(config_errors)}")
+            raise PluginConfigurationError(
+                f"Invalid configuration: {', '.join(config_errors)}"
+            )
 
         # Create instance
         instance = plugin_class(config)
@@ -107,7 +133,9 @@ class PluginRegistry:
         # Validate plugin-specific configuration
         plugin_errors = instance.validate_config()
         if plugin_errors:
-            raise RuntimeError(f"Plugin validation failed: {', '.join(plugin_errors)}")
+            raise PluginConfigurationError(
+                f"Plugin validation failed: {', '.join(plugin_errors)}"
+            )
 
         cls._instances[plugin_id] = instance
         logger.info(f"Created instance of plugin: {plugin_id}")
@@ -133,8 +161,11 @@ class PluginRegistry:
             else:
                 instance._status = PluginStatus.ERROR
             return success
-        except Exception as exc:
-            logger.error(f"Failed to connect plugin {plugin_id}: {exc}")
+        except PLUGIN_REGISTRY_OPERATION_ERRORS as exc:
+            logger.error(
+                "Plugin connection failed exception_type=%s",
+                type(exc).__name__,
+            )
             return False
 
     @classmethod
@@ -148,24 +179,33 @@ class PluginRegistry:
                 del cls._instances[plugin_id]
                 logger.info(f"Disconnected plugin: {plugin_id}")
                 return True
-            except Exception as exc:
-                logger.error(f"Failed to disconnect plugin {plugin_id}: {exc}")
+            except PLUGIN_REGISTRY_OPERATION_ERRORS as exc:
+                logger.error(
+                    "Plugin disconnect failed exception_type=%s",
+                    type(exc).__name__,
+                )
                 return False
         return False
 
     @classmethod
-    async def health_check(cls, plugin_id: str, *, timeout: float | None = None) -> PluginHealth | None:
+    async def health_check(
+        cls, plugin_id: str, *, timeout: float | None = None
+    ) -> PluginHealth | None:
         """Perform health check on a plugin instance."""
         instance = cls.get_instance(plugin_id)
         if instance:
             try:
                 check = instance.health_check()
-                health = await asyncio.wait_for(check, timeout=timeout) if timeout else await check
+                health = (
+                    await asyncio.wait_for(check, timeout=timeout)
+                    if timeout
+                    else await check
+                )
                 instance._health = health
                 instance._status = health.status
                 return health
             except asyncio.TimeoutError:
-                logger.error("Health check timed out for plugin %s", plugin_id)
+                logger.error("Plugin health check timed out")
                 health = PluginHealth(
                     status=PluginStatus.ERROR,
                     message=f"Health check timed out after {timeout:.1f}s",
@@ -174,18 +214,27 @@ class PluginRegistry:
                 instance._health = health
                 instance._status = health.status
                 return health
-            except Exception as exc:
-                logger.error(f"Health check failed for plugin {plugin_id}: {exc}")
-                return PluginHealth(
+            except PLUGIN_REGISTRY_OPERATION_ERRORS as exc:
+                logger.error(
+                    "Plugin health check failed exception_type=%s",
+                    type(exc).__name__,
+                )
+                health = PluginHealth(
                     status=PluginStatus.ERROR,
-                    message=f"Health check exception: {exc}",
+                    message="Plugin health check failed",
                     compatible=False,
                 )
+                instance._health = health
+                instance._status = health.status
+                return health
         return None
 
     @classmethod
-    async def health_check_all(cls, *, timeout: float | None = None) -> dict[str, PluginHealth]:
+    async def health_check_all(
+        cls, *, timeout: float | None = None
+    ) -> dict[str, PluginHealth]:
         """Perform health checks on all active plugin instances."""
+
         async def _check(plugin_id: str) -> tuple[str, PluginHealth | None]:
             return plugin_id, await cls.health_check(plugin_id, timeout=timeout)
 
@@ -197,7 +246,9 @@ class PluginRegistry:
         return results
 
     @classmethod
-    def validate_all_configurations(cls, configs: dict[str, PluginConfig]) -> dict[str, list[str]]:
+    def validate_all_configurations(
+        cls, configs: dict[str, PluginConfig]
+    ) -> dict[str, list[str]]:
         """
         Validate configurations for multiple plugins.
 
@@ -245,9 +296,7 @@ class PluginRegistry:
     # ------------------------------------------------------------------
 
     @classmethod
-    def discover_entry_point_plugins(
-        cls, group: str = "oqlos_hardware"
-    ) -> list[str]:
+    def discover_entry_point_plugins(cls, group: str = "oqlos_hardware") -> list[str]:
         """
         Discover and register plugins from installed entry points.
 
@@ -283,7 +332,13 @@ class PluginRegistry:
                     discovered.append(ep.name)
                 logger.info("Discovered entry-point plugin: %s", ep.name)
             except Exception as exc:
-                logger.error("Failed to load entry point %s: %s", ep.name, exc)
+                # Entry points execute third-party import code. This is an
+                # intentional process boundary: one broken optional package
+                # must not prevent built-in hardware plugins from loading.
+                logger.error(
+                    "Entry-point plugin load failed exception_type=%s",
+                    type(exc).__name__,
+                )
         return discovered
 
     # ------------------------------------------------------------------
@@ -291,9 +346,7 @@ class PluginRegistry:
     # ------------------------------------------------------------------
 
     @classmethod
-    def load_configs_from_yaml(
-        cls, config_path: str | Path
-    ) -> dict[str, PluginConfig]:
+    def load_configs_from_yaml(cls, config_path: str | Path) -> dict[str, PluginConfig]:
         """Deprecated compatibility alias; use :meth:`load_configs`."""
         return cls.load_configs(config_path)
 
@@ -305,6 +358,8 @@ class PluginRegistry:
         document = load_hardware_configuration(config_path, allow_legacy=True)
         configs: dict[str, PluginConfig] = {}
         for plugin_id, plugin_config in document.plugins.items():
-            configs[plugin_id] = plugin_config.model_copy(update={"plugin_id": plugin_id})
+            configs[plugin_id] = plugin_config.model_copy(
+                update={"plugin_id": plugin_id}
+            )
             logger.info("Loaded config for plugin: %s", plugin_id)
         return configs
