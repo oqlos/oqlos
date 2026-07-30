@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-07-30T07:26:26+00:00",
+  "generated_at": "2026-07-30T07:48:19+00:00",
   "root": "/home/tom/github/oqlos/oqlos",
-  "git_commit": "0ecb92ad8f505f74a4a55f72b9dc493e418ba55b",
+  "git_commit": "614cf7426ed8ecadc22cf2d8c5aef2aa83ad6723",
   "git_dirty": false,
   "git_dirty_including_generated_artifacts": true,
   "git_status_excluding_generated_artifacts": [],
@@ -16,10 +16,10 @@
     }
   },
   "artifacts": {
-    "analysis.toon.yaml": "ab43cb48209bd656be023aeacdca2315e20fbe4db303f1cee818b405ffff05b0",
-    "map.toon.yaml": "b0583f90d39f60de3a1332233cfaf8c94aa7416d8267b9be50d48a2544c789da"
+    "analysis.toon.yaml": "9b743760ce790283668574fc8a636da76160e113bd359904d5da12c9e9a64883",
+    "map.toon.yaml": "143c540d55d3f36debc634c52973c1b3c29f58c8490a9b6ed0e8551fb1d37bc8"
   },
-  "source_file_count": 401,
+  "source_file_count": 402,
   "public_routes": [
     {
       "file": "oqlos/api/_hw3_cqrs.py",
@@ -1803,7 +1803,7 @@
     },
     {
       "file": "packages/backend-shared-py/src/shared/cqrs/fastapi_integration.py",
-      "line": 41,
+      "line": 42,
       "function": "dispatch_command",
       "return_annotation": "CommandResponse",
       "method": "POST",
@@ -1813,7 +1813,7 @@
     },
     {
       "file": "packages/backend-shared-py/src/shared/cqrs/fastapi_integration.py",
-      "line": 58,
+      "line": 65,
       "function": "dispatch_query",
       "return_annotation": "QueryResponse",
       "method": "GET",
@@ -1823,7 +1823,7 @@
     },
     {
       "file": "packages/backend-shared-py/src/shared/cqrs/http_relay.py",
-      "line": 76,
+      "line": 77,
       "function": "receive_event",
       "return_annotation": "dict",
       "method": "POST",
@@ -1833,7 +1833,7 @@
     },
     {
       "file": "packages/backend-shared-py/src/shared/cqrs/http_relay.py",
-      "line": 86,
+      "line": 92,
       "function": "inbox_health",
       "return_annotation": "dict",
       "method": "GET",
@@ -1863,7 +1863,7 @@
     },
     {
       "file": "packages/backend-shared-py/src/shared/module_app_factory.py",
-      "line": 51,
+      "line": 58,
       "function": "health",
       "return_annotation": null,
       "method": "GET",
@@ -1873,7 +1873,7 @@
     },
     {
       "file": "packages/backend-shared-py/src/shared/module_app_factory.py",
-      "line": 55,
+      "line": 62,
       "function": "get_manifest",
       "return_annotation": null,
       "method": "GET",
@@ -1883,7 +1883,7 @@
     },
     {
       "file": "packages/backend-shared-py/src/shared/module_app_factory.py",
-      "line": 61,
+      "line": 73,
       "function": "list_pages",
       "return_annotation": null,
       "method": "GET",
@@ -1893,7 +1893,7 @@
     },
     {
       "file": "packages/backend-shared-py/src/shared/module_app_factory.py",
-      "line": 65,
+      "line": 77,
       "function": "serve_ui",
       "return_annotation": null,
       "method": "GET",
@@ -1903,7 +1903,7 @@
     },
     {
       "file": "packages/backend-shared-py/src/shared/module_app_factory.py",
-      "line": 74,
+      "line": 91,
       "function": "serve_model",
       "return_annotation": null,
       "method": "GET",
@@ -1913,7 +1913,7 @@
     },
     {
       "file": "packages/backend-shared-py/src/shared/module_app_factory.py",
-      "line": 83,
+      "line": 105,
       "function": "list_models",
       "return_annotation": null,
       "method": "GET",
@@ -1923,7 +1923,7 @@
     },
     {
       "file": "packages/backend-shared-py/src/shared/module_app_factory.py",
-      "line": 115,
+      "line": 137,
       "function": "index",
       "return_annotation": null,
       "method": "GET",
@@ -1933,7 +1933,7 @@
     },
     {
       "file": "packages/backend-shared-py/src/shared/sensors_endpoint.py",
-      "line": 62,
+      "line": 65,
       "function": "get_current_sensors",
       "return_annotation": null,
       "method": "GET",
@@ -1943,7 +1943,7 @@
     },
     {
       "file": "packages/backend-shared-py/src/shared/sensors_endpoint.py",
-      "line": 83,
+      "line": 92,
       "function": "get_pressure_history",
       "return_annotation": null,
       "method": "GET",
@@ -1953,7 +1953,7 @@
     },
     {
       "file": "packages/backend-shared-py/src/shared/sensors_endpoint.py",
-      "line": 105,
+      "line": 125,
       "function": "sensors_health",
       "return_annotation": null,
       "method": "GET",
@@ -4467,7 +4467,7 @@
     },
     {
       "file": "packages/backend-shared-py/src/shared/cqrs/http_relay.py",
-      "line": 76,
+      "line": 77,
       "function": "receive_event",
       "return_annotation": "dict",
       "method": "POST",
@@ -4477,7 +4477,7 @@
     },
     {
       "file": "packages/backend-shared-py/src/shared/cqrs/http_relay.py",
-      "line": 86,
+      "line": 92,
       "function": "inbox_health",
       "return_annotation": "dict",
       "method": "GET",
@@ -4507,7 +4507,7 @@
     },
     {
       "file": "packages/backend-shared-py/src/shared/module_app_factory.py",
-      "line": 51,
+      "line": 58,
       "function": "health",
       "return_annotation": null,
       "method": "GET",
@@ -4517,7 +4517,7 @@
     },
     {
       "file": "packages/backend-shared-py/src/shared/module_app_factory.py",
-      "line": 55,
+      "line": 62,
       "function": "get_manifest",
       "return_annotation": null,
       "method": "GET",
@@ -4527,7 +4527,7 @@
     },
     {
       "file": "packages/backend-shared-py/src/shared/module_app_factory.py",
-      "line": 61,
+      "line": 73,
       "function": "list_pages",
       "return_annotation": null,
       "method": "GET",
@@ -4537,7 +4537,7 @@
     },
     {
       "file": "packages/backend-shared-py/src/shared/module_app_factory.py",
-      "line": 65,
+      "line": 77,
       "function": "serve_ui",
       "return_annotation": null,
       "method": "GET",
@@ -4547,7 +4547,7 @@
     },
     {
       "file": "packages/backend-shared-py/src/shared/module_app_factory.py",
-      "line": 74,
+      "line": 91,
       "function": "serve_model",
       "return_annotation": null,
       "method": "GET",
@@ -4557,7 +4557,7 @@
     },
     {
       "file": "packages/backend-shared-py/src/shared/module_app_factory.py",
-      "line": 83,
+      "line": 105,
       "function": "list_models",
       "return_annotation": null,
       "method": "GET",
@@ -4567,7 +4567,7 @@
     },
     {
       "file": "packages/backend-shared-py/src/shared/module_app_factory.py",
-      "line": 115,
+      "line": 137,
       "function": "index",
       "return_annotation": null,
       "method": "GET",
@@ -4577,7 +4577,7 @@
     },
     {
       "file": "packages/backend-shared-py/src/shared/sensors_endpoint.py",
-      "line": 62,
+      "line": 65,
       "function": "get_current_sensors",
       "return_annotation": null,
       "method": "GET",
@@ -4587,7 +4587,7 @@
     },
     {
       "file": "packages/backend-shared-py/src/shared/sensors_endpoint.py",
-      "line": 83,
+      "line": 92,
       "function": "get_pressure_history",
       "return_annotation": null,
       "method": "GET",
@@ -4597,7 +4597,7 @@
     },
     {
       "file": "packages/backend-shared-py/src/shared/sensors_endpoint.py",
-      "line": 105,
+      "line": 125,
       "function": "sensors_health",
       "return_annotation": null,
       "method": "GET",
@@ -5158,7 +5158,7 @@
     },
     {
       "file": "packages/backend-shared-py/src/shared/db/alembic_helpers.py",
-      "line": 32
+      "line": 33
     },
     {
       "file": "packages/backend-shared-py/src/shared/http_service_client.py",
@@ -5417,11 +5417,6 @@
       "exception": "RuntimeError"
     },
     {
-      "file": "oqlos/shared/_endpoint_helpers.py",
-      "line": 47,
-      "exception": "HTTPException"
-    },
-    {
       "file": "oqlos/tools/cql_cli/utils.py",
       "line": 72,
       "exception": "ValueError"
@@ -5457,23 +5452,8 @@
       "exception": "ValueError"
     },
     {
-      "file": "packages/backend-shared-py/src/shared/cqrs/fastapi_integration.py",
-      "line": 44,
-      "exception": "HTTPException"
-    },
-    {
-      "file": "packages/backend-shared-py/src/shared/cqrs/fastapi_integration.py",
-      "line": 59,
-      "exception": "HTTPException"
-    },
-    {
-      "file": "packages/backend-shared-py/src/shared/cqrs/http_relay.py",
-      "line": 80,
-      "exception": "HTTPException"
-    },
-    {
       "file": "packages/backend-shared-py/src/shared/db/alembic_helpers.py",
-      "line": 34,
+      "line": 35,
       "exception": "RuntimeError"
     },
     {
@@ -5492,39 +5472,9 @@
       "exception": "ValueError"
     },
     {
-      "file": "packages/backend-shared-py/src/shared/module_app_factory.py",
-      "line": 57,
-      "exception": "HTTPException"
-    },
-    {
-      "file": "packages/backend-shared-py/src/shared/module_app_factory.py",
-      "line": 69,
-      "exception": "HTTPException"
-    },
-    {
-      "file": "packages/backend-shared-py/src/shared/module_app_factory.py",
-      "line": 78,
-      "exception": "HTTPException"
-    },
-    {
       "file": "packages/backend-shared-py/src/shared/nfo_postgres_sink.py",
       "line": 42,
       "exception": "RuntimeError"
-    },
-    {
-      "file": "packages/backend-shared-py/src/shared/sensors_endpoint.py",
-      "line": 80,
-      "exception": "HTTPException"
-    },
-    {
-      "file": "packages/backend-shared-py/src/shared/sensors_endpoint.py",
-      "line": 92,
-      "exception": "HTTPException"
-    },
-    {
-      "file": "packages/backend-shared-py/src/shared/sensors_endpoint.py",
-      "line": 102,
-      "exception": "HTTPException"
     },
     {
       "file": "packages/backend-shared-py/src/shared/types/base.py",
@@ -6575,7 +6525,7 @@
     },
     {
       "file": "packages/backend-shared-py/src/shared/cqrs/http_relay.py",
-      "line": 66,
+      "line": 67,
       "exception": "Exception"
     },
     {
@@ -6670,12 +6620,12 @@
     },
     {
       "file": "packages/backend-shared-py/src/shared/sensors_endpoint.py",
-      "line": 78,
+      "line": 81,
       "exception": "Exception"
     },
     {
       "file": "packages/backend-shared-py/src/shared/sensors_endpoint.py",
-      "line": 100,
+      "line": 114,
       "exception": "Exception"
     },
     {
@@ -6942,7 +6892,7 @@
     },
     {
       "file": "oqlos/errors/catalog.py",
-      "lines": 533
+      "lines": 539
     },
     {
       "file": "oqlos/tools/xml_import/generators.py",
@@ -7013,7 +6963,7 @@
     "routes_with_generic_response": 184,
     "routes_with_false_success_at_http_200": 0,
     "environment_reads_outside_settings": 154,
-    "raw_exceptions": 93,
+    "raw_exceptions": 83,
     "broad_exception_handlers": 237,
     "large_modules": 31,
     "parse_failures": 0
