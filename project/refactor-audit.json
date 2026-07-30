@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-07-30T14:29:57+00:00",
+  "generated_at": "2026-07-30T14:33:32+00:00",
   "root": "/home/tom/github/oqlos/oqlos",
-  "git_commit": "9eea00b42c874ed3dc23d799cda17331c12a22dc",
+  "git_commit": "2e2d77a7376ca7bc2a5f595fa1ef8a2f31cc05a8",
   "git_dirty": false,
   "git_dirty_including_generated_artifacts": true,
   "git_status_excluding_generated_artifacts": [],
@@ -16,8 +16,8 @@
     }
   },
   "artifacts": {
-    "analysis.toon.yaml": "d0fdfd8eaa9e1de8a02dc7f146de87372f77ac98320c60b43c8b0ef07f87e48d",
-    "map.toon.yaml": "eb02b8b72294cb3249dfefb5a1ce8189f46618dc8ba34c14137194eeda2a900c"
+    "analysis.toon.yaml": "772edb4ea3d32e6411f1d4285b1464bab82676cc77c20fe901fd6945ed42ea63",
+    "map.toon.yaml": "b4b0f8ee24f08f006dca63f7081565cf02366aae9eba51ecb4db00225b46eb36"
   },
   "source_file_count": 406,
   "public_routes": [
