@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-07-30T15:08:06+00:00",
+  "generated_at": "2026-07-30T15:36:55+00:00",
   "root": "/home/tom/github/oqlos/oqlos",
-  "git_commit": "066a2b6f3dfe292e6fbc04b3220656cbc363475c",
+  "git_commit": "4e0bcb73c9005240742ba06f20bde5ea0ef69b67",
   "git_dirty": false,
   "git_dirty_including_generated_artifacts": true,
   "git_status_excluding_generated_artifacts": [],
@@ -16,8 +16,8 @@
     }
   },
   "artifacts": {
-    "analysis.toon.yaml": "7a5213a2bbca288609e54198a221eafc0ed3ab0149ba3758bdde5e4def11727d",
-    "map.toon.yaml": "c044457f1913795f1459f4cbec08ec8ae6da1afd06b360edfb21182cb779d123"
+    "analysis.toon.yaml": "7652b5ebdbfa974ca6d1da7bf1f83d8161d2ee46322d345ffa60ac35b1d6cd63",
+    "map.toon.yaml": "d9f9ad94789be7807d1e831cbc5066dac05cb3f2c7fe55c9b0597d918b9a90d5"
   },
   "source_file_count": 407,
   "public_routes": [
@@ -5819,36 +5819,6 @@
       "exception": "Exception"
     },
     {
-      "file": "oqlos/hardware/plugins/lung.py",
-      "line": 80,
-      "exception": "Exception"
-    },
-    {
-      "file": "oqlos/hardware/plugins/lung.py",
-      "line": 150,
-      "exception": "Exception"
-    },
-    {
-      "file": "oqlos/hardware/plugins/lung.py",
-      "line": 159,
-      "exception": "Exception"
-    },
-    {
-      "file": "oqlos/hardware/plugins/lung.py",
-      "line": 163,
-      "exception": "Exception"
-    },
-    {
-      "file": "oqlos/hardware/plugins/lung.py",
-      "line": 345,
-      "exception": "Exception"
-    },
-    {
-      "file": "oqlos/hardware/plugins/lung.py",
-      "line": 104,
-      "exception": "Exception"
-    },
-    {
       "file": "oqlos/hardware/plugins/modbus.py",
       "line": 147,
       "exception": "Exception"
@@ -5931,11 +5901,6 @@
     {
       "file": "oqlos/hardware/plugins/piadc.py",
       "line": 226,
-      "exception": "Exception"
-    },
-    {
-      "file": "oqlos/hardware/plugins/plugin_http_handlers.py",
-      "line": 29,
       "exception": "Exception"
     },
     {
@@ -6630,7 +6595,7 @@
     "routes_with_false_success_at_http_200": 0,
     "environment_reads_outside_settings": 154,
     "raw_exceptions": 78,
-    "broad_exception_handlers": 180,
+    "broad_exception_handlers": 173,
     "large_modules": 30,
     "parse_failures": 0
   }
