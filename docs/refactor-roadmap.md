@@ -192,7 +192,7 @@ payload zdarzenia i tekst wyjątków sensora nie trafiają do odpowiedzi. Audyt
 OqlOS wskazuje 83 surowe wyjątki, 0 negatywnych envelope przy HTTP 200 i 0
 błędów parsowania. Nowy `shared.http_errors` ma 4 metody i CC=4, więc nie
 powiększa listy hotspotów wskazanych przez analizę. Bramka: 1024/1024 testy
-OqlOS, 43/43 dostępne testy `backend-shared-py`, 149/149 frontend, build Vite
+OqlOS, 50/50 testów `backend-shared-py`, 149/149 frontend, build Vite
 oraz Ruff `F821,F811` bez błędów.
 
 Następna partia zastąpiła dwa pozostałe surowe 403 w trasach sterowania i
