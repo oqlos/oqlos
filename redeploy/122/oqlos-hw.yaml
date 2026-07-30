@@ -1,4 +1,4 @@
-# OqlOS hardware-node plugin config (boardnet / 192.168.188.122).
+# OqlOS hardware-node plugin config (boardnet / 192.168.188.131).
 #
 # This is the base config copied to /home/pi/maskservice/config/oqlos-real.yaml by
 # the `apply-oqlos-hw-config` deploy step. BoardNet identities are pinned to
@@ -53,7 +53,7 @@ plugins:
       serial_port: /dev/serial/by-id/usb-1a86_USB_Single_Serial_5958006895-if00
       baudrate: 4800
       parity: N
-      device_id: 1
+      device_id: 2
     timeout: 2.0
     retry_count: 3
     peripherals:

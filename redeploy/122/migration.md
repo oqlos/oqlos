@@ -918,9 +918,11 @@ for port in candidates:
     try:
         if not cli.connect():
             continue
-        # Machine contract is fixed: Waveshare IO must be slave 1.  Scanning
-        # and silently adopting another address would hide a wiring/config fault.
-        resp = cli.read_coils(address=0, count=1, device_id=1)
+        # The device profile is authoritative for the isolated Waveshare IO
+        # slave. Scanning another address would hide a wiring/config fault.
+        resp = cli.read_coils(
+            address=0, count=1, device_id=${BOARDNET_MODBUS_IO_DEVICE_ID}
+        )
         if resp is not None and not resp.isError():
             matches.append(port)
     except Exception:
@@ -943,18 +945,18 @@ EXPECTED_IO_DEV=${BOARDNET_MODBUS_IO_PORT}
 IO_BAUD=4800
 IO_ENABLED=true
 IO_DEV="${MB_IO_DEV:-$EXPECTED_IO_DEV}"
-IO_DEVICE_ID=1
+IO_DEVICE_ID=${BOARDNET_MODBUS_IO_DEVICE_ID}
 if [ -n "${MB_IO_AMBIGUOUS:-}" ]; then
-  echo "ERROR: więcej niż jeden adapter odpowiada jako Waveshare slave 1: $MB_IO_AMBIGUOUS" >&2
+  echo "ERROR: więcej niż jeden adapter odpowiada jako Waveshare slave ${BOARDNET_MODBUS_IO_DEVICE_ID}: $MB_IO_AMBIGUOUS" >&2
   exit 1
 fi
 if [ -n "${MB_IO_DEV:-}" ] && [ "$MB_IO_DEV" != "$EXPECTED_IO_DEV" ]; then
-  echo "ERROR: slave 1 odpowiedział na niezatwierdzonym adapterze $MB_IO_DEV" >&2
+  echo "ERROR: slave ${BOARDNET_MODBUS_IO_DEVICE_ID} odpowiedział na niezatwierdzonym adapterze $MB_IO_DEV" >&2
   echo "ERROR: oczekiwany adapter maszyny to $EXPECTED_IO_DEV; wymagana jawna zmiana konfiguracji" >&2
   exit 1
 fi
 if [ -z "${MB_IO_DEV:-}" ]; then
-  echo "WARN: Waveshare slave 1 nie odpowiedział podczas deployu; zachowuję stabilną tożsamość $EXPECTED_IO_DEV" >&2
+  echo "WARN: Waveshare slave ${BOARDNET_MODBUS_IO_DEVICE_ID} nie odpowiedział podczas deployu; zachowuję stabilną tożsamość $EXPECTED_IO_DEV" >&2
   echo "WARN: preflight przy każdym starcie nie dopuści OqlOS do pracy, dopóki właściwy sprzęt nie odpowie" >&2
 fi
 # Legacy Modbus ADC is intentionally disabled. usb-adc-stack owns AI01..AI03.
@@ -997,10 +999,10 @@ set -euo pipefail
 PORT="${OQLOS_MODBUS_SERIAL_PORT:?missing OQLOS_MODBUS_SERIAL_PORT}"
 BAUD="${OQLOS_MODBUS_BAUD:-4800}"
 PARITY="${OQLOS_MODBUS_PARITY:-N}"
-DEVICE_ID="${OQLOS_MODBUS_DEVICE_ID:-1}"
+DEVICE_ID="${OQLOS_MODBUS_DEVICE_ID:-${BOARDNET_MODBUS_IO_DEVICE_ID}}"
 EXPECTED_SERIAL="${OQLOS_MODBUS_EXPECTED_SERIAL:-${BOARDNET_MODBUS_IO_SERIAL}}"
 
-if [ "$BAUD" != "4800" ] || [ "$PARITY" != "N" ] || [ "$DEVICE_ID" != "1" ]; then
+if [ "$BAUD" != "4800" ] || [ "$PARITY" != "N" ] || [ "$DEVICE_ID" != "${BOARDNET_MODBUS_IO_DEVICE_ID}" ]; then
   echo "ERROR: invalid BoardNet Modbus contract: $PORT@$BAUD 8${PARITY}1 slave=$DEVICE_ID" >&2
   exit 1
 fi
@@ -1048,7 +1050,7 @@ SH
 chmod +x /home/${BOARDNET_SSH_USER}/maskservice/scripts/verify-boardnet-modbus.sh
 
 # Remove the legacy emergency override. The generated unit now carries the
-# verified 4800/slave 1 machine contract directly, so no higher-precedence
+# verified the profiled 4800/slave machine contract directly, so no higher-precedence
 # drop-in is required.
 rm -f /home/${BOARDNET_SSH_USER}/.config/systemd/user/oqlos-hardware-api.service.d/99-modbus-port.conf
 rm -f /home/${BOARDNET_SSH_USER}/.config/systemd/user/oqlos-hardware-api.service.d/90-modbus-device-id.conf

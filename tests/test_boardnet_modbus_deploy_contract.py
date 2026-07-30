@@ -1,4 +1,4 @@
-"""BoardNet deployment must probe the physical Waveshare IO at 4800/N/8/1, slave 1."""
+"""BoardNet deploy probes the profiled Waveshare IO at 4800/N/8/1."""
 
 from pathlib import Path
 
@@ -15,9 +15,9 @@ def test_boardnet_modbus_detection_uses_stable_port_and_machine_baud() -> None:
     assert 'glob.glob("/dev/serial/by-id/*")' in detection
     assert "baudrate=4800" in detection
     assert "IO_BAUD=4800" in detection
-    assert "device_id=1" in detection
+    assert "device_id=${BOARDNET_MODBUS_IO_DEVICE_ID}" in detection
     assert "range(1, 9)" not in detection
-    assert "IO_DEVICE_ID=1" in detection
+    assert "IO_DEVICE_ID=${BOARDNET_MODBUS_IO_DEVICE_ID}" in detection
     assert "IO_ENABLED=false" not in detection
     assert "io-not-present" not in detection
     assert "MB_IO_AMBIGUOUS" in detection
@@ -29,6 +29,7 @@ def test_boardnet_modbus_identity_comes_from_device_profile() -> None:
 
     assert "${BOARDNET_MODBUS_IO_PORT}" in migration
     assert "${BOARDNET_MODBUS_IO_SERIAL}" in migration
+    assert "${BOARDNET_MODBUS_IO_DEVICE_ID}" in migration
     assert "5958006895" not in migration
 
 
@@ -43,7 +44,7 @@ def test_boardnet_modbus_is_verified_read_only_on_every_service_start() -> None:
     ) in migration
     assert "ID_SERIAL_SHORT=${EXPECTED_SERIAL}" in verifier
     assert 'BAUD" != "4800"' in verifier
-    assert 'DEVICE_ID" != "1"' in verifier
+    assert 'DEVICE_ID" != "${BOARDNET_MODBUS_IO_DEVICE_ID}"' in verifier
     assert "read_coils" in verifier
     assert "write_coil" not in verifier
     assert "write_register" not in verifier
@@ -173,7 +174,7 @@ def test_boardnet_base_config_matches_machine_modbus_contract() -> None:
         "serial_port": "/dev/serial/by-id/usb-1a86_USB_Single_Serial_5958006895-if00",
         "baudrate": 4800,
         "parity": "N",
-        "device_id": 1,
+        "device_id": 2,
     }
 
 
