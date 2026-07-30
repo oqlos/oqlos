@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-07-30T14:36:23+00:00",
+  "generated_at": "2026-07-30T14:55:17+00:00",
   "root": "/home/tom/github/oqlos/oqlos",
-  "git_commit": "9aa79272c30a9ae49597cfc0c8ecda1c6875d714",
+  "git_commit": "30102f7de0150f6d7ccd810e3eb5c5cadf923275",
   "git_dirty": false,
   "git_dirty_including_generated_artifacts": true,
   "git_status_excluding_generated_artifacts": [],
@@ -16,10 +16,10 @@
     }
   },
   "artifacts": {
-    "analysis.toon.yaml": "380c130c4c7855a42b1c44a8127026ea926d70a5874880f80598f1cb4a29244c",
-    "map.toon.yaml": "b98b768bc9e95352fedd97fc444b52951913b971337607480da88c3d810877f8"
+    "analysis.toon.yaml": "64064337ab52b5df977a2ae3197ef17544292ab4925528ceee5eb1115b70c669",
+    "map.toon.yaml": "76a8a0b997b9d17c1429c46fbb4fe7a25835e7444708e09ecf7528f8d8ea4e76"
   },
-  "source_file_count": 406,
+  "source_file_count": 407,
   "public_routes": [
     {
       "file": "oqlos/api/_hw3_cqrs.py",
@@ -5317,16 +5317,6 @@
       "exception": "ValueError"
     },
     {
-      "file": "oqlos/hardware/firmware_adapter.py",
-      "line": 193,
-      "exception": "RuntimeError"
-    },
-    {
-      "file": "oqlos/hardware/firmware_adapter.py",
-      "line": 150,
-      "exception": "RuntimeError"
-    },
-    {
       "file": "oqlos/hardware/plugin_gateway.py",
       "line": 105,
       "exception": "RuntimeError"
@@ -5756,36 +5746,6 @@
     {
       "file": "oqlos/hardware/drivers/spi.py",
       "line": 74,
-      "exception": "Exception"
-    },
-    {
-      "file": "oqlos/hardware/firmware_adapter.py",
-      "line": 165,
-      "exception": "Exception"
-    },
-    {
-      "file": "oqlos/hardware/firmware_adapter.py",
-      "line": 175,
-      "exception": "Exception"
-    },
-    {
-      "file": "oqlos/hardware/firmware_adapter.py",
-      "line": 350,
-      "exception": "Exception"
-    },
-    {
-      "file": "oqlos/hardware/firmware_adapter.py",
-      "line": 464,
-      "exception": "Exception"
-    },
-    {
-      "file": "oqlos/hardware/firmware_adapter.py",
-      "line": 482,
-      "exception": "Exception"
-    },
-    {
-      "file": "oqlos/hardware/firmware_adapter.py",
-      "line": 368,
       "exception": "Exception"
     },
     {
@@ -6635,16 +6595,16 @@
       "lines": 539
     },
     {
+      "file": "oqlos/hardware/firmware_adapter.py",
+      "lines": 511
+    },
+    {
       "file": "oqlos/tools/xml_import/generators.py",
       "lines": 506
     },
     {
       "file": "oqlos/api/hardware_modbus_wizard.py",
       "lines": 498
-    },
-    {
-      "file": "oqlos/hardware/firmware_adapter.py",
-      "lines": 490
     },
     {
       "file": "packages/oqlos-core/src/oqlos/core/cql_parser.py",
@@ -6699,8 +6659,8 @@
     "routes_with_generic_response": 182,
     "routes_with_false_success_at_http_200": 0,
     "environment_reads_outside_settings": 154,
-    "raw_exceptions": 83,
-    "broad_exception_handlers": 189,
+    "raw_exceptions": 81,
+    "broad_exception_handlers": 183,
     "large_modules": 30,
     "parse_failures": 0
   }
