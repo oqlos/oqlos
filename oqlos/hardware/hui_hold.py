@@ -150,6 +150,7 @@ async def _shutdown_all_hui_hardware_unlocked(gateway: Any) -> dict[str, Any]:
         ("modbus-io",),
         command="shutdown",
         check_power=False,
+        reconnect=False,
     )
     if readiness_failure is not None:
         readiness_failure["operations"] = operations

@@ -580,8 +580,13 @@ class PluginHardwareGateway:
     def is_real(self) -> bool:
         return self.mode == "real"
 
-    async def plugin_readiness(self, plugin_id: str) -> dict[str, Any]:
-        """Resolve a configured plugin and expose a stable HUI preflight result."""
+    async def plugin_readiness(
+        self,
+        plugin_id: str,
+        *,
+        reconnect: bool = True,
+    ) -> dict[str, Any]:
+        """Expose HUI readiness, optionally without probing a disconnected device."""
         if not self.is_real:
             return {
                 "ok": True,
@@ -606,13 +611,21 @@ class PluginHardwareGateway:
                 "message": f"Plugin {plugin_id} is disabled in OqlOS configuration",
             }
 
-        plugin = await self._get_or_connect_plugin(plugin_id)
+        if reconnect:
+            plugin = await self._get_or_connect_plugin(plugin_id)
+        else:
+            await self.ensure_initialized()
+            plugin = self._plugins.get(plugin_id)
         if plugin is None:
             return {
                 "ok": False,
                 "plugin_id": plugin_id,
                 "status": "unavailable",
-                "message": f"Plugin {plugin_id} could not connect",
+                "message": (
+                    f"Plugin {plugin_id} could not connect"
+                    if reconnect
+                    else f"Plugin {plugin_id} is not connected"
+                ),
             }
 
         try:

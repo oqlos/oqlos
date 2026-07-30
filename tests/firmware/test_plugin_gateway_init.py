@@ -213,3 +213,29 @@ def test_suspended_plugin_cannot_reconnect_until_resumed(monkeypatch) -> None:
     assert "modbus-io" not in gateway._suspended_plugins
     connect.assert_awaited_once()
     assert gateway._plugins["modbus-io"] is instance
+
+
+def test_plugin_readiness_can_fail_fast_without_reconnect(monkeypatch) -> None:
+    gateway = PluginHardwareGateway(mode="mock")
+    gateway.mode = "real"
+    gateway._init_done = True
+    gateway._plugin_configs = {
+        "modbus-io": PluginConfig(
+            plugin_id="modbus-io",
+            enabled=True,
+            connection_type="modbus-rtu",
+            connection_params={"serial_port": "/dev/ttyACM0", "baudrate": 4800},
+        ),
+    }
+    reconnect = AsyncMock()
+    monkeypatch.setattr(gateway, "_get_or_connect_plugin", reconnect)
+
+    result = asyncio.run(gateway.plugin_readiness("modbus-io", reconnect=False))
+
+    assert result == {
+        "ok": False,
+        "plugin_id": "modbus-io",
+        "status": "unavailable",
+        "message": "Plugin modbus-io is not connected",
+    }
+    reconnect.assert_not_awaited()

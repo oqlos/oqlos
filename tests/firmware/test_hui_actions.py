@@ -45,7 +45,12 @@ class FakeGateway:
         self.calls.append(("plugin", plugin_id))
         return self.plugin
 
-    async def plugin_readiness(self, plugin_id: str) -> dict[str, Any]:
+    async def plugin_readiness(
+        self,
+        plugin_id: str,
+        *,
+        reconnect: bool = True,
+    ) -> dict[str, Any]:
         self.calls.append(("readiness", plugin_id))
         if self.readiness is None:
             return {"ok": True, "plugin_id": plugin_id, "status": "ok", "message": ""}
