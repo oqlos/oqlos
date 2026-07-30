@@ -139,6 +139,22 @@ async def _shutdown_all_hui_hardware_unlocked(gateway: Any) -> dict[str, Any]:
     global _active_hold_key
     _active_hold_key = None
     operations: list[dict[str, Any]] = [await _set_pump_best_effort(gateway, 0.0)]
+
+    # A disconnected Modbus plugin used to trigger the same reconnect probe for
+    # every known valve.  With the production RTU timeout this kept the HUI lock
+    # occupied for minutes and queued subsequent emergency shutdown requests.
+    # Probe once after stopping the independently controlled pump; if the valve
+    # controller is unavailable, report that degraded safe-off state immediately.
+    readiness_failure = await required_plugins_failure(
+        gateway,
+        ("modbus-io",),
+        command="shutdown",
+        check_power=False,
+    )
+    if readiness_failure is not None:
+        readiness_failure["operations"] = operations
+        return readiness_failure
+
     for valve_id in HUI_ALL_VALVE_IDS:
         try:
             operations.append(await _set_valve(gateway, valve_id, False))

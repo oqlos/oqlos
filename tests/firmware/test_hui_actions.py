@@ -416,3 +416,26 @@ def test_hui_shutdown_turns_off_pump_and_all_known_valves() -> None:
     assert gateway.calls[0] == ("pump", 0.0)
     off_valves = [call for call in gateway.calls if call[0] == "valve" and call[2] is False]
     assert len(off_valves) == len(hui_actions.HUI_ALL_VALVE_IDS)
+
+
+def test_hui_shutdown_stops_pump_and_fails_fast_when_modbus_is_unavailable() -> None:
+    gateway = FakeGateway(
+        real=True,
+        readiness={
+            "modbus-io": {
+                "ok": False,
+                "plugin_id": "modbus-io",
+                "status": "unavailable",
+                "message": "Plugin modbus-io could not connect",
+            }
+        },
+    )
+
+    payload = run(hui_actions.shutdown_all_hui_hardware(gateway))
+
+    assert payload["ok"] is False
+    assert payload["command"] == "shutdown"
+    assert payload["error_code"] == "C2004-HW-0012"
+    assert payload["unavailable_hardware"][0]["plugin_id"] == "modbus-io"
+    assert payload["operations"][0]["operation"] == "set_pump"
+    assert gateway.calls == [("pump", 0.0), ("readiness", "modbus-io")]
