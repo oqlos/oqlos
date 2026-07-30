@@ -1,4 +1,4 @@
-# oqlos | 533f 83545L | json:6,yaml:15,python:322,txt:5,md:34,toml:4,yml:4,shell:14,typescript:3,javascript:118,conf:6 | 2026-07-30
+# oqlos | 533f 83679L | json:7,yaml:14,python:322,txt:5,md:34,yml:4,toml:4,shell:14,typescript:3,javascript:118,conf:6 | 2026-07-30
 # generated in 0.06s
 # stats: 3523 func | 0 cls | 533 mod | CC̄=3.6 | critical:23 | cycles:0
 # alerts[5]: fan-out useMotorDemoControls=34; CC summarizePanelResult=31; CC UI_URL_ARGS_KEY_SET=28; CC normalizePersistedValue=28; CC MotorHardwareDemoPanel=27
@@ -11,7 +11,7 @@ M[533]:
   CONTRIBUTION.md,13
   Makefile,113
   README.md,787
-  TODO.md,299
+  TODO.md,300
   Taskfile.yml,194
   Taskfile.testql.yml,48
   deploy/systemd/oqlos-hardware-api.service.d/usb-adc-stack.conf,7
@@ -42,7 +42,7 @@ M[533]:
   docs/refactor-roadmap.md,618
   docs/refactor-roadmap-2026-07-27.md,258
   examples/curl-quickstart.sh,74
-  examples/hardware-configuration/boardnet.yaml,87
+  examples/hardware-configuration/boardnet.json,204
   examples/hardware/doctor-workflow.sh,52
   examples/plugin-config.yaml,128
   frontend/local.dev.txt,8
@@ -287,7 +287,7 @@ M[533]:
   oqlos/hardware/host_power.py,78
   oqlos/hardware/hui_actions.py,74
   oqlos/hardware/hui_artificial_lung.py,190
-  oqlos/hardware/hui_hold.py,308
+  oqlos/hardware/hui_hold.py,324
   oqlos/hardware/hui_lung_recipe.py,139
   oqlos/hardware/hui_profiles_oql.py,211
   oqlos/hardware/hui_readiness.py,65
@@ -692,6 +692,36 @@ D:
     playMelody()
     melody()
     stopMelody()
+  frontend/src/utils/hardware-restart-configure-skip.js:
+    e: HEALTHY_STATUSES,BASELINE_BAUD,skipDecision,uartDetails,details,baudRampDecision,canCompare,note,alreadyConfiguredDecision,pluginHealthEntry,role,direct,plugins,isPluginHealthOk,status,portsLooselyMatch,a,b,base,evaluateConfigureSkip,role,entry,live,stepPort,targetId,targetBaud,targetParity,baudDecision
+    HEALTHY_STATUSES()
+    BASELINE_BAUD()
+    skipDecision()
+    uartDetails()
+    details()
+    baudRampDecision()
+    canCompare()
+    note()
+    alreadyConfiguredDecision()
+    pluginHealthEntry()
+    role()
+    direct()
+    plugins()
+    isPluginHealthOk()
+    status()
+    portsLooselyMatch()
+    a()
+    b()
+    base()
+    evaluateConfigureSkip()
+    role()
+    entry()
+    live()
+    stepPort()
+    targetId()
+    targetBaud()
+    targetParity()
+    baudDecision()
   frontend/src/pages/Panel.jsx:
     i: ../api/scenarioFilesApi,../components/SharedNav,../components/SidebarList,../i18n/I18nProvider,../utils/designRem.js,../utils/panel-run-mode.js,../utils/panelResultLog.js,../utils/panelScenarioLoader.js,react,react-router-dom
     e: numericPresetField,n,normalizeLungPresetArgs,src,actionBodyArgs,body,nested,runMode,skipWaits,urlScenarioBootRef,monDataRef,monTimerRef,canvasRef,autoRefreshTimerRef,editorRef,callApi,r,data,getStatus,r,h,loadScenarios,scenarios,scenarios,sidebarItems,selectedScenarioTitle,selectedScenarioIsFile,editorIsDirty,syncScenarioUrl,patch,nextSearch,handleSelectScenario,item,s,encodedPath,r,data,requestSelectScenario,query,item,saveLocalScenario,oql,name,filtered,saveSelectedScenario,oql,path,item,createNewScenarioFile,raw,path,duplicate,content,deleteSelectedScenario,path,name,updated,drawSpark,canvas,ctx,W,H,data,min,max,rng,x,y,monPoll,metric,val,toggleMonitor,iv,appendLogEntry,entry,runManage,runOql,k,runItem,args,runGroup,runEditor,txt,item,copyText,btn,orig,flash,legacyCopy,ta,ok,loadHardwareConfigurationLungPresets,r,data,actions,insertSnippet,ta,start,end,oldText,nextText,newPos,toggleGroupCollapse,setAllGroupsCollapsedState,toggleSnippetCollapse,handleKeyDown,tag,inField,f,resultsDoc,downloadResults,doc,blob,url,a,stamp,downloadCsv,q,blob,url,a,stamp,copyAllResults,filteredLogs,q,editorToolbar,newParams,newParams,scenarioSidebarFooter
@@ -824,36 +854,6 @@ D:
     newParams()
     newParams()
     scenarioSidebarFooter()
-  frontend/src/utils/hardware-restart-configure-skip.js:
-    e: HEALTHY_STATUSES,BASELINE_BAUD,skipDecision,uartDetails,details,baudRampDecision,canCompare,note,alreadyConfiguredDecision,pluginHealthEntry,role,direct,plugins,isPluginHealthOk,status,portsLooselyMatch,a,b,base,evaluateConfigureSkip,role,entry,live,stepPort,targetId,targetBaud,targetParity,baudDecision
-    HEALTHY_STATUSES()
-    BASELINE_BAUD()
-    skipDecision()
-    uartDetails()
-    details()
-    baudRampDecision()
-    canCompare()
-    note()
-    alreadyConfiguredDecision()
-    pluginHealthEntry()
-    role()
-    direct()
-    plugins()
-    isPluginHealthOk()
-    status()
-    portsLooselyMatch()
-    a()
-    b()
-    base()
-    evaluateConfigureSkip()
-    role()
-    entry()
-    live()
-    stepPort()
-    targetId()
-    targetBaud()
-    targetParity()
-    baudDecision()
   oqlos/errors/fastapi_integration.py:
     e: _safe_correlation_id,correlation_id_for_request,_safe_upstream_context,_public_code_for_status,_problem_response,install_oqlos_error_handler
     _safe_correlation_id(value)
@@ -980,65 +980,6 @@ Inst...
     add_connect_health_endpoints(app)
     coerce_timestamp(value)
     resolve_cors_origins()
-  packages/oqlos-core/src/oqlos/core/_interpreter_actions.py:
-    e: _extract_action_tokens,_drop_command_token,_coerce_expected_value,_compare_values,_oql_quote,_format_set_command,_get_nested_value,_record_failure,_mark_success,_normalize_bool,_lookup_peripheral_state,_mock_api_response,exec_action_task,exec_action_save,parse_wait_secs,exec_action_wait,_do_sleep,exec_action_min_max,_extract_unit,_resolve_live_val,_evaluate_val_thresholds,_auto_mock_threshold_value,_within_thresholds,_threshold_message,_report_threshold_pass,_mock_missing_val,exec_action_val,exec_action_log,exec_action_error,exec_action_else,exec_action_sample,_resolve_numeric_token,_func_avg,_func_sum,_func_reduce_or_zero,_func_sub,_func_div,_func_mul,exec_action_func,exec_action_goto,exec_action_api,exec_action_expect,_assert_status,_assert_json,_assert_sensor,_assert_valve,exec_action_assert,exec_action_shell,exec_action_var_set,exec_action_condition,exec_action_if_fail_block,exec_action_if_block,exec_action_loop_block,exec_action_endloop,exec_action_set,_exec_set_wait,exec_action_action
-    _extract_action_tokens(text)
-    _drop_command_token(act)
-    _coerce_expected_value(value)
-    _compare_values(actual;operator;expected)
-    _oql_quote(value)
-    _format_set_command(target;value)
-    _get_nested_value(payload;path)
-    _record_failure(interp;key;message)
-    _mark_success(interp;key)
-    _normalize_bool(value)
-    _lookup_peripheral_state(interp;target)
-    _mock_api_response(interp;endpoint)
-    exec_action_task(interp;act)
-    exec_action_save(interp;act)
-    parse_wait_secs(raw)
-    exec_action_wait(interp;act)
-    _do_sleep(interp;secs;label)
-    exec_action_min_max(interp;act)
-    _extract_unit(value)
-    _resolve_live_val(interp;sensor)
-    _evaluate_val_thresholds(interp;sensor;val;unit)
-    _auto_mock_threshold_value(interp;sensor;val;min_val;max_val)
-    _within_thresholds(val;min_val;max_val)
-    _threshold_message(sensor;val;unit;min_val;max_val)
-    _report_threshold_pass(interp;sensor;val;unit;min_val;max_val)
-    _mock_missing_val(interp;sensor)
-    exec_action_val(interp;act)
-    exec_action_log(interp;act)
-    exec_action_error(interp;act)
-    exec_action_else(interp;act)
-    exec_action_sample(interp;act)
-    _resolve_numeric_token(interp;token)
-    _func_avg(values)
-    _func_sum(values)
-    _func_reduce_or_zero(values;reducer)
-    _func_sub(values)
-    _func_div(values;interp;target)
-    _func_mul(values)
-    exec_action_func(interp;act)
-    exec_action_goto(interp;act)
-    exec_action_api(interp;act)
-    exec_action_expect(interp;act)
-    _assert_status(interp;act;tokens)
-    _assert_json(interp;act;tokens)
-    _assert_sensor(interp;act;tokens)
-    _assert_valve(interp;act;tokens)
-    exec_action_assert(interp;act)
-    exec_action_shell(interp;act)
-    exec_action_var_set(interp;act)
-    exec_action_condition(interp;act)
-    exec_action_if_fail_block(interp;act)
-    exec_action_if_block(interp;act)
-    exec_action_loop_block(interp;act)
-    exec_action_endloop(interp;act)
-    exec_action_set(interp;act)
-    _exec_set_wait(interp;act;value)
-    exec_action_action(interp;act)
   packages/oqlos-core/src/oqlos/core/motor2_runtime.py:
     e: Motor2RuntimeConfig,Motor2ReciprocatingPlan,_coerce_int,_coerce_float,_pick,_coerce_bool,motor2_max_steps_per_second,normalize_motor2_runtime_config,motor2_speed_for_duration,motor2_acceleration_raw,motor2_speed_raw,_normalize_motor2_direction,_compute_motor2_cycles,_compute_motor2_speed,build_motor2_reciprocating_plan
     Motor2RuntimeConfig:
@@ -1129,19 +1070,6 @@ Inst...
     _parse_document_body(doc;text;version_info)
     parse_oql(text;filename)
     format_doc(doc)
-  packages/oqlos-core/src/oqlos/core/parser.py:
-    e: _dispatch_simple_parser,_try_action_or_condition,_parse_runtime_line,_flat_condition_lines,_flat_action_synthetic_lines,_flat_repeat_count,_flat_actions_to_steps,_flat_goal_to_runtime,_parse_flat_oql_to_goal,parse_dsl_to_goal_with_issues,parse_dsl_to_goal
-    _dispatch_simple_parser(kind;line;step_counter;steps)
-    _try_action_or_condition(line;normalized_line;step_counter;steps;record_invalid)
-    _parse_runtime_line(line;step_counter;steps;func_defs;indent;call_stack;invalid_lines)
-    _flat_condition_lines(action)
-    _flat_action_synthetic_lines(action)
-    _flat_repeat_count(args)
-    _flat_actions_to_steps(actions;steps;invalid_lines;goal_meta)
-    _flat_goal_to_runtime(goal;scenario_id)
-    _parse_flat_oql_to_goal(dsl;scenario_id)
-    parse_dsl_to_goal_with_issues(dsl;scenario_id)
-    parse_dsl_to_goal(dsl;scenario_id)
   packages/oqlos-core/src/oqlos/core/_oql_adapter.py:
     e: _MacroRegistry,_fmt_value,_scenarios_root,_resolve_include,_substitute_args,_load_includes,_lower_include,_lower_call,_lower_set,_lower_get,_lower_wait,_lower_save,_make_lower_minmax,_lower_check,_check_fail_message,_has_bounded_range,_bounded_check_action,_open_check_actions,_comparison_action,_lower_if_delta,_lower_sample,_lower_log,_lower_error_cmd,_lower_val_cmd,_split_else_clause,_lower_if_cmd,_lower_else_cmd,_lower_task,_lower_prompt,_lower_testql,_lower_noop,_lower_goto,_lower_range,_lower_pass,_lower_fail,_lower_repeat,_cmd_to_actions,_parse_macro_line,_has_anonymous_named_goal,is_flat_oql,oql_doc_to_runtime_document,_split_device_field,parse_flat_oql
     _MacroRegistry: __init__(0),register(1),get(1)  # Collect ``MACRO`` definitions (raw body lines) from the root...
@@ -1187,6 +1115,78 @@ Inst...
     oql_doc_to_runtime_document(doc)
     _split_device_field(device;index)
     parse_flat_oql(source;filename)
+  packages/oqlos-core/src/oqlos/core/_interpreter_actions.py:
+    e: _extract_action_tokens,_drop_command_token,_coerce_expected_value,_compare_values,_oql_quote,_format_set_command,_get_nested_value,_record_failure,_mark_success,_normalize_bool,_lookup_peripheral_state,_mock_api_response,exec_action_task,exec_action_save,parse_wait_secs,exec_action_wait,_do_sleep,exec_action_min_max,_extract_unit,_resolve_live_val,_evaluate_val_thresholds,_auto_mock_threshold_value,_within_thresholds,_threshold_message,_report_threshold_pass,_mock_missing_val,exec_action_val,exec_action_log,exec_action_error,exec_action_else,exec_action_sample,_resolve_numeric_token,_func_avg,_func_sum,_func_reduce_or_zero,_func_sub,_func_div,_func_mul,exec_action_func,exec_action_goto,exec_action_api,exec_action_expect,_assert_status,_assert_json,_assert_sensor,_assert_valve,exec_action_assert,exec_action_shell,exec_action_var_set,exec_action_condition,exec_action_if_fail_block,exec_action_if_block,exec_action_loop_block,exec_action_endloop,exec_action_set,_exec_set_wait,exec_action_action
+    _extract_action_tokens(text)
+    _drop_command_token(act)
+    _coerce_expected_value(value)
+    _compare_values(actual;operator;expected)
+    _oql_quote(value)
+    _format_set_command(target;value)
+    _get_nested_value(payload;path)
+    _record_failure(interp;key;message)
+    _mark_success(interp;key)
+    _normalize_bool(value)
+    _lookup_peripheral_state(interp;target)
+    _mock_api_response(interp;endpoint)
+    exec_action_task(interp;act)
+    exec_action_save(interp;act)
+    parse_wait_secs(raw)
+    exec_action_wait(interp;act)
+    _do_sleep(interp;secs;label)
+    exec_action_min_max(interp;act)
+    _extract_unit(value)
+    _resolve_live_val(interp;sensor)
+    _evaluate_val_thresholds(interp;sensor;val;unit)
+    _auto_mock_threshold_value(interp;sensor;val;min_val;max_val)
+    _within_thresholds(val;min_val;max_val)
+    _threshold_message(sensor;val;unit;min_val;max_val)
+    _report_threshold_pass(interp;sensor;val;unit;min_val;max_val)
+    _mock_missing_val(interp;sensor)
+    exec_action_val(interp;act)
+    exec_action_log(interp;act)
+    exec_action_error(interp;act)
+    exec_action_else(interp;act)
+    exec_action_sample(interp;act)
+    _resolve_numeric_token(interp;token)
+    _func_avg(values)
+    _func_sum(values)
+    _func_reduce_or_zero(values;reducer)
+    _func_sub(values)
+    _func_div(values;interp;target)
+    _func_mul(values)
+    exec_action_func(interp;act)
+    exec_action_goto(interp;act)
+    exec_action_api(interp;act)
+    exec_action_expect(interp;act)
+    _assert_status(interp;act;tokens)
+    _assert_json(interp;act;tokens)
+    _assert_sensor(interp;act;tokens)
+    _assert_valve(interp;act;tokens)
+    exec_action_assert(interp;act)
+    exec_action_shell(interp;act)
+    exec_action_var_set(interp;act)
+    exec_action_condition(interp;act)
+    exec_action_if_fail_block(interp;act)
+    exec_action_if_block(interp;act)
+    exec_action_loop_block(interp;act)
+    exec_action_endloop(interp;act)
+    exec_action_set(interp;act)
+    _exec_set_wait(interp;act;value)
+    exec_action_action(interp;act)
+  packages/oqlos-core/src/oqlos/core/parser.py:
+    e: _dispatch_simple_parser,_try_action_or_condition,_parse_runtime_line,_flat_condition_lines,_flat_action_synthetic_lines,_flat_repeat_count,_flat_actions_to_steps,_flat_goal_to_runtime,_parse_flat_oql_to_goal,parse_dsl_to_goal_with_issues,parse_dsl_to_goal
+    _dispatch_simple_parser(kind;line;step_counter;steps)
+    _try_action_or_condition(line;normalized_line;step_counter;steps;record_invalid)
+    _parse_runtime_line(line;step_counter;steps;func_defs;indent;call_stack;invalid_lines)
+    _flat_condition_lines(action)
+    _flat_action_synthetic_lines(action)
+    _flat_repeat_count(args)
+    _flat_actions_to_steps(actions;steps;invalid_lines;goal_meta)
+    _flat_goal_to_runtime(goal;scenario_id)
+    _parse_flat_oql_to_goal(dsl;scenario_id)
+    parse_dsl_to_goal_with_issues(dsl;scenario_id)
+    parse_dsl_to_goal(dsl;scenario_id)
   frontend/src/utils/hardware-restart-configure.js:
     i: ../api/hardwareApi.js,./hardware-restart-probe-select.js
     e: runConfigureProbePhase,target,stepPort,role,probePayload,probe,candidate,runConfigureProgramPhase,programPayload,program,logProgramStart,logProgramResult,configureProgramOutcome
@@ -1298,6 +1298,11 @@ Inst...
     _resolve_name_or_attr(node;context)
     _safe_resolve(node;context)
     safe_eval_condition(expr;context)
+  oqlos/tools/cql_cli/formatting.py:
+    e: _quote_oql,canonicalize_oql_text,canonicalize_oql_line
+    _quote_oql(value)
+    canonicalize_oql_text(text)
+    canonicalize_oql_line(line)
   oqlos/tools/xml_import/generators.py:
     e: _mode_symbol,_format_range,_mode_action,_append_output_lines,_append_operator_param_lines,_append_timer_param_lines,_append_measurement,_append_range_constraint,_append_min_constraint,_append_max_constraint,_append_threshold_constraint,_append_param_lines,_goal_groups_for_test_run,_emit_goal_operations,_emit_dsl_output,_emit_dsl_param,_build_steps_from_op,_append_sensor_assertion,_build_validation_criteria,generate_dsl,_emit_dsl_test_run,_emit_dsl_sensors,_emit_dsl_metadata,generate_oql,generate_cql,_generate_oql_for_goal,_generate_cql_for_goal,generate_goals_json
     _mode_symbol(mode)
@@ -1328,11 +1333,28 @@ Inst...
     _generate_oql_for_goal(ops)
     _generate_cql_for_goal(ops)
     generate_goals_json(report)
-  oqlos/tools/cql_cli/formatting.py:
-    e: _quote_oql,canonicalize_oql_text,canonicalize_oql_line
-    _quote_oql(value)
-    canonicalize_oql_text(text)
-    canonicalize_oql_line(line)
+  oqlos/hardware/usb_adc_stack.py:
+    e: UsbAdcStackError,_usb_adc_http_client,normalize_usb_adc_channels,read_usb_adc_channels
+    UsbAdcStackError(RuntimeError):  # Raised when the ADC sidecar cannot provide a valid channel p...
+    _usb_adc_http_client(base_url;timeout_seconds)
+    normalize_usb_adc_channels(payload)
+    read_usb_adc_channels(base_url)
+  oqlos/hardware/scanner_probe.py:
+    e: _join_blob,_match_blob,_is_likely_scanner_usb_blob,_is_likely_scanner_input,_usb_product_blob,_canonical_match_key,_match_priority,_merge_matches,_scan_lsusb_matches,_scan_input_matches,_scan_diagnostics_usb_matches,resolve_scanner_presence,build_scanner_adapter_entry,enrich_scanner_adapter
+    _join_blob(source;keys)
+    _match_blob(item)
+    _is_likely_scanner_usb_blob(blob)
+    _is_likely_scanner_input(name;handlers)
+    _usb_product_blob(device)
+    _canonical_match_key(item)
+    _match_priority(item)
+    _merge_matches()
+    _scan_lsusb_matches()
+    _scan_input_matches()
+    _scan_diagnostics_usb_matches(diagnostics)
+    resolve_scanner_presence(diagnostics)
+    build_scanner_adapter_entry(diagnostics)
+    enrich_scanner_adapter(payload)
   oqlos/hardware/sidecar_control.py:
     e: SerialIdentityAmbiguousError,_modbus_serial_candidates,resolve_dri0050_serial,_dri0050_paths,_poll_until_ok,_dri0050_probe_ok,_http_sidecar_poll,_http_sidecar_listening,_http_sidecar_healthy,_run_cmd,_free_api_port,ensure_dri0050_sidecar,_tic249_status,_tic249_connect,_tic249_listening_ok,_tic249_connected_ok,_http_tic249_listening,_http_tic249_connected,ensure_tic249_sidecar
     SerialIdentityAmbiguousError(RuntimeError):  # Raised when a hardware role cannot be assigned to exactly on...
@@ -1354,28 +1376,6 @@ Inst...
     _http_tic249_listening()
     _http_tic249_connected()
     ensure_tic249_sidecar()
-  oqlos/hardware/scanner_probe.py:
-    e: _join_blob,_match_blob,_is_likely_scanner_usb_blob,_is_likely_scanner_input,_usb_product_blob,_canonical_match_key,_match_priority,_merge_matches,_scan_lsusb_matches,_scan_input_matches,_scan_diagnostics_usb_matches,resolve_scanner_presence,build_scanner_adapter_entry,enrich_scanner_adapter
-    _join_blob(source;keys)
-    _match_blob(item)
-    _is_likely_scanner_usb_blob(blob)
-    _is_likely_scanner_input(name;handlers)
-    _usb_product_blob(device)
-    _canonical_match_key(item)
-    _match_priority(item)
-    _merge_matches()
-    _scan_lsusb_matches()
-    _scan_input_matches()
-    _scan_diagnostics_usb_matches(diagnostics)
-    resolve_scanner_presence(diagnostics)
-    build_scanner_adapter_entry(diagnostics)
-    enrich_scanner_adapter(payload)
-  oqlos/hardware/usb_adc_stack.py:
-    e: UsbAdcStackError,_usb_adc_http_client,normalize_usb_adc_channels,read_usb_adc_channels
-    UsbAdcStackError(RuntimeError):  # Raised when the ADC sidecar cannot provide a valid channel p...
-    _usb_adc_http_client(base_url;timeout_seconds)
-    normalize_usb_adc_channels(payload)
-    read_usb_adc_channels(base_url)
   oqlos/hardware/usb_diagnostics.py:
     e: decode_throttled,_vcgencmd,pi_power_diagnostics,_read,_find_tty,_find_drivers,list_usb_devices,_kernel_event_snapshot,pi_system_diagnostics,reset_usb_device
     decode_throttled(raw)
@@ -1539,10 +1539,6 @@ Configuration:...
     _extract_func_name(line;indent)
     _guard_recursion(func_name;call_stack)
     _parse_func_call(line;step_counter;steps;func_defs;indent;call_stack;parse_line_fn)
-  packages/oqlos-core/src/oqlos/core/interpreter.py:
-    e: OqlInterpreter
-    OqlInterpreter(BaseInterpreter): __init__(12),sensor_values(1),sensor_values(1),_firmware(1),_firmware(1),_firmware_url(1),_firmware_url(1),_coerce_float(1),_resolve_peripheral_id(1),_get_pump_flow_full_scale_lpm(0),_normalize_pump_power(1),_normalize_valve_value(1),_normalize_lung_value(1),parse(2),_print_header(2),_collect_warnings(2),_planned_step_results(1),_run_validation_mode(4),_collect_all_goals(1),_execute_single_goal(2),_evaluate_pending_thresholds(1),_execute_all_goals(1),_build_script_result(2),execute(1),_execute_step(2),_execute_action(1),_exec_flat_action(1),_do_sleep(2),_normalize_peripheral_value(2),_coerce_generic_peripheral_value(1),_exec_set_peripheral(2),_get_firmware(0),_execute_firmware_action(2),_execute_plugin_action(2),_execute_legacy_firmware_action(2),_refresh_sensors_from_firmware(0),_auto_mock_sensor(3),_compare_sensor(3),_mark_threshold_evaluated(1),_resolve_sensor_value(1),_resolve_delta_sensor_value(1),_resolve_windowed_delta_sensor_value(2),_extract_window_seconds(0),_resolve_condition_rhs(3),_evaluate_resolved_condition(0),_eval_condition_clause(2),_evaluate_inline_condition_expression(1),_tokenize_condition_expression(1),_aggregate_condition_results(2),_apply_connector(3),_finalize_condition_result(4),_evaluate_range_condition(2),_evaluate_condition(1)  # OQL interpreter with three execution modes:
-  - validate: pa...
   frontend/src/pages/HardwareRtc.jsx:
     i: ../api/hardwareApi,../components/SharedNav,../components/SidebarList,../components/UiNavLink.jsx,../i18n/I18nProvider,../utils/modbus-profiles.js,../utils/rtc-summary.js,../utils/ui-url-args-cookie.js,react,react-router-dom
     e: formatValue,hasTimeFields,pad,SummaryRow,displayValue,activeMenuId,activeCommand,sidebarItems,syncMenuUrl,refresh,payload,next,data,connected,optionalDisabled,mockMode,summary,runCommand,result,selectMenu,command,navContext
@@ -1648,16 +1644,6 @@ Configuration:...
     applyUrlEmbedPatch()
     url()
     param()
-  frontend/src/api/wsClient.js:
-    e: WsCqrsClient,RECONNECT_DELAY_MS,RECONNECT_MAX_ATTEMPTS,REQUEST_TIMEOUT_MS,defaultUrl,fromEnv,loc,proto
-    WsCqrsClient: super(-1),connected(-1),connect(-1),reject(-1),resolve(-1),reject(-1),disconnect(-1),command(-1),query(-1),subscribe(-1),_request(-1),timeout(-1),reject(-1),key(-1),_handleMessage(-1),response(-1),pending(-1),clearTimeout(-1),evt(-1),handlers(-1),_scheduleReconnect(-1),delay(-1),setTimeout(-1),singleton(-1),getWsClient(-1)
-    RECONNECT_DELAY_MS()
-    RECONNECT_MAX_ATTEMPTS()
-    REQUEST_TIMEOUT_MS()
-    defaultUrl()
-    fromEnv()
-    loc()
-    proto()
   frontend/src/api/hardware-api-errors.js:
     e: tryParseJson,describeDetail,message,issues,lastError,extractErrorPayload,isProcessDiagnostic,processDiagnosticContext,processDiagnosticCauses,formatProcessDiagnostic,message,firstLine,causes,formatPayloadError,oqlError,parseOqlError,formatHardwareApiError,payload
     tryParseJson()
@@ -1678,6 +1664,20 @@ Configuration:...
     parseOqlError()
     formatHardwareApiError()
     payload()
+  frontend/src/api/wsClient.js:
+    e: WsCqrsClient,RECONNECT_DELAY_MS,RECONNECT_MAX_ATTEMPTS,REQUEST_TIMEOUT_MS,defaultUrl,fromEnv,loc,proto
+    WsCqrsClient: super(-1),connected(-1),connect(-1),reject(-1),resolve(-1),reject(-1),disconnect(-1),command(-1),query(-1),subscribe(-1),_request(-1),timeout(-1),reject(-1),key(-1),_handleMessage(-1),response(-1),pending(-1),clearTimeout(-1),evt(-1),handlers(-1),_scheduleReconnect(-1),delay(-1),setTimeout(-1),singleton(-1),getWsClient(-1)
+    RECONNECT_DELAY_MS()
+    RECONNECT_MAX_ATTEMPTS()
+    REQUEST_TIMEOUT_MS()
+    defaultUrl()
+    fromEnv()
+    loc()
+    proto()
+  packages/oqlos-core/src/oqlos/core/interpreter.py:
+    e: OqlInterpreter
+    OqlInterpreter(BaseInterpreter): __init__(12),sensor_values(1),sensor_values(1),_firmware(1),_firmware(1),_firmware_url(1),_firmware_url(1),_coerce_float(1),_resolve_peripheral_id(1),_get_pump_flow_full_scale_lpm(0),_normalize_pump_power(1),_normalize_valve_value(1),_normalize_lung_value(1),parse(2),_print_header(2),_collect_warnings(2),_planned_step_results(1),_run_validation_mode(4),_collect_all_goals(1),_execute_single_goal(2),_evaluate_pending_thresholds(1),_execute_all_goals(1),_build_script_result(2),execute(1),_execute_step(2),_execute_action(1),_exec_flat_action(1),_do_sleep(2),_normalize_peripheral_value(2),_coerce_generic_peripheral_value(1),_exec_set_peripheral(2),_get_firmware(0),_execute_firmware_action(2),_execute_plugin_action(2),_execute_legacy_firmware_action(2),_refresh_sensors_from_firmware(0),_auto_mock_sensor(3),_compare_sensor(3),_mark_threshold_evaluated(1),_resolve_sensor_value(1),_resolve_delta_sensor_value(1),_resolve_windowed_delta_sensor_value(2),_extract_window_seconds(0),_resolve_condition_rhs(3),_evaluate_resolved_condition(0),_eval_condition_clause(2),_evaluate_inline_condition_expression(1),_tokenize_condition_expression(1),_aggregate_condition_results(2),_apply_connector(3),_finalize_condition_result(4),_evaluate_range_condition(2),_evaluate_condition(1)  # OQL interpreter with three execution modes:
+  - validate: pa...
   oqlos/tools/hardware_diagnose/doctor_modbus_analysis.py:
     e: expected_modbus_params,expected_modbus_adc_params,analyze_modbus_adc_config,analyze_modbus_config,analyze_serial_port_owners
     expected_modbus_params(modbus_probe)
@@ -1738,6 +1738,15 @@ Configuration:...
     ids_from_preflight(payload)
     modbus_io_instance_ids(payload)
     expand_modbus_io_instances(adapters;payload)
+  oqlos/hardware/client/modbus_repair.py:
+    e: _env,_is_separate_adapters,_adapter_ports,_augment_no_response_from_health,_build_diagnose_cmd,_build_safety_hints,rewrite_modbus_repair
+    _env(name;default)
+    _is_separate_adapters(payload)
+    _adapter_ports(payload)
+    _augment_no_response_from_health(no_response;health)
+    _build_diagnose_cmd(target;io_port;adc_port)
+    _build_safety_hints(no_response;health;existing_safety)
+    rewrite_modbus_repair(payload)
   oqlos/hardware/client/resolvers.py:
     e: normalize_modbus_valve_id,resolve_modbus_target,resolve_pump_target,resolve_artificial_lung_target,resolve_lung_target,resolve_modbus_adc_target,resolve_rtc_target,resolve_diagnostic_target,_coalesce_error_message,extract_command_failure
     normalize_modbus_valve_id(raw)
@@ -1750,23 +1759,6 @@ Configuration:...
     resolve_diagnostic_target(peripheral;command;args)
     _coalesce_error_message()
     extract_command_failure(result)
-  oqlos/hardware/client/modbus_repair.py:
-    e: _env,_is_separate_adapters,_adapter_ports,_augment_no_response_from_health,_build_diagnose_cmd,_build_safety_hints,rewrite_modbus_repair
-    _env(name;default)
-    _is_separate_adapters(payload)
-    _adapter_ports(payload)
-    _augment_no_response_from_health(no_response;health)
-    _build_diagnose_cmd(target;io_port;adc_port)
-    _build_safety_hints(no_response;health;existing_safety)
-    rewrite_modbus_repair(payload)
-  oqlos/hardware/client/tic249_motion_params.py:
-    e: normalize_motion_params,stroke_steps,apply_reciprocate_direction,_resolve_reciprocate_speed,_resolve_reciprocate_ramp,build_reciprocate_params
-    normalize_motion_params(args)
-    stroke_steps(args;default)
-    apply_reciprocate_direction(params;args)
-    _resolve_reciprocate_speed(args)
-    _resolve_reciprocate_ramp(args)
-    build_reciprocate_params(args)
   oqlos/hardware/client/identify_enrich_adapters.py:
     e: health_message,enrich_disabled,enrich_motor_tic249,enrich_motor_dri0050,enrich_modbus_adapter,enrich_by_device_id,enrich_adapter_entry,adapter_status_modbus,adapter_status_tic249,adapter_status_from_health
     health_message(health;probe)
@@ -1779,6 +1771,14 @@ Configuration:...
     adapter_status_modbus(hw_id;status;lowered;probe)
     adapter_status_tic249(hw_id;status;lowered;probe)
     adapter_status_from_health(hw_id;health_entry)
+  oqlos/hardware/client/tic249_motion_params.py:
+    e: normalize_motion_params,stroke_steps,apply_reciprocate_direction,_resolve_reciprocate_speed,_resolve_reciprocate_ramp,build_reciprocate_params
+    normalize_motion_params(args)
+    stroke_steps(args;default)
+    apply_reciprocate_direction(params;args)
+    _resolve_reciprocate_speed(args)
+    _resolve_reciprocate_ramp(args)
+    build_reciprocate_params(args)
   oqlos/api/state.py:
     e: _compose_named_state,_compose_sim_state_list,get_state,_generate_sinusoidal_values,stream_values,get_current_value,get_sim_state,_maybe_register_dsl_from_content,_extract_scenario_id,_extract_inline_dsl,_execution_request_error,_handle_start,_make_state_handler,post_commands
     _compose_named_state()
@@ -1904,6 +1904,13 @@ Configuration:...
     list_services()
     control_service(unit;action)
     service_logs(unit;lines)
+  oqlos/hardware/startup_diagnostics.py:
+    e: _flag,last_startup_diagnostics,_report_is_degraded,_power_from_identify,run_startup_diagnostics_and_repair
+    _flag(name;default)
+    last_startup_diagnostics()
+    _report_is_degraded(report)
+    _power_from_identify(payload)
+    run_startup_diagnostics_and_repair()
   oqlos/hardware/firmware_adapter.py:
     e: FirmwareAdapter,_first_nonempty,_extract_failure_message,_parse_numeric
     FirmwareAdapter: __init__(3),_get_client(0),close(0),_get_lung_motor_url(0),is_available(0),_resolve_peripheral(1),_raise_if_rejected(1),set_peripheral(2),pump_off(1),pump_set(2),valve_open(1),valve_close(1),reset_peripherals(0),read_state(0),read_sensor(1),read_all_sensors(0),_resolve_dispatch_target(3),_handle_lung_action(4),_handle_valve_action(4),_handle_pump_action(4),_handle_common_action(3),_execute_method(4),dispatch_action(3)  # HTTP bridge between the OQL interpreter and firmware simulat...
@@ -1926,13 +1933,6 @@ Configuration:...
     count_detected_adapters(adapters)
     enrich_identify_payload(payload)
     enrich_hardware_identify(payload)
-  oqlos/hardware/startup_diagnostics.py:
-    e: _flag,last_startup_diagnostics,_report_is_degraded,_power_from_identify,run_startup_diagnostics_and_repair
-    _flag(name;default)
-    last_startup_diagnostics()
-    _report_is_degraded(report)
-    _power_from_identify(payload)
-    run_startup_diagnostics_and_repair()
   oqlos/hardware/plugins/modbus_adc.py:
     e: ModbusAdcPlugin,_resolve_channel,_modbus_error
     ModbusAdcPlugin(HardwarePlugin): __init__(1),validate_config(0),connect(0),disconnect(0),health_check(0),execute_command(2),_execute_write_holding_register(1),_execute_read_config_snapshot(0),_rtu_call(1),_read_registers(0),_format_channels(1),_format_channel(2),_peripheral_for_channel(1),_rtu_timeout(0),_device_id(0),_config_int(3),_read_address(0),_read_count(0),get_capabilities(0)  # Plugin for Waveshare Modbus RTU Analog Input 8CH.
@@ -2005,9 +2005,9 @@ Mirrors th...
     generate_def_code(data)
   packages/backend-shared-py/src/shared/cqrs/bus.py:
     e: CommandHandler,QueryHandler,EventHandler,CommandBus,QueryBus,EventBus,ResolvingEventBus
-    CommandHandler(ABC,<ast.Subscript object at 0x7b34d8bb3ed0>): handle(1)
-    QueryHandler(ABC,<ast.Subscript object at 0x7b34d8bbb8d0>): handle(1)
-    EventHandler(ABC,<ast.Subscript object at 0x7b34d8bbaf90>): handle(1)
+    CommandHandler(ABC,<ast.Subscript object at 0x7bc0d88c89d0>): handle(1)
+    QueryHandler(ABC,<ast.Subscript object at 0x7bc0d88c9750>): handle(1)
+    EventHandler(ABC,<ast.Subscript object at 0x7bc0d88c9310>): handle(1)
     CommandBus: __init__(0),register(2),register_handler(2),dispatch(1)  # Dispatches commands to a single registered handler...
     QueryBus: __init__(0),register(2),register_handler(2),dispatch(1)  # Dispatches queries to the primary (first) registered handler...
     EventBus: __init__(0),register(2),register_handler(2),add_middleware(1),_resolve_handlers(1),publish(1),publish_all(1),publish_batch(1)  # Dispatches events to all registered handlers (pub-sub).
@@ -2195,13 +2195,6 @@ Configuration...
     ModbusPlugin(HardwarePlugin): __init__(1),_validate_rtu_params(1),_validate_tcp_params(1),validate_config(0),connect(0),disconnect(0),_health_check_rtu(0),_health_check_tcp(0),health_check(0),_execute_set_coil(1),_execute_set_valve(1),_rtu_timeout(0),_rtu_call(1),_rtu_result_values(1),_execute_read_io_snapshot(0),_execute_write_holding_register(1),execute_command(2),_device_id(0),get_capabilities(0)  # Plugin for Waveshare Modbus RTU IO 8CH valve controller.
 
 Co...
-  oqlos/api/hardware_identify.py:
-    e: _hardware_health_overall_ok,_determine_scan_set,_map_adapter_identify_status,hardware_health,hardware_identify
-    _hardware_health_overall_ok(payload)
-    _determine_scan_set(scan_mode;health)
-    _map_adapter_identify_status(hw;health;probes)
-    hardware_health()
-    hardware_identify(scan)
   oqlos/shared/release_version.py:
     e: clean_version,_run_git,_read_version_from_package_json,_read_version_from_text,_version_candidates,resolve_release_version,main
     clean_version(raw)
@@ -2211,6 +2204,13 @@ Co...
     _version_candidates(project_root)
     resolve_release_version(project_root)
     main()
+  oqlos/api/hardware_identify.py:
+    e: _hardware_health_overall_ok,_determine_scan_set,_map_adapter_identify_status,hardware_health,hardware_identify
+    _hardware_health_overall_ok(payload)
+    _determine_scan_set(scan_mode;health)
+    _map_adapter_identify_status(hw;health;probes)
+    hardware_health()
+    hardware_identify(scan)
   oqlos/api/scenarios.py:
     e: get_scenario,_fetch_raw_from_sources,_compute_slug,_extract_id,_extract_display_fields,_extract_goals,_normalize_scenario_row,fetch_scenarios,_parse_content_to_goals,_ensure_list,_normalize_dsl_payload,_collect_dsl_strings,_parse_goals_from_dsl,_merge_goals_into_scenario,_register_single_dsl_scenario,_load_dsl_parser,register_dsl
     get_scenario(scenario_id)
@@ -2580,6 +2580,15 @@ Co...
     enrich_platform_modbus_ports(payload)
     enrich_modbus_serial_hints(payload)
     enrich_modbus_identify(payload)
+  oqlos/hardware/log_files.py:
+    e: resolve_log_dir,_is_safe_name,_file_day,_journal_units_payload,list_log_files,_tail_text,read_log
+    resolve_log_dir()
+    _is_safe_name(name)
+    _file_day(mtime)
+    _journal_units_payload()
+    list_log_files()
+    _tail_text(path;lines)
+    read_log(log_id;lines)
   oqlos/hardware/client/tic249_extended.py:
     e: _plugin_payload,_execute,_handle_move_relative_command,_try_disable_fallback,_try_sidecar_reciprocate,_handle_hardware_proxy_error,run_extended_motor_tic249_command
     _plugin_payload(command;params)
@@ -2598,15 +2607,6 @@ Co...
     adc_sensor_alias(raw_sensor_id)
     normalize_adc_read_result(result;requested_sensor_id)
     normalize_adc_read_all_result(result)
-  oqlos/hardware/log_files.py:
-    e: resolve_log_dir,_is_safe_name,_file_day,_journal_units_payload,list_log_files,_tail_text,read_log
-    resolve_log_dir()
-    _is_safe_name(name)
-    _file_day(mtime)
-    _journal_units_payload()
-    list_log_files()
-    _tail_text(path;lines)
-    read_log(log_id;lines)
   oqlos/reporters/html_report.py:
     e: render_html_report,_render_device_meta,_render_goal,_render_thresholds_table,_render_step
     render_html_report(data_json)
@@ -2614,6 +2614,21 @@ Co...
     _render_goal(goal;idx)
     _render_thresholds_table(thresholds)
     _render_step(step;idx)
+  oqlos/hardware/configuration.py:
+    e: _HardwareYamlLoader,_parse_oql,_dump_oql,normalize_hardware_configuration,detect_hardware_configuration_format,parse_hardware_configuration,serialize_hardware_configuration,load_hardware_configuration,save_hardware_configuration,resolve_effective_hardware_configuration,semantic_configuration_diff,load_effective_hardware_configuration
+    _HardwareYamlLoader(yaml.SafeLoader):  # YAML loader with YAML-1.2-style booleans (only true/false).
+...
+    _parse_oql(text;source)
+    _dump_oql(config)
+    normalize_hardware_configuration(value)
+    detect_hardware_configuration_format(path)
+    parse_hardware_configuration(content;format)
+    serialize_hardware_configuration(config;format)
+    load_hardware_configuration(path)
+    save_hardware_configuration(path;config)
+    resolve_effective_hardware_configuration(config;environ)
+    semantic_configuration_diff(configured;effective)
+    load_effective_hardware_configuration(path;environ)
   oqlos/api/editor.py:
     e: FileInfo,FileContent,ExecutionRequest,_default_scenarios_dir,_normalize_oql_mode,_result_dict,_editor_response_from_oql,_safe_path,_editor_path_forbidden,_editor_file_not_found,_editor_target_invalid,list_files,read_file_endpoint,write_file_endpoint,delete_file_endpoint,_sensor_telemetry_recorder,execute_scenario
     FileInfo(BaseModel):
@@ -2633,21 +2648,6 @@ Co...
     delete_file_endpoint(file_path)
     _sensor_telemetry_recorder()
     execute_scenario(request;http_request;http_response)
-  oqlos/hardware/configuration.py:
-    e: _HardwareYamlLoader,_parse_oql,_dump_oql,normalize_hardware_configuration,detect_hardware_configuration_format,parse_hardware_configuration,serialize_hardware_configuration,load_hardware_configuration,save_hardware_configuration,resolve_effective_hardware_configuration,semantic_configuration_diff,load_effective_hardware_configuration
-    _HardwareYamlLoader(yaml.SafeLoader):  # YAML loader with YAML-1.2-style booleans (only true/false).
-...
-    _parse_oql(text;source)
-    _dump_oql(config)
-    normalize_hardware_configuration(value)
-    detect_hardware_configuration_format(path)
-    parse_hardware_configuration(content;format)
-    serialize_hardware_configuration(config;format)
-    load_hardware_configuration(path)
-    save_hardware_configuration(path;config)
-    resolve_effective_hardware_configuration(config;environ)
-    semantic_configuration_diff(configured;effective)
-    load_effective_hardware_configuration(path;environ)
   frontend/src/hooks/useParentEncoderNavigation.js:
     i: ../utils/encoder-navigation.js,react
     e: useParentEncoderNavigation,controller,onMessage,envelope,detail,onWheel,raw
@@ -2981,6 +2981,15 @@ Co...
     read_update_progress()
     compute_git_drift(deploy_commit)
     build_update_status_payload()
+  oqlos/tools/hardware_diagnose/health.py:
+    e: _request_firmware_json,check_firmware_health,check_firmware_identify,_is_health_ok,_format_health_value,cmd_health,cmd_diagnose
+    _request_firmware_json(url;endpoint)
+    check_firmware_health(url)
+    check_firmware_identify(url)
+    _is_health_ok(value)
+    _format_health_value(value)
+    cmd_health(url)
+    cmd_diagnose(url)
   oqlos/tools/plugin_cli.py:
     e: _default_config_path,_load_config_file,cmd_list,cmd_status,cmd_capabilities,cmd_validate,cmd_connect,cmd_disconnect,cmd_health,cmd_execute,cmd_reload,cmd_peripherals,main
     _default_config_path()
@@ -2996,15 +3005,6 @@ Co...
     cmd_reload(args)
     cmd_peripherals(args)
     main()
-  oqlos/tools/hardware_diagnose/health.py:
-    e: _request_firmware_json,check_firmware_health,check_firmware_identify,_is_health_ok,_format_health_value,cmd_health,cmd_diagnose
-    _request_firmware_json(url;endpoint)
-    check_firmware_health(url)
-    check_firmware_identify(url)
-    _is_health_ok(value)
-    _format_health_value(value)
-    cmd_health(url)
-    cmd_diagnose(url)
   oqlos/tools/hardware_diagnose/discovery.py:
     e: UsbDevice,_run_shell_command,list_usb_serial_devices,list_i2c_buses,detect_chips_on_i2c
     UsbDevice: to_dict(0)  # USB device information...
@@ -3123,6 +3123,21 @@ Co...
     hui_valve_key(key)
     hui_al_start()
     hui_al_stop()
+  oqlos/reporters/junit.py:
+    e: JUnitReporter,report_junit
+    JUnitReporter: generate(2),_add_testcase(2)  # Generate JUnit XML from a ScriptResult...
+    report_junit(result;suite_name)
+  scripts/oql_v4_validator.py:
+    e: Issue,_line_number,_validate_version_header,_validate_line_v4,_validate_goal_set_name,_validate_structure,_validate_runtime,validate_oql_v4,main
+    Issue:
+    _line_number(lines;idx)
+    _validate_version_header(lines)
+    _validate_line_v4(raw;ln;patterns)
+    _validate_goal_set_name(lines;patterns)
+    _validate_structure(text)
+    _validate_runtime(text;filename)
+    validate_oql_v4(text;source)
+    main()
   oqlos/api/main.py:
     e: _app_lifespan,_initialize_runtime_dependencies,_start_oql_transport,_stop_oql_transport,index_page,_serve_static_html,editor_page,panel_alias,navigation_alias,ui_legacy_panel_page,ui_legacy_navigation_page,_resolve_ui_dist,_with_query,_redirect_with_query,hardware_status_page,hardware_demo_alias,hardware_restart_alias,hardware_modbus_alias,hardware_coils_alias,hardware_rtc_alias,rtc_alias,retired_map_editor_alias,scenario_files_alias,func_editor_alias,motor_services_alias,nav_alias,status_alias,restart_alias,modbus_alias,demo_alias,files_alias,functions_alias,api_docs_alias,oql_panel_alias,ui_legacy_status_routes,retired_ui_map_editor,hardware_ui_spa,update_status_page,health_check,navigation_index,status,_forward_websocket,hardware_events_websocket_alias,websocket_endpoint,oql_websocket_alias,_parse_server_args,run
     _app_lifespan(_)
@@ -3172,17 +3187,6 @@ Co...
     oql_websocket_alias(websocket)
     _parse_server_args()
     run()
-  scripts/oql_v4_validator.py:
-    e: Issue,_line_number,_validate_version_header,_validate_line_v4,_validate_goal_set_name,_validate_structure,_validate_runtime,validate_oql_v4,main
-    Issue:
-    _line_number(lines;idx)
-    _validate_version_header(lines)
-    _validate_line_v4(raw;ln;patterns)
-    _validate_goal_set_name(lines;patterns)
-    _validate_structure(text)
-    _validate_runtime(text;filename)
-    validate_oql_v4(text;source)
-    main()
   scripts/scenarios_export.py:
     e: _list_url,_row_url,_http_get_json,_resolve_scenario_id,_fetch_all,_fetch_one,_safe_filename,export_all_zip,export_one_bash,_http_patch_json,_validate_oql_v4,import_scenarios,main
     _list_url(base;limit)
@@ -3198,10 +3202,6 @@ Co...
     _validate_oql_v4(dsl;source)
     import_scenarios(base;dir_path;validate)
     main(argv)
-  oqlos/reporters/junit.py:
-    e: JUnitReporter,report_junit
-    JUnitReporter: generate(2),_add_testcase(2)  # Generate JUnit XML from a ScriptResult...
-    report_junit(result;suite_name)
   packages/backend-shared-py/src/shared/menu_route_delete.py:
     e: route_match_candidates,collect_parent_config_ids,bump_menu_config_versions
     route_match_candidates(route)
@@ -3269,6 +3269,15 @@ Co...
     handle_start_step(cmd)
     handle_update_progress(cmd)
     handle_set_execution_status(cmd)
+  oqlos/hardware/gateway.py:
+    e: _PiAdcAdapter,_DRI0050MotorAdapter,_Tic249LungAdapter,_ModbusAdapter,HardwareGateway
+    _PiAdcAdapter: __init__(1),read_channel(1),read_sensor(1)  # Reads pressure / analog sensors via piadc REST API (ADS1115)...
+    _DRI0050MotorAdapter: __init__(1),set_speed(1),_stop(0),status(0)  # Controls the pump motor via rpi-motor-DRI0050 REST API (DFRo...
+    _Tic249LungAdapter: __init__(1),reciprocate(4),stop(0),move(2),energize(1),status(0)  # Controls the artificial lung stepper motor via rpi-motor-tic...
+    _ModbusAdapter: __init__(5),set_coil(2),_set_coil_rtu(3),_set_coil_tcp(2),set_valve(2)  # Controls valves via Modbus RTU over RS485 (Waveshare Modbus ...
+    HardwareGateway: __init__(1),set_valve(2),set_pump(1),read_sensor(1),set_lung(4),stop_lung(0),health(0)  # Single entry-point for all physical hardware I/O.
+
+In *mock*...
   oqlos/hardware/configuration_models.py:
     e: HardwareConfigurationError,SecretReference,HardwareAlias,HardwareProcess,HardwareConfiguration,_reject_inline_secrets,_optional_positive_integer,_validate_motor2_speed,_validate_motor2_identity,_validate_positive_number,_validate_motor2_acceleration,_validate_motor2_choices,_validate_motor2_runtime,validation_issues
     HardwareConfigurationError(ValueError): __init__(1)  # A configuration error with source/format context suitable fo...
@@ -3285,15 +3294,6 @@ Co...
     _validate_motor2_choices(motor2)
     _validate_motor2_runtime(value)
     validation_issues(exc)
-  oqlos/hardware/gateway.py:
-    e: _PiAdcAdapter,_DRI0050MotorAdapter,_Tic249LungAdapter,_ModbusAdapter,HardwareGateway
-    _PiAdcAdapter: __init__(1),read_channel(1),read_sensor(1)  # Reads pressure / analog sensors via piadc REST API (ADS1115)...
-    _DRI0050MotorAdapter: __init__(1),set_speed(1),_stop(0),status(0)  # Controls the pump motor via rpi-motor-DRI0050 REST API (DFRo...
-    _Tic249LungAdapter: __init__(1),reciprocate(4),stop(0),move(2),energize(1),status(0)  # Controls the artificial lung stepper motor via rpi-motor-tic...
-    _ModbusAdapter: __init__(5),set_coil(2),_set_coil_rtu(3),_set_coil_tcp(2),set_valve(2)  # Controls valves via Modbus RTU over RS485 (Waveshare Modbus ...
-    HardwareGateway: __init__(1),set_valve(2),set_pump(1),read_sensor(1),set_lung(4),stop_lung(0),health(0)  # Single entry-point for all physical hardware I/O.
-
-In *mock*...
   oqlos/hardware/transport/mqtt_protocol.py:
     e: MqttEnvelopeError,Topics,_JsonEnvelopeMixin,OqlRequest,OqlResponse,_decode_envelope,build_topics,mqtt_error_response
     MqttEnvelopeError(ValueError):  # Raised when an MQTT request/response envelope cannot be deco...
@@ -3304,11 +3304,6 @@ In *mock*...
     _decode_envelope(raw)
     build_topics(prefix;node_id)
     mqtt_error_response(correlation_id;exc)
-  oqlos/shared/event_server.py:
-    e: EventServerConnectionManager,EventServer,main
-    EventServerConnectionManager: __init__(0),connect(2),disconnect(1),broadcast(2),get_stats(0)  # Tracks clients connected to the standalone OqlOS event serve...
-    EventServer: __init__(3),handle_client(1),_handle_message(2),_normalize_event(0),start(0)  # WebSocket event broker with persistence...
-    main()
   oqlos/hardware/transport/manage_ops_diagnostic.py:
     e: _success_from_result,run_modbus_io_valve,run_pump_diagnostic,_resolve_move_relative_params,run_motor_tic249_extended,_extract_diagnostic_ids,_extract_params,_route_tic249_lung_command,_route_diagnostic_command,run_diagnostic_command
     _success_from_result(result)
@@ -3321,6 +3316,11 @@ In *mock*...
     _route_tic249_lung_command(command;hw)
     _route_diagnostic_command(plugin_id;command;params;hw;pl)
     run_diagnostic_command(a)
+  oqlos/shared/event_server.py:
+    e: EventServerConnectionManager,EventServer,main
+    EventServerConnectionManager: __init__(0),connect(2),disconnect(1),broadcast(2),get_stats(0)  # Tracks clients connected to the standalone OqlOS event serve...
+    EventServer: __init__(3),handle_client(1),_handle_message(2),_normalize_event(0),start(0)  # WebSocket event broker with persistence...
+    main()
   oqlos/api/ui_prefs_store.py:
     e: UiPrefsStoreUnavailableError,UiPrefsStore,_default_path,empty_prefs,normalize_prefs
     UiPrefsStoreUnavailableError(Exception):  # Raised when the configured preferences format cannot be proc...
@@ -3377,17 +3377,6 @@ In *mock*...
   packages/backend-shared-py/src/shared/db/alembic_helpers.py:
     e: build_alembic_env_main
     build_alembic_env_main()
-  packages/backend-shared-py/src/shared/cqrs/setup.py:
-    e: _register_modules,setup_cqrs,reset_cqrs_setup
-    _register_modules(modules;container)
-    setup_cqrs()
-    reset_cqrs_setup()
-  packages/backend-shared-py/src/shared/cqrs/event_store_postgres.py:
-    e: PostgresEventStoreError,PostgresEventStore
-    PostgresEventStoreError(RuntimeError):  # Raised when the PostgreSQL event store cannot be initialized...
-    PostgresEventStore: __init__(1),_open_connection(0),_ensure_schema(1),_replace_connection(0),_connection(0),_serialize(1),_deserialize(2),append(2),load(1),stream_ids(0),latest_version(1),truncate(0),health_check(0),close(0)  # Append-only PostgreSQL event store.
-
-Schema (per-service dat...
   packages/backend-shared-py/src/shared/types/base.py:
     e: EntityId,DeviceId,CustomerId,TestSessionId,ScenarioId,ProtocolId,MenuConfigId,UserId,BaseCommand,BaseQuery,BaseEvent,BaseDto
     EntityId: __post_init__(0),__str__(0),to_prefixed(0)
@@ -3402,6 +3391,17 @@ Schema (per-service dat...
     BaseQuery(ABC,BaseEntity): validate(0),to_dict(0),_get_params(0)
     BaseEvent(ABC,BaseEntity): to_dict(0),to_json(0),_build_event_data(2),_get_event_data(0)
     BaseDto: to_dict(0),to_json(0),from_dict(1)
+  packages/backend-shared-py/src/shared/cqrs/setup.py:
+    e: _register_modules,setup_cqrs,reset_cqrs_setup
+    _register_modules(modules;container)
+    setup_cqrs()
+    reset_cqrs_setup()
+  packages/backend-shared-py/src/shared/cqrs/event_store_postgres.py:
+    e: PostgresEventStoreError,PostgresEventStore
+    PostgresEventStoreError(RuntimeError):  # Raised when the PostgreSQL event store cannot be initialized...
+    PostgresEventStore: __init__(1),_open_connection(0),_ensure_schema(1),_replace_connection(0),_connection(0),_serialize(1),_deserialize(2),append(2),load(1),stream_ids(0),latest_version(1),truncate(0),health_check(0),close(0)  # Append-only PostgreSQL event store.
+
+Schema (per-service dat...
   packages/backend-shared-py/src/shared/testing/conftest_helpers.py:
     e: setup_service_test_paths,_purge_modules
     setup_service_test_paths(conftest_file;service_dir_name)
@@ -3448,11 +3448,6 @@ Schema (per-service dat...
   frontend/src/utils/hardware-restart-step-runner.js:
     e: runWizardStep
     runWizardStep()
-  oqlos/tools/gen_error_docs.py:
-    e: _repair_cell,generate_markdown,main
-    _repair_cell(defn)
-    generate_markdown()
-    main()
   oqlos/core/cqrs/peripheral.py:
     e: PeripheralRegistered,PeripheralValueSet,PeripheralModeChanged,PeripheralStatusChanged,PeripheralAggregate,RegisterPeripheralCommand,SetPeripheralValueCommand,SetPeripheralModeCommand,SetPeripheralStatusCommand,PeripheralsProjection,handle_register_peripheral,handle_set_peripheral_value,handle_set_peripheral_mode,handle_set_peripheral_status
     PeripheralRegistered(Event):
@@ -3469,19 +3464,6 @@ Schema (per-service dat...
     handle_set_peripheral_value(cmd)
     handle_set_peripheral_mode(cmd)
     handle_set_peripheral_status(cmd)
-  oqlos/tools/hardware_diagnose/__main__.py:
-    e: _print_list,_print_health,_print_calibrate,_print_benchmark,_print_detect,_print_doctor,_print_modbus_probe,main,_handle_report_action,_dispatch_action,_print_diagnose
-    _print_list(url;as_json)
-    _print_health(url;as_json)
-    _print_calibrate(url;as_json)
-    _print_benchmark(url;duration;as_json)
-    _print_detect(url;as_json;config_path)
-    _print_doctor(url;as_json;config_path;fix)
-    _print_modbus_probe(_as_json;args)
-    main()
-    _handle_report_action(args;url;jout)
-    _dispatch_action(args;url;jout)
-    _print_diagnose(url;jout)
   oqlos/tools/hardware_diagnose/benchmark.py:
     e: run_benchmark
     run_benchmark(url;duration)
@@ -3499,6 +3481,24 @@ Schema (per-service dat...
     serial_port_owners(devices)
     canonical_device_path(device)
     owners_for_configured_port(owners;configured_port)
+  oqlos/tools/hardware_diagnose/__main__.py:
+    e: _print_list,_print_health,_print_calibrate,_print_benchmark,_print_detect,_print_doctor,_print_modbus_probe,main,_handle_report_action,_dispatch_action,_print_diagnose
+    _print_list(url;as_json)
+    _print_health(url;as_json)
+    _print_calibrate(url;as_json)
+    _print_benchmark(url;duration;as_json)
+    _print_detect(url;as_json;config_path)
+    _print_doctor(url;as_json;config_path;fix)
+    _print_modbus_probe(_as_json;args)
+    main()
+    _handle_report_action(args;url;jout)
+    _dispatch_action(args;url;jout)
+    _print_diagnose(url;jout)
+  oqlos/tools/gen_error_docs.py:
+    e: _repair_cell,generate_markdown,main
+    _repair_cell(defn)
+    generate_markdown()
+    main()
   oqlos/hardware/hui_lung_recipe.py:
     e: build_hui_lung_reciprocate_args,_configured_hui_lung_profile,_int_from_body,_float_from_body,_text_from_body,get_hui_lung_valve_id,get_hui_lung_reciprocate_args
     build_hui_lung_reciprocate_args()
@@ -3587,19 +3587,19 @@ Supports basic I/O operation...
     paged_like_search(session;model_class)
   packages/backend-shared-py/src/shared/cqrs/postgres_aggregate_repository.py:
     e: PostgresAggregateRepository
-    PostgresAggregateRepository(<ast.Subscript object at 0x7b34d8bcfd90>): __init__(1),append(2),get_events(1),get_snapshot(1),list_snapshots(0),reset(0),health_check(0),close(0)  # Reusable synchronous repository for event-sourced aggregates...
+    PostgresAggregateRepository(<ast.Subscript object at 0x7bc0d8835010>): __init__(1),append(2),get_events(1),get_snapshot(1),list_snapshots(0),reset(0),health_check(0),close(0)  # Reusable synchronous repository for event-sourced aggregates...
   packages/backend-shared-py/src/shared/cqrs/event_store.py:
     e: ConcurrencyError,EventStore,InMemoryEventStore,EventSourcedRepository
     ConcurrencyError(Exception):  # Raised when optimistic concurrency check fails...
     EventStore(ABC): append_events(3),load_events(1)  # Abstract event store contract...
     InMemoryEventStore(EventStore): __init__(0),append_events(3),load_events(1)  # Simple in-memory event store (good for tests/local services)...
-    EventSourcedRepository(<ast.Subscript object at 0x7b34d81f7b90>): __init__(2),load(1),save(1)  # Generic repository for event-sourced aggregates...
+    EventSourcedRepository(<ast.Subscript object at 0x7bc0d68b1510>): __init__(2),load(1),save(1)  # Generic repository for event-sourced aggregates...
   packages/backend-shared-py/src/shared/cqrs/dispatch_registry.py:
     e: CqrsCommand,CqrsQuery,HandlerNotFoundError,HandlerRegistry,DomainHandlerRegistry,_new_id
     CqrsCommand: validate(0)  # Base for all CQRS commands. Auto-generates command_id if not...
     CqrsQuery: validate(0)  # Base for all CQRS queries. Auto-generates query_id if not pr...
     HandlerNotFoundError(Exception):  # Raised when no handler is found for a command/query...
-    HandlerRegistry(<ast.Subscript object at 0x7b34d80ab690>): __init__(0),register(2),register_decorator(1),add_middleware(1),dispatch(1),has_handler(1),get_registered_types(0)  # Registry for synchronous command/query handlers...
+    HandlerRegistry(<ast.Subscript object at 0x7bc0d6706390>): __init__(0),register(2),register_decorator(1),add_middleware(1),dispatch(1),has_handler(1),get_registered_types(0)  # Registry for synchronous command/query handlers...
     DomainHandlerRegistry: __init__(0),register(2),get_handler(1),can_handle(1),dispatch(1)  # Async handler registry with validation and Result return typ...
     _new_id()
   packages/backend-shared-py/src/shared/cqrs/event_store_contracts/commands.py:
@@ -3657,6 +3657,10 @@ Supports basic I/O operation...
     params()
     rawSize()
     nextSize()
+  frontend/src/utils/clipboard.js:
+    e: copyTextToClipboard,textarea
+    copyTextToClipboard()
+    textarea()
   frontend/src/i18n/dictionaries.js:
     i: ./hardware-demo-extra-translations.js,./hardware-status-log-translations.js,./hardware-status-panel-translations.js,./hardware-status-presets-translations.js
     e: buildDictionaries,dictionaries,resolveKey,val
@@ -3664,10 +3668,6 @@ Supports basic I/O operation...
     dictionaries()
     resolveKey()
     val()
-  frontend/src/utils/clipboard.js:
-    e: copyTextToClipboard,textarea
-    copyTextToClipboard()
-    textarea()
   frontend/src/utils/hui-shell-key.js:
     e: isValidShellHuiKey,huiKeyForDigit,entry,huiShortcutClass,huiShortcutLabelClass
     isValidShellHuiKey()
@@ -3749,11 +3749,6 @@ Supports basic I/O operation...
     _probe_waveshare(probe_fn)
     _probe_waveshare_role(role;preferred_port;preferred_baud;preferred_parity;preferred_device_id;timeout)
     _build_waveshare_probe(role;doc)
-  oqlos/hardware/transport/manage_ops.py:
-    e: run_manage_verb,_resolve,list_manage_verbs
-    run_manage_verb(verb;args)
-    _resolve(verb)
-    list_manage_verbs()
   oqlos/hardware/client/config.py:
     e: OqlosHardwareProxyConfig,float_from_env,int_from_env,_value_from_env,candidate_oqlos_bases
     OqlosHardwareProxyConfig: __post_init__(0),from_env(1)
@@ -3761,6 +3756,11 @@ Supports basic I/O operation...
     int_from_env(env;key;default)
     _value_from_env(env;key;default;caster)
     candidate_oqlos_bases(api_base)
+  oqlos/hardware/transport/manage_ops.py:
+    e: run_manage_verb,_resolve,list_manage_verbs
+    run_manage_verb(verb;args)
+    _resolve(verb)
+    list_manage_verbs()
   oqlos/hardware/transport/mqtt_oql_bridge.py:
     e: _PahoAsyncClient,OqlMqttController,OqlMqttAgent,_make_client
     _PahoAsyncClient: __init__(0),start(0),stop(0),_subscriptions(0),_last_will(0),_on_payload(2),_handle_connect(0),_handle_message(3),_publish(2)  # Wraps a paho client and bridges its network thread to an asy...
@@ -3838,6 +3838,14 @@ Usage::
     e: CQRSContainer,SingletonCQRSContainer
     CQRSContainer: __init__(3),dispatch_command(1),dispatch_query(1),publish_event(1),publish_events(1)  # Composable CQRS runtime (not a hard singleton)...
     SingletonCQRSContainer(CQRSContainer): __new__(0),__init__(0)  # Process-local singleton with configurable application bus ty...
+  packages/backend-shared-py/src/shared/identification_models.py:
+    e: IdentificationType,IdentificationMethod,IdentificationRequest,IdentificationResponse,HealthCheckResponse,ErrorResponse
+    IdentificationType(str,Enum):
+    IdentificationMethod(str,Enum):
+    IdentificationRequest(BaseModel): validate_value(2)  # Request to identify an entity...
+    IdentificationResponse(BaseModel):  # Response with identification result...
+    HealthCheckResponse(BaseModel):  # Health check response...
+    ErrorResponse(BaseModel):  # Error response...
   packages/backend-shared-py/src/shared/cqrs/handler_helpers.py:
     e: evolve_existing_aggregate
     evolve_existing_aggregate()
@@ -3904,14 +3912,6 @@ Usage::
     record_sensor_readings(store;readings)
     latest_sensor_values(store)
     sensor_history(store;sensor_id)
-  packages/backend-shared-py/src/shared/identification_models.py:
-    e: IdentificationType,IdentificationMethod,IdentificationRequest,IdentificationResponse,HealthCheckResponse,ErrorResponse
-    IdentificationType(str,Enum):
-    IdentificationMethod(str,Enum):
-    IdentificationRequest(BaseModel): validate_value(2)  # Request to identify an entity...
-    IdentificationResponse(BaseModel):  # Response with identification result...
-    HealthCheckResponse(BaseModel):  # Health check response...
-    ErrorResponse(BaseModel):  # Error response...
   oqlos/errors/catalog.py:
     e: RepairTemplate,IssueDefinition,CodePattern,get_issue_definition,matches_known_pattern,all_codes
     RepairTemplate:
@@ -4022,14 +4022,14 @@ Subclasses declare which i...
     e: HttpInterServiceRelay,create_inbox_router
     HttpInterServiceRelay: __init__(0),add_subscriber(1),relay(1),_post(3)  # Forwards local ``InterServiceEvent`` instances to remote ser...
     create_inbox_router(bus)
+  packages/backend-shared-py/src/shared/cqrs/aggregate_publish_handler.py:
+    e: AggregatePublishHandler
+    AggregatePublishHandler(<ast.Subscript object at 0x7bc0d9665b90>,ABC,<ast.Subscript object at 0x7bc0d9664190>): __init__(2),create_default_repo(0),aggregate_id_from_command(1),not_found_message(1),build_aggregate(1),apply_publish(2),build_publish_payload(2),build_success_payload(2),handle(1)  # Shared implementation for ``publish(version, notes)`` style ...
   packages/backend-shared-py/src/shared/cqrs/inter_service_events.py:
     e: InterServiceEvent,InterServiceEventBus
     InterServiceEvent: to_dict(0),from_dict(1)  # Canonical envelope for events published between c2004 servic...
     InterServiceEventBus: __init__(0),subscribe(2),publish(1)  # Minimal in-memory inter-service event bus.
 Production: repla...
-  packages/backend-shared-py/src/shared/cqrs/aggregate_publish_handler.py:
-    e: AggregatePublishHandler
-    AggregatePublishHandler(<ast.Subscript object at 0x7b34d81a5e90>,ABC,<ast.Subscript object at 0x7b34d81a7e10>): __init__(2),create_default_repo(0),aggregate_id_from_command(1),not_found_message(1),build_aggregate(1),apply_publish(2),build_publish_payload(2),build_success_payload(2),handle(1)  # Shared implementation for ``publish(version, notes)`` style ...
   packages/backend-shared-py/src/shared/cqrs/event_store_contracts/queries.py:
     e: EventListQuery,EventStreamListQuery
     EventListQuery(BaseQuery): __post_init__(0),validate(0),_get_params(0)  # List events for a given stream...
@@ -4119,7 +4119,7 @@ Mapped to Pr...
     AggregateRoot(ABC): __init__(1),get_uncommitted_events(0),mark_events_as_committed(0),apply_event(1),raise_event(1),load_from_history(1),_apply_event(1),to_snapshot(0),from_snapshot(1)  # Base class for event-sourced aggregate roots...
   packages/backend-shared-py/src/shared/cqrs/result.py:
     e: Result
-    Result(<ast.Subscript object at 0x7b34d804e410>): success(1),failure(1),__bool__(0)  # Immutable result wrapper.
+    Result(<ast.Subscript object at 0x7bc0d6873850>): success(1),failure(1),__bool__(0)  # Immutable result wrapper.
 
 Usage::
     return Result.success...
@@ -4128,6 +4128,13 @@ Usage::
     MockHttpResponse: json(1),ok(0),created(0),not_found(0),bad_request(0),server_error(0),gateway_timeout(-1),service_unavailable(-1),paginated(3)  # Factory for common HTTP responses used in tests.
 
 Provides c...
+  packages/backend-shared-py/src/shared/cqrs/fastapi_integration.py:
+    e: CommandResponse,QueryResponse,create_command_router,create_query_router,result_to_response
+    CommandResponse(BaseModel):
+    QueryResponse(BaseModel):
+    create_command_router(command_bus;prefix;tags)
+    create_query_router(query_bus;prefix;tags)
+    result_to_response(result)
   frontend/src/utils/hardware-restart-docs.js:
     e: hardwareRestartDocsUrl,base
     hardwareRestartDocsUrl()
@@ -4243,13 +4250,6 @@ Subclasses implement `ap...
     register_custom_mapping(target;plugin_id)
     get_all_mappings()
     generate_dynamic_valve_mappings(max_valve_count)
-  packages/backend-shared-py/src/shared/cqrs/fastapi_integration.py:
-    e: CommandResponse,QueryResponse,create_command_router,create_query_router,result_to_response
-    CommandResponse(BaseModel):
-    QueryResponse(BaseModel):
-    create_command_router(command_bus;prefix;tags)
-    create_query_router(query_bus;prefix;tags)
-    result_to_response(result)
   oqlos/hardware/identify_enrichment.py:
     e: enrich_identify_payload
     enrich_identify_payload(payload)
@@ -4365,15 +4365,15 @@ Subclasses implement `ap...
     e: result,result
     result()
     result()
-  frontend/src/utils/hardware-time.js:
-    e: hardwareNowText
-    hardwareNowText()
   frontend/src/utils/hardware-coil-test.test.js:
     i: node:assert/strict,node:test
     e: report,intent,error
     report()
     intent()
     error()
+  frontend/src/utils/hardware-time.js:
+    e: hardwareNowText
+    hardwareNowText()
   frontend/src/utils/scenarioFilesUrl.test.js:
     i: node:assert/strict,node:test
     e: search
@@ -4449,16 +4449,16 @@ Subclasses implement `ap...
     i: node:assert/strict,node:test
     e: originalWindow
     originalWindow()
+  frontend/src/utils/hardwareEventStream.test.js:
+    i: node:assert/strict,node:test
+    e: event
+    event()
   frontend/src/utils/designRem.test.js:
     i: ./designRem.js,node:assert/strict,node:fs,node:path,node:test,node:url
     e: __dirname,globalCss,navPanel
     __dirname()
     globalCss()
     navPanel()
-  frontend/src/utils/hardwareEventStream.test.js:
-    i: node:assert/strict,node:test
-    e: event
-    event()
   frontend/src/utils/designRem.js:
     e: rem,remVar
     rem()
@@ -4479,14 +4479,14 @@ Subclasses implement `ap...
     e: Settings,get_settings
     Settings(BaseSettings):  # Application settings loaded from environment variables and ...
     get_settings()
-  oqlos/tools/hardware_diagnose/__init__.py:
-    e: main
-    main()
   oqlos/tools/oql_cli.py:
     e: run_single_command,run_source,build_result_payload
     run_single_command()
     run_source()
     build_result_payload()
+  oqlos/tools/hardware_diagnose/__init__.py:
+    e: main
+    main()
   oqlos/hardware/protocol.py:
     e: ProtocolType,HardwareProtocol
     ProtocolType(Enum):  # Supported hardware communication protocols...
@@ -4523,34 +4523,33 @@ A driver must implemen...
     _make_exec_handler(orch_attr;orch_value;target_status)
   hw_diagnostic_20260415_133138.json:
   nlp2uri.yaml:
-  pyqual.yaml:
-  oqlos/__init__.py:
   goal.yaml:
-  Makefile:
+  oqlos/__init__.py:
   local.dev.txt:
-  sumd.json:
+  Makefile:
+  pyqual.yaml:
   AGENTS.md:
+  sumd.json:
+  Taskfile.testql.yml:
   pyproject.toml:
-  TODO.md:
+  openapi_spec.yaml:
   testql-contracts.testql.toon.yaml:
   CONTRIBUTION.md:
-  Taskfile.yml:
+  TODO.md:
   CHANGELOG.md:
-  openapi_spec.yaml:
+  Taskfile.yml:
   openapi.yaml:
-  packages/oqlos-models/pyproject.toml:
-  packages/README.md:
-  packages/oqlos-models/README.md:
-  Taskfile.testql.yml:
-  README.md:
-  packages/oqlos-models/local.dev.txt:
   project.sh:
+  packages/README.md:
+  packages/oqlos-models/local.dev.txt:
+  README.md:
+  packages/oqlos-models/pyproject.toml:
+  packages/oqlos-models/README.md:
+  packages/oqlos-models/src/oqlos/models/__init__.py:
   packages/backend-shared-py/local.dev.txt:
   packages/backend-shared-py/pyproject.toml:
-  packages/backend-shared-py/README.md:
   packages/backend-shared-py/CONTRIBUTION.md:
-  packages/oqlos-models/src/oqlos/models/__init__.py:
-  packages/backend-shared-py/src/shared/__init__.py:
+  packages/backend-shared-py/README.md:
   packages/oqlos-models/src/oqlos/models/dsl_models.py:
     e: OqlMetadata,OqlInterval,OqlCondition,OqlAction,OqlStep,OqlGoal,OqlScenario,OqlDocument
     OqlMetadata:
@@ -4561,6 +4560,7 @@ A driver must implemen...
     OqlGoal:  # A test goal within a scenario...
     OqlScenario:  # A named scenario block: @Namespace.Name...
     OqlDocument:  # Internal runtime AST node for an OQL document...
+  packages/backend-shared-py/src/shared/__init__.py:
   packages/backend-shared-py/src/shared/health_endpoint.py:
   packages/backend-shared-py/src/shared/version_endpoint.py:
   packages/backend-shared-py/src/shared/db/__init__.py:
@@ -4571,23 +4571,45 @@ A driver must implemen...
   packages/backend-shared-py/src/shared/types/__init__.py:
   packages/backend-shared-py/src/shared/types/dtos.py:
   packages/backend-shared-py/src/shared/types/enums.py:
+  packages/oqlos-models/src/oqlos/models/peripheral.py:
+    e: PeripheralType,PeripheralStatus,PeripheralMode,Peripheral
+    PeripheralType(str,Enum):
+    PeripheralStatus(str,Enum):
+    PeripheralMode(str,Enum):
+    Peripheral(BaseModel):  # Event-sourced: only oqlos.core.cqrs.peripheral may produce a...
   packages/backend-shared-py/src/shared/cqrs/__init__.py:
   packages/backend-shared-py/src/shared/cqrs/event_store_contracts/__init__.py:
+  packages/oqlos-models/src/oqlos/models/execution.py:
+    e: ExecutionRequest,ExecutionStatus,CommandEnvelope
+    ExecutionRequest(BaseModel):
+    ExecutionStatus(BaseModel):  # Event-sourced: only oqlos.core.cqrs.execution may produce a ...
+    CommandEnvelope(BaseModel):
   packages/backend-shared-py/src/shared/live_protocol/__init__.py:
   packages/backend-shared-py/src/shared/live_protocol/value_objects.py:
     e: DslStep,ProtocolData
     DslStep:  # Single DSL step...
     ProtocolData:  # Protocol data collected during execution...
   packages/backend-shared-py/src/shared/testing/__init__.py:
+  packages/oqlos-models/src/oqlos/models/scenario.py:
+    e: Step,ValidationRule,Goal,Scenario
+    Step(BaseModel):
+    ValidationRule(BaseModel):
+    Goal(BaseModel):
+    Scenario(BaseModel):
   packages/oqlos-core/local.dev.txt:
   packages/oqlos-core/pyproject.toml:
   packages/oqlos-core/README.md:
+  packages/backend-shared-py/src/shared/protocol_models.py:
+    e: StartProtocolRequest,PauseProtocolRequest,CompleteProtocolRequest
+    StartProtocolRequest(BaseModel):
+    PauseProtocolRequest(BaseModel):
+    CompleteProtocolRequest(BaseModel):
   packages/oqlos-core/src/oqlos/core/__init__.py:
   packages/oqlos-core/src/oqlos/shared/__init__.py:
   frontend/local.dev.txt:
+  frontend/package.json:
   frontend/vite.config.ts:
     i: @vitejs/plugin-react,node:url,vite
-  frontend/package.json:
   frontend/src/App.jsx:
     i: ./pages/ApiDocs,./pages/HardwareCoilTest,./pages/HardwareRestart,./pages/HardwareRtc,./pages/HardwareStatus,./pages/MotorServices,./pages/Panel,./pages/ScenarioFiles,react-router-dom
   frontend/src/components/HardwareActivityLog.jsx:
@@ -4595,9 +4617,9 @@ A driver must implemen...
   frontend/src/i18n/hardware-status-log-translations.js:
   frontend/src/i18n/hardware-status-panel-translations.js:
   frontend/src/i18n/hardware-demo-extra-translations.js:
-  frontend/src/i18n/hardware-status-presets-translations.js:
   frontend/src/utils/panel-run-mode.test.js:
     i: ./panel-run-mode.js,node:assert/strict,node:test
+  frontend/src/i18n/hardware-status-presets-translations.js:
   frontend/src/utils/api-docs-url.test.js:
     i: ./api-docs-url.js,node:assert/strict,node:test
   frontend/src/utils/sidebar-layout.test.js:
@@ -4610,37 +4632,37 @@ A driver must implemen...
     i: ./hardware-diagnostic-failure.js,node:assert/strict,node:test
   docs/HARDWARE_CONFIGURATION.md:
   docs/SYSTEMD-CONTROL.md:
-  docs/oql_v2_llm_validator.schema.json:
   docs/oql-examples.md:
-  docs/oql-spec.md:
-  docs/ERROR_STANDARDIZATION.md:
-  docs/ERROR_CODES.md:
+  docs/oql_v2_llm_validator.schema.json:
   docs/hardware-ui-modules.md:
-  docs/oql_v4_llm_validator.schema.json:
+  docs/oql-spec.md:
+  docs/ERROR_CODES.md:
   docs/STANDARDIZATION_AUDIT_2026-07-27.md:
-  docs/HARDWARE_DIAGNOSTICS.md:
+  docs/ERROR_STANDARDIZATION.md:
+  docs/oql_v4_llm_validator.schema.json:
   docs/refactor-roadmap-2026-07-27.md:
+  docs/refactor-roadmap.md:
   docs/refactor-audit-2026-07-29.md:
   docs/DEDUP-connect-scenario.md:
-  docs/refactor-roadmap.md:
+  docs/HARDWARE_DIAGNOSTICS.md:
   docs/boardnet-navigation.md:
   docs/oql_v5_llm_validator.schema.json:
   docs/OQL_V4_MIGRATION_MANUAL.md:
   docs/HARDWARE_CONTROL_OQL_MQTT.md:
   docs/oql-v3-examples.md:
-  docs/refactor-plan.md:
-  redeploy/pi-hw/push-hw-node-code.sh:
-  docs/README.md:
-  redeploy/122/mosquitto.conf:
   redeploy/pi-hw/RUNBOOK.md:
+  redeploy/pi-hw/push-hw-node-code.sh:
+  docs/refactor-plan.md:
+  redeploy/122/mosquitto.conf:
   redeploy/122/oqlos-hw.yaml:
   redeploy/122/CURRENT_STATE.md:
-  redeploy/122/migration.md:
   redeploy/122/usb-adc-cache.conf:
   redeploy/122/RUNBOOK.md:
-  redeploy/122/.migration.md:
+  docs/README.md:
+  redeploy/122/migration.md:
   redeploy/122/oqlos-logging.conf:
   redeploy/122/modbus-baseline.conf:
+  redeploy/122/.migration.md:
   examples/plugin-config.yaml:
   examples/curl-quickstart.sh:
   examples/hardware/doctor-workflow.sh:
@@ -4648,25 +4670,14 @@ A driver must implemen...
     print()
     print()
     print()
-  examples/hardware-configuration/boardnet.yaml:
+  examples/hardware-configuration/boardnet.json:
   docker/mosquitto.conf:
+  docker/docker-compose.prod.yml:
   docker/docker-compose.dev.yml:
   docker/Dockerfile:
-  docker/docker-compose.prod.yml:
   oqlos/core/__init__.py:
   oqlos/tools/__init__.py:
-  packages/oqlos-models/src/oqlos/models/peripheral.py:
-    e: PeripheralType,PeripheralStatus,PeripheralMode,Peripheral
-    PeripheralType(str,Enum):
-    PeripheralStatus(str,Enum):
-    PeripheralMode(str,Enum):
-    Peripheral(BaseModel):  # Event-sourced: only oqlos.core.cqrs.peripheral may produce a...
   oqlos/tools/xml_import/__init__.py:
-  packages/oqlos-models/src/oqlos/models/execution.py:
-    e: ExecutionRequest,ExecutionStatus,CommandEnvelope
-    ExecutionRequest(BaseModel):
-    ExecutionStatus(BaseModel):  # Event-sourced: only oqlos.core.cqrs.execution may produce a ...
-    CommandEnvelope(BaseModel):
   oqlos/tools/xml_import/models.py:
     e: SensorParam,Output,Operation,TestRun,DeviceReport
     SensorParam:  # Parameter measurement from an operation...
@@ -4675,18 +4686,7 @@ A driver must implemen...
     TestRun:  # A test run (scenario) within a device type...
     DeviceReport:  # Parsed device test report...
   oqlos/errors/__init__.py:
-  packages/oqlos-models/src/oqlos/models/scenario.py:
-    e: Step,ValidationRule,Goal,Scenario
-    Step(BaseModel):
-    ValidationRule(BaseModel):
-    Goal(BaseModel):
-    Scenario(BaseModel):
   oqlos/hardware/__init__.py:
-  packages/backend-shared-py/src/shared/protocol_models.py:
-    e: StartProtocolRequest,PauseProtocolRequest,CompleteProtocolRequest
-    StartProtocolRequest(BaseModel):
-    PauseProtocolRequest(BaseModel):
-    CompleteProtocolRequest(BaseModel):
   oqlos/hardware/transport/__init__.py:
   oqlos/hardware/client/__init__.py:
   oqlos/hardware/client/constants.py:
@@ -4701,8 +4701,8 @@ A driver must implemen...
   oqlos/api/hardware.py:
   oqlos/api/utils/__init__.py:
   oqlos/ide/__init__.py:
-  deploy/systemd/oqlos-hardware-api.service.d/usb-adc-stack.conf:
   oqlos/dsl/__init__.py:
+  deploy/systemd/oqlos-hardware-api.service.d/usb-adc-stack.conf:
   scripts/hardware-diag-fix.sh:
     e: phase_test,list_serial_adapters,scan_port,print,phase_diagnose,phase_fix,print
     phase_test()
@@ -4745,7 +4745,7 @@ A driver must implemen...
   scripts/test-hardware.sh:
   testql-scenarios/generated-from-scenarios.testql.toon.yaml:
   testql-scenarios/generated-api-integration.testql.toon.yaml:
-  testql-scenarios/panel-editor-smoke.testql.toon.yaml:
   testql-scenarios/generated-from-pytests.testql.toon.yaml:
+  testql-scenarios/panel-editor-smoke.testql.toon.yaml:
   testql-scenarios/cross-project-integration.testql.toon.yaml:
   testql-scenarios/generated-api-smoke.testql.toon.yaml:

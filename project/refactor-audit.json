@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-07-30T14:25:55+00:00",
+  "generated_at": "2026-07-30T14:29:57+00:00",
   "root": "/home/tom/github/oqlos/oqlos",
-  "git_commit": "3793b94f36b020776a6fbf04d36c8cb900c42eb3",
+  "git_commit": "9eea00b42c874ed3dc23d799cda17331c12a22dc",
   "git_dirty": false,
   "git_dirty_including_generated_artifacts": true,
   "git_status_excluding_generated_artifacts": [],
@@ -16,8 +16,8 @@
     }
   },
   "artifacts": {
-    "analysis.toon.yaml": "8ddc3ceaf6e056808cc795bfebd0f2fa2ffe9a96623a332c5159c72b26791bc1",
-    "map.toon.yaml": "8314642784e1eb41aeb110ad75a402ae33a6deac90efa5632dcf11a778694461"
+    "analysis.toon.yaml": "d0fdfd8eaa9e1de8a02dc7f146de87372f77ac98320c60b43c8b0ef07f87e48d",
+    "map.toon.yaml": "eb02b8b72294cb3249dfefb5a1ce8189f46618dc8ba34c14137194eeda2a900c"
   },
   "source_file_count": 406,
   "public_routes": [
@@ -5845,7 +5845,7 @@
     },
     {
       "file": "oqlos/hardware/hui_hold.py",
-      "line": 145,
+      "line": 161,
       "exception": "Exception"
     },
     {
