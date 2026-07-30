@@ -399,6 +399,12 @@ ISSUE_CATALOG: dict[str, IssueDefinition] = {
         default_severity="warning",
         summary="The execution control command conflicts with the current runtime state.",
     ),
+    "api_execution_runtime_unavailable": IssueDefinition(
+        code="api_execution_runtime_unavailable",
+        domain="api",
+        default_severity="error",
+        summary="The scenario execution runtime is unavailable.",
+    ),
     "api_hardware_configuration_write_forbidden": IssueDefinition(
         code="api_hardware_configuration_write_forbidden",
         domain="api",

@@ -1,6 +1,6 @@
 # OqlOS — lista zadań
 
-Stan: **2026-07-30**, bazowy `main` `180037f`, z kolejną partią `NEXT-04`.
+Stan: **2026-07-30**, bazowy `main` `edcf3b5`, z kolejną partią `NEXT-04`.
 
 Ten plik jest operacyjną checklistą. Szczegółowe uzasadnienie, zależności i
 kryteria ukończenia znajdują się w
@@ -10,7 +10,7 @@ należy zaktualizować oba dokumenty oraz dołączyć wynik testów i commit.
 ## Bieżące metryki
 
 - 194 publiczne trasy API;
-- 95 surowych wyjątków;
+- 94 surowe wyjątki;
 - 236 szerokich handlerów `except` (w tym jawna granica storage preferencji UI);
 - 80 tras zwracających `dict[str, Any]`;
 - 184 trasy z generyczną odpowiedzią OpenAPI;
@@ -24,8 +24,7 @@ należy zaktualizować oba dokumenty oraz dołączyć wynik testów i commit.
 ### Publiczne granice API
 
 - [ ] Sklasyfikować pozostałe surowe wyjątki w API:
-  - `oqlos/api/hardware_modbus_wizard.py`;
-  - `oqlos/api/utils/execution_ctrl.py`.
+  - `oqlos/api/hardware_modbus_wizard.py`.
 - [ ] Zastąpić surowe `HTTPException` w współdzielonych granicach:
   - `oqlos/shared/_endpoint_helpers.py`;
   - `packages/backend-shared-py/src/shared/cqrs/fastapi_integration.py`;

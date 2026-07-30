@@ -255,7 +255,16 @@ Pełna bramka po tej zmianie: 1008/1008 testów, 149/149 testów frontendowych,
 build Vite oraz Ruff `F821,F811` bez błędów. Metryka surowych wyjątków spadła
 do 95; liczba szerokich handlerów wzrosła do 236 przez dwie jawne granice tras.
 
-Pozostały zakres: sklasyfikować 95 surowych wyjątków i 236 szerokich handlerów
+Niezainicjalizowany `state_manager` lub orkiestrator w sterowaniu wykonaniem nie
+podnosi już surowego `RuntimeError` ani przypadkowego `AttributeError`. Trasy
+pause/resume/stop oraz command bus używają typowanych getterów i zwracają
+503/`C2004-NET-0002` z lokalnym `api_execution_runtime_unavailable`. Kontekst
+publikuje tylko nazwę zależności z zamkniętego zbioru i bezpieczny target
+`runtime://scenario-execution`; `correlation_id` pozostaje zachowany. Pełna
+bramka tej partii: 1013/1013 testów, 149/149 testów frontendowych, build Vite
+oraz Ruff `F821,F811` bez błędów.
+
+Pozostały zakres: sklasyfikować 94 surowe wyjątki i 236 szerokich handlerów
 OqlOS, rozdzielić pozostałe klasy host/proxy/plugin oraz wykonać analogiczną
 inwentaryzację i kontrakty po stronie C2004/POA.
 

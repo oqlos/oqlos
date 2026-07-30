@@ -368,7 +368,8 @@ async def _handle_start(env: CommandEnvelope) -> dict:
 def _make_state_handler(ctrl_fn):
     """Factory for pause/resume/stop command handlers — eliminates 3 near-identical blocks."""
     async def handler(env: CommandEnvelope) -> dict:
-        if not _ctrl.orchestrator.current_execution:
+        orchestrator = _ctrl.get_orchestrator()
+        if not orchestrator.current_execution:
             raise OqlosError(
                 code="api_execution_state_conflict",
                 status_code=409,

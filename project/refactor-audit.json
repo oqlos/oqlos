@@ -1,11 +1,24 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-07-30T06:50:39+00:00",
+  "generated_at": "2026-07-30T07:08:16+00:00",
   "root": "/home/tom/github/oqlos/oqlos",
-  "git_commit": "b8fbafc720e4e3d0bcd157120e812b02b897f76c",
-  "git_dirty": false,
+  "git_commit": "edcf3b543832f927bfb257dc349f9fb5b6d672ca",
+  "git_dirty": true,
   "git_dirty_including_generated_artifacts": true,
-  "git_status_excluding_generated_artifacts": [],
+  "git_status_excluding_generated_artifacts": [
+    " M TODO.md",
+    " M docs/ERROR_CODES.md",
+    " M docs/ERROR_STANDARDIZATION.md",
+    " M docs/refactor-roadmap.md",
+    " M oqlos/_CHECKSUMS.sha256",
+    " M oqlos/api/execution.py",
+    " M oqlos/api/state.py",
+    " M oqlos/api/utils/execution_ctrl.py",
+    " M oqlos/errors/c2004_catalog_generated.py",
+    " M oqlos/errors/catalog.py",
+    " M tests/firmware/test_error_catalog.py",
+    "?? tests/firmware/test_execution_ctrl_error_contract.py"
+  ],
   "generator": {
     "audit_command": "python scripts/refactor_audit.py --root /home/tom/github/oqlos/oqlos --output /home/tom/github/oqlos/oqlos/project/refactor-audit.json",
     "code2llm_command": "code2llm . -m hybrid -f toon,map --strategy standard --toon-yaml --no-png --no-cache --no-chunk -o <temp>",
@@ -16,8 +29,8 @@
     }
   },
   "artifacts": {
-    "analysis.toon.yaml": "c297f78df7cb9ba78bfeb2b242b35a0a7a76d0b2242f4d5c5794fad15dfb2da5",
-    "map.toon.yaml": "e9b9d0668305b2b36bd9a0905342f4d1f3d708a5bc351353724c442df9e838ee"
+    "analysis.toon.yaml": "34c433c70532dbc659b1298010f653f1b7184e852e02a59b2d8223144d660b82",
+    "map.toon.yaml": "e9dceac050cb2fb2379e019e52634cb3d42ed62cb4f6e80219e1fc73655367b9"
   },
   "source_file_count": 400,
   "public_routes": [
@@ -523,7 +536,7 @@
     },
     {
       "file": "oqlos/api/execution.py",
-      "line": 252,
+      "line": 253,
       "function": "get_execution",
       "return_annotation": null,
       "method": "GET",
@@ -533,7 +546,7 @@
     },
     {
       "file": "oqlos/api/execution.py",
-      "line": 260,
+      "line": 261,
       "function": "get_execution_projection",
       "return_annotation": null,
       "method": "GET",
@@ -543,7 +556,7 @@
     },
     {
       "file": "oqlos/api/execution.py",
-      "line": 265,
+      "line": 266,
       "function": "get_execution_status",
       "return_annotation": null,
       "method": "GET",
@@ -553,7 +566,7 @@
     },
     {
       "file": "oqlos/api/execution.py",
-      "line": 290,
+      "line": 291,
       "function": "get_execution_logs",
       "return_annotation": null,
       "method": "GET",
@@ -563,7 +576,7 @@
     },
     {
       "file": "oqlos/api/execution.py",
-      "line": 341,
+      "line": 343,
       "function": "execution_stream",
       "return_annotation": null,
       "method": "GET",
@@ -573,7 +586,7 @@
     },
     {
       "file": "oqlos/api/execution.py",
-      "line": 373,
+      "line": 375,
       "function": "execution_logs_stream",
       "return_annotation": null,
       "method": "GET",
@@ -1723,7 +1736,7 @@
     },
     {
       "file": "oqlos/api/state.py",
-      "line": 400,
+      "line": 401,
       "function": "post_commands",
       "return_annotation": null,
       "method": "POST",
@@ -3257,7 +3270,7 @@
     },
     {
       "file": "oqlos/api/execution.py",
-      "line": 252,
+      "line": 253,
       "function": "get_execution",
       "return_annotation": null,
       "method": "GET",
@@ -3267,7 +3280,7 @@
     },
     {
       "file": "oqlos/api/execution.py",
-      "line": 260,
+      "line": 261,
       "function": "get_execution_projection",
       "return_annotation": null,
       "method": "GET",
@@ -3277,7 +3290,7 @@
     },
     {
       "file": "oqlos/api/execution.py",
-      "line": 265,
+      "line": 266,
       "function": "get_execution_status",
       "return_annotation": null,
       "method": "GET",
@@ -3287,7 +3300,7 @@
     },
     {
       "file": "oqlos/api/execution.py",
-      "line": 290,
+      "line": 291,
       "function": "get_execution_logs",
       "return_annotation": null,
       "method": "GET",
@@ -3297,7 +3310,7 @@
     },
     {
       "file": "oqlos/api/execution.py",
-      "line": 341,
+      "line": 343,
       "function": "execution_stream",
       "return_annotation": null,
       "method": "GET",
@@ -3307,7 +3320,7 @@
     },
     {
       "file": "oqlos/api/execution.py",
-      "line": 373,
+      "line": 375,
       "function": "execution_logs_stream",
       "return_annotation": null,
       "method": "GET",
@@ -4407,7 +4420,7 @@
     },
     {
       "file": "oqlos/api/state.py",
-      "line": 400,
+      "line": 401,
       "function": "post_commands",
       "return_annotation": null,
       "method": "POST",
@@ -5234,11 +5247,6 @@
     {
       "file": "oqlos/api/hardware_modbus_wizard.py",
       "line": 425,
-      "exception": "RuntimeError"
-    },
-    {
-      "file": "oqlos/api/utils/execution_ctrl.py",
-      "line": 35,
       "exception": "RuntimeError"
     },
     {
@@ -6947,7 +6955,7 @@
     },
     {
       "file": "oqlos/errors/catalog.py",
-      "lines": 527
+      "lines": 533
     },
     {
       "file": "oqlos/tools/xml_import/generators.py",
@@ -6983,19 +6991,19 @@
     },
     {
       "file": "oqlos/api/execution.py",
-      "lines": 424
+      "lines": 426
     },
     {
       "file": "scripts/refactor_audit.py",
       "lines": 412
     },
     {
-      "file": "packages/oqlos-core/src/oqlos/core/_cql_tokenizer.py",
+      "file": "oqlos/api/state.py",
       "lines": 410
     },
     {
-      "file": "oqlos/api/state.py",
-      "lines": 409
+      "file": "packages/oqlos-core/src/oqlos/core/_cql_tokenizer.py",
+      "lines": 410
     },
     {
       "file": "oqlos/core/executor.py",
@@ -7012,13 +7020,13 @@
   ],
   "parse_failures": [],
   "summary": {
-    "git_status_excluding_generated_artifacts": 0,
+    "git_status_excluding_generated_artifacts": 12,
     "public_routes": 194,
     "routes_returning_dict_any": 80,
     "routes_with_generic_response": 184,
     "routes_with_false_success_at_http_200": 0,
     "environment_reads_outside_settings": 154,
-    "raw_exceptions": 95,
+    "raw_exceptions": 94,
     "broad_exception_handlers": 236,
     "large_modules": 31,
     "parse_failures": 0

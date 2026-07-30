@@ -135,6 +135,7 @@ domenowym. Powtarzalny błąd zakończony `SYS-0000` wymaga dodania jawnego
 | niepełny lub błędny request wykonania | 422 | `C2004-DATA-0002` | `SOA/oqlos` | `scenario-execution` / walidacja źródła, DSL lub komendy | publikowany jest wyłącznie stabilny `reason` |
 | scenariusz wykonania nie istnieje | 404 | `C2004-DATA-0001` | `SOA/oqlos` | `scenario-execution` / `scenario.lookup` | identyfikator wejściowy nie jest publikowany |
 | sterowanie bez aktywnego wykonania | 409 | `C2004-DATA-0003` | `SOA/oqlos` | `scenario-execution` / `state.validate` | brak negatywnego envelope przy HTTP 200 |
+| runtime wykonania nie został zainicjalizowany | 503 | `C2004-NET-0002` | `SOA/oqlos` | `scenario-execution` / `dependency.resolve` | wyłącznie nazwa zależności z zamkniętego zbioru i `runtime://scenario-execution` |
 | brak pluginu w rejestrze | 404 | `C2004-DATA-0001` | `SOA/firmware` | `plugin-registry` / `plugin.lookup` | identyfikator wejściowy nie jest publikowany |
 | brak peryferium w rejestrze | 404 | `C2004-DATA-0001` | `SOA/firmware` | `peripheral-registry` / `peripheral.lookup` | identyfikator wejściowy nie jest publikowany |
 | błędny start lub krok execution API | 422 | `C2004-DATA-0002` | `SOA/oqlos` | `scenario-execution` / `dsl.validate` albo `step.validate` | DSL i payload nie są publikowane |

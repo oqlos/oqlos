@@ -237,7 +237,8 @@ def _register_dsl_scenario(scenario_id: str, dsl_content: str):
 def _make_exec_route(ctrl_fn):
     """Factory for pause/resume/stop routes — eliminates 3 near-identical handlers."""
     async def handler(execution_id: str):
-        if execution_id not in _ctrl.state_manager.executions:
+        state_manager = _ctrl.get_state_manager()
+        if execution_id not in state_manager.executions:
             raise _execution_not_found(operation_id="execution.control-by-id")
         return ctrl_fn(execution_id)
     handler.__name__ = ctrl_fn.__name__
@@ -314,7 +315,8 @@ async def get_execution_logs():
 # Legacy control endpoints without execution_id (frontend fallback)
 def _make_legacy_route(ctrl_fn):
     async def handler():
-        if not _ctrl.orchestrator.current_execution:
+        orchestrator = _ctrl.get_orchestrator()
+        if not orchestrator.current_execution:
             raise OqlosError(
                 code="api_execution_state_conflict",
                 status_code=409,

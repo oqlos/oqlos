@@ -26,6 +26,7 @@ own:
 | `api_editor_target_invalid` | warning | The requested editor operation requires a file target. | — |
 | `api_execution_not_found` | warning | The requested execution does not exist. | — |
 | `api_execution_request_invalid` | warning | The scenario execution request is invalid. | — |
+| `api_execution_runtime_unavailable` | error | The scenario execution runtime is unavailable. | — |
 | `api_execution_state_conflict` | warning | The execution control command conflicts with the current runtime state. | — |
 | `api_hardware_configuration_invalid` | warning | The hardware configuration request is invalid. | — |
 | `api_hardware_configuration_write_forbidden` | warning | The caller is not permitted to save hardware configuration. | — |

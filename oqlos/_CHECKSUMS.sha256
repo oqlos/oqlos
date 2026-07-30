@@ -5,7 +5,7 @@
 c6e031d2428a48ef03c323c2b5937b305ab0a35fc99b039893faac30e3bc14e5  ./api/_hw3_peripheral.py
 80178360587f48fedb9e66aa3606d7fa11b696d6d0d188004a47e5220a22d713  ./api/_hw3_system.py
 004a9e295abf7548b32335bf6fbc587524772dc14726a66465fad58788e55a8e  ./api/editor.py
-edceac7920d8626087f9f9b2d7511d71fc1df0a463fc3ab16a0b2dce95b0c306  ./api/execution.py
+58da9aa4e94e7894d8d094fdb10bd1f8f8b398d18a5b7c98d66cb9e1c9302ca0  ./api/execution.py
 330816147e1ca94a014c0fa065568d6f7306e165440907bb7df80f4253a2dd50  ./api/hardware.py
 999d904cfe88750ef4e50b417d6b5ac6cc7c8ceda3f55e8afa8eb84fdb2ac37a  ./api/hardware_actuators.py
 bac00596c4af49cd0a7cdb46f50e7ee2fc961a75e3b6cbe6b4a2065994d39657  ./api/hardware_configuration_routes.py
@@ -36,7 +36,7 @@ de854679e1957ebbc2e29c6fa9c205b4f17ecd666faf6a5cfec9e982a91335e7  ./api/index.ht
 3b49e12dfc914a8e2bcb6f5fdce76ff03a233b50cb376e8e08cc417e4741a974  ./api/peripherals.py
 3c422d6199e1ff0e0af648d6dd78c99b8b1d0759bc176467b868aba79aab42bd  ./api/plugins.py
 7baf8b6049c207e019f2eb844dfe18c143d3e3b5a890f010ea77e08bfa1e2b0d  ./api/scenarios.py
-b2391ce8e674a0501a4f1e0ba37bb0a467034787b9e0418a075e719d50b71087  ./api/state.py
+c06cac65a021b9c45635422b1a3316ab53345dbd8cba7e5bc90e428de734b584  ./api/state.py
 fc1875ce2c6c77655831fd0049bbb53014a588444d32f24cdb0a8db71bfb83ad  ./api/static/editor.html
 d5c38cb5a76a8984a670f52b1318c9ff637bfe7d1dbd83f42c3aae602520d708  ./api/static/hardware-status.html
 b1a29caca5f6b70dd8781d850ff0fdd2933a64f5531a9dc311c75bdbfaa07e28  ./api/static/navigation.html
@@ -47,7 +47,7 @@ ec28b9072a421cf935ef1da4790216cf3ab5c404e6ec6265e793aaccf59dd111  ./api/static/p
 f0828c86c8aba66b1bc57d5d71302f299f0107cf37a0b0334ef1b2d8633cdde6  ./api/ui_prefs_store.py
 2d57e8e082ea8ec22920711fb4d5706a28f3f8e30de2e78967fdb6daaacb4775  ./api/update_status.py
 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  ./api/utils/__init__.py
-f5649e56bfaa76816845597345f0e8b14d2d7f363cbb9f10a25bc7e194ef2b36  ./api/utils/execution_ctrl.py
+fff1eb5ad5f273bab191edbbecacf4a535b2033a350573f373f811455e026667  ./api/utils/execution_ctrl.py
 55104a216d89d5f5f35a118f30ba23a523ff86d44b01af163b1dfbf974d9e1f9  ./api/version.py
 62c339feea01bd3f1f455fa66903e3169db95f0a135039ceea7a7d43ba7b753d  ./config.py
 a8415eab7cae7f7950295b1e00b98bf1a3ccf1fa424b9e01ff9a6bcb4d0cde19  ./core/__init__.py
@@ -64,8 +64,8 @@ e30d874a60c86b80cc1ae0733443fd231d98319f990cd290f42edb335e5c17d7  ./core/cqrs/pe
 bf70e4db36df5cd500b125b5442d739d78b6a396414d680f9f71eed88f08e218  ./dsl/__init__.py
 a8771d1964d7e5554014a29201da045a23afd9a7578a9cfb71f60ef4eafcf515  ./dsl/schema.py
 d90b572434be5d6793438fd7d253cfaae7f990edaf0fdfa9fe6ca2729eaf257e  ./errors/__init__.py
-e05ab407e000298f2b244e3f8ade2841f6ce91cc2f0e66745fb033b9a0e54dae  ./errors/c2004_catalog_generated.py
-1ad0e4ab5c959693563021f79588cef4431db57ce2d40ae25655dd03c3ba6808  ./errors/catalog.py
+f65344cb8478158d487ca9cd11084beeb17a0f5387b80618adb916486a832032  ./errors/c2004_catalog_generated.py
+2d32958ee561481bf8c39b8a0265ec2b397e20bdf541f858bbcb310b08216e79  ./errors/catalog.py
 19aff6afa83ad0678e8001aa3edd0bb4634bccb9fcffc2f47e6f033f21f5389c  ./errors/exceptions.py
 ca91d2220c7c0d8807acc4dd5259916ba85146fce21157f0250e571a46d35453  ./errors/fastapi_integration.py
 8b9761452b0176fa955a5aa1c9c24de0f68adf2e12bb7d334738d4df256d1346  ./errors/repair_commit.py

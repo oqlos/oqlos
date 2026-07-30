@@ -9,6 +9,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from oqlos.core.cqrs.execution import SetExecutionStatusCommand
+from oqlos.errors import OqlosError
 
 if TYPE_CHECKING:
     from oqlos.core.state import StateManager
@@ -32,7 +33,20 @@ def _make_getter(name: str, label: str):
     def getter():
         val = globals().get(name)
         if val is None:
-            raise RuntimeError(f"{label} not initialised — call set_dependencies() first")
+            raise OqlosError(
+                code="api_execution_runtime_unavailable",
+                status_code=503,
+                detail={
+                    "architecture": "SOA",
+                    "layer": "oqlos",
+                    "component": "scenario-execution",
+                    "stage": "dependency.resolve",
+                    "problem_source": "runtime-state",
+                    "operation_id": "execution.dependencies.resolve",
+                    "upstream_target": "runtime://scenario-execution",
+                    "dependency": label,
+                },
+            )
         return val
     getter.__name__ = f"get_{label}"
     return getter
