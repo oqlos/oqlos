@@ -60,8 +60,8 @@ publikuje wyjątku, sekretu ani pełnej ścieżki. Raport zbiorczy zachowuje HTT
 200 jako odczyt diagnostyczny, ale ma jawny `overall_status`, a błąd rejestrów
 per-slave degraduje jego `ok`. Surowe komunikaty plugin health również nie są
 kopiowane do raportu. Metryka szerokich handlerów spadła 228 → 222, a moduł
-Waveshare z 656 do 631 linii. Bramka: 1037/1037 backend, 149/149 frontend,
-build Vite oraz Ruff.
+Waveshare z 656 do 640 linii przy zachowanym CC=11. Bramka: 1037/1037 backend,
+149/149 frontend, build Vite oraz Ruff.
 - [ ] Dla każdego przewidywalnego błędu ustalić:
   - lokalny `issue_code` i publiczny `C2004-*`;
   - właściwy HTTP status, severity, retryability i ownera;

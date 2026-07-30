@@ -105,7 +105,8 @@ odczytu konfiguracji i cleanup nie łapią już dowolnego `Exception`; oczekiwan
 awarie mają stabilny kod i powód, a defekty programu trafiają do centralnej
 granicy 500. Raport diagnostyczny nie kopiuje komunikatów wyjątku ani plugin
 health i jawnie publikuje `overall_status`. Bieżąca metryka OqlOS spadła z 228
-do 222 szerokich handlerów, a moduł Waveshare z 656 do 631 linii.
+do 222 szerokich handlerów, a moduł Waveshare z 656 do 640 linii bez wzrostu
+maksymalnej złożoności CC=11.
 
 ### Hotspoty rozmiaru
 

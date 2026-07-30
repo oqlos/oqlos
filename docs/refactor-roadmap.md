@@ -306,8 +306,9 @@ sanitizowanej granicy 500. Zajęty adapter zwraca 409/`C2004-HW-0013`, pozostał
 oczekiwana awaria skanu 503/`C2004-HW-0012`, a brak `pimodbus` bezpieczny błąd
 zależności. Raport obserwacyjny ma jawny `overall_status`, stabilne powody oraz
 nie kopiuje komunikatów wyjątków lub plugin health. Wydzielona granica zmniejsza
-moduł Waveshare z 656 do 631 linii. Audyt wskazuje 222 szerokie handlery;
-bramka: 1037/1037 backend, 149/149 frontend, build Vite i Ruff.
+moduł Waveshare z 656 do 640 linii przy zachowanym CC=11. Audyt wskazuje 222
+szerokie handlery; bramka: 1037/1037 backend, 149/149 frontend, build Vite i
+Ruff.
 
 Pozostały zakres: sklasyfikować 83 surowe wyjątki i 222 szerokie handlery
 OqlOS, rozdzielić pozostałe klasy host/proxy/plugin oraz wykonać analogiczną

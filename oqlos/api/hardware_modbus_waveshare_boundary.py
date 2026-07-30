@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, NoReturn
+from typing import Any, Callable, NoReturn
 
 from oqlos.api.hardware_modbus_wizard_boundary import (
     _modbus_wizard_issue_for_exception,
@@ -105,6 +105,31 @@ def _read_output_control_modes(
                 client.close()
             except (OSError, RuntimeError, ModbusException):
                 pass
+
+
+def _waveshare_probe_checked(
+    probe: Callable[..., tuple[dict[str, Any], bool]],
+    *args: Any,
+    serial_port: str,
+) -> tuple[dict[str, Any], bool]:
+    """Execute one topology probe and type expected transport failures."""
+    from pymodbus.exceptions import ModbusException
+
+    try:
+        return probe(*args)
+    except (OSError, RuntimeError, ModbusException) as exc:
+        _raise_waveshare_probe_failure(serial_port=serial_port, cause=exc)
+
+
+def _waveshare_report_outcome(
+    report_ok: bool, per_slave: dict[str, Any]
+) -> tuple[bool, str]:
+    """Summarize a scan and its detailed reads as an observation status."""
+    if not report_ok:
+        return False, "unavailable"
+    if all(bool(item.get("ok")) for item in per_slave.values()):
+        return True, "healthy"
+    return False, "degraded"
 
 
 def _raise_waveshare_probe_failure(*, serial_port: str, cause: Exception) -> NoReturn:

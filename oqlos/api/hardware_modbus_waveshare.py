@@ -14,8 +14,9 @@ from oqlos.api.hardware_modbus_settings import (
 from oqlos.api.hardware_modbus_waveshare_boundary import (
     _read_output_control_modes,
     _raise_waveshare_dependency_unavailable,
-    _raise_waveshare_probe_failure,
     _waveshare_diagnostic_failure,
+    _waveshare_probe_checked,
+    _waveshare_report_outcome,
 )
 from oqlos.api.hardware_gateway import is_plugin_compatible as _is_plugin_compatible
 from oqlos.errors.c2004_catalog_generated import c2004_code_for_issue
@@ -582,21 +583,33 @@ def _build_waveshare_diagnose_report(health: dict[str, Any] | None = None) -> di
     try:
         import pimodbus.config  # noqa: F401
         import pimodbus.provisioning  # noqa: F401
-        from pymodbus.exceptions import ModbusException
+        import pymodbus.exceptions  # noqa: F401
     except ImportError as exc:
         _raise_waveshare_dependency_unavailable(cause=exc)
 
-    try:
-        if separate:
-            report_dict, report_ok = _probe_waveshare_separate(
-                io_port, adc_port, target_baud, target_parity, io_device_id, io_ids, adc_id
-            )
-        else:
-            report_dict, report_ok = _probe_waveshare_shared_bus(
-                io_port, target_baud, target_parity, io_device_id, adc_id, target_ids
-            )
-    except (OSError, RuntimeError, ModbusException) as exc:
-        _raise_waveshare_probe_failure(serial_port=io_port, cause=exc)
+    if separate:
+        report_dict, report_ok = _waveshare_probe_checked(
+            _probe_waveshare_separate,
+            io_port,
+            adc_port,
+            target_baud,
+            target_parity,
+            io_device_id,
+            io_ids,
+            adc_id,
+            serial_port=io_port,
+        )
+    else:
+        report_dict, report_ok = _waveshare_probe_checked(
+            _probe_waveshare_shared_bus,
+            io_port,
+            target_baud,
+            target_parity,
+            io_device_id,
+            adc_id,
+            target_ids,
+            serial_port=io_port,
+        )
 
     hits = list(report_dict.get("hits") or [])
     io_hits, adc_hits = _split_hits_by_role(hits)
@@ -611,11 +624,7 @@ def _build_waveshare_diagnose_report(health: dict[str, Any] | None = None) -> di
         adc_id, adc_hits, adc_port, target_baud, target_parity
     )
 
-    details_ok = all(bool(item.get("ok")) for item in per_slave.values())
-    overall_ok = bool(report_ok and details_ok)
-    overall_status = "healthy" if overall_ok else (
-        "degraded" if report_ok else "unavailable"
-    )
+    overall_ok, overall_status = _waveshare_report_outcome(report_ok, per_slave)
 
     return {
         "ok": overall_ok,
