@@ -139,10 +139,22 @@ Odpowiedź sukcesu preferencji nie ujawnia ścieżki serwera. Snapshot wskazuje
 200 i 0 błędów parsowania; bramka to 1059 testów backendowych oraz 149
 frontendowych, build Vite i Ruff.
 
+Szósta grupa przeglądu usunęła wszystkie 13 szerokich handlerów z
+`plugin_gateway.py`. Inicjalizacja, reconnect, readiness, komendy aktuatorów i
+reload konfiguracji łapią wyłącznie oczekiwane błędy konfiguracji, transportu i
+runtime. Zwracane wyniki mają stabilne powody, nie kopiują komunikatu wyjątku,
+surowego health, surowego powodu init ani negatywnego body pluginu, a zewnętrzny
+kod C2004 musi istnieć w katalogu. `AttributeError` przechodzi do nadrzędnej
+granicy zamiast udawać niedostępny sprzęt. Wspólna normalizacja i bezpieczne
+logowanie są w małym `plugin_gateway_boundary.py`, bez nowego hotspotu.
+Snapshot wskazuje 195 szerokich handlerów, 83 surowe wyjątki i 0 błędów
+parsowania; bramka to 1072 testy backendowe, 149 frontendowych, build Vite i
+Ruff.
+
 ### Hotspoty rozmiaru
 
 Największe pliki OqlOS to słownik tłumaczeń (2 150 linii), `Panel.jsx`
-(1 519), parser OQL (1 420), gateway pluginów (963), akcje interpretera (933),
+(1 519), parser OQL (1 420), gateway pluginów (1 007), akcje interpretera (933),
 główny interpreter (778), adapter OQL (744), `oqlos/api/main.py` (684) oraz
 Waveshare Modbus (656).
 

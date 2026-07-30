@@ -15,6 +15,14 @@ from typing import Any
 
 from oqlos.config import get_settings
 from oqlos.hardware.config_paths import resolve_oqlos_config_path
+from oqlos.hardware.plugin_gateway_boundary import (
+    CONFIGURATION_ERRORS,
+    PLUGIN_OPERATION_ERRORS,
+    configuration_failure as _configuration_failure,
+    log_boundary_failure as _log_boundary_failure,
+    normalize_plugin_command_result as _normalize_plugin_command_result,
+    plugin_command_failure as _plugin_command_failure,
+)
 from oqlos.hardware.plugins import (
     PluginConfig,
     PluginHealth,
@@ -95,10 +103,9 @@ class PluginHardwareGateway:
             )
             if not loaded:
                 raise RuntimeError(f"No plugins defined in config: {selected_path}")
-        except Exception as exc:
-            raise RuntimeError(
-                f"Failed to load OqlOS hardware configuration: {exc}"
-            ) from exc
+        except CONFIGURATION_ERRORS as exc:
+            _log_boundary_failure(logger, "Hardware configuration load failed", exc)
+            raise RuntimeError("Failed to load OqlOS hardware configuration") from None
 
     def _parse_plugin_configs(self, plugins_data: dict[str, dict[str, Any]]) -> None:
         """Parse plugin configurations from dictionary (Pydantic handles nesting)."""
@@ -443,11 +450,13 @@ class PluginHardwareGateway:
                         plugin_id,
                     )
                     return instance
-            except Exception as exc:
-                logger.debug(
-                    "Health check before reconnect failed for plugin %s: %s",
-                    plugin_id,
+            except PLUGIN_OPERATION_ERRORS as exc:
+                _log_boundary_failure(
+                    logger,
+                    "Health check before reconnect failed for plugin %s",
                     exc,
+                    plugin_id,
+                    level=logging.DEBUG,
                 )
 
         config = self._plugin_configs.get(plugin_id)
@@ -461,8 +470,10 @@ class PluginHardwareGateway:
             if instance is None:
                 instance = await PluginRegistry.create_instance(plugin_id, config)
             success = await instance.connect()
-        except Exception as exc:
-            logger.error("Failed to reconnect plugin %s: %s", plugin_id, exc)
+        except PLUGIN_OPERATION_ERRORS as exc:
+            _log_boundary_failure(
+                logger, "Failed to reconnect plugin %s", exc, plugin_id
+            )
             return None
 
         if success:
@@ -519,15 +530,12 @@ class PluginHardwareGateway:
                             plugin_id,
                             f" ({port_hint})" if port_hint else "",
                         )
-                except Exception as exc:
+                except PLUGIN_OPERATION_ERRORS as exc:
                     summary["failed"].append(
-                        {"plugin_id": plugin_id, "reason": str(exc)}
+                        {"plugin_id": plugin_id, "reason": "initialization-error"}
                     )
-                    logger.error(
-                        "Failed to initialize plugin %s: %s",
-                        plugin_id,
-                        exc,
-                        exc_info=True,
+                    _log_boundary_failure(
+                        logger, "Failed to initialize plugin %s", exc, plugin_id
                     )
 
             modbus_plugin_ids = ("modbus-io", "modbus-adc")
@@ -609,12 +617,19 @@ class PluginHardwareGateway:
 
         try:
             health = await plugin.health_check()
-        except Exception as exc:
+        except PLUGIN_OPERATION_ERRORS as exc:
+            _log_boundary_failure(
+                logger,
+                "Plugin readiness check failed plugin_id=%s",
+                exc,
+                plugin_id,
+                level=logging.WARNING,
+            )
             return {
                 "ok": False,
                 "plugin_id": plugin_id,
                 "status": "error",
-                "message": f"Plugin {plugin_id} health check failed: {exc}",
+                "message": "Plugin health check failed",
             }
 
         compatible = bool(getattr(health, "compatible", False))
@@ -624,7 +639,9 @@ class PluginHardwareGateway:
             "ok": compatible,
             "plugin_id": plugin_id,
             "status": str(status),
-            "message": str(getattr(health, "message", "") or ""),
+            "message": (
+                "Plugin is ready" if compatible else "Plugin health is not compatible"
+            ),
         }
 
     async def set_valve(self, valve_id: str, value: bool) -> bool:
@@ -649,8 +666,10 @@ class PluginHardwareGateway:
                 "set_valve", {"valve_id": valve_id, "value": value}
             )
             return result.get("success", False)
-        except Exception as exc:
-            logger.error("PluginHardwareGateway.set_valve error: %s", exc)
+        except PLUGIN_OPERATION_ERRORS as exc:
+            _log_boundary_failure(
+                logger, "PluginHardwareGateway.set_valve failed", exc
+            )
             return False
 
     async def set_pump(self, power_pct: float) -> dict[str, Any]:
@@ -668,14 +687,16 @@ class PluginHardwareGateway:
         plugin = await self._get_or_connect_plugin("motor-dri0050")
         if not plugin:
             logger.error("Motor plugin not available")
-            return {"success": False, "error": "Motor plugin not available"}
+            return _plugin_command_failure("plugin-unavailable")
 
         try:
             result = await plugin.execute_command("set_speed", {"power_pct": power_pct})
-            return result
-        except Exception as exc:
-            logger.error("PluginHardwareGateway.set_pump error: %s", exc)
-            return {"success": False, "error": str(exc)}
+            return _normalize_plugin_command_result(result)
+        except PLUGIN_OPERATION_ERRORS as exc:
+            _log_boundary_failure(
+                logger, "PluginHardwareGateway.set_pump failed", exc
+            )
+            return _plugin_command_failure("command-failed")
 
     async def read_sensor(self, sensor_id: str) -> float | None:
         """Read sensor value using the Modbus ADC plugin."""
@@ -695,8 +716,10 @@ class PluginHardwareGateway:
             if result.get("success"):
                 return result.get("data")
             return None
-        except Exception as exc:
-            logger.error("PluginHardwareGateway.read_sensor error: %s", exc)
+        except PLUGIN_OPERATION_ERRORS as exc:
+            _log_boundary_failure(
+                logger, "PluginHardwareGateway.read_sensor failed", exc
+            )
             return None
 
     async def read_adc_channels(self) -> dict[str, Any] | None:
@@ -715,8 +738,10 @@ class PluginHardwareGateway:
             data = result.get("data") or {}
             channels = data.get("channels")
             return channels if isinstance(channels, dict) else None
-        except Exception as exc:
-            logger.error("PluginHardwareGateway.read_adc_channels error: %s", exc)
+        except PLUGIN_OPERATION_ERRORS as exc:
+            _log_boundary_failure(
+                logger, "PluginHardwareGateway.read_adc_channels failed", exc
+            )
             return None
 
     async def set_lung_result(
@@ -752,7 +777,7 @@ class PluginHardwareGateway:
         plugin = self._plugins.get("motor-tic249")
         if not plugin:
             logger.error("Lung plugin not available")
-            return {"success": False, "error": "Lung plugin not available"}
+            return _plugin_command_failure("plugin-unavailable")
 
         try:
             result = await plugin.execute_command(
@@ -764,14 +789,12 @@ class PluginHardwareGateway:
                     "pause": pause,
                 },
             )
-            return (
-                result
-                if isinstance(result, dict)
-                else {"success": False, "error": "Invalid plugin response"}
+            return _normalize_plugin_command_result(result)
+        except PLUGIN_OPERATION_ERRORS as exc:
+            _log_boundary_failure(
+                logger, "PluginHardwareGateway.set_lung failed", exc
             )
-        except Exception as exc:
-            logger.error("PluginHardwareGateway.set_lung error: %s", exc)
-            return {"success": False, "error": str(exc)}
+            return _plugin_command_failure("command-failed")
 
     async def set_lung(
         self,
@@ -807,8 +830,10 @@ class PluginHardwareGateway:
         try:
             result = await plugin.execute_command(command, params)
             return result.get("success", False)
-        except Exception as exc:
-            logger.error("PluginHardwareGateway.%s error: %s", error_context, exc)
+        except PLUGIN_OPERATION_ERRORS as exc:
+            _log_boundary_failure(
+                logger, "PluginHardwareGateway.%s failed", exc, error_context
+            )
             return False
 
     async def stop_lung(self) -> bool:
@@ -878,8 +903,8 @@ class PluginHardwareGateway:
         """
         try:
             path = resolve_oqlos_config_path(config_path)
-        except Exception as exc:
-            return {"success": False, "error": str(exc)}
+        except OSError:
+            return _configuration_failure("config-path-unavailable")
         try:
             from oqlos.hardware.configuration import load_hardware_configuration
 
@@ -887,9 +912,9 @@ class PluginHardwareGateway:
             motor2 = document.runtime.get("motor2")
             self._motor2_runtime = dict(motor2) if isinstance(motor2, dict) else {}
             new_configs = PluginRegistry.load_configs(path)
-        except Exception as exc:
-            logger.error("reload_configs failed: %s", exc)
-            return {"success": False, "error": str(exc)}
+        except CONFIGURATION_ERRORS as exc:
+            _log_boundary_failure(logger, "Hardware configuration reload failed", exc)
+            return _configuration_failure("config-load-failed")
 
         updated: list[str] = []
         for plugin_id, new_cfg in new_configs.items():
@@ -952,7 +977,11 @@ class PluginHardwareGateway:
             config = self._plugin_configs.get(plugin_id)
             result[plugin_id] = {
                 "status": health.status.value,
-                "message": health.message,
+                "message": (
+                    "Plugin is healthy"
+                    if health.compatible
+                    else "Plugin health is unavailable"
+                ),
                 "compatible": health.compatible,
             }
             if config and config.metadata.get("required") is True:

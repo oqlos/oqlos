@@ -338,7 +338,16 @@ kończą się sanitizowanym 500/`C2004-SYS-0000`. Poprawna odpowiedź preferencj
 nie publikuje już pełnej ścieżki magazynu. Audyt wskazuje 208 szerokich
 handlerów; bramka: 1059/1059 backend, 149/149 frontend, build Vite i Ruff.
 
-Pozostały zakres: sklasyfikować 83 surowe wyjątki i 208 szerokich handlerów
+Szósta grupa sklasyfikowała wszystkie 13 szerokich handlerów centralnego
+`plugin_gateway.py`. Oczekiwane awarie konfiguracji, transportu i komend są
+ograniczone do jawnych klas, mają stabilny powód i nie publikują komunikatu,
+surowego health, surowego powodu init ani negatywnego payloadu pluginu. Kod
+C2004 z pluginu jest zachowywany tylko wtedy, gdy istnieje w katalogu; defekty
+programu nie są maskowane. Helpery granicy trafiły do osobnego modułu
+51-liniowego, więc nie powstał nowy hotspot. Audyt wskazuje 195 szerokich
+handlerów; bramka: 1072/1072 backend, 149/149 frontend, build Vite i Ruff.
+
+Pozostały zakres: sklasyfikować 83 surowe wyjątki i 195 szerokich handlerów
 OqlOS, rozdzielić pozostałe klasy host/proxy/plugin oraz wykonać analogiczną
 inwentaryzację i kontrakty po stronie C2004/POA.
 

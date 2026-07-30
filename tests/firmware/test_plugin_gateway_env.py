@@ -221,7 +221,7 @@ def test_plugin_readiness_returns_normalized_health_status(monkeypatch):
         "ok": True,
         "plugin_id": "motor-dri0050",
         "status": "connected",
-        "message": "Motor is healthy",
+        "message": "Plugin is ready",
     }
 
 
@@ -286,7 +286,7 @@ def test_health_does_not_poll_configured_disabled_plugins(monkeypatch):
     assert calls == ["modbus-io"]
     assert result["modbus-io"] == {
         "status": "connected",
-        "message": "modbus-io healthy",
+        "message": "Plugin is healthy",
         "compatible": True,
     }
     assert result["modbus-adc"] == {
