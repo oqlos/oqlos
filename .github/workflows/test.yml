@@ -26,7 +26,7 @@ jobs:
           token: ${{ secrets.ORG_SYNC_PAT }}
           submodules: recursive
           persist-credentials: false
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.13"
       - name: Validate dependency lock
@@ -50,7 +50,7 @@ jobs:
           assert report["generator"]["code2llm"]["package_version"] == "0.5.168"
           assert all(report["artifacts"].values())
           PY
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: refactor-analysis
           path: /tmp/oqlos-refactor-analysis
@@ -79,7 +79,7 @@ jobs:
           path: packages/oql-scenario
           token: ${{ secrets.ORG_SYNC_PAT }}
           persist-credentials: false
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.13"
       - uses: actions/setup-node@v6
@@ -121,7 +121,7 @@ jobs:
           path: packages/oql-scenario
           token: ${{ secrets.ORG_SYNC_PAT }}
           persist-credentials: false
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.13"
       - uses: actions/setup-node@v6
