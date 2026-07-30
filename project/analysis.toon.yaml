@@ -1,6 +1,6 @@
-# code2llm | 532f 83082L | python:321,javascript:118,md:34,yaml:15,shell:14,json:6,conf:6,txt:5,toml:4,yml:4,typescript:3 | 2026-07-30
-# generated in 0.30s
-# CC̅=3.6 | critical:24/3517 | dups:0 | cycles:0
+# code2llm | 532f 83277L | python:321,javascript:118,md:34,yaml:14,shell:14,json:7,conf:6,txt:5,toml:4,yml:4,typescript:3 | 2026-07-30
+# generated in 0.29s
+# CC̅=3.6 | critical:23/3517 | dups:0 | cycles:0
 
 HEALTH[20]:
   🟡 CC    useMotorDemoControls CC=21 (limit:15)
@@ -8,10 +8,10 @@ HEALTH[20]:
   🟡 CC    panelResultClass CC=15 (limit:15)
   🟡 CC    summarizePanelResult CC=31 (limit:15)
   🟡 CC    evaluateConfigureSkip CC=18 (limit:15)
+  🟡 CC    coilCommandErrorCodes CC=24 (limit:15)
   🟡 CC    UI_URL_ARGS_KEY_SET CC=28 (limit:15)
   🟡 CC    normalizePersistedValue CC=28 (limit:15)
   🟡 CC    token CC=25 (limit:15)
-  🟡 CC    coilCommandErrorCodes CC=24 (limit:15)
   🟡 CC    request CC=15 (limit:15)
   🟡 CC    handleKeyDown CC=18 (limit:15)
   🟡 CC    _problem_response CC=18 (limit:15)
@@ -30,103 +30,103 @@ REFACTOR[1]:
 PIPELINES[1708]:
   [1] Src [create_logs_router]: create_logs_router → resolve_logs_db_path
       PURITY: 100% pure
-  [2] Src [create_nfo_setup]: create_nfo_setup → _resolve_logs_sink
+  [2] Src [query_events]: query_events → list
       PURITY: 100% pure
-  [3] Src [_load_sibling]: _load_sibling
+  [3] Src [append_events_to_stream]: append_events_to_stream
       PURITY: 100% pure
-  [4] Src [identify]: identify
+  [4] Src [list_event_streams]: list_event_streams
       PURITY: 100% pure
-  [5] Src [create_service_health_router]: create_service_health_router → _aggregate_status
+  [5] Src [clear_event_stream]: clear_event_stream
       PURITY: 100% pure
-  [6] Src [__init__]: __init__ → super → connected
+  [6] Src [_load_sibling]: _load_sibling
       PURITY: 100% pure
-  [7] Src [__init__]: __init__
+  [7] Src [identify]: identify
       PURITY: 100% pure
-  [8] Src [_get_client]: _get_client
+  [8] Src [build_related_model_loader]: build_related_model_loader → load_related_by_id
       PURITY: 100% pure
-  [9] Src [close]: close
+  [9] Src [to_template_dict]: to_template_dict → protocol_to_template_dict → measurement_to_template_dict
       PURITY: 100% pure
-  [10] Src [request]: request
+  [10] Src [to_template_dict]: to_template_dict → measurement_to_template_dict
       PURITY: 100% pure
-  [11] Src [proxy]: proxy
+  [11] Src [create_service_health_router]: create_service_health_router → _aggregate_status
       PURITY: 100% pure
-  [12] Src [__init__]: __init__ → set
+  [12] Src [main]: main → run_oql_scenario → print
       PURITY: 100% pure
-  [13] Src [connect]: connect
+  [13] Src [create_nfo_setup]: create_nfo_setup → _resolve_logs_sink
       PURITY: 100% pure
-  [14] Src [disconnect]: disconnect
+  [14] Src [__init__]: __init__ → super → connected
       PURITY: 100% pure
-  [15] Src [broadcast]: broadcast
+  [15] Src [__init__]: __init__
       PURITY: 100% pure
-  [16] Src [get_stats]: get_stats
+  [16] Src [_get_client]: _get_client
       PURITY: 100% pure
-  [17] Src [connect]: connect
+  [17] Src [close]: close
       PURITY: 100% pure
-  [18] Src [disconnect]: disconnect
+  [18] Src [request]: request
       PURITY: 100% pure
-  [19] Src [broadcast]: broadcast
+  [19] Src [proxy]: proxy
       PURITY: 100% pure
-  [20] Src [get_stats]: get_stats
+  [20] Src [verify_password]: verify_password
       PURITY: 100% pure
   [21] Src [export_backend_shared_module]: export_backend_shared_module → load_backend_shared_module → ensure_package
       PURITY: 100% pure
-  [22] Src [build_related_model_loader]: build_related_model_loader → load_related_by_id
+  [22] Src [generate_def_code]: generate_def_code
       PURITY: 100% pure
-  [23] Src [to_template_dict]: to_template_dict → protocol_to_template_dict → measurement_to_template_dict
+  [23] Src [__init__]: __init__ → set
       PURITY: 100% pure
-  [24] Src [to_template_dict]: to_template_dict → measurement_to_template_dict
+  [24] Src [connect]: connect
       PURITY: 100% pure
-  [25] Src [verify_password]: verify_password
+  [25] Src [disconnect]: disconnect
       PURITY: 100% pure
-  [26] Src [main]: main → run_oql_scenario → print
+  [26] Src [broadcast]: broadcast
       PURITY: 100% pure
-  [27] Src [create_module_app]: create_module_app → install_shared_error_handler → _correlation_id
+  [27] Src [get_stats]: get_stats
       PURITY: 100% pure
-  [28] Src [build_logs_query_service]: build_logs_query_service → resolve_logs_db_path
+  [28] Src [connect]: connect
       PURITY: 100% pure
-  [29] Src [_connect]: _connect
+  [29] Src [disconnect]: disconnect
       PURITY: 100% pure
-  [30] Src [query_logs]: query_logs → dict → t
+  [30] Src [broadcast]: broadcast
       PURITY: 100% pure
   [31] Src [get_stats]: get_stats
       PURITY: 100% pure
-  [32] Src [__init__]: __init__ → super → connected
+  [32] Src [create_module_app]: create_module_app → install_shared_error_handler → _correlation_id
       PURITY: 100% pure
-  [33] Src [_pg_conn]: _pg_conn
+  [33] Src [define_menu_models]: define_menu_models
       PURITY: 100% pure
-  [34] Src [query_logs]: query_logs → dict → t
+  [34] Src [register_method_handler_bindings]: register_method_handler_bindings
       PURITY: 100% pure
-  [35] Src [get_stats]: get_stats
+  [35] Src [scan_proc_input_devices]: scan_proc_input_devices → read_input_device_blocks
       PURITY: 100% pure
-  [36] Src [generate_def_code]: generate_def_code
+  [36] Src [build_alembic_env_main]: build_alembic_env_main
       PURITY: 100% pure
-  [37] Src [query_events]: query_events → list
+  [37] Src [get_pressure_service]: get_pressure_service → _get_pressure_service_class
       PURITY: 100% pure
-  [38] Src [append_events_to_stream]: append_events_to_stream
+  [38] Src [create_sensors_router]: create_sensors_router
       PURITY: 100% pure
-  [39] Src [list_event_streams]: list_event_streams
+  [39] Src [__init__]: __init__
       PURITY: 100% pure
-  [40] Src [clear_event_stream]: clear_event_stream
+  [40] Src [_get_conn]: _get_conn
       PURITY: 100% pure
-  [41] Src [register_method_handler_bindings]: register_method_handler_bindings
+  [41] Src [_ensure_table]: _ensure_table
       PURITY: 100% pure
-  [42] Src [scan_proc_input_devices]: scan_proc_input_devices → read_input_device_blocks
+  [42] Src [write]: write
       PURITY: 100% pure
-  [43] Src [__init__]: __init__
+  [43] Src [close]: close
       PURITY: 100% pure
-  [44] Src [_get_conn]: _get_conn
+  [44] Src [create_health_router]: create_health_router → all → dict → t
       PURITY: 100% pure
-  [45] Src [_ensure_table]: _ensure_table
+  [45] Src [create_version_router]: create_version_router → build_version_payload → dict → t
       PURITY: 100% pure
-  [46] Src [write]: write
+  [46] Src [paged_like_search]: paged_like_search
       PURITY: 100% pure
-  [47] Src [close]: close
+  [47] Src [build_find_all_by_field_method]: build_find_all_by_field_method
       PURITY: 100% pure
-  [48] Src [get_pressure_service]: get_pressure_service → _get_pressure_service_class
+  [48] Src [build_text_search_method]: build_text_search_method
       PURITY: 100% pure
-  [49] Src [create_sensors_router]: create_sensors_router
+  [49] Src [build_logs_query_service]: build_logs_query_service → resolve_logs_db_path
       PURITY: 100% pure
-  [50] Src [build_alembic_env_main]: build_alembic_env_main
+  [50] Src [_connect]: _connect
       PURITY: 100% pure
 
 LAYERS:
@@ -138,7 +138,7 @@ LAYERS:
   │ CHANGELOG.md               496L  0C    0m  CC=0.0    ←0
   │ hw_diagnostic_20260415_133138.json   340L  0C    0m  CC=0.0    ←0
   │ setup_hardware_and_run_oql   333L  0C    7m  CC=12     ←0
-  │ TODO.md                    254L  0C    0m  CC=0.0    ←0
+  │ TODO.md                    264L  0C    0m  CC=0.0    ←0
   │ Taskfile.yml               194L  0C    0m  CC=0.0    ←0
   │ sumd.json                  150L  0C    0m  CC=0.0    ←0
   │ pyproject.toml             118L  0C    0m  CC=0.0    ←0
@@ -152,12 +152,12 @@ LAYERS:
   │ CONTRIBUTION.md             13L  0C    0m  CC=0.0    ←0
   │ nlp2uri.yaml                 8L  0C    0m  CC=0.0    ←0
   │
-  oqlos/                          CC̄=4.0    ←in:18  →out:0
+  oqlos/                          CC̄=3.9    ←in:18  →out:0
   │ !! plugin_gateway             978L  1C   30m  CC=15     ←1
   │ !! main                       684L  0C   47m  CC=8      ←0
   │ !! hardware_modbus_waveshare   640L  0C   14m  CC=11     ←0
   │ !! proxy                      575L  1C   29m  CC=16     ←0
-  │ !! hardware_runtime           545L  0C   21m  CC=17     ←0
+  │ !! hardware_runtime           569L  0C   21m  CC=17     ←0
   │ !! catalog                    539L  3C    4m  CC=4      ←1
   │ !! generators                 506L  0C   28m  CC=14     ←0
   │ hardware_modbus_wizard     498L  0C   10m  CC=13     ←1
@@ -181,9 +181,9 @@ LAYERS:
   │ preflight                  342L  0C   13m  CC=13     ←1
   │ configuration              328L  1C   11m  CC=10     ←8
   │ diagnosis                  323L  0C   19m  CC=11     ←2
-  │ hardware_modbus_settings   316L  0C   26m  CC=12     ←5
   │ hardware_configuration_routes   316L  3C   14m  CC=7      ←0
   │ c2004_catalog_generated    314L  2C    1m  CC=5      ←4
+  │ hardware_modbus_settings   314L  0C   26m  CC=12     ←5
   │ registry                   310L  1C   15m  CC=6      ←0
   │ hui_hold                   308L  0C   20m  CC=9      ←4
   │ plugin_cli                 299L  0C   13m  CC=8      ←3
@@ -191,7 +191,7 @@ LAYERS:
   │ schema                     291L  5C    7m  CC=7      ←0
   │ !! hardware_modbus_channels   290L  0C    7m  CC=18     ←1
   │ scenarios                  289L  0C   17m  CC=11     ←0
-  │ !! hardware_modbus_routes     287L  0C   13m  CC=18     ←0
+  │ hardware_modbus_routes     289L  0C   13m  CC=14     ←0
   │ editor                     287L  3C   14m  CC=10     ←0
   │ !! rtc_probe                  286L  0C   10m  CC=15     ←1
   │ config                     274L  1C    1m  CC=1      ←8
@@ -228,6 +228,7 @@ LAYERS:
   │ log_files                  157L  0C    7m  CC=10     ←2
   │ manage_ops                 153L  0C    3m  CC=5      ←3
   │ hardware_events            152L  0C   11m  CC=11     ←4
+  │ hardware_lung              151L  0C    8m  CC=8      ←1
   │ utils                      150L  0C   10m  CC=8      ←3
   │ modbus_identify            150L  0C    8m  CC=10     ←1
   │ mqtt_protocol              150L  4C    6m  CC=8      ←1
@@ -235,14 +236,13 @@ LAYERS:
   │ file_ops                   148L  1C    8m  CC=4      ←3
   │ state                      147L  1C    3m  CC=4      ←0
   │ manage_ops_diagnostic      147L  0C   10m  CC=7      ←0
-  │ hardware_probe             141L  0C    8m  CC=11     ←0
+  │ hardware_probe             145L  0C    8m  CC=11     ←0
   │ config_schema              140L  1C    4m  CC=2      ←0
   │ peripheral_mapping         139L  0C    4m  CC=2      ←0
   │ hui_lung_recipe            139L  0C    7m  CC=6      ←2
   │ shell                      138L  0C    5m  CC=6      ←1
   │ json_reporter              138L  0C    5m  CC=8      ←0
   │ update_status              134L  0C    7m  CC=8      ←3
-  │ hardware_lung              134L  0C    8m  CC=10     ←1
   │ autorepair                 133L  0C    8m  CC=12     ←0
   │ !! logger                     133L  0C    4m  CC=17     ←0
   │ startup_diagnostics        132L  0C    5m  CC=12     ←2
@@ -510,16 +510,16 @@ LAYERS:
   │ SidebarList.jsx            306L  0C    5m  CC=6      ←0
   │ HardwareCoilTest.jsx       284L  0C   16m  CC=9      ←0
   │ !! hardwareApi.js             278L  0C   25m  CC=15     ←0
-  │ !! useMotorDemoControls.js    257L  0C   35m  CC=21     ←5
+  │ !! useMotorDemoControls.js    257L  0C   35m  CC=21     ←4
   │ url-embed-config.js        253L  0C   52m  CC=13     ←0
-  │ HardwareRtc.jsx            239L  0C   22m  CC=13     ←9
+  │ HardwareRtc.jsx            239L  0C   22m  CC=13     ←0
   │ !! HardwareDemo.jsx           226L  0C   11m  CC=27     ←0
   │ SharedNav.jsx              215L  0C   13m  CC=5      ←0
   │ useSelectionCollapsePanel.js   205L  0C   18m  CC=14     ←0
   │ !! ui-url-args-cookie.js      193L  0C   33m  CC=28     ←0
   │ hardware-demo-extra-translations.js   183L  0C    0m  CC=0.0    ←0
   │ ModbusChannelInspector.jsx   179L  0C    8m  CC=10     ←0
-  │ MotorServices.jsx          177L  0C   11m  CC=9      ←0
+  │ MotorServices.jsx          177L  0C   11m  CC=9      ←10
   │ NodeNavigationPanel.jsx    151L  0C    6m  CC=5      ←0
   │ modbus-profiles.js         150L  0C   34m  CC=9      ←0
   │ url-embed-config.test.js   149L  0C    7m  CC=2      ←0
@@ -554,8 +554,8 @@ LAYERS:
   │ status-logs-menu.js         77L  0C   11m  CC=10     ←0
   │ ui-prefs-client.js          75L  0C   12m  CC=9      ←0
   │ I18nProvider.jsx            65L  0C   10m  CC=13     ←34
-  │ collapse-toggle-bridge.js    65L  0C   11m  CC=4      ←0
   │ scenarioFilesApi.test.js    65L  0C    1m  CC=1      ←0
+  │ collapse-toggle-bridge.js    65L  0C   11m  CC=4      ←0
   │ hardware-restart-wizard-steps.test.js    62L  0C    1m  CC=1      ←0
   │ rtc-menu.js                 62L  0C   10m  CC=4      ←0
   │ hardware-diagnostic-failure.test.js    58L  0C    0m  CC=0.0    ←0
@@ -625,23 +625,23 @@ LAYERS:
   │ hardware-time.js             4L  0C    1m  CC=1      ←0
   │
   examples/                       CC̄=0.0    ←in:0  →out:0
+  │ boardnet.json              204L  0C    0m  CC=0.0    ←0
   │ plugin-config.yaml         128L  0C    0m  CC=0.0    ←0
-  │ boardnet.yaml               87L  0C    0m  CC=0.0    ←0
   │ curl-quickstart.sh          74L  0C    0m  CC=0.0    ←0
   │ doctor-workflow.sh          52L  0C    1m  CC=0.0    ←21
   │
   docs/                           CC̄=0.0    ←in:0  →out:0
   │ !! README.md                 2438L  0C    0m  CC=0.0    ←0
   │ !! oql-examples.md            588L  0C    0m  CC=0.0    ←0
-  │ !! refactor-roadmap.md        559L  0C    0m  CC=0.0    ←0
+  │ !! refactor-roadmap.md        569L  0C    0m  CC=0.0    ←0
   │ HARDWARE_DIAGNOSTICS.md    470L  0C    0m  CC=0.0    ←0
   │ oql-spec.md                437L  0C    0m  CC=0.0    ←0
-  │ ERROR_STANDARDIZATION.md   326L  0C    0m  CC=0.0    ←0
+  │ ERROR_STANDARDIZATION.md   330L  0C    0m  CC=0.0    ←0
   │ HARDWARE_CONTROL_OQL_MQTT.md   319L  0C    0m  CC=0.0    ←0
   │ refactor-roadmap-2026-07-27.md   258L  0C    0m  CC=0.0    ←0
   │ OQL_V4_MIGRATION_MANUAL.md   221L  0C    0m  CC=0.0    ←0
   │ hardware-ui-modules.md     180L  0C    0m  CC=0.0    ←0
-  │ refactor-audit-2026-07-29.md   155L  0C    0m  CC=0.0    ←0
+  │ refactor-audit-2026-07-29.md   164L  0C    0m  CC=0.0    ←0
   │ STANDARDIZATION_AUDIT_2026-07-27.md   147L  0C    0m  CC=0.0    ←0
   │ oql_v5_llm_validator.schema.json   144L  0C    0m  CC=0.0    ←0
   │ refactor-plan.md           137L  0C    0m  CC=0.0    ←0
@@ -698,37 +698,37 @@ COUPLING:
                  oqlos.tools                          70                          ──                         130                          19                                                      10                           1                                                                                                                                                                                                                                  hub
            examples.hardware                                                    ←130                          ──                                                                                  ←2                         ←65                          ←1                          ←7                         ←27                                                                                                                                              hub
               oqlos.hardware                         125                           3                                                      ──                           6                          18                                                                                                                                           6                                                                                   2                              hub
-                   oqlos.api                          44                                                                                  53                          ──                          11                                                       1                          12                                                      10                           7                           1                           8                              hub
+                   oqlos.api                          44                                                                                  53                          ──                          11                                                       1                          12                                                      10                           8                           1                           8                              hub
          packages.oqlos-core                          60                         ←10                           2                         ←18                         ←11                          ──                          ←2                          ←9                          ←1                                                       1                                                      ←2                                                      ←1  hub
                      scripts                           3                           6                          65                                                                                   2                          ──                           1                                                                                                                                                                                                      !! fan-out
   packages.backend-shared-py                          29                                                       1                                                       2                           9                          ←1                          ──                          ←2                                                                                                                                                                          !! fan-out
                 oqlos.shared                           5                                                       7                                                     ←12                           1                                                       2                          ──                                                       1                                                                                                                  hub
   setup_hardware_and_run_oql                                                                                  27                                                                                                                                                                                                  ──                                                                                                                                              !! fan-out
                        oqlos                                                                                                              ←6                         ←10                          ←1                                                                                  ←1                                                      ──                                                                                                                  hub
-                oqlos.errors                           7                                                                                                              ←7                                                                                                                                                                                                  ──                                                                                      hub
+                oqlos.errors                           7                                                                                                              ←8                                                                                                                                                                                                  ──                                                                                      hub
                   oqlos.core                           7                                                                                                              ←1                           2                                                                                                                                                                                                  ──                                                          !! fan-out
               oqlos.services                                                                                                              ←2                          ←8                                                                                                                                                                                                                                                          ──                              hub
                    oqlos.dsl                           1                                                                                                                                           1                                                                                                                                                                                                                                                          ──
   CYCLES: none
-  HUB: oqlos.api/ (fan-in=8)
-  HUB: oqlos.hardware/ (fan-in=72)
-  HUB: oqlos.errors/ (fan-in=7)
   HUB: oqlos/ (fan-in=18)
   HUB: oqlos.services/ (fan-in=10)
-  HUB: oqlos.tools/ (fan-in=9)
-  HUB: examples.hardware/ (fan-in=232)
-  HUB: oqlos.shared/ (fan-in=12)
+  HUB: oqlos.errors/ (fan-in=8)
   HUB: packages.oqlos-core/ (fan-in=54)
+  HUB: oqlos.tools/ (fan-in=9)
+  HUB: oqlos.hardware/ (fan-in=72)
   HUB: frontend.src/ (fan-in=353)
-  SMELL: oqlos.api/ fan-out=149 → split needed
-  SMELL: oqlos.hardware/ fan-out=160 → split needed
+  HUB: oqlos.shared/ (fan-in=12)
+  HUB: oqlos.api/ (fan-in=8)
+  HUB: examples.hardware/ (fan-in=232)
+  SMELL: packages.oqlos-core/ fan-out=63 → split needed
   SMELL: oqlos.tools/ fan-out=230 → split needed
+  SMELL: oqlos.hardware/ fan-out=160 → split needed
+  SMELL: oqlos.core/ fan-out=9 → split needed
+  SMELL: setup_hardware_and_run_oql/ fan-out=27 → split needed
   SMELL: scripts/ fan-out=77 → split needed
   SMELL: oqlos.shared/ fan-out=16 → split needed
   SMELL: packages.backend-shared-py/ fan-out=41 → split needed
-  SMELL: packages.oqlos-core/ fan-out=63 → split needed
-  SMELL: setup_hardware_and_run_oql/ fan-out=27 → split needed
-  SMELL: oqlos.core/ fan-out=9 → split needed
+  SMELL: oqlos.api/ fan-out=150 → split needed
 
 EXTERNAL:
   validation: run `vallm batch .` → validation.toon

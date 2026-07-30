@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-07-30T09:16:23+00:00",
+  "generated_at": "2026-07-30T09:26:08+00:00",
   "root": "/home/tom/github/oqlos/oqlos",
-  "git_commit": "15f89acdb02c58043cf2a08e9c625b39b939a5f1",
+  "git_commit": "e09a6e667c1010959f2ac58e6e2a4e201731a1cd",
   "git_dirty": false,
   "git_dirty_including_generated_artifacts": true,
   "git_status_excluding_generated_artifacts": [],
@@ -16,8 +16,8 @@
     }
   },
   "artifacts": {
-    "analysis.toon.yaml": "99b7e181ebfc60c2337af09d0af8f8f543cd9baf554a9665cece032a8f1a84ef",
-    "map.toon.yaml": "ac46adb29a208ba6932c0508aa70d04e1aef18a3f29cf53f77a2fd763bea0e37"
+    "analysis.toon.yaml": "ff5a4e699aa10b23348d48cc25a89d53a1c010f749bd19ad686ec1ba07c5194c",
+    "map.toon.yaml": "b884bed2d1ab1fd7a8e0d4b72621bdeec5faf08977f27fae2d1b6e97092e9a6c"
   },
   "source_file_count": 405,
   "public_routes": [
@@ -793,7 +793,7 @@
     },
     {
       "file": "oqlos/api/hardware_lung.py",
-      "line": 73,
+      "line": 97,
       "function": "set_lung",
       "return_annotation": null,
       "method": "POST",
@@ -803,7 +803,7 @@
     },
     {
       "file": "oqlos/api/hardware_lung.py",
-      "line": 115,
+      "line": 132,
       "function": "stop_lung",
       "return_annotation": null,
       "method": "POST",
@@ -813,7 +813,7 @@
     },
     {
       "file": "oqlos/api/hardware_lung.py",
-      "line": 120,
+      "line": 137,
       "function": "disable_lung",
       "return_annotation": null,
       "method": "POST",
@@ -823,7 +823,7 @@
     },
     {
       "file": "oqlos/api/hardware_lung.py",
-      "line": 125,
+      "line": 142,
       "function": "artificial_lung_status",
       "return_annotation": null,
       "method": "GET",
@@ -833,7 +833,7 @@
     },
     {
       "file": "oqlos/api/hardware_lung.py",
-      "line": 131,
+      "line": 148,
       "function": "artificial_lung_command",
       "return_annotation": null,
       "method": "POST",
@@ -983,7 +983,7 @@
     },
     {
       "file": "oqlos/api/hardware_runtime.py",
-      "line": 406,
+      "line": 411,
       "function": "read_sensor",
       "return_annotation": null,
       "method": "GET",
@@ -993,7 +993,7 @@
     },
     {
       "file": "oqlos/api/hardware_runtime.py",
-      "line": 427,
+      "line": 432,
       "function": "hardware_temperature",
       "return_annotation": "dict[str, Any]",
       "method": "GET",
@@ -1003,7 +1003,7 @@
     },
     {
       "file": "oqlos/api/hardware_runtime.py",
-      "line": 453,
+      "line": 458,
       "function": "read_sensors_batch",
       "return_annotation": "dict[str, Any]",
       "method": "GET",
@@ -1013,7 +1013,7 @@
     },
     {
       "file": "oqlos/api/hardware_runtime.py",
-      "line": 527,
+      "line": 543,
       "function": "hardware_diagnose",
       "return_annotation": "dict[str, Any]",
       "method": "GET",
@@ -2665,7 +2665,7 @@
     },
     {
       "file": "oqlos/api/hardware_runtime.py",
-      "line": 427,
+      "line": 432,
       "function": "hardware_temperature",
       "return_annotation": "dict[str, Any]",
       "method": "GET",
@@ -2675,7 +2675,7 @@
     },
     {
       "file": "oqlos/api/hardware_runtime.py",
-      "line": 453,
+      "line": 458,
       "function": "read_sensors_batch",
       "return_annotation": "dict[str, Any]",
       "method": "GET",
@@ -2685,7 +2685,7 @@
     },
     {
       "file": "oqlos/api/hardware_runtime.py",
-      "line": 527,
+      "line": 543,
       "function": "hardware_diagnose",
       "return_annotation": "dict[str, Any]",
       "method": "GET",
@@ -3527,7 +3527,7 @@
     },
     {
       "file": "oqlos/api/hardware_lung.py",
-      "line": 73,
+      "line": 97,
       "function": "set_lung",
       "return_annotation": null,
       "method": "POST",
@@ -3537,7 +3537,7 @@
     },
     {
       "file": "oqlos/api/hardware_lung.py",
-      "line": 115,
+      "line": 132,
       "function": "stop_lung",
       "return_annotation": null,
       "method": "POST",
@@ -3547,7 +3547,7 @@
     },
     {
       "file": "oqlos/api/hardware_lung.py",
-      "line": 120,
+      "line": 137,
       "function": "disable_lung",
       "return_annotation": null,
       "method": "POST",
@@ -3557,7 +3557,7 @@
     },
     {
       "file": "oqlos/api/hardware_lung.py",
-      "line": 125,
+      "line": 142,
       "function": "artificial_lung_status",
       "return_annotation": null,
       "method": "GET",
@@ -3567,7 +3567,7 @@
     },
     {
       "file": "oqlos/api/hardware_lung.py",
-      "line": 131,
+      "line": 148,
       "function": "artificial_lung_command",
       "return_annotation": null,
       "method": "POST",
@@ -3717,7 +3717,7 @@
     },
     {
       "file": "oqlos/api/hardware_runtime.py",
-      "line": 406,
+      "line": 411,
       "function": "read_sensor",
       "return_annotation": null,
       "method": "GET",
@@ -3727,7 +3727,7 @@
     },
     {
       "file": "oqlos/api/hardware_runtime.py",
-      "line": 427,
+      "line": 432,
       "function": "hardware_temperature",
       "return_annotation": "dict[str, Any]",
       "method": "GET",
@@ -3737,7 +3737,7 @@
     },
     {
       "file": "oqlos/api/hardware_runtime.py",
-      "line": 453,
+      "line": 458,
       "function": "read_sensors_batch",
       "return_annotation": "dict[str, Any]",
       "method": "GET",
@@ -3747,7 +3747,7 @@
     },
     {
       "file": "oqlos/api/hardware_runtime.py",
-      "line": 527,
+      "line": 543,
       "function": "hardware_diagnose",
       "return_annotation": "dict[str, Any]",
       "method": "GET",
@@ -5634,21 +5634,6 @@
       "exception": "Exception"
     },
     {
-      "file": "oqlos/api/hardware_lung.py",
-      "line": 82,
-      "exception": "Exception"
-    },
-    {
-      "file": "oqlos/api/hardware_modbus_routes.py",
-      "line": 260,
-      "exception": "Exception"
-    },
-    {
-      "file": "oqlos/api/hardware_modbus_settings.py",
-      "line": 166,
-      "exception": "Exception"
-    },
-    {
       "file": "oqlos/api/hardware_modbus_wizard.py",
       "line": 156,
       "exception": "Exception"
@@ -5681,21 +5666,6 @@
     {
       "file": "oqlos/api/hardware_peripherals_routes.py",
       "line": 75,
-      "exception": "Exception"
-    },
-    {
-      "file": "oqlos/api/hardware_probe.py",
-      "line": 100,
-      "exception": "Exception"
-    },
-    {
-      "file": "oqlos/api/hardware_runtime.py",
-      "line": 531,
-      "exception": "Exception"
-    },
-    {
-      "file": "oqlos/api/hardware_runtime.py",
-      "line": 395,
       "exception": "Exception"
     },
     {
@@ -6789,7 +6759,7 @@
     },
     {
       "file": "oqlos/api/hardware_runtime.py",
-      "lines": 545
+      "lines": 569
     },
     {
       "file": "packages/oqlos-core/src/oqlos/core/_action_motor2.py",
@@ -6865,7 +6835,7 @@
     "routes_with_false_success_at_http_200": 0,
     "environment_reads_outside_settings": 154,
     "raw_exceptions": 83,
-    "broad_exception_handlers": 222,
+    "broad_exception_handlers": 216,
     "large_modules": 30,
     "parse_failures": 0
   }
