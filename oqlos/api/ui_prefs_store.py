@@ -11,7 +11,7 @@ from oqlos.shared.file_ops import env_configured_path
 
 try:
     import yaml
-except Exception:  # pragma: no cover
+except ImportError:  # pragma: no cover
     yaml = None
 
 
@@ -40,6 +40,15 @@ def normalize_prefs(value: Any) -> dict[str, str]:
 
 class UiPrefsStoreUnavailableError(Exception):
     """Raised when the configured preferences format cannot be processed."""
+
+
+UI_PREFS_STORE_ERRORS = (
+    OSError,
+    UnicodeError,
+    json.JSONDecodeError,
+    UiPrefsStoreUnavailableError,
+    *((yaml.YAMLError,) if yaml is not None else ()),
+)
 
 
 class UiPrefsStore:

@@ -266,7 +266,7 @@ async def register_dsl(payload: dict[str, Any]):
     # Import inside handler to avoid circular import at module import time
     try:
         parse_dsl_to_goal = _load_dsl_parser()
-    except Exception as ex:  # noqa: BLE001 - parser dependency loader boundary
+    except ImportError as ex:
         raise OqlosError(
             code="api_scenario_parser_unavailable",
             status_code=503,

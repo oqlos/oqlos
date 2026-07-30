@@ -7,7 +7,7 @@ from typing import Any, NoReturn
 from fastapi import APIRouter, Body
 from pydantic import BaseModel, Field
 
-from oqlos.api.ui_prefs_store import ui_prefs_store
+from oqlos.api.ui_prefs_store import UI_PREFS_STORE_ERRORS, ui_prefs_store
 from oqlos.errors import OqlosError
 
 router = APIRouter(prefix="/api/v3/ui", tags=["ui-prefs"])
@@ -44,9 +44,7 @@ def _raise_ui_prefs_store_unavailable(
 async def get_ui_prefs() -> dict[str, Any]:
     try:
         prefs = ui_prefs_store.get()
-    except OqlosError:
-        raise
-    except Exception as exc:
+    except UI_PREFS_STORE_ERRORS as exc:
         _raise_ui_prefs_store_unavailable(
             stage="preferences.load",
             operation_id="ui.preferences.read",
@@ -55,7 +53,6 @@ async def get_ui_prefs() -> dict[str, Any]:
     return {
         "ok": True,
         "prefs": prefs,
-        "store_path": ui_prefs_store.file_path,
     }
 
 
@@ -66,9 +63,7 @@ async def put_ui_prefs(req: UiPrefsReplaceRequest = Body()) -> dict[str, Any]:
             prefs = ui_prefs_store.merge(req.prefs, persist=req.persist)
         else:
             prefs = ui_prefs_store.replace(req.prefs, persist=req.persist)
-    except OqlosError:
-        raise
-    except Exception as exc:
+    except UI_PREFS_STORE_ERRORS as exc:
         _raise_ui_prefs_store_unavailable(
             stage="preferences.persist" if req.persist else "preferences.update",
             operation_id="ui.preferences.write",
@@ -77,5 +72,4 @@ async def put_ui_prefs(req: UiPrefsReplaceRequest = Body()) -> dict[str, Any]:
     return {
         "ok": True,
         "prefs": prefs,
-        "store_path": ui_prefs_store.file_path,
     }

@@ -70,7 +70,7 @@ def test_register_dsl_sanitizes_parser_dependency_failure(
     client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     def _unavailable_parser():
-        raise RuntimeError("password=hunter2 parser import failed")
+        raise ImportError("password=hunter2 parser import failed")
 
     monkeypatch.setattr(scenarios, "_load_dsl_parser", _unavailable_parser)
 
@@ -91,3 +91,26 @@ def test_register_dsl_sanitizes_parser_dependency_failure(
     )
     assert "hunter2" not in response.text
     assert "import failed" not in response.text
+
+
+def test_register_dsl_does_not_mask_parser_programming_error(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def _broken_parser_loader():
+        raise AttributeError("password=hunter2 programming defect")
+
+    monkeypatch.setattr(scenarios, "_load_dsl_parser", _broken_parser_loader)
+
+    response = client.post(
+        "/api/v1/scenarios/register-dsl",
+        json={"id": "demo", "dsl": "GOAL: demo"},
+        headers={"X-Correlation-ID": "cor-scenario-defect"},
+    )
+
+    assert response.status_code == 500
+    body = response.json()
+    assert body["code"] == "C2004-SYS-0000"
+    assert body["correlation_id"] == "cor-scenario-defect"
+    assert body["metadata"]["diagnostics"]["exception_type"] == "AttributeError"
+    assert "hunter2" not in response.text
+    assert "programming defect" not in response.text

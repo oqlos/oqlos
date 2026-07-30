@@ -172,3 +172,48 @@ def test_modbus_adc_raw_plugin_read_failure_is_sanitized(monkeypatch):
         stage="plugin.read",
         reason="read_failed",
     )
+
+
+def test_modbus_adc_raw_does_not_mask_gateway_programming_error(monkeypatch):
+    class _Gateway:
+        async def health(self):
+            raise AttributeError("password=hunter2 programming defect")
+
+    monkeypatch.setattr(peripherals, "get_hardware_gateway", lambda: _Gateway())
+
+    response = TestClient(app, raise_server_exceptions=False).get(
+        "/api/v1/hardware/modbus-adc/raw",
+        headers={"X-Correlation-ID": "cor-modbus-adc-defect"},
+    )
+
+    assert response.status_code == 500
+    body = response.json()
+    assert body["code"] == "C2004-SYS-0000"
+    assert body["correlation_id"] == "cor-modbus-adc-defect"
+    assert body["metadata"]["diagnostics"]["exception_type"] == "AttributeError"
+    assert "hunter2" not in response.text
+    assert "programming defect" not in response.text
+
+
+def test_modbus_adc_raw_does_not_mask_connect_programming_error(monkeypatch):
+    class _Gateway:
+        async def health(self):
+            return {"mode": "real", "modbus-adc": {"compatible": True}}
+
+        async def _get_or_connect_plugin(self, _plugin_id: str):
+            raise AttributeError("password=hunter2 programming defect")
+
+    monkeypatch.setattr(peripherals, "get_hardware_gateway", lambda: _Gateway())
+
+    response = TestClient(app, raise_server_exceptions=False).get(
+        "/api/v1/hardware/modbus-adc/raw",
+        headers={"X-Correlation-ID": "cor-modbus-adc-connect-defect"},
+    )
+
+    assert response.status_code == 500
+    body = response.json()
+    assert body["code"] == "C2004-SYS-0000"
+    assert body["correlation_id"] == "cor-modbus-adc-connect-defect"
+    assert body["metadata"]["diagnostics"]["exception_type"] == "AttributeError"
+    assert "hunter2" not in response.text
+    assert "programming defect" not in response.text

@@ -126,7 +126,7 @@ domenowym. Powtarzalny błąd zakończony `SYS-0000` wymaga dodania jawnego
 | Diagnose: gateway health niedostępny | 503 | `C2004-HW-0012` | `SOA/firmware` | `hardware-gateway` / `gateway.health` | `hardware-runtime://gateway`; tylko stabilny `gateway-health-unavailable` |
 | Start artificial lung: awaria Tic249 | 503 | `C2004-HW-0012` | `SOA/firmware` | `artificial-lung` / `command.execute` | `hardware-plugin://motor-tic249`; brak powtórnej aktuacji przez legacy fallback |
 | Defekt programu podczas programowania Modbus | 500 | `C2004-SYS-0000` | `SOA/oqlos` | `oqlos-api` / `api.error` | pluginy są wznawiane w `finally`, wyjątek i ścieżka nie są publikowane |
-| Modbus ADC raw: health, połączenie lub odczyt niedostępny | 503 | `C2004-HW-0012` | `SOA/firmware` | `modbus-adc` / `gateway.health`, `plugin.connect` albo `plugin.read` | `hardware-plugin://modbus-adc`; publikowany jest tylko stabilny `reason` |
+| Modbus ADC raw: health, połączenie lub odczyt niedostępny | 503 | `C2004-HW-0012` | `SOA/firmware` | `modbus-adc` / `gateway.health`, `plugin.connect` albo `plugin.read` | `hardware-plugin://modbus-adc`; oczekiwane `OSError/RuntimeError` publikują tylko stabilny `reason`, defekt programu daje bezpieczne 500 |
 | błędna komenda HUI / artificial-lung | 422 | `C2004-DATA-0002` | `SOA/firmware` | komponent sprzętowy / `command.validate` | nie dotyczy |
 | niedostępna akcja HUI | status katalogu | kod wyniku, np. `C2004-HW-0012` | `SOA/firmware` | `hardware-hui` / `action.execute` | lokalna akcja sprzętowa |
 | niedozwolona akcja systemd | 422 | `C2004-DATA-0002` | `SOA/host` | `systemd-control` / `action.validate` | whitelisted unit |
@@ -140,10 +140,10 @@ domenowym. Powtarzalny błąd zakończony `SYS-0000` wymaga dodania jawnego
 | brak pliku edytora lub scenariusza | 404 | `C2004-DATA-0001` | `SOA/oqlos` | `scenario-editor` / `file.lookup` | nazwa i ścieżka wejściowa nie są publikowane |
 | operacja plikowa edytora wskazuje katalog | 422 | `C2004-DATA-0002` | `SOA/oqlos` | `scenario-editor` / `target.validate` | nazwa i ścieżka wejściowa nie są publikowane |
 | nieznana awaria magazynu edytora | 500 | `C2004-SYS-0000` | `SOA/oqlos` | `oqlos-api` / `api.error` | treść wyjątku i ścieżka nie są publikowane |
-| niedostępny magazyn preferencji UI | 503 | `C2004-NET-0002` | `SOA/oqlos` | `ui-prefs-store` / `preferences.load` albo `preferences.persist` | ścieżka, payload i tekst błędu I/O nie są publikowane |
+| niedostępny magazyn preferencji UI | 503 | `C2004-NET-0002` | `SOA/oqlos` | `ui-prefs-store` / `preferences.load` albo `preferences.persist` | tylko błędy pliku, kodowania i JSON/YAML; ścieżka nie jest publikowana także w sukcesie, a defekt programu daje bezpieczne 500 |
 | brak scenariusza w rejestrze | 404 | `C2004-DATA-0001` | `SOA/oqlos` | `scenario-registry` / `scenario.lookup` | identyfikator wejściowy nie jest publikowany |
 | błędny payload rejestracji DSL | 422 | `C2004-DATA-0002` | `SOA/oqlos` | `scenario-registry` / `payload.validate` | publikowane jest tylko pole i oczekiwany typ |
-| niedostępny parser scenariuszy | 503 | `C2004-NET-0002` | `SOA/oqlos` | `scenario-parser` / `dependency.load` | tekst wyjątku importu nie jest publikowany |
+| niedostępny parser scenariuszy | 503 | `C2004-NET-0002` | `SOA/oqlos` | `scenario-parser` / `dependency.load` | wyłącznie `ImportError`; tekst importu nie jest publikowany, a defekt loadera daje bezpieczne 500 |
 | niepełny lub błędny request wykonania | 422 | `C2004-DATA-0002` | `SOA/oqlos` | `scenario-execution` / walidacja źródła, DSL lub komendy | publikowany jest wyłącznie stabilny `reason` |
 | scenariusz wykonania nie istnieje | 404 | `C2004-DATA-0001` | `SOA/oqlos` | `scenario-execution` / `scenario.lookup` | identyfikator wejściowy nie jest publikowany |
 | sterowanie bez aktywnego wykonania | 409 | `C2004-DATA-0003` | `SOA/oqlos` | `scenario-execution` / `state.validate` | brak negatywnego envelope przy HTTP 200 |

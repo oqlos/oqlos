@@ -128,6 +128,17 @@ centralnej sanitizowanej granicy 500. Zregenerowany snapshot workspace wskazuje
 214 szerokich handlerów, 83 surowe wyjątki, 0 negatywnych envelope przy HTTP
 200 i 0 błędów parsowania.
 
+Piąta grupa przeglądu usunęła sześć szerokich handlerów z
+`hardware_peripherals_routes.py`, `scenarios.py`, `ui_prefs_routes.py` i
+`ui_prefs_store.py`. Błędy transportu/runtime Modbus ADC, brak parsera oraz
+błędy pliku, kodowania i JSON/YAML nadal mają stabilny kontrakt domenowy.
+Nieoczekiwany `AttributeError` nie jest już maskowany jako awaria sprzętu,
+parsera albo magazynu, lecz trafia do centralnego 500 bez komunikatu wyjątku.
+Odpowiedź sukcesu preferencji nie ujawnia ścieżki serwera. Snapshot wskazuje
+208 szerokich handlerów, 83 surowe wyjątki, 0 negatywnych envelope przy HTTP
+200 i 0 błędów parsowania; bramka to 1059 testów backendowych oraz 149
+frontendowych, build Vite i Ruff.
+
 ### Hotspoty rozmiaru
 
 Największe pliki OqlOS to słownik tłumaczeń (2 150 linii), `Panel.jsx`

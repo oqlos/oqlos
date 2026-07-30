@@ -247,9 +247,10 @@ treść żądania, nazwa celu lub niezgodność rozszerzenia daje
 
 Granica `/modbus-adc/raw` klasyfikuje błędy health, połączenia pluginu i odczytu
 jako 503/`C2004-HW-0012` z lokalnym `modbus_adc_not_detected` albo
-`hw_modbus_no_response`. Dwa szerokie handlery są celowymi granicami adaptera,
-ale nie publikują już tekstu wyjątku, pełnego health ani wyniku pluginu; kontekst
-zawiera wyłącznie stabilny etap, powód, operację i target pluginu.
+`hw_modbus_no_response`. Granice adaptera nie publikują tekstu wyjątku, pełnego
+health ani wyniku pluginu; kontekst zawiera wyłącznie stabilny etap, powód,
+operację i target pluginu. Piąta grupa audytu zawęziła je do oczekiwanych
+`OSError/RuntimeError`, więc defekty programu przechodzą do centralnego 500.
 
 Granica nieotypowanych `HTTPException` 5xx sanitizuje teraz komunikat i kontekst
 według katalogu. Zdalne wykonanie `/api/v1/editor/execute` propaguje
@@ -330,7 +331,14 @@ więc nagłówek `Host` nie może skierować go do obcego celu. Audyt wskazuje 2
 szerokich handlerów; bramka: 1053/1053 backend, 149/149 frontend, build Vite i
 Ruff.
 
-Pozostały zakres: sklasyfikować 83 surowe wyjątki i 214 szerokich handlerów
+Piąta grupa usunęła sześć szerokich handlerów z Modbus ADC raw, loadera parsera
+DSL i preferencji UI. Oczekiwane awarie sprzętu, importu oraz storage zachowują
+dotychczasowe typowane 503, natomiast `AttributeError` i inne defekty programu
+kończą się sanitizowanym 500/`C2004-SYS-0000`. Poprawna odpowiedź preferencji
+nie publikuje już pełnej ścieżki magazynu. Audyt wskazuje 208 szerokich
+handlerów; bramka: 1059/1059 backend, 149/149 frontend, build Vite i Ruff.
+
+Pozostały zakres: sklasyfikować 83 surowe wyjątki i 208 szerokich handlerów
 OqlOS, rozdzielić pozostałe klasy host/proxy/plugin oraz wykonać analogiczną
 inwentaryzację i kontrakty po stronie C2004/POA.
 

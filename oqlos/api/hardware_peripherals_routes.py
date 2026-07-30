@@ -50,7 +50,7 @@ async def read_modbus_adc_raw() -> dict[str, Any]:
     """Return raw Modbus ADC diagnostics for HUI troubleshooting."""
     try:
         health = await get_hardware_gateway().health()
-    except Exception as exc:
+    except (OSError, RuntimeError) as exc:
         _raise_modbus_adc_raw(
             stage="gateway.health",
             reason="gateway_health_unavailable",
@@ -72,7 +72,7 @@ async def read_modbus_adc_raw() -> dict[str, Any]:
 
     try:
         plugin = await get_hardware_gateway()._get_or_connect_plugin("modbus-adc")
-    except Exception as exc:
+    except (OSError, RuntimeError) as exc:
         _raise_modbus_adc_raw(
             stage="plugin.connect",
             reason="plugin_connection_failed",

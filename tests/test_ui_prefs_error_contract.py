@@ -54,6 +54,20 @@ def test_store_merge_loads_existing_prefs_before_persisting(tmp_path) -> None:
     assert json.loads(path.read_text(encoding="utf-8"))["prefs"] == result
 
 
+def test_get_ui_prefs_does_not_publish_store_path(monkeypatch, tmp_path) -> None:
+    path = tmp_path / "private" / "password=hunter2" / "ui-prefs.json"
+    path.parent.mkdir(parents=True)
+    path.write_text('{"prefs": {"sidebar": "collapsed"}}', encoding="utf-8")
+    monkeypatch.setattr(ui_prefs_routes, "ui_prefs_store", UiPrefsStore(path))
+
+    response = TestClient(app, raise_server_exceptions=False).get("/api/v3/ui/prefs")
+
+    assert response.status_code == 200
+    assert response.json() == {"ok": True, "prefs": {"sidebar": "collapsed"}}
+    assert "store_path" not in response.text
+    assert "hunter2" not in response.text
+
+
 def test_get_ui_prefs_sanitizes_store_read_failure(monkeypatch) -> None:
     class _FailingStore:
         file_path = "/srv/private/password=hunter2/ui-prefs.yaml"
@@ -96,3 +110,50 @@ def test_put_ui_prefs_sanitizes_store_write_failure(monkeypatch) -> None:
         stage="preferences.persist",
         operation_id="ui.preferences.write",
     )
+
+
+def test_get_ui_prefs_does_not_mask_programming_error(monkeypatch) -> None:
+    class _BrokenStore:
+        file_path = "/srv/private/password=hunter2/ui-prefs.yaml"
+
+        def get(self):
+            raise AttributeError("password=hunter2 programming defect")
+
+    monkeypatch.setattr(ui_prefs_routes, "ui_prefs_store", _BrokenStore())
+
+    response = TestClient(app, raise_server_exceptions=False).get(
+        "/api/v3/ui/prefs",
+        headers={"X-Correlation-ID": "cor-ui-prefs-defect"},
+    )
+
+    assert response.status_code == 500
+    body = response.json()
+    assert body["code"] == "C2004-SYS-0000"
+    assert body["correlation_id"] == "cor-ui-prefs-defect"
+    assert body["metadata"]["diagnostics"]["exception_type"] == "AttributeError"
+    assert "hunter2" not in response.text
+    assert "programming defect" not in response.text
+
+
+def test_put_ui_prefs_does_not_mask_programming_error(monkeypatch) -> None:
+    class _BrokenStore:
+        file_path = "/srv/private/password=hunter2/ui-prefs.yaml"
+
+        def merge(self, _prefs, *, persist: bool):
+            raise AttributeError("password=hunter2 programming defect")
+
+    monkeypatch.setattr(ui_prefs_routes, "ui_prefs_store", _BrokenStore())
+
+    response = TestClient(app, raise_server_exceptions=False).put(
+        "/api/v3/ui/prefs",
+        json={"prefs": {"secret": "hunter2"}, "persist": True, "merge": True},
+        headers={"X-Correlation-ID": "cor-ui-prefs-write-defect"},
+    )
+
+    assert response.status_code == 500
+    body = response.json()
+    assert body["code"] == "C2004-SYS-0000"
+    assert body["correlation_id"] == "cor-ui-prefs-write-defect"
+    assert body["metadata"]["diagnostics"]["exception_type"] == "AttributeError"
+    assert "hunter2" not in response.text
+    assert "programming defect" not in response.text
