@@ -1,6 +1,6 @@
 # OqlOS — lista zadań
 
-Stan: **2026-07-30**, commit implementacji `ff9b245`, po dziewiątej grupie
+Stan: **2026-07-30**, commit implementacji `54df6cd`, po dziesiątej grupie
 `NEXT-04`.
 
 Ten plik jest operacyjną checklistą. Szczegółowe uzasadnienie, zależności i
@@ -12,7 +12,7 @@ należy zaktualizować oba dokumenty oraz dołączyć wynik testów i commit.
 
 - 194 publiczne trasy API;
 - 78 surowych wyjątków;
-- 180 szerokich handlerów `except` (w tym jawne granice storage i adapterów);
+- 173 szerokie handlery `except` (w tym jawne granice storage i adapterów);
 - 80 tras zwracających `dict[str, Any]`;
 - 182 trasy z generyczną odpowiedzią OpenAPI;
 - 154 odczyty zmiennych środowiskowych poza typowaną warstwą settings;
@@ -50,7 +50,8 @@ negatywnych envelope przy HTTP 200.
   6. [x] `plugin_gateway.py`;
   7. [x] `mqtt_oql_bridge.py`, `mqtt_protocol.py`;
   8. [x] `firmware_adapter.py`;
-  9. [x] `plugins/registry.py`.
+  9. [x] `plugins/registry.py`;
+  10. [x] `plugins/lung.py`, `plugins/plugin_http_handlers.py`.
 
 Dowód grupy 1: oczekiwane błędy HTTP/JSON i parsera mają wąskie handlery;
 awaria programistyczna przechodzi do sanitizowanej granicy 500. Cztery
@@ -113,6 +114,15 @@ publikuje już surowego wyjątku i aktualizuje stan instancji na `ERROR`. Metryk
 spadła 183 → 180 szerokich handlerów oraz 81 → 78 surowych wyjątków; bramka:
 1098/1098 backend, 149/149 frontend, build Vite, Ruff i `uv lock --check`.
 
+Dowód grupy 10: plugin artificial-lung łapie wyłącznie oczekiwane błędy
+transportu, runtime i payloadu. Connect, health i komendy nie publikują tekstu
+wyjątku, ścieżki ani sekretu, nieznana komenda nie odbija wejścia, a błędny
+status runtime blokuje aktuację. `AttributeError` pozostaje widoczny dla
+nadrzędnej sanitizowanej granicy. Wspólny dekoder HTTP nie maskuje defektów
+obiektu odpowiedzi. Metryka spadła 180 → 173 szerokie handlery, przy 78
+surowych wyjątkach i 30 dużych modułach; bramka: 1107/1107 backend, 149/149
+frontend, build Vite, Ruff i `uv lock --check`.
+
 - [ ] Dla każdego przewidywalnego błędu ustalić:
   - lokalny `issue_code` i publiczny `C2004-*`;
   - właściwy HTTP status, severity, retryability i ownera;
@@ -135,7 +145,8 @@ spadła 183 → 180 szerokich handlerów oraz 81 → 78 surowych wyjątków; bra
   - `oqlos/hardware/gateway.py`;
   - [x] `oqlos/hardware/firmware_adapter.py`;
   - [x] `oqlos/hardware/plugins/registry.py`;
-  - pluginach `lung`, `modbus`, `modbus_adc` i `piadc`.
+  - [x] `oqlos/hardware/plugins/lung.py`;
+  - pluginach `modbus`, `modbus_adc` i `piadc`.
 - [ ] Oznaczyć szerokie handlery, które są celowymi granicami adaptera, i
   udowodnić testem, że publikują wyłącznie bezpieczny kontekst.
 - [ ] Rozdzielić oczekiwane walidacyjne `ValueError` od awarii wykonania w:

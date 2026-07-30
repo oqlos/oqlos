@@ -183,6 +183,16 @@ logu wyłącznie typ wyjątku. Health ma stabilny komunikat i nie kopiuje sekret
 surowych wyjątków i 0 błędów parsowania; bramka to 1098 testów backendowych,
 149 frontendowych, build Vite, Ruff i `uv lock --check`.
 
+Dziesiąta grupa przeglądu objęła `plugins/lung.py` i współdzielony dekoder
+odpowiedzi pluginów HTTP. Siedem szerokich handlerów zastąpiono oczekiwanymi
+błędami transportu, runtime i payloadu. Connect, health oraz komendy zwracają
+stabilne, katalogowe wyniki bez tekstu wyjątku, ścieżki, sekretu i wejściowej
+komendy. Błędny JSON statusu runtime blokuje ruch, a `AttributeError` nie jest
+maskowany jako awaria urządzenia. Snapshot wskazuje 173 szerokie handlery, 78
+surowych wyjątków, 30 dużych modułów i 0 błędów parsowania; `lung.py` ma 395
+linii. Bramka to 1107 testów backendowych, 149 frontendowych, build Vite, Ruff
+i `uv lock --check`.
+
 ### Przegląd istniejących logów wykonawczych
 
 Logi w `iql-run-logs/` i `oql-run-logs/` pochodzą z 2026-04-15, więc nie są
@@ -218,9 +228,9 @@ OQL TypeScript (1 441), inicjalizator frontendu (1 250) i runtime scenariusza
 
 1. Implementacja `NEXT-03` jest zakończona; przed wdrożeniem nadal wymaga
    fizycznej walidacji zasilania i bezpiecznej aktuacji w `NEXT-12`.
-2. Dziewięć grup `NEXT-04` zmniejszyło bieżący zakres OqlOS do 78 surowych
-   wyjątków i 180 szerokich handlerów. Następne aktywne hotspoty to pluginy
-   `lung`, `modbus`, `modbus_adc` i `piadc`; legacy `gateway.py`
+2. Dziesięć grup `NEXT-04` zmniejszyło bieżący zakres OqlOS do 78 surowych
+   wyjątków i 173 szerokich handlerów. Następne aktywne hotspoty to pluginy
+   `modbus`, `modbus_adc` i `piadc`; legacy `gateway.py`
    wymaga najpierw audytu konsumentów i planu deprecjacji.
 3. `NEXT-07` powinno wprowadzić allowlistę settings i blokować nowe odczyty env;
    154/317 trafień to inwentarz migracji, nie założenie, że każde jest błędem.
