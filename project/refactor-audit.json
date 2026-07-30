@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-07-30T09:26:08+00:00",
+  "generated_at": "2026-07-30T14:25:55+00:00",
   "root": "/home/tom/github/oqlos/oqlos",
-  "git_commit": "e09a6e667c1010959f2ac58e6e2a4e201731a1cd",
+  "git_commit": "3793b94f36b020776a6fbf04d36c8cb900c42eb3",
   "git_dirty": false,
   "git_dirty_including_generated_artifacts": true,
   "git_status_excluding_generated_artifacts": [],
@@ -16,10 +16,10 @@
     }
   },
   "artifacts": {
-    "analysis.toon.yaml": "ff5a4e699aa10b23348d48cc25a89d53a1c010f749bd19ad686ec1ba07c5194c",
-    "map.toon.yaml": "b884bed2d1ab1fd7a8e0d4b72621bdeec5faf08977f27fae2d1b6e97092e9a6c"
+    "analysis.toon.yaml": "8ddc3ceaf6e056808cc795bfebd0f2fa2ffe9a96623a332c5159c72b26791bc1",
+    "map.toon.yaml": "8314642784e1eb41aeb110ad75a402ae33a6deac90efa5632dcf11a778694461"
   },
-  "source_file_count": 405,
+  "source_file_count": 406,
   "public_routes": [
     {
       "file": "oqlos/api/_hw3_cqrs.py",
@@ -1543,7 +1543,7 @@
     },
     {
       "file": "oqlos/api/plugins.py",
-      "line": 91,
+      "line": 145,
       "function": "list_plugins",
       "return_annotation": null,
       "method": "GET",
@@ -1553,7 +1553,7 @@
     },
     {
       "file": "oqlos/api/plugins.py",
-      "line": 97,
+      "line": 151,
       "function": "get_plugin_status",
       "return_annotation": null,
       "method": "GET",
@@ -1563,7 +1563,7 @@
     },
     {
       "file": "oqlos/api/plugins.py",
-      "line": 103,
+      "line": 157,
       "function": "get_plugin_info",
       "return_annotation": null,
       "method": "GET",
@@ -1573,7 +1573,7 @@
     },
     {
       "file": "oqlos/api/plugins.py",
-      "line": 123,
+      "line": 177,
       "function": "get_plugin_health",
       "return_annotation": null,
       "method": "GET",
@@ -1583,7 +1583,7 @@
     },
     {
       "file": "oqlos/api/plugins.py",
-      "line": 142,
+      "line": 208,
       "function": "connect_plugin",
       "return_annotation": null,
       "method": "POST",
@@ -1593,7 +1593,7 @@
     },
     {
       "file": "oqlos/api/plugins.py",
-      "line": 170,
+      "line": 239,
       "function": "disconnect_plugin",
       "return_annotation": null,
       "method": "POST",
@@ -1603,7 +1603,7 @@
     },
     {
       "file": "oqlos/api/plugins.py",
-      "line": 202,
+      "line": 274,
       "function": "execute_plugin_command",
       "return_annotation": null,
       "method": "POST",
@@ -1613,7 +1613,7 @@
     },
     {
       "file": "oqlos/api/plugins.py",
-      "line": 252,
+      "line": 324,
       "function": "validate_plugin_configs",
       "return_annotation": null,
       "method": "POST",
@@ -1763,7 +1763,7 @@
     },
     {
       "file": "oqlos/api/ui_prefs_routes.py",
-      "line": 63,
+      "line": 60,
       "function": "put_ui_prefs",
       "return_annotation": "dict[str, Any]",
       "method": "PUT",
@@ -1773,7 +1773,7 @@
     },
     {
       "file": "oqlos/api/update_status.py",
-      "line": 65,
+      "line": 103,
       "function": "get_update_status",
       "return_annotation": "dict[str, Any]",
       "method": "GET",
@@ -2735,7 +2735,7 @@
     },
     {
       "file": "oqlos/api/ui_prefs_routes.py",
-      "line": 63,
+      "line": 60,
       "function": "put_ui_prefs",
       "return_annotation": "dict[str, Any]",
       "method": "PUT",
@@ -2745,7 +2745,7 @@
     },
     {
       "file": "oqlos/api/update_status.py",
-      "line": 65,
+      "line": 103,
       "function": "get_update_status",
       "return_annotation": "dict[str, Any]",
       "method": "GET",
@@ -4227,7 +4227,7 @@
     },
     {
       "file": "oqlos/api/plugins.py",
-      "line": 91,
+      "line": 145,
       "function": "list_plugins",
       "return_annotation": null,
       "method": "GET",
@@ -4237,7 +4237,7 @@
     },
     {
       "file": "oqlos/api/plugins.py",
-      "line": 97,
+      "line": 151,
       "function": "get_plugin_status",
       "return_annotation": null,
       "method": "GET",
@@ -4247,7 +4247,7 @@
     },
     {
       "file": "oqlos/api/plugins.py",
-      "line": 103,
+      "line": 157,
       "function": "get_plugin_info",
       "return_annotation": null,
       "method": "GET",
@@ -4257,7 +4257,7 @@
     },
     {
       "file": "oqlos/api/plugins.py",
-      "line": 123,
+      "line": 177,
       "function": "get_plugin_health",
       "return_annotation": null,
       "method": "GET",
@@ -4267,7 +4267,7 @@
     },
     {
       "file": "oqlos/api/plugins.py",
-      "line": 142,
+      "line": 208,
       "function": "connect_plugin",
       "return_annotation": null,
       "method": "POST",
@@ -4277,7 +4277,7 @@
     },
     {
       "file": "oqlos/api/plugins.py",
-      "line": 170,
+      "line": 239,
       "function": "disconnect_plugin",
       "return_annotation": null,
       "method": "POST",
@@ -4287,7 +4287,7 @@
     },
     {
       "file": "oqlos/api/plugins.py",
-      "line": 202,
+      "line": 274,
       "function": "execute_plugin_command",
       "return_annotation": null,
       "method": "POST",
@@ -4297,7 +4297,7 @@
     },
     {
       "file": "oqlos/api/plugins.py",
-      "line": 252,
+      "line": 324,
       "function": "validate_plugin_configs",
       "return_annotation": null,
       "method": "POST",
@@ -4407,7 +4407,7 @@
     },
     {
       "file": "oqlos/api/ui_prefs_routes.py",
-      "line": 63,
+      "line": 60,
       "function": "put_ui_prefs",
       "return_annotation": "dict[str, Any]",
       "method": "PUT",
@@ -4417,7 +4417,7 @@
     },
     {
       "file": "oqlos/api/update_status.py",
-      "line": 65,
+      "line": 103,
       "function": "get_update_status",
       "return_annotation": "dict[str, Any]",
       "method": "GET",
@@ -4894,39 +4894,15 @@
     },
     {
       "file": "oqlos/hardware/plugin_gateway.py",
-      "line": 930
+      "line": 955
     },
     {
       "file": "oqlos/hardware/plugin_gateway.py",
-      "line": 264
+      "line": 271
     },
     {
       "file": "oqlos/hardware/plugin_gateway.py",
-      "line": 272
-    },
-    {
-      "file": "oqlos/hardware/plugin_gateway.py",
-      "line": 301
-    },
-    {
-      "file": "oqlos/hardware/plugin_gateway.py",
-      "line": 314
-    },
-    {
-      "file": "oqlos/hardware/plugin_gateway.py",
-      "line": 326
-    },
-    {
-      "file": "oqlos/hardware/plugin_gateway.py",
-      "line": 127
-    },
-    {
-      "file": "oqlos/hardware/plugin_gateway.py",
-      "line": 266
-    },
-    {
-      "file": "oqlos/hardware/plugin_gateway.py",
-      "line": 274
+      "line": 279
     },
     {
       "file": "oqlos/hardware/plugin_gateway.py",
@@ -4934,23 +4910,47 @@
     },
     {
       "file": "oqlos/hardware/plugin_gateway.py",
-      "line": 320
+      "line": 321
     },
     {
       "file": "oqlos/hardware/plugin_gateway.py",
-      "line": 332
+      "line": 333
     },
     {
       "file": "oqlos/hardware/plugin_gateway.py",
-      "line": 364
+      "line": 134
     },
     {
       "file": "oqlos/hardware/plugin_gateway.py",
-      "line": 127
+      "line": 273
     },
     {
       "file": "oqlos/hardware/plugin_gateway.py",
-      "line": 364
+      "line": 281
+    },
+    {
+      "file": "oqlos/hardware/plugin_gateway.py",
+      "line": 315
+    },
+    {
+      "file": "oqlos/hardware/plugin_gateway.py",
+      "line": 327
+    },
+    {
+      "file": "oqlos/hardware/plugin_gateway.py",
+      "line": 339
+    },
+    {
+      "file": "oqlos/hardware/plugin_gateway.py",
+      "line": 371
+    },
+    {
+      "file": "oqlos/hardware/plugin_gateway.py",
+      "line": 134
+    },
+    {
+      "file": "oqlos/hardware/plugin_gateway.py",
+      "line": 371
     },
     {
       "file": "oqlos/hardware/plugins/piadc.py",
@@ -5328,12 +5328,12 @@
     },
     {
       "file": "oqlos/hardware/plugin_gateway.py",
-      "line": 97,
+      "line": 105,
       "exception": "RuntimeError"
     },
     {
       "file": "oqlos/hardware/plugin_gateway.py",
-      "line": 99,
+      "line": 108,
       "exception": "RuntimeError"
     },
     {
@@ -5393,7 +5393,7 @@
     },
     {
       "file": "oqlos/hardware/transport/mqtt_oql_bridge.py",
-      "line": 227,
+      "line": 228,
       "exception": "RuntimeError"
     },
     {
@@ -5659,16 +5659,6 @@
       "exception": "Exception"
     },
     {
-      "file": "oqlos/api/hardware_peripherals_routes.py",
-      "line": 53,
-      "exception": "Exception"
-    },
-    {
-      "file": "oqlos/api/hardware_peripherals_routes.py",
-      "line": 75,
-      "exception": "Exception"
-    },
-    {
       "file": "oqlos/api/main.py",
       "line": 222,
       "exception": "Exception"
@@ -5679,38 +5669,8 @@
       "exception": "Exception"
     },
     {
-      "file": "oqlos/api/plugins.py",
-      "line": 197,
-      "exception": "Exception"
-    },
-    {
-      "file": "oqlos/api/scenarios.py",
-      "line": 269,
-      "exception": "Exception"
-    },
-    {
       "file": "oqlos/api/state.py",
       "line": 293,
-      "exception": "Exception"
-    },
-    {
-      "file": "oqlos/api/ui_prefs_routes.py",
-      "line": 49,
-      "exception": "Exception"
-    },
-    {
-      "file": "oqlos/api/ui_prefs_routes.py",
-      "line": 71,
-      "exception": "Exception"
-    },
-    {
-      "file": "oqlos/api/ui_prefs_store.py",
-      "line": 14,
-      "exception": "Exception"
-    },
-    {
-      "file": "oqlos/api/update_status.py",
-      "line": 30,
       "exception": "Exception"
     },
     {
@@ -5909,71 +5869,6 @@
       "exception": "Exception"
     },
     {
-      "file": "oqlos/hardware/plugin_gateway.py",
-      "line": 98,
-      "exception": "Exception"
-    },
-    {
-      "file": "oqlos/hardware/plugin_gateway.py",
-      "line": 464,
-      "exception": "Exception"
-    },
-    {
-      "file": "oqlos/hardware/plugin_gateway.py",
-      "line": 612,
-      "exception": "Exception"
-    },
-    {
-      "file": "oqlos/hardware/plugin_gateway.py",
-      "line": 652,
-      "exception": "Exception"
-    },
-    {
-      "file": "oqlos/hardware/plugin_gateway.py",
-      "line": 676,
-      "exception": "Exception"
-    },
-    {
-      "file": "oqlos/hardware/plugin_gateway.py",
-      "line": 698,
-      "exception": "Exception"
-    },
-    {
-      "file": "oqlos/hardware/plugin_gateway.py",
-      "line": 718,
-      "exception": "Exception"
-    },
-    {
-      "file": "oqlos/hardware/plugin_gateway.py",
-      "line": 772,
-      "exception": "Exception"
-    },
-    {
-      "file": "oqlos/hardware/plugin_gateway.py",
-      "line": 810,
-      "exception": "Exception"
-    },
-    {
-      "file": "oqlos/hardware/plugin_gateway.py",
-      "line": 881,
-      "exception": "Exception"
-    },
-    {
-      "file": "oqlos/hardware/plugin_gateway.py",
-      "line": 890,
-      "exception": "Exception"
-    },
-    {
-      "file": "oqlos/hardware/plugin_gateway.py",
-      "line": 446,
-      "exception": "Exception"
-    },
-    {
-      "file": "oqlos/hardware/plugin_gateway.py",
-      "line": 522,
-      "exception": "Exception"
-    },
-    {
       "file": "oqlos/hardware/plugins/_rtu_serial.py",
       "line": 31,
       "exception": "Exception"
@@ -6150,42 +6045,12 @@
     },
     {
       "file": "oqlos/hardware/transport/mqtt_oql_bridge.py",
-      "line": 123,
+      "line": 397,
       "exception": "Exception"
     },
     {
       "file": "oqlos/hardware/transport/mqtt_oql_bridge.py",
-      "line": 190,
-      "exception": "Exception"
-    },
-    {
-      "file": "oqlos/hardware/transport/mqtt_oql_bridge.py",
-      "line": 200,
-      "exception": "Exception"
-    },
-    {
-      "file": "oqlos/hardware/transport/mqtt_oql_bridge.py",
-      "line": 335,
-      "exception": "Exception"
-    },
-    {
-      "file": "oqlos/hardware/transport/mqtt_oql_bridge.py",
-      "line": 344,
-      "exception": "Exception"
-    },
-    {
-      "file": "oqlos/hardware/transport/mqtt_oql_bridge.py",
-      "line": 396,
-      "exception": "Exception"
-    },
-    {
-      "file": "oqlos/hardware/transport/mqtt_oql_bridge.py",
-      "line": 438,
-      "exception": "Exception"
-    },
-    {
-      "file": "oqlos/hardware/transport/mqtt_protocol.py",
-      "line": 130,
+      "line": 447,
       "exception": "Exception"
     },
     {
@@ -6719,7 +6584,7 @@
     },
     {
       "file": "oqlos/hardware/plugin_gateway.py",
-      "lines": 978
+      "lines": 1007
     },
     {
       "file": "packages/oqlos-core/src/oqlos/core/_interpreter_actions.py",
@@ -6786,12 +6651,12 @@
       "lines": 472
     },
     {
-      "file": "frontend/src/pages/HardwareStatus.jsx",
-      "lines": 456
+      "file": "oqlos/hardware/transport/mqtt_oql_bridge.py",
+      "lines": 458
     },
     {
-      "file": "oqlos/hardware/transport/mqtt_oql_bridge.py",
-      "lines": 445
+      "file": "frontend/src/pages/HardwareStatus.jsx",
+      "lines": 456
     },
     {
       "file": "oqlos/hardware/plugins/modbus_adc.py",
@@ -6835,7 +6700,7 @@
     "routes_with_false_success_at_http_200": 0,
     "environment_reads_outside_settings": 154,
     "raw_exceptions": 83,
-    "broad_exception_handlers": 216,
+    "broad_exception_handlers": 189,
     "large_modules": 30,
     "parse_failures": 0
   }
