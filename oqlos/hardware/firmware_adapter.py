@@ -12,6 +12,7 @@ Also reads sensor values from firmware state for condition evaluation.
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 try:
@@ -21,6 +22,68 @@ except ImportError:
 
 from oqlos.config import get_settings
 from oqlos.hardware.tic249_units import TIC249_DEFAULT_TARGET_VELOCITY
+
+
+logger = logging.getLogger(__name__)
+
+
+class FirmwareAdapterError(RuntimeError):
+    """Expected failure at the legacy firmware HTTP boundary."""
+
+
+class FirmwareDependencyError(FirmwareAdapterError):
+    """The HTTP client required by the adapter is unavailable."""
+
+
+class FirmwarePayloadError(FirmwareAdapterError):
+    """A firmware endpoint returned an invalid payload."""
+
+
+class FirmwareRejectedError(FirmwareAdapterError):
+    """A firmware endpoint explicitly rejected a command."""
+
+
+_HTTP_ERRORS = (httpx.HTTPError,) if httpx is not None else ()
+_HTTP_STATUS_ERRORS = (httpx.HTTPStatusError,) if httpx is not None else ()
+FIRMWARE_OPERATION_ERRORS = (OSError, FirmwareAdapterError, *_HTTP_ERRORS)
+
+
+def _response_mapping(response: Any) -> dict[str, Any]:
+    """Decode an HTTP response without letting malformed JSON masquerade as success."""
+    try:
+        payload = response.json()
+    except (TypeError, ValueError) as exc:
+        raise FirmwarePayloadError("invalid firmware JSON response") from exc
+    if not isinstance(payload, dict):
+        raise FirmwarePayloadError("firmware response must be an object")
+    return payload
+
+
+def _sensor_value(payload: dict[str, Any], key: str) -> float:
+    try:
+        return float(payload.get(key, 0.0))
+    except (TypeError, ValueError) as exc:
+        raise FirmwarePayloadError("invalid firmware sensor value") from exc
+
+
+def _firmware_failure(reason: str) -> dict[str, Any]:
+    """Return the stable internal envelope consumed by the legacy OQL executor."""
+    return {
+        "ok": False,
+        "detail": "Required hardware is unavailable",
+        "data": {},
+        "status": 503,
+        "error_code": "C2004-HW-0012",
+        "issue_code": reason,
+        "architecture": "SOA",
+        "layer": "firmware",
+        "component": "firmware-adapter",
+        "stage": "command.execute",
+        "problem_source": "hardware-runtime://firmware-adapter",
+        "operation_id": "firmware.command.dispatch",
+        "owner": "owner://domain/hardware",
+        "retryable": False,
+    }
 
 
 # ── Peripheral name mapping ──────────────────────────────────────────────────
@@ -137,7 +200,12 @@ def _extract_failure_message(data: dict) -> Any:
 class FirmwareAdapter:
     """HTTP bridge between the OQL interpreter and firmware simulator."""
 
-    def __init__(self, base_url: str = "http://localhost:8202", timeout: float = 5.0, mock: bool = False):
+    def __init__(
+        self,
+        base_url: str = "http://localhost:8202",
+        timeout: float = 5.0,
+        mock: bool = False,
+    ):
         self.base_url = base_url.rstrip("/")
         self.timeout = timeout
         self.mock = mock
@@ -147,7 +215,7 @@ class FirmwareAdapter:
     def _get_client(self):
         if self._client is None:
             if httpx is None:
-                raise RuntimeError("httpx not installed — pip install httpx")
+                raise FirmwareDependencyError("firmware HTTP client is unavailable")
             self._client = httpx.Client(base_url=self.base_url, timeout=self.timeout)
         return self._client
 
@@ -160,10 +228,7 @@ class FirmwareAdapter:
         url = getattr(self, "lung_motor_url", "")
         if url:
             return str(url).rstrip("/")
-        try:
-            return get_settings().lung_motor_url.rstrip("/")
-        except Exception:
-            return "http://localhost:8205"
+        return get_settings().lung_motor_url.rstrip("/")
 
     # ── Health check ─────────────────────────────────────────────────────────
 
@@ -172,7 +237,7 @@ class FirmwareAdapter:
         try:
             r = self._get_client().get("/api/v1/health")
             return r.status_code == 200
-        except Exception:
+        except FIRMWARE_OPERATION_ERRORS:
             return False
 
     # ── Peripheral control ───────────────────────────────────────────────────
@@ -190,7 +255,7 @@ class FirmwareAdapter:
 
         message = _extract_failure_message(data)
         if message:
-            raise RuntimeError(f"{context} rejected: {message}")
+            raise FirmwareRejectedError(f"{context} rejected: {message}")
 
     def set_peripheral(self, target: str, value: Any) -> dict:
         """Set peripheral value via firmware API.
@@ -201,7 +266,7 @@ class FirmwareAdapter:
         Falls back to PUT /api/v1/peripherals/{pid} for unknown types.
         """
         import re
-        
+
         def _parse_numeric(val):
             """Extract numeric value from string like '5 l/min' or '10 mbar'."""
             if val is None:
@@ -209,9 +274,9 @@ class FirmwareAdapter:
             if isinstance(val, (int, float)):
                 return float(val)
             # Extract first numeric value from string
-            match = re.search(r'[-+]?[0-9]*\.?[0-9]+', str(val))
+            match = re.search(r"[-+]?[0-9]*\.?[0-9]+", str(val))
             return float(match.group()) if match else 0.0
-        
+
         pid = self._resolve_peripheral(target)
 
         # Route to hardware-specific endpoints for real device control
@@ -222,7 +287,7 @@ class FirmwareAdapter:
                 params={"power_pct": power},
             )
             r.raise_for_status()
-            data = r.json()
+            data = _response_mapping(r)
             self._raise_if_rejected(data, f"{target} ({pid})")
             # Also update peripheral state for UI consistency
             self._get_client().put(
@@ -240,7 +305,7 @@ class FirmwareAdapter:
                 params={"value": str(bool_value).lower()},
             )
             r.raise_for_status()
-            data = r.json()
+            data = _response_mapping(r)
             self._raise_if_rejected(data, f"{target} ({pid})")
             # Also update peripheral state for UI consistency
             self._get_client().put(
@@ -255,24 +320,29 @@ class FirmwareAdapter:
             val_num = _parse_numeric(value)
             cycles = int(val_num) if val_num > 0 else 0
             if cycles > 0:
-                payload = {"steps": 500, "speed": TIC249_DEFAULT_TARGET_VELOCITY, "cycles": cycles, "pause": 0.5}
+                payload = {
+                    "steps": 500,
+                    "speed": TIC249_DEFAULT_TARGET_VELOCITY,
+                    "cycles": cycles,
+                    "pause": 0.5,
+                }
                 try:
                     r = self._get_client().post(
                         "/api/v1/hardware/lung",
                         params=payload,
                     )
                     r.raise_for_status()
-                    data = r.json()
+                    data = _response_mapping(r)
                     self._raise_if_rejected(data, f"{target} ({pid})")
                     return data
-                except httpx.HTTPStatusError as exc:
+                except _HTTP_STATUS_ERRORS as exc:
                     if exc.response.status_code != 404:
                         raise
                 direct = httpx.Client(base_url=lung_url, timeout=self.timeout)
                 try:
                     r = direct.post("/api/reciprocate", json=payload)
                     r.raise_for_status()
-                    data = r.json()
+                    data = _response_mapping(r)
                     self._raise_if_rejected(data, f"{target} ({pid})")
                     return data
                 finally:
@@ -281,14 +351,14 @@ class FirmwareAdapter:
             try:
                 r = self._get_client().post("/api/v1/hardware/lung/stop")
                 r.raise_for_status()
-                data = r.json()
+                data = _response_mapping(r)
                 self._raise_if_rejected(data, f"{target} ({pid})")
                 # The OqlOS lung endpoint applies the canonical
                 # deenergizeOnStop policy in PluginHardwareGateway.  A second
                 # direct request here would bypass that policy and previously
                 # referenced an uninitialised fallback client.
                 return data
-            except httpx.HTTPStatusError as exc:
+            except _HTTP_STATUS_ERRORS as exc:
                 if exc.response.status_code != 404:
                     raise
 
@@ -296,11 +366,14 @@ class FirmwareAdapter:
             try:
                 r = direct.post("/api/stop")
                 r.raise_for_status()
-                data = r.json()
+                data = _response_mapping(r)
                 self._raise_if_rejected(data, f"{target} ({pid})")
                 deenergize = direct.post("/api/energize", json={"enable": False})
                 deenergize.raise_for_status()
-                self._raise_if_rejected(deenergize.json(), f"{target} ({pid}) deenergize")
+                self._raise_if_rejected(
+                    _response_mapping(deenergize),
+                    f"{target} ({pid}) deenergize",
+                )
                 return data
             finally:
                 direct.close()
@@ -311,7 +384,7 @@ class FirmwareAdapter:
             json={"currentValue": value, "targetValue": value},
         )
         r.raise_for_status()
-        data = r.json()
+        data = _response_mapping(r)
         self._raise_if_rejected(data, f"{target} ({pid})")
         return data
 
@@ -330,7 +403,7 @@ class FirmwareAdapter:
     def reset_peripherals(self) -> dict:
         r = self._get_client().post("/api/v1/peripherals/reset")
         r.raise_for_status()
-        return r.json()
+        return _response_mapping(r)
 
     # ── Sensor reading ───────────────────────────────────────────────────────
 
@@ -338,7 +411,7 @@ class FirmwareAdapter:
         """Read full firmware state."""
         r = self._get_client().get("/api/v1/state")
         r.raise_for_status()
-        return r.json()
+        return _response_mapping(r)
 
     def read_sensor(self, sensor_name: str) -> float:
         """Read a sensor value by OQL name (AI01, AI02, etc.)."""
@@ -346,15 +419,15 @@ class FirmwareAdapter:
         try:
             r = self._get_client().get(f"/api/v1/hardware/sensor/{pid}")
             r.raise_for_status()
-            return float(r.json().get("value", 0.0))
-        except Exception:
+            return _sensor_value(_response_mapping(r), "value")
+        except FIRMWARE_OPERATION_ERRORS:
             # Fallback to state endpoint
             state = self.read_state()
             peripherals = state.get("peripherals", state)
             if isinstance(peripherals, dict):
                 p = peripherals.get(pid, {})
                 if isinstance(p, dict):
-                    return float(p.get("currentValue", 0.0))
+                    return _sensor_value(p, "currentValue")
             return 0.0
 
     def read_all_sensors(self) -> dict[str, float]:
@@ -364,34 +437,60 @@ class FirmwareAdapter:
             try:
                 r = self._get_client().get(f"/api/v1/hardware/sensor/{pid}")
                 r.raise_for_status()
-                result[cql_name] = float(r.json().get("value", 0.0))
-            except Exception:
+                result[cql_name] = _sensor_value(_response_mapping(r), "value")
+            except FIRMWARE_OPERATION_ERRORS:
                 result[cql_name] = 0.0
         return result
 
     # ── OQL action keywords ─────────────────────────────────────────────────
 
     _ACTION_KEYWORDS = {
-        "off", "on", "set", "open", "close", "start", "stop", "reset",
-        "read", "confirm", "potwierdź", "potwierdz", "wyłącz", "wylacz",
-        "włącz", "wlacz", "ustaw", "otwórz", "otworz", "zamknij",
-        "zmierz", "sprawdź", "sprawdz", "odczytaj", "wyzeruj",
+        "off",
+        "on",
+        "set",
+        "open",
+        "close",
+        "start",
+        "stop",
+        "reset",
+        "read",
+        "confirm",
+        "potwierdź",
+        "potwierdz",
+        "wyłącz",
+        "wylacz",
+        "włącz",
+        "wlacz",
+        "ustaw",
+        "otwórz",
+        "otworz",
+        "zamknij",
+        "zmierz",
+        "sprawdź",
+        "sprawdz",
+        "odczytaj",
+        "wyzeruj",
     }
 
     # ── OQL action dispatch ──────────────────────────────────────────────────
 
-    def _resolve_dispatch_target(self, target: str, method: str, args: str) -> tuple[str, str, str]:
+    def _resolve_dispatch_target(
+        self, target: str, method: str, args: str
+    ) -> tuple[str, str, str]:
         """Resolve peripheral_id, effective method, and remaining args.
 
         When 'method' isn't an action keyword (e.g. Valve.6), combine
         target-method into a peripheral identifier and promote args.
         """
         import re as _re
+
         method_lower = method.lower().strip()
         target_lower = target.lower().strip()
         args_stripped = args.strip()
 
-        if method_lower not in self._ACTION_KEYWORDS or _re.match(r'^\d+$', method_lower):
+        if method_lower not in self._ACTION_KEYWORDS or _re.match(
+            r"^\d+$", method_lower
+        ):
             combined = f"{target_lower}-{method_lower}"
             self._resolve_peripheral(combined)
             return combined, args_stripped.lower() if args_stripped else "on", ""
@@ -400,15 +499,23 @@ class FirmwareAdapter:
 
     # ── Action Handlers ──────────────────────────────────────────────────────
 
-    def _handle_lung_action(self, target: str, peripheral: str, method: str, args: str) -> dict:
+    def _handle_lung_action(
+        self, target: str, peripheral: str, method: str, args: str
+    ) -> dict:
         if method in {"off", "stop", "wyłącz", "wylacz", "zamknij", "close"}:
             data = self.set_peripheral(peripheral, 0)
             return {"ok": True, "detail": f"{target}.stop → lung stopped", "data": data}
         cycles = _parse_numeric(args) if args.strip() else 5
         data = self.set_peripheral(peripheral, cycles)
-        return {"ok": True, "detail": f"{target}.reciprocate → {int(cycles)} cycles", "data": data}
+        return {
+            "ok": True,
+            "detail": f"{target}.reciprocate → {int(cycles)} cycles",
+            "data": data,
+        }
 
-    def _handle_valve_action(self, target: str, peripheral: str, method: str, args: str) -> dict:
+    def _handle_valve_action(
+        self, target: str, peripheral: str, method: str, args: str
+    ) -> dict:
         if method in {"off", "wyłącz", "wylacz", "stop", "zamknij", "close"}:
             data = self.valve_close(peripheral)
             return {"ok": True, "detail": f"{target}.close → 0", "data": data}
@@ -419,7 +526,9 @@ class FirmwareAdapter:
         data = self.valve_open(peripheral)
         return {"ok": True, "detail": f"{target}.open (default) → 1", "data": data}
 
-    def _handle_pump_action(self, target: str, peripheral: str, method: str, args: str) -> dict:
+    def _handle_pump_action(
+        self, target: str, peripheral: str, method: str, args: str
+    ) -> dict:
         if method in {"off", "wyłącz", "wylacz", "stop"}:
             data = self.pump_off(peripheral)
             return {"ok": True, "detail": f"{target}.off → 0", "data": data}
@@ -435,14 +544,16 @@ class FirmwareAdapter:
             return {"ok": True, "detail": f"Operator confirmed: {args}", "data": {}}
         return None
 
-    def _execute_method(self, target: str, peripheral_target: str, method_lower: str, args: str) -> dict:
+    def _execute_method(
+        self, target: str, peripheral_target: str, method_lower: str, args: str
+    ) -> dict:
         """Execute the resolved method on the target peripheral using a dispatch table."""
         common = self._handle_common_action(target, method_lower, args)
         if common:
             return common
 
         pid = self._resolve_peripheral(peripheral_target)
-        
+
         # Sensor reading
         if method_lower in {"read", "zmierz", "sprawdź", "sprawdz", "odczytaj"}:
             val = self.read_sensor(peripheral_target)
@@ -457,12 +568,9 @@ class FirmwareAdapter:
             return self._handle_pump_action(target, pid, method_lower, args)
 
         # Fallback for generic peripherals
-        try:
-            val = _parse_numeric(args) if args.strip() else 1
-            data = self.set_peripheral(pid, val)
-            return {"ok": True, "detail": f"{target}.{method_lower} → {val}", "data": data}
-        except Exception as e:
-            return {"ok": False, "detail": f"Unknown method or error: {target}.{method_lower} ({e})", "data": {}}
+        val = _parse_numeric(args) if args.strip() else 1
+        data = self.set_peripheral(pid, val)
+        return {"ok": True, "detail": f"{target}.{method_lower} → {val}", "data": data}
 
     def dispatch_action(self, target: str, method: str, args: str = "") -> dict:
         """Dispatch an OQL action (→ Target.method args) to firmware.
@@ -475,16 +583,25 @@ class FirmwareAdapter:
         Returns:
             {"ok": True/False, "detail": str, "data": any}
         """
-        peripheral_target, effective_method, remaining_args = self._resolve_dispatch_target(target, method, args)
+        peripheral_target, effective_method, remaining_args = (
+            self._resolve_dispatch_target(target, method, args)
+        )
 
         try:
-            return self._execute_method(target, peripheral_target, effective_method, remaining_args or args)
-        except Exception as e:
-            return {"ok": False, "detail": str(e), "data": {}}
+            return self._execute_method(
+                target, peripheral_target, effective_method, remaining_args or args
+            )
+        except FIRMWARE_OPERATION_ERRORS as exc:
+            logger.warning(
+                "Firmware command failed exception_type=%s",
+                type(exc).__name__,
+            )
+            return _firmware_failure("firmware-command-unavailable")
 
 
 def _parse_numeric(s: str) -> float:
     """Parse numeric value from OQL args like '5l', '7.0 mbar', '100%'."""
     import re
+
     m = re.search(r"[-+]?\d*\.?\d+", s)
     return float(m.group()) if m else 0.0

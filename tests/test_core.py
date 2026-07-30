@@ -984,7 +984,10 @@ class TestFirmwareAdapterUnit:
         result = fw.dispatch_action("Pump", "set", "1")
 
         assert result["ok"] is False
-        assert "allowed raster" in result["detail"]
+        assert result["status"] == 503
+        assert result["error_code"] == "C2004-HW-0012"
+        assert result["detail"] == "Required hardware is unavailable"
+        assert "allowed raster" not in str(result)
 
     def test_dispatch_lung_falls_back_to_direct_service_on_404(self, monkeypatch):
         import httpx
