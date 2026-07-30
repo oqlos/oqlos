@@ -1,6 +1,6 @@
 # OqlOS — lista zadań
 
-Stan: **2026-07-30**, commit implementacji `f00d6f0`, po siódmej grupie
+Stan: **2026-07-30**, commit implementacji `7034c27`, po ósmej grupie
 `NEXT-04`.
 
 Ten plik jest operacyjną checklistą. Szczegółowe uzasadnienie, zależności i
@@ -11,8 +11,8 @@ należy zaktualizować oba dokumenty oraz dołączyć wynik testów i commit.
 ## Bieżące metryki
 
 - 194 publiczne trasy API;
-- 83 surowe wyjątki;
-- 189 szerokich handlerów `except` (w tym jawne granice storage i adapterów);
+- 81 surowych wyjątków;
+- 183 szerokie handlery `except` (w tym jawne granice storage i adapterów);
 - 80 tras zwracających `dict[str, Any]`;
 - 182 trasy z generyczną odpowiedzią OpenAPI;
 - 154 odczyty zmiennych środowiskowych poza typowaną warstwą settings;
@@ -48,7 +48,8 @@ negatywnych envelope przy HTTP 200.
   5. [x] `hardware_peripherals_routes.py`, `scenarios.py`,
      `ui_prefs_routes.py`, `ui_prefs_store.py`;
   6. [x] `plugin_gateway.py`;
-  7. [x] `mqtt_oql_bridge.py`, `mqtt_protocol.py`.
+  7. [x] `mqtt_oql_bridge.py`, `mqtt_protocol.py`;
+  8. [x] `firmware_adapter.py`.
 
 Dowód grupy 1: oczekiwane błędy HTTP/JSON i parsera mają wąskie handlery;
 awaria programistyczna przechodzi do sanitizowanej granicy 500. Cztery
@@ -92,6 +93,14 @@ tracebacku w odpowiedzi lub logu. Publiczny komunikat pochodzi z katalogu
 C2004. Metryka spadła 195 → 189; bramka: 1080/1080 backend, 149/149 frontend,
 build Vite, Ruff i spójny `uv.lock`.
 
+Dowód grupy 8: adapter firmware rozróżnia błędy transportu, zależności,
+payloadu i jawnego odrzucenia komendy. Oczekiwana awaria daje stabilny,
+sanitizowany envelope 503/`C2004-HW-0012`; komunikat upstream, ścieżka i sekret
+nie trafiają do wyniku ani logu. `AttributeError` nie jest maskowany jako
+awaria sprzętu. Metryka spadła 189 → 183 szerokie handlery oraz 83 → 81
+surowych wyjątków; bramka: 1089/1089 backend, 149/149 frontend, build Vite,
+Ruff `F821,F811`, lint zmienionych plików i `uv lock --check`.
+
 - [ ] Dla każdego przewidywalnego błędu ustalić:
   - lokalny `issue_code` i publiczny `C2004-*`;
   - właściwy HTTP status, severity, retryability i ownera;
@@ -112,7 +121,7 @@ build Vite, Ruff i spójny `uv.lock`.
   - [x] `oqlos/hardware/plugin_gateway.py`;
   - [x] `oqlos/hardware/transport/mqtt_oql_bridge.py`;
   - `oqlos/hardware/gateway.py`;
-  - `oqlos/hardware/firmware_adapter.py`;
+  - [x] `oqlos/hardware/firmware_adapter.py`;
   - `oqlos/hardware/plugins/registry.py`;
   - pluginach `lung`, `modbus`, `modbus_adc` i `piadc`.
 - [ ] Oznaczyć szerokie handlery, które są celowymi granicami adaptera, i
@@ -212,6 +221,9 @@ build Vite, Ruff i spójny `uv.lock`.
   do testu integracyjnego. Po migracji testu oznaczyć moduł deprecated i usunąć
   go dopiero po okresie kompatybilności.
 - [ ] Dodać `pytest-cov`, `.coveragerc` oraz raport coverage w CI.
+- [ ] Zredukować kontrolowany baseline pełnego `ruff check .` (107 trafień na
+  2026-07-30) i dopiero potem rozszerzyć bramkę poza bieżące `F821,F811` oraz
+  lint zmienionych plików.
 - [ ] Zbudować deterministyczny hardware mock server dla testów TestQL bez
   fizycznego urządzenia; `dry-run` nie może być przedstawiany jako live
   acceptance, a suite z wynikiem `0/0` ma kończyć się błędem.
@@ -225,6 +237,9 @@ build Vite, Ruff i spójny `uv.lock`.
 
 ## P1/P2 — deploy i fizyczna walidacja (`NEXT-11`, `NEXT-12`)
 
+- [ ] Po odzyskaniu stabilnego LAN/zasilania wznowić zapisany checkpoint
+  BoardNet 22/25 i potwierdzić kroki 23–25; nie ponawiać aktuacji, gdy SSH
+  nadal zwraca timeout, `Broken pipe` albo `No route to host`.
 - [ ] Budować `.122` i `.109` z clean checkout oraz przypiętych commitów.
 - [ ] Zapisywać commity OqlOS/OQL Scenario, wersję schema i checksumy w
   `CURRENT_STATE`.
