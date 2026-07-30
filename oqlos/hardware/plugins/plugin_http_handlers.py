@@ -26,7 +26,7 @@ _UPSTREAM_ERROR_FIELDS = (
 def _response_payload(resp: Any) -> Any:
     try:
         return resp.json()
-    except Exception:
+    except (TypeError, ValueError):
         return None
 
 
@@ -36,7 +36,9 @@ def _command_result(resp: Any) -> dict[str, Any]:
         return {"success": True, "data": payload}
 
     upstream = payload if isinstance(payload, dict) else {}
-    detail = upstream.get("detail") or upstream.get("error") or f"HTTP {resp.status_code}"
+    detail = (
+        upstream.get("detail") or upstream.get("error") or f"HTTP {resp.status_code}"
+    )
     result: dict[str, Any] = {
         "success": False,
         "error": str(detail),

@@ -3,14 +3,37 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, TYPE_CHECKING
+from typing import Any
 
-if TYPE_CHECKING:
-    import httpx
+import httpx
 
 from .base import PluginHealth, PluginStatus
 
 logger = logging.getLogger(__name__)
+
+PLUGIN_OPERATION_ERRORS = (OSError, RuntimeError, ValueError, httpx.HTTPError)
+PLUGIN_PAYLOAD_ERRORS = (TypeError, ValueError)
+
+
+def plugin_operation_failure(
+    component: str,
+    reason: str,
+    *,
+    status_code: int = 503,
+) -> dict[str, Any]:
+    """Return a stable internal failure envelope for a hardware plugin."""
+    error_code = "C2004-DATA-0002" if status_code == 422 else "C2004-HW-0012"
+    return {
+        "success": False,
+        "error": "Hardware plugin operation failed",
+        "reason": reason,
+        "status_code": status_code,
+        "code": error_code,
+        "error_code": error_code,
+        "architecture": "SOA",
+        "component": component,
+        "stage": "adapter.execute",
+    }
 
 
 async def http_health_check(

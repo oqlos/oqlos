@@ -10,11 +10,20 @@ from typing import Any
 import httpx
 
 from .base import HardwarePlugin, PluginConfig, PluginHealth, PluginStatus
-from ._shared import not_connected_health, health_check_exception, disconnect_http_plugin
+from ._shared import (
+    PLUGIN_OPERATION_ERRORS as LUNG_OPERATION_ERRORS,
+    PLUGIN_PAYLOAD_ERRORS as LUNG_PAYLOAD_ERRORS,
+    disconnect_http_plugin,
+    not_connected_health,
+    plugin_operation_failure,
+)
 from .plugin_http_handlers import http_get_command, http_post_command
 from oqlos.hardware.tic249_units import TIC249_DEFAULT_TARGET_VELOCITY
 
 logger = logging.getLogger(__name__)
+
+def _lung_failure(reason: str, *, status_code: int = 503) -> dict[str, Any]:
+    return plugin_operation_failure("motor-tic249", reason, status_code=status_code)
 
 
 class LungPlugin(HardwarePlugin):
@@ -77,9 +86,12 @@ class LungPlugin(HardwarePlugin):
                 self._status = PluginStatus.CONNECTED
                 logger.info("Connected to lung motor via USB")
                 return True
-        except Exception as exc:
+        except LUNG_OPERATION_ERRORS as exc:
             self._status = PluginStatus.ERROR
-            logger.error(f"Failed to connect to lung motor: {exc}")
+            logger.error(
+                "Lung motor connection failed exception_type=%s",
+                type(exc).__name__,
+            )
             return False
 
     async def disconnect(self) -> None:
@@ -101,7 +113,7 @@ class LungPlugin(HardwarePlugin):
                     data = resp.json()
                     details["data"] = data
                     version = data.get("version", "unknown") if isinstance(data, dict) else "unknown"
-                except Exception:
+                except LUNG_PAYLOAD_ERRORS:
                     version = "unknown"
 
                 runtime = await self._runtime_status()
@@ -147,8 +159,16 @@ class LungPlugin(HardwarePlugin):
                 message="Lung motor (USB) is healthy",
                 compatible=True,
             )
-        except Exception as exc:
-            return health_check_exception(exc)
+        except LUNG_OPERATION_ERRORS as exc:
+            logger.error(
+                "Lung motor health check failed exception_type=%s",
+                type(exc).__name__,
+            )
+            return PluginHealth(
+                status=PluginStatus.ERROR,
+                message="Lung motor health check failed",
+                compatible=False,
+            )
 
     async def _runtime_status(self) -> dict[str, Any] | None:
         """Return optional runtime status when the HTTP service exposes it."""
@@ -156,12 +176,17 @@ class LungPlugin(HardwarePlugin):
             return None
         try:
             resp = await self._client.get(f"{self._base_url}/api/status")
-        except Exception:
+        except LUNG_OPERATION_ERRORS:
             return None
         try:
             data = resp.json()
-        except Exception:
-            data = None
+        except LUNG_PAYLOAD_ERRORS:
+            return {
+                "success": False,
+                "error": "Lung motor runtime status is invalid",
+                "code": "C2004-HW-0012",
+                "error_code": "C2004-HW-0012",
+            }
         if not isinstance(data, dict):
             data = {}
         if resp.status_code >= 300:
@@ -184,6 +209,8 @@ class LungPlugin(HardwarePlugin):
 
         if status.get("connected") is False:
             return "Lung motor is not connected"
+        if status.get("success") is False:
+            return "Lung motor runtime status is unavailable"
         if status.get("motor_driver_error"):
             return "Motor driver error is active"
         if status.get("low_vin"):
@@ -237,7 +264,7 @@ class LungPlugin(HardwarePlugin):
                 "architecture": "SOA",
                 "component": "motor-tic249",
                 "stage": "adapter.preflight",
-                "data": {"runtime_status": runtime},
+                "data": {},
             }
 
         resp = await http_post_command(
@@ -306,44 +333,43 @@ class LungPlugin(HardwarePlugin):
         calling focused command handlers (each CC<10).
         """
         if self.config.connection_type == "http" and not self._client:
-            return {"success": False, "error": "Not connected to lung motor"}
+            return _lung_failure("plugin-unavailable")
 
         try:
             if command == "reciprocate":
                 if self.config.connection_type == "http":
                     return await self._handle_reciprocate_http(params)
-                else:
-                    return await self._handle_reciprocate_usb(params)
+                return await self._handle_reciprocate_usb(params)
 
             elif command == "stop":
                 if self.config.connection_type == "http":
                     return await self._handle_stop_http()
-                else:
-                    return await self._handle_stop_usb()
+                return await self._handle_stop_usb()
 
             elif command == "move":
                 if self.config.connection_type == "http":
                     return await self._handle_move_http(params)
-                else:
-                    return await self._handle_move_usb(params)
+                return await self._handle_move_usb(params)
 
             elif command == "energize":
                 if self.config.connection_type == "http":
                     return await self._handle_energize_http(params)
-                else:
-                    return await self._handle_energize_usb(params)
+                return await self._handle_energize_usb(params)
 
             elif command == "status":
                 if self.config.connection_type == "http":
                     return await self._handle_status_http()
-                else:
-                    return await self._handle_status_usb()
+                return await self._handle_status_usb()
 
             else:
-                return {"success": False, "error": f"Unknown command: {command}"}
+                return _lung_failure("unsupported-command", status_code=422)
 
-        except Exception as exc:
-            return {"success": False, "error": str(exc)}
+        except LUNG_OPERATION_ERRORS as exc:
+            logger.error(
+                "Lung motor command failed exception_type=%s",
+                type(exc).__name__,
+            )
+            return _lung_failure("command-failed")
 
     @classmethod
     def get_capabilities(cls) -> dict[str, Any]:
