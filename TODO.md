@@ -1,6 +1,6 @@
 # OqlOS — lista zadań
 
-Stan: **2026-07-30**, bazowy `main` `a8059de`, z kolejną partią `NEXT-04`.
+Stan: **2026-07-30**, bazowy `main` `30a6691`, z kolejną partią `NEXT-04`.
 
 Ten plik jest operacyjną checklistą. Szczegółowe uzasadnienie, zależności i
 kryteria ukończenia znajdują się w
@@ -11,7 +11,7 @@ należy zaktualizować oba dokumenty oraz dołączyć wynik testów i commit.
 
 - 194 publiczne trasy API;
 - 83 surowe wyjątki;
-- 228 szerokich handlerów `except` (w tym jawne granice storage i adapterów);
+- 222 szerokie handlery `except` (w tym jawne granice storage i adapterów);
 - 80 tras zwracających `dict[str, Any]`;
 - 182 trasy z generyczną odpowiedzią OpenAPI;
 - 154 odczyty zmiennych środowiskowych poza typowaną warstwą settings;
@@ -40,7 +40,7 @@ Audyt po partii: 83 surowe wyjątki (spadek o 10), 0 błędów parsowania i 0
 negatywnych envelope przy HTTP 200.
 - [ ] Przejrzeć i sklasyfikować szerokie handlery w kolejności:
   1. [x] `_hw3_peripheral.py`, `state.py`, `scenarios.py`;
-  2. [ ] `hardware_modbus_waveshare.py`;
+  2. [x] `hardware_modbus_waveshare.py`;
   3. [ ] `hardware_runtime.py`, `hardware_modbus_routes.py`,
      `hardware_modbus_settings.py`, `hardware_probe.py`, `hardware_lung.py`;
   4. [ ] `plugins.py`, `update_status.py`.
@@ -52,6 +52,16 @@ loadera zależności i zadania w tle. Failover statusu oraz zdarzenie błędu
 diagnostycznego nie publikują wyjątku, argumentów ani sekretów. Metryka
 szerokich handlerów spadła 237 → 228; `state.py` ma 352 linie, a
 `_hw3_peripheral.py` spadł z CC=17 do CC=8.
+
+Dowód grupy 2: sześć szerokich handlerów Waveshare zastąpiono granicami
+`ImportError` oraz oczekiwanych błędów transportu Modbus. Błąd adaptera daje
+409/`C2004-HW-0013` albo 503/`C2004-HW-0012`, zachowuje `correlation_id` i nie
+publikuje wyjątku, sekretu ani pełnej ścieżki. Raport zbiorczy zachowuje HTTP
+200 jako odczyt diagnostyczny, ale ma jawny `overall_status`, a błąd rejestrów
+per-slave degraduje jego `ok`. Surowe komunikaty plugin health również nie są
+kopiowane do raportu. Metryka szerokich handlerów spadła 228 → 222, a moduł
+Waveshare z 656 do 631 linii. Bramka: 1037/1037 backend, 149/149 frontend,
+build Vite oraz Ruff.
 - [ ] Dla każdego przewidywalnego błędu ustalić:
   - lokalny `issue_code` i publiczny `C2004-*`;
   - właściwy HTTP status, severity, retryability i ownera;

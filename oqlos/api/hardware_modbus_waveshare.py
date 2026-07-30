@@ -11,8 +11,13 @@ from oqlos.api.hardware_modbus_settings import (
     build_init_baud_sequence,
     effective_modbus_target_baud,
 )
+from oqlos.api.hardware_modbus_waveshare_boundary import (
+    _read_output_control_modes,
+    _raise_waveshare_dependency_unavailable,
+    _raise_waveshare_probe_failure,
+    _waveshare_diagnostic_failure,
+)
 from oqlos.api.hardware_gateway import is_plugin_compatible as _is_plugin_compatible
-from oqlos.errors import OqlosError
 from oqlos.errors.c2004_catalog_generated import c2004_code_for_issue
 
 _settings = get_settings()
@@ -118,43 +123,6 @@ def _merge_waveshare_scan_dicts(*reports: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _read_output_control_modes(
-    serial_port: str,
-    baudrate: int,
-    parity: str,
-    device_id: int,
-    timeout: float = 1.5,
-) -> dict[str, Any]:
-    try:
-        from pymodbus.client import ModbusSerialClient  # type: ignore
-    except Exception as exc:
-        return {"ok": False, "error": f"pymodbus unavailable: {exc}"}
-
-    client = ModbusSerialClient(
-        port=serial_port,
-        baudrate=int(baudrate),
-        parity=str(parity),
-        stopbits=1,
-        bytesize=8,
-        timeout=float(timeout),
-    )
-    try:
-        if not client.connect():
-            return {"ok": False, "error": f"Cannot open serial port {serial_port}"}
-        result = client.read_holding_registers(address=0x1000, count=8, device_id=int(device_id))
-        if not result or result.isError():
-            return {"ok": False, "error": "Failed to read holding registers 0x1000..0x1007"}
-        registers = list(getattr(result, "registers", []) or [])
-        return {"ok": True, "registers": registers}
-    except Exception as exc:
-        return {"ok": False, "error": str(exc)}
-    finally:
-        try:
-            client.close()
-        except Exception:
-            pass
-
-
 def _modbus_plugins_healthy(health: dict[str, Any] | None) -> bool:
     """True when both Modbus plugins report compatible (ports held by firmware)."""
     if not isinstance(health, dict):
@@ -199,17 +167,18 @@ def _build_waveshare_serial_stale_report(
             "status": "serial-stale",
             "device_id": io_id,
             "source": "plugin-health",
-            "message": str((health.get("modbus-io") or {}).get("message") or skip_reason),
+            "message": skip_reason,
         }
     per_slave[f"modbus-adc-{adc_id}"] = {
         "ok": False,
         "status": "serial-stale",
         "device_id": adc_id,
         "source": "plugin-health",
-        "message": str((health.get("modbus-adc") or {}).get("message") or skip_reason),
+        "message": skip_reason,
     }
     return {
         "ok": False,
+        "overall_status": "unavailable",
         "serial_handles_stale": True,
         "baud_sequence": baud_sequence,
         "io_device_ids": io_ids,
@@ -274,7 +243,7 @@ def _build_waveshare_from_plugin_health(
             "status": "connected",
             "device_id": io_id,
             "source": "plugin-health",
-            "message": str((health.get("modbus-io") or {}).get("message") or "Modbus RTU is healthy"),
+            "message": "Modbus RTU is healthy",
             "detected": {
                 "serial_port": io_port,
                 "baudrate": target_baud,
@@ -304,7 +273,7 @@ def _build_waveshare_from_plugin_health(
         "status": "connected",
         "device_id": adc_id,
         "source": "plugin-health",
-        "message": str((health.get("modbus-adc") or {}).get("message") or "Modbus ADC is healthy"),
+        "message": "Modbus ADC is healthy",
         "detected": {
             "serial_port": adc_port,
             "baudrate": target_baud,
@@ -359,6 +328,7 @@ def _build_waveshare_from_plugin_health(
 
     return {
         "ok": True,
+        "overall_status": "healthy",
         "baud_sequence": baud_sequence,
         "io_device_ids": io_ids,
         "adc_device_id": adc_id,
@@ -457,6 +427,8 @@ def _read_waveshare_io_slave_config(
     """Read device config and control modes for one modbus-io slave; return per-slave dict."""
     from pimodbus.config import RtuBusSettings
     from pimodbus.provisioning import read_device_config
+    from pymodbus.exceptions import ModbusException
+
     hit = next((entry for entry in io_hits if int(entry.get("device_id", -1)) == io_id), None)
     if not hit:
         return {
@@ -473,13 +445,13 @@ def _read_waveshare_io_slave_config(
     )
     try:
         config = read_device_config(settings, device_id=io_id).to_dict()
-    except Exception as exc:
-        return {
-            "ok": False,
-            "status": "read-error",
-            "device_id": io_id,
-            "message": str(exc),
-        }
+    except (OSError, RuntimeError, ModbusException):
+        return _waveshare_diagnostic_failure(
+            issue_code="modbus_preflight_exception",
+            status="read-error",
+            reason="device-config-read-failed",
+            device_id=io_id,
+        )
     control_modes = _read_output_control_modes(
         settings.serial_port,
         settings.baudrate,
@@ -487,9 +459,10 @@ def _read_waveshare_io_slave_config(
         io_id,
         timeout=settings.timeout,
     )
+    control_modes_ok = bool(control_modes.get("ok"))
     return {
-        "ok": True,
-        "status": "ok",
+        "ok": control_modes_ok,
+        "status": "ok" if control_modes_ok else "read-error",
         "device_id": io_id,
         "detected": {
             "serial_port": settings.serial_port,
@@ -516,6 +489,8 @@ def _read_waveshare_adc_slave_config(
     """Read device config for the modbus-adc slave; return per-slave dict."""
     from pimodbus.config import RtuBusSettings
     from pimodbus.provisioning import read_device_config
+    from pymodbus.exceptions import ModbusException
+
     adc_hit = next((entry for entry in adc_hits if int(entry.get("device_id", -1)) == adc_id), None)
     if not adc_hit:
         return {
@@ -532,13 +507,13 @@ def _read_waveshare_adc_slave_config(
     )
     try:
         config = read_device_config(settings, device_id=adc_id).to_dict()
-    except Exception as exc:
-        return {
-            "ok": False,
-            "status": "read-error",
-            "device_id": adc_id,
-            "message": str(exc),
-        }
+    except (OSError, RuntimeError, ModbusException):
+        return _waveshare_diagnostic_failure(
+            issue_code="modbus_preflight_exception",
+            status="read-error",
+            reason="device-config-read-failed",
+            device_id=adc_id,
+        )
     return {
         "ok": True,
         "status": "ok",
@@ -607,28 +582,21 @@ def _build_waveshare_diagnose_report(health: dict[str, Any] | None = None) -> di
     try:
         import pimodbus.config  # noqa: F401
         import pimodbus.provisioning  # noqa: F401
-    except Exception as exc:
-        raise OqlosError(
-            code="pimodbus_unavailable",
-            status_code=503,
-            message=f"pimodbus is not available: {exc}",
-            detail={
-                "operation": "modbus.waveshare.diagnose",
-                "baud_sequence": baud_sequence,
-                "io_device_ids": io_ids,
-                "adc_device_id": adc_id,
-                "topology": ports["topology"],
-            },
-        ) from exc
+        from pymodbus.exceptions import ModbusException
+    except ImportError as exc:
+        _raise_waveshare_dependency_unavailable(cause=exc)
 
-    if separate:
-        report_dict, report_ok = _probe_waveshare_separate(
-            io_port, adc_port, target_baud, target_parity, io_device_id, io_ids, adc_id
-        )
-    else:
-        report_dict, report_ok = _probe_waveshare_shared_bus(
-            io_port, target_baud, target_parity, io_device_id, adc_id, target_ids
-        )
+    try:
+        if separate:
+            report_dict, report_ok = _probe_waveshare_separate(
+                io_port, adc_port, target_baud, target_parity, io_device_id, io_ids, adc_id
+            )
+        else:
+            report_dict, report_ok = _probe_waveshare_shared_bus(
+                io_port, target_baud, target_parity, io_device_id, adc_id, target_ids
+            )
+    except (OSError, RuntimeError, ModbusException) as exc:
+        _raise_waveshare_probe_failure(serial_port=io_port, cause=exc)
 
     hits = list(report_dict.get("hits") or [])
     io_hits, adc_hits = _split_hits_by_role(hits)
@@ -643,8 +611,15 @@ def _build_waveshare_diagnose_report(health: dict[str, Any] | None = None) -> di
         adc_id, adc_hits, adc_port, target_baud, target_parity
     )
 
+    details_ok = all(bool(item.get("ok")) for item in per_slave.values())
+    overall_ok = bool(report_ok and details_ok)
+    overall_status = "healthy" if overall_ok else (
+        "degraded" if report_ok else "unavailable"
+    )
+
     return {
-        "ok": report_ok,
+        "ok": overall_ok,
+        "overall_status": overall_status,
         "baud_sequence": baud_sequence,
         "io_device_ids": io_ids,
         "adc_device_id": adc_id,

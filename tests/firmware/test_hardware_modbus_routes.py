@@ -268,6 +268,43 @@ def test_wizard_probe_missing_pimodbus_is_safe_problem(monkeypatch) -> None:
     assert "/srv/private" not in response.text
 
 
+def test_waveshare_busy_adapter_is_safe_problem_details(monkeypatch) -> None:
+    from oqlos.api.hardware_modbus_waveshare_boundary import (
+        _raise_waveshare_probe_failure,
+    )
+
+    def _fail(_health):
+        _raise_waveshare_probe_failure(
+            serial_port="/dev/password=hunter2",
+            cause=OSError("serial port is busy password=hunter2 /srv/private"),
+        )
+
+    async def _snapshot(build_fn):
+        return build_fn(None)
+
+    monkeypatch.setattr(modbus_hw, "_build_waveshare_diagnose_report", _fail)
+    monkeypatch.setattr(modbus_hw, "snapshot_via_health", _snapshot)
+
+    response = _modbus_client().get(
+        "/api/v1/hardware/modbus/waveshare-diagnose",
+        headers={"X-Correlation-ID": "cor-waveshare-busy"},
+    )
+
+    assert response.status_code == 409
+    assert response.headers["content-type"].startswith("application/problem+json")
+    body = response.json()
+    assert body["code"] == "C2004-HW-0013"
+    assert body["correlation_id"] == "cor-waveshare-busy"
+    assert body["component"] == "modbus-waveshare"
+    assert body["stage"] == "matrix.scan"
+    assert body["metadata"]["diagnostics"]["issue_code"] == "serial_port_busy"
+    assert body["metadata"]["context"]["upstream_target"] == (
+        "serial-device://configured-adapter"
+    )
+    assert "hunter2" not in response.text
+    assert "/srv/private" not in response.text
+
+
 def test_wizard_probe_rejects_role_without_reflecting_it() -> None:
     response = _modbus_client().post(
         "/api/v1/hardware/modbus/wizard/probe-isolated",

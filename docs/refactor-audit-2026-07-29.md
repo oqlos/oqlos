@@ -99,6 +99,14 @@ nie obejmuje. Zdalny błąd edytora korzysta teraz ze wspólnego kontraktu MQTT 
 nie zwraca HTTP 200. Nieotypowane HTTP 5xx zostały jednocześnie objęte centralną
 sanityzacją, dzięki czemu surowe wyjątki starszych tras nie trafiają do body.
 
+Druga grupa przeglądu szerokich handlerów `NEXT-04` sklasyfikowała wszystkie
+sześć trafień w `hardware_modbus_waveshare.py`. Granice importu, transportu,
+odczytu konfiguracji i cleanup nie łapią już dowolnego `Exception`; oczekiwane
+awarie mają stabilny kod i powód, a defekty programu trafiają do centralnej
+granicy 500. Raport diagnostyczny nie kopiuje komunikatów wyjątku ani plugin
+health i jawnie publikuje `overall_status`. Bieżąca metryka OqlOS spadła z 228
+do 222 szerokich handlerów, a moduł Waveshare z 656 do 631 linii.
+
 ### Hotspoty rozmiaru
 
 Największe pliki OqlOS to słownik tłumaczeń (2 150 linii), `Panel.jsx`

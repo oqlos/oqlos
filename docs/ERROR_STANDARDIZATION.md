@@ -118,6 +118,10 @@ domenowym. Powtarzalny błąd zakończony `SYS-0000` wymaga dodania jawnego
 | Modbus wizard: port RS485 zajęty | 409 | `C2004-HW-0013` | `SOA/firmware` | `modbus-wizard` / etap probe lub program | klasyfikacja używa tekstu wyłącznie wewnętrznie; odpowiedź go nie publikuje |
 | Modbus wizard: brak `pimodbus` | 503 | `C2004-HW-0012` | `SOA/firmware` | `modbus-wizard` / `dependency.load` | `python-package://pimodbus`; komunikat importu nie jest publikowany |
 | Modbus wizard bez weryfikacji | 503 | `C2004-HW-0012` | `SOA/firmware` | `modbus-wizard` / `program.verify` | `serial-device://<name>` |
+| Waveshare diagnose: zajęty adapter | 409 | `C2004-HW-0013` | `SOA/firmware` | `modbus-waveshare` / `matrix.scan` | sanitizowany `serial-device://<label>`; wyjątek i ścieżka nie są publikowane |
+| Waveshare diagnose: inna oczekiwana awaria adaptera | 503 | `C2004-HW-0012` | `SOA/firmware` | `modbus-waveshare` / `matrix.scan` | tylko bezpieczna etykieta adaptera i stabilny kontekst |
+| Waveshare diagnose: brak `pimodbus` | 503 | `C2004-HW-0012` | `SOA/firmware` | `modbus-waveshare` / `dependency.load` | `python-package://pimodbus`; komunikat importu nie jest publikowany |
+| Waveshare diagnose: brak odpowiedzi lub błąd odczytu slave | 200 (raport zbiorczy) | `C2004-HW-0012` w diagnostyce | `SOA/firmware` | wynik `per_slave` / stabilny `reason` | jawny `overall_status=degraded/unavailable`; brak komunikatu wyjątku i health pluginu |
 | Modbus ADC raw: health, połączenie lub odczyt niedostępny | 503 | `C2004-HW-0012` | `SOA/firmware` | `modbus-adc` / `gateway.health`, `plugin.connect` albo `plugin.read` | `hardware-plugin://modbus-adc`; publikowany jest tylko stabilny `reason` |
 | błędna komenda HUI / artificial-lung | 422 | `C2004-DATA-0002` | `SOA/firmware` | komponent sprzętowy / `command.validate` | nie dotyczy |
 | niedostępna akcja HUI | status katalogu | kod wyniku, np. `C2004-HW-0012` | `SOA/firmware` | `hardware-hui` / `action.execute` | lokalna akcja sprzętowa |

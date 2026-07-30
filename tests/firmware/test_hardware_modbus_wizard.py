@@ -271,7 +271,9 @@ def test_build_waveshare_diagnose_uses_target_baud_fast_path(monkeypatch):
     monkeypatch.setattr(waveshare, "effective_modbus_target_baud", lambda _settings: 9600)
 
     result = hw._build_waveshare_diagnose_report()
-    assert result["ok"] is True
+    assert result["ok"] is False
+    assert result["overall_status"] == "degraded"
+    assert result["waveshare_scan"]["ok"] is True
     assert len(calls) == 1
     assert calls[0]["serial_port"] == "/dev/ttyTEST"
     assert calls[0]["target_baudrate"] == 9600
@@ -342,6 +344,7 @@ def test_build_waveshare_diagnose_scans_separate_adapters(monkeypatch):
     result = hw._build_waveshare_diagnose_report()
     assert result["topology"] == "separate-adapters"
     assert result["ok"] is True
+    assert result["overall_status"] == "healthy"
     assert calls == ["/dev/ttyIO", "/dev/ttyADC"]
     assert result["waveshare_scan"]["ports_scanned"] == [
         {"role": "modbus-io", "serial_port": "/dev/ttyIO"},
@@ -380,15 +383,26 @@ def test_build_waveshare_skips_matrix_when_plugins_healthy(monkeypatch):
     )
 
     health = {
-        "modbus-io": {"compatible": True, "status": "connected", "message": "Modbus RTU is healthy"},
-        "modbus-adc": {"compatible": True, "status": "connected", "message": "Modbus ADC is healthy"},
+        "modbus-io": {
+            "compatible": True,
+            "status": "connected",
+            "message": "healthy password=hunter2 /srv/private",
+        },
+        "modbus-adc": {
+            "compatible": True,
+            "status": "connected",
+            "message": "healthy password=hunter2 /srv/private",
+        },
     }
     result = hw._build_waveshare_diagnose_report(health)
     assert result["ok"] is True
+    assert result["overall_status"] == "healthy"
     assert result.get("plugin_health_deferred") is True
     assert calls == []
     assert result["per_slave"]["modbus-io-2"]["status"] == "connected"
     assert result["waveshare_scan"]["scan_skipped"] is True
+    assert "hunter2" not in str(result)
+    assert "/srv/private" not in str(result)
 
 
 def test_build_waveshare_serial_stale_skips_matrix(monkeypatch):
@@ -418,16 +432,135 @@ def test_build_waveshare_serial_stale_skips_matrix(monkeypatch):
         )(),
     )
     health = {
-        "modbus-io": {"compatible": False, "message": "Health check exception: [Errno 5] Input/output error"},
-        "modbus-adc": {"compatible": False, "message": "Health check exception: [Errno 5] Input/output error"},
+        "modbus-io": {
+            "compatible": False,
+            "message": "Health check exception: [Errno 5] Input/output error password=hunter2",
+        },
+        "modbus-adc": {
+            "compatible": False,
+            "message": "Health check exception: [Errno 5] Input/output error /srv/private",
+        },
     }
     result = hw._build_waveshare_diagnose_report(health)
     assert result.get("serial_handles_stale") is True
+    assert result["overall_status"] == "unavailable"
     assert result["waveshare_scan"]["scan_skipped"] is True
     assert result["per_slave"]["modbus-io-2"]["status"] == "serial-stale"
     assert result["code"] == result["error_code"] == "C2004-HW-0012"
     assert result["diagnostics"]["issue_code"] == "hw_modbus_serial_handle_stale"
     assert result["waveshare_scan"]["issues"][0]["public_code"] == "C2004-HW-0012"
+    assert "hunter2" not in str(result)
+    assert "/srv/private" not in str(result)
+
+
+def test_waveshare_control_mode_failure_is_classified_and_sanitized(monkeypatch):
+    import pymodbus.client
+
+    class _Client:
+        def __init__(self, **_kwargs):
+            pass
+
+        def connect(self):
+            return True
+
+        def read_holding_registers(self, **_kwargs):
+            raise OSError("serial port is busy password=hunter2 /srv/private")
+
+        def close(self):
+            raise RuntimeError("close password=hunter2")
+
+    monkeypatch.setattr(pymodbus.client, "ModbusSerialClient", _Client)
+
+    result = waveshare._read_output_control_modes(
+        "/dev/password=hunter2", 9600, "N", 1
+    )
+
+    assert result["status"] == "read-error"
+    assert result["reason"] == "control-register-read-failed"
+    assert result["error_code"] == "C2004-HW-0013"
+    assert result["diagnostics"]["issue_code"] == "serial_port_busy"
+    assert "hunter2" not in str(result)
+    assert "/srv/private" not in str(result)
+
+
+def test_waveshare_control_mode_missing_dependency_is_sanitized(monkeypatch):
+    import builtins
+
+    real_import = builtins.__import__
+
+    def _blocked_import(name, *args, **kwargs):
+        if name.startswith("pymodbus"):
+            raise ModuleNotFoundError("password=hunter2 /srv/private")
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", _blocked_import)
+
+    result = waveshare._read_output_control_modes("/dev/ttyTEST", 9600, "N", 1)
+
+    assert result["status"] == "dependency-unavailable"
+    assert result["error_code"] == "C2004-HW-0012"
+    assert result["diagnostics"]["issue_code"] == "pimodbus_unavailable"
+    assert "hunter2" not in str(result)
+    assert "/srv/private" not in str(result)
+
+
+def test_waveshare_control_mode_programming_error_is_not_masked(monkeypatch):
+    import pymodbus.client
+
+    class _Client:
+        def __init__(self, **_kwargs):
+            pass
+
+        def connect(self):
+            return True
+
+        def read_holding_registers(self, **_kwargs):
+            raise AttributeError("programming defect")
+
+        def close(self):
+            return None
+
+    monkeypatch.setattr(pymodbus.client, "ModbusSerialClient", _Client)
+
+    with pytest.raises(AttributeError, match="programming defect"):
+        waveshare._read_output_control_modes("/dev/ttyTEST", 9600, "N", 1)
+
+
+@pytest.mark.parametrize(
+    ("reader", "device_id", "hits", "port"),
+    [
+        (
+            waveshare._read_waveshare_io_slave_config,
+            1,
+            [{"role": "modbus-io", "device_id": 1, "serial_port": "/dev/ttyIO"}],
+            "/dev/ttyIO",
+        ),
+        (
+            waveshare._read_waveshare_adc_slave_config,
+            2,
+            [{"role": "modbus-adc", "device_id": 2, "serial_port": "/dev/ttyADC"}],
+            "/dev/ttyADC",
+        ),
+    ],
+)
+def test_waveshare_device_config_failure_is_sanitized(
+    monkeypatch, reader, device_id, hits, port
+):
+    from pimodbus import provisioning as pim_prov
+
+    def _fail(*_args, **_kwargs):
+        raise RuntimeError("password=hunter2 /srv/private")
+
+    monkeypatch.setattr(pim_prov, "read_device_config", _fail)
+
+    result = reader(device_id, hits, port, 9600, "N")
+
+    assert result["status"] == "read-error"
+    assert result["reason"] == "device-config-read-failed"
+    assert result["error_code"] == "C2004-HW-0012"
+    assert result["diagnostics"]["issue_code"] == "modbus_preflight_exception"
+    assert "hunter2" not in str(result)
+    assert "/srv/private" not in str(result)
 
 
 def test_modbus_wizard_probe_raises_when_pimodbus_missing(monkeypatch):
@@ -464,7 +597,7 @@ def test_build_waveshare_raises_when_pimodbus_missing(monkeypatch):
 
     def _blocked_import(name, *args, **kwargs):
         if name.startswith("pimodbus"):
-            raise ModuleNotFoundError("No module named 'pimodbus'")
+            raise ModuleNotFoundError("password=hunter2 /srv/private")
         return real_import(name, *args, **kwargs)
 
     _patch_modbus_ports(monkeypatch, {
@@ -496,7 +629,61 @@ def test_build_waveshare_raises_when_pimodbus_missing(monkeypatch):
     assert caught.value.issue_code == "pimodbus_unavailable"
     assert caught.value.public_code == "C2004-HW-0012"
     assert caught.value.status_code == 503
-    assert caught.value.detail["operation"] == "modbus.waveshare.diagnose"
+    assert "hunter2" not in caught.value.message
+    assert caught.value.detail == {
+        "architecture": "SOA",
+        "layer": "firmware",
+        "component": "modbus-waveshare",
+        "stage": "dependency.load",
+        "problem_source": "dependency",
+        "operation_id": "modbus.waveshare.diagnose",
+        "upstream_target": "python-package://pimodbus",
+    }
+
+
+def test_build_waveshare_adapter_failure_is_typed_and_sanitized(monkeypatch):
+    _patch_modbus_ports(
+        monkeypatch,
+        {
+            "io_serial_port": "/dev/password=hunter2",
+            "adc_serial_port": "/dev/password=hunter2",
+            "topology": "shared-bus",
+        },
+    )
+    _patch_modbus_io_ids(monkeypatch, [1])
+    _patch_modbus_settings(
+        monkeypatch,
+        type(
+            "S",
+            (),
+            {
+                "modbus_serial_port": "/dev/password=hunter2",
+                "modbus_adc_serial_port": "/dev/password=hunter2",
+                "modbus_baud": 9600,
+                "modbus_parity": "N",
+                "modbus_device_id": 1,
+                "modbus_adc_device_id": 2,
+            },
+        )(),
+    )
+
+    def _fail(*_args, **_kwargs):
+        raise OSError("serial port is busy password=hunter2 /srv/private")
+
+    monkeypatch.setattr(waveshare, "_probe_waveshare_shared_bus", _fail)
+
+    with pytest.raises(OqlosError) as caught:
+        waveshare._build_waveshare_diagnose_report()
+
+    assert caught.value.status_code == 409
+    assert caught.value.issue_code == "serial_port_busy"
+    assert caught.value.public_code == "C2004-HW-0013"
+    assert caught.value.detail["component"] == "modbus-waveshare"
+    assert caught.value.detail["stage"] == "matrix.scan"
+    assert caught.value.detail["upstream_target"] == (
+        "serial-device://configured-adapter"
+    )
+    assert "hunter2" not in caught.value.message
 
 
 def test_modbus_runtime_ports_auto_detects_separate_adapters(monkeypatch):

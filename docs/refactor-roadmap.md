@@ -299,7 +299,17 @@ spadł z 410 do 352 linii, a nowe moduły mają CC maksymalnie 6. Audyt wskazuje
 OpenAPI. Bramka: 1030/1030 backend, 149/149 frontend, build Vite, publiczny
 runtime API oraz Ruff `F821,F811`.
 
-Pozostały zakres: sklasyfikować 83 surowe wyjątki i 228 szerokich handlerów
+Druga grupa audytu usunęła sześć szerokich handlerów z diagnostyki Waveshare.
+Importy łapią wyłącznie `ImportError`, a odczyt i cleanup tylko oczekiwane
+błędy transportu Modbus; `AttributeError` i inne defekty programu przechodzą do
+sanitizowanej granicy 500. Zajęty adapter zwraca 409/`C2004-HW-0013`, pozostała
+oczekiwana awaria skanu 503/`C2004-HW-0012`, a brak `pimodbus` bezpieczny błąd
+zależności. Raport obserwacyjny ma jawny `overall_status`, stabilne powody oraz
+nie kopiuje komunikatów wyjątków lub plugin health. Wydzielona granica zmniejsza
+moduł Waveshare z 656 do 631 linii. Audyt wskazuje 222 szerokie handlery;
+bramka: 1037/1037 backend, 149/149 frontend, build Vite i Ruff.
+
+Pozostały zakres: sklasyfikować 83 surowe wyjątki i 222 szerokie handlery
 OqlOS, rozdzielić pozostałe klasy host/proxy/plugin oraz wykonać analogiczną
 inwentaryzację i kontrakty po stronie C2004/POA.
 
