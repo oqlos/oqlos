@@ -159,17 +159,40 @@ async def start_hui_artificial_lung(gateway: Any) -> dict[str, Any]:
 
 async def stop_hui_artificial_lung(gateway: Any) -> dict[str, Any]:
     global _artificial_lung_running
-    # STOP must attempt both independent safe-state operations even when one
-    # device is unavailable, and it must fit inside the 5 s process timeout.
-    lung_ok, valve = await asyncio.gather(
-        gateway.stop_lung(),
-        _set_valve(gateway, get_hui_lung_valve_id(), False),
+    # STOP: Tic stop is critical. Do not block on modbus reconnect — probe once
+    # without reconnect, then either close the valve or skip it immediately.
+    lung_task = asyncio.create_task(gateway.stop_lung())
+    valve_id = get_hui_lung_valve_id()
+    readiness = await required_plugins_failure(
+        gateway,
+        ("modbus-io",),
+        command="al-stop",
+        key="al-stop",
+        check_power=False,
+        reconnect=False,
     )
+    if readiness is not None:
+        valve = {
+            "operation": "set_valve",
+            "ok": False,
+            "valve_id": valve_id,
+            "value": False,
+            "skipped": True,
+            "warning": "Valve close skipped (modbus-io offline); Tic stop applied",
+            "result": readiness,
+        }
+    else:
+        valve = await _set_valve(gateway, valve_id, False)
+
+    lung_ok = await lung_task
     _artificial_lung_running = False
-    # Tic stop is the critical path; valve close may fail when modbus-io is offline.
-    valve_ok = bool(valve.get("ok"))
-    if not valve_ok and _skip_valve_on_comm_failure() and _valve_looks_like_comm_failure(valve):
-        valve = {**valve, "skipped": True, "warning": "Valve close skipped (modbus-io offline)"}
+    valve_ok = bool(valve.get("ok")) or bool(valve.get("skipped"))
+    if not valve_ok and _valve_looks_like_comm_failure(valve):
+        valve = {
+            **valve,
+            "skipped": True,
+            "warning": "Valve close skipped (modbus-io offline); Tic stop applied",
+        }
         valve_ok = True
     ok = bool(lung_ok) and valve_ok
     payload: dict[str, Any] = {
@@ -180,6 +203,9 @@ async def stop_hui_artificial_lung(gateway: Any) -> dict[str, Any]:
             valve,
         ],
     }
+    if valve.get("skipped"):
+        payload["warning"] = valve.get("warning")
+        payload["valve_skipped"] = True
     if not ok:
         payload.update({
             "error": "Required hardware unavailable while stopping artificial lung",

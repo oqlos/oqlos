@@ -16,9 +16,15 @@ async def required_plugins_failure(
     command: str,
     key: str | None = None,
     check_power: bool = True,
-    reconnect: bool = True,
+    reconnect: bool = False,
 ) -> dict[str, Any] | None:
-    """Return a structured failure before an HUI action touches hardware."""
+    """Return a structured failure before an HUI action touches hardware.
+
+    Default ``reconnect=False``: use the already-initialized plugin map so a
+    known-dead modbus-io does not burn the DisplayNet process timeout (5–15 s)
+    on a serial re-open and surface as a false gateway 504 / C2004-HW-0011.
+    Pass ``reconnect=True`` only for explicit recovery paths.
+    """
     required = tuple(dict.fromkeys(str(plugin_id).strip() for plugin_id in plugin_ids if plugin_id))
     if not required or not getattr(gateway, "is_real", False):
         return None
@@ -42,7 +48,7 @@ async def required_plugins_failure(
         return None
 
     # Hardware health probes may each consume their transport timeout. Run the
-    # independent checks together so a 5 s Process URI does not turn two clear
+    # independent checks together so a short Process URI does not turn two clear
     # device failures into an opaque gateway timeout.
     checks = list(
         await asyncio.gather(
