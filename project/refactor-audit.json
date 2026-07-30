@@ -1,23 +1,11 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-07-30T06:49:55+00:00",
+  "generated_at": "2026-07-30T06:50:39+00:00",
   "root": "/home/tom/github/oqlos/oqlos",
-  "git_commit": "180037f374046876da94be09f8decc835bcc39c9",
-  "git_dirty": true,
+  "git_commit": "b8fbafc720e4e3d0bcd157120e812b02b897f76c",
+  "git_dirty": false,
   "git_dirty_including_generated_artifacts": true,
-  "git_status_excluding_generated_artifacts": [
-    " M TODO.md",
-    " M docs/ERROR_CODES.md",
-    " M docs/ERROR_STANDARDIZATION.md",
-    " M docs/refactor-roadmap.md",
-    " M oqlos/_CHECKSUMS.sha256",
-    " M oqlos/api/ui_prefs_routes.py",
-    " M oqlos/api/ui_prefs_store.py",
-    " M oqlos/errors/c2004_catalog_generated.py",
-    " M oqlos/errors/catalog.py",
-    " M tests/firmware/test_error_catalog.py",
-    "?? tests/test_ui_prefs_error_contract.py"
-  ],
+  "git_status_excluding_generated_artifacts": [],
   "generator": {
     "audit_command": "python scripts/refactor_audit.py --root /home/tom/github/oqlos/oqlos --output /home/tom/github/oqlos/oqlos/project/refactor-audit.json",
     "code2llm_command": "code2llm . -m hybrid -f toon,map --strategy standard --toon-yaml --no-png --no-cache --no-chunk -o <temp>",
@@ -28,8 +16,8 @@
     }
   },
   "artifacts": {
-    "analysis.toon.yaml": "c5f8e18341f616748fcd521ea05e82276654dd65e7601861acaf177dc1a62cac",
-    "map.toon.yaml": "f09935e878db2aa19d9f8a78ba1f12890d27c5e3ae0410af63016a89fc4c03f4"
+    "analysis.toon.yaml": "c297f78df7cb9ba78bfeb2b242b35a0a7a76d0b2242f4d5c5794fad15dfb2da5",
+    "map.toon.yaml": "e9b9d0668305b2b36bd9a0905342f4d1f3d708a5bc351353724c442df9e838ee"
   },
   "source_file_count": 400,
   "public_routes": [
@@ -7024,7 +7012,7 @@
   ],
   "parse_failures": [],
   "summary": {
-    "git_status_excluding_generated_artifacts": 11,
+    "git_status_excluding_generated_artifacts": 0,
     "public_routes": 194,
     "routes_returning_dict_any": 80,
     "routes_with_generic_response": 184,

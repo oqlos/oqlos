@@ -1,5 +1,5 @@
-# code2llm | 526f 82283L | python:316,javascript:118,md:33,yaml:15,shell:14,json:6,conf:6,txt:5,toml:4,yml:4,typescript:3 | 2026-07-30
-# generated in 0.29s
+# code2llm | 526f 82283L | python:316,javascript:118,md:33,yaml:15,shell:14,json:6,conf:6,txt:5,yml:4,toml:4,typescript:3 | 2026-07-30
+# generated in 0.28s
 # CC̅=3.7 | critical:25/3496 | dups:0 | cycles:0
 
 HEALTH[20]:
@@ -8,15 +8,15 @@ HEALTH[20]:
   🟡 CC    panelResultClass CC=15 (limit:15)
   🟡 CC    summarizePanelResult CC=31 (limit:15)
   🟡 CC    evaluateConfigureSkip CC=18 (limit:15)
-  🟡 CC    coilCommandErrorCodes CC=24 (limit:15)
   🟡 CC    UI_URL_ARGS_KEY_SET CC=28 (limit:15)
   🟡 CC    normalizePersistedValue CC=28 (limit:15)
   🟡 CC    token CC=25 (limit:15)
-  🟡 CC    request CC=15 (limit:15)
+  🟡 CC    coilCommandErrorCodes CC=24 (limit:15)
   🟡 CC    handleKeyDown CC=18 (limit:15)
+  🟡 CC    request CC=15 (limit:15)
   🟡 CC    _problem_response CC=18 (limit:15)
-  🟡 CC    required_plugins_failure CC=16 (limit:15)
   🟡 CC    enrich_rtc_adapter CC=15 (limit:15)
+  🟡 CC    required_plugins_failure CC=16 (limit:15)
   🟡 CC    start_hui_artificial_lung CC=17 (limit:15)
   🟡 CC    health CC=15 (limit:15)
   🟡 CC    _classify_unavailable_reason CC=16 (limit:15)
@@ -28,105 +28,105 @@ REFACTOR[1]:
   1. split 20 high-CC methods  (CC>15)
 
 PIPELINES[1703]:
-  [1] Src [create_nfo_setup]: create_nfo_setup → _resolve_logs_sink
+  [1] Src [create_health_router]: create_health_router → all → dict → t
       PURITY: 100% pure
-  [2] Src [build_related_model_loader]: build_related_model_loader → load_related_by_id
+  [2] Src [create_version_router]: create_version_router → build_version_payload → dict → t
       PURITY: 100% pure
-  [3] Src [to_template_dict]: to_template_dict → protocol_to_template_dict → measurement_to_template_dict
+  [3] Src [query_events]: query_events → list
       PURITY: 100% pure
-  [4] Src [to_template_dict]: to_template_dict → measurement_to_template_dict
+  [4] Src [append_events_to_stream]: append_events_to_stream
       PURITY: 100% pure
-  [5] Src [export_backend_shared_module]: export_backend_shared_module → load_backend_shared_module → ensure_package
+  [5] Src [list_event_streams]: list_event_streams
       PURITY: 100% pure
-  [6] Src [__init__]: __init__ → set
+  [6] Src [clear_event_stream]: clear_event_stream
       PURITY: 100% pure
-  [7] Src [connect]: connect
+  [7] Src [create_service_health_router]: create_service_health_router → _aggregate_status
       PURITY: 100% pure
-  [8] Src [disconnect]: disconnect
+  [8] Src [__init__]: __init__ → set
       PURITY: 100% pure
-  [9] Src [broadcast]: broadcast
+  [9] Src [connect]: connect
       PURITY: 100% pure
-  [10] Src [get_stats]: get_stats
+  [10] Src [disconnect]: disconnect
       PURITY: 100% pure
-  [11] Src [connect]: connect
+  [11] Src [broadcast]: broadcast
       PURITY: 100% pure
-  [12] Src [disconnect]: disconnect
+  [12] Src [get_stats]: get_stats
       PURITY: 100% pure
-  [13] Src [broadcast]: broadcast
+  [13] Src [connect]: connect
       PURITY: 100% pure
-  [14] Src [get_stats]: get_stats
+  [14] Src [disconnect]: disconnect
       PURITY: 100% pure
-  [15] Src [create_service_health_router]: create_service_health_router → _aggregate_status
+  [15] Src [broadcast]: broadcast
       PURITY: 100% pure
-  [16] Src [__init__]: __init__ → super → connected
+  [16] Src [get_stats]: get_stats
       PURITY: 100% pure
-  [17] Src [__init__]: __init__
+  [17] Src [build_related_model_loader]: build_related_model_loader → load_related_by_id
       PURITY: 100% pure
-  [18] Src [_get_client]: _get_client
+  [18] Src [to_template_dict]: to_template_dict → protocol_to_template_dict → measurement_to_template_dict
       PURITY: 100% pure
-  [19] Src [close]: close
+  [19] Src [to_template_dict]: to_template_dict → measurement_to_template_dict
       PURITY: 100% pure
-  [20] Src [request]: request
+  [20] Src [export_backend_shared_module]: export_backend_shared_module → load_backend_shared_module → ensure_package
       PURITY: 100% pure
-  [21] Src [proxy]: proxy
+  [21] Src [create_logs_router]: create_logs_router → resolve_logs_db_path
       PURITY: 100% pure
-  [22] Src [build_logs_query_service]: build_logs_query_service → resolve_logs_db_path
+  [22] Src [__init__]: __init__ → super → connected
       PURITY: 100% pure
-  [23] Src [_connect]: _connect
+  [23] Src [__init__]: __init__
       PURITY: 100% pure
-  [24] Src [query_logs]: query_logs → dict → t
+  [24] Src [_get_client]: _get_client
       PURITY: 100% pure
-  [25] Src [get_stats]: get_stats
+  [25] Src [close]: close
       PURITY: 100% pure
-  [26] Src [__init__]: __init__ → super → connected
+  [26] Src [request]: request
       PURITY: 100% pure
-  [27] Src [_pg_conn]: _pg_conn
+  [27] Src [proxy]: proxy
       PURITY: 100% pure
-  [28] Src [query_logs]: query_logs → dict → t
+  [28] Src [create_module_app]: create_module_app
       PURITY: 100% pure
-  [29] Src [get_stats]: get_stats
+  [29] Src [verify_password]: verify_password
       PURITY: 100% pure
-  [30] Src [create_module_app]: create_module_app
+  [30] Src [generate_def_code]: generate_def_code
       PURITY: 100% pure
-  [31] Src [define_menu_models]: define_menu_models
+  [31] Src [main]: main → run_oql_scenario → print
       PURITY: 100% pure
-  [32] Src [verify_password]: verify_password
+  [32] Src [scan_proc_input_devices]: scan_proc_input_devices → read_input_device_blocks
       PURITY: 100% pure
-  [33] Src [generate_def_code]: generate_def_code
+  [33] Src [register_method_handler_bindings]: register_method_handler_bindings
       PURITY: 100% pure
-  [34] Src [scan_proc_input_devices]: scan_proc_input_devices → read_input_device_blocks
+  [34] Src [define_menu_models]: define_menu_models
       PURITY: 100% pure
-  [35] Src [register_method_handler_bindings]: register_method_handler_bindings
+  [35] Src [build_alembic_env_main]: build_alembic_env_main
       PURITY: 100% pure
-  [36] Src [__init__]: __init__
+  [36] Src [get_pressure_service]: get_pressure_service → _get_pressure_service_class
       PURITY: 100% pure
-  [37] Src [_get_conn]: _get_conn
+  [37] Src [create_sensors_router]: create_sensors_router
       PURITY: 100% pure
-  [38] Src [_ensure_table]: _ensure_table
+  [38] Src [__init__]: __init__
       PURITY: 100% pure
-  [39] Src [write]: write
+  [39] Src [_get_conn]: _get_conn
       PURITY: 100% pure
-  [40] Src [close]: close
+  [40] Src [_ensure_table]: _ensure_table
       PURITY: 100% pure
-  [41] Src [get_pressure_service]: get_pressure_service → _get_pressure_service_class
+  [41] Src [write]: write
       PURITY: 100% pure
-  [42] Src [create_sensors_router]: create_sensors_router
+  [42] Src [close]: close
       PURITY: 100% pure
-  [43] Src [build_alembic_env_main]: build_alembic_env_main
+  [43] Src [build_find_all_by_field_method]: build_find_all_by_field_method
       PURITY: 100% pure
-  [44] Src [main]: main → run_oql_scenario → print
+  [44] Src [build_text_search_method]: build_text_search_method
       PURITY: 100% pure
-  [45] Src [build_find_all_by_field_method]: build_find_all_by_field_method
+  [45] Src [paged_like_search]: paged_like_search
       PURITY: 100% pure
-  [46] Src [build_text_search_method]: build_text_search_method
+  [46] Src [get_uncommitted_events]: get_uncommitted_events
       PURITY: 100% pure
-  [47] Src [create_health_router]: create_health_router → all → dict → t
+  [47] Src [mark_events_as_committed]: mark_events_as_committed
       PURITY: 100% pure
-  [48] Src [create_version_router]: create_version_router → build_version_payload → dict → t
+  [48] Src [apply_event]: apply_event
       PURITY: 100% pure
-  [49] Src [paged_like_search]: paged_like_search
+  [49] Src [raise_event]: raise_event
       PURITY: 100% pure
-  [50] Src [get_uncommitted_events]: get_uncommitted_events
+  [50] Src [load_from_history]: load_from_history
       PURITY: 100% pure
 
 LAYERS:
@@ -423,8 +423,8 @@ LAYERS:
   │ nfo_config_factory          95L  0C    2m  CC=3      ←0
   │ saga                        93L  2C    5m  CC=3      ←1
   │ domain                      92L  0C    0m  CC=0.0    ←0
-  │ scanner_input_devices       91L  0C    5m  CC=6      ←0
   │ _endpoint_helpers           91L  0C    3m  CC=3      ←0
+  │ scanner_input_devices       91L  0C    5m  CC=6      ←0
   │ http_relay                  89L  1C    5m  CC=3      ←0
   │ container                   89L  2C    7m  CC=4      ←1
   │ legacy_compat_loader        87L  0C    3m  CC=8      ←0
@@ -441,8 +441,8 @@ LAYERS:
   │ fastapi_integration         71L  2C    3m  CC=2      ←0
   │ mock_http_response          68L  1C    9m  CC=2      ←0
   │ commands                    66L  3C    6m  CC=5      ←0
-  │ alembic_helpers             63L  0C    1m  CC=4      ←0
   │ events_helpers              63L  0C    4m  CC=4      ←0
+  │ alembic_helpers             63L  0C    1m  CC=4      ←0
   │ def_generator               62L  0C    1m  CC=11     ←0
   │ registry                    58L  1C    5m  CC=4      ←0
   │ method_adapters             57L  4C    5m  CC=1      ←0
@@ -504,16 +504,16 @@ LAYERS:
   │ SidebarList.jsx            306L  0C    5m  CC=6      ←0
   │ HardwareCoilTest.jsx       284L  0C   16m  CC=9      ←0
   │ !! hardwareApi.js             278L  0C   25m  CC=15     ←0
-  │ !! useMotorDemoControls.js    257L  0C   35m  CC=21     ←2
+  │ !! useMotorDemoControls.js    257L  0C   35m  CC=21     ←3
   │ url-embed-config.js        253L  0C   52m  CC=13     ←0
-  │ HardwareRtc.jsx            239L  0C   22m  CC=13     ←10
+  │ HardwareRtc.jsx            239L  0C   22m  CC=13     ←0
   │ !! HardwareDemo.jsx           226L  0C   11m  CC=27     ←0
   │ SharedNav.jsx              215L  0C   13m  CC=5      ←0
   │ useSelectionCollapsePanel.js   205L  0C   18m  CC=14     ←0
   │ !! ui-url-args-cookie.js      193L  0C   33m  CC=28     ←0
   │ hardware-demo-extra-translations.js   183L  0C    0m  CC=0.0    ←0
   │ ModbusChannelInspector.jsx   179L  0C    8m  CC=10     ←0
-  │ MotorServices.jsx          177L  0C   11m  CC=9      ←0
+  │ MotorServices.jsx          177L  0C   11m  CC=9      ←9
   │ NodeNavigationPanel.jsx    151L  0C    6m  CC=5      ←0
   │ modbus-profiles.js         150L  0C   34m  CC=9      ←0
   │ url-embed-config.test.js   149L  0C    7m  CC=2      ←0
@@ -704,25 +704,25 @@ COUPLING:
               oqlos.services                                                                                  ←2                                                      ←8                                                                                                                                                                                                                                                          ──                              hub
                    oqlos.dsl                           1                                                                                                                                           1                                                                                                                                                                                                                                                          ──
   CYCLES: none
-  HUB: oqlos.api/ (fan-in=8)
-  HUB: oqlos.hardware/ (fan-in=73)
   HUB: oqlos.errors/ (fan-in=6)
-  HUB: oqlos.tools/ (fan-in=9)
-  HUB: packages.oqlos-core/ (fan-in=53)
-  HUB: oqlos.shared/ (fan-in=9)
-  HUB: oqlos.services/ (fan-in=10)
   HUB: oqlos/ (fan-in=18)
+  HUB: oqlos.api/ (fan-in=8)
+  HUB: packages.oqlos-core/ (fan-in=53)
   HUB: frontend.src/ (fan-in=349)
   HUB: examples.hardware/ (fan-in=232)
-  SMELL: setup_hardware_and_run_oql/ fan-out=27 → split needed
-  SMELL: packages.backend-shared-py/ fan-out=39 → split needed
+  HUB: oqlos.hardware/ (fan-in=73)
+  HUB: oqlos.services/ (fan-in=10)
+  HUB: oqlos.tools/ (fan-in=9)
+  HUB: oqlos.shared/ (fan-in=9)
   SMELL: oqlos.api/ fan-out=143 → split needed
+  SMELL: setup_hardware_and_run_oql/ fan-out=27 → split needed
+  SMELL: packages.oqlos-core/ fan-out=63 → split needed
   SMELL: oqlos.core/ fan-out=9 → split needed
+  SMELL: scripts/ fan-out=77 → split needed
   SMELL: oqlos.hardware/ fan-out=160 → split needed
   SMELL: oqlos.tools/ fan-out=230 → split needed
-  SMELL: packages.oqlos-core/ fan-out=63 → split needed
   SMELL: oqlos.shared/ fan-out=16 → split needed
-  SMELL: scripts/ fan-out=77 → split needed
+  SMELL: packages.backend-shared-py/ fan-out=39 → split needed
 
 EXTERNAL:
   validation: run `vallm batch .` → validation.toon
