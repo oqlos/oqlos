@@ -72,6 +72,29 @@ def test_unknown_peripheral_status_uses_typed_configuration_error(monkeypatch):
     assert caught.value.issue_code == "config_unavailable"
 
 
+def test_peripheral_status_fallback_does_not_publish_primary_exception(monkeypatch):
+    async def _boom(_peripheral_id, _command, _args):
+        raise RuntimeError("password=hunter2 diagnostic failure")
+
+    async def _identify(*, scan):
+        assert scan == "never"
+        return {"adapters": [{"id": "motor-dri0050", "status": "ok"}]}
+
+    from oqlos.api import hardware as hw
+
+    monkeypatch.setattr(peripheral, "_run_diagnostic", _boom)
+    monkeypatch.setattr(hw, "hardware_identify", _identify)
+
+    result = asyncio.run(
+        peripheral.hardware_peripheral_status_v3("motor-dri0050")
+    )
+
+    assert result["ok"] is True
+    assert result["fallback_reason"] == "diagnostic-unavailable"
+    assert "hunter2" not in str(result)
+    assert "RuntimeError" not in str(result)
+
+
 def test_peripheral_status_keeps_successful_read_as_http_payload(monkeypatch):
     async def _healthy(_peripheral_id, _command, _args):
         return {"ok": True, "peripheral_id": "motor-dri0050", "power_pct": 0}
@@ -163,13 +186,45 @@ def test_diagnostic_command_raises_typed_tic249_error(monkeypatch):
                 DiagnosticCommandRequest(
                     peripheral_id="tic249",
                     command="status",
-                    args={},
+                    args={"password": "hunter2"},
                 )
             )
         )
     assert caught.value.public_code == "C2004-HW-0012"
     assert caught.value.issue_code == "hw_tic249_sidecar_unreachable"
     assert published and published[0]["result"]["ok"] is False
+    assert "hunter2" not in str(published)
+    assert "sidecar down" not in str(published)
+
+
+def test_diagnostic_http_validation_failure_is_converted_to_typed_error(
+    monkeypatch,
+):
+    from fastapi import HTTPException
+
+    async def _invalid(_peripheral_id, _command, _args):
+        raise HTTPException(status_code=422, detail="password=hunter2")
+
+    async def _publish(*_args, **_kwargs):
+        return None
+
+    monkeypatch.setattr(peripheral, "_run_diagnostic", _invalid)
+    monkeypatch.setattr(peripheral, "publish_hardware_command_event", _publish)
+
+    with pytest.raises(OqlosError) as caught:
+        asyncio.run(
+            peripheral.hardware_diagnostic_command_v3(
+                DiagnosticCommandRequest(
+                    peripheral_id="rtc",
+                    command="spin",
+                    args={"password": "hunter2"},
+                )
+            )
+        )
+
+    assert caught.value.status_code == 422
+    assert caught.value.issue_code == "api_diagnostic_command_invalid"
+    assert "hunter2" not in str(caught.value.detail)
 
 
 def test_diagnostic_command_rejects_returned_ok_false(monkeypatch):

@@ -287,7 +287,19 @@ poniżej 500 linii i nie powstał nowy hotspot złożoności. Pełna bramka tej
 partii: 1023/1023 testy, 149/149 testów frontendowych, build Vite oraz Ruff
 `F821,F811` bez błędów.
 
-Pozostały zakres: sklasyfikować 93 surowe wyjątki i 237 szerokich handlerów
+Pierwsza grupa audytu szerokich handlerów rozdziela teraz oczekiwane awarie
+transportu/JSON i walidację DSL od błędów programu. Opcjonalne źródła danych
+zachowują kontrolowany fallback, natomiast nieoczekiwany wyjątek trafia do
+sanitizowanej granicy 500 bez komunikatu i tracebacku także w logu. Failover
+statusu urządzenia nie zwraca już tekstu pierwotnego wyjątku w HTTP 200, a
+zdarzenie błędu diagnostycznego pomija `args` i komunikat adaptera. Zgodnie z
+analizą `_hw3_peripheral.py` został podzielony z CC=17 do CC=8, `state.py`
+spadł z 410 do 352 linii, a nowe moduły mają CC maksymalnie 6. Audyt wskazuje
+228 szerokich handlerów, 30 dużych modułów i 182 generyczne odpowiedzi
+OpenAPI. Bramka: 1030/1030 backend, 149/149 frontend, build Vite, publiczny
+runtime API oraz Ruff `F821,F811`.
+
+Pozostały zakres: sklasyfikować 83 surowe wyjątki i 228 szerokich handlerów
 OqlOS, rozdzielić pozostałe klasy host/proxy/plugin oraz wykonać analogiczną
 inwentaryzację i kontrakty po stronie C2004/POA.
 

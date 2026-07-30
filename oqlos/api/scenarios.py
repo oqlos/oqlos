@@ -2,12 +2,12 @@
 from typing import Any, Callable
 
 from fastapi import APIRouter
-import httpx
 
 from oqlos.api.utils import execution_ctrl as _ctrl
 from oqlos.errors import OqlosError
 from oqlos.models.scenario import Goal, Scenario, Step
 from oqlos.shared._endpoint_helpers import make_collection_route
+from oqlos.shared.http_fallback import fetch_first_json
 
 router = APIRouter(prefix="/api/v1/scenarios", tags=["scenarios"])
 
@@ -40,23 +40,14 @@ async def get_scenario(scenario_id: str):
 
 async def _fetch_raw_from_sources(sources: list[str]) -> Any | None:
     """Try each URL in order and return the first valid JSON response, or None."""
-    try:
-        async with httpx.AsyncClient(timeout=5.0) as client:
-            for src in sources:
-                try:
-                    resp = await client.get(src)
-                    if not resp.is_success:
-                        continue
-                    data = resp.json()
-                    if isinstance(data, list):
-                        return data
-                    if isinstance(data, dict) and "rows" in data:
-                        return data
-                except Exception:  # noqa: BLE001
-                    continue
-    except Exception:  # noqa: BLE001
-        pass
-    return None
+    def normalize(payload: object) -> Any | None:
+        if isinstance(payload, list):
+            return payload
+        if isinstance(payload, dict) and "rows" in payload:
+            return payload
+        return None
+
+    return await fetch_first_json(sources, normalize, timeout_seconds=5.0)
 
 def _compute_slug(item: dict[str, Any], display_name: str, sid: str) -> str | None:
     """Compute a URL-friendly slug from the scenario row fields."""
@@ -123,7 +114,10 @@ async def fetch_scenarios(source: str = "http://localhost:8100/connect-data/test
         for item in rows:
             if not isinstance(item, dict):
                 continue
-            scenario = _normalize_scenario_row(item)
+            try:
+                scenario = _normalize_scenario_row(item)
+            except (TypeError, ValueError):
+                continue
             if not scenario:
                 continue
             # Don't overwrite local scenarios with goals - they are authoritative
@@ -217,7 +211,7 @@ def _parse_goals_from_dsl(goals_dsl: list[str], sid: str, parse_fn) -> list[Goal
                 idx += 1
                 g.id = f"goal-runtime-{sid}-{idx}"
                 parsed.append(g)
-        except Exception:  # noqa: BLE001
+        except (TypeError, ValueError):
             continue
     return parsed
 
@@ -272,7 +266,7 @@ async def register_dsl(payload: dict[str, Any]):
     # Import inside handler to avoid circular import at module import time
     try:
         parse_dsl_to_goal = _load_dsl_parser()
-    except Exception as ex:
+    except Exception as ex:  # noqa: BLE001 - parser dependency loader boundary
         raise OqlosError(
             code="api_scenario_parser_unavailable",
             status_code=503,

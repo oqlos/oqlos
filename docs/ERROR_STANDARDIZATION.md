@@ -156,6 +156,10 @@ domenowym. Powtarzalny błąd zakończony `SYS-0000` wymaga dodania jawnego
 | błędny envelope inter-service event | 422 | `C2004-DATA-0002` | `SOA/shared-backend` | `inter-service-inbox` / `event.validate` | payload i tekst parsera nie są publikowane |
 | limit historii sensora poza zakresem | 422 | `C2004-DATA-0002` | `SOA/shared-backend` | `sensor-service` / `pressure-history.validate` | wartość wejściowa nie jest publikowana |
 | nieznana awaria odczytu sensora | 500 | `C2004-SYS-0000` | `SOA/shared-backend` | `sensor-service` / etap odczytu | komunikat wyjątku i traceback pozostają wyłącznie w logu |
+| opcjonalne źródło variables/scenarios/protocol-steps offline lub bez JSON | 200 z kontrolowanym fallbackiem | brak nowego błędu | `SOA/oqlos` | `state-sources` albo `scenario-registry` / `source.fetch` | URL, treść odpowiedzi i wyjątek transportu nie są publikowane |
+| nieoczekiwana awaria klienta opcjonalnego źródła | 500 | `C2004-SYS-0000` | `SOA/oqlos` | `oqlos-api` / `api.error` | odpowiedź i log zawierają korelację oraz typ wyjątku, bez jego komunikatu i tracebacku |
+| diagnostyka statusu zawodzi, ale identify potwierdza zdrowy adapter | 200 z `fallback_reason` | brak nowego błędu | `SOA/firmware` | `hardware-diagnostics` / `status.failover` | pierwotny wyjątek nie jest zwracany |
+| wyjątek diagnostycznej komendy urządzenia | 422 albo 503 | `C2004-DATA-0002` albo właściwy `C2004-HW-*` | `SOA/firmware` | `hardware-diagnostics` / `diagnostic.execute` | event pomija args, payload i komunikat wyjątku |
 
 Na granicy `/api/v1/oql/execute` i `/manage` identyfikator z
 `X-Correlation-ID` lub `X-Request-ID` jest przekazywany do requestu MQTT,

@@ -62,13 +62,14 @@ def _raise_diagnostic_command_failure(
     result: dict[str, Any],
     *,
     cause: Exception | None = None,
+    invalid: bool | None = None,
 ) -> None:
     message = extract_command_failure(result) or str(
         result.get("error")
         or result.get("message")
         or f"Diagnostic command '{command}' failed for '{peripheral_id}'"
     )
-    invalid = _diagnostic_failure_is_invalid(message)
+    invalid = _diagnostic_failure_is_invalid(message) if invalid is None else invalid
     if invalid:
         error = OqlosError(
             code="api_diagnostic_command_invalid",
@@ -102,50 +103,46 @@ def _raise_peripheral_status_failure(
     raise error
 
 
-@sub_router.get("/peripheral-status/{peripheral_id}")
-async def hardware_peripheral_status_v3(peripheral_id: str) -> dict[str, Any]:
-    normalized = normalize_peripheral_id(peripheral_id)
-    if normalized == "artificial-lung":
-        from oqlos.hardware.transport.manage_ops import run_manage_verb
-        result = await run_manage_verb("artificial-lung-status")
-        response = {
-            "ok": _ok_from_result(result),
-            "peripheral_id": normalized,
-            "command": "status",
-            "result": result,
-            "transport": "direct-oqlos",
-        }
-        if response["ok"]:
-            return response
-        _raise_peripheral_status_failure("motor-tic249", response)
-    if normalized == "rtc":
-        from oqlos.hardware.transport.manage_ops import run_manage_verb
-        result = await run_manage_verb("rtc-status")
-        response = {
-            "ok": _ok_from_result(result),
-            "peripheral_id": normalized,
-            "command": "status",
-            "result": result,
-            "transport": "direct-oqlos",
-        }
-        if response["ok"]:
-            return response
-        _raise_peripheral_status_failure(normalized, response)
-    if normalized == "barcode-scanner":
-        from oqlos.api import hardware as hw
-        identify = await hw.hardware_identify(scan="never")
-        adapter = _find_adapter(identify, normalized)
-        response = {
-            "ok": bool(adapter and adapter.get("status") == "ok"),
-            "peripheral_id": normalized,
-            "command": "scanner_status",
-            "result": adapter or {},
-            "status": adapter.get("status") if adapter else "unknown",
-            "transport": "direct-oqlos",
-        }
-        if response["ok"]:
-            return response
-        _raise_peripheral_status_failure(normalized, response)
+async def _manage_peripheral_status(
+    normalized: str,
+    *,
+    verb: str,
+    failure_peripheral_id: str,
+) -> dict[str, Any]:
+    from oqlos.hardware.transport.manage_ops import run_manage_verb
+
+    result = await run_manage_verb(verb)
+    response = {
+        "ok": _ok_from_result(result),
+        "peripheral_id": normalized,
+        "command": "status",
+        "result": result,
+        "transport": "direct-oqlos",
+    }
+    if response["ok"]:
+        return response
+    _raise_peripheral_status_failure(failure_peripheral_id, response)
+
+
+async def _scanner_peripheral_status(normalized: str) -> dict[str, Any]:
+    from oqlos.api import hardware as hw
+
+    identify = await hw.hardware_identify(scan="never")
+    adapter = _find_adapter(identify, normalized)
+    response = {
+        "ok": bool(adapter and adapter.get("status") == "ok"),
+        "peripheral_id": normalized,
+        "command": "scanner_status",
+        "result": adapter or {},
+        "status": adapter.get("status") if adapter else "unknown",
+        "transport": "direct-oqlos",
+    }
+    if response["ok"]:
+        return response
+    _raise_peripheral_status_failure(normalized, response)
+
+
+async def _diagnostic_peripheral_status(normalized: str) -> dict[str, Any]:
     try:
         result = await _run_diagnostic(normalized, "status", {})
         if _ok_from_result(result):
@@ -153,7 +150,7 @@ async def hardware_peripheral_status_v3(peripheral_id: str) -> dict[str, Any]:
         _raise_peripheral_status_failure(normalized, result)
     except OqlosError:
         raise
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001 - hardware status failover boundary
         from oqlos.api import hardware as hw
         identify = await hw.hardware_identify(scan="never")
         adapter = _find_adapter(identify, normalized)
@@ -163,12 +160,32 @@ async def hardware_peripheral_status_v3(peripheral_id: str) -> dict[str, Any]:
             "command": "status",
             "result": adapter or {},
             "status": adapter.get("status") if adapter else "unknown",
-            "error": str(exc),
+            "fallback_reason": "diagnostic-unavailable",
             "transport": "direct-oqlos",
         }
         if fallback["ok"]:
             return fallback
         _raise_peripheral_status_failure(normalized, fallback, cause=exc)
+
+
+@sub_router.get("/peripheral-status/{peripheral_id}")
+async def hardware_peripheral_status_v3(peripheral_id: str) -> dict[str, Any]:
+    normalized = normalize_peripheral_id(peripheral_id)
+    if normalized == "artificial-lung":
+        return await _manage_peripheral_status(
+            normalized,
+            verb="artificial-lung-status",
+            failure_peripheral_id="motor-tic249",
+        )
+    if normalized == "rtc":
+        return await _manage_peripheral_status(
+            normalized,
+            verb="rtc-status",
+            failure_peripheral_id=normalized,
+        )
+    if normalized == "barcode-scanner":
+        return await _scanner_peripheral_status(normalized)
+    return await _diagnostic_peripheral_status(normalized)
 
 
 @sub_router.post("/diagnostic-command")
@@ -181,20 +198,18 @@ async def hardware_diagnostic_command_v3(req: DiagnosticCommandRequest) -> dict[
         _raise_diagnostic_command_failure(
             normalize_peripheral_id(req.peripheral_id), req.command, result
         )
-    except HTTPException:
-        raise
     except OqlosError:
         raise
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001 - diagnostic adapter boundary
         payload = {
             "peripheral_id": normalize_peripheral_id(req.peripheral_id),
             "command": req.command,
-            "args": req.args,
         }
         result = {
             "ok": False,
             "success": False,
-            "error": str(exc),
+            "error": "diagnostic-command-failed",
+            "failure_type": type(exc).__name__,
             "peripheral_id": payload["peripheral_id"],
             "command": req.command,
             "transport": "direct-oqlos",
@@ -203,7 +218,14 @@ async def hardware_diagnostic_command_v3(req: DiagnosticCommandRequest) -> dict[
             {"payload": payload}, result, context={"source": "diagnostic-command"}
         )
         _raise_diagnostic_command_failure(
-            payload["peripheral_id"], req.command, result, cause=exc
+            payload["peripheral_id"],
+            req.command,
+            result,
+            cause=exc,
+            invalid=(
+                isinstance(exc, (TypeError, ValueError))
+                or isinstance(exc, HTTPException) and 400 <= exc.status_code < 500
+            ),
         )
 
 

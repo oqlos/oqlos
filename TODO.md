@@ -1,6 +1,6 @@
 # OqlOS — lista zadań
 
-Stan: **2026-07-30**, bazowy `main` `535e0ea`, z kolejną partią `NEXT-04`.
+Stan: **2026-07-30**, bazowy `main` `a8059de`, z kolejną partią `NEXT-04`.
 
 Ten plik jest operacyjną checklistą. Szczegółowe uzasadnienie, zależności i
 kryteria ukończenia znajdują się w
@@ -11,11 +11,11 @@ należy zaktualizować oba dokumenty oraz dołączyć wynik testów i commit.
 
 - 194 publiczne trasy API;
 - 83 surowe wyjątki;
-- 237 szerokich handlerów `except` (w tym jawne granice storage i adapterów);
+- 228 szerokich handlerów `except` (w tym jawne granice storage i adapterów);
 - 80 tras zwracających `dict[str, Any]`;
-- 184 trasy z generyczną odpowiedzią OpenAPI;
+- 182 trasy z generyczną odpowiedzią OpenAPI;
 - 154 odczyty zmiennych środowiskowych poza typowaną warstwą settings;
-- 31 dużych modułów;
+- 30 dużych modułów;
 - 0 literalnych negatywnych odpowiedzi przy HTTP 200;
 - 0 błędów parsowania w audycie statycznym.
 
@@ -39,11 +39,19 @@ testów kontraktowych w pakiecie, a lokalny helper OqlOS osobny test 404.
 Audyt po partii: 83 surowe wyjątki (spadek o 10), 0 błędów parsowania i 0
 negatywnych envelope przy HTTP 200.
 - [ ] Przejrzeć i sklasyfikować szerokie handlery w kolejności:
-  1. `_hw3_peripheral.py`, `state.py`, `scenarios.py`;
-  2. `hardware_modbus_waveshare.py`;
-  3. `hardware_runtime.py`, `hardware_modbus_routes.py`,
+  1. [x] `_hw3_peripheral.py`, `state.py`, `scenarios.py`;
+  2. [ ] `hardware_modbus_waveshare.py`;
+  3. [ ] `hardware_runtime.py`, `hardware_modbus_routes.py`,
      `hardware_modbus_settings.py`, `hardware_probe.py`, `hardware_lung.py`;
-  4. `plugins.py`, `update_status.py`.
+  4. [ ] `plugins.py`, `update_status.py`.
+
+Dowód grupy 1: oczekiwane błędy HTTP/JSON i parsera mają wąskie handlery;
+awaria programistyczna przechodzi do sanitizowanej granicy 500. Cztery
+pozostawione szerokie handlery są jawnie opisanymi granicami adaptera,
+loadera zależności i zadania w tle. Failover statusu oraz zdarzenie błędu
+diagnostycznego nie publikują wyjątku, argumentów ani sekretów. Metryka
+szerokich handlerów spadła 237 → 228; `state.py` ma 352 linie, a
+`_hw3_peripheral.py` spadł z CC=17 do CC=8.
 - [ ] Dla każdego przewidywalnego błędu ustalić:
   - lokalny `issue_code` i publiczny `C2004-*`;
   - właściwy HTTP status, severity, retryability i ownera;

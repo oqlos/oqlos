@@ -2,7 +2,6 @@
 import logging
 from fastapi import APIRouter, BackgroundTasks
 from fastapi.responses import StreamingResponse
-import httpx
 import asyncio
 import math
 import time
@@ -13,9 +12,16 @@ from oqlos.models.execution import ExecutionRequest, CommandEnvelope
 from oqlos.models.scenario import Scenario
 from oqlos.core.parser import parse_dsl_to_goal_with_issues
 from oqlos.api.utils import execution_ctrl as _ctrl
+from oqlos.api.state_sources import (
+    fetch_protocol_steps,
+    fetch_variables,
+    get_variables_alias,
+    router as state_sources_router,
+)
 from oqlos.errors import OqlosError
 
 router = APIRouter(tags=["state"])
+router.include_router(state_sources_router)
 logger = logging.getLogger(__name__)
 
 def _compose_named_state() -> dict[str, Any]:
@@ -162,87 +168,12 @@ async def get_sim_state():
     named = _compose_named_state()
     return _compose_sim_state_list(named)
 
-@router.get("/api/v1/variables")
-async def get_variables_alias():
-    """Get variables (alias for fetch)"""
-    # Reuse fetch implementation; tolerate failures by returning []
-    try:
-        return await fetch_variables()
-    except Exception:  # noqa: BLE001
-        return []
-
-@router.get("/api/v1/variables/fetch")
-async def fetch_variables(source: str = "http://localhost:8101/api/v1/data/variables"):
-    """Fetch variables (Peripheral State Table) from backend DB; tolerate dev HTML by returning []."""
-    sources = [
-        source,
-        "http://localhost:8101/api/v1/data/variables",
-        "http://localhost:8100/api/v1/data/variables",
-        "http://localhost:8000/api/v1/data/variables",
-    ]
-    
-    try:
-        async with httpx.AsyncClient(timeout=3.0) as client:
-            for src in sources:
-                try:
-                    resp = await client.get(src)
-                    data = resp.json()
-                    # Filter HTML responses
-                    if isinstance(data, list):
-                        return data
-                    elif isinstance(data, dict) and 'rows' in data:
-                        return data['rows']
-                except Exception:  # noqa: BLE001
-                    continue
-    except Exception:  # noqa: BLE001
-        pass
-    return []
-
-@router.get("/api/v1/protocol-steps/fetch")
-async def fetch_protocol_steps(scenario: str, source: str = "http://localhost:8100/connect-test/protocol-steps"):
-    """Fetch protocol steps for preview."""
-    # Prefer locally loaded scenario goals
-    if scenario and scenario in _ctrl.state_manager.scenarios:
-        sc = _ctrl.state_manager.scenarios[scenario]
-        steps = []
-        for goal in sc.goals:
-            for step in goal.steps:
-                steps.append({
-                    'step': step.id,
-                    'action': step.action,
-                    'peripheral': step.peripheral,
-                    'value': step.value,
-                    'duration': step.duration,
-                    'condition': step.condition
-                })
-        return {"steps": steps}
-    
-    # Fallback to external source
-    sources = [
-        f"{source}?scenario={scenario}",
-        f"http://localhost:8101/api/v1/data/protocol-steps?scenario={scenario}",
-    ]
-    
-    try:
-        async with httpx.AsyncClient(timeout=3.0) as client:
-            for src in sources:
-                try:
-                    resp = await client.get(src)
-                    data = resp.json()
-                    if isinstance(data, dict) and 'steps' in data:
-                        return data
-                    return {"steps": data if isinstance(data, list) else []}
-                except Exception:  # noqa: BLE001
-                    continue
-    except Exception:  # noqa: BLE001
-        return {"steps": []}
-
 def _maybe_register_dsl_from_content(data: dict, scenario_id: str):
     """If the command data contains inline DSL content, parse and register it."""
     dsl = _extract_inline_dsl(data)
     if not isinstance(dsl, str) or not dsl.strip():
         return None, []
-    logger.debug("Parsing DSL content from frontend: %s", dsl[:200])
+    logger.debug("Parsing inline DSL content length=%d", len(dsl))
     try:
         parsed_goal, invalid_lines = parse_dsl_to_goal_with_issues(dsl, scenario_id)
         if parsed_goal:
@@ -257,8 +188,9 @@ def _maybe_register_dsl_from_content(data: dict, scenario_id: str):
             _ctrl.state_manager.scenarios[scenario_id] = temp
             logger.debug("Created temporary scenario with %d steps", len(parsed_goal.steps))
             return parsed_goal, invalid_lines
-    except Exception as ex:
-        logger.warning("Failed to parse DSL: %s", ex)
+    except (TypeError, ValueError):
+        logger.warning("Inline DSL failed request validation")
+        return None, ["invalid_dsl"]
     return None, []
 
 
@@ -358,8 +290,11 @@ async def _handle_start(env: CommandEnvelope) -> dict:
                 speed=req.speed,
             )
             logger.info("Background task COMPLETED. Result: %s", result)
-        except Exception as e:
-            logger.error("Background task ERROR: %s", e, exc_info=True)
+        except Exception as exc:  # noqa: BLE001 - background task isolation boundary
+            logger.error(
+                "Background scenario execution failed exception_type=%s",
+                type(exc).__name__,
+            )
 
     task = asyncio.create_task(run_execution())
     logger.debug("Async execution task created: %s", task)
@@ -396,6 +331,13 @@ _COMMAND_HANDLERS: dict[str, Any] = {
     'ResumeExecution': _handle_resume,
     'StopExecution': _handle_stop,
 }
+
+__all__ = [
+    "fetch_protocol_steps",
+    "fetch_variables",
+    "get_variables_alias",
+    "router",
+]
 
 @router.post("/api/v1/commands")
 async def post_commands(env: CommandEnvelope, background_tasks: BackgroundTasks):

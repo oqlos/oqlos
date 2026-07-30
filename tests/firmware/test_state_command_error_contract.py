@@ -94,6 +94,30 @@ def test_start_rejects_invalid_dsl_without_reflecting_lines(
     assert body["metadata"]["context"]["reason"] == "dsl_invalid"
 
 
+def test_start_classifies_parser_value_error_as_invalid_dsl(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def _invalid_parser(_dsl, _scenario_id):
+        raise ValueError("password=hunter2 parser detail")
+
+    monkeypatch.setattr(state, "parse_dsl_to_goal_with_issues", _invalid_parser)
+
+    response = _post_command(
+        client,
+        "StartExecution",
+        {"scenarioId": "runtime", "dsl": "password=hunter2"},
+    )
+
+    body = _assert_typed_error(
+        response,
+        status=422,
+        code="C2004-DATA-0002",
+        issue_code="api_execution_request_invalid",
+        stage="dsl.validate",
+    )
+    assert body["metadata"]["context"]["reason"] == "dsl_invalid"
+
+
 def test_start_rejects_dsl_without_executable_steps(
     client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:

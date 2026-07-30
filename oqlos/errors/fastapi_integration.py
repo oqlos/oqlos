@@ -327,11 +327,11 @@ def install_oqlos_error_handler(app: FastAPI) -> None:
     @app.exception_handler(Exception)
     async def _unexpected_error_handler(request: Request, exc: Exception) -> JSONResponse:
         correlation_id = correlation_id_for_request(request)
-        logger.exception(
-            "Uncoded OqlOS API failure correlation_id=%s path=%s",
+        logger.error(
+            "Uncoded OqlOS API failure correlation_id=%s path=%s exception_type=%s",
             correlation_id,
             request.url.path,
-            exc_info=exc,
+            type(exc).__name__,
         )
         return _problem_response(
             request,
