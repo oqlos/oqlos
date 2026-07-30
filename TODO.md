@@ -1,6 +1,7 @@
 # OqlOS — lista zadań
 
-Stan: **2026-07-30**, bazowy `main` `82f9636`, po siódmej grupie `NEXT-04`.
+Stan: **2026-07-30**, commit implementacji `f00d6f0`, po siódmej grupie
+`NEXT-04`.
 
 Ten plik jest operacyjną checklistą. Szczegółowe uzasadnienie, zależności i
 kryteria ukończenia znajdują się w
@@ -88,7 +89,7 @@ sprawdzają wersję envelope i nie maskują `AttributeError`. Pięć przewidywal
 handlerów zastąpiono wąskimi granicami; dwie pozostałe granice pętli agenta są
 celowe i przetestowane pod kątem braku komunikatu wyjątku, ścieżki, sekretu i
 tracebacku w odpowiedzi lub logu. Publiczny komunikat pochodzi z katalogu
-C2004. Metryka spadła 195 → 189; bramka: 1079/1079 backend, 149/149 frontend,
+C2004. Metryka spadła 195 → 189; bramka: 1080/1080 backend, 149/149 frontend,
 build Vite, Ruff i spójny `uv.lock`.
 
 - [ ] Dla każdego przewidywalnego błędu ustalić:

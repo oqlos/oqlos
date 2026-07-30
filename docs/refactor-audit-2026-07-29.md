@@ -159,7 +159,7 @@ uznany za błędne dane. Dwie szerokie granice wykonania agenta pozostają celow
 chronią pętlę przed awarią komendy/pluginu, lecz publikują tylko katalogowy
 komunikat C2004, korelację i typ wyjątku. Test potwierdza brak surowego
 komunikatu, ścieżki, sekretu i tracebacku także w logu. Snapshot wskazuje 189
-szerokich handlerów, 83 surowe wyjątki i 0 błędów parsowania; bramka to 1079
+szerokich handlerów, 83 surowe wyjątki i 0 błędów parsowania; bramka to 1080
 testów backendowych, 149 frontendowych, build Vite, Ruff i `uv lock --check`.
 
 ### Przegląd istniejących logów wykonawczych
