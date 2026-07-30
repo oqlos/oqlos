@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-07-30T14:57:07+00:00",
+  "generated_at": "2026-07-30T14:59:40+00:00",
   "root": "/home/tom/github/oqlos/oqlos",
-  "git_commit": "a1b01dfce686da727329c164c38ee91d4593182e",
+  "git_commit": "66f7ac955ea47340c4d87b3190effe8eb3d68351",
   "git_dirty": false,
-  "git_dirty_including_generated_artifacts": true,
+  "git_dirty_including_generated_artifacts": false,
   "git_status_excluding_generated_artifacts": [],
   "generator": {
     "audit_command": "python scripts/refactor_audit.py --root /home/tom/github/oqlos/oqlos --output /home/tom/github/oqlos/oqlos/project/refactor-audit.json",
