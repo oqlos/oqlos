@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-07-30T14:55:17+00:00",
+  "generated_at": "2026-07-30T14:57:07+00:00",
   "root": "/home/tom/github/oqlos/oqlos",
-  "git_commit": "30102f7de0150f6d7ccd810e3eb5c5cadf923275",
+  "git_commit": "a1b01dfce686da727329c164c38ee91d4593182e",
   "git_dirty": false,
   "git_dirty_including_generated_artifacts": true,
   "git_status_excluding_generated_artifacts": [],
@@ -16,8 +16,8 @@
     }
   },
   "artifacts": {
-    "analysis.toon.yaml": "64064337ab52b5df977a2ae3197ef17544292ab4925528ceee5eb1115b70c669",
-    "map.toon.yaml": "76a8a0b997b9d17c1429c46fbb4fe7a25835e7444708e09ecf7528f8d8ea4e76"
+    "analysis.toon.yaml": "77ec7a5c03ae872c799459ed3d6a8e6bd4bbabe226f5390c1b8205b05369c5ce",
+    "map.toon.yaml": "89420af402e863dd2637d6a8d37f369fdf018a676345a33e416d19e78f29a87a"
   },
   "source_file_count": 407,
   "public_routes": [
@@ -4894,7 +4894,7 @@
     },
     {
       "file": "oqlos/hardware/plugin_gateway.py",
-      "line": 955
+      "line": 968
     },
     {
       "file": "oqlos/hardware/plugin_gateway.py",
@@ -5805,7 +5805,7 @@
     },
     {
       "file": "oqlos/hardware/hui_hold.py",
-      "line": 161,
+      "line": 162,
       "exception": "Exception"
     },
     {
@@ -6544,7 +6544,7 @@
     },
     {
       "file": "oqlos/hardware/plugin_gateway.py",
-      "lines": 1007
+      "lines": 1020
     },
     {
       "file": "packages/oqlos-core/src/oqlos/core/_interpreter_actions.py",
