@@ -151,6 +151,9 @@ def test_boardnet_watchdog_is_opt_in_and_has_persistent_audit() -> None:
     assert "StandardOutput=append:" not in pirtc
 
     assert "Storage=persistent" in audit
+    assert "/etc/systemd/journald.conf.d/90-boardnet-persistent.conf" in audit
+    assert "rm -f /etc/systemd/journald.conf.d/20-boardnet-persistent.conf" in audit
+    assert "/etc/systemd/journald.conf.d/20-boardnet-persistent.conf >/dev/null" not in audit
     assert 'WATCHDOG_ENABLED="${BOARDNET_RUNTIME_WATCHDOG_ENABLED}"' in audit
     assert 'WATCHDOG_POLICY=disabled' in audit
     assert "RuntimeWatchdogSec=3min" in audit

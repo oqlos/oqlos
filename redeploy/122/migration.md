@@ -120,7 +120,10 @@ esac
 
 # Keep enough history to diagnose an abrupt reset, without filling the SD card.
 sudo mkdir -p /var/log/journal /etc/systemd/journald.conf.d
-sudo tee /etc/systemd/journald.conf.d/20-boardnet-persistent.conf >/dev/null <<'CONF'
+# Raspberry Pi OS ships 40-rpi-volatile-storage.conf. Use a later drop-in so
+# the BoardNet persistence policy wins in systemd's lexical merge order.
+sudo rm -f /etc/systemd/journald.conf.d/20-boardnet-persistent.conf
+sudo tee /etc/systemd/journald.conf.d/90-boardnet-persistent.conf >/dev/null <<'CONF'
 [Journal]
 Storage=persistent
 SystemMaxUse=100M
