@@ -138,6 +138,9 @@ sudo journalctl --flush
 # can turn an early I/O stall into a permanent reboot loop. The external HAT
 # remains disabled until its exact MAX705/CH32V003 revision is verified.
 sudo mkdir -p /etc/systemd/system.conf.d
+# A pre-profile recovery procedure installed this higher-priority drop-in.
+# Leaving it behind would silently override the canonical opt-in policy below.
+sudo rm -f /etc/systemd/system.conf.d/99-boardnet-recovery.conf
 if [ "$WATCHDOG_ENABLED" = "1" ]; then
   WATCHDOG_POLICY=enabled
   sudo tee /etc/systemd/system.conf.d/60-boardnet-watchdog.conf >/dev/null <<'CONF'
