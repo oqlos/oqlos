@@ -169,6 +169,30 @@ def _detect_runtime_platform() -> dict[str, Any]:
         "analog_input_driver_role": "usb-adc-stack"
         if usb_adc_selected
         else "modbus-rtu",
+        "analog_input_devices": (
+            [
+                {
+                    "device_id": "usb-adc-mcp2221",
+                    "adapter": "usb-adc-mcp2221",
+                    "inputs": ["ai01"],
+                    "physical_inputs": ["MCP2221A.G1"],
+                },
+                {
+                    "device_id": "usb-adc-dfr1184",
+                    "adapter": "usb-adc-dfr1184",
+                    "inputs": ["ai02", "ai03"],
+                    "physical_inputs": ["DFR1184.AIN1", "DFR1184.AIN2"],
+                },
+            ]
+            if usb_adc_selected
+            else [
+                {
+                    "device_id": "modbus-adc",
+                    "adapter": "modbus-adc",
+                    "inputs": ["ai01", "ai02", "ai03"],
+                }
+            ]
+        ),
         "modbus_topology": modbus_ports["topology"],
         "modbus_topology_mode": modbus_ports["topology_mode"],
         "modbus_bus_serial_port": modbus_ports.get("shared_serial_port")

@@ -161,29 +161,15 @@ def add_dri0050_device_actions(
     )
 
 
-def _replaced_adc_diagnosis(
-    plugin_id: str, display_name: str, platform: dict[str, Any], topology: str,
-) -> DeviceDiagnosis | None:
+def _modbus_adc_is_replaced(plugin_id: str, platform: dict[str, Any]) -> bool:
+    """Hide the legacy Modbus ADC when dedicated USB/UART ADCs own AI inputs."""
     if plugin_id != "modbus-adc":
-        return None
+        return False
     analog_driver = str(platform.get("analog_input_driver_role") or "").strip().lower()
     driver_role = str(platform.get("modbus_adc_driver_role") or "").strip().lower()
-    if not ((analog_driver and analog_driver != "modbus-adc") or driver_role in {"disabled", "replaced"}):
-        return None
-    return DeviceDiagnosis(
-        device_id=plugin_id,
-        display_name=display_name,
-        status="ok",
-        health_summary=(
-            f"Disabled as expected; {analog_driver} owns analog inputs"
-            if analog_driver
-            else "Disabled as expected; replacement ADC stack is active"
-        ),
-        environment={
-            "topology": topology,
-            "driver_role": driver_role or "disabled",
-            "replaced_by": analog_driver or None,
-        },
+    return (
+        bool(analog_driver and analog_driver != "modbus-adc")
+        or driver_role in {"disabled", "replaced"}
     )
 
 
@@ -235,12 +221,13 @@ def diagnose_plugin_devices(
     health: dict[str, Any], adapters: dict[str, Any], platform: dict[str, Any],
     topology: str, host_recover: str, *, hardware_mode: str = "",
 ) -> dict[str, DeviceDiagnosis]:
-    """Build per-device diagnosis for the four monitored hardware plugins."""
+    """Build diagnosis only for devices active in the selected topology."""
     devices: dict[str, DeviceDiagnosis] = {}
     for plugin_id, display_name in _MONITORED_PLUGINS:
+        if _modbus_adc_is_replaced(plugin_id, platform):
+            continue
         entry = health.get(plugin_id) if isinstance(health.get(plugin_id), dict) else None
-        special = _replaced_adc_diagnosis(plugin_id, display_name, platform, topology)
-        special = special or _mock_motor_diagnosis(plugin_id, display_name, entry, topology, hardware_mode)
+        special = _mock_motor_diagnosis(plugin_id, display_name, entry, topology, hardware_mode)
         devices[plugin_id] = special or _standard_plugin_diagnosis(
             plugin_id, display_name, entry, adapters.get(plugin_id), platform, topology, host_recover,
         )

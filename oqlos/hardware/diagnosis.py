@@ -31,7 +31,6 @@ from oqlos.hardware.diagnosis_types import (
 from oqlos.hardware.plugins.registry import PluginRegistry
 from oqlos.hardware.stack_snapshot import build_hardware_stack_snapshot
 
-_MONITOR_PLUGINS = ("modbus-io", "modbus-adc", "motor-tic249", "motor-dri0050")
 _OQLOS_SAFE_PLUGINS = ("modbus-io", "modbus-adc", "motor-tic249", "motor-dri0050")
 _MOTOR_PLUGIN_IDS = frozenset({"motor-tic249", "motor-dri0050"})
 
@@ -138,6 +137,7 @@ def _diagnosis_environment(
         "runtime_control_available": bool(host_recover),
         "host_recover_hook": host_recover or None,
         "serial_ports": [str(port) for port in (platform.get("serial_ports") or []) if port],
+        "analog_input_devices": list(platform.get("analog_input_devices") or []),
         "stack_snapshot_ok": snapshot.get("ok"),
         "serial_handles_stale": snapshot.get("serial_handles_stale"),
     }

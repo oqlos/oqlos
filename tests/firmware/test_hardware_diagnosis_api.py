@@ -165,13 +165,23 @@ def test_build_diagnosis_report_mock_motors_without_health():
     assert payload["devices"]["motor-tic249"]["recommended_actions"] == []
 
 
-def test_build_diagnosis_report_accepts_replaced_modbus_adc():
+def test_build_diagnosis_report_omits_replaced_modbus_adc():
     identify = {
         "mode": "real",
         "platform": {
             "modbus_topology": "separate-adapters",
             "analog_input_driver_role": "usb-adc-stack",
             "modbus_adc_driver_role": "disabled",
+            "analog_input_devices": [
+                {
+                    "device_id": "usb-adc-mcp2221",
+                    "inputs": ["ai01"],
+                },
+                {
+                    "device_id": "usb-adc-dfr1184",
+                    "inputs": ["ai02", "ai03"],
+                },
+            ],
         },
         "diagnostics": {
             "health": {
@@ -197,9 +207,11 @@ def test_build_diagnosis_report_accepts_replaced_modbus_adc():
     assert payload["ok"] is True
     assert payload["requires_full_stack_restart"] is False
     assert payload["global_actions"] == []
-    assert payload["devices"]["modbus-adc"]["status"] == "ok"
-    assert payload["devices"]["modbus-adc"]["environment"]["replaced_by"] == "usb-adc-stack"
-    assert payload["devices"]["modbus-adc"]["recommended_actions"] == []
+    assert "modbus-adc" not in payload["devices"]
+    assert payload["environment"]["analog_input_devices"] == [
+        {"device_id": "usb-adc-mcp2221", "inputs": ["ai01"]},
+        {"device_id": "usb-adc-dfr1184", "inputs": ["ai02", "ai03"]},
+    ]
 
 
 def test_modbus_io_timeout_recommends_physical_not_stale_reconnect():

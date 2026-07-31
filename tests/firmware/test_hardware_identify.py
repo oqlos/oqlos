@@ -126,6 +126,20 @@ def test_platform_reports_usb_adc_stack_without_legacy_modbus_probe(monkeypatch)
     assert platform["modbus_adc_driver_role"] == "disabled"
     assert platform["modbus_adc_local_probe_allowed"] is False
     assert platform["piadc_driver_role"] == "replaced-by-usb-adc-stack"
+    assert platform["analog_input_devices"] == [
+        {
+            "device_id": "usb-adc-mcp2221",
+            "adapter": "usb-adc-mcp2221",
+            "inputs": ["ai01"],
+            "physical_inputs": ["MCP2221A.G1"],
+        },
+        {
+            "device_id": "usb-adc-dfr1184",
+            "adapter": "usb-adc-dfr1184",
+            "inputs": ["ai02", "ai03"],
+            "physical_inputs": ["DFR1184.AIN1", "DFR1184.AIN2"],
+        },
+    ]
 
 
 def test_hardware_identify_includes_diagnostics(monkeypatch):
