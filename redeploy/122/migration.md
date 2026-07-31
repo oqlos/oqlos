@@ -713,8 +713,8 @@ if ! systemctl --user is-active pirtc-api.service >/dev/null 2>&1; then
   systemctl --user status pirtc-api.service --no-pager || true
   exit 1
 fi
-STATUS=$(curl -sf http://127.0.0.1:8125/api/status 2>/dev/null || true)
-if ! python3 - "$STATUS" <<'PY'
+watchdog_is_safely_disabled() {
+  python3 - "$1" <<'PY'
 import json
 import sys
 try:
@@ -729,11 +729,23 @@ safe = (
 )
 raise SystemExit(0 if safe else 1)
 PY
-then
+}
+
+STATUS=""
+WATCHDOG_SAFE=0
+for _attempt in $(seq 1 15); do
+  STATUS=$(curl -sf http://127.0.0.1:8125/api/status 2>/dev/null || true)
+  if watchdog_is_safely_disabled "$STATUS"; then
+    WATCHDOG_SAFE=1
+    break
+  fi
+  sleep 1
+done
+if [ "$WATCHDOG_SAFE" != "1" ]; then
   echo "FAIL: C2004-HW-0017 watchdog_configuration_unsafe — zewnetrzny watchdog nie jest bezpiecznie wylaczony" >&2
   exit 1
 fi
-echo "PASS: external WatchDog disabled; BCM /dev/watchdog0 pozostaje jedynym reset ownerem"
+echo "PASS: external WatchDog disabled; BCM reset policy remains controlled by systemd"
 
 if python3 - "$STATUS" <<'PY'
 import json

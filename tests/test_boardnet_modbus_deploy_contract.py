@@ -144,6 +144,9 @@ def test_boardnet_watchdog_is_opt_in_and_has_persistent_audit() -> None:
     assert "Environment=WATCHDOG_ENABLED=false" in pirtc
     assert "Environment=WATCHDOG_MODEL=disabled" in pirtc
     assert "watchdog.get(\"ready\") is True" in pirtc
+    assert "watchdog_is_safely_disabled" in pirtc
+    assert "for _attempt in $(seq 1 15)" in pirtc
+    assert 'if [ "$WATCHDOG_SAFE" != "1" ]' in pirtc
     assert "StandardOutput=journal" in pirtc
     assert "StandardOutput=append:" not in pirtc
 
