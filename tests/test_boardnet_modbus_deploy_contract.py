@@ -176,6 +176,10 @@ def test_boardnet_watchdog_is_opt_in_and_has_persistent_audit() -> None:
     assert "C2004-HW-0016" in audit
     assert "C2004-HW-0017" in audit
     assert "boot_id" in audit
+    assert "bootloader_reset_status_raw_hex" in audit
+    assert '"pstore_records": list_names("/sys/fs/pstore")' in audit
+    assert '"root_mount": root_mount()' in audit
+    assert '"persistent_journal_ready"' in audit
 
 
 def test_boardnet_deploy_uses_the_canonical_oql_scenario_store() -> None:

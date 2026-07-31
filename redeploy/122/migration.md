@@ -213,6 +213,36 @@ def read(path, default=None):
         return default
 
 
+def read_hex(path, default=None):
+    try:
+        payload = Path(path).read_bytes()
+        return payload.hex() if payload else default
+    except OSError:
+        return default
+
+
+def list_names(path):
+    try:
+        return sorted(item.name for item in Path(path).iterdir())
+    except OSError:
+        return None
+
+
+def root_mount():
+    try:
+        for line in Path("/proc/mounts").read_text(encoding="utf-8").splitlines():
+            source, target, filesystem, options, *_ = line.split()
+            if target == "/":
+                return {
+                    "source": source,
+                    "filesystem": filesystem,
+                    "options": options.split(","),
+                }
+    except (OSError, ValueError):
+        pass
+    return None
+
+
 def command(argv, default=None):
     try:
         return subprocess.run(argv, check=False, capture_output=True, text=True, timeout=4).stdout.strip() or default
@@ -242,6 +272,20 @@ pirtc = pirtc_status()
 rtc = pirtc.get("rtc", {}) if isinstance(pirtc, dict) else {}
 external = pirtc.get("watchdog", {}) if isinstance(pirtc, dict) else {}
 throttled_raw = command(["vcgencmd", "get_throttled"], "unavailable")
+machine_id = read("/etc/machine-id")
+forensics = {
+    # Preserve the bytes exactly as firmware exported them. Their byte order
+    # and bit meanings vary across Pi firmware generations, so decoding stays
+    # an explicit post-incident step instead of an unsafe runtime guess.
+    "bootloader_reset_status_raw_hex": read_hex(
+        "/proc/device-tree/chosen/bootloader/rsts"
+    ),
+    "pstore_records": list_names("/sys/fs/pstore"),
+    "root_mount": root_mount(),
+    "persistent_journal_ready": bool(
+        machine_id and Path("/var/log/journal", machine_id).is_dir()
+    ),
+}
 anomalies = []
 
 if internal["policy"] == "enabled" and (
@@ -292,6 +336,7 @@ print(json.dumps({
     "external_watchdog": external,
     "rtc": rtc,
     "throttled": throttled_raw,
+    "forensics": forensics,
     "anomalies": anomalies,
 }, separators=(",", ":"), default=str))
 PY
