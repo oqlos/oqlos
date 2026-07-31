@@ -343,6 +343,8 @@ else
   printf 'OQLOS_OQL_MQTT_USERNAME=oqlos\n' >> "$MQTT_ENV"
 fi
 chmod 600 "$MQTT_ENV"
+# Non-login PATH on the Pi omits /usr/sbin, where the broker binary lives.
+export PATH="/usr/sbin:/usr/bin:${PATH:-/usr/bin}"
 if ! command -v mosquitto >/dev/null 2>&1; then
   sudo apt-get update -qq
   sudo apt-get install -y git python3-venv mosquitto mosquitto-clients
