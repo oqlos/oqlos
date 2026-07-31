@@ -95,11 +95,6 @@ NAVIGATION_PAGES = [
         "description": "OQL scenario editor served directly by OqlOS.",
     },
     {
-        "path": "/ui/func-editor",
-        "label": "Function editor",
-        "description": "Reusable OQL function definitions.",
-    },
-    {
         "path": "/ui/panel",
         "label": "OQL panel",
         "description": "Direct OQL command, scenario and manage verb tester.",

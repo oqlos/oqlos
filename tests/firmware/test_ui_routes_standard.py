@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -45,6 +47,7 @@ def test_navigation_index_lists_ui_prefixed_pages(client: TestClient) -> None:
     assert "/ui/panel" in page_paths
     assert "/ui/hardware-modbus" in page_paths
     assert "/ui/hardware-rtc" in page_paths
+    assert "/ui/func-editor" not in page_paths
     assert "/navigation" not in page_paths
     assert "/panel" not in page_paths
 
@@ -59,3 +62,17 @@ def test_ui_func_editor_redirects_to_ui_func_editor(client: TestClient) -> None:
     response = client.get("/func-editor?lang=pl", follow_redirects=False)
     assert response.status_code in {302, 307}
     assert response.headers["location"] == "/ui/func-editor?lang=pl"
+
+
+def test_function_editor_is_not_linked_from_static_navigation() -> None:
+    static_dir = Path(__file__).resolve().parents[2] / "oqlos" / "api"
+    menu_files = [
+        static_dir / "index.html",
+        static_dir / "static" / "navigation.html",
+        static_dir / "static" / "hardware-status.html",
+        static_dir / "static" / "editor.html",
+        static_dir / "static" / "panel.html",
+    ]
+
+    for menu_file in menu_files:
+        assert 'href="/ui/func-editor"' not in menu_file.read_text(encoding="utf-8")
