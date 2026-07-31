@@ -490,8 +490,23 @@ UNIT
 systemctl --user daemon-reload
 systemctl --user enable hw-tic249.service
 systemctl --user restart hw-tic249.service
-sleep 3
-systemctl --user is-active hw-tic249.service
+# is-active exits 3 while ExecStartPost (wait-hw-tic249-ready) is still running.
+state=""
+for i in {1..60}; do
+  state=$(systemctl --user is-active hw-tic249.service 2>/dev/null || true)
+  case "$state" in
+    active|failed|inactive) break ;;
+  esac
+  sleep 2
+done
+if [ "$state" != "active" ]; then
+  if [ "${PIHW_ALLOW_MISSING_HARDWARE:-1}" = "1" ]; then
+    echo "WARN: hw-tic249 state=$state — PIHW_ALLOW_MISSING_HARDWARE=1, pomijam"
+    exit 0
+  fi
+  systemctl --user status hw-tic249.service --no-pager || true
+  exit 1
+fi
 if /home/${BOARDNET_SSH_USER}/maskservice/scripts/wait-hw-tic249-ready.sh; then
   echo "PASS: hw-tic249 aktywny i widzi Pololu Tic"
   /home/${BOARDNET_SSH_USER}/maskservice/scripts/tic249-deenergize-best-effort.sh
