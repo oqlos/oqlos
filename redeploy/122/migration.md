@@ -837,9 +837,17 @@ if [ "${BOARDNET_DFR1184_DISABLE_SERIAL_CONSOLE}" = "1" ]; then
     else
       printf '\nenable_uart=1\n' | sudo tee -a "$BOOT_CONFIG" >/dev/null
     fi
+    # Pi 3/3+ Bluetooth claims the PL011 UART; without this /dev/serial0 never
+    # appears and DFR1184 (usb-adc-stack) stays unavailable.
+    if ! grep -Eq '^[[:space:]]*dtoverlay=disable-bt([[:space:]]|$)' "$BOOT_CONFIG"; then
+      printf '\n# OqlOS BoardNet: free primary UART for DFR1184 (/dev/serial0)\ndtoverlay=disable-bt\n' \
+        | sudo tee -a "$BOOT_CONFIG" >/dev/null
+      echo "PASS: added dtoverlay=disable-bt for ${BOARDNET_DFR1184_PORT}"
+    fi
   fi
-  if grep -Eq '(^|[[:space:]])console=serial0,' /proc/cmdline; then
-    echo "WARN: reboot BoardNet once to release the running kernel serial console"
+  if grep -Eq '(^|[[:space:]])console=serial0,' /proc/cmdline \
+    || { [ ! -e /dev/serial0 ] && grep -Eq '^[[:space:]]*dtoverlay=disable-bt' "$BOOT_CONFIG"; }; then
+    echo "WARN: reboot BoardNet once so /dev/serial0 is available for DFR1184"
   fi
 fi
 
