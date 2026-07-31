@@ -24,6 +24,7 @@ import { isOptionalWizardStep, isSkippablePumpOffWizardStep } from "../utils/har
 import { runWizardStep, resolveStepAdvance, buildStepError } from "../utils/hardware-restart-step-runner.js";
 import { hardwareRestartDocsUrl } from "../utils/hardware-restart-docs.js";
 import { extractWizardPlan, isOqlosUnreachableError } from "../utils/hardware-wizard-plan.js";
+import { runtimeControlTranslationKey } from "../utils/hardware-restart-runtime-status.js";
 import { runApiWithRetry } from "../utils/hardware-api-retry.js";
 import { copyTextToClipboard } from "../utils/clipboard.js";
 
@@ -460,7 +461,7 @@ export default function HardwareRestart() {
 
         <div className="hw-card" style={{ marginBottom: "12px" }}>
           <h3>{t("hardwareRestart.portCard")}</h3>
-          <div className="hw-kv"><span>{t("hardwareRestart.runtimeControl")}</span><strong>{runtimeStatus?.runtime_control_available ? t("hardwareRestart.runtimeAvailable") : t("hardwareRestart.runtimeUnavailable")}</strong></div>
+          <div className="hw-kv"><span>{t("hardwareRestart.runtimeControl")}</span><strong>{t(runtimeControlTranslationKey(runtimeStatus))}</strong></div>
           <div className="hw-kv"><span>{t("hardwareRestart.oqlosPort")}</span><strong>{runtimeStatus?.oqlos_up ? t("hardwareRestart.oqlosUp") : t("hardwareRestart.oqlosStopped")}</strong></div>
           <div className="hw-kv"><span>{t("hardwareRestart.serialPort")}</span><strong>{runtimeStatus?.serial_state || "-"}</strong></div>
           <div style={{ display: "flex", gap: "8px", marginTop: "10px", flexWrap: "wrap" }}>
@@ -632,4 +633,3 @@ export default function HardwareRestart() {
     </div>
   );
 }
-
