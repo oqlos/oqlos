@@ -804,6 +804,15 @@ fi
 export PIP_PREFER_BINARY=1
 "$ROOT/.venv/bin/pip" install -q --upgrade pip
 "$ROOT/.venv/bin/pip" install -q -e "$MCP_DIR" -e "$DFR_DIR[api]"
+# MCP2221 HID lands as root-only hidraw without this; EasyMCP2221 then fails open.
+cat > /tmp/99-mcp2221-hid.rules << 'RULES'
+KERNEL=="hidraw*", ATTRS{idVendor}=="04d8", ATTRS{idProduct}=="00dd", MODE="0666", GROUP="plugdev"
+SUBSYSTEM=="usb", ATTR{idVendor}=="04d8", ATTR{idProduct}=="00dd", MODE="0666", GROUP="plugdev"
+RULES
+sudo install -m 0644 /tmp/99-mcp2221-hid.rules /etc/udev/rules.d/99-mcp2221-hid.rules
+sudo udevadm control --reload-rules || true
+sudo udevadm trigger -s hidraw || true
+sudo udevadm trigger -s usb || true
 install -m 0644 "$DFR_DIR/deploy/systemd/usb-adc-stack.service" \
   /home/${BOARDNET_SSH_USER}/.config/systemd/user/usb-adc-stack.service
 
