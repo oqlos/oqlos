@@ -27,12 +27,36 @@ def _digital_output_states(module: dict[str, Any]) -> list[bool]:
 
 
 async def build_coil_test_plan() -> dict[str, Any]:
-    snapshot = await read_modbus_profile_channels("modbus-io")
-    module = (snapshot.get("modules") or [{}])[0]
+    issue_code: str | None = None
+    issue_message: str | None = None
+    try:
+        snapshot = await read_modbus_profile_channels("modbus-io")
+        module = (snapshot.get("modules") or [{}])[0]
+    except OqlosError as exc:
+        # A disconnected module must keep the test fail-closed, but the plan is
+        # still a read-only UI projection. Return the configured identity and
+        # DO1-DO8 catalogue instead of replacing the whole view with a 503.
+        modules = exc.detail.get("modules") if isinstance(exc.detail, dict) else None
+        module = (modules or [{}])[0]
+        module = {
+            "module_role": module.get("module_role") or "modbus-io",
+            "ok": False,
+            "device_id": module.get("device_id", int(_settings.modbus_device_id)),
+            "serial_port": module.get("serial_port") or str(_settings.modbus_serial_port),
+            "message": module.get("message") or exc.message,
+            "config_registers": module.get("config_registers") or [],
+            "channels": [],
+        }
+        issue_code = exc.public_code
+        issue_message = exc.message
     states = _digital_output_states(module)
     reasons: list[str] = []
+    if issue_message:
+        reasons.append(issue_message)
     if not module.get("ok"):
-        reasons.append(str(module.get("message") or "modbus-io is unavailable"))
+        module_message = str(module.get("message") or "modbus-io is unavailable")
+        if module_message not in reasons:
+            reasons.append(module_message)
     if module.get("ok") and len(states) != MODBUS_IO_COIL_COUNT:
         reasons.append(
             f"Expected {MODBUS_IO_COIL_COUNT} coil states, received {len(states)}"
@@ -46,6 +70,7 @@ async def build_coil_test_plan() -> dict[str, Any]:
         "ok": bool(module.get("ok")),
         "ready": ready,
         "mode": str(getattr(_settings, "hardware_mode", "unknown")),
+        "error_code": issue_code,
         "safety": {
             "one_coil_at_a_time": True,
             "automatic_off": True,

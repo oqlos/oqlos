@@ -58,6 +58,50 @@ def test_plan_blocks_when_a_coil_is_already_on(monkeypatch) -> None:
     assert "DO2" in plan["safety"]["blocked_reasons"][0]
 
 
+def test_plan_keeps_configured_identity_when_module_does_not_respond(monkeypatch) -> None:
+    async def fake_read(_profile):
+        raise OqlosError(
+            code="hw_modbus_no_response",
+            status_code=503,
+            message="No Modbus profile modules responded",
+            detail={
+                "profile_id": "modbus-io",
+                "modules": [{
+                    "module_role": "modbus-io",
+                    "device_id": 2,
+                    "serial_port": "/dev/serial/by-id/io-adapter",
+                    "message": "read_all failed",
+                }],
+            },
+        )
+
+    monkeypatch.setattr(coil_test, "read_modbus_profile_channels", fake_read)
+    monkeypatch.setattr(
+        coil_test,
+        "build_coil_catalog",
+        lambda states: [
+            {"address": index, "state": states[index] if index < len(states) else None}
+            for index in range(MODBUS_IO_COIL_COUNT)
+        ],
+    )
+
+    plan = asyncio.run(coil_test.build_coil_test_plan())
+
+    assert plan["ok"] is False
+    assert plan["ready"] is False
+    assert plan["error_code"] == "C2004-HW-0012"
+    assert plan["module"]["device_id"] == 2
+    assert plan["module"]["serial_port"] == "/dev/serial/by-id/io-adapter"
+    assert plan["safety"]["automatic_off"] is True
+    assert plan["safety"]["max_pulse_ms"] == 1000
+    assert plan["safety"]["blocked_reasons"] == [
+        "No Modbus profile modules responded",
+        "read_all failed",
+    ]
+    assert len(plan["coils"]) == MODBUS_IO_COIL_COUNT
+    assert all(row["state"] is None for row in plan["coils"])
+
+
 def test_pulse_always_switches_selected_coil_off(monkeypatch) -> None:
     calls = []
 
@@ -151,4 +195,3 @@ def test_pulse_raises_when_preflight_blocks(monkeypatch) -> None:
     assert caught.value.public_code == "C2004-HW-0012"
     assert caught.value.issue_code == "hw_modbus_no_response"
     assert "preflight" in caught.value.message
-
