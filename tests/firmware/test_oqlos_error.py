@@ -65,7 +65,7 @@ def test_oqlos_error_rejects_unknown_public_code_override():
         public_code="C2004-NET-9999",
     )
 
-    assert err.public_code == "C2004-SYS-0000"
+    assert err.public_code == "C2004-HW-0012"
 
 
 def test_oqlos_error_fastapi_handler_returns_standard_body():

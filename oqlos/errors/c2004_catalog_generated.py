@@ -286,7 +286,7 @@ C2004_CODE_BY_ISSUE: dict[str, str] = {
     'api_scenario_parser_unavailable': 'C2004-NET-0002',
     'api_scenario_payload_invalid': 'C2004-DATA-0002',
     'api_systemd_unit_forbidden': 'C2004-AUTH-0002',
-    'api_ui_prefs_store_unavailable': 'C2004-SYS-0001',
+    'api_ui_prefs_store_unavailable': 'C2004-NET-0002',
     'boardnet_power_condition_active': 'C2004-HW-0014',
     'boardnet_power_condition_historical': 'C2004-HW-0014',
     'boardnet_power_telemetry_unavailable': 'C2004-HW-0012',

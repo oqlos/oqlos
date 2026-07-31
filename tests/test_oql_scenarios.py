@@ -46,7 +46,12 @@ def test_oql_scenario_dryrun(path: str) -> None:
         f"{os.path.basename(path)}: {result.failed} failed, "
         f"errors={result.errors}"
     )
-    assert result.passed > 0, f"{os.path.basename(path)}: no steps passed"
+    # system.oql is the declarative composition root (CONFIG/HARDWARE/EVENT),
+    # so it intentionally has no executable TASK/GOAL steps.
+    if Path(path).name == "system.oql":
+        assert result.steps == []
+    else:
+        assert result.passed > 0, f"{os.path.basename(path)}: no steps passed"
 
 
 @pytest.mark.parametrize(

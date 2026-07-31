@@ -51,6 +51,15 @@ _CODE_SOURCE_PATHS = [
     _REPO_ROOT / "oqlos" / "hardware" / "hui_readiness.py",
     _REPO_ROOT / "oqlos" / "shared" / "_endpoint_helpers.py",
 ]
+# These issue codes cross the BoardNet process boundary as piRTC/audit payloads.
+# OqlOS consumes them dynamically, so no local Python string literal exists for
+# the source scanner to discover.
+_EXTERNAL_CONTRACT_ISSUES = {
+    "rtc_i2c_unavailable",
+    "watchdog_configuration_unsafe",
+    "watchdog_feed_failed",
+    "watchdog_i2c_unavailable",
+}
 _CODE_LITERAL = re.compile(r'code\s*=\s*"([a-z0-9_]+)"')
 _CODE_FSTRING = re.compile(r'code\s*=\s*f"([a-z0-9_{}]+)"')
 _CODE_DICT_LITERAL = re.compile(r'"code"\s*:\s*"([a-z0-9_]+)"')
@@ -102,7 +111,7 @@ def test_every_source_code_is_registered_in_catalog():
 
 def test_every_catalog_code_is_still_used_somewhere():
     """Catch stale catalog entries for codes no one raises anymore."""
-    used = _codes_used_in_source()
+    used = _codes_used_in_source() | _EXTERNAL_CONTRACT_ISSUES
     orphaned = set(ISSUE_CATALOG) - used
     assert not orphaned, f"catalog codes no longer used in source: {sorted(orphaned)}"
 
@@ -122,17 +131,16 @@ def test_every_repair_template_has_a_hint_or_is_manual_only():
 
 
 def test_every_fixed_issue_maps_to_an_existing_public_code():
-    dynamic_public_code_issues = {"remote_oql_execution_failed"}
     fallback = {
         code
         for code in ISSUE_CATALOG
         if c2004_code_for_issue(code) == "C2004-SYS-0000"
     }
 
-    assert fallback == dynamic_public_code_issues
+    assert fallback == set()
     assert all(
         c2004_code_for_issue(code) in CATALOG
-        for code in set(ISSUE_CATALOG) - dynamic_public_code_issues
+        for code in ISSUE_CATALOG
     )
 
 

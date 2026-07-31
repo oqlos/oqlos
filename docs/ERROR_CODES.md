@@ -84,7 +84,11 @@ own:
 | `modbus_adc_not_detected` | warning | Modbus ADC device was not detected on any probed serial port. | — |
 | `modbus_not_detected` | error | Modbus RTU (modbus-io) device was not detected on any probed serial port. | — |
 | `modbus_preflight_exception` | error | The Modbus topology preflight failed before a valid report could be produced. | — |
+| `rtc_i2c_unavailable` | error | The BoardNet DS3231 real-time clock did not respond to an I2C probe. | `restore_boardnet_rtc` (scope=host, manual, risk=physical) |
 | `serial_port_busy` | warning | The configured Modbus serial port is already open by another process. | `release_serial_port` (scope=host, manual, risk=none) |
+| `watchdog_configuration_unsafe` | critical | The external BoardNet watchdog configuration is not safe to enable. | — |
+| `watchdog_feed_failed` | critical | The external BoardNet watchdog feed operation failed. | — |
+| `watchdog_i2c_unavailable` | error | The CH32V003 BoardNet watchdog did not respond to an I2C probe. | — |
 
 ## Dynamic code families
 
