@@ -1,6 +1,8 @@
 /**
  * Inline-style helpers: 1rem tracks html { font-size: var(--font-base-size) } (14px default).
- * Values are design px ÷ 14, same as connect-scenario CSS.
+ * Values are design px ÷ 14, shared by connect-scenario and OqlOS UI.
+ *
+ * SSOT — import from `@semcod/frontend-services/designRem.js`.
  */
 export const rem = Object.freeze({
   /** 10px */
