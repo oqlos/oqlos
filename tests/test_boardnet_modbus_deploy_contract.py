@@ -219,6 +219,8 @@ def test_usb_adc_deploy_uses_profiled_uart_and_releases_serial_console() -> None
     migration = (ROOT / "redeploy/122/migration.md").read_text(encoding="utf-8")
     deploy = migration.split("markpact:ref deploy-usb-adc-stack", 1)[1]
 
+    assert "command -v swig" in deploy
+    assert "sudo apt-get install -y python3-dev swig" in deploy
     assert "usb-adc-stack.service.d/20-boardnet.conf" in deploy
     assert "Environment=DFR1184_SERIAL_PORT=${BOARDNET_DFR1184_PORT}" in deploy
     assert "Environment=DFR1184_BAUDRATE=${BOARDNET_DFR1184_BAUDRATE}" in deploy

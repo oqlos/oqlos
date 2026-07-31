@@ -793,9 +793,9 @@ mkdir -p "$ROOT" /home/${BOARDNET_SSH_USER}/.config/systemd/user
 [ -f "$DFR_DIR/pyproject.toml" ] || { echo "FAIL: brak $DFR_DIR — uruchom sync_usb_adc_dfr1184"; exit 1; }
 
 PYTHON_INCLUDE=$(python3 -c 'import sysconfig; print(sysconfig.get_paths()["include"])')
-if [ ! -f "$PYTHON_INCLUDE/Python.h" ]; then
+if [ ! -f "$PYTHON_INCLUDE/Python.h" ] || ! command -v swig >/dev/null 2>&1; then
   sudo apt-get update -qq
-  sudo apt-get install -y python3-dev
+  sudo apt-get install -y python3-dev swig
 fi
 
 if [ ! -x "$ROOT/.venv/bin/python" ]; then
