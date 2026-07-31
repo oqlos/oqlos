@@ -792,15 +792,17 @@ mkdir -p "$ROOT" /home/${BOARDNET_SSH_USER}/.config/systemd/user
 [ -f "$MCP_DIR/pyproject.toml" ] || { echo "FAIL: brak $MCP_DIR — uruchom sync_usb_adc_mcp2221"; exit 1; }
 [ -f "$DFR_DIR/pyproject.toml" ] || { echo "FAIL: brak $DFR_DIR — uruchom sync_usb_adc_dfr1184"; exit 1; }
 
-PYTHON_INCLUDE=$(python3 -c 'import sysconfig; print(sysconfig.get_paths()["include"])')
-if [ ! -f "$PYTHON_INCLUDE/Python.h" ] || ! command -v swig >/dev/null 2>&1; then
+# Prefer OS python3-lgpio (RPi OS) over compiling PyPI lgpio (needs SWIG + RAM).
+if ! python3 -c 'import lgpio' >/dev/null 2>&1; then
   sudo apt-get update -qq
-  sudo apt-get install -y python3-dev swig
+  sudo apt-get install -y python3-lgpio
 fi
-
-if [ ! -x "$ROOT/.venv/bin/python" ]; then
-  python3 -m venv "$ROOT/.venv"
+if [ ! -f "$ROOT/.venv/pyvenv.cfg" ] \
+  || ! grep -q '^include-system-site-packages = true$' "$ROOT/.venv/pyvenv.cfg"; then
+  rm -rf "$ROOT/.venv"
+  python3 -m venv --system-site-packages "$ROOT/.venv"
 fi
+export PIP_PREFER_BINARY=1
 "$ROOT/.venv/bin/pip" install -q --upgrade pip
 "$ROOT/.venv/bin/pip" install -q -e "$MCP_DIR" -e "$DFR_DIR[api]"
 install -m 0644 "$DFR_DIR/deploy/systemd/usb-adc-stack.service" \
