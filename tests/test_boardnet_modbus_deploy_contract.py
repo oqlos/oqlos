@@ -150,6 +150,10 @@ def test_boardnet_watchdog_has_one_safe_reset_owner_and_persistent_audit() -> No
     assert "Storage=persistent" in audit
     assert "RuntimeWatchdogSec=3min" in audit
     assert "RebootWatchdogSec=5min" in audit
+    assert 'RUNTIME_WATCHDOG" = "3min"' in audit
+    assert "systemctl --no-block daemon-reexec" in audit
+    assert "daemon-reexec skipped" in audit
+    assert "sudo systemctl daemon-reexec\n" not in audit
     assert "boardnet-watchdog-audit.timer" in audit
     assert "C2004-HW-0016" in audit
     assert "C2004-HW-0017" in audit

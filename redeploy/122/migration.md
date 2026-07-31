@@ -127,15 +127,31 @@ RuntimeWatchdogSec=3min
 RebootWatchdogSec=5min
 ServiceWatchdogs=yes
 CONF
-sudo systemctl daemon-reexec
-sleep 2
+
+# `daemon-reexec` can leave an SSH deploy blocked until the command timeout on
+# RPi3. With an active watchdog that turns a harmless re-run into an avoidable
+# hardware reset. Skip the reexec when the requested policy is already live;
+# otherwise queue it without waiting for the manager process to replace itself.
+WATCHDOG_STATE=$(cat /sys/class/watchdog/watchdog0/state 2>/dev/null || true)
+RUNTIME_WATCHDOG=$(systemctl show --property=RuntimeWatchdogUSec --value 2>/dev/null || true)
+if [ "$WATCHDOG_STATE" = "active" ] && [ "$RUNTIME_WATCHDOG" = "3min" ]; then
+  echo "PASS: BCM watchdog policy already active; daemon-reexec skipped"
+else
+  sudo systemctl --no-block daemon-reexec
+  for _attempt in $(seq 1 30); do
+    WATCHDOG_STATE=$(cat /sys/class/watchdog/watchdog0/state 2>/dev/null || true)
+    RUNTIME_WATCHDOG=$(systemctl show --property=RuntimeWatchdogUSec --value 2>/dev/null || true)
+    [ "$WATCHDOG_STATE" = "active" ] && [ "$RUNTIME_WATCHDOG" = "3min" ] && break
+    sleep 1
+  done
+fi
 
 BOOT_ID_AFTER=$(cat /proc/sys/kernel/random/boot_id)
 if [ "$BOOT_ID_BEFORE" != "$BOOT_ID_AFTER" ]; then
   echo "FAIL: C2004-HW-0017 watchdog_configuration_unsafe — boot ID zmienil sie podczas konfiguracji" >&2
   exit 1
 fi
-if [ ! -e /dev/watchdog0 ] || [ "$(cat /sys/class/watchdog/watchdog0/state 2>/dev/null || true)" != "active" ]; then
+if [ ! -e /dev/watchdog0 ] || [ "$WATCHDOG_STATE" != "active" ] || [ "$RUNTIME_WATCHDOG" != "3min" ]; then
   echo "FAIL: C2004-HW-0017 watchdog_configuration_unsafe — /dev/watchdog0 nie jest aktywny" >&2
   exit 1
 fi
