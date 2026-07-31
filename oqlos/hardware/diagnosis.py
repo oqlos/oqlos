@@ -10,6 +10,7 @@ from typing import Any
 
 from oqlos.hardware.diagnosis_device_actions import (
     build_report_global_actions,
+    diagnose_analog_input_devices,
     diagnose_barcode_scanner,
     diagnose_plugin_devices,
 )
@@ -122,6 +123,7 @@ def _diagnosis_devices(
         health, adapters, platform, topology, host_recover,
         hardware_mode=str(identify.get("mode") or "").strip().lower(),
     )
+    devices.update(diagnose_analog_input_devices(identify, platform))
     devices["barcode-scanner"] = diagnose_barcode_scanner(adapters)
     return devices
 

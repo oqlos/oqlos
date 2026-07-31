@@ -196,6 +196,31 @@ def test_hardware_identify_default_skips_live_probe(monkeypatch):
     assert result["diagnostics"]["scan_performed"] is False
 
 
+def test_hardware_identify_includes_usb_adc_component_health(monkeypatch):
+    _patch_gateway(monkeypatch, _FakeGateway())
+    monkeypatch.setattr(
+        hw_identify.platform,
+        "_detect_runtime_platform",
+        lambda: {
+            "analog_input_driver_role": "usb-adc-stack",
+            "analog_input_devices": [],
+        },
+    )
+
+    async def _health(_url, *, timeout_seconds):
+        assert timeout_seconds > 0
+        return {
+            "ok": False,
+            "components": {"usb-adc-dfr1184": {"ok": False}},
+        }
+
+    monkeypatch.setattr(hw_identify, "read_usb_adc_health", _health)
+
+    result = asyncio.run(hw.hardware_identify())
+
+    assert result["diagnostics"]["analog_input_health"]["ok"] is False
+
+
 def test_read_sensors_batch_raises_typed_error_when_all_adc_transports_are_down(monkeypatch):
     _patch_gateway(monkeypatch, _UnavailableAdcGateway())
 

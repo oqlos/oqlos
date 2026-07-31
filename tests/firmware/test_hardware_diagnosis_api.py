@@ -214,6 +214,65 @@ def test_build_diagnosis_report_omits_replaced_modbus_adc():
     ]
 
 
+def test_build_diagnosis_report_surfaces_partial_usb_adc_failure():
+    identify = {
+        "mode": "real",
+        "platform": {
+            "modbus_topology": "separate-adapters",
+            "analog_input_driver_role": "usb-adc-stack",
+            "modbus_adc_driver_role": "disabled",
+            "analog_input_devices": [
+                {
+                    "device_id": "usb-adc-mcp2221",
+                    "inputs": ["ai01"],
+                    "physical_inputs": ["MCP2221A.G1"],
+                },
+                {
+                    "device_id": "usb-adc-dfr1184",
+                    "inputs": ["ai02", "ai03"],
+                    "physical_inputs": ["DFR1184.AIN1", "DFR1184.AIN2"],
+                },
+            ],
+        },
+        "diagnostics": {
+            "health": {
+                "modbus-io": {"status": "connected", "compatible": True},
+                "motor-tic249": {"status": "connected", "compatible": True},
+                "motor-dri0050": {"status": "connected", "compatible": True},
+            },
+            "analog_input_health": {
+                "ok": False,
+                "status": "degraded",
+                "components": {
+                    "usb-adc-mcp2221": {
+                        "ok": True,
+                        "status": "connected",
+                        "message": "MCP2221 ready",
+                    },
+                    "usb-adc-dfr1184": {
+                        "ok": False,
+                        "status": "unavailable",
+                        "message": "UART response truncated: expected 4 bytes, received 0",
+                        "transport": "uart",
+                        "endpoint": "/dev/serial0",
+                    },
+                },
+            },
+        },
+        "adapters": [],
+    }
+
+    payload = report_to_dict(build_diagnosis_report(identify))
+
+    assert payload["ok"] is False
+    assert payload["devices"]["usb-adc-mcp2221"]["status"] == "ok"
+    dfr = payload["devices"]["usb-adc-dfr1184"]
+    assert dfr["status"] == "error"
+    assert dfr["environment"]["endpoint"] == "/dev/serial0"
+    assert dfr["recommended_actions"][0]["id"] == "dfr1184-uart-physical"
+    assert "usb-adc-dfr1184" in payload["message"]
+
+
 def test_modbus_io_timeout_recommends_physical_not_stale_reconnect():
     identify = {
         "platform": {

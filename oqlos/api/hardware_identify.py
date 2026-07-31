@@ -13,8 +13,30 @@ from oqlos.api.hardware_gateway import get_hardware_gateway
 from oqlos.api.hardware_registry import HARDWARE_REGISTRY
 from oqlos.hardware.identify_enrichment import enrich_identify_payload
 from oqlos.hardware.power_safety import sample_power_telemetry
+from oqlos.hardware.usb_adc_stack import UsbAdcStackError, read_usb_adc_health
 
 router = APIRouter(tags=["hardware-identify"])
+
+
+async def _analog_input_health(runtime_platform: dict[str, Any]) -> dict[str, Any] | None:
+    """Return dedicated ADC health when usb-adc-stack owns analog inputs."""
+    if runtime_platform.get("analog_input_driver_role") != "usb-adc-stack":
+        return None
+    from oqlos.config import get_settings
+
+    settings = get_settings()
+    try:
+        return await read_usb_adc_health(
+            settings.usb_adc_stack_url,
+            timeout_seconds=settings.usb_adc_timeout_seconds,
+        )
+    except UsbAdcStackError:
+        return {
+            "ok": False,
+            "status": "unavailable",
+            "message": "usb-adc-stack health endpoint is unavailable",
+            "components": {},
+        }
 
 
 def _hardware_health_overall_ok(payload: dict[str, Any]) -> bool:
@@ -144,6 +166,8 @@ async def hardware_identify(
         scan_mode = "never"
 
     health = await get_hardware_gateway().health()
+    runtime_platform = platform._detect_runtime_platform()
+    analog_input_health = await _analog_input_health(runtime_platform)
     scan_ids, skipped_owned_modbus_probe, scan_skip_reason = _determine_scan_set(scan_mode, health)
     should_scan = bool(scan_ids)
 
@@ -160,7 +184,7 @@ async def hardware_identify(
     mode = health.get("mode", "mock")
     payload = {
         "mode": mode,
-        "platform": platform._detect_runtime_platform(),
+        "platform": runtime_platform,
         "detected": sum(1 for a in adapters if a["status"] == "ok"),
         "total": len(adapters),
         "adapters": adapters,
@@ -170,6 +194,11 @@ async def hardware_identify(
             "scan_performed": should_scan,
             "modbus_preflight": hw_probe._modbus_preflight_report(),
             "modbus_repair": hw_probe._modbus_repair_guidance(health),
+            **(
+                {"analog_input_health": analog_input_health}
+                if analog_input_health is not None
+                else {}
+            ),
             **diagnostics,
         },
     }

@@ -247,6 +247,80 @@ def diagnose_barcode_scanner(adapters: dict[str, Any]) -> DeviceDiagnosis:
     )
 
 
+def diagnose_analog_input_devices(
+    identify: dict[str, Any],
+    platform: dict[str, Any],
+) -> dict[str, DeviceDiagnosis]:
+    """Expose health of the dedicated MCP2221/DFR1184 analog-input stack."""
+    if platform.get("analog_input_driver_role") != "usb-adc-stack":
+        return {}
+    diagnostics = identify.get("diagnostics")
+    stack_health = (
+        diagnostics.get("analog_input_health")
+        if isinstance(diagnostics, dict)
+        and isinstance(diagnostics.get("analog_input_health"), dict)
+        else {}
+    )
+    components = (
+        stack_health.get("components")
+        if isinstance(stack_health.get("components"), dict)
+        else {}
+    )
+    parent_error = str(stack_health.get("message") or "brak danych health usb-adc-stack")
+    devices: dict[str, DeviceDiagnosis] = {}
+    for spec in platform.get("analog_input_devices") or []:
+        if not isinstance(spec, dict) or not spec.get("device_id"):
+            continue
+        device_id = str(spec["device_id"])
+        entry = components.get(device_id)
+        component = entry if isinstance(entry, dict) else {}
+        if component.get("ok") is True:
+            status = "ok"
+        elif stack_health:
+            status = "error"
+        else:
+            status = "unknown"
+        message = str(component.get("message") or parent_error)
+        dev = DeviceDiagnosis(
+            device_id=device_id,
+            display_name=(
+                "Microchip MCP2221A ADC"
+                if device_id == "usb-adc-mcp2221"
+                else "DFRobot DFR1184 ADC"
+            ),
+            status=status,
+            health_summary=message,
+            environment={
+                "inputs": list(spec.get("inputs") or []),
+                "physical_inputs": list(spec.get("physical_inputs") or []),
+                **({"transport": component.get("transport")} if component.get("transport") else {}),
+                **({"endpoint": component.get("endpoint")} if component.get("endpoint") else {}),
+            },
+        )
+        if status == "error":
+            dev.issues.append(message)
+            if device_id == "usb-adc-dfr1184":
+                dev.recommended_actions.append(
+                    DiagnosisAction(
+                        id="dfr1184-uart-physical",
+                        device_id=device_id,
+                        label="Sprawdź zasilanie, tryb UART oraz TX/RX/GND DFR1184",
+                        kind="manual",
+                        priority=20,
+                        auto_executable=False,
+                        scope="host",
+                        detail=(
+                            "Wyłącz zasilanie przed zmianą przełącznika. DFR1184: UART, "
+                            "9600 8N1; Pi TXD pin 8 → C/R, Pi RXD pin 10 ← D/T, wspólne GND."
+                        ),
+                        code="hw_usb_adc_sidecar_unreachable",
+                        actuation_risk="physical",
+                    )
+                )
+        devices[device_id] = dev
+    return devices
+
+
 def build_report_global_actions(
     modbus_bad: bool,
     motors_bad: bool,

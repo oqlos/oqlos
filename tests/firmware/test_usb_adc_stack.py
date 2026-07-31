@@ -7,6 +7,7 @@ from oqlos.hardware.usb_adc_stack import (
     _USB_ADC_HTTP_CLIENT,
     _usb_adc_http_client,
     normalize_usb_adc_channels,
+    read_usb_adc_health,
 )
 
 
@@ -84,3 +85,27 @@ async def test_usb_adc_http_client_reuses_same_loopback_pool():
 
     assert first is second
     await first.aclose()
+
+
+@pytest.mark.asyncio
+async def test_read_usb_adc_health_requires_component_payload(monkeypatch):
+    class _Response:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {"ok": False, "components": {"usb-adc-dfr1184": {"ok": False}}}
+
+    class _Client:
+        async def get(self, path):
+            assert path == "/health"
+            return _Response()
+
+    monkeypatch.setattr(
+        "oqlos.hardware.usb_adc_stack._usb_adc_http_client",
+        lambda _base_url, _timeout: _Client(),
+    )
+
+    payload = await read_usb_adc_health("http://127.0.0.1:8214")
+
+    assert payload["components"]["usb-adc-dfr1184"]["ok"] is False

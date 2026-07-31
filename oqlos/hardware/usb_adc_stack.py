@@ -113,3 +113,21 @@ async def read_usb_adc_channels(
         raise
     except (httpx.HTTPError, ValueError) as exc:
         raise UsbAdcStackError(f"usb-adc-stack request failed: {exc}") from exc
+
+
+async def read_usb_adc_health(
+    base_url: str,
+    *,
+    timeout_seconds: float = 0.8,
+) -> dict[str, Any]:
+    """Read and validate component health from the local ADC sidecar."""
+    client = _usb_adc_http_client(base_url, timeout_seconds)
+    try:
+        response = await client.get("/health")
+        response.raise_for_status()
+        payload = response.json()
+    except (httpx.HTTPError, ValueError) as exc:
+        raise UsbAdcStackError(f"usb-adc-stack health request failed: {exc}") from exc
+    if not isinstance(payload, dict) or not isinstance(payload.get("components"), dict):
+        raise UsbAdcStackError("usb-adc-stack returned invalid health payload")
+    return payload
