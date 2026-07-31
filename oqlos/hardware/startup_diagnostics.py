@@ -7,7 +7,7 @@ the hardware runtime from serving.
 
 Env flags:
   OQLOS_STARTUP_DIAGNOSTICS   default "1" — run diagnosis on startup
-  OQLOS_STARTUP_AUTO_REPAIR   default "1" — attempt safe recover when degraded
+  OQLOS_STARTUP_AUTO_REPAIR   default "0" — opt in to safe recover when degraded
 """
 
 from __future__ import annotations
@@ -20,6 +20,7 @@ from typing import Any
 logger = logging.getLogger(__name__)
 
 _last_result: dict[str, Any] | None = None
+STARTUP_AUTO_REPAIR_DEFAULT = False
 
 
 def _flag(name: str, default: bool) -> bool:
@@ -38,12 +39,22 @@ def _report_is_degraded(report: dict[str, Any]) -> bool:
     """Heuristic: a diagnosis report is degraded if any device is not ok."""
     if not isinstance(report, dict):
         return False
-    if report.get("overall_ok") is False or report.get("degraded") is True:
+    if (
+        report.get("ok") is False
+        or report.get("overall_ok") is False
+        or report.get("degraded") is True
+    ):
         return True
     devices = report.get("devices")
     if isinstance(devices, list):
         for dev in devices:
             if isinstance(dev, dict) and dev.get("ok") is False:
+                return True
+    elif isinstance(devices, dict):
+        for dev in devices.values():
+            if isinstance(dev, dict) and (
+                dev.get("ok") is False or dev.get("status") == "error"
+            ):
                 return True
     return False
 
@@ -106,7 +117,10 @@ async def run_startup_diagnostics_and_repair() -> dict[str, Any]:
                 "skipped": "active BoardNet power safety error",
                 "error_code": "C2004-HW-0014",
             }
-        elif degraded and _flag("OQLOS_STARTUP_AUTO_REPAIR", True):
+        elif degraded and _flag(
+            "OQLOS_STARTUP_AUTO_REPAIR",
+            STARTUP_AUTO_REPAIR_DEFAULT,
+        ):
             logger.warning("Startup diagnostics: hardware degraded — attempting safe auto-repair")
             try:
                 execution = await execute_safe_recover(get_hardware_gateway(), report)
