@@ -96,6 +96,45 @@ def test_recover_targets_skip_devices_ok_in_report():
     assert targets == ["motor-dri0050"]
 
 
+def test_still_failed_plugins_skip_intentionally_disabled_modbus_adc():
+    from oqlos.hardware.diagnosis import (
+        DiagnosisReport,
+        DeviceDiagnosis,
+        _still_failed_plugins,
+    )
+
+    report = DiagnosisReport(
+        environment={},
+        devices={
+            "modbus-io": DeviceDiagnosis(
+                device_id="modbus-io",
+                display_name="IO",
+                status="error",
+                health_summary="down",
+            ),
+            "modbus-adc": DeviceDiagnosis(
+                device_id="modbus-adc",
+                display_name="ADC",
+                status="ok",
+                health_summary="Disabled as expected",
+            ),
+        },
+        global_actions=[],
+        ok=False,
+        message="",
+    )
+    health = {
+        "modbus-io": {"status": "error", "compatible": False, "message": "down"},
+        "modbus-adc": {"status": "disabled", "compatible": False, "message": "disabled"},
+    }
+
+    assert _still_failed_plugins(
+        report,
+        health,
+        ("modbus-io", "modbus-adc"),
+    ) == ["modbus-io"]
+
+
 def test_host_actions_filtered_motor_only_no_make():
     from oqlos.hardware.diagnosis import DiagnosisReport, _host_actions_from_report
 

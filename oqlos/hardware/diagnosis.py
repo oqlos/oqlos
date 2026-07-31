@@ -241,6 +241,23 @@ def _recover_targets(
     return targets
 
 
+def _still_failed_plugins(
+    report: DiagnosisReport,
+    health: dict[str, Any],
+    allowed: tuple[str, ...],
+) -> list[str]:
+    """Return failed configured devices, excluding intentionally disabled ones."""
+    return [
+        plugin_id
+        for plugin_id in allowed
+        if _report_device_status(report, plugin_id) == "error"
+        and plugin_needs_repair(
+            plugin_id,
+            health.get(plugin_id) if isinstance(health.get(plugin_id), dict) else {},
+        )
+    ]
+
+
 _SIDECAR_DOWN_MARKERS = ("connection attempts failed", "http 503", "503", "connect returned false")
 
 
@@ -309,11 +326,7 @@ async def execute_safe_recover(
             continue
         repairs.append({"step": step, "ok": bool(ok)})
     health_after = await gateway.health()
-    still_bad = [
-        pid
-        for pid in allowed
-        if plugin_needs_repair(pid, health_after.get(pid) if isinstance(health_after.get(pid), dict) else {})
-    ]
+    still_bad = _still_failed_plugins(report, health_after, allowed)
     return {
         "ok": not still_bad,
         "strategy": "oqlos-safe",
