@@ -141,7 +141,6 @@ if [ "$WATCHDOG_ENABLED" = "1" ]; then
 [Manager]
 RuntimeWatchdogSec=3min
 RebootWatchdogSec=5min
-ServiceWatchdogs=yes
 CONF
 else
   WATCHDOG_POLICY=disabled
@@ -150,7 +149,6 @@ else
 RuntimeWatchdogSec=0
 RebootWatchdogSec=0
 KExecWatchdogSec=0
-ServiceWatchdogs=no
 CONF
 fi
 printf '%s\n' "$WATCHDOG_POLICY" | sudo tee /etc/boardnet-watchdog-policy >/dev/null

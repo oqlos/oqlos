@@ -158,7 +158,7 @@ def test_boardnet_watchdog_is_opt_in_and_has_persistent_audit() -> None:
     assert "RuntimeWatchdogSec=0" in audit
     assert "RebootWatchdogSec=0" in audit
     assert "KExecWatchdogSec=0" in audit
-    assert "ServiceWatchdogs=no" in audit
+    assert "ServiceWatchdogs=" not in audit
     assert 'internal["policy"] == "enabled"' in audit
     assert (
         'internal["policy"] != "enabled" and internal["state"] == "active"'
