@@ -354,18 +354,19 @@ sudo systemctl disable --now mosquitto 2>/dev/null || true
 
 cp /home/${BOARDNET_SSH_USER}/maskservice/boardnet-config/mosquitto.conf /home/${BOARDNET_SSH_USER}/maskservice/config/mosquitto.conf
 
-if [ ! -f /home/${BOARDNET_SSH_USER}/maskservice/config/mosquitto.passwd ]; then
-  PW="${OQLOS_OQL_MQTT_PASSWORD:-}"
-  if [ -z "$PW" ]; then
-    PW=$(grep -E '^OQLOS_OQL_MQTT_PASSWORD=' "$MQTT_ENV" | head -1 | cut -d= -f2- || true)
-  fi
-  if [ -z "$PW" ] || [ "$PW" = "CHANGE_ME_ON_PI" ]; then
-    echo "FAIL: ustaw OQLOS_OQL_MQTT_PASSWORD w ~/maskservice/config/oql-mqtt.env przed deployem brokera" >&2
-    exit 1
-  fi
-  mosquitto_passwd -b -c /home/${BOARDNET_SSH_USER}/maskservice/config/mosquitto.passwd oqlos "$PW"
-  echo "INFO: utworzono mosquitto.passwd dla uzytkownika 'oqlos'"
+PW="${OQLOS_OQL_MQTT_PASSWORD:-}"
+if [ -z "$PW" ]; then
+  PW=$(grep -E '^OQLOS_OQL_MQTT_PASSWORD=' "$MQTT_ENV" | head -1 | cut -d= -f2- || true)
 fi
+if [ -z "$PW" ] || [ "$PW" = "CHANGE_ME_ON_PI" ]; then
+  echo "FAIL: ustaw OQLOS_OQL_MQTT_PASSWORD w ~/maskservice/config/oql-mqtt.env przed deployem brokera" >&2
+  exit 1
+fi
+# oql-mqtt.env is the credential source of truth. Rebuild the broker password
+# file on every deploy so a restored/stale mosquitto.passwd cannot disagree.
+mosquitto_passwd -b -c /home/${BOARDNET_SSH_USER}/maskservice/config/mosquitto.passwd oqlos "$PW"
+chmod 600 /home/${BOARDNET_SSH_USER}/maskservice/config/mosquitto.passwd
+echo "INFO: zsynchronizowano mosquitto.passwd dla uzytkownika 'oqlos'"
 
 cat > /home/${BOARDNET_SSH_USER}/.config/systemd/user/mosquitto.service << 'UNIT'
 [Unit]

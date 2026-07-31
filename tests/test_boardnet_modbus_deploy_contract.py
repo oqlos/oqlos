@@ -228,3 +228,12 @@ def test_usb_adc_deploy_uses_profiled_uart_and_releases_serial_console() -> None
     assert "Environment=DFR1184_BAUDRATE=${BOARDNET_DFR1184_BAUDRATE}" in deploy
     assert "BOARDNET_DFR1184_DISABLE_SERIAL_CONSOLE" in deploy
     assert "console=serial0," in deploy
+
+
+def test_mosquitto_password_is_resynced_from_runtime_env() -> None:
+    migration = (ROOT / "redeploy/122/migration.md").read_text(encoding="utf-8")
+    install = migration.split("markpact:ref install-mosquitto", 1)[1]
+
+    assert "if [ ! -f /home/${BOARDNET_SSH_USER}/maskservice/config/mosquitto.passwd ]" not in install
+    assert "mosquitto_passwd -b -c" in install
+    assert "chmod 600 /home/${BOARDNET_SSH_USER}/maskservice/config/mosquitto.passwd" in install
