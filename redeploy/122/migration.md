@@ -47,6 +47,10 @@ RUNBOOK can run them manually over ssh if the automation needs adjusting.
   i lokalnego agenta/controllera na BoardNet.
 - `PIHW_ALLOW_MISSING_HARDWARE` (default `1`) turns missing-device failures into warnings so
   the node still boots for bench testing.
+- `BOARDNET_RUNTIME_WATCHDOG_ENABLED` defaults to `0`. Enable the BCM runtime
+  watchdog only after the root filesystem has passed an offline check and the
+  node has completed repeated clean boots. Observability remains enabled in
+  both modes.
 - Modbus RTU serial framing stays **local** (oqlos-server ↔ /dev/tty* on this Pi). Only OQL
   request/response crosses the LAN — latency-tolerant.
 - USB `by-id` strings differ per Pi; `deploy-oqlos-hw-api` autodetects and rewrites the
@@ -105,6 +109,14 @@ echo "PASS: linger + grupy (dialout,plugdev,i2c,gpio), timezone Europe/Warsaw; I
 set -euo pipefail
 
 BOOT_ID_BEFORE=$(cat /proc/sys/kernel/random/boot_id)
+WATCHDOG_ENABLED="${BOARDNET_RUNTIME_WATCHDOG_ENABLED}"
+case "$WATCHDOG_ENABLED" in
+  0|1) ;;
+  *)
+    echo "FAIL: BOARDNET_RUNTIME_WATCHDOG_ENABLED musi miec wartosc 0 albo 1" >&2
+    exit 1
+    ;;
+esac
 
 # Keep enough history to diagnose an abrupt reset, without filling the SD card.
 sudo mkdir -p /var/log/journal /etc/systemd/journald.conf.d
@@ -118,30 +130,53 @@ CONF
 sudo systemctl restart systemd-journald
 sudo journalctl --flush
 
-# BCM2835 watchdog is the single active reset owner. The external HAT remains
-# disabled until its exact MAX705/CH32V003 revision and timeout are verified.
+# The BCM2835 watchdog is opt-in. Its physical heartbeat is much shorter than
+# the configured userspace timeout, so enabling it on an unverified SD/rootfs
+# can turn an early I/O stall into a permanent reboot loop. The external HAT
+# remains disabled until its exact MAX705/CH32V003 revision is verified.
 sudo mkdir -p /etc/systemd/system.conf.d
-sudo tee /etc/systemd/system.conf.d/60-boardnet-watchdog.conf >/dev/null <<'CONF'
+if [ "$WATCHDOG_ENABLED" = "1" ]; then
+  WATCHDOG_POLICY=enabled
+  sudo tee /etc/systemd/system.conf.d/60-boardnet-watchdog.conf >/dev/null <<'CONF'
 [Manager]
 RuntimeWatchdogSec=3min
 RebootWatchdogSec=5min
 ServiceWatchdogs=yes
 CONF
+else
+  WATCHDOG_POLICY=disabled
+  sudo tee /etc/systemd/system.conf.d/60-boardnet-watchdog.conf >/dev/null <<'CONF'
+[Manager]
+RuntimeWatchdogSec=0
+RebootWatchdogSec=0
+KExecWatchdogSec=0
+ServiceWatchdogs=no
+CONF
+fi
+printf '%s\n' "$WATCHDOG_POLICY" | sudo tee /etc/boardnet-watchdog-policy >/dev/null
 
 # `daemon-reexec` can leave an SSH deploy blocked until the command timeout on
-# RPi3. With an active watchdog that turns a harmless re-run into an avoidable
-# hardware reset. Skip the reexec when the requested policy is already live;
-# otherwise queue it without waiting for the manager process to replace itself.
+# RPi3. Skip it when the requested policy is already live; otherwise queue it
+# without waiting for the manager process to replace itself.
 WATCHDOG_STATE=$(cat /sys/class/watchdog/watchdog0/state 2>/dev/null || true)
 RUNTIME_WATCHDOG=$(systemctl show --property=RuntimeWatchdogUSec --value 2>/dev/null || true)
-if [ "$WATCHDOG_STATE" = "active" ] && [ "$RUNTIME_WATCHDOG" = "3min" ]; then
-  echo "PASS: BCM watchdog policy already active; daemon-reexec skipped"
+
+watchdog_policy_is_live() {
+  if [ "$WATCHDOG_POLICY" = "enabled" ]; then
+    [ "$WATCHDOG_STATE" = "active" ] && [ "$RUNTIME_WATCHDOG" = "3min" ]
+  else
+    [ "$WATCHDOG_STATE" != "active" ] && [ "$RUNTIME_WATCHDOG" = "0" ]
+  fi
+}
+
+if watchdog_policy_is_live; then
+  echo "PASS: BCM watchdog policy already $WATCHDOG_POLICY; daemon-reexec skipped"
 else
   sudo systemctl --no-block daemon-reexec
   for _attempt in $(seq 1 30); do
     WATCHDOG_STATE=$(cat /sys/class/watchdog/watchdog0/state 2>/dev/null || true)
     RUNTIME_WATCHDOG=$(systemctl show --property=RuntimeWatchdogUSec --value 2>/dev/null || true)
-    [ "$WATCHDOG_STATE" = "active" ] && [ "$RUNTIME_WATCHDOG" = "3min" ] && break
+    watchdog_policy_is_live && break
     sleep 1
   done
 fi
@@ -151,8 +186,12 @@ if [ "$BOOT_ID_BEFORE" != "$BOOT_ID_AFTER" ]; then
   echo "FAIL: C2004-HW-0017 watchdog_configuration_unsafe — boot ID zmienil sie podczas konfiguracji" >&2
   exit 1
 fi
-if [ ! -e /dev/watchdog0 ] || [ "$WATCHDOG_STATE" != "active" ] || [ "$RUNTIME_WATCHDOG" != "3min" ]; then
-  echo "FAIL: C2004-HW-0017 watchdog_configuration_unsafe — /dev/watchdog0 nie jest aktywny" >&2
+if ! watchdog_policy_is_live; then
+  echo "FAIL: C2004-HW-0017 watchdog_configuration_unsafe — polityka $WATCHDOG_POLICY nie zostala zastosowana (state=$WATCHDOG_STATE runtime=$RUNTIME_WATCHDOG)" >&2
+  exit 1
+fi
+if [ "$WATCHDOG_POLICY" = "enabled" ] && [ ! -e /dev/watchdog0 ]; then
+  echo "FAIL: C2004-HW-0017 watchdog_configuration_unsafe — brak /dev/watchdog0" >&2
   exit 1
 fi
 
@@ -191,6 +230,7 @@ def pirtc_status():
 watchdog_root = "/sys/class/watchdog/watchdog0"
 internal = {
     "device": "/dev/watchdog0",
+    "policy": read("/etc/boardnet-watchdog-policy", "disabled"),
     "identity": read(f"{watchdog_root}/identity"),
     "state": read(f"{watchdog_root}/state", "missing"),
     "timeout_seconds": read(f"{watchdog_root}/timeout"),
@@ -203,11 +243,19 @@ external = pirtc.get("watchdog", {}) if isinstance(pirtc, dict) else {}
 throttled_raw = command(["vcgencmd", "get_throttled"], "unavailable")
 anomalies = []
 
-if internal["state"] != "active" or not internal["timeleft_seconds"]:
+if internal["policy"] == "enabled" and (
+    internal["state"] != "active" or not internal["timeleft_seconds"]
+):
     anomalies.append({
         "code": "C2004-HW-0017",
         "issue_code": "watchdog_configuration_unsafe",
         "message": "BCM watchdog is not active or has no time-left telemetry",
+    })
+if internal["policy"] != "enabled" and internal["state"] == "active":
+    anomalies.append({
+        "code": "C2004-HW-0017",
+        "issue_code": "watchdog_configuration_unsafe",
+        "message": "BCM watchdog is active although the BoardNet policy disables resets",
     })
 if external.get("enabled") is not False or external.get("ready") is not True:
     anomalies.append({
@@ -278,7 +326,7 @@ UNIT
 sudo systemctl daemon-reload
 sudo systemctl enable --now boardnet-watchdog-audit.timer
 sudo systemctl start boardnet-watchdog-audit.service
-echo "PASS: persistent journal + BCM watchdog + boardnet-watchdog-audit.timer (boot_id=$BOOT_ID_AFTER)"
+echo "PASS: persistent journal + BCM watchdog policy=$WATCHDOG_POLICY + boardnet-watchdog-audit.timer (boot_id=$BOOT_ID_AFTER)"
 ```
 
 ```bash markpact:ref install-mosquitto
@@ -1826,7 +1874,7 @@ extra_steps:
 
   - id: configure_boardnet_watchdog_observability
     action: inline_script
-    description: "Persistent journal, BCM watchdog policy i audit anomalii"
+    description: "Persistent journal, opt-in BCM watchdog policy i audit anomalii"
     command_ref: configure-boardnet-watchdog-observability
     timeout: 120
 

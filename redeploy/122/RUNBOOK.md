@@ -64,6 +64,12 @@ Modbus ADC adapter, and the RTC WatchDog HAT on the GPIO header (if used). These
 move **off pi109** onto this Pi.
 
 ## 7. Deploy
+
+The internal BCM watchdog is disabled by default so an unverified SD card or
+root filesystem cannot turn an early boot stall into a reboot loop. Keep
+`BOARDNET_RUNTIME_WATCHDOG_ENABLED=0` for provisioning and recovery. Set it to
+`1` only after an offline filesystem check and repeated clean boots.
+
 ```bash
 # From the c2004 repository:
 scripts/redeploy/deploy-fleet.sh --only 122

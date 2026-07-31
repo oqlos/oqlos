@@ -132,7 +132,7 @@ def test_pirtc_reuses_raspberry_pi_os_gpio_backend() -> None:
     assert "python3 -m venv --system-site-packages .venv" in pirtc
 
 
-def test_boardnet_watchdog_has_one_safe_reset_owner_and_persistent_audit() -> None:
+def test_boardnet_watchdog_is_opt_in_and_has_persistent_audit() -> None:
     migration = (ROOT / "redeploy/122/migration.md").read_text(encoding="utf-8")
     pirtc = migration.split("markpact:ref deploy-pirtc-sidecar", 1)[1].split(
         "```", 1
@@ -148,9 +148,21 @@ def test_boardnet_watchdog_has_one_safe_reset_owner_and_persistent_audit() -> No
     assert "StandardOutput=append:" not in pirtc
 
     assert "Storage=persistent" in audit
+    assert 'WATCHDOG_ENABLED="${BOARDNET_RUNTIME_WATCHDOG_ENABLED}"' in audit
+    assert 'WATCHDOG_POLICY=disabled' in audit
     assert "RuntimeWatchdogSec=3min" in audit
     assert "RebootWatchdogSec=5min" in audit
+    assert "RuntimeWatchdogSec=0" in audit
+    assert "RebootWatchdogSec=0" in audit
+    assert "KExecWatchdogSec=0" in audit
+    assert "ServiceWatchdogs=no" in audit
+    assert 'internal["policy"] == "enabled"' in audit
+    assert (
+        'internal["policy"] != "enabled" and internal["state"] == "active"'
+        in audit
+    )
     assert 'RUNTIME_WATCHDOG" = "3min"' in audit
+    assert 'RUNTIME_WATCHDOG" = "0"' in audit
     assert "systemctl --no-block daemon-reexec" in audit
     assert "daemon-reexec skipped" in audit
     assert "sudo systemctl daemon-reexec\n" not in audit
