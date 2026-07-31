@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from fastapi import APIRouter
@@ -20,6 +21,29 @@ from oqlos.hardware.hui_actions import (
 )
 
 router = APIRouter(tags=["hardware-hui"])
+
+_SAFE_PLUGIN_ID_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,63}")
+
+
+def _safe_unavailable_hardware_ids(payload: dict[str, Any]) -> list[str]:
+    """Project only bounded plugin identifiers from an HUI failure payload."""
+    candidates: list[Any] = []
+    unavailable = payload.get("unavailable_hardware")
+    if isinstance(unavailable, list):
+        candidates.extend(
+            item.get("plugin_id") if isinstance(item, dict) else item
+            for item in unavailable
+        )
+    explicit = payload.get("unavailable_hardware_ids")
+    if isinstance(explicit, list):
+        candidates.extend(explicit)
+
+    safe: list[str] = []
+    for candidate in candidates:
+        plugin_id = str(candidate or "").strip()
+        if _SAFE_PLUGIN_ID_RE.fullmatch(plugin_id) and plugin_id not in safe:
+            safe.append(plugin_id)
+    return safe
 
 
 def raise_if_hui_failed(
@@ -43,19 +67,37 @@ def raise_if_hui_failed(
             if entry.domain == "data"
             else "config_unavailable"
         )
+        unavailable_hardware_ids = _safe_unavailable_hardware_ids(payload)
+        safe_message = None
+        detail: dict[str, Any] = {
+            "architecture": "SOA",
+            "layer": "firmware",
+            "component": "hardware-hui",
+            "stage": "action.execute",
+            "problem_source": "hardware-action",
+            "operation_id": operation[:128],
+            "safe_to_retry": bool(payload.get("safe_to_retry", False)),
+        }
+        if unavailable_hardware_ids:
+            names = ", ".join(unavailable_hardware_ids)
+            safe_message = f"Required hardware unavailable: {names}"
+            detail.update(
+                {
+                    "peripheral_id": unavailable_hardware_ids[0],
+                    "unavailable_hardware_ids": unavailable_hardware_ids,
+                    "failure_reason": safe_message,
+                    "failure_codes": [
+                        f"{plugin_id}-inactive"
+                        for plugin_id in unavailable_hardware_ids
+                    ],
+                }
+            )
         raise OqlosError(
             code=issue_code,
             public_code=public_code,
             status_code=entry.http_status,
-            detail={
-                "architecture": "SOA",
-                "layer": "firmware",
-                "component": "hardware-hui",
-                "stage": "action.execute",
-                "problem_source": "hardware-action",
-                "operation_id": operation[:128],
-                "safe_to_retry": bool(payload.get("safe_to_retry", False)),
-            },
+            message=safe_message,
+            detail=detail,
         )
 
 

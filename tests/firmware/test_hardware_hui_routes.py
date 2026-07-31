@@ -36,10 +36,34 @@ def test_raise_if_hui_failed_preserves_hardware_unavailable_status():
                 "ok": False,
                 "error": "Required hardware unavailable: modbus-io",
                 "status_code": 503,
+                "unavailable_hardware": [
+                    {"plugin_id": "modbus-io", "message": "secret transport detail"}
+                ],
             }
         )
     assert exc.value.status_code == 503
     assert exc.value.public_code == "C2004-HW-0012"
+    assert exc.value.message == "Required hardware unavailable: modbus-io"
+    assert exc.value.detail["unavailable_hardware_ids"] == ["modbus-io"]
+    assert "secret transport detail" not in str(exc.value.detail)
+
+
+def test_raise_if_hui_failed_rejects_unsafe_hardware_identifiers():
+    with pytest.raises(OqlosError) as exc:
+        hui.raise_if_hui_failed(
+            {
+                "ok": False,
+                "error_code": "C2004-HW-0012",
+                "status_code": 503,
+                "unavailable_hardware": [
+                    {"plugin_id": "modbus-io\npassword=hunter2"}
+                ],
+            }
+        )
+
+    assert exc.value.message != "Required hardware unavailable: modbus-io\npassword=hunter2"
+    assert "hunter2" not in exc.value.message
+    assert "unavailable_hardware_ids" not in exc.value.detail
 
 
 def test_raise_if_hui_failed_rejects_invalid_status_metadata_safely():
@@ -120,3 +144,39 @@ def test_hui_failure_http_contract_does_not_leak_action_error(monkeypatch):
     assert body["component"] == "hardware-hui"
     assert body["stage"] == "action.execute"
     assert "hunter2" not in response.text
+
+
+def test_hui_failure_http_contract_exposes_only_safe_hardware_ids(monkeypatch):
+    monkeypatch.setattr(hui, "get_hardware_gateway", lambda: _FakeGateway())
+
+    async def _fake_start(_gateway):
+        return {
+            "ok": False,
+            "error": "private serial failure",
+            "error_code": "C2004-HW-0012",
+            "status_code": 503,
+            "unavailable_hardware": [
+                {
+                    "plugin_id": "modbus-io",
+                    "message": "private serial failure",
+                }
+            ],
+        }
+
+    monkeypatch.setattr(hui, "start_hui_artificial_lung", _fake_start)
+    app = FastAPI()
+    install_oqlos_error_handler(app)
+    app.include_router(hui.router, prefix="/api/v1/hardware")
+
+    response = TestClient(app, raise_server_exceptions=False).post(
+        "/api/v1/hardware/hui/al/start"
+    )
+
+    assert response.status_code == 503
+    body = response.json()
+    assert body["detail"] == "Required hardware unavailable: modbus-io"
+    assert body["error"] == "Required hardware unavailable: modbus-io"
+    assert body["metadata"]["context"]["unavailable_hardware_ids"] == [
+        "modbus-io"
+    ]
+    assert "private serial failure" not in response.text
