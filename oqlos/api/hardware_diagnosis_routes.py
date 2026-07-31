@@ -24,7 +24,10 @@ async def hardware_stack_snapshot() -> dict[str, Any]:
 @router.get("/diagnosis")
 async def hardware_diagnosis_route(
     scan: str = Query(default="never", description="Identify scan mode passed before diagnosis"),
-    devices: str = Query(default="all", description="Device subset: all | motors"),
+    devices: str = Query(
+        default="all",
+        description="Device subset: all | motors | modbus | an exact recoverable plugin id",
+    ),
 ) -> dict[str, Any]:
     """Per-device diagnosis plan (environment + recommended actions)."""
     from oqlos.hardware.diagnosis import build_diagnosis_report, filter_diagnosis_dict_for_devices, report_to_dict
@@ -38,7 +41,10 @@ async def hardware_diagnosis_route(
 @router.post("/recover")
 async def hardware_recover_route(
     scope: str = Query(default="safe", description="Recovery scope: safe = in-process plugin reconnect only"),
-    devices: str = Query(default="all", description="Device subset: all | motors"),
+    devices: str = Query(
+        default="all",
+        description="Device subset: all | motors | modbus | an exact recoverable plugin id",
+    ),
 ) -> dict[str, Any]:
     """Safe auto-recovery inside OqlOS; host sidecar steps are returned as host_actions."""
     from oqlos.hardware.diagnosis import (

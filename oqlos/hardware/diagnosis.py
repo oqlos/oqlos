@@ -34,6 +34,7 @@ from oqlos.hardware.stack_snapshot import build_hardware_stack_snapshot
 
 _OQLOS_SAFE_PLUGINS = ("modbus-io", "modbus-adc", "motor-tic249", "motor-dri0050")
 _MOTOR_PLUGIN_IDS = frozenset({"motor-tic249", "motor-dri0050"})
+_MODBUS_PLUGIN_IDS = frozenset({"modbus-io", "modbus-adc"})
 
 # Backward-compatible aliases
 _health_map = health_map
@@ -41,8 +42,13 @@ _action_dict = action_dict
 
 
 def resolve_recover_plugin_ids(devices: str) -> tuple[str, ...]:
-    if str(devices or "").strip().lower() == "motors":
+    selector = str(devices or "").strip().lower()
+    if selector == "motors":
         return tuple(sorted(_MOTOR_PLUGIN_IDS))
+    if selector == "modbus":
+        return tuple(sorted(_MODBUS_PLUGIN_IDS))
+    if selector in _OQLOS_SAFE_PLUGINS:
+        return (selector,)
     return _OQLOS_SAFE_PLUGINS
 
 
@@ -59,17 +65,30 @@ def _is_motor_global_action(action: object) -> bool:
 
 
 def filter_diagnosis_dict_for_devices(payload: dict[str, Any], devices: str) -> dict[str, Any]:
-    if str(devices or "").strip().lower() != "motors":
+    selector = str(devices or "").strip().lower()
+    if selector not in {"motors", "modbus", *_OQLOS_SAFE_PLUGINS}:
         return payload
+    selected = set(resolve_recover_plugin_ids(selector))
     device_map = payload.get("devices") if isinstance(payload.get("devices"), dict) else {}
     filtered_devices = {
-        key: value for key, value in device_map.items() if key in _MOTOR_PLUGIN_IDS
+        key: value for key, value in device_map.items() if key in selected
     }
-    global_actions = [
-        action
-        for action in (payload.get("global_actions") or [])
-        if _is_motor_global_action(action)
-    ]
+    if selected <= _MOTOR_PLUGIN_IDS:
+        global_actions = [
+            action
+            for action in (payload.get("global_actions") or [])
+            if _is_motor_global_action(action)
+        ]
+    else:
+        global_actions = [
+            action
+            for action in (payload.get("global_actions") or [])
+            if isinstance(action, dict)
+            and (
+                str(action.get("device_id") or "") in selected
+                or str(action.get("id") or "").startswith("global-modbus")
+            )
+        ]
     return {
         **payload,
         "devices": filtered_devices,

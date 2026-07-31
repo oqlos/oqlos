@@ -130,7 +130,9 @@ async def hardware_hui_al_command_v3(command: str, payload: dict[str, Any] = Bod
 
 @sub_router.post("/modbus/autoconfigure")
 async def hardware_modbus_autoconfigure_v3() -> dict[str, Any]:
-    return await _hardware_v1_call("hardware_recover_route", scope="safe")
+    return await _hardware_v1_call(
+        "hardware_recover_route", scope="safe", devices="modbus"
+    )
 
 
 @sub_router.get("/diagnosis")

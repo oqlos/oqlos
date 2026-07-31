@@ -4,6 +4,7 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+from oqlos.api import _hw3_system as system_hw
 from oqlos.api import hardware_modbus_routes as modbus_hw
 from oqlos.api._hw3_system import sub_router
 from oqlos.errors.fastapi_integration import install_oqlos_error_handler
@@ -27,6 +28,24 @@ def _client() -> TestClient:
     install_oqlos_error_handler(app)
     app.include_router(sub_router, prefix="/api/v3/hardware")
     return TestClient(app, raise_server_exceptions=False)
+
+
+def test_modbus_autoconfigure_limits_safe_recovery_to_modbus(monkeypatch) -> None:
+    calls = []
+
+    async def _recover(name, **kwargs):
+        calls.append((name, kwargs))
+        return {"ok": True}
+
+    monkeypatch.setattr(system_hw, "_hardware_v1_call", _recover)
+
+    response = _client().post("/api/v3/hardware/modbus/autoconfigure")
+
+    assert response.status_code == 200
+    assert response.json() == {"ok": True}
+    assert calls == [
+        ("hardware_recover_route", {"scope": "safe", "devices": "modbus"})
+    ]
 
 
 def test_program_isolated_rejects_invalid_integer_before_hardware(monkeypatch) -> None:
