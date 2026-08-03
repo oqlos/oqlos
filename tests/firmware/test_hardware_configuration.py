@@ -143,6 +143,32 @@ def test_effective_configuration_explains_environment_override() -> None:
     }]
 
 
+def test_effective_configuration_reuses_parse_until_source_changes(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    from oqlos.hardware import configuration as configuration_module
+
+    source = FIXTURES / "boardnet.yaml"
+    target = tmp_path / "oqlos.yaml"
+    target.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
+    configuration_module._load_effective_hardware_configuration_cached.cache_clear()
+    original_loader = configuration_module.load_hardware_configuration
+    calls: list[Path] = []
+
+    def counted_loader(path, *, allow_legacy=False):
+        calls.append(Path(path))
+        return original_loader(path, allow_legacy=allow_legacy)
+
+    monkeypatch.setattr(configuration_module, "load_hardware_configuration", counted_loader)
+
+    first, _ = configuration_module.load_effective_hardware_configuration(target)
+    second, _ = configuration_module.load_effective_hardware_configuration(target)
+
+    assert first is second
+    assert calls == [target.resolve()]
+
+
 def test_atomic_save_leaves_no_temporary_file(tmp_path: Path) -> None:
     config = load_hardware_configuration(FIXTURES / "boardnet.yaml", allow_legacy=False)
     target = tmp_path / "oqlos.json"

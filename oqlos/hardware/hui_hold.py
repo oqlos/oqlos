@@ -457,9 +457,22 @@ async def _engage_hold_pump_if_needed(
 async def _start_hui_hold_unlocked(gateway: Any, key: str) -> dict[str, Any]:
     global _active_hold_key
     hold_key = str(key or "").strip().lower()
+    profile_started = _timing_start()
     profile = get_hui_hold_profiles().get(hold_key)
+    profile_operation = _operation(
+        "profile.resolve",
+        profile is not None,
+        timing=profile_started,
+        key=hold_key,
+    )
     if profile is None:
-        return {"ok": False, "command": "hold_start", "key": hold_key, "error": "Unknown HUI hold key"}
+        return {
+            "ok": False,
+            "command": "hold_start",
+            "key": hold_key,
+            "error": "Unknown HUI hold key",
+            "timeline": _operation_timeline([profile_operation]),
+        }
 
     required_plugins = ["modbus-io"]
     if float(profile["pump_pct"]):
@@ -481,7 +494,7 @@ async def _start_hui_hold_unlocked(gateway: Any, key: str) -> dict[str, Any]:
     if readiness_failure is not None:
         readiness_failure["operations"] = []
         readiness_failure["timeline"] = _operation_timeline(
-            [readiness_operation]
+            [profile_operation, readiness_operation]
         )
         return readiness_failure
 
@@ -523,7 +536,9 @@ async def _start_hui_hold_unlocked(gateway: Any, key: str) -> dict[str, Any]:
         "command": "hold_start",
         "key": hold_key,
         "operations": operations,
-        "timeline": _operation_timeline([readiness_operation, *operations]),
+        "timeline": _operation_timeline(
+            [profile_operation, readiness_operation, *operations]
+        ),
     }
 
 

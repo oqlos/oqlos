@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import os
+from functools import lru_cache
 from pathlib import Path
 import re
 import shlex
@@ -322,7 +323,35 @@ def load_effective_hardware_configuration(
         from oqlos.hardware.config_paths import resolve_oqlos_config_path
 
         path = resolve_oqlos_config_path()
+    resolved_path = Path(path).resolve()
+    if environ is not None:
+        return resolve_effective_hardware_configuration(
+            load_hardware_configuration(resolved_path, allow_legacy=True),
+            environ,
+        )
+    stat = resolved_path.stat()
+    environment = tuple(
+        (name, os.environ.get(name, ""))
+        for _plugin, _parameter, names, _kind in _ENV_OVERRIDES
+        for name in names
+    )
+    return _load_effective_hardware_configuration_cached(
+        str(resolved_path),
+        stat.st_mtime_ns,
+        stat.st_size,
+        environment,
+    )
+
+
+@lru_cache(maxsize=8)
+def _load_effective_hardware_configuration_cached(
+    path: str,
+    _mtime_ns: int,
+    _size: int,
+    environment: tuple[tuple[str, str], ...],
+) -> tuple[HardwareConfiguration, list[dict[str, Any]]]:
+    """Cache immutable runtime configuration until file or overrides change."""
     return resolve_effective_hardware_configuration(
         load_hardware_configuration(path, allow_legacy=True),
-        environ,
+        dict(environment),
     )
