@@ -685,6 +685,31 @@ class PluginHardwareGateway:
             )
             return False
 
+    async def all_valves_off(self) -> dict[str, Any]:
+        """Clear all Waveshare outputs in one Modbus transaction."""
+        if not self.is_real:
+            logger.info("[HW mock] ALL_VALVES_OFF")
+            return {"success": True, "data": {"all_outputs": True, "mock": True}}
+
+        await ensure_power_safe(
+            self,
+            operation="modbus-io.all_outputs_off",
+            safe_state=True,
+        )
+
+        plugin = await self._get_or_connect_plugin("modbus-io")
+        if not plugin:
+            return _plugin_command_failure("plugin-unavailable")
+        try:
+            return _normalize_plugin_command_result(
+                await plugin.execute_command("all_outputs_off", {})
+            )
+        except PLUGIN_OPERATION_ERRORS as exc:
+            _log_boundary_failure(
+                logger, "PluginHardwareGateway.all_valves_off failed", exc
+            )
+            return _plugin_command_failure("command-failed")
+
     async def set_pump(self, power_pct: float) -> dict[str, Any]:
         """Set pump power using motor plugin with detailed driver data."""
         if not self.is_real:

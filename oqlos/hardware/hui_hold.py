@@ -121,6 +121,13 @@ def _operation(name: str, ok: bool, **extra: Any) -> dict[str, Any]:
 def _shutdown_progress(operations: list[dict[str, Any]]) -> dict[str, Any]:
     pump_operations = [operation for operation in operations if operation.get("operation") == "set_pump"]
     valve_operations = [operation for operation in operations if operation.get("operation") == "set_valve"]
+    bulk_operations = [
+        operation
+        for operation in operations
+        if operation.get("operation") == "all_valves_off"
+    ]
+    bulk_executed = bool(bulk_operations)
+    bulk_confirmed = bool(bulk_operations and bulk_operations[-1].get("ok"))
     return {
         "requested": {
             "pump_off": True,
@@ -128,15 +135,23 @@ def _shutdown_progress(operations: list[dict[str, Any]]) -> dict[str, Any]:
         },
         "executed": {
             "pump_off": bool(pump_operations),
-            "valves_off": [str(operation.get("valve_id")) for operation in valve_operations],
+            "valves_off": (
+                list(HUI_ALL_VALVE_IDS)
+                if bulk_executed
+                else [str(operation.get("valve_id")) for operation in valve_operations]
+            ),
         },
         "confirmed": {
             "pump_off": bool(pump_operations and pump_operations[-1].get("ok")),
-            "valves_off": [
-                str(operation.get("valve_id"))
-                for operation in valve_operations
-                if operation.get("ok")
-            ],
+            "valves_off": (
+                list(HUI_ALL_VALVE_IDS)
+                if bulk_confirmed
+                else [
+                    str(operation.get("valve_id"))
+                    for operation in valve_operations
+                    if operation.get("ok")
+                ]
+            ),
         },
     }
 
@@ -156,6 +171,27 @@ async def _set_pump_best_effort(gateway: Any, power_pct: float) -> dict[str, Any
         return await _set_pump(gateway, power_pct)
     except Exception as exc:
         return _operation("set_pump", False, power_pct=power_pct, error=str(exc), best_effort=True)
+
+
+async def _all_valves_off(gateway: Any) -> dict[str, Any] | None:
+    command = getattr(gateway, "all_valves_off", None)
+    if not callable(command):
+        return None
+    try:
+        result = await command()
+        return _operation(
+            "all_valves_off",
+            _success(result),
+            valve_ids=list(HUI_ALL_VALVE_IDS),
+            result=result,
+        )
+    except Exception as exc:
+        return _operation(
+            "all_valves_off",
+            False,
+            valve_ids=list(HUI_ALL_VALVE_IDS),
+            error=str(exc),
+        )
 
 
 async def _shutdown_all_hui_hardware_unlocked(gateway: Any) -> dict[str, Any]:
@@ -186,19 +222,26 @@ async def _shutdown_all_hui_hardware_unlocked(gateway: Any) -> dict[str, Any]:
         )
         return readiness_failure
 
-    for valve_id in HUI_ALL_VALVE_IDS:
-        try:
-            operations.append(await _set_valve(gateway, valve_id, False))
-        except Exception as exc:
-            operations.append(_operation("set_valve", False, valve_id=valve_id, value=False, error=str(exc)))
-    ok = all(operation.get("ok") for operation in operations)
+    bulk_off = await _all_valves_off(gateway)
+    if bulk_off is not None:
+        operations.append(bulk_off)
+    if bulk_off is None or not bulk_off.get("ok"):
+        for valve_id in HUI_ALL_VALVE_IDS:
+            try:
+                operations.append(await _set_valve(gateway, valve_id, False))
+            except Exception as exc:
+                operations.append(_operation("set_valve", False, valve_id=valve_id, value=False, error=str(exc)))
+    progress = _shutdown_progress(operations)
+    ok = bool(progress["confirmed"]["pump_off"]) and set(
+        progress["confirmed"]["valves_off"]
+    ).issuperset(HUI_ALL_VALVE_IDS)
     return {
         "ok": ok,
         "status": "safe" if ok else "partial",
         "degraded": not ok,
         "command": "shutdown",
         "operations": operations,
-        **_shutdown_progress(operations),
+        **progress,
     }
 
 

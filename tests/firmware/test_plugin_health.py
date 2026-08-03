@@ -407,6 +407,31 @@ def test_modbus_rtu_uses_configured_device_id_for_health_and_writes():
     assert result["success"] is True
 
 
+def test_modbus_rtu_all_outputs_off_uses_waveshare_broadcast_coil():
+    client = _CapturingModbusClient()
+    plugin = ModbusPlugin(
+        PluginConfig(
+            plugin_id="modbus-io",
+            enabled=True,
+            connection_type="modbus-rtu",
+            connection_params={"serial_port": "/dev/ttyACM0", "device_id": 2},
+            timeout=0.1,
+        )
+    )
+    plugin._client = client
+    plugin._mode = "rtu"
+
+    result = asyncio.run(plugin.execute_command("all_outputs_off", {}))
+
+    assert result["success"] is True
+    assert result["data"]["all_outputs"] is True
+    assert client.write_kwargs == {
+        "address": ModbusPlugin.ALL_OUTPUTS_COIL_ADDRESS,
+        "value": False,
+        "device_id": 2,
+    }
+
+
 def test_modbus_rtu_health_infers_mode_from_connected_bus():
     client = _CapturingAsyncModbusBus()
     plugin = ModbusPlugin(

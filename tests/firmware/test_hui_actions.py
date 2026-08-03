@@ -60,6 +60,18 @@ class FakeGateway:
         )
 
 
+class BulkOffGateway(FakeGateway):
+    async def all_valves_off(self) -> dict[str, Any]:
+        self.calls.append(("all_valves_off",))
+        return {"success": True, "data": {"all_outputs": True}}
+
+
+class FailingBulkOffGateway(FakeGateway):
+    async def all_valves_off(self) -> dict[str, Any]:
+        self.calls.append(("all_valves_off",))
+        return {"success": False, "error": "bulk command unsupported"}
+
+
 class FakeTic249Plugin:
     def __init__(self) -> None:
         self.commands: list[tuple[str, dict[str, Any]]] = []
@@ -430,6 +442,32 @@ def test_hui_shutdown_turns_off_pump_and_all_known_valves() -> None:
     assert gateway.calls[0] == ("pump", 0.0)
     off_valves = [call for call in gateway.calls if call[0] == "valve" and call[2] is False]
     assert len(off_valves) == len(hui_actions.HUI_ALL_VALVE_IDS)
+
+
+def test_hui_shutdown_uses_single_bulk_modbus_safe_off_when_available() -> None:
+    gateway = BulkOffGateway()
+
+    payload = run(hui_actions.shutdown_all_hui_hardware(gateway))
+
+    assert payload["ok"] is True
+    assert gateway.calls == [("pump", 0.0), ("all_valves_off",)]
+    assert payload["confirmed"]["valves_off"] == list(
+        hui_actions.HUI_ALL_VALVE_IDS
+    )
+
+
+def test_hui_shutdown_falls_back_to_individual_valves_after_bulk_failure() -> None:
+    gateway = FailingBulkOffGateway()
+
+    payload = run(hui_actions.shutdown_all_hui_hardware(gateway))
+
+    assert payload["ok"] is True
+    assert gateway.calls[:2] == [("pump", 0.0), ("all_valves_off",)]
+    off_valves = [call for call in gateway.calls if call[0] == "valve"]
+    assert len(off_valves) == len(hui_actions.HUI_ALL_VALVE_IDS)
+    assert payload["confirmed"]["valves_off"] == list(
+        hui_actions.HUI_ALL_VALVE_IDS
+    )
 
 
 def test_hui_shutdown_stops_pump_and_fails_fast_when_modbus_is_unavailable() -> None:

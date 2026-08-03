@@ -34,6 +34,7 @@ class ModbusPlugin(HardwarePlugin):
     PLUGIN_DESCRIPTION = "8DI + 8DO industrial I/O module — valve & signal control"
     REQUIRED_PYTHON_PACKAGES = ["pymodbus"]
     SUPPORTED_PROTOCOLS = ["modbus-rtu", "modbus-tcp"]
+    ALL_OUTPUTS_COIL_ADDRESS = 0x00FF
 
     def __init__(self, config: PluginConfig):
         super().__init__(config)
@@ -287,6 +288,18 @@ class ModbusPlugin(HardwarePlugin):
             return {"success": False, "error": f"Unknown valve_id: {valve_id}"}
         return await self.execute_command("set_coil", {"coil": coil, "value": params.get("value", False)})
 
+    async def _execute_all_outputs_off(self) -> dict[str, Any]:
+        """Clear every Waveshare output with its single safe-off command."""
+        result = await self._execute_set_coil(
+            {"coil": self.ALL_OUTPUTS_COIL_ADDRESS, "value": False}
+        )
+        if result.get("success"):
+            result["data"] = {
+                **dict(result.get("data") or {}),
+                "all_outputs": True,
+            }
+        return result
+
     def _rtu_timeout(self) -> float:
         return rtu_timeout(self.config)
 
@@ -365,6 +378,8 @@ class ModbusPlugin(HardwarePlugin):
                 return await self._execute_set_coil(params)
             if command == "set_valve":
                 return await self._execute_set_valve(params)
+            if command == "all_outputs_off":
+                return await self._execute_all_outputs_off()
             if command == "read_io_snapshot":
                 return await self._execute_read_io_snapshot()
             if command == "write_holding_register":
@@ -383,7 +398,13 @@ class ModbusPlugin(HardwarePlugin):
 
         capabilities = super().get_capabilities()
         capabilities.update({
-            "supported_commands": ["set_coil", "set_valve", "read_io_snapshot", "write_holding_register"],
+            "supported_commands": [
+                "set_coil",
+                "set_valve",
+                "all_outputs_off",
+                "read_io_snapshot",
+                "write_holding_register",
+            ],
             "valve_mapping": dict(VALVE_COIL_MAP),
             "configuration_schema": {
                 "connection_type": {
