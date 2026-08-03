@@ -229,28 +229,20 @@ def _wizard_apply_uart_write(
     bus_settings: Any,
     cur_id: int,
     new_id: int,
-    uart_target: int,
     new_baudrate: int,
     line_parity: str,
+    uart_already_configured: bool,
     write_uart_config: Any,
     write_device_address: Any,
-    _uart_register_value: Any,
 ) -> "dict[str, bool]":
-    """Write UART config and device address with retry loop. Returns {set_address, set_uart}."""
-    import time
+    """Write address before UART so every write uses the live bus settings.
 
-    uart_at_current = _uart_register_value(cur_id)
-    if uart_at_current is not None and int(uart_at_current) == int(uart_target):
-        set_uart = True
-    else:
-        set_uart = bool(
-            write_uart_config(
-                bus_settings,
-                device_id=cur_id,
-                baudrate=int(new_baudrate),
-                parity=line_parity,
-            )
-        )
+    Waveshare applies a UART register write immediately.  Writing UART first
+    and then trying to change the slave address through the old baud rate can
+    therefore leave a module half-commissioned.  Address changes keep the
+    current UART settings, so changing the address first is deterministic.
+    """
+    import time
 
     if cur_id != new_id:
         set_address = bool(
@@ -264,23 +256,16 @@ def _wizard_apply_uart_write(
     else:
         set_address = True
 
-    if not set_uart:
-        for attempt, device_id in enumerate((new_id, new_id, cur_id)):
-            if attempt == 1:
-                time.sleep(0.15)
-            uart_value = _uart_register_value(device_id)
-            if uart_value is not None and int(uart_value) == int(uart_target):
-                set_uart = True
-                break
-        if not set_uart:
-            set_uart = bool(
-                write_uart_config(
-                    bus_settings,
-                    device_id=new_id,
-                    baudrate=int(new_baudrate),
-                    parity=line_parity,
-                )
+    set_uart = bool(uart_already_configured)
+    if set_address and not set_uart:
+        set_uart = bool(
+            write_uart_config(
+                bus_settings,
+                device_id=new_id,
+                baudrate=int(new_baudrate),
+                parity=line_parity,
             )
+        )
 
     return {"set_address": set_address, "set_uart": set_uart}
 
@@ -370,13 +355,9 @@ def _modbus_wizard_program_isolated(
     try:
         from pimodbus.config import RtuBusSettings
         from pimodbus.provisioning import (
-            UART_REGISTER,
             read_device_config,
-            uart_register_value,
             write_device_address,
             write_uart_config,
-            _open_client,
-            _read_holding_register,
         )
     except Exception as exc:
         _raise_pimodbus_unavailable(
@@ -465,21 +446,24 @@ def _modbus_wizard_program_isolated(
         writes["set_address"] = True
         writes["set_uart"] = True
     else:
-        # Writes must use the baud the module is *currently* listening on.
-        uart_target = uart_register_value(target_baud, line_parity)
+        # Address must be written first.  A UART change takes effect
+        # immediately and invalidates bus_settings for subsequent writes.
         cur_id = int(current_device_id)
         new_id = int(new_device_id)
-
-        def _uart_register_value(device_id: int) -> int | None:
-            client = _open_client(bus_settings)
-            try:
-                return _read_holding_register(client, UART_REGISTER, device_id)
-            finally:
-                client.close()
+        uart_already_configured = (
+            int(existing.get("baudrate") or 0) == target_baud
+            and str(existing.get("parity") or "").upper() == line_parity
+        )
 
         write_results = _wizard_apply_uart_write(
-            bus_settings, cur_id, new_id, uart_target, target_baud, line_parity,
-            write_uart_config, write_device_address, _uart_register_value,
+            bus_settings,
+            cur_id,
+            new_id,
+            target_baud,
+            line_parity,
+            uart_already_configured,
+            write_uart_config,
+            write_device_address,
         )
         writes["set_address"] = write_results["set_address"]
         writes["set_uart"] = write_results["set_uart"]
