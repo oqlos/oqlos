@@ -13,6 +13,7 @@ from oqlos.hardware.hui_hold import (
     start_hui_hold,
     stop_hui_hold,
 )
+from oqlos.hardware.hui_readiness import build_hui_readiness
 from oqlos.hardware.hui_valve import get_hui_valve_specs, run_hui_valve_key
 from oqlos.hardware.hui_lung_recipe import (
     HUI_AL_LUNG_VALVE_ID,
@@ -38,6 +39,7 @@ __all__ = [
     "get_hui_lung_reciprocate_args",
     "get_hui_lung_valve_id",
     "get_hui_valve_specs",
+    "build_hui_readiness",
     "list_hui_actions",
     "run_hui_valve_key",
     "shutdown_all_hui_hardware",
@@ -60,6 +62,10 @@ def list_hui_actions() -> dict[str, Any]:
             key: {
                 "valves_on": list(profile["valves_on"]),
                 "pump_pct": profile["pump_pct"],
+                "required_hardware": [
+                    "modbus-io",
+                    *(["motor-dri0050"] if float(profile["pump_pct"]) else []),
+                ],
             }
             for key, profile in profiles.items()
         },
@@ -70,5 +76,19 @@ def list_hui_actions() -> dict[str, Any]:
         "artificial_lung": {
             "valve_id": get_hui_lung_valve_id(),
             "reciprocate_args": get_hui_lung_reciprocate_args(),
+            "start_required_hardware": ["modbus-io", "motor-tic249"],
+            "stop_required_hardware": ["motor-tic249"],
+            "stop_best_effort_hardware": ["modbus-io"],
+        },
+        "requirements": {
+            "valve_actions": ["modbus-io"],
+            "shutdown_full_confirmation": ["motor-dri0050", "modbus-io"],
+            "telemetry_sc_wc": ["usb-adc-dfr1184"],
+        },
+        "diagnostics": {
+            "hui_readiness": "/api/v1/hardware/hui/readiness",
+            "hardware_diagnosis": "/api/v1/hardware/diagnosis?scan=never",
+            "modbus_io": "/api/v1/plugins/modbus-io/health",
+            "analog_inputs": "/api/v1/hardware/sensors/batch",
         },
     }

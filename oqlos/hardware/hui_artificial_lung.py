@@ -197,7 +197,17 @@ async def stop_hui_artificial_lung(gateway: Any) -> dict[str, Any]:
     ok = bool(lung_ok) and valve_ok
     payload: dict[str, Any] = {
         "ok": ok,
+        "status": "partial" if valve.get("skipped") and lung_ok else ("safe" if ok else "failed"),
         "command": "al-stop",
+        "requested": {"motor_stop": True, "valve_close": valve_id},
+        "executed": {
+            "motor_stop": True,
+            "valve_close": not bool(valve.get("skipped")),
+        },
+        "confirmed": {
+            "motor_stopped": bool(lung_ok),
+            "valve_closed": bool(valve.get("ok")),
+        },
         "operations": [
             {"operation": "stop_lung", "ok": bool(lung_ok), "result": lung_ok},
             valve,

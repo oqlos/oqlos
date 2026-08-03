@@ -190,8 +190,12 @@ def test_hui_hold_stop_fails_fast_when_modbus_io_is_unavailable(monkeypatch) -> 
     assert payload["key"] == "head-inflate"
     assert payload["stopped_key"] == "head-inflate"
     assert hui_hold._active_hold_key is None  # noqa: SLF001
-    assert not any(call[0] in {"pump", "valve"} for call in gateway.calls)
+    assert ("pump", 0.0) in gateway.calls
+    assert not any(call[0] == "valve" for call in gateway.calls)
     assert ("readiness", "modbus-io") in gateway.calls
+    assert payload["status"] == "partial"
+    assert payload["executed"]["pump_off"] is True
+    assert payload["confirmed"]["pump_off"] is True
 
 
 def test_hui_hold_profile_can_be_overridden_from_hardware_configuration(monkeypatch) -> None:
@@ -225,7 +229,12 @@ def test_hui_actions_list_uses_configured_profiles(monkeypatch) -> None:
     payload = hui_actions.list_hui_actions()
 
     assert payload["ok"] is True
-    assert payload["profiles"]["head-inflate"] == {"valves_on": ["valve-8"], "pump_pct": 12.5}
+    assert payload["profiles"]["head-inflate"] == {
+        "valves_on": ["valve-8"],
+        "pump_pct": 12.5,
+        "required_hardware": ["modbus-io", "motor-dri0050"],
+    }
+    assert payload["diagnostics"]["hui_readiness"] == "/api/v1/hardware/hui/readiness"
 
 
 def test_hui_artificial_lung_uses_tic249_plugin_recipe() -> None:
@@ -440,7 +449,64 @@ def test_hui_shutdown_stops_pump_and_fails_fast_when_modbus_is_unavailable() -> 
 
     assert payload["ok"] is False
     assert payload["command"] == "shutdown"
+    assert payload["status"] == "partial"
     assert payload["error_code"] == "C2004-HW-0012"
     assert payload["unavailable_hardware"][0]["plugin_id"] == "modbus-io"
     assert payload["operations"][0]["operation"] == "set_pump"
+    assert payload["executed"] == {"pump_off": True, "valves_off": []}
+    assert payload["confirmed"] == {"pump_off": True, "valves_off": []}
     assert gateway.calls == [("pump", 0.0), ("readiness", "modbus-io")]
+
+
+def test_hui_readiness_separates_control_blocker_from_dfr1184_telemetry() -> None:
+    gateway = FakeGateway(
+        real=True,
+        readiness={
+            "modbus-io": {
+                "ok": False,
+                "plugin_id": "modbus-io",
+                "status": "error",
+                "message": "Plugin health is not compatible",
+            },
+            "motor-dri0050": {
+                "ok": True,
+                "plugin_id": "motor-dri0050",
+                "status": "connected",
+                "message": "Plugin is ready",
+            },
+            "motor-tic249": {
+                "ok": True,
+                "plugin_id": "motor-tic249",
+                "status": "connected",
+                "message": "Plugin is ready",
+            },
+        },
+    )
+
+    payload = run(
+        hui_readiness.build_hui_readiness(
+            gateway,
+            analog_input_health={
+                "ok": False,
+                "status": "degraded",
+                "components": {
+                    "usb-adc-mcp2221": {"ok": True, "status": "connected", "message": "ready"},
+                    "usb-adc-dfr1184": {
+                        "ok": False,
+                        "status": "unavailable",
+                        "message": "UART response truncated: expected 4 bytes, received 0",
+                        "transport": "uart",
+                        "endpoint": "/dev/serial0",
+                    },
+                },
+            },
+        )
+    )
+
+    assert payload["status"] == "degraded"
+    assert payload["controls_ready"] is False
+    assert payload["telemetry_ready"] is False
+    assert payload["actions"]["holds"]["lp-pwm-plus10"]["unavailable_hardware"] == ["modbus-io"]
+    assert payload["actions"]["shutdown"]["ready"] is True
+    assert payload["actions"]["shutdown"]["full_confirmation"] is False
+    assert payload["telemetry"]["components"]["usb-adc-dfr1184"]["endpoint"] == "/dev/serial0"

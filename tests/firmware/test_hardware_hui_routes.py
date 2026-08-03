@@ -43,9 +43,24 @@ def test_raise_if_hui_failed_preserves_hardware_unavailable_status():
         )
     assert exc.value.status_code == 503
     assert exc.value.public_code == "C2004-HW-0012"
+    assert exc.value.issue_code == "hw_modbus_no_response"
     assert exc.value.message == "Required hardware unavailable: modbus-io"
+    assert "oqlos.yaml" not in exc.value.message
     assert exc.value.detail["unavailable_hardware_ids"] == ["modbus-io"]
     assert "secret transport detail" not in str(exc.value.detail)
+
+
+def test_raise_if_hui_failed_503_without_plugin_ids_avoids_yaml_lie():
+    with pytest.raises(OqlosError) as exc:
+        hui.raise_if_hui_failed(
+            {
+                "ok": False,
+                "error_code": "C2004-HW-0012",
+                "status_code": 503,
+            }
+        )
+    assert exc.value.issue_code == "identify_unavailable"
+    assert "oqlos.yaml" not in exc.value.message
 
 
 def test_raise_if_hui_failed_rejects_unsafe_hardware_identifiers():
@@ -179,4 +194,6 @@ def test_hui_failure_http_contract_exposes_only_safe_hardware_ids(monkeypatch):
     assert body["metadata"]["context"]["unavailable_hardware_ids"] == [
         "modbus-io"
     ]
+    assert body["metadata"]["diagnostics"]["issue_code"] == "hw_modbus_no_response"
+    assert "oqlos.yaml" not in response.text
     assert "private serial failure" not in response.text

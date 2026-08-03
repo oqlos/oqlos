@@ -118,6 +118,29 @@ def _operation(name: str, ok: bool, **extra: Any) -> dict[str, Any]:
     return {"operation": name, "ok": ok, **extra}
 
 
+def _shutdown_progress(operations: list[dict[str, Any]]) -> dict[str, Any]:
+    pump_operations = [operation for operation in operations if operation.get("operation") == "set_pump"]
+    valve_operations = [operation for operation in operations if operation.get("operation") == "set_valve"]
+    return {
+        "requested": {
+            "pump_off": True,
+            "valves_off": list(HUI_ALL_VALVE_IDS),
+        },
+        "executed": {
+            "pump_off": bool(pump_operations),
+            "valves_off": [str(operation.get("valve_id")) for operation in valve_operations],
+        },
+        "confirmed": {
+            "pump_off": bool(pump_operations and pump_operations[-1].get("ok")),
+            "valves_off": [
+                str(operation.get("valve_id"))
+                for operation in valve_operations
+                if operation.get("ok")
+            ],
+        },
+    }
+
+
 async def _set_valve(gateway: Any, valve_id: str, value: bool) -> dict[str, Any]:
     result = await gateway.set_valve(valve_id, value)
     return _operation("set_valve", _success(result), valve_id=valve_id, value=value, result=result)
@@ -153,7 +176,14 @@ async def _shutdown_all_hui_hardware_unlocked(gateway: Any) -> dict[str, Any]:
         reconnect=False,
     )
     if readiness_failure is not None:
-        readiness_failure["operations"] = operations
+        readiness_failure.update(
+            {
+                "status": "partial",
+                "degraded": True,
+                "operations": operations,
+                **_shutdown_progress(operations),
+            }
+        )
         return readiness_failure
 
     for valve_id in HUI_ALL_VALVE_IDS:
@@ -161,10 +191,14 @@ async def _shutdown_all_hui_hardware_unlocked(gateway: Any) -> dict[str, Any]:
             operations.append(await _set_valve(gateway, valve_id, False))
         except Exception as exc:
             operations.append(_operation("set_valve", False, valve_id=valve_id, value=False, error=str(exc)))
+    ok = all(operation.get("ok") for operation in operations)
     return {
-        "ok": all(operation.get("ok") for operation in operations),
+        "ok": ok,
+        "status": "safe" if ok else "partial",
+        "degraded": not ok,
         "command": "shutdown",
         "operations": operations,
+        **_shutdown_progress(operations),
     }
 
 
@@ -294,30 +328,34 @@ async def _stop_hui_hold_unlocked(gateway: Any, key: str | None = None) -> dict[
     global _active_hold_key
     requested_key = str(key or _active_hold_key or "").strip().lower()
 
-    # Valve shutdown needs modbus-io; pump stop is already best-effort.
-    readiness_failure = await required_plugins_failure(
-        gateway,
-        ["modbus-io"],
-        command="hold_stop",
-        key=requested_key or None,
-        check_power=False,
-    )
-    if readiness_failure is not None:
-        stopped_key = _active_hold_key
-        _active_hold_key = None
-        readiness_failure["stopped_key"] = stopped_key
-        readiness_failure["key"] = requested_key or stopped_key
-        return readiness_failure
-
     stopped_key = _active_hold_key
+    _active_hold_key = None
+    # Always issue the independently controlled pump stop before checking the
+    # valve controller. _shutdown... then probes modbus-io once and returns a
+    # structured partial result instead of leaving the pump command unsent.
     shutdown = await _shutdown_all_hui_hardware_unlocked(gateway)
-    return {
+    payload = {
         "ok": bool(shutdown.get("ok")),
+        "status": shutdown.get("status", "safe" if shutdown.get("ok") else "partial"),
         "command": "hold_stop",
         "key": requested_key or stopped_key,
         "stopped_key": stopped_key,
         "shutdown": shutdown,
+        "requested": shutdown.get("requested"),
+        "executed": shutdown.get("executed"),
+        "confirmed": shutdown.get("confirmed"),
     }
+    for field in (
+        "error",
+        "error_code",
+        "status_code",
+        "required_hardware",
+        "unavailable_hardware",
+        "safe_to_retry",
+    ):
+        if field in shutdown:
+            payload[field] = shutdown[field]
+    return payload
 
 
 async def stop_hui_hold(gateway: Any, key: str | None = None) -> dict[str, Any]:
