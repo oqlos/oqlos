@@ -1,13 +1,13 @@
 schema_version: '1.0'
-generated_at: '2026-07-28T08:28:41.154659+00:00'
+generated_at: '2026-08-03T09:24:58.677907+00:00'
 spec:
-  path: redeploy/122/migration.md
+  path: /tmp/c2004-boardnet-migration.X7T4FN.md
   name: oqlos boardnet deploy
   source_strategy: systemd
   target_strategy: systemd
-  host: pi@192.168.188.122
+  host: pi@192.168.188.131
 plan:
-  steps_total: 25
+  steps_total: 26
   risk: low
   estimated_downtime: rolling (no downtime)
   steps:
@@ -24,6 +24,11 @@ plan:
   - id: enable_linger_groups
     action: inline_script
     description: Linger + grupy urządzeń dla użytkownika pi
+    has_command_ref: true
+    insert_before: null
+  - id: configure_boardnet_watchdog_observability
+    action: inline_script
+    description: Persistent journal, opt-in BCM watchdog policy i audit anomalii
     has_command_ref: true
     insert_before: null
   - id: sync_oqlos_core
@@ -148,71 +153,100 @@ checks:
   command_refs:
   - step_id: mkdir_hw_remote
     command_ref: mkdir-hw-remote
-    file: /home/tom/github/oqlos/oqlos/redeploy/122/migration.md
+    file: /tmp/c2004-boardnet-migration.X7T4FN.md
     ref: mkdir-hw-remote
     resolved: true
     mode: markpact_ref
   - step_id: enable_linger_groups
     command_ref: enable-linger-groups
-    file: /home/tom/github/oqlos/oqlos/redeploy/122/migration.md
+    file: /tmp/c2004-boardnet-migration.X7T4FN.md
     ref: enable-linger-groups
+    resolved: true
+    mode: markpact_ref
+  - step_id: configure_boardnet_watchdog_observability
+    command_ref: configure-boardnet-watchdog-observability
+    file: /tmp/c2004-boardnet-migration.X7T4FN.md
+    ref: configure-boardnet-watchdog-observability
     resolved: true
     mode: markpact_ref
   - step_id: assert_oqlos_checksum
     command_ref: assert-oqlos-checksum
-    file: /home/tom/github/oqlos/oqlos/redeploy/122/migration.md
+    file: /tmp/c2004-boardnet-migration.X7T4FN.md
     ref: assert-oqlos-checksum
     resolved: true
     mode: markpact_ref
   - step_id: install_mosquitto
     command_ref: install-mosquitto
-    file: /home/tom/github/oqlos/oqlos/redeploy/122/migration.md
+    file: /tmp/c2004-boardnet-migration.X7T4FN.md
     ref: install-mosquitto
     resolved: true
     mode: markpact_ref
   - step_id: deploy_pololu_udev
     command_ref: deploy-pololu-udev
-    file: /home/tom/github/oqlos/oqlos/redeploy/122/migration.md
+    file: /tmp/c2004-boardnet-migration.X7T4FN.md
     ref: deploy-pololu-udev
     resolved: true
     mode: markpact_ref
   - step_id: deploy_hw_tic249_service
     command_ref: deploy-hw-tic249-service
-    file: /home/tom/github/oqlos/oqlos/redeploy/122/migration.md
+    file: /tmp/c2004-boardnet-migration.X7T4FN.md
     ref: deploy-hw-tic249-service
     resolved: true
     mode: markpact_ref
   - step_id: deploy_dri0050_motor_service
     command_ref: deploy-dri0050-motor-service
-    file: /home/tom/github/oqlos/oqlos/redeploy/122/migration.md
+    file: /tmp/c2004-boardnet-migration.X7T4FN.md
     ref: deploy-dri0050-motor-service
     resolved: true
     mode: markpact_ref
   - step_id: deploy_pirtc_sidecar
     command_ref: deploy-pirtc-sidecar
-    file: /home/tom/github/oqlos/oqlos/redeploy/122/migration.md
+    file: /tmp/c2004-boardnet-migration.X7T4FN.md
     ref: deploy-pirtc-sidecar
     resolved: true
     mode: markpact_ref
   - step_id: deploy_usb_adc_stack
     command_ref: deploy-usb-adc-stack
-    file: /home/tom/github/oqlos/oqlos/redeploy/122/migration.md
+    file: /tmp/c2004-boardnet-migration.X7T4FN.md
     ref: deploy-usb-adc-stack
     resolved: true
     mode: markpact_ref
   - step_id: deploy_oqlos_hw_api
     command_ref: deploy-oqlos-hw-api
-    file: /home/tom/github/oqlos/oqlos/redeploy/122/migration.md
+    file: /tmp/c2004-boardnet-migration.X7T4FN.md
     ref: deploy-oqlos-hw-api
     resolved: true
     mode: markpact_ref
   - step_id: assert_hw_node_healthy
     command_ref: assert-hw-node-healthy
-    file: /home/tom/github/oqlos/oqlos/redeploy/122/migration.md
+    file: /tmp/c2004-boardnet-migration.X7T4FN.md
     ref: assert-hw-node-healthy
     resolved: true
     mode: markpact_ref
   local_artifacts:
+  - kind: env_file
+    path: .env
+    resolved: /home/tom/github/oqlos/oqlos/.env
+    exists: true
+    steps: []
+  - kind: src
+    path: ./
+    resolved: /home/tom/github/maskservice/c2004/extern/oqlos
+    exists: true
+    steps:
+    - sync_oqlos_core
+  - kind: src
+    path: ./frontend/dist/
+    resolved: /home/tom/github/maskservice/c2004/extern/oqlos/frontend/dist
+    exists: true
+    steps:
+    - sync_oqlos_frontend_dist
+  - kind: src
+    path: ./redeploy/122/
+    resolved: /home/tom/github/maskservice/c2004/extern/oqlos/redeploy/122
+    exists: true
+    steps:
+    - sync_pihw_config
   - kind: src
     path: /home/tom/github/maskservice/c2004/packages/backend-shared-py/
     resolved: /home/tom/github/maskservice/c2004/packages/backend-shared-py
@@ -225,24 +259,6 @@ checks:
     exists: true
     steps:
     - sync_oql_scenario
-  - kind: src
-    path: /home/tom/github/oqlos/oqlos/
-    resolved: /home/tom/github/oqlos/oqlos
-    exists: true
-    steps:
-    - sync_oqlos_core
-  - kind: src
-    path: /home/tom/github/oqlos/oqlos/frontend/dist/
-    resolved: /home/tom/github/oqlos/oqlos/frontend/dist
-    exists: true
-    steps:
-    - sync_oqlos_frontend_dist
-  - kind: src
-    path: /home/tom/github/oqlos/oqlos/redeploy/122/
-    resolved: /home/tom/github/oqlos/oqlos/redeploy/122
-    exists: true
-    steps:
-    - sync_pihw_config
   - kind: src
     path: /home/tom/github/oqlos/pimodbus/
     resolved: /home/tom/github/oqlos/pimodbus
@@ -287,15 +303,12 @@ checks:
     - sync_usb_adc_mcp2221
   remote:
     enabled: true
-    host: pi@192.168.188.122
-    reachable: false
-    checks:
-    - type: ssh_reachability
-      ok: false
-      message: 'Cannot reach host via SSH: pi@192.168.188.122'
+    host: pi@192.168.188.131
+    reachable: true
+    checks: []
 blockers: []
 summary:
   blockers: 0
   local_missing: 0
   refs_missing: 0
-  remote_failed_checks: 1
+  remote_failed_checks: 0
