@@ -454,6 +454,37 @@ def test_hui_shutdown_uses_single_bulk_modbus_safe_off_when_available() -> None:
     assert payload["confirmed"]["valves_off"] == list(
         hui_actions.HUI_ALL_VALVE_IDS
     )
+    assert payload["duration_ms"] >= 0
+    assert [item["stage"] for item in payload["timeline"]] == [
+        "hui.lock_wait",
+        "set_pump",
+        "readiness.modbus-io",
+        "all_valves_off",
+        "hui.total",
+    ]
+    assert all(item["started_at"] for item in payload["timeline"])
+    assert all(item["completed_at"] for item in payload["timeline"])
+
+
+def test_hui_hold_reuses_successful_modbus_readiness_inside_shutdown(monkeypatch) -> None:
+    monkeypatch.setattr(hui_hold, "_VALVE_STAGGER_SECONDS", 0)
+    gateway = BulkOffGateway(real=True)
+
+    payload = run(hui_actions.start_hui_hold(gateway, "lp-pwm-plus5"))
+
+    assert payload["ok"] is True
+    readiness_calls = [call for call in gateway.calls if call[0] == "readiness"]
+    assert readiness_calls.count(("readiness", "modbus-io")) == 1
+    assert readiness_calls.count(("readiness", "motor-dri0050")) == 1
+    shutdown = next(
+        operation for operation in payload["operations"]
+        if operation["operation"] == "shutdown"
+    )
+    cached = next(
+        item for item in shutdown["result"]["timeline"]
+        if item["stage"] == "readiness.modbus-io"
+    )
+    assert cached["cached"] is True
 
 
 def test_hui_shutdown_falls_back_to_individual_valves_after_bulk_failure() -> None:

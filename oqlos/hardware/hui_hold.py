@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import datetime, timezone
+from time import perf_counter_ns
 from typing import Any
 
 from oqlos.hardware.hui_readiness import required_plugins_failure
@@ -34,6 +36,19 @@ HUI_ALL_VALVE_IDS = (
 _VALVE_STAGGER_SECONDS = 0.1
 _active_hold_key: str | None = None
 _HUI_OPERATION_LOCK = asyncio.Lock()
+
+
+def _timing_start() -> tuple[str, int]:
+    return datetime.now(timezone.utc).isoformat(), perf_counter_ns()
+
+
+def _timing_fields(started: tuple[str, int] | None = None) -> dict[str, Any]:
+    timing = started or _timing_start()
+    return {
+        "started_at": timing[0],
+        "completed_at": datetime.now(timezone.utc).isoformat(),
+        "duration_ms": round((perf_counter_ns() - timing[1]) / 1_000_000, 3),
+    }
 
 
 def _normalize_hui_profile_key(key: Any) -> str:
@@ -114,8 +129,61 @@ def _success(value: Any) -> bool:
     return bool(value)
 
 
-def _operation(name: str, ok: bool, **extra: Any) -> dict[str, Any]:
-    return {"operation": name, "ok": ok, **extra}
+def _operation(
+    name: str,
+    ok: bool,
+    *,
+    timing: tuple[str, int] | None = None,
+    **extra: Any,
+) -> dict[str, Any]:
+    return {"operation": name, "ok": ok, **_timing_fields(timing), **extra}
+
+
+def _operation_timeline(operations: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return [
+        {
+            "stage": str(operation.get("operation") or "unknown"),
+            "started_at": operation.get("started_at"),
+            "completed_at": operation.get("completed_at"),
+            "duration_ms": operation.get("duration_ms"),
+            "ok": bool(operation.get("ok")),
+            **(
+                {"cached": bool(operation.get("cached"))}
+                if "cached" in operation
+                else {}
+            ),
+        }
+        for operation in operations
+    ]
+
+
+def _append_action_timing(
+    payload: dict[str, Any],
+    *,
+    wait_started: tuple[str, int],
+    lock_acquired_at: str,
+    total_started: tuple[str, int],
+) -> dict[str, Any]:
+    lock_wait = {
+        "stage": "hui.lock_wait",
+        "started_at": wait_started[0],
+        "completed_at": lock_acquired_at,
+        "duration_ms": round((perf_counter_ns() - wait_started[1]) / 1_000_000, 3),
+        "ok": True,
+    }
+    # The lock wait is completed before execution, so calculate its duration at
+    # acquisition in callers and replace the provisional value when supplied.
+    if "lock_wait_duration_ms" in payload:
+        lock_wait["duration_ms"] = payload.pop("lock_wait_duration_ms")
+    total = {
+        "stage": "hui.total",
+        **_timing_fields(total_started),
+        "ok": bool(payload.get("ok")),
+    }
+    timeline = [lock_wait, *list(payload.get("timeline") or []), total]
+    payload["timeline"] = timeline
+    payload["duration_ms"] = total["duration_ms"]
+    return payload
 
 
 def _shutdown_progress(operations: list[dict[str, Any]]) -> dict[str, Any]:
@@ -157,31 +225,63 @@ def _shutdown_progress(operations: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 async def _set_valve(gateway: Any, valve_id: str, value: bool) -> dict[str, Any]:
+    started = _timing_start()
     result = await gateway.set_valve(valve_id, value)
-    return _operation("set_valve", _success(result), valve_id=valve_id, value=value, result=result)
+    return _operation(
+        "set_valve",
+        _success(result),
+        timing=started,
+        valve_id=valve_id,
+        value=value,
+        result=result,
+    )
 
 
 async def _set_pump(gateway: Any, power_pct: float) -> dict[str, Any]:
+    started = _timing_start()
     result = await gateway.set_pump(power_pct)
-    return _operation("set_pump", _success(result), power_pct=power_pct, result=result)
+    return _operation(
+        "set_pump",
+        _success(result),
+        timing=started,
+        power_pct=power_pct,
+        result=result,
+    )
 
 
 async def _set_pump_best_effort(gateway: Any, power_pct: float) -> dict[str, Any]:
+    started = _timing_start()
     try:
-        return await _set_pump(gateway, power_pct)
+        result = await gateway.set_pump(power_pct)
+        return _operation(
+            "set_pump",
+            _success(result),
+            timing=started,
+            power_pct=power_pct,
+            result=result,
+        )
     except Exception as exc:
-        return _operation("set_pump", False, power_pct=power_pct, error=str(exc), best_effort=True)
+        return _operation(
+            "set_pump",
+            False,
+            timing=started,
+            power_pct=power_pct,
+            error=str(exc),
+            best_effort=True,
+        )
 
 
 async def _all_valves_off(gateway: Any) -> dict[str, Any] | None:
     command = getattr(gateway, "all_valves_off", None)
     if not callable(command):
         return None
+    started = _timing_start()
     try:
         result = await command()
         return _operation(
             "all_valves_off",
             _success(result),
+            timing=started,
             valve_ids=list(HUI_ALL_VALVE_IDS),
             result=result,
         )
@@ -189,12 +289,17 @@ async def _all_valves_off(gateway: Any) -> dict[str, Any] | None:
         return _operation(
             "all_valves_off",
             False,
+            timing=started,
             valve_ids=list(HUI_ALL_VALVE_IDS),
             error=str(exc),
         )
 
 
-async def _shutdown_all_hui_hardware_unlocked(gateway: Any) -> dict[str, Any]:
+async def _shutdown_all_hui_hardware_unlocked(
+    gateway: Any,
+    *,
+    modbus_prechecked: bool = False,
+) -> dict[str, Any]:
     global _active_hold_key
     _active_hold_key = None
     operations: list[dict[str, Any]] = [await _set_pump_best_effort(gateway, 0.0)]
@@ -204,12 +309,21 @@ async def _shutdown_all_hui_hardware_unlocked(gateway: Any) -> dict[str, Any]:
     # occupied for minutes and queued subsequent emergency shutdown requests.
     # Probe once after stopping the independently controlled pump; if the valve
     # controller is unavailable, report that degraded safe-off state immediately.
-    readiness_failure = await required_plugins_failure(
-        gateway,
-        ("modbus-io",),
-        command="shutdown",
-        check_power=False,
-        reconnect=False,
+    readiness_started = _timing_start()
+    readiness_failure = None
+    if not modbus_prechecked:
+        readiness_failure = await required_plugins_failure(
+            gateway,
+            ("modbus-io",),
+            command="shutdown",
+            check_power=False,
+            reconnect=False,
+        )
+    readiness_operation = _operation(
+        "readiness.modbus-io",
+        readiness_failure is None,
+        timing=readiness_started,
+        cached=modbus_prechecked,
     )
     if readiness_failure is not None:
         readiness_failure.update(
@@ -217,6 +331,9 @@ async def _shutdown_all_hui_hardware_unlocked(gateway: Any) -> dict[str, Any]:
                 "status": "partial",
                 "degraded": True,
                 "operations": operations,
+                "timeline": _operation_timeline(
+                    [operations[0], readiness_operation, *operations[1:]]
+                ),
                 **_shutdown_progress(operations),
             }
         )
@@ -241,13 +358,29 @@ async def _shutdown_all_hui_hardware_unlocked(gateway: Any) -> dict[str, Any]:
         "degraded": not ok,
         "command": "shutdown",
         "operations": operations,
+        "timeline": _operation_timeline(
+            [operations[0], readiness_operation, *operations[1:]]
+        ),
         **progress,
     }
 
 
 async def shutdown_all_hui_hardware(gateway: Any) -> dict[str, Any]:
+    total_started = _timing_start()
+    wait_started = _timing_start()
     async with _HUI_OPERATION_LOCK:
-        return await _shutdown_all_hui_hardware_unlocked(gateway)
+        lock_acquired_at = datetime.now(timezone.utc).isoformat()
+        lock_wait_duration_ms = round(
+            (perf_counter_ns() - wait_started[1]) / 1_000_000, 3
+        )
+        payload = await _shutdown_all_hui_hardware_unlocked(gateway)
+    payload["lock_wait_duration_ms"] = lock_wait_duration_ms
+    return _append_action_timing(
+        payload,
+        wait_started=wait_started,
+        lock_acquired_at=lock_acquired_at,
+        total_started=total_started,
+    )
 
 
 def _hold_start_failure(
@@ -264,6 +397,7 @@ def _hold_start_failure(
         "error": error,
         "operations": operations,
         "cleanup": cleanup,
+        "timeline": _operation_timeline(operations),
     }
 
 
@@ -285,7 +419,16 @@ async def _engage_hold_valves(
                 operations=operations,
                 cleanup=cleanup,
             )
+        stagger_started = _timing_start()
         await asyncio.sleep(_VALVE_STAGGER_SECONDS)
+        operations.append(
+            _operation(
+                "valve_stagger",
+                True,
+                timing=stagger_started,
+                seconds=_VALVE_STAGGER_SECONDS,
+            )
+        )
     return None
 
 
@@ -321,18 +464,40 @@ async def _start_hui_hold_unlocked(gateway: Any, key: str) -> dict[str, Any]:
     required_plugins = ["modbus-io"]
     if float(profile["pump_pct"]):
         required_plugins.append("motor-dri0050")
+    operations: list[dict[str, Any]] = []
+    readiness_started = _timing_start()
     readiness_failure = await required_plugins_failure(
         gateway,
         required_plugins,
         command="hold_start",
         key=hold_key,
     )
+    readiness_operation = _operation(
+        "readiness.required_plugins",
+        readiness_failure is None,
+        timing=readiness_started,
+        required_hardware=list(required_plugins),
+    )
     if readiness_failure is not None:
+        readiness_failure["operations"] = []
+        readiness_failure["timeline"] = _operation_timeline(
+            [readiness_operation]
+        )
         return readiness_failure
 
-    operations: list[dict[str, Any]] = []
-    shutdown = await _shutdown_all_hui_hardware_unlocked(gateway)
-    operations.append({"operation": "shutdown", "ok": bool(shutdown.get("ok")), "result": shutdown})
+    shutdown_started = _timing_start()
+    shutdown = await _shutdown_all_hui_hardware_unlocked(
+        gateway,
+        modbus_prechecked=True,
+    )
+    operations.append(
+        _operation(
+            "shutdown",
+            bool(shutdown.get("ok")),
+            timing=shutdown_started,
+            result=shutdown,
+        )
+    )
 
     valve_failure = await _engage_hold_valves(
         gateway,
@@ -353,12 +518,31 @@ async def _start_hui_hold_unlocked(gateway: Any, key: str) -> dict[str, Any]:
         return pump_failure
 
     _active_hold_key = hold_key
-    return {"ok": True, "command": "hold_start", "key": hold_key, "operations": operations}
+    return {
+        "ok": True,
+        "command": "hold_start",
+        "key": hold_key,
+        "operations": operations,
+        "timeline": _operation_timeline([readiness_operation, *operations]),
+    }
 
 
 async def start_hui_hold(gateway: Any, key: str) -> dict[str, Any]:
+    total_started = _timing_start()
+    wait_started = _timing_start()
     async with _HUI_OPERATION_LOCK:
-        return await _start_hui_hold_unlocked(gateway, key)
+        lock_acquired_at = datetime.now(timezone.utc).isoformat()
+        lock_wait_duration_ms = round(
+            (perf_counter_ns() - wait_started[1]) / 1_000_000, 3
+        )
+        payload = await _start_hui_hold_unlocked(gateway, key)
+    payload["lock_wait_duration_ms"] = lock_wait_duration_ms
+    return _append_action_timing(
+        payload,
+        wait_started=wait_started,
+        lock_acquired_at=lock_acquired_at,
+        total_started=total_started,
+    )
 
 
 async def _stop_hui_hold_unlocked(gateway: Any, key: str | None = None) -> dict[str, Any]:
@@ -387,6 +571,7 @@ async def _stop_hui_hold_unlocked(gateway: Any, key: str | None = None) -> dict[
         "requested": shutdown.get("requested"),
         "executed": shutdown.get("executed"),
         "confirmed": shutdown.get("confirmed"),
+        "timeline": shutdown.get("timeline") or [],
     }
     for field in (
         "error",
@@ -402,5 +587,18 @@ async def _stop_hui_hold_unlocked(gateway: Any, key: str | None = None) -> dict[
 
 
 async def stop_hui_hold(gateway: Any, key: str | None = None) -> dict[str, Any]:
+    total_started = _timing_start()
+    wait_started = _timing_start()
     async with _HUI_OPERATION_LOCK:
-        return await _stop_hui_hold_unlocked(gateway, key)
+        lock_acquired_at = datetime.now(timezone.utc).isoformat()
+        lock_wait_duration_ms = round(
+            (perf_counter_ns() - wait_started[1]) / 1_000_000, 3
+        )
+        payload = await _stop_hui_hold_unlocked(gateway, key)
+    payload["lock_wait_duration_ms"] = lock_wait_duration_ms
+    return _append_action_timing(
+        payload,
+        wait_started=wait_started,
+        lock_acquired_at=lock_acquired_at,
+        total_started=total_started,
+    )
