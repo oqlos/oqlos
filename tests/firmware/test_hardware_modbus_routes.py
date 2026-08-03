@@ -358,6 +358,43 @@ def test_wizard_program_exception_is_sanitized(monkeypatch) -> None:
     assert "/srv/private" not in response.text
 
 
+def test_wizard_program_modbus_io_exception_is_typed(monkeypatch) -> None:
+    class ModbusIOException(Exception):
+        """Stand-in for pymodbus.exceptions.ModbusIOException."""
+
+    async def _pause(_serial_port: str):
+        return None, set()
+
+    def _fail(**_kwargs):
+        raise ModbusIOException(
+            "No response received after 3 retries, continue with next request"
+        )
+
+    monkeypatch.setattr(modbus_hw, "try_get_hardware_gateway", lambda: None)
+    monkeypatch.setattr(modbus_hw, "_pause_modbus_plugins_on_serial", _pause)
+    monkeypatch.setattr(modbus_hw, "_modbus_wizard_program_isolated", _fail)
+
+    response = _modbus_client().post(
+        "/api/v1/hardware/modbus/wizard/program-isolated",
+        json={
+            "serial_port": "/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_A5069RR4-if00-port0",
+            "confirm_isolated": True,
+        },
+        headers={"X-Correlation-ID": "cor-wizard-modbusio"},
+    )
+
+    assert response.status_code == 503
+    body = response.json()
+    assert body["code"] == "C2004-HW-0012"
+    assert body["correlation_id"] == "cor-wizard-modbusio"
+    assert body["stage"] == "program.execute"
+    assert body["metadata"]["diagnostics"]["issue_code"] == "hw_modbus_no_response"
+    assert body["metadata"]["context"]["upstream_target"] == (
+        "serial-device://usb-FTDI_FT232R_USB_UART_A5069RR4-if00-port0"
+    )
+    assert "No response received" not in response.text
+
+
 def test_wizard_programming_error_is_not_masked_and_plugins_resume(monkeypatch) -> None:
     resumed: list[set[str]] = []
 

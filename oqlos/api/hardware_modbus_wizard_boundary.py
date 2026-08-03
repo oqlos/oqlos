@@ -31,7 +31,8 @@ def _modbus_wizard_serial_target(serial_port: str) -> str:
 
 def _modbus_wizard_issue_for_exception(exc: Exception) -> str:
     """Classify adapter failures without publishing their message."""
-    normalized = str(exc).lower()
+    type_name = type(exc).__name__.lower()
+    normalized = f"{type_name} {exc}".lower()
     if any(
         marker in normalized
         for marker in (
@@ -42,7 +43,7 @@ def _modbus_wizard_issue_for_exception(exc: Exception) -> str:
         )
     ):
         return "serial_port_busy"
-    if any(
+    if "modbusio" in type_name or any(
         marker in normalized
         for marker in ("no response", "did not respond", "timed out", "timeout")
     ):

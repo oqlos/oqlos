@@ -68,62 +68,56 @@ def test_modbus_wizard_probe_uses_bounded_timeout_and_required_role(monkeypatch)
     assert captured["required_roles"] == ["modbus-io"]
 
 
-def test_modbus_wizard_program_writes_uart_before_address_change(monkeypatch):
+def test_modbus_wizard_program_writes_address_before_uart_change(monkeypatch):
     from pimodbus import provisioning as pim_prov
 
     calls: list[tuple[str, int]] = []
+    live = {"device_id": 1, "baudrate": 9600, "parity": "N"}
 
     class _Config:
-        device_id = 1
-        baudrate = 9600
-        parity = "N"
-        software_version = "V2.00"
-
         def to_dict(self):
             return {
-                "device_id": self.device_id,
-                "baudrate": self.baudrate,
-                "parity": self.parity,
-                "software_version": self.software_version,
+                **live,
+                "software_version": "V2.00",
             }
 
-    def _read_config(_settings, *, device_id: int):
-        cfg = _Config()
-        cfg.device_id = device_id
-        return cfg
+    def _read_config(settings, *, device_id: int):
+        if device_id != live["device_id"] or settings.baudrate != live["baudrate"]:
+            raise RuntimeError("module does not answer at these settings")
+        return _Config()
 
-    def _write_uart(_settings, *, device_id: int, **_kwargs):
+    def _write_uart(settings, *, device_id: int, baudrate: int, parity: str, **_kwargs):
+        assert settings.baudrate == live["baudrate"]
+        assert device_id == live["device_id"]
         calls.append(("uart", device_id))
+        live.update(baudrate=baudrate, parity=parity)
         return True
 
-    def _write_address(_settings, *, current_device_id: int, new_device_id: int, **_kwargs):
+    def _write_address(settings, *, current_device_id: int, new_device_id: int, **_kwargs):
+        assert settings.baudrate == live["baudrate"]
+        assert current_device_id == live["device_id"]
         calls.append(("address", current_device_id))
+        live["device_id"] = new_device_id
         return True
 
     monkeypatch.setattr(pim_prov, "read_device_config", _read_config)
     monkeypatch.setattr(pim_prov, "write_uart_config", _write_uart)
     monkeypatch.setattr(pim_prov, "write_device_address", _write_address)
-    monkeypatch.setattr(pim_prov, "uart_register_value", lambda *_a, **_k: 0x0101)
-    class _Client:
-        def close(self):
-            return None
-
-    monkeypatch.setattr(pim_prov, "_open_client", lambda *_a, **_k: _Client())
-    monkeypatch.setattr(pim_prov, "_read_holding_register", lambda *_a, **_k: None)
     monkeypatch.setattr(time, "sleep", lambda *_a, **_k: None)
 
     result = wizard._modbus_wizard_program_isolated(
         serial_port="/dev/ttyTEST",
         current_device_id=1,
         new_device_id=2,
-        new_baudrate=9600,
+        current_baudrate=9600,
+        new_baudrate=4800,
         new_parity="N",
         confirm_isolated=True,
     )
 
     assert result["ok"] is True
-    assert calls[0] == ("uart", 1)
-    assert ("address", 1) in calls
+    assert result["verified"] is True
+    assert calls == [("address", 1), ("uart", 2)]
 
 
 def test_modbus_wizard_program_skips_when_already_at_target(monkeypatch):
@@ -199,6 +193,16 @@ def test_modbus_wizard_classifies_exception_without_publishing_message(
     issue_code: str,
 ) -> None:
     assert wizard._modbus_wizard_issue_for_exception(OSError(message)) == issue_code
+
+
+def test_modbus_wizard_classifies_modbus_io_exception_by_type() -> None:
+    class ModbusIOException(Exception):
+        pass
+
+    assert (
+        wizard._modbus_wizard_issue_for_exception(ModbusIOException("adapter failure"))
+        == "hw_modbus_no_response"
+    )
 
 
 def test_modbus_wizard_rejects_empty_config_instead_of_skipping(monkeypatch):

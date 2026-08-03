@@ -264,6 +264,19 @@ async def hardware_modbus_wizard_program_isolated(
                 serial_port=serial,
                 cause=exc,
             )
+        except Exception as exc:
+            # pymodbus ModbusIOException ("No response…") must not become uncoded 500.
+            # Keep AttributeError/TypeError as programming failures for the SYS handler.
+            issue_code = _modbus_wizard_issue_for_exception(exc)
+            if issue_code in {"hw_modbus_no_response", "serial_port_busy"}:
+                _raise_modbus_wizard_failure(
+                    issue_code=issue_code,
+                    stage="program.execute",
+                    operation_id="modbus.wizard.program-isolated",
+                    serial_port=serial,
+                    cause=exc,
+                )
+            raise
     finally:
         if paused_plugin_ids and gateway is not None:
             runtime_apply = await gateway.apply_modbus_user_settings(
