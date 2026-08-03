@@ -266,6 +266,10 @@ async def test_hui_manage_verbs_route_to_hui_handlers(monkeypatch):
         calls.append(("actions", None))
         return {"ok": True, "hold_keys": ["head-inflate"]}
 
+    async def _fake_readiness():
+        calls.append(("readiness", None))
+        return {"ok": False, "status": "degraded"}
+
     async def _fake_hold_start(key):
         calls.append(("hold-start", key))
         return {"ok": True, "key": key}
@@ -279,17 +283,20 @@ async def test_hui_manage_verbs_route_to_hui_handlers(monkeypatch):
         return {"ok": True, "command": "al-stop"}
 
     monkeypatch.setattr(hw, "hui_actions", _fake_actions)
+    monkeypatch.setattr(hw, "hui_readiness", _fake_readiness)
     monkeypatch.setattr(hw, "hui_hold_start", _fake_hold_start)
     monkeypatch.setattr(hw, "hui_hold_stop", _fake_hold_stop)
     monkeypatch.setattr(hw, "hui_al_stop", _fake_al_stop)
 
     assert (await manage_ops.run_manage_verb("hui-actions"))["ok"] is True
+    assert (await manage_ops.run_manage_verb("hui-readiness"))["status"] == "degraded"
     assert (await manage_ops.run_manage_verb("hui-hold-start", {"key": "head-inflate"}))["ok"] is True
     assert (await manage_ops.run_manage_verb("hui-hold-stop", {"key": "head-inflate"}))["ok"] is True
     assert (await manage_ops.run_manage_verb("hui-al-stop"))["ok"] is True
 
     assert calls == [
         ("actions", None),
+        ("readiness", None),
         ("hold-start", "head-inflate"),
         ("hold-stop", "head-inflate"),
         ("al-stop", None),
@@ -300,6 +307,7 @@ def test_hui_manage_verbs_listed():
     verbs = set(manage_ops.list_manage_verbs())
     assert {
         "hui-actions",
+        "hui-readiness",
         "hui-shutdown",
         "hui-hold-start",
         "hui-hold-stop",
