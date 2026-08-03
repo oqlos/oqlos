@@ -18,7 +18,7 @@ must happen **before** the first real `deploy-fleet.sh --only 122` run.
 ## Uruchomienie
 
 ```bash
-# From the c2004 repository, after provisioning per RUNBOOK.md:
+# From the maskservice/update repository, after provisioning per RUNBOOK.md:
 cp -n env.d/21-boardnet-redeploy.env.example env.d/21-boardnet-redeploy.env
 chmod 600 env.d/21-boardnet-redeploy.env
 scripts/redeploy/deploy-fleet.sh --only 122

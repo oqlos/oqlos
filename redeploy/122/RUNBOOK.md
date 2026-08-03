@@ -11,13 +11,13 @@ Aktualny stan BoardNet/DisplayNet i ostatniej diagnostyki hardware:
 - Flash **Raspberry Pi OS Lite (64-bit)** to the SD card.
 - Hostname `boardnet`; user `pi`.
 - Wired **ethernet** (Modbus-over-network latency: avoid Wi-Fi).
-- Reserve the `BOARDNET_IP` configured in c2004
-  `env.d/21-boardnet-redeploy.env` for the Pi's MAC in the router DHCP table.
+- Reserve the `BOARDNET_IP` configured in
+  `maskservice/update/env.d/21-boardnet-redeploy.env` for the Pi's MAC in the router DHCP table.
 
 Load that profile once in the shell used for the commands below:
 
 ```bash
-cd /home/tom/github/maskservice/c2004
+cd /home/tom/github/maskservice/update
 cp -n env.d/21-boardnet-redeploy.env.example env.d/21-boardnet-redeploy.env
 chmod 600 env.d/21-boardnet-redeploy.env
 set -a; . env.d/21-boardnet-redeploy.env; set +a
@@ -56,7 +56,7 @@ The broker requires auth (`allow_anonymous false`). Choose a token and set it on
 "${BOARDNET_SSH[@]}" "$BOARDNET_HOST" 'mkdir -p ~/maskservice/config && \
   printf "OQLOS_OQL_MQTT_PASSWORD=%s\n" "<your-token>" >> ~/maskservice/config/oql-mqtt.env'
 ```
-Use the **same token** on pi109 (see `redeploy/pi109/migration.md` → `point_oqlos_at_remote`).
+Use the **same token** on DisplayNet (see `redeploy/pi109/migration.md` → `point_oqlos_at_remote`).
 
 ## 6. Plug in the hardware
 USB hub on boardnet with: Pololu Tic T249 (`1ffb:00c9`), Waveshare Modbus IO 8CH (`1a86`),
@@ -71,7 +71,7 @@ root filesystem cannot turn an early boot stall into a reboot loop. Keep
 `1` only after an offline filesystem check and repeated clean boots.
 
 ```bash
-# From the c2004 repository:
+# From the maskservice/update repository:
 scripts/redeploy/deploy-fleet.sh --only 122
 # Bench mode (devices not all present yet):
 PIHW_ALLOW_MISSING_HARDWARE=1 scripts/redeploy/deploy-fleet.sh --only 122
@@ -92,7 +92,7 @@ scripts/redeploy/deploy-pi109.sh
 ```
 That stops/skips DisplayNet local hardware services and points c2004 backend/proxy
 at `OQLOS_API_URL=http://${BOARDNET_IP}:${BOARDNET_OQLOS_PORT}`. See the **Hardware Separation**
-section of `/home/tom/github/maskservice/c2004/redeploy/pi109/migration.md`.
+section of `/home/tom/github/maskservice/update/redeploy/pi109/migration.md`.
 
 ## Ports on boardnet
 | Service | Port | Exposure |

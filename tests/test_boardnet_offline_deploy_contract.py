@@ -41,7 +41,7 @@ def test_modbus_io_runtime_defaults_are_4800_n_8_1_slave_1() -> None:
     assert "Modbus-IO is configured for `4800/N/8/1`, slave ID `1`" in runbook
 
 
-def test_active_boardnet_deploy_entrypoints_use_c2004_profile() -> None:
+def test_active_boardnet_deploy_entrypoints_use_update_profile() -> None:
     active_paths = (
         ROOT / "Makefile",
         ROOT / "README.md",
@@ -56,5 +56,6 @@ def test_active_boardnet_deploy_entrypoints_use_c2004_profile() -> None:
     assert "192.168.188.110" not in combined
     assert "192.168.188.122" not in combined
     assert "redeploy run redeploy/122/migration.md" not in combined
+    assert "update" in combined
     assert "scripts/redeploy/deploy-fleet.sh --only 122" in combined
     assert "env.d/21-boardnet-redeploy.env" in combined

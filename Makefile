@@ -3,7 +3,8 @@
 # Cele lokalne (dev) i obsługa zdalnego węzła sprzętowego (Raspberry Pi, OQL-over-MQTT).
 # Konfiguracja przez zmienne:
 #   PI=pi@boardnet.local   host ssh węzła sprzętowego (maintenance only)
-#   C2004_ROOT=../..        c2004 repo containing the deployment profile
+#   C2004_ROOT=../..        c2004 application repository
+#   UPDATE_ROOT=../../../update  Raspberry Pi update orchestrator
 #   PORT=8202              port lokalnego serwera (cel `serve`)
 #
 # Szybki start:  make help
@@ -12,6 +13,7 @@ PI   ?= pi@boardnet.local
 PORT ?= 8202
 PYTHON ?= python
 C2004_ROOT ?= $(abspath ../..)
+UPDATE_ROOT ?= $(abspath $(C2004_ROOT)/../update)
 
 .DEFAULT_GOAL := help
 
@@ -67,14 +69,14 @@ restart: ## Zrestartuj agenta sprzętowego (oqlos-hardware-api) na $(PI) i spraw
 	  echo "FAIL: agent nie podniosl /health w 20s" >&2; exit 1'
 
 # --- deploy (redeploy framework) ------------------------------------------
-deploy: ## Pełny deploy BoardNet przez profil c2004
-	@test -x "$(C2004_ROOT)/scripts/redeploy/deploy-fleet.sh" || \
-	  { echo "FAIL: ustaw C2004_ROOT na repozytorium c2004" >&2; exit 2; }
-	cd "$(C2004_ROOT)" && scripts/redeploy/deploy-fleet.sh --only 122
+deploy: ## Pełny deploy BoardNet przez profil maskservice/update
+	@test -x "$(UPDATE_ROOT)/scripts/redeploy/deploy-fleet.sh" || \
+	  { echo "FAIL: ustaw UPDATE_ROOT na repozytorium maskservice/update" >&2; exit 2; }
+	cd "$(UPDATE_ROOT)" && C2004_ROOT="$(C2004_ROOT)" scripts/redeploy/deploy-fleet.sh --only 122
 
 redeploy: ## (pomoc) wdrożenie BoardNet przez kanoniczny profil c2004
 	@echo "Wdrożenie węzła sprzętowego:"
-	@echo "  make deploy              # BoardNet z env.d/21-boardnet-redeploy.env"
+	@echo "  make deploy              # BoardNet z update/env.d/21-boardnet-redeploy.env"
 	@echo "  make 122                 # alias zgodności"
 	@echo "  make pi-hw               # przestarzały alias zgodności"
 

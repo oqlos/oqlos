@@ -5,10 +5,10 @@ BoardNet migration is `redeploy/122/migration.md`; its bare-metal instructions
 are in `redeploy/122/RUNBOOK.md`.
 
 Always invoke it from c2004 so the current network identity, SSH options and
-source paths are rendered from `env.d/21-boardnet-redeploy.env`:
+source paths are rendered from `../update/env.d/21-boardnet-redeploy.env`:
 
 ```bash
-scripts/redeploy/deploy-fleet.sh --only 122
+../update/scripts/redeploy/deploy-fleet.sh --only 122
 ```
 
 `push-hw-node-code.sh` remains only as a code-only maintenance shortcut and

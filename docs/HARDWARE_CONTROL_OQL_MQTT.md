@@ -291,7 +291,7 @@ Implementacja: `oqlos/hardware/transport/manage_ops.py`, `oqlos/hardware/usb_dia
 - Węzeł sprzętowy (boardnet): `oqlos/redeploy/122/` — `migration.md` (markpact: mosquitto,
   agent, sidecary, autodetekcja Modbus), `oqlos-hw.yaml`, `.env.hw`, `mosquitto.conf`, `RUNBOOK.md`.
   Wymaga `sudo` na Pi (apt mosquitto, udev, systemd linger).
-- Węzeł aplikacyjny (DisplayNet/pi109): `c2004/redeploy/pi109/migration.md` —
+- Węzeł aplikacyjny (DisplayNet/pi109): `maskservice/update/redeploy/pi109/migration.md` —
   domyślnie `PI109_HARDWARE_LOCAL=0`; lokalne usługi hardware na RPi5 są wyłączone,
   a backend/proxy kieruje HTTP bezpośrednio na `http://192.168.188.122:8202`.
 - Reverse-proxy/OQL panel: `/api/v3/hardware/*` jest główną ścieżką GUI. Stare

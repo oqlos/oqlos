@@ -146,8 +146,8 @@ defaults are still respected when flags are omitted.
 
 ### Hardware node (Raspberry Pi) — deploy, test, run
 
-The physical rig runs on the dedicated BoardNet Raspberry Pi selected by c2004
-`env.d/21-boardnet-redeploy.env`. The Pi owns all devices and runs the
+The physical rig runs on the dedicated BoardNet Raspberry Pi selected by
+`maskservice/update/env.d/21-boardnet-redeploy.env`. The Pi owns all devices and runs the
 **OQL-over-MQTT agent**; DisplayNet uses the HTTP endpoint rendered from the same
 profile. What is deployed and running on the node:
 
@@ -755,7 +755,7 @@ It does **not** emulate the production Raspberry Pi 3 topology:
 For the real distributed deployment onto a dedicated RPi3 hardware node
 (mosquitto `:1883` + OqlOS `:8202` + sidecars), use the single canonical
 BoardNet migration `redeploy/122/migration.md`. Its current IP, SSH user and
-credentials are supplied by c2004 `env.d/21-boardnet-redeploy.env`; they are
+credentials are supplied by `maskservice/update/env.d/21-boardnet-redeploy.env`; they are
 not duplicated in another per-address migration.
 
 ## Testing

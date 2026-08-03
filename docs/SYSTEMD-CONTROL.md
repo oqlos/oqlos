@@ -80,5 +80,5 @@ and served at `/api/v3/hardware/startup-diagnostics`. Never blocks boot.
 redeploy/pi-hw/push-hw-node-code.sh
 
 # or full provisioning from c2004:
-scripts/redeploy/deploy-fleet.sh --only 122
+../update/scripts/redeploy/deploy-fleet.sh --only 122
 ```

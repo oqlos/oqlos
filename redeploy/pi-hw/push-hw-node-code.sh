@@ -17,7 +17,8 @@ set -euo pipefail
 
 SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/"
 C2004_ROOT="${C2004_ROOT:-$(cd "${SRC}/../.." && pwd)}"
-BOARDNET_DEPLOY_ENV_FILE="${BOARDNET_DEPLOY_ENV_FILE:-${C2004_ROOT}/env.d/21-boardnet-redeploy.env}"
+UPDATE_ROOT="${UPDATE_ROOT:-${C2004_ROOT}/../update}"
+BOARDNET_DEPLOY_ENV_FILE="${BOARDNET_DEPLOY_ENV_FILE:-${UPDATE_ROOT}/env.d/21-boardnet-redeploy.env}"
 
 if [ -z "${1:-${PIHW:-}}" ]; then
   if [ ! -f "$BOARDNET_DEPLOY_ENV_FILE" ]; then
