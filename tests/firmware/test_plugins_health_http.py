@@ -51,8 +51,29 @@ def test_plugin_health_returns_503_when_no_active_instance(monkeypatch):
 
     assert caught.value.status_code == 503
     assert caught.value.public_code == "C2004-HW-0012"
+    assert caught.value.issue_code == "hw_modbus_no_response"
     assert caught.value.detail["reason"] == "instance-unavailable"
+    assert caught.value.detail["peripheral_id"] == "modbus-io"
     assert "health" not in caught.value.detail
+
+
+def test_plugin_health_maps_not_connected_modbus_to_no_response(monkeypatch):
+    health = PluginHealth(
+        status=PluginStatus.ERROR,
+        message="Not connected to modbus",
+        compatible=False,
+    )
+
+    async def _check(_plugin_id: str):
+        return health
+
+    monkeypatch.setattr(plugins.PluginRegistry, "health_check", _check)
+
+    with pytest.raises(OqlosError) as caught:
+        asyncio.run(plugins.get_plugin_health("modbus-io"))
+
+    assert caught.value.issue_code == "hw_modbus_no_response"
+    assert caught.value.detail["reason"] == "health-not-ok"
 
 
 def test_plugin_health_returns_200_when_plugin_connected(monkeypatch):
@@ -92,14 +113,15 @@ def test_plugin_health_http_failure_is_canonical_problem_details(monkeypatch):
     body = response.json()
     assert body["code"] == body["error_code"] == "C2004-HW-0012"
     assert body["correlation_id"] == "cor-plugin-health-test"
-    assert body["metadata"]["diagnostics"]["issue_code"] == (
-        "adapter_modbus-io_health_not_ok"
-    )
+    assert body["metadata"]["diagnostics"]["issue_code"] == "hw_modbus_no_response"
+    assert body["metadata"]["diagnostics"]["repair"]["id"] == "modbus-physical-check"
     context = body["metadata"]["context"]
     assert context["component"] == "plugin-registry"
     assert context["stage"] == "plugin.health"
     assert context["operation_id"] == "plugin.health"
     assert context["upstream_target"] == "hardware-plugin://modbus-io"
+    assert context["peripheral_id"] == "modbus-io"
+    assert context["issue_code"] == "hw_modbus_no_response"
     assert "plugin_id" not in context
 
 

@@ -88,15 +88,20 @@ def _plugin_health_body(health: PluginHealth) -> dict[str, Any]:
 def _plugin_health_issue_code(
     plugin_id: str, body: dict[str, Any] | None = None
 ) -> str:
+    """Map plugin health failures to operator issue codes.
+
+    ``modbus-io`` always uses ``hw_modbus_no_response`` (not connected, timeout,
+    or failed coil read) so HUI and plugin health share the same repair hint.
+    """
     normalized = str(plugin_id or "").strip().lower()
     message = str((body or {}).get("message") or "").lower()
-    if normalized in {"modbus-io", "modbus-adc"} and any(
+    if normalized == "modbus-io":
+        return "hw_modbus_no_response"
+    if normalized == "modbus-adc" and any(
         marker in message
         for marker in ("timed out", "timeout", "no response", "did not answer")
     ):
         return "hw_modbus_no_response"
-    if normalized == "modbus-io":
-        return "adapter_modbus-io_health_not_ok"
     return _PLUGIN_ISSUE_BY_ID.get(
         normalized, "adapter_configured-plugin_health_not_ok"
     )
@@ -117,24 +122,29 @@ def _raise_unhealthy_plugin(
         public_code if public_code in CATALOG else c2004_code_for_issue(issue_code)
     )
     entry = CATALOG[resolved_public_code]
+    safe_plugin_id = str(plugin_id or "").strip()
+    detail: dict[str, Any] = {
+        "architecture": "SOA",
+        "layer": "firmware",
+        "component": "plugin-registry",
+        "stage": stage,
+        "problem_source": "hardware",
+        "operation_id": operation_id,
+        "upstream_target": _PLUGIN_TARGET_BY_ID.get(
+            safe_plugin_id.lower(),
+            "hardware-plugin://configured-plugin",
+        ),
+        "reason": reason,
+        "issue_code": issue_code,
+    }
+    if safe_plugin_id:
+        detail["peripheral_id"] = safe_plugin_id
     error = OqlosError(
         code=issue_code,
         public_code=resolved_public_code,
         status_code=entry.http_status,
         message=entry.message,
-        detail={
-            "architecture": "SOA",
-            "layer": "firmware",
-            "component": "plugin-registry",
-            "stage": stage,
-            "problem_source": "hardware",
-            "operation_id": operation_id,
-            "upstream_target": _PLUGIN_TARGET_BY_ID.get(
-                str(plugin_id or "").strip().lower(),
-                "hardware-plugin://configured-plugin",
-            ),
-            "reason": reason,
-        },
+        detail=detail,
     )
     if cause is not None:
         raise error from cause
