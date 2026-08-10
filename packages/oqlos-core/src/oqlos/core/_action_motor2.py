@@ -30,14 +30,24 @@ if TYPE_CHECKING:
 
 def _normalize_motor2_target(target_lower: str) -> bool:
     normalized = target_lower.replace("_", "-").strip()
-    return normalized in {"motor-2", "motor 2", "motor2", "motor-tic249", "tic249"}
+    return normalized in {
+        "motor-2",
+        "motor 2",
+        "motor2",
+        "motor-tic249",
+        "tic249",
+        "lung-main",
+        "lung",
+        "pluco",
+        "artificial-lung",
+    }
 
 
 def _parse_motor2_direction(value: str) -> str | None:
     normalized = re.sub(r"[\s_-]+", " ", str(value or "").strip().lower())
-    if "left" in normalized or "reverse" in normalized:
+    if "left" in normalized or "reverse" in normalized or "lewo" in normalized:
         return "left"
-    if "right" in normalized or "forward" in normalized:
+    if "right" in normalized or "forward" in normalized or "prawo" in normalized:
         return "right"
     return None
 
@@ -58,11 +68,19 @@ def _parse_motor2_relative_move(value: str) -> dict[str, int] | None:
         r"(?:steps|krok(?:i|ów|ow)?)/s",
         normalized,
     )
-    if not match:
+    if match:
+        return {
+            "steps": max(1, int(match.group(1))),
+            "speed": max(1, int(match.group(2))),
+        }
+    # Lung jog shorthand used by hardware-lung-*.oql / connect-scenario.
+    bare = re.fullmatch(r"(\d+)\s+(?:steps?|krok(?:i|ów|ow)?)", normalized)
+    if not bare:
         return None
+    default_speed = normalize_motor2_runtime_config().default_speed_steps_per_second or 80
     return {
-        "steps": max(1, int(match.group(1))),
-        "speed": max(1, int(match.group(2))),
+        "steps": max(1, int(bare.group(1))),
+        "speed": max(1, int(default_speed)),
     }
 
 
@@ -175,8 +193,12 @@ def _parse_motor2_reciprocating_setting(value: str) -> "dict[str, Any] | None":
     if prefixed is not None:
         return prefixed
     if "start" in normalized:
-        direction = _parse_motor2_direction(normalized) or "left"
-        return {"action": "start", "direction": direction}
+        # Bare "start" must not force left — honor prior SET direction / __motor2_direction.
+        direction = _parse_motor2_direction(normalized)
+        setting: dict[str, Any] = {"action": "start"}
+        if direction is not None:
+            setting["direction"] = direction
+        return setting
     return None
 
 
@@ -319,7 +341,7 @@ def _motor2_build_plan(
     interp: "OqlInterpreter", setting: "dict[str, Any]", state: "dict[str, Any]"
 ) -> "Motor2ReciprocatingPlan":
     """Build the reciprocating motion plan from interpreter state and setting."""
-    direction = str(setting.get("direction") or interp.vars.get("__motor2_direction") or "right")
+    direction = str(setting.get("direction") or interp.vars.get("__motor2_direction") or "left")
     acceleration_percent = interp.vars.get("__motor2_acceleration_percent")
     try:
         acceleration_percent = int(acceleration_percent) if acceleration_percent is not None else None
