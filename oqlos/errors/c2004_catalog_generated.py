@@ -35,6 +35,9 @@ class ErrorCode(str, Enum):
     C2004_DATA_0004 = 'C2004-DATA-0004'
     C2004_CFG_0001 = 'C2004-CFG-0001'
     C2004_CFG_0002 = 'C2004-CFG-0002'
+    C2004_SCEN_0001 = 'C2004-SCEN-0001'
+    C2004_SCEN_0002 = 'C2004-SCEN-0002'
+    C2004_SCEN_0003 = 'C2004-SCEN-0003'
     C2004_NET_0001 = 'C2004-NET-0001'
     C2004_NET_0002 = 'C2004-NET-0002'
     C2004_NET_0003 = 'C2004-NET-0003'
@@ -140,6 +143,30 @@ CATALOG: dict[str, ErrorEntry] = {
         retryable=False, owner='owner://domain/config', title='Configuration route reported a runtime error',
         message='The configuration route rendered an explicit module error', message_i18n=None,
         remediation='Open the affected route and use the linked occurrence details to inspect the captured error, route, module and URL.', auto_repair={'enabled': False, 'risk': 'medium'},
+    ),
+    'C2004-SCEN-0001': ErrorEntry(
+        code='C2004-SCEN-0001', slug='scenario.oql.test_step.missing_criterion', domain='scenario',
+        http_status=422, severity='warning',
+        classification='operational', confidentiality='internal',
+        retryable=False, owner='owner://domain/scenario', title='OQL test step has no acceptance criterion',
+        message='TEST_STEP requires MIN, MAX, RANGE, CHECK, IF or an operator PROMPT', message_i18n=None,
+        remediation='Use the editor quick fix to add an operator PROMPT, or change an operation-only TEST_STEP block to TASK. For an automatic test, define a real measured criterion.', auto_repair={'enabled': False, 'risk': 'low'},
+    ),
+    'C2004-SCEN-0002': ErrorEntry(
+        code='C2004-SCEN-0002', slug='scenario.oql.test_step.missing_observation', domain='scenario',
+        http_status=422, severity='warning',
+        classification='operational', confidentiality='internal',
+        retryable=False, owner='owner://domain/scenario', title='OQL test step has no observed value',
+        message='TEST_STEP requires a VAL or GET observation unless it uses an operator PROMPT', message_i18n=None,
+        remediation='Use the editor quick fix to add VAL for the parameter inferred from the criterion, or change an operation-only TEST_STEP block to TASK.', auto_repair={'enabled': False, 'risk': 'low'},
+    ),
+    'C2004-SCEN-0003': ErrorEntry(
+        code='C2004-SCEN-0003', slug='scenario.oql.test_step.missing_verdicts', domain='scenario',
+        http_status=422, severity='warning',
+        classification='operational', confidentiality='internal',
+        retryable=False, owner='owner://domain/scenario', title='OQL test step has no complete verdict pair',
+        message='TEST_STEP requires both PASS and FAIL verdict commands', message_i18n=None,
+        remediation='Use the editor quick fix to add the missing PASS and FAIL commands bound to the observed parameter, or change an operation-only TEST_STEP block to TASK.', auto_repair={'enabled': False, 'risk': 'low'},
     ),
     'C2004-NET-0001': ErrorEntry(
         code='C2004-NET-0001', slug='network.upstream_unreachable', domain='network',
