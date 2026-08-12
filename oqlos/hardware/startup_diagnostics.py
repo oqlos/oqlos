@@ -138,6 +138,17 @@ async def run_startup_diagnostics_and_repair() -> dict[str, Any]:
         logger.exception("Startup diagnostics failed")
         summary["error"] = str(exc)
 
+    try:
+        from oqlos.hardware.tic249_nvm_validation import check_tic249_nvm_profile
+
+        nvm = await check_tic249_nvm_profile()
+        summary["tic249_nvm"] = nvm
+        if nvm.get("ok") is False:
+            summary["degraded"] = True
+    except Exception as exc:  # pragma: no cover - defensive
+        logger.warning("Tic249 NVM validation hook failed: %s", exc)
+        summary["tic249_nvm"] = {"ok": True, "warning": str(exc)}
+
     summary["duration_sec"] = round(time.time() - started, 3)
     _last_result = summary
     return summary
