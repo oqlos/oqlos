@@ -876,13 +876,18 @@ class PluginHardwareGateway:
 
     async def stop_lung(self) -> bool:
         """Stop motion and release Tic249 coils according to the motor2 idle policy."""
+        stop_params: dict[str, Any] = {}
+        if self.motor2_stop_at_limit:
+            stop_params["stop_mode"] = "reach_limit"
         stopped = await self._execute_lung_bool_command(
             "stop",
-            {},
+            stop_params,
             mock_label="STOP_LUNG",
             error_context="stop_lung",
         )
         if not self.motor2_deenergize_on_stop:
+            return stopped
+        if self.motor2_stop_at_limit:
             return stopped
         deenergized = await self.disable_lung()
         return stopped and deenergized
@@ -923,6 +928,17 @@ class PluginHardwareGateway:
             self._motor2_runtime.get("deenergizeOnStartup"),
             idle_state == "deenergized",
         )
+
+    @property
+    def motor2_stop_at_limit(self) -> bool:
+        stop_mode = str(self._motor2_runtime.get("stopMode") or "").strip().lower()
+        if "stopAtLimit" in self._motor2_runtime or "stop_at_limit" in self._motor2_runtime:
+            return self._runtime_bool(self._motor2_runtime.get("stopAtLimit"), True)
+        if stop_mode == "reach_limit":
+            return True
+        if stop_mode in {"immediate", "emergency"}:
+            return False
+        return True
 
     async def enforce_motor2_startup_idle_state(self) -> bool:
         """Release Tic249 coils at startup when configured for deenergized idle."""

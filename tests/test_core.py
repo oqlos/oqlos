@@ -506,6 +506,7 @@ TASK:
         assert cfg.idle_state == "deenergized"
         assert cfg.deenergize_on_stop is True
         assert cfg.deenergize_on_startup is True
+        assert cfg.stop_at_limit is True
 
     def test_motor2_volume_duration_reciprocating_calculates_cycles_and_speed(self, monkeypatch):
         reciprocate_calls: list[dict[str, object]] = []

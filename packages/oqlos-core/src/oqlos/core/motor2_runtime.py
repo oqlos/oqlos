@@ -23,6 +23,7 @@ class Motor2RuntimeConfig:
     idle_state: str = "deenergized"
     deenergize_on_stop: bool = True
     deenergize_on_startup: bool = True
+    stop_at_limit: bool = True
 
 
 @dataclass(frozen=True)
@@ -113,6 +114,16 @@ def normalize_motor2_runtime_config(source: dict[str, Any] | None = None) -> Mot
     if idle_state not in {"deenergized", "holding"}:
         idle_state = "deenergized"
     idle_default = idle_state == "deenergized"
+    stop_mode = str(_pick(src, "stopMode", "stop_mode") or "").strip().lower()
+    stop_at_limit_raw = _pick(src, "stopAtLimit", "stop_at_limit")
+    if stop_at_limit_raw is not None:
+        stop_at_limit_default = _coerce_bool(stop_at_limit_raw, True)
+    elif stop_mode == "reach_limit":
+        stop_at_limit_default = True
+    elif stop_mode in {"immediate", "emergency"}:
+        stop_at_limit_default = False
+    else:
+        stop_at_limit_default = True
     return Motor2RuntimeConfig(
         peripheral_id=str(_pick(src, "peripheralId", "peripheral_id") or "motor-tic249"),
         stroke_steps=_coerce_int(_pick(src, "strokeSteps", "stroke_steps"), 1000),
@@ -131,6 +142,7 @@ def normalize_motor2_runtime_config(source: dict[str, Any] | None = None) -> Mot
         deenergize_on_startup=_coerce_bool(
             _pick(src, "deenergizeOnStartup", "deenergize_on_startup"), idle_default
         ),
+        stop_at_limit=stop_at_limit_default,
     )
 
 

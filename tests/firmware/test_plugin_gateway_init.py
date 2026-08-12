@@ -127,7 +127,30 @@ def test_apply_modbus_user_settings_reconnects_selected_plugin(monkeypatch) -> N
 def test_stop_lung_releases_coils_for_deenergized_idle(monkeypatch) -> None:
     gateway = PluginHardwareGateway(mode="mock")
     gateway.mode = "real"
-    gateway._motor2_runtime = {"idleState": "deenergized", "deenergizeOnStop": True}
+    gateway._motor2_runtime = {
+        "idleState": "deenergized",
+        "deenergizeOnStop": True,
+        "stopAtLimit": True,
+    }
+    calls: list[tuple[str, dict]] = []
+
+    async def _execute(command: str, params: dict, **_kwargs) -> bool:
+        calls.append((command, params))
+        return True
+
+    monkeypatch.setattr(gateway, "_execute_lung_bool_command", _execute)
+    assert asyncio.run(gateway.stop_lung()) is True
+    assert calls == [("stop", {"stop_mode": "reach_limit"})]
+
+
+def test_stop_lung_immediate_stop_still_deenergizes_when_configured(monkeypatch) -> None:
+    gateway = PluginHardwareGateway(mode="mock")
+    gateway.mode = "real"
+    gateway._motor2_runtime = {
+        "idleState": "deenergized",
+        "deenergizeOnStop": True,
+        "stopAtLimit": False,
+    }
     calls: list[tuple[str, dict]] = []
 
     async def _execute(command: str, params: dict, **_kwargs) -> bool:
@@ -151,7 +174,7 @@ def test_stop_lung_can_preserve_explicit_holding_current(monkeypatch) -> None:
 
     monkeypatch.setattr(gateway, "_execute_lung_bool_command", _execute)
     assert asyncio.run(gateway.stop_lung()) is True
-    assert calls == [("stop", {})]
+    assert calls == [("stop", {"stop_mode": "reach_limit"})]
 
 
 def test_startup_idle_policy_deenergizes_tic249(monkeypatch) -> None:

@@ -273,17 +273,12 @@ def _post_motor2_reciprocate(
 
 def _post_motor2_stop() -> None:
     base_url = lung_motor_url()
-    with httpx.Client(base_url=base_url, timeout=10.0) as client:
-        response = client.post("/api/stop")
+    with httpx.Client(base_url=base_url, timeout=15.0) as client:
+        response = client.post("/api/stop", json={"stop_mode": "reach_limit"})
         response.raise_for_status()
         data = response.json()
         if isinstance(data, dict) and data.get("success") is False:
             raise RuntimeError(str(data.get("error") or "motor2 stop failed"))
-        deenergize = client.post("/api/energize", json={"enable": False})
-        deenergize.raise_for_status()
-        deenergize_data = deenergize.json()
-        if isinstance(deenergize_data, dict) and deenergize_data.get("success") is False:
-            raise RuntimeError(str(deenergize_data.get("error") or "motor2 deenergize failed"))
 
 
 def _call_motor2_transport(name: str, fallback: "Any", *args: "Any") -> "Any":

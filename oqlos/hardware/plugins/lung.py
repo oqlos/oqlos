@@ -281,9 +281,18 @@ class LungPlugin(HardwarePlugin):
         speed = params.get("speed", TIC249_DEFAULT_TARGET_VELOCITY)
         return {"success": True, "data": {"steps": steps, "speed": speed}}
 
-    async def _handle_stop_http(self) -> dict[str, Any]:
+    async def _handle_stop_http(self, params: dict[str, Any] | None = None) -> dict[str, Any]:
         """Handle stop command via HTTP."""
-        return await http_post_command(self._client, self._base_url, "/api/stop")
+        payload: dict[str, Any] = {}
+        params = params or {}
+        if params.get("stop_mode") == "reach_limit" or params.get("stop_at_limit"):
+            payload["stop_mode"] = "reach_limit"
+        return await http_post_command(
+            self._client,
+            self._base_url,
+            "/api/stop",
+            json_body=payload or None,
+        )
 
     async def _handle_stop_usb(self) -> dict[str, Any]:
         """Handle stop command via USB (placeholder)."""
@@ -343,7 +352,7 @@ class LungPlugin(HardwarePlugin):
 
             elif command == "stop":
                 if self.config.connection_type == "http":
-                    return await self._handle_stop_http()
+                    return await self._handle_stop_http(params)
                 return await self._handle_stop_usb()
 
             elif command == "move":

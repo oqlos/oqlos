@@ -43,6 +43,5 @@ def test_stop_releases_tic249_coils(monkeypatch) -> None:
     _action_motor2._post_motor2_stop()
 
     assert client.posts == [
-        ("/api/stop", None),
-        ("/api/energize", {"enable": False}),
+        ("/api/stop", {"stop_mode": "reach_limit"}),
     ]

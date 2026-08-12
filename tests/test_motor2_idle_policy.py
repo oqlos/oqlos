@@ -44,6 +44,5 @@ def test_motor2_stop_halts_motion_then_releases_coils(monkeypatch) -> None:
     motor2_actions._post_motor2_stop()
 
     assert calls == [
-        ("/api/stop", None),
-        ("/api/energize", {"enable": False}),
+        ("/api/stop", {"stop_mode": "reach_limit"}),
     ]

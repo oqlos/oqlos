@@ -37,7 +37,10 @@ def map_tic249_command(command: str, args: dict[str, Any]) -> tuple[str, dict[st
     if command in {"status", "limits", "position"}:
         return "status", {}
     if command in {"stop", "emergency_stop", "lung_stop"}:
-        return "stop", {}
+        payload: dict[str, Any] = {}
+        if args.get("stop_mode") == "reach_limit" or args.get("stop_at_limit"):
+            payload["stop_mode"] = "reach_limit"
+        return "stop", payload
     if command in {"home", "home_reverse", "go_home"}:
         return "home", {"direction": "reverse", **dict(args)}
     if command == "home_forward":
