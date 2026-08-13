@@ -282,10 +282,9 @@ def diagnose_plugin_devices(
         if _modbus_adc_is_replaced(plugin_id, platform):
             continue
         entry = health.get(plugin_id) if isinstance(health.get(plugin_id), dict) else None
-        # The alternative valve module is reported only where it is actually
-        # configured; stands still on modbus-io must not grow a permanent
-        # "missing device" row.
-        if plugin_id == M5_4IN8OUT_PLUGIN_ID and entry is None and not adapters.get(plugin_id):
+        # The identify registry always lists optional inventory adapters, so
+        # only a health entry proves that M5 is enabled for this bench.
+        if plugin_id == M5_4IN8OUT_PLUGIN_ID and entry is None:
             continue
         special = _mock_motor_diagnosis(plugin_id, display_name, entry, topology, hardware_mode)
         devices[plugin_id] = special or _standard_plugin_diagnosis(

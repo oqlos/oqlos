@@ -30,6 +30,24 @@ def test_module_is_absent_from_reports_until_it_is_configured() -> None:
     assert "modbus-io" in devices
 
 
+def test_registry_only_optional_adapter_is_not_reported_as_offline() -> None:
+    devices = _diagnose(
+        {"modbus-io": {"status": "ok", "compatible": True}},
+        {
+            M5_4IN8OUT_PLUGIN_ID: {
+                "id": M5_4IN8OUT_PLUGIN_ID,
+                "optional": True,
+                "status": "offline",
+                "probe": {},
+            }
+        },
+    )
+
+    # The identify registry lists optional hardware for inventory purposes. It
+    # is not proof that the plugin was enabled for this bench.
+    assert M5_4IN8OUT_PLUGIN_ID not in devices
+
+
 def test_configured_module_is_reported() -> None:
     devices = _diagnose(
         {M5_4IN8OUT_PLUGIN_ID: {"status": "connected", "compatible": True, "message": "ok"}}
