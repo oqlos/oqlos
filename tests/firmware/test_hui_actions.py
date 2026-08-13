@@ -374,9 +374,12 @@ def test_stop_hui_artificial_lung_exposes_structured_hardware_failure() -> None:
     payload = run(hui_actions.stop_hui_artificial_lung(gateway))
 
     assert payload["ok"] is False
+    assert payload["error"] == "Artificial lung motor stop was not confirmed"
     assert payload["error_code"] == "C2004-HW-0012"
+    assert payload["issue_code"] == "hw_tic249_sidecar_unreachable"
     assert payload["status_code"] == 503
     assert payload["safe_to_retry"] is True
+    assert payload["unavailable_hardware_ids"] == ["motor-tic249"]
     assert ("valve", "valve-4", False) in gateway.calls
 
 

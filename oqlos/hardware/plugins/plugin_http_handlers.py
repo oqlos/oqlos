@@ -58,13 +58,18 @@ async def http_post_command(
     path: str,
     *,
     json_body: dict[str, Any] | None = None,
+    timeout: float | None = None,
 ) -> dict[str, Any]:
     """POST to a plugin HTTP API and return ``{success, data|error}``."""
     url = f"{base_url.rstrip('/')}{path}"
-    if json_body is None:
+    if json_body is None and timeout is None:
         resp = await client.post(url)
-    else:
+    elif json_body is None:
+        resp = await client.post(url, timeout=timeout)
+    elif timeout is None:
         resp = await client.post(url, json=json_body)
+    else:
+        resp = await client.post(url, json=json_body, timeout=timeout)
     return _command_result(resp)
 
 

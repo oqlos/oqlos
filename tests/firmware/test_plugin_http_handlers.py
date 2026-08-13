@@ -32,6 +32,16 @@ class _Client:
         return _Response(self._payload, self._status_code)
 
 
+class _TimeoutClient(_Client):
+    def __init__(self, payload, status_code=200):
+        super().__init__(payload, status_code)
+        self.posts = []
+
+    async def post(self, url, json=None, timeout=None):
+        self.posts.append((url, json, timeout))
+        return _Response(self._payload, self._status_code)
+
+
 def test_http_get_command_success():
     result = asyncio.run(
         http_get_command(_Client({"position": 1}), "http://localhost:8205", "/api/status")
@@ -68,6 +78,29 @@ def test_http_command_preserves_c2004_problem_details_from_sidecar():
     assert result["correlation_id"] == "cor-sidecar"
     assert result["component"] == "motor-tic249"
     assert result["upstream"] == problem
+
+
+def test_http_post_command_forwards_an_operation_specific_timeout():
+    client = _TimeoutClient({"success": True})
+
+    result = asyncio.run(
+        http_post_command(
+            client,
+            "http://localhost:8205",
+            "/api/stop",
+            json_body={"stop_mode": "reach_limit"},
+            timeout=14.0,
+        )
+    )
+
+    assert result["success"] is True
+    assert client.posts == [
+        (
+            "http://localhost:8205/api/stop",
+            {"stop_mode": "reach_limit"},
+            14.0,
+        )
+    ]
 
 
 def test_http_command_falls_back_when_upstream_is_not_problem_details():

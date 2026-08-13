@@ -22,6 +22,10 @@ from oqlos.hardware.tic249_units import TIC249_DEFAULT_TARGET_VELOCITY
 
 logger = logging.getLogger(__name__)
 
+
+_REACH_LIMIT_STOP_TIMEOUT_SECONDS = 14.0
+
+
 def _lung_failure(reason: str, *, status_code: int = 503) -> dict[str, Any]:
     return plugin_operation_failure("motor-tic249", reason, status_code=status_code)
 
@@ -285,13 +289,19 @@ class LungPlugin(HardwarePlugin):
         """Handle stop command via HTTP."""
         payload: dict[str, Any] = {}
         params = params or {}
-        if params.get("stop_mode") == "reach_limit" or params.get("stop_at_limit"):
+        reach_limit = params.get("stop_mode") == "reach_limit" or params.get("stop_at_limit")
+        if reach_limit:
             payload["stop_mode"] = "reach_limit"
         return await http_post_command(
             self._client,
             self._base_url,
             "/api/stop",
             json_body=payload or None,
+            timeout=(
+                max(float(self.config.timeout), _REACH_LIMIT_STOP_TIMEOUT_SECONDS)
+                if reach_limit
+                else None
+            ),
         )
 
     async def _handle_stop_usb(self) -> dict[str, Any]:

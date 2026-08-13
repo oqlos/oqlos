@@ -116,10 +116,12 @@ def test_hui_al_stop_maps_safe_state_failure_to_service_unavailable(monkeypatch)
     async def _fake_stop(gw):
         return {
             "ok": False,
-            "error": "Required hardware unavailable while stopping artificial lung",
+            "error": "Artificial lung motor stop was not confirmed",
             "error_code": "C2004-HW-0012",
+            "issue_code": "hw_tic249_sidecar_unreachable",
             "status_code": 503,
             "safe_to_retry": True,
+            "unavailable_hardware_ids": ["motor-tic249"],
         }
 
     monkeypatch.setattr(hui, "stop_hui_artificial_lung", _fake_stop)
@@ -129,6 +131,8 @@ def test_hui_al_stop_maps_safe_state_failure_to_service_unavailable(monkeypatch)
 
     assert exc.value.status_code == 503
     assert exc.value.public_code == "C2004-HW-0012"
+    assert exc.value.issue_code == "hw_tic249_sidecar_unreachable"
+    assert exc.value.detail["unavailable_hardware_ids"] == ["motor-tic249"]
 
 
 def test_hui_failure_http_contract_does_not_leak_action_error(monkeypatch):

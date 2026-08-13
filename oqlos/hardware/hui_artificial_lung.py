@@ -218,9 +218,11 @@ async def stop_hui_artificial_lung(gateway: Any) -> dict[str, Any]:
         payload["valve_skipped"] = True
     if not ok:
         payload.update({
-            "error": "Required hardware unavailable while stopping artificial lung",
+            "error": "Artificial lung motor stop was not confirmed",
             "error_code": "C2004-HW-0012",
+            "issue_code": "hw_tic249_sidecar_unreachable",
             "status_code": 503,
             "safe_to_retry": True,
+            "unavailable_hardware_ids": ["motor-tic249"],
         })
     return payload

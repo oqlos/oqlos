@@ -43,6 +43,15 @@ class _ReadyFalseClient:
         return _JsonResponse(200, {"success": True, "mode": "reciprocating"})
 
 
+class _StopClient:
+    def __init__(self):
+        self.posts = []
+
+    async def post(self, url, json=None, timeout=None):
+        self.posts.append((url, json, timeout))
+        return _JsonResponse(200, {"success": True})
+
+
 def _plugin_with_client(client):
     plugin = LungPlugin(
         PluginConfig(
@@ -101,6 +110,25 @@ def test_active_limits_return_a_canonical_hardware_error_before_post():
     assert result["component"] == "motor-tic249"
     assert result["stage"] == "adapter.preflight"
     assert client.posts == []
+
+
+def test_reach_limit_stop_has_enough_time_for_sidecar_safety_window():
+    client = _StopClient()
+    plugin = _plugin_with_client(client)
+    plugin.config.timeout = 2.0
+
+    result = asyncio.run(
+        plugin.execute_command("stop", {"stop_mode": "reach_limit"})
+    )
+
+    assert result["success"] is True
+    assert client.posts == [
+        (
+            "http://localhost:8205/api/stop",
+            {"stop_mode": "reach_limit"},
+            14.0,
+        )
+    ]
 
 
 def test_tic249_extended_reciprocate_normalizes_ramp_time_alias():
