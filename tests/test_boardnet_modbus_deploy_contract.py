@@ -198,7 +198,7 @@ def test_boardnet_base_config_matches_machine_modbus_contract() -> None:
     params = payload["plugins"]["modbus-io"]["connection_params"]
 
     assert params == {
-        "serial_port": "/dev/serial/by-id/usb-1a86_USB_Single_Serial_5958006895-if00",
+        "serial_port": "/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_A5069RR4-if00-port0",
         "baudrate": 4800,
         "parity": "N",
         "device_id": 2,

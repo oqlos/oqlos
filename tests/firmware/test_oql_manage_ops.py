@@ -49,7 +49,7 @@ async def test_mqtt_manage_actuation_is_blocked_before_adapter(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_mqtt_manage_stop_and_deenergize_bypass_power_gate(monkeypatch):
+async def test_mqtt_manage_reach_limit_stop_bypasses_power_gate(monkeypatch):
     gateway = PluginHardwareGateway(mode="mock")
     gateway.mode = "real"
     gateway._init_done = True
@@ -71,10 +71,10 @@ async def test_mqtt_manage_stop_and_deenergize_bypass_power_gate(monkeypatch):
     result = await manage_ops.run_manage_verb("lung-stop")
 
     assert result == {"ok": True, "status": "stopped"}
-    assert adapter_calls == [
-        ("stop", {}),
-        ("energize", {"enable": False}),
-    ]
+    # The reach-limit stop is one atomic sidecar command: the Tic completes the
+    # safe stroke and de-energizes itself, so a second immediate energize=false
+    # command would interrupt the controlled stop.
+    assert adapter_calls == [("stop", {"stop_mode": "reach_limit"})]
 
 
 def test_hardware_facade_exposes_manage_ops_handlers():
