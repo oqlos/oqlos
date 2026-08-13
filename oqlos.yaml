@@ -129,6 +129,33 @@ plugins:
         conversion: {type: none}
 
   # -----------------------------------------------------------------------
+  # M5Stack Module 4In8Out — I2C valve controller (alternative to modbus-io)
+  #
+  # Wiring: module has its own 9-24 V supply; connect SDA/SCL/GND to the Pi
+  # (GPIO2/GPIO3 = /dev/i2c-1) or use backend: mcp2221 for a USB-I2C adapter.
+  # Enable this plugin to make it the valve output stage — the gateway prefers
+  # it over modbus-io and keeps modbus-io as fallback (see valve_controller.py).
+  # -----------------------------------------------------------------------
+  io-m5-4in8out:
+    enabled: false
+    connection_type: i2c
+    connection_params:
+      backend: smbus
+      bus: 1
+      address: 0x45
+    timeout: 1.0
+    retry_count: 1
+    metadata:
+      description: "8x MOSFET output + 4x contact input I2C module — valve & signal control"
+    peripherals:
+      state:
+        name: state
+        type: valve
+        scale: {min: 0, max: 1, default: 0, unit: ""}
+        raster: [0, 1]
+        conversion: {type: none}
+
+  # -----------------------------------------------------------------------
   # Pololu Tic T249 — stepper motor (artificial lung)
   # -----------------------------------------------------------------------
   motor-tic249:

@@ -9,6 +9,7 @@ const navItems = [
   { path: "/status", labelKey: "nav.hardware" },
   { path: "/hardware-modbus", labelKey: "nav.modbus" },
   { path: "/hardware-coils", labelKey: "nav.coilTest" },
+  { path: "/hardware-m5-out", labelKey: "nav.m5Out" },
   { path: "/hardware-rtc", labelKey: "nav.rtc" },
   { path: "/motor-services", labelKey: "nav.motorServices" },
   { path: "/scenario-files", labelKey: "nav.scenarioFiles" },

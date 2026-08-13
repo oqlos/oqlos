@@ -104,6 +104,30 @@ plugins:
         conversion: {type: none}
 
   # ------------------------------------------------------------------
+  # M5Stack Module 4In8Out — I2C valve controller (alternative to modbus-io)
+  # Enable to take over the valves; modbus-io stays as fallback.
+  # ------------------------------------------------------------------
+  io-m5-4in8out:
+    enabled: false
+    connection_type: i2c
+    connection_params:
+      backend: smbus        # smbus | mcp2221 | mock
+      bus: 1
+      address: 0x45
+    timeout: 1.0
+    retry_count: 1
+    metadata:
+      description: "8x MOSFET output + 4x contact input I2C module"
+      valve_count: 8
+    peripherals:
+      state:
+        name: state
+        type: valve
+        scale: {min: 0, max: 1, default: 0, unit: ""}
+        raster: [0, 1]
+        conversion: {type: none}
+
+  # ------------------------------------------------------------------
   # Pololu Tic T249 — stepper motor (artificial lung)
   # ------------------------------------------------------------------
   motor-tic249:

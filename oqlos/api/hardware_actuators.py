@@ -8,8 +8,18 @@ from fastapi import APIRouter
 
 from oqlos.api.hardware_gateway import get_hardware_gateway
 from oqlos.errors import OqlosError
+from oqlos.hardware.valve_controller import (
+    M5_VALVE_CONTROLLER,
+    MODBUS_VALVE_CONTROLLER,
+    gateway_valve_controllers,
+)
 
 router = APIRouter(tags=["hardware-actuators"])
+
+
+def _valve_controller_id(gateway: Any) -> str:
+    controllers = gateway_valve_controllers(gateway)
+    return controllers[0] if controllers else MODBUS_VALVE_CONTROLLER
 
 
 def _pump_success(result: Any) -> bool:
@@ -21,13 +31,22 @@ def _pump_success(result: Any) -> bool:
 @router.post("/valve/{valve_id}")
 async def set_valve(valve_id: str, value: bool):
     """Directly set a valve (for manual testing)."""
-    ok = await get_hardware_gateway().set_valve(valve_id, value)
+    gateway = get_hardware_gateway()
+    ok = await gateway.set_valve(valve_id, value)
     if not ok:
+        controller = _valve_controller_id(gateway)
         raise OqlosError(
-            code="hw_modbus_no_response",
+            code=(
+                "hw_m5_4in8out_no_response"
+                if controller == M5_VALVE_CONTROLLER
+                else "hw_modbus_no_response"
+            ),
             status_code=503,
-            message=f"Valve '{valve_id}' command failed (modbus-io unavailable or no response)",
-            detail={"valve_id": valve_id, "value": value},
+            message=(
+                f"Valve '{valve_id}' command failed "
+                f"({controller} unavailable or no response)"
+            ),
+            detail={"valve_id": valve_id, "value": value, "controller": controller},
         )
     return {"valve_id": valve_id, "value": value, "ok": True}
 

@@ -25,6 +25,7 @@ _HEALTH_KEYS_BY_ADAPTER = {
     "motor-dri0050": ("motor-dri0050", "motor"),
     "motor-tic249": ("motor-tic249", "lung"),
     "modbus-io": ("modbus-io", "modbus"),
+    "io-m5-4in8out": ("io-m5-4in8out", "m5-4in8out"),
 }
 
 # Adaptery, które mogą obsłużyć wejścia analogowe. `resolve_required_adapter`

@@ -7,6 +7,14 @@ plugin-based configuration system that is more flexible and maintainable.
 
 from __future__ import annotations
 
+from oqlos.hardware.valve_controller import (
+    DEFAULT_VALVE_CONTROLLER_PREFERENCE,
+    resolve_valve_controller_from_config,
+)
+
+#: Plugin ids that can act as the valve output stage (resolved at call time).
+VALVE_CONTROLLER_PLUGIN_IDS = frozenset(DEFAULT_VALVE_CONTROLLER_PREFERENCE)
+
 
 # DSL target names → plugin ID mapping
 # This maps DSL peripheral names to their corresponding plugin IDs
@@ -99,13 +107,20 @@ def resolve_target_to_plugin(target: str) -> str | None:
     """
     Resolve a DSL target name to its plugin ID.
 
+    Valve targets are resolved against the configured valve output module, so a
+    stand rewired from the Waveshare RS485 module to the M5Stack 4In8Out module
+    keeps working without touching this table.
+
     Args:
         target: The DSL target name (e.g., "pompa 1", "zawór NC")
 
     Returns:
         The plugin ID (e.g., "motor-dri0050", "modbus-io") or None if not found
     """
-    return _PERIPHERAL_TO_PLUGIN_MAP.get(target)
+    plugin_id = _PERIPHERAL_TO_PLUGIN_MAP.get(target)
+    if plugin_id in VALVE_CONTROLLER_PLUGIN_IDS:
+        return resolve_valve_controller_from_config()
+    return plugin_id
 
 
 def register_custom_mapping(target: str, plugin_id: str) -> None:

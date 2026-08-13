@@ -118,6 +118,16 @@ export const HardwareApi = {
     return get("/api/v3/hardware/proxy-info", options);
   },
 
+  async executePluginCommand(pluginId, command, params = {}, options) {
+    // Direct plugin channel: the M5 valve stage is addressed by its own id even
+    // while the gateway still routes logical valves to another output module.
+    return post(
+      `/api/v1/plugins/${encodeURIComponent(pluginId)}/execute`,
+      { command, params },
+      options,
+    );
+  },
+
   async peripheralStatus(peripheralId, options) {
     return get(`/api/v3/hardware/peripheral-status/${encodeURIComponent(peripheralId)}`, options);
   },

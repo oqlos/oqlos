@@ -57,4 +57,20 @@ HARDWARE_REGISTRY: list[dict[str, Any]] = [
         "default_config": "4800 baud, N-8-1, slave address 1",
         "wiki": "https://www.waveshare.com/wiki/Modbus_RTU_IO_8CH",
     },
+    {
+        "id": "io-m5-4in8out",
+        "name": "M5Stack Module 4In8Out",
+        # Alternative valve stage: listed so operators see it, but a stand that
+        # has not been rewired must not be pushed into live scans because of it.
+        "optional": True,
+        "version": "13.2",
+        "protocol": "I2C",
+        "description": "8 MOSFET outputs + 4 contact inputs - valve control (alternative to modbus-io)",
+        "repo": "m5-4in8out",
+        "digital_outputs": "OUT1-OUT8 (AO3400A MOSFET, common anode, 1A/ch, 8A total, 9-24V)",
+        "digital_inputs": "IN1-IN4 (passive dry contact only, no active signal above 5V)",
+        "interface": "I2C via Raspberry Pi /dev/i2c-1 or MCP2221A USB-I2C adapter",
+        "default_config": "address 0x45, 100 kHz; outputs 0x20+n, inputs 0x10+n, version 0xFE",
+        "wiki": "https://docs.m5stack.com/en/module/4in8out",
+    },
 ]

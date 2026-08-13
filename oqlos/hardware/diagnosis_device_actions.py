@@ -9,10 +9,63 @@ from oqlos.hardware.diagnosis_types import DeviceDiagnosis, DiagnosisAction
 
 _MONITORED_PLUGINS = (
     ("modbus-io", "Waveshare Modbus IO 8CH"),
+    ("io-m5-4in8out", "M5Stack Module 4In8Out"),
     ("modbus-adc", "Waveshare Modbus ADC 8CH"),
     ("motor-tic249", "Pololu Tic T249"),
     ("motor-dri0050", "DFRobot DRI0050"),
 )
+
+M5_4IN8OUT_PLUGIN_ID = "io-m5-4in8out"
+
+
+def add_m5_4in8out_device_actions(dev: DeviceDiagnosis, status: str, msg: str) -> None:
+    """I2C failures need different hands-on checks than an RS485 module."""
+    if status == "ok":
+        return
+    if "no such file or directory" in msg or "/dev/i2c" in msg:
+        dev.issues.append(
+            "Brak magistrali I2C na hoście — włącz I2C (raspi-config) i sprawdź /dev/i2c-1."
+        )
+    if "remote i/o error" in msg or "errno 121" in msg or "no answer" in msg:
+        dev.issues.append(
+            "Moduł nie odpowiada pod adresem I2C — zasilanie 9-24 V, SDA/SCL i wspólne GND."
+        )
+    if "not installed" in msg or "no module named" in msg:
+        dev.issues.append(
+            "Brak sterownika m5-4in8out w venv OqlOS — uruchom krok deployu sync_m5_4in8out."
+        )
+    dev.recommended_actions.append(
+        DiagnosisAction(
+            id="m5-4in8out-physical",
+            device_id=M5_4IN8OUT_PLUGIN_ID,
+            label="Sprawdź I2C: i2cdetect -y 1 (oczekiwany adres 0x45)",
+            kind="manual",
+            priority=20,
+            auto_executable=False,
+            scope="host",
+            detail=(
+                "Moduł zasilany z własnego portu 9-24 V; do Pi idą tylko SDA (GPIO2), "
+                "SCL (GPIO3) i wspólne GND. Wejścia IN1-IN4 przyjmują wyłącznie styk "
+                "bezpotencjałowy."
+            ),
+            code="hw_m5_4in8out_no_response",
+            actuation_risk="none",
+        )
+    )
+    dev.recommended_actions.append(
+        DiagnosisAction(
+            id="m5-4in8out-reconnect",
+            device_id=M5_4IN8OUT_PLUGIN_ID,
+            label="Reconnect plugin io-m5-4in8out (OqlOS)",
+            kind="oqlos",
+            priority=15,
+            auto_executable=True,
+            scope="oqlos",
+            detail="Ponowne otwarcie magistrali I2C w procesie OqlOS (bez zmiany stanu wyjść).",
+            code="hw_m5_4in8out_bus_stale",
+            actuation_risk="none",
+        )
+    )
 
 
 def add_modbus_device_actions(
@@ -194,6 +247,8 @@ def _add_plugin_actions(
 ) -> None:
     if plugin_id.startswith("modbus"):
         add_modbus_device_actions(dev, plugin_id, status, message, platform)
+    elif plugin_id == M5_4IN8OUT_PLUGIN_ID:
+        add_m5_4in8out_device_actions(dev, status, message)
     elif plugin_id == "motor-tic249":
         add_tic249_device_actions(dev, status, message, host_recover)
     elif plugin_id == "motor-dri0050":
@@ -227,6 +282,11 @@ def diagnose_plugin_devices(
         if _modbus_adc_is_replaced(plugin_id, platform):
             continue
         entry = health.get(plugin_id) if isinstance(health.get(plugin_id), dict) else None
+        # The alternative valve module is reported only where it is actually
+        # configured; stands still on modbus-io must not grow a permanent
+        # "missing device" row.
+        if plugin_id == M5_4IN8OUT_PLUGIN_ID and entry is None and not adapters.get(plugin_id):
+            continue
         special = _mock_motor_diagnosis(plugin_id, display_name, entry, topology, hardware_mode)
         devices[plugin_id] = special or _standard_plugin_diagnosis(
             plugin_id, display_name, entry, adapters.get(plugin_id), platform, topology, host_recover,

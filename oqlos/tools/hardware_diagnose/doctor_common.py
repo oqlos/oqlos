@@ -12,6 +12,7 @@ _HEALTH_KEYS_BY_ADAPTER = {
     "motor-dri0050": ("motor-dri0050", "motor"),
     "motor-tic249": ("motor-tic249", "lung"),
     "modbus-io": ("modbus-io", "modbus"),
+    "io-m5-4in8out": ("io-m5-4in8out", "m5-4in8out"),
 }
 
 LOCAL_FIRMWARE_HOSTS = {"", "localhost", "127.0.0.1", "::1"}

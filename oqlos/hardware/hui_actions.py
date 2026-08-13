@@ -14,6 +14,7 @@ from oqlos.hardware.hui_hold import (
     stop_hui_hold,
 )
 from oqlos.hardware.hui_readiness import build_hui_readiness
+from oqlos.hardware.valve_controller import resolve_valve_controller_from_config
 from oqlos.hardware.hui_valve import get_hui_valve_specs, run_hui_valve_key
 from oqlos.hardware.hui_lung_recipe import (
     HUI_AL_LUNG_VALVE_ID,
@@ -53,6 +54,9 @@ __all__ = [
 def list_hui_actions() -> dict[str, Any]:
     profiles = get_hui_hold_profiles()
     valve_specs = get_hui_valve_specs()
+    # Valves run on whichever output module the configuration selects
+    # (Waveshare modbus-io or the M5Stack 4In8Out I2C module).
+    valve_plugin = resolve_valve_controller_from_config()
     return {
         "ok": True,
         "hold_keys": list(profiles.keys()),
@@ -63,7 +67,7 @@ def list_hui_actions() -> dict[str, Any]:
                 "valves_on": list(profile["valves_on"]),
                 "pump_pct": profile["pump_pct"],
                 "required_hardware": [
-                    "modbus-io",
+                    valve_plugin,
                     *(["motor-dri0050"] if float(profile["pump_pct"]) else []),
                 ],
             }
@@ -76,18 +80,19 @@ def list_hui_actions() -> dict[str, Any]:
         "artificial_lung": {
             "valve_id": get_hui_lung_valve_id(),
             "reciprocate_args": get_hui_lung_reciprocate_args(),
-            "start_required_hardware": ["modbus-io", "motor-tic249"],
+            "start_required_hardware": [valve_plugin, "motor-tic249"],
             "stop_required_hardware": ["motor-tic249"],
-            "stop_best_effort_hardware": ["modbus-io"],
+            "stop_best_effort_hardware": [valve_plugin],
         },
         "requirements": {
-            "valve_actions": ["modbus-io"],
-            "shutdown_full_confirmation": ["motor-dri0050", "modbus-io"],
+            "valve_actions": [valve_plugin],
+            "shutdown_full_confirmation": ["motor-dri0050", valve_plugin],
             "telemetry_sc_wc": ["usb-adc-dfr1184"],
         },
         "diagnostics": {
             "hui_readiness": "/api/v1/hardware/hui/readiness",
             "hardware_diagnosis": "/api/v1/hardware/diagnosis?scan=never",
+            "valve_controller": f"/api/v1/plugins/{valve_plugin}/health",
             "modbus_io": "/api/v1/plugins/modbus-io/health",
             "analog_inputs": "/api/v1/hardware/sensors/batch",
         },

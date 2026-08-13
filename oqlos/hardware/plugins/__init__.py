@@ -23,6 +23,7 @@ from .piadc import PiadcPlugin
 from .modbus_adc import ModbusAdcPlugin
 from .motor import MotorPlugin
 from .modbus import ModbusPlugin
+from .m5_4in8out import M54In8OutPlugin
 from .lung import LungPlugin
 
 __all__ = [
@@ -45,5 +46,6 @@ __all__ = [
     "ModbusAdcPlugin",
     "MotorPlugin",
     "ModbusPlugin",
+    "M54In8OutPlugin",
     "LungPlugin",
 ]

@@ -8,6 +8,7 @@ from time import perf_counter_ns
 from typing import Any
 
 from oqlos.hardware.hui_readiness import required_plugins_failure
+from oqlos.hardware.valve_controller import gateway_valve_controllers
 
 HUI_HOLD_PROFILES: dict[str, dict[str, Any]] = {
     "head-inflate": {"valves_on": ("valve-5", "valve-2"), "pump_pct": 70.0},
@@ -311,16 +312,17 @@ async def _shutdown_all_hui_hardware_unlocked(
     # controller is unavailable, report that degraded safe-off state immediately.
     readiness_started = _timing_start()
     readiness_failure = None
+    valve_controllers = gateway_valve_controllers(gateway)
     if not modbus_prechecked:
         readiness_failure = await required_plugins_failure(
             gateway,
-            ("modbus-io",),
+            tuple(valve_controllers),
             command="shutdown",
             check_power=False,
             reconnect=False,
         )
     readiness_operation = _operation(
-        "readiness.modbus-io",
+        f"readiness.{valve_controllers[0] if valve_controllers else 'valve-controller'}",
         readiness_failure is None,
         timing=readiness_started,
         cached=modbus_prechecked,
@@ -474,7 +476,7 @@ async def _start_hui_hold_unlocked(gateway: Any, key: str) -> dict[str, Any]:
             "timeline": _operation_timeline([profile_operation]),
         }
 
-    required_plugins = ["modbus-io"]
+    required_plugins = gateway_valve_controllers(gateway)
     if float(profile["pump_pct"]):
         required_plugins.append("motor-dri0050")
     operations: list[dict[str, Any]] = []

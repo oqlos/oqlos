@@ -55,9 +55,22 @@ def _collect_hardware_diagnostics() -> dict[str, Any]:
     }
 
 
+def _adapter_is_dormant(hw: dict[str, Any], health: dict[str, Any]) -> bool:
+    """True for an optional adapter this stand has not configured at all.
+
+    Optional hardware (e.g. the alternative M5 valve stage) stays on the
+    registry so operators can see it, but while its plugin is disabled it has
+    no health entry — and that absence must not be read as "unhealthy", or
+    every identify call would trigger a live scan forever.
+    """
+    return bool(hw.get("optional")) and not isinstance(health.get(hw["id"]), dict)
+
+
 def _needs_live_scan(health: dict[str, Any]) -> bool:
     """Run expensive live scan only when at least one registered adapter is not compatible."""
     for hw in HARDWARE_REGISTRY:
+        if _adapter_is_dormant(hw, health):
+            continue
         if not _is_plugin_compatible(health.get(hw["id"])):
             return True
     return False
@@ -68,7 +81,8 @@ def _unhealthy_plugin_ids(health: dict[str, Any]) -> set[str]:
     return {
         hw["id"]
         for hw in HARDWARE_REGISTRY
-        if not _is_plugin_compatible(health.get(hw["id"]))
+        if not _adapter_is_dormant(hw, health)
+        and not _is_plugin_compatible(health.get(hw["id"]))
     }
 
 

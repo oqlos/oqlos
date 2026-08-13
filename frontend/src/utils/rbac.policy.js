@@ -74,6 +74,7 @@ const VIEW_ROLE_BINDINGS = [
   { pattern: "/hardware-status*", roles: ["admin", "manager", "technician", "operator", "viewer"] },
   { pattern: "/hardware-modbus*", roles: ["admin", "manager", "technician", "operator", "viewer"] },
   { pattern: "/hardware-coils*", roles: ["admin", "manager", "technician", "operator", "viewer"] },
+  { pattern: "/hardware-m5-out*", roles: ["admin", "manager", "technician", "operator", "viewer"] },
   { pattern: "/hardware-rtc*", roles: ["admin", "manager", "technician", "operator", "viewer"] },
   { pattern: "/ui/hardware-modbus*", roles: ["admin", "manager", "technician", "operator", "viewer"] },
   { pattern: "/ui/hardware-rtc*", roles: ["admin", "manager", "technician", "operator", "viewer"] },

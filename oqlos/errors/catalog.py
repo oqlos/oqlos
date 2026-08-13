@@ -360,6 +360,32 @@ ISSUE_CATALOG: dict[str, IssueDefinition] = {
             hint="Verify module power, RS485 A/B polarity, common GND, slave ID (plan: 2) and baud 4800 8N1; software reconnect will not help.",
         ),
     ),
+    "hw_m5_4in8out_bus_stale": IssueDefinition(
+        code="hw_m5_4in8out_bus_stale",
+        domain="hardware",
+        default_severity="warning",
+        summary="The M5Stack 4In8Out valve module (io-m5-4in8out) has a stale I2C handle and needs a plugin reconnect.",
+        repair=RepairTemplate(
+            id="m5-4in8out-plugin-reconnect",
+            scope="oqlos",
+            auto_executable=True,
+            actuation_risk="none",
+            hint="Pure in-process reopen of the I2C transport — output state is left untouched, nothing to commit.",
+        ),
+    ),
+    "hw_m5_4in8out_no_response": IssueDefinition(
+        code="hw_m5_4in8out_no_response",
+        domain="hardware",
+        default_severity="error",
+        summary="The M5Stack 4In8Out valve module did not answer on the configured I2C address.",
+        repair=RepairTemplate(
+            id="m5-4in8out-physical-check",
+            scope="host",
+            auto_executable=False,
+            actuation_risk="none",
+            hint="Run i2cdetect -y 1 (expected 0x45); verify the module 9-24 V supply, SDA/SCL wiring and common GND. A software reconnect will not help.",
+        ),
+    ),
     "api_oql_transport_disabled": IssueDefinition(
         code="api_oql_transport_disabled",
         domain="api",

@@ -7,8 +7,23 @@ from collections.abc import Iterable
 from typing import Any
 
 from oqlos.hardware.power_safety import power_actuation_failure
+from oqlos.hardware.valve_controller import (
+    MODBUS_VALVE_CONTROLLER,
+    gateway_valve_controllers,
+)
 
-_HUI_CONTROL_PLUGINS = ("modbus-io", "motor-dri0050", "motor-tic249")
+_HUI_MOTOR_PLUGINS = ("motor-dri0050", "motor-tic249")
+
+
+def _hui_control_plugins(gateway: Any) -> tuple[str, ...]:
+    """Control plugins probed for readiness, valve controller first."""
+    return (_hui_valve_plugin(gateway), *_HUI_MOTOR_PLUGINS)
+
+
+def _hui_valve_plugin(gateway: Any) -> str:
+    """Valve output module this stand actually uses (modbus-io or M5 4In8Out)."""
+    controllers = gateway_valve_controllers(gateway)
+    return controllers[0] if controllers else MODBUS_VALVE_CONTROLLER
 
 
 def _public_readiness(check: Any, plugin_id: str) -> dict[str, Any]:
@@ -103,8 +118,12 @@ async def build_hui_readiness(
     analog_input_health: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Fast, non-reconnecting HUI preflight with control/telemetry separation."""
+    valve_plugin = _hui_valve_plugin(gateway)
     checks = await asyncio.gather(
-        *(_read_plugin_without_reconnect(gateway, plugin_id) for plugin_id in _HUI_CONTROL_PLUGINS)
+        *(
+            _read_plugin_without_reconnect(gateway, plugin_id)
+            for plugin_id in _hui_control_plugins(gateway)
+        )
     )
     controls = {check["plugin_id"]: check for check in checks}
 
@@ -112,7 +131,7 @@ async def build_hui_readiness(
 
     hold_actions: dict[str, dict[str, Any]] = {}
     for key, profile in get_hui_hold_profiles().items():
-        required = ("modbus-io",) + (("motor-dri0050",) if float(profile["pump_pct"]) else ())
+        required = (valve_plugin,) + (("motor-dri0050",) if float(profile["pump_pct"]) else ())
         hold_actions[key] = _action_state(required, controls)
 
     telemetry = _telemetry_readiness(analog_input_health)
@@ -128,21 +147,23 @@ async def build_hui_readiness(
         "telemetry": telemetry,
         "actions": {
             "holds": hold_actions,
-            "valves": _action_state(("modbus-io",), controls),
-            "artificial_lung_start": _action_state(("modbus-io", "motor-tic249"), controls),
+            "valves": _action_state((valve_plugin,), controls),
+            "artificial_lung_start": _action_state((valve_plugin, "motor-tic249"), controls),
             "artificial_lung_stop": {
                 **_action_state(("motor-tic249",), controls),
-                "best_effort_hardware": ["modbus-io"],
+                "best_effort_hardware": [valve_plugin],
             },
             "shutdown": {
                 "ready": True,
-                "full_confirmation": controls["modbus-io"]["ok"] and controls["motor-dri0050"]["ok"],
+                "full_confirmation": controls[valve_plugin]["ok"]
+                and controls["motor-dri0050"]["ok"],
                 "best_effort": True,
-                "required_for_full_confirmation": ["motor-dri0050", "modbus-io"],
+                "required_for_full_confirmation": ["motor-dri0050", valve_plugin],
             },
         },
         "diagnostic_endpoints": {
             "full": "/api/v1/hardware/diagnosis?scan=never",
+            "valve_controller": f"/api/v1/plugins/{valve_plugin}/health",
             "modbus_io": "/api/v1/plugins/modbus-io/health",
             "analog_inputs": "/api/v1/hardware/sensors/batch",
         },

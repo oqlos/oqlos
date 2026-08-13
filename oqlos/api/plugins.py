@@ -22,6 +22,7 @@ from oqlos.hardware.plugins import (
     ModbusAdcPlugin,
     MotorPlugin,
     ModbusPlugin,
+    M54In8OutPlugin,
     LungPlugin,
 )
 
@@ -38,6 +39,7 @@ def ensure_plugins_initialized() -> None:
     PluginRegistry.register(ModbusAdcPlugin)
     PluginRegistry.register(MotorPlugin)
     PluginRegistry.register(ModbusPlugin)
+    PluginRegistry.register(M54In8OutPlugin)
     PluginRegistry.register(LungPlugin)
     PluginRegistry.discover_entry_point_plugins()
     _PLUGINS_INITIALIZED = True

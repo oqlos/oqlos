@@ -32,7 +32,13 @@ from oqlos.hardware.diagnosis_types import (
 from oqlos.hardware.plugins.registry import PluginRegistry
 from oqlos.hardware.stack_snapshot import build_hardware_stack_snapshot
 
-_OQLOS_SAFE_PLUGINS = ("modbus-io", "modbus-adc", "motor-tic249", "motor-dri0050")
+_OQLOS_SAFE_PLUGINS = (
+    "modbus-io",
+    "io-m5-4in8out",
+    "modbus-adc",
+    "motor-tic249",
+    "motor-dri0050",
+)
 _MOTOR_PLUGIN_IDS = frozenset({"motor-tic249", "motor-dri0050"})
 _MODBUS_PLUGIN_IDS = frozenset({"modbus-io", "modbus-adc"})
 

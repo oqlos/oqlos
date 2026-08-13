@@ -100,3 +100,10 @@ Hardware commands continue through explicit OQL/process or CQRS endpoints.
 Configuration availability must never be inferred from hardware actuation: a
 healthy editor can coexist with a degraded device such as unavailable
 `modbus-io`, which remains an explicit 503 diagnostic condition.
+
+## Valve output stage
+
+The valve output module is configurable: `modbus-io` (Waveshare RS485) or
+`io-m5-4in8out` (M5Stack 4In8Out, I2C). See
+[VALVE_OUTPUT_MODULES.md](VALVE_OUTPUT_MODULES.md) for selection rules, wiring
+and the migration path.

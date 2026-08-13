@@ -332,6 +332,8 @@ C2004_CODE_BY_ISSUE: dict[str, str] = {
     'firmware_not_real': 'C2004-HW-0012',
     'firmware_unreachable': 'C2004-HW-0011',
     'hw_dri0050_sidecar_unreachable': 'C2004-HW-0012',
+    'hw_m5_4in8out_bus_stale': 'C2004-HW-0012',
+    'hw_m5_4in8out_no_response': 'C2004-HW-0012',
     'hw_modbus_no_response': 'C2004-HW-0012',
     'hw_modbus_serial_handle_stale': 'C2004-HW-0012',
     'hw_tic249_sidecar_unreachable': 'C2004-HW-0012',

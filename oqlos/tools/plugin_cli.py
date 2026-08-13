@@ -14,13 +14,12 @@ import yaml
 
 from oqlos.hardware.config_paths import resolve_oqlos_config_path
 from oqlos.hardware.plugins import (
-    HardwarePlugin,
     PluginConfig,
-    PluginHealth,
     PluginRegistry,
     PiadcPlugin,
     MotorPlugin,
     ModbusPlugin,
+    M54In8OutPlugin,
     LungPlugin,
 )
 
@@ -29,6 +28,7 @@ from oqlos.hardware.plugins import (
 PluginRegistry.register(PiadcPlugin)
 PluginRegistry.register(MotorPlugin)
 PluginRegistry.register(ModbusPlugin)
+PluginRegistry.register(M54In8OutPlugin)
 PluginRegistry.register(LungPlugin)
 
 # Discover third-party plugins from entry points

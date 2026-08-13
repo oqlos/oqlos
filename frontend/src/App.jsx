@@ -7,6 +7,7 @@ import MotorServices from "./pages/MotorServices";
 import Panel from "./pages/Panel";
 import ApiDocs from "./pages/ApiDocs";
 import HardwareCoilTest from "./pages/HardwareCoilTest";
+import HardwareM5Out from "./pages/HardwareM5Out";
 
 // Standalone hardware UI moved out of c2004 connect-scenario. RBAC GuardedRoute
 // was an app-shell concern; here routes render directly (SharedNav still reflects
@@ -20,6 +21,7 @@ export default function App() {
       <Route path="/navigation" element={<Navigate to="/status" replace />} />
       <Route path="/hardware-modbus" element={<HardwareRestart />} />
       <Route path="/hardware-coils" element={<HardwareCoilTest />} />
+      <Route path="/hardware-m5-out" element={<HardwareM5Out />} />
       <Route path="/hardware-restart" element={<Navigate to="/hardware-modbus" replace />} />
       <Route path="/hardware-rtc" element={<HardwareRtc />} />
       <Route path="/hardware-demo" element={<Navigate to="/motor-services" replace />} />

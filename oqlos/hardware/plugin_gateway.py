@@ -32,9 +32,11 @@ from oqlos.hardware.plugins import (
     MotorPlugin,
     ModbusPlugin,
     LungPlugin,
+    M54In8OutPlugin,
 )
 from oqlos.hardware.power_safety import ensure_power_safe
 from oqlos.hardware.tic249_units import TIC249_DEFAULT_TARGET_VELOCITY
+from oqlos.hardware.valve_controller import resolve_valve_controllers
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +45,7 @@ PluginRegistry.register(PiadcPlugin)
 PluginRegistry.register(ModbusAdcPlugin)
 PluginRegistry.register(MotorPlugin)
 PluginRegistry.register(ModbusPlugin)
+PluginRegistry.register(M54In8OutPlugin)
 PluginRegistry.register(LungPlugin)
 
 # Discover third-party plugins from entry points
@@ -657,58 +660,96 @@ class PluginHardwareGateway:
             ),
         }
 
+    def valve_controllers(self) -> list[str]:
+        """Enabled valve output modules, most preferred first."""
+        return resolve_valve_controllers(self._plugin_configs)
+
     async def set_valve(self, valve_id: str, value: bool) -> bool:
-        """Set valve state using modbus plugin."""
+        """Set valve state using the configured valve output module."""
         if not self.is_real:
             logger.info("[HW mock] SET_VALVE %s → %s", valve_id, value)
             return True
 
-        await ensure_power_safe(
-            self,
-            operation=f"modbus-io.set_valve:{valve_id}",
-            safe_state=not value,
-        )
-
-        plugin = await self._get_or_connect_plugin("modbus-io")
-        if not plugin:
-            logger.error("Modbus plugin not available")
+        controllers = self.valve_controllers()
+        if not controllers:
+            logger.error("No valve output module is enabled")
             return False
 
-        try:
-            result = await plugin.execute_command(
-                "set_valve", {"valve_id": valve_id, "value": value}
+        for plugin_id in controllers:
+            await ensure_power_safe(
+                self,
+                operation=f"{plugin_id}.set_valve:{valve_id}",
+                safe_state=not value,
             )
-            return result.get("success", False)
-        except PLUGIN_OPERATION_ERRORS as exc:
-            _log_boundary_failure(
-                logger, "PluginHardwareGateway.set_valve failed", exc
+
+            plugin = await self._get_or_connect_plugin(plugin_id)
+            if not plugin:
+                logger.warning("Valve controller %s not available", plugin_id)
+                continue
+
+            try:
+                result = await plugin.execute_command(
+                    "set_valve", {"valve_id": valve_id, "value": value}
+                )
+            except PLUGIN_OPERATION_ERRORS as exc:
+                _log_boundary_failure(
+                    logger, "PluginHardwareGateway.set_valve failed", exc
+                )
+                continue
+            if result.get("success", False):
+                return True
+            logger.warning(
+                "Valve controller %s rejected set_valve %s: %s",
+                plugin_id,
+                valve_id,
+                result.get("error"),
             )
-            return False
+        return False
 
     async def all_valves_off(self) -> dict[str, Any]:
-        """Clear all Waveshare outputs in one Modbus transaction."""
+        """Clear all valve outputs in one transaction per output module."""
         if not self.is_real:
             logger.info("[HW mock] ALL_VALVES_OFF")
             return {"success": True, "data": {"all_outputs": True, "mock": True}}
 
-        await ensure_power_safe(
-            self,
-            operation="modbus-io.all_outputs_off",
-            safe_state=True,
-        )
-
-        plugin = await self._get_or_connect_plugin("modbus-io")
-        if not plugin:
+        controllers = self.valve_controllers()
+        if not controllers:
             return _plugin_command_failure("plugin-unavailable")
-        try:
-            return _normalize_plugin_command_result(
-                await plugin.execute_command("all_outputs_off", {})
+
+        # Safe-off runs on every enabled module: a stand mid-migration can have
+        # valves wired to both, and shutdown must not leave one energized.
+        results: list[dict[str, Any]] = []
+        for plugin_id in controllers:
+            await ensure_power_safe(
+                self,
+                operation=f"{plugin_id}.all_outputs_off",
+                safe_state=True,
             )
-        except PLUGIN_OPERATION_ERRORS as exc:
-            _log_boundary_failure(
-                logger, "PluginHardwareGateway.all_valves_off failed", exc
-            )
-            return _plugin_command_failure("command-failed")
+
+            plugin = await self._get_or_connect_plugin(plugin_id)
+            if not plugin:
+                results.append(
+                    {"plugin_id": plugin_id, **_plugin_command_failure("plugin-unavailable")}
+                )
+                continue
+            try:
+                result = _normalize_plugin_command_result(
+                    await plugin.execute_command("all_outputs_off", {})
+                )
+            except PLUGIN_OPERATION_ERRORS as exc:
+                _log_boundary_failure(
+                    logger, "PluginHardwareGateway.all_valves_off failed", exc
+                )
+                result = _plugin_command_failure("command-failed")
+            results.append({"plugin_id": plugin_id, **result})
+
+        primary = next(
+            (result for result in results if result.get("success")),
+            results[0],
+        )
+        if len(results) > 1:
+            primary = {**primary, "controllers": results}
+        return primary
 
     async def set_pump(self, power_pct: float) -> dict[str, Any]:
         """Set pump power using motor plugin with detailed driver data."""
