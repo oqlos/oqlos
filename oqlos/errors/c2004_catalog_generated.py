@@ -53,6 +53,7 @@ class ErrorCode(str, Enum):
     C2004_HW_0014 = 'C2004-HW-0014'
     C2004_HW_0016 = 'C2004-HW-0016'
     C2004_HW_0017 = 'C2004-HW-0017'
+    C2004_HW_0018 = 'C2004-HW-0018'
 
 
 CATALOG: dict[str, ErrorEntry] = {
@@ -287,6 +288,14 @@ CATALOG: dict[str, ErrorEntry] = {
         retryable=False, owner='owner://domain/hardware', title='BoardNet watchdog is unavailable or unsafe',
         message='The BoardNet watchdog could not be verified, configured safely, or fed', message_i18n=None,
         remediation='Keep the external HAT watchdog disabled, confirm whether the board uses MAX705 or CH32V003, and verify its timeout is longer than the complete boot budget before enabling feeds. The Raspberry Pi BCM watchdog may remain enabled independently.', auto_repair={'enabled': False, 'risk': 'high'},
+    ),
+    'C2004-HW-0018': ErrorEntry(
+        code='C2004-HW-0018', slug='hardware.tic249.nvm_pin_mismatch', domain='hardware',
+        http_status=503, severity='error',
+        classification='safety', confidentiality='restricted',
+        retryable=False, owner='owner://domain/hardware', title='Tic249 NVM limit-switch pin configuration mismatch',
+        message='Pololu Tic T249 NVM pin functions do not match the BoardNet limit-switch profile', message_i18n=None,
+        remediation='Stop hw-tic249.service, run `python provision_cli.py apply --yes` in rpi-motor-tic249 (or bundled ticcmd --settings), then restart the sidecar. Expected: SCL=limit forward and SDA=limit reverse with pull-up enabled and active-low polarity.', auto_repair={'enabled': False, 'risk': 'high'},
     ),
 }
 
