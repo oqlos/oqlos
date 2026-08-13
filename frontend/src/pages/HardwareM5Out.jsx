@@ -23,14 +23,19 @@ const COPY = {
     outputs: "Wyjścia OUT1–OUT8",
     inputs: "Wejścia IN1–IN4",
     module: "Moduł",
+    controller: "Sterownik I/O",
+    outputsSummary: "8 kanałów MOSFET",
+    inputsSummary: "4 wejścia stykowe",
     state: "Stan",
+    online: "online",
+    offline: "offline",
     on: "ZAŁ",
     off: "WYŁ",
     closed: "zwarte",
     open: "rozwarte",
-    unavailable: "Moduł nie odpowiada",
+    unavailable: "Moduł nieaktywny lub niedostępny",
     unavailableHint:
-      "Brak potwierdzenia adresu 0x45 na magistrali. Sprawdź przełącznik BOOT0 (pozycja 0), zasilanie DC IN 9–24 V oraz SDA/SCL i wspólną masę. Po zmianie odłącz i podaj zasilanie modułu.",
+      "Moduł nie jest włączony w konfiguracji sprzętowej albo nie potwierdził adresu 0x45. Sprawdź ustawienie enabled, przełącznik BOOT0 (pozycja 0), zasilanie DC IN 9–24 V, SDA/SCL i wspólną masę.",
     firmware: "Firmware",
     address: "Adres",
     transport: "Transport",
@@ -49,14 +54,19 @@ const COPY = {
     outputs: "Outputs OUT1–OUT8",
     inputs: "Inputs IN1–IN4",
     module: "Module",
+    controller: "I/O controller",
+    outputsSummary: "8 MOSFET channels",
+    inputsSummary: "4 contact inputs",
     state: "State",
+    online: "online",
+    offline: "offline",
     on: "ON",
     off: "OFF",
     closed: "closed",
     open: "open",
-    unavailable: "Module does not answer",
+    unavailable: "Module inactive or unavailable",
     unavailableHint:
-      "No acknowledgement at address 0x45. Check the BOOT0 switch (position 0), the 9–24 V DC IN supply, SDA/SCL and the common ground. Power-cycle the module after any change.",
+      "The module is not enabled in the hardware configuration or did not acknowledge address 0x45. Check enabled, the BOOT0 switch (position 0), the 9–24 V DC IN supply, SDA/SCL and the common ground.",
     firmware: "Firmware",
     address: "Address",
     transport: "Transport",
@@ -150,92 +160,143 @@ export default function HardwareM5Out() {
   const details = health?.details || health?.result?.details || {};
 
   return (
-    <div className="page">
-      <SharedNav />
-      <header className="page-header">
-        <h1>{text.title}</h1>
-        <p>{text.subtitle}</p>
-      </header>
-
-      <section className="panel">
-        <div className="panel-row">
-          <strong>{text.module}</strong>
-          <span>
-            {text.address}: {details.address || "0x45"} · {text.transport}: {details.backend || "i2c"}
-            {details.firmware_version ? ` · ${text.firmware}: ${details.firmware_version}` : ""}
-          </span>
-          <span className={online ? "status-ok" : "status-error"}>
-            {online ? "online" : "offline"}
-          </span>
-        </div>
-        <div className="panel-actions">
-          <button type="button" onClick={() => void refresh()} disabled={Boolean(busy)}>
-            {text.refresh}
-          </button>
-          <button
-            type="button"
-            className="danger"
-            onClick={stopAll}
-            disabled={!online || !isAdmin || Boolean(busy)}
-          >
-            {text.stop}
-          </button>
-          <button type="button" onClick={allOn} disabled={!canDrive}>
-            {text.allOn}
-          </button>
-        </div>
-        {!isAdmin && <p className="hint">{text.roleBlocked}</p>}
-        {!online && (
-          <div className="empty-state">
-            <strong>{text.unavailable}</strong>
-            <p>{text.unavailableHint}</p>
+    <div className="m5-out-page">
+      <SharedNav navContext={<div className="section-label">M5 4In8Out</div>} />
+      <main className="m5-out-content">
+        <header className="m5-out-header">
+          <div>
+            <span className="m5-out-eyebrow">I2C · 0x45 · 8 OUT / 4 IN</span>
+            <h1>{text.title}</h1>
+            <p>{text.subtitle}</p>
           </div>
-        )}
-        {error && <p className="status-error">{error}</p>}
-      </section>
+          <span className={`m5-out-status m5-out-status--${online ? "online" : "offline"}`}>
+            <span className="m5-out-status-dot" aria-hidden="true" />
+            {online ? text.online : text.offline}
+          </span>
+        </header>
 
-      <section className="panel">
-        <label className="confirm-line">
-          <input
-            type="checkbox"
-            checked={confirmed}
-            onChange={(event) => setConfirmed(event.target.checked)}
-            disabled={!online || !isAdmin}
-          />
-          <span>{text.confirm}</span>
-        </label>
-        <p className="hint">{text.valveHint}</p>
-      </section>
+        <section className="m5-out-card m5-out-overview">
+          <div className="m5-out-card-heading">
+            <div className="m5-out-device">
+              <span>{text.controller}</span>
+              <strong>{PLUGIN_ID}</strong>
+            </div>
+            <div className="m5-out-meta">
+              <div>
+                <span>{text.address}</span>
+                <strong>{details.address || "0x45"}</strong>
+              </div>
+              <div>
+                <span>{text.transport}</span>
+                <strong>{details.backend || "i2c"}</strong>
+              </div>
+              <div>
+                <span>{text.firmware}</span>
+                <strong>{details.firmware_version || "—"}</strong>
+              </div>
+            </div>
+          </div>
 
-      <section className="panel">
-        <h2>{text.outputs}</h2>
-        <div className="coil-grid">
-          {outputs.map((output) => (
+          <div className="m5-out-actions">
             <button
-              key={output.channel}
+              className="m5-out-button"
               type="button"
-              className={output.on ? "coil coil-on" : "coil"}
-              onClick={() => toggle(output)}
+              onClick={() => void refresh()}
+              disabled={Boolean(busy)}
+            >
+              {text.refresh}
+            </button>
+            <button
+              className="m5-out-button m5-out-button--danger"
+              type="button"
+              onClick={stopAll}
+              disabled={!online || !isAdmin || Boolean(busy)}
+            >
+              {text.stop}
+            </button>
+            <button
+              className="m5-out-button m5-out-button--energize"
+              type="button"
+              onClick={allOn}
               disabled={!canDrive}
             >
-              <strong>OUT{output.channel}</strong>
-              <span>{output.on ? text.on : text.off}</span>
+              {text.allOn}
             </button>
-          ))}
-        </div>
-      </section>
+          </div>
 
-      <section className="panel">
-        <h2>{text.inputs}</h2>
-        <div className="coil-grid">
-          {inputs.map((input) => (
-            <div key={input.channel} className={input.closed ? "coil coil-on" : "coil"}>
-              <strong>IN{input.channel}</strong>
-              <span>{input.closed ? text.closed : text.open}</span>
+          {!isAdmin && <p className="m5-out-role-hint">{text.roleBlocked}</p>}
+          {!online && (
+            <div className="m5-out-alert" role="status">
+              <span className="m5-out-alert-icon" aria-hidden="true">!</span>
+              <div>
+                <strong>{text.unavailable}</strong>
+                <p>{text.unavailableHint}</p>
+                {error && <code>{error}</code>}
+              </div>
             </div>
-          ))}
+          )}
+          {online && error && <p className="m5-out-command-error">{error}</p>}
+        </section>
+
+        <section className="m5-out-card m5-out-safety">
+          <label className="m5-out-confirm">
+            <input
+              type="checkbox"
+              checked={confirmed}
+              onChange={(event) => setConfirmed(event.target.checked)}
+              disabled={!online || !isAdmin}
+            />
+            <span>{text.confirm}</span>
+          </label>
+          <p>{text.valveHint}</p>
+        </section>
+
+        <div className="m5-out-io-grid">
+          <section className="m5-out-card m5-out-io-card">
+            <div className="m5-out-section-heading">
+              <h2>{text.outputs}</h2>
+              <span>{text.outputsSummary}</span>
+            </div>
+            <div className="m5-out-channel-grid m5-out-channel-grid--outputs">
+              {outputs.map((output) => (
+                <button
+                  key={output.channel}
+                  type="button"
+                  className={`m5-out-channel m5-out-channel--output${output.on ? " is-active" : ""}`}
+                  aria-pressed={output.on}
+                  onClick={() => toggle(output)}
+                  disabled={!canDrive}
+                >
+                  <span className="m5-out-channel-index">{String(output.channel).padStart(2, "0")}</span>
+                  <strong>OUT{output.channel}</strong>
+                  <span className="m5-out-channel-state">{output.on ? text.on : text.off}</span>
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <section className="m5-out-card m5-out-io-card">
+            <div className="m5-out-section-heading">
+              <h2>{text.inputs}</h2>
+              <span>{text.inputsSummary}</span>
+            </div>
+            <div className="m5-out-channel-grid m5-out-channel-grid--inputs">
+              {inputs.map((input) => (
+                <div
+                  key={input.channel}
+                  className={`m5-out-channel m5-out-channel--input${input.closed ? " is-active" : ""}`}
+                >
+                  <span className="m5-out-channel-index">{String(input.channel).padStart(2, "0")}</span>
+                  <strong>IN{input.channel}</strong>
+                  <span className="m5-out-channel-state">
+                    {input.closed ? text.closed : text.open}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </section>
         </div>
-      </section>
+      </main>
     </div>
   );
 }
