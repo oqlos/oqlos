@@ -159,9 +159,20 @@ class M54In8OutPlugin(HardwarePlugin):
     async def health_check(self) -> PluginHealth:
         """Probe the module without changing output state."""
         if self._module is None:
+            address = self._address()
+            bus = int(self._params().get("bus", 1))
+            logger.warning(
+                "io-m5-4in8out issue_code=hw_m5_4in8out_no_response "
+                "not_connected address=0x%02X bus=%s",
+                address,
+                bus,
+            )
             return PluginHealth(
                 status=PluginStatus.ERROR,
-                message="Not connected to 4In8Out",
+                message=(
+                    f"Not connected to 4In8Out at 0x{address:02X} on /dev/i2c-{bus}; "
+                    f"expected on i2cdetect -y {bus}"
+                ),
                 compatible=False,
             )
         try:

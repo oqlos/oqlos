@@ -79,6 +79,7 @@ own:
 | `hw_m5_4in8out_no_response` | error | The M5Stack 4In8Out valve module did not answer on the configured I2C address. | `m5-4in8out-physical-check` (scope=host, manual, risk=none) |
 | `hw_modbus_no_response` | error | Modbus RTU slave did not answer (read timed out / no response) on the configured serial path. | `modbus-physical-check` (scope=host, manual, risk=none) |
 | `hw_modbus_serial_handle_stale` | warning | A Modbus RTU plugin (modbus-io/modbus-adc) has a stale USB/RS485 serial handle after device re-enumeration (errno 19). | `modbus-plugin-reconnect` (scope=oqlos, auto, risk=none) |
+| `hw_tic249_position_uncertain` | warning | Tic249 reports position_uncertain and neither limit switch is active; AL motion is blocked until homing or reverse-limit (SDA) wiring is fixed. | `tic249-limit-wiring` (scope=host, manual, risk=none) |
 | `hw_tic249_sidecar_unreachable` | error | hw-tic249 sidecar (:8205, lung motor) is unreachable or not connected to the Pololu Tic USB device. | `tic249-ensure-sidecar` (scope=oqlos, auto, risk=config) |
 | `hw_usb_adc_sidecar_unreachable` | error | usb-adc-stack sidecar (:8214, MCP2221A/DFR1184) is unreachable or returned no channels. | `usb-adc-ensure-sidecar` (scope=oqlos, auto, risk=config) |
 | `modbus_adapter_only` | warning | USB serial adapter is visible, but the device did not answer. Check RS485 wiring, power, slave address and baudrate. | — |

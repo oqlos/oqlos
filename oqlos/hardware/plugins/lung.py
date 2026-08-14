@@ -135,6 +135,14 @@ class LungPlugin(HardwarePlugin):
                             compatible=False,
                             version=version,
                         )
+                    blocked = self._runtime_block_reason(runtime)
+                    if blocked:
+                        details["operator_alerts"] = [
+                            {
+                                "issue_code": "hw_tic249_position_uncertain",
+                                "message": blocked,
+                            }
+                        ]
 
                 return PluginHealth(
                     status=PluginStatus.CONNECTED,
@@ -228,6 +236,22 @@ class LungPlugin(HardwarePlugin):
         if status.get("forward_limit_active") and status.get("reverse_limit_active"):
             return "Both limit switches are active; movement is blocked"
 
+        if status.get("position_uncertain") and not (
+            status.get("forward_limit_active") or status.get("reverse_limit_active")
+        ):
+            logger.warning(
+                "tic249 issue_code=hw_tic249_position_uncertain "
+                "position=%s reverse_limit=%s forward_limit=%s energized=%s",
+                status.get("position"),
+                status.get("reverse_limit_active"),
+                status.get("forward_limit_active"),
+                status.get("energized"),
+            )
+            return (
+                "Pozycja silnika jest niepewna i żadna krańcówka nie jest aktywna. "
+                "Sprawdź okablowanie reverse (SDA) albo wykonaj homing przed ruchem AL."
+            )
+
         return None
 
     # ── Command Handlers (refactored from monolithic execute_command) ──
@@ -259,7 +283,7 @@ class LungPlugin(HardwarePlugin):
         runtime = await self._runtime_status()
         blocked_reason = self._runtime_block_reason(runtime)
         if blocked_reason:
-            return {
+            payload = {
                 "success": False,
                 "error": blocked_reason,
                 "code": "C2004-HW-0012",
@@ -270,6 +294,9 @@ class LungPlugin(HardwarePlugin):
                 "stage": "adapter.preflight",
                 "data": {},
             }
+            if runtime and runtime.get("position_uncertain"):
+                payload["issue_code"] = "hw_tic249_position_uncertain"
+            return payload
 
         resp = await http_post_command(
             self._client,

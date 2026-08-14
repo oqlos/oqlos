@@ -57,12 +57,14 @@ _PLUGIN_ISSUE_BY_ID = {
     "motor-tic249": "hw_tic249_sidecar_unreachable",
     "artificial-lung": "hw_tic249_sidecar_unreachable",
     "piadc": "hw_usb_adc_sidecar_unreachable",
+    "io-m5-4in8out": "hw_m5_4in8out_no_response",
 }
 
 _PLUGIN_TARGET_BY_ID = {
     plugin_id: f"hardware-plugin://{plugin_id}"
     for plugin_id in {
         "artificial-lung",
+        "io-m5-4in8out",
         "modbus-adc",
         "modbus-io",
         "motor-dri0050",

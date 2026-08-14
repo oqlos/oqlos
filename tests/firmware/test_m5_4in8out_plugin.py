@@ -166,6 +166,17 @@ async def test_snapshot_keeps_modbus_io_wire_shape() -> None:
 
 
 @pytest.mark.asyncio
+async def test_disconnected_health_names_expected_i2c_address() -> None:
+    instance = M54In8OutPlugin(_config())
+
+    health = await instance.health_check()
+
+    assert health.compatible is False
+    assert "0x45" in health.message
+    assert "i2cdetect -y 1" in health.message
+
+
+@pytest.mark.asyncio
 async def test_commands_fail_cleanly_when_disconnected() -> None:
     instance = M54In8OutPlugin(_config())
 

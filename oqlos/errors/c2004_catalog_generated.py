@@ -336,6 +336,7 @@ C2004_CODE_BY_ISSUE: dict[str, str] = {
     'hw_m5_4in8out_no_response': 'C2004-HW-0012',
     'hw_modbus_no_response': 'C2004-HW-0012',
     'hw_modbus_serial_handle_stale': 'C2004-HW-0012',
+    'hw_tic249_position_uncertain': 'C2004-HW-0012',
     'hw_tic249_sidecar_unreachable': 'C2004-HW-0012',
     'hw_usb_adc_sidecar_unreachable': 'C2004-HW-0012',
     'identify_unavailable': 'C2004-HW-0012',

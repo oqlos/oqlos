@@ -112,6 +112,33 @@ def test_active_limits_return_a_canonical_hardware_error_before_post():
     assert client.posts == []
 
 
+def test_position_uncertain_without_limits_blocks_reciprocate():
+    client = _ReadyFalseClient()
+
+    async def uncertain_status(_url):
+        return _JsonResponse(
+            200,
+            {
+                "connected": True,
+                "position_uncertain": True,
+                "energized": False,
+                "forward_limit_active": False,
+                "reverse_limit_active": False,
+                "position": 0,
+            },
+        )
+
+    client.get = uncertain_status
+    plugin = _plugin_with_client(client)
+
+    result = asyncio.run(plugin.execute_command("reciprocate", {"steps": 500}))
+
+    assert result["success"] is False
+    assert result["issue_code"] == "hw_tic249_position_uncertain"
+    assert "krańcówka" in result["error"]
+    assert client.posts == []
+
+
 def test_reach_limit_stop_has_enough_time_for_sidecar_safety_window():
     client = _StopClient()
     plugin = _plugin_with_client(client)

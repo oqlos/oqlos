@@ -101,7 +101,7 @@ def add_modbus_device_actions(
                 scope="host",
                 detail=(
                     "Sonda baud/parity/ID bez odpowiedzi. Reconnect OqlOS nie pomoże — "
-                    "sprawdź 12/24V, A/B, wspólne GND i DIP slave (plan: ID=2, 4800 8N1)."
+                    "sprawdź 12/24V, A/B, wspólne GND i DIP slave (plan: ID=1, 4800 8N1)."
                 ),
                 code="hw_modbus_no_response",
                 actuation_risk="none",
@@ -165,26 +165,66 @@ def add_tic249_device_actions(
     status: str,
     msg: str,
     host_recover: str,
+    entry: dict[str, Any] | None = None,
 ) -> None:
-    if status == "ok":
+    details = (entry or {}).get("details") if isinstance((entry or {}).get("details"), dict) else {}
+    runtime = details.get("runtime_status") if isinstance(details.get("runtime_status"), dict) else {}
+    uncertain = bool(runtime.get("position_uncertain"))
+    reverse = bool(runtime.get("reverse_limit_active"))
+    forward = bool(runtime.get("forward_limit_active"))
+    if uncertain:
+        dev.status = "degraded"
+        if not reverse and not forward:
+            dev.issues.append(
+                "Pozycja silnika niepewna i żadna krańcówka nie jest aktywna — "
+                "sprawdź SDA (reverse) oraz homing przed ruchem AL."
+            )
+        else:
+            dev.issues.append("Pozycja silnika niepewna — wykonaj homing do krańcówki.")
+        dev.environment.update(
+            {
+                "position_uncertain": True,
+                "reverse_limit_active": reverse,
+                "forward_limit_active": forward,
+            }
+        )
+        dev.recommended_actions.append(
+            DiagnosisAction(
+                id="tic249-limit-wiring",
+                device_id=dev.device_id,
+                label="Sprawdź krańcówkę reverse (SDA) i NVM pinów Tic249",
+                kind="manual",
+                priority=12,
+                auto_executable=False,
+                scope="host",
+                detail=(
+                    "Sidecar :8205 jest online, ale position_uncertain=true. "
+                    "Reconnect USB nie pomoże — sprawdź krańcówkę reverse, pull-up i profil NVM."
+                ),
+                code="hw_tic249_position_uncertain",
+                actuation_risk="none",
+            )
+        )
+    if status == "ok" and not uncertain:
         return
-    if "errno 19" in msg:
-        dev.issues.append("USB Tic — martwy handle po replug.")
-    if "connection attempts failed" in msg or "503" in msg or "connect returned false" in msg:
-        dev.issues.append(
-            "Sidecar hw-tic249 (:8205) niedostępny — OqlOS zrestartuje usługę systemd --user."
+    if status != "ok":
+        if "errno 19" in msg:
+            dev.issues.append("USB Tic — martwy handle po replug.")
+        if "connection attempts failed" in msg or "503" in msg or "connect returned false" in msg:
+            dev.issues.append(
+                "Sidecar hw-tic249 (:8205) niedostępny — OqlOS zrestartuje usługę systemd --user."
+            )
+        dev.recommended_actions.extend(
+            _sidecar_recovery_actions(
+                dev.device_id,
+                ensure_id="tic249-ensure-sidecar",
+                ensure_label="Restart hw-tic249.service (OqlOS)",
+                ensure_detail="systemctl --user restart hw-tic249.service, potem reconnect USB Tic (bez ruchu silnika).",
+                reconnect_id="tic249-oqlos-reconnect",
+                reconnect_label="Reconnect motor-tic249 plugin (OqlOS)",
+                issue_code="hw_tic249_sidecar_unreachable",
+            )
         )
-    dev.recommended_actions.extend(
-        _sidecar_recovery_actions(
-            dev.device_id,
-            ensure_id="tic249-ensure-sidecar",
-            ensure_label="Restart hw-tic249.service (OqlOS)",
-            ensure_detail="systemctl --user restart hw-tic249.service, potem reconnect USB Tic (bez ruchu silnika).",
-            reconnect_id="tic249-oqlos-reconnect",
-            reconnect_label="Reconnect motor-tic249 plugin (OqlOS)",
-            issue_code="hw_tic249_sidecar_unreachable",
-        )
-    )
 
 
 def add_dri0050_device_actions(
@@ -244,13 +284,14 @@ def _mock_motor_diagnosis(
 def _add_plugin_actions(
     dev: DeviceDiagnosis, plugin_id: str, status: str, message: str,
     platform: dict[str, Any], host_recover: str,
+    entry: dict[str, Any] | None = None,
 ) -> None:
     if plugin_id.startswith("modbus"):
         add_modbus_device_actions(dev, plugin_id, status, message, platform)
     elif plugin_id == M5_4IN8OUT_PLUGIN_ID:
         add_m5_4in8out_device_actions(dev, status, message)
     elif plugin_id == "motor-tic249":
-        add_tic249_device_actions(dev, status, message, host_recover)
+        add_tic249_device_actions(dev, status, message, host_recover, entry)
     elif plugin_id == "motor-dri0050":
         add_dri0050_device_actions(dev, status, message, host_recover)
 
@@ -268,7 +309,9 @@ def _standard_plugin_diagnosis(
         health_summary=str((entry or {}).get("message") or (adapter or {}).get("status") or "brak danych"),
         environment={"topology": topology},
     )
-    _add_plugin_actions(dev, plugin_id, status, message_lower(entry), platform, host_recover)
+    _add_plugin_actions(
+        dev, plugin_id, status, message_lower(entry), platform, host_recover, entry,
+    )
     return dev
 
 

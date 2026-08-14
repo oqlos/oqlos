@@ -308,6 +308,26 @@ ISSUE_CATALOG: dict[str, IssueDefinition] = {
             hint="systemctl --user restart hw-tic249.service, then reconnect the USB handle — no motor motion is issued.",
         ),
     ),
+    "hw_tic249_position_uncertain": IssueDefinition(
+        code="hw_tic249_position_uncertain",
+        domain="hardware",
+        default_severity="warning",
+        summary=(
+            "Tic249 reports position_uncertain and neither limit switch is active; "
+            "AL motion is blocked until homing or reverse-limit (SDA) wiring is fixed."
+        ),
+        repair=RepairTemplate(
+            id="tic249-limit-wiring",
+            scope="host",
+            auto_executable=False,
+            actuation_risk="none",
+            hint=(
+                "GET :8205/api/status — if reverse_limit_active stays false during reverse "
+                "home, check SDA wiring, pull-up and NVM limit pins. Restarting the sidecar "
+                "will not clear this."
+            ),
+        ),
+    ),
     "hw_dri0050_sidecar_unreachable": IssueDefinition(
         code="hw_dri0050_sidecar_unreachable",
         domain="hardware",

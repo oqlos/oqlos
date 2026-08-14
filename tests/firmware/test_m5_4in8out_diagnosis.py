@@ -114,6 +114,38 @@ def test_recover_selector_accepts_the_new_plugin() -> None:
 def test_issue_codes_are_registered() -> None:
     assert "hw_m5_4in8out_no_response" in ISSUE_CATALOG
     assert "hw_m5_4in8out_bus_stale" in ISSUE_CATALOG
+    assert "hw_tic249_position_uncertain" in ISSUE_CATALOG
+
+
+def test_m5_plugin_health_maps_to_i2c_issue_code() -> None:
+    from oqlos.api.plugins import _plugin_health_issue_code
+
+    assert _plugin_health_issue_code("io-m5-4in8out") == "hw_m5_4in8out_no_response"
+    assert _plugin_health_issue_code("modbus-io") == "hw_modbus_no_response"
+
+
+def test_connected_tic249_with_uncertain_position_is_degraded() -> None:
+    devices = _diagnose(
+        {
+            "motor-tic249": {
+                "status": "connected",
+                "compatible": True,
+                "message": "Lung motor is healthy",
+                "details": {
+                    "runtime_status": {
+                        "position_uncertain": True,
+                        "reverse_limit_active": False,
+                        "forward_limit_active": False,
+                    }
+                },
+            }
+        }
+    )
+    device = devices["motor-tic249"]
+
+    assert device.status == "degraded"
+    assert any("SDA" in issue for issue in device.issues)
+    assert any(action.code == "hw_tic249_position_uncertain" for action in device.recommended_actions)
 
 
 def test_optional_adapter_is_listed_in_the_hardware_registry() -> None:
