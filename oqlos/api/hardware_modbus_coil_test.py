@@ -196,6 +196,17 @@ async def pulse_coil(payload: dict[str, Any]) -> dict[str, Any]:
         return payload
 
 
+def _off_operations(result: dict[str, Any]) -> list[dict[str, Any]]:
+    return [
+        {
+            "coil": f"DO{address + 1}",
+            "ok": True,
+            "result": {**dict(result), "coil": address, "value": False},
+        }
+        for address in range(MODBUS_IO_COIL_COUNT)
+    ]
+
+
 async def stop_all_coils() -> dict[str, Any]:
     """Best-effort emergency de-energize; safe even when preflight cannot read."""
     # Waiting on the same lock lets an in-flight pulse finish its mandatory OFF
@@ -212,6 +223,16 @@ async def stop_all_coils() -> dict[str, Any]:
                 message=str(exc),
                 detail={"operations": []},
             ) from exc
+        # Waveshare IO 8CH has a single safe-off coil (0x00FF). Eight sequential
+        # RTU writes lose to a busy bus even when diagnosis/health still reads OK.
+        broadcast = await plugin.execute_command("all_outputs_off", {})
+        if broadcast.get("success"):
+            return {
+                "ok": True,
+                "method": "all_outputs_off",
+                "operations": _off_operations(broadcast.get("data") or {"all_outputs": True}),
+            }
+
         operations: list[dict[str, Any]] = []
         for address in range(MODBUS_IO_COIL_COUNT):
             try:
@@ -220,13 +241,23 @@ async def stop_all_coils() -> dict[str, Any]:
             except Exception as exc:
                 operations.append({"coil": f"DO{address + 1}", "ok": False, "error": str(exc)})
         if not all(operation["ok"] for operation in operations):
+            failed = [row["coil"] for row in operations if not row["ok"]]
             raise OqlosError(
                 code="hw_modbus_no_response",
                 status_code=503,
-                message="Failed to de-energize one or more coils",
-                detail={"operations": operations},
+                message=(
+                    "Failed to de-energize "
+                    + ", ".join(failed)
+                    + f" (all_outputs_off: {broadcast.get('error') or 'failed'})"
+                ),
+                detail={
+                    "method": "per_coil_fallback",
+                    "broadcast_error": broadcast.get("error") or "all_outputs_off failed",
+                    "operations": operations,
+                },
             )
         return {
             "ok": True,
+            "method": "per_coil_fallback",
             "operations": operations,
         }

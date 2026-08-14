@@ -16,6 +16,9 @@ export function summarizeHardwareApiBody(path, body) {
   }
 
   const normalized = String(path || "");
+  if (normalized.includes("/mapping")) {
+    return { keys: Object.keys(body).slice(0, 8) };
+  }
   if (normalized.includes("probe-isolated")) {
     return {
       serial_port: body.serial_port,

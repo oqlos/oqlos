@@ -195,3 +195,84 @@ def test_pulse_raises_when_preflight_blocks(monkeypatch) -> None:
     assert caught.value.public_code == "C2004-HW-0012"
     assert caught.value.issue_code == "hw_modbus_no_response"
     assert "preflight" in caught.value.message
+
+
+def test_stop_uses_waveshare_all_outputs_off(monkeypatch) -> None:
+    calls = []
+
+    class FakePlugin:
+        async def execute_command(self, command, payload):
+            calls.append((command, dict(payload)))
+            return {"success": True, "data": {"all_outputs": True}}
+
+    async def fake_plugin():
+        return FakePlugin()
+
+    monkeypatch.setattr(coil_test, "_plugin", fake_plugin)
+
+    result = asyncio.run(coil_test.stop_all_coils())
+
+    assert result["ok"] is True
+    assert result["method"] == "all_outputs_off"
+    assert calls == [("all_outputs_off", {})]
+    assert [row["coil"] for row in result["operations"]] == [f"DO{i}" for i in range(1, 9)]
+    assert all(row["ok"] for row in result["operations"])
+
+
+def test_stop_falls_back_to_per_coil_when_broadcast_fails(monkeypatch) -> None:
+    calls = []
+
+    class FakePlugin:
+        async def execute_command(self, command, payload):
+            calls.append((command, dict(payload)))
+            if command == "all_outputs_off":
+                return {"success": False, "error": "broadcast rejected"}
+            return {"success": True, "data": dict(payload)}
+
+    async def fake_plugin():
+        return FakePlugin()
+
+    monkeypatch.setattr(coil_test, "_plugin", fake_plugin)
+
+    result = asyncio.run(coil_test.stop_all_coils())
+
+    assert result["ok"] is True
+    assert result["method"] == "per_coil_fallback"
+    assert calls[0] == ("all_outputs_off", {})
+    assert [command for command, _payload in calls[1:]] == ["set_coil"] * MODBUS_IO_COIL_COUNT
+
+
+def test_stop_raises_when_plugin_unavailable(monkeypatch) -> None:
+    async def missing_plugin():
+        raise OqlosError(
+            code="hw_modbus_no_response",
+            status_code=503,
+            message="modbus-io plugin unavailable",
+        )
+
+    monkeypatch.setattr(coil_test, "_plugin", missing_plugin)
+
+    with pytest.raises(OqlosError) as caught:
+        asyncio.run(coil_test.stop_all_coils())
+    assert caught.value.public_code == "C2004-HW-0012"
+    assert "unavailable" in caught.value.message
+
+
+def test_stop_names_failed_coils_after_broadcast_and_writes_fail(monkeypatch) -> None:
+    class FakePlugin:
+        async def execute_command(self, command, payload):
+            if command == "all_outputs_off":
+                return {"success": False, "error": "timeout"}
+            return {"success": False, "error": f"DO{int(payload['coil']) + 1} write failed"}
+
+    async def fake_plugin():
+        return FakePlugin()
+
+    monkeypatch.setattr(coil_test, "_plugin", fake_plugin)
+
+    with pytest.raises(OqlosError) as caught:
+        asyncio.run(coil_test.stop_all_coils())
+    assert caught.value.public_code == "C2004-HW-0012"
+    assert "DO1" in caught.value.message
+    assert "all_outputs_off: timeout" in caught.value.message
+    assert caught.value.detail["method"] == "per_coil_fallback"

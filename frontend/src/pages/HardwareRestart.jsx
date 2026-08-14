@@ -25,7 +25,7 @@ import { runWizardStep, resolveStepAdvance, buildStepError } from "../utils/hard
 import { hardwareRestartDocsUrl } from "../utils/hardware-restart-docs.js";
 import { extractWizardPlan, isOqlosUnreachableError } from "../utils/hardware-wizard-plan.js";
 import { runtimeControlTranslationKey } from "../utils/hardware-restart-runtime-status.js";
-import { runApiWithRetry } from "../utils/hardware-api-retry.js";
+import { runApiWithRetry } from "../api/hardware-api-retry.js";
 import { copyTextToClipboard } from "../utils/clipboard.js";
 
 function timestamp() {
