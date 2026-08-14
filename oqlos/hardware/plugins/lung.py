@@ -135,12 +135,12 @@ class LungPlugin(HardwarePlugin):
                             compatible=False,
                             version=version,
                         )
-                    blocked = self._runtime_block_reason(runtime)
-                    if blocked:
+                    alert = self._position_uncertain_alert(runtime)
+                    if alert:
                         details["operator_alerts"] = [
                             {
                                 "issue_code": "hw_tic249_position_uncertain",
-                                "message": blocked,
+                                "message": alert,
                             }
                         ]
 
@@ -236,23 +236,33 @@ class LungPlugin(HardwarePlugin):
         if status.get("forward_limit_active") and status.get("reverse_limit_active"):
             return "Both limit switches are active; movement is blocked"
 
-        if status.get("position_uncertain") and not (
+        alert = LungPlugin._position_uncertain_alert(status)
+        if alert and not (
             status.get("forward_limit_active") or status.get("reverse_limit_active")
         ):
-            logger.warning(
-                "tic249 issue_code=hw_tic249_position_uncertain "
-                "position=%s reverse_limit=%s forward_limit=%s energized=%s",
-                status.get("position"),
-                status.get("reverse_limit_active"),
-                status.get("forward_limit_active"),
-                status.get("energized"),
-            )
-            return (
-                "Pozycja silnika jest niepewna i żadna krańcówka nie jest aktywna. "
-                "Sprawdź okablowanie reverse (SDA) albo wykonaj homing przed ruchem AL."
-            )
+            return alert
 
         return None
+
+    @staticmethod
+    def _position_uncertain_alert(status: dict[str, Any] | None) -> str | None:
+        """Polish operator text when Tic249 reports an untrusted position."""
+        if not isinstance(status, dict) or not status.get("position_uncertain"):
+            return None
+        logger.warning(
+            "tic249 issue_code=hw_tic249_position_uncertain "
+            "position=%s reverse_limit=%s forward_limit=%s energized=%s",
+            status.get("position"),
+            status.get("reverse_limit_active"),
+            status.get("forward_limit_active"),
+            status.get("energized"),
+        )
+        if status.get("forward_limit_active") or status.get("reverse_limit_active"):
+            return "Pozycja silnika niepewna — wykonaj homing do krańcówki."
+        return (
+            "Pozycja silnika jest niepewna i żadna krańcówka nie jest aktywna. "
+            "Sprawdź okablowanie reverse (SDA) albo wykonaj homing przed ruchem AL."
+        )
 
     # ── Command Handlers (refactored from monolithic execute_command) ──
 

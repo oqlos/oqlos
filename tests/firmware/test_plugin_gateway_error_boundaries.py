@@ -297,6 +297,52 @@ def test_gateway_health_does_not_publish_plugin_health_message(monkeypatch) -> N
     assert "health-secret" not in json.dumps(result)
 
 
+def test_gateway_health_forwards_allowlisted_operator_details(monkeypatch) -> None:
+    async def _health_result(cls, plugin_id: str, timeout=None):
+        return PluginHealth(
+            status=PluginStatus.CONNECTED,
+            message="token=health-secret at /dev/private-device",
+            compatible=True,
+            details={
+                "data": {"token": "sidecar-secret"},
+                "operator_alerts": [
+                    {
+                        "issue_code": "hw_tic249_position_uncertain",
+                        "message": "Pozycja silnika niepewna — wykonaj homing do krańcówki.",
+                    }
+                ],
+                "runtime_status": {
+                    "position_uncertain": True,
+                    "reverse_limit_active": True,
+                    "forward_limit_active": False,
+                    "secret_field": "sidecar-secret",
+                },
+            },
+        )
+
+    gateway = _real_gateway()
+    gateway._plugin_configs = {
+        "motor-tic249": PluginConfig(plugin_id="motor-tic249", enabled=True)
+    }
+    monkeypatch.setattr(
+        gateway_mod.PluginRegistry,
+        "health_check",
+        classmethod(_health_result),
+    )
+
+    result = asyncio.run(gateway.health())
+    body = result["motor-tic249"]
+
+    assert body["message"] == "Plugin is healthy"
+    assert body["details"]["operator_alerts"][0]["issue_code"] == "hw_tic249_position_uncertain"
+    assert body["details"]["runtime_status"]["position_uncertain"] is True
+    assert body["details"]["runtime_status"]["reverse_limit_active"] is True
+    dumped = json.dumps(result)
+    assert "health-secret" not in dumped
+    assert "sidecar-secret" not in dumped
+    assert "secret_field" not in dumped
+
+
 def test_reload_configs_sanitizes_expected_failures_and_propagates_defect(
     monkeypatch,
 ) -> None:

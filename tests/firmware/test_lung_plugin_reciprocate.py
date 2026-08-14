@@ -139,6 +139,38 @@ def test_position_uncertain_without_limits_blocks_reciprocate():
     assert client.posts == []
 
 
+def test_position_uncertain_with_active_limit_alerts_but_does_not_block():
+    client = _ReadyFalseClient()
+
+    async def uncertain_at_reverse(_url):
+        if _url.endswith("/api/status"):
+            return _JsonResponse(
+                200,
+                {
+                    "connected": True,
+                    "position_uncertain": True,
+                    "energized": False,
+                    "forward_limit_active": False,
+                    "reverse_limit_active": True,
+                    "position": 0,
+                },
+            )
+        return _JsonResponse(200, {"version": "test"})
+
+    client.get = uncertain_at_reverse
+    plugin = _plugin_with_client(client)
+
+    health = asyncio.run(plugin.health_check())
+    alerts = health.details["operator_alerts"]
+    motion = asyncio.run(plugin.execute_command("reciprocate", {"steps": 500}))
+
+    assert health.status.value == "connected"
+    assert alerts[0]["issue_code"] == "hw_tic249_position_uncertain"
+    assert "homing" in alerts[0]["message"]
+    assert motion["success"] is True
+    assert client.posts
+
+
 def test_reach_limit_stop_has_enough_time_for_sidecar_safety_window():
     client = _StopClient()
     plugin = _plugin_with_client(client)

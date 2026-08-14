@@ -40,6 +40,39 @@ from oqlos.hardware.valve_controller import resolve_valve_controllers
 
 logger = logging.getLogger(__name__)
 
+_OPERATOR_RUNTIME_KEYS = (
+    "position_uncertain",
+    "reverse_limit_active",
+    "forward_limit_active",
+    "energized",
+    "connected",
+    "success",
+    "position",
+)
+
+
+def _operator_health_details(details: dict[str, Any] | None) -> dict[str, Any]:
+    """Copy allowlisted operator fields; never forward raw sidecar payloads."""
+    if not isinstance(details, dict):
+        return {}
+    out: dict[str, Any] = {}
+    alerts = details.get("operator_alerts")
+    if isinstance(alerts, list):
+        out["operator_alerts"] = [
+            {
+                "issue_code": str(alert.get("issue_code") or ""),
+                "message": str(alert.get("message") or ""),
+            }
+            for alert in alerts
+            if isinstance(alert, dict) and (alert.get("issue_code") or alert.get("message"))
+        ]
+    runtime = details.get("runtime_status")
+    if isinstance(runtime, dict):
+        slim = {key: runtime[key] for key in _OPERATOR_RUNTIME_KEYS if key in runtime}
+        if slim:
+            out["runtime_status"] = slim
+    return out
+
 # Register built-in plugins
 PluginRegistry.register(PiadcPlugin)
 PluginRegistry.register(ModbusAdcPlugin)
@@ -1079,6 +1112,16 @@ class PluginHardwareGateway:
                 ),
                 "compatible": health.compatible,
             }
+            operator_details = _operator_health_details(health.details)
+            if operator_details:
+                result[plugin_id]["details"] = operator_details
+                for alert in operator_details.get("operator_alerts") or []:
+                    logger.warning(
+                        "plugin %s issue_code=%s %s",
+                        plugin_id,
+                        alert.get("issue_code") or "unknown",
+                        alert.get("message") or "",
+                    )
             if config and config.metadata.get("required") is True:
                 result[plugin_id]["required"] = True
         for plugin_id, config in self._plugin_configs.items():

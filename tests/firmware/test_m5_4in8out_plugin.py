@@ -174,6 +174,7 @@ async def test_disconnected_health_names_expected_i2c_address() -> None:
     assert health.compatible is False
     assert "0x45" in health.message
     assert "i2cdetect -y 1" in health.message
+    assert health.details["operator_alerts"][0]["issue_code"] == "hw_m5_4in8out_no_response"
 
 
 @pytest.mark.asyncio

@@ -22,6 +22,10 @@ def add_m5_4in8out_device_actions(dev: DeviceDiagnosis, status: str, msg: str) -
     """I2C failures need different hands-on checks than an RS485 module."""
     if status == "ok":
         return
+    if "disabled" in msg:
+        dev.issues.append(
+            "Moduł M5 4In8Out jest wyłączony w konfiguracji — na I2C oczekiwany 0x45 (i2cdetect -y 1)."
+        )
     if "no such file or directory" in msg or "/dev/i2c" in msg:
         dev.issues.append(
             "Brak magistrali I2C na hoście — włącz I2C (raspi-config) i sprawdź /dev/i2c-1."

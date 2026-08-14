@@ -148,6 +148,46 @@ def test_connected_tic249_with_uncertain_position_is_degraded() -> None:
     assert any(action.code == "hw_tic249_position_uncertain" for action in device.recommended_actions)
 
 
+def test_connected_tic249_uncertain_at_reverse_limit_is_degraded() -> None:
+    devices = _diagnose(
+        {
+            "motor-tic249": {
+                "status": "connected",
+                "compatible": True,
+                "message": "Plugin is healthy",
+                "details": {
+                    "runtime_status": {
+                        "position_uncertain": True,
+                        "reverse_limit_active": True,
+                        "forward_limit_active": False,
+                    }
+                },
+            }
+        }
+    )
+    device = devices["motor-tic249"]
+
+    assert device.status == "degraded"
+    assert any("homing" in issue for issue in device.issues)
+    assert any(action.code == "hw_tic249_position_uncertain" for action in device.recommended_actions)
+
+
+def test_disabled_m5_tells_operator_to_check_i2c() -> None:
+    devices = _diagnose(
+        {
+            M5_4IN8OUT_PLUGIN_ID: {
+                "status": "disabled",
+                "compatible": False,
+                "message": "Plugin is disabled in OqlOS configuration",
+            }
+        }
+    )
+    device = devices[M5_4IN8OUT_PLUGIN_ID]
+
+    assert device.status == "error"
+    assert any("0x45" in issue for issue in device.issues)
+
+
 def test_optional_adapter_is_listed_in_the_hardware_registry() -> None:
     from oqlos.api.hardware_registry import HARDWARE_REGISTRY
 

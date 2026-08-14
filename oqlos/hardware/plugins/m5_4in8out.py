@@ -173,6 +173,17 @@ class M54In8OutPlugin(HardwarePlugin):
                     f"Not connected to 4In8Out at 0x{address:02X} on /dev/i2c-{bus}; "
                     f"expected on i2cdetect -y {bus}"
                 ),
+                details={
+                    "operator_alerts": [
+                        {
+                            "issue_code": "hw_m5_4in8out_no_response",
+                            "message": (
+                                f"Moduł M5 4In8Out nie odpowiada na I2C 0x{address:02X} "
+                                f"(/dev/i2c-{bus}; i2cdetect -y {bus})."
+                            ),
+                        }
+                    ]
+                },
                 compatible=False,
             )
         try:
