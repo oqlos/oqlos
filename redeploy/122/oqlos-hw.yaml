@@ -50,12 +50,12 @@ plugins:
       required: true
     connection_type: modbus-rtu
     connection_params:
-      # Live BoardNet adapter (Waveshare RS485 USB, FTDI A5069RR4). The older
-      # CH340 Single Serial by-id path is not present on this node.
+      # Live BoardNet adapter (Waveshare RS485 USB, FTDI A5069RR4).
+      # CH340 (1a86) may also appear; it is not the IO module.
       serial_port: /dev/serial/by-id/usb-FTDI_FT232R_USB_UART_A5069RR4-if00-port0
       baudrate: 4800
       parity: N
-      device_id: 2
+      device_id: 1
     timeout: 2.0
     retry_count: 3
     peripherals:
