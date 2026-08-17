@@ -1,0 +1,9 @@
+VERSION: 6
+SCENARIO: Raspberry Pi raspi-config
+CATEGORY: raspi-config
+DESCRIPTION: BoardNet host interfaces via raspi-config nonint.
+
+CONFIG:
+  NAME 'Raspberry Pi raspi-config'
+  SET 'raspi.config.schemaVersion' "\"raspi-config-v1\""
+  SET 'raspi.config.interfaces' "{\"i2c\":true,\"serial_cons\":false,\"serial_hw\":true,\"spi\":false,\"ssh\":true,\"vnc\":false}"

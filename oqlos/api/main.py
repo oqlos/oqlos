@@ -179,6 +179,11 @@ NAVIGATION_API_ENDPOINTS = [
         "description": "Canonical effective hardware configuration (OQL/YAML/JSON).",
     },
     {
+        "method": "GET",
+        "path": "/api/v3/hardware/raspi-config",
+        "description": "Declarative Raspberry Pi raspi-config (OQL/YAML/JSON).",
+    },
+    {
         "method": "WS",
         "path": "/ws/events/hardware",
         "description": "Hardware event stream.",
