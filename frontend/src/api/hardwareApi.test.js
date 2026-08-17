@@ -27,5 +27,6 @@ test("executePluginCommand posts the plugin id, command and params", async () =>
   assert.deepEqual(JSON.parse(calls[0].init.body), {
     command: "set_coil",
     params: { coil: 2, value: true },
+    args: { coil: 2, value: true },
   });
 });
