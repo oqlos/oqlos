@@ -105,8 +105,13 @@ def _resolve(verb: str) -> Callable[[dict[str, Any]], Awaitable[Any]]:
             new_parity=a.get("new_parity", "N"),
             confirm_isolated=bool(a.get("confirm_isolated", False)),
         ),
-        "valve": lambda a: hw.set_valve(str(a["valve_id"]), bool(a.get("value", False))),
-        "pump": lambda a: hw.set_pump(float(a.get("power_pct", 0.0))),
+        "valve": lambda a: hw.set_valve(
+            str(a.get("valve_id") or a.get("valveId") or ""),
+            bool(a.get("value", False)),
+        ),
+        "pump": lambda a: hw.set_pump(
+            float(a.get("power_pct", a.get("powerPct", 0.0)))
+        ),
         "sensor": lambda a: hw.read_sensor(str(a["sensor_id"])),
         "lung": lambda a: hw.set_lung(
             steps=int(a.get("steps", 500)),

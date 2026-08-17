@@ -99,7 +99,7 @@ class OqlRequest(_JsonEnvelopeMixin):
                 kind=str(data.get("kind", "command")),
                 mode=str(data.get("mode", "execute")),
                 sensors=data.get("sensors") or None,
-                args=data.get("args") or None,
+                args=data.get("args") or data.get("params") or None,
                 skip_waits=bool(data.get("skip_waits", False)),
                 timeout_ms=int(data.get("timeout_ms", 15000)),
                 source=str(data.get("source", "")),

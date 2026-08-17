@@ -233,7 +233,9 @@ class M54In8OutPlugin(HardwarePlugin):
 
     async def _execute_set_coil(self, params: dict[str, Any]) -> dict[str, Any]:
         """Write one output; the Waveshare 'all outputs' address is honoured too."""
-        coil = params.get("coil", 0)
+        if "coil" not in params:
+            return {"success": False, "error": "coil is required"}
+        coil = params.get("coil")
         value = bool(params.get("value", False))
         if not isinstance(coil, int) or isinstance(coil, bool) or coil < 0:
             return {"success": False, "error": "coil must be a non-negative integer"}
@@ -260,16 +262,18 @@ class M54In8OutPlugin(HardwarePlugin):
 
     async def _execute_set_valve(self, params: dict[str, Any]) -> dict[str, Any]:
         """Map valve_id to an output channel using the canonical catalogue."""
+        from oqlos.api.command_kwargs import pick_param
         from oqlos.hardware.modbus_io_catalog import resolve_valve_coil
 
-        valve_id = params.get("valve_id")
+        valve_id = pick_param(params, "valve_id", "valveId")
         if not valve_id:
             return {"success": False, "error": "valve_id is required"}
         coil = resolve_valve_coil(str(valve_id))
         if coil is None:
             return {"success": False, "error": f"Unknown valve_id: {valve_id}"}
-        return await self._execute_set_coil(
-            {"coil": coil, "value": params.get("value", False)}
+        return await self.execute_command(
+            "set_coil",
+            {"coil": coil, "value": pick_param(params, "value", default=False)},
         )
 
     async def _execute_all_outputs_off(self) -> dict[str, Any]:

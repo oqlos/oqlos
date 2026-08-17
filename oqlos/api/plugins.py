@@ -93,6 +93,7 @@ def _plugin_health_body(health: PluginHealth) -> dict[str, Any]:
 _PLUGIN_REQUEST_VALIDATION_MARKERS = (
     "valve_id is required",
     "unknown valve_id",
+    "coil is required",
     "coil must be",
     "must be a non-negative integer",
     "unknown command",

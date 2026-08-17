@@ -346,7 +346,9 @@ class MotorPlugin(HardwarePlugin):
 
         try:
             if command == "set_speed":
-                power_pct = params.get("power_pct", 0)
+                from oqlos.api.command_kwargs import pick_param
+
+                power_pct = pick_param(params, "power_pct", "powerPct", default=0)
                 is_valid, converted_pct, error_msg = self._validate_power_pct(power_pct)
                 if not is_valid:
                     return {"success": False, "error": error_msg}

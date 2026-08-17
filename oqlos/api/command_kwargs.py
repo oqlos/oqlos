@@ -55,3 +55,17 @@ def validate_args_or_params_types(
         if not isinstance(value, dict):
             raise ValueError(field)
     return resolve_args_or_params(data, prefer=prefer)
+
+
+def pick_param(
+    params: Mapping[str, Any] | None,
+    *keys: str,
+    default: Any = None,
+) -> Any:
+    """Return the first present key among snake/camel aliases."""
+    data = params or {}
+    for key in keys:
+        if key in data and data[key] is not None:
+            return data[key]
+    return default
+

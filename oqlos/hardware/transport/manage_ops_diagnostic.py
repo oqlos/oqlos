@@ -22,7 +22,9 @@ def _success_from_result(result: Any) -> bool:
 
 
 async def run_modbus_io_valve(hw: Any, command: str, params: dict[str, Any]) -> dict[str, Any]:
-    valve_id = str(params.get("valve_id") or "").strip()
+    from oqlos.api.command_kwargs import pick_param
+
+    valve_id = str(pick_param(params, "valve_id", "valveId") or "").strip()
     if not valve_id:
         raise ValueError("modbus-io diagnostic command requires 'valve_id'")
     value = command == "valve_on" if command != "set_valve" else bool(params.get("value", False))
@@ -36,9 +38,14 @@ async def run_modbus_io_valve(hw: Any, command: str, params: dict[str, Any]) -> 
 
 async def run_pump_diagnostic(command: str, params: dict[str, Any]) -> dict[str, Any]:
     """Map connect-scenario pump_off/pump_set to the motor plugin set_speed path."""
+    from oqlos.api.command_kwargs import pick_param
     from oqlos.api.hardware_gateway import get_hardware_gateway
 
-    power = 0.0 if command == "pump_off" else float(params.get("power_pct", 0))
+    power = (
+        0.0
+        if command == "pump_off"
+        else float(pick_param(params, "power_pct", "powerPct", default=0) or 0)
+    )
     result = await get_hardware_gateway().set_pump(power)
     success = _success_from_result(result)
     return {
