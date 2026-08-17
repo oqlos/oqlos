@@ -44,6 +44,56 @@ def test_modbus_timeout_health_uses_standard_hardware_error():
     assert caught.value.status_code == 503
 
 
+def test_modbus_missing_valve_id_is_request_invalid_not_rs485():
+    with pytest.raises(OqlosError) as caught:
+        plugins._raise_unhealthy_plugin(
+            "modbus-io",
+            {"success": False, "error": "valve_id is required"},
+            reason="command-rejected",
+        )
+
+    assert caught.value.issue_code == "api_diagnostic_command_invalid"
+    assert caught.value.public_code == "C2004-DATA-0002"
+
+
+def test_resolve_execute_params_prefers_params_but_accepts_args():
+    assert plugins._resolve_execute_params(
+        {"command": "set_valve", "params": {"valve_id": "valve-4"}, "args": {"valve_id": "x"}}
+    ) == {"valve_id": "valve-4"}
+    assert plugins._resolve_execute_params(
+        {"command": "set_valve", "args": {"valve_id": "valve-4", "value": False}}
+    ) == {"valve_id": "valve-4", "value": False}
+    assert plugins._resolve_execute_params({"command": "status"}) == {}
+
+
+def test_execute_plugin_command_accepts_args_alias(monkeypatch):
+    seen: dict[str, object] = {}
+
+    class RecordingPlugin:
+        async def execute_command(self, command, params):
+            seen["command"] = command
+            seen["params"] = params
+            return {"success": True, "data": {"coil": 3, "value": False}}
+
+    async def resolve(_plugin_id):
+        return RecordingPlugin()
+
+    monkeypatch.setattr(plugins, "_resolve_plugin_instance", resolve)
+    monkeypatch.setattr(
+        "oqlos.api.hardware_gateway.try_get_hardware_gateway", lambda: None
+    )
+
+    result = asyncio.run(
+        plugins.execute_plugin_command(
+            "modbus-io",
+            {"command": "set_coil", "args": {"coil": 3, "value": False}},
+        )
+    )
+
+    assert result["success"] is True
+    assert seen == {"command": "set_coil", "params": {"coil": 3, "value": False}}
+
+
 def test_execute_plugin_command_sanitizes_operational_failure_payload(monkeypatch):
     monkeypatch.setattr(plugins.PluginRegistry, "get_instance", lambda plugin_id: FakePlugin())
     app = FastAPI()

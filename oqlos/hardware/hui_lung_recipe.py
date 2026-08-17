@@ -93,7 +93,12 @@ def get_hui_lung_valve_id() -> str:
 def get_hui_lung_reciprocate_args() -> dict[str, Any]:
     defaults = dict(DEFAULT_HUI_LUNG_RECIPROCATE_ARGS)
     body = _configured_hui_lung_profile()
-    args = body.get("reciprocate_args") or body.get("reciprocateArgs") or body.get("args")
+    args = (
+        body.get("reciprocate_args")
+        or body.get("reciprocateArgs")
+        or body.get("args")
+        or body.get("params")
+    )
     if isinstance(args, dict):
         body = {**body, **args}
 

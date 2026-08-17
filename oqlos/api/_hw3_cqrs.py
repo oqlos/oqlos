@@ -31,7 +31,9 @@ async def hardware_cqrs_command_v3(req: CqrsCommandRequest) -> dict[str, Any]:
     payload = command.get("payload") if isinstance(command.get("payload"), dict) else command
     peripheral_id = normalize_peripheral_id(str(payload.get("peripheral_id") or payload.get("peripheralId") or ""))
     command_name = str(payload.get("command") or payload.get("command_name") or "").strip()
-    args = payload.get("args") if isinstance(payload.get("args"), dict) else {}
+    from oqlos.api.command_kwargs import resolve_args_or_params
+
+    args = resolve_args_or_params(payload, prefer="args")
     if not peripheral_id or not command_name:
         result = {
             "ok": False,

@@ -37,10 +37,12 @@ def command_payload(payload: dict[str, Any]) -> tuple[str, dict[str, Any]]:
                 "expected": "non-empty string",
             },
         )
-    args = payload.get("args")
-    if args is None:
-        args = {}
-    if not isinstance(args, dict):
+    from oqlos.api.command_kwargs import validate_args_or_params_types
+
+    try:
+        args = validate_args_or_params_types(payload, prefer="args")
+    except ValueError as exc:
+        field = str(exc) or "args"
         raise OqlosError(
             code="api_diagnostic_command_invalid",
             status_code=422,
@@ -51,10 +53,10 @@ def command_payload(payload: dict[str, Any]) -> tuple[str, dict[str, Any]]:
                 "stage": "command.validate",
                 "problem_source": "request",
                 "operation_id": "artificial-lung.command",
-                "field": "args",
+                "field": field,
                 "expected": "object",
             },
-        )
+        ) from None
     return command, args
 
 

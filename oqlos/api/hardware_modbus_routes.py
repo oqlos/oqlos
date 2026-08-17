@@ -110,6 +110,33 @@ async def hardware_modbus_waveshare_diagnose() -> dict[str, Any]:
     return await snapshot_via_health(_build_waveshare_diagnose_report)
 
 
+@router.get("/modbus/io-verify")
+async def hardware_modbus_io_verify(write_safe_off: bool = True) -> dict[str, Any]:
+    """Bounded live RTU verify for modbus-io (snapshot + optional valve-4 safe-off)."""
+    from oqlos.api.hardware_modbus_io_verify import build_modbus_io_verify_report
+
+    return await build_modbus_io_verify_report(write_safe_off=write_safe_off)
+
+
+@router.post("/modbus/io-repair")
+async def hardware_modbus_io_repair() -> dict[str, Any]:
+    """Reconnect modbus plugins, then re-run the bounded IO verify probe."""
+    from oqlos.api.hardware_diagnosis_routes import hardware_recover_route
+    from oqlos.api.hardware_modbus_io_verify import build_modbus_io_verify_report
+
+    before = await build_modbus_io_verify_report(write_safe_off=False)
+    recover = await hardware_recover_route(scope="safe", devices="modbus")
+    after = await build_modbus_io_verify_report(write_safe_off=True)
+    return {
+        "ok": bool(after.get("ok")),
+        "before": before,
+        "recover": recover,
+        "after": after,
+        "issue_code": after.get("issue_code") or before.get("issue_code"),
+        "code": after.get("code") or before.get("code"),
+    }
+
+
 @router.get("/modbus/profile-channels")
 async def hardware_modbus_profile_channels_get(profile: str = "modbus-adc") -> dict[str, Any]:
     from oqlos.api.hardware_modbus_channels import read_modbus_profile_channels

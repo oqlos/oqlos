@@ -166,6 +166,18 @@ async def hardware_modbus_waveshare_diagnose_v3(exclusive: bool = False) -> dict
     return await modbus_hw.hardware_modbus_waveshare_diagnose()
 
 
+@sub_router.get("/modbus/io-verify")
+async def hardware_modbus_io_verify_v3(write_safe_off: bool = True) -> dict[str, Any]:
+    from oqlos.api import hardware_modbus_routes as modbus_hw
+    return await modbus_hw.hardware_modbus_io_verify(write_safe_off=write_safe_off)
+
+
+@sub_router.post("/modbus/io-repair")
+async def hardware_modbus_io_repair_v3() -> dict[str, Any]:
+    from oqlos.api import hardware_modbus_routes as modbus_hw
+    return await modbus_hw.hardware_modbus_io_repair()
+
+
 @sub_router.get("/modbus/profile-channels")
 async def hardware_modbus_profile_channels_v3(profile: str = "modbus-adc") -> dict[str, Any]:
     from oqlos.api import hardware_modbus_routes as modbus_hw

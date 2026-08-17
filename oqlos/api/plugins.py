@@ -11,6 +11,7 @@ from fastapi.responses import JSONResponse
 
 from oqlos.errors import OqlosError
 from oqlos.errors.c2004_catalog_generated import CATALOG, c2004_code_for_issue
+from oqlos.errors.catalog import ISSUE_CATALOG
 from oqlos.hardware.power_safety import command_power_policy, ensure_power_safe
 
 from oqlos.hardware.plugins import (
@@ -89,16 +90,47 @@ def _plugin_health_body(health: PluginHealth) -> dict[str, Any]:
     }
 
 
+_PLUGIN_REQUEST_VALIDATION_MARKERS = (
+    "valve_id is required",
+    "unknown valve_id",
+    "coil must be",
+    "must be a non-negative integer",
+    "unknown command",
+)
+
+
+def _resolve_execute_params(command: dict[str, Any]) -> dict[str, Any]:
+    """Accept both ``params`` and legacy ``args`` bodies for plugin execute."""
+    from oqlos.api.command_kwargs import resolve_args_or_params
+
+    return resolve_args_or_params(command, prefer="params")
+
+
 def _plugin_health_issue_code(
     plugin_id: str, body: dict[str, Any] | None = None
 ) -> str:
     """Map plugin health failures to operator issue codes.
 
-    ``modbus-io`` always uses ``hw_modbus_no_response`` (not connected, timeout,
-    or failed coil read) so HUI and plugin health share the same repair hint.
+    ``modbus-io`` uses ``hw_modbus_no_response`` for bus/timeout failures so HUI
+    and plugin health share the same repair hint. Request/argument validation
+    failures must stay ``api_diagnostic_command_invalid`` — otherwise a missing
+    ``valve_id`` (often from ``args`` vs ``params``) is misdiagnosed as RS485.
+    Prefer an explicit ``issue_code`` from the plugin command result when present
+    so command-rejected failures are not always remapped to ``*_sidecar_unreachable``.
     """
     normalized = str(plugin_id or "").strip().lower()
-    message = str((body or {}).get("message") or "").lower()
+    body = body or {}
+    explicit = str(body.get("issue_code") or "").strip()
+    if explicit and explicit in ISSUE_CATALOG:
+        return explicit
+    # Some plugins put the issue code only under nested upstream Problem Details.
+    upstream = body.get("upstream") if isinstance(body.get("upstream"), dict) else {}
+    nested = str(upstream.get("issue_code") or "").strip()
+    if nested and nested in ISSUE_CATALOG:
+        return nested
+    message = str(body.get("message") or body.get("error") or "").lower()
+    if any(marker in message for marker in _PLUGIN_REQUEST_VALIDATION_MARKERS):
+        return "api_diagnostic_command_invalid"
     if normalized == "modbus-io":
         return "hw_modbus_no_response"
     if normalized == "modbus-adc" and any(
@@ -288,7 +320,7 @@ async def _resolve_plugin_instance(plugin_id: str) -> Any | None:
 async def execute_plugin_command(plugin_id: str, command: dict[str, Any]):
     """Execute a command on a hardware plugin."""
     command_name = command.get("command")
-    params = command.get("params", {})
+    params = _resolve_execute_params(command)
     from oqlos.api.hardware_gateway import try_get_hardware_gateway
 
     gateway = try_get_hardware_gateway()

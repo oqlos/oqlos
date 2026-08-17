@@ -107,6 +107,7 @@ async def start_hui_artificial_lung(gateway: Any) -> dict[str, Any]:
     if readiness_failure is not None:
         return readiness_failure
 
+
     valve_id = get_hui_lung_valve_id()
     valve = await _set_valve(gateway, valve_id, True)
     valve_skipped = False
@@ -114,7 +115,17 @@ async def start_hui_artificial_lung(gateway: Any) -> dict[str, Any]:
         if _require_valve() or not (
             _skip_valve_on_comm_failure() and _valve_looks_like_comm_failure(valve)
         ):
-            return {"ok": False, "command": "al-start", "error": "Lung valve failed", "operations": [valve]}
+            return {
+                "ok": False,
+                "command": "al-start",
+                "error": "Lung valve failed",
+                "error_code": "C2004-HW-0012",
+                "status_code": 503,
+                "issue_code": "hw_modbus_no_response",
+                "unavailable_hardware_ids": ["modbus-io"],
+                "safe_to_retry": True,
+                "operations": [valve],
+            }
         valve_skipped = True
         valve = {
             **valve,
@@ -137,13 +148,36 @@ async def start_hui_artificial_lung(gateway: Any) -> dict[str, Any]:
         cleanup = None
         if not valve_skipped:
             cleanup = await _set_valve(gateway, valve_id, False)
-        return {
+        lung_error = (
+            str(lung.get("error") or "Tic249 reciprocate failed")
+            if isinstance(lung, dict)
+            else "Tic249 reciprocate failed"
+        )
+        # Prefer the plugin's issue_code; fall back by message so UI never gets DATA-0002.
+        default_issue = "hw_tic249_sidecar_unreachable"
+        if "niepewna" in lung_error.lower() or "position_uncertain" in lung_error.lower():
+            default_issue = "hw_tic249_position_uncertain"
+        err_res = {
             "ok": False,
             "command": "al-start",
-            "error": str(lung.get("error") or "Tic249 reciprocate failed") if isinstance(lung, dict) else "Tic249 reciprocate failed",
+            "error": lung_error,
+            "error_code": "C2004-HW-0012",
+            "status_code": 503,
+            "issue_code": default_issue,
+            "unavailable_hardware_ids": ["motor-tic249"],
+            "safe_to_retry": True,
             "operations": [valve, {"operation": "reciprocate", "ok": False, "result": lung}],
             "cleanup": cleanup,
         }
+        if isinstance(lung, dict):
+            for field in ("error_code", "status_code", "issue_code"):
+                if field in lung and lung.get(field) not in (None, ""):
+                    # Never promote actuation failures to DATA-0002 in the HTTP mapper.
+                    if field == "error_code" and str(lung.get(field)) == "C2004-DATA-0002":
+                        continue
+                    err_res[field] = lung[field]
+        return err_res
+
 
     _artificial_lung_running = True
     payload: dict[str, Any] = {

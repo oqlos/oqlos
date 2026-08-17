@@ -236,13 +236,9 @@ class LungPlugin(HardwarePlugin):
         if status.get("forward_limit_active") and status.get("reverse_limit_active"):
             return "Both limit switches are active; movement is blocked"
 
-        alert = LungPlugin._position_uncertain_alert(status)
-        if alert and not (
-            status.get("forward_limit_active") or status.get("reverse_limit_active")
-        ):
-            return alert
-
+        # position_uncertain is reported as an operator alert in health check, but does not block relative reciprocate motion.
         return None
+
 
     @staticmethod
     def _position_uncertain_alert(status: dict[str, Any] | None) -> str | None:

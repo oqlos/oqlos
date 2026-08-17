@@ -102,11 +102,9 @@ def _extract_diagnostic_ids(a: dict[str, Any]) -> tuple[str, str]:
 
 
 def _extract_params(a: dict[str, Any]) -> dict[str, Any]:
-    args = a.get("args")
-    if isinstance(args, dict):
-        return args
-    params = a.get("params")
-    return params if isinstance(params, dict) else {}
+    from oqlos.api.command_kwargs import resolve_args_or_params
+
+    return resolve_args_or_params(a, prefer="args")
 
 
 async def _route_tic249_lung_command(command: str, hw: Any) -> dict[str, Any] | None:

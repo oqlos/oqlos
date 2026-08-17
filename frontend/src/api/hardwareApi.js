@@ -121,9 +121,11 @@ export const HardwareApi = {
   async executePluginCommand(pluginId, command, params = {}, options) {
     // Direct plugin channel: the M5 valve stage is addressed by its own id even
     // while the gateway still routes logical valves to another output module.
+    // Send both params and args — older firmware only read one of the keys.
+    const kwargs = params && typeof params === "object" ? params : {};
     return post(
       `/api/v1/plugins/${encodeURIComponent(pluginId)}/execute`,
-      { command, params },
+      { command, params: kwargs, args: kwargs },
       options,
     );
   },

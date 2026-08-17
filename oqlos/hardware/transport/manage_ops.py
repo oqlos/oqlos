@@ -67,6 +67,8 @@ def _resolve(verb: str) -> Callable[[dict[str, Any]], Awaitable[Any]]:
         "diagnose": hw.hardware_diagnose,
         "stack-snapshot": hw.hardware_stack_snapshot,
         "waveshare-diagnose": modbus_hw.hardware_modbus_waveshare_diagnose,
+        "io-verify": modbus_hw.hardware_modbus_io_verify,
+        "io-repair": modbus_hw.hardware_modbus_io_repair,
         "wizard-plan": modbus_hw.hardware_modbus_wizard_plan,
         "hui-actions": hw.hui_actions,
         "hui-readiness": hw.hui_readiness,
