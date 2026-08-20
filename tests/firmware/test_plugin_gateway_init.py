@@ -167,7 +167,10 @@ def test_stop_lung_immediate_stop_still_deenergizes_when_configured(monkeypatch)
 
     monkeypatch.setattr(gateway, "_execute_lung_bool_command", _execute)
     assert asyncio.run(gateway.stop_lung()) is True
-    assert calls == [("stop", {}), ("energize", {"enable": False})]
+    assert calls == [
+        ("stop", {"stop_at_limit": False}),
+        ("energize", {"enable": False}),
+    ]
 
 
 def test_stop_lung_oql_profile_overrides_yaml_reach_limit(monkeypatch) -> None:
@@ -190,7 +193,10 @@ def test_stop_lung_oql_profile_overrides_yaml_reach_limit(monkeypatch) -> None:
 
     monkeypatch.setattr(gateway, "_execute_lung_bool_command", _execute)
     assert asyncio.run(gateway.stop_lung()) is True
-    assert calls == [("stop", {}), ("energize", {"enable": False})]
+    assert calls == [
+        ("stop", {"stop_at_limit": False}),
+        ("energize", {"enable": False}),
+    ]
 
 
 def test_stop_lung_can_preserve_explicit_holding_current(monkeypatch) -> None:

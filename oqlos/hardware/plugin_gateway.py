@@ -968,6 +968,11 @@ class PluginHardwareGateway:
         stop_params: dict[str, Any] = {}
         if stop_at_limit:
             stop_params["stop_mode"] = "reach_limit"
+        else:
+            # The Tic249 sidecar has its own persistent stop-at-limit default.
+            # An empty payload would therefore turn an OQL immediate STOP back
+            # into a slow reach-limit command.
+            stop_params["stop_at_limit"] = False
         stopped = await self._execute_lung_bool_command(
             "stop",
             stop_params,
