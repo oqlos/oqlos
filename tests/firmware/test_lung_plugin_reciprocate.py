@@ -234,6 +234,24 @@ def test_reach_limit_stop_has_enough_time_for_sidecar_safety_window():
     ]
 
 
+def test_immediate_stop_forwards_explicit_false_to_sidecar():
+    client = _StopClient()
+    plugin = _plugin_with_client(client)
+
+    result = asyncio.run(
+        plugin.execute_command("stop", {"stop_at_limit": False})
+    )
+
+    assert result["success"] is True
+    assert client.posts == [
+        (
+            "http://localhost:8205/api/stop",
+            {"stop_at_limit": False},
+            None,
+        )
+    ]
+
+
 def test_tic249_extended_reciprocate_normalizes_ramp_time_alias():
     params = _build_reciprocate_params(
         {
