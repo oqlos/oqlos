@@ -1,9 +1,10 @@
-"""M5Stack Module 4In8Out plugin — I2C valve output stage.
+"""M5Stack Module 4In8Out plugin — I2C or CoreS3 WiFi valve output stage.
 
 Command surface is deliberately identical to :mod:`oqlos.hardware.plugins.modbus`
 (``set_coil`` / ``set_valve`` / ``all_outputs_off`` / ``read_io_snapshot``) so the
-gateway can drive valves through either module without branching. Channel
-identity follows the same canonical catalogue: ``valve-1..8`` → output 0..7.
+gateway can drive valves through either module without branching. A direct I2C
+module exposes 8 outputs; the CoreS3 HTTP gateway exposes two modules as 16
+outputs and 8 inputs.
 """
 
 from __future__ import annotations
@@ -12,12 +13,15 @@ import asyncio
 import logging
 from typing import Any
 
+from ._m5_core_http import CoreS3HttpClient
 from .base import HardwarePlugin, PluginConfig, PluginHealth, PluginStatus
 
 logger = logging.getLogger(__name__)
 
 OUTPUT_COUNT = 8
 INPUT_COUNT = 4
+CORES3_OUTPUT_COUNT = 16
+CORES3_INPUT_COUNT = 8
 DEFAULT_ADDRESS = 0x45
 _BACKENDS = ("smbus", "mcp2221", "mock")
 
@@ -40,9 +44,9 @@ class M54In8OutPlugin(HardwarePlugin):
     PLUGIN_ID = "io-m5-4in8out"
     PLUGIN_NAME = "M5Stack Module 4In8Out"
     PLUGIN_VERSION = "1.0.0"
-    PLUGIN_DESCRIPTION = "8x MOSFET output + 4x contact input I2C module — valve & signal control"
+    PLUGIN_DESCRIPTION = "CoreS3 WiFi gateway for 16x MOSFET output + 8x contact input"
     REQUIRED_PYTHON_PACKAGES = ["m5-4in8out"]
-    SUPPORTED_PROTOCOLS = ["i2c"]
+    SUPPORTED_PROTOCOLS = ["i2c", "http"]
     # Alias kept from the Waveshare plugin so callers can use one "all off" address.
     ALL_OUTPUTS_COIL_ADDRESS = 0x00FF
 
@@ -62,13 +66,21 @@ class M54In8OutPlugin(HardwarePlugin):
         raw = self._params().get("address", DEFAULT_ADDRESS)
         return int(raw, 0) if isinstance(raw, str) else int(raw)
 
+    def _is_http(self) -> bool:
+        return self.config.connection_type == "http"
+
     def validate_config(self) -> list[str]:
         """Validate I2C-specific configuration."""
         errors: list[str] = []
-        if self.config.connection_type != "i2c":
-            errors.append("m5-4in8out plugin supports the i2c connection type")
-
         params = self._params()
+        if self.config.connection_type not in {"i2c", "http"}:
+            errors.append("m5-4in8out plugin supports i2c or http connection types")
+        if self._is_http():
+            base_url = str(params.get("base_url", "")).strip()
+            if not base_url.startswith(("http://", "https://")):
+                errors.append("base_url must start with http:// or https:// for the http transport")
+            return errors
+
         backend = str(params.get("backend", "smbus")).strip().lower()
         if backend not in _BACKENDS:
             errors.append(f"backend must be one of {', '.join(_BACKENDS)}")
@@ -111,6 +123,24 @@ class M54In8OutPlugin(HardwarePlugin):
 
     async def connect(self) -> bool:
         """Open the I2C transport and probe the module."""
+        if self._is_http():
+            params = self._params()
+            self._module = CoreS3HttpClient(
+                str(params.get("base_url", "")),
+                str(params.get("token", "")),
+                self.config.timeout,
+            )
+            attempts = max(1, int(self.config.retry_count) + 1)
+            for attempt in range(attempts):
+                health = await self.health_check()
+                if health.status == PluginStatus.CONNECTED and health.compatible:
+                    self._status = PluginStatus.CONNECTED
+                    return True
+                if attempt + 1 < attempts:
+                    await asyncio.sleep(min(0.25 * (attempt + 1), 1.0))
+            self._module = None
+            self._status = PluginStatus.ERROR
+            return False
         try:
             from m5_4in8out import Module4In8Out  # noqa: F401
         except ImportError:
@@ -158,6 +188,13 @@ class M54In8OutPlugin(HardwarePlugin):
 
     async def health_check(self) -> PluginHealth:
         """Probe the module without changing output state."""
+        if self._module is None and self._is_http():
+            params = self._params()
+            self._module = CoreS3HttpClient(
+                str(params.get("base_url", "")),
+                str(params.get("token", "")),
+                self.config.timeout,
+            )
         if self._module is None:
             address = self._address()
             bus = int(self._params().get("bus", 1))
@@ -188,6 +225,25 @@ class M54In8OutPlugin(HardwarePlugin):
             )
         try:
             async with self._lock:
+                if self._is_http():
+                    payload = await asyncio.wait_for(
+                        asyncio.to_thread(self._module.status), timeout=self.config.timeout
+                    )
+                    data = payload.get("data") or {}
+                    modules = data.get("modules") or []
+                    healthy = bool(data.get("healthy"))
+                    return PluginHealth(
+                        status=PluginStatus.CONNECTED if healthy else PluginStatus.ERROR,
+                        message="CoreS3 dual M122 online" if healthy else "CoreS3 reachable; one or more M122 modules unavailable",
+                        details={
+                            "backend": "cores3-http",
+                            "base_url": self._params().get("base_url"),
+                            "modules": modules,
+                            "address": ", ".join(str(item.get("address")) for item in modules),
+                        },
+                        compatible=healthy,
+                        version=",".join(str(item.get("firmware_version", "?")) for item in modules),
+                    )
                 status = await asyncio.wait_for(
                     asyncio.to_thread(self._module.health),
                     timeout=self.config.timeout,
@@ -199,6 +255,27 @@ class M54In8OutPlugin(HardwarePlugin):
                 compatible=False,
             )
         except Exception as exc:
+            if self._is_http():
+                self._module = None
+                base_url = str(self._params().get("base_url", "")).rstrip("/")
+                return PluginHealth(
+                    status=PluginStatus.ERROR,
+                    message=f"CoreS3 WiFi gateway unavailable at {base_url}: {exc}",
+                    details={
+                        "backend": "cores3-http",
+                        "base_url": base_url,
+                        "operator_alerts": [
+                            {
+                                "issue_code": "hw_m5_4in8out_no_response",
+                                "message": (
+                                    "Brak odpowiedzi CoreS3 przez WiFi; sprawdz siec, "
+                                    "zasilanie i endpoint /api/v1/oql/status."
+                                ),
+                            }
+                        ],
+                    },
+                    compatible=False,
+                )
             return PluginHealth(
                 status=PluginStatus.ERROR,
                 message=f"Health check exception: {exc}",
@@ -247,10 +324,11 @@ class M54In8OutPlugin(HardwarePlugin):
                 "success": True,
                 "data": {"all_outputs": True, "outputs": list(outputs)},
             }
-        if coil >= OUTPUT_COUNT:
+        output_count = CORES3_OUTPUT_COUNT if self._is_http() else OUTPUT_COUNT
+        if coil >= output_count:
             return {
                 "success": False,
-                "error": f"coil must be 0..{OUTPUT_COUNT - 1} on the 4In8Out module",
+                "error": f"coil must be 0..{output_count - 1} on the configured 4In8Out transport",
             }
         # Coils keep the zero-based Modbus wire contract (coil 0 = first output);
         # the module and both vendor drivers number outputs OUT1..OUT8.
@@ -306,6 +384,17 @@ class M54In8OutPlugin(HardwarePlugin):
         if self._module is None:
             return {"success": False, "error": "Not connected to 4In8Out"}
         try:
+            if self._is_http():
+                if command == "set_valve":
+                    from oqlos.api.command_kwargs import pick_param
+                    from oqlos.hardware.modbus_io_catalog import resolve_valve_coil
+                    valve_id = pick_param(params, "valve_id", "valveId")
+                    coil = resolve_valve_coil(str(valve_id)) if valve_id else None
+                    if coil is None:
+                        return {"success": False, "error": f"Unknown valve_id: {valve_id}"}
+                    command = "set_coil"
+                    params = {"coil": coil, "value": pick_param(params, "value", default=False)}
+                return await self._call("execute", command, params)
             if command == "set_coil":
                 return await self._execute_set_coil(params)
             if command == "set_valve":
@@ -337,10 +426,10 @@ class M54In8OutPlugin(HardwarePlugin):
                 "read_io_snapshot",
             ],
             "valve_mapping": dict(VALVE_COIL_MAP),
-            "outputs": OUTPUT_COUNT,
-            "inputs": INPUT_COUNT,
+            "outputs": CORES3_OUTPUT_COUNT,
+            "inputs": CORES3_INPUT_COUNT,
             "configuration_schema": {
-                "connection_type": {"type": "string", "enum": ["i2c"], "default": "i2c"},
+                "connection_type": {"type": "string", "enum": ["i2c", "http"], "default": "http"},
                 "connection_params": {
                     "type": "object",
                     "properties": {
@@ -354,6 +443,8 @@ class M54In8OutPlugin(HardwarePlugin):
                         "device_index": {"type": "integer", "default": 0, "minimum": 0},
                         "usb_serial": {"type": "string"},
                         "i2c_freq": {"type": "integer", "default": 100000},
+                        "base_url": {"type": "string", "default": "http://192.168.188.127:8080"},
+                        "token": {"type": "string"},
                     },
                 },
             },

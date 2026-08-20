@@ -6,26 +6,26 @@ import { useAppConfig } from "../context/AppConfigProvider";
 import { useI18n } from "../i18n/I18nProvider";
 
 const PLUGIN_ID = "io-m5-4in8out";
-const OUTPUT_COUNT = 8;
-const INPUT_COUNT = 4;
+const OUTPUT_COUNT = 16;
+const INPUT_COUNT = 8;
 
 const COPY = {
   pl: {
     title: "M5Stack 4In8Out — wyjścia",
     subtitle:
-      "Bezpośrednie sterowanie 8 wyjściami MOSFET modułu I2C (0x45). Wejścia IN1–IN4 tylko do odczytu.",
+      "Sterowanie przez WiFi 16 wyjściami MOSFET dwóch modułów I2C (0x45 i 0x66). Wejścia IN1–IN8 są tylko do odczytu.",
     refresh: "Odśwież stan",
     stop: "STOP — wyłącz wszystkie",
     allOn: "Załącz wszystkie",
     confirm:
       "Potwierdzam, że stanowisko jest zabezpieczone i obserwuję właściwy moduł wykonawczy.",
     roleBlocked: "Sterowanie wyjściami jest dostępne wyłącznie dla roli system/admin.",
-    outputs: "Wyjścia OUT1–OUT8",
-    inputs: "Wejścia IN1–IN4",
+    outputs: "Wyjścia OUT1–OUT16",
+    inputs: "Wejścia IN1–IN8",
     module: "Moduł",
     controller: "Sterownik I/O",
-    outputsSummary: "8 kanałów MOSFET",
-    inputsSummary: "4 wejścia stykowe",
+    outputsSummary: "16 kanałów MOSFET",
+    inputsSummary: "8 wejść stykowych",
     state: "Stan",
     online: "online",
     offline: "offline",
@@ -35,7 +35,7 @@ const COPY = {
     open: "rozwarte",
     unavailable: "Moduł nieaktywny lub niedostępny",
     unavailableHint:
-      "Moduł nie jest włączony w konfiguracji sprzętowej albo nie potwierdził adresu 0x45. Sprawdź ustawienie enabled, przełącznik BOOT0 (pozycja 0), zasilanie DC IN 9–24 V, SDA/SCL i wspólną masę.",
+      "CoreS3 lub moduł 0x45/0x66 nie odpowiada. Sprawdź base_url, WiFi, unikalne adresy I2C, zasilanie DC IN 9–24 V, SDA/SCL i wspólną masę.",
     firmware: "Firmware",
     address: "Adres",
     transport: "Transport",
@@ -45,18 +45,18 @@ const COPY = {
   en: {
     title: "M5Stack 4In8Out — outputs",
     subtitle:
-      "Direct control of the 8 MOSFET outputs on the I2C module (0x45). IN1–IN4 are read-only.",
+      "WiFi control of 16 MOSFET outputs on two I2C modules (0x45 and 0x66). IN1–IN8 are read-only.",
     refresh: "Refresh state",
     stop: "STOP — de-energize all",
     allOn: "Energize all",
     confirm: "I confirm the bench is safe and I am observing the correct actuator module.",
     roleBlocked: "Output control is available only to system/admin.",
-    outputs: "Outputs OUT1–OUT8",
-    inputs: "Inputs IN1–IN4",
+    outputs: "Outputs OUT1–OUT16",
+    inputs: "Inputs IN1–IN8",
     module: "Module",
     controller: "I/O controller",
-    outputsSummary: "8 MOSFET channels",
-    inputsSummary: "4 contact inputs",
+    outputsSummary: "16 MOSFET channels",
+    inputsSummary: "8 contact inputs",
     state: "State",
     online: "online",
     offline: "offline",
@@ -66,7 +66,7 @@ const COPY = {
     open: "open",
     unavailable: "Module inactive or unavailable",
     unavailableHint:
-      "The module is not enabled in the hardware configuration or did not acknowledge address 0x45. Check enabled, the BOOT0 switch (position 0), the 9–24 V DC IN supply, SDA/SCL and the common ground.",
+      "CoreS3 or module 0x45/0x66 is unavailable. Check base_url, WiFi, unique I2C addresses, 9–24 V DC IN, SDA/SCL and common ground.",
     firmware: "Firmware",
     address: "Address",
     transport: "Transport",
@@ -125,36 +125,73 @@ export default function HardwareM5Out() {
   const online = Boolean(snapshot);
   const canDrive = Boolean(online && confirmed && isAdmin && !busy);
 
-  const runCommand = useCallback(async (command, params, tag) => {
-    setBusy(tag);
-    setError("");
+  const reconcileSnapshot = useCallback(async () => {
     try {
-      await HardwareApi.executePluginCommand(PLUGIN_ID, command, params);
       const result = await HardwareApi.executePluginCommand(PLUGIN_ID, "read_io_snapshot");
       setSnapshot(result?.data || result?.result?.data || null);
+    } catch {
+      // Preserve the command error; manual refresh exposes transport diagnostics.
+    }
+  }, []);
+
+  const runCommand = useCallback(async (command, params, tag, optimisticUpdate) => {
+    setBusy(tag);
+    setError("");
+    if (optimisticUpdate) setSnapshot((current) => optimisticUpdate(current));
+    try {
+      await HardwareApi.executePluginCommand(PLUGIN_ID, command, params);
     } catch (err) {
       setError(formatHardwareApiError(err, `M5 4In8Out ${command} failed`));
+      void reconcileSnapshot();
     } finally {
       setBusy("");
     }
-  }, []);
+  }, [reconcileSnapshot]);
 
   const toggle = useCallback((output) => {
     if (!canDrive) return;
     // Coils keep the zero-based wire contract; OUTn is what the case is labelled.
-    void runCommand("set_coil", { coil: output.coil, value: !output.on }, `out-${output.channel}`);
+    const nextValue = !output.on;
+    void runCommand(
+      "set_coil",
+      { coil: output.coil, value: nextValue },
+      `out-${output.channel}`,
+      (current) => {
+        const coils = Array.isArray(current?.coils)
+          ? [...current.coils]
+          : Array(OUTPUT_COUNT).fill(false);
+        coils[output.coil] = nextValue;
+        return { ...(current || {}), coils, outputs: coils };
+      },
+    );
   }, [canDrive, runCommand]);
 
   // Safe-off stays reachable without the confirmation checkbox: de-energizing
   // is the recovery action, never the risky one.
   const stopAll = useCallback(() => {
     if (!online || !isAdmin || busy) return;
-    void runCommand("all_outputs_off", {}, "stop");
+    void runCommand(
+      "all_outputs_off",
+      {},
+      "stop",
+      (current) => {
+        const coils = Array(OUTPUT_COUNT).fill(false);
+        return { ...(current || {}), coils, outputs: coils };
+      },
+    );
   }, [online, isAdmin, busy, runCommand]);
 
   const allOn = useCallback(() => {
     if (!canDrive) return;
-    void runCommand("set_coil", { coil: 0x00ff, value: true }, "all-on");
+    void runCommand(
+      "set_coil",
+      { coil: 0x00ff, value: true },
+      "all-on",
+      (current) => {
+        const coils = Array(OUTPUT_COUNT).fill(true);
+        return { ...(current || {}), coils, outputs: coils };
+      },
+    );
   }, [canDrive, runCommand]);
 
   const details = health?.details || health?.result?.details || {};
@@ -165,7 +202,7 @@ export default function HardwareM5Out() {
       <main className="m5-out-content">
         <header className="m5-out-header">
           <div>
-            <span className="m5-out-eyebrow">I2C · 0x45 · 8 OUT / 4 IN</span>
+            <span className="m5-out-eyebrow">WiFi · CoreS3 · 0x45 + 0x66 · 16 OUT / 8 IN</span>
             <h1>{text.title}</h1>
             <p>{text.subtitle}</p>
           </div>
@@ -184,7 +221,7 @@ export default function HardwareM5Out() {
             <div className="m5-out-meta">
               <div>
                 <span>{text.address}</span>
-                <strong>{details.address || "0x45"}</strong>
+                <strong>{details.address || "0x45, 0x66"}</strong>
               </div>
               <div>
                 <span>{text.transport}</span>

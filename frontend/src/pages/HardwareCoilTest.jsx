@@ -18,8 +18,8 @@ import { recordCommandUrlState } from "../utils/command-url-state.js";
 
 const COPY = {
   pl: {
-    title: "TEST — kolejność cewek BoardNet",
-    subtitle: "Kontrolowany test DO1–DO8: jedna cewka, krótki impuls, automatyczne OFF i ocena operatora.",
+    title: "TEST — wyjścia zaworów BoardNet",
+    subtitle: "Aktywny kontroler wybierany automatycznie: M5Stack/CoreS3 z fallbackiem do Modbus.",
     refresh: "Odśwież preflight",
     stop: "STOP — wyłącz wszystkie",
     ready: "GOTOWY",
@@ -28,7 +28,7 @@ const COPY = {
     next: "Impuls następnej cewki",
     copy: "Kopiuj raport JSON",
     configuration: "Szczegółowa konfiguracja modułu",
-    sequence: "Test połączeń DO1–DO8",
+    sequence: "Test wyjść aktywnego kontrolera",
     result: "Ocena",
     correct: "poprawnie",
     wrong: "inna cewka",
@@ -43,7 +43,7 @@ const COPY = {
   },
   en: {
     title: "TEST — BoardNet coil order",
-    subtitle: "Controlled DO1–DO8 test: one coil, short pulse, automatic OFF and operator assessment.",
+    subtitle: "The active controller is selected automatically: M5Stack/CoreS3 with Modbus fallback.",
     refresh: "Refresh preflight",
     stop: "STOP — de-energize all",
     ready: "READY",
@@ -52,7 +52,7 @@ const COPY = {
     next: "Pulse next coil",
     copy: "Copy JSON report",
     configuration: "Detailed module configuration",
-    sequence: "DO1–DO8 wiring test",
+    sequence: "Active controller output test",
     result: "Assessment",
     correct: "correct",
     wrong: "different coil",
@@ -179,15 +179,18 @@ export default function HardwareCoilTest() {
         {error ? <div className="coil-test-alert danger">{error}</div> : null}
         <section className={`coil-test-alert ${plan?.ready ? "ok" : "warn"}`}>
           <strong>{plan?.ready ? text.ready : text.blocked}</strong>
-          <span>mode={plan?.mode || "—"} · {plan?.module?.role || "modbus-io"} · ID={valueText(plan?.module?.device_id)}</span>
-          <span>{plan?.module?.serial_port || "serial: —"}</span>
+          <span>mode={plan?.mode || "—"} · active={plan?.module?.active_controller || plan?.module?.role || "—"}</span>
+          <span>transport={plan?.module?.transport || "—"} · endpoint={plan?.module?.endpoint || "—"}</span>
+          <span>OUT={valueText(plan?.module?.output_count)} · IN={valueText(plan?.module?.input_count)} · fallback={(plan?.module?.fallback_controllers || []).join(", ") || "—"}</span>
           {blockedReasons.map((reason) => <span key={reason}>{reason}</span>)}
         </section>
 
         <section className="coil-test-card">
           <h2>{text.configuration}</h2>
           <div className="coil-test-config-grid">
-            <div><small>serial_port</small><code>{plan?.module?.serial_port || "—"}</code></div>
+            <div><small>active_controller</small><code>{plan?.module?.active_controller || "—"}</code></div>
+            <div><small>endpoint</small><code>{plan?.module?.endpoint || "—"}</code></div>
+            <div><small>controller_preference</small><code>{(plan?.module?.controller_preference || []).join(" → ") || "—"}</code></div>
             <div><small>device_id</small><code>{valueText(plan?.module?.device_id)}</code></div>
             <div><small>automatic_off</small><code>{valueText(plan?.safety?.automatic_off)}</code></div>
             <div><small>max_pulse_ms</small><code>{valueText(plan?.safety?.max_pulse_ms)}</code></div>

@@ -16,12 +16,12 @@ _HUI_MOTOR_PLUGINS = ("motor-dri0050", "motor-tic249")
 
 
 def _hui_control_plugins(gateway: Any) -> tuple[str, ...]:
-    """Control plugins probed for readiness, valve controller first."""
-    return (_hui_valve_plugin(gateway), *_HUI_MOTOR_PLUGINS)
+    """Control plugins probed for readiness, valve alternatives first."""
+    return (*gateway_valve_controllers(gateway), *_HUI_MOTOR_PLUGINS)
 
 
 def _hui_valve_plugin(gateway: Any) -> str:
-    """Valve output module this stand actually uses (modbus-io or M5 4In8Out)."""
+    """Preferred valve output module (the first configured alternative)."""
     controllers = gateway_valve_controllers(gateway)
     return controllers[0] if controllers else MODBUS_VALVE_CONTROLLER
 
@@ -112,13 +112,39 @@ def _action_state(required: tuple[str, ...], controls: dict[str, dict[str, Any]]
     }
 
 
+def _valve_action_state(
+    controllers: tuple[str, ...],
+    controls: dict[str, dict[str, Any]],
+    *required: str,
+) -> dict[str, Any]:
+    active = next(
+        (plugin_id for plugin_id in controllers if controls.get(plugin_id, {}).get("ok")),
+        None,
+    )
+    unavailable_required = [
+        plugin_id for plugin_id in required if not controls.get(plugin_id, {}).get("ok")
+    ]
+    return {
+        "ready": active is not None and not unavailable_required,
+        "required_hardware": [*(active and [active] or list(controllers)), *required],
+        "valve_controller_alternatives": list(controllers),
+        "active_valve_controller": active,
+        "unavailable_hardware": [
+            *([] if active else list(controllers)),
+            *unavailable_required,
+        ],
+    }
+
+
 async def build_hui_readiness(
     gateway: Any,
     *,
     analog_input_health: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Fast, non-reconnecting HUI preflight with control/telemetry separation."""
-    valve_plugin = _hui_valve_plugin(gateway)
+    valve_controllers = tuple(gateway_valve_controllers(gateway))
+    if not valve_controllers:
+        valve_controllers = (MODBUS_VALVE_CONTROLLER,)
     checks = await asyncio.gather(
         *(
             _read_plugin_without_reconnect(gateway, plugin_id)
@@ -126,16 +152,26 @@ async def build_hui_readiness(
         )
     )
     controls = {check["plugin_id"]: check for check in checks}
+    valve_plugin = next(
+        (
+            plugin_id
+            for plugin_id in valve_controllers
+            if controls.get(plugin_id, {}).get("ok")
+        ),
+        valve_controllers[0],
+    )
 
     from oqlos.hardware.hui_hold import get_hui_hold_profiles
 
     hold_actions: dict[str, dict[str, Any]] = {}
     for key, profile in get_hui_hold_profiles().items():
-        required = (valve_plugin,) + (("motor-dri0050",) if float(profile["pump_pct"]) else ())
-        hold_actions[key] = _action_state(required, controls)
+        motors = (("motor-dri0050",) if float(profile["pump_pct"]) else ())
+        hold_actions[key] = _valve_action_state(valve_controllers, controls, *motors)
 
     telemetry = _telemetry_readiness(analog_input_health)
-    controls_ready = all(check["ok"] for check in controls.values())
+    controls_ready = any(
+        controls.get(plugin_id, {}).get("ok") for plugin_id in valve_controllers
+    ) and all(controls.get(plugin_id, {}).get("ok") for plugin_id in _HUI_MOTOR_PLUGINS)
     telemetry_ready = telemetry["ready"] is not False
     status = "ready" if controls_ready and telemetry_ready else "degraded"
     return {
@@ -147,11 +183,14 @@ async def build_hui_readiness(
         "telemetry": telemetry,
         "actions": {
             "holds": hold_actions,
-            "valves": _action_state((valve_plugin,), controls),
-            "artificial_lung_start": _action_state((valve_plugin, "motor-tic249"), controls),
+            "valves": _valve_action_state(valve_controllers, controls),
+            "artificial_lung_start": _valve_action_state(
+                valve_controllers, controls, "motor-tic249"
+            ),
             "artificial_lung_stop": {
                 **_action_state(("motor-tic249",), controls),
                 "best_effort_hardware": [valve_plugin],
+                "valve_controller_alternatives": list(valve_controllers),
             },
             "shutdown": {
                 "ready": True,
@@ -166,6 +205,13 @@ async def build_hui_readiness(
             "valve_controller": f"/api/v1/plugins/{valve_plugin}/health",
             "modbus_io": "/api/v1/plugins/modbus-io/health",
             "analog_inputs": "/api/v1/hardware/sensors/batch",
+        },
+        "valve_controllers": {
+            "preference": list(valve_controllers),
+            "active": valve_plugin if controls.get(valve_plugin, {}).get("ok") else None,
+            "fallback": [
+                plugin_id for plugin_id in valve_controllers if plugin_id != valve_plugin
+            ],
         },
     }
 
@@ -216,7 +262,21 @@ async def required_plugins_failure(
             *(readiness(plugin_id, reconnect=reconnect) for plugin_id in required)
         )
     )
-    unavailable = [check for check in checks if not check.get("ok")]
+    controllers = tuple(gateway_valve_controllers(gateway))
+    valve_ids = tuple(plugin_id for plugin_id in required if plugin_id in controllers)
+    strict_ids = tuple(plugin_id for plugin_id in required if plugin_id not in valve_ids)
+    by_id = {str(check.get("plugin_id") or ""): check for check in checks}
+    valve_ready = not valve_ids or any(by_id.get(plugin_id, {}).get("ok") for plugin_id in valve_ids)
+    unavailable = [
+        by_id[plugin_id]
+        for plugin_id in strict_ids
+        if not by_id.get(plugin_id, {}).get("ok")
+    ]
+    if valve_ids and not valve_ready:
+        unavailable = [
+            *[by_id.get(plugin_id, {"plugin_id": plugin_id, "ok": False}) for plugin_id in valve_ids],
+            *unavailable,
+        ]
     if not unavailable:
         return None
 

@@ -59,18 +59,18 @@ HARDWARE_REGISTRY: list[dict[str, Any]] = [
     },
     {
         "id": "io-m5-4in8out",
-        "name": "M5Stack Module 4In8Out",
+        "name": "2x M5Stack 4In8Out (16 OUT / 8 IN via CoreS3)",
         # Alternative valve stage: listed so operators see it, but a stand that
         # has not been rewired must not be pushed into live scans because of it.
         "optional": True,
         "version": "13.2",
-        "protocol": "I2C",
-        "description": "8 MOSFET outputs + 4 contact inputs - valve control (alternative to modbus-io)",
+        "protocol": "HTTP/WiFi to CoreS3, then I2C",
+        "description": "16 MOSFET outputs + 8 contact inputs on two modules - valve fallback for modbus-io",
         "repo": "m5-4in8out",
-        "digital_outputs": "OUT1-OUT8 (AO3400A MOSFET, common anode, 1A/ch, 8A total, 9-24V)",
-        "digital_inputs": "IN1-IN4 (passive dry contact only, no active signal above 5V)",
-        "interface": "I2C via Raspberry Pi /dev/i2c-1 or MCP2221A USB-I2C adapter",
-        "default_config": "address 0x45, 100 kHz; outputs 0x20+n, inputs 0x10+n, version 0xFE",
+        "digital_outputs": "OUT1-OUT16 (2x 8 AO3400A MOSFET, common anode, 1A/channel, 9-24V)",
+        "digital_inputs": "IN1-IN8 (2x 4 passive dry contact, no active signal above 5V)",
+        "interface": "BoardNet HTTP -> CoreS3 WiFi -> I2C modules 0x45 + 0x66",
+        "default_config": "CoreS3 :8080; addresses 0x45 + 0x66, 100 kHz; outputs 0x20+n, inputs 0x10+n",
         "wiki": "https://docs.m5stack.com/en/module/4in8out",
     },
 ]

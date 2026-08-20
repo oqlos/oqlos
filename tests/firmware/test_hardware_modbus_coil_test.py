@@ -44,59 +44,65 @@ def test_catalog_is_ordered_and_aliases_are_canonical(monkeypatch) -> None:
 
 
 def test_plan_blocks_when_a_coil_is_already_on(monkeypatch) -> None:
-    async def fake_read(_profile):
-        return _snapshot([False, True, False, False, False, False, False, False])
+    class FakePlugin:
+        async def execute_command(self, _command, _payload):
+            return {
+                "success": True,
+                "data": {
+                    "outputs": [False, True, False, False, False, False, False, False],
+                    "inputs": [False] * 4,
+                },
+            }
 
-    monkeypatch.setattr(coil_test, "read_modbus_profile_channels", fake_read)
-    monkeypatch.setattr(
-        coil_test,
-        "build_coil_catalog",
-        lambda states: [{"address": index, "state": value} for index, value in enumerate(states)],
-    )
+    class FakeGateway:
+        _plugin_configs = {}
+
+        def valve_controllers(self):
+            return ["io-m5-4in8out"]
+
+    async def fake_controller():
+        return "io-m5-4in8out", FakePlugin(), FakeGateway()
+
+    monkeypatch.setattr(coil_test, "_controller", fake_controller)
     plan = asyncio.run(coil_test.build_coil_test_plan())
     assert plan["ready"] is False
     assert "DO2" in plan["safety"]["blocked_reasons"][0]
+    assert plan["module"]["active_controller"] == "io-m5-4in8out"
 
 
 def test_plan_keeps_configured_identity_when_module_does_not_respond(monkeypatch) -> None:
-    async def fake_read(_profile):
+    async def fake_controller():
         raise OqlosError(
-            code="hw_modbus_no_response",
+            code="hw_m5_4in8out_no_response",
             status_code=503,
-            message="No Modbus profile modules responded",
+            message="No configured valve controller is available",
             detail={
-                "profile_id": "modbus-io",
-                "modules": [{
-                    "module_role": "modbus-io",
-                    "device_id": 2,
-                    "serial_port": "/dev/serial/by-id/io-adapter",
-                    "message": "read_all failed",
-                }],
+                "controllers": ["io-m5-4in8out", "modbus-io"],
+                "readiness": [
+                    {
+                        "plugin_id": "io-m5-4in8out",
+                        "message": "CoreS3 gateway unavailable",
+                        "endpoint": "http://192.168.188.127:8080",
+                        "transport": "http",
+                    }
+                ],
             },
         )
 
-    monkeypatch.setattr(coil_test, "read_modbus_profile_channels", fake_read)
-    monkeypatch.setattr(
-        coil_test,
-        "build_coil_catalog",
-        lambda states: [
-            {"address": index, "state": states[index] if index < len(states) else None}
-            for index in range(MODBUS_IO_COIL_COUNT)
-        ],
-    )
+    monkeypatch.setattr(coil_test, "_controller", fake_controller)
 
     plan = asyncio.run(coil_test.build_coil_test_plan())
 
     assert plan["ok"] is False
     assert plan["ready"] is False
     assert plan["error_code"] == "C2004-HW-0012"
-    assert plan["module"]["device_id"] == 2
-    assert plan["module"]["serial_port"] == "/dev/serial/by-id/io-adapter"
+    assert plan["module"]["active_controller"] == "io-m5-4in8out"
+    assert plan["module"]["endpoint"] == "http://192.168.188.127:8080"
     assert plan["safety"]["automatic_off"] is True
     assert plan["safety"]["max_pulse_ms"] == 1000
     assert plan["safety"]["blocked_reasons"] == [
-        "No Modbus profile modules responded",
-        "read_all failed",
+        "No configured valve controller is available",
+        "CoreS3 gateway unavailable",
     ]
     assert len(plan["coils"]) == MODBUS_IO_COIL_COUNT
     assert all(row["state"] is None for row in plan["coils"])
@@ -115,7 +121,7 @@ def test_pulse_always_switches_selected_coil_off(monkeypatch) -> None:
             "ok": True,
             "ready": True,
             "safety": {"blocked_reasons": []},
-            "coils": [],
+            "coils": [{"address": index} for index in range(16)],
         }
 
     async def fake_plugin():

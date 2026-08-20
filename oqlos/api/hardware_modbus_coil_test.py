@@ -6,11 +6,11 @@ import asyncio
 from typing import Any
 
 from oqlos.api.hardware_gateway import get_hardware_gateway, try_get_hardware_gateway
-from oqlos.api.hardware_modbus_channels import read_modbus_profile_channels
 from oqlos.config import get_settings
 from oqlos.errors import OqlosError
 from oqlos.hardware.modbus_io_catalog import MODBUS_IO_COIL_COUNT, build_coil_catalog
 from oqlos.hardware.power_safety import ensure_power_safe
+from oqlos.hardware.valve_controller import M5_VALVE_CONTROLLER, gateway_valve_controllers
 
 _settings = get_settings()
 _coil_test_lock = asyncio.Lock()
@@ -18,49 +18,118 @@ MIN_PULSE_MS = 100
 MAX_PULSE_MS = 1000
 
 
-def _digital_output_states(module: dict[str, Any]) -> list[bool]:
-    rows = [
-        row for row in module.get("channels") or [] if row.get("kind") == "digital_output"
-    ]
-    rows.sort(key=lambda row: int(row.get("address", 0)))
-    return [bool(row.get("value")) for row in rows[:MODBUS_IO_COIL_COUNT]]
+def _controller_issue_code(plugin_id: str | None) -> str:
+    return "hw_m5_4in8out_no_response" if plugin_id == M5_VALVE_CONTROLLER else "hw_modbus_no_response"
+
+
+async def _controller() -> tuple[str, Any, Any]:
+    gateway = get_hardware_gateway()
+    controllers = gateway_valve_controllers(gateway)
+    checks: list[dict[str, Any]] = []
+    for reconnect in (False, True):
+        for plugin_id in controllers:
+            check = await gateway.plugin_readiness(plugin_id, reconnect=reconnect)
+            checks.append(check)
+            if not check.get("ok"):
+                continue
+            plugin = await gateway._get_or_connect_plugin(plugin_id)
+            if plugin is not None:
+                return plugin_id, plugin, gateway
+        if any(check.get("ok") for check in checks):
+            break
+    raise OqlosError(
+        code=_controller_issue_code(controllers[0] if controllers else None),
+        status_code=503,
+        message="No configured valve controller is available",
+        detail={"controllers": controllers, "readiness": checks},
+    )
+
+
+def _coil_catalog(states: list[bool]) -> list[dict[str, Any]]:
+    rows = build_coil_catalog(states[:MODBUS_IO_COIL_COUNT])
+    rows.extend(
+        {
+            "sequence": address + 1,
+            "id": f"DO{address + 1}",
+            "address": address,
+            "address_hex": f"output:{address}",
+            "primary_valve_id": f"valve-{address + 1}",
+            "aliases": [f"m5_out_{address + 1}"],
+            "uses": [],
+            "state": states[address],
+        }
+        for address in range(MODBUS_IO_COIL_COUNT, len(states))
+    )
+    return rows
 
 
 async def build_coil_test_plan() -> dict[str, Any]:
     issue_code: str | None = None
     issue_message: str | None = None
+    controllers: list[str] = []
     try:
-        snapshot = await read_modbus_profile_channels("modbus-io")
-        module = (snapshot.get("modules") or [{}])[0]
+        plugin_id, plugin, gateway = await _controller()
+        controllers = gateway_valve_controllers(gateway)
+        result = await plugin.execute_command("read_io_snapshot", {})
+        if not result.get("success"):
+            raise OqlosError(
+                code=_controller_issue_code(plugin_id),
+                status_code=503,
+                message=str(result.get("error") or f"{plugin_id} snapshot failed"),
+            )
+        data = result.get("data") or {}
+        states = [bool(value) for value in (data.get("outputs") or data.get("coils") or [])]
+        inputs = [bool(value) for value in (data.get("inputs") or data.get("discrete_inputs") or [])]
+        config = gateway._plugin_configs.get(plugin_id)
+        params = config.connection_params if config is not None else {}
+        module = {
+            "module_role": plugin_id,
+            "ok": True,
+            "device_id": params.get("device_id"),
+            "endpoint": params.get("base_url") or params.get("serial_port"),
+            "transport": getattr(config, "connection_type", None),
+            "message": "Active valve controller",
+            "config_registers": [],
+            "states": states,
+            "inputs": inputs,
+        }
     except OqlosError as exc:
         # A disconnected module must keep the test fail-closed, but the plan is
         # still a read-only UI projection. Return the configured identity and
         # DO1-DO8 catalogue instead of replacing the whole view with a 503.
-        modules = exc.detail.get("modules") if isinstance(exc.detail, dict) else None
-        module = (modules or [{}])[0]
+        detail = exc.detail if isinstance(exc.detail, dict) else {}
+        configured = detail.get("controllers")
+        if isinstance(configured, list):
+            controllers = [str(item) for item in configured if str(item).strip()]
+        readiness = detail.get("readiness")
+        readiness = readiness if isinstance(readiness, list) else []
+        primary_check = next(
+            (item for item in readiness if isinstance(item, dict)),
+            {},
+        )
         module = {
-            "module_role": module.get("module_role") or "modbus-io",
+            "module_role": controllers[0] if controllers else "valve-controller",
             "ok": False,
-            "device_id": module.get("device_id", int(_settings.modbus_device_id)),
-            "serial_port": module.get("serial_port") or str(_settings.modbus_serial_port),
-            "message": module.get("message") or exc.message,
-            "config_registers": module.get("config_registers") or [],
-            "channels": [],
+            "device_id": primary_check.get("device_id"),
+            "endpoint": primary_check.get("endpoint"),
+            "transport": primary_check.get("transport"),
+            "message": str(primary_check.get("message") or exc.message),
+            "config_registers": [],
+            "states": [],
+            "inputs": [],
         }
         issue_code = exc.public_code
         issue_message = exc.message
-    states = _digital_output_states(module)
+    states = list(module.get("states") or [])
     reasons: list[str] = []
     if issue_message:
         reasons.append(issue_message)
     if not module.get("ok"):
-        module_message = str(module.get("message") or "modbus-io is unavailable")
+        module_message = str(module.get("message") or "valve controller is unavailable")
         if module_message not in reasons:
             reasons.append(module_message)
-    if module.get("ok") and len(states) != MODBUS_IO_COIL_COUNT:
-        reasons.append(
-            f"Expected {MODBUS_IO_COIL_COUNT} coil states, received {len(states)}"
-        )
+    if module.get("ok") and len(states) < MODBUS_IO_COIL_COUNT:
+        reasons.append(f"Expected at least 8 output states, received {len(states)}")
     energized = [f"DO{index + 1}" for index, value in enumerate(states) if value]
     if energized:
         reasons.append(f"Outputs already energized: {', '.join(energized)}")
@@ -80,23 +149,27 @@ async def build_coil_test_plan() -> dict[str, Any]:
         },
         "module": {
             "role": module.get("module_role", "modbus-io"),
+            "active_controller": module.get("module_role"),
+            "controller_preference": controllers,
+            "fallback_controllers": [
+                item for item in controllers if item != module.get("module_role")
+            ],
             "device_id": module.get("device_id"),
-            "serial_port": module.get("serial_port"),
+            "serial_port": module.get("endpoint"),
+            "endpoint": module.get("endpoint"),
+            "transport": module.get("transport"),
+            "output_count": len(states),
+            "input_count": len(module.get("inputs") or []),
+            "inputs": list(module.get("inputs") or []),
             "message": module.get("message"),
             "config_registers": module.get("config_registers") or [],
         },
-        "coils": build_coil_catalog(states),
+        "coils": _coil_catalog(states),
     }
 
 
 async def _plugin() -> Any:
-    plugin = await get_hardware_gateway()._get_or_connect_plugin("modbus-io")
-    if plugin is None:
-        raise OqlosError(
-            code="hw_modbus_no_response",
-            status_code=503,
-            message="modbus-io plugin unavailable",
-        )
+    _plugin_id, plugin, _gateway = await _controller()
     return plugin
 
 
@@ -114,11 +187,11 @@ async def _write_coil(plugin: Any, address: int, value: bool) -> dict[str, Any]:
 
 async def pulse_coil(payload: dict[str, Any]) -> dict[str, Any]:
     address = int(payload.get("address", -1))
-    if not 0 <= address < MODBUS_IO_COIL_COUNT:
+    if not 0 <= address < 16:
         raise OqlosError(
             code="api_modbus_wizard_invalid_request",
             status_code=422,
-            message="address must be between 0 and 7",
+            message="address must be between 0 and 15",
             detail={"payload": payload},
         )
     duration_ms = int(payload.get("duration_ms", 300))
@@ -148,16 +221,23 @@ async def pulse_coil(payload: dict[str, Any]) -> dict[str, Any]:
 
     gateway = try_get_hardware_gateway()
     if gateway is not None:
-        await ensure_power_safe(gateway, operation="modbus-io.coil-test.pulse")
+        await ensure_power_safe(gateway, operation="valve-controller.coil-test.pulse")
     async with _coil_test_lock:
         plan = await build_coil_test_plan()
         if not plan.get("ready"):
             reasons = plan.get("safety", {}).get("blocked_reasons") or []
             raise OqlosError(
-                code="hw_modbus_no_response",
+                code=_controller_issue_code(plan.get("module", {}).get("active_controller")),
                 status_code=503,
                 message="coil test preflight failed",
                 detail={"blocked_reasons": reasons, "plan": plan},
+            )
+        if address >= len(plan.get("coils") or []):
+            raise OqlosError(
+                code="api_modbus_wizard_invalid_request",
+                status_code=422,
+                message=f"DO{address + 1} is not exposed by the active controller",
+                detail={"payload": payload, "plan": plan},
             )
 
         plugin = await _plugin()
@@ -188,7 +268,7 @@ async def pulse_coil(payload: dict[str, Any]) -> dict[str, Any]:
         }
         if not payload["ok"]:
             raise OqlosError(
-                code="hw_modbus_no_response",
+                code=_controller_issue_code(plan.get("module", {}).get("active_controller")),
                 status_code=503,
                 message=str(error or "coil test did not leave outputs safe"),
                 detail=payload,
@@ -196,14 +276,14 @@ async def pulse_coil(payload: dict[str, Any]) -> dict[str, Any]:
         return payload
 
 
-def _off_operations(result: dict[str, Any]) -> list[dict[str, Any]]:
+def _off_operations(result: dict[str, Any], count: int) -> list[dict[str, Any]]:
     return [
         {
             "coil": f"DO{address + 1}",
             "ok": True,
             "result": {**dict(result), "coil": address, "value": False},
         }
-        for address in range(MODBUS_IO_COIL_COUNT)
+        for address in range(count)
     ]
 
 
@@ -212,13 +292,15 @@ async def stop_all_coils() -> dict[str, Any]:
     # Waiting on the same lock lets an in-flight pulse finish its mandatory OFF
     # without introducing a second RTU writer or a release/reacquire race.
     async with _coil_test_lock:
+        plan = await build_coil_test_plan()
+        count = max(MODBUS_IO_COIL_COUNT, len(plan.get("coils") or []))
         try:
             plugin = await _plugin()
         except OqlosError:
             raise
         except Exception as exc:
             raise OqlosError(
-                code="hw_modbus_no_response",
+                code=_controller_issue_code(plan.get("module", {}).get("active_controller")),
                 status_code=503,
                 message=str(exc),
                 detail={"operations": []},
@@ -230,11 +312,14 @@ async def stop_all_coils() -> dict[str, Any]:
             return {
                 "ok": True,
                 "method": "all_outputs_off",
-                "operations": _off_operations(broadcast.get("data") or {"all_outputs": True}),
+                "controller": plan.get("module", {}).get("active_controller"),
+                "operations": _off_operations(
+                    broadcast.get("data") or {"all_outputs": True}, count
+                ),
             }
 
         operations: list[dict[str, Any]] = []
-        for address in range(MODBUS_IO_COIL_COUNT):
+        for address in range(count):
             try:
                 result = await _write_coil(plugin, address, False)
                 operations.append({"coil": f"DO{address + 1}", "ok": True, "result": result})
@@ -243,7 +328,7 @@ async def stop_all_coils() -> dict[str, Any]:
         if not all(operation["ok"] for operation in operations):
             failed = [row["coil"] for row in operations if not row["ok"]]
             raise OqlosError(
-                code="hw_modbus_no_response",
+                code=_controller_issue_code(plan.get("module", {}).get("active_controller")),
                 status_code=503,
                 message=(
                     "Failed to de-energize "

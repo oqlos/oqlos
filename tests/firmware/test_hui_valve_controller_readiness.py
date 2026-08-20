@@ -33,6 +33,25 @@ class _Gateway:
         return True
 
 
+class _FallbackGateway(_Gateway):
+    """M5 is ready while the legacy Modbus candidate is disconnected."""
+
+    def valve_controllers(self) -> list[str]:
+        return [M5_VALVE_CONTROLLER, MODBUS_VALVE_CONTROLLER]
+
+    async def plugin_readiness(
+        self, plugin_id: str, *, reconnect: bool = True
+    ) -> dict[str, Any]:
+        self.probed.append(plugin_id)
+        ready = plugin_id != MODBUS_VALVE_CONTROLLER
+        return {
+            "ok": ready,
+            "plugin_id": plugin_id,
+            "status": "ok" if ready else "unavailable",
+            "message": "" if ready else "legacy controller disconnected",
+        }
+
+
 def test_readiness_probes_the_m5_module_instead_of_modbus() -> None:
     gateway = _Gateway()
 
@@ -60,6 +79,26 @@ def test_hold_profiles_require_the_configured_controller() -> None:
 
     for action in payload["actions"]["holds"].values():
         assert action["required_hardware"][0] == M5_VALVE_CONTROLLER
+
+
+def test_hui_uses_healthy_m5_when_legacy_modbus_is_offline(monkeypatch) -> None:
+    gateway = _FallbackGateway()
+    monkeypatch.setattr(hui_hold, "_VALVE_STAGGER_SECONDS", 0)
+
+    readiness = asyncio.run(hui_readiness.build_hui_readiness(gateway))
+    started = asyncio.run(hui_hold.start_hui_hold(gateway, "lp-pwm-plus5"))
+
+    assert readiness["actions"]["holds"]["lp-pwm-plus5"]["ready"] is True
+    assert readiness["valve_controllers"]["active"] == M5_VALVE_CONTROLLER
+    assert started["ok"] is True
+    assert M5_VALVE_CONTROLLER in gateway.probed
+    assert MODBUS_VALVE_CONTROLLER in gateway.probed
+    assert any(
+        operation.get("operation") == "set_valve"
+        and operation.get("valve_id") == "valve-5"
+        and operation.get("ok")
+        for operation in started["operations"]
+    )
 
 
 @pytest.mark.asyncio

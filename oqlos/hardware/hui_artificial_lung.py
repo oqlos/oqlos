@@ -14,6 +14,10 @@ from oqlos.hardware.hui_lung_recipe import (
     get_hui_lung_valve_id,
 )
 from oqlos.hardware.power_safety import ensure_power_safe
+from oqlos.hardware.valve_controller import (
+    M5_VALVE_CONTROLLER,
+    gateway_valve_controllers,
+)
 
 _artificial_lung_running = False
 
@@ -98,9 +102,10 @@ async def _run_tic249_reciprocate(gateway: Any) -> dict[str, Any]:
 
 async def start_hui_artificial_lung(gateway: Any) -> dict[str, Any]:
     global _artificial_lung_running
+    valve_controllers = gateway_valve_controllers(gateway)
     readiness_failure = await required_plugins_failure(
         gateway,
-        ("modbus-io", "motor-tic249"),
+        (*valve_controllers, "motor-tic249"),
         command="al-start",
         key="al-start",
     )
@@ -121,8 +126,12 @@ async def start_hui_artificial_lung(gateway: Any) -> dict[str, Any]:
                 "error": "Lung valve failed",
                 "error_code": "C2004-HW-0012",
                 "status_code": 503,
-                "issue_code": "hw_modbus_no_response",
-                "unavailable_hardware_ids": ["modbus-io"],
+                "issue_code": (
+                    "hw_m5_4in8out_no_response"
+                    if valve_controllers and valve_controllers[0] == M5_VALVE_CONTROLLER
+                    else "hw_modbus_no_response"
+                ),
+                "unavailable_hardware_ids": list(valve_controllers),
                 "safe_to_retry": True,
                 "operations": [valve],
             }
@@ -131,8 +140,8 @@ async def start_hui_artificial_lung(gateway: Any) -> dict[str, Any]:
             **valve,
             "skipped": True,
             "warning": (
-                f"Valve {valve_id} unavailable (modbus-io); continuing AL with Tic249 only. "
-                "Fix RS485 / Waveshare IO for full circuit."
+                f"Valve {valve_id} unavailable ({', '.join(valve_controllers)}); "
+                "continuing AL with Tic249 only. Fix the configured valve controller."
             ),
         }
 
@@ -197,9 +206,10 @@ async def stop_hui_artificial_lung(gateway: Any) -> dict[str, Any]:
     # without reconnect, then either close the valve or skip it immediately.
     lung_task = asyncio.create_task(gateway.stop_lung())
     valve_id = get_hui_lung_valve_id()
+    valve_controllers = gateway_valve_controllers(gateway)
     readiness = await required_plugins_failure(
         gateway,
-        ("modbus-io",),
+        valve_controllers,
         command="al-stop",
         key="al-stop",
         check_power=False,
@@ -212,7 +222,7 @@ async def stop_hui_artificial_lung(gateway: Any) -> dict[str, Any]:
             "valve_id": valve_id,
             "value": False,
             "skipped": True,
-            "warning": "Valve close skipped (modbus-io offline); Tic stop applied",
+            "warning": "Valve close skipped (all valve controllers offline); Tic stop applied",
             "result": readiness,
         }
     else:
@@ -225,7 +235,7 @@ async def stop_hui_artificial_lung(gateway: Any) -> dict[str, Any]:
         valve = {
             **valve,
             "skipped": True,
-            "warning": "Valve close skipped (modbus-io offline); Tic stop applied",
+            "warning": "Valve close skipped (all valve controllers offline); Tic stop applied",
         }
         valve_ok = True
     ok = bool(lung_ok) and valve_ok

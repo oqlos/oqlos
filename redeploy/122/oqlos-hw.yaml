@@ -10,6 +10,19 @@
 schemaVersion: hardware-configuration-v1
 
 plugins:
+  # Dwa M5Stack Module 4In8Out podłączone do CoreS3; OqlOS steruje nimi przez WiFi.
+  # Drugi moduł musi mieć jednorazowo ustawiony adres 0x66 przed połączeniem obu na I2C.
+  io-m5-4in8out:
+    enabled: true
+    connection_type: http
+    connection_params:
+      base_url: http://192.168.188.127:8080
+      token: ""
+    timeout: 2.0
+    retry_count: 3
+    peripherals:
+      state: {name: M5 outputs, type: valve, scale: {min: 0, max: 1, default: 0, unit: ""}, raster: [0, 1], conversion: {type: none}}
+
   # Legacy Waveshare Modbus ADC. Pressure inputs now use usb-adc-stack:
   # MCP2221A over USB (AI01) and DFR1184 over Raspberry Pi UART (AI02/AI03).
   # Keep the schema entry for compatibility, but never let deploy autodetection
@@ -47,7 +60,7 @@ plugins:
   modbus-io:
     enabled: true
     metadata:
-      required: true
+      required: false
     connection_type: modbus-rtu
     connection_params:
       # Live BoardNet adapter (Waveshare RS485 USB, FTDI A5069RR4).
@@ -74,6 +87,10 @@ plugins:
       speed: {name: speed, type: lung, scale: {min: 0, max: 1000, default: 1000, unit: "steps/s"}, conversion: {type: none}}
 
 profiles:
+  hardware:
+    # CoreS3 + dual M122 is primary. Waveshare is the automatic fallback;
+    # HUI requires at least one member of this ordered alternative group.
+    valve_controller: [io-m5-4in8out, modbus-io]
   hui:
     holds:
       head-inflate: {valves_on: [valve-5, valve-2], pump_pct: 70}

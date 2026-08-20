@@ -708,6 +708,10 @@ class PluginHardwareGateway:
             logger.error("No valve output module is enabled")
             return False
 
+        # Prefer already-connected candidates, but keep the regular lazy-connect
+        # path for direct commands and startup races. HUI preflight normally makes
+        # the active controller available before this method is reached.
+        await self.ensure_initialized()
         for plugin_id in controllers:
             await ensure_power_safe(
                 self,
@@ -715,9 +719,14 @@ class PluginHardwareGateway:
                 safe_state=not value,
             )
 
-            plugin = await self._get_or_connect_plugin(plugin_id)
-            if not plugin:
-                logger.warning("Valve controller %s not available", plugin_id)
+            plugin = self._plugins.get(plugin_id)
+            if plugin is None:
+                plugin = await self._get_or_connect_plugin(plugin_id)
+            if plugin is None:
+                logger.warning(
+                    "Valve controller %s is disconnected; using the next fallback",
+                    plugin_id,
+                )
                 continue
 
             try:
@@ -728,6 +737,7 @@ class PluginHardwareGateway:
                 _log_boundary_failure(
                     logger, "PluginHardwareGateway.set_valve failed", exc
                 )
+                self._plugins.pop(plugin_id, None)
                 continue
             if result.get("success", False):
                 return True

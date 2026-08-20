@@ -65,7 +65,16 @@ def modbus_plugins_need_repair(identify: dict[str, Any] | None) -> bool:
     platform = payload.get("platform") if isinstance(payload.get("platform"), dict) else {}
     analog_driver = str(platform.get("analog_input_driver_role") or "").strip().lower()
     modbus_adc_driver = str(platform.get("modbus_adc_driver_role") or "").strip().lower()
-    required_plugins = ["modbus-io"]
+    valve_controllers = ("io-m5-4in8out", "modbus-io")
+    if not any(
+        not plugin_needs_repair(
+            key,
+            health.get(key) if isinstance(health.get(key), dict) else {},
+        )
+        for key in valve_controllers
+    ):
+        return True
+    required_plugins: list[str] = []
     # The disabled compatibility entry is healthy-by-design when another ADC
     # stack owns the analog inputs. Keep the legacy behavior if older identify
     # payloads do not expose driver-role metadata.

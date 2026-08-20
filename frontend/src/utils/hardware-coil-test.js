@@ -9,7 +9,7 @@ export function nextUntestedCoil(coils = [], results = {}) {
 
 export function buildCoilTestReport(plan, results, pulses) {
   return {
-    schema: "oqlos-boardnet-coil-test-v1",
+    schema: "oqlos-boardnet-valve-controller-test-v2",
     generated_at: new Date().toISOString(),
     boardnet: {
       mode: plan?.mode || "unknown",
@@ -68,7 +68,7 @@ export function coilPulseIntentUrlArgs(coil, role) {
 export function coilStopIntentUrlArgs(role) {
   return {
     COMMAND: "coil-test-stop",
-    COILS: "DO1-DO8",
+    COILS: "ACTIVE-CONTROLLER",
     REQUEST_ROLE: parseConnectRole(role) || urlToken(role),
   };
 }

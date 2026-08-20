@@ -186,6 +186,25 @@ def build_diagnosis_report(identify: dict[str, Any]) -> DiagnosisReport:
     c2004_root = os.environ.get("C2004_ROOT", "/home/tom/github/maskservice/c2004")
     devices = _diagnosis_devices(identify, health, adapters, platform, topology, host_recover)
 
+    valve_ids = ("io-m5-4in8out", "modbus-io")
+    healthy_valves = [
+        plugin_id
+        for plugin_id in valve_ids
+        if plugin_is_healthy(
+            health.get(plugin_id) if isinstance(health.get(plugin_id), dict) else None
+        )
+    ]
+    if healthy_valves:
+        for plugin_id in valve_ids:
+            device = devices.get(plugin_id)
+            if device is not None and device.status == "error":
+                device.status = "degraded"
+                device.issues.append(
+                    "Kontroler zapasowy jest niedostępny; zawory obsługuje "
+                    + healthy_valves[0]
+                    + "."
+                )
+
     modbus_bad = modbus_plugins_need_repair(identify)
     motors_bad = any(devices[d].status == "error" for d in ("motor-tic249", "motor-dri0050"))
     global_actions = build_report_global_actions(modbus_bad, motors_bad, c2004_root, host_recover)
