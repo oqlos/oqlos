@@ -267,17 +267,39 @@ def _host_actions_from_report(
     return host
 
 
+def _has_safe_auto_action(report: DiagnosisReport, plugin_id: str) -> bool:
+    """The report itself offers a zero-risk in-process repair for this device."""
+    device = report.devices.get(plugin_id)
+    if device is None:
+        return False
+    return any(
+        action.auto_executable
+        and action.scope == "oqlos"
+        and action.actuation_risk in (None, "none")
+        for action in device.recommended_actions
+    )
+
+
 def _recover_targets(
     report: DiagnosisReport,
     health: dict[str, Any],
     *,
     plugin_ids: tuple[str, ...] | None = None,
 ) -> list[str]:
-    """Only plugins marked error in diagnosis AND unhealthy in live health."""
+    """Plugins that diagnosis wants repaired AND that are unhealthy in live health.
+
+    A device that lost its only role is reported `degraded`, not `error` — a
+    valve module demoted to fallback by the M5 migration is the live example. It
+    still advertises `auto_executable` reconnect actions, so filtering on `error`
+    alone left the operator with a repair button that reconnected nothing.
+    """
     allowed = plugin_ids or _OQLOS_SAFE_PLUGINS
     targets: list[str] = []
     for pid in allowed:
-        if _report_device_status(report, pid) != "error":
+        status = _report_device_status(report, pid)
+        if status != "error" and not (
+            status == "degraded" and _has_safe_auto_action(report, pid)
+        ):
             continue
         entry = health.get(pid) if isinstance(health.get(pid), dict) else {}
         if plugin_is_healthy(entry):

@@ -96,6 +96,64 @@ def test_recover_targets_skip_devices_ok_in_report():
     assert targets == ["motor-dri0050"]
 
 
+def test_recover_targets_include_degraded_device_with_a_safe_auto_action():
+    """Regression: after the M5 migration modbus-io is `degraded`, not `error`, so
+    its advertised auto-executable reconnect was never executed."""
+    from oqlos.hardware.diagnosis import DiagnosisReport, DeviceDiagnosis, _recover_targets
+    from oqlos.hardware.diagnosis_types import DiagnosisAction
+
+    reconnect = DiagnosisAction(
+        id="modbus-io-reconnect",
+        device_id="modbus-io",
+        label="Reconnect plugin modbus-io (OqlOS)",
+        kind="oqlos",
+        priority=15,
+        auto_executable=True,
+        scope="oqlos",
+        actuation_risk="none",
+    )
+    manual = DiagnosisAction(
+        id="tic249-limit-wiring",
+        device_id="motor-tic249",
+        label="Check the reverse limit switch",
+        kind="manual",
+        priority=12,
+        auto_executable=False,
+        scope="host",
+        actuation_risk="none",
+    )
+    report = DiagnosisReport(
+        environment={},
+        devices={
+            "modbus-io": DeviceDiagnosis(
+                device_id="modbus-io",
+                display_name="IO",
+                status="degraded",
+                health_summary="Plugin health is unavailable",
+                recommended_actions=[reconnect],
+            ),
+            "motor-tic249": DeviceDiagnosis(
+                device_id="motor-tic249",
+                display_name="Tic",
+                status="degraded",
+                health_summary="Plugin is healthy",
+                recommended_actions=[manual],
+            ),
+        },
+        global_actions=[],
+        ok=True,
+        message="",
+    )
+    health = {
+        "modbus-io": {"status": "error", "compatible": False, "message": "not connected"},
+        "motor-tic249": {"status": "error", "compatible": False, "message": "position uncertain"},
+    }
+
+    # Only the device whose repair is in-process and risk-free is reconnected;
+    # a manual host action stays a recommendation.
+    assert _recover_targets(report, health) == ["modbus-io"]
+
+
 def test_still_failed_plugins_skip_intentionally_disabled_modbus_adc():
     from oqlos.hardware.diagnosis import (
         DiagnosisReport,
