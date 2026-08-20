@@ -55,6 +55,35 @@ def _configured_hui_lung_profile() -> dict[str, Any]:
     return dict(lung) if isinstance(lung, dict) else {}
 
 
+def _oql_hui_lung_profile() -> dict[str, Any]:
+    """OQL SET profile from layers/hardware/hui-profiles.oql (preferred)."""
+    try:
+        from oqlos.hardware.hui_profiles_oql import load_oql_hui_lung_profile
+
+        return load_oql_hui_lung_profile()
+    except Exception:
+        return {}
+
+
+def _effective_hui_lung_profile() -> dict[str, Any]:
+    configured = _configured_hui_lung_profile()
+    oql = _oql_hui_lung_profile()
+
+    # Human-readable OQL fields must also replace equivalent raw/camelCase YAML
+    # fields. Otherwise an old raw ``speed`` or ``steps`` entry would silently
+    # win in get_hui_lung_reciprocate_args().
+    if "speed_steps_per_second" in oql:
+        for key in ("speed", "target_velocity", "targetVelocity", "speedStepsPerSecond"):
+            configured.pop(key, None)
+    if "stroke_steps" in oql:
+        for key in ("steps", "strokeSteps"):
+            configured.pop(key, None)
+    if "speed_steps_per_second" in oql or "ramp_seconds" in oql:
+        for key in ("acceleration", "acceleration_raw", "accelerationRaw"):
+            configured.pop(key, None)
+    return {**configured, **oql}
+
+
 def _int_from_body(body: dict[str, Any], *keys: str, fallback: int) -> int:
     for key in keys:
         if key not in body:
@@ -85,14 +114,34 @@ def _text_from_body(body: dict[str, Any], *keys: str, fallback: str) -> str:
     return fallback
 
 
+def _bool_from_body(body: dict[str, Any], *keys: str, fallback: bool) -> bool:
+    for key in keys:
+        if key not in body:
+            continue
+        value = body[key]
+        if isinstance(value, bool):
+            return value
+        token = str(value or "").strip().lower()
+        if token in {"1", "true", "yes", "on"}:
+            return True
+        if token in {"0", "false", "no", "off"}:
+            return False
+    return fallback
+
+
 def get_hui_lung_valve_id() -> str:
-    body = _configured_hui_lung_profile()
+    body = _effective_hui_lung_profile()
     return _text_from_body(body, "valve_id", "valveId", fallback=HUI_AL_LUNG_VALVE_ID)
+
+
+def get_hui_lung_stop_at_limit(*, fallback: bool) -> bool:
+    body = _effective_hui_lung_profile()
+    return _bool_from_body(body, "stop_at_limit", "stopAtLimit", fallback=fallback)
 
 
 def get_hui_lung_reciprocate_args() -> dict[str, Any]:
     defaults = dict(DEFAULT_HUI_LUNG_RECIPROCATE_ARGS)
-    body = _configured_hui_lung_profile()
+    body = _effective_hui_lung_profile()
     args = (
         body.get("reciprocate_args")
         or body.get("reciprocateArgs")

@@ -1,4 +1,4 @@
-"""Load HUI hold/valve recipes from OQL SET keys.
+"""Load HUI hold/valve/lung recipes from OQL SET keys.
 
 Source file (default): ``layers/hardware/hui-profiles.oql`` under
 ``OQLOS_SCENARIOS_DIR`` (or paths listed in ``OQLOS_HUI_PROFILES_OQL``).
@@ -8,6 +8,7 @@ Keys:
   hui.hold.<key>.pump_pct    = float
   hui.valve.<key>.valve_id   = valve id
   hui.valve.<key>.value      = true|false|on|off
+  hui.lung.<field>            = artificial-lung motion/stop setting
 """
 
 from __future__ import annotations
@@ -25,6 +26,7 @@ _SET_RE = re.compile(
 
 _HOLD_PREFIX = "hui.hold."
 _VALVE_PREFIX = "hui.valve."
+_LUNG_PREFIX = "hui.lung."
 
 
 def _scenarios_roots() -> list[Path]:
@@ -74,12 +76,12 @@ def _profile_file_candidates() -> list[Path]:
 
 
 def parse_hui_profile_sets(text: str) -> dict[str, str]:
-    """Return raw SET key → value map for hui.hold.* / hui.valve.* only."""
+    """Return raw SET key → value map for supported HUI profile keys."""
     values: dict[str, str] = {}
     for match in _SET_RE.finditer(text or ""):
         key = match.group(1).strip()
         val = match.group(2).strip()
-        if key.startswith(_HOLD_PREFIX) or key.startswith(_VALVE_PREFIX):
+        if key.startswith((_HOLD_PREFIX, _VALVE_PREFIX, _LUNG_PREFIX)):
             values[key] = val
     return values
 
@@ -170,6 +172,45 @@ def build_valve_specs_from_sets(sets: dict[str, str]) -> dict[str, dict[str, Any
     return specs
 
 
+def build_lung_profile_from_sets(sets: dict[str, str]) -> dict[str, Any]:
+    """Build a partial artificial-lung profile from human-readable OQL values."""
+    profile: dict[str, Any] = {}
+    text_fields = {"valve_id", "direction", "start_direction", "limit_mode"}
+    positive_integer_fields = {
+        "steps",
+        "stroke_steps",
+        "speed_steps_per_second",
+        "max_steps_per_second",
+        "cycles",
+    }
+    non_negative_float_fields = {"pause", "ramp_seconds"}
+
+    for key, val in sets.items():
+        if not key.startswith(_LUNG_PREFIX):
+            continue
+        field = key[len(_LUNG_PREFIX) :].strip().lower()
+        if field in text_fields:
+            value = str(val or "").strip()
+            if value:
+                profile[field] = value
+        elif field in positive_integer_fields:
+            try:
+                value = int(str(val).strip())
+            except (TypeError, ValueError):
+                continue
+            if value > 0:
+                profile[field] = value
+        elif field in non_negative_float_fields:
+            value = _coerce_float(val)
+            if value is not None and value >= 0:
+                profile[field] = value
+        elif field == "stop_at_limit":
+            value = _coerce_bool(val)
+            if value is not None:
+                profile[field] = value
+    return profile
+
+
 @lru_cache(maxsize=8)
 def _load_sets_from_disk(signature: str) -> dict[str, str]:
     # signature forces cache bust when mtimes change
@@ -205,6 +246,11 @@ def load_oql_hui_hold_profiles() -> dict[str, dict[str, Any]]:
 def load_oql_hui_valve_specs() -> dict[str, dict[str, Any]]:
     sets = _load_sets_from_disk(_disk_signature())
     return build_valve_specs_from_sets(sets)
+
+
+def load_oql_hui_lung_profile() -> dict[str, Any]:
+    sets = _load_sets_from_disk(_disk_signature())
+    return build_lung_profile_from_sets(sets)
 
 
 def clear_oql_hui_profiles_cache() -> None:

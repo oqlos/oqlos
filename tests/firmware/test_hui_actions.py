@@ -304,6 +304,7 @@ def test_hui_artificial_lung_fails_fast_before_motion_when_valve_is_unavailable(
 
 
 def test_hui_artificial_lung_recipe_can_be_overridden_from_hardware_configuration(monkeypatch) -> None:
+    monkeypatch.setattr(hui_lung_recipe, "_oql_hui_lung_profile", lambda: {})
     monkeypatch.setattr(
         hui_lung_recipe,
         "_configured_hui_lung_profile",
@@ -350,6 +351,7 @@ def test_stop_hui_artificial_lung_closes_the_configured_valve() -> None:
 
 def test_stop_hui_artificial_lung_uses_overridden_valve(monkeypatch) -> None:
     """Regression: stop must close whichever valve start would have opened, not the hardcoded default."""
+    monkeypatch.setattr(hui_lung_recipe, "_oql_hui_lung_profile", lambda: {})
     monkeypatch.setattr(
         hui_lung_recipe,
         "_configured_hui_lung_profile",
@@ -385,6 +387,7 @@ def test_stop_hui_artificial_lung_exposes_structured_hardware_failure() -> None:
 
 def test_hui_artificial_lung_start_failure_cleans_up_same_valve_it_opened(monkeypatch) -> None:
     """Regression: cleanup-on-failure must close the same (possibly overridden) valve it opened."""
+    monkeypatch.setattr(hui_lung_recipe, "_oql_hui_lung_profile", lambda: {})
     monkeypatch.setattr(
         hui_lung_recipe,
         "_configured_hui_lung_profile",

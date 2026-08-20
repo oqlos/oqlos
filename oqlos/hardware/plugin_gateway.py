@@ -960,8 +960,13 @@ class PluginHardwareGateway:
 
     async def stop_lung(self) -> bool:
         """Stop motion and release Tic249 coils according to the motor2 idle policy."""
+        from oqlos.hardware.hui_lung_recipe import get_hui_lung_stop_at_limit
+
+        stop_at_limit = get_hui_lung_stop_at_limit(
+            fallback=self.motor2_stop_at_limit
+        )
         stop_params: dict[str, Any] = {}
-        if self.motor2_stop_at_limit:
+        if stop_at_limit:
             stop_params["stop_mode"] = "reach_limit"
         stopped = await self._execute_lung_bool_command(
             "stop",
@@ -971,7 +976,7 @@ class PluginHardwareGateway:
         )
         if not self.motor2_deenergize_on_stop:
             return stopped
-        if self.motor2_stop_at_limit:
+        if stop_at_limit:
             return stopped
         deenergized = await self.disable_lung()
         return stopped and deenergized

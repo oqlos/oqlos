@@ -125,6 +125,10 @@ def test_apply_modbus_user_settings_reconnects_selected_plugin(monkeypatch) -> N
 
 
 def test_stop_lung_releases_coils_for_deenergized_idle(monkeypatch) -> None:
+    monkeypatch.setattr(
+        "oqlos.hardware.hui_lung_recipe.get_hui_lung_stop_at_limit",
+        lambda *, fallback: fallback,
+    )
     gateway = PluginHardwareGateway(mode="mock")
     gateway.mode = "real"
     gateway._motor2_runtime = {
@@ -144,6 +148,10 @@ def test_stop_lung_releases_coils_for_deenergized_idle(monkeypatch) -> None:
 
 
 def test_stop_lung_immediate_stop_still_deenergizes_when_configured(monkeypatch) -> None:
+    monkeypatch.setattr(
+        "oqlos.hardware.hui_lung_recipe.get_hui_lung_stop_at_limit",
+        lambda *, fallback: fallback,
+    )
     gateway = PluginHardwareGateway(mode="mock")
     gateway.mode = "real"
     gateway._motor2_runtime = {
@@ -162,7 +170,34 @@ def test_stop_lung_immediate_stop_still_deenergizes_when_configured(monkeypatch)
     assert calls == [("stop", {}), ("energize", {"enable": False})]
 
 
+def test_stop_lung_oql_profile_overrides_yaml_reach_limit(monkeypatch) -> None:
+    monkeypatch.setattr(
+        "oqlos.hardware.hui_lung_recipe.get_hui_lung_stop_at_limit",
+        lambda *, fallback: False,
+    )
+    gateway = PluginHardwareGateway(mode="mock")
+    gateway.mode = "real"
+    gateway._motor2_runtime = {
+        "idleState": "deenergized",
+        "deenergizeOnStop": True,
+        "stopAtLimit": True,
+    }
+    calls: list[tuple[str, dict]] = []
+
+    async def _execute(command: str, params: dict, **_kwargs) -> bool:
+        calls.append((command, params))
+        return True
+
+    monkeypatch.setattr(gateway, "_execute_lung_bool_command", _execute)
+    assert asyncio.run(gateway.stop_lung()) is True
+    assert calls == [("stop", {}), ("energize", {"enable": False})]
+
+
 def test_stop_lung_can_preserve_explicit_holding_current(monkeypatch) -> None:
+    monkeypatch.setattr(
+        "oqlos.hardware.hui_lung_recipe.get_hui_lung_stop_at_limit",
+        lambda *, fallback: fallback,
+    )
     gateway = PluginHardwareGateway(mode="mock")
     gateway.mode = "real"
     gateway._motor2_runtime = {"idleState": "holding", "deenergizeOnStop": False}
