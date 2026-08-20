@@ -181,7 +181,8 @@ def add_tic249_device_actions(
         if not reverse and not forward:
             dev.issues.append(
                 "Pozycja silnika niepewna i żadna krańcówka nie jest aktywna — "
-                "sprawdź SDA (reverse) oraz homing przed ruchem AL."
+                "sprawdź krańcówkę reverse, mapę pinów OQL/NVM oraz homing "
+                "przed ruchem AL."
             )
         else:
             dev.issues.append("Pozycja silnika niepewna — wykonaj homing do krańcówki.")
@@ -196,7 +197,7 @@ def add_tic249_device_actions(
             DiagnosisAction(
                 id="tic249-limit-wiring",
                 device_id=dev.device_id,
-                label="Sprawdź krańcówkę reverse (SDA) i NVM pinów Tic249",
+                label="Sprawdź krańcówkę reverse i mapę pinów OQL/NVM Tic249",
                 kind="manual",
                 priority=12,
                 auto_executable=False,

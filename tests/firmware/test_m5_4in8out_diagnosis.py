@@ -144,7 +144,8 @@ def test_connected_tic249_with_uncertain_position_is_degraded() -> None:
     device = devices["motor-tic249"]
 
     assert device.status == "degraded"
-    assert any("SDA" in issue for issue in device.issues)
+    assert any("mapę pinów OQL/NVM" in issue for issue in device.issues)
+    assert all("SDA" not in issue and "SCL" not in issue for issue in device.issues)
     assert any(action.code == "hw_tic249_position_uncertain" for action in device.recommended_actions)
 
 
