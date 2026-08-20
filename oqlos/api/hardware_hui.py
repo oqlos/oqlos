@@ -9,6 +9,7 @@ from fastapi import APIRouter
 
 from oqlos.api import hardware_platform as platform
 from oqlos.api.hardware_gateway import get_hardware_gateway
+from oqlos.api.hardware_hui_profile_source import router as hui_profile_source_router
 from oqlos.api.hardware_identify import _analog_input_health
 from oqlos.errors import OqlosError
 from oqlos.errors.c2004_catalog_generated import CATALOG
@@ -24,6 +25,7 @@ from oqlos.hardware.hui_actions import (
 )
 
 router = APIRouter(tags=["hardware-hui"])
+router.include_router(hui_profile_source_router)
 
 _SAFE_PLUGIN_ID_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,63}")
 

@@ -75,6 +75,14 @@ def _profile_file_candidates() -> list[Path]:
     return out
 
 
+def resolve_oql_hui_profiles_path() -> Path:
+    """Return the profile source used by this runtime, preferring an existing file."""
+    candidates = _profile_file_candidates()
+    if not candidates:
+        raise FileNotFoundError("OQL HUI profiles are disabled")
+    return next((path for path in candidates if path.is_file()), candidates[0])
+
+
 def parse_hui_profile_sets(text: str) -> dict[str, str]:
     """Return raw SET key → value map for supported HUI profile keys."""
     values: dict[str, str] = {}
