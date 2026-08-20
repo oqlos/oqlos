@@ -4,7 +4,9 @@ Lung plugin - Pololu Tic T249 stepper motor for artificial lung integration.
 
 from __future__ import annotations
 
+import asyncio
 import logging
+import time
 from typing import Any
 
 import httpx
@@ -24,6 +26,7 @@ logger = logging.getLogger(__name__)
 
 
 _REACH_LIMIT_STOP_TIMEOUT_SECONDS = 14.0
+_RUNTIME_STATUS_CACHE_SECONDS = 0.2
 
 
 def _lung_failure(reason: str, *, status_code: int = 503) -> dict[str, Any]:
@@ -52,6 +55,41 @@ class LungPlugin(HardwarePlugin):
         self._client: httpx.AsyncClient | None = None
         self._base_url = self.config.connection_params.get("base_url", "http://localhost:8205").rstrip("/")
         self._health_endpoint = "/health"
+        self._runtime_status_cache: dict[str, Any] | None = None
+        self._runtime_status_cached_at = 0.0
+        self._runtime_status_lock = asyncio.Lock()
+
+    def _invalidate_runtime_status(self) -> None:
+        self._runtime_status_cache = None
+        self._runtime_status_cached_at = 0.0
+
+    @staticmethod
+    def _copy_status_result(result: dict[str, Any]) -> dict[str, Any]:
+        copied = dict(result)
+        if isinstance(result.get("data"), dict):
+            copied["data"] = dict(result["data"])
+        if isinstance(result.get("upstream"), dict):
+            copied["upstream"] = dict(result["upstream"])
+        return copied
+
+    async def _runtime_status_result(self) -> dict[str, Any]:
+        """Coalesce and briefly cache the USB-heavy Tic status request."""
+        if not self._client:
+            return _lung_failure("plugin-unavailable")
+        now = time.monotonic()
+        cached = self._runtime_status_cache
+        if cached is not None and now - self._runtime_status_cached_at < _RUNTIME_STATUS_CACHE_SECONDS:
+            return self._copy_status_result(cached)
+
+        async with self._runtime_status_lock:
+            now = time.monotonic()
+            cached = self._runtime_status_cache
+            if cached is not None and now - self._runtime_status_cached_at < _RUNTIME_STATUS_CACHE_SECONDS:
+                return self._copy_status_result(cached)
+            result = await http_get_command(self._client, self._base_url, "/api/status")
+            self._runtime_status_cache = self._copy_status_result(result)
+            self._runtime_status_cached_at = time.monotonic()
+            return self._copy_status_result(result)
 
     def validate_config(self) -> list[str]:
         """Validate lung-specific configuration."""
@@ -100,6 +138,7 @@ class LungPlugin(HardwarePlugin):
 
     async def disconnect(self) -> None:
         """Disconnect from lung motor service."""
+        self._invalidate_runtime_status()
         await disconnect_http_plugin(self, "lung motor")
 
     async def _health_check_http(self) -> PluginHealth:
@@ -187,31 +226,25 @@ class LungPlugin(HardwarePlugin):
         if not self._client:
             return None
         try:
-            resp = await self._client.get(f"{self._base_url}/api/status")
+            result = await self._runtime_status_result()
         except LUNG_OPERATION_ERRORS:
             return None
-        try:
-            data = resp.json()
-        except LUNG_PAYLOAD_ERRORS:
-            return {
-                "success": False,
-                "error": "Lung motor runtime status is invalid",
-                "code": "C2004-HW-0012",
-                "error_code": "C2004-HW-0012",
-            }
-        if not isinstance(data, dict):
-            data = {}
-        if resp.status_code >= 300:
-            # A reachable sidecar can still have a detached USB device.  Do
-            # not turn its Problem Details response into ``None`` because the
-            # caller treats missing optional runtime data as healthy.
-            data.setdefault("success", False)
-            data.setdefault("status_code", resp.status_code)
-            data.setdefault(
-                "error",
-                data.get("detail") or f"Lung motor status returned HTTP {resp.status_code}",
-            )
-        return data
+        data = result.get("data")
+        if result.get("success") is True and isinstance(data, dict):
+            return dict(data)
+        upstream = result.get("upstream")
+        failure = dict(upstream) if isinstance(upstream, dict) else {}
+        failure.setdefault("success", False)
+        failure.setdefault(
+            "error",
+            str(result.get("error") or "Lung motor runtime status is invalid"),
+        )
+        failure.setdefault("code", str(result.get("code") or "C2004-HW-0012"))
+        failure.setdefault(
+            "error_code", str(result.get("error_code") or "C2004-HW-0012")
+        )
+        failure.setdefault("status_code", int(result.get("status_code") or 503))
+        return failure
 
     @staticmethod
     def _runtime_block_reason(status: dict[str, Any] | None) -> str | None:
@@ -304,6 +337,7 @@ class LungPlugin(HardwarePlugin):
                 payload["issue_code"] = "hw_tic249_position_uncertain"
             return payload
 
+        self._invalidate_runtime_status()
         resp = await http_post_command(
             self._client,
             self._base_url,
@@ -324,6 +358,7 @@ class LungPlugin(HardwarePlugin):
         blocked_reason = self._runtime_block_reason(runtime)
         if blocked_reason:
             return _lung_failure(blocked_reason)
+        self._invalidate_runtime_status()
         return await http_post_command(
             self._client,
             self._base_url,
@@ -338,6 +373,7 @@ class LungPlugin(HardwarePlugin):
         reach_limit = params.get("stop_mode") == "reach_limit" or params.get("stop_at_limit")
         if reach_limit:
             payload["stop_mode"] = "reach_limit"
+        self._invalidate_runtime_status()
         return await http_post_command(
             self._client,
             self._base_url,
@@ -361,6 +397,7 @@ class LungPlugin(HardwarePlugin):
         payload = {"position": position}
         if speed is not None:
             payload["speed"] = speed
+        self._invalidate_runtime_status()
         return await http_post_command(self._client, self._base_url, "/api/move", json_body=payload)
 
     async def _handle_move_usb(self, params: dict[str, Any]) -> dict[str, Any]:
@@ -371,6 +408,7 @@ class LungPlugin(HardwarePlugin):
     async def _handle_energize_http(self, params: dict[str, Any]) -> dict[str, Any]:
         """Handle energize command via HTTP."""
         enable = params.get("enable", True)
+        self._invalidate_runtime_status()
         return await http_post_command(
             self._client,
             self._base_url,
@@ -385,7 +423,7 @@ class LungPlugin(HardwarePlugin):
 
     async def _handle_status_http(self) -> dict[str, Any]:
         """Handle status command via HTTP."""
-        return await http_get_command(self._client, self._base_url, "/api/status")
+        return await self._runtime_status_result()
 
     async def _handle_status_usb(self) -> dict[str, Any]:
         """Handle status command via USB (placeholder)."""

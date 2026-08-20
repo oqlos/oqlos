@@ -123,6 +123,56 @@ def test_invalid_runtime_json_blocks_motion_with_catalogued_failure() -> None:
     assert client.posted is False
 
 
+def test_status_requests_are_coalesced_and_cached() -> None:
+    class Client:
+        def __init__(self) -> None:
+            self.get_calls = 0
+
+        async def get(self, _url: str) -> _Response:
+            self.get_calls += 1
+            await asyncio.sleep(0.01)
+            return _Response({"connected": True, "forward_limit_active": False})
+
+    async def run() -> tuple[list[dict], int]:
+        client = Client()
+        plugin = _plugin(client)
+        results = await asyncio.gather(
+            plugin.execute_command("status", {}),
+            plugin.execute_command("status", {}),
+        )
+        await plugin.execute_command("status", {})
+        return results, client.get_calls
+
+    results, calls = asyncio.run(run())
+
+    assert calls == 1
+    assert all(result["success"] is True for result in results)
+
+
+def test_motor_command_invalidates_cached_status() -> None:
+    class Client:
+        def __init__(self) -> None:
+            self.get_calls = 0
+
+        async def get(self, _url: str) -> _Response:
+            self.get_calls += 1
+            return _Response({"connected": True, "forward_limit_active": False})
+
+        async def post(self, _url: str, json: object = None) -> _Response:
+            return _Response({"success": True})
+
+    async def run() -> int:
+        client = Client()
+        plugin = _plugin(client)
+        await plugin.execute_command("status", {})
+        await plugin.execute_command("status", {})
+        await plugin.execute_command("energize", {"enable": True})
+        await plugin.execute_command("status", {})
+        return client.get_calls
+
+    assert asyncio.run(run()) == 2
+
+
 def test_command_sanitizes_expected_transport_failure(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
