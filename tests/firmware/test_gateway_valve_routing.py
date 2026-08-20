@@ -118,6 +118,7 @@ async def test_safe_off_reaches_every_enabled_controller(
     _enable(gateway, **{MODBUS_VALVE_CONTROLLER: True, M5_VALVE_CONTROLLER: True})
     plugins = {plugin_id: _FakePlugin(plugin_id) for plugin_id in (MODBUS_VALVE_CONTROLLER, M5_VALVE_CONTROLLER)}
     _install(gateway, monkeypatch, plugins)
+    gateway._plugins.update(plugins)
 
     result = await gateway.all_valves_off()
 
@@ -129,3 +130,25 @@ async def test_safe_off_reaches_every_enabled_controller(
         M5_VALVE_CONTROLLER,
         MODBUS_VALVE_CONTROLLER,
     }
+
+
+@pytest.mark.asyncio
+async def test_safe_off_does_not_reconnect_disconnected_fallback(
+    gateway: PluginHardwareGateway, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _enable(gateway, **{MODBUS_VALVE_CONTROLLER: True, M5_VALVE_CONTROLLER: True})
+    m5 = _FakePlugin(M5_VALVE_CONTROLLER)
+    gateway._plugins[M5_VALVE_CONTROLLER] = m5
+    reconnects: list[str] = []
+
+    async def _unexpected_reconnect(plugin_id: str) -> Any:
+        reconnects.append(plugin_id)
+        return None
+
+    monkeypatch.setattr(gateway, "_get_or_connect_plugin", _unexpected_reconnect)
+
+    result = await gateway.all_valves_off()
+
+    assert result["success"] is True
+    assert m5.calls == [("all_outputs_off", {})]
+    assert reconnects == []

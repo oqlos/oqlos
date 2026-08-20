@@ -759,22 +759,33 @@ class PluginHardwareGateway:
         if not controllers:
             return _plugin_command_failure("plugin-unavailable")
 
-        # Safe-off runs on every enabled module: a stand mid-migration can have
-        # valves wired to both, and shutdown must not leave one energized.
+        # Safe-off runs on every *connected* module: a stand mid-migration can
+        # have valves wired to both, and neither may stay energized.  Do not
+        # reconnect an already-known-dead fallback here; one Modbus retry can
+        # occupy the global HUI lock for several seconds even when the primary
+        # M5 controller is healthy.
+        connected = [
+            (plugin_id, self._plugins[plugin_id])
+            for plugin_id in controllers
+            if plugin_id in self._plugins
+        ]
+        if not connected:
+            # Preserve lazy startup behaviour for direct shutdown calls, but
+            # stop after the first usable alternative instead of probing every
+            # unavailable controller.
+            for plugin_id in controllers:
+                plugin = await self._get_or_connect_plugin(plugin_id)
+                if plugin is not None:
+                    connected.append((plugin_id, plugin))
+                    break
+
         results: list[dict[str, Any]] = []
-        for plugin_id in controllers:
+        for plugin_id, plugin in connected:
             await ensure_power_safe(
                 self,
                 operation=f"{plugin_id}.all_outputs_off",
                 safe_state=True,
             )
-
-            plugin = await self._get_or_connect_plugin(plugin_id)
-            if not plugin:
-                results.append(
-                    {"plugin_id": plugin_id, **_plugin_command_failure("plugin-unavailable")}
-                )
-                continue
             try:
                 result = _normalize_plugin_command_result(
                     await plugin.execute_command("all_outputs_off", {})
@@ -785,6 +796,9 @@ class PluginHardwareGateway:
                 )
                 result = _plugin_command_failure("command-failed")
             results.append({"plugin_id": plugin_id, **result})
+
+        if not results:
+            return _plugin_command_failure("plugin-unavailable")
 
         primary = next(
             (result for result in results if result.get("success")),
