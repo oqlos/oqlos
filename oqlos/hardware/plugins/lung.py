@@ -318,6 +318,19 @@ class LungPlugin(HardwarePlugin):
         speed = params.get("speed", TIC249_DEFAULT_TARGET_VELOCITY)
         return {"success": True, "data": {"steps": steps, "speed": speed}}
 
+    async def _handle_stroke_sequence_http(self, params: dict[str, Any]) -> dict[str, Any]:
+        """Forward the strict human-unit, zero-dwell stroke sequence contract."""
+        runtime = await self._runtime_status()
+        blocked_reason = self._runtime_block_reason(runtime)
+        if blocked_reason:
+            return _lung_failure(blocked_reason)
+        return await http_post_command(
+            self._client,
+            self._base_url,
+            "/api/stroke-sequence",
+            json_body=dict(params),
+        )
+
     async def _handle_stop_http(self, params: dict[str, Any] | None = None) -> dict[str, Any]:
         """Handle stop command via HTTP."""
         payload: dict[str, Any] = {}
@@ -393,6 +406,11 @@ class LungPlugin(HardwarePlugin):
                     return await self._handle_reciprocate_http(params)
                 return await self._handle_reciprocate_usb(params)
 
+            elif command == "stroke_sequence":
+                if self.config.connection_type == "http":
+                    return await self._handle_stroke_sequence_http(params)
+                return _lung_failure("stroke-sequence-requires-http", status_code=422)
+
             elif command == "stop":
                 if self.config.connection_type == "http":
                     return await self._handle_stop_http(params)
@@ -428,8 +446,15 @@ class LungPlugin(HardwarePlugin):
         """Return lung plugin capabilities."""
         capabilities = super().get_capabilities()
         capabilities.update({
-            "supported_commands": ["reciprocate", "stop", "move", "energize", "status"],
-            "capabilities": ["reciprocate", "homing", "limit-switches"],
+            "supported_commands": [
+                "reciprocate",
+                "stroke_sequence",
+                "stop",
+                "move",
+                "energize",
+                "status",
+            ],
+            "capabilities": ["reciprocate", "zero-dwell-stroke-sequence", "homing", "limit-switches"],
             "configuration_schema": {
                 "connection_type": {
                     "type": "string",

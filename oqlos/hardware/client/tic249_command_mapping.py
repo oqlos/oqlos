@@ -3,7 +3,12 @@ from __future__ import annotations
 from typing import Any
 
 from oqlos.hardware.client.tic249_arg_helpers import tic249_arg
-from oqlos.hardware.client.tic249_motion_params import build_reciprocate_params, normalize_motion_params, stroke_steps
+from oqlos.hardware.client.tic249_motion_params import (
+    build_reciprocate_params,
+    build_stroke_sequence_params,
+    normalize_motion_params,
+    stroke_steps,
+)
 from oqlos.hardware.tic249_units import TIC249_DEFAULT_LUNG_PAUSE_SECONDS, TIC249_DEFAULT_STEPS_PER_SECOND
 
 
@@ -22,6 +27,8 @@ def map_lung_or_reciprocate(command: str, args: dict[str, Any]) -> tuple[str, di
 
 
 def map_tic249_command(command: str, args: dict[str, Any]) -> tuple[str, dict[str, Any]]:
+    if command in {"stroke_sequence", "tic249_stroke_sequence", "reciprocate_v2"}:
+        return "stroke_sequence", build_stroke_sequence_params(args)
     if command in {"tic249_inhale", "tic249_forward"}:
         return "move", normalize_motion_params({"position": stroke_steps(args), **dict(args)})
     if command in {"tic249_exhale", "tic249_backward"}:

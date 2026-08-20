@@ -125,3 +125,36 @@ def build_reciprocate_params(args: dict[str, Any], *, default_cycles: int) -> di
         params["ramp_seconds"] = ramp_time
 
     return params
+
+
+_STROKE_SEQUENCE_KEYS: dict[str, tuple[str, ...]] = {
+    "stroke_count": ("stroke_count", "strokeCount"),
+    "speed_steps_per_second": ("speed_steps_per_second", "speedStepsPerSecond"),
+    "boundary_mode": ("boundary_mode", "boundaryMode"),
+    "stroke_steps": ("stroke_steps", "strokeSteps"),
+    "lower_position": ("lower_position", "lowerPosition"),
+    "upper_position": ("upper_position", "upperPosition"),
+    "safety_steps": ("safety_steps", "safetySteps"),
+    "start_direction": ("start_direction", "startDirection", "direction"),
+    "acceleration_steps_per_second2": (
+        "acceleration_steps_per_second2",
+        "accelerationStepsPerSecond2",
+    ),
+    "deceleration_steps_per_second2": (
+        "deceleration_steps_per_second2",
+        "decelerationStepsPerSecond2",
+    ),
+    "poll_interval_ms": ("poll_interval_ms", "pollIntervalMs"),
+    "position_tolerance": ("position_tolerance", "positionTolerance"),
+}
+
+
+def build_stroke_sequence_params(args: dict[str, Any]) -> dict[str, Any]:
+    """Build the strict zero-dwell sidecar payload; pause is intentionally unsupported."""
+    params: dict[str, Any] = {}
+    for target, aliases in _STROKE_SEQUENCE_KEYS.items():
+        for alias in aliases:
+            if alias in args and args[alias] is not None:
+                params[target] = args[alias]
+                break
+    return params

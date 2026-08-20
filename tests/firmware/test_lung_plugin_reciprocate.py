@@ -6,6 +6,7 @@ import asyncio
 
 from oqlos.hardware.plugins.base import PluginConfig
 from oqlos.hardware.client.tic249_extended import _build_reciprocate_params
+from oqlos.hardware.client.tic249_command_mapping import map_tic249_command
 from oqlos.hardware.plugins.lung import LungPlugin
 
 
@@ -83,6 +84,50 @@ def test_ready_false_does_not_block_reciprocate_start():
             {"steps": 500, "speed": 10_000_000, "cycles": 3, "pause": 0.5, "ramp_seconds": 0.5},
         )
     ]
+
+
+def test_stroke_sequence_posts_human_units_to_zero_dwell_endpoint():
+    client = _ReadyFalseClient()
+    plugin = _plugin_with_client(client)
+    params = {
+        "stroke_count": 6,
+        "speed_steps_per_second": 1200,
+        "boundary_mode": "position",
+        "stroke_steps": 500,
+        "acceleration_steps_per_second2": 3000,
+    }
+
+    result = asyncio.run(plugin.execute_command("stroke_sequence", params))
+
+    assert result["success"] is True
+    assert client.posts == [
+        ("http://localhost:8205/api/stroke-sequence", params),
+    ]
+
+
+def test_tic249_stroke_sequence_maps_camel_case_without_pause():
+    plugin_command, params = map_tic249_command(
+        "tic249_stroke_sequence",
+        {
+            "strokeCount": 4,
+            "speedStepsPerSecond": 1000,
+            "boundaryMode": "position",
+            "strokeSteps": 200,
+            "startDirection": "right",
+            "accelerationStepsPerSecond2": 2500,
+            "pause": 1,
+        },
+    )
+
+    assert plugin_command == "stroke_sequence"
+    assert params == {
+        "stroke_count": 4,
+        "speed_steps_per_second": 1000,
+        "boundary_mode": "position",
+        "stroke_steps": 200,
+        "start_direction": "right",
+        "acceleration_steps_per_second2": 2500,
+    }
 
 
 def test_active_limits_return_a_canonical_hardware_error_before_post():

@@ -43,13 +43,16 @@ MOTOR_TIC249_EXTENDED_COMMANDS = {
     "standby",
     "status",
     "stop",
+    "stroke_sequence",
     "tic249_reciprocate",
+    "tic249_stroke_sequence",
     "tic249_cycle",
     "tic249_inhale",
     "tic249_forward",
     "tic249_exhale",
     "tic249_backward",
     "tic249_stop",
+    "reciprocate_v2",
 }
 
 _PLUGIN_PATH = "/api/v1/plugins/motor-tic249/execute"
