@@ -373,6 +373,12 @@ class LungPlugin(HardwarePlugin):
         reach_limit = params.get("stop_mode") == "reach_limit" or params.get("stop_at_limit")
         if reach_limit:
             payload["stop_mode"] = "reach_limit"
+        elif params.get("stop_at_limit") is False:
+            # Preserve an explicit immediate-stop override.  Sending an empty
+            # body makes the Tic249 sidecar fall back to its persistent
+            # stop_at_limit setting, which can turn HUI STOP into a slow
+            # reach-limit move and exceed the HTTP timeout.
+            payload["stop_at_limit"] = False
         self._invalidate_runtime_status()
         return await http_post_command(
             self._client,
