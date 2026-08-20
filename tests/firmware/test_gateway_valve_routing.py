@@ -152,3 +152,50 @@ async def test_safe_off_does_not_reconnect_disconnected_fallback(
     assert result["success"] is True
     assert m5.calls == [("all_outputs_off", {})]
     assert reconnects == []
+
+
+@pytest.mark.asyncio
+async def test_dead_fallback_is_probed_once_not_once_per_valve(
+    gateway: PluginHardwareGateway, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Safe-off walks eleven valves; a silent RS485 adapter used to be re-opened
+    for each one and blew the HUI action budget."""
+    _enable(gateway, **{MODBUS_VALVE_CONTROLLER: True, M5_VALVE_CONTROLLER: True})
+    m5 = _FakePlugin(M5_VALVE_CONTROLLER, succeeds=False)
+    gateway._plugins[M5_VALVE_CONTROLLER] = m5
+    attempts: list[str] = []
+
+    async def _dead_connect(plugin_id: str) -> Any:
+        attempts.append(plugin_id)
+        return None
+
+    monkeypatch.setattr(gateway, "_get_or_connect_plugin", _dead_connect)
+
+    for valve_id in ("valve-1", "valve-2", "valve-3"):
+        assert await gateway.set_valve(valve_id, False) is False
+
+    # Failover still runs — the fallback is tried, just not re-probed per valve.
+    assert attempts == [MODBUS_VALVE_CONTROLLER]
+    assert len(m5.calls) == 3
+
+
+@pytest.mark.asyncio
+async def test_recovered_fallback_is_used_again_after_the_cooldown(
+    gateway: PluginHardwareGateway, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _enable(gateway, **{MODBUS_VALVE_CONTROLLER: True, M5_VALVE_CONTROLLER: True})
+    gateway._plugins[M5_VALVE_CONTROLLER] = _FakePlugin(M5_VALVE_CONTROLLER, succeeds=False)
+    modbus = _FakePlugin(MODBUS_VALVE_CONTROLLER)
+    available: list[Any] = [None]
+
+    async def _connect(plugin_id: str) -> Any:
+        return available[0] if plugin_id == MODBUS_VALVE_CONTROLLER else None
+
+    monkeypatch.setattr(gateway, "_get_or_connect_plugin", _connect)
+    assert await gateway.set_valve("valve-1", False) is False
+
+    available[0] = modbus
+    gateway._valve_reconnect_blocked_until.clear()
+
+    assert await gateway.set_valve("valve-2", False) is True
+    assert modbus.calls == [("set_valve", {"valve_id": "valve-2", "value": False})]

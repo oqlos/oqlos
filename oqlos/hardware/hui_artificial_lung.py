@@ -261,12 +261,31 @@ async def stop_hui_artificial_lung(gateway: Any) -> dict[str, Any]:
         payload["warning"] = valve.get("warning")
         payload["valve_skipped"] = True
     if not ok:
+        # Attribute the failure to the leg that actually failed. Reporting the Tic
+        # for an unconfirmed valve close sends the operator to a device that just
+        # answered, and hides the valve controller that did not.
+        if not lung_ok:
+            failure = {
+                "error": "Artificial lung motor stop was not confirmed",
+                "public_message": "Artificial lung motor stop was not confirmed",
+                "issue_code": "hw_tic249_sidecar_unreachable",
+                "unavailable_hardware_ids": ["motor-tic249"],
+            }
+        else:
+            failure = {
+                "error": f"Valve {valve_id} close was not confirmed",
+                "public_message": f"Valve {valve_id} close was not confirmed",
+                "issue_code": (
+                    "hw_m5_4in8out_no_response"
+                    if valve_controllers and valve_controllers[0] == M5_VALVE_CONTROLLER
+                    else "hw_modbus_no_response"
+                ),
+                "unavailable_hardware_ids": list(valve_controllers),
+            }
         payload.update({
-            "error": "Artificial lung motor stop was not confirmed",
+            **failure,
             "error_code": "C2004-HW-0012",
-            "issue_code": "hw_tic249_sidecar_unreachable",
             "status_code": 503,
             "safe_to_retry": True,
-            "unavailable_hardware_ids": ["motor-tic249"],
         })
     return payload

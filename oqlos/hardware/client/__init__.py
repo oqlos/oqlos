@@ -39,6 +39,7 @@ from oqlos.hardware.client.resolvers import (
     resolve_lung_target,
     resolve_modbus_adc_target,
     resolve_modbus_target,
+    resolve_valve_target,
     resolve_pump_target,
     resolve_rtc_target,
 )
@@ -97,6 +98,7 @@ __all__ = [
     "resolve_lung_target",
     "resolve_modbus_adc_target",
     "resolve_modbus_target",
+    "resolve_valve_target",
     "resolve_pump_target",
     "resolve_rtc_target",
     "rewrite_modbus_repair",

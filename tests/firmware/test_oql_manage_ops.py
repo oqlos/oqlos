@@ -176,6 +176,37 @@ async def test_modbus_io_valve_diagnostic_uses_set_valve(monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_m5_valve_diagnostic_uses_set_valve(monkeypatch):
+    """Regression: with M5 as the valve controller, valve_on used to reach the raw
+    plugin execute, which the M5 module rejects as an unknown command."""
+    from oqlos.api import hardware as hw
+
+    calls: list[tuple[str, bool]] = []
+
+    async def _fake_set_valve(valve_id, value):
+        calls.append((valve_id, value))
+        return True
+
+    async def _unexpected_execute(*_args, **_kwargs):
+        raise AssertionError("valve_on must not go through raw plugin execute")
+
+    monkeypatch.setattr(hw, "set_valve", _fake_set_valve)
+    monkeypatch.setattr("oqlos.api.plugins.execute_plugin_command", _unexpected_execute, raising=True)
+
+    result = await manage_ops.run_manage_verb(
+        "diagnostic-command",
+        {
+            "peripheral_id": "io-m5-4in8out",
+            "command": "valve_on",
+            "args": {"valve_id": "valve-wc"},
+        },
+    )
+
+    assert result["success"] is True
+    assert calls == [("valve-wc", True)]
+
+
+@pytest.mark.asyncio
 async def test_modbus_io_valve_diagnostic_preserves_set_valve_failure(monkeypatch):
     from oqlos.api import hardware as hw
 
