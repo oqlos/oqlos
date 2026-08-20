@@ -9,6 +9,10 @@ from oqlos.hardware.client.tic249_error_messages import extract_position
 from oqlos.hardware.client.tic249_extended import MOTOR_TIC249_EXTENDED_COMMANDS
 from oqlos.hardware.client.tic249_motion_params import normalize_motion_params
 from oqlos.hardware.client.tic249_rig_direction import RIG_LEFT_ALIASES
+from oqlos.hardware.valve_controller import DEFAULT_VALVE_CONTROLLER_PREFERENCE
+
+VALVE_CONTROLLER_IDS = DEFAULT_VALVE_CONTROLLER_PREFERENCE
+_VALVE_COMMANDS = frozenset({"valve_on", "valve_off", "set_valve"})
 
 
 def _success_from_result(result: Any) -> bool:
@@ -21,12 +25,13 @@ def _success_from_result(result: Any) -> bool:
     return bool(result)
 
 
-async def run_modbus_io_valve(hw: Any, command: str, params: dict[str, Any]) -> dict[str, Any]:
+async def run_valve_command(hw: Any, command: str, params: dict[str, Any]) -> dict[str, Any]:
+    """Drive one valve through the gateway, whichever output module is active."""
     from oqlos.api.command_kwargs import pick_param
 
     valve_id = str(pick_param(params, "valve_id", "valveId") or "").strip()
     if not valve_id:
-        raise ValueError("modbus-io diagnostic command requires 'valve_id'")
+        raise ValueError("valve diagnostic command requires 'valve_id'")
     value = command == "valve_on" if command != "set_valve" else bool(params.get("value", False))
     result = await hw.set_valve(valve_id, value)
     if isinstance(result, dict):
@@ -123,8 +128,10 @@ async def _route_tic249_lung_command(command: str, hw: Any) -> dict[str, Any] | 
 
 
 async def _route_diagnostic_command(plugin_id: str, command: str, params: dict[str, Any], hw: Any, pl: Any) -> dict[str, Any]:
-    if plugin_id == "modbus-io" and command in {"valve_on", "valve_off", "set_valve"}:
-        return await run_modbus_io_valve(hw, command, params)
+    if plugin_id in VALVE_CONTROLLER_IDS and command in _VALVE_COMMANDS:
+        # gateway.set_valve owns the controller choice; a valve command must not be
+        # tied to modbus-io, or every M5-primary stand rejects it as unsupported.
+        return await run_valve_command(hw, command, params)
     if plugin_id == "motor-dri0050" and command in {"pump_off", "pump_set"}:
         return await run_pump_diagnostic(command, params)
     if plugin_id == "motor-tic249" and command in MOTOR_TIC249_EXTENDED_COMMANDS:

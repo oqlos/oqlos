@@ -135,6 +135,33 @@ def test_hui_al_stop_maps_safe_state_failure_to_service_unavailable(monkeypatch)
     assert exc.value.detail["unavailable_hardware_ids"] == ["motor-tic249"]
 
 
+def test_hui_failure_reports_the_action_reason_without_leaking_internals(monkeypatch):
+    """`public_message` is the only text an action may put in front of the operator;
+    the raw `error` stays internal. Before this, every failure was reported as
+    "Required hardware unavailable", pointing at a device that was answering."""
+    monkeypatch.setattr(hui, "get_hardware_gateway", lambda: _FakeGateway())
+
+    async def _fake_stop(_gateway):
+        return {
+            "ok": False,
+            "error": "serial /dev/ttyUSB0 rejected frame",
+            "public_message": "Valve valve-4 close was not confirmed",
+            "error_code": "C2004-HW-0012",
+            "issue_code": "hw_m5_4in8out_no_response",
+            "status_code": 503,
+            "unavailable_hardware_ids": ["io-m5-4in8out"],
+        }
+
+    monkeypatch.setattr(hui, "stop_hui_artificial_lung", _fake_stop)
+
+    with pytest.raises(OqlosError) as exc:
+        asyncio.run(hui.hui_al_stop())
+
+    assert exc.value.message == "Valve valve-4 close was not confirmed"
+    assert "ttyUSB0" not in str(exc.value.message)
+    assert exc.value.detail["unavailable_hardware_ids"] == ["io-m5-4in8out"]
+
+
 def test_hui_failure_http_contract_does_not_leak_action_error(monkeypatch):
     monkeypatch.setattr(hui, "get_hardware_gateway", lambda: _FakeGateway())
 

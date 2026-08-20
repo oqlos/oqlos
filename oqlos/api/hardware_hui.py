@@ -125,7 +125,11 @@ def raise_if_hui_failed(
         issue_code = explicit_issue or _hui_issue_code(
             domain=entry.domain, unavailable_ids=unavailable_hardware_ids
         )
-        safe_message = None
+        # `error` may carry plugin/serial internals and never reaches the client.
+        # An action that has a specific, operator-safe reason states it in
+        # `public_message`; without it the generic hardware sentence is used, which
+        # on the STOP path used to point at a device that was answering fine.
+        safe_message = str(payload.get("public_message") or "").strip()[:256] or None
         detail: dict[str, Any] = {
             "architecture": "SOA",
             "layer": "firmware",
@@ -138,7 +142,8 @@ def raise_if_hui_failed(
         }
         if unavailable_hardware_ids:
             names = ", ".join(unavailable_hardware_ids)
-            safe_message = f"Required hardware unavailable: {names}"
+            if safe_message is None:
+                safe_message = f"Required hardware unavailable: {names}"
             detail.update(
                 {
                     "peripheral_id": unavailable_hardware_ids[0],

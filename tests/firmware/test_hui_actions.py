@@ -6,6 +6,7 @@ import asyncio
 from typing import Any
 
 from oqlos.hardware import hui_actions, hui_hold, hui_lung_recipe, hui_readiness, hui_valve
+from oqlos.hardware.valve_controller import gateway_valve_controllers
 
 
 def run(coro):
@@ -383,6 +384,40 @@ def test_stop_hui_artificial_lung_exposes_structured_hardware_failure() -> None:
     assert payload["safe_to_retry"] is True
     assert payload["unavailable_hardware_ids"] == ["motor-tic249"]
     assert ("valve", "valve-4", False) in gateway.calls
+
+
+def test_stop_hui_artificial_lung_blames_the_valve_when_the_motor_stopped() -> None:
+    """Regression: an unconfirmed valve close used to be reported as a missing Tic249."""
+
+    class ValveRejectingGateway(FakeGateway):
+        async def set_valve(self, valve_id: str, value: bool) -> dict[str, Any]:
+            self.calls.append(("valve", valve_id, value))
+            return {"success": False, "error": "rejected by controller"}
+
+    gateway = ValveRejectingGateway()
+    controllers = gateway_valve_controllers(gateway)
+
+    payload = run(hui_actions.stop_hui_artificial_lung(gateway))
+
+    assert payload["ok"] is False
+    assert payload["error"] == "Valve valve-4 close was not confirmed"
+    assert payload["public_message"] == "Valve valve-4 close was not confirmed"
+    assert payload["unavailable_hardware_ids"] == controllers
+    assert "motor-tic249" not in payload["unavailable_hardware_ids"]
+    assert ("stop_lung",) in gateway.calls
+
+
+def test_stop_hui_artificial_lung_publishes_the_motor_reason() -> None:
+    """The HTTP mapper may only expose `public_message`, never the raw error."""
+
+    class StopFailingGateway(FakeGateway):
+        async def stop_lung(self) -> bool:
+            self.calls.append(("stop_lung",))
+            return False
+
+    payload = run(hui_actions.stop_hui_artificial_lung(StopFailingGateway()))
+
+    assert payload["public_message"] == "Artificial lung motor stop was not confirmed"
 
 
 def test_hui_artificial_lung_start_failure_cleans_up_same_valve_it_opened(monkeypatch) -> None:

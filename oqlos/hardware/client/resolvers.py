@@ -12,28 +12,52 @@ from oqlos.hardware.client.constants import (
     TIC249_DEFAULT_TARGET_VELOCITY,
 )
 from oqlos.hardware.client.errors import HardwareProxyError
+from oqlos.hardware.valve_controller import (
+    DEFAULT_VALVE_CONTROLLER_PREFERENCE,
+    MODBUS_VALVE_CONTROLLER,
+)
 
 
-def normalize_modbus_valve_id(raw: Any) -> str:
+def normalize_modbus_valve_id(raw: Any, peripheral: str = MODBUS_VALVE_CONTROLLER) -> str:
     valve_id = str(raw or "valve-1").strip().lower().replace("_", "-")
     if valve_id not in MODBUS_ALLOWED_VALVE_IDS:
         raise HardwareProxyError(
             400,
             (
-                f"Unsupported valve_id '{valve_id}' for peripheral 'modbus-io'. "
+                f"Unsupported valve_id '{valve_id}' for peripheral '{peripheral}'. "
                 "Expected valve-1..valve-14, valve-nc, valve-sc, or valve-wc"
             ),
         )
     return valve_id
 
 
-def resolve_modbus_target(command: str, args: dict[str, Any]) -> tuple[str, str, dict[str, Any] | None]:
-    valve_id = normalize_modbus_valve_id(args.get("valve_id"))
+def resolve_valve_target(
+    peripheral: str, command: str, args: dict[str, Any]
+) -> tuple[str, str, dict[str, Any] | None]:
+    """Route a valve command to any configured valve output module.
+
+    The REST target is controller-agnostic: ``/api/v1/hardware/valve/{id}`` runs
+    through the gateway's valve failover, so this resolver must not be pinned to
+    ``modbus-io`` — a stand on ``io-m5-4in8out`` sends the same command.
+    """
+    valve_id = normalize_modbus_valve_id(args.get("valve_id"), peripheral)
     if command == "valve_on":
         return "POST", f"/api/v1/hardware/valve/{valve_id}", {"value": True}
     if command == "valve_off":
         return "POST", f"/api/v1/hardware/valve/{valve_id}", {"value": False}
-    raise HardwareProxyError(400, f"Unsupported diagnostic command '{command}' for peripheral 'modbus-io'")
+    if command == "set_valve":
+        return (
+            "POST",
+            f"/api/v1/hardware/valve/{valve_id}",
+            {"value": bool(args.get("value", False))},
+        )
+    raise HardwareProxyError(
+        400, f"Unsupported diagnostic command '{command}' for peripheral '{peripheral}'"
+    )
+
+
+def resolve_modbus_target(command: str, args: dict[str, Any]) -> tuple[str, str, dict[str, Any] | None]:
+    return resolve_valve_target(MODBUS_VALVE_CONTROLLER, command, args)
 
 
 def resolve_pump_target(command: str, args: dict[str, Any]) -> tuple[str, str, dict[str, Any] | None]:
@@ -87,8 +111,9 @@ def resolve_diagnostic_target(peripheral: str, command: str, args: dict[str, Any
         )
     if peripheral in ARTIFICIAL_LUNG_IDS:
         return resolve_artificial_lung_target(command, args)
+    if peripheral in DEFAULT_VALVE_CONTROLLER_PREFERENCE:
+        return resolve_valve_target(peripheral, command, args)
     resolvers = {
-        "modbus-io": resolve_modbus_target,
         "motor-dri0050": resolve_pump_target,
         "motor-tic249": resolve_lung_target,
         "modbus-adc": resolve_modbus_adc_target,

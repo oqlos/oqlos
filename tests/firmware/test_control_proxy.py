@@ -147,6 +147,32 @@ def test_artificial_lung_diagnostic_resolves_to_logical_lung_api():
     assert params == {"command": "lung_stop", "args": {}}
 
 
+def test_valve_diagnostic_resolves_for_every_valve_controller():
+    """Regression: a stand on io-m5-4in8out used to be rejected by the proxy with
+    "Unsupported diagnostic command 'valve_on'" before the request left C2004."""
+    for peripheral in ("modbus-io", "io-m5-4in8out"):
+        assert resolve_diagnostic_target(peripheral, "valve_on", {"valve_id": "valve-wc"}) == (
+            "POST",
+            "/api/v1/hardware/valve/valve-wc",
+            {"value": True},
+        )
+        assert resolve_diagnostic_target(peripheral, "valve_off", {"valve_id": "valve-wc"}) == (
+            "POST",
+            "/api/v1/hardware/valve/valve-wc",
+            {"value": False},
+        )
+        assert resolve_diagnostic_target(
+            peripheral, "set_valve", {"valve_id": "valve_wc", "value": True}
+        ) == ("POST", "/api/v1/hardware/valve/valve-wc", {"value": True})
+
+
+def test_unknown_valve_command_names_the_requested_peripheral():
+    with pytest.raises(HardwareProxyError) as exc:
+        resolve_diagnostic_target("io-m5-4in8out", "spin", {"valve_id": "valve-wc"})
+
+    assert "io-m5-4in8out" in str(exc.value.detail)
+
+
 def test_status_diagnostic_resolves_to_read_only_canonical_status_api():
     method, path, params = resolve_diagnostic_target("motor-dri0050", "status", {})
 

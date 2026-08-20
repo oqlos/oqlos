@@ -11,6 +11,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+from time import monotonic
 from typing import Any
 
 from oqlos.config import get_settings
@@ -37,6 +38,9 @@ from oqlos.hardware.plugins import (
 from oqlos.hardware.power_safety import ensure_power_safe
 from oqlos.hardware.tic249_units import TIC249_DEFAULT_TARGET_VELOCITY
 from oqlos.hardware.valve_controller import resolve_valve_controllers
+
+#: How long a valve module that failed to connect is left alone by actuation.
+_VALVE_RECONNECT_COOLDOWN_SECONDS = 20.0
 
 logger = logging.getLogger(__name__)
 
@@ -107,6 +111,7 @@ class PluginHardwareGateway:
         self._init_lock = asyncio.Lock()
         self._reconfigure_lock = asyncio.Lock()
         self._suspended_plugins: set[str] = set()
+        self._valve_reconnect_blocked_until: dict[str, float] = {}
         self._runtime_loop: asyncio.AbstractEventLoop | None = None
         self.last_init_summary: dict[str, Any] = {}
         if self.mode == "real":
@@ -697,6 +702,33 @@ class PluginHardwareGateway:
         """Enabled valve output modules, most preferred first."""
         return resolve_valve_controllers(self._plugin_configs)
 
+    async def _connect_valve_controller(self, plugin_id: str) -> Any | None:
+        """Lazy-connect a valve module, but do not retry a dead one per valve.
+
+        Safe-off walks every valve id, so a module that just failed to open used
+        to be re-probed eleven times inside one shutdown; with a silent RS485
+        adapter that alone outlives the HUI action budget and surfaces as a
+        gateway 504. The first attempt still runs — failover is unchanged — only
+        the repeat within ``_VALVE_RECONNECT_COOLDOWN_SECONDS`` is skipped.
+        Readiness probes and the explicit repair actions bypass this entirely.
+        """
+        now = monotonic()
+        if now < self._valve_reconnect_blocked_until.get(plugin_id, 0.0):
+            return None
+        plugin = await self._get_or_connect_plugin(plugin_id)
+        if plugin is None:
+            self._valve_reconnect_blocked_until[plugin_id] = (
+                now + _VALVE_RECONNECT_COOLDOWN_SECONDS
+            )
+            logger.warning(
+                "Valve controller %s did not connect; not re-probing it for %.0fs",
+                plugin_id,
+                _VALVE_RECONNECT_COOLDOWN_SECONDS,
+            )
+        else:
+            self._valve_reconnect_blocked_until.pop(plugin_id, None)
+        return plugin
+
     async def set_valve(self, valve_id: str, value: bool) -> bool:
         """Set valve state using the configured valve output module."""
         if not self.is_real:
@@ -721,7 +753,7 @@ class PluginHardwareGateway:
 
             plugin = self._plugins.get(plugin_id)
             if plugin is None:
-                plugin = await self._get_or_connect_plugin(plugin_id)
+                plugin = await self._connect_valve_controller(plugin_id)
             if plugin is None:
                 logger.warning(
                     "Valve controller %s is disconnected; using the next fallback",
