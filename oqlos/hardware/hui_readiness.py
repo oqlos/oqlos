@@ -43,6 +43,12 @@ def _public_readiness(check: Any, plugin_id: str) -> dict[str, Any]:
 
 
 async def _read_plugin_without_reconnect(gateway: Any, plugin_id: str) -> dict[str, Any]:
+    cached_readiness = getattr(gateway, "plugin_cached_readiness", None)
+    if callable(cached_readiness):
+        try:
+            return _public_readiness(await cached_readiness(plugin_id), plugin_id)
+        except Exception:
+            pass
     readiness = getattr(gateway, "plugin_readiness", None)
     if not callable(readiness):
         return _public_readiness(None, plugin_id)
@@ -250,18 +256,24 @@ async def required_plugins_failure(
                 payload["key"] = key
             return payload
 
-    readiness = getattr(gateway, "plugin_readiness", None)
-    if not callable(readiness):
-        return None
-
     # Hardware health probes may each consume their transport timeout. Run the
     # independent checks together so a short Process URI does not turn two clear
     # device failures into an opaque gateway timeout.
-    checks = list(
-        await asyncio.gather(
-            *(readiness(plugin_id, reconnect=reconnect) for plugin_id in required)
+    if not reconnect:
+        checks = list(
+            await asyncio.gather(
+                *(_read_plugin_without_reconnect(gateway, plugin_id) for plugin_id in required)
+            )
         )
-    )
+    else:
+        readiness = getattr(gateway, "plugin_readiness", None)
+        if not callable(readiness):
+            return None
+        checks = list(
+            await asyncio.gather(
+                *(readiness(plugin_id, reconnect=True) for plugin_id in required)
+            )
+        )
     controllers = tuple(gateway_valve_controllers(gateway))
     valve_ids = tuple(plugin_id for plugin_id in required if plugin_id in controllers)
     strict_ids = tuple(plugin_id for plugin_id in required if plugin_id not in valve_ids)
