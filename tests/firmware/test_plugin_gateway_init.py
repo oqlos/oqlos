@@ -390,6 +390,8 @@ def test_plugin_readiness_reattaches_healthy_registry_instance_without_reconnect
     """Recovery may populate PluginRegistry while the gateway map stays stale."""
 
     class _RecoveredPlugin:
+        status = PluginStatus.CONNECTED
+
         async def health_check(self) -> PluginHealth:
             return PluginHealth(
                 status=PluginStatus.CONNECTED,
@@ -430,4 +432,51 @@ def test_plugin_readiness_reattaches_healthy_registry_instance_without_reconnect
         "message": "Plugin is ready",
     }
     assert gateway._plugins["io-m5-4in8out"] is recovered
+    reconnect.assert_not_awaited()
+
+
+def test_plugin_readiness_skips_failed_registry_instance_without_reconnect(
+    monkeypatch,
+) -> None:
+    """A dead preferred controller must not delay the connected fallback."""
+
+    class _FailedPlugin:
+        status = PluginStatus.ERROR
+
+        def __init__(self) -> None:
+            self.health_check = AsyncMock()
+
+    gateway = PluginHardwareGateway(mode="mock")
+    gateway.mode = "real"
+    gateway._init_done = True
+    gateway._plugin_configs = {
+        "io-m5-4in8out": PluginConfig(
+            plugin_id="io-m5-4in8out",
+            enabled=True,
+        ),
+    }
+    failed = _FailedPlugin()
+    monkeypatch.setattr(
+        PluginRegistry,
+        "get_instance",
+        classmethod(
+            lambda cls, plugin_id: (
+                failed if plugin_id == "io-m5-4in8out" else None
+            )
+        ),
+    )
+    reconnect = AsyncMock()
+    monkeypatch.setattr(gateway, "_get_or_connect_plugin", reconnect)
+
+    result = asyncio.run(
+        gateway.plugin_readiness("io-m5-4in8out", reconnect=False)
+    )
+
+    assert result == {
+        "ok": False,
+        "plugin_id": "io-m5-4in8out",
+        "status": "unavailable",
+        "message": "Plugin io-m5-4in8out is not connected",
+    }
+    failed.health_check.assert_not_awaited()
     reconnect.assert_not_awaited()

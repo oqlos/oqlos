@@ -108,6 +108,8 @@ def test_hui_readiness_reattaches_m5_connected_only_in_registry(monkeypatch) -> 
     """Match the live split: plugin status is connected while gateway is stale."""
 
     class _RegistryM5:
+        status = PluginStatus.CONNECTED
+
         async def health_check(self) -> PluginHealth:
             return PluginHealth(
                 status=PluginStatus.CONNECTED,
