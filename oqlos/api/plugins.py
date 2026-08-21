@@ -267,6 +267,16 @@ async def connect_plugin(plugin_id: str, config: dict[str, Any]):
 
     success = await PluginRegistry.connect_plugin(plugin_id, plugin_config)
     if success:
+        # Keep the gateway fast-path consistent with the process-wide registry.
+        # HUI readiness intentionally avoids reconnecting dead hardware, so a
+        # plugin connected through this management endpoint must be attached
+        # explicitly or the GUI will continue to report it as unavailable.
+        from oqlos.api.hardware_gateway import try_get_hardware_gateway
+
+        gateway = try_get_hardware_gateway()
+        instance = PluginRegistry.get_instance(plugin_id)
+        if gateway is not None and instance is not None:
+            gateway._plugins[plugin_id] = instance
         return {"status": "connected", "plugin_id": plugin_id}
     else:
         _raise_unhealthy_plugin(
@@ -287,6 +297,11 @@ async def disconnect_plugin(plugin_id: str):
     """Disconnect from a hardware plugin."""
     success = await PluginRegistry.disconnect_plugin(plugin_id)
     if success:
+        from oqlos.api.hardware_gateway import try_get_hardware_gateway
+
+        gateway = try_get_hardware_gateway()
+        if gateway is not None:
+            gateway._plugins.pop(plugin_id, None)
         return {"status": "disconnected", "plugin_id": plugin_id}
     else:
         _raise_unhealthy_plugin(

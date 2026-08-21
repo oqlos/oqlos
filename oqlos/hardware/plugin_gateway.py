@@ -230,6 +230,111 @@ class PluginHardwareGateway:
             )
         return applied
 
+    @staticmethod
+    def _rtu_serial_port(config: PluginConfig | None) -> str | None:
+        if config is None or config.connection_type != "modbus-rtu":
+            return None
+        raw = str((config.connection_params or {}).get("serial_port") or "").strip()
+        return os.path.realpath(raw) if raw else None
+
+    def _rtu_ports(self) -> dict[str, str]:
+        return {
+            plugin_id: port
+            for plugin_id, config in self._plugin_configs.items()
+            if (port := self._rtu_serial_port(config)) is not None
+        }
+
+    async def _release_rtu_ports(self, ports: set[str]) -> list[str]:
+        """Drop closed shared-bus singletons before replacement clients open."""
+        if not ports:
+            return []
+        try:
+            from pimodbus.client import release_rtu_bus
+        except ImportError:
+            logger.warning(
+                "pimodbus release_rtu_bus unavailable; RTU reconnect cannot "
+                "explicitly clear the shared-bus registry"
+            )
+            return []
+
+        released: list[str] = []
+        for port in sorted(ports):
+            if await release_rtu_bus(port):
+                released.append(port)
+        return released
+
+    async def _reconnect_rtu_plugins_locked(
+        self,
+        requested: set[str],
+        *,
+        old_ports: dict[str, str],
+    ) -> tuple[list[dict[str, Any]], list[str]]:
+        """Reconnect a complete physical RTU-port ownership group.
+
+        ``pimodbus`` shares one client per serial adapter. Replacing only the
+        selected logical profile can leave another plugin holding the old bus
+        while a new client attempts pyserial's exclusive open. Disconnect every
+        active owner of the selected old/new ports, release the singleton, then
+        reconnect owners sequentially.
+        """
+        new_ports = self._rtu_ports()
+        target_ports = {
+            port
+            for plugin_id in requested
+            for port in (old_ports.get(plugin_id), new_ports.get(plugin_id))
+            if port
+        }
+        affected = {
+            plugin_id
+            for plugin_id in set(old_ports) | set(new_ports)
+            if old_ports.get(plugin_id) in target_ports
+            or new_ports.get(plugin_id) in target_ports
+        }
+        active_before = {
+            plugin_id
+            for plugin_id in affected
+            if plugin_id in self._plugins
+            or PluginRegistry.get_instance(plugin_id) is not None
+        }
+        reconnect_ids = {
+            plugin_id
+            for plugin_id in affected
+            if plugin_id in requested or plugin_id in active_before
+        }
+
+        for plugin_id in sorted(active_before):
+            self._plugins.pop(plugin_id, None)
+            await PluginRegistry.disconnect_plugin(plugin_id)
+
+        release_ports = {
+            port
+            for plugin_id in affected
+            for port in (old_ports.get(plugin_id), new_ports.get(plugin_id))
+            if port
+        }
+        released = await self._release_rtu_ports(release_ports)
+
+        reconnects: list[dict[str, Any]] = []
+        preferred_order = ("modbus-io", "modbus-adc")
+        ordered = [pid for pid in preferred_order if pid in reconnect_ids]
+        ordered.extend(sorted(reconnect_ids.difference(ordered)))
+        for plugin_id in ordered:
+            config = self._plugin_configs.get(plugin_id)
+            if config is None or not config.enabled:
+                continue
+            ok = await PluginRegistry.connect_plugin(plugin_id, config)
+            instance = PluginRegistry.get_instance(plugin_id)
+            if ok and instance is not None:
+                self._plugins[plugin_id] = instance
+            reconnects.append(
+                {
+                    "plugin_id": plugin_id,
+                    "ok": bool(ok),
+                    "shared_port_owner": plugin_id not in requested,
+                }
+            )
+        return reconnects, released
+
     async def apply_modbus_user_settings(
         self,
         plugin_ids: set[str] | None = None,
@@ -237,25 +342,19 @@ class PluginHardwareGateway:
         """Apply persisted settings immediately and reconnect RTU plugins without actuation."""
         await self.ensure_initialized()
         async with self._reconfigure_lock:
+            old_ports = self._rtu_ports()
             applied = self._apply_persisted_modbus_settings()
-            reconnects: list[dict[str, Any]] = []
-            for plugin_id in ("modbus-io", "modbus-adc"):
-                if plugin_ids is not None and plugin_id not in plugin_ids:
-                    continue
-                config = self._plugin_configs.get(plugin_id)
-                if config is None or not config.enabled or plugin_id not in applied:
-                    continue
-                self._plugins.pop(plugin_id, None)
-                await PluginRegistry.disconnect_plugin(plugin_id)
-                ok = await PluginRegistry.connect_plugin(plugin_id, config)
-                instance = PluginRegistry.get_instance(plugin_id)
-                if ok and instance is not None:
-                    self._plugins[plugin_id] = instance
-                reconnects.append({"plugin_id": plugin_id, "ok": bool(ok)})
+            requested = set(plugin_ids or applied)
+            requested.intersection_update(applied)
+            reconnects, released = await self._reconnect_rtu_plugins_locked(
+                requested,
+                old_ports=old_ports,
+            )
             return {
                 "ok": all(item["ok"] for item in reconnects),
                 "applied": applied,
                 "reconnects": reconnects,
+                "released_rtu_ports": released,
                 "actuation": False,
             }
 
@@ -272,9 +371,15 @@ class PluginHardwareGateway:
             return set()
         async with self._reconfigure_lock:
             self._suspended_plugins.update(selected)
+            rtu_ports = {
+                port
+                for plugin_id in selected
+                if (port := self._rtu_serial_port(self._plugin_configs.get(plugin_id)))
+            }
             for plugin_id in selected:
                 self._plugins.pop(plugin_id, None)
                 await PluginRegistry.disconnect_plugin(plugin_id)
+            await self._release_rtu_ports(rtu_ports)
         return selected
 
     async def resume_modbus_plugins(self, plugin_ids: set[str]) -> dict[str, Any]:
@@ -282,26 +387,21 @@ class PluginHardwareGateway:
         await self.ensure_initialized()
         selected = set(plugin_ids)
         async with self._reconfigure_lock:
+            old_ports = self._rtu_ports()
             applied = self._apply_persisted_modbus_settings()
-            reconnects: list[dict[str, Any]] = []
             try:
-                for plugin_id in selected:
-                    config = self._plugin_configs.get(plugin_id)
-                    if config is None or not config.enabled or plugin_id not in applied:
-                        continue
-                    self._plugins.pop(plugin_id, None)
-                    await PluginRegistry.disconnect_plugin(plugin_id)
-                    ok = await PluginRegistry.connect_plugin(plugin_id, config)
-                    instance = PluginRegistry.get_instance(plugin_id)
-                    if ok and instance is not None:
-                        self._plugins[plugin_id] = instance
-                    reconnects.append({"plugin_id": plugin_id, "ok": bool(ok)})
+                requested = selected.intersection(applied)
+                reconnects, released = await self._reconnect_rtu_plugins_locked(
+                    requested,
+                    old_ports=old_ports,
+                )
             finally:
                 self._suspended_plugins.difference_update(selected)
             return {
                 "ok": all(item["ok"] for item in reconnects),
                 "applied": applied,
                 "reconnects": reconnects,
+                "released_rtu_ports": released,
                 "actuation": False,
             }
 
@@ -657,6 +757,14 @@ class PluginHardwareGateway:
         else:
             await self.ensure_initialized()
             plugin = self._plugins.get(plugin_id)
+            if plugin is None:
+                # PluginRegistry is the process-wide owner of plugin instances.
+                # Recovery and the plugin-management API may reconnect an
+                # instance there without going through this gateway, leaving
+                # the local fast-path map stale. Re-attaching an existing
+                # instance is not a reconnect and does not open a transport;
+                # the health check below still decides whether it is usable.
+                plugin = PluginRegistry.get_instance(plugin_id)
         if plugin is None:
             return {
                 "ok": False,
@@ -689,6 +797,10 @@ class PluginHardwareGateway:
         compatible = bool(getattr(health, "compatible", False))
         health_status = getattr(health, "status", "ok" if compatible else "error")
         status = getattr(health_status, "value", health_status)
+        if compatible:
+            self._plugins[plugin_id] = plugin
+        elif self._plugins.get(plugin_id) is plugin:
+            self._plugins.pop(plugin_id, None)
         return {
             "ok": compatible,
             "plugin_id": plugin_id,

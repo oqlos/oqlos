@@ -169,3 +169,59 @@ def test_resolve_plugin_instance_does_not_mask_programming_errors(monkeypatch):
 
     with pytest.raises(AttributeError, match="programming defect"):
         asyncio.run(plugins._resolve_plugin_instance("modbus-io"))
+
+
+def test_connect_plugin_attaches_registry_instance_to_gateway(monkeypatch):
+    instance = object()
+
+    class _Gateway:
+        def __init__(self):
+            self._plugins = {}
+
+    gateway = _Gateway()
+
+    async def _connect(_plugin_id, _config):
+        return True
+
+    monkeypatch.setattr(plugins.PluginRegistry, "connect_plugin", _connect)
+    monkeypatch.setattr(
+        plugins.PluginRegistry,
+        "get_instance",
+        lambda plugin_id: instance if plugin_id == "io-m5-4in8out" else None,
+    )
+    monkeypatch.setattr(
+        "oqlos.api.hardware_gateway.try_get_hardware_gateway", lambda: gateway
+    )
+
+    result = asyncio.run(
+        plugins.connect_plugin(
+            "io-m5-4in8out",
+            {"enabled": True, "connection_type": "http"},
+        )
+    )
+
+    assert result == {"status": "connected", "plugin_id": "io-m5-4in8out"}
+    assert gateway._plugins["io-m5-4in8out"] is instance
+
+
+def test_disconnect_plugin_removes_gateway_instance(monkeypatch):
+    instance = object()
+
+    class _Gateway:
+        def __init__(self):
+            self._plugins = {"io-m5-4in8out": instance}
+
+    gateway = _Gateway()
+
+    async def _disconnect(_plugin_id):
+        return True
+
+    monkeypatch.setattr(plugins.PluginRegistry, "disconnect_plugin", _disconnect)
+    monkeypatch.setattr(
+        "oqlos.api.hardware_gateway.try_get_hardware_gateway", lambda: gateway
+    )
+
+    result = asyncio.run(plugins.disconnect_plugin("io-m5-4in8out"))
+
+    assert result == {"status": "disconnected", "plugin_id": "io-m5-4in8out"}
+    assert "io-m5-4in8out" not in gateway._plugins
