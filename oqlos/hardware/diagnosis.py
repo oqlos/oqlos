@@ -41,6 +41,7 @@ _OQLOS_SAFE_PLUGINS = (
 )
 _MOTOR_PLUGIN_IDS = frozenset({"motor-tic249", "motor-dri0050"})
 _MODBUS_PLUGIN_IDS = frozenset({"modbus-io", "modbus-adc"})
+_VALVE_PLUGIN_IDS = frozenset({"io-m5-4in8out", "modbus-io"})
 
 # Backward-compatible aliases
 _health_map = health_map
@@ -53,6 +54,8 @@ def resolve_recover_plugin_ids(devices: str) -> tuple[str, ...]:
         return tuple(sorted(_MOTOR_PLUGIN_IDS))
     if selector == "modbus":
         return tuple(sorted(_MODBUS_PLUGIN_IDS))
+    if selector == "valves":
+        return tuple(sorted(_VALVE_PLUGIN_IDS))
     if selector in _OQLOS_SAFE_PLUGINS:
         return (selector,)
     return _OQLOS_SAFE_PLUGINS
@@ -72,7 +75,7 @@ def _is_motor_global_action(action: object) -> bool:
 
 def filter_diagnosis_dict_for_devices(payload: dict[str, Any], devices: str) -> dict[str, Any]:
     selector = str(devices or "").strip().lower()
-    if selector not in {"motors", "modbus", *_OQLOS_SAFE_PLUGINS}:
+    if selector not in {"motors", "modbus", "valves", *_OQLOS_SAFE_PLUGINS}:
         return payload
     selected = set(resolve_recover_plugin_ids(selector))
     device_map = payload.get("devices") if isinstance(payload.get("devices"), dict) else {}

@@ -18,9 +18,103 @@ _MONITORED_PLUGINS = (
 M5_4IN8OUT_PLUGIN_ID = "io-m5-4in8out"
 
 
-def add_m5_4in8out_device_actions(dev: DeviceDiagnosis, status: str, msg: str) -> None:
-    """I2C failures need different hands-on checks than an RS485 module."""
+def _m5_4in8out_transport(entry: dict[str, Any] | None, msg: str) -> str:
+    """Resolve whether the module is local I2C or the remote StackNet gateway."""
+    details = (entry or {}).get("details")
+    details = details if isinstance(details, dict) else {}
+    backend = str(details.get("backend") or "").strip().lower()
+    if backend == "cores3-http" or any(marker in msg for marker in ("cores3", "wifi", "http")):
+        return "http"
+    if backend in {"smbus", "mcp2221", "mock"} or any(
+        marker in msg for marker in ("/dev/i2c", "0x45", "sda/scl")
+    ):
+        return "i2c"
+    try:
+        from oqlos.hardware.configuration import load_effective_hardware_configuration
+
+        config, _ = load_effective_hardware_configuration()
+        plugin = config.plugins.get(M5_4IN8OUT_PLUGIN_ID)
+        configured = str(getattr(plugin, "connection_type", "") or "").strip().lower()
+        if configured in {"http", "i2c"}:
+            return configured
+    except Exception:
+        pass
+    return "unknown"
+
+
+def add_m5_4in8out_device_actions(
+    dev: DeviceDiagnosis,
+    status: str,
+    msg: str,
+    entry: dict[str, Any] | None = None,
+) -> None:
+    """Give transport-specific guidance for local I2C or remote StackNet."""
     if status == "ok":
+        return
+    transport = _m5_4in8out_transport(entry, msg)
+    if transport == "http":
+        if "lease" in msg:
+            dev.issues.append(
+                "StackNet odpowiada, ale BoardNet nie uzyskał dzierżawy sterowania."
+            )
+        elif any(marker in msg for marker in ("401", "403", "auth", "token")):
+            dev.issues.append(
+                "StackNet odrzucił poświadczenia MaskAuth lub token capability."
+            )
+        else:
+            dev.issues.append(
+                "Brak połączenia HTTP z bramką StackNet/CoreS3; sprawdź WiFi, adres i port 8080."
+            )
+        dev.recommended_actions.extend(
+            [
+                DiagnosisAction(
+                    id="stacknet-http-check",
+                    device_id=M5_4IN8OUT_PLUGIN_ID,
+                    label="Sprawdź StackNet /health i /api/v1/oql/status",
+                    kind="manual",
+                    priority=20,
+                    auto_executable=False,
+                    scope="network",
+                    detail=(
+                        "Sprawdź osiągalność skonfigurowanego base_url, zgodność firmware/OQL, "
+                        "MaskAuth oraz stan obu modułów I2C raportowany przez CoreS3."
+                    ),
+                    code="hw_m5_4in8out_no_response",
+                    actuation_risk="none",
+                ),
+                DiagnosisAction(
+                    id="m5-4in8out-reconnect",
+                    device_id=M5_4IN8OUT_PLUGIN_ID,
+                    label="Reconnect StackNet plugin (OqlOS)",
+                    kind="oqlos",
+                    priority=15,
+                    auto_executable=True,
+                    scope="oqlos",
+                    detail="Ponowne połączenie HTTP i odnowienie dzierżawy bez włączania wyjść.",
+                    code="hw_m5_4in8out_bus_stale",
+                    actuation_risk="none",
+                ),
+            ]
+        )
+        return
+    if transport == "unknown":
+        dev.issues.append(
+            "Nie można ustalić transportu io-m5-4in8out; sprawdź connection_type w konfiguracji OqlOS."
+        )
+        dev.recommended_actions.append(
+            DiagnosisAction(
+                id="m5-4in8out-reconnect",
+                device_id=M5_4IN8OUT_PLUGIN_ID,
+                label="Reconnect plugin io-m5-4in8out (OqlOS)",
+                kind="oqlos",
+                priority=15,
+                auto_executable=True,
+                scope="oqlos",
+                detail="Bezpieczne odświeżenie skonfigurowanego transportu.",
+                code="hw_m5_4in8out_bus_stale",
+                actuation_risk="none",
+            )
+        )
         return
     if "disabled" in msg:
         dev.issues.append(
@@ -181,8 +275,7 @@ def add_tic249_device_actions(
         if not reverse and not forward:
             dev.issues.append(
                 "Pozycja silnika niepewna i żadna krańcówka nie jest aktywna — "
-                "sprawdź krańcówkę reverse, mapę pinów OQL/NVM oraz homing "
-                "przed ruchem AL."
+                "sprawdź SDA (reverse) oraz homing przed ruchem AL."
             )
         else:
             dev.issues.append("Pozycja silnika niepewna — wykonaj homing do krańcówki.")
@@ -197,7 +290,7 @@ def add_tic249_device_actions(
             DiagnosisAction(
                 id="tic249-limit-wiring",
                 device_id=dev.device_id,
-                label="Sprawdź krańcówkę reverse i mapę pinów OQL/NVM Tic249",
+                label="Sprawdź krańcówkę reverse (SDA) i NVM pinów Tic249",
                 kind="manual",
                 priority=12,
                 auto_executable=False,
@@ -294,7 +387,7 @@ def _add_plugin_actions(
     if plugin_id.startswith("modbus"):
         add_modbus_device_actions(dev, plugin_id, status, message, platform)
     elif plugin_id == M5_4IN8OUT_PLUGIN_ID:
-        add_m5_4in8out_device_actions(dev, status, message)
+        add_m5_4in8out_device_actions(dev, status, message, entry)
     elif plugin_id == "motor-tic249":
         add_tic249_device_actions(dev, status, message, host_recover, entry)
     elif plugin_id == "motor-dri0050":

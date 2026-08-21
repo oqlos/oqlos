@@ -21,6 +21,7 @@ def test_hw3_system_router_includes_ui_module_routes() -> None:
     assert "/rtc/command" in paths
     assert "/diagnosis" in paths
     assert "/diagnosis/repair" in paths
+    assert "/valves/autoconfigure" in paths
 
 
 def _client() -> TestClient:
@@ -45,6 +46,24 @@ def test_modbus_autoconfigure_limits_safe_recovery_to_modbus(monkeypatch) -> Non
     assert response.json() == {"ok": True}
     assert calls == [
         ("hardware_recover_route", {"scope": "safe", "devices": "modbus"})
+    ]
+
+
+def test_valve_autoconfigure_recovers_stacknet_and_modbus(monkeypatch) -> None:
+    calls = []
+
+    async def _recover(name, **kwargs):
+        calls.append((name, kwargs))
+        return {"ok": True}
+
+    monkeypatch.setattr(system_hw, "_hardware_v1_call", _recover)
+
+    response = _client().post("/api/v3/hardware/valves/autoconfigure")
+
+    assert response.status_code == 200
+    assert response.json() == {"ok": True}
+    assert calls == [
+        ("hardware_recover_route", {"scope": "safe", "devices": "valves"})
     ]
 
 
