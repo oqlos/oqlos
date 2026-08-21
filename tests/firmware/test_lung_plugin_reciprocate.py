@@ -181,6 +181,17 @@ def test_position_uncertain_without_limits_allows_reciprocate():
     assert result["success"] is True
     assert len(client.posts) == 1
 
+    alert = plugin._position_uncertain_alert(
+        {
+            "position_uncertain": True,
+            "forward_limit_active": False,
+            "reverse_limit_active": False,
+        }
+    )
+    assert alert is not None
+    assert "mapę pinów OQL/NVM" in alert
+    assert "SDA" not in alert and "SCL" not in alert
+
 
 
 def test_position_uncertain_with_active_limit_alerts_but_does_not_block():

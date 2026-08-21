@@ -390,6 +390,8 @@ def test_plugin_readiness_reattaches_healthy_registry_instance_without_reconnect
     """Recovery may populate PluginRegistry while the gateway map stays stale."""
 
     class _RecoveredPlugin:
+        status = PluginStatus.CONNECTED
+
         async def health_check(self) -> PluginHealth:
             return PluginHealth(
                 status=PluginStatus.CONNECTED,
@@ -431,3 +433,105 @@ def test_plugin_readiness_reattaches_healthy_registry_instance_without_reconnect
     }
     assert gateway._plugins["io-m5-4in8out"] is recovered
     reconnect.assert_not_awaited()
+
+
+def test_plugin_readiness_skips_failed_registry_instance_without_reconnect(
+    monkeypatch,
+) -> None:
+    """A dead preferred controller must not delay the connected fallback."""
+
+    class _FailedPlugin:
+        status = PluginStatus.ERROR
+
+        def __init__(self) -> None:
+            self.health_check = AsyncMock()
+
+    gateway = PluginHardwareGateway(mode="mock")
+    gateway.mode = "real"
+    gateway._init_done = True
+    gateway._plugin_configs = {
+        "io-m5-4in8out": PluginConfig(
+            plugin_id="io-m5-4in8out",
+            enabled=True,
+        ),
+    }
+    failed = _FailedPlugin()
+    monkeypatch.setattr(
+        PluginRegistry,
+        "get_instance",
+        classmethod(
+            lambda cls, plugin_id: (
+                failed if plugin_id == "io-m5-4in8out" else None
+            )
+        ),
+    )
+    reconnect = AsyncMock()
+    monkeypatch.setattr(gateway, "_get_or_connect_plugin", reconnect)
+
+    result = asyncio.run(
+        gateway.plugin_readiness("io-m5-4in8out", reconnect=False)
+    )
+
+    assert result == {
+        "ok": False,
+        "plugin_id": "io-m5-4in8out",
+        "status": "unavailable",
+        "message": "Plugin io-m5-4in8out is not connected",
+    }
+    failed.health_check.assert_not_awaited()
+    reconnect.assert_not_awaited()
+
+
+def test_plugin_readiness_persists_live_failure_and_skips_the_next_probe(
+    monkeypatch,
+) -> None:
+    """A live timeout/error must be paid once, not again on the next click."""
+
+    class _FailingConnectedPlugin:
+        def __init__(self) -> None:
+            self._status = PluginStatus.CONNECTED
+            self.health_check = AsyncMock(
+                return_value=PluginHealth(
+                    status=PluginStatus.ERROR,
+                    message="StackNet unavailable",
+                    compatible=False,
+                )
+            )
+
+        @property
+        def status(self) -> PluginStatus:
+            return self._status
+
+    gateway = PluginHardwareGateway(mode="mock")
+    gateway.mode = "real"
+    gateway._init_done = True
+    gateway._plugin_configs = {
+        "io-m5-4in8out": PluginConfig(
+            plugin_id="io-m5-4in8out",
+            enabled=True,
+        ),
+    }
+    plugin = _FailingConnectedPlugin()
+    gateway._plugins["io-m5-4in8out"] = plugin
+    monkeypatch.setattr(
+        PluginRegistry,
+        "get_instance",
+        classmethod(
+            lambda cls, plugin_id: (
+                plugin if plugin_id == "io-m5-4in8out" else None
+            )
+        ),
+    )
+
+    first = asyncio.run(
+        gateway.plugin_readiness("io-m5-4in8out", reconnect=False)
+    )
+    second = asyncio.run(
+        gateway.plugin_readiness("io-m5-4in8out", reconnect=False)
+    )
+
+    assert first["ok"] is False
+    assert first["status"] == "error"
+    assert second["status"] == "unavailable"
+    assert plugin.status is PluginStatus.ERROR
+    plugin.health_check.assert_awaited_once()

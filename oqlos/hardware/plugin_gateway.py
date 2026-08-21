@@ -28,6 +28,7 @@ from oqlos.hardware.plugins import (
     PluginConfig,
     PluginHealth,
     PluginRegistry,
+    PluginStatus,
     PiadcPlugin,
     ModbusAdcPlugin,
     MotorPlugin,
@@ -772,10 +773,14 @@ class PluginHardwareGateway:
                 # PluginRegistry is the process-wide owner of plugin instances.
                 # Recovery and the plugin-management API may reconnect an
                 # instance there without going through this gateway, leaving
-                # the local fast-path map stale. Re-attaching an existing
-                # instance is not a reconnect and does not open a transport;
-                # the health check below still decides whether it is usable.
-                plugin = PluginRegistry.get_instance(plugin_id)
+                # the local fast-path map stale. Re-attach only an instance
+                # already marked CONNECTED. Failed startup instances also stay
+                # in the registry; probing one of those here makes every HUI
+                # action wait for its full transport timeout even when a healthy
+                # valve-controller fallback is already connected.
+                recovered = PluginRegistry.get_instance(plugin_id)
+                if getattr(recovered, "status", None) is PluginStatus.CONNECTED:
+                    plugin = recovered
         if plugin is None:
             return {
                 "ok": False,
@@ -807,6 +812,13 @@ class PluginHardwareGateway:
 
         compatible = bool(getattr(health, "compatible", False))
         health_status = getattr(health, "status", "ok" if compatible else "error")
+        # A direct HUI readiness probe bypasses PluginRegistry.health_check(),
+        # which normally persists the returned status on the instance. Keep
+        # that invariant here as well: otherwise a just-failed CONNECTED
+        # instance is reattached from the process-wide registry on every
+        # reconnect=False action and every click pays its transport timeout.
+        if hasattr(plugin, "_status"):
+            plugin._status = health_status
         status = getattr(health_status, "value", health_status)
         if compatible:
             self._plugins[plugin_id] = plugin

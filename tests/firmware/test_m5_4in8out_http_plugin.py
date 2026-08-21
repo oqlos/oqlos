@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 import pytest
@@ -15,6 +16,7 @@ class _CoreS3:
     configured = True
     active_revision = 1
     lease_error: Exception | None = None
+    renew_error: Exception | None = None
     instances: list["_CoreS3"] = []
 
     def __init__(self, base_url: str, token: str, timeout: float, capability_client=None) -> None:
@@ -60,6 +62,8 @@ class _CoreS3:
         return {"success": True, "data": {"lease_id": lease_id, "ttl_ms": ttl_ms}}
 
     def renew_lease(self) -> dict[str, Any]:
+        if self.renew_error is not None:
+            raise self.renew_error
         return {"success": True, "data": {"lease_id": self.lease_id}}
 
     def release_lease(self) -> dict[str, Any]:
@@ -104,6 +108,7 @@ def _fake_cores3(monkeypatch: pytest.MonkeyPatch) -> None:
     _CoreS3.configured = True
     _CoreS3.active_revision = 1
     _CoreS3.lease_error = None
+    _CoreS3.renew_error = None
     _CoreS3.instances.clear()
     monkeypatch.setattr(m5_4in8out, "CoreS3HttpClient", _CoreS3)
 
@@ -258,4 +263,47 @@ async def test_http_lease_renewal_errors_out_when_reacquire_is_refused() -> None
 
     assert await plugin._reacquire_http_lease() is False
 
+    await plugin.disconnect()
+
+
+async def _wait_for_status(plugin, status, *, timeout: float = 3.0) -> bool:
+    deadline = asyncio.get_running_loop().time() + timeout
+    while asyncio.get_running_loop().time() < deadline:
+        if plugin.status is status:
+            return True
+        await asyncio.sleep(0.05)
+    return plugin.status is status
+
+
+@pytest.mark.asyncio
+async def test_http_lease_renewal_failure_marks_plugin_unavailable() -> None:
+    config = _config()
+    config.connection_params["lease_ttl_ms"] = 500
+    plugin = M54In8OutPlugin(config)
+    assert await plugin.connect() is True
+    # Renewal *and* re-acquire refused: nothing can re-arm the lease, so the
+    # plugin must end up unavailable rather than pretending it can still drive.
+    _CoreS3.renew_error = RuntimeError("MaskAuth unavailable")
+    _CoreS3.lease_error = RuntimeError("MaskAuth unavailable")
+
+    assert await _wait_for_status(plugin, PluginStatus.ERROR)
+
+    health = await plugin.health_check()
+    assert health.compatible is False
+    assert health.details["control_lease_active"] is False
+    await plugin.disconnect()
+
+
+@pytest.mark.asyncio
+async def test_http_lease_renewal_failure_recovers_when_reacquire_succeeds() -> None:
+    """One refused renewal must not brick the valve stage until a restart."""
+    config = _config()
+    config.connection_params["lease_ttl_ms"] = 500
+    plugin = M54In8OutPlugin(config)
+    assert await plugin.connect() is True
+    _CoreS3.renew_error = RuntimeError("HTTP 409: ESP_ERR_INVALID_STATE")
+
+    await asyncio.sleep(0.6)
+
+    assert plugin.status is PluginStatus.CONNECTED
     await plugin.disconnect()

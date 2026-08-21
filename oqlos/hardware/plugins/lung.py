@@ -290,7 +290,8 @@ class LungPlugin(HardwarePlugin):
             return "Pozycja silnika niepewna — wykonaj homing do krańcówki."
         return (
             "Pozycja silnika jest niepewna i żadna krańcówka nie jest aktywna. "
-            "Sprawdź okablowanie reverse (SDA) albo wykonaj homing przed ruchem AL."
+            "Sprawdź okablowanie reverse i mapę pinów OQL/NVM albo wykonaj "
+            "homing przed ruchem AL."
         )
 
     # ── Command Handlers (refactored from monolithic execute_command) ──
