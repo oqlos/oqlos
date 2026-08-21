@@ -10,10 +10,15 @@ outputs and 8 inputs.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
+import os
+import socket
 from typing import Any
+import uuid
 
 from ._m5_core_http import CoreS3HttpClient
+from ._maskauth_capability import MaskAuthCapabilityClient
 from .base import HardwarePlugin, PluginConfig, PluginHealth, PluginStatus
 
 logger = logging.getLogger(__name__)
@@ -54,6 +59,8 @@ class M54In8OutPlugin(HardwarePlugin):
         super().__init__(config)
         self._module: Any = None
         self._lock = asyncio.Lock()
+        self._lease_task: asyncio.Task[None] | None = None
+        self._lease_id = f"boardnet:{socket.gethostname()}:{uuid.uuid4().hex}"
 
     # ------------------------------------------------------------------
     # Configuration
@@ -69,6 +76,37 @@ class M54In8OutPlugin(HardwarePlugin):
     def _is_http(self) -> bool:
         return self.config.connection_type == "http"
 
+    def _http_token(self) -> str:
+        params = self._params()
+        explicit = str(params.get("token", "")).strip()
+        if explicit:
+            return explicit
+        token_env = str(params.get("token_env", "STACKNET_OQL_TOKEN")).strip()
+        return os.environ.get(token_env, "").strip()
+
+    def _capability_client(self) -> MaskAuthCapabilityClient | None:
+        params = self._params()
+        base_url = str(params.get("maskauth_url", "")).strip()
+        if not base_url:
+            return None
+        secret_env = str(
+            params.get("maskauth_credential_env", "MASKAUTH_BOARDNET_CLIENT_SECRET")
+        ).strip()
+        secret = os.environ.get(secret_env, "").strip()
+        if not secret:
+            return None
+        return MaskAuthCapabilityClient(
+            base_url,
+            str(params.get("maskauth_client_id", "boardnet")),
+            secret,
+            str(params.get("maskauth_application", "boardnet")),
+            str(params.get("maskauth_audience", "stacknet")),
+            self.config.timeout,
+        )
+
+    def _lease_ttl_ms(self) -> int:
+        return int(self._params().get("lease_ttl_ms", 3000))
+
     def validate_config(self) -> list[str]:
         """Validate I2C-specific configuration."""
         errors: list[str] = []
@@ -79,6 +117,15 @@ class M54In8OutPlugin(HardwarePlugin):
             base_url = str(params.get("base_url", "")).strip()
             if not base_url.startswith(("http://", "https://")):
                 errors.append("base_url must start with http:// or https:// for the http transport")
+            if not self._http_token() and self._capability_client() is None:
+                errors.append("StackNet requires MaskAuth service credentials or a legacy control token")
+            try:
+                lease_ttl_ms = self._lease_ttl_ms()
+            except (TypeError, ValueError):
+                errors.append("lease_ttl_ms must be an integer")
+            else:
+                if lease_ttl_ms < 500 or lease_ttl_ms > 10000:
+                    errors.append("lease_ttl_ms must be between 500 and 10000")
             return errors
 
         backend = str(params.get("backend", "smbus")).strip().lower()
@@ -117,6 +164,47 @@ class M54In8OutPlugin(HardwarePlugin):
         )
         return Module4In8Out(config)
 
+    def _http_health_from_payload(
+        self,
+        payload: dict[str, Any],
+        *,
+        require_control_lease: bool,
+    ) -> PluginHealth:
+        """Separate physical M122 health from permission to actuate outputs."""
+        data = payload.get("data") or {}
+        modules = data.get("modules") or []
+        physical_healthy = bool(data.get("healthy"))
+        lease_active = bool(
+            getattr(self._module, "lease_id", "")
+            and self._lease_task is not None
+            and not self._lease_task.done()
+        )
+        control_ready = physical_healthy and (
+            lease_active or not require_control_lease
+        )
+        if not physical_healthy:
+            message = "CoreS3 reachable; one or more M122 modules unavailable"
+        elif require_control_lease and not lease_active:
+            message = "CoreS3 dual M122 online; control lease unavailable"
+        else:
+            message = "CoreS3 dual M122 online"
+        return PluginHealth(
+            status=PluginStatus.CONNECTED if control_ready else PluginStatus.ERROR,
+            message=message,
+            details={
+                "backend": "cores3-http",
+                "base_url": self._params().get("base_url"),
+                "modules": modules,
+                "address": ", ".join(str(item.get("address")) for item in modules),
+                "physical_healthy": physical_healthy,
+                "control_lease_active": lease_active,
+            },
+            compatible=control_ready,
+            version=",".join(
+                str(item.get("firmware_version", "?")) for item in modules
+            ),
+        )
+
     # ------------------------------------------------------------------
     # Lifecycle
     # ------------------------------------------------------------------
@@ -127,13 +215,31 @@ class M54In8OutPlugin(HardwarePlugin):
             params = self._params()
             self._module = CoreS3HttpClient(
                 str(params.get("base_url", "")),
-                str(params.get("token", "")),
+                self._http_token(),
                 self.config.timeout,
+                self._capability_client(),
             )
             attempts = max(1, int(self.config.retry_count) + 1)
             for attempt in range(attempts):
-                health = await self.health_check()
+                async with self._lock:
+                    payload = await asyncio.wait_for(
+                        asyncio.to_thread(self._module.status),
+                        timeout=self.config.timeout,
+                    )
+                health = self._http_health_from_payload(
+                    payload,
+                    require_control_lease=False,
+                )
                 if health.status == PluginStatus.CONNECTED and health.compatible:
+                    try:
+                        await self._call("acquire_lease", self._lease_id, self._lease_ttl_ms())
+                    except Exception as exc:
+                        logger.error("StackNet control lease acquisition failed: %s", exc)
+                        self._module.close()
+                        self._module = None
+                        self._status = PluginStatus.ERROR
+                        return False
+                    self._lease_task = asyncio.create_task(self._renew_http_lease())
                     self._status = PluginStatus.CONNECTED
                     return True
                 if attempt + 1 < attempts:
@@ -177,9 +283,16 @@ class M54In8OutPlugin(HardwarePlugin):
 
     async def disconnect(self) -> None:
         """Close the I2C transport."""
+        if self._lease_task is not None:
+            self._lease_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await self._lease_task
+            self._lease_task = None
         module, self._module = self._module, None
         if module is not None:
             try:
+                if self._is_http():
+                    await asyncio.to_thread(module.release_lease)
                 await asyncio.to_thread(module.close)
             except Exception:
                 logger.debug("Failed to close 4In8Out transport", exc_info=True)
@@ -192,8 +305,9 @@ class M54In8OutPlugin(HardwarePlugin):
             params = self._params()
             self._module = CoreS3HttpClient(
                 str(params.get("base_url", "")),
-                str(params.get("token", "")),
+                self._http_token(),
                 self.config.timeout,
+                self._capability_client(),
             )
         if self._module is None:
             address = self._address()
@@ -229,20 +343,9 @@ class M54In8OutPlugin(HardwarePlugin):
                     payload = await asyncio.wait_for(
                         asyncio.to_thread(self._module.status), timeout=self.config.timeout
                     )
-                    data = payload.get("data") or {}
-                    modules = data.get("modules") or []
-                    healthy = bool(data.get("healthy"))
-                    return PluginHealth(
-                        status=PluginStatus.CONNECTED if healthy else PluginStatus.ERROR,
-                        message="CoreS3 dual M122 online" if healthy else "CoreS3 reachable; one or more M122 modules unavailable",
-                        details={
-                            "backend": "cores3-http",
-                            "base_url": self._params().get("base_url"),
-                            "modules": modules,
-                            "address": ", ".join(str(item.get("address")) for item in modules),
-                        },
-                        compatible=healthy,
-                        version=",".join(str(item.get("firmware_version", "?")) for item in modules),
+                    return self._http_health_from_payload(
+                        payload,
+                        require_control_lease=True,
                     )
                 status = await asyncio.wait_for(
                     asyncio.to_thread(self._module.health),
@@ -307,6 +410,19 @@ class M54In8OutPlugin(HardwarePlugin):
                 asyncio.to_thread(getattr(self._module, method), *args),
                 timeout=self.config.timeout,
             )
+
+    async def _renew_http_lease(self) -> None:
+        interval = max(0.2, self._lease_ttl_ms() / 3000.0)
+        while True:
+            await asyncio.sleep(interval)
+            try:
+                await self._call("renew_lease")
+            except asyncio.CancelledError:
+                raise
+            except Exception as exc:
+                self._status = PluginStatus.ERROR
+                logger.error("StackNet control lease renewal failed; dead-man will force all-off: %s", exc)
+                return
 
     async def _execute_set_coil(self, params: dict[str, Any]) -> dict[str, Any]:
         """Write one output; the Waveshare 'all outputs' address is honoured too."""

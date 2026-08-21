@@ -12,13 +12,16 @@ from oqlos.hardware.plugins import m5_4in8out
 
 class _CoreS3:
     healthy = True
+    lease_error: Exception | None = None
     instances: list["_CoreS3"] = []
 
-    def __init__(self, base_url: str, token: str, timeout: float) -> None:
+    def __init__(self, base_url: str, token: str, timeout: float, capability_client=None) -> None:
         self.base_url = base_url
         self.token = token
         self.timeout = timeout
+        self.capability_client = capability_client
         self.closed = False
+        self.lease_id = ""
         self.commands: list[tuple[str, dict[str, Any]]] = []
         self.__class__.instances.append(self)
 
@@ -36,6 +39,22 @@ class _CoreS3:
     def execute(self, command: str, params: dict[str, Any]) -> dict[str, Any]:
         self.commands.append((command, params))
         return {"success": True, "data": {"command": command, **params}}
+
+    def acquire_lease(self, lease_id: str, ttl_ms: int) -> dict[str, Any]:
+        if self.lease_error is not None:
+            raise self.lease_error
+        self.lease_id = lease_id
+        return {"success": True, "data": {"lease_id": lease_id, "ttl_ms": ttl_ms}}
+
+    def renew_lease(self) -> dict[str, Any]:
+        return {"success": True, "data": {"lease_id": self.lease_id}}
+
+    def release_lease(self) -> dict[str, Any]:
+        self.lease_id = ""
+        return {"success": True}
+
+    def set_output(self, output: int, value: bool) -> dict[str, Any]:
+        return self.execute("set_coil", {"coil": output - 1, "value": value})
 
     def close(self) -> None:
         self.closed = True
@@ -57,6 +76,7 @@ def _config() -> PluginConfig:
 @pytest.fixture(autouse=True)
 def _fake_cores3(monkeypatch: pytest.MonkeyPatch) -> None:
     _CoreS3.healthy = True
+    _CoreS3.lease_error = None
     _CoreS3.instances.clear()
     monkeypatch.setattr(m5_4in8out, "CoreS3HttpClient", _CoreS3)
 
@@ -71,6 +91,23 @@ async def test_http_connect_and_health_require_both_modules_ready() -> None:
     assert plugin.status is PluginStatus.CONNECTED
     assert health.compatible is True
     assert health.details["address"] == "0x45, 0x66"
+    assert health.details["physical_healthy"] is True
+    assert health.details["control_lease_active"] is True
+
+
+@pytest.mark.asyncio
+async def test_http_health_does_not_promote_physical_gateway_without_control_lease() -> None:
+    _CoreS3.lease_error = RuntimeError("lease denied")
+    plugin = M54In8OutPlugin(_config())
+
+    assert await plugin.connect() is False
+    health = await plugin.health_check()
+
+    assert health.status is PluginStatus.ERROR
+    assert health.compatible is False
+    assert health.details["physical_healthy"] is True
+    assert health.details["control_lease_active"] is False
+    assert "control lease unavailable" in health.message
 
 
 @pytest.mark.asyncio

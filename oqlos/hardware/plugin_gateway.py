@@ -870,7 +870,17 @@ class PluginHardwareGateway:
 
             plugin = self._plugins.get(plugin_id)
             if plugin is None:
-                plugin = await self._connect_valve_controller(plugin_id)
+                # Actuation must not stall on a known-dead preferred controller
+                # while another controller is already connected. Recovery and
+                # management endpoints reconnect hardware explicitly; the hot
+                # command path uses the healthy fallback immediately. If every
+                # alternative is disconnected, preserve the lazy-connect path.
+                connected_alternative = any(
+                    candidate != plugin_id and candidate in self._plugins
+                    for candidate in controllers
+                )
+                if not connected_alternative:
+                    plugin = await self._connect_valve_controller(plugin_id)
             if plugin is None:
                 logger.warning(
                     "Valve controller %s is disconnected; using the next fallback",
@@ -895,6 +905,12 @@ class PluginHardwareGateway:
                 plugin_id,
                 valve_id,
                 result.get("error"),
+            )
+            # Do not let a controller that just rejected actuation suppress
+            # lazy connection of the next fallback in this same command.
+            self._plugins.pop(plugin_id, None)
+            self._valve_reconnect_blocked_until[plugin_id] = (
+                monotonic() + _VALVE_RECONNECT_COOLDOWN_SECONDS
             )
         return False
 
