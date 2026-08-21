@@ -267,3 +267,92 @@ def test_tic249_extended_reciprocate_normalizes_ramp_time_alias():
 
     assert params["speed"] == 10_000_000
     assert params["ramp_seconds"] == 0.5
+
+
+class _AbortsAfterAcceptClient:
+    """Sidecar accepts /api/reciprocate, then reports it refused to move."""
+
+    def __init__(self, *, previous_error: str = ""):
+        self.posts = []
+        self._motion_error = previous_error
+        self._accepted = False
+
+    async def get(self, url):
+        if url.endswith("/api/status"):
+            return _JsonResponse(
+                200,
+                {
+                    "connected": True,
+                    "ready": False,
+                    "energized": False,
+                    "motor_driver_error": False,
+                    "low_vin": False,
+                    "forward_limit_active": False,
+                    "reverse_limit_active": False,
+                    "last_motion_error": self._motion_error,
+                },
+            )
+        return _JsonResponse(404, {})
+
+    async def post(self, url, json=None):
+        self.posts.append((url, json))
+        self._accepted = True
+        self._motion_error = (
+            "Unexpected reverse limit active before half-cycle; "
+            "aborting instead of reversing direction"
+        )
+        return _JsonResponse(200, {"success": True, "mode": "reciprocating"})
+
+
+class _StaleMotionErrorClient(_ReadyFalseClient):
+    """A motion error left over from an earlier run must not fail a good START."""
+
+    async def get(self, url):
+        if url.endswith("/api/status"):
+            return _JsonResponse(
+                200,
+                {
+                    "connected": True,
+                    "ready": False,
+                    "energized": False,
+                    "motor_driver_error": False,
+                    "low_vin": False,
+                    "forward_limit_active": False,
+                    "reverse_limit_active": False,
+                    "last_motion_error": "stale error from an earlier run",
+                },
+            )
+        return _JsonResponse(404, {})
+
+
+def _reciprocate(plugin):
+    return asyncio.run(
+        plugin.execute_command(
+            "reciprocate",
+            {"steps": 500, "speed": 10_000_000, "cycles": 3, "pause": 0.5},
+        )
+    )
+
+
+def test_reciprocate_reports_sidecar_abort_instead_of_success():
+    client = _AbortsAfterAcceptClient()
+    plugin = _plugin_with_client(client)
+
+    result = _reciprocate(plugin)
+
+    assert result["success"] is False
+    assert "reverse limit active" in result["reason"]
+    assert result["error_code"] == "C2004-HW-0012"
+    assert result["stage"] == "adapter.motion"
+    assert result["issue_code"] == "hw_tic249_position_uncertain"
+    # The command still reached the sidecar; only the verdict changed.
+    assert client.posts[0][0] == "http://localhost:8205/api/reciprocate"
+
+
+def test_reciprocate_ignores_a_stale_motion_error():
+    client = _StaleMotionErrorClient()
+    plugin = _plugin_with_client(client)
+
+    result = _reciprocate(plugin)
+
+    assert result["success"] is True

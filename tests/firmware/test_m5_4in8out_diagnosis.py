@@ -109,6 +109,28 @@ def test_missing_driver_package_is_named() -> None:
 def test_recover_selector_accepts_the_new_plugin() -> None:
     assert M5_4IN8OUT_PLUGIN_ID in _OQLOS_SAFE_PLUGINS
     assert resolve_recover_plugin_ids(M5_4IN8OUT_PLUGIN_ID) == (M5_4IN8OUT_PLUGIN_ID,)
+    assert resolve_recover_plugin_ids("valves") == (
+        M5_4IN8OUT_PLUGIN_ID,
+        "modbus-io",
+    )
+
+
+def test_stacknet_http_failure_does_not_recommend_local_i2c_scan() -> None:
+    devices = _diagnose(
+        {
+            M5_4IN8OUT_PLUGIN_ID: {
+                "status": "error",
+                "compatible": False,
+                "message": "CoreS3 WiFi gateway unavailable",
+                "details": {"backend": "cores3-http"},
+            }
+        }
+    )
+    device = devices[M5_4IN8OUT_PLUGIN_ID]
+
+    assert any("StackNet" in issue for issue in device.issues)
+    assert any(action.id == "stacknet-http-check" for action in device.recommended_actions)
+    assert not any("i2cdetect" in action.label for action in device.recommended_actions)
 
 
 def test_issue_codes_are_registered() -> None:

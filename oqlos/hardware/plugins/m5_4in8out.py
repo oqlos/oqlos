@@ -10,10 +10,15 @@ outputs and 8 inputs.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
+import os
+import socket
 from typing import Any
+import uuid
 
 from ._m5_core_http import CoreS3HttpClient
+from ._maskauth_capability import MaskAuthCapabilityClient
 from .base import HardwarePlugin, PluginConfig, PluginHealth, PluginStatus
 
 logger = logging.getLogger(__name__)
@@ -23,6 +28,7 @@ INPUT_COUNT = 4
 CORES3_OUTPUT_COUNT = 16
 CORES3_INPUT_COUNT = 8
 DEFAULT_ADDRESS = 0x45
+LEASE_REACQUIRE_ATTEMPTS = 3
 _BACKENDS = ("smbus", "mcp2221", "mock")
 
 
@@ -54,6 +60,8 @@ class M54In8OutPlugin(HardwarePlugin):
         super().__init__(config)
         self._module: Any = None
         self._lock = asyncio.Lock()
+        self._lease_task: asyncio.Task[None] | None = None
+        self._lease_id = f"boardnet:{socket.gethostname()}:{uuid.uuid4().hex}"
 
     # ------------------------------------------------------------------
     # Configuration
@@ -69,6 +77,61 @@ class M54In8OutPlugin(HardwarePlugin):
     def _is_http(self) -> bool:
         return self.config.connection_type == "http"
 
+    def _http_token(self) -> str:
+        params = self._params()
+        explicit = str(params.get("token", "")).strip()
+        if explicit:
+            return explicit
+        token_env = str(params.get("token_env", "STACKNET_OQL_TOKEN")).strip()
+        return os.environ.get(token_env, "").strip()
+
+    def _capability_client(self) -> MaskAuthCapabilityClient | None:
+        params = self._params()
+        base_url = str(params.get("maskauth_url", "")).strip()
+        if not base_url:
+            return None
+        secret_env = str(
+            params.get("maskauth_credential_env", "MASKAUTH_BOARDNET_CLIENT_SECRET")
+        ).strip()
+        secret = os.environ.get(secret_env, "").strip()
+        if not secret:
+            return None
+        return MaskAuthCapabilityClient(
+            base_url,
+            str(params.get("maskauth_client_id", "boardnet")),
+            secret,
+            str(params.get("maskauth_application", "boardnet")),
+            str(params.get("maskauth_audience", "stacknet")),
+            self.config.timeout,
+        )
+
+    def _lease_ttl_ms(self) -> int:
+        return int(self._params().get("lease_ttl_ms", 3000))
+
+    def _runtime_configuration(self) -> dict[str, Any] | None:
+        value = self._params().get("runtime_configuration")
+        return dict(value) if isinstance(value, dict) else None
+
+    @staticmethod
+    def _configuration_matches(
+        payload: dict[str, Any], desired: dict[str, Any] | None = None
+    ) -> bool:
+        data = payload.get("data") if isinstance(payload.get("data"), dict) else {}
+        firmware = data.get("firmware") if isinstance(data.get("firmware"), dict) else {}
+        compatibility = (
+            firmware.get("oql_compatibility")
+            if isinstance(firmware.get("oql_compatibility"), dict)
+            else {}
+        )
+        if not compatibility.get("configured") or not compatibility.get("compatible"):
+            return False
+        if desired is None:
+            return True
+        return (
+            compatibility.get("active_schema") == desired.get("config_schema")
+            and compatibility.get("active_revision") == desired.get("config_revision")
+        )
+
     def validate_config(self) -> list[str]:
         """Validate I2C-specific configuration."""
         errors: list[str] = []
@@ -79,6 +142,15 @@ class M54In8OutPlugin(HardwarePlugin):
             base_url = str(params.get("base_url", "")).strip()
             if not base_url.startswith(("http://", "https://")):
                 errors.append("base_url must start with http:// or https:// for the http transport")
+            if not self._http_token() and self._capability_client() is None:
+                errors.append("StackNet requires MaskAuth service credentials or a legacy control token")
+            try:
+                lease_ttl_ms = self._lease_ttl_ms()
+            except (TypeError, ValueError):
+                errors.append("lease_ttl_ms must be an integer")
+            else:
+                if lease_ttl_ms < 500 or lease_ttl_ms > 10000:
+                    errors.append("lease_ttl_ms must be between 500 and 10000")
             return errors
 
         backend = str(params.get("backend", "smbus")).strip().lower()
@@ -117,6 +189,51 @@ class M54In8OutPlugin(HardwarePlugin):
         )
         return Module4In8Out(config)
 
+    def _http_health_from_payload(
+        self,
+        payload: dict[str, Any],
+        *,
+        require_control_lease: bool,
+    ) -> PluginHealth:
+        """Separate physical M122 health from permission to actuate outputs."""
+        data = payload.get("data") or {}
+        modules = data.get("modules") or []
+        physical_healthy = bool(data.get("healthy"))
+        configuration_compatible = self._configuration_matches(payload)
+        lease_active = bool(
+            getattr(self._module, "lease_id", "")
+            and self._lease_task is not None
+            and not self._lease_task.done()
+        )
+        control_ready = physical_healthy and (
+            lease_active or not require_control_lease
+        ) and (configuration_compatible or not require_control_lease)
+        if not physical_healthy:
+            message = "CoreS3 reachable; one or more M122 modules unavailable"
+        elif require_control_lease and not lease_active:
+            message = "CoreS3 dual M122 online; control lease unavailable"
+        elif require_control_lease and not configuration_compatible:
+            message = "CoreS3 dual M122 online; OQL configuration unavailable or incompatible"
+        else:
+            message = "CoreS3 dual M122 online"
+        return PluginHealth(
+            status=PluginStatus.CONNECTED if control_ready else PluginStatus.ERROR,
+            message=message,
+            details={
+                "backend": "cores3-http",
+                "base_url": self._params().get("base_url"),
+                "modules": modules,
+                "address": ", ".join(str(item.get("address")) for item in modules),
+                "physical_healthy": physical_healthy,
+                "control_lease_active": lease_active,
+                "oql_configuration_compatible": configuration_compatible,
+            },
+            compatible=control_ready,
+            version=",".join(
+                str(item.get("firmware_version", "?")) for item in modules
+            ),
+        )
+
     # ------------------------------------------------------------------
     # Lifecycle
     # ------------------------------------------------------------------
@@ -127,13 +244,61 @@ class M54In8OutPlugin(HardwarePlugin):
             params = self._params()
             self._module = CoreS3HttpClient(
                 str(params.get("base_url", "")),
-                str(params.get("token", "")),
+                self._http_token(),
                 self.config.timeout,
+                self._capability_client(),
             )
             attempts = max(1, int(self.config.retry_count) + 1)
             for attempt in range(attempts):
-                health = await self.health_check()
+                async with self._lock:
+                    payload = await asyncio.wait_for(
+                        asyncio.to_thread(self._module.status),
+                        timeout=self.config.timeout,
+                    )
+                health = self._http_health_from_payload(
+                    payload,
+                    require_control_lease=False,
+                )
                 if health.status == PluginStatus.CONNECTED and health.compatible:
+                    try:
+                        await self._call("acquire_lease", self._lease_id, self._lease_ttl_ms())
+                        desired = self._runtime_configuration()
+                        if desired is not None and not self._configuration_matches(payload, desired):
+                            await self._call("execute", "config_apply", desired)
+                            confirmed = False
+                            for confirmation_attempt in range(attempts + 2):
+                                if confirmation_attempt:
+                                    await asyncio.sleep(min(0.25 * confirmation_attempt, 1.0))
+                                try:
+                                    payload = await self._call("status")
+                                except Exception:
+                                    continue
+                                if self._configuration_matches(payload, desired):
+                                    confirmed = True
+                                    break
+                            if not confirmed:
+                                raise RuntimeError(
+                                    "StackNet did not confirm the configured OQL schema/revision"
+                                )
+                            # Configuration may rebind the network interface.
+                            # Refresh the lease after confirmation so the first
+                            # renewal never relies on the pre-apply deadline.
+                            await self._call("acquire_lease", self._lease_id, self._lease_ttl_ms())
+                    except Exception as exc:
+                        logger.error("StackNet control preparation failed: %s", exc)
+                        self._module.close()
+                        self._module = None
+                        self._status = PluginStatus.ERROR
+                        return False
+                    self._lease_task = asyncio.create_task(self._renew_http_lease())
+                    final_health = self._http_health_from_payload(
+                        payload,
+                        require_control_lease=True,
+                    )
+                    if not final_health.compatible:
+                        await self.disconnect()
+                        self._status = PluginStatus.ERROR
+                        return False
                     self._status = PluginStatus.CONNECTED
                     return True
                 if attempt + 1 < attempts:
@@ -177,9 +342,16 @@ class M54In8OutPlugin(HardwarePlugin):
 
     async def disconnect(self) -> None:
         """Close the I2C transport."""
+        if self._lease_task is not None:
+            self._lease_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await self._lease_task
+            self._lease_task = None
         module, self._module = self._module, None
         if module is not None:
             try:
+                if self._is_http():
+                    await asyncio.to_thread(module.release_lease)
                 await asyncio.to_thread(module.close)
             except Exception:
                 logger.debug("Failed to close 4In8Out transport", exc_info=True)
@@ -192,8 +364,9 @@ class M54In8OutPlugin(HardwarePlugin):
             params = self._params()
             self._module = CoreS3HttpClient(
                 str(params.get("base_url", "")),
-                str(params.get("token", "")),
+                self._http_token(),
                 self.config.timeout,
+                self._capability_client(),
             )
         if self._module is None:
             address = self._address()
@@ -229,20 +402,9 @@ class M54In8OutPlugin(HardwarePlugin):
                     payload = await asyncio.wait_for(
                         asyncio.to_thread(self._module.status), timeout=self.config.timeout
                     )
-                    data = payload.get("data") or {}
-                    modules = data.get("modules") or []
-                    healthy = bool(data.get("healthy"))
-                    return PluginHealth(
-                        status=PluginStatus.CONNECTED if healthy else PluginStatus.ERROR,
-                        message="CoreS3 dual M122 online" if healthy else "CoreS3 reachable; one or more M122 modules unavailable",
-                        details={
-                            "backend": "cores3-http",
-                            "base_url": self._params().get("base_url"),
-                            "modules": modules,
-                            "address": ", ".join(str(item.get("address")) for item in modules),
-                        },
-                        compatible=healthy,
-                        version=",".join(str(item.get("firmware_version", "?")) for item in modules),
+                    return self._http_health_from_payload(
+                        payload,
+                        require_control_lease=True,
                     )
                 status = await asyncio.wait_for(
                     asyncio.to_thread(self._module.health),
@@ -307,6 +469,42 @@ class M54In8OutPlugin(HardwarePlugin):
                 asyncio.to_thread(getattr(self._module, method), *args),
                 timeout=self.config.timeout,
             )
+
+    async def _reacquire_http_lease(self) -> bool:
+        """Re-arm a lost lease. The dead-man already forced every output off."""
+        for attempt in range(LEASE_REACQUIRE_ATTEMPTS):
+            if attempt:
+                await asyncio.sleep(min(0.25 * attempt, 1.0))
+            try:
+                await self._call("acquire_lease", self._lease_id, self._lease_ttl_ms())
+            except asyncio.CancelledError:
+                raise
+            except Exception:
+                continue
+            return True
+        return False
+
+    async def _renew_http_lease(self) -> None:
+        interval = max(0.2, self._lease_ttl_ms() / 3000.0)
+        while True:
+            await asyncio.sleep(interval)
+            try:
+                await self._call("renew_lease")
+            except asyncio.CancelledError:
+                raise
+            except Exception as exc:
+                # A single refused renewal (StackNet reboot, dropped WiFi frame,
+                # HTTP 409 on an expired lease) must not brick the valve stage
+                # until the whole service restarts: re-arming cannot energize an
+                # output, because the dead-man already forced all-off.
+                logger.warning(
+                    "StackNet control lease renewal failed; re-acquiring: %s", exc
+                )
+                if await self._reacquire_http_lease():
+                    continue
+                self._status = PluginStatus.ERROR
+                logger.error("StackNet control lease renewal failed; dead-man will force all-off: %s", exc)
+                return
 
     async def _execute_set_coil(self, params: dict[str, Any]) -> dict[str, Any]:
         """Write one output; the Waveshare 'all outputs' address is honoured too."""
@@ -394,6 +592,19 @@ class M54In8OutPlugin(HardwarePlugin):
                         return {"success": False, "error": f"Unknown valve_id: {valve_id}"}
                     command = "set_coil"
                     params = {"coil": coil, "value": pick_param(params, "value", default=False)}
+                elif command == "replace_valves":
+                    from oqlos.hardware.modbus_io_catalog import resolve_valve_coil
+                    valve_ids = params.get("valve_ids")
+                    if not isinstance(valve_ids, (list, tuple)):
+                        return {"success": False, "error": "valve_ids must be a list"}
+                    mask = 0
+                    for valve_id in valve_ids:
+                        coil = resolve_valve_coil(str(valve_id))
+                        if coil is None or coil >= CORES3_OUTPUT_COUNT:
+                            return {"success": False, "error": f"Unknown valve_id: {valve_id}"}
+                        mask |= 1 << coil
+                    command = "replace_outputs"
+                    params = {"mask": mask}
                 return await self._call("execute", command, params)
             if command == "set_coil":
                 return await self._execute_set_coil(params)
@@ -422,6 +633,7 @@ class M54In8OutPlugin(HardwarePlugin):
             "supported_commands": [
                 "set_coil",
                 "set_valve",
+                "replace_valves",
                 "all_outputs_off",
                 "read_io_snapshot",
             ],

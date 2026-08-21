@@ -41,6 +41,7 @@ _OQLOS_SAFE_PLUGINS = (
 )
 _MOTOR_PLUGIN_IDS = frozenset({"motor-tic249", "motor-dri0050"})
 _MODBUS_PLUGIN_IDS = frozenset({"modbus-io", "modbus-adc"})
+_VALVE_PLUGIN_IDS = frozenset({"io-m5-4in8out", "modbus-io"})
 
 # Backward-compatible aliases
 _health_map = health_map
@@ -53,6 +54,8 @@ def resolve_recover_plugin_ids(devices: str) -> tuple[str, ...]:
         return tuple(sorted(_MOTOR_PLUGIN_IDS))
     if selector == "modbus":
         return tuple(sorted(_MODBUS_PLUGIN_IDS))
+    if selector == "valves":
+        return tuple(sorted(_VALVE_PLUGIN_IDS))
     if selector in _OQLOS_SAFE_PLUGINS:
         return (selector,)
     return _OQLOS_SAFE_PLUGINS
@@ -72,7 +75,7 @@ def _is_motor_global_action(action: object) -> bool:
 
 def filter_diagnosis_dict_for_devices(payload: dict[str, Any], devices: str) -> dict[str, Any]:
     selector = str(devices or "").strip().lower()
-    if selector not in {"motors", "modbus", *_OQLOS_SAFE_PLUGINS}:
+    if selector not in {"motors", "modbus", "valves", *_OQLOS_SAFE_PLUGINS}:
         return payload
     selected = set(resolve_recover_plugin_ids(selector))
     device_map = payload.get("devices") if isinstance(payload.get("devices"), dict) else {}
@@ -366,6 +369,33 @@ async def execute_safe_recover(
     repairs: list[dict[str, Any]] = []
     health_before = await gateway.health()
     targets = _recover_targets(report, health_before, plugin_ids=allowed)
+    coordinated_valve_recovery = (
+        _VALVE_PLUGIN_IDS.issubset(set(allowed))
+        and bool(_VALVE_PLUGIN_IDS.intersection(targets))
+    )
+    safe_state: dict[str, Any] = {
+        "required": coordinated_valve_recovery,
+        "before": None,
+        "after": None,
+        "confirmed": not coordinated_valve_recovery,
+    }
+
+    async def ensure_valves_off() -> dict[str, Any]:
+        stop = getattr(gateway, "all_valves_off", None)
+        if not callable(stop):
+            return {"success": False, "error": "gateway.all_valves_off is unavailable"}
+        try:
+            result = await stop()
+        except Exception as exc:  # pragma: no cover - defensive hardware boundary
+            return {"success": False, "error": str(exc)}
+        if isinstance(result, dict):
+            normalized = dict(result)
+            normalized.setdefault("success", bool(normalized.get("ok", True)))
+            return normalized
+        return {"success": bool(result), "result": result}
+
+    if coordinated_valve_recovery:
+        safe_state["before"] = await ensure_valves_off()
     await _repair_sidecar_if_needed("motor-dri0050", ensure_dri0050_sidecar, targets, health_before, repairs)
     await _repair_sidecar_if_needed(
         "motor-tic249", ensure_tic249_sidecar, targets, health_before, repairs, extra_markers=("errno 19",)
@@ -421,10 +451,14 @@ async def execute_safe_recover(
         repairs.append({"step": step, "ok": bool(ok)})
     health_after = await gateway.health()
     still_bad = _still_failed_plugins(report, health_after, allowed)
+    if coordinated_valve_recovery:
+        safe_state["after"] = await ensure_valves_off()
+        safe_state["confirmed"] = bool(safe_state["after"].get("success"))
     return {
-        "ok": not still_bad,
+        "ok": not still_bad and safe_state["confirmed"],
         "strategy": "oqlos-safe",
         "repairs": repairs,
         "host_actions": _host_actions_from_report(report, still_failed=still_bad),
         "still_failed": still_bad,
+        "safe_state": safe_state,
     }

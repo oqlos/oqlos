@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime, timezone
+from functools import lru_cache
 from time import perf_counter_ns
 from typing import Any
 
@@ -76,6 +77,7 @@ def _coerce_float(value: Any) -> float | None:
         return None
 
 
+@lru_cache(maxsize=1)
 def _configured_hui_hold_profiles() -> dict[str, dict[str, Any]]:
     """Profiles from the format-neutral HardwareConfiguration document."""
     try:
@@ -421,16 +423,8 @@ async def _engage_hold_valves(
                 operations=operations,
                 cleanup=cleanup,
             )
-        stagger_started = _timing_start()
-        await asyncio.sleep(_VALVE_STAGGER_SECONDS)
-        operations.append(
-            _operation(
-                "valve_stagger",
-                True,
-                timing=stagger_started,
-                seconds=_VALVE_STAGGER_SECONDS,
-            )
-        )
+        # Exact replacement confirms the complete valve state. The following
+        # pump request preserves ordering without a fixed 100 ms delay.
     return None
 
 
@@ -500,28 +494,65 @@ async def _start_hui_hold_unlocked(gateway: Any, key: str) -> dict[str, Any]:
         )
         return readiness_failure
 
-    shutdown_started = _timing_start()
-    shutdown = await _shutdown_all_hui_hardware_unlocked(
-        gateway,
-        modbus_prechecked=True,
+    replace = getattr(gateway, "replace_valves_exact", None)
+    supports_replace = getattr(gateway, "supports_exact_valve_replace", None)
+    exact_replace = callable(replace) and (
+        not callable(supports_replace) or bool(supports_replace())
     )
-    operations.append(
-        _operation(
-            "shutdown",
-            bool(shutdown.get("ok")),
-            timing=shutdown_started,
-            result=shutdown,
+    if exact_replace:
+        pump_off = await _set_pump_best_effort(gateway, 0.0)
+        operations.append(pump_off)
+        replace_started = _timing_start()
+        replace_result = await replace(tuple(profile["valves_on"]))
+        replace_operation = _operation(
+            "replace_valves",
+            _success(replace_result),
+            timing=replace_started,
+            valve_ids=list(profile["valves_on"]),
+            result=replace_result,
         )
-    )
+        operations.append(replace_operation)
+        if not pump_off["ok"] or not replace_operation["ok"]:
+            cleanup = await _shutdown_all_hui_hardware_unlocked(gateway)
+            return _hold_start_failure(
+                hold_key,
+                error="Exact valve preparation failed",
+                operations=operations,
+                cleanup=cleanup,
+            )
+        stagger_started = _timing_start()
+        await asyncio.sleep(_VALVE_STAGGER_SECONDS)
+        operations.append(
+            _operation(
+                "valve_stagger",
+                True,
+                timing=stagger_started,
+                seconds=_VALVE_STAGGER_SECONDS,
+            )
+        )
+    else:
+        shutdown_started = _timing_start()
+        shutdown = await _shutdown_all_hui_hardware_unlocked(
+            gateway,
+            modbus_prechecked=True,
+        )
+        operations.append(
+            _operation(
+                "shutdown",
+                bool(shutdown.get("ok")),
+                timing=shutdown_started,
+                result=shutdown,
+            )
+        )
 
-    valve_failure = await _engage_hold_valves(
-        gateway,
-        tuple(profile["valves_on"]),
-        operations=operations,
-        hold_key=hold_key,
-    )
-    if valve_failure is not None:
-        return valve_failure
+        valve_failure = await _engage_hold_valves(
+            gateway,
+            tuple(profile["valves_on"]),
+            operations=operations,
+            hold_key=hold_key,
+        )
+        if valve_failure is not None:
+            return valve_failure
 
     pump_failure = await _engage_hold_pump_if_needed(
         gateway,

@@ -162,10 +162,21 @@ class PluginRegistry:
                 instance._status = PluginStatus.ERROR
             return success
         except PLUGIN_REGISTRY_OPERATION_ERRORS as exc:
-            logger.error(
-                "Plugin connection failed exception_type=%s",
-                type(exc).__name__,
-            )
+            # Configuration errors carry text OqlOS wrote itself (the failing
+            # validator), never device payloads, so naming the reason is safe —
+            # and without it a refused reconnect is undiagnosable from the log.
+            if isinstance(exc, PluginConfigurationError):
+                logger.error(
+                    "Plugin connection failed plugin_id=%s exception_type=%s reason=%s",
+                    plugin_id,
+                    type(exc).__name__,
+                    exc,
+                )
+            else:
+                logger.error(
+                    "Plugin connection failed exception_type=%s",
+                    type(exc).__name__,
+                )
             return False
 
     @classmethod

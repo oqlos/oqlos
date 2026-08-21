@@ -721,6 +721,17 @@ class PluginHardwareGateway:
     def is_real(self) -> bool:
         return self.mode == "real"
 
+    async def plugin_cached_readiness(self, plugin_id: str) -> dict[str, Any]:
+        """Return connected in-process plugins without a remote health probe."""
+        if plugin_id in self._plugins:
+            return {
+                "ok": True,
+                "plugin_id": plugin_id,
+                "status": "connected",
+                "message": "Plugin is ready (cached)",
+            }
+        return await self.plugin_readiness(plugin_id, reconnect=False)
+
     async def plugin_readiness(
         self,
         plugin_id: str,
@@ -814,6 +825,31 @@ class PluginHardwareGateway:
         """Enabled valve output modules, most preferred first."""
         return resolve_valve_controllers(self._plugin_configs)
 
+    def supports_exact_valve_replace(self) -> bool:
+        """Whether StackNet can replace the complete valve state in one request."""
+        return "io-m5-4in8out" in self._plugins
+
+    async def replace_valves_exact(self, valve_ids: tuple[str, ...]) -> dict[str, Any] | None:
+        """Atomically clear stale StackNet outputs and enable only *valve_ids*."""
+        plugin = self._plugins.get("io-m5-4in8out")
+        if plugin is None:
+            return None
+        await ensure_power_safe(
+            self,
+            operation="io-m5-4in8out.replace_valves",
+            safe_state=not valve_ids,
+        )
+        try:
+            return _normalize_plugin_command_result(
+                await plugin.execute_command("replace_valves", {"valve_ids": list(valve_ids)})
+            )
+        except PLUGIN_OPERATION_ERRORS as exc:
+            _log_boundary_failure(
+                logger, "PluginHardwareGateway.replace_valves_exact failed", exc
+            )
+            self._plugins.pop("io-m5-4in8out", None)
+            return _plugin_command_failure("command-failed")
+
     async def _connect_valve_controller(self, plugin_id: str) -> Any | None:
         """Lazy-connect a valve module, but do not retry a dead one per valve.
 
@@ -865,7 +901,17 @@ class PluginHardwareGateway:
 
             plugin = self._plugins.get(plugin_id)
             if plugin is None:
-                plugin = await self._connect_valve_controller(plugin_id)
+                # Actuation must not stall on a known-dead preferred controller
+                # while another controller is already connected. Recovery and
+                # management endpoints reconnect hardware explicitly; the hot
+                # command path uses the healthy fallback immediately. If every
+                # alternative is disconnected, preserve the lazy-connect path.
+                connected_alternative = any(
+                    candidate != plugin_id and candidate in self._plugins
+                    for candidate in controllers
+                )
+                if not connected_alternative:
+                    plugin = await self._connect_valve_controller(plugin_id)
             if plugin is None:
                 logger.warning(
                     "Valve controller %s is disconnected; using the next fallback",
@@ -890,6 +936,12 @@ class PluginHardwareGateway:
                 plugin_id,
                 valve_id,
                 result.get("error"),
+            )
+            # Do not let a controller that just rejected actuation suppress
+            # lazy connection of the next fallback in this same command.
+            self._plugins.pop(plugin_id, None)
+            self._valve_reconnect_blocked_until[plugin_id] = (
+                monotonic() + _VALVE_RECONNECT_COOLDOWN_SECONDS
             )
         return False
 

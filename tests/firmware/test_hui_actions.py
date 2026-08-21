@@ -73,6 +73,15 @@ class FailingBulkOffGateway(FakeGateway):
         return {"success": False, "error": "bulk command unsupported"}
 
 
+class ExactReplaceGateway(BulkOffGateway):
+    def supports_exact_valve_replace(self) -> bool:
+        return True
+
+    async def replace_valves_exact(self, valve_ids: tuple[str, ...]) -> dict[str, Any]:
+        self.calls.append(("replace_valves_exact", valve_ids))
+        return {"success": True, "data": {"valve_ids": list(valve_ids)}}
+
+
 class FakeTic249Plugin:
     def __init__(self) -> None:
         self.commands: list[tuple[str, dict[str, Any]]] = []
@@ -92,6 +101,20 @@ def test_hui_hold_profile_runs_inside_oqlos(monkeypatch) -> None:
     assert gateway.calls[-3:] == [
         ("valve", "valve-5", True),
         ("valve", "valve-2", True),
+        ("pump", 70.0),
+    ]
+
+
+def test_hui_hold_uses_exact_stacknet_replace_without_separate_bulk_off(monkeypatch) -> None:
+    monkeypatch.setattr(hui_hold, "_VALVE_STAGGER_SECONDS", 0)
+    gateway = ExactReplaceGateway()
+
+    payload = run(hui_actions.start_hui_hold(gateway, "head-inflate"))
+
+    assert payload["ok"] is True
+    assert gateway.calls == [
+        ("pump", 0.0),
+        ("replace_valves_exact", ("valve-5", "valve-2")),
         ("pump", 70.0),
     ]
 

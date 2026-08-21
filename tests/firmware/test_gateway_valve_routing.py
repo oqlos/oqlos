@@ -102,6 +102,28 @@ async def test_failed_primary_controller_falls_back(
 
 
 @pytest.mark.asyncio
+async def test_connected_fallback_skips_slow_primary_reconnect(
+    gateway: PluginHardwareGateway, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _enable(gateway, **{MODBUS_VALVE_CONTROLLER: True, M5_VALVE_CONTROLLER: True})
+    modbus = _FakePlugin(MODBUS_VALVE_CONTROLLER)
+    gateway._plugins[MODBUS_VALVE_CONTROLLER] = modbus
+    reconnects: list[str] = []
+
+    async def _unexpected_reconnect(plugin_id: str) -> Any:
+        reconnects.append(plugin_id)
+        return None
+
+    monkeypatch.setattr(gateway, "_connect_valve_controller", _unexpected_reconnect)
+
+    assert await gateway.set_valve("valve-wc", False) is True
+    assert reconnects == []
+    assert modbus.calls == [
+        ("set_valve", {"valve_id": "valve-wc", "value": False})
+    ]
+
+
+@pytest.mark.asyncio
 async def test_set_valve_fails_when_no_controller_is_enabled(
     gateway: PluginHardwareGateway, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -176,7 +198,9 @@ async def test_dead_fallback_is_probed_once_not_once_per_valve(
 
     # Failover still runs — the fallback is tried, just not re-probed per valve.
     assert attempts == [MODBUS_VALVE_CONTROLLER]
-    assert len(m5.calls) == 3
+    # A controller that rejected the first command is also removed from the
+    # actuation fast path until recovery or cooldown, so it is not hammered.
+    assert len(m5.calls) == 1
 
 
 @pytest.mark.asyncio

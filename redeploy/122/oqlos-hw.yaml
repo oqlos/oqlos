@@ -14,11 +14,42 @@ plugins:
   # Drugi moduł musi mieć jednorazowo ustawiony adres 0x66 przed połączeniem obu na I2C.
   io-m5-4in8out:
     enabled: true
+    metadata:
+      node_name: stacknet
+      display_name: StackNet - M5Stack CoreS3 IO gateway
+      device_class: m5stack-cores3
+      role: io-gateway
+      config_source: layers/hardware/devices/m5-4in8out-boardnet.oql
+      wifi_credentials_store: nvs
+      wifi_change_via_oql: false
+      secrets_in_oql: false
+      legacy_control_enabled: false
     connection_type: http
     connection_params:
       base_url: http://192.168.188.127:8080
-      token: ""
-    timeout: 2.0
+      hostname: stacknet
+      target_base_url: http://stacknet.local:8080
+      address_source: dhcp-reservation
+      maskauth_url: http://192.168.188.108:8280
+      maskauth_client_id: boardnet
+      maskauth_credential_env: MASKAUTH_BOARDNET_CLIENT_SECRET
+      maskauth_application: boardnet
+      maskauth_audience: stacknet
+      lease_ttl_ms: 3000
+      # Versioned desired state applied after BoardNet acquires the StackNet lease.
+      # DHCP reservation remains authoritative for 192.168.188.127.
+      runtime_configuration:
+        hostname: stacknet
+        ipv4_mode: dhcp
+        ipv4_address: ""
+        ipv4_gateway: ""
+        ipv4_netmask: ""
+        ipv4_dns: ""
+        m122_addresses: [69, 102]
+        config_schema: stacknet-runtime-v1
+        config_revision: 2
+        control_api_version: 3
+    timeout: 5.0
     retry_count: 3
     peripherals:
       state: {name: M5 outputs, type: valve, scale: {min: 0, max: 1, default: 0, unit: ""}, raster: [0, 1], conversion: {type: none}}

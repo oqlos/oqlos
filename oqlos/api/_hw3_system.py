@@ -135,6 +135,14 @@ async def hardware_modbus_autoconfigure_v3() -> dict[str, Any]:
     )
 
 
+@sub_router.post("/valves/autoconfigure")
+async def hardware_valves_autoconfigure_v3() -> dict[str, Any]:
+    """Recover StackNet and Modbus as one ordered valve-controller capability."""
+    return await _hardware_v1_call(
+        "hardware_recover_route", scope="safe", devices="valves"
+    )
+
+
 @sub_router.get("/diagnosis")
 async def hardware_diagnosis_v3(
     scan: str = "never",

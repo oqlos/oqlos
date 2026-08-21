@@ -337,6 +337,7 @@ class LungPlugin(HardwarePlugin):
                 payload["issue_code"] = "hw_tic249_position_uncertain"
             return payload
 
+        previous_motion_error = self._motion_error(runtime)
         self._invalidate_runtime_status()
         resp = await http_post_command(
             self._client,
@@ -344,7 +345,40 @@ class LungPlugin(HardwarePlugin):
             "/api/reciprocate",
             json_body=payload,
         )
+        if isinstance(resp, dict) and resp.get("success") is False:
+            return resp
+        # The sidecar accepts /api/reciprocate and only then decides it cannot
+        # move (e.g. "reverse limit active before half-cycle"). That abort never
+        # reaches this response, so an aborted START would report success and
+        # the operator would keep pressing it. Compare against the pre-START
+        # error so a stale one from an earlier run cannot fail a good START.
+        aborted = await self._reciprocate_abort_reason(previous_motion_error)
+        if aborted:
+            failure = _lung_failure(aborted)
+            failure["issue_code"] = "hw_tic249_position_uncertain"
+            failure["stage"] = "adapter.motion"
+            return failure
         return resp
+
+    @staticmethod
+    def _motion_error(status: dict[str, Any] | None) -> str:
+        if not isinstance(status, dict):
+            return ""
+        return str(status.get("last_motion_error") or "").strip()
+
+    async def _reciprocate_abort_reason(self, previous_motion_error: str) -> str | None:
+        """Return the sidecar's motion error when START aborted instead of moving."""
+        self._invalidate_runtime_status()
+        try:
+            runtime = await self._runtime_status()
+        except (OSError, RuntimeError):
+            # Losing status right after START must not turn a good START into a
+            # failure; health checks and the operator alert still cover it.
+            return None
+        current = self._motion_error(runtime)
+        if not current or current == previous_motion_error:
+            return None
+        return current
 
     async def _handle_reciprocate_usb(self, params: dict[str, Any]) -> dict[str, Any]:
         """Handle reciprocate command via USB (placeholder)."""
