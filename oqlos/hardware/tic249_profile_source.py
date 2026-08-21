@@ -91,10 +91,10 @@ def _build_nvm_profile(
         tokens.append(f"limit_switch_{direction}")
         settings_file[f"{pin}_config"] = " ".join(tokens)
     return {
-        "profile_id": "boardnet-tic249-oql-v1",
+        "profile_id": "boardnet-tic249-limit-switches-v1",
         "description": (
-            f"BoardNet OQL: {forward_pin.upper()}=limit forward, "
-            f"{reverse_pin.upper()}=limit reverse"
+            "BoardNet artificial lung: SCL=limit forward, SDA=limit reverse, "
+            "pull-up ON, active low (fail-safe NC)"
         ),
         "product": "T249",
         "pins": pins,
@@ -118,10 +118,14 @@ def validate_tic249_profile_source(content: str) -> dict[str, Any]:
     }
     required = (
         "current_limit_ma",
+        "deenergize_on_stop",
+        "deenergize_on_startup",
         "limit_switch_forward_pin",
         "limit_switch_reverse_pin",
         "limit_switch_pull_up",
         "limit_switch_active_high",
+        "limit_reaction_delay_ms",
+        "stop_at_limit",
     )
     missing = [field for field in required if field not in values]
     if missing:
@@ -146,6 +150,37 @@ def validate_tic249_profile_source(content: str) -> dict[str, Any]:
     active_high = _parse_bool(
         values["limit_switch_active_high"], "limit_switch_active_high"
     )
+    deenergize_on_stop = _parse_bool(
+        values["deenergize_on_stop"], "deenergize_on_stop"
+    )
+    deenergize_on_startup = _parse_bool(
+        values["deenergize_on_startup"], "deenergize_on_startup"
+    )
+    if not deenergize_on_stop or not deenergize_on_startup:
+        raise Tic249ProfileSourceError(
+            "deenergize_on_stop and deenergize_on_startup must remain true"
+        )
+    if (forward_pin, reverse_pin, pull_up, active_high) != (
+        "scl",
+        "sda",
+        True,
+        False,
+    ):
+        raise Tic249ProfileSourceError(
+            "BoardNet requires SCL=forward, SDA=reverse, pull-up=true and "
+            "active_high=false"
+        )
+    try:
+        limit_reaction_delay_ms = int(values["limit_reaction_delay_ms"])
+    except ValueError as exc:
+        raise Tic249ProfileSourceError(
+            "limit_reaction_delay_ms must be an integer"
+        ) from exc
+    if not 0 <= limit_reaction_delay_ms <= 12000:
+        raise Tic249ProfileSourceError(
+            "limit_reaction_delay_ms must be between 0 and 12000"
+        )
+    stop_at_limit = _parse_bool(values["stop_at_limit"], "stop_at_limit")
     return {
         "current_limit_ma": current_limit_ma,
         "current_limit_code": current_limit_code,
@@ -154,6 +189,8 @@ def validate_tic249_profile_source(content: str) -> dict[str, Any]:
         "limit_switch_reverse_pin": reverse_pin,
         "limit_switch_pull_up": pull_up,
         "limit_switch_active_high": active_high,
+        "limit_reaction_delay_ms": limit_reaction_delay_ms,
+        "stop_at_limit": stop_at_limit,
         "nvm_profile": _build_nvm_profile(
             forward_pin=forward_pin,
             reverse_pin=reverse_pin,
@@ -324,7 +361,13 @@ async def apply_tic249_profile_source(content: str) -> dict[str, Any]:
     current_result, base = await _sidecar_request(
         "POST",
         "/api/config",
-        payload={"motor": {"current_limit_ma": configured["current_limit_ma"]}},
+        payload={
+            "motor": {"current_limit_ma": configured["current_limit_ma"]},
+            "limit_switches": {
+                "limit_reaction_delay_ms": configured["limit_reaction_delay_ms"]
+            },
+            "stop_at_limit": configured["stop_at_limit"],
+        },
     )
     source_target = _scenario_target()
     normalized = content if content.endswith("\n") else f"{content}\n"
@@ -335,7 +378,7 @@ async def apply_tic249_profile_source(content: str) -> dict[str, Any]:
         "configured": {
             key: value for key, value in configured.items() if key != "nvm_profile"
         },
-        "effective": current_result.get("motor", current_result),
+        "effective": current_result,
         "nvm": {**nvm_result, "applied": nvm_applied},
         "sidecar_base_url": base,
     }

@@ -17,22 +17,31 @@ def _source(*, current_ma: int = 1600, forward: str = "scl", reverse: str = "sda
     return f"""VERSION: 6
 CONFIG:
   SET 'device.boardnet.motor-tic249.current_limit_ma' '{current_ma}'
+  SET 'device.boardnet.motor-tic249.deenergize_on_stop' 'true'
+  SET 'device.boardnet.motor-tic249.deenergize_on_startup' 'true'
   SET 'device.boardnet.motor-tic249.limit_switch_forward_pin' '{forward}'
   SET 'device.boardnet.motor-tic249.limit_switch_reverse_pin' '{reverse}'
   SET 'device.boardnet.motor-tic249.limit_switch_pull_up' 'true'
   SET 'device.boardnet.motor-tic249.limit_switch_active_high' 'false'
+  SET 'device.boardnet.motor-tic249.limit_reaction_delay_ms' '0'
+  SET 'device.boardnet.motor-tic249.stop_at_limit' 'true'
 """
 
 
-def test_profile_maps_current_and_limit_pin_directions() -> None:
-    result = validate_tic249_profile_source(_source(forward="sda", reverse="scl"))
+def test_profile_maps_current_and_canonical_limit_pin_directions() -> None:
+    result = validate_tic249_profile_source(_source())
 
     assert result["current_limit_code"] == 40
     assert result["current_measurement_available"] is False
     assert result["nvm_profile"]["settings_file"] == {
-        "scl_config": "pullup limit_switch_reverse",
-        "sda_config": "pullup limit_switch_forward",
+        "scl_config": "pullup limit_switch_forward",
+        "sda_config": "pullup limit_switch_reverse",
     }
+
+
+def test_profile_rejects_noncanonical_limit_pin_directions() -> None:
+    with pytest.raises(Tic249ProfileSourceError, match="SCL=forward"):
+        validate_tic249_profile_source(_source(forward="sda", reverse="scl"))
 
 
 def test_profile_rejects_one_pin_for_both_limits() -> None:
@@ -88,7 +97,11 @@ async def test_apply_persists_source_and_sets_current_when_nvm_already_matches(
     assert calls[-1] == (
         "POST",
         "/api/config",
-        {"motor": {"current_limit_ma": 1600}},
+        {
+            "motor": {"current_limit_ma": 1600},
+            "limit_switches": {"limit_reaction_delay_ms": 0},
+            "stop_at_limit": True,
+        },
     )
     assert oql_target.read_text(encoding="utf-8") == source
 
