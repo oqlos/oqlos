@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import re
 import sys
+import time
 from typing import Any, TYPE_CHECKING
 
 import httpx
@@ -232,12 +233,44 @@ def _post_motor2_move_relative(direction: str, steps: int, speed_raw: int, accel
     payload: dict[str, Any] = {"offset": offset, "speed": speed_raw}
     if acceleration_raw is not None:
         payload["acceleration"] = acceleration_raw
-    with httpx.Client(base_url=base_url, timeout=10.0) as client:
+    with httpx.Client(base_url=base_url, timeout=15.0) as client:
+        before_response = client.get("/api/status")
+        before_response.raise_for_status()
+        before = before_response.json()
+        if not isinstance(before, dict) or before.get("connected") is not True:
+            raise RuntimeError("motor2 status is unavailable before move-relative")
+        start_position = int(before.get("position"))
+        target_position = start_position + offset
         response = client.post("/api/move-relative", json=payload)
         response.raise_for_status()
         data = response.json()
         if isinstance(data, dict) and data.get("success") is False:
             raise RuntimeError(str(data.get("error") or "motor2 move-relative failed"))
+        # The sidecar accepts the command asynchronously.  Do not let the next
+        # OQL statement (normally STOP) run until the bounded target was
+        # actually reached, otherwise a graceful STOP could continue towards a
+        # physical limit instead of completing the requested installation jog.
+        effective_speed = max(1.0, abs(float(speed_raw)) / 10_000.0)
+        timeout = min(12.0, max(2.0, (abs(offset) / effective_speed) * 2.0 + 1.0))
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            status_response = client.get("/api/status")
+            status_response.raise_for_status()
+            status = status_response.json()
+            if not isinstance(status, dict) or status.get("connected") is not True:
+                raise RuntimeError("motor2 status became unavailable during move-relative")
+            position = int(status.get("position"))
+            velocity = int(status.get("velocity") or 0)
+            if velocity == 0 and abs(position - target_position) <= 10:
+                return
+            if offset < 0 and status.get("reverse_limit_active") is True:
+                raise RuntimeError("motor2 reverse limit activated before jog target")
+            if offset > 0 and status.get("forward_limit_active") is True:
+                raise RuntimeError("motor2 forward limit activated before jog target")
+            time.sleep(0.05)
+        raise TimeoutError(
+            f"motor2 move-relative did not reach {target_position} within {timeout:.1f}s"
+        )
 
 
 def _post_motor2_reciprocate(
