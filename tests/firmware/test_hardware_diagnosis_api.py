@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+
 from oqlos.hardware.diagnosis import build_diagnosis_report, report_to_dict
 
 
@@ -191,6 +193,139 @@ def test_still_failed_plugins_skip_intentionally_disabled_modbus_adc():
         health,
         ("modbus-io", "modbus-adc"),
     ) == ["modbus-io"]
+
+
+def test_safe_recover_uses_gateway_modbus_reconnect_and_sync_path() -> None:
+    from oqlos.hardware.diagnosis import (
+        DiagnosisReport,
+        DeviceDiagnosis,
+        execute_safe_recover,
+    )
+    from oqlos.hardware.diagnosis_types import DiagnosisAction
+
+    recovered = False
+
+    class _Gateway:
+        async def health(self):
+            return {
+                "modbus-io": {
+                    "status": "connected" if recovered else "error",
+                    "compatible": recovered,
+                    "message": "ok" if recovered else "not connected",
+                }
+            }
+
+        async def apply_modbus_user_settings(self, plugin_ids: set[str]):
+            nonlocal recovered
+            assert plugin_ids == {"modbus-io"}
+            recovered = True
+            return {
+                "ok": True,
+                "reconnects": [{"plugin_id": "modbus-io", "ok": True}],
+                "released_rtu_ports": ["/dev/ttyUSB0"],
+                "actuation": False,
+            }
+
+    report = DiagnosisReport(
+        environment={},
+        devices={
+            "modbus-io": DeviceDiagnosis(
+                device_id="modbus-io",
+                display_name="IO",
+                status="degraded",
+                health_summary="not connected",
+                recommended_actions=[
+                    DiagnosisAction(
+                        id="modbus-io-reconnect",
+                        device_id="modbus-io",
+                        label="Reconnect",
+                        kind="oqlos",
+                        priority=15,
+                        auto_executable=True,
+                        scope="oqlos",
+                        actuation_risk="none",
+                    )
+                ],
+            )
+        },
+        global_actions=[],
+        ok=False,
+        message="repair",
+    )
+
+    result = asyncio.run(
+        execute_safe_recover(
+            _Gateway(),
+            report,
+            plugin_ids=("modbus-io",),
+        )
+    )
+
+    assert result["ok"] is True
+    assert result["repairs"] == [{"step": "reconnect-modbus-io", "ok": True}]
+    assert result["still_failed"] == []
+
+
+def test_safe_recover_does_not_accept_missing_requested_reconnect() -> None:
+    from oqlos.hardware.diagnosis import (
+        DiagnosisReport,
+        DeviceDiagnosis,
+        execute_safe_recover,
+    )
+    from oqlos.hardware.diagnosis_types import DiagnosisAction
+
+    class _Gateway:
+        async def health(self):
+            return {
+                "modbus-io": {
+                    "status": "error",
+                    "compatible": False,
+                    "message": "not connected",
+                }
+            }
+
+        async def apply_modbus_user_settings(self, plugin_ids: set[str]):
+            assert plugin_ids == {"modbus-io"}
+            return {"ok": True, "reconnects": [], "actuation": False}
+
+    report = DiagnosisReport(
+        environment={},
+        devices={
+            "modbus-io": DeviceDiagnosis(
+                device_id="modbus-io",
+                display_name="IO",
+                status="error",
+                health_summary="not connected",
+                recommended_actions=[
+                    DiagnosisAction(
+                        id="modbus-io-reconnect",
+                        device_id="modbus-io",
+                        label="Reconnect",
+                        kind="oqlos",
+                        priority=15,
+                        auto_executable=True,
+                        scope="oqlos",
+                        actuation_risk="none",
+                    )
+                ],
+            )
+        },
+        global_actions=[],
+        ok=False,
+        message="repair",
+    )
+
+    result = asyncio.run(
+        execute_safe_recover(
+            _Gateway(),
+            report,
+            plugin_ids=("modbus-io",),
+        )
+    )
+
+    assert result["ok"] is False
+    assert result["repairs"] == [{"step": "reconnect-modbus-io", "ok": False}]
+    assert result["still_failed"] == ["modbus-io"]
 
 
 def test_host_actions_filtered_motor_only_no_make():

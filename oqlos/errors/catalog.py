@@ -377,7 +377,7 @@ ISSUE_CATALOG: dict[str, IssueDefinition] = {
             scope="host",
             auto_executable=False,
             actuation_risk="none",
-            hint="Verify module power, RS485 A/B polarity, common GND, slave ID (plan: 2) and baud 4800 8N1; software reconnect will not help.",
+            hint="Verify module power, RS485 A/B polarity, common GND, the configured slave ID and baud/parity; software reconnect will not help.",
         ),
     ),
     "hw_m5_4in8out_bus_stale": IssueDefinition(

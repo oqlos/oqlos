@@ -115,6 +115,7 @@ def test_plugin_health_http_failure_is_canonical_problem_details(monkeypatch):
     assert body["correlation_id"] == "cor-plugin-health-test"
     assert body["metadata"]["diagnostics"]["issue_code"] == "hw_modbus_no_response"
     assert body["metadata"]["diagnostics"]["repair"]["id"] == "modbus-physical-check"
+    assert "plan: 2" not in body["metadata"]["diagnostics"]["repair"]["hint"]
     context = body["metadata"]["context"]
     assert context["component"] == "plugin-registry"
     assert context["stage"] == "plugin.health"

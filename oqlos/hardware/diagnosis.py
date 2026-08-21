@@ -382,10 +382,36 @@ async def execute_safe_recover(
         ok = False
         try:
             if plugin_id.startswith("modbus"):
-                await PluginRegistry.disconnect_plugin(plugin_id)
-                config = gateway._plugin_configs.get(plugin_id)
-                if config:
-                    ok = await PluginRegistry.connect_plugin(plugin_id, config)
+                reconnect = getattr(gateway, "apply_modbus_user_settings", None)
+                if callable(reconnect):
+                    result = await reconnect({plugin_id})
+                    requested_result = next(
+                        (
+                            item
+                            for item in result.get("reconnects", [])
+                            if item.get("plugin_id") == plugin_id
+                        ),
+                        None,
+                    )
+                    # Recovery is successful only when the requested logical
+                    # plugin was actually reconnected.  ``all([])``-style
+                    # aggregate success must not turn a missing config/result
+                    # into a false-positive repair.
+                    ok = bool(
+                        requested_result is not None
+                        and requested_result.get("ok")
+                    )
+                else:
+                    # Compatibility for small/local gateways. Keep both runtime
+                    # maps synchronized even on the legacy recovery path.
+                    gateway._plugins.pop(plugin_id, None)
+                    await PluginRegistry.disconnect_plugin(plugin_id)
+                    config = gateway._plugin_configs.get(plugin_id)
+                    if config:
+                        ok = await PluginRegistry.connect_plugin(plugin_id, config)
+                        instance = PluginRegistry.get_instance(plugin_id)
+                        if ok and instance is not None:
+                            gateway._plugins[plugin_id] = instance
             else:
                 instance = await gateway._get_or_connect_plugin(plugin_id)
                 ok = instance is not None

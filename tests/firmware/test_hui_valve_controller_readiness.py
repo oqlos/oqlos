@@ -8,6 +8,9 @@ from typing import Any
 import pytest
 
 from oqlos.hardware import hui_hold, hui_readiness
+from oqlos.hardware.plugin_gateway import PluginHardwareGateway
+from oqlos.hardware.plugins.base import PluginConfig, PluginHealth, PluginStatus
+from oqlos.hardware.plugins.registry import PluginRegistry
 from oqlos.hardware.valve_controller import M5_VALVE_CONTROLLER, MODBUS_VALVE_CONTROLLER
 
 
@@ -99,6 +102,53 @@ def test_hui_uses_healthy_m5_when_legacy_modbus_is_offline(monkeypatch) -> None:
         and operation.get("ok")
         for operation in started["operations"]
     )
+
+
+def test_hui_readiness_reattaches_m5_connected_only_in_registry(monkeypatch) -> None:
+    """Match the live split: plugin status is connected while gateway is stale."""
+
+    class _RegistryM5:
+        async def health_check(self) -> PluginHealth:
+            return PluginHealth(
+                status=PluginStatus.CONNECTED,
+                message="CoreS3 dual M122 online",
+                compatible=True,
+            )
+
+    gateway = PluginHardwareGateway(mode="mock")
+    gateway.mode = "real"
+    gateway._init_done = True
+    gateway._plugin_configs = {
+        M5_VALVE_CONTROLLER: PluginConfig(
+            plugin_id=M5_VALVE_CONTROLLER,
+            enabled=True,
+        ),
+        "motor-dri0050": PluginConfig(
+            plugin_id="motor-dri0050",
+            enabled=False,
+        ),
+        "motor-tic249": PluginConfig(
+            plugin_id="motor-tic249",
+            enabled=False,
+        ),
+    }
+    registry_m5 = _RegistryM5()
+    monkeypatch.setattr(
+        PluginRegistry,
+        "get_instance",
+        classmethod(
+            lambda cls, plugin_id: (
+                registry_m5 if plugin_id == M5_VALVE_CONTROLLER else None
+            )
+        ),
+    )
+
+    payload = asyncio.run(hui_readiness.build_hui_readiness(gateway))
+
+    assert payload["controls"][M5_VALVE_CONTROLLER]["ok"] is True
+    assert payload["actions"]["valves"]["ready"] is True
+    assert payload["valve_controllers"]["active"] == M5_VALVE_CONTROLLER
+    assert gateway._plugins[M5_VALVE_CONTROLLER] is registry_m5
 
 
 @pytest.mark.asyncio

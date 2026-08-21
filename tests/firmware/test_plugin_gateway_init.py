@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import asyncio
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, call
 
 from oqlos.hardware.plugin_gateway import PluginHardwareGateway
-from oqlos.hardware.plugins import PluginConfig
+from oqlos.hardware.plugins import PluginConfig, PluginHealth, PluginRegistry, PluginStatus
 
 
 def test_health_awaits_ensure_initialized_before_checks(monkeypatch) -> None:
@@ -122,6 +122,85 @@ def test_apply_modbus_user_settings_reconnects_selected_plugin(monkeypatch) -> N
     disconnect.assert_awaited_once_with("modbus-io")
     connect.assert_awaited_once()
     assert gateway._plugins["modbus-io"] is instance
+
+
+def test_apply_modbus_settings_reconnects_every_active_owner_of_shared_port(
+    monkeypatch,
+) -> None:
+    gateway = PluginHardwareGateway(mode="mock")
+    gateway.mode = "real"
+    gateway._init_done = True
+    shared_port = "/dev/serial/by-id/shared-rs485"
+    gateway._plugin_configs = {
+        plugin_id: PluginConfig(
+            plugin_id=plugin_id,
+            enabled=True,
+            connection_type="modbus-rtu",
+            connection_params={
+                "serial_port": shared_port,
+                "baudrate": 4800,
+                "device_id": device_id,
+            },
+        )
+        for plugin_id, device_id in (("modbus-io", 1), ("modbus-adc", 2))
+    }
+    old_instances = {"modbus-io": object(), "modbus-adc": object()}
+    new_instances = {"modbus-io": object(), "modbus-adc": object()}
+    registry_instances = dict(old_instances)
+    gateway._plugins.update(old_instances)
+    monkeypatch.setattr(
+        gateway,
+        "_apply_persisted_modbus_settings",
+        lambda: {
+            "modbus-io": {"serial_port": shared_port, "baudrate": 4800},
+            "modbus-adc": {"serial_port": shared_port, "baudrate": 4800},
+        },
+    )
+
+    async def _disconnect(plugin_id: str) -> bool:
+        registry_instances.pop(plugin_id, None)
+        return True
+
+    async def _connect(plugin_id: str, _config: PluginConfig) -> bool:
+        registry_instances[plugin_id] = new_instances[plugin_id]
+        return True
+
+    disconnect = AsyncMock(side_effect=_disconnect)
+    connect = AsyncMock(side_effect=_connect)
+    release = AsyncMock(return_value=[shared_port])
+    monkeypatch.setattr(PluginRegistry, "disconnect_plugin", disconnect)
+    monkeypatch.setattr(PluginRegistry, "connect_plugin", connect)
+    monkeypatch.setattr(
+        PluginRegistry,
+        "get_instance",
+        classmethod(lambda cls, plugin_id: registry_instances.get(plugin_id)),
+    )
+    monkeypatch.setattr(gateway, "_release_rtu_ports", release)
+
+    result = asyncio.run(gateway.apply_modbus_user_settings({"modbus-io"}))
+
+    assert result["ok"] is True
+    assert result["released_rtu_ports"] == [shared_port]
+    assert result["reconnects"] == [
+        {
+            "plugin_id": "modbus-io",
+            "ok": True,
+            "shared_port_owner": False,
+        },
+        {
+            "plugin_id": "modbus-adc",
+            "ok": True,
+            "shared_port_owner": True,
+        },
+    ]
+    assert disconnect.await_args_list == [call("modbus-adc"), call("modbus-io")]
+    assert [args.args[0] for args in connect.await_args_list] == [
+        "modbus-io",
+        "modbus-adc",
+    ]
+    release.assert_awaited_once()
+    assert set(release.await_args.args[0]) == {shared_port}
+    assert gateway._plugins == new_instances
 
 
 def test_stop_lung_releases_coils_for_deenergized_idle(monkeypatch) -> None:
@@ -302,4 +381,53 @@ def test_plugin_readiness_can_fail_fast_without_reconnect(monkeypatch) -> None:
         "status": "unavailable",
         "message": "Plugin modbus-io is not connected",
     }
+    reconnect.assert_not_awaited()
+
+
+def test_plugin_readiness_reattaches_healthy_registry_instance_without_reconnect(
+    monkeypatch,
+) -> None:
+    """Recovery may populate PluginRegistry while the gateway map stays stale."""
+
+    class _RecoveredPlugin:
+        async def health_check(self) -> PluginHealth:
+            return PluginHealth(
+                status=PluginStatus.CONNECTED,
+                message="CoreS3 dual M122 online",
+                compatible=True,
+            )
+
+    gateway = PluginHardwareGateway(mode="mock")
+    gateway.mode = "real"
+    gateway._init_done = True
+    gateway._plugin_configs = {
+        "io-m5-4in8out": PluginConfig(
+            plugin_id="io-m5-4in8out",
+            enabled=True,
+        ),
+    }
+    recovered = _RecoveredPlugin()
+    monkeypatch.setattr(
+        PluginRegistry,
+        "get_instance",
+        classmethod(
+            lambda cls, plugin_id: (
+                recovered if plugin_id == "io-m5-4in8out" else None
+            )
+        ),
+    )
+    reconnect = AsyncMock()
+    monkeypatch.setattr(gateway, "_get_or_connect_plugin", reconnect)
+
+    result = asyncio.run(
+        gateway.plugin_readiness("io-m5-4in8out", reconnect=False)
+    )
+
+    assert result == {
+        "ok": True,
+        "plugin_id": "io-m5-4in8out",
+        "status": "connected",
+        "message": "Plugin is ready",
+    }
+    assert gateway._plugins["io-m5-4in8out"] is recovered
     reconnect.assert_not_awaited()
