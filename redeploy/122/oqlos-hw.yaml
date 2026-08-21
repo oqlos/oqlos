@@ -36,6 +36,19 @@ plugins:
       maskauth_application: boardnet
       maskauth_audience: stacknet
       lease_ttl_ms: 3000
+      # Desired state is applied only after the authenticated lease is held.
+      # DHCP reservation remains authoritative for 192.168.188.127.
+      runtime_configuration:
+        hostname: stacknet
+        ipv4_mode: dhcp
+        ipv4_address: ""
+        ipv4_gateway: ""
+        ipv4_netmask: ""
+        ipv4_dns: ""
+        m122_addresses: [69, 102]
+        config_schema: stacknet-runtime-v1
+        config_revision: 1
+        control_api_version: 2
     timeout: 5.0
     retry_count: 3
     peripherals:

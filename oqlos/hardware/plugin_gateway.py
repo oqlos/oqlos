@@ -801,6 +801,13 @@ class PluginHardwareGateway:
 
         compatible = bool(getattr(health, "compatible", False))
         health_status = getattr(health, "status", "ok" if compatible else "error")
+        # A direct HUI readiness probe bypasses PluginRegistry.health_check(),
+        # which normally persists the returned status on the instance. Keep
+        # that invariant here as well: otherwise a just-failed CONNECTED
+        # instance is reattached from the process-wide registry on every
+        # reconnect=False action and every click pays its transport timeout.
+        if hasattr(plugin, "_status"):
+            plugin._status = health_status
         status = getattr(health_status, "value", health_status)
         if compatible:
             self._plugins[plugin_id] = plugin

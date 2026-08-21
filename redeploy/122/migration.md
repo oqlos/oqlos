@@ -1008,6 +1008,11 @@ if [ -z "$PW" ] || [ "$PW" = "CHANGE_ME_ON_PI" ]; then
   echo "FAIL: ustaw prawdziwe OQLOS_OQL_MQTT_PASSWORD w $ENVF; deploy nie nadpisuje sekretow" >&2
   exit 1
 fi
+MASKAUTH_SECRET=$(grep -E '^MASKAUTH_BOARDNET_CLIENT_SECRET=' "$ENVF" 2>/dev/null | head -1 | cut -d= -f2- || true)
+if [ -z "$MASKAUTH_SECRET" ] || [ "$MASKAUTH_SECRET" = "CHANGE_ME_ON_PI" ]; then
+  echo "FAIL: ustaw prawdziwy MASKAUTH_BOARDNET_CLIENT_SECRET w $ENVF; deploy nie nadpisuje sekretow" >&2
+  exit 1
+fi
 if grep -qE '^OQLOS_OQL_TRANSPORT_ROLE=' "$ENVF"; then
   sed -i 's/^OQLOS_OQL_TRANSPORT_ROLE=.*/OQLOS_OQL_TRANSPORT_ROLE=both/' "$ENVF"
 else
