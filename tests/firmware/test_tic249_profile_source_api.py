@@ -8,10 +8,14 @@ from oqlos.api.main import app
 SOURCE = """VERSION: 6
 CONFIG:
   SET 'device.boardnet.motor-tic249.current_limit_ma' '1600'
+  SET 'device.boardnet.motor-tic249.deenergize_on_stop' 'true'
+  SET 'device.boardnet.motor-tic249.deenergize_on_startup' 'true'
   SET 'device.boardnet.motor-tic249.limit_switch_forward_pin' 'scl'
   SET 'device.boardnet.motor-tic249.limit_switch_reverse_pin' 'sda'
   SET 'device.boardnet.motor-tic249.limit_switch_pull_up' 'true'
   SET 'device.boardnet.motor-tic249.limit_switch_active_high' 'false'
+  SET 'device.boardnet.motor-tic249.limit_reaction_delay_ms' '0'
+  SET 'device.boardnet.motor-tic249.stop_at_limit' 'true'
 """
 
 
