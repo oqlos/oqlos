@@ -34,6 +34,20 @@ def test_health_awaits_ensure_initialized_before_checks(monkeypatch) -> None:
     assert calls == ["ensure", "health_all"]
 
 
+def test_health_uses_explicit_per_request_plugin_timeout(monkeypatch) -> None:
+    gateway = PluginHardwareGateway(mode="mock")
+    gateway.mode = "real"
+    gateway._init_done = True
+    health_all = AsyncMock(return_value={})
+    monkeypatch.setattr(gateway, "ensure_initialized", AsyncMock())
+    monkeypatch.setattr(PluginRegistry, "health_check_all", health_all)
+    gateway._plugin_configs = {}
+
+    asyncio.run(gateway.health(timeout=1.5))
+
+    health_all.assert_awaited_once_with(timeout=1.5)
+
+
 def test_initialize_plugins_records_summary(monkeypatch) -> None:
     gateway = PluginHardwareGateway(mode="mock")
     gateway.mode = "real"

@@ -53,7 +53,7 @@ def test_hardware_health_overall_ok_false_when_any_plugin_errors():
 
 
 class _FakeGateway:
-    async def health(self):
+    async def health(self, *, timeout: float | None = None):
         return {
             "mode": "real",
             "modbus-io": {"status": "error", "compatible": False, "message": "EIO"},
@@ -71,6 +71,23 @@ def test_hardware_health_endpoint_returns_200_when_degraded(monkeypatch):
     assert payload.get("degraded") is True
     assert payload.get("overall_ok") is False
     assert payload.get("status") == "degraded"
+
+
+def test_hardware_health_accepts_bounded_plugin_probe_budget(monkeypatch):
+    observed: list[float | None] = []
+
+    class BudgetGateway:
+        async def health(self, *, timeout: float | None = None):
+            observed.append(timeout)
+            return {"mode": "real"}
+
+    monkeypatch.setattr(hw_identify, "get_hardware_gateway", lambda: BudgetGateway())
+    monkeypatch.setattr(hw_identify.platform, "_detect_runtime_platform", lambda: {})
+
+    payload = asyncio.run(hw.hardware_health(plugin_timeout_seconds=1.5))
+
+    assert payload["overall_ok"] is True
+    assert observed == [1.5]
 
 
 def test_hardware_health_exposes_active_undervoltage_as_coded_degraded_state(monkeypatch):

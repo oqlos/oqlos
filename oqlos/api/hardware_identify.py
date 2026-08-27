@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Query
 
@@ -134,9 +134,19 @@ def _map_adapter_identify_status(
 
 
 @router.get("/health")
-async def hardware_health():
+async def hardware_health(
+    plugin_timeout_seconds: Annotated[
+        float | None,
+        Query(ge=0.1, le=10.0),
+    ] = None,
+):
     """Return connectivity status for all hardware services."""
-    payload = await get_hardware_gateway().health()
+    gateway = get_hardware_gateway()
+    payload = (
+        await gateway.health(timeout=plugin_timeout_seconds)
+        if plugin_timeout_seconds is not None
+        else await gateway.health()
+    )
     if isinstance(payload, dict):
         power = await sample_power_telemetry()
         payload["power"] = power
