@@ -105,6 +105,9 @@ class M54In8OutPlugin(HardwarePlugin):
             self.config.timeout,
         )
 
+    def _control_credentials_available(self) -> bool:
+        return bool(self._http_token() or self._capability_client() is not None)
+
     def _lease_ttl_ms(self) -> int:
         return int(self._params().get("lease_ttl_ms", 3000))
 
@@ -142,8 +145,6 @@ class M54In8OutPlugin(HardwarePlugin):
             base_url = str(params.get("base_url", "")).strip()
             if not base_url.startswith(("http://", "https://")):
                 errors.append("base_url must start with http:// or https:// for the http transport")
-            if not self._http_token() and self._capability_client() is None:
-                errors.append("StackNet requires MaskAuth service credentials or a legacy control token")
             try:
                 lease_ttl_ms = self._lease_ttl_ms()
             except (TypeError, ValueError):
@@ -200,6 +201,7 @@ class M54In8OutPlugin(HardwarePlugin):
         modules = data.get("modules") or []
         physical_healthy = bool(data.get("healthy"))
         configuration_compatible = self._configuration_matches(payload)
+        control_credentials_available = self._control_credentials_available()
         lease_active = bool(
             getattr(self._module, "lease_id", "")
             and self._lease_task is not None
@@ -210,6 +212,8 @@ class M54In8OutPlugin(HardwarePlugin):
         ) and (configuration_compatible or not require_control_lease)
         if not physical_healthy:
             message = "CoreS3 reachable; one or more M122 modules unavailable"
+        elif require_control_lease and not control_credentials_available:
+            message = "CoreS3 dual M122 online; control authorization unavailable"
         elif require_control_lease and not lease_active:
             message = "CoreS3 dual M122 online; control lease unavailable"
         elif require_control_lease and not configuration_compatible:
@@ -225,6 +229,7 @@ class M54In8OutPlugin(HardwarePlugin):
                 "modules": modules,
                 "address": ", ".join(str(item.get("address")) for item in modules),
                 "physical_healthy": physical_healthy,
+                "control_credentials_available": control_credentials_available,
                 "control_lease_active": lease_active,
                 "oql_configuration_compatible": configuration_compatible,
             },
@@ -260,6 +265,12 @@ class M54In8OutPlugin(HardwarePlugin):
                     require_control_lease=False,
                 )
                 if health.status == PluginStatus.CONNECTED and health.compatible:
+                    if not self._control_credentials_available():
+                        self._status = PluginStatus.CONNECTED
+                        logger.warning(
+                            "StackNet connected read-only; control authorization unavailable"
+                        )
+                        return True
                     try:
                         await self._call("acquire_lease", self._lease_id, self._lease_ttl_ms())
                         desired = self._runtime_configuration()
@@ -581,6 +592,11 @@ class M54In8OutPlugin(HardwarePlugin):
         """Execute a 4In8Out command."""
         if self._module is None:
             return {"success": False, "error": "Not connected to 4In8Out"}
+        if self._is_http() and not self._control_credentials_available():
+            return {
+                "success": False,
+                "error": "StackNet control authorization unavailable; read-only connection",
+            }
         try:
             if self._is_http():
                 if command == "set_valve":

@@ -77,13 +77,13 @@ class _CoreS3:
         self.closed = True
 
 
-def _config() -> PluginConfig:
+def _config(*, token: str = "test-token") -> PluginConfig:
     return PluginConfig(
         plugin_id="io-m5-4in8out",
         connection_type="http",
         connection_params={
             "base_url": "http://192.168.188.127:8080",
-            "token": "test-token",
+            "token": token,
             "runtime_configuration": {
                 "hostname": "stacknet",
                 "ipv4_mode": "dhcp",
@@ -140,6 +140,28 @@ async def test_http_health_does_not_promote_physical_gateway_without_control_lea
     assert health.details["physical_healthy"] is True
     assert health.details["control_lease_active"] is False
     assert "control lease unavailable" in health.message
+
+
+@pytest.mark.asyncio
+async def test_http_gateway_without_credentials_stays_visible_but_read_only() -> None:
+    plugin = M54In8OutPlugin(_config(token=""))
+
+    assert plugin.validate_config() == []
+    assert await plugin.connect() is True
+    health = await plugin.health_check()
+    command = await plugin.execute_command("set_coil", {"coil": 0, "value": True})
+
+    assert plugin.status is PluginStatus.CONNECTED
+    assert health.status is PluginStatus.ERROR
+    assert health.compatible is False
+    assert health.details["physical_healthy"] is True
+    assert health.details["control_credentials_available"] is False
+    assert "control authorization unavailable" in health.message
+    assert command == {
+        "success": False,
+        "error": "StackNet control authorization unavailable; read-only connection",
+    }
+    assert _CoreS3.instances[-1].commands == []
 
 
 @pytest.mark.asyncio
