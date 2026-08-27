@@ -187,7 +187,9 @@ async def hardware_modbus_io_repair_v3() -> dict[str, Any]:
 
 
 @sub_router.get("/modbus/profile-channels")
-async def hardware_modbus_profile_channels_v3(profile: str = "modbus-adc") -> dict[str, Any]:
+async def hardware_modbus_profile_channels_v3(
+    profile: str | None = None,
+) -> dict[str, Any]:
     from oqlos.api import hardware_modbus_routes as modbus_hw
     return await modbus_hw.hardware_modbus_profile_channels_get(profile)
 

@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from oqlos.api import hardware_modbus_routes as modbus_hw
+from oqlos.api import hardware_modbus_channels
 from oqlos.errors import OqlosError
 from oqlos.errors.fastapi_integration import install_oqlos_error_handler
 
@@ -29,6 +30,46 @@ def test_hardware_modbus_router_includes_channel_and_wizard_paths():
     assert "/modbus/coil-test/plan" in paths
     assert "/modbus/coil-test/pulse" in paths
     assert "/modbus/coil-test/stop" in paths
+
+
+def test_profile_channels_defaults_to_runtime_active_profile(monkeypatch) -> None:
+    calls: list[str] = []
+
+    async def _read(profile: str):
+        calls.append(profile)
+        return {"profile": profile}
+
+    monkeypatch.setattr(
+        modbus_hw, "active_modbus_profile_id", lambda _settings: "modbus-io"
+    )
+    monkeypatch.setattr(hardware_modbus_channels, "read_modbus_profile_channels", _read)
+
+    result = asyncio.run(modbus_hw.hardware_modbus_profile_channels_get())
+
+    assert result == {"profile": "modbus-io"}
+    assert calls == ["modbus-io"]
+
+
+def test_profile_channels_keeps_explicit_profile(monkeypatch) -> None:
+    calls: list[str] = []
+
+    async def _read(profile: str):
+        calls.append(profile)
+        return {"profile": profile}
+
+    monkeypatch.setattr(
+        modbus_hw,
+        "active_modbus_profile_id",
+        lambda _settings: (_ for _ in ()).throw(AssertionError("must not resolve")),
+    )
+    monkeypatch.setattr(hardware_modbus_channels, "read_modbus_profile_channels", _read)
+
+    result = asyncio.run(
+        modbus_hw.hardware_modbus_profile_channels_get("modbus-adc")
+    )
+
+    assert result == {"profile": "modbus-adc"}
+    assert calls == ["modbus-adc"]
 
 
 def test_coil_pulse_role_is_enforced_server_side() -> None:

@@ -24,6 +24,29 @@ def test_hw3_system_router_includes_ui_module_routes() -> None:
     assert "/valves/autoconfigure" in paths
 
 
+def test_profile_channels_v3_forwards_optional_profile(monkeypatch) -> None:
+    calls: list[str | None] = []
+
+    async def _channels(profile: str | None = None):
+        calls.append(profile)
+        return {"profile": profile or "runtime-active"}
+
+    monkeypatch.setattr(
+        modbus_hw, "hardware_modbus_profile_channels_get", _channels
+    )
+
+    default_response = _client().get("/api/v3/hardware/modbus/profile-channels")
+    explicit_response = _client().get(
+        "/api/v3/hardware/modbus/profile-channels?profile=modbus-adc"
+    )
+
+    assert default_response.status_code == 200
+    assert default_response.json() == {"profile": "runtime-active"}
+    assert explicit_response.status_code == 200
+    assert explicit_response.json() == {"profile": "modbus-adc"}
+    assert calls == [None, "modbus-adc"]
+
+
 def _client() -> TestClient:
     app = FastAPI()
     install_oqlos_error_handler(app)

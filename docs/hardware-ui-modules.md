@@ -45,7 +45,8 @@ BoardNet serves the React SPA under **`/ui/*`** on port **8202**. Legacy paths w
 - **Profile sidebar** via URL `submenu`: `modbus-adc`, `modbus-io`, `shared-bus`.
 - **Channel inspector** — live DO/DI/coils, ADC reads, config registers (0x1000–0x4000).
 - API v3:
-  - `GET /api/v3/hardware/modbus/profile-channels?profile=…`
+  - `GET /api/v3/hardware/modbus/profile-channels?profile=…` — bez parametru
+    używa bieżącego `active_profile` z ustawień runtime.
   - `PUT /api/v3/hardware/modbus/channel-value`
   - `GET/PUT /api/v3/hardware/modbus/settings`
   - `GET /api/v3/hardware/stack/snapshot` (wizard plan)

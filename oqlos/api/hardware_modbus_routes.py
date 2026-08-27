@@ -21,6 +21,7 @@ from oqlos.api.hardware_modbus_wizard import (
     _modbus_wizard_program_isolated,
 )
 from oqlos.api.hardware_modbus_settings import (
+    active_modbus_profile_id,
     effective_modbus_target_baud,
     normalize_probe_baudrates,
     read_modbus_baud_settings,
@@ -138,10 +139,14 @@ async def hardware_modbus_io_repair() -> dict[str, Any]:
 
 
 @router.get("/modbus/profile-channels")
-async def hardware_modbus_profile_channels_get(profile: str = "modbus-adc") -> dict[str, Any]:
+async def hardware_modbus_profile_channels_get(
+    profile: str | None = None,
+) -> dict[str, Any]:
     from oqlos.api.hardware_modbus_channels import read_modbus_profile_channels
 
-    return await read_modbus_profile_channels(profile)
+    return await read_modbus_profile_channels(
+        profile or active_modbus_profile_id(_settings)
+    )
 
 
 @router.put("/modbus/channel-value")

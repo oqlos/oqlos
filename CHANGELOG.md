@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- Modbus profile-channel endpoints now default to the runtime `active_profile`
+  instead of forcing the potentially disabled `modbus-adc` profile.
 - `POST /api/v1/hardware/lung/disable` now de-energizes Tic T249 coils reliably (`de-energized` response path).
 - `GET /api/v1/hardware/identify` latency reduced by conditional scanning (`scan=auto|always|never`), with fast path when plugin health is compatible.
 - `GET /api/v1/hardware/identify` no longer misreports Modbus lock errors when plugin already owns the serial port and the real issue is `read_coils` no-response.
@@ -493,4 +495,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Other
 - Update oqlos/scenarios/test-zaworu.oql
-
