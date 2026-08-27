@@ -211,7 +211,7 @@ class M54In8OutPlugin(HardwarePlugin):
             lease_active or not require_control_lease
         ) and (configuration_compatible or not require_control_lease)
         if not physical_healthy:
-            message = "CoreS3 reachable; one or more M122 modules unavailable"
+            message = "StackNet reachable; one or more M122 modules unavailable"
         elif require_control_lease and not control_credentials_available:
             message = "CoreS3 dual M122 online; control authorization unavailable"
         elif require_control_lease and not lease_active:
@@ -226,6 +226,7 @@ class M54In8OutPlugin(HardwarePlugin):
             details={
                 "backend": "cores3-http",
                 "base_url": self._params().get("base_url"),
+                "transport_reachable": True,
                 "modules": modules,
                 "address": ", ".join(str(item.get("address")) for item in modules),
                 "physical_healthy": physical_healthy,
@@ -264,6 +265,14 @@ class M54In8OutPlugin(HardwarePlugin):
                     payload,
                     require_control_lease=False,
                 )
+                if health.details.get("transport_reachable") and not health.details.get(
+                    "physical_healthy"
+                ):
+                    self._status = PluginStatus.CONNECTED
+                    logger.warning(
+                        "StackNet connected diagnostic-only; one or more M122 modules unavailable"
+                    )
+                    return True
                 if health.status == PluginStatus.CONNECTED and health.compatible:
                     if not self._control_credentials_available():
                         self._status = PluginStatus.CONNECTED
@@ -437,6 +446,7 @@ class M54In8OutPlugin(HardwarePlugin):
                     details={
                         "backend": "cores3-http",
                         "base_url": base_url,
+                        "transport_reachable": False,
                         "operator_alerts": [
                             {
                                 "issue_code": "hw_m5_4in8out_no_response",
@@ -596,6 +606,13 @@ class M54In8OutPlugin(HardwarePlugin):
             return {
                 "success": False,
                 "error": "StackNet control authorization unavailable; read-only connection",
+            }
+        if self._is_http() and (
+            self._lease_task is None or self._lease_task.done()
+        ):
+            return {
+                "success": False,
+                "error": "StackNet control lease unavailable; read-only connection",
             }
         try:
             if self._is_http():

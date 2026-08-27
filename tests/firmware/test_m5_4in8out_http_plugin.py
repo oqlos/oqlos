@@ -169,11 +169,20 @@ async def test_http_unhealthy_gateway_is_not_compatible() -> None:
     _CoreS3.healthy = False
     plugin = M54In8OutPlugin(_config())
 
-    assert await plugin.connect() is False
+    assert await plugin.connect() is True
     health = await plugin.health_check()
+    command = await plugin.execute_command("set_coil", {"coil": 0, "value": True})
 
+    assert plugin.status is PluginStatus.CONNECTED
     assert health.compatible is False
     assert health.status is PluginStatus.ERROR
+    assert health.details["transport_reachable"] is True
+    assert health.details["physical_healthy"] is False
+    assert command == {
+        "success": False,
+        "error": "StackNet control lease unavailable; read-only connection",
+    }
+    assert _CoreS3.instances[-1].commands == []
 
 
 @pytest.mark.asyncio
