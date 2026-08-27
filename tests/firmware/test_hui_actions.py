@@ -69,7 +69,12 @@ class FakeGateway:
             return {"ok": True, "plugin_id": plugin_id, "status": "ok", "message": ""}
         return self.readiness.get(
             plugin_id,
-            {"ok": False, "plugin_id": plugin_id, "status": "not_configured", "message": ""},
+            {
+                "ok": False,
+                "plugin_id": plugin_id,
+                "status": "not_configured",
+                "message": "",
+            },
         )
 
 
@@ -97,11 +102,19 @@ class ExactReplaceGateway(BulkOffGateway):
         return {"success": True, "data": {"valve_ids": list(valve_ids)}}
 
 
+class FailingExactReplaceGateway(ExactReplaceGateway):
+    async def replace_valves_exact(self, valve_ids: tuple[str, ...]) -> dict[str, Any]:
+        self.calls.append(("replace_valves_exact", valve_ids))
+        return {"success": False, "error": "transient controller failure"}
+
+
 class FakeTic249Plugin:
     def __init__(self) -> None:
         self.commands: list[tuple[str, dict[str, Any]]] = []
 
-    async def execute_command(self, command: str, params: dict[str, Any]) -> dict[str, Any]:
+    async def execute_command(
+        self, command: str, params: dict[str, Any]
+    ) -> dict[str, Any]:
         self.commands.append((command, params))
         return {"success": True, "data": {"command": command, "params": params}}
 
@@ -120,7 +133,9 @@ def test_hui_hold_profile_runs_inside_oqlos(monkeypatch) -> None:
     ]
 
 
-def test_hui_hold_uses_exact_stacknet_replace_without_separate_bulk_off(monkeypatch) -> None:
+def test_hui_hold_uses_exact_stacknet_replace_without_separate_bulk_off(
+    monkeypatch,
+) -> None:
     monkeypatch.setattr(hui_hold, "_VALVE_STAGGER_SECONDS", 0)
     gateway = ExactReplaceGateway()
 
@@ -134,7 +149,24 @@ def test_hui_hold_uses_exact_stacknet_replace_without_separate_bulk_off(monkeypa
     ]
 
 
-def test_hui_hold_fails_before_shutdown_when_required_plugin_is_disabled(monkeypatch) -> None:
+def test_hui_hold_execution_failure_is_retryable_service_unavailable(
+    monkeypatch,
+) -> None:
+    monkeypatch.setattr(hui_hold, "_VALVE_STAGGER_SECONDS", 0)
+    gateway = FailingExactReplaceGateway()
+
+    payload = run(hui_actions.start_hui_hold(gateway, "head-inflate"))
+
+    assert payload["ok"] is False
+    assert payload["status_code"] == 503
+    assert payload["error_code"] == "C2004-HW-0012"
+    assert payload["issue_code"] == "hui_hold_execution_failed"
+    assert payload["safe_to_retry"] is True
+
+
+def test_hui_hold_fails_before_shutdown_when_required_plugin_is_disabled(
+    monkeypatch,
+) -> None:
     monkeypatch.setattr(hui_hold, "_VALVE_STAGGER_SECONDS", 0)
     gateway = FakeGateway(
         real=True,
@@ -166,6 +198,7 @@ def test_hui_hold_fails_before_shutdown_when_required_plugin_is_disabled(monkeyp
 
 def test_hui_hold_active_undervoltage_fails_before_adapter_calls(monkeypatch) -> None:
     monkeypatch.setattr(hui_hold, "_VALVE_STAGGER_SECONDS", 0)
+
     async def _active_undervoltage(*_args, **_kwargs):
         return {
             "ok": False,
@@ -177,13 +210,13 @@ def test_hui_hold_active_undervoltage_fails_before_adapter_calls(monkeypatch) ->
             "blocked_before_adapter": True,
             "safe_to_retry": False,
             "power": {
-            "status": "critical",
-            "errors": [
-                {
-                    "error_code": "C2004-HW-0014",
-                    "issue_code": "boardnet_undervoltage_active",
-                }
-            ],
+                "status": "critical",
+                "errors": [
+                    {
+                        "error_code": "C2004-HW-0014",
+                        "issue_code": "boardnet_undervoltage_active",
+                    }
+                ],
             },
         }
 
@@ -249,7 +282,9 @@ def test_hui_hold_stop_fails_fast_when_modbus_io_is_unavailable(monkeypatch) -> 
     assert payload["confirmed"]["pump_off"] is True
 
 
-def test_hui_hold_profile_can_be_overridden_from_hardware_configuration(monkeypatch) -> None:
+def test_hui_hold_profile_can_be_overridden_from_hardware_configuration(
+    monkeypatch,
+) -> None:
     monkeypatch.setattr(hui_hold, "_VALVE_STAGGER_SECONDS", 0)
     # Isolate from on-disk OQL profiles so the common config is the top layer.
     monkeypatch.setattr(hui_hold, "_oql_hui_hold_profiles", lambda: {})
@@ -321,7 +356,9 @@ def test_hui_artificial_lung_uses_tic249_plugin_recipe(monkeypatch) -> None:
     assert args["acceleration"] == 200_000_000
 
 
-def test_hui_artificial_lung_fails_fast_before_motion_when_valve_is_unavailable() -> None:
+def test_hui_artificial_lung_fails_fast_before_motion_when_valve_is_unavailable() -> (
+    None
+):
     plugin = FakeTic249Plugin()
     gateway = FakeGateway(
         real=True,
@@ -352,7 +389,9 @@ def test_hui_artificial_lung_fails_fast_before_motion_when_valve_is_unavailable(
     assert not any(call[0] == "valve" for call in gateway.calls)
 
 
-def test_hui_artificial_lung_recipe_can_be_overridden_from_hardware_configuration(monkeypatch) -> None:
+def test_hui_artificial_lung_recipe_can_be_overridden_from_hardware_configuration(
+    monkeypatch,
+) -> None:
     monkeypatch.setattr(hui_lung_recipe, "_oql_hui_lung_profile", lambda: {})
     monkeypatch.setattr(
         hui_lung_recipe,
@@ -468,7 +507,9 @@ def test_stop_hui_artificial_lung_publishes_the_motor_reason() -> None:
     assert payload["public_message"] == "Artificial lung motor stop was not confirmed"
 
 
-def test_hui_artificial_lung_start_failure_cleans_up_same_valve_it_opened(monkeypatch) -> None:
+def test_hui_artificial_lung_start_failure_cleans_up_same_valve_it_opened(
+    monkeypatch,
+) -> None:
     """Regression: cleanup-on-failure must close the same (possibly overridden) valve it opened."""
     monkeypatch.setattr(hui_lung_recipe, "_oql_hui_lung_profile", lambda: {})
     monkeypatch.setattr(
@@ -478,7 +519,9 @@ def test_hui_artificial_lung_start_failure_cleans_up_same_valve_it_opened(monkey
     )
 
     class FailingPlugin:
-        async def execute_command(self, command: str, params: dict[str, Any]) -> dict[str, Any]:
+        async def execute_command(
+            self, command: str, params: dict[str, Any]
+        ) -> dict[str, Any]:
             return {"success": False, "error": "boom"}
 
     gateway = FakeGateway(real=True, plugin=FailingPlugin())
@@ -493,7 +536,9 @@ def test_hui_artificial_lung_start_failure_cleans_up_same_valve_it_opened(monkey
     assert gateway.calls.index(valve_open) < gateway.calls.index(valve_close)
 
 
-def test_hui_valve_key_can_be_overridden_from_hardware_configuration(monkeypatch) -> None:
+def test_hui_valve_key_can_be_overridden_from_hardware_configuration(
+    monkeypatch,
+) -> None:
     monkeypatch.setattr(hui_valve, "_oql_hui_valve_specs", lambda: {})
     monkeypatch.setattr(
         hui_valve,
@@ -519,7 +564,10 @@ def test_hui_actions_list_includes_valve_specs(monkeypatch) -> None:
 
     assert payload["ok"] is True
     assert "wc-press" in payload["valve_keys"]
-    assert payload["valve_specs"]["wc-bleed"] == {"valve_id": "valve-wc", "value": False}
+    assert payload["valve_specs"]["wc-bleed"] == {
+        "valve_id": "valve-wc",
+        "value": False,
+    }
 
 
 def test_hui_shutdown_turns_off_pump_and_all_known_valves() -> None:
@@ -529,7 +577,9 @@ def test_hui_shutdown_turns_off_pump_and_all_known_valves() -> None:
 
     assert payload["ok"] is True
     assert gateway.calls[0] == ("pump", 0.0)
-    off_valves = [call for call in gateway.calls if call[0] == "valve" and call[2] is False]
+    off_valves = [
+        call for call in gateway.calls if call[0] == "valve" and call[2] is False
+    ]
     assert len(off_valves) == len(hui_actions.HUI_ALL_VALVE_IDS)
 
 
@@ -540,9 +590,7 @@ def test_hui_shutdown_uses_single_bulk_modbus_safe_off_when_available() -> None:
 
     assert payload["ok"] is True
     assert gateway.calls == [("pump", 0.0), ("all_valves_off",)]
-    assert payload["confirmed"]["valves_off"] == list(
-        hui_actions.HUI_ALL_VALVE_IDS
-    )
+    assert payload["confirmed"]["valves_off"] == list(hui_actions.HUI_ALL_VALVE_IDS)
     assert payload["duration_ms"] >= 0
     assert [item["stage"] for item in payload["timeline"]] == [
         "hui.lock_wait",
@@ -555,7 +603,9 @@ def test_hui_shutdown_uses_single_bulk_modbus_safe_off_when_available() -> None:
     assert all(item["completed_at"] for item in payload["timeline"])
 
 
-def test_hui_hold_reuses_successful_modbus_readiness_inside_shutdown(monkeypatch) -> None:
+def test_hui_hold_reuses_successful_modbus_readiness_inside_shutdown(
+    monkeypatch,
+) -> None:
     monkeypatch.setattr(hui_hold, "_VALVE_STAGGER_SECONDS", 0)
     gateway = BulkOffGateway(real=True)
 
@@ -566,11 +616,13 @@ def test_hui_hold_reuses_successful_modbus_readiness_inside_shutdown(monkeypatch
     assert readiness_calls.count(("readiness", "modbus-io")) == 1
     assert readiness_calls.count(("readiness", "motor-dri0050")) == 1
     shutdown = next(
-        operation for operation in payload["operations"]
+        operation
+        for operation in payload["operations"]
         if operation["operation"] == "shutdown"
     )
     cached = next(
-        item for item in shutdown["result"]["timeline"]
+        item
+        for item in shutdown["result"]["timeline"]
         if item["stage"] == "readiness.modbus-io"
     )
     assert cached["cached"] is True
@@ -585,9 +637,7 @@ def test_hui_shutdown_falls_back_to_individual_valves_after_bulk_failure() -> No
     assert gateway.calls[:2] == [("pump", 0.0), ("all_valves_off",)]
     off_valves = [call for call in gateway.calls if call[0] == "valve"]
     assert len(off_valves) == len(hui_actions.HUI_ALL_VALVE_IDS)
-    assert payload["confirmed"]["valves_off"] == list(
-        hui_actions.HUI_ALL_VALVE_IDS
-    )
+    assert payload["confirmed"]["valves_off"] == list(hui_actions.HUI_ALL_VALVE_IDS)
 
 
 def test_hui_shutdown_stops_pump_and_fails_fast_when_modbus_is_unavailable() -> None:
@@ -648,7 +698,11 @@ def test_hui_readiness_separates_control_blocker_from_dfr1184_telemetry() -> Non
                 "ok": False,
                 "status": "degraded",
                 "components": {
-                    "usb-adc-mcp2221": {"ok": True, "status": "connected", "message": "ready"},
+                    "usb-adc-mcp2221": {
+                        "ok": True,
+                        "status": "connected",
+                        "message": "ready",
+                    },
                     "usb-adc-dfr1184": {
                         "ok": False,
                         "status": "unavailable",
@@ -664,7 +718,12 @@ def test_hui_readiness_separates_control_blocker_from_dfr1184_telemetry() -> Non
     assert payload["status"] == "degraded"
     assert payload["controls_ready"] is False
     assert payload["telemetry_ready"] is False
-    assert payload["actions"]["holds"]["lp-pwm-plus10"]["unavailable_hardware"] == ["modbus-io"]
+    assert payload["actions"]["holds"]["lp-pwm-plus10"]["unavailable_hardware"] == [
+        "modbus-io"
+    ]
     assert payload["actions"]["shutdown"]["ready"] is True
     assert payload["actions"]["shutdown"]["full_confirmation"] is False
-    assert payload["telemetry"]["components"]["usb-adc-dfr1184"]["endpoint"] == "/dev/serial0"
+    assert (
+        payload["telemetry"]["components"]["usb-adc-dfr1184"]["endpoint"]
+        == "/dev/serial0"
+    )

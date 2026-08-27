@@ -86,7 +86,11 @@ def _configured_hui_hold_profiles() -> dict[str, dict[str, Any]]:
         config, _ = load_effective_hardware_configuration()
     except Exception:
         return {}
-    hui = config.profiles.get("hui") if isinstance(config.profiles.get("hui"), dict) else {}
+    hui = (
+        config.profiles.get("hui")
+        if isinstance(config.profiles.get("hui"), dict)
+        else {}
+    )
     holds = hui.get("holds") if isinstance(hui.get("holds"), dict) else {}
     profiles: dict[str, dict[str, Any]] = {}
     for key, body in holds.items():
@@ -113,7 +117,10 @@ def _oql_hui_hold_profiles() -> dict[str, dict[str, Any]]:
 def get_hui_hold_profiles() -> dict[str, dict[str, Any]]:
     # One normalized config model plus OQL scenario-layer overrides.
     profiles = {
-        key: {"valves_on": tuple(profile["valves_on"]), "pump_pct": float(profile["pump_pct"])}
+        key: {
+            "valves_on": tuple(profile["valves_on"]),
+            "pump_pct": float(profile["pump_pct"]),
+        }
         for key, profile in HUI_HOLD_PROFILES.items()
     }
     profiles.update(_configured_hui_hold_profiles())
@@ -190,8 +197,16 @@ def _append_action_timing(
 
 
 def _shutdown_progress(operations: list[dict[str, Any]]) -> dict[str, Any]:
-    pump_operations = [operation for operation in operations if operation.get("operation") == "set_pump"]
-    valve_operations = [operation for operation in operations if operation.get("operation") == "set_valve"]
+    pump_operations = [
+        operation
+        for operation in operations
+        if operation.get("operation") == "set_pump"
+    ]
+    valve_operations = [
+        operation
+        for operation in operations
+        if operation.get("operation") == "set_valve"
+    ]
     bulk_operations = [
         operation
         for operation in operations
@@ -351,7 +366,15 @@ async def _shutdown_all_hui_hardware_unlocked(
             try:
                 operations.append(await _set_valve(gateway, valve_id, False))
             except Exception as exc:
-                operations.append(_operation("set_valve", False, valve_id=valve_id, value=False, error=str(exc)))
+                operations.append(
+                    _operation(
+                        "set_valve",
+                        False,
+                        valve_id=valve_id,
+                        value=False,
+                        error=str(exc),
+                    )
+                )
     progress = _shutdown_progress(operations)
     ok = bool(progress["confirmed"]["pump_off"]) and set(
         progress["confirmed"]["valves_off"]
@@ -399,6 +422,11 @@ def _hold_start_failure(
         "command": "hold_start",
         "key": hold_key,
         "error": error,
+        "error_code": "C2004-HW-0012",
+        "issue_code": "hui_hold_execution_failed",
+        "status_code": 503,
+        "safe_to_retry": True,
+        "public_message": "The HUI hold could not be started because a hardware operation failed.",
         "operations": operations,
         "cleanup": cleanup,
         "timeline": _operation_timeline(operations),
@@ -593,7 +621,9 @@ async def start_hui_hold(gateway: Any, key: str) -> dict[str, Any]:
     )
 
 
-async def _stop_hui_hold_unlocked(gateway: Any, key: str | None = None) -> dict[str, Any]:
+async def _stop_hui_hold_unlocked(
+    gateway: Any, key: str | None = None
+) -> dict[str, Any]:
     """Stop a hold and return hardware to a safe state.
 
     Fail-fast on unavailable required plugins (same contract as start) so a

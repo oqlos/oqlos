@@ -50,6 +50,27 @@ def test_raise_if_hui_failed_preserves_hardware_unavailable_status():
     assert "secret transport detail" not in str(exc.value.detail)
 
 
+def test_raise_if_hui_failed_maps_hold_execution_failure_to_service_unavailable():
+    with pytest.raises(OqlosError) as exc:
+        hui.raise_if_hui_failed(
+            {
+                "ok": False,
+                "error": "private adapter failure",
+                "error_code": "C2004-HW-0012",
+                "issue_code": "hui_hold_execution_failed",
+                "status_code": 503,
+                "safe_to_retry": True,
+                "public_message": "The HUI hold could not be started because a hardware operation failed.",
+            }
+        )
+
+    assert exc.value.status_code == 503
+    assert exc.value.public_code == "C2004-HW-0012"
+    assert exc.value.issue_code == "hui_hold_execution_failed"
+    assert exc.value.detail["safe_to_retry"] is True
+    assert "private adapter failure" not in str(exc.value.detail)
+
+
 def test_raise_if_hui_failed_503_without_plugin_ids_avoids_yaml_lie():
     with pytest.raises(OqlosError) as exc:
         hui.raise_if_hui_failed(
@@ -70,13 +91,14 @@ def test_raise_if_hui_failed_rejects_unsafe_hardware_identifiers():
                 "ok": False,
                 "error_code": "C2004-HW-0012",
                 "status_code": 503,
-                "unavailable_hardware": [
-                    {"plugin_id": "modbus-io\npassword=hunter2"}
-                ],
+                "unavailable_hardware": [{"plugin_id": "modbus-io\npassword=hunter2"}],
             }
         )
 
-    assert exc.value.message != "Required hardware unavailable: modbus-io\npassword=hunter2"
+    assert (
+        exc.value.message
+        != "Required hardware unavailable: modbus-io\npassword=hunter2"
+    )
     assert "hunter2" not in exc.value.message
     assert "unavailable_hardware_ids" not in exc.value.detail
 
@@ -92,8 +114,8 @@ def test_raise_if_hui_failed_rejects_invalid_status_metadata_safely():
 
 
 class _FakeGateway:
-  async def hold(self, key: str):
-      return {"ok": True, "key": key}
+    async def hold(self, key: str):
+        return {"ok": True, "key": key}
 
 
 def test_hui_hold_start_uses_gateway(monkeypatch):
@@ -222,9 +244,7 @@ def test_hui_failure_http_contract_exposes_only_safe_hardware_ids(monkeypatch):
     body = response.json()
     assert body["detail"] == "Required hardware unavailable: modbus-io"
     assert body["error"] == "Required hardware unavailable: modbus-io"
-    assert body["metadata"]["context"]["unavailable_hardware_ids"] == [
-        "modbus-io"
-    ]
+    assert body["metadata"]["context"]["unavailable_hardware_ids"] == ["modbus-io"]
     assert body["metadata"]["diagnostics"]["issue_code"] == "hw_modbus_no_response"
     assert "oqlos.yaml" not in response.text
     assert "private serial failure" not in response.text
