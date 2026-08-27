@@ -1,4 +1,4 @@
-# OqlOS hardware-node plugin config (boardnet / 192.168.188.131).
+# OqlOS hardware-node plugin config (boardnet.local).
 #
 # This is the base config copied to /home/pi/maskservice/config/oqlos-real.yaml by
 # the `apply-oqlos-hw-config` deploy step. BoardNet identities are pinned to
@@ -10,34 +10,35 @@
 schemaVersion: hardware-configuration-v1
 
 plugins:
-  # Dwa M5Stack Module 4In8Out podłączone do CoreS3; OqlOS steruje nimi przez WiFi.
+  # Dwa M5Stack Module 4In8Out podłączone do Core2/CoreS3; OqlOS steruje nimi przez LAN lub Wi-Fi.
   # Drugi moduł musi mieć jednorazowo ustawiony adres 0x66 przed połączeniem obu na I2C.
   io-m5-4in8out:
     enabled: true
     metadata:
       node_name: stacknet
-      display_name: StackNet - M5Stack CoreS3 IO gateway
-      device_class: m5stack-cores3
+      display_name: StackNet - M5Stack IO gateway
+      device_class: m5stack-core
       role: io-gateway
       config_source: layers/hardware/devices/m5-4in8out-boardnet.oql
-      wifi_credentials_store: nvs
-      wifi_change_via_oql: false
+      network_credentials_store: nvs
+      network_change_via_oql: true
       secrets_in_oql: false
       legacy_control_enabled: false
     connection_type: http
     connection_params:
-      base_url: http://192.168.188.199:8080
+      base_url: http://stacknet.local:8080
       hostname: stacknet
       target_base_url: http://stacknet.local:8080
-      address_source: dhcp-reservation
-      maskauth_url: http://192.168.188.108:8280
+      address_source: mdns
+      token_env: STACKNET_OQL_TOKEN
+      maskauth_url: http://maskauth.local:8280
       maskauth_client_id: boardnet
       maskauth_credential_env: MASKAUTH_BOARDNET_CLIENT_SECRET
       maskauth_application: boardnet
       maskauth_audience: stacknet
       lease_ttl_ms: 3000
       # Versioned desired state applied after BoardNet acquires the StackNet lease.
-      # DHCP reservation remains authoritative for 192.168.188.199.
+      # The hostname remains authoritative when DHCP changes the address.
       runtime_configuration:
         hostname: stacknet
         ipv4_mode: dhcp
@@ -119,7 +120,7 @@ plugins:
 
 profiles:
   hardware:
-    # CoreS3 + dual M122 is primary. Waveshare is the automatic fallback;
+    # M5Stack Core2/CoreS3 + dual M122 is primary. Waveshare is the automatic fallback;
     # HUI requires at least one member of this ordered alternative group.
     valve_controller: [io-m5-4in8out, modbus-io]
   hui:

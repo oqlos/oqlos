@@ -1,9 +1,9 @@
-"""M5Stack Module 4In8Out plugin — I2C or CoreS3 WiFi valve output stage.
+"""M5Stack Module 4In8Out plugin — I2C or StackNet LAN/Wi-Fi output stage.
 
 Command surface is deliberately identical to :mod:`oqlos.hardware.plugins.modbus`
 (``set_coil`` / ``set_valve`` / ``all_outputs_off`` / ``read_io_snapshot``) so the
 gateway can drive valves through either module without branching. A direct I2C
-module exposes 8 outputs; the CoreS3 HTTP gateway exposes two modules as 16
+module exposes 8 outputs; the Core2/CoreS3 HTTP gateway exposes two modules as 16
 outputs and 8 inputs.
 """
 
@@ -50,7 +50,7 @@ class M54In8OutPlugin(HardwarePlugin):
     PLUGIN_ID = "io-m5-4in8out"
     PLUGIN_NAME = "M5Stack Module 4In8Out"
     PLUGIN_VERSION = "1.0.0"
-    PLUGIN_DESCRIPTION = "CoreS3 WiFi gateway for 16x MOSFET output + 8x contact input"
+    PLUGIN_DESCRIPTION = "M5Stack LAN/Wi-Fi gateway for 16x MOSFET output + 8x contact input"
     REQUIRED_PYTHON_PACKAGES = ["m5-4in8out"]
     SUPPORTED_PROTOCOLS = ["i2c", "http"]
     # Alias kept from the Waveshare plugin so callers can use one "all off" address.
@@ -213,13 +213,13 @@ class M54In8OutPlugin(HardwarePlugin):
         if not physical_healthy:
             message = "StackNet reachable; one or more M122 modules unavailable"
         elif require_control_lease and not control_credentials_available:
-            message = "CoreS3 dual M122 online; control authorization unavailable"
+            message = "StackNet dual M122 online; control authorization unavailable"
         elif require_control_lease and not lease_active:
-            message = "CoreS3 dual M122 online; control lease unavailable"
+            message = "StackNet dual M122 online; control lease unavailable"
         elif require_control_lease and not configuration_compatible:
-            message = "CoreS3 dual M122 online; OQL configuration unavailable or incompatible"
+            message = "StackNet dual M122 online; OQL configuration unavailable or incompatible"
         else:
-            message = "CoreS3 dual M122 online"
+            message = "StackNet dual M122 online"
         return PluginHealth(
             status=PluginStatus.CONNECTED if control_ready else PluginStatus.ERROR,
             message=message,
@@ -442,7 +442,7 @@ class M54In8OutPlugin(HardwarePlugin):
                 base_url = str(self._params().get("base_url", "")).rstrip("/")
                 return PluginHealth(
                     status=PluginStatus.ERROR,
-                    message=f"CoreS3 WiFi gateway unavailable at {base_url}: {exc}",
+                    message=f"StackNet LAN/Wi-Fi gateway unavailable at {base_url}: {exc}",
                     details={
                         "backend": "cores3-http",
                         "base_url": base_url,
@@ -451,7 +451,7 @@ class M54In8OutPlugin(HardwarePlugin):
                             {
                                 "issue_code": "hw_m5_4in8out_no_response",
                                 "message": (
-                                    "Brak odpowiedzi CoreS3 przez WiFi; sprawdz siec, "
+                                    "Brak odpowiedzi StackNet przez LAN/Wi-Fi; sprawdź sieć, "
                                     "zasilanie i endpoint /api/v1/oql/status."
                                 ),
                             }
@@ -514,7 +514,7 @@ class M54In8OutPlugin(HardwarePlugin):
             except asyncio.CancelledError:
                 raise
             except Exception as exc:
-                # A single refused renewal (StackNet reboot, dropped WiFi frame,
+                # A single refused renewal (StackNet reboot, dropped network frame,
                 # HTTP 409 on an expired lease) must not brick the valve stage
                 # until the whole service restarts: re-arming cannot energize an
                 # output, because the dead-man already forced all-off.
@@ -688,7 +688,7 @@ class M54In8OutPlugin(HardwarePlugin):
                         "device_index": {"type": "integer", "default": 0, "minimum": 0},
                         "usb_serial": {"type": "string"},
                         "i2c_freq": {"type": "integer", "default": 100000},
-                        "base_url": {"type": "string", "default": "http://192.168.188.199:8080"},
+                        "base_url": {"type": "string", "default": "http://stacknet.local:8080"},
                         "token": {"type": "string"},
                     },
                 },
