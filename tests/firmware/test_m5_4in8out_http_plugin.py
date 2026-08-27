@@ -39,6 +39,7 @@ class _CoreS3:
                     {"address": "0x45", "firmware_version": 3},
                     {"address": "0x66", "firmware_version": 3},
                 ],
+                "network_interface": {"effective": "wifi"},
                 "firmware": {
                     "version": "1.7.1",
                     "oql_compatibility": {
@@ -181,6 +182,11 @@ async def test_http_read_only_gateway_still_serves_io_snapshot() -> None:
     assert result["data"]["control_ready"] is False
     assert result["data"]["firmware_version"] == "1.7.1"
     assert result["data"]["address"] == "0x45, 0x66"
+    assert result["data"]["modules"] == [
+        {"address": "0x45", "firmware_version": 3},
+        {"address": "0x66", "firmware_version": 3},
+    ]
+    assert result["data"]["network_interface"] == {"effective": "wifi"}
     assert _CoreS3.instances[-1].commands == []
 
 

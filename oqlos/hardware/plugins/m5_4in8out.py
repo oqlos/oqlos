@@ -628,9 +628,13 @@ class M54In8OutPlugin(HardwarePlugin):
         modules = data.get("modules") if isinstance(data.get("modules"), list) else []
         firmware = data.get("firmware") if isinstance(data.get("firmware"), dict) else {}
         health = self._http_health_from_payload(payload, require_control_lease=True)
-        return {
-            "success": True,
-            "data": {
+        snapshot_data = dict(data)
+        snapshot_data.update(
+            {
+                # `coils` / `discrete_inputs` retain the Modbus-compatible wire
+                # shape while the remaining public StackNet inventory stays
+                # available to read-only gateways such as the C2004 process
+                # runtime.
                 "coils": [bool(value) for value in outputs],
                 "discrete_inputs": [bool(value) for value in inputs],
                 "outputs": [bool(value) for value in outputs],
@@ -645,7 +649,11 @@ class M54In8OutPlugin(HardwarePlugin):
                 "physical_healthy": bool(health.details.get("physical_healthy")),
                 "control_ready": bool(health.compatible),
                 "control_message": health.message,
-            },
+            }
+        )
+        return {
+            "success": True,
+            "data": snapshot_data,
         }
 
     async def execute_command(self, command: str, params: dict[str, Any]) -> dict[str, Any]:
