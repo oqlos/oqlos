@@ -218,6 +218,7 @@ def test_optional_adapter_is_listed_in_the_hardware_registry() -> None:
     entry = next(hw for hw in HARDWARE_REGISTRY if hw["id"] == M5_4IN8OUT_PLUGIN_ID)
 
     assert entry["protocol"] == "HTTP/WiFi to CoreS3, then I2C"
+    assert "primary valve controller with modbus-io fallback" in entry["description"]
     # Operators must see the module on identify even before it is wired.
     assert entry["optional"] is True
 

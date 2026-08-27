@@ -65,7 +65,7 @@ HARDWARE_REGISTRY: list[dict[str, Any]] = [
         "optional": True,
         "version": "13.2",
         "protocol": "HTTP/WiFi to CoreS3, then I2C",
-        "description": "16 MOSFET outputs + 8 contact inputs on two modules - valve fallback for modbus-io",
+        "description": "16 MOSFET outputs + 8 contact inputs on two modules - primary valve controller with modbus-io fallback",
         "repo": "m5-4in8out",
         "digital_outputs": "OUT1-OUT16 (2x 8 AO3400A MOSFET, common anode, 1A/channel, 9-24V)",
         "digital_inputs": "IN1-IN8 (2x 4 passive dry contact, no active signal above 5V)",
