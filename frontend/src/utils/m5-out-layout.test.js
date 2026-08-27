@@ -45,4 +45,6 @@ test("M5 output page keeps read-only StackNet observable without enabling contro
   assert.doesNotMatch(pageSource, /peripheralStatus\(PLUGIN_ID\)/);
   assert.match(pageSource, /snapshot\?\.control_ready !== false/);
   assert.match(pageSource, /disabled=\{!controlReady \|\| !isAdmin/);
+  assert.match(pageSource, /nextM5OfflinePollDelay/);
+  assert.match(pageSource, /pollInFlight\.current/);
 });

@@ -1,9 +1,14 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { HardwareApi, formatHardwareApiError } from "../api/hardwareApi";
 import SharedNav from "../components/SharedNav";
 import { useAppConfig } from "../context/AppConfigProvider";
 import { useI18n } from "../i18n/I18nProvider";
+import {
+  M5_POLL_OFFLINE_INITIAL_MS,
+  M5_POLL_ONLINE_MS,
+  nextM5OfflinePollDelay,
+} from "../utils/m5-out-polling.js";
 
 const PLUGIN_ID = "io-m5-4in8out";
 const OUTPUT_COUNT = 16;
@@ -92,6 +97,8 @@ export default function HardwareM5Out() {
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
   const [lastCommandMs, setLastCommandMs] = useState(null);
+  const [pollDelayMs, setPollDelayMs] = useState(M5_POLL_ONLINE_MS);
+  const pollInFlight = useRef(false);
 
   const refresh = useCallback(async () => {
     setBusy("refresh");
@@ -101,6 +108,7 @@ export default function HardwareM5Out() {
       setSnapshot(result?.data || result?.result?.data || null);
     } catch (err) {
       setSnapshot(null);
+      setPollDelayMs(M5_POLL_OFFLINE_INITIAL_MS);
       setError(formatHardwareApiError(err, "M5 4In8Out snapshot failed"));
     } finally {
       setBusy("");
@@ -134,8 +142,13 @@ export default function HardwareM5Out() {
     try {
       const result = await HardwareApi.executePluginCommand(PLUGIN_ID, "read_io_snapshot");
       setSnapshot(result?.data || result?.result?.data || null);
+      setError("");
+      setPollDelayMs(M5_POLL_ONLINE_MS);
     } catch {
       // Preserve the command error; manual refresh exposes transport diagnostics.
+      // Back off an offline module so a diagnostic page does not continuously
+      // create expensive HTTP/plugin reconnect attempts.
+      setPollDelayMs(nextM5OfflinePollDelay);
     }
   }, []);
 
@@ -156,11 +169,17 @@ export default function HardwareM5Out() {
   }, [reconcileSnapshot]);
 
   useEffect(() => {
-    const interval = window.setInterval(() => {
-      if (!document.hidden && !busy) void reconcileSnapshot();
-    }, 1500);
+    const interval = window.setInterval(async () => {
+      if (document.hidden || busy || pollInFlight.current) return;
+      pollInFlight.current = true;
+      try {
+        await reconcileSnapshot();
+      } finally {
+        pollInFlight.current = false;
+      }
+    }, pollDelayMs);
     return () => window.clearInterval(interval);
-  }, [busy, reconcileSnapshot]);
+  }, [busy, pollDelayMs, reconcileSnapshot]);
 
   const toggle = useCallback((output) => {
     if (!canDrive) return;
