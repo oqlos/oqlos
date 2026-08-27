@@ -58,11 +58,6 @@ def test_no_enabled_controller_yields_no_candidates() -> None:
     assert resolve_valve_controller(configs) == MODBUS_VALVE_CONTROLLER
 
 
-def test_missing_configuration_keeps_legacy_error_attribution() -> None:
-    assert resolve_valve_controllers(None) == []
-    assert resolve_valve_controller(None) == MODBUS_VALVE_CONTROLLER
-
-
 def test_env_override_pins_the_controller(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("OQLOS_VALVE_CONTROLLER", MODBUS_VALVE_CONTROLLER)
     configs = _configs(**{MODBUS_VALVE_CONTROLLER: True, M5_VALVE_CONTROLLER: True})

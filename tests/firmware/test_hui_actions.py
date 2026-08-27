@@ -27,11 +27,16 @@ class FakeGateway:
         real: bool = False,
         plugin: Any | None = None,
         readiness: dict[str, dict[str, Any]] | None = None,
+        controllers: tuple[str, ...] = ("modbus-io",),
     ) -> None:
         self.is_real = real
         self.plugin = plugin
         self.readiness = readiness
+        self.controllers = controllers
         self.calls: list[tuple[Any, ...]] = []
+
+    def valve_controllers(self) -> list[str]:
+        return list(self.controllers)
 
     async def set_valve(self, valve_id: str, value: bool) -> bool:
         self.calls.append(("valve", valve_id, value))
@@ -81,6 +86,9 @@ class FailingBulkOffGateway(FakeGateway):
 
 
 class ExactReplaceGateway(BulkOffGateway):
+    def valve_controllers(self) -> list[str]:
+        return ["io-m5-4in8out", "modbus-io"]
+
     def supports_exact_valve_replace(self) -> bool:
         return True
 
@@ -267,6 +275,11 @@ def test_hui_actions_list_uses_configured_profiles(monkeypatch) -> None:
         hui_hold,
         "_configured_hui_hold_profiles",
         lambda: {"head-inflate": {"valves_on": ("valve-8",), "pump_pct": 12.5}},
+    )
+    monkeypatch.setattr(
+        hui_actions,
+        "resolve_valve_controller_from_config",
+        lambda: "modbus-io",
     )
 
     payload = hui_actions.list_hui_actions()

@@ -73,6 +73,9 @@ def test_set_pump_raises_typed_error_when_dri0050_unavailable(monkeypatch):
 
 def test_set_valve_raises_typed_error_when_modbus_io_unavailable(monkeypatch):
     class _Gateway:
+        def valve_controllers(self):
+            return ["modbus-io"]
+
         async def set_valve(self, valve_id: str, value: bool):
             return False
 
