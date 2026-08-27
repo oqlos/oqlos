@@ -305,6 +305,11 @@ def test_gateway_health_forwards_allowlisted_operator_details(monkeypatch) -> No
             compatible=True,
             details={
                 "data": {"token": "sidecar-secret"},
+                "transport_reachable": True,
+                "physical_healthy": False,
+                "control_credentials_available": False,
+                "control_lease_active": False,
+                "oql_configuration_compatible": True,
                 "operator_alerts": [
                     {
                         "issue_code": "hw_tic249_position_uncertain",
@@ -337,6 +342,11 @@ def test_gateway_health_forwards_allowlisted_operator_details(monkeypatch) -> No
     assert body["details"]["operator_alerts"][0]["issue_code"] == "hw_tic249_position_uncertain"
     assert body["details"]["runtime_status"]["position_uncertain"] is True
     assert body["details"]["runtime_status"]["reverse_limit_active"] is True
+    assert body["details"]["transport_reachable"] is True
+    assert body["details"]["physical_healthy"] is False
+    assert body["details"]["control_credentials_available"] is False
+    assert body["details"]["control_lease_active"] is False
+    assert body["details"]["oql_configuration_compatible"] is True
     dumped = json.dumps(result)
     assert "health-secret" not in dumped
     assert "sidecar-secret" not in dumped

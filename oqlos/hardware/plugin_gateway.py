@@ -55,12 +55,24 @@ _OPERATOR_RUNTIME_KEYS = (
     "position",
 )
 
+_OPERATOR_HEALTH_BOOL_KEYS = (
+    "transport_reachable",
+    "physical_healthy",
+    "control_credentials_available",
+    "control_lease_active",
+    "oql_configuration_compatible",
+)
+
 
 def _operator_health_details(details: dict[str, Any] | None) -> dict[str, Any]:
     """Copy allowlisted operator fields; never forward raw sidecar payloads."""
     if not isinstance(details, dict):
         return {}
     out: dict[str, Any] = {}
+    for key in _OPERATOR_HEALTH_BOOL_KEYS:
+        value = details.get(key)
+        if isinstance(value, bool):
+            out[key] = value
     alerts = details.get("operator_alerts")
     if isinstance(alerts, list):
         out["operator_alerts"] = [
