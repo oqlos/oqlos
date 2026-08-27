@@ -3,7 +3,7 @@ import {
   connectCqrsEventsPath,
   connectDiagnosticCommandPath,
   connectPeripheralStatusPath,
-} from "@semcod/hardware-client/paths.js";
+} from "../../vendor/hardware-client/paths.js";
 import {
   logHardwareApiEvent,
   summarizeHardwareApiBody,

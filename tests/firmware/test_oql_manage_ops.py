@@ -67,6 +67,10 @@ async def test_mqtt_manage_reach_limit_stop_bypasses_power_gate(monkeypatch):
 
     monkeypatch.setattr(hardware_gateway, "_gateway", gateway)
     monkeypatch.setattr(power_safety, "sample_power_telemetry", _unexpected_power)
+    monkeypatch.setattr(
+        "oqlos.hardware.hui_lung_recipe.get_hui_lung_stop_at_limit",
+        lambda *, fallback: True,
+    )
 
     result = await manage_ops.run_manage_verb("lung-stop")
 

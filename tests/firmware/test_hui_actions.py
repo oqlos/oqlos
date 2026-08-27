@@ -5,7 +5,14 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
-from oqlos.hardware import hui_actions, hui_hold, hui_lung_recipe, hui_readiness, hui_valve
+from oqlos.hardware import (
+    hui_actions,
+    hui_artificial_lung,
+    hui_hold,
+    hui_lung_recipe,
+    hui_readiness,
+    hui_valve,
+)
 from oqlos.hardware.valve_controller import gateway_valve_controllers
 
 
@@ -273,7 +280,12 @@ def test_hui_actions_list_uses_configured_profiles(monkeypatch) -> None:
     assert payload["diagnostics"]["hui_readiness"] == "/api/v1/hardware/hui/readiness"
 
 
-def test_hui_artificial_lung_uses_tic249_plugin_recipe() -> None:
+def test_hui_artificial_lung_uses_tic249_plugin_recipe(monkeypatch) -> None:
+    monkeypatch.setattr(
+        hui_artificial_lung,
+        "get_hui_lung_reciprocate_args",
+        hui_lung_recipe.build_hui_lung_reciprocate_args,
+    )
     plugin = FakeTic249Plugin()
     gateway = FakeGateway(real=True, plugin=plugin)
 

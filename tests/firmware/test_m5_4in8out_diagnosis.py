@@ -97,6 +97,7 @@ def test_missing_driver_package_is_named() -> None:
                 "status": "incompatible",
                 "compatible": False,
                 "message": "m5-4in8out is not installed for the io-m5-4in8out plugin",
+                "details": {"backend": "smbus"},
             }
         }
     )
@@ -201,6 +202,7 @@ def test_disabled_m5_tells_operator_to_check_i2c() -> None:
                 "status": "disabled",
                 "compatible": False,
                 "message": "Plugin is disabled in OqlOS configuration",
+                "details": {"backend": "smbus"},
             }
         }
     )

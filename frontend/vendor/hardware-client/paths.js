@@ -15,17 +15,17 @@ export const CONNECT_HARDWARE_PATHS = {
   scannerIngest: `${CONNECT_HARDWARE_V3}/scanner/ingest`,
   diagnosis: `${CONNECT_HARDWARE_V3}/diagnosis`,
   diagnosisRepair: `${CONNECT_HARDWARE_V3}/diagnosis/repair`,
-} as const;
+};
 
-export function connectPeripheralStatusPath(peripheralId: string): string {
+export function connectPeripheralStatusPath(peripheralId) {
   return `${CONNECT_HARDWARE_V3}/peripheral-status/${encodeURIComponent(peripheralId)}`;
 }
 
-export function connectDiagnosticCommandPath(): string {
+export function connectDiagnosticCommandPath() {
   return CONNECT_HARDWARE_PATHS.diagnosticCommand;
 }
 
-export function connectCqrsEventsPath(limit = 50): string {
+export function connectCqrsEventsPath(limit = 50) {
   const q = Number.isFinite(limit) ? Math.max(1, Math.min(500, Number(limit))) : 50;
   return `${CONNECT_HARDWARE_PATHS.cqrsEvents}?limit=${q}`;
 }

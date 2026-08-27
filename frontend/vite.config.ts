@@ -12,11 +12,11 @@ export default defineConfig({
       // Vendored copy of the c2004 @semcod/hardware-client path constants (subpath first).
       {
         find: '@semcod/hardware-client/paths.js',
-        replacement: fileURLToPath(new URL('./vendor/hardware-client/paths.ts', import.meta.url)),
+        replacement: fileURLToPath(new URL('./vendor/hardware-client/paths.js', import.meta.url)),
       },
       {
         find: '@semcod/hardware-client',
-        replacement: fileURLToPath(new URL('./vendor/hardware-client/index.ts', import.meta.url)),
+        replacement: fileURLToPath(new URL('./vendor/hardware-client/index.js', import.meta.url)),
       },
     ],
   },

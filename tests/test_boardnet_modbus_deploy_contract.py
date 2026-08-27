@@ -205,14 +205,16 @@ def test_boardnet_base_config_matches_machine_modbus_contract() -> None:
     }
 
 
-def test_boardnet_base_config_targets_reserved_stacknet_node() -> None:
+def test_boardnet_base_config_targets_discoverable_stacknet_node() -> None:
     payload = yaml.safe_load(
         (ROOT / "redeploy/122/oqlos-hw.yaml").read_text(encoding="utf-8")
     )
     params = payload["plugins"]["io-m5-4in8out"]["connection_params"]
 
-    assert params["base_url"] == "http://192.168.188.199:8080"
+    assert params["base_url"] == "http://stacknet.local:8080"
     assert params["target_base_url"] == "http://stacknet.local:8080"
+    assert params["address_source"] == "mdns"
+    assert params["token_env"] == "STACKNET_OQL_TOKEN"
     assert params["runtime_configuration"]["config_schema"] == "stacknet-runtime-v1"
     assert params["runtime_configuration"]["config_revision"] == 2
 

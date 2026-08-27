@@ -48,6 +48,7 @@ async def save_tic249_profile_source(
     except Tic249ProfileUnsafeError as exc:
         raise OqlosError(
             code="api_hardware_configuration_invalid",
+            public_code="C2004-DATA-0003",
             status_code=409,
             message=str(exc),
             detail={

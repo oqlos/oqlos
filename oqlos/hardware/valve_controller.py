@@ -98,7 +98,10 @@ def resolve_valve_controllers(plugin_configs: Mapping[str, Any] | None) -> list[
     """
     candidates = valve_controller_preference()
     if not plugin_configs:
-        return candidates
+        # No configuration means that no M5 controller has been enabled. Keep
+        # the legacy Modbus identifier for error attribution and mock callers;
+        # selecting M5 here made installed-wheel behavior depend on cwd.
+        return []
 
     enabled: list[str] = []
     for plugin_id in candidates:

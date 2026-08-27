@@ -3,11 +3,9 @@
 export const OQLOS_HARDWARE_V1 = '/api/v1/hardware';
 export const CONNECT_HARDWARE_V3 = '/api/v3/hardware';
 
-export const ARTIFICIAL_LUNG_IDS = ['artificial-lung', 'lung', 'lung-main'] as const;
+export const ARTIFICIAL_LUNG_IDS = ['artificial-lung', 'lung', 'lung-main'];
 
-export type ArtificialLungId = (typeof ARTIFICIAL_LUNG_IDS)[number];
-
-export const PERIPHERAL_STATUS_COMMANDS: Record<string, string> = {
+export const PERIPHERAL_STATUS_COMMANDS = {
   'modbus-io': 'health',
   'motor-dri0050': 'status',
   'motor-tic249': 'status',
@@ -22,10 +20,10 @@ export const PERIPHERAL_STATUS_COMMANDS: Record<string, string> = {
 export { CONNECT_HARDWARE_PATHS, connectCqrsEventsPath } from './paths.js';
 export { connectPeripheralStatusPath, connectDiagnosticCommandPath } from './paths.js';
 
-export function oqlosArtificialLungCommandPath(): string {
+export function oqlosArtificialLungCommandPath() {
   return `${OQLOS_HARDWARE_V1}/artificial-lung/command`;
 }
 
-export function oqlosArtificialLungStatusPath(): string {
+export function oqlosArtificialLungStatusPath() {
   return `${OQLOS_HARDWARE_V1}/artificial-lung/status`;
 }
