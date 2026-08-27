@@ -33,11 +33,14 @@ class _CoreS3:
         return {
             "data": {
                 "healthy": self.healthy,
+                "outputs": [False] * 16,
+                "inputs": [True] * 8,
                 "modules": [
                     {"address": "0x45", "firmware_version": 3},
                     {"address": "0x66", "firmware_version": 3},
                 ],
                 "firmware": {
+                    "version": "1.7.1",
                     "oql_compatibility": {
                         "configured": self.configured,
                         "compatible": self.configured,
@@ -161,6 +164,23 @@ async def test_http_gateway_without_credentials_stays_visible_but_read_only() ->
         "success": False,
         "error": "StackNet control authorization unavailable; read-only connection",
     }
+    assert _CoreS3.instances[-1].commands == []
+
+
+@pytest.mark.asyncio
+async def test_http_read_only_gateway_still_serves_io_snapshot() -> None:
+    plugin = M54In8OutPlugin(_config(token=""))
+
+    assert await plugin.connect() is True
+    result = await plugin.execute_command("read_io_snapshot", {})
+
+    assert result["success"] is True
+    assert result["data"]["coils"] == [False] * 16
+    assert result["data"]["discrete_inputs"] == [True] * 8
+    assert result["data"]["physical_healthy"] is True
+    assert result["data"]["control_ready"] is False
+    assert result["data"]["firmware_version"] == "1.7.1"
+    assert result["data"]["address"] == "0x45, 0x66"
     assert _CoreS3.instances[-1].commands == []
 
 

@@ -29,6 +29,8 @@ const COPY = {
     state: "Stan",
     online: "online",
     offline: "offline",
+    readOnly: "tylko odczyt",
+    controlUnavailable: "StackNet działa, ale sterowanie jest zablokowane do czasu uzyskania autoryzacji, dzierżawy i zgodnej konfiguracji OQL.",
     on: "ZAŁ",
     off: "WYŁ",
     closed: "zwarte",
@@ -61,6 +63,8 @@ const COPY = {
     state: "State",
     online: "online",
     offline: "offline",
+    readOnly: "read-only",
+    controlUnavailable: "StackNet is online, but control stays blocked until authorization, a lease and a compatible OQL configuration are available.",
     on: "ON",
     off: "OFF",
     closed: "closed",
@@ -83,7 +87,6 @@ export default function HardwareM5Out() {
   const { lang } = useI18n();
   const text = COPY[lang] || COPY.en;
 
-  const [health, setHealth] = useState(null);
   const [snapshot, setSnapshot] = useState(null);
   const [confirmed, setConfirmed] = useState(false);
   const [busy, setBusy] = useState("");
@@ -94,8 +97,6 @@ export default function HardwareM5Out() {
     setBusy("refresh");
     setError("");
     try {
-      const status = await HardwareApi.peripheralStatus(PLUGIN_ID);
-      setHealth(status);
       const result = await HardwareApi.executePluginCommand(PLUGIN_ID, "read_io_snapshot");
       setSnapshot(result?.data || result?.result?.data || null);
     } catch (err) {
@@ -125,8 +126,9 @@ export default function HardwareM5Out() {
     }));
   }, [snapshot]);
 
-  const online = Boolean(snapshot);
-  const canDrive = Boolean(online && confirmed && isAdmin && !busy);
+  const online = Boolean(snapshot && snapshot.physical_healthy !== false);
+  const controlReady = Boolean(online && snapshot?.control_ready !== false);
+  const canDrive = Boolean(controlReady && confirmed && isAdmin && !busy);
 
   const reconcileSnapshot = useCallback(async () => {
     try {
@@ -181,7 +183,7 @@ export default function HardwareM5Out() {
   // Safe-off stays reachable without the confirmation checkbox: de-energizing
   // is the recovery action, never the risky one.
   const stopAll = useCallback(() => {
-    if (!online || !isAdmin || busy) return;
+    if (!controlReady || !isAdmin || busy) return;
     void runCommand(
       "all_outputs_off",
       {},
@@ -191,7 +193,7 @@ export default function HardwareM5Out() {
         return { ...(current || {}), coils, outputs: coils };
       },
     );
-  }, [online, isAdmin, busy, runCommand]);
+  }, [controlReady, isAdmin, busy, runCommand]);
 
   const allOn = useCallback(() => {
     if (!canDrive) return;
@@ -206,7 +208,7 @@ export default function HardwareM5Out() {
     );
   }, [canDrive, runCommand]);
 
-  const details = health?.details || health?.result?.details || {};
+  const details = snapshot || {};
 
   return (
     <div className="m5-out-page">
@@ -220,7 +222,7 @@ export default function HardwareM5Out() {
           </div>
           <span className={`m5-out-status m5-out-status--${online ? "online" : "offline"}`}>
             <span className="m5-out-status-dot" aria-hidden="true" />
-            {online ? text.online : text.offline}
+            {online ? `${text.online}${controlReady ? "" : ` · ${text.readOnly}`}` : text.offline}
           </span>
         </header>
 
@@ -263,7 +265,7 @@ export default function HardwareM5Out() {
               className="m5-out-button m5-out-button--danger"
               type="button"
               onClick={stopAll}
-              disabled={!online || !isAdmin || Boolean(busy)}
+              disabled={!controlReady || !isAdmin || Boolean(busy)}
             >
               {text.stop}
             </button>
@@ -278,6 +280,12 @@ export default function HardwareM5Out() {
           </div>
 
           {!isAdmin && <p className="m5-out-role-hint">{text.roleBlocked}</p>}
+          {online && !controlReady && (
+            <p className="m5-out-role-hint">
+              {text.controlUnavailable}
+              {snapshot?.control_message ? ` ${snapshot.control_message}` : ""}
+            </p>
+          )}
           {!online && (
             <div className="m5-out-alert" role="status">
               <span className="m5-out-alert-icon" aria-hidden="true">!</span>
@@ -297,7 +305,7 @@ export default function HardwareM5Out() {
               type="checkbox"
               checked={confirmed}
               onChange={(event) => setConfirmed(event.target.checked)}
-              disabled={!online || !isAdmin}
+              disabled={!controlReady || !isAdmin}
             />
             <span>{text.confirm}</span>
           </label>

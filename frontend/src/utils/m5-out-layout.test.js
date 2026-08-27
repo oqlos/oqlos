@@ -39,3 +39,10 @@ test("embedded M5 output page owns vertical scrolling inside the iframe", () => 
   assert.match(root, /overflow-x:\s*hidden/);
   assert.match(root, /overflow-y:\s*auto/);
 });
+
+test("M5 output page keeps read-only StackNet observable without enabling control", () => {
+  assert.match(pageSource, /executePluginCommand\(PLUGIN_ID, "read_io_snapshot"\)/);
+  assert.doesNotMatch(pageSource, /peripheralStatus\(PLUGIN_ID\)/);
+  assert.match(pageSource, /snapshot\?\.control_ready !== false/);
+  assert.match(pageSource, /disabled=\{!controlReady \|\| !isAdmin/);
+});

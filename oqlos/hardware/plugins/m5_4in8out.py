@@ -598,10 +598,55 @@ class M54In8OutPlugin(HardwarePlugin):
             },
         }
 
+    async def _execute_http_read_io_snapshot(self) -> dict[str, Any]:
+        """Read StackNet state without requiring an actuation lease.
+
+        StackNet publishes the current input/output snapshot on its public
+        status endpoint.  Keeping this path separate from ``execute`` lets a
+        physically healthy node remain observable while MaskAuth, the control
+        lease, or the active OQL configuration is unavailable.
+        """
+        payload = await self._call("status")
+        data = payload.get("data") if isinstance(payload.get("data"), dict) else {}
+        outputs = data.get("outputs") if isinstance(data.get("outputs"), list) else []
+        inputs = data.get("inputs") if isinstance(data.get("inputs"), list) else []
+        modules = data.get("modules") if isinstance(data.get("modules"), list) else []
+        firmware = data.get("firmware") if isinstance(data.get("firmware"), dict) else {}
+        health = self._http_health_from_payload(payload, require_control_lease=True)
+        return {
+            "success": True,
+            "data": {
+                "coils": [bool(value) for value in outputs],
+                "discrete_inputs": [bool(value) for value in inputs],
+                "outputs": [bool(value) for value in outputs],
+                "inputs": [bool(value) for value in inputs],
+                "firmware_version": firmware.get("version") or "",
+                "address": ", ".join(
+                    str(module.get("address"))
+                    for module in modules
+                    if isinstance(module, dict) and module.get("address")
+                ),
+                "backend": "cores3-http",
+                "physical_healthy": bool(health.details.get("physical_healthy")),
+                "control_ready": bool(health.compatible),
+                "control_message": health.message,
+            },
+        }
+
     async def execute_command(self, command: str, params: dict[str, Any]) -> dict[str, Any]:
         """Execute a 4In8Out command."""
         if self._module is None:
             return {"success": False, "error": "Not connected to 4In8Out"}
+        if self._is_http() and command == "read_io_snapshot":
+            try:
+                return await self._execute_http_read_io_snapshot()
+            except asyncio.TimeoutError:
+                return {
+                    "success": False,
+                    "error": f"4In8Out command timed out after {self.config.timeout:.1f}s",
+                }
+            except Exception as exc:
+                return {"success": False, "error": str(exc)}
         if self._is_http() and not self._control_credentials_available():
             return {
                 "success": False,
