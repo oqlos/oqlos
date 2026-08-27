@@ -26,7 +26,7 @@ plugins:
       legacy_control_enabled: false
     connection_type: http
     connection_params:
-      base_url: http://192.168.188.127:8080
+      base_url: http://192.168.188.199:8080
       hostname: stacknet
       target_base_url: http://stacknet.local:8080
       address_source: dhcp-reservation
@@ -37,7 +37,7 @@ plugins:
       maskauth_audience: stacknet
       lease_ttl_ms: 3000
       # Versioned desired state applied after BoardNet acquires the StackNet lease.
-      # DHCP reservation remains authoritative for 192.168.188.127.
+      # DHCP reservation remains authoritative for 192.168.188.199.
       runtime_configuration:
         hostname: stacknet
         ipv4_mode: dhcp

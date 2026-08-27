@@ -655,7 +655,7 @@ class M54In8OutPlugin(HardwarePlugin):
                         "device_index": {"type": "integer", "default": 0, "minimum": 0},
                         "usb_serial": {"type": "string"},
                         "i2c_freq": {"type": "integer", "default": 100000},
-                        "base_url": {"type": "string", "default": "http://192.168.188.127:8080"},
+                        "base_url": {"type": "string", "default": "http://192.168.188.199:8080"},
                         "token": {"type": "string"},
                     },
                 },

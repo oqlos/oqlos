@@ -201,8 +201,20 @@ def test_boardnet_base_config_matches_machine_modbus_contract() -> None:
         "serial_port": "/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_A5069RR4-if00-port0",
         "baudrate": 4800,
         "parity": "N",
-        "device_id": 2,
+        "device_id": 1,
     }
+
+
+def test_boardnet_base_config_targets_reserved_stacknet_node() -> None:
+    payload = yaml.safe_load(
+        (ROOT / "redeploy/122/oqlos-hw.yaml").read_text(encoding="utf-8")
+    )
+    params = payload["plugins"]["io-m5-4in8out"]["connection_params"]
+
+    assert params["base_url"] == "http://192.168.188.199:8080"
+    assert params["target_base_url"] == "http://stacknet.local:8080"
+    assert params["runtime_configuration"]["config_schema"] == "stacknet-runtime-v1"
+    assert params["runtime_configuration"]["config_revision"] == 2
 
 
 def test_optional_map_editor_cannot_roll_back_healthy_hardware_runtime() -> None:
