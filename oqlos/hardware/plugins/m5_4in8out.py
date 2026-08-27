@@ -606,7 +606,22 @@ class M54In8OutPlugin(HardwarePlugin):
         physically healthy node remain observable while MaskAuth, the control
         lease, or the active OQL configuration is unavailable.
         """
-        payload = await self._call("status")
+        if self._module is None:
+            client = CoreS3HttpClient(
+                str(self._params().get("base_url", "")),
+                self._http_token(),
+                self.config.timeout,
+                self._capability_client(),
+            )
+            try:
+                payload = await asyncio.wait_for(
+                    asyncio.to_thread(client.status),
+                    timeout=self.config.timeout,
+                )
+            finally:
+                client.close()
+        else:
+            payload = await self._call("status")
         data = payload.get("data") if isinstance(payload.get("data"), dict) else {}
         outputs = data.get("outputs") if isinstance(data.get("outputs"), list) else []
         inputs = data.get("inputs") if isinstance(data.get("inputs"), list) else []
@@ -635,8 +650,6 @@ class M54In8OutPlugin(HardwarePlugin):
 
     async def execute_command(self, command: str, params: dict[str, Any]) -> dict[str, Any]:
         """Execute a 4In8Out command."""
-        if self._module is None:
-            return {"success": False, "error": "Not connected to 4In8Out"}
         if self._is_http() and command == "read_io_snapshot":
             try:
                 return await self._execute_http_read_io_snapshot()
@@ -647,6 +660,8 @@ class M54In8OutPlugin(HardwarePlugin):
                 }
             except Exception as exc:
                 return {"success": False, "error": str(exc)}
+        if self._module is None:
+            return {"success": False, "error": "Not connected to 4In8Out"}
         if self._is_http() and not self._control_credentials_available():
             return {
                 "success": False,

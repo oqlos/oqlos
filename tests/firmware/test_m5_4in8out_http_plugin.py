@@ -185,6 +185,19 @@ async def test_http_read_only_gateway_still_serves_io_snapshot() -> None:
 
 
 @pytest.mark.asyncio
+async def test_http_snapshot_recovers_after_startup_transport_failure() -> None:
+    plugin = M54In8OutPlugin(_config(token=""))
+
+    result = await plugin.execute_command("read_io_snapshot", {})
+
+    assert result["success"] is True
+    assert result["data"]["physical_healthy"] is True
+    assert result["data"]["control_ready"] is False
+    assert plugin._module is None
+    assert _CoreS3.instances[-1].commands == []
+
+
+@pytest.mark.asyncio
 async def test_http_unhealthy_gateway_is_not_compatible() -> None:
     _CoreS3.healthy = False
     plugin = M54In8OutPlugin(_config())
