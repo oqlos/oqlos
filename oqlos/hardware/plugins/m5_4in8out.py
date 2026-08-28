@@ -199,7 +199,7 @@ class M54In8OutPlugin(HardwarePlugin):
         """Separate physical M122 health from permission to actuate outputs."""
         data = payload.get("data") or {}
         modules = data.get("modules") or []
-        physical_healthy = bool(data.get("healthy"))
+        physical_healthy = self._m122_modules_healthy(data, modules)
         configuration_compatible = self._configuration_matches(payload)
         control_credentials_available = self._control_credentials_available()
         lease_active = bool(
@@ -239,6 +239,35 @@ class M54In8OutPlugin(HardwarePlugin):
                 str(item.get("firmware_version", "?")) for item in modules
             ),
         )
+
+    @staticmethod
+    def _m122_modules_healthy(
+        data: dict[str, Any], modules: list[dict[str, Any]]
+    ) -> bool:
+        """Derive valve-module health without inheriting unrelated node faults.
+
+        StackNet's top-level ``healthy`` describes its complete hardware
+        profile.  It can therefore be false when DRI0050 or another sibling
+        component is absent even though both M122 modules answer correctly.
+        New firmware publishes an explicit module inventory; older firmware
+        falls back to the aggregate flag.
+        """
+        if not modules:
+            return bool(data.get("healthy"))
+
+        i2c = data.get("i2c") if isinstance(data.get("i2c"), dict) else {}
+        expected = i2c.get("m122_module_count", 2)
+        try:
+            expected_count = max(1, int(expected))
+        except (TypeError, ValueError):
+            expected_count = 2
+
+        present_modules = [
+            module
+            for module in modules
+            if isinstance(module, dict) and module.get("present", True) is not False
+        ]
+        return len(present_modules) >= expected_count
 
     # ------------------------------------------------------------------
     # Lifecycle

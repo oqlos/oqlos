@@ -13,6 +13,8 @@ from oqlos.hardware.plugins import m5_4in8out
 
 class _CoreS3:
     healthy = True
+    module_count = 2
+    missing_module = False
     configured = True
     active_revision = 1
     lease_error: Exception | None = None
@@ -36,9 +38,22 @@ class _CoreS3:
                 "outputs": [False] * 16,
                 "inputs": [True] * 8,
                 "modules": [
-                    {"address": "0x45", "firmware_version": 3},
-                    {"address": "0x66", "firmware_version": 3},
+                    {
+                        "address": "0x45",
+                        "firmware_version": 3,
+                        "present": True,
+                    },
+                    {
+                        "address": "0x66",
+                        "firmware_version": 3,
+                        "present": not self.missing_module,
+                    },
                 ],
+                "i2c": {"m122_module_count": self.module_count},
+                "hardware_profile": {
+                    "compliant": self.healthy,
+                    "missing_components": [] if self.healthy else ["dri0050"],
+                },
                 "network_interface": {"effective": "wifi"},
                 "firmware": {
                     "version": "1.7.1",
@@ -109,6 +124,8 @@ def _config(*, token: str = "test-token") -> PluginConfig:
 @pytest.fixture(autouse=True)
 def _fake_cores3(monkeypatch: pytest.MonkeyPatch) -> None:
     _CoreS3.healthy = True
+    _CoreS3.module_count = 2
+    _CoreS3.missing_module = False
     _CoreS3.configured = True
     _CoreS3.active_revision = 1
     _CoreS3.lease_error = None
@@ -183,8 +200,8 @@ async def test_http_read_only_gateway_still_serves_io_snapshot() -> None:
     assert result["data"]["firmware_version"] == "1.7.1"
     assert result["data"]["address"] == "0x45, 0x66"
     assert result["data"]["modules"] == [
-        {"address": "0x45", "firmware_version": 3},
-        {"address": "0x66", "firmware_version": 3},
+        {"address": "0x45", "firmware_version": 3, "present": True},
+        {"address": "0x66", "firmware_version": 3, "present": True},
     ]
     assert result["data"]["network_interface"] == {"effective": "wifi"}
     assert _CoreS3.instances[-1].commands == []
@@ -204,24 +221,35 @@ async def test_http_snapshot_recovers_after_startup_transport_failure() -> None:
 
 
 @pytest.mark.asyncio
-async def test_http_unhealthy_gateway_is_not_compatible() -> None:
+async def test_http_unhealthy_node_with_both_m122_modules_still_connects() -> None:
     _CoreS3.healthy = False
     plugin = M54In8OutPlugin(_config())
 
     assert await plugin.connect() is True
     health = await plugin.health_check()
-    command = await plugin.execute_command("set_coil", {"coil": 0, "value": True})
 
     assert plugin.status is PluginStatus.CONNECTED
+    assert health.compatible is True
+    assert health.status is PluginStatus.CONNECTED
+    assert health.details["transport_reachable"] is True
+    assert health.details["physical_healthy"] is True
+    assert health.details["control_lease_active"] is True
+
+    await plugin.disconnect()
+
+
+@pytest.mark.asyncio
+async def test_http_missing_m122_module_is_not_compatible() -> None:
+    _CoreS3.missing_module = True
+    plugin = M54In8OutPlugin(_config())
+
+    assert await plugin.connect() is True
+    health = await plugin.health_check()
+
     assert health.compatible is False
     assert health.status is PluginStatus.ERROR
-    assert health.details["transport_reachable"] is True
     assert health.details["physical_healthy"] is False
-    assert command == {
-        "success": False,
-        "error": "StackNet control lease unavailable; read-only connection",
-    }
-    assert _CoreS3.instances[-1].commands == []
+    assert "one or more M122 modules unavailable" in health.message
 
 
 @pytest.mark.asyncio
