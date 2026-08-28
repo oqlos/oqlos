@@ -497,7 +497,8 @@ async def read_sensors_batch(
     # Complete transport loss → typed Problem Details. Partial channel failures
     # (sidecar up, some AI channels timed out) stay in the 200 payload.
     if ids and successful == 0 and (
-        _USB_ADC_STATUS.get("available") is False or modbus_unavailable
+        _USB_ADC_STATUS.get("available") is False
+        or (_USB_ADC_STATUS.get("available") is not True and modbus_unavailable)
     ):
         usb_down = _USB_ADC_STATUS.get("available") is False
         if usb_down:
@@ -533,7 +534,10 @@ async def read_sensors_batch(
         # the payload instead of failing the entire HUI process.
         "ok": successful > 0,
         "complete": complete,
-        "degraded": successful > 0 and not complete,
+        # A reachable sidecar with zero installed/working channels is a valid
+        # degraded inventory response.  Consumers can render every channel as
+        # unavailable without confusing device absence with transport loss.
+        "degraded": not complete,
         "sensors": sensors,
         "diagnostics": diagnostics,
     }

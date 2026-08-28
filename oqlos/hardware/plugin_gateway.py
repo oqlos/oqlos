@@ -58,6 +58,7 @@ _OPERATOR_RUNTIME_KEYS = (
 _OPERATOR_HEALTH_BOOL_KEYS = (
     "transport_reachable",
     "physical_healthy",
+    "control_ready",
     "control_credentials_available",
     "control_lease_active",
     "oql_configuration_compatible",
@@ -1367,9 +1368,15 @@ class PluginHardwareGateway:
             config = self._plugin_configs.get(plugin_id)
             result[plugin_id] = {
                 "status": health.status.value,
+                # Never forward raw transport messages into aggregate health:
+                # they may contain credentials or private device paths.  A
+                # configured status still distinguishes a reachable read-only
+                # device from a transport failure.
                 "message": (
                     "Plugin is healthy"
                     if health.compatible
+                    else "Plugin is reachable but control is unavailable"
+                    if health.status is PluginStatus.CONFIGURED
                     else "Plugin health is unavailable"
                 ),
                 "compatible": health.compatible,

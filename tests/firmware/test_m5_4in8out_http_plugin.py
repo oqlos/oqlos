@@ -156,9 +156,10 @@ async def test_http_health_does_not_promote_physical_gateway_without_control_lea
     assert await plugin.connect() is False
     health = await plugin.health_check()
 
-    assert health.status is PluginStatus.ERROR
+    assert health.status is PluginStatus.CONFIGURED
     assert health.compatible is False
     assert health.details["physical_healthy"] is True
+    assert health.details["control_ready"] is False
     assert health.details["control_lease_active"] is False
     assert "control lease unavailable" in health.message
 
@@ -173,9 +174,10 @@ async def test_http_gateway_without_credentials_stays_visible_but_read_only() ->
     command = await plugin.execute_command("set_coil", {"coil": 0, "value": True})
 
     assert plugin.status is PluginStatus.CONNECTED
-    assert health.status is PluginStatus.ERROR
+    assert health.status is PluginStatus.CONFIGURED
     assert health.compatible is False
     assert health.details["physical_healthy"] is True
+    assert health.details["control_ready"] is False
     assert health.details["control_credentials_available"] is False
     assert "control authorization unavailable" in health.message
     assert command == {

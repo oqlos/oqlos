@@ -315,3 +315,34 @@ def test_health_does_not_poll_configured_disabled_plugins(monkeypatch):
         "message": "Plugin is disabled in OqlOS configuration",
         "compatible": False,
     }
+
+
+def test_health_distinguishes_reachable_read_only_plugin(monkeypatch):
+    async def _health_result(cls, plugin_id, timeout=None):
+        return PluginHealth(
+            status=PluginStatus.CONFIGURED,
+            message="control lease unavailable",
+            compatible=False,
+            details={"physical_healthy": True, "control_ready": False},
+        )
+
+    gateway = PluginHardwareGateway(mode="mock")
+    gateway.mode = "real"
+    gateway._init_done = True
+    gateway._plugin_configs = {
+        "io-m5-4in8out": PluginConfig(plugin_id="io-m5-4in8out", enabled=True),
+    }
+    monkeypatch.setattr(
+        PluginRegistry,
+        "health_check",
+        classmethod(_health_result),
+    )
+
+    result = asyncio.run(gateway.health())
+
+    assert result["io-m5-4in8out"] == {
+        "status": "configured",
+        "message": "Plugin is reachable but control is unavailable",
+        "compatible": False,
+        "details": {"physical_healthy": True, "control_ready": False},
+    }

@@ -221,7 +221,17 @@ class M54In8OutPlugin(HardwarePlugin):
         else:
             message = "StackNet dual M122 online"
         return PluginHealth(
-            status=PluginStatus.CONNECTED if control_ready else PluginStatus.ERROR,
+            # A physically healthy read-only StackNet is configured and
+            # reachable.  Keep ``compatible`` false until control is armed so
+            # HUI actions remain fail-closed, while the health endpoint can
+            # distinguish missing authorization/lease from a dead M122 bus.
+            status=(
+                PluginStatus.CONNECTED
+                if control_ready
+                else PluginStatus.CONFIGURED
+                if physical_healthy
+                else PluginStatus.ERROR
+            ),
             message=message,
             details={
                 "backend": "cores3-http",
@@ -230,6 +240,7 @@ class M54In8OutPlugin(HardwarePlugin):
                 "modules": modules,
                 "address": ", ".join(str(item.get("address")) for item in modules),
                 "physical_healthy": physical_healthy,
+                "control_ready": control_ready,
                 "control_credentials_available": control_credentials_available,
                 "control_lease_active": lease_active,
                 "oql_configuration_compatible": configuration_compatible,

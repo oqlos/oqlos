@@ -404,6 +404,40 @@ def test_batch_marks_partial_usb_reading_as_usable_and_degraded(monkeypatch):
     assert result["degraded"] is True
 
 
+def test_batch_keeps_reachable_usb_stack_with_no_channels_as_degraded(monkeypatch):
+    runtime._USB_ADC_STATUS.update(
+        available=True,
+        error=None,
+        retry_after=0.0,
+    )
+
+    async def _sensor_values(_sensor_ids, *, health=None):
+        return {
+            sensor_id: {
+                "sensor_id": sensor_id,
+                "value": None,
+                "ok": False,
+                "error": "ADC device is not installed",
+                "source": "usb-adc-stack",
+            }
+            for sensor_id in _sensor_ids
+        }
+
+    monkeypatch.setattr(runtime, "read_sensor_values", _sensor_values)
+    monkeypatch.setattr(
+        runtime,
+        "fresh_gateway_health",
+        lambda: {"mode": "real", "modbus-adc": {"compatible": False}},
+    )
+
+    result = asyncio.run(runtime.read_sensors_batch("ai01,ai02,ai03"))
+
+    assert result["ok"] is False
+    assert result["complete"] is False
+    assert result["degraded"] is True
+    assert all(sensor["ok"] is False for sensor in result["sensors"].values())
+
+
 def test_batch_raises_typed_error_when_usb_transport_is_down(monkeypatch):
     runtime._USB_ADC_STATUS.update(
         available=False,
