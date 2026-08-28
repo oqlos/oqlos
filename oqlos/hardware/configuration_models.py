@@ -63,13 +63,27 @@ class HardwareProcess(BaseModel):
 
 
 _SECRET_KEY = re.compile(r"(?:^|_)(?:password|passwd|token|api_key|secret)(?:$|_)", re.I)
+_ENV_REFERENCE = re.compile(r"^[A-Z_][A-Z0-9_]*$")
+
+
+def _is_environment_reference(key: object, value: Any) -> bool:
+    """Return whether a secret-looking field names an environment variable."""
+    return (
+        str(key).lower().endswith("_env")
+        and isinstance(value, str)
+        and _ENV_REFERENCE.fullmatch(value) is not None
+    )
 
 
 def _reject_inline_secrets(value: Any, path: tuple[str, ...] = ()) -> None:
     if isinstance(value, dict):
         for key, child in value.items():
             child_path = (*path, str(key))
-            if _SECRET_KEY.search(str(key)) and child not in (None, "", {}):
+            if (
+                _SECRET_KEY.search(str(key))
+                and child not in (None, "", {})
+                and not _is_environment_reference(key, child)
+            ):
                 raise ValueError(f"inline secret at {'.'.join(child_path)}; use secretRefs instead")
             _reject_inline_secrets(child, child_path)
     elif isinstance(value, list):

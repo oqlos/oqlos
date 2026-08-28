@@ -106,6 +106,37 @@ def test_inline_secret_is_rejected_but_reference_is_allowed() -> None:
     assert valid.secret_refs["mqtt"].provider == "env"
 
 
+def test_plugin_environment_variable_locator_is_not_treated_as_inline_secret() -> None:
+    valid = parse_hardware_configuration(
+        json.dumps({
+            "schemaVersion": "hardware-configuration-v1",
+            "plugins": {
+                "stacknet": {
+                    "connection_params": {"token_env": "STACKNET_OQL_TOKEN"},
+                },
+            },
+        }),
+        "json",
+    )
+
+    assert valid.plugins["stacknet"].connection_params["token_env"] == "STACKNET_OQL_TOKEN"
+
+
+def test_plugin_token_env_rejects_a_value_that_is_not_an_environment_locator() -> None:
+    with pytest.raises(HardwareConfigurationError, match="inline secret"):
+        parse_hardware_configuration(
+            json.dumps({
+                "schemaVersion": "hardware-configuration-v1",
+                "plugins": {
+                    "stacknet": {
+                        "connection_params": {"token_env": "actual-token-value"},
+                    },
+                },
+            }),
+            "json",
+        )
+
+
 def test_legacy_map_migrates_once_without_runtime_fallback() -> None:
     migrated = parse_hardware_configuration(
         """
