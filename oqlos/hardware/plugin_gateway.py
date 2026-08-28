@@ -179,20 +179,24 @@ class PluginHardwareGateway:
     def _apply_env_overrides(self) -> None:
         """Let deployment env point YAML-defined plugins at host/external services."""
         url_overrides = {
-            "piadc": ("OQLOS_PIADC_URL", "PIADC_URL"),
-            "motor-dri0050": ("OQLOS_MOTOR_URL", "MOTOR_URL"),
-            "motor-tic249": ("OQLOS_LUNG_MOTOR_URL", "LUNG_MOTOR_URL"),
+            ("io-m5-4in8out", "base_url"): ("STACKNET_RUNTIME_URL",),
+            ("io-m5-4in8out", "maskauth_url"): ("MASKAUTH_URL",),
+            ("piadc", "base_url"): ("OQLOS_PIADC_URL", "PIADC_URL"),
+            ("motor-dri0050", "base_url"): ("OQLOS_MOTOR_URL", "MOTOR_URL"),
+            ("motor-tic249", "base_url"): ("OQLOS_LUNG_MOTOR_URL", "LUNG_MOTOR_URL"),
         }
-        for plugin_id, env_names in url_overrides.items():
+        for (plugin_id, parameter), env_names in url_overrides.items():
             value = next(
                 (os.getenv(name) for name in env_names if os.getenv(name)), None
             )
             if not value or plugin_id not in self._plugin_configs:
                 continue
-            self._plugin_configs[plugin_id].connection_params["base_url"] = (
+            self._plugin_configs[plugin_id].connection_params[parameter] = (
                 value.rstrip("/")
             )
-            logger.info("Hardware plugin %s base_url overridden by env", plugin_id)
+            logger.info(
+                "Hardware plugin %s %s overridden by env", plugin_id, parameter
+            )
 
         self._apply_plugin_enable_env_overrides()
         self._apply_shared_modbus_bus_env_overrides()

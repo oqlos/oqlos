@@ -36,6 +36,27 @@ def test_plugin_gateway_env_overrides_service_urls(monkeypatch):
     assert gateway._plugin_configs["motor-tic249"].connection_params["base_url"] == "http://lung-controller.local:8205"
 
 
+def test_plugin_gateway_env_overrides_stacknet_and_maskauth_urls(monkeypatch):
+    gateway = PluginHardwareGateway(mode="mock")
+    gateway._plugin_configs = {
+        "io-m5-4in8out": PluginConfig(
+            plugin_id="io-m5-4in8out",
+            connection_params={
+                "base_url": "http://stacknet.local:8080",
+                "maskauth_url": "http://maskauth.local:8280",
+            },
+        ),
+    }
+    monkeypatch.setenv("STACKNET_RUNTIME_URL", "http://192.0.2.42:8080/")
+    monkeypatch.setenv("MASKAUTH_URL", "http://127.0.0.1:8280/")
+
+    gateway._apply_env_overrides()
+
+    params = gateway._plugin_configs["io-m5-4in8out"].connection_params
+    assert params["base_url"] == "http://192.0.2.42:8080"
+    assert params["maskauth_url"] == "http://127.0.0.1:8280"
+
+
 def test_plugin_gateway_env_overrides_modbus_params(monkeypatch):
     gateway = PluginHardwareGateway(mode="mock")
     gateway._plugin_configs = {
