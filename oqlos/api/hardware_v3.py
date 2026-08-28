@@ -24,6 +24,7 @@ from oqlos.api._hw3_peripheral import sub_router as _peripheral_router
 from oqlos.api._hw3_system import sub_router as _system_router
 from oqlos.api.hardware_configuration_routes import router as _configuration_router
 from oqlos.api.raspi_config_routes import router as _raspi_config_router
+from oqlos.api.network_identity_routes import router as _network_identity_router
 
 router = APIRouter(prefix="/api/v3/hardware", tags=["hardware-v3-compat"])
 
@@ -61,5 +62,6 @@ router.include_router(_system_router)
 router.include_router(_cqrs_router)
 router.include_router(_configuration_router)
 router.include_router(_raspi_config_router)
+router.include_router(_network_identity_router)
 
 __all__ = ["router", "hardware_events_ws"]
