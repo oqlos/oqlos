@@ -5,6 +5,8 @@
 !oqlos.yaml
 !oqlos/
 !oqlos/**
+!packages/
+!packages/**
 !frontend/
 !frontend/index.html
 !frontend/package.json
