@@ -1736,6 +1736,7 @@ const hardwareRestartByLang = {
     channelsRefreshing: "Odświeżanie…",
     channelsLoadFailed: "Nie udało się odczytać kanałów Modbus.",
     channelsUnavailable: "niedostępny",
+    channelsDisabled: "wyłączony",
     configRegisters: "Rejestry konfiguracyjne",
     ioChannels: "Wejścia / wyjścia",
     channelLabel: "Kanał",

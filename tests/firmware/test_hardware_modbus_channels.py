@@ -50,7 +50,12 @@ def test_write_modbus_channel_value_rejects_invalid_role():
     with pytest.raises(OqlosError) as caught:
         asyncio.run(
             write_modbus_channel_value(
-                {"module_role": "other", "write_type": "coil", "address": 0, "value": True}
+                {
+                    "module_role": "other",
+                    "write_type": "coil",
+                    "address": 0,
+                    "value": True,
+                }
             )
         )
     assert caught.value.public_code == "C2004-DATA-0002"
@@ -84,8 +89,8 @@ def test_read_modbus_profile_channels_raises_when_all_modules_fail(monkeypatch):
         return {"module_role": role, "ok": False, "message": "down", "channels": []}
 
     class _Gateway:
-        async def health(self):
-            return {"mode": "real"}
+        async def plugin_readiness(self, plugin_id: str):
+            return {"ok": False, "status": "error", "message": f"{plugin_id} down"}
 
     monkeypatch.setattr(channels, "get_hardware_gateway", lambda: _Gateway())
     monkeypatch.setattr(channels, "_read_module_channels", _fail_module)
@@ -94,7 +99,10 @@ def test_read_modbus_profile_channels_raises_when_all_modules_fail(monkeypatch):
         "read_modbus_baud_settings",
         lambda _settings: {
             "profiles": {
-                "modbus-io": {"module_roles": ["modbus-io"], "serial_port": "/dev/null"},
+                "modbus-io": {
+                    "module_roles": ["modbus-io"],
+                    "serial_port": "/dev/null",
+                },
             }
         },
     )
@@ -104,3 +112,51 @@ def test_read_modbus_profile_channels_raises_when_all_modules_fail(monkeypatch):
         asyncio.run(channels.read_modbus_profile_channels("modbus-io"))
     assert caught.value.public_code == "C2004-HW-0012"
     assert caught.value.issue_code == "hw_modbus_no_response"
+
+
+def test_read_modbus_profile_channels_returns_disabled_module_without_503(monkeypatch):
+    class _Gateway:
+        async def plugin_readiness(self, plugin_id: str):
+            assert plugin_id == "modbus-adc"
+            return {
+                "ok": False,
+                "status": "disabled",
+                "message": "Plugin is disabled in OqlOS configuration",
+            }
+
+        async def health(self):
+            raise AssertionError(
+                "profile channels must not run a full gateway health sweep"
+            )
+
+    monkeypatch.setattr(channels, "get_hardware_gateway", lambda: _Gateway())
+    monkeypatch.setattr(
+        channels,
+        "read_modbus_baud_settings",
+        lambda _settings: {
+            "profiles": {
+                "modbus-adc": {
+                    "module_roles": ["modbus-adc"],
+                    "serial_port": "/dev/null",
+                },
+            }
+        },
+    )
+    monkeypatch.setattr(channels, "MODBUS_PROFILE_IDS", {"modbus-adc"})
+
+    result = asyncio.run(channels.read_modbus_profile_channels("modbus-adc"))
+
+    assert result["ok"] is False
+    assert result["status"] == "disabled"
+    assert result["modules"] == [
+        {
+            "module_role": "modbus-adc",
+            "ok": False,
+            "status": "disabled",
+            "device_id": channels._role_device_id("modbus-adc"),
+            "serial_port": None,
+            "message": "Plugin is disabled in OqlOS configuration",
+            "config_registers": [],
+            "channels": [],
+        }
+    ]

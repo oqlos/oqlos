@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 from oqlos.api.hardware_gateway import get_hardware_gateway, is_plugin_compatible
-from oqlos.api.hardware_modbus_settings import MODBUS_PROFILE_IDS, read_modbus_baud_settings
+from oqlos.api.hardware_modbus_settings import (
+    MODBUS_PROFILE_IDS,
+    read_modbus_baud_settings,
+)
 from oqlos.config import get_settings
 from oqlos.errors import OqlosError
 from oqlos.hardware.power_safety import ensure_power_safe
@@ -123,15 +127,20 @@ def _role_device_id(role: str) -> int:
     return int(getattr(_settings, "modbus_device_id", 1) or 1)
 
 
-async def _read_module_channels(role: str, profile_cfg: dict[str, Any], health: dict[str, Any]) -> dict[str, Any]:
+async def _read_module_channels(
+    role: str, profile_cfg: dict[str, Any], health: dict[str, Any]
+) -> dict[str, Any]:
     device_id = _role_device_id(role)
     entry = health.get(role) or {}
     if not is_plugin_compatible(entry):
         return {
             "module_role": role,
             "ok": False,
+            "status": str(entry.get("status") or "unavailable"),
             "device_id": device_id,
-            "serial_port": profile_cfg.get("serial_port") if role != "modbus-adc" else None,
+            "serial_port": profile_cfg.get("serial_port")
+            if role != "modbus-adc"
+            else None,
             "message": str(entry.get("message") or "Plugin not connected"),
             "config_registers": [],
             "channels": [],
@@ -143,6 +152,7 @@ async def _read_module_channels(role: str, profile_cfg: dict[str, Any], health: 
         return {
             "module_role": role,
             "ok": False,
+            "status": "unavailable",
             "device_id": device_id,
             "message": f"{role} plugin unavailable",
             "config_registers": [],
@@ -158,6 +168,7 @@ async def _read_module_channels(role: str, profile_cfg: dict[str, Any], health: 
             return {
                 "module_role": role,
                 "ok": False,
+                "status": "error",
                 "device_id": device_id,
                 "serial_port": serial_port,
                 "message": str(snapshot.get("error") or "read_io_snapshot failed"),
@@ -168,6 +179,7 @@ async def _read_module_channels(role: str, profile_cfg: dict[str, Any], health: 
         return {
             "module_role": role,
             "ok": True,
+            "status": "connected",
             "device_id": device_id,
             "serial_port": serial_port,
             "config_registers": _config_rows(data),
@@ -180,6 +192,7 @@ async def _read_module_channels(role: str, profile_cfg: dict[str, Any], health: 
         return {
             "module_role": role,
             "ok": False,
+            "status": "error",
             "device_id": device_id,
             "serial_port": serial_port,
             "message": str(read_result.get("error") or "read_all failed"),
@@ -192,6 +205,7 @@ async def _read_module_channels(role: str, profile_cfg: dict[str, Any], health: 
     return {
         "module_role": role,
         "ok": True,
+        "status": "connected",
         "device_id": device_id,
         "serial_port": serial_port,
         "config_registers": _config_rows(config_data or {}),
@@ -199,17 +213,41 @@ async def _read_module_channels(role: str, profile_cfg: dict[str, Any], health: 
     }
 
 
+async def _read_profile_health(gateway: Any, roles: list[str]) -> dict[str, Any]:
+    """Probe only plugins used by the selected profile.
+
+    A full gateway health sweep also waits for unrelated transports.  The
+    channel inspector only needs readiness for the roles it is about to read.
+    """
+
+    async def _read_role(role: str) -> tuple[str, dict[str, Any]]:
+        readiness = await gateway.plugin_readiness(role)
+        return role, {
+            "status": str(readiness.get("status") or "unavailable"),
+            "message": str(readiness.get("message") or "Plugin not connected"),
+            "compatible": bool(readiness.get("ok")),
+        }
+
+    checks = await asyncio.gather(*(_read_role(role) for role in roles))
+    return dict(checks)
+
+
 async def read_modbus_profile_channels(profile_id: str) -> dict[str, Any]:
     if profile_id not in MODBUS_PROFILE_IDS:
         profile_id = "modbus-adc"
     baud_settings = read_modbus_baud_settings(_settings)
     profile_cfg = baud_settings["profiles"][profile_id]
-    health = await get_hardware_gateway().health()
+    roles = list(profile_cfg.get("module_roles") or [])
+    gateway = get_hardware_gateway()
+    health = await _read_profile_health(gateway, roles)
     modules = []
-    for role in profile_cfg.get("module_roles") or []:
+    for role in roles:
         modules.append(await _read_module_channels(role, profile_cfg, health))
     successful = sum(1 for module in modules if module.get("ok"))
-    if modules and successful == 0:
+    all_disabled = bool(modules) and all(
+        module.get("status") == "disabled" for module in modules
+    )
+    if modules and successful == 0 and not all_disabled:
         raise OqlosError(
             code="hw_modbus_no_response",
             status_code=503,
@@ -218,6 +256,9 @@ async def read_modbus_profile_channels(profile_id: str) -> dict[str, Any]:
         )
     return {
         "ok": successful == len(modules) if modules else False,
+        "status": "disabled"
+        if all_disabled
+        else ("ok" if successful == len(modules) else "degraded"),
         "profile_id": profile_id,
         "modules": modules,
     }
@@ -269,11 +310,16 @@ async def write_modbus_channel_value(payload: dict[str, Any]) -> dict[str, Any]:
     if write_type == "coil":
         address = int(payload.get("address"))
         value = raw_value in {True, 1, "1", "true", "True", "on", "ON"}
-        result = await plugin.execute_command("set_coil", {"coil": address, "value": value})
+        result = await plugin.execute_command(
+            "set_coil", {"coil": address, "value": value}
+        )
     else:
         result = await plugin.execute_command(
             "write_holding_register",
-            {"address": int(payload.get("address")), "value": int(payload.get("value"))},
+            {
+                "address": int(payload.get("address")),
+                "value": int(payload.get("value")),
+            },
         )
 
     if not result.get("success"):

@@ -61,6 +61,7 @@ export default function HardwareRestart() {
   const logPanelRef = useRef(null);
   const [runtimeStatus, setRuntimeStatus] = useState(null);
   const [modbusSettings, setModbusSettings] = useState(null);
+  const [modbusSettingsLoaded, setModbusSettingsLoaded] = useState(false);
   const [targetBaudDraft, setTargetBaudDraft] = useState(String(MODBUS_DEFAULT_BAUD));
   const [serialPortDraft, setSerialPortDraft] = useState("");
   const [settingsStatus, setSettingsStatus] = useState("");
@@ -99,6 +100,7 @@ export default function HardwareRestart() {
 
   const loadModbusSettings = useCallback(async (planData) => {
     const urlProfile = readModbusProfileFromSearch(window.location.search);
+    setModbusSettingsLoaded(false);
     try {
       const settings = await HardwareApi.getModbusSettings({ logContext: "modbus-settings" });
       setModbusSettings(settings);
@@ -119,6 +121,8 @@ export default function HardwareRestart() {
         syncProfileUrl(profileId);
       }
       return null;
+    } finally {
+      setModbusSettingsLoaded(true);
     }
   }, [syncProfileDraft, syncProfileUrl]);
 
@@ -491,11 +495,13 @@ export default function HardwareRestart() {
           baselineBaud={modbusSettings?.baseline_baudrate || plan?.baseline_baudrate || 4800}
         />
 
-        <ModbusChannelInspector
-          profileId={activeProfileId}
-          refreshToken={channelRefreshToken}
-          busy={busy}
-        />
+        {modbusSettingsLoaded ? (
+          <ModbusChannelInspector
+            profileId={activeProfileId}
+            refreshToken={channelRefreshToken}
+            busy={busy}
+          />
+        ) : null}
 
         <div className="hw-card">
           <h3>{t("hardwareRestart.wizardSteps")}</h3>
