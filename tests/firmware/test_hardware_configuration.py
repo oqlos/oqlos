@@ -21,6 +21,10 @@ from oqlos.hardware.configuration import (
 FIXTURES = Path(__file__).resolve().parents[2] / "examples" / "hardware-configuration"
 
 
+def test_hardware_yaml_loader_does_not_mutate_safe_loader_boolean_resolvers() -> None:
+    assert yaml.safe_load("mutates: false") == {"mutates": False}
+
+
 def test_oql_yaml_json_have_identical_complete_semantics() -> None:
     documents = {
         format: load_hardware_configuration(FIXTURES / f"boardnet.{format}", allow_legacy=False)
@@ -143,7 +147,7 @@ def test_legacy_map_migrates_once_without_runtime_fallback() -> None:
 runtimeConfig:
   motor2: {strokeSteps: 1000}
 objectActionMap:
-  pump: {on: pump.start}
+  pump: {on: pump.start, off: pump.stop}
 paramSensorMap:
   PI1: {sensor: AI01}
 funcImplementations:
@@ -154,6 +158,7 @@ funcImplementations:
     )
     assert migrated.runtime["motor2"]["strokeSteps"] == 1000
     assert migrated.actions["objects"]["pump"]["on"] == "pump.start"
+    assert migrated.actions["objects"]["pump"]["off"] == "pump.stop"
     assert migrated.sensors["bindings"]["PI1"]["sensor"] == "AI01"
     assert migrated.functions["smoke"]["steps"] == []
 

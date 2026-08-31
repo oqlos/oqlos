@@ -62,6 +62,16 @@ class _HardwareYamlLoader(yaml.SafeLoader):
     """
 
 
+if _HardwareYamlLoader.yaml_implicit_resolvers is yaml.SafeLoader.yaml_implicit_resolvers:
+    # Subclasses share the parent's resolver dict until it is replaced.
+    # Mutating the shared dict in place would strip the YAML 1.1 boolean
+    # resolver from every other SafeLoader user in this process (PyYAML
+    # copies per-class state only inside add_implicit_resolver).
+    _HardwareYamlLoader.yaml_implicit_resolvers = {
+        first_char: list(resolvers)
+        for first_char, resolvers in yaml.SafeLoader.yaml_implicit_resolvers.items()
+    }
+
 for first_char, resolvers in list(_HardwareYamlLoader.yaml_implicit_resolvers.items()):
     _HardwareYamlLoader.yaml_implicit_resolvers[first_char] = [
         item for item in resolvers if item[0] != "tag:yaml.org,2002:bool"
