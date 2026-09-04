@@ -154,7 +154,16 @@ export default function ModbusChannelInspector({ profileId, refreshToken = 0, bu
             <span style={{ color: "var(--text-muted)", fontSize: rem.sm }}>{module.module_role}</span>
             <span style={{ color: "var(--text-muted)", fontSize: rem.sm }}>ID={module.device_id}</span>
             {module.serial_port ? <span style={{ color: "var(--text-muted)", fontSize: rem.sm }}>{module.serial_port}</span> : null}
-            {!module.ok ? <span className="hw-badge hw-badge-err">{module.message || t("hardwareRestart.channelsUnavailable", "niedostępny")}</span> : null}
+            {!module.ok ? (
+              <span
+                className={`hw-badge${module.status === "disabled" ? "" : " hw-badge-err"}`}
+                title={module.message || undefined}
+              >
+                {module.status === "disabled"
+                  ? t("hardwareRestart.channelsDisabled", "wyłączony")
+                  : module.message || t("hardwareRestart.channelsUnavailable", "niedostępny")}
+              </span>
+            ) : null}
           </div>
           <ChannelTable
             title={t("hardwareRestart.configRegisters", "Rejestry konfiguracyjne")}

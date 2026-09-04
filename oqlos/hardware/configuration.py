@@ -246,6 +246,8 @@ def save_hardware_configuration(
 
 
 _ENV_OVERRIDES: tuple[tuple[str, str, tuple[str, ...], str], ...] = (
+    ("io-m5-4in8out", "base_url", ("STACKNET_RUNTIME_URL",), "text"),
+    ("io-m5-4in8out", "maskauth_url", ("MASKAUTH_URL",), "text"),
     ("motor-dri0050", "base_url", ("OQLOS_MOTOR_URL", "MOTOR_URL"), "text"),
     ("motor-tic249", "base_url", ("OQLOS_LUNG_MOTOR_URL", "LUNG_MOTOR_URL"), "text"),
     ("piadc", "base_url", ("OQLOS_PIADC_URL", "PIADC_URL"), "text"),

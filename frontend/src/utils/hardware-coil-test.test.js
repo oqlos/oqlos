@@ -32,7 +32,7 @@ test("buildCoilTestReport joins operator and pulse results", () => {
     { "0": "correct" },
     { "0": { ok: true } },
   );
-  assert.equal(report.schema, "oqlos-boardnet-coil-test-v1");
+  assert.equal(report.schema, "oqlos-boardnet-valve-controller-test-v2");
   assert.equal(report.coils[0].operator_result, "correct");
   assert.equal(report.coils[0].pulse.ok, true);
 });
@@ -75,7 +75,7 @@ test("coil command URL args preserve request intent and successful response", ()
   });
   assert.deepEqual(coilStopIntentUrlArgs("administrator"), {
     COMMAND: "coil-test-stop",
-    COILS: "DO1-DO8",
+    COILS: "ACTIVE-CONTROLLER",
     REQUEST_ROLE: "admin",
   });
 });

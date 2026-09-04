@@ -1,4 +1,4 @@
-"""Synchronous client for the CoreS3 OQL-over-WiFi endpoint."""
+"""Synchronous client for the StackNet OQL-over-LAN/Wi-Fi endpoint."""
 
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ class CoreS3HttpClient:
         self.capability_client = capability_client
         parsed = urlsplit(self.base_url)
         if parsed.scheme not in {"http", "https"} or not parsed.hostname:
-            raise ValueError(f"Invalid CoreS3 base_url: {base_url}")
+            raise ValueError(f"Invalid StackNet base_url: {base_url}")
         self._scheme = parsed.scheme
         self._host = parsed.hostname
         self._port = parsed.port
@@ -72,20 +72,20 @@ class CoreS3HttpClient:
                 self.close()
                 if status >= 400:
                     raise RuntimeError(
-                        f"CoreS3 HTTP failed: HTTP {status}: {raw.decode('utf-8', errors='replace')}"
+                        f"StackNet HTTP failed: HTTP {status}: {raw.decode('utf-8', errors='replace')}"
                     )
                 break
             except (HTTPException, OSError, TimeoutError) as exc:
                 self.close()
                 if attempt == 0:
                     continue
-                raise RuntimeError(f"CoreS3 HTTP failed: {exc}") from exc
+                raise RuntimeError(f"StackNet HTTP failed: {exc}") from exc
         try:
             payload = json.loads(raw.decode("utf-8"))
         except (UnicodeDecodeError, ValueError) as exc:
-            raise RuntimeError(f"CoreS3 returned invalid JSON: {exc}") from exc
+            raise RuntimeError(f"StackNet returned invalid JSON: {exc}") from exc
         if not isinstance(payload, dict):
-            raise RuntimeError("CoreS3 returned a non-object JSON response")
+            raise RuntimeError("StackNet returned a non-object JSON response")
         return payload
 
     @staticmethod

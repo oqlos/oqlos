@@ -143,6 +143,27 @@ def test_effective_configuration_explains_environment_override() -> None:
     }]
 
 
+def test_stacknet_url_is_a_deployment_override_not_a_hardcoded_address() -> None:
+    configured = parse_hardware_configuration(
+        """
+schemaVersion: hardware-configuration-v1
+plugins:
+  io-m5-4in8out:
+    enabled: true
+    connection_type: http
+    connection_params: {base_url: http://stacknet.local:8080}
+""",
+        "yaml",
+        allow_legacy=False,
+    )
+    effective, overrides = resolve_effective_hardware_configuration(
+        configured,
+        {"STACKNET_RUNTIME_URL": "http://192.0.2.42:8080"},
+    )
+    assert effective.plugins["io-m5-4in8out"].connection_params["base_url"] == "http://192.0.2.42:8080"
+    assert overrides[0]["source"] == "STACKNET_RUNTIME_URL"
+
+
 def test_effective_configuration_reuses_parse_until_source_changes(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,

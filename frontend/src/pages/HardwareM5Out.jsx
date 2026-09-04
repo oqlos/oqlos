@@ -13,7 +13,7 @@ const COPY = {
   pl: {
     title: "M5Stack 4In8Out — wyjścia",
     subtitle:
-      "Sterowanie przez WiFi 16 wyjściami MOSFET dwóch modułów I2C (0x45 i 0x66). Wejścia IN1–IN8 są tylko do odczytu.",
+      "Sterowanie przez LAN lub Wi-Fi 16 wyjściami MOSFET dwóch modułów I2C (0x45 i 0x66). Wejścia IN1–IN8 są tylko do odczytu.",
     refresh: "Odśwież stan",
     stop: "STOP — wyłącz wszystkie",
     allOn: "Załącz wszystkie",
@@ -35,17 +35,18 @@ const COPY = {
     open: "rozwarte",
     unavailable: "Moduł nieaktywny lub niedostępny",
     unavailableHint:
-      "CoreS3 lub moduł 0x45/0x66 nie odpowiada. Sprawdź base_url, WiFi, unikalne adresy I2C, zasilanie DC IN 9–24 V, SDA/SCL i wspólną masę.",
+      "StackNet lub moduł 0x45/0x66 nie odpowiada. Sprawdź profil HTTP, LAN/Wi-Fi, nazwę stacknet.local, unikalne adresy I2C, zasilanie DC IN 9–24 V, SDA/SCL i wspólną masę.",
     firmware: "Firmware",
     address: "Adres",
     transport: "Transport",
+    latency: "Ostatnia komenda",
     valveHint:
       "Wyjścia są typu low-side ze wspólną anodą: obciążenie łączy się między zacisk V+ modułu a OUTn.",
   },
   en: {
     title: "M5Stack 4In8Out — outputs",
     subtitle:
-      "WiFi control of 16 MOSFET outputs on two I2C modules (0x45 and 0x66). IN1–IN8 are read-only.",
+      "LAN or Wi-Fi control of 16 MOSFET outputs on two I2C modules (0x45 and 0x66). IN1–IN8 are read-only.",
     refresh: "Refresh state",
     stop: "STOP — de-energize all",
     allOn: "Energize all",
@@ -66,10 +67,11 @@ const COPY = {
     open: "open",
     unavailable: "Module inactive or unavailable",
     unavailableHint:
-      "CoreS3 or module 0x45/0x66 is unavailable. Check base_url, WiFi, unique I2C addresses, 9–24 V DC IN, SDA/SCL and common ground.",
+      "StackNet or module 0x45/0x66 is unavailable. Check the HTTP profile, LAN/Wi-Fi, stacknet.local name, unique I2C addresses, 9–24 V DC IN, SDA/SCL and common ground.",
     firmware: "Firmware",
     address: "Address",
     transport: "Transport",
+    latency: "Last command",
     valveHint:
       "Outputs are low-side with a common anode: wire the load between the module V+ terminal and OUTn.",
   },
@@ -86,6 +88,7 @@ export default function HardwareM5Out() {
   const [confirmed, setConfirmed] = useState(false);
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
+  const [lastCommandMs, setLastCommandMs] = useState(null);
 
   const refresh = useCallback(async () => {
     setBusy("refresh");
@@ -138,15 +141,24 @@ export default function HardwareM5Out() {
     setBusy(tag);
     setError("");
     if (optimisticUpdate) setSnapshot((current) => optimisticUpdate(current));
+    const startedAt = performance.now();
     try {
       await HardwareApi.executePluginCommand(PLUGIN_ID, command, params);
     } catch (err) {
       setError(formatHardwareApiError(err, `M5 4In8Out ${command} failed`));
       void reconcileSnapshot();
     } finally {
+      setLastCommandMs(Math.round(performance.now() - startedAt));
       setBusy("");
     }
   }, [reconcileSnapshot]);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      if (!document.hidden && !busy) void reconcileSnapshot();
+    }, 1500);
+    return () => window.clearInterval(interval);
+  }, [busy, reconcileSnapshot]);
 
   const toggle = useCallback((output) => {
     if (!canDrive) return;
@@ -202,7 +214,7 @@ export default function HardwareM5Out() {
       <main className="m5-out-content">
         <header className="m5-out-header">
           <div>
-            <span className="m5-out-eyebrow">WiFi · CoreS3 · 0x45 + 0x66 · 16 OUT / 8 IN</span>
+            <span className="m5-out-eyebrow">LAN / Wi-Fi · Core2 / CoreS3 · 0x45 + 0x66 · 16 OUT / 8 IN</span>
             <h1>{text.title}</h1>
             <p>{text.subtitle}</p>
           </div>
@@ -225,7 +237,11 @@ export default function HardwareM5Out() {
               </div>
               <div>
                 <span>{text.transport}</span>
-                <strong>{details.backend || "i2c"}</strong>
+                <strong>{details.backend || "http"}</strong>
+              </div>
+              <div>
+                <span>{text.latency}</span>
+                <strong>{lastCommandMs == null ? "—" : `${lastCommandMs} ms`}</strong>
               </div>
               <div>
                 <span>{text.firmware}</span>
