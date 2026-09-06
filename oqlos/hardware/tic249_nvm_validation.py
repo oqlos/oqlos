@@ -7,6 +7,7 @@ import os
 from typing import Any
 
 import httpx
+from .plugins._shared import hardware_failure_payload
 
 logger = logging.getLogger(__name__)
 
@@ -42,12 +43,10 @@ def _interpret_nvm_validation(payload: dict[str, Any]) -> dict[str, Any]:
 
     detail = payload.get("detail") or "Tic249 NVM limit-switch pin configuration mismatch"
     logger.error("Tic249 NVM validation failed: %s", detail)
-    return {
-        "ok": False,
-        "error_code": C2004_HW_NVM_MISMATCH,
-        "detail": detail,
-        "validation": payload,
-    }
+    return hardware_failure_payload(
+        C2004_HW_NVM_MISMATCH, component="tic249",
+        detail=detail, validation=payload,
+    )
 
 
 __all__ = ["C2004_HW_NVM_MISMATCH", "check_tic249_nvm_profile"]

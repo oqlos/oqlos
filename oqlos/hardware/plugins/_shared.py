@@ -6,6 +6,7 @@ import logging
 from typing import Any
 
 import httpx
+from oqlos.errors.c2004_catalog_generated import CATALOG
 
 from .base import PluginHealth, PluginStatus
 
@@ -13,6 +14,20 @@ logger = logging.getLogger(__name__)
 
 PLUGIN_OPERATION_ERRORS = (OSError, RuntimeError, ValueError, httpx.HTTPError)
 PLUGIN_PAYLOAD_ERRORS = (TypeError, ValueError)
+
+
+def hardware_failure_payload(code: str, *, component: str, **details: Any) -> dict[str, Any]:
+    """Attach validated failure identity to hardware diagnostic evidence."""
+    if code not in CATALOG:
+        raise ValueError(f"Unknown hardware failure code: {code}")
+    return {
+        **details,
+        "ok": False,
+        "success": False,
+        "code": code,
+        "error_code": code,
+        "component": component,
+    }
 
 
 def plugin_operation_failure(

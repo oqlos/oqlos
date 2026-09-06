@@ -6,6 +6,21 @@ from oqlos.hardware.tic249_nvm_validation import C2004_HW_NVM_MISMATCH, check_ti
 from oqlos.hardware.tic249_nvm_validation import _interpret_nvm_validation
 
 
+def test_nvm_mismatch_preserves_evidence_and_canonical_identity():
+    payload = {"ok": False, "detail": "pin mismatch", "mismatches": ["SCL"]}
+    result = _interpret_nvm_validation(payload)
+    assert result["validation"] is payload
+    assert result["detail"] == "pin mismatch"
+    assert result["code"] == result["error_code"] == C2004_HW_NVM_MISMATCH
+    assert result["success"] is False
+
+
+def test_hardware_failure_rejects_unknown_code():
+    from oqlos.hardware.plugins._shared import hardware_failure_payload
+    with pytest.raises(ValueError, match="Unknown hardware failure code"):
+        hardware_failure_payload("invalid", component="test")
+
+
 @pytest.mark.parametrize("payload, expected", [
     ({"skipped": "disabled", "warning": "notice", "ok": True}, {"ok": True, "skipped": "disabled"}),
     ({"warning": "notice", "ok": True}, {"ok": True, "warning": "notice"}),
