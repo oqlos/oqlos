@@ -8,6 +8,7 @@ import asyncio
 import logging
 from typing import Any
 
+from ._shared import plugin_operation_failure
 from .base import HardwarePlugin, PluginConfig, PluginHealth, PluginStatus
 from ._rtu_serial import reopen_rtu_after_stale, rtu_device_id, rtu_timeout, serial_error_is_stale
 
@@ -373,7 +374,7 @@ class ModbusPlugin(HardwarePlugin):
         )
         if result and not getattr(result, "isError", lambda: True)():
             return {"success": True, "data": {"address": address, "value": value}}
-        return {"success": False, "error": str(result)}
+        return {**plugin_operation_failure(self.config.plugin_id, str(result)), "error": str(result)}
 
     async def execute_command(self, command: str, params: dict[str, Any]) -> dict[str, Any]:
         """Execute modbus command."""

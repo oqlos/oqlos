@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import shutil
+from oqlos.hardware.plugins._shared import plugin_operation_failure
 from collections.abc import Awaitable, Callable
 from datetime import datetime, timezone
 from typing import Any
@@ -383,11 +384,12 @@ async def execute_safe_recover(
     async def ensure_valves_off() -> dict[str, Any]:
         stop = getattr(gateway, "all_valves_off", None)
         if not callable(stop):
-            return {"success": False, "error": "gateway.all_valves_off is unavailable"}
+            return {**plugin_operation_failure("valve-recovery", "gateway.all_valves_off is unavailable"),
+                    "error": "gateway.all_valves_off is unavailable"}
         try:
             result = await stop()
         except Exception as exc:  # pragma: no cover - defensive hardware boundary
-            return {"success": False, "error": str(exc)}
+            return {**plugin_operation_failure("valve-recovery", str(exc)), "error": str(exc)}
         if isinstance(result, dict):
             normalized = dict(result)
             normalized.setdefault("success", bool(normalized.get("ok", True)))
