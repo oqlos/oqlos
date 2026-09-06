@@ -11,6 +11,7 @@ from typing import Any
 
 from oqlos.api.hardware_gateway import try_get_hardware_gateway
 from oqlos.errors.c2004_catalog_generated import c2004_code_for_issue
+from oqlos.hardware.plugins._shared import hardware_failure_payload
 
 
 def _step(name: str, ok: bool, **extra: Any) -> dict[str, Any]:
@@ -26,26 +27,25 @@ async def build_modbus_io_verify_report(*, write_safe_off: bool = True) -> dict[
 
     if gateway is None:
         issue_code = "hw_modbus_no_response"
-        return {
-            "ok": False,
-            "issue_code": issue_code,
-            "code": c2004_code_for_issue(issue_code),
-            "steps": [_step("gateway", False, error="hardware gateway unavailable")],
-            "issues": [
+        return hardware_failure_payload(
+            c2004_code_for_issue(issue_code), component="modbus-io",
+            issue_code=issue_code,
+            steps=[_step("gateway", False, error="hardware gateway unavailable")],
+            issues=[
                 {
                     "code": issue_code,
                     "message": "Hardware gateway is not initialized",
                 }
             ],
-            "repairs": [
+            repairs=[
                 {
                     "id": "restart-oqlos",
                     "auto_executable": True,
                     "hint": "Restart oqlos-hardware-api so the gateway binds modbus-io",
                 }
             ],
-            "snapshot": None,
-        }
+            snapshot=None,
+        )
 
     await gateway.ensure_initialized()
     plugin = await gateway._get_or_connect_plugin("modbus-io")
@@ -65,15 +65,14 @@ async def build_modbus_io_verify_report(*, write_safe_off: bool = True) -> dict[
                 "hint": "Reconnect modbus-io via safe diagnosis repair",
             }
         )
-        return {
-            "ok": False,
-            "issue_code": issue_code,
-            "code": c2004_code_for_issue(issue_code),
-            "steps": [_step("connect", False)],
-            "issues": issues,
-            "repairs": repairs,
-            "snapshot": None,
-        }
+        return hardware_failure_payload(
+            c2004_code_for_issue(issue_code), component="modbus-io",
+            issue_code=issue_code,
+            steps=[_step("connect", False)],
+            issues=issues,
+            repairs=repairs,
+            snapshot=None,
+        )
 
     health = await plugin.health_check()
     status_value = getattr(health.status, "value", health.status)
@@ -129,15 +128,14 @@ async def build_modbus_io_verify_report(*, write_safe_off: bool = True) -> dict[
                 "hint": "Reconnect modbus-io after physical check",
             }
         )
-        return {
-            "ok": False,
-            "issue_code": issue_code,
-            "code": c2004_code_for_issue(issue_code),
-            "steps": steps,
-            "issues": issues,
-            "repairs": repairs,
-            "snapshot": snapshot_data if isinstance(snapshot_data, dict) else None,
-        }
+        return hardware_failure_payload(
+            c2004_code_for_issue(issue_code), component="modbus-io",
+            issue_code=issue_code,
+            steps=steps,
+            issues=issues,
+            repairs=repairs,
+            snapshot=snapshot_data if isinstance(snapshot_data, dict) else None,
+        )
 
     write_ok = True
     if write_safe_off:
