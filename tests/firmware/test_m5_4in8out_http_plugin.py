@@ -180,10 +180,11 @@ async def test_http_gateway_without_credentials_stays_visible_but_read_only() ->
     assert health.details["control_ready"] is False
     assert health.details["control_credentials_available"] is False
     assert "control authorization unavailable" in health.message
-    assert command == {
+    assert {key: command[key] for key in ("success", "error")} == {
         "success": False,
         "error": "StackNet control authorization unavailable; read-only connection",
     }
+    assert command["error_code"] == "C2004-HW-0012"
     assert _CoreS3.instances[-1].commands == []
 
 
@@ -407,3 +408,13 @@ async def test_http_lease_renewal_failure_recovers_when_reacquire_succeeds() -> 
 
     assert plugin.status is PluginStatus.CONNECTED
     await plugin.disconnect()
+
+
+@pytest.mark.parametrize("status, code", [(422, "C2004-DATA-0002"), (503, "C2004-HW-0012")])
+def test_command_failure_preserves_message_with_canonical_metadata(status, code):
+    from oqlos.hardware.plugins.m5_4in8out import _command_failure
+    result = _command_failure("original message", status_code=status)
+    assert result["success"] is False
+    assert result["error"] == "original message"
+    assert result["error_code"] == code
+    assert result["status_code"] == status

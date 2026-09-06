@@ -19,6 +19,7 @@ import uuid
 
 from ._m5_core_http import CoreS3HttpClient
 from ._maskauth_capability import MaskAuthCapabilityClient
+from ._shared import plugin_operation_failure
 from .base import HardwarePlugin, PluginConfig, PluginHealth, PluginStatus
 
 logger = logging.getLogger(__name__)
@@ -30,6 +31,13 @@ CORES3_INPUT_COUNT = 8
 DEFAULT_ADDRESS = 0x45
 LEASE_REACQUIRE_ATTEMPTS = 3
 _BACKENDS = ("smbus", "mcp2221", "mock")
+
+
+def _command_failure(message: str, *, status_code: int = 503) -> dict[str, Any]:
+    """Keep legacy error text while attaching canonical plugin failure metadata."""
+    result = plugin_operation_failure("io-m5-4in8out", message, status_code=status_code)
+    result["error"] = message
+    return result
 
 
 class M54In8OutPlugin(HardwarePlugin):
@@ -570,11 +578,11 @@ class M54In8OutPlugin(HardwarePlugin):
     async def _execute_set_coil(self, params: dict[str, Any]) -> dict[str, Any]:
         """Write one output; the Waveshare 'all outputs' address is honoured too."""
         if "coil" not in params:
-            return {"success": False, "error": "coil is required"}
+            return _command_failure("coil is required", status_code=422)
         coil = params.get("coil")
         value = bool(params.get("value", False))
         if not isinstance(coil, int) or isinstance(coil, bool) or coil < 0:
-            return {"success": False, "error": "coil must be a non-negative integer"}
+            return _command_failure("coil must be a non-negative integer", status_code=422)
         if coil == self.ALL_OUTPUTS_COIL_ADDRESS:
             if not value:
                 return await self._execute_all_outputs_off()
@@ -585,10 +593,7 @@ class M54In8OutPlugin(HardwarePlugin):
             }
         output_count = CORES3_OUTPUT_COUNT if self._is_http() else OUTPUT_COUNT
         if coil >= output_count:
-            return {
-                "success": False,
-                "error": f"coil must be 0..{output_count - 1} on the configured 4In8Out transport",
-            }
+            return _command_failure(f"coil must be 0..{output_count - 1} on the configured 4In8Out transport", status_code=422)
         # Coils keep the zero-based Modbus wire contract (coil 0 = first output);
         # the module and both vendor drivers number outputs OUT1..OUT8.
         await self._call("set_output", coil + 1, value)
@@ -604,10 +609,10 @@ class M54In8OutPlugin(HardwarePlugin):
 
         valve_id = pick_param(params, "valve_id", "valveId")
         if not valve_id:
-            return {"success": False, "error": "valve_id is required"}
+            return _command_failure("valve_id is required", status_code=422)
         coil = resolve_valve_coil(str(valve_id))
         if coil is None:
-            return {"success": False, "error": f"Unknown valve_id: {valve_id}"}
+            return _command_failure(f"Unknown valve_id: {valve_id}", status_code=422)
         return await self.execute_command(
             "set_coil",
             {"coil": coil, "value": pick_param(params, "value", default=False)},
@@ -702,26 +707,17 @@ class M54In8OutPlugin(HardwarePlugin):
             try:
                 return await self._execute_http_read_io_snapshot()
             except asyncio.TimeoutError:
-                return {
-                    "success": False,
-                    "error": f"4In8Out command timed out after {self.config.timeout:.1f}s",
-                }
+                return _command_failure(f"4In8Out command timed out after {self.config.timeout:.1f}s")
             except Exception as exc:
-                return {"success": False, "error": str(exc)}
+                return _command_failure(str(exc))
         if self._module is None:
-            return {"success": False, "error": "Not connected to 4In8Out"}
+            return _command_failure("Not connected to 4In8Out")
         if self._is_http() and not self._control_credentials_available():
-            return {
-                "success": False,
-                "error": "StackNet control authorization unavailable; read-only connection",
-            }
+            return _command_failure("StackNet control authorization unavailable; read-only connection")
         if self._is_http() and (
             self._lease_task is None or self._lease_task.done()
         ):
-            return {
-                "success": False,
-                "error": "StackNet control lease unavailable; read-only connection",
-            }
+            return _command_failure("StackNet control lease unavailable; read-only connection")
         try:
             if self._is_http():
                 if command == "set_valve":
@@ -730,19 +726,19 @@ class M54In8OutPlugin(HardwarePlugin):
                     valve_id = pick_param(params, "valve_id", "valveId")
                     coil = resolve_valve_coil(str(valve_id)) if valve_id else None
                     if coil is None:
-                        return {"success": False, "error": f"Unknown valve_id: {valve_id}"}
+                        return _command_failure(f"Unknown valve_id: {valve_id}", status_code=422)
                     command = "set_coil"
                     params = {"coil": coil, "value": pick_param(params, "value", default=False)}
                 elif command == "replace_valves":
                     from oqlos.hardware.modbus_io_catalog import resolve_valve_coil
                     valve_ids = params.get("valve_ids")
                     if not isinstance(valve_ids, (list, tuple)):
-                        return {"success": False, "error": "valve_ids must be a list"}
+                        return _command_failure("valve_ids must be a list", status_code=422)
                     mask = 0
                     for valve_id in valve_ids:
                         coil = resolve_valve_coil(str(valve_id))
                         if coil is None or coil >= CORES3_OUTPUT_COUNT:
-                            return {"success": False, "error": f"Unknown valve_id: {valve_id}"}
+                            return _command_failure(f"Unknown valve_id: {valve_id}", status_code=422)
                         mask |= 1 << coil
                     command = "replace_outputs"
                     params = {"mask": mask}
@@ -755,14 +751,11 @@ class M54In8OutPlugin(HardwarePlugin):
                 return await self._execute_all_outputs_off()
             if command == "read_io_snapshot":
                 return await self._execute_read_io_snapshot()
-            return {"success": False, "error": f"Unknown command: {command}"}
+            return _command_failure(f"Unknown command: {command}", status_code=422)
         except asyncio.TimeoutError:
-            return {
-                "success": False,
-                "error": f"4In8Out command timed out after {self.config.timeout:.1f}s",
-            }
+            return _command_failure(f"4In8Out command timed out after {self.config.timeout:.1f}s")
         except Exception as exc:
-            return {"success": False, "error": str(exc)}
+            return _command_failure(str(exc))
 
     @classmethod
     def get_capabilities(cls) -> dict[str, Any]:
