@@ -3,6 +3,19 @@ from __future__ import annotations
 import pytest
 
 from oqlos.hardware.tic249_nvm_validation import C2004_HW_NVM_MISMATCH, check_tic249_nvm_profile
+from oqlos.hardware.tic249_nvm_validation import _interpret_nvm_validation
+
+
+@pytest.mark.parametrize("payload, expected", [
+    ({"skipped": "disabled", "warning": "notice", "ok": True}, {"ok": True, "skipped": "disabled"}),
+    ({"warning": "notice", "ok": True}, {"ok": True, "warning": "notice"}),
+    ({"ok": True, "profile_id": "profile"}, {"ok": True, "profile_id": "profile"}),
+])
+def test_interpret_nvm_validation_preserves_evidence_precedence(payload, expected):
+    result = _interpret_nvm_validation(payload)
+    if "skipped" in payload or "warning" in payload:
+        assert result.pop("detail") is payload
+    assert result == expected
 
 
 @pytest.mark.asyncio

@@ -28,6 +28,11 @@ async def check_tic249_nvm_profile(*, timeout: float = 2.0) -> dict[str, Any]:
         logger.warning("Tic249 NVM validation skipped: %s", exc)
         return {"ok": True, "skipped": "sidecar_unreachable", "warning": str(exc)}
 
+    return _interpret_nvm_validation(payload)
+
+
+def _interpret_nvm_validation(payload: dict[str, Any]) -> dict[str, Any]:
+    """Interpret sidecar evidence independently of the HTTP transport."""
     if payload.get("skipped"):
         return {"ok": True, "skipped": payload.get("skipped"), "detail": payload}
     if payload.get("warning"):
