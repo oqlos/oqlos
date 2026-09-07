@@ -77,6 +77,10 @@ def _configured_preference() -> list[str]:
 
 def valve_controller_preference() -> list[str]:
     """Ordered controller candidates, most preferred first (no enablement filter)."""
+    from oqlos.hardware.control_sources import source as selected_source
+    selected = selected_source("valves")
+    if selected != "auto":
+        return [M5_VALVE_CONTROLLER if selected == "stacknet" else MODBUS_VALVE_CONTROLLER]
     for source in (_env_preference(), _configured_preference()):
         if source:
             # A pinned controller still gets the remaining defaults as fallback,

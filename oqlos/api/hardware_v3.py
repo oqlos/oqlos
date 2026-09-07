@@ -18,6 +18,7 @@ from typing import Any
 
 from fastapi import APIRouter
 from oqlos.api.adc_source_routes import router as _adc_sources_router
+from oqlos.api.control_source_routes import router as _control_sources_router
 
 from oqlos.api._hw3_cqrs import hardware_events_ws  # re-exported for main.py
 from oqlos.api._hw3_cqrs import router as _cqrs_router
@@ -68,3 +69,4 @@ router.include_router(_network_identity_router)
 __all__ = ["router", "hardware_events_ws"]
 
 router.include_router(_adc_sources_router)
+router.include_router(_control_sources_router)

@@ -108,6 +108,12 @@ class LungPlugin(HardwarePlugin):
 
     async def connect(self) -> bool:
         """Connect to lung motor service."""
+        from oqlos.hardware.control_sources import source
+        if source("stepper") == "stacknet":
+            self._client = httpx.AsyncClient(timeout=self.config.timeout)
+            health = await self.health_check()
+            self._status = health.status
+            return health.compatible
         try:
             if self.config.connection_type == "http":
                 self._client = httpx.AsyncClient(timeout=self.config.timeout)
@@ -199,6 +205,16 @@ class LungPlugin(HardwarePlugin):
 
     async def health_check(self) -> PluginHealth:
         """Check lung motor health and compatibility."""
+        from oqlos.hardware.control_sources import source
+        if source("stepper") == "stacknet":
+            from .stacknet_motor import execute
+            result = await execute("stepper", "status", {})
+            ok = result.get("success") is True
+            return PluginHealth(
+                status=PluginStatus.CONNECTED if ok else PluginStatus.ERROR,
+                message="StackNet" if ok else result.get("error", "StackNet unavailable"),
+                compatible=ok, details={"runtime_status": result.get("data", {}), "source": "stacknet"},
+            )
         if self.config.connection_type == "http" and not self._client:
             return not_connected_health("lung motor")
 
@@ -471,6 +487,10 @@ class LungPlugin(HardwarePlugin):
         return {"success": True, "data": {"status": "ok"}}
 
     async def execute_command(self, command: str, params: dict[str, Any]) -> dict[str, Any]:
+        from oqlos.hardware.control_sources import motor_command
+        return await motor_command(self, command, params)
+
+    async def _execute_boardnet_command(self, command: str, params: dict[str, Any]) -> dict[str, Any]:
         """Execute lung motor command.
 
         Refactored from CC=20 monolithic function into orchestrator

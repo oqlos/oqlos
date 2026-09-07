@@ -856,12 +856,17 @@ class PluginHardwareGateway:
 
     def supports_exact_valve_replace(self) -> bool:
         """Whether StackNet can replace the complete valve state in one request."""
-        return "io-m5-4in8out" in self._plugins
+        return "io-m5-4in8out" in self.valve_controllers() and "io-m5-4in8out" in self._plugins
 
     async def replace_valves_exact(self, valve_ids: tuple[str, ...]) -> dict[str, Any] | None:
+        from oqlos.hardware.control_sources import LOCK
+        async with LOCK:
+            return await self._replace_valves_exact_routed(valve_ids)
+
+    async def _replace_valves_exact_routed(self, valve_ids: tuple[str, ...]) -> dict[str, Any] | None:
         """Atomically clear stale StackNet outputs and enable only *valve_ids*."""
         plugin = self._plugins.get("io-m5-4in8out")
-        if plugin is None:
+        if "io-m5-4in8out" not in self.valve_controllers() or plugin is None:
             return None
         await ensure_power_safe(
             self,
@@ -907,6 +912,11 @@ class PluginHardwareGateway:
         return plugin
 
     async def set_valve(self, valve_id: str, value: bool) -> bool:
+        from oqlos.hardware.control_sources import LOCK
+        async with LOCK:
+            return await self._set_valve_routed(valve_id, value)
+
+    async def _set_valve_routed(self, valve_id: str, value: bool) -> bool:
         """Set valve state using the configured valve output module."""
         if not self.is_real:
             logger.info("[HW mock] SET_VALVE %s → %s", valve_id, value)
@@ -975,12 +985,25 @@ class PluginHardwareGateway:
         return False
 
     async def all_valves_off(self) -> dict[str, Any]:
+        from oqlos.hardware.control_sources import LOCK
+        async with LOCK:
+            return await self._all_valves_off_routed()
+
+    async def _all_valves_off_routed(self) -> dict[str, Any]:
         """Clear all valve outputs in one transaction per output module."""
         if not self.is_real:
             logger.info("[HW mock] ALL_VALVES_OFF")
             return {"success": True, "data": {"all_outputs": True, "mock": True}}
 
-        controllers = self.valve_controllers()
+        # Emergency shutdown must also clear a connected, unselected module.
+        try:
+            preferred = self.valve_controllers()
+        except (OSError, ValueError):
+            preferred = ["io-m5-4in8out", "modbus-io"]
+        controllers = list(dict.fromkeys([
+            *preferred,
+            *(plugin_id for plugin_id in ("io-m5-4in8out", "modbus-io") if plugin_id in self._plugins),
+        ]))
         if not controllers:
             return _plugin_command_failure("plugin-unavailable")
 
