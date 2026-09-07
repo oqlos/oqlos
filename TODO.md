@@ -1,5 +1,9 @@
 # OqlOS — lista zadań
 
+Przegląd utrzymaniowy **2026-09-07**: [rozliczenie starych commitów i worktree](docs/maintenance-2026-09-07.md).
+Metryki i checkboxy poniżej pochodzą z audytu lipcowego; nie są ponownym pomiarem
+aktualnego kodu. Przegląd wrześniowy naprawia lockfile i rozlicza zaległe prace Git.
+
 Stan: **2026-07-30**, commit implementacji `54df6cd`, po dziesiątej grupie
 `NEXT-04`.
 
