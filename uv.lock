@@ -1554,7 +1554,7 @@ wheels = [
 
 [[package]]
 name = "oqlos"
-version = "0.1.35"
+version = "0.1.41"
 source = { editable = "." }
 dependencies = [
     { name = "costs" },
