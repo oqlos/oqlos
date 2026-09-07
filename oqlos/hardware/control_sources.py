@@ -24,14 +24,21 @@ def validate(sources: dict[str, str]) -> None:
         raise ValueError("Wymagane są ustawienia pompy, silnika krokowego i zaworów.")
     for key, value in sources.items():
         allowed = {"boardnet", "stacknet", "auto"} if key == "valves" else {"boardnet", "stacknet"}
-        if value not in allowed:
+        if not isinstance(value, str) or value not in allowed:
             raise ValueError(f"Nieprawidłowy kontroler urządzenia: {key}.")
 
 
 def snapshot() -> dict:
     path = config_path()
-    raw = path.read_bytes() if path.exists() else b""
-    sources = json.loads(raw) if raw else dict(DEFAULTS)
+    try:
+        raw = path.read_bytes()
+    except FileNotFoundError:
+        raw = b""
+        sources = dict(DEFAULTS)
+    else:
+        # An existing, empty file is damaged configuration, not a request
+        # to silently move control back to the default hardware.
+        sources = json.loads(raw)
     if not isinstance(sources, dict):
         raise ValueError("Nieprawidłowa konfiguracja sterowania.")
     validate(sources)

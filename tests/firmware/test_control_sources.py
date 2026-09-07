@@ -209,3 +209,21 @@ async def test_returning_to_boardnet_reconnects_modbus_transport():
     plugin._execute_boardnet_command = AsyncMock(return_value={"success": True})
     assert (await plugin.execute_command("stop", {}))["success"]
     plugin.connect.assert_awaited_once()
+
+
+@pytest.mark.parametrize("content", [
+    "",
+    '{"pump": [], "stepper": "boardnet", "valves": "auto"}',
+    '{"pump": {}, "stepper": "boardnet", "valves": "auto"}',
+])
+@pytest.mark.asyncio
+async def test_malformed_settings_return_service_error_and_block_motion(content):
+    store.config_path().write_text(content)
+    with pytest.raises(HTTPException) as error:
+        await api.get_sources()
+    assert error.value.status_code == 503
+    plugin = MotorPlugin(PluginConfig(plugin_id="motor-dri0050", connection_type="http"))
+    plugin._execute_boardnet_command = AsyncMock(return_value={"success": True})
+    result = await plugin.execute_command("set_speed", {"power_pct": 50})
+    assert result["success"] is False
+    plugin._execute_boardnet_command.assert_not_awaited()
