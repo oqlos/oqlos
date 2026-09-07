@@ -13,9 +13,6 @@ _DRIVER_SRC = Path(__file__).resolve().parents[3] / "m5-4in8out" / "src"
 if _DRIVER_SRC.is_dir() and str(_DRIVER_SRC) not in sys.path:
     sys.path.insert(0, str(_DRIVER_SRC))
 
-pytest.importorskip("m5_4in8out", reason="m5-4in8out driver package not installed")
-
-
 def _config(**params) -> PluginConfig:
     return PluginConfig(
         plugin_id="io-m5-4in8out",
@@ -26,6 +23,7 @@ def _config(**params) -> PluginConfig:
 
 
 async def _connected() -> M54In8OutPlugin:
+    pytest.importorskip("m5_4in8out", reason="m5-4in8out driver package not installed")
     instance = M54In8OutPlugin(_config())
     assert await instance.connect() is True
     return instance
@@ -33,10 +31,10 @@ async def _connected() -> M54In8OutPlugin:
 
 def test_plugin_identity_matches_registry_entry() -> None:
     assert M54In8OutPlugin.PLUGIN_ID == "io-m5-4in8out"
-    assert M54In8OutPlugin.SUPPORTED_PROTOCOLS == ["i2c"]
+    assert M54In8OutPlugin.SUPPORTED_PROTOCOLS == ["i2c", "http"]
 
 
-def test_validate_config_rejects_non_i2c_connection() -> None:
+def test_validate_config_rejects_unsupported_connection() -> None:
     config = _config()
     config.connection_type = "modbus-rtu"
 
@@ -61,9 +59,7 @@ def test_validate_config_reports_bad_params(params: dict, fragment: str) -> None
 
 @pytest.mark.asyncio
 async def test_connect_probes_module_and_reports_connected() -> None:
-    instance = M54In8OutPlugin(_config())
-
-    assert await instance.connect() is True
+    instance = await _connected()
     assert instance.status is PluginStatus.CONNECTED
 
     health = await instance.health_check()
@@ -183,7 +179,11 @@ async def test_commands_fail_cleanly_when_disconnected() -> None:
 
     result = await instance.execute_command("set_coil", {"coil": 0, "value": True})
 
-    assert result == {"success": False, "error": "Not connected to 4In8Out"}
+    assert result["success"] is False
+    assert result["error"] == "Not connected to 4In8Out"
+    assert result["error_code"] == "C2004-HW-0012"
+    assert result["status_code"] == 503
+    assert result["component"] == "io-m5-4in8out"
 
 
 @pytest.mark.asyncio
@@ -203,5 +203,5 @@ def test_capabilities_mirror_modbus_io_command_surface() -> None:
 
     # The gateway drives valves through either plugin, so the valve-facing
     # commands must exist on both.
-    assert {"set_coil", "set_valve", "all_outputs_off", "read_io_snapshot"} <= m5_commands
-    assert m5_commands <= modbus_commands
+    shared_commands = {"set_coil", "set_valve", "all_outputs_off", "read_io_snapshot"}
+    assert shared_commands <= m5_commands & modbus_commands

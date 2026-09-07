@@ -2,10 +2,25 @@
 
 from __future__ import annotations
 
+import pytest
 import yaml
 
 from oqlos.tools.hardware_diagnose import doctor
 from oqlos.tools.hardware_diagnose.discovery import UsbDevice
+
+
+@pytest.fixture(autouse=True)
+def _isolate_adc_probe(monkeypatch):
+    """These IO diagnostics must not probe the workstation's physical ADC bus."""
+    monkeypatch.setattr(
+        doctor,
+        "probe_waveshare_modbus_adc",
+        lambda timeout=0.35: {
+            "connected": False,
+            "modbus_device_responds": False,
+            "reason": "no ADC in this test fixture",
+        },
+    )
 
 
 def _write_config(path):
