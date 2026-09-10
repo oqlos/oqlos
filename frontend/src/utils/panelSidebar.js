@@ -31,7 +31,7 @@ export function buildPanelSidebarItems({
     myScenarios.map((s) => ({
       id: `my:${s.name}`,
       title: s.name,
-      subtitle: "localStorage",
+      subtitle: "baza danych",
       _scenario: {
         name: s.name,
         oql: s.oql,

@@ -51,7 +51,8 @@ def test_store_merge_loads_existing_prefs_before_persisting(tmp_path) -> None:
     result = UiPrefsStore(path).merge({"panel": "pinned"})
 
     assert result == {"sidebar": "collapsed", "panel": "pinned"}
-    assert json.loads(path.read_text(encoding="utf-8"))["prefs"] == result
+    assert UiPrefsStore(path).get() == result
+    assert json.loads(path.read_text(encoding="utf-8"))["prefs"] == {"sidebar": "collapsed"}
 
 
 def test_get_ui_prefs_does_not_publish_store_path(monkeypatch, tmp_path) -> None:

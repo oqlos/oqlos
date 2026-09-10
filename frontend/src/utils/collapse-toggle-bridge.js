@@ -1,6 +1,7 @@
-/** Cross-frame + localStorage helpers for auto-collapsing side panels. */
+import { databasePreferences } from "./ui-prefs-client.js";
+/** Cross-frame + databasePreferences helpers for auto-collapsing side panels. */
 
-import { queueUiPrefPersist } from "./ui-prefs-client.js";
+
 
 export const COLLAPSE_DELAY_MS = 3000;
 
@@ -36,28 +37,28 @@ export function postToParent(type, payload) {
 
 export function readStoredCollapsed(storageKey) {
   if (!storageKey) return false;
-  try { return window.localStorage.getItem(storageKey) === "1"; }
+  try { return databasePreferences.getItem(storageKey) === "1"; }
   catch { return false; }
 }
 
 export function persistStoredCollapsed(storageKey, collapsed) {
   if (!storageKey) return;
   const value = collapsed ? "1" : "0";
-  try { window.localStorage.setItem(storageKey, value); }
+  try { databasePreferences.setItem(storageKey, value); }
   catch { /* silent */ }
-  queueUiPrefPersist(storageKey, value);
+
 }
 
 export function readPinned(storageKey) {
-  try { return localStorage.getItem(storageKey + "-pinned") === "true"; }
+  try { return databasePreferences.getItem(storageKey + "-pinned") === "true"; }
   catch { return false; }
 }
 
 export function writePinned(storageKey, value) {
   const token = String(value);
-  try { localStorage.setItem(storageKey + "-pinned", token); }
+  try { databasePreferences.setItem(storageKey + "-pinned", token); }
   catch { /* silent */ }
-  queueUiPrefPersist(`${storageKey}-pinned`, token);
+
 }
 
 export function formatBadge(badge) {

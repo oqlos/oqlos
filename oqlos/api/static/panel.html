@@ -148,7 +148,7 @@
         <select id="scenarioSel" onchange="loadScenario()"></select>
         <div class="row" style="margin-top:8px">
           <button onclick="loadEditorFileScenarios(true)" title="Odśwież listę plików z /api/v1/editor/files">⟳ Odśwież pliki</button>
-          <button onclick="saveScenario()" title="Zapisz zawartość edytora jako własny scenariusz (w przeglądarce)">💾 Zapisz bieżący</button>
+          <button onclick="saveScenario()" title="Zapisz zawartość edytora jako własny scenariusz (w bazie danych)">💾 Zapisz bieżący</button>
           <button onclick="deleteScenario()" title="Usuń wybrany własny scenariusz [moje]">🗑 Usuń wybrany</button>
         </div>
         <div class="hint"><span id="scenarioListStatus">Ładowanie plików z /api/v1/editor/files…</span> Lista plików jest ta sama co w <code>/ui/scenario-files</code>; szablony panelu i własne zapisy są niżej.</div>
@@ -213,6 +213,26 @@
 </div>
 
 <script>
+(async () => {
+let prefs = {};
+try {
+ const response = await fetch("/api/v3/ui/prefs", {cache: "no-store", signal: AbortSignal.timeout(8000)});
+ if (!response.ok) throw new Error(`Preferences HTTP ${response.status}`);
+ prefs = (await response.json()).prefs || {};
+} catch (error) { console.error("Nie odczytano ustawień z bazy danych.", error); }
+let writes = Promise.resolve();
+const databasePreferences = {
+ getItem(key) { return prefs[key] ?? null; },
+ setItem(key, value) {
+  prefs[key] = value;
+  writes = writes.catch(() => {}).then(async () => {
+   const response = await fetch("/api/v3/ui/prefs", {method: "PUT", keepalive: true, headers: {"Content-Type": "application/json"}, body: JSON.stringify({prefs: {[key]: value}, merge: true, persist: true})});
+   if (!response.ok) throw new Error(`Preferences HTTP ${response.status}`);
+  });
+  void writes.catch(error => console.error("Nie zapisano ustawień w bazie danych.", error));
+  return writes;
+ }
+};
 const VALVE_IDS = [
   "valve-1", "valve-2", "valve-3", "valve-4",
   "valve-5", "valve-6", "valve-7", "valve-8",
@@ -379,10 +399,10 @@ function insertAtCursor(text){
 const GROUP_COLLAPSE_KEY='oqlos_panel_collapsed_groups';
 const SNIP_COLLAPSE_KEY='oqlos_panel_collapsed_snippets';
 function readCollapsedMap(key){
-  try{ return JSON.parse(localStorage.getItem(key)||'{}') || {}; }catch(e){ return {}; }
+  try{ return JSON.parse(databasePreferences.getItem(key)||'{}') || {}; }catch(e){ return {}; }
 }
 function writeCollapsedMap(key, map){
-  try{ localStorage.setItem(key, JSON.stringify(map)); }catch(e){}
+  try{ databasePreferences.setItem(key, JSON.stringify(map)); }catch(e){}
 }
 function isCollapsed(key, title){
   return !!readCollapsedMap(key)[title];
@@ -688,8 +708,8 @@ let SCENARIOS = BUILTIN_SCENARIOS.slice();
 let SERVER_SCENARIOS = [];
 let FILE_SCENARIOS = [];
 const _MY_KEY='oqlos_panel_scenarios';
-function myScenarios(){ try{ return JSON.parse(localStorage.getItem(_MY_KEY)||'[]'); }catch(e){ return []; } }
-function setMyScenarios(arr){ try{ localStorage.setItem(_MY_KEY, JSON.stringify(arr)); }catch(e){ banner('Nie udało się zapisać (localStorage).'); } }
+function myScenarios(){ try{ return JSON.parse(databasePreferences.getItem(_MY_KEY)||'[]'); }catch(e){ return []; } }
+async function setMyScenarios(arr){ try{ await databasePreferences.setItem(_MY_KEY, JSON.stringify(arr)); return true; }catch(e){ banner('Nie udało się zapisać (baza danych).'); return false; } }
 function setScenarioListStatus(message){
   const el=$('#scenarioListStatus');
   if(el) el.textContent=message;
@@ -747,20 +767,20 @@ async function loadScenario(){
   }
   if(s && s.oql) $('#editor').value=s.oql;
 }
-function saveScenario(){
+async function saveScenario(){
   const oql=$('#editor').value.trim();
   if(!oql){ banner('Edytor jest pusty — nie ma czego zapisać.'); return; }
   const name=(prompt('Nazwa scenariusza:')||'').trim();
   if(!name) return;
-  const arr=myScenarios().filter(s=>s.name!==name); arr.push({name, oql}); setMyScenarios(arr);
+  const arr=myScenarios().filter(s=>s.name!==name); arr.push({name, oql}); if (!await setMyScenarios(arr)) return;
   rebuildScenarios();
   const idx=SCENARIOS.findIndex(s=>s._my && s._name===name); if(idx>=0) $('#scenarioSel').value=idx;
-  banner('Zapisano scenariusz „'+name+'" (w przeglądarce).');
+  banner('Zapisano scenariusz „'+name+'" (w bazie danych).');
 }
-function deleteScenario(){
+async function deleteScenario(){
   const s=SCENARIOS[+$('#scenarioSel').value];
   if(!s || !s._my){ banner('Wybierz własny scenariusz [moje] do usunięcia.'); return; }
-  setMyScenarios(myScenarios().filter(x=>x.name!==s._name));
+  if (!await setMyScenarios(myScenarios().filter(x=>x.name!==s._name))) return;
   rebuildScenarios(); banner('Usunięto „'+s._name+'".');
 }
 function downloadCsv(){
@@ -895,9 +915,9 @@ function toggleMonitor(btn){
 // --- Motyw jasny/ciemny (persystowany) ---
 function toggleTheme(){
   const light=document.body.classList.toggle('light');
-  try{ localStorage.setItem('oqlos_panel_theme', light?'light':'dark'); }catch(e){}
+  try{ databasePreferences.setItem('oqlos_panel_theme', light?'light':'dark'); }catch(e){}
 }
-try{ if(localStorage.getItem('oqlos_panel_theme')==='light') document.body.classList.add('light'); }catch(e){}
+try{ if(databasePreferences.getItem('oqlos_panel_theme')==='light') document.body.classList.add('light'); }catch(e){}
 
 // --- Skróty klawiszowe ---
 document.addEventListener('keydown', e=>{
@@ -918,6 +938,9 @@ initPanelUrlState();
 refreshStatus();
 loadEditorFileScenarios();
 loadServerScenarios();
+
+Object.assign(window, {numericPresetField, normalizeLungPresetArgs, actionBodyArgs, lungPresetArgs, loadHardwareConfigurationLungPresets, valveCommandItems, huiHoldItems, insertAtCursor, readCollapsedMap, writeCollapsedMap, isCollapsed, setCollapsed, toggleGroup, setAllGroupsCollapsed, toggleSnippetGroup, renderSnippets, mode, skipWaitsDefault, parseBoolParam, skipWaits, syncPanelUrl, initPanelUrlState, banner, api, summarize, esc, escAttr, escJsAttr, classify, replay, logEntry, resultsDoc, copyAllResults, downloadResults, runManage, runOql, normalizeEditorOql, runItem, renderGroups, runGroup, toggleAuto, filterLog, myScenarios, setMyScenarios, setScenarioListStatus, fileScenarioLabel, rebuildScenarios, renderScenarios, loadScenario, saveScenario, deleteScenario, downloadCsv, runEditor, clearLog, copyText, legacyCopy, copyEditor, copyEntryJson, loadServerScenarios, loadEditorFileScenarios, refreshStatus, monPoll, drawSpark, toggleMonitor, toggleTheme});
+})();
 </script>
 </body>
 </html>

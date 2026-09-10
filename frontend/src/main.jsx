@@ -9,7 +9,7 @@ import "./styles/global.css";
 import { hydrateUiPrefsFromServer } from "./utils/ui-prefs-client.js";
 import { hydrateUrlFromUiArgsCookie } from "./utils/ui-url-args-cookie.js";
 
-void hydrateUiPrefsFromServer();
+
 hydrateUrlFromUiArgsCookie();
 
 // Standalone OqlOS hardware UI.
@@ -24,6 +24,8 @@ function LocalizedApp() {
   );
 }
 
+async function mount() {
+try { await hydrateUiPrefsFromServer(); } catch (error) { console.error('Nie odczytano ustawień z bazy danych.', error); }
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter basename="/ui">
@@ -33,3 +35,6 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     </BrowserRouter>
   </React.StrictMode>
 );
+
+}
+void mount();

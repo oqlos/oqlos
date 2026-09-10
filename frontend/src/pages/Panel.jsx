@@ -1,3 +1,4 @@
+import { databasePreferences } from "../utils/ui-prefs-client.js";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import SharedNav from "../components/SharedNav";
@@ -160,7 +161,7 @@ export default function Panel() {
 
   const [collapsedGroups, setCollapsedGroups] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem(GROUP_COLLAPSE_KEY)) || {};
+      return JSON.parse(databasePreferences.getItem(GROUP_COLLAPSE_KEY)) || {};
     } catch {
       return {};
     }
@@ -168,7 +169,7 @@ export default function Panel() {
 
   const [collapsedSnippets, setCollapsedSnippets] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem(SNIP_COLLAPSE_KEY)) || {};
+      return JSON.parse(databasePreferences.getItem(SNIP_COLLAPSE_KEY)) || {};
     } catch {
       return {};
     }
@@ -176,7 +177,7 @@ export default function Panel() {
 
   const [myScenarios, setMyScenarios] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem(MY_SCENARIOS_KEY)) || [];
+      return JSON.parse(databasePreferences.getItem(MY_SCENARIOS_KEY)) || [];
     } catch {
       return [];
     }
@@ -367,7 +368,7 @@ export default function Panel() {
     handleSelectScenario(item.id);
   }, [sidebarItems, searchParams, handleSelectScenario]);
 
-  const saveLocalScenario = () => {
+  const saveLocalScenario = async () => {
     const oql = editorText.trim();
     if (!oql) {
       setBannerMsg("Edytor jest pusty — nie ma czego zapisać.");
@@ -377,9 +378,10 @@ export default function Panel() {
     if (!name) return;
     const filtered = myScenarios.filter((s) => s.name !== name);
     const updated = [...filtered, { name, oql }];
+    try { await databasePreferences.setItem(MY_SCENARIOS_KEY, JSON.stringify(updated)); }
+    catch (error) { setBannerMsg('Nie zapisano w bazie danych: ' + error.message); return; }
     setMyScenarios(updated);
-    localStorage.setItem(MY_SCENARIOS_KEY, JSON.stringify(updated));
-    setBannerMsg(`Zapisano scenariusz „${name}” (w przeglądarce).`);
+    setBannerMsg(`Zapisano scenariusz „${name}” (w bazie danych).`);
   };
 
   const saveSelectedScenario = async () => {
@@ -446,7 +448,7 @@ export default function Panel() {
 
   const deleteSelectedScenario = async () => {
     if (!canDeletePanelScenario(selectedScenarioId)) {
-      setBannerMsg("Usuń można tylko plik .oql lub własny scenariusz z localStorage.");
+      setBannerMsg("Usuń można tylko plik .oql lub własny scenariusz z bazy danych.");
       return;
     }
     if (selectedScenarioIsFile) {
@@ -471,8 +473,9 @@ export default function Panel() {
     }
     const name = selectedScenarioId.slice(3);
     const updated = myScenarios.filter((x) => x.name !== name);
+    try { await databasePreferences.setItem(MY_SCENARIOS_KEY, JSON.stringify(updated)); }
+    catch (error) { setBannerMsg('Nie zapisano w bazie danych: ' + error.message); return; }
     setMyScenarios(updated);
-    localStorage.setItem(MY_SCENARIOS_KEY, JSON.stringify(updated));
     setBannerMsg(`Usunięto „${name}”.`);
     setSelectedScenarioId("");
   };
@@ -824,7 +827,7 @@ export default function Panel() {
   const toggleGroupCollapse = (title) => {
     const next = { ...collapsedGroups, [title]: !collapsedGroups[title] };
     setCollapsedGroups(next);
-    localStorage.setItem(GROUP_COLLAPSE_KEY, JSON.stringify(next));
+    databasePreferences.setItem(GROUP_COLLAPSE_KEY, JSON.stringify(next));
   };
 
   const setAllGroupsCollapsedState = (collapsed) => {
@@ -835,13 +838,13 @@ export default function Panel() {
       });
     }
     setCollapsedGroups(next);
-    localStorage.setItem(GROUP_COLLAPSE_KEY, JSON.stringify(next));
+    databasePreferences.setItem(GROUP_COLLAPSE_KEY, JSON.stringify(next));
   };
 
   const toggleSnippetCollapse = (title) => {
     const next = { ...collapsedSnippets, [title]: !collapsedSnippets[title] };
     setCollapsedSnippets(next);
-    localStorage.setItem(SNIP_COLLAPSE_KEY, JSON.stringify(next));
+    databasePreferences.setItem(SNIP_COLLAPSE_KEY, JSON.stringify(next));
   };
 
   // Keyboard Shortcuts
