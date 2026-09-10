@@ -4,10 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
-HUI_VALVE_DEFAULTS: dict[str, dict[str, Any]] = {
-    "wc-press": {"valve_id": "valve-wc", "value": True},
-    "wc-bleed": {"valve_id": "valve-wc", "value": False},
-}
+# No default WC target: a process name is not a physical output.
+HUI_VALVE_DEFAULTS: dict[str, dict[str, Any]] = {}
 
 
 def _normalize_hui_valve_key(key: Any) -> str:
@@ -79,7 +77,7 @@ async def run_hui_valve_key(gateway: Any, key: str) -> dict[str, Any]:
     normalized = _normalize_hui_valve_key(key)
     spec = get_hui_valve_spec(normalized)
     if spec is None:
-        return {"ok": False, "command": "valve_key", "key": normalized, "error": f"Unknown HUI valve key: {key}"}
+        return {"ok": False, "command": "valve_key", "key": normalized, "error": f"HUI valve key has no configured output binding: {key}"}
 
     valve_id = str(spec["valve_id"])
     value = bool(spec["value"])

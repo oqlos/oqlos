@@ -33,7 +33,7 @@ PERIPHERAL_STATUS_PLUGIN_ALIASES: dict[str, str] = {
 
 MODBUS_ALLOWED_VALVE_IDS = frozenset(
     {
-        *(f"valve-{idx}" for idx in range(1, 15)),
+        *(f"valve-{idx}" for idx in range(1, 17)),
         "valve-nc",
         "valve-sc",
         "valve-wc",

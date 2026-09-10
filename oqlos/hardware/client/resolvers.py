@@ -25,7 +25,7 @@ def normalize_modbus_valve_id(raw: Any, peripheral: str = MODBUS_VALVE_CONTROLLE
             400,
             (
                 f"Unsupported valve_id '{valve_id}' for peripheral '{peripheral}'. "
-                "Expected valve-1..valve-14, valve-nc, valve-sc, or valve-wc"
+                "Expected valve-1..valve-16, valve-nc, valve-sc, or valve-wc"
             ),
         )
     return valve_id

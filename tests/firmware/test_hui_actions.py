@@ -554,6 +554,7 @@ def test_hui_valve_key_can_be_overridden_from_hardware_configuration(
 
 
 def test_hui_actions_list_includes_valve_specs(monkeypatch) -> None:
+    monkeypatch.setattr(hui_valve, "_oql_hui_valve_specs", lambda: {})
     monkeypatch.setattr(
         hui_valve,
         "_configured_hui_valve_specs",
@@ -563,7 +564,7 @@ def test_hui_actions_list_includes_valve_specs(monkeypatch) -> None:
     payload = hui_actions.list_hui_actions()
 
     assert payload["ok"] is True
-    assert "wc-press" in payload["valve_keys"]
+    assert "wc-press" not in payload["valve_keys"]
     assert payload["valve_specs"]["wc-bleed"] == {
         "valve_id": "valve-wc",
         "value": False,
@@ -750,3 +751,23 @@ CONFIG:
     payload = run(hui_actions.start_hui_hold(gateway, "head-inflate"))
     assert not payload["ok"] and "Invalid OQL hold profile" in payload["error"]
     assert gateway.calls == []
+
+
+def test_unconfigured_wc_does_not_guess_a_valve(monkeypatch):
+    monkeypatch.setattr(hui_valve, "_configured_hui_valve_specs", lambda: {})
+    monkeypatch.setattr(hui_valve, "_oql_hui_valve_specs", lambda: {})
+    gateway = FakeGateway()
+    result = run(hui_valve.run_hui_valve_key(gateway, "wc-press"))
+    assert result["ok"] is False
+    assert "no configured output binding" in result["error"]
+    assert gateway.calls == []
+
+
+def test_m5_output_aliases_cover_all_sixteen_channels():
+    from oqlos.hardware.client.resolvers import normalize_modbus_valve_id
+    from oqlos.hardware.client.errors import HardwareProxyError
+    import pytest
+    for channel in range(1, 17):
+        assert normalize_modbus_valve_id(f"valve-{channel}", "io-m5-4in8out") == f"valve-{channel}"
+    with pytest.raises(HardwareProxyError):
+        normalize_modbus_valve_id("valve-17", "io-m5-4in8out")
