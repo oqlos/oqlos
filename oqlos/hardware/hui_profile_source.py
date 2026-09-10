@@ -11,6 +11,7 @@ from typing import Any
 
 from oqlos.hardware.hui_lung_recipe import get_hui_lung_reciprocate_args
 from oqlos.hardware.hui_profiles_oql import (
+    build_hold_profiles_from_sets,
     build_lung_profile_from_sets,
     clear_oql_hui_profiles_cache,
     parse_hui_profile_sets,
@@ -39,6 +40,10 @@ def validate_hui_profile_source(content: str) -> dict[str, Any]:
         raise HuiProfileSourceError("HUI profile must contain CONFIG:")
 
     sets = parse_hui_profile_sets(source)
+    try:
+        build_hold_profiles_from_sets(sets)
+    except ValueError as exc:
+        raise HuiProfileSourceError(str(exc)) from exc
     lung = build_lung_profile_from_sets(sets)
     required = ("speed_steps_per_second", "max_steps_per_second", "pause")
     missing = [field for field in required if field not in lung]

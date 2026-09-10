@@ -6,6 +6,7 @@ Source file (default): ``layers/hardware/hui-profiles.oql`` under
 Keys:
   hui.hold.<key>.valves_on   = comma-separated valve ids
   hui.hold.<key>.pump_pct    = float
+  hui.hold.<key>.valve_stagger_ms = integer 100..1000 (default 100)
   hui.valve.<key>.valve_id   = valve id
   hui.valve.<key>.value      = true|false|on|off
   hui.lung.<field>            = artificial-lung motion/stop setting
@@ -138,6 +139,14 @@ def build_hold_profiles_from_sets(sets: dict[str, str]) -> dict[str, dict[str, A
             pump = _coerce_float(val)
             if pump is not None:
                 bucket["pump_pct"] = pump
+        elif field == "valve_stagger_ms":
+            try:
+                stagger = int(str(val).strip())
+            except (TypeError, ValueError) as exc:
+                raise ValueError(f"{key} must be an integer in 100..1000 ms") from exc
+            if not 100 <= stagger <= 1000:
+                raise ValueError(f"{key} must be in 100..1000 ms")
+            bucket[field] = stagger
     profiles: dict[str, dict[str, Any]] = {}
     for hold_key, bucket in buckets.items():
         if "valves_on" in bucket and "pump_pct" in bucket:
@@ -145,6 +154,8 @@ def build_hold_profiles_from_sets(sets: dict[str, str]) -> dict[str, dict[str, A
                 "valves_on": tuple(bucket["valves_on"]),
                 "pump_pct": float(bucket["pump_pct"]),
             }
+            if "valve_stagger_ms" in bucket:
+                profiles[hold_key]["valve_stagger_ms"] = bucket["valve_stagger_ms"]
     return profiles
 
 

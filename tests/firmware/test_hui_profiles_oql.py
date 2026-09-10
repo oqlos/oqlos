@@ -95,3 +95,15 @@ def test_oql_profiles_override_normalized_config_and_defaults(tmp_path: Path, mo
     assert hui_lung_recipe.get_hui_lung_stop_at_limit(fallback=True) is False
 
     clear_oql_hui_profiles_cache()
+
+
+def test_hold_stagger_is_optional_and_strict():
+    import pytest
+    sets = parse_hui_profile_sets(SAMPLE)
+    assert "valve_stagger_ms" not in build_hold_profiles_from_sets(sets)["head-inflate"]
+    key = "hui.hold.head-inflate.valve_stagger_ms"
+    for value in ("100", "250", "1000"):
+        assert build_hold_profiles_from_sets({**sets, key: value})["head-inflate"]["valve_stagger_ms"] == int(value)
+    for value in ("0", "99", "1001", "-1", "NaN", "250.5", "bad"):
+        with pytest.raises(ValueError, match="valve_stagger_ms"):
+            build_hold_profiles_from_sets({**sets, key: value})

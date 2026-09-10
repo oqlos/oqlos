@@ -727,3 +727,26 @@ def test_hui_readiness_separates_control_blocker_from_dfr1184_telemetry() -> Non
         payload["telemetry"]["components"]["usb-adc-dfr1184"]["endpoint"]
         == "/dev/serial0"
     )
+
+
+def test_oql_stagger_runs_between_valves_and_pump(monkeypatch, tmp_path):
+    source = tmp_path / "hui.oql"
+    source.write_text("""VERSION: 6
+CONFIG:
+  SET 'hui.hold.head-inflate.valves_on' 'valve-5,valve-2'
+  SET 'hui.hold.head-inflate.pump_pct' '70'
+  SET 'hui.hold.head-inflate.valve_stagger_ms' '350'
+""")
+    monkeypatch.setenv("OQLOS_HUI_PROFILES_OQL", str(source))
+    gateway = ExactReplaceGateway()
+    async def sleep(seconds):
+        gateway.calls.append(("wait", seconds))
+    monkeypatch.setattr(hui_hold.asyncio, "sleep", sleep)
+    payload = run(hui_actions.start_hui_hold(gateway, "head-inflate"))
+    assert payload["ok"]
+    assert gateway.calls == [("pump", 0.0), ("replace_valves_exact", ("valve-5", "valve-2")), ("wait", 0.35), ("pump", 70.0)]
+    source.write_text(source.read_text().replace("'350'", "'NaN'"))
+    gateway.calls.clear()
+    payload = run(hui_actions.start_hui_hold(gateway, "head-inflate"))
+    assert not payload["ok"] and "Invalid OQL hold profile" in payload["error"]
+    assert gateway.calls == []

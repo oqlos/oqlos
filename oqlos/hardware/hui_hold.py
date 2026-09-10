@@ -110,6 +110,9 @@ def _oql_hui_hold_profiles() -> dict[str, dict[str, Any]]:
         from oqlos.hardware.hui_profiles_oql import load_oql_hui_hold_profiles
 
         return load_oql_hui_hold_profiles()
+    except ValueError:
+        # An explicit invalid recipe must not silently execute fallback hardware settings.
+        raise
     except Exception:
         return {}
 
@@ -482,7 +485,11 @@ async def _start_hui_hold_unlocked(gateway: Any, key: str) -> dict[str, Any]:
     global _active_hold_key
     hold_key = str(key or "").strip().lower()
     profile_started = _timing_start()
-    profile = get_hui_hold_profiles().get(hold_key)
+    try:
+        profile = get_hui_hold_profiles().get(hold_key)
+    except ValueError as exc:
+        return {"ok": False, "command": "hold_start", "key": hold_key,
+                "error": f"Invalid OQL hold profile: {exc}"}
     profile_operation = _operation(
         "profile.resolve",
         profile is not None,
@@ -549,13 +556,14 @@ async def _start_hui_hold_unlocked(gateway: Any, key: str) -> dict[str, Any]:
                 cleanup=cleanup,
             )
         stagger_started = _timing_start()
-        await asyncio.sleep(_VALVE_STAGGER_SECONDS)
+        stagger_seconds = profile.get("valve_stagger_ms", _VALVE_STAGGER_SECONDS * 1000) / 1000
+        await asyncio.sleep(stagger_seconds)
         operations.append(
             _operation(
                 "valve_stagger",
                 True,
                 timing=stagger_started,
-                seconds=_VALVE_STAGGER_SECONDS,
+                seconds=stagger_seconds,
             )
         )
     else:
