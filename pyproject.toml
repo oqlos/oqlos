@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "oqlos"
-version = "0.1.41"
+version = "0.1.42"
 description = "OqlOS — Operation Query Language runtime for hardware testing"
 readme = "README.md"
 requires-python = ">=3.11,<3.14"
 dependencies = [
-    "oqlos-models==0.2.0",
-    "oqlos-core==0.2.2",
+    "oqlos-models==0.2.1",
+    "oqlos-core==0.2.3",
     "fastapi>=0.110",
     "uvicorn>=0.28",
     "pydantic>=2.0",

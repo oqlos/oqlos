@@ -1,7 +1,7 @@
 {
   "name": "@oqlos/frontend",
   "private": true,
-  "version": "0.1.28",
+  "version": "0.1.29",
   "type": "module",
   "description": "OqlOS hardware diagnostics and OQL file tooling UI",
   "scripts": {

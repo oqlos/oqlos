@@ -1554,7 +1554,7 @@ wheels = [
 
 [[package]]
 name = "oqlos"
-version = "0.1.41"
+version = "0.1.42"
 source = { editable = "." }
 dependencies = [
     { name = "costs" },
@@ -1642,7 +1642,7 @@ provides-extras = ["rpi", "server", "dev", "hardware-services"]
 
 [[package]]
 name = "oqlos-core"
-version = "0.2.2"
+version = "0.2.3"
 source = { editable = "packages/oqlos-core" }
 dependencies = [
     { name = "httpx" },
@@ -1655,7 +1655,7 @@ dependencies = [
 requires-dist = [
     { name = "httpx", specifier = ">=0.25" },
     { name = "oqlos", marker = "extra == 'firmware'", specifier = ">=0.1.31" },
-    { name = "oqlos-models", specifier = "==0.2.0" },
+    { name = "oqlos-models", specifier = "==0.2.1" },
     { name = "pydantic", specifier = ">=2.0" },
     { name = "pyyaml", specifier = ">=6.0" },
 ]
@@ -1663,7 +1663,7 @@ provides-extras = ["firmware"]
 
 [[package]]
 name = "oqlos-models"
-version = "0.2.0"
+version = "0.2.1"
 source = { editable = "packages/oqlos-models" }
 dependencies = [
     { name = "pydantic" },
