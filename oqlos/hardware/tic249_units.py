@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import Any
+from shared.models.tic_motion_profile import motion_profile
 
 TIC249_TARGET_VELOCITY_SCALE = 10_000
 TIC249_DEFAULT_STEPS_PER_SECOND = 1_000
@@ -34,6 +35,6 @@ def steps_per_second_to_raw(
 
 def raw_acceleration_for_ramp(raw_speed: int, ramp_seconds: float) -> int:
     """Derive Tic raw acceleration so speed ramps in ``ramp_seconds``."""
-    if ramp_seconds <= 0:
-        return int(raw_speed)
-    return int(raw_speed / ramp_seconds)
+    if type(raw_speed) is not int or raw_speed % 10000:
+        raise ValueError("raw_speed must represent whole steps/s")
+    return motion_profile(raw_speed // 10000, ramp_seconds)["acceleration_raw"]

@@ -353,7 +353,7 @@ def test_hui_artificial_lung_uses_tic249_plugin_recipe(monkeypatch) -> None:
     assert args["speed"] == 100_000_000
     assert args["pause"] == 0.5
     assert args["ramp_seconds"] == 0.5
-    assert args["acceleration"] == 200_000_000
+    assert args["acceleration"] == 2_000_000
 
 
 def test_hui_artificial_lung_fails_fast_before_motion_when_valve_is_unavailable() -> (

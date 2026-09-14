@@ -14,4 +14,6 @@ def test_steps_per_second_to_raw_default_cap() -> None:
 
 
 def test_raw_acceleration_for_ramp() -> None:
-    assert raw_acceleration_for_ramp(TIC249_DEFAULT_TARGET_VELOCITY, 0.5) == 20_000_000
+    assert raw_acceleration_for_ramp(TIC249_DEFAULT_TARGET_VELOCITY, 0.5) == 200_000
+    assert raw_acceleration_for_ramp(100_000_000, 0.5) == 2_000_000
+    assert raw_acceleration_for_ramp(100_000_000, 0) == 2_147_483_647
