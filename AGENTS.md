@@ -12,3 +12,7 @@ This repository uses one canonical Git branch: `main`.
   do not work around it by creating a branch or pull request.
 
 These rules apply to all automated agents and repository maintenance sessions.
+
+## Documentation delivery
+
+Follow [documentation validation](docs/information/documentation-validation.md). Prepare canonical documents with the pinned Docs checker before writing, retain the preparation JSON privately, and require scripts/check-docs-report.py --complete before claiming completion. Changed analysis reports require tracked Report sidecars. Pin integrity and local conformance do not grant publication or merge authority.

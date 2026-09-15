@@ -2436,3 +2436,5 @@ For `volume 50 l` and `cycleVolumeLiters = 5`, the runtime plans 10 cycles. If a
 provided, it computes nominal `steps/s` from half-cycles and stroke size, then clamps it to the
 configured maximum. Hardware services remain responsible for final safety checks, limits, and
 stop/de-energize behavior.
+
+- [Documentation validation](information/documentation-validation.md)
