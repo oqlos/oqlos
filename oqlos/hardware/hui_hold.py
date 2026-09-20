@@ -535,8 +535,14 @@ async def _start_hui_hold_unlocked(gateway: Any, key: str) -> dict[str, Any]:
         not callable(supports_replace) or bool(supports_replace())
     )
     if exact_replace:
-        pump_off = await _set_pump_best_effort(gateway, 0.0)
-        operations.append(pump_off)
+        # Re-pressing the already active hold re-asserts the identical valve
+        # mask and pump setpoint, so the depressurizing pump-off and the
+        # settling delay are skipped to avoid a needless pressure blip.
+        already_active = _active_hold_key == hold_key
+        pump_off: dict[str, Any] | None = None
+        if not already_active:
+            pump_off = await _set_pump_best_effort(gateway, 0.0)
+            operations.append(pump_off)
         replace_started = _timing_start()
         replace_result = await replace(tuple(profile["valves_on"]))
         replace_operation = _operation(
@@ -547,7 +553,7 @@ async def _start_hui_hold_unlocked(gateway: Any, key: str) -> dict[str, Any]:
             result=replace_result,
         )
         operations.append(replace_operation)
-        if not pump_off["ok"] or not replace_operation["ok"]:
+        if (pump_off is not None and not pump_off["ok"]) or not replace_operation["ok"]:
             cleanup = await _shutdown_all_hui_hardware_unlocked(gateway)
             return _hold_start_failure(
                 hold_key,
@@ -555,17 +561,18 @@ async def _start_hui_hold_unlocked(gateway: Any, key: str) -> dict[str, Any]:
                 operations=operations,
                 cleanup=cleanup,
             )
-        stagger_started = _timing_start()
-        stagger_seconds = profile.get("valve_stagger_ms", _VALVE_STAGGER_SECONDS * 1000) / 1000
-        await asyncio.sleep(stagger_seconds)
-        operations.append(
-            _operation(
-                "valve_stagger",
-                True,
-                timing=stagger_started,
-                seconds=stagger_seconds,
+        if not already_active:
+            stagger_started = _timing_start()
+            stagger_seconds = profile.get("valve_stagger_ms", _VALVE_STAGGER_SECONDS * 1000) / 1000
+            await asyncio.sleep(stagger_seconds)
+            operations.append(
+                _operation(
+                    "valve_stagger",
+                    True,
+                    timing=stagger_started,
+                    seconds=stagger_seconds,
+                )
             )
-        )
     else:
         shutdown_started = _timing_start()
         shutdown = await _shutdown_all_hui_hardware_unlocked(

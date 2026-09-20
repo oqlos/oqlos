@@ -1027,8 +1027,7 @@ class PluginHardwareGateway:
                     connected.append((plugin_id, plugin))
                     break
 
-        results: list[dict[str, Any]] = []
-        for plugin_id, plugin in connected:
+        async def _off_controller(plugin_id: str, plugin: Any) -> dict[str, Any]:
             await ensure_power_safe(
                 self,
                 operation=f"{plugin_id}.all_outputs_off",
@@ -1043,7 +1042,19 @@ class PluginHardwareGateway:
                     logger, "PluginHardwareGateway.all_valves_off failed", exc
                 )
                 result = _plugin_command_failure("command-failed")
-            results.append({"plugin_id": plugin_id, **result})
+            return {"plugin_id": plugin_id, **result}
+
+        # The controllers are independent devices on independent transports, so
+        # their safe-off commands run together instead of serializing transport
+        # latency inside the HUI lock.
+        results = list(
+            await asyncio.gather(
+                *(
+                    _off_controller(plugin_id, plugin)
+                    for plugin_id, plugin in connected
+                )
+            )
+        )
 
         if not results:
             return _plugin_command_failure("plugin-unavailable")

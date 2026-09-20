@@ -6,6 +6,7 @@ import asyncio
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 import threading
+from time import monotonic
 from typing import Any
 
 from oqlos.errors import OqlosError
@@ -128,9 +129,7 @@ async def observe_power_telemetry(power: dict[str, Any]) -> dict[str, Any]:
     return power
 
 
-async def sample_power_telemetry() -> dict[str, Any]:
-    """Read current Pi throttling data without blocking the event loop."""
-    power = await asyncio.to_thread(pi_power_diagnostics)
+def _apply_power_age(power: dict[str, Any]) -> dict[str, Any]:
     observed = str(power.get("observed_at") or "")
     try:
         timestamp = datetime.fromisoformat(observed.replace("Z", "+00:00"))
@@ -141,7 +140,30 @@ async def sample_power_telemetry() -> dict[str, Any]:
         )
     except (TypeError, ValueError):
         power["age_ms"] = 0
-    return await observe_power_telemetry(power)
+    return power
+
+
+# ``vcgencmd`` runs as a subprocess and one HUI actuation sequence passes this
+# gate several times within ~1 s. Reuse a just-taken sample so the sequence
+# costs a single subprocess while throttling is still re-checked about once a
+# second across operations.
+_POWER_SAMPLE_TTL_SECONDS = 1.0
+_power_sample: dict[str, Any] | None = None
+_power_sample_at = 0.0
+
+
+async def sample_power_telemetry() -> dict[str, Any]:
+    """Read current Pi throttling data without blocking the event loop."""
+    global _power_sample, _power_sample_at
+    if _power_sample is not None and (
+        monotonic() - _power_sample_at < _POWER_SAMPLE_TTL_SECONDS
+    ):
+        return _apply_power_age(dict(_power_sample))
+    power = _apply_power_age(await asyncio.to_thread(pi_power_diagnostics))
+    observed_power = await observe_power_telemetry(power)
+    _power_sample = dict(observed_power)
+    _power_sample_at = monotonic()
+    return observed_power
 
 
 def has_active_undervoltage(power: dict[str, Any]) -> bool:
@@ -217,8 +239,10 @@ async def ensure_power_safe(
 
 
 def _reset_power_event_state() -> None:
-    """Reset process-local change detection (test helper)."""
-    global _last_event_state, _last_signature
+    """Reset process-local change detection and the sample cache (test helper)."""
+    global _last_event_state, _last_signature, _power_sample, _power_sample_at
     with _state_lock:
         _last_signature = None
         _last_event_state = None
+        _power_sample = None
+        _power_sample_at = 0.0

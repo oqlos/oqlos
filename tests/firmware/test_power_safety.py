@@ -165,3 +165,44 @@ async def test_raw_plugin_execute_is_gated_before_plugin_resolution(
         )
 
     assert caught.value.public_code == "C2004-HW-0014"
+
+
+@pytest.mark.asyncio
+async def test_power_sample_reuses_fresh_telemetry(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    diagnostics_calls: list[int] = []
+
+    def _diagnostics() -> dict[str, Any]:
+        diagnostics_calls.append(1)
+        return decode_throttled("throttled=0x0")
+
+    monkeypatch.setattr(power_safety, "pi_power_diagnostics", _diagnostics)
+    power_safety._reset_power_event_state()
+
+    first = await power_safety.sample_power_telemetry()
+    second = await power_safety.sample_power_telemetry()
+
+    assert len(diagnostics_calls) == 1
+    assert second["available"] == first["available"]
+    assert second["age_ms"] >= first["age_ms"]
+
+
+@pytest.mark.asyncio
+async def test_power_sample_refreshes_after_ttl(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    diagnostics_calls: list[int] = []
+
+    def _diagnostics() -> dict[str, Any]:
+        diagnostics_calls.append(1)
+        return decode_throttled("throttled=0x0")
+
+    monkeypatch.setattr(power_safety, "pi_power_diagnostics", _diagnostics)
+    monkeypatch.setattr(power_safety, "_POWER_SAMPLE_TTL_SECONDS", 0.0)
+    power_safety._reset_power_event_state()
+
+    await power_safety.sample_power_telemetry()
+    await power_safety.sample_power_telemetry()
+
+    assert len(diagnostics_calls) == 2

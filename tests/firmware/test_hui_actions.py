@@ -5,6 +5,8 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
+import pytest
+
 from oqlos.hardware import (
     hui_actions,
     hui_artificial_lung,
@@ -18,6 +20,13 @@ from oqlos.hardware.valve_controller import gateway_valve_controllers
 
 def run(coro):
     return asyncio.run(coro)
+
+
+@pytest.fixture(autouse=True)
+def _reset_hui_hold_state():
+    hui_hold._active_hold_key = None  # noqa: SLF001
+    yield
+    hui_hold._active_hold_key = None  # noqa: SLF001
 
 
 class FakeGateway:
@@ -147,6 +156,28 @@ def test_hui_hold_uses_exact_stacknet_replace_without_separate_bulk_off(
         ("replace_valves_exact", ("valve-5", "valve-2")),
         ("pump", 70.0),
     ]
+
+
+def test_hui_hold_repress_reasserts_without_pump_off_or_stagger(
+    monkeypatch,
+) -> None:
+    monkeypatch.setattr(hui_hold, "_VALVE_STAGGER_SECONDS", 0)
+    gateway = ExactReplaceGateway()
+
+    first = run(hui_actions.start_hui_hold(gateway, "head-inflate"))
+    assert first["ok"] is True
+    gateway.calls.clear()
+
+    second = run(hui_actions.start_hui_hold(gateway, "head-inflate"))
+
+    assert second["ok"] is True
+    assert gateway.calls == [
+        ("replace_valves_exact", ("valve-5", "valve-2")),
+        ("pump", 70.0),
+    ]
+    stages = [item["stage"] for item in second["timeline"]]
+    assert "valve_stagger" not in stages
+    assert stages.count("set_pump") == 1
 
 
 def test_hui_hold_execution_failure_is_retryable_service_unavailable(
