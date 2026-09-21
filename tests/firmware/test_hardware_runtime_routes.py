@@ -326,18 +326,18 @@ def test_usb_adc_sampler_does_not_add_interval_after_slow_physical_read(monkeypa
         channels={"ai01": {"sensor_id": "ai01", "value": 1.0, "ok": True}},
         sampled_at=time.monotonic(),
         sampler_task=None,
-        active_until=time.monotonic() + 0.12,
+        active_until=time.monotonic() + 0.2,
     )
     runtime._USB_ADC_STATUS.update(available=True, retry_after=0.0)
     monkeypatch.setattr(
         runtime,
         "get_settings",
-        lambda: SimpleNamespace(usb_adc_sample_interval_seconds=0.01),
+        lambda: SimpleNamespace(usb_adc_sample_interval_seconds=0.025),
     )
 
     async def _slow_refresh():
         starts.append(time.monotonic())
-        await asyncio.sleep(0.03)
+        await asyncio.sleep(0.05)
 
     monkeypatch.setattr(runtime, "_refresh_usb_adc_sample", _slow_refresh)
 
@@ -345,7 +345,9 @@ def test_usb_adc_sampler_does_not_add_interval_after_slow_physical_read(monkeypa
 
     gaps = [later - earlier for earlier, later in zip(starts, starts[1:])]
     assert len(starts) >= 3
-    assert gaps and max(gaps) < 0.04
+    # Correct: gap ≈ refresh duration (0.05). A regression that adds the
+    # interval after a slow read produces gap ≈ 0.075. Keep slack on both.
+    assert gaps and max(gaps) < 0.065
 
 
 def test_read_sensor_values_preserves_partial_usb_batch(monkeypatch):
