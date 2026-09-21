@@ -133,8 +133,8 @@ profiles:
       lp-pwm-minus10: {valves_on: [valve-6], pump_pct: 100}
       lp-bleed: {valves_on: [valve-4], pump_pct: 0}
     valves:
-      wc-press: {valve_id: valve-wc, value: true}
-      wc-bleed: {valve_id: valve-wc, value: false}
+      wc-press: {valve_id: valve-3, value: true}
+      wc-bleed: {valve_id: valve-3, value: false}
     lung:
       valve_id: valve-4
       direction: right

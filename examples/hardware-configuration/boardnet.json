@@ -30,7 +30,7 @@
       "kind": "valve",
       "metadata": {},
       "plugin": "modbus-io",
-      "target": "valve-nc"
+      "target": "valve-1"
     }
   },
   "devices": {
@@ -163,7 +163,7 @@
       "valves": {
         "wc-press": {
           "value": true,
-          "valve_id": "valve-wc"
+          "valve_id": "valve-3"
         }
       }
     }
