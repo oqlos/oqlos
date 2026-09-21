@@ -139,6 +139,13 @@ def get_hui_lung_stop_at_limit(*, fallback: bool) -> bool:
     return _bool_from_body(body, "stop_at_limit", "stopAtLimit", fallback=fallback)
 
 
+def get_hui_lung_rearm_params() -> tuple[int, int]:
+    body = _effective_hui_lung_profile()
+    steps = _int_from_body(body, "rearm_steps", "rearm_offset_steps", fallback=500)
+    speed = _int_from_body(body, "rearm_speed_steps_per_second", "rearm_speed", fallback=2000)
+    return steps, speed
+
+
 def get_hui_lung_reciprocate_args() -> dict[str, Any]:
     defaults = dict(DEFAULT_HUI_LUNG_RECIPROCATE_ARGS)
     body = _effective_hui_lung_profile()

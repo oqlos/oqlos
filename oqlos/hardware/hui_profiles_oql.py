@@ -204,6 +204,8 @@ def build_lung_profile_from_sets(sets: dict[str, str]) -> dict[str, Any]:
         "speed_steps_per_second",
         "max_steps_per_second",
         "cycles",
+        "rearm_steps",
+        "rearm_speed_steps_per_second",
     }
     non_negative_float_fields = {"pause", "ramp_seconds"}
 
