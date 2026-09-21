@@ -577,6 +577,122 @@ def test_hui_artificial_lung_start_failure_cleans_up_same_valve_it_opened(
     assert gateway.calls.index(valve_open) < gateway.calls.index(valve_close)
 
 
+class FakeTic249RearmPlugin:
+    def __init__(self, status_data: dict[str, Any] | None = None) -> None:
+        self.status_data = status_data or {}
+        self.commands: list[tuple[str, dict[str, Any]]] = []
+
+    async def execute_command(
+        self, command: str, params: dict[str, Any]
+    ) -> dict[str, Any]:
+        self.commands.append((command, params))
+        if command == "status":
+            return {"success": True, "data": dict(self.status_data)}
+        return {"success": True, "data": {"command": command, "params": params}}
+
+
+def test_hui_motor_rearm_energizes_and_backs_off_reverse_limit() -> None:
+    plugin = FakeTic249RearmPlugin(
+        {"position": 1200, "reverse_limit_active": True, "energized": False}
+    )
+    gateway = FakeGateway(real=True, plugin=plugin)
+
+    payload = run(hui_actions.rearm_hui_motor(gateway))
+
+    assert payload["ok"] is True
+    assert payload["requested"] == {"energize": True, "limit_backoff_steps": 500}
+    assert plugin.commands[0][0] == "status"
+    assert plugin.commands[1] == ("energize", {"enable": True})
+    move_command, move_params = plugin.commands[2]
+    assert move_command == "move"
+    assert move_params["position"] == 1700
+    assert isinstance(move_params["speed"], int)
+
+
+def test_hui_motor_rearm_backs_off_forward_limit() -> None:
+    plugin = FakeTic249RearmPlugin(
+        {"position": -640, "forward_limit_active": True}
+    )
+    gateway = FakeGateway(real=True, plugin=plugin)
+
+    payload = run(hui_actions.rearm_hui_motor(gateway))
+
+    assert payload["ok"] is True
+    assert payload["requested"]["limit_backoff_steps"] == -500
+    assert plugin.commands[2][1]["position"] == -1140
+
+
+def test_hui_motor_rearm_stacknet_fields_and_no_speed_param(monkeypatch) -> None:
+    """StackNet status uses forward_limit/current_position and rejects move speed."""
+    monkeypatch.setattr(
+        "oqlos.hardware.control_sources.source", lambda device: "stacknet"
+    )
+    plugin = FakeTic249RearmPlugin(
+        {"current_position": 42, "forward_limit": True}
+    )
+    gateway = FakeGateway(real=True, plugin=plugin)
+
+    payload = run(hui_actions.rearm_hui_motor(gateway))
+
+    assert payload["ok"] is True
+    move_command, move_params = plugin.commands[2]
+    assert move_command == "move"
+    assert move_params == {"position": -458}
+
+
+def test_hui_motor_rearm_without_active_limit_only_energizes() -> None:
+    plugin = FakeTic249RearmPlugin({"position": 300, "energized": False})
+    gateway = FakeGateway(real=True, plugin=plugin)
+
+    payload = run(hui_actions.rearm_hui_motor(gateway))
+
+    assert payload["ok"] is True
+    assert payload["confirmed"] == {"energized": True, "limit_backoff": False}
+    assert [command for command, _ in plugin.commands] == ["status", "energize"]
+
+
+def test_hui_motor_rearm_fails_when_both_limits_active() -> None:
+    plugin = FakeTic249RearmPlugin(
+        {"position": 0, "forward_limit_active": True, "reverse_limit_active": True}
+    )
+    gateway = FakeGateway(real=True, plugin=plugin)
+
+    payload = run(hui_actions.rearm_hui_motor(gateway))
+
+    assert payload["ok"] is False
+    assert payload["status_code"] == 503
+    assert "Both limit switches" in payload["error"]
+    assert [command for command, _ in plugin.commands] == ["status", "energize"]
+
+
+def test_hui_motor_rearm_uses_profile_steps_and_speed(monkeypatch) -> None:
+    monkeypatch.setattr(
+        hui_artificial_lung,
+        "get_hui_lung_rearm_params",
+        lambda: (320, 1500),
+    )
+    plugin = FakeTic249RearmPlugin(
+        {"position": 50, "reverse_limit_active": True}
+    )
+    gateway = FakeGateway(real=True, plugin=plugin)
+
+    payload = run(hui_actions.rearm_hui_motor(gateway))
+
+    assert payload["ok"] is True
+    assert payload["requested"]["limit_backoff_steps"] == 320
+    assert plugin.commands[2][1]["position"] == 370
+
+
+def test_hui_motor_rearm_fails_fast_when_plugin_unavailable() -> None:
+    gateway = FakeGateway(real=True, plugin=None)
+
+    payload = run(hui_actions.rearm_hui_motor(gateway))
+
+    assert payload["ok"] is False
+    assert payload["error_code"] == "C2004-HW-0012"
+    assert payload["unavailable_hardware_ids"] == ["motor-tic249"]
+
+
 def test_hui_valve_key_can_be_overridden_from_hardware_configuration(
     monkeypatch,
 ) -> None:

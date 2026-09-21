@@ -9,10 +9,13 @@ from typing import Any
 from oqlos.hardware.hui_hold import _set_valve, _success
 from oqlos.hardware.hui_readiness import required_plugins_failure
 from oqlos.hardware.hui_lung_recipe import (
+    HUI_LUNG_MAX_SPEED_STEPS_PER_S,
     HUI_LUNG_STROKE_STEPS,
+    get_hui_lung_rearm_params,
     get_hui_lung_reciprocate_args,
     get_hui_lung_valve_id,
 )
+from oqlos.hardware.tic249_units import steps_per_second_to_raw
 from oqlos.hardware.power_safety import ensure_power_safe
 from oqlos.hardware.valve_controller import (
     M5_VALVE_CONTROLLER,
@@ -289,3 +292,141 @@ async def stop_hui_artificial_lung(gateway: Any) -> dict[str, Any]:
             "safe_to_retry": True,
         })
     return payload
+
+
+def _rearm_failure(
+    error: str,
+    *,
+    operations: list[dict[str, Any]] | None = None,
+    issue_code: str = "hw_tic249_sidecar_unreachable",
+) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "ok": False,
+        "command": "motor-rearm",
+        "error": error,
+        "public_message": error,
+        "error_code": "C2004-HW-0012",
+        "status_code": 503,
+        "issue_code": issue_code,
+        "unavailable_hardware_ids": ["motor-tic249"],
+        "safe_to_retry": True,
+    }
+    if operations is not None:
+        payload["operations"] = operations
+    return payload
+
+
+def _tic249_status_fields(status: dict[str, Any] | None) -> dict[str, Any]:
+    """Normalize Tic249 status across sidecar and StackNet field names."""
+    body: dict[str, Any] = {}
+    if isinstance(status, dict):
+        data = status.get("data")
+        body = dict(data) if isinstance(data, dict) else dict(status)
+    base = body.get("position", body.get("current_position", body.get("target_position")))
+    try:
+        base_position = int(base) if base is not None else None
+    except (TypeError, ValueError):
+        base_position = None
+    return {
+        "forward_limit": bool(
+            body.get("forward_limit_active") or body.get("forward_limit")
+        ),
+        "reverse_limit": bool(
+            body.get("reverse_limit_active") or body.get("reverse_limit")
+        ),
+        "position": base_position,
+    }
+
+
+def _move_supports_speed_param() -> bool:
+    """StackNet moves use the speed stored in Tic; only the sidecar takes a speed."""
+    try:
+        from oqlos.hardware.control_sources import source
+
+        return source("stepper") != "stacknet"
+    except (OSError, ValueError):
+        return True
+
+
+async def rearm_hui_motor(gateway: Any) -> dict[str, Any]:
+    """Clear Tic249 safe-start violation and back off from an active limit switch."""
+    readiness_failure = await required_plugins_failure(
+        gateway,
+        ("motor-tic249",),
+        command="motor-rearm",
+        key="motor-rearm",
+    )
+    if readiness_failure is not None:
+        return readiness_failure
+    if not getattr(gateway, "is_real", False):
+        return {"ok": True, "command": "motor-rearm", "data": {"mock": True}}
+
+    await ensure_power_safe(gateway, operation="hui.motor-tic249.rearm")
+    plugin = (
+        await gateway._get_or_connect_plugin("motor-tic249")
+        if hasattr(gateway, "_get_or_connect_plugin")
+        else None
+    )
+    if plugin is None:
+        return _rearm_failure("motor-tic249 plugin not available")
+
+    steps, speed_steps_per_second = get_hui_lung_rearm_params()
+    speed = steps_per_second_to_raw(
+        speed_steps_per_second,
+        max_steps_per_second=HUI_LUNG_MAX_SPEED_STEPS_PER_S,
+    )
+
+    operations: list[dict[str, Any]] = []
+    status = await plugin.execute_command("status", {})
+    operations.append({"operation": "status", "ok": _success(status), "result": status})
+    fields = _tic249_status_fields(status if _success(status) else None)
+
+    energize = await plugin.execute_command("energize", {"enable": True})
+    operations.append(
+        {"operation": "energize", "ok": _success(energize), "result": energize}
+    )
+    if not _success(energize):
+        return _rearm_failure(
+            "Tic249 energize/exit-safe-start was not confirmed",
+            operations=operations,
+        )
+
+    if fields["forward_limit"] and fields["reverse_limit"]:
+        return _rearm_failure(
+            "Both limit switches are active; movement is blocked",
+            operations=operations,
+            issue_code="hw_tic249_position_uncertain",
+        )
+
+    offset = 0
+    if fields["reverse_limit"]:
+        offset = steps
+    elif fields["forward_limit"]:
+        offset = -steps
+
+    if offset:
+        if fields["position"] is None:
+            return _rearm_failure(
+                "Tic249 position unavailable for limit backoff",
+                operations=operations,
+            )
+        move_params: dict[str, Any] = {"position": fields["position"] + offset}
+        if _move_supports_speed_param():
+            move_params["speed"] = speed
+        move = await plugin.execute_command("move", move_params)
+        operations.append(
+            {"operation": "move", "ok": _success(move), "result": move}
+        )
+        if not _success(move):
+            return _rearm_failure(
+                "Tic249 limit backoff move was not confirmed",
+                operations=operations,
+            )
+
+    return {
+        "ok": True,
+        "command": "motor-rearm",
+        "requested": {"energize": True, "limit_backoff_steps": offset},
+        "confirmed": {"energized": True, "limit_backoff": bool(offset)},
+        "operations": operations,
+    }

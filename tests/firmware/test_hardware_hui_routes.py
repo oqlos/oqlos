@@ -20,6 +20,7 @@ def test_hardware_router_includes_hui_paths():
     paths = set(app.openapi()["paths"])
     assert "/api/v1/hardware/hui/actions" in paths
     assert "/api/v1/hardware/hui/al/start" in paths
+    assert "/api/v1/hardware/hui/motor/rearm" in paths
 
 
 def test_raise_if_hui_failed_raises_on_error_payload():

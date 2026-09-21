@@ -4,7 +4,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from oqlos.hardware.hui_artificial_lung import start_hui_artificial_lung, stop_hui_artificial_lung
+from oqlos.hardware.hui_artificial_lung import (
+    rearm_hui_motor,
+    start_hui_artificial_lung,
+    stop_hui_artificial_lung,
+)
 from oqlos.hardware.hui_hold import (
     HUI_ALL_VALVE_IDS,
     HUI_HOLD_PROFILES,
@@ -42,6 +46,7 @@ __all__ = [
     "get_hui_valve_specs",
     "build_hui_readiness",
     "list_hui_actions",
+    "rearm_hui_motor",
     "run_hui_valve_key",
     "shutdown_all_hui_hardware",
     "start_hui_artificial_lung",
@@ -83,6 +88,7 @@ def list_hui_actions() -> dict[str, Any]:
             "start_required_hardware": [valve_plugin, "motor-tic249"],
             "stop_required_hardware": ["motor-tic249"],
             "stop_best_effort_hardware": [valve_plugin],
+            "rearm_required_hardware": ["motor-tic249"],
         },
         "requirements": {
             "valve_actions": [valve_plugin],

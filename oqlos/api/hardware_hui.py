@@ -17,6 +17,7 @@ from oqlos.errors.c2004_catalog_generated import CATALOG
 from oqlos.hardware.hui_actions import (
     build_hui_readiness,
     list_hui_actions,
+    rearm_hui_motor,
     run_hui_valve_key,
     shutdown_all_hui_hardware,
     start_hui_artificial_lung,
@@ -219,3 +220,8 @@ async def hui_al_start() -> dict[str, Any]:
 @router.post("/hui/al/stop", summary="Stop the HUI artificial-lung action")
 async def hui_al_stop() -> dict[str, Any]:
     return await start_hui_action(stop_hui_artificial_lung)
+
+
+@router.post("/hui/motor/rearm", summary="Clear Tic249 safe-start violation and back off from an active limit switch")
+async def hui_motor_rearm() -> dict[str, Any]:
+    return await start_hui_action(rearm_hui_motor)

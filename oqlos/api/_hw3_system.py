@@ -128,6 +128,13 @@ async def hardware_hui_al_command_v3(command: str, payload: dict[str, Any] = Bod
     )
 
 
+@sub_router.post("/hui/motor/rearm")
+async def hardware_hui_motor_rearm_v3(payload: dict[str, Any] = Body(default_factory=dict)) -> dict[str, Any]:
+    from oqlos.api import hardware as hw
+
+    return await hw.hui_motor_rearm()
+
+
 @sub_router.post("/modbus/autoconfigure")
 async def hardware_modbus_autoconfigure_v3() -> dict[str, Any]:
     return await _hardware_v1_call(
