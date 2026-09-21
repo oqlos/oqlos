@@ -575,6 +575,23 @@ class M54In8OutPlugin(HardwarePlugin):
                 logger.error("StackNet control lease renewal failed; dead-man will force all-off: %s", exc)
                 return
 
+    async def _execute_http_command(self, command: str, params: dict[str, Any]) -> dict[str, Any]:
+        """Run an OQL command, re-arming a dead-man-cleared lease once.
+
+        A slow serialized call can starve the renewal for longer than the
+        lease TTL; the firmware then answers 409/ESP_ERR_INVALID_STATE until a
+        client acquires again. Re-acquiring is safe — the dead-man already
+        forced every output off and set_coil/replace_outputs are idempotent.
+        """
+        try:
+            return await self._call("execute", command, params)
+        except RuntimeError as exc:
+            if "HTTP 409" not in str(exc) and "ESP_ERR_INVALID_STATE" not in str(exc):
+                raise
+            if not await self._reacquire_http_lease():
+                raise
+            return await self._call("execute", command, params)
+
     async def _execute_set_coil(self, params: dict[str, Any]) -> dict[str, Any]:
         """Write one output; the Waveshare 'all outputs' address is honoured too."""
         if "coil" not in params:
@@ -742,7 +759,7 @@ class M54In8OutPlugin(HardwarePlugin):
                         mask |= 1 << coil
                     command = "replace_outputs"
                     params = {"mask": mask}
-                return await self._call("execute", command, params)
+                return await self._execute_http_command(command, params)
             if command == "set_coil":
                 return await self._execute_set_coil(params)
             if command == "set_valve":

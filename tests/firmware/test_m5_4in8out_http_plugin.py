@@ -367,6 +367,72 @@ async def test_http_lease_renewal_errors_out_when_reacquire_is_refused() -> None
     await plugin.disconnect()
 
 
+@pytest.mark.asyncio
+async def test_http_command_retries_once_after_lease_conflict(monkeypatch) -> None:
+    """A 409 from a dead-man-cleared lease re-arms and retries the command."""
+    plugin = M54In8OutPlugin(_config())
+    assert await plugin.connect() is True
+    client = _CoreS3.instances[-1]
+
+    conflicts = {"count": 1}
+    original_execute = client.execute
+
+    def _execute_once_conflict(command: str, params: dict[str, Any]) -> dict[str, Any]:
+        if command == "set_coil" and conflicts["count"]:
+            conflicts["count"] -= 1
+            raise RuntimeError("StackNet HTTP failed: HTTP 409: ESP_ERR_INVALID_STATE")
+        return original_execute(command, params)
+
+    monkeypatch.setattr(client, "execute", _execute_once_conflict)
+
+    result = await plugin.execute_command("set_valve", {"valve_id": "valve-5", "value": False})
+
+    assert result["success"] is True
+    assert client.commands[-1] == ("set_coil", {"coil": 4, "value": False})
+    assert client.lease_id == plugin._lease_id
+    await plugin.disconnect()
+
+
+@pytest.mark.asyncio
+async def test_http_command_fails_when_lease_reacquire_is_refused(monkeypatch) -> None:
+    plugin = M54In8OutPlugin(_config())
+    assert await plugin.connect() is True
+    client = _CoreS3.instances[-1]
+    client.lease_error = RuntimeError("lease denied")
+
+    def _execute_conflict(command: str, params: dict[str, Any]) -> dict[str, Any]:
+        raise RuntimeError("StackNet HTTP failed: HTTP 409: ESP_ERR_INVALID_STATE")
+
+    monkeypatch.setattr(client, "execute", _execute_conflict)
+
+    result = await plugin.execute_command("set_valve", {"valve_id": "valve-5", "value": False})
+
+    assert result["success"] is False
+    assert "ESP_ERR_INVALID_STATE" in result["error"]
+    await plugin.disconnect()
+
+
+@pytest.mark.asyncio
+async def test_http_command_does_not_retry_non_lease_errors(monkeypatch) -> None:
+    plugin = M54In8OutPlugin(_config())
+    assert await plugin.connect() is True
+    client = _CoreS3.instances[-1]
+
+    def _execute_offline(command: str, params: dict[str, Any]) -> dict[str, Any]:
+        raise RuntimeError("StackNet HTTP failed: HTTP 503: ESP_FAIL")
+
+    monkeypatch.setattr(client, "execute", _execute_offline)
+    acquire_calls: list[Any] = []
+    monkeypatch.setattr(client, "acquire_lease", lambda *args: acquire_calls.append(args))
+
+    result = await plugin.execute_command("set_valve", {"valve_id": "valve-5", "value": False})
+
+    assert result["success"] is False
+    assert "ESP_FAIL" in result["error"]
+    assert acquire_calls == []
+    await plugin.disconnect()
+
+
 async def _wait_for_status(plugin, status, *, timeout: float = 3.0) -> bool:
     deadline = asyncio.get_running_loop().time() + timeout
     while asyncio.get_running_loop().time() < deadline:
