@@ -540,7 +540,14 @@ async def _start_hui_hold_unlocked(gateway: Any, key: str) -> dict[str, Any]:
         # settling delay are skipped to avoid a needless pressure blip.
         already_active = _active_hold_key == hold_key
         pump_off: dict[str, Any] | None = None
-        if not already_active:
+        skip_idle = True
+        try:
+            from oqlos.hardware.hui_profiles_oql import get_hui_skip_idle_pump_off
+            skip_idle = get_hui_skip_idle_pump_off()
+        except Exception:
+            pass
+        need_pump_off = not already_active and not (skip_idle and _active_hold_key is None)
+        if need_pump_off:
             pump_off = await _set_pump_best_effort(gateway, 0.0)
             operations.append(pump_off)
         replace_started = _timing_start()
@@ -561,9 +568,17 @@ async def _start_hui_hold_unlocked(gateway: Any, key: str) -> dict[str, Any]:
                 operations=operations,
                 cleanup=cleanup,
             )
-        if not already_active:
+        stagger_ms = profile.get("valve_stagger_ms")
+        if stagger_ms is None:
+            try:
+                from oqlos.hardware.hui_profiles_oql import get_hui_default_valve_stagger_ms
+                stagger_ms = get_hui_default_valve_stagger_ms()
+            except Exception:
+                stagger_ms = int(_VALVE_STAGGER_SECONDS * 1000)
+        has_pump = bool(float(profile.get("pump_pct") or 0.0))
+        if not already_active and stagger_ms > 0 and has_pump:
             stagger_started = _timing_start()
-            stagger_seconds = profile.get("valve_stagger_ms", _VALVE_STAGGER_SECONDS * 1000) / 1000
+            stagger_seconds = stagger_ms / 1000
             await asyncio.sleep(stagger_seconds)
             operations.append(
                 _operation(

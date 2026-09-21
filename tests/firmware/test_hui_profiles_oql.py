@@ -102,8 +102,32 @@ def test_hold_stagger_is_optional_and_strict():
     sets = parse_hui_profile_sets(SAMPLE)
     assert "valve_stagger_ms" not in build_hold_profiles_from_sets(sets)["head-inflate"]
     key = "hui.hold.head-inflate.valve_stagger_ms"
-    for value in ("100", "250", "1000"):
+    for value in ("0", "100", "250", "1000", "2000"):
         assert build_hold_profiles_from_sets({**sets, key: value})["head-inflate"]["valve_stagger_ms"] == int(value)
-    for value in ("0", "99", "1001", "-1", "NaN", "250.5", "bad"):
+    for value in ("-1", "2001", "NaN", "250.5", "bad"):
         with pytest.raises(ValueError, match="valve_stagger_ms"):
             build_hold_profiles_from_sets({**sets, key: value})
+
+
+def test_timing_and_lease_config_from_sets():
+    from oqlos.hardware.hui_profiles_oql import build_timing_config_from_sets
+    sample = """
+    VERSION: 6
+    CONFIG:
+      SET 'hui.timing.valve_stagger_ms' '20'
+      SET 'hui.timing.skip_idle_pump_off' 'true'
+      SET 'hui.lease.ttl_ms' '7500'
+      SET 'hui.lease.renew_interval_seconds' '2.0'
+      SET 'hui.lease.reuse_active' 'true'
+      SET 'hui.discovery.ttl_seconds' '120'
+      SET 'hui.capability.token_ttl_seconds' '7200'
+    """
+    sets = parse_hui_profile_sets(sample)
+    cfg = build_timing_config_from_sets(sets)
+    assert cfg["valve_stagger_ms"] == 20
+    assert cfg["skip_idle_pump_off"] is True
+    assert cfg["lease_ttl_ms"] == 7500
+    assert cfg["lease_renew_interval_seconds"] == 2.0
+    assert cfg["lease_reuse_active"] is True
+    assert cfg["discovery_ttl_seconds"] == 120.0
+    assert cfg["capability_token_ttl_seconds"] == 7200

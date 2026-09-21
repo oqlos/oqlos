@@ -28,6 +28,9 @@ _SET_RE = re.compile(
 _HOLD_PREFIX = "hui.hold."
 _VALVE_PREFIX = "hui.valve."
 _LUNG_PREFIX = "hui.lung."
+_TIMING_PREFIX = "hui.timing."
+_LEASE_PREFIX = "hui.lease."
+_DISCOVERY_PREFIX = "hui.discovery."
 
 
 def _scenarios_roots() -> list[Path]:
@@ -90,7 +93,7 @@ def parse_hui_profile_sets(text: str) -> dict[str, str]:
     for match in _SET_RE.finditer(text or ""):
         key = match.group(1).strip()
         val = match.group(2).strip()
-        if key.startswith((_HOLD_PREFIX, _VALVE_PREFIX, _LUNG_PREFIX)):
+        if key.startswith((_HOLD_PREFIX, _VALVE_PREFIX, _LUNG_PREFIX, _TIMING_PREFIX, _LEASE_PREFIX, _DISCOVERY_PREFIX, "hui.", "maskauth.", "stacknet.")):
             values[key] = val
     return values
 
@@ -143,9 +146,9 @@ def build_hold_profiles_from_sets(sets: dict[str, str]) -> dict[str, dict[str, A
             try:
                 stagger = int(str(val).strip())
             except (TypeError, ValueError) as exc:
-                raise ValueError(f"{key} must be an integer in 100..1000 ms") from exc
-            if not 100 <= stagger <= 1000:
-                raise ValueError(f"{key} must be in 100..1000 ms")
+                raise ValueError(f"{key} must be an integer in 0..2000 ms") from exc
+            if not 0 <= stagger <= 2000:
+                raise ValueError(f"{key} must be in 0..2000 ms")
             bucket[field] = stagger
     profiles: dict[str, dict[str, Any]] = {}
     for hold_key, bucket in buckets.items():
@@ -270,6 +273,90 @@ def load_oql_hui_valve_specs() -> dict[str, dict[str, Any]]:
 def load_oql_hui_lung_profile() -> dict[str, Any]:
     sets = _load_sets_from_disk(_disk_signature())
     return build_lung_profile_from_sets(sets)
+
+
+def build_timing_config_from_sets(sets: dict[str, str]) -> dict[str, Any]:
+    cfg: dict[str, Any] = {
+        "valve_stagger_ms": 100,
+        "skip_idle_pump_off": True,
+        "lease_ttl_ms": 5000,
+        "lease_renew_interval_seconds": 1.5,
+        "lease_reuse_active": True,
+        "discovery_ttl_seconds": 60.0,
+        "capability_token_ttl_seconds": 3600,
+    }
+    for key, val in sets.items():
+        if key in {"hui.timing.valve_stagger_ms", "hui.valve_stagger_ms"}:
+            try:
+                v = int(str(val).strip())
+                if 0 <= v <= 2000:
+                    cfg["valve_stagger_ms"] = v
+            except (TypeError, ValueError):
+                pass
+        elif key in {"hui.timing.skip_idle_pump_off", "hui.skip_idle_pump_off"}:
+            b = _coerce_bool(val)
+            if b is not None:
+                cfg["skip_idle_pump_off"] = b
+        elif key in {"hui.lease.ttl_ms", "stacknet.lease.ttl_ms"}:
+            try:
+                v = int(str(val).strip())
+                if 500 <= v <= 60000:
+                    cfg["lease_ttl_ms"] = v
+            except (TypeError, ValueError):
+                pass
+        elif key in {"hui.lease.renew_interval_seconds", "hui.lease.renew_interval"}:
+            f = _coerce_float(val)
+            if f is not None and 0.1 <= f <= 30.0:
+                cfg["lease_renew_interval_seconds"] = f
+        elif key in {"hui.lease.reuse_active", "stacknet.lease.reuse_active"}:
+            b = _coerce_bool(val)
+            if b is not None:
+                cfg["lease_reuse_active"] = b
+        elif key in {"hui.discovery.ttl_seconds", "stacknet.discovery.ttl_seconds", "fleet.discovery_ttl_seconds"}:
+            f = _coerce_float(val)
+            if f is not None and 1.0 <= f <= 3600.0:
+                cfg["discovery_ttl_seconds"] = f
+        elif key in {"hui.capability.token_ttl_seconds", "maskauth.capability_token_ttl_seconds", "hui.token_ttl_seconds"}:
+            try:
+                v = int(str(val).strip())
+                if 30 <= v <= 86400:
+                    cfg["capability_token_ttl_seconds"] = v
+            except (TypeError, ValueError):
+                pass
+    return cfg
+
+
+def load_oql_hui_timing_config() -> dict[str, Any]:
+    sets = _load_sets_from_disk(_disk_signature())
+    return build_timing_config_from_sets(sets)
+
+
+def get_hui_default_valve_stagger_ms() -> int:
+    return load_oql_hui_timing_config()["valve_stagger_ms"]
+
+
+def get_hui_skip_idle_pump_off() -> bool:
+    return load_oql_hui_timing_config()["skip_idle_pump_off"]
+
+
+def get_hui_lease_ttl_ms() -> int:
+    return load_oql_hui_timing_config()["lease_ttl_ms"]
+
+
+def get_hui_lease_renew_interval() -> float:
+    return load_oql_hui_timing_config()["lease_renew_interval_seconds"]
+
+
+def get_hui_lease_reuse_active() -> bool:
+    return load_oql_hui_timing_config()["lease_reuse_active"]
+
+
+def get_hui_discovery_ttl_seconds() -> float:
+    return load_oql_hui_timing_config()["discovery_ttl_seconds"]
+
+
+def get_hui_capability_token_ttl_seconds() -> int:
+    return load_oql_hui_timing_config()["capability_token_ttl_seconds"]
 
 
 def clear_oql_hui_profiles_cache() -> None:

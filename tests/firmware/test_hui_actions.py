@@ -151,10 +151,20 @@ def test_hui_hold_uses_exact_stacknet_replace_without_separate_bulk_off(
     payload = run(hui_actions.start_hui_hold(gateway, "head-inflate"))
 
     assert payload["ok"] is True
+    # With skip_idle_pump_off defaulting to True, idle start skips redundant pump off
     assert gateway.calls == [
-        ("pump", 0.0),
         ("replace_valves_exact", ("valve-5", "valve-2")),
         ("pump", 70.0),
+    ]
+
+    # When transitioning from another hold, pump is stopped first
+    gateway.calls.clear()
+    payload = run(hui_actions.start_hui_hold(gateway, "lp-pwm-plus5"))
+    assert payload["ok"] is True
+    assert gateway.calls == [
+        ("pump", 0.0),
+        ("replace_valves_exact", ("valve-5",)),
+        ("pump", 50.0),
     ]
 
 
@@ -776,7 +786,16 @@ CONFIG:
     monkeypatch.setattr(hui_hold.asyncio, "sleep", sleep)
     payload = run(hui_actions.start_hui_hold(gateway, "head-inflate"))
     assert payload["ok"]
+    assert gateway.calls == [("replace_valves_exact", ("valve-5", "valve-2")), ("wait", 0.35), ("pump", 70.0)]
+
+    # When skip_idle_pump_off is false, pump off is executed even from idle
+    source.write_text(source.read_text() + "\n  SET 'hui.timing.skip_idle_pump_off' 'false'\n")
+    gateway.calls.clear()
+    monkeypatch.setattr(hui_hold, "_active_hold_key", None)
+    payload = run(hui_actions.start_hui_hold(gateway, "head-inflate"))
+    assert payload["ok"]
     assert gateway.calls == [("pump", 0.0), ("replace_valves_exact", ("valve-5", "valve-2")), ("wait", 0.35), ("pump", 70.0)]
+
     source.write_text(source.read_text().replace("'350'", "'NaN'"))
     gateway.calls.clear()
     payload = run(hui_actions.start_hui_hold(gateway, "head-inflate"))
