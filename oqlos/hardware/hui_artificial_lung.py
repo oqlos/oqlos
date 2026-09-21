@@ -338,14 +338,14 @@ def _tic249_status_fields(status: dict[str, Any] | None) -> dict[str, Any]:
     }
 
 
-def _move_supports_speed_param() -> bool:
-    """StackNet moves use the speed stored in Tic; only the sidecar takes a speed."""
+def _stepper_source() -> str:
+    """Selected stepper controller; an unreadable config defaults to the sidecar."""
     try:
         from oqlos.hardware.control_sources import source
 
-        return source("stepper") != "stacknet"
+        return source("stepper")
     except (OSError, ValueError):
-        return True
+        return "boardnet"
 
 
 async def rearm_hui_motor(gateway: Any) -> dict[str, Any]:
@@ -371,25 +371,11 @@ async def rearm_hui_motor(gateway: Any) -> dict[str, Any]:
         return _rearm_failure("motor-tic249 plugin not available")
 
     steps, speed_steps_per_second = get_hui_lung_rearm_params()
-    speed = steps_per_second_to_raw(
-        speed_steps_per_second,
-        max_steps_per_second=HUI_LUNG_MAX_SPEED_STEPS_PER_S,
-    )
 
     operations: list[dict[str, Any]] = []
     status = await plugin.execute_command("status", {})
     operations.append({"operation": "status", "ok": _success(status), "result": status})
     fields = _tic249_status_fields(status if _success(status) else None)
-
-    energize = await plugin.execute_command("energize", {"enable": True})
-    operations.append(
-        {"operation": "energize", "ok": _success(energize), "result": energize}
-    )
-    if not _success(energize):
-        return _rearm_failure(
-            "Tic249 energize/exit-safe-start was not confirmed",
-            operations=operations,
-        )
 
     if fields["forward_limit"] and fields["reverse_limit"]:
         return _rearm_failure(
@@ -404,24 +390,59 @@ async def rearm_hui_motor(gateway: Any) -> dict[str, Any]:
     elif fields["forward_limit"]:
         offset = -steps
 
-    if offset:
-        if fields["position"] is None:
-            return _rearm_failure(
-                "Tic249 position unavailable for limit backoff",
-                operations=operations,
-            )
-        move_params: dict[str, Any] = {"position": fields["position"] + offset}
-        if _move_supports_speed_param():
-            move_params["speed"] = speed
-        move = await plugin.execute_command("move", move_params)
-        operations.append(
-            {"operation": "move", "ok": _success(move), "result": move}
+    if _stepper_source() == "stacknet":
+        # The StackNet bounded-motion engine performs deenergize → energize →
+        # exit-safe-start → limit-checked move atomically; the legacy energize
+        # and set_target_position actions never clear a safe-start violation.
+        command, params = (
+            ("bounded_move", {"offset": offset, "speed": speed_steps_per_second})
+            if offset
+            else ("arm", {})
         )
-        if not _success(move):
+        motion = await plugin.execute_command(command, params)
+        operations.append(
+            {"operation": command, "ok": _success(motion), "result": motion}
+        )
+        if not _success(motion):
             return _rearm_failure(
-                "Tic249 limit backoff move was not confirmed",
+                f"Tic249 {command} was not confirmed",
                 operations=operations,
             )
+    else:
+        energize = await plugin.execute_command("energize", {"enable": True})
+        operations.append(
+            {"operation": "energize", "ok": _success(energize), "result": energize}
+        )
+        if not _success(energize):
+            return _rearm_failure(
+                "Tic249 energize/exit-safe-start was not confirmed",
+                operations=operations,
+            )
+
+        if offset:
+            if fields["position"] is None:
+                return _rearm_failure(
+                    "Tic249 position unavailable for limit backoff",
+                    operations=operations,
+                )
+            move = await plugin.execute_command(
+                "move",
+                {
+                    "position": fields["position"] + offset,
+                    "speed": steps_per_second_to_raw(
+                        speed_steps_per_second,
+                        max_steps_per_second=HUI_LUNG_MAX_SPEED_STEPS_PER_S,
+                    ),
+                },
+            )
+            operations.append(
+                {"operation": "move", "ok": _success(move), "result": move}
+            )
+            if not _success(move):
+                return _rearm_failure(
+                    "Tic249 limit backoff move was not confirmed",
+                    operations=operations,
+                )
 
     return {
         "ok": True,

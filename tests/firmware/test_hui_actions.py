@@ -622,8 +622,9 @@ def test_hui_motor_rearm_backs_off_forward_limit() -> None:
     assert plugin.commands[2][1]["position"] == -1140
 
 
-def test_hui_motor_rearm_stacknet_fields_and_no_speed_param(monkeypatch) -> None:
-    """StackNet status uses forward_limit/current_position and rejects move speed."""
+def test_hui_motor_rearm_stacknet_uses_bounded_move(monkeypatch) -> None:
+    """StackNet rearm must use the bounded-motion engine: legacy energize and
+    set_target_position never clear a safe-start violation."""
     monkeypatch.setattr(
         "oqlos.hardware.control_sources.source", lambda device: "stacknet"
     )
@@ -635,9 +636,26 @@ def test_hui_motor_rearm_stacknet_fields_and_no_speed_param(monkeypatch) -> None
     payload = run(hui_actions.rearm_hui_motor(gateway))
 
     assert payload["ok"] is True
-    move_command, move_params = plugin.commands[2]
-    assert move_command == "move"
-    assert move_params == {"position": -458}
+    assert [command for command, _ in plugin.commands] == [
+        "status",
+        "bounded_move",
+    ]
+    assert plugin.commands[1][1] == {"offset": -500, "speed": 2000}
+
+
+def test_hui_motor_rearm_stacknet_without_active_limit_arms(monkeypatch) -> None:
+    monkeypatch.setattr(
+        "oqlos.hardware.control_sources.source", lambda device: "stacknet"
+    )
+    plugin = FakeTic249RearmPlugin({"current_position": 42})
+    gateway = FakeGateway(real=True, plugin=plugin)
+
+    payload = run(hui_actions.rearm_hui_motor(gateway))
+
+    assert payload["ok"] is True
+    assert payload["confirmed"] == {"energized": True, "limit_backoff": False}
+    assert [command for command, _ in plugin.commands] == ["status", "arm"]
+    assert plugin.commands[1][1] == {}
 
 
 def test_hui_motor_rearm_without_active_limit_only_energizes() -> None:
@@ -662,7 +680,7 @@ def test_hui_motor_rearm_fails_when_both_limits_active() -> None:
     assert payload["ok"] is False
     assert payload["status_code"] == 503
     assert "Both limit switches" in payload["error"]
-    assert [command for command, _ in plugin.commands] == ["status", "energize"]
+    assert [command for command, _ in plugin.commands] == ["status"]
 
 
 def test_hui_motor_rearm_uses_profile_steps_and_speed(monkeypatch) -> None:

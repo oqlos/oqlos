@@ -88,6 +88,21 @@ async def execute(device: str, command: str, params: dict) -> dict:
                 raise ValueError("StackNet używa prędkości zapisanej w Tic; zmiana prędkości ruchu wymaga BoardNet.")
             data = await request(device, {"action": "set_target_position", "position": position})
             data = {**data, "position": position}
+        elif command in {"arm", "bounded_move"}:
+            # The bounded motion engine de-energizes, energizes, exits safe
+            # start and only then moves — the legacy energize/set_target
+            # actions never clear a safe-start violation.
+            body: dict = {"action": command}
+            if command == "bounded_move":
+                offset = params.get("offset")
+                if type(offset) is not int or not -10000 <= offset <= 10000 or offset == 0:
+                    raise ValueError("Offset bounded_move musi być niezerową liczbą z zakresu ±10000 kroków.")
+                speed = params.get("speed")
+                if type(speed) is not int or not 1 <= speed <= 10000:
+                    raise ValueError("Prędkość bounded_move musi wynosić 1–10000 kroków/s.")
+                body.update({"offset": offset, "speed": speed})
+            data = await request(device, body)
+            data = {**data, "motion": command}
         else:
             raise ValueError("StackNet nie obsługuje cykli sztucznego płuca ani sekwencji skoków. Wybierz BoardNet.")
         return {"success": True, "data": data}

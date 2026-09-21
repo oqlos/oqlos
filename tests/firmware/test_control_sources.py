@@ -111,6 +111,36 @@ async def test_stacknet_stepper_stop_and_unsupported_cycles(monkeypatch):
     request.assert_not_awaited()
 
 
+@pytest.mark.asyncio
+async def test_stacknet_stepper_arm_and_bounded_move(monkeypatch):
+    request = AsyncMock(return_value={"ok": True, "operation": 7})
+    monkeypatch.setattr(stacknet_motor, "request", request)
+
+    result = await stacknet_motor.execute("stepper", "arm", {})
+    assert result["success"] is True
+    request.assert_awaited_once_with("stepper", {"action": "arm"})
+
+    request.reset_mock()
+    result = await stacknet_motor.execute(
+        "stepper", "bounded_move", {"offset": -500, "speed": 2000}
+    )
+    assert result["success"] is True
+    request.assert_awaited_once_with(
+        "stepper", {"action": "bounded_move", "offset": -500, "speed": 2000}
+    )
+
+
+@pytest.mark.asyncio
+async def test_stacknet_stepper_bounded_move_rejects_bad_params(monkeypatch):
+    request = AsyncMock()
+    monkeypatch.setattr(stacknet_motor, "request", request)
+
+    for params in ({"offset": 0, "speed": 2000}, {"offset": 500, "speed": 0}, {"offset": 20000, "speed": 1}):
+        result = await stacknet_motor.execute("stepper", "bounded_move", params)
+        assert result["success"] is False
+    request.assert_not_awaited()
+
+
 @pytest.mark.parametrize("power", [-1, 101, float("nan"), True])
 @pytest.mark.asyncio
 async def test_invalid_pump_power_never_writes(monkeypatch, power):
