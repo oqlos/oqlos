@@ -13,7 +13,7 @@ from oqlos.hardware.valve_controller import gateway_valve_controllers
 
 HUI_HOLD_PROFILES: dict[str, dict[str, Any]] = {
     "head-inflate": {"valves_on": ("valve-5", "valve-2"), "pump_pct": 70.0},
-    "head-deflate": {"valves_on": ("valve-3", "valve-6"), "pump_pct": 0.0},
+    "head-deflate": {"valves_on": ("valve-3", "valve-6"), "pump_pct": 70.0},
     "lp-pwm-plus5": {"valves_on": ("valve-5",), "pump_pct": 50.0},
     "lp-pwm-plus10": {"valves_on": ("valve-5",), "pump_pct": 100.0},
     "lp-pwm-minus5": {"valves_on": ("valve-6",), "pump_pct": 50.0},
@@ -37,7 +37,9 @@ HUI_ALL_VALVE_IDS = (
 
 _VALVE_STAGGER_SECONDS = 0.1
 _active_hold_key: str | None = None
+_active_hold_started_at: int | None = None
 _HUI_OPERATION_LOCK = asyncio.Lock()
+_interrupt_hold_wait_event = asyncio.Event()
 
 
 def _timing_start() -> tuple[str, int]:
@@ -321,8 +323,9 @@ async def _shutdown_all_hui_hardware_unlocked(
     *,
     modbus_prechecked: bool = False,
 ) -> dict[str, Any]:
-    global _active_hold_key
+    global _active_hold_key, _active_hold_started_at
     _active_hold_key = None
+    _active_hold_started_at = None
     operations: list[dict[str, Any]] = [await _set_pump_best_effort(gateway, 0.0)]
 
     # A disconnected Modbus plugin used to trigger the same reconnect probe for
@@ -398,12 +401,14 @@ async def _shutdown_all_hui_hardware_unlocked(
 async def shutdown_all_hui_hardware(gateway: Any) -> dict[str, Any]:
     total_started = _timing_start()
     wait_started = _timing_start()
+    _interrupt_hold_wait_event.set()
     async with _HUI_OPERATION_LOCK:
         lock_acquired_at = datetime.now(timezone.utc).isoformat()
         lock_wait_duration_ms = round(
             (perf_counter_ns() - wait_started[1]) / 1_000_000, 3
         )
         payload = await _shutdown_all_hui_hardware_unlocked(gateway)
+        _interrupt_hold_wait_event.clear()
     payload["lock_wait_duration_ms"] = lock_wait_duration_ms
     return _append_action_timing(
         payload,
@@ -622,6 +627,7 @@ async def _start_hui_hold_unlocked(gateway: Any, key: str) -> dict[str, Any]:
         return pump_failure
 
     _active_hold_key = hold_key
+    _active_hold_started_at = perf_counter_ns()
     return {
         "ok": True,
         "command": "hold_start",
@@ -636,12 +642,14 @@ async def _start_hui_hold_unlocked(gateway: Any, key: str) -> dict[str, Any]:
 async def start_hui_hold(gateway: Any, key: str) -> dict[str, Any]:
     total_started = _timing_start()
     wait_started = _timing_start()
+    _interrupt_hold_wait_event.set()
     async with _HUI_OPERATION_LOCK:
         lock_acquired_at = datetime.now(timezone.utc).isoformat()
         lock_wait_duration_ms = round(
             (perf_counter_ns() - wait_started[1]) / 1_000_000, 3
         )
         payload = await _start_hui_hold_unlocked(gateway, key)
+        _interrupt_hold_wait_event.clear()
     payload["lock_wait_duration_ms"] = lock_wait_duration_ms
     return _append_action_timing(
         payload,
@@ -660,11 +668,12 @@ async def _stop_hui_hold_unlocked(
     silent Modbus slave cannot hang the HTTP request until the C2004 proxy
     maps the stall to C2004-NET-0003 / 504.
     """
-    global _active_hold_key
+    global _active_hold_key, _active_hold_started_at
     requested_key = str(key or _active_hold_key or "").strip().lower()
 
     stopped_key = _active_hold_key
     _active_hold_key = None
+    _active_hold_started_at = None
     # Always issue the independently controlled pump stop before checking the
     # valve controller. _shutdown... then probes modbus-io once and returns a
     # structured partial result instead of leaving the pump command unsent.
@@ -702,6 +711,33 @@ async def stop_hui_hold(gateway: Any, key: str | None = None) -> dict[str, Any]:
         lock_wait_duration_ms = round(
             (perf_counter_ns() - wait_started[1]) / 1_000_000, 3
         )
+        min_hold_ms = 0
+        try:
+            from oqlos.hardware.hui_profiles_oql import get_hui_min_hold_ms
+
+            min_hold_ms = get_hui_min_hold_ms()
+        except Exception:
+            pass
+
+        if (
+            min_hold_ms > 0
+            and _active_hold_started_at is not None
+            and _active_hold_key is not None
+            and (key is None or str(key).strip().lower() == _active_hold_key)
+        ):
+            elapsed_ms = (perf_counter_ns() - _active_hold_started_at) / 1_000_000
+            remaining_s = (min_hold_ms - elapsed_ms) / 1000.0
+            if remaining_s > 0:
+                try:
+                    await asyncio.wait_for(
+                        _interrupt_hold_wait_event.wait(),
+                        timeout=remaining_s,
+                    )
+                except asyncio.TimeoutError:
+                    pass
+                finally:
+                    _interrupt_hold_wait_event.clear()
+
         payload = await _stop_hui_hold_unlocked(gateway, key)
     payload["lock_wait_duration_ms"] = lock_wait_duration_ms
     return _append_action_timing(

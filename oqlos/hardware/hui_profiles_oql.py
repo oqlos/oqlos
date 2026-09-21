@@ -280,6 +280,7 @@ def load_oql_hui_lung_profile() -> dict[str, Any]:
 def build_timing_config_from_sets(sets: dict[str, str]) -> dict[str, Any]:
     cfg: dict[str, Any] = {
         "valve_stagger_ms": 100,
+        "min_hold_ms": 0,
         "skip_idle_pump_off": True,
         "lease_ttl_ms": 5000,
         "lease_renew_interval_seconds": 1.5,
@@ -293,6 +294,13 @@ def build_timing_config_from_sets(sets: dict[str, str]) -> dict[str, Any]:
                 v = int(str(val).strip())
                 if 0 <= v <= 2000:
                     cfg["valve_stagger_ms"] = v
+            except (TypeError, ValueError):
+                pass
+        elif key in {"hui.timing.min_hold_ms", "hui.min_hold_ms"}:
+            try:
+                v = int(str(val).strip())
+                if 0 <= v <= 10000:
+                    cfg["min_hold_ms"] = v
             except (TypeError, ValueError):
                 pass
         elif key in {"hui.timing.skip_idle_pump_off", "hui.skip_idle_pump_off"}:
@@ -335,6 +343,10 @@ def load_oql_hui_timing_config() -> dict[str, Any]:
 
 def get_hui_default_valve_stagger_ms() -> int:
     return load_oql_hui_timing_config()["valve_stagger_ms"]
+
+
+def get_hui_min_hold_ms() -> int:
+    return load_oql_hui_timing_config()["min_hold_ms"]
 
 
 def get_hui_skip_idle_pump_off() -> bool:
