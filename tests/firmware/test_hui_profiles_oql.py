@@ -115,6 +115,7 @@ def test_timing_and_lease_config_from_sets():
     VERSION: 6
     CONFIG:
       SET 'hui.timing.valve_stagger_ms' '20'
+      SET 'hui.timing.min_hold_ms' '1500'
       SET 'hui.timing.skip_idle_pump_off' 'true'
       SET 'hui.lease.ttl_ms' '7500'
       SET 'hui.lease.renew_interval_seconds' '2.0'
@@ -125,6 +126,7 @@ def test_timing_and_lease_config_from_sets():
     sets = parse_hui_profile_sets(sample)
     cfg = build_timing_config_from_sets(sets)
     assert cfg["valve_stagger_ms"] == 20
+    assert cfg["min_hold_ms"] == 1500
     assert cfg["skip_idle_pump_off"] is True
     assert cfg["lease_ttl_ms"] == 7500
     assert cfg["lease_renew_interval_seconds"] == 2.0

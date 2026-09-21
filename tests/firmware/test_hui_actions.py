@@ -25,8 +25,14 @@ def run(coro):
 @pytest.fixture(autouse=True)
 def _reset_hui_hold_state():
     hui_hold._active_hold_key = None  # noqa: SLF001
+    hui_hold._active_hold_started_at = None  # noqa: SLF001
+    hui_hold._interrupt_hold_wait_event = None  # noqa: SLF001
+    hui_hold._HUI_OPERATION_LOCK = None  # noqa: SLF001
     yield
     hui_hold._active_hold_key = None  # noqa: SLF001
+    hui_hold._active_hold_started_at = None  # noqa: SLF001
+    hui_hold._interrupt_hold_wait_event = None  # noqa: SLF001
+    hui_hold._HUI_OPERATION_LOCK = None  # noqa: SLF001
 
 
 class FakeGateway:
@@ -955,3 +961,80 @@ def test_m5_output_aliases_cover_all_sixteen_channels():
         assert normalize_modbus_valve_id(f"valve-{channel}", "io-m5-4in8out") == f"valve-{channel}"
     with pytest.raises(HardwareProxyError):
         normalize_modbus_valve_id("valve-17", "io-m5-4in8out")
+
+
+def test_head_deflate_profile_pump_percent():
+    profiles = hui_hold.get_hui_hold_profiles()
+    assert profiles["head-deflate"]["pump_pct"] == 70.0
+    assert profiles["head-deflate"]["valves_on"] == ("valve-3", "valve-6")
+
+
+def test_stop_hui_hold_honors_min_hold_ms(monkeypatch):
+    import time
+    from oqlos.hardware import hui_profiles_oql
+
+    monkeypatch.setattr(hui_profiles_oql, "get_hui_min_hold_ms", lambda: 150)
+    gateway = FakeGateway()
+
+    start_res = run(hui_hold.start_hui_hold(gateway, "head-inflate"))
+    assert start_res["ok"]
+
+    t0 = time.perf_counter()
+    stop_res = run(hui_hold.stop_hui_hold(gateway, "head-inflate"))
+    elapsed = time.perf_counter() - t0
+
+    assert stop_res["ok"]
+    # Should have waited at least ~100ms (accounting for test runner timing jitter)
+    assert elapsed >= 0.10
+
+
+def test_stop_hui_hold_interrupted_by_new_start(monkeypatch):
+    import time
+    from oqlos.hardware import hui_profiles_oql
+
+    monkeypatch.setattr(hui_profiles_oql, "get_hui_min_hold_ms", lambda: 3000)
+    gateway = FakeGateway()
+
+    async def scenario():
+        start1 = await hui_hold.start_hui_hold(gateway, "lp-pwm-plus10")
+        assert start1["ok"]
+
+        t0 = time.perf_counter()
+        # Launch stop in background
+        stop_task = asyncio.create_task(hui_hold.stop_hui_hold(gateway, "lp-pwm-plus10"))
+        await asyncio.sleep(0.05)
+
+        # Launch new start while stop is waiting
+        start2_task = asyncio.create_task(hui_hold.start_hui_hold(gateway, "lp-pwm-minus10"))
+
+        await asyncio.gather(stop_task, start2_task)
+        elapsed = time.perf_counter() - t0
+        # Interrupted early, should take way less than 3 seconds
+        assert elapsed < 1.0
+
+    run(scenario())
+
+
+def test_stop_hui_hold_interrupted_by_emergency_shutdown(monkeypatch):
+    import time
+    from oqlos.hardware import hui_profiles_oql
+
+    monkeypatch.setattr(hui_profiles_oql, "get_hui_min_hold_ms", lambda: 3000)
+    gateway = FakeGateway()
+
+    async def scenario():
+        start1 = await hui_hold.start_hui_hold(gateway, "lp-pwm-plus10")
+        assert start1["ok"]
+
+        t0 = time.perf_counter()
+        stop_task = asyncio.create_task(hui_hold.stop_hui_hold(gateway, "lp-pwm-plus10"))
+        await asyncio.sleep(0.05)
+
+        shutdown_task = asyncio.create_task(hui_hold.shutdown_all_hui_hardware(gateway))
+
+        await asyncio.gather(stop_task, shutdown_task)
+        elapsed = time.perf_counter() - t0
+        assert elapsed < 1.0
+
+    run(scenario())
+

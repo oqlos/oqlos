@@ -38,8 +38,36 @@ HUI_ALL_VALVE_IDS = (
 _VALVE_STAGGER_SECONDS = 0.1
 _active_hold_key: str | None = None
 _active_hold_started_at: int | None = None
-_HUI_OPERATION_LOCK = asyncio.Lock()
-_interrupt_hold_wait_event = asyncio.Event()
+_HUI_OPERATION_LOCK: asyncio.Lock | None = None
+_interrupt_hold_wait_event: asyncio.Event | None = None
+
+
+def _get_operation_lock() -> asyncio.Lock:
+    global _HUI_OPERATION_LOCK
+    try:
+        current_loop = asyncio.get_running_loop()
+    except RuntimeError:
+        current_loop = None
+
+    if _HUI_OPERATION_LOCK is None:
+        _HUI_OPERATION_LOCK = asyncio.Lock()
+    elif _HUI_OPERATION_LOCK._loop is not None and _HUI_OPERATION_LOCK._loop is not current_loop:
+        _HUI_OPERATION_LOCK = asyncio.Lock()
+    return _HUI_OPERATION_LOCK
+
+
+def _get_interrupt_event() -> asyncio.Event:
+    global _interrupt_hold_wait_event
+    try:
+        current_loop = asyncio.get_running_loop()
+    except RuntimeError:
+        current_loop = None
+
+    if _interrupt_hold_wait_event is None:
+        _interrupt_hold_wait_event = asyncio.Event()
+    elif _interrupt_hold_wait_event._loop is not None and _interrupt_hold_wait_event._loop is not current_loop:
+        _interrupt_hold_wait_event = asyncio.Event()
+    return _interrupt_hold_wait_event
 
 
 def _timing_start() -> tuple[str, int]:
@@ -401,14 +429,14 @@ async def _shutdown_all_hui_hardware_unlocked(
 async def shutdown_all_hui_hardware(gateway: Any) -> dict[str, Any]:
     total_started = _timing_start()
     wait_started = _timing_start()
-    _interrupt_hold_wait_event.set()
-    async with _HUI_OPERATION_LOCK:
+    _get_interrupt_event().set()
+    async with _get_operation_lock():
         lock_acquired_at = datetime.now(timezone.utc).isoformat()
         lock_wait_duration_ms = round(
             (perf_counter_ns() - wait_started[1]) / 1_000_000, 3
         )
         payload = await _shutdown_all_hui_hardware_unlocked(gateway)
-        _interrupt_hold_wait_event.clear()
+        _get_interrupt_event().clear()
     payload["lock_wait_duration_ms"] = lock_wait_duration_ms
     return _append_action_timing(
         payload,
@@ -487,7 +515,7 @@ async def _engage_hold_pump_if_needed(
 
 
 async def _start_hui_hold_unlocked(gateway: Any, key: str) -> dict[str, Any]:
-    global _active_hold_key
+    global _active_hold_key, _active_hold_started_at
     hold_key = str(key or "").strip().lower()
     profile_started = _timing_start()
     try:
@@ -642,14 +670,14 @@ async def _start_hui_hold_unlocked(gateway: Any, key: str) -> dict[str, Any]:
 async def start_hui_hold(gateway: Any, key: str) -> dict[str, Any]:
     total_started = _timing_start()
     wait_started = _timing_start()
-    _interrupt_hold_wait_event.set()
-    async with _HUI_OPERATION_LOCK:
+    _get_interrupt_event().set()
+    async with _get_operation_lock():
         lock_acquired_at = datetime.now(timezone.utc).isoformat()
         lock_wait_duration_ms = round(
             (perf_counter_ns() - wait_started[1]) / 1_000_000, 3
         )
         payload = await _start_hui_hold_unlocked(gateway, key)
-        _interrupt_hold_wait_event.clear()
+        _get_interrupt_event().clear()
     payload["lock_wait_duration_ms"] = lock_wait_duration_ms
     return _append_action_timing(
         payload,
@@ -706,7 +734,7 @@ async def _stop_hui_hold_unlocked(
 async def stop_hui_hold(gateway: Any, key: str | None = None) -> dict[str, Any]:
     total_started = _timing_start()
     wait_started = _timing_start()
-    async with _HUI_OPERATION_LOCK:
+    async with _get_operation_lock():
         lock_acquired_at = datetime.now(timezone.utc).isoformat()
         lock_wait_duration_ms = round(
             (perf_counter_ns() - wait_started[1]) / 1_000_000, 3
@@ -730,13 +758,13 @@ async def stop_hui_hold(gateway: Any, key: str | None = None) -> dict[str, Any]:
             if remaining_s > 0:
                 try:
                     await asyncio.wait_for(
-                        _interrupt_hold_wait_event.wait(),
+                        _get_interrupt_event().wait(),
                         timeout=remaining_s,
                     )
                 except asyncio.TimeoutError:
                     pass
                 finally:
-                    _interrupt_hold_wait_event.clear()
+                    _get_interrupt_event().clear()
 
         payload = await _stop_hui_hold_unlocked(gateway, key)
     payload["lock_wait_duration_ms"] = lock_wait_duration_ms
