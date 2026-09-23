@@ -14,6 +14,7 @@ Keys:
 
 from __future__ import annotations
 
+import json
 import os
 import re
 from functools import lru_cache
@@ -198,12 +199,12 @@ def build_lung_profile_from_sets(sets: dict[str, str]) -> dict[str, Any]:
     """Build a partial artificial-lung profile from human-readable OQL values."""
     profile: dict[str, Any] = {}
     text_fields = {"valve_id", "direction", "start_direction", "limit_mode"}
+    non_negative_integer_fields = {"cycles"}
     positive_integer_fields = {
         "steps",
         "stroke_steps",
         "speed_steps_per_second",
         "max_steps_per_second",
-        "cycles",
         "rearm_steps",
         "rearm_speed_steps_per_second",
     }
@@ -216,6 +217,13 @@ def build_lung_profile_from_sets(sets: dict[str, str]) -> dict[str, Any]:
         if field in text_fields:
             value = str(val or "").strip()
             if value:
+                profile[field] = value
+        elif field in non_negative_integer_fields:
+            try:
+                value = int(str(val).strip())
+            except (TypeError, ValueError):
+                continue
+            if value >= 0:
                 profile[field] = value
         elif field in positive_integer_fields:
             try:
@@ -235,6 +243,61 @@ def build_lung_profile_from_sets(sets: dict[str, str]) -> dict[str, Any]:
     return profile
 
 
+def _load_sets_from_db() -> dict[str, str]:
+    db_url = os.getenv("CONFIG_DATABASE_URL") or os.getenv("DATABASE_URL")
+    if not db_url:
+        return {}
+    try:
+        from sqlalchemy import create_engine, text
+        engine = create_engine(db_url)
+        with engine.connect() as conn:
+            row = conn.execute(text("SELECT data FROM config_sections WHERE section = 'hardware-hui-config'")).fetchone()
+            if not row or not row[0]:
+                return {}
+            data = json.loads(row[0])
+            db_sets: dict[str, str] = {}
+            if "timing" in data and isinstance(data["timing"], dict):
+                t = data["timing"]
+                if "min_hold_ms" in t:
+                    db_sets["hui.timing.min_hold_ms"] = str(t["min_hold_ms"])
+                if "valve_stagger_ms" in t:
+                    db_sets["hui.timing.valve_stagger_ms"] = str(t["valve_stagger_ms"])
+                if "skip_idle_pump_off" in t:
+                    db_sets["hui.timing.skip_idle_pump_off"] = str(t["skip_idle_pump_off"])
+            if "lease" in data and isinstance(data["lease"], dict):
+                l = data["lease"]
+                if "ttl_ms" in l:
+                    db_sets["hui.lease.ttl_ms"] = str(l["ttl_ms"])
+                if "renew_interval_seconds" in l:
+                    db_sets["hui.lease.renew_interval_seconds"] = str(l["renew_interval_seconds"])
+                if "reuse_active" in l:
+                    db_sets["hui.lease.reuse_active"] = str(l["reuse_active"])
+            if "discovery" in data and isinstance(data["discovery"], dict):
+                d = data["discovery"]
+                if "ttl_seconds" in d:
+                    db_sets["hui.discovery.ttl_seconds"] = str(d["ttl_seconds"])
+            if "capability" in data and isinstance(data["capability"], dict):
+                c = data["capability"]
+                if "token_ttl_seconds" in c:
+                    db_sets["hui.capability.token_ttl_seconds"] = str(c["token_ttl_seconds"])
+            if "lung" in data and isinstance(data["lung"], dict):
+                for k, v in data["lung"].items():
+                    db_sets[f"hui.lung.{k}"] = str(v)
+            if "holds" in data and isinstance(data["holds"], dict):
+                for hold_name, hold_cfg in data["holds"].items():
+                    if isinstance(hold_cfg, dict):
+                        if "valves" in hold_cfg:
+                            valves_val = hold_cfg["valves"]
+                            if isinstance(valves_val, list):
+                                valves_val = ",".join(str(x) for x in valves_val)
+                            db_sets[f"hui.hold.{hold_name}.valves_on"] = str(valves_val)
+                        if "pump_pct" in hold_cfg:
+                            db_sets[f"hui.hold.{hold_name}.pump_pct"] = str(hold_cfg["pump_pct"])
+            return db_sets
+    except Exception:
+        return {}
+
+
 @lru_cache(maxsize=8)
 def _load_sets_from_disk(signature: str) -> dict[str, str]:
     # signature forces cache bust when mtimes change
@@ -248,6 +311,8 @@ def _load_sets_from_disk(signature: str) -> dict[str, str]:
         except OSError:
             continue
         merged.update(parse_hui_profile_sets(text))
+    # Overlay dynamic system configuration from database when available
+    merged.update(_load_sets_from_db())
     return merged
 
 

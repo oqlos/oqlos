@@ -62,6 +62,19 @@ def test_parse_and_build_lung_profile() -> None:
     }
 
 
+def test_parse_and_build_lung_profile_continuous_cycles() -> None:
+    sample_continuous = """
+    CONFIG:
+      SET 'hui.lung.cycles' '0'
+      SET 'hui.lung.valve_id' 'valve-8'
+    """
+    sets = parse_hui_profile_sets(sample_continuous)
+    profile = build_lung_profile_from_sets(sets)
+    assert profile["cycles"] == 0
+    assert profile["valve_id"] == "valve-8"
+
+
+
 def test_oql_profiles_override_normalized_config_and_defaults(tmp_path: Path, monkeypatch) -> None:
     oql_file = tmp_path / "hui-profiles.oql"
     oql_file.write_text(SAMPLE, encoding="utf-8")
@@ -133,3 +146,39 @@ def test_timing_and_lease_config_from_sets():
     assert cfg["lease_reuse_active"] is True
     assert cfg["discovery_ttl_seconds"] == 120.0
     assert cfg["capability_token_ttl_seconds"] == 7200
+
+
+def test_oql_profiles_load_from_db_overlay(tmp_path: Path, monkeypatch) -> None:
+    import json
+    import sqlite3
+    db_file = tmp_path / "test_config.db"
+    conn = sqlite3.connect(str(db_file))
+    conn.execute("CREATE TABLE config_sections (section TEXT PRIMARY KEY, data TEXT, updated_at TEXT)")
+    payload = {
+        "timing": {"min_hold_ms": 42, "valve_stagger_ms": 15},
+        "lease": {"ttl_ms": 4500},
+        "lung": {"cycles": 0, "stroke_steps": 9999},
+        "holds": {"head-inflate": {"valves": "1,2", "pump_pct": 88.0}},
+    }
+    conn.execute("INSERT INTO config_sections VALUES ('hardware-hui-config', ?, '2026-09-23T00:00:00Z')", (json.dumps(payload),))
+    conn.commit()
+    conn.close()
+
+    monkeypatch.setenv("DATABASE_URL", f"sqlite:///{db_file}")
+    clear_oql_hui_profiles_cache()
+    from oqlos.hardware.hui_profiles_oql import load_oql_hui_timing_config, load_oql_hui_hold_profiles, load_oql_hui_lung_profile
+    timing = load_oql_hui_timing_config()
+    assert timing["min_hold_ms"] == 42
+    assert timing["valve_stagger_ms"] == 15
+    assert timing["lease_ttl_ms"] == 4500
+
+    holds = load_oql_hui_hold_profiles()
+    assert holds["head-inflate"]["valves_on"] == ("1", "2")
+    assert holds["head-inflate"]["pump_pct"] == 88.0
+
+    lung = load_oql_hui_lung_profile()
+    assert lung["cycles"] == 0
+    assert lung["stroke_steps"] == 9999
+
+    clear_oql_hui_profiles_cache()
+
