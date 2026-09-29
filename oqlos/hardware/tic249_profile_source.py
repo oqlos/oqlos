@@ -75,7 +75,7 @@ def _build_nvm_profile(
 ) -> dict[str, Any]:
     pins: dict[str, dict[str, bool]] = {}
     settings_file: dict[str, str] = {}
-    for pin in ("scl", "sda"):
+    for pin in ("tx", "rx"):
         direction = "forward" if pin == forward_pin else "reverse"
         pins[pin] = {
             "limit_switch_forward": direction == "forward",
@@ -84,17 +84,17 @@ def _build_nvm_profile(
             "active_high": active_high,
         }
         tokens = []
-        if pull_up:
+        if pull_up and pin in {"scl", "sda"}:
             tokens.append("pullup")
         if active_high:
             tokens.append("active_high")
         tokens.append(f"limit_switch_{direction}")
         settings_file[f"{pin}_config"] = " ".join(tokens)
     return {
-        "profile_id": "boardnet-tic249-limit-switches-v1",
+        "profile_id": "boardnet-tic249-limit-switches-v2",
         "description": (
-            "BoardNet artificial lung: SCL=limit forward, SDA=limit reverse, "
-            "pull-up ON, active low (fail-safe NC)"
+            "BoardNet artificial lung: TX=limit forward, RX=limit reverse, "
+            "always-pulled-up inputs, active high (fail-safe NC)"
         ),
         "product": "T249",
         "pins": pins,
@@ -140,8 +140,8 @@ def validate_tic249_profile_source(content: str) -> dict[str, Any]:
     current_limit_code = _current_ma_to_code(current_limit_ma)
     forward_pin = values["limit_switch_forward_pin"].lower()
     reverse_pin = values["limit_switch_reverse_pin"].lower()
-    if forward_pin not in {"scl", "sda"} or reverse_pin not in {"scl", "sda"}:
-        raise Tic249ProfileSourceError("limit-switch pins must be scl or sda")
+    if forward_pin not in {"tx", "rx"} or reverse_pin not in {"tx", "rx"}:
+        raise Tic249ProfileSourceError("limit-switch pins must be tx or rx")
     if forward_pin == reverse_pin:
         raise Tic249ProfileSourceError(
             "forward and reverse limit switches must use different pins"
@@ -161,14 +161,14 @@ def validate_tic249_profile_source(content: str) -> dict[str, Any]:
             "deenergize_on_stop and deenergize_on_startup must remain true"
         )
     if (forward_pin, reverse_pin, pull_up, active_high) != (
-        "scl",
-        "sda",
+        "tx",
+        "rx",
         True,
-        False,
+        True,
     ):
         raise Tic249ProfileSourceError(
-            "BoardNet requires SCL=forward, SDA=reverse, pull-up=true and "
-            "active_high=false"
+            "BoardNet requires TX=forward, RX=reverse, pull-up=true and "
+            "active_high=true"
         )
     try:
         limit_reaction_delay_ms = int(values["limit_reaction_delay_ms"])

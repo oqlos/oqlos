@@ -37,7 +37,7 @@ def test_interpret_nvm_validation_preserves_evidence_precedence(payload, expecte
 async def test_check_tic249_nvm_profile_accepts_ok_response(monkeypatch):
     class FakeResponse:
         def json(self):
-            return {"ok": True, "profile_id": "boardnet-tic249-limit-switches-v1"}
+            return {"ok": True, "profile_id": "boardnet-tic249-limit-switches-v2"}
 
     class FakeClient:
         async def __aenter__(self):
@@ -54,7 +54,7 @@ async def test_check_tic249_nvm_profile_accepts_ok_response(monkeypatch):
 
     result = await check_tic249_nvm_profile()
     assert result["ok"] is True
-    assert result["profile_id"] == "boardnet-tic249-limit-switches-v1"
+    assert result["profile_id"] == "boardnet-tic249-limit-switches-v2"
 
 
 @pytest.mark.asyncio

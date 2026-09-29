@@ -295,7 +295,7 @@ CATALOG: dict[str, ErrorEntry] = {
         classification='safety', confidentiality='restricted',
         retryable=False, owner='owner://domain/hardware', title='Tic249 NVM limit-switch pin configuration mismatch',
         message='Pololu Tic T249 NVM pin functions do not match the BoardNet limit-switch profile', message_i18n=None,
-        remediation='Stop hw-tic249.service, run `python provision_cli.py apply --yes` in rpi-motor-tic249 (or bundled ticcmd --settings), then restart the sidecar. Expected: SCL=limit forward and SDA=limit reverse with pull-up enabled and active-low polarity.', auto_repair={'enabled': False, 'risk': 'high'},
+        remediation='Stop hw-tic249.service, run `python provision_cli.py apply --yes` in rpi-motor-tic249 (or bundled ticcmd --settings), then restart the sidecar. Expected: TX=limit forward and RX=limit reverse with the always-on pull-ups and active-high fail-safe polarity.', auto_repair={'enabled': False, 'risk': 'high'},
     ),
 }
 

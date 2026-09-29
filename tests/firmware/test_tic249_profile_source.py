@@ -13,7 +13,7 @@ from oqlos.hardware.tic249_profile_source import (
 )
 
 
-def _source(*, current_ma: int = 1600, forward: str = "scl", reverse: str = "sda") -> str:
+def _source(*, current_ma: int = 1600, forward: str = "tx", reverse: str = "rx") -> str:
     return f"""VERSION: 6
 CONFIG:
   SET 'device.boardnet.motor-tic249.current_limit_ma' '{current_ma}'
@@ -22,7 +22,7 @@ CONFIG:
   SET 'device.boardnet.motor-tic249.limit_switch_forward_pin' '{forward}'
   SET 'device.boardnet.motor-tic249.limit_switch_reverse_pin' '{reverse}'
   SET 'device.boardnet.motor-tic249.limit_switch_pull_up' 'true'
-  SET 'device.boardnet.motor-tic249.limit_switch_active_high' 'false'
+  SET 'device.boardnet.motor-tic249.limit_switch_active_high' 'true'
   SET 'device.boardnet.motor-tic249.limit_reaction_delay_ms' '0'
   SET 'device.boardnet.motor-tic249.stop_at_limit' 'true'
 """
@@ -34,19 +34,19 @@ def test_profile_maps_current_and_canonical_limit_pin_directions() -> None:
     assert result["current_limit_code"] == 40
     assert result["current_measurement_available"] is False
     assert result["nvm_profile"]["settings_file"] == {
-        "scl_config": "pullup limit_switch_forward",
-        "sda_config": "pullup limit_switch_reverse",
+        "tx_config": "active_high limit_switch_forward",
+        "rx_config": "active_high limit_switch_reverse",
     }
 
 
 def test_profile_rejects_noncanonical_limit_pin_directions() -> None:
-    with pytest.raises(Tic249ProfileSourceError, match="SCL=forward"):
-        validate_tic249_profile_source(_source(forward="sda", reverse="scl"))
+    with pytest.raises(Tic249ProfileSourceError, match="TX=forward"):
+        validate_tic249_profile_source(_source(forward="rx", reverse="tx"))
 
 
 def test_profile_rejects_one_pin_for_both_limits() -> None:
     with pytest.raises(Tic249ProfileSourceError, match="different pins"):
-        validate_tic249_profile_source(_source(forward="scl", reverse="scl"))
+        validate_tic249_profile_source(_source(forward="tx", reverse="tx"))
 
 
 def test_profile_rejects_current_above_continuous_limit() -> None:
