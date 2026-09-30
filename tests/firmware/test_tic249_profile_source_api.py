@@ -13,7 +13,7 @@ CONFIG:
   SET 'device.boardnet.motor-tic249.limit_switch_forward_pin' 'tx'
   SET 'device.boardnet.motor-tic249.limit_switch_reverse_pin' 'rx'
   SET 'device.boardnet.motor-tic249.limit_switch_pull_up' 'true'
-  SET 'device.boardnet.motor-tic249.limit_switch_active_high' 'true'
+  SET 'device.boardnet.motor-tic249.limit_switch_active_high' 'false'
   SET 'device.boardnet.motor-tic249.limit_reaction_delay_ms' '0'
   SET 'device.boardnet.motor-tic249.stop_at_limit' 'true'
 """

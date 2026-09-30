@@ -91,10 +91,10 @@ def _build_nvm_profile(
         tokens.append(f"limit_switch_{direction}")
         settings_file[f"{pin}_config"] = " ".join(tokens)
     return {
-        "profile_id": "boardnet-tic249-limit-switches-v2",
+        "profile_id": "boardnet-tic249-limit-switches-v3",
         "description": (
             "BoardNet artificial lung: TX=limit forward, RX=limit reverse, "
-            "always-pulled-up inputs, active high (fail-safe NC)"
+            "always-pulled-up inputs, active low (switch pulls the pin to GND)"
         ),
         "product": "T249",
         "pins": pins,
@@ -160,15 +160,18 @@ def validate_tic249_profile_source(content: str) -> dict[str, Any]:
         raise Tic249ProfileSourceError(
             "deenergize_on_stop and deenergize_on_startup must remain true"
         )
+    # v2 declared active_high=true when the switches moved from SCL/SDA to
+    # TX/RX, but the rig's switches pull the pin to GND: at rest both limits
+    # then read active and the lung refused to start (PLF-2713).
     if (forward_pin, reverse_pin, pull_up, active_high) != (
         "tx",
         "rx",
         True,
-        True,
+        False,
     ):
         raise Tic249ProfileSourceError(
             "BoardNet requires TX=forward, RX=reverse, pull-up=true and "
-            "active_high=true"
+            "active_high=false"
         )
     try:
         limit_reaction_delay_ms = int(values["limit_reaction_delay_ms"])

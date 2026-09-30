@@ -22,7 +22,7 @@ CONFIG:
   SET 'device.boardnet.motor-tic249.limit_switch_forward_pin' '{forward}'
   SET 'device.boardnet.motor-tic249.limit_switch_reverse_pin' '{reverse}'
   SET 'device.boardnet.motor-tic249.limit_switch_pull_up' 'true'
-  SET 'device.boardnet.motor-tic249.limit_switch_active_high' 'true'
+  SET 'device.boardnet.motor-tic249.limit_switch_active_high' 'false'
   SET 'device.boardnet.motor-tic249.limit_reaction_delay_ms' '0'
   SET 'device.boardnet.motor-tic249.stop_at_limit' 'true'
 """
@@ -34,8 +34,8 @@ def test_profile_maps_current_and_canonical_limit_pin_directions() -> None:
     assert result["current_limit_code"] == 40
     assert result["current_measurement_available"] is False
     assert result["nvm_profile"]["settings_file"] == {
-        "tx_config": "active_high limit_switch_forward",
-        "rx_config": "active_high limit_switch_reverse",
+        "tx_config": "limit_switch_forward",
+        "rx_config": "limit_switch_reverse",
     }
 
 
@@ -116,3 +116,13 @@ async def test_apply_refuses_profile_while_coils_are_energized(monkeypatch) -> N
 
     with pytest.raises(Tic249ProfileUnsafeError, match="energized=false"):
         await apply_tic249_profile_source(_source())
+
+
+def test_profile_rejects_active_high_limit_polarity() -> None:
+    # PLF-2713: the rig's switches pull TX/RX to GND; active-high made both
+    # limits read active at rest and blocked the lung.
+    source = _source().replace(
+        "limit_switch_active_high' 'false'", "limit_switch_active_high' 'true'"
+    )
+    with pytest.raises(Tic249ProfileSourceError, match="active_high=false"):
+        validate_tic249_profile_source(source)
