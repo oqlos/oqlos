@@ -54,6 +54,7 @@ class ErrorCode(str, Enum):
     C2004_HW_0016 = 'C2004-HW-0016'
     C2004_HW_0017 = 'C2004-HW-0017'
     C2004_HW_0018 = 'C2004-HW-0018'
+    C2004_HW_0019 = 'C2004-HW-0019'
 
 
 CATALOG: dict[str, ErrorEntry] = {
@@ -296,6 +297,14 @@ CATALOG: dict[str, ErrorEntry] = {
         retryable=False, owner='owner://domain/hardware', title='Tic249 NVM limit-switch pin configuration mismatch',
         message='Pololu Tic T249 NVM pin functions do not match the BoardNet limit-switch profile', message_i18n=None,
         remediation='Stop hw-tic249.service, run `python provision_cli.py apply --yes` in rpi-motor-tic249 (or bundled ticcmd --settings), then restart the sidecar. Expected: TX=limit forward and RX=limit reverse with the always-on pull-ups and active-high fail-safe polarity.', auto_repair={'enabled': False, 'risk': 'high'},
+    ),
+    'C2004-HW-0019': ErrorEntry(
+        code='C2004-HW-0019', slug='hardware.hui.pressure_refresh_rate', domain='hardware',
+        http_status=503, severity='error',
+        classification='safety', confidentiality='internal',
+        retryable=True, owner='owner://domain/hardware', title='HUI pressure display refreshes too slowly',
+        message='The HUI pressure display received fewer than 2 StackNet ADS1110 measurements in the last second', message_i18n=None,
+        remediation='Check StackNet latency (ping, /api/v1/adc, /api/v1/oql/health) and the DisplayNet sensors/batch path; values on screen may be stale until the rate recovers.', auto_repair={'enabled': False, 'risk': 'low'},
     ),
 }
 
