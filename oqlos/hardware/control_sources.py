@@ -12,6 +12,48 @@ DEFAULTS = {"pump": "boardnet", "stepper": "boardnet", "valves": "auto"}
 MOTOR_DEVICES = {"motor-dri0050": "pump", "motor-tic249": "stepper"}
 
 
+def rig_oql_path() -> Path | None:
+    explicit = os.environ.get("OQLOS_RIG_OQL_PATH") or os.environ.get("RIG_OQL_PATH")
+    if explicit:
+        p = Path(explicit)
+        if p.exists() or p.parent.exists():
+            return p
+    if os.environ.get("OQLOS_CONTROL_SOURCES_PATH"):
+        return None
+    profile_path = os.environ.get("STACKNET_OQL_PROFILE_PATH")
+    if profile_path:
+        p = Path(profile_path).parent / "rig.oql"
+        if p.exists():
+            return p
+    candidates = [
+        Path("/scenarios/layers/hardware/rig.oql"),
+        Path("/home/pi/oqlos/oql-scenario/layers/hardware/rig.oql"),
+        Path.home() / "github/oqlos/oql-scenario/layers/hardware/rig.oql",
+        Path.home() / "oqlos/oql-scenario/layers/hardware/rig.oql",
+    ]
+    for c in candidates:
+        if c.exists():
+            return c
+    return None
+
+
+def _parse_oql_key(text: str, key: str) -> str | None:
+    import re
+    m = re.search(rf"(?m)^\s*SET\s+['\"]{re.escape(key)}['\"]\s+['\"]([^'\"\r\n]*)['\"]", text)
+    return m.group(1).strip() if m else None
+
+
+def _update_oql_key(text: str, key: str, value: str) -> str:
+    import re
+    pattern = rf"(?m)^(\s*SET\s+['\"]{re.escape(key)}['\"]\s+)['\"][^'\"\r\n]*['\"]([^\r\n]*)$"
+    if re.search(pattern, text):
+        return re.sub(pattern, rf"\g<1>'{value}'\2", text)
+    m = re.search(r"(?m)^(\s*CONFIG:\s*)$", text)
+    if m:
+        return re.sub(r"(?m)^(\s*CONFIG:\s*)$", rf"\1\n  SET '{key}' '{value}'", text, count=1)
+    return text.rstrip() + f"\n  SET '{key}' '{value}'\n"
+
+
 def config_path() -> Path:
     return Path(os.environ.get(
         "OQLOS_CONTROL_SOURCES_PATH",
@@ -36,6 +78,22 @@ def validate(sources: dict[str, str]) -> None:
 
 
 def snapshot() -> dict:
+    oql_file = rig_oql_path()
+    if oql_file and oql_file.exists():
+        try:
+            raw = oql_file.read_bytes()
+            text = raw.decode("utf-8")
+            pump = _parse_oql_key(text, "rig.pump.host") or DEFAULTS["pump"]
+            stepper = (_parse_oql_key(text, "rig.tic249.host")
+                       or _parse_oql_key(text, "rig.stepper.host")
+                       or DEFAULTS["stepper"])
+            valves = _parse_oql_key(text, "rig.valves.host") or DEFAULTS["valves"]
+            sources = {"pump": pump, "stepper": stepper, "valves": valves}
+            validate(sources)
+            return {"sources": sources, "revision": hashlib.sha256(raw).hexdigest()}
+        except Exception:
+            pass
+
     path = config_path()
     try:
         raw = path.read_bytes()
@@ -58,6 +116,29 @@ def source(device: str) -> str:
 
 def save(sources: dict[str, str]) -> dict:
     validate(sources)
+    oql_file = rig_oql_path()
+    if oql_file and oql_file.exists():
+        text = oql_file.read_text(encoding="utf-8")
+        text = _update_oql_key(text, "rig.pump.host", sources["pump"])
+        text = _update_oql_key(text, "rig.tic249.host", sources["stepper"])
+        text = _update_oql_key(text, "rig.valves.host", sources["valves"])
+        if sources["pump"] == "displaynet":
+            sidecar = os.environ.get("STACKNET_DRI0050_SIDECAR_URL", "http://192.168.188.212:8203")
+            text = _update_oql_key(text, "rig.pump.sidecar_url", sidecar)
+            text = _update_oql_key(text, "rig.pump.health_source", "displaynet-dri0050-sidecar")
+        elif sources["pump"] == "boardnet":
+            text = _update_oql_key(text, "rig.pump.health_source", "boardnet-dri0050")
+        elif sources["pump"] == "stacknet":
+            text = _update_oql_key(text, "rig.pump.health_source", "stacknet-dri0050")
+
+        oql_file.parent.mkdir(parents=True, exist_ok=True)
+        pending_oql = oql_file.with_suffix(".pending")
+        try:
+            pending_oql.write_text(text, encoding="utf-8")
+            pending_oql.replace(oql_file)
+        finally:
+            pending_oql.unlink(missing_ok=True)
+
     path = config_path()
     path.parent.mkdir(parents=True, exist_ok=True)
     pending = path.with_suffix(".pending")
