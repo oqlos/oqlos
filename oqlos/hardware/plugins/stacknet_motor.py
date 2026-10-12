@@ -10,14 +10,25 @@ import os
 
 import httpx
 
+from urllib.parse import urlsplit
+
 PATHS = {"pump": "/api/v1/dri0050", "stepper": "/api/v1/motor"}
+
+
+def web_base(url: str) -> str:
+    parsed = urlsplit(url)
+    host = parsed.hostname or "stacknet.local"
+    if parsed.port and parsed.port != 8080:
+        return f"{parsed.scheme or 'http'}://{host}:{parsed.port}"
+    return f"{parsed.scheme or 'http'}://{host}"
 
 
 async def request(device: str, body: dict | None = None) -> dict:
     token = os.environ.get("STACKNET_OQL_TOKEN", "")
     if body is not None and not token:
         raise ValueError("Brak poświadczeń sterowania silnikiem StackNet (STACKNET_OQL_TOKEN).")
-    url = os.environ.get("STACKNET_RUNTIME_URL", "http://stacknet.local:8080").rstrip("/")
+    raw_url = os.environ.get("STACKNET_MOTOR_URL") or os.environ.get("STACKNET_RUNTIME_URL", "http://stacknet.local:8080")
+    url = web_base(raw_url.rstrip("/"))
     headers = {"X-OQL-Token": token} if token else {}
     async with httpx.AsyncClient(timeout=5.0) as client:
         response = await client.request(

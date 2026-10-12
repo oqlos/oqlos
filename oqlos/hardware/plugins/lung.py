@@ -109,7 +109,7 @@ class LungPlugin(HardwarePlugin):
     async def connect(self) -> bool:
         """Connect to lung motor service."""
         from oqlos.hardware.control_sources import source
-        if source("stepper") == "stacknet":
+        if source("stepper") in ("stacknet", "displaynet"):
             self._client = httpx.AsyncClient(timeout=self.config.timeout)
             health = await self.health_check()
             self._status = health.status
@@ -214,6 +214,15 @@ class LungPlugin(HardwarePlugin):
                 status=PluginStatus.CONNECTED if ok else PluginStatus.ERROR,
                 message="StackNet" if ok else result.get("error", "StackNet unavailable"),
                 compatible=ok, details={"runtime_status": result.get("data", {}), "source": "stacknet"},
+            )
+        if source("stepper") == "displaynet":
+            from oqlos.hardware.control_sources import _execute_displaynet_command
+            result = await _execute_displaynet_command("motor-tic249", "status", {})
+            ok = result.get("success") is True
+            return PluginHealth(
+                status=PluginStatus.CONNECTED if ok else PluginStatus.ERROR,
+                message="DisplayNet" if ok else result.get("error", "DisplayNet sidecar unavailable"),
+                compatible=ok, details={"runtime_status": result.get("data", {}), "source": "displaynet"},
             )
         if self.config.connection_type == "http" and not self._client:
             return not_connected_health("lung motor")

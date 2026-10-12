@@ -93,7 +93,7 @@ class MotorPlugin(HardwarePlugin):
     async def connect(self) -> bool:
         """Connect to motor service."""
         from oqlos.hardware.control_sources import source
-        if source("pump") == "stacknet":
+        if source("pump") in ("stacknet", "displaynet"):
             self._client = httpx.AsyncClient(timeout=self.config.timeout)
             health = await self.health_check()
             self._status = health.status
@@ -194,6 +194,15 @@ class MotorPlugin(HardwarePlugin):
                 status=PluginStatus.CONNECTED if ok else PluginStatus.ERROR,
                 message="StackNet" if ok else result.get("error", "StackNet unavailable"),
                 compatible=ok, details={"runtime_status": result.get("data", {}), "source": "stacknet"},
+            )
+        if source("pump") == "displaynet":
+            from oqlos.hardware.control_sources import _execute_displaynet_command
+            result = await _execute_displaynet_command("motor-dri0050", "status", {})
+            ok = result.get("success") is True
+            return PluginHealth(
+                status=PluginStatus.CONNECTED if ok else PluginStatus.ERROR,
+                message="DisplayNet" if ok else result.get("error", "DisplayNet sidecar unavailable"),
+                compatible=ok, details={"runtime_status": result.get("data", {}), "source": "displaynet"},
             )
         if self.config.connection_type == "http" and not self._client:
             return not_connected_health("motor")

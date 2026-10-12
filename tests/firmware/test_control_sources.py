@@ -215,7 +215,7 @@ async def test_stacknet_http_transport_uses_device_path_and_existing_auth(monkey
     monkeypatch.setenv("STACKNET_RUNTIME_URL", "http://stacknet.test:8080")
     monkeypatch.setenv("STACKNET_OQL_TOKEN", "test-token")
     await stacknet_motor.request("stepper", {"action": "halt"})
-    assert str(calls[0].url) == "http://stacknet.test:8080/api/v1/motor"
+    assert str(calls[0].url) == "http://stacknet.test/api/v1/motor"
     assert calls[0].headers["X-OQL-Token"] == "test-token"
     assert calls[0].method == "POST"
 
@@ -257,3 +257,77 @@ async def test_malformed_settings_return_service_error_and_block_motion(content)
     result = await plugin.execute_command("set_speed", {"power_pct": 50})
     assert result["success"] is False
     plugin._execute_boardnet_command.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_displaynet_pump_selection_and_routing(monkeypatch):
+    idle = AsyncMock()
+    monkeypatch.setattr(api, "ensure_idle", idle)
+    initial = await api.get_sources()
+    selected = {**initial["sources"], "pump": "displaynet"}
+    saved = await api.update_sources(api.ControlSourceUpdate(sources=selected, revision=initial["revision"]))
+    assert saved["sources"]["pump"] == "displaynet"
+
+    plugin = MotorPlugin(PluginConfig(plugin_id="motor-dri0050", connection_type="http", connection_params={"base_url": "http://localhost:8203"}))
+    mock_displaynet = AsyncMock(return_value={"success": True, "node": "displaynet"})
+    monkeypatch.setattr(store, "_execute_displaynet_command", mock_displaynet)
+
+    res = await plugin.execute_command("set_speed", {"power_pct": 50})
+    assert res["node"] == "displaynet"
+    mock_displaynet.assert_awaited_once_with("motor-dri0050", "set_speed", {"power_pct": 50})
+
+    mock_displaynet.reset_mock()
+    res_stop = await plugin.execute_command("stop", {})
+    assert res_stop["node"] == "displaynet"
+    mock_displaynet.assert_awaited_once_with("motor-dri0050", "stop", {})
+
+
+@pytest.mark.parametrize("data,allowed", [
+    ({"connected": True, "enabled": False, "duty_raw": 0, "duty_percent": 0.0}, True),
+    ({"connected": True, "enabled": True, "duty_raw": 100}, False),
+    ({"connected": True, "enabled": False, "duty_raw": 50}, False),
+    ({"connected": False}, False),
+])
+@pytest.mark.asyncio
+async def test_displaynet_ensure_idle(monkeypatch, data, allowed):
+    from oqlos.api import hardware_gateway
+    gateway = SimpleNamespace(is_real=True)
+    monkeypatch.setattr(hardware_gateway, "get_hardware_gateway", lambda: gateway)
+
+    mock_displaynet = AsyncMock(return_value={
+        "success": data.get("connected") is True,
+        "data": data,
+    })
+    monkeypatch.setattr(store, "_execute_displaynet_command", mock_displaynet)
+
+    if allowed:
+        await api.ensure_idle("pump", {"displaynet"})
+    else:
+        with pytest.raises(HTTPException):
+            await api.ensure_idle("pump", {"displaynet"})
+
+
+@pytest.mark.asyncio
+async def test_displaynet_stepper_selection_and_routing(monkeypatch):
+    from oqlos.hardware.plugins.lung import LungPlugin
+    idle = AsyncMock()
+    monkeypatch.setattr(api, "ensure_idle", idle)
+    initial = await api.get_sources()
+    selected = {**initial["sources"], "stepper": "displaynet"}
+    saved = await api.update_sources(api.ControlSourceUpdate(sources=selected, revision=initial["revision"]))
+    assert saved["sources"]["stepper"] == "displaynet"
+
+    plugin = LungPlugin(PluginConfig(plugin_id="motor-tic249", connection_type="http", connection_params={"base_url": "http://localhost:8205"}))
+    mock_displaynet = AsyncMock(return_value={"success": True, "node": "displaynet"})
+    monkeypatch.setattr(store, "_execute_displaynet_command", mock_displaynet)
+
+    res = await plugin.execute_command("move", {"position": 500})
+    assert res["node"] == "displaynet"
+    mock_displaynet.assert_awaited_once_with("motor-tic249", "move", {"position": 500})
+
+    mock_displaynet.reset_mock()
+    res_stop = await plugin.execute_command("stop", {})
+    assert res_stop["node"] == "displaynet"
+    mock_displaynet.assert_awaited_once_with("motor-tic249", "stop", {})
+
+

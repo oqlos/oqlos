@@ -64,6 +64,10 @@ async def ensure_idle(device: str, selections: set[str]) -> None:
     for selection in selections:
         if selection == "stacknet":
             result = await execute(device, "status", {})
+        elif selection == "displaynet":
+            from oqlos.hardware.control_sources import _execute_displaynet_command
+            plugin_id = "motor-dri0050" if device == "pump" else "motor-tic249"
+            result = await _execute_displaynet_command(plugin_id, "status", {})
         else:
             plugin_id = "motor-dri0050" if device == "pump" else "motor-tic249"
             plugin = await gateway._get_or_connect_plugin(plugin_id)
