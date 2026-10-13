@@ -347,7 +347,7 @@ def build_timing_config_from_sets(sets: dict[str, str]) -> dict[str, Any]:
         "valve_stagger_ms": 100,
         "min_hold_ms": 0,
         "skip_idle_pump_off": True,
-        "lease_ttl_ms": 5000,
+        "lease_ttl_ms": 10000,
         "lease_renew_interval_seconds": 1.5,
         "lease_reuse_active": True,
         "discovery_ttl_seconds": 60.0,
