@@ -239,3 +239,6 @@ build/
 /.subactor/snapshots/
 
 /.subactor/sessions/
+
+/.subactor/leases/
+

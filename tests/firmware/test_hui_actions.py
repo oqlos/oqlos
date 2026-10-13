@@ -598,6 +598,7 @@ class FakeTic249RearmPlugin:
 
 
 def test_hui_motor_rearm_energizes_and_backs_off_reverse_limit() -> None:
+    steps, _ = hui_lung_recipe.get_hui_lung_rearm_params()
     plugin = FakeTic249RearmPlugin(
         {"position": 1200, "reverse_limit_active": True, "energized": False}
     )
@@ -606,16 +607,17 @@ def test_hui_motor_rearm_energizes_and_backs_off_reverse_limit() -> None:
     payload = run(hui_actions.rearm_hui_motor(gateway))
 
     assert payload["ok"] is True
-    assert payload["requested"] == {"energize": True, "limit_backoff_steps": 50}
+    assert payload["requested"] == {"energize": True, "limit_backoff_steps": steps}
     assert plugin.commands[0][0] == "status"
     assert plugin.commands[1] == ("energize", {"enable": True})
     move_command, move_params = plugin.commands[2]
     assert move_command == "move"
-    assert move_params["position"] == 1250
+    assert move_params["position"] == 1200 + steps
     assert isinstance(move_params["speed"], int)
 
 
 def test_hui_motor_rearm_backs_off_forward_limit() -> None:
+    steps, _ = hui_lung_recipe.get_hui_lung_rearm_params()
     plugin = FakeTic249RearmPlugin(
         {"position": -640, "forward_limit_active": True}
     )
@@ -624,8 +626,8 @@ def test_hui_motor_rearm_backs_off_forward_limit() -> None:
     payload = run(hui_actions.rearm_hui_motor(gateway))
 
     assert payload["ok"] is True
-    assert payload["requested"]["limit_backoff_steps"] == -50
-    assert plugin.commands[2][1]["position"] == -690
+    assert payload["requested"]["limit_backoff_steps"] == -steps
+    assert plugin.commands[2][1]["position"] == -640 - steps
 
 
 def test_hui_motor_rearm_stacknet_uses_bounded_move(monkeypatch) -> None:
@@ -634,6 +636,7 @@ def test_hui_motor_rearm_stacknet_uses_bounded_move(monkeypatch) -> None:
     monkeypatch.setattr(
         "oqlos.hardware.control_sources.source", lambda device: "stacknet"
     )
+    steps, speed = hui_lung_recipe.get_hui_lung_rearm_params()
     plugin = FakeTic249RearmPlugin(
         {"current_position": 42, "forward_limit": True}
     )
@@ -646,7 +649,7 @@ def test_hui_motor_rearm_stacknet_uses_bounded_move(monkeypatch) -> None:
         "status",
         "bounded_move",
     ]
-    assert plugin.commands[1][1] == {"offset": -50, "speed": 2000}
+    assert plugin.commands[1][1] == {"offset": -steps, "speed": speed}
 
 
 def test_hui_motor_rearm_stacknet_without_active_limit_arms(monkeypatch) -> None:

@@ -22,3 +22,11 @@ def _reset_hardware_runtime_batch_cache():
     yield
     runtime._BATCH_HEALTH_CACHE["expires_at"] = 0.0
     runtime._BATCH_HEALTH_CACHE["payload"] = None
+
+
+@pytest.fixture(autouse=True)
+def _isolate_control_sources(monkeypatch, tmp_path):
+    """Prevent developer's local ~/.config/oqlos/control-sources.json from leaking into tests."""
+    config_file = tmp_path / "test-control-sources.json"
+    monkeypatch.setenv("OQLOS_CONTROL_SOURCES_PATH", str(config_file))
+
