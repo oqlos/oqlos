@@ -4,6 +4,7 @@ dsl/interpreter/base.py — Shared base classes for OQL runtime interpreters.
 
 from __future__ import annotations
 
+import os
 import re
 import time
 from abc import ABC, abstractmethod
@@ -96,12 +97,21 @@ class VariableStore:
         self._vars.clear()
 
     def interpolate(self, text: str) -> str:
-        """Replace ${var} and $var references in text using hierarchical lookup."""
+        """Replace ${var}, ${var:-default}, and $var references in text using hierarchical lookup."""
+        def _repl_with_default(m: re.Match) -> str:
+            key = m.group(1)
+            default = m.group(2)
+            val = self.get(key)
+            if val is None or (isinstance(val, str) and val.startswith("${") and val.endswith("}")):
+                val = os.environ.get(key)
+            return str(val) if val not in (None, "") else default
+
         def _repl(m: re.Match) -> str:
             key = m.group(1) or m.group(2)
             val = self.get(key)
             return str(val) if val is not None else m.group(0)
-        # ${var} first, then $var (word chars only)
+
+        text = re.sub(r'\$\{([^}:-]+):-([^}]*)\}', _repl_with_default, text)
         text = re.sub(r'\$\{([^}]+)\}', _repl, text)
         text = re.sub(r'\$([A-Za-z_]\w*)', _repl, text)
         return text
