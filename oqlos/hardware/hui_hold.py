@@ -354,7 +354,19 @@ async def _shutdown_all_hui_hardware_unlocked(
     global _active_hold_key, _active_hold_started_at
     _active_hold_key = None
     _active_hold_started_at = None
-    operations: list[dict[str, Any]] = [await _set_pump_best_effort(gateway, 0.0)]
+
+    has_bulk_valves_off = callable(getattr(gateway, "all_valves_off", None))
+    if has_bulk_valves_off:
+        pump_op, bulk_off = await asyncio.gather(
+            _set_pump_best_effort(gateway, 0.0),
+            _all_valves_off(gateway),
+        )
+        operations: list[dict[str, Any]] = [pump_op]
+        if bulk_off is not None:
+            operations.append(bulk_off)
+    else:
+        operations: list[dict[str, Any]] = [await _set_pump_best_effort(gateway, 0.0)]
+        bulk_off = None
 
     # A disconnected Modbus plugin used to trigger the same reconnect probe for
     # every known valve.  With the production RTU timeout this kept the HUI lock
@@ -392,9 +404,10 @@ async def _shutdown_all_hui_hardware_unlocked(
         )
         return readiness_failure
 
-    bulk_off = await _all_valves_off(gateway)
-    if bulk_off is not None:
-        operations.append(bulk_off)
+    if not has_bulk_valves_off:
+        bulk_off = await _all_valves_off(gateway)
+        if bulk_off is not None:
+            operations.append(bulk_off)
     if bulk_off is None or not bulk_off.get("ok"):
         for valve_id in HUI_ALL_VALVE_IDS:
             try:
