@@ -489,6 +489,15 @@ def _lower_range(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "lis
     ]
 
 
+def _lower_wait_until(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "list[CqlAction]":
+    """WAIT_UNTIL → jedna akcja ``wait_until``; args = ``min|max|every_ms|timeout_ms|unit``."""
+    a = cmd.args
+    args = "|".join(
+        str(part) for part in (a["min"], a["max"], a["every_ms"], a["timeout_ms"], a.get("unit") or "")
+    )
+    return [CqlAction(kind="wait_until", target=a["sensor"], args=args, raw=cmd.raw)]
+
+
 def _lower_pass(cmd: OqlCmd, macros: "_MacroRegistry", visiting: tuple) -> "list[CqlAction]":
     """PASS 'msg' — alias semantyczny CORRECT: komunikat werdyktu pozytywnego.
 
@@ -562,6 +571,7 @@ _CMD_LOWERERS: dict = {
     "ELSE": _lower_else_cmd,
     "GOTO": _lower_goto,
     "RANGE": _lower_range,
+    "WAIT_UNTIL": _lower_wait_until,
     "PASS": _lower_pass,
     "FAIL": _lower_fail,
     "PROMPT": _lower_prompt,

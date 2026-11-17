@@ -653,6 +653,63 @@ def parse_RANGE(tokens: list[str], ln: int, raw: str) -> OqlCmd:
     )
 
 
+_WAIT_UNTIL_DEFAULT_EVERY_MS = 1000
+_WAIT_UNTIL_SHAPE = "'param' 'min [unit]' .. 'max [unit]' [EVERY 'czas'] TIMEOUT 'czas'"
+
+
+def _wait_until_duration(keyword: str, tokens: list[str], ln: int) -> int:
+    if len(tokens) != 1:
+        raise ValueError(
+            f"WAIT_UNTIL … {keyword} wymaga dokładnie jednego czasu, np. {keyword} '1 s' (linia {ln})"
+        )
+    try:
+        ms = duration_to_ms(tokens[0])
+    except (ValueError, KeyError) as exc:
+        raise ValueError(f"WAIT_UNTIL … {keyword}: {exc} (linia {ln})") from exc
+    if ms <= 0:
+        raise ValueError(
+            f"WAIT_UNTIL … {keyword} wymaga dodatniego czasu, nie {tokens[0]!r} (linia {ln})"
+        )
+    return ms
+
+
+def parse_WAIT_UNTIL(tokens: list[str], ln: int, raw: str) -> OqlCmd:
+    """``WAIT_UNTIL 'param' 'min' .. 'max' [EVERY 'czas'] TIMEOUT 'czas'``.
+
+    Warunek wstępny, nie werdykt: runtime odpytuje ``param`` co ``EVERY``
+    (domyślnie 1 s, nie dłużej niż TIMEOUT), aż wartość będzie w zakresie
+    (włącznie). Po ``TIMEOUT`` przebieg kończy się błędem jak ``ERROR``.
+    Dozwolony w ``TASK:``; nie spełnia wymagań kryterium ``TEST_STEP:``.
+    Parytet z ``@semcod/oqlts`` ``parseWAIT_UNTIL``.
+    """
+    _require(tokens, 6, "WAIT_UNTIL", ln, _WAIT_UNTIL_SHAPE)
+    upper = [str(token).upper() for token in tokens]
+
+    def keyword_at(name: str) -> int:
+        return next((idx for idx, token in enumerate(upper) if idx > 0 and token == name), -1)
+
+    every_idx, timeout_idx = keyword_at("EVERY"), keyword_at("TIMEOUT")
+    if timeout_idx < 0:
+        raise ValueError(f"WAIT_UNTIL wymaga TIMEOUT 'czas' ({_WAIT_UNTIL_SHAPE}, linia {ln})")
+    tail_start = min(every_idx, timeout_idx) if every_idx >= 0 else timeout_idx
+    try:
+        range_cmd = parse_RANGE(tokens[:tail_start], ln, raw)
+    except ValueError as exc:
+        raise ValueError(re.sub(r"^RANGE", "WAIT_UNTIL", str(exc))) from exc
+    timeout_end = every_idx if every_idx > timeout_idx else None
+    timeout_ms = _wait_until_duration("TIMEOUT", tokens[timeout_idx + 1:timeout_end], ln)
+    if every_idx >= 0:
+        every_end = timeout_idx if timeout_idx > every_idx else None
+        every_ms = _wait_until_duration("EVERY", tokens[every_idx + 1:every_end], ln)
+    else:
+        every_ms = min(_WAIT_UNTIL_DEFAULT_EVERY_MS, timeout_ms)
+    if every_ms > timeout_ms:
+        raise ValueError(f"WAIT_UNTIL: EVERY nie może być dłuższy niż TIMEOUT (linia {ln})")
+    args = dict(range_cmd.args)
+    args.update({"every_ms": every_ms, "timeout_ms": timeout_ms})
+    return OqlCmd("WAIT_UNTIL", args, ln, raw)
+
+
 _TASK_FIELDS = {"TITLE", "VAL", "PASS", "FAIL"}
 
 
@@ -830,6 +887,7 @@ DISPATCHERS = {
     "RANGE":   parse_RANGE,   # v5: deklaratywny zakres (CHECK = alias historyczny)
     "PASS":    parse_PASS,    # v5: alias semantyczny CORRECT
     "FAIL":    parse_FAIL,    # v5: alias semantyczny ERROR (+ GOTO / RETRY)
+    "WAIT_UNTIL": parse_WAIT_UNTIL,  # v6: warunek wstępny (nie werdykt), dozwolony w TASK
     "ENDIF":   parse_NOOP,    # terminator legacy bloku IF (no-op w modelu inline)
     "FI":      parse_NOOP,    # alias ENDIF
     **{cmd: parse_TESTQL for cmd in _TESTQL_COMMANDS},

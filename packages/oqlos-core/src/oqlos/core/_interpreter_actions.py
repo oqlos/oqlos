@@ -246,6 +246,52 @@ def exec_action_wait(interp: "OqlInterpreter", act: OqlAction) -> "StepStatus":
     return StepStatus.PASSED
 
 
+def _wait_until_sleep(secs: float) -> None:
+    time.sleep(max(secs, 0.0))
+
+
+def exec_action_wait_until(interp: "OqlInterpreter", act: OqlAction) -> "StepStatus":
+    """WAIT_UNTIL: poll the sensor until it is in range; TIMEOUT fails like ERROR.
+
+    A precondition, not a verdict. Every poll refreshes firmware sensors so a
+    stale cached reading can never satisfy the wait.
+    """
+    from oqlos.core.base import StepStatus
+
+    sensor = str(act.target or "").strip()
+    lo_raw, hi_raw, every_raw, timeout_raw, unit = (str(act.args or "").split("|") + [""] * 5)[:5]
+    lo, hi = float(lo_raw), float(hi_raw)
+    every_s, timeout_s = int(every_raw) / 1000.0, int(timeout_raw) / 1000.0
+    label = f"WAIT_UNTIL [{sensor}] {lo:g}..{hi:g} {unit}".strip()
+    if interp.mode != "execute" or interp._skip_waits:
+        interp.out.step("    ⏳", f"{label} (simulated)")
+        return StepStatus.PASSED
+
+    started = time.monotonic()
+    value: float | None = None
+    while True:
+        try:
+            interp._refresh_sensors_from_firmware()
+        except Exception as exc:  # noqa: BLE001 - reported and retried until TIMEOUT
+            interp.out.warn(f"Could not refresh sensors during {label}: {exc}")
+        value = interp._coerce_float(interp.sensor_values.get(sensor))
+        elapsed = time.monotonic() - started
+        if value is not None and lo <= value <= hi:
+            interp.vars.set(sensor, value)
+            interp.out.step("    ⏳", f"{label}: {sensor}={value:g} po {elapsed:.1f} s")
+            return StepStatus.PASSED
+        remaining = timeout_s - elapsed
+        if remaining <= 0:
+            message = (
+                f"WAIT_UNTIL timeout after {int(timeout_raw)} ms: {sensor}={value} "
+                f"not in {lo:g}..{hi:g} {unit}".strip()
+            )
+            interp.errors.append(message)
+            interp.out.error(message)
+            return StepStatus.FAILED
+        _wait_until_sleep(min(every_s, remaining))
+
+
 def _do_sleep(interp: "OqlInterpreter", secs: float, label: str) -> None:
     """Perform sleep operation."""
     import asyncio
@@ -920,6 +966,7 @@ ACTION_HANDLERS = {
     "set": exec_action_set,
     "save": exec_action_save,
     "wait": exec_action_wait,
+    "wait_until": exec_action_wait_until,
     "min": exec_action_min_max,
     "max": exec_action_min_max,
     "val": exec_action_val,
