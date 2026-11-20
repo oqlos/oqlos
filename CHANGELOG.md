@@ -10,6 +10,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.44] - 2026-11-19
+
+### Added
+- `WAIT_UNTIL` precondition allowed in OQL v6 `TASK` blocks (`4463bb4`).
+
+### Changed
+- Run pump and bulk valve shutdown concurrently on HUI hold release (`465492f`).
+
 ### Fixed
 - Modbus profile-channel endpoints now default to the runtime `active_profile`
   instead of forcing the potentially disabled `modbus-adc` profile.
