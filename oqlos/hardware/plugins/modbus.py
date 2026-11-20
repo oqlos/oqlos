@@ -8,9 +8,18 @@ import asyncio
 import logging
 from typing import Any
 
+from ._rtu_serial import (
+    DEFAULT_MODBUS_BAUD_RATE,
+    RtuTurnaroundPacer,
+    modbus_rtu_t35_us,
+    reopen_rtu_after_stale,
+    rtu_baudrate,
+    rtu_device_id,
+    rtu_timeout,
+    serial_error_is_stale,
+)
 from ._shared import plugin_operation_failure
 from .base import HardwarePlugin, PluginConfig, PluginHealth, PluginStatus
-from ._rtu_serial import reopen_rtu_after_stale, rtu_device_id, rtu_timeout, serial_error_is_stale
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +51,8 @@ class ModbusPlugin(HardwarePlugin):
         self._client: Any = None
         self._bus: Any = None
         self._mode = "unknown"
+        self._rtu_pacer = RtuTurnaroundPacer()
+        self._static_io_config_cache: dict[str, Any] | None = None
 
     def _validate_rtu_params(self, errors: list) -> None:
         params = self.config.connection_params
@@ -159,6 +170,8 @@ class ModbusPlugin(HardwarePlugin):
 
     async def disconnect(self) -> None:
         """Disconnect from modbus device."""
+        self._static_io_config_cache = None
+        self._rtu_pacer.reset()
         if self._bus:
             await self._bus.close()
             self._bus = None
@@ -310,32 +323,35 @@ class ModbusPlugin(HardwarePlugin):
     def _rtu_timeout(self) -> float:
         return rtu_timeout(self.config)
 
+    def _baudrate(self) -> int:
+        return rtu_baudrate(self.config, default=DEFAULT_MODBUS_BAUD_RATE)
+
+    def rtu_turnaround_us(self) -> int:
+        return modbus_rtu_t35_us(self._baudrate())
+
     async def _rtu_call(self, method_name: str, **kwargs: Any) -> Any:
-        if self._bus is not None:
-            method = getattr(self._bus, method_name, None)
-            if method is not None and method_name in {"read_coils", "write_coil", "read_input_registers"}:
-                return await method(timeout=self._rtu_timeout(), **kwargs)
-            return await self._bus.call(method_name, timeout=self._rtu_timeout(), **kwargs)
-        return await asyncio.wait_for(
-            asyncio.to_thread(getattr(self._client, method_name), **kwargs),
-            timeout=self._rtu_timeout(),
-        )
+        async def _invoke() -> Any:
+            if self._bus is not None:
+                method = getattr(self._bus, method_name, None)
+                if method is not None and method_name in {"read_coils", "write_coil", "read_input_registers"}:
+                    return await method(timeout=self._rtu_timeout(), **kwargs)
+                return await self._bus.call(method_name, timeout=self._rtu_timeout(), **kwargs)
+            return await asyncio.wait_for(
+                asyncio.to_thread(getattr(self._client, method_name), **kwargs),
+                timeout=self._rtu_timeout(),
+            )
+
+        return await self._rtu_pacer.run(self._baudrate(), _invoke)
 
     def _rtu_result_values(self, result: Any, *, attr: str) -> list[Any]:
         if not result or getattr(result, "isError", lambda: True)():
             raise RuntimeError(f"Modbus {attr} read failed: {result}")
         return list(getattr(result, attr, []) or [])
 
-    async def _execute_read_io_snapshot(self) -> dict[str, Any]:
+    async def _read_static_io_config(self, *, refresh: bool = False) -> dict[str, Any]:
+        if not refresh and self._static_io_config_cache is not None:
+            return dict(self._static_io_config_cache)
         device_id = self._device_id()
-        coils = self._rtu_result_values(
-            await self._rtu_call("read_coils", address=0, count=8, device_id=device_id),
-            attr="bits",
-        )
-        discrete = self._rtu_result_values(
-            await self._rtu_call("read_discrete_inputs", address=0, count=8, device_id=device_id),
-            attr="bits",
-        )
         modes = self._rtu_result_values(
             await self._rtu_call("read_holding_registers", address=0x1000, count=8, device_id=device_id),
             attr="registers",
@@ -351,15 +367,33 @@ class ModbusPlugin(HardwarePlugin):
         from pimodbus.provisioning import decode_uart_register
 
         uart_raw = int(uart_regs[0]) if uart_regs else None
+        snapshot = {
+            "output_mode_registers": [int(value) for value in modes[:8]],
+            "device_id_register": int(addr_regs[0]) if addr_regs else None,
+            "uart_register_raw": uart_raw,
+            "uart_register": decode_uart_register(uart_raw) if uart_raw is not None else None,
+        }
+        self._static_io_config_cache = snapshot
+        return dict(snapshot)
+
+    async def _execute_read_io_snapshot(self, params: dict[str, Any] | None = None) -> dict[str, Any]:
+        device_id = self._device_id()
+        coils = self._rtu_result_values(
+            await self._rtu_call("read_coils", address=0, count=8, device_id=device_id),
+            attr="bits",
+        )
+        discrete = self._rtu_result_values(
+            await self._rtu_call("read_discrete_inputs", address=0, count=8, device_id=device_id),
+            attr="bits",
+        )
+        refresh_config = bool((params or {}).get("refresh_config", False))
+        static_cfg = await self._read_static_io_config(refresh=refresh_config)
         return {
             "success": True,
             "data": {
                 "coils": [bool(value) for value in coils[:8]],
                 "discrete_inputs": [bool(value) for value in discrete[:8]],
-                "output_mode_registers": [int(value) for value in modes[:8]],
-                "device_id_register": int(addr_regs[0]) if addr_regs else None,
-                "uart_register_raw": uart_raw,
-                "uart_register": decode_uart_register(uart_raw) if uart_raw is not None else None,
+                **static_cfg,
             },
         }
 
@@ -373,6 +407,7 @@ class ModbusPlugin(HardwarePlugin):
             device_id=self._device_id(),
         )
         if result and not getattr(result, "isError", lambda: True)():
+            self._static_io_config_cache = None
             return {"success": True, "data": {"address": address, "value": value}}
         return {**plugin_operation_failure(self.config.plugin_id, str(result)), "error": str(result)}
 
@@ -388,7 +423,7 @@ class ModbusPlugin(HardwarePlugin):
             if command == "all_outputs_off":
                 return await self._execute_all_outputs_off()
             if command == "read_io_snapshot":
-                return await self._execute_read_io_snapshot()
+                return await self._execute_read_io_snapshot(params)
             if command == "write_holding_register":
                 return await self._execute_write_holding_register(params)
             return {"success": False, "error": f"Unknown command: {command}"}

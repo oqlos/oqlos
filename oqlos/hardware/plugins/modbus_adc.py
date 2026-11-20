@@ -6,12 +6,29 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time
 from typing import Any
 
-from .base import HardwarePlugin, PeripheralConfig, PluginConfig, PluginHealth, PluginStatus
-from ._rtu_serial import reopen_rtu_after_stale, rtu_device_id, rtu_timeout, serial_error_is_stale
+from ._rtu_serial import (
+    RtuTurnaroundPacer,
+    modbus_rtu_t35_us,
+    reopen_rtu_after_stale,
+    rtu_baudrate,
+    rtu_device_id,
+    rtu_timeout,
+    serial_error_is_stale,
+)
+from .base import (
+    HardwarePlugin,
+    PeripheralConfig,
+    PluginConfig,
+    PluginHealth,
+    PluginStatus,
+)
 
 logger = logging.getLogger(__name__)
+
+DEFAULT_READ_CACHE_TTL_S = 0.05
 
 _SENSOR_CHANNEL_ALIASES: dict[str, int] = {
     "v1": 0,
@@ -120,6 +137,10 @@ class ModbusAdcPlugin(HardwarePlugin):
         super().__init__(config)
         self._client: Any = None
         self._bus: Any = None
+        self._rtu_pacer = RtuTurnaroundPacer()
+        self._read_cache_registers: list[int] | None = None
+        self._read_cache_ts: float = 0.0
+        self._config_snapshot_cache: dict[str, Any] | None = None
 
     def validate_config(self) -> list[str]:
         errors: list[str] = []
@@ -187,6 +208,10 @@ class ModbusAdcPlugin(HardwarePlugin):
             return False
 
     async def disconnect(self) -> None:
+        self._read_cache_registers = None
+        self._read_cache_ts = 0.0
+        self._config_snapshot_cache = None
+        self._rtu_pacer.reset()
         if self._bus:
             await self._bus.close()
             self._bus = None
@@ -251,7 +276,8 @@ class ModbusAdcPlugin(HardwarePlugin):
 
         try:
             if command == "read_all":
-                registers = await self._read_registers()
+                use_cache = bool(params.get("use_cache", False)) and not bool(params.get("force_refresh", False))
+                registers = await self._read_registers(use_cache=use_cache)
                 return {
                     "success": True,
                     "data": {
@@ -265,7 +291,8 @@ class ModbusAdcPlugin(HardwarePlugin):
                 channel = _resolve_channel(raw_channel)
                 if channel is None:
                     return {"success": False, "error": f"Unknown sensor/channel: {raw_channel}"}
-                registers = await self._read_registers()
+                use_cache = not bool(params.get("force_refresh", False))
+                registers = await self._read_registers(use_cache=use_cache)
                 if channel >= len(registers):
                     return {
                         "success": False,
@@ -277,7 +304,7 @@ class ModbusAdcPlugin(HardwarePlugin):
                 return {"success": True, "data": reading}
 
             if command == "read_config_snapshot":
-                return await self._execute_read_config_snapshot()
+                return await self._execute_read_config_snapshot(params)
             if command == "write_holding_register":
                 return await self._execute_write_holding_register(params)
 
@@ -297,10 +324,14 @@ class ModbusAdcPlugin(HardwarePlugin):
             device_id=self._device_id(),
         )
         if result and not getattr(result, "isError", lambda: True)():
+            self._config_snapshot_cache = None
             return {"success": True, "data": {"address": address, "value": value}}
         return {"success": False, "error": str(result)}
 
-    async def _execute_read_config_snapshot(self) -> dict[str, Any]:
+    async def _execute_read_config_snapshot(self, params: dict[str, Any] | None = None) -> dict[str, Any]:
+        refresh_config = bool((params or {}).get("refresh_config", False))
+        if not refresh_config and self._config_snapshot_cache is not None:
+            return {"success": True, "data": dict(self._config_snapshot_cache)}
         device_id = self._device_id()
         addr_regs = await self._rtu_call("read_holding_registers", address=0x4000, count=1, device_id=device_id)
         uart_regs = await self._rtu_call("read_holding_registers", address=0x2000, count=1, device_id=device_id)
@@ -309,36 +340,60 @@ class ModbusAdcPlugin(HardwarePlugin):
         from pimodbus.provisioning import decode_uart_register
 
         uart_raw = int(list(uart_regs.registers or [0])[0])
-        return {
-            "success": True,
-            "data": {
-                "device_id_register": int(list(addr_regs.registers or [0])[0]),
-                "uart_register_raw": uart_raw,
-                "uart_register": decode_uart_register(uart_raw),
-            },
+        snapshot = {
+            "device_id_register": int(list(addr_regs.registers or [0])[0]),
+            "uart_register_raw": uart_raw,
+            "uart_register": decode_uart_register(uart_raw),
         }
+        self._config_snapshot_cache = snapshot
+        return {"success": True, "data": dict(snapshot)}
+
+    def _baudrate(self) -> int:
+        return rtu_baudrate(self.config, default=9600)
+
+    def rtu_turnaround_us(self) -> int:
+        return modbus_rtu_t35_us(self._baudrate())
+
+    def _read_cache_ttl_s(self) -> float:
+        raw = self.config.connection_params.get("read_cache_ttl_s", DEFAULT_READ_CACHE_TTL_S)
+        try:
+            return max(0.0, float(raw))
+        except (TypeError, ValueError):
+            return DEFAULT_READ_CACHE_TTL_S
 
     async def _rtu_call(self, method_name: str, **kwargs: Any) -> Any:
-        if self._bus is not None:
-            method = getattr(self._bus, method_name, None)
-            if method is not None and method_name in {"read_input_registers"}:
-                return await method(timeout=self._rtu_timeout(), **kwargs)
-            return await self._bus.call(method_name, timeout=self._rtu_timeout(), **kwargs)
-        return await asyncio.wait_for(
-            asyncio.to_thread(getattr(self._client, method_name), **kwargs),
-            timeout=self._rtu_timeout(),
-        )
-
-    async def _read_registers(self) -> list[int]:
-        if self._bus is not None:
-            result = await self._bus.read_input_registers(
-                address=self._read_address(),
-                count=self._read_count(),
-                device_id=self._device_id(),
+        async def _invoke() -> Any:
+            if self._bus is not None:
+                method = getattr(self._bus, method_name, None)
+                if method is not None and method_name in {"read_input_registers"}:
+                    return await method(timeout=self._rtu_timeout(), **kwargs)
+                return await self._bus.call(method_name, timeout=self._rtu_timeout(), **kwargs)
+            return await asyncio.wait_for(
+                asyncio.to_thread(getattr(self._client, method_name), **kwargs),
                 timeout=self._rtu_timeout(),
             )
-        else:
-            result = await asyncio.wait_for(
+
+        return await self._rtu_pacer.run(self._baudrate(), _invoke)
+
+    async def _read_registers(self, *, use_cache: bool = False) -> list[int]:
+        ttl = self._read_cache_ttl_s()
+        if (
+            use_cache
+            and ttl > 0.0
+            and self._read_cache_registers is not None
+            and (time.monotonic() - self._read_cache_ts) < ttl
+        ):
+            return list(self._read_cache_registers)
+
+        async def _invoke() -> Any:
+            if self._bus is not None:
+                return await self._bus.read_input_registers(
+                    address=self._read_address(),
+                    count=self._read_count(),
+                    device_id=self._device_id(),
+                    timeout=self._rtu_timeout(),
+                )
+            return await asyncio.wait_for(
                 asyncio.to_thread(
                     self._client.read_input_registers,
                     address=self._read_address(),
@@ -347,11 +402,15 @@ class ModbusAdcPlugin(HardwarePlugin):
                 ),
                 timeout=self._rtu_timeout(),
             )
+
+        result = await self._rtu_pacer.run(self._baudrate(), _invoke)
         if not result or _modbus_error(result):
             raise RuntimeError(f"Modbus ADC read_input_registers failed: {result}")
         registers = list(getattr(result, "registers", []) or [])
         if not registers:
             raise RuntimeError("Modbus ADC returned no input registers")
+        self._read_cache_registers = list(registers)
+        self._read_cache_ts = time.monotonic()
         return registers
 
     def _format_channels(self, registers: list[int]) -> dict[str, dict[str, Any]]:
